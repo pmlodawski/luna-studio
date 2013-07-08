@@ -18,3 +18,6 @@ To set up Luna Project do the following:
     e) gitflow
 2) Configure project with $ cabal configure
 3) Build with $ cabal build
+
+The project uses gitflow for git management.
+Read the docs! http://danielkummer.github.io/git-flow-cheatsheet/
