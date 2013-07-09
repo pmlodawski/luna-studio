@@ -14,6 +14,7 @@ import qualified Data.Graph.Inductive as DG
 import qualified Luna.DefManager as DefManager
 import qualified Luna.Edge as Edge
 import qualified Luna
+import qualified Luna.GraphSerialization as GS
 
 noEdges :: [DG.UEdge]
 noEdges = [] 
