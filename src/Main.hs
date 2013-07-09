@@ -13,22 +13,31 @@ import qualified Data.Graph.Inductive as DG
 
 import qualified Luna.DefManager as DefManager
 import qualified Luna.Edge as Edge
+import qualified Luna.Graph as Graph
 import qualified Luna
+
+import qualified Luna.DefManager.DefTree as DefTree
+import qualified Luna.NodeDef as NodeDef
+
+import Text.Show.Pretty
+import Text.Groom
 
 noEdges :: [DG.UEdge]
 noEdges = [] 
 
 main :: IO ()
 main = do
-	print $ example_1
-	--print $ runState graphManip DG.empty
+	let
+		d  = DefTree.insert ["std","math"] (Luna.Package $ NodeDef.NodeDef "std" Graph.empty NodeDef.noPorts NodeDef.noPorts) $ 
+			 DefTree.insert ["std"] (Luna.Package $ NodeDef.NodeDef "std" Graph.empty NodeDef.noPorts NodeDef.noPorts) $
+			 DefTree.empty
+	print d
 	return ()
 
 
 example_1 :: Luna.Graph
 example_1 = let
 	manager = DefManager.empty
-	manager' = DefManager.insert "ala" (Luna.Function $ Luna.NodeDef "f" g3 [] []) manager
 
 	g :: Luna.Graph
 	g = DG.empty

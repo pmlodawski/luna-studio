@@ -9,10 +9,20 @@ module Luna.NodeType(
 NodeType(..)
 ) where
 
-import qualified Luna.NodeDef as NodeDef
+import Luna.NodeDef (NodeDef)
+import qualified Luna.Graph as Graph
 
-data NodeType = Function NodeDef.NodeDef 
-	| Package NodeDef.NodeDef 
-	| Class NodeDef.NodeDef 
-	| Interface NodeDef.NodeDef
+data NodeType = Function NodeDef 
+	| Package NodeDef 
+	| Class NodeDef 
+	| Interface NodeDef
 	deriving (Show)
+
+--class NodeTypeC a where
+--	test :: a -> Bool
+
+--instance NodeTypeC NodeType where
+--	test _ = False
+
+-- empty = a $ \name = NodeDef name Graph.empty [] []
+

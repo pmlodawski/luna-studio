@@ -7,19 +7,24 @@
 
 module Luna.DefManager(
 empty,
-insert
+--insert
 ) where
 
 import qualified Data.Map as Map
-import qualified Luna.NodeType as NodeType
+import Luna.NodeType (NodeType)
+import qualified Luna.DefManager.DefTree as DefTree
 
 data DefManager = DefManager{
-	map' :: Map.Map String NodeType.NodeType
+	defTree :: DefTree.DefTree
 } deriving (Show)
 
 empty :: DefManager
-empty = DefManager Map.empty
+empty = DefManager DefTree.empty
 
-insert :: String -> NodeType.NodeType -> DefManager -> DefManager
-insert k v manager =
-	manager {map' = Map.insert k v $ map' manager }
+--insert :: TypePath -> NodeType -> DefManager -> DefManager
+--insert typePath nodeType defManager = DefTree.insert typePath nodeType $defTree defManager
+
+
+--insert :: String -> NodeType.NodeType -> DefManager -> DefManager
+--insert k v manager =
+--	manager {map' = Map.insert k v $ map' manager }

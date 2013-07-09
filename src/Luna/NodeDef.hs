@@ -6,7 +6,8 @@
 ---------------------------------------------------------------------------
 
 module Luna.NodeDef(
-NodeDef(..)
+NodeDef(..),
+noPorts
 ) where
 
 import qualified Data.Graph.Inductive as DG
@@ -15,9 +16,11 @@ import qualified Luna.Edge as Edge
 
 type Graph = DG.Gr Node.Node Edge.Edge
 
+noPorts = []
+
 data NodeDef = NodeDef {
-	name :: String,
-	graph :: Graph,
-	inputs :: [String],
+	name 	:: String,
+	graph 	:: Graph,
+	inputs 	:: [String],
 	outputs :: [String]
 } deriving (Show)
