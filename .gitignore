@@ -7,3 +7,7 @@ cabal-dev
 .virthualenv
 *~
 
+
+#emacs backup files
+.\#*
+\#*\#

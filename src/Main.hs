@@ -15,6 +15,7 @@ import qualified Luna.DefManager as DefManager
 import qualified Luna.Edge as Edge
 import qualified Luna.Graph as Graph
 import qualified Luna
+import qualified Luna.GraphSerialization as GS
 
 import qualified Luna.DefManager.DefTree as DefTree
 import qualified Luna.NodeDef as NodeDef
