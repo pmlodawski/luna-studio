@@ -9,6 +9,13 @@ module Luna.Node(
 Node(..)
 ) where
 
-data Node = Node {
-	defName :: String
-} deriving (Show, Read)
+import qualified Luna.DefaultValue as DefaultValue
+import Data.GraphViz.Attributes (Labellable, toLabelValue)
+
+data Node = Node { defName :: String }
+		  | DefaultNode { defValue :: DefaultValue.DefaultValue }
+		  deriving (Show, Read, Ord, Eq)
+
+
+instance Labellable Node where
+	toLabelValue = toLabelValue . show

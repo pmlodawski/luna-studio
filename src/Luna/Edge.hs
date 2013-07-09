@@ -7,13 +7,22 @@
 
 module Luna.Edge(
 Edge(..),
-EdgeCls(..)
+EdgeCls(..),
+noEdges
 ) where
+
+import Data.GraphViz.Attributes (Labellable, toLabelValue)
 	
-data EdgeCls = Standard | Arrow deriving (Show, Read)
+data EdgeCls = Standard | Arrow deriving (Show, Read, Ord, Eq)
+
+noEdges :: [Edge]
+noEdges = [] 
 
 data Edge = Edge { 
 	inn :: String,
 	out :: String,
 	cls :: EdgeCls
-} deriving (Show, Read)
+} deriving (Show, Read, Ord, Eq)
+
+instance Labellable Edge where
+	toLabelValue = toLabelValue . show

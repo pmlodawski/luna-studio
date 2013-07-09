@@ -5,17 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Graph(
-Graph,
-empty
+module Luna.DefaultValue(
+DefaultValue(..)
 ) where
 
-import qualified Data.Graph.Inductive as DG
-import qualified Luna.Node as Node
-import qualified Luna.Edge as Edge
-
-type Graph = DG.Gr Node.Node Edge.Edge
-
-empty :: Graph
-empty = DG.empty 
-
+data DefaultValue = DefaultInt Int
+				  | DefaultString String 
+				  deriving (Show, Read, Ord, Eq)
