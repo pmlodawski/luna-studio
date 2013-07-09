@@ -16,6 +16,7 @@ import qualified Luna.Edge as Edge
 
 type Graph = DG.Gr Node.Node Edge.Edge
 
+noPorts :: [String]
 noPorts = []
 
 data NodeDef = NodeDef {
@@ -24,3 +25,4 @@ data NodeDef = NodeDef {
 	inputs 	:: [String],
 	outputs :: [String]
 } deriving (Show)
+

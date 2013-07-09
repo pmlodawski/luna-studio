@@ -20,8 +20,8 @@ import qualified Luna.GraphSerialization as GS
 import qualified Luna.DefManager.DefTree as DefTree
 import qualified Luna.NodeDef as NodeDef
 
-import Text.Show.Pretty
-import Text.Groom
+--import Text.Show.Pretty
+--import Text.Groom
 
 noEdges :: [DG.UEdge]
 noEdges = [] 
