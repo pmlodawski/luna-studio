@@ -25,6 +25,7 @@ insert (name_head:name_tail) newType (DefTree childmap) = DefTree newmap
 		case Map.lookup name_head childmap of 
 			Just (subtree, nodeType) -> 
 				Map.insert name_head (insert name_tail newType subtree, nodeType) childmap
+			Nothing -> error "Attempt to add node to the package that not exists!"
 	
 --Map.insert name_head (insert name_tail nType subtree, nType') map
 	--DefTree $ Map.insert x map

@@ -5,19 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Edge(
-Edge(..),
-EdgeCls(..),
-noEdges
+module Luna.DefaultValue(
+DefaultValue(..)
 ) where
-	
-data EdgeCls = Standard | Arrow deriving (Show, Read)
 
-noEdges :: [Edge]
-noEdges = [] 
-
-data Edge = Edge { 
-	inn :: String,
-	out :: String,
-	cls :: EdgeCls
-} deriving (Show, Read)
+data DefaultValue = DefaultInt Int
+				  | DefaultString String 
+				  deriving (Show, Read)

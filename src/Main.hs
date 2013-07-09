@@ -11,40 +11,77 @@ import qualified Data.Graph.Inductive as DG
 --import Data.Graph.Inductive.Monad
 --import Data.Graph.Inductive.Monad.IOArray
 
-import qualified Luna.DefManager as DefManager
-import qualified Luna.Edge as Edge
-import qualified Luna.Graph as Graph
 import qualified Luna
+import qualified Luna.Edge as Edge
+import qualified Luna.DefManager as DefManager
+import qualified Luna.DefManager.DefTree as DefTree
+import qualified Luna.Graph as Graph
+import qualified Luna.NodeDef as NodeDef
 import qualified Luna.GraphSerialization as GS
 
-import qualified Luna.DefManager.DefTree as DefTree
-import qualified Luna.NodeDef as NodeDef
+
+
 
 --import Text.Show.Pretty
 --import Text.Groom
 
-noEdges :: [DG.UEdge]
-noEdges = [] 
-
 main :: IO ()
-main = do
-	let
-		d  = DefTree.insert ["std","math"] (Luna.Package $ NodeDef.NodeDef "std" Graph.empty NodeDef.noPorts NodeDef.noPorts) $ 
-			 DefTree.insert ["std"] (Luna.Package $ NodeDef.NodeDef "std" Graph.empty NodeDef.noPorts NodeDef.noPorts) $
-			 DefTree.empty
-	print d
+main = do 
+	showGraph example_helloWorld
+	return ()
+	--let
+	--	d  = DefTree.insert ["std","math"] (Luna.Package $ NodeDef.NodeDef "std" Graph.empty NodeDef.noPorts NodeDef.noPorts) $ 
+	--		 DefTree.insert ["std"] (Luna.Package $ NodeDef.NodeDef "std" Graph.empty NodeDef.noPorts NodeDef.noPorts) $
+	--		 DefTree.empty
+	--print d
+	--return ()
+
+
+--example_1 :: Luna.Graph
+--example_1 = let
+--	manager = DefManager.empty
+
+--	g :: Luna.Graph
+--	g = DG.empty
+--	g2 = DG.insNodes (zip [1..] [Luna.Node "ala", Luna.Node "bob"]) g
+--	g3 = DG.insEdges [(1,2,Luna.Edge "a" "b" Edge.Standard)] g2
+--	in g3
+
+showGraph :: (Graph.Graph, DefManager.DefManager) -> IO()
+showGraph (graph, manager) = do 
+	print graph
+	print manager
 	return ()
 
 
-example_1 :: Luna.Graph
-example_1 = let
-	manager = DefManager.empty
+example_helloWorld = (graph, manager) where
+	manager = DefManager.insert ["std", "io", "Console", "print"]  (Luna.Class    $ NodeDef.NodeDef "Console" Graph.empty NodeDef.noPorts NodeDef.noPorts) 
+			$ DefManager.insert ["std", "io", "Console", "init"]   (Luna.Function $ NodeDef.NodeDef "init" 	  Graph.empty ["self"]    ["instance"])    
+			$ DefManager.insert ["std", "io", "Console"] 		   (Luna.Class    $ NodeDef.NodeDef "Console" Graph.empty NodeDef.noPorts NodeDef.noPorts) 
+			$ DefManager.insert ["std", "io"] 					   (Luna.Package  $ NodeDef.NodeDef "io"      Graph.empty NodeDef.noPorts NodeDef.noPorts) 
+			$ DefManager.insert ["std", "types", "String", "init"] (Luna.Function $ NodeDef.NodeDef "init"    Graph.empty ["self", "value"]    ["instance"])    
+			$ DefManager.insert ["std", "types", "String"] 		   (Luna.Class    $ NodeDef.NodeDef "String"  Graph.empty NodeDef.noPorts NodeDef.noPorts) 
+			$ DefManager.insert ["std", "types", "new"] 		   (Luna.Function $ NodeDef.NodeDef "new"     Graph.empty ["type"]        ["instance"])    
+			$ DefManager.insert ["std", "types", "type"] 		   (Luna.Function $ NodeDef.NodeDef "type"    Graph.empty ["name"]        ["type"])        
+			$ DefManager.insert ["std", "types"] 				   (Luna.Package  $ NodeDef.NodeDef "types"   Graph.empty NodeDef.noPorts NodeDef.noPorts) 
+			$ DefManager.insert ["std"] 						   (Luna.Package  $ NodeDef.NodeDef "std"     Graph.empty NodeDef.noPorts NodeDef.noPorts) 
+			$ DefManager.empty
 
-	g :: Luna.Graph
-	g = DG.empty
-	g2 = DG.insNodes (zip [1..] [Luna.Node "ala", Luna.Node "bob"]) g
-	g3 = DG.insEdges [(1,2,Luna.Edge "a" "b" Edge.Standard)] g2
-	in g3
+	graph   = DG.insEdges [ (7,5,Luna.Edge "value" "value" Edge.Standard)
+			  			  ]
+			$ DG.insNodes [ (0, Luna.Node "std.types.type"),
+							(1, Luna.Node "std.types.new"),
+							(2, Luna.Node "std.types.Console.init"),
+							(3, Luna.Node "std.types.type"),
+							(4, Luna.Node "std.types.new"),
+							(5, Luna.Node "std.types.String.init"),
+							(6, Luna.Node "std.types.Console.print"),
+							(7, Luna.DefaultNode $ Luna.DefaultString "hello world!")
+						  ]
+		  	$ Graph.empty
+
+
+
 
 --insN :: [Node] -> State Graph ()
 --insN n = State $ \s -> DG.insNodes n g

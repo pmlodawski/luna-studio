@@ -9,6 +9,8 @@ module Luna.Node(
 Node(..)
 ) where
 
-data Node = Node {
-	defName :: String
-} deriving (Show, Read)
+import qualified Luna.DefaultValue as DefaultValue
+
+data Node = Node { defName :: String }
+		  | DefaultNode { defValue :: DefaultValue.DefaultValue }
+		  deriving (Show, Read)
