@@ -29,10 +29,13 @@ noEdges = []
 main :: IO ()
 main = do
 	let
-		d  = DefTree.insert ["std","math"] (Luna.Package $ NodeDef.NodeDef "std" Graph.empty NodeDef.noPorts NodeDef.noPorts) $ 
+		d  = DefTree.insert ["std","math"] (Luna.Package $ NodeDef.NodeDef "math" Graph.empty NodeDef.noPorts NodeDef.noPorts) $ 
 			 DefTree.insert ["std"] (Luna.Package $ NodeDef.NodeDef "std" Graph.empty NodeDef.noPorts NodeDef.noPorts) $
 			 DefTree.empty
+		d2 = DefTree.delete ["std"] $ 
+			 DefTree.delete ["std", "math"] d
 	print d
+	print d2
 	return ()
 
 

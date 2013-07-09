@@ -2,6 +2,7 @@ module Luna.DefManager.DefTree(
 DefTree,
 TypePath,
 insert,
+delete,
 empty
 ) where
 
@@ -19,12 +20,20 @@ empty = DefTree Map.empty
 type TypePath = [String]
 
 insert :: TypePath -> NodeType -> DefTree -> DefTree
-insert (name_head:[]) newType (DefTree childmap) = DefTree $ Map.insert name_head (empty, newType) childmap
+insert (name_head:[])        newType (DefTree childmap) = DefTree $ Map.insert name_head (empty, newType) childmap
 insert (name_head:name_tail) newType (DefTree childmap) = DefTree newmap
 	where newmap = 
 		case Map.lookup name_head childmap of 
 			Just (subtree, nodeType) -> 
 				Map.insert name_head (insert name_tail newType subtree, nodeType) childmap
+
+delete :: TypePath -> DefTree -> DefTree
+delete (name_head:[])        (DefTree childmap) = DefTree $ Map.delete name_head childmap
+delete (name_head:name_tail) (DefTree childmap) = DefTree newmap
+	where newmap = 
+		case Map.lookup name_head childmap of 
+			Just (subtree, nodeType) -> 
+				Map.insert name_head (delete name_tail subtree, nodeType) childmap
 	
 --Map.insert name_head (insert name_tail nType subtree, nType') map
 	--DefTree $ Map.insert x map
