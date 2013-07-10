@@ -12,16 +12,33 @@ import qualified Luna.NodeDef as NodeDef
 
 sample_helloWorld :: (DG.Gr Luna.Node Edge.Edge, DefManager.DefManager)
 sample_helloWorld = (graph, manager) where
-	manager = DefManager.insert ["std", "io", "Console", "print"]  (Luna.Class    $ NodeDef.NodeDef "Console" Graph.empty ["self", "value"] ["console"]) 
-			$ DefManager.insert ["std", "io", "Console", "init"]   (Luna.Function $ NodeDef.NodeDef "init" 	  Graph.empty ["self"]   		["instance"])
-			$ DefManager.insert ["std", "io", "Console"] 		   (Luna.Class    $ NodeDef.NodeDef "Console" Graph.empty NodeDef.noPorts   NodeDef.noPorts) 
-			$ DefManager.insert ["std", "io"] 					   (Luna.Package  $ NodeDef.NodeDef "io"      Graph.empty NodeDef.noPorts   NodeDef.noPorts) 
-			$ DefManager.insert ["std", "types", "String", "init"] (Luna.Function $ NodeDef.NodeDef "init"    Graph.empty ["self", "value"] ["instance"])    
-			$ DefManager.insert ["std", "types", "String"] 		   (Luna.Class    $ NodeDef.NodeDef "String"  Graph.empty NodeDef.noPorts   NodeDef.noPorts) 
-			$ DefManager.insert ["std", "types", "new"] 		   (Luna.Function $ NodeDef.NodeDef "new"     Graph.empty ["type"]          ["instance"])    
-			$ DefManager.insert ["std", "types", "type"] 		   (Luna.Function $ NodeDef.NodeDef "type"    Graph.empty ["name"]          ["type"])        
-			$ DefManager.insert ["std", "types"] 				   (Luna.Package  $ NodeDef.NodeDef "types"   Graph.empty NodeDef.noPorts   NodeDef.noPorts) 
-			$ DefManager.insert ["std"] 						   (Luna.Package  $ NodeDef.NodeDef "std"     Graph.empty NodeDef.noPorts   NodeDef.noPorts) 
+
+	consoleGraph = DG.insNodes [(0, Luna.Node "std.io.Console.init"),
+								(1, Luna.Node "std.io.Console.print")]
+				 $ Graph.empty
+
+	stringGraph  = DG.insNodes [(0, Luna.Node "std.types.String.init")]
+				 $ Graph.empty	
+
+	typesGraph   = DG.insNodes [(0, Luna.Node "std.types.String"),
+								(1, Luna.Node "std.types.new"),
+								(2, Luna.Node "std.types.type")]
+				 $ Graph.empty
+
+	stdGraph     = DG.insNodes [(0, Luna.Node "std.io"),
+								(1, Luna.Node "std.types")]
+				 $ Graph.empty
+
+	manager = DefManager.insert ["std", "io", "Console", "print"]  (Luna.Class    $ NodeDef.NodeDef "Console" Graph.empty  ["self", "value"] ["console"]) 
+			$ DefManager.insert ["std", "io", "Console", "init"]   (Luna.Function $ NodeDef.NodeDef "init" 	  Graph.empty  ["self"]   		["instance"])
+			$ DefManager.insert ["std", "io", "Console"] 		   (Luna.Class    $ NodeDef.NodeDef "Console" consoleGraph NodeDef.noPorts   NodeDef.noPorts) 
+			$ DefManager.insert ["std", "io"] 					   (Luna.Package  $ NodeDef.NodeDef "io"      Graph.empty  NodeDef.noPorts   NodeDef.noPorts) 
+			$ DefManager.insert ["std", "types", "String", "init"] (Luna.Function $ NodeDef.NodeDef "init"    Graph.empty  ["self", "value"] ["instance"])    
+			$ DefManager.insert ["std", "types", "String"] 		   (Luna.Class    $ NodeDef.NodeDef "String"  stringGraph  NodeDef.noPorts   NodeDef.noPorts) 
+			$ DefManager.insert ["std", "types", "new"] 		   (Luna.Function $ NodeDef.NodeDef "new"     Graph.empty  ["type"]          ["instance"])    
+			$ DefManager.insert ["std", "types", "type"] 		   (Luna.Function $ NodeDef.NodeDef "type"    Graph.empty  ["name"]          ["type"])        
+			$ DefManager.insert ["std", "types"] 				   (Luna.Package  $ NodeDef.NodeDef "types"   typesGraph   NodeDef.noPorts   NodeDef.noPorts) 
+			$ DefManager.insert ["std"] 						   (Luna.Package  $ NodeDef.NodeDef "std"     stdGraph     NodeDef.noPorts   NodeDef.noPorts) 
 			$ DefManager.empty
 
 	graph   = DG.insEdges [ (0,1,Luna.Edge "value" "name" Edge.Standard),

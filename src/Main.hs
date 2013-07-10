@@ -30,23 +30,6 @@ main :: IO ()
 main = do 
 	showGraph Samples.sample_helloWorld
 	return ()
-	--let
-	--	d  = DefTree.insert ["std","math"] (Luna.Package $ NodeDef.NodeDef "std" Graph.empty NodeDef.noPorts NodeDef.noPorts) $ 
-	--		 DefTree.insert ["std"] (Luna.Package $ NodeDef.NodeDef "std" Graph.empty NodeDef.noPorts NodeDef.noPorts) $
-	--		 DefTree.empty
-	--print d
-	--return ()
-
-
---example_1 :: Luna.Graph
---example_1 = let
---	manager = DefManager.empty
-
---	g :: Luna.Graph
---	g = DG.empty
---	g2 = DG.insNodes (zip [1..] [Luna.Node "ala", Luna.Node "bob"]) g
---	g3 = DG.insEdges [(1,2,Luna.Edge "a" "b" Edge.Standard)] g2
---	in g3
 
 showGraph :: (Graph.Graph, DefManager.DefManager) -> IO()
 showGraph (graph, manager) = do 
@@ -55,21 +38,4 @@ showGraph (graph, manager) = do
 	print $ defaultVis graph -- prints dot graphviz representation
 	GV.preview graph -- shows interactive view while compiling from sublime
 	return ()
-
-
-
-
-
-
---insN :: [Node] -> State Graph ()
---insN n = State $ \s -> DG.insNodes n g
-
---insE :: [Edge] -> State Graph ()
---insE e = State $ \s -> DG.insEdges e g
-
---graphManip :: State Graph Graph
---graphManip = do
---	insN (zip [1..] [Node "ala", Node "bob"])
---	insE [(1,2,Edge "a" "b" Standard)]
-
 
