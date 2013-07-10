@@ -14,7 +14,6 @@ import qualified Data.Graph.Inductive as DG
 import qualified Luna
 import qualified Luna.Edge as Edge
 import qualified Luna.DefManager as DefManager
-import qualified Luna.DefManager.DefTree as DefTree
 import qualified Luna.Graph as Graph
 import qualified Luna.NodeDef as NodeDef
 import qualified Luna.GraphSerialization as GS
@@ -59,7 +58,7 @@ showGraph (graph, manager) = do
 	GV.preview graph -- shows interactive view while compiling from sublime
 	return ()
 
-
+example_helloWorld :: (DG.Gr Luna.Node Edge.Edge, DefManager.DefManager)
 example_helloWorld = (graph, manager) where
 	manager = DefManager.insert ["std", "io", "Console", "print"]  (Luna.Class    $ NodeDef.NodeDef "Console" Graph.empty ["self", "value"] ["console"]) 
 			$ DefManager.insert ["std", "io", "Console", "init"]   (Luna.Function $ NodeDef.NodeDef "init" 	  Graph.empty ["self"]   		["instance"])

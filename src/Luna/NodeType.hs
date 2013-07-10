@@ -10,7 +10,6 @@ NodeType(..)
 ) where
 
 import Luna.NodeDef (NodeDef)
-import qualified Luna.Graph as Graph
 
 data NodeType = Function NodeDef 
 	| Package NodeDef 

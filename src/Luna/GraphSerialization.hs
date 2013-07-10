@@ -4,7 +4,6 @@ import Control.Monad
 
 import qualified  Data.Graph.Inductive as DG
 
-import qualified Luna.Graph
 import qualified Luna.Node
 import qualified Luna.Edge
 import Data.Serialize

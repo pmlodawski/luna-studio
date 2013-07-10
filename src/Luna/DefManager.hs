@@ -11,7 +11,6 @@ empty,
 insert
 ) where
 
-import qualified Data.Map as Map
 import Luna.NodeType (NodeType)
 import qualified Luna.DefManager.DefTree as DefTree
 
