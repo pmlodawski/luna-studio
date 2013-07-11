@@ -1,26 +1,50 @@
---module System.Test(
---test
---) where
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2013
+---------------------------------------------------------------------------
+
+module System.UniPath(
+UniPath,
+empty,
+fromUnixString,
+toUnixString,
+fromList,
+append,
+prepend,
+toPathItem,
+normalise
+) where
 
 import Data.List.Split (splitOn)
+import Data.String.Utils (join)
 
-main = do 
-	let
-		p = Node "a" : Node "b" : empty
-	print p
-	return ()
-
-data PathItem = Node String | UP deriving (Eq,Ord,Show)  
+data PathItem = Node String | Root String | Up | Current| Empty deriving (Eq,Ord,Show)  
 
 type UniPath = [PathItem]
 
-empty = [] :: UniPath
+empty :: UniPath
+empty = []
 
-fromString :: String -> UniPath
-fromString spath = fromList $ splitOn "/" spath
+fromUnixString :: String -> UniPath
+fromUnixString []           = empty
+fromUnixString spath@(x:xs) = case x of
+	'/' -> fromList $ "/" : splitOn "/" xs
+	_   -> fromList $ splitOn "/" spath
+
+
+toUnixString :: UniPath -> String
+toUnixString path = join "/" $ fmap str path where
+	str item = case item of
+		Node txt -> txt
+		Root txt -> txt
+		Up       -> ".."
+		Current  -> "."
+		Empty    -> ""
 
 fromList :: [String] -> UniPath
-fromList list = empty -- TODO
+fromList path = foldr prepend empty path
 
 append :: String -> UniPath -> UniPath
 append snode path = path ++ [toPathItem snode]
@@ -30,5 +54,26 @@ prepend snode path = (toPathItem snode):path
 
 toPathItem :: String -> PathItem
 toPathItem snode = case snode of
-	".." -> UP
+	"/"  -> Root "/"
+	".." -> Up
+	"."  -> Current
+	""   -> Empty
 	txt  -> Node txt
+
+normalise :: UniPath -> UniPath
+normalise path = case reverse (normalise_r (reverse path) $ 0) of
+	[] -> [Current]
+	p  -> p
+
+normalise_r :: UniPath -> Int -> UniPath
+normalise_r path undo = case path of
+	[] -> replicate undo Up
+	x:xs -> case x of
+		root@(Root _) -> [root]
+		Up            -> normalise_r xs (undo+1)
+		Current       -> normalise_r xs undo
+		Empty         -> normalise_r xs undo
+		_             -> if undo>0 then
+			                 normalise_r xs (undo-1)
+			             else x:normalise_r xs (undo)
+		

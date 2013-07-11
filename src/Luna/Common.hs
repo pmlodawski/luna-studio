@@ -13,11 +13,9 @@ NodeDef (..),
 
 
 import qualified Data.Graph.Inductive as DG
-import qualified Luna.Edge 			  as Edge
 import           Luna.Edge 			    (Edge)
 import           Luna.DefaultValue 	    (DefaultValue)
 import           Data.Map               (Map)
-import qualified Data.Map             as Map
 import           Data.MultiMap          (MultiMap)
 import qualified Luna.Library         as Library
 
@@ -41,15 +39,12 @@ data Node = TypeNode    { name  :: String }
 		  deriving (Show)
 
 
-
+-- FIXME[wd] move the following instance to the right place
 instance (Show k, Show a) => Show (MultiMap k a) where
     show a = show a
 
 
 -----------------------------------------------------------------
-
-noPorts :: [String]
-noPorts = []
 
 data NodeDef = NodeDef {
 	inputs 	:: [String],

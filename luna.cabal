@@ -9,7 +9,9 @@ build-depends:  base,
 				mtl, 
 				cereal, 
 				graphviz, 
-				multimap
+				multimap,
+				split,
+				MissingH
 build-type:		Simple
 
 Executable:     luna

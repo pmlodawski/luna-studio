@@ -6,7 +6,8 @@
 ---------------------------------------------------------------------------
 
 module Luna.DefManager(
-DefManager
+DefManager(..),
+library
 ) where
 
 import qualified Luna.Node    as Node
