@@ -7,6 +7,7 @@ import Data.Word
 
 import qualified Luna.Edge as Edge
 import qualified Luna.Node as Node
+import qualified Luna.NodeDef as NodeDef
 
 instance Serialize Node.Node where
   put i = case i of 
@@ -26,11 +27,11 @@ instance Serialize Node.Node where
               4 -> do (name, def) <- get; return $ Node.PackageNode  name def
 
 
-instance Serialize Node.NodeDef where
-  put i = put (Node.inputs i, Node.outputs i, Node.imports i, Node.graph i, Node.libID i)
+instance Serialize NodeDef.NodeDef where
+  put i = put (NodeDef.inputs i, NodeDef.outputs i, NodeDef.imports i, NodeDef.graph i, NodeDef.libID i)
   get   = do
             (inputs, outputs, imports, graph, libID) <- get
-            return $ Node.NodeDef inputs outputs imports graph libID
+            return $ NodeDef.NodeDef inputs outputs imports graph libID
 
 instance Serialize Edge.EdgeCls where
   put i = put $ show i

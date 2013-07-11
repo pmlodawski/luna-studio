@@ -1,4 +1,5 @@
----------------------------------------------------------------------------
+--------------
+-------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
@@ -6,12 +7,12 @@
 ---------------------------------------------------------------------------
 
 module Luna.Graph(
-Graph,
-empty
+Graph
+--empty
 ) where
 
 import qualified Data.Graph.Inductive as DG
-import Luna.Node(Graph)
+import Luna.Common(Graph)
 
 empty :: Graph
 empty = DG.empty 
