@@ -14,7 +14,7 @@ import qualified Luna.Node as Node
 
 data DefManager = DefManager{
 	rootPackage :: Node.Node
-} deriving (Show)
+} --deriving (Show)
 
 --empty :: DefManager
 --empty = DefManager Node.Node 
