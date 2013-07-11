@@ -11,11 +11,9 @@ empty
 ) where
 
 import qualified Data.Graph.Inductive as DG
-import qualified Luna.Node as Node
-import qualified Luna.Edge as Edge
-
-type Graph = DG.Gr Node.Node Edge.Edge
+import Luna.Node(Graph)
 
 empty :: Graph
 empty = DG.empty 
+
 

@@ -1,27 +1,45 @@
 module Luna.GraphSerialization where
 
 import Control.Monad
-
 import qualified  Data.Graph.Inductive as DG
-
-import qualified Luna.Node
-import qualified Luna.Edge
 import Data.Serialize
+import Data.Word
 
+import qualified Luna.Edge as Edge
+import qualified Luna.Node as Node
 
-instance Serialize Luna.Node.Node where
-  put i = put $ Luna.Node.defName i
-  get   = liftM Luna.Node.Node (get :: Get String)
+instance Serialize Node.Node where
+  put i = case i of 
+            Node.TypeNode  name -> put ((0 :: Word8), name)
+            Node.CallNode  name -> put ((1 :: Word8), name)
+            Node.ClassNode    name def -> put ((2 :: Word8), name, def)
+            Node.FunctionNode name def -> put ((3 :: Word8), name, def)
+            Node.PackageNode  name def -> put ((4 :: Word8), name, def)
 
-instance Serialize Luna.Edge.EdgeCls where
+  get   = do 
+            t <- get :: Get Word8
+            case t of 
+              0 -> do name <- get; return $ Node.TypeNode name
+              1 -> do name <- get; return $ Node.CallNode name
+              2 -> do (name, def) <- get; return $ Node.ClassNode    name def
+              3 -> do (name, def) <- get; return $ Node.FunctionNode name def
+              4 -> do (name, def) <- get; return $ Node.PackageNode  name def
+
+instance Serialize Node.NodeDef where
+  put i = put (Node.inputs i, Node.outputs i, Node.imports i, Node.graph i, Node.libID i)
+  get   = do
+            (inputs, outputs, imports, graph, libID) <- get
+            return $ Node.NodeDef inputs outputs imports graph libID
+
+instance Serialize Edge.EdgeCls where
   put i = put $ show i
-  get   = liftM (read :: String -> Luna.Edge.EdgeCls) (get :: Get String)
+  get   = liftM (read :: String -> Edge.EdgeCls) (get :: Get String)
 
-instance Serialize Luna.Edge.Edge where
-  put i = put (Luna.Edge.inn i, Luna.Edge.out i, Luna.Edge.cls i)
+instance Serialize Edge.Edge where
+  put i = put (Edge.inn i, Edge.out i, Edge.cls i)
   get   = do
             (x,y,z) <- get
-            return $ Luna.Edge.Edge x y z
+            return $ Edge.Edge x y z
 
 instance (Serialize a, Serialize b) => Serialize (DG.Gr a b) where
   put i = put (DG.labNodes i, DG.labEdges i)

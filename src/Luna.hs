@@ -9,7 +9,6 @@ module Luna(
 DefaultValue(..),
 Node(..),
 Edge(..),
-NodeType(..),
 NodeDef(..),
 Graph
 ) where
@@ -18,7 +17,5 @@ Graph
 import Luna.DefaultValue
 import Luna.Edge
 import Luna.Graph
-import Luna.Node
-import Luna.NodeType
 import Luna.NodeDef
 
