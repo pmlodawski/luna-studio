@@ -10,19 +10,12 @@ NodeDef(..),
 noPorts
 ) where
 
-import qualified Data.Graph.Inductive as DG
-import qualified Luna.Node as Node
-import qualified Luna.Edge as Edge
-
-type Graph = DG.Gr Node.Node Edge.Edge
-
 noPorts :: [String]
 noPorts = []
 
 data NodeDef = NodeDef {
-	name 	:: String,
-	graph 	:: Graph,
 	inputs 	:: [String],
-	outputs :: [String]
-} deriving (Show)
+	outputs :: [String],
+	imports :: [String]
+} deriving (Show, Read, Ord, Eq)
 

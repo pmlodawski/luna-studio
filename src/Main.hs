@@ -28,7 +28,7 @@ defaultVis = GV.graphToDot GV.nonClusteredParams
 
 main :: IO ()
 main = do 
-	showGraph Samples.sample_helloWorld
+	--showGraph Samples.sample_helloWorld
 	return ()
 
 showGraph :: (Graph.Graph, DefManager.DefManager) -> IO()
