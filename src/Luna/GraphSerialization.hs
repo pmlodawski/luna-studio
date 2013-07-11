@@ -10,8 +10,8 @@ import qualified Luna.Node as Node
 
 instance Serialize Node.Node where
   put i = case i of 
-            Node.TypeNode  name -> put ((0 :: Word8), name)
-            Node.CallNode  name -> put ((1 :: Word8), name)
+            Node.TypeNode     name     -> put ((0 :: Word8), name)
+            Node.CallNode     name     -> put ((1 :: Word8), name)
             Node.ClassNode    name def -> put ((2 :: Word8), name, def)
             Node.FunctionNode name def -> put ((3 :: Word8), name, def)
             Node.PackageNode  name def -> put ((4 :: Word8), name, def)
@@ -19,11 +19,12 @@ instance Serialize Node.Node where
   get   = do 
             t <- get :: Get Word8
             case t of 
-              0 -> do name <- get; return $ Node.TypeNode name
-              1 -> do name <- get; return $ Node.CallNode name
+              0 -> do name        <- get; return $ Node.TypeNode name
+              1 -> do name        <- get; return $ Node.CallNode name
               2 -> do (name, def) <- get; return $ Node.ClassNode    name def
               3 -> do (name, def) <- get; return $ Node.FunctionNode name def
               4 -> do (name, def) <- get; return $ Node.PackageNode  name def
+
 
 instance Serialize Node.NodeDef where
   put i = put (Node.inputs i, Node.outputs i, Node.imports i, Node.graph i, Node.libID i)

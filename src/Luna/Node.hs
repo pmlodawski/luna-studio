@@ -6,8 +6,9 @@ Graph,
 
 import Data.GraphViz.Attributes (Labellable, toLabelValue)
 import qualified Data.Graph.Inductive as DG
-import qualified Luna.Edge as Edge
-import qualified Luna.DefaultValue as DefaultValue
+import qualified Luna.Edge 			  as Edge
+import qualified Luna.DefaultValue 	  as DefaultValue
+
 
 type Graph = DG.Gr Node Edge.Edge
 
@@ -22,7 +23,7 @@ data Node = TypeNode    { name :: String }
 instance Labellable Node where
 	toLabelValue = toLabelValue . show
 
-
+-----------------------------------------------------------------
 
 noPorts :: [String]
 noPorts = []
