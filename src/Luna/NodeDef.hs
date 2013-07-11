@@ -6,10 +6,12 @@
 ---------------------------------------------------------------------------
 
 module Luna.NodeDef(
-NodeDef(..)
+NodeDef(..),
+noPorts
 ) where
 
 
 import Luna.Common(NodeDef(..))
 
-
+noPorts :: [String]
+noPorts = []

@@ -10,10 +10,11 @@ Library(..),
 LibID
 ) where
 
-type Path  = [String]
+import System.UniPath (UniPath)
+
 type LibID = Int
 
 data Library =  Library{
-	path :: Path,
+	path :: UniPath,
 	id	 :: LibID
 } deriving (Show)

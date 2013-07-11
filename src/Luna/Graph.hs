@@ -7,11 +7,12 @@
 
 module Luna.Graph(
 Graph(..),
+empty,
 insNode,
 delNode,
 insEdge,
 delEdge,
-node,
+nodeById,
 typeByName,
 callByName,
 classByName,
@@ -32,11 +33,11 @@ empty :: Graph
 empty = Graph DG.empty Map.empty Map.empty Map.empty MultiMap.empty Map.empty
 
 insNode :: DG.LNode Node -> Graph -> Graph
-insNode lnode@(id, node) graph =
+insNode lnode@(id_, node) graph =
 	let 
 		newgraph = graph{repr=DG.insNode lnode $ repr graph}
-		updateNodeMap 	   = Map.insert      (Node.name node) id
-		updateNodeMultiMap = MultiMap.insert (Node.name node) id
+		updateNodeMap 	   = Map.insert      (Node.name node) id_
+		updateNodeMultiMap = MultiMap.insert (Node.name node) id_
 	in case node of
 		Node.TypeNode     _   -> newgraph{types  	  = updateNodeMap      $ types graph}
 		Node.CallNode     _   -> newgraph{calls  	  = updateNodeMap      $ calls graph}
@@ -46,10 +47,10 @@ insNode lnode@(id, node) graph =
 		_                     -> newgraph
 
 delNode :: DG.Node -> Graph -> Graph
-delNode id graph =
+delNode id_ graph =
 	let
-		newgraph = graph{repr=DG.delNode id $ repr graph}
-		(_, node)     = DG.labNode' $ DG.context (repr graph) id
+		newgraph = graph{repr=DG.delNode id_ $ repr graph}
+		(_, node)     = DG.labNode' $ DG.context (repr graph) id_
 		updateNodeMap 	   = Map.delete      (Node.name node)
 		updateNodeMultiMap = MultiMap.delete (Node.name node)
 	in case node of
@@ -66,26 +67,33 @@ insEdge ledge graph = graph{repr = DG.insEdge ledge $ repr graph}
 delEdge :: DG.Edge -> Graph -> Graph
 delEdge edge graph = graph{repr = DG.delEdge edge $ repr graph}
 
-node :: DG.Node -> Graph -> Node
-node id graph = let
-	(_, node) = DG.labNode' $ DG.context (repr graph) id
+nodeById :: DG.Node -> Graph -> Node
+nodeById id_ graph = let
+	(_, node) = DG.labNode' $ DG.context (repr graph) id_
 	in node
 
-
+nodeByName :: Ord k => (Graph -> Map.Map k DG.Node) -> k -> Graph -> Maybe Node
 nodeByName getter name graph = 
 	case Map.lookup name $ getter graph of
-	 	Just id -> Just(node id graph)
-	 	Nothing -> Nothing
+	 	Just id_ -> Just(nodeById id_ graph)
+	 	Nothing  -> Nothing
 
-nodesByName getter name graph = 
-	case MultiMap.lookup name $ getter graph of
-	 	ids@[id] -> [node id graph | id <- ids]
-	 	[] -> []
-
-
+nodesByName :: Ord k => (Graph -> MultiMap.MultiMap k DG.Node) -> k -> Graph -> [Node]
+nodesByName getter name graph = [nodeById elid graph | elid <- ids] where
+	ids = MultiMap.lookup name $ getter graph
+	
+typeByName :: String -> Graph -> Maybe Node
 typeByName 		= nodeByName  types
+
+callByName :: String -> Graph -> Maybe Node
 callByName 		= nodeByName  calls
+
+classByName :: String -> Graph -> Maybe Node
 classByName 	= nodeByName  classes
+
+packageByName :: String -> Graph -> Maybe Node
 packageByName 	= nodeByName  packages
+
+functionsByName :: String -> Graph -> [Node]
 functionsByName = nodesByName functions
 
