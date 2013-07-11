@@ -23,13 +23,15 @@ import qualified Data.Graph.Inductive as DG
 import qualified Data.Map as Map
 import qualified Data.MultiMap as MultiMap
 import qualified Luna.Node as Node
-import qualified Luna.Edge as Edge
+import           Luna.Node (Node)
+import           Luna.Edge (Edge)
 import Luna.Common(Graph(..))
+
 
 empty :: Graph
 empty = Graph DG.empty Map.empty Map.empty Map.empty MultiMap.empty Map.empty
 
-insNode :: DG.LNode Node.Node -> Graph -> Graph
+insNode :: DG.LNode Node -> Graph -> Graph
 insNode lnode@(id, node) graph =
 	let 
 		newgraph = graph{repr=DG.insNode lnode $ repr graph}
@@ -58,13 +60,13 @@ delNode id graph =
 		Node.PackageNode  _ _ -> newgraph{packages  = updateNodeMap      $ packages graph}
 		_                     -> newgraph
 
-insEdge :: DG.LEdge Edge.Edge-> Graph -> Graph
+insEdge :: DG.LEdge Edge-> Graph -> Graph
 insEdge ledge graph = graph{repr = DG.insEdge ledge $ repr graph}
 
 delEdge :: DG.Edge -> Graph -> Graph
 delEdge edge graph = graph{repr = DG.delEdge edge $ repr graph}
 
-node :: DG.Node -> Graph -> Node.Node
+node :: DG.Node -> Graph -> Node
 node id graph = let
 	(_, node) = DG.labNode' $ DG.context (repr graph) id
 	in node
