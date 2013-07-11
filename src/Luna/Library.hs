@@ -5,13 +5,15 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Node(
-Node(..)
+module Luna.Library(
+Library(..),
+LibID
 ) where
 
+type Path  = [String]
+type LibID = Int
 
-import Luna.Common(Node(..))
-import Data.GraphViz.Attributes (Labellable, toLabelValue)
-
-instance Labellable Node where
-	toLabelValue = toLabelValue . show
+data Library =  Library{
+	path :: Path,
+	id	 :: LibID
+} deriving (Show)

@@ -3,7 +3,13 @@ Version:        0.1
 License-file:   LICENSE
 Author:			Flowbox <contact@flowbox.io>
 Maintainer:		Flowbox <contact@flowbox.io>
-build-depends:  base, fgl, containers, mtl, cereal, graphviz
+build-depends:  base, 
+				fgl, 
+				containers, 
+				mtl, 
+				cereal, 
+				graphviz, 
+				multimap
 build-type:		Simple
 
 Executable:     luna

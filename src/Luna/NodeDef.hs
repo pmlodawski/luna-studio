@@ -5,13 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Node(
-Node(..)
+module Luna.NodeDef(
+NodeDef(..)
 ) where
 
 
-import Luna.Common(Node(..))
-import Data.GraphViz.Attributes (Labellable, toLabelValue)
+import Luna.Common(NodeDef(..))
 
-instance Labellable Node where
-	toLabelValue = toLabelValue . show
+

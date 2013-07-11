@@ -10,12 +10,24 @@ DefManager
 --empty
 ) where
 
-import qualified Luna.Node as Node
+import qualified Luna.Node    as Node
+import           Luna.Node      (Node)
+import qualified Luna.NodeDef as NodeDef
+import qualified Data.Map     as Map
+import           Data.Map       (Map)
+import qualified Luna.Library as Library
+import           Luna.Library   (Library)
+
 
 data DefManager = DefManager{
-	rootPackage :: Node.Node
+	libraries :: Map Library.LibID Library,
+	defs      :: Node
 } deriving (Show)
 
---empty :: DefManager
---empty = DefManager Node.Node 
+
+
+library :: Node -> DefManager -> Maybe Library
+library node manager = Map.lookup (NodeDef.libID $ Node.def node) $ libraries manager
+
+--load :: 
 

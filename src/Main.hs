@@ -14,6 +14,7 @@ import qualified Data.Graph.Inductive as DG
 
 import qualified Luna.DefManager as DefManager
 import qualified Luna.Graph as Graph
+import qualified Luna.Node as Node
 import qualified Luna.GraphSerialization as GS
 import qualified Luna.Samples as Samples
 import qualified Data.GraphViz as GV
@@ -34,8 +35,8 @@ main = do
 showGraph :: (Graph.Graph, DefManager.DefManager) -> IO()
 showGraph (graph, manager) = do 
 	print graph
-	print manager
-	print $ defaultVis graph -- prints dot graphviz representation
-	GV.preview graph -- shows interactive view while compiling from sublime
-	return ()
+	--print manager
+	print $ defaultVis $ Graph.repr graph -- prints dot graphviz representation
+	GV.preview $ Graph.repr graph -- shows interactive view while compiling from sublime
+	--return ()
 
