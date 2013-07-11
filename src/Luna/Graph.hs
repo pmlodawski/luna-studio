@@ -7,7 +7,7 @@
 
 module Luna.Graph(
 Graph,
-Node,
+Node(..),
 empty
 ) where
 
