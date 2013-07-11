@@ -7,7 +7,6 @@ import qualified Data.Graph.Inductive as DG
 import qualified Luna.Edge as Edge
 import qualified Luna.DefManager as DefManager
 import qualified Luna.Graph as Graph
-import qualified Luna.NodeDef as NodeDef
 
 --sample_helloWorld :: (DG.Gr Luna.Node Edge.Edge, DefManager.DefManager)
 --sample_helloWorld = (graph, manager) where

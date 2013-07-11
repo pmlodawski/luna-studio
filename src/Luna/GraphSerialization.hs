@@ -5,32 +5,31 @@ import qualified  Data.Graph.Inductive as DG
 import Data.Serialize
 import Data.Word
 
-import qualified Luna.Graph as Graph
 import qualified Luna.Edge as Edge
-import qualified Luna.NodeDef as NodeDef
+import qualified Luna.Node as Node
 
-instance Serialize Graph.Node where
+instance Serialize Node.Node where
   put i = case i of 
-            Graph.TypeNode  name -> put ((0 :: Word8), name)
-            Graph.CallNode  name -> put ((1 :: Word8), name)
-            Graph.ClassNode    name graph def -> put ((2 :: Word8), name, graph, def)
-            Graph.FunctionNode name graph def -> put ((3 :: Word8), name, graph, def)
-            Graph.PackageNode  name graph def -> put ((4 :: Word8), name, graph, def)
+            Node.TypeNode  name -> put ((0 :: Word8), name)
+            Node.CallNode  name -> put ((1 :: Word8), name)
+            Node.ClassNode    name def -> put ((2 :: Word8), name, def)
+            Node.FunctionNode name def -> put ((3 :: Word8), name, def)
+            Node.PackageNode  name def -> put ((4 :: Word8), name, def)
 
   get   = do 
             t <- get :: Get Word8
             case t of 
-              0 -> do name <- get; return $ Graph.TypeNode name
-              1 -> do name <- get; return $ Graph.CallNode name
-              2 -> do (name, graph, def) <- get; return $ Graph.ClassNode    name graph def
-              3 -> do (name, graph, def) <- get; return $ Graph.FunctionNode name graph def
-              4 -> do (name, graph, def) <- get; return $ Graph.PackageNode  name graph def
+              0 -> do name <- get; return $ Node.TypeNode name
+              1 -> do name <- get; return $ Node.CallNode name
+              2 -> do (name, def) <- get; return $ Node.ClassNode    name def
+              3 -> do (name, def) <- get; return $ Node.FunctionNode name def
+              4 -> do (name, def) <- get; return $ Node.PackageNode  name def
 
-instance Serialize NodeDef.NodeDef where
-  put i = put (NodeDef.inputs i, NodeDef.outputs i, NodeDef.imports i)
+instance Serialize Node.NodeDef where
+  put i = put (Node.inputs i, Node.outputs i, Node.imports i, Node.graph i, Node.libID i)
   get   = do
-            (inputs, outputs, imports) <- get
-            return $ NodeDef.NodeDef inputs outputs imports
+            (inputs, outputs, imports, graph, libID) <- get
+            return $ Node.NodeDef inputs outputs imports graph libID
 
 instance Serialize Edge.EdgeCls where
   put i = put $ show i

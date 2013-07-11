@@ -9,4 +9,5 @@ build-type:		Simple
 Executable:     luna
 Hs-source-dirs: src
 GHC-Options:    -Wall
+extensions:     StandaloneDeriving, FlexibleContexts
 Main-Is:        Main.hs

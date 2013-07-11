@@ -10,12 +10,12 @@ DefManager
 --empty
 ) where
 
-import qualified Luna.Graph as Graph
+import qualified Luna.Node as Node
 
 data DefManager = DefManager{
-	rootPackage :: Graph.Node
+	rootPackage :: Node.Node
 } deriving (Show)
 
 --empty :: DefManager
---empty = DefManager Graph.Node 
+--empty = DefManager Node.Node 
 
