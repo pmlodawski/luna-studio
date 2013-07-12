@@ -82,9 +82,9 @@ instance Serialize Node where
   put i = case i of 
             TypeNode     name'      -> Serialize.put (0 :: Word8, name')
             CallNode     name'      -> Serialize.put (1 :: Word8, name')
-            ClassNode    name' def' -> Serialize.put (2 :: Word8, name', def')
-            FunctionNode name' def' -> Serialize.put (3 :: Word8, name', def')
-            PackageNode  name' def' -> Serialize.put (4 :: Word8, name', def')
+            ClassNode    name'      -> Serialize.put (2 :: Word8, name')
+            FunctionNode name'      -> Serialize.put (3 :: Word8, name')
+            PackageNode  name'      -> Serialize.put (4 :: Word8, name')
             DefaultNode  value'     -> Serialize.put (5 :: Word8, value')
 
   get   = do 
@@ -92,9 +92,9 @@ instance Serialize Node where
             case t of 
               0 -> do name'         <- Serialize.get; return $ TypeNode     name'
               1 -> do name'         <- Serialize.get; return $ CallNode     name'
-              2 -> do (name', def') <- Serialize.get; return $ ClassNode    name'  def'
-              3 -> do (name', def') <- Serialize.get; return $ FunctionNode name'  def'
-              4 -> do (name', def') <- Serialize.get; return $ PackageNode  name'  def'
+              2 -> do name'         <- Serialize.get; return $ ClassNode    name'  NotLoaded
+              3 -> do name'         <- Serialize.get; return $ FunctionNode name'  NotLoaded
+              4 -> do name'         <- Serialize.get; return $ PackageNode  name'  NotLoaded
               5 -> do value'        <- Serialize.get; return $ DefaultNode  value'
               _ -> error "Unknown Node Type (unserialize)"
 
