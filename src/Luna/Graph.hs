@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Luna.Graph(
 Graph(..),
