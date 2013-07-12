@@ -47,7 +47,7 @@ data Node = TypeNode    { name  :: String }
 
 -- FIXME[wd] move the following instance to the right place
 instance (Show k, Show a) => Show (MultiMap k a) where
-    show a = show a
+    show a = show $ MultiMap.toMap a
 
 
 -----------------------------------------------------------------

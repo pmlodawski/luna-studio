@@ -9,16 +9,16 @@
 module Luna.Graph(
 Graph(..),
 empty,
-insNode,
-delNode,
-insEdge,
-delEdge,
+
+insNode, insNodes,
+delNode, delNodes,
+insEdge, insEdges,
+delEdge, delEdges,
+
 nodeById,
-typeByName,
-callByName,
-classByName,
-packageByName,
-functionsByName
+
+typeByName, callByName, classByName, packageByName, functionsByName
+
 ) where
 
 
@@ -30,10 +30,15 @@ import qualified Luna.Node            as Node
 import           Luna.Node              (Node)
 import           Luna.Edge              (Edge)
 import           Luna.Common            (Graph(..))
+import           Data.List              (foldri)
 
 
 empty :: Graph
 empty = Graph DG.empty Map.empty Map.empty Map.empty MultiMap.empty Map.empty
+
+
+insNodes :: [DG.LNode Node] -> Graph -> Graph
+insNodes = foldri insNode
 
 insNode :: DG.LNode Node -> Graph -> Graph
 insNode lnode@(id_, node) graph =
@@ -48,6 +53,9 @@ insNode lnode@(id_, node) graph =
 		Node.FunctionNode _ _ -> newgraph{functions = updateNodeMultiMap $ functions graph}
 		Node.PackageNode  _ _ -> newgraph{packages  = updateNodeMap      $ packages graph}
 		_                     -> newgraph
+
+delNodes :: [DG.Node] -> Graph -> Graph
+delNodes = foldri delNode
 
 delNode :: DG.Node -> Graph -> Graph
 delNode id_ graph =
@@ -64,11 +72,20 @@ delNode id_ graph =
 		Node.PackageNode  _ _ -> newgraph{packages  = updateNodeMap      $ packages graph}
 		_                     -> newgraph
 
-insEdge :: DG.LEdge Edge-> Graph -> Graph
+
+insEdges :: [DG.LEdge Edge] -> Graph -> Graph
+insEdges = foldri insEdge 
+
+insEdge :: DG.LEdge Edge -> Graph -> Graph
 insEdge ledge graph = graph{repr = DG.insEdge ledge $ repr graph}
+
+
+delEdges :: [DG.Edge] -> Graph -> Graph
+delEdges = foldri delEdge 
 
 delEdge :: DG.Edge -> Graph -> Graph
 delEdge edge graph = graph{repr = DG.delEdge edge $ repr graph}
+
 
 nodeById :: DG.Node -> Graph -> Node
 nodeById id_ graph = let
