@@ -12,6 +12,9 @@ import qualified Data.Graph.Inductive as DG
 --import Data.Graph.Inductive.Monad.IOArray
 
 import qualified Luna.DefManager as DefManager
+import qualified Luna.Library as Library
+import qualified System.UniPath as Path
+
 import qualified Luna.Graph as Graph
 import qualified Luna.Samples as Samples
 import qualified Data.GraphViz as GV
@@ -25,14 +28,19 @@ defaultVis = GV.graphToDot GV.nonClusteredParams
 
 main :: IO ()
 main = do 
-	showGraph Samples.sample_helloWorld
+	let
+		lib = Library.Library $ Path.fromUnixString "/home/wdanilo/tmp/lunalib/std.node"
+		manager = DefManager.load lib
+			    $ DefManager.empty
+	print manager
+	-- showGraph Samples.sample_helloWorld
 	return ()
 
-showGraph :: (Graph.Graph, DefManager.DefManager) -> IO()
-showGraph (graph, manager) = do 
-	print graph
-	print manager
-	print $ defaultVis $ Graph.repr graph -- prints dot graphviz representation
-	GV.preview $ Graph.repr graph -- shows interactive view while compiling from sublime
-	--return ()
+--showGraph :: (Graph.Graph, DefManager.DefManager) -> IO()
+--showGraph (graph, manager) = do 
+--	print graph
+--	print manager
+--	print $ defaultVis $ Graph.repr graph -- prints dot graphviz representation
+--	GV.preview $ Graph.repr graph -- shows interactive view while compiling from sublime
+--	--return ()
 

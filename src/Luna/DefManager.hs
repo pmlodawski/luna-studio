@@ -8,7 +8,8 @@
 module Luna.DefManager(
 DefManager(..),
 empty,
-library
+library,
+load
 ) where
 
 import qualified Luna.Graph   as Graph
@@ -19,11 +20,12 @@ import qualified Luna.NodeDef as NodeDef
 import qualified Data.Map     as Map
 import           Data.Map       (Map)
 import qualified Luna.Library as Library
-import           Luna.Library   (Library)
+import           Luna.Library   (Library, LibID)
+
 
 
 data DefManager = DefManager{
-	libraries :: Map Library.LibID Library,
+	libraries :: Map LibID Library,
 	defs      :: Graph
 } deriving (Show)
 
@@ -33,5 +35,27 @@ empty = DefManager Map.empty Graph.empty
 library :: Node -> DefManager -> Maybe Library
 library node manager = Map.lookup (NodeDef.libID $ Node.def node) $ libraries manager
 
---load :: 
+newId :: DefManager -> LibID
+newId manager = case Map.keys $ libraries manager of
+	              []    -> 0
+	              list  -> 1 + maximum list
 
+load :: Library -> DefManager -> DefManager
+load library manager = manager{libraries = Map.insert (newId manager) library $ libraries manager}
+
+--import System.Directory.Tree
+--import qualified Data.Foldable as F
+--import qualified Data.Traversable as T
+
+--main = do
+--	dir <- readDirectoryWithL readFile "directory"
+--	let
+--		tree = dirTree dir
+--		a:xs = contents tree
+--		x = "oto plik:" ++ file a
+--		--all_files = collectfiles tree
+--		--all_filenames = collectnames2 all_files
+--	--print $ all_filenames
+--	print $ name a
+--	_ <- getLine
+--	print $ file a

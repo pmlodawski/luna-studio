@@ -14,7 +14,7 @@ NodeDef (..),
 
 
 import qualified Data.Graph.Inductive as DG
-import           Luna.Edge 			    (Edge)
+import           Luna.Edge 			        (Edge)
 import           Luna.DefaultValue 	    (DefaultValue)
 import           Data.Map               (Map)
 import qualified Data.MultiMap        as MultiMap
