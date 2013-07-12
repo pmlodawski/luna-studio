@@ -21,13 +21,15 @@ packageByName,
 functionsByName
 ) where
 
+
 import qualified Data.Graph.Inductive as DG
-import qualified Data.Map as Map
-import qualified Data.MultiMap as MultiMap
-import qualified Luna.Node as Node
-import           Luna.Node (Node)
-import           Luna.Edge (Edge)
-import Luna.Common(Graph(..))
+import qualified Data.Map             as Map
+import qualified Data.MultiMap        as MultiMap
+import           Data.MultiMap          (MultiMap)
+import qualified Luna.Node            as Node
+import           Luna.Node              (Node)
+import           Luna.Edge              (Edge)
+import           Luna.Common            (Graph(..))
 
 
 empty :: Graph
@@ -79,7 +81,7 @@ nodeByName getter name graph =
 	 	Just id_ -> Just(nodeById id_ graph)
 	 	Nothing  -> Nothing
 
-nodesByName :: Ord k => (Graph -> MultiMap.MultiMap k DG.Node) -> k -> Graph -> [Node]
+nodesByName :: Ord k => (Graph -> MultiMap k DG.Node) -> k -> Graph -> [Node]
 nodesByName getter name graph = [nodeById elid graph | elid <- ids] where
 	ids = MultiMap.lookup name $ getter graph
 	
@@ -97,4 +99,3 @@ packageByName 	= nodeByName  packages
 
 functionsByName :: String -> Graph -> [Node]
 functionsByName = nodesByName functions
-

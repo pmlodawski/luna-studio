@@ -10,7 +10,6 @@ module Luna.Node(
 Node(..)
 ) where
 
-
 import Luna.Common(Node(..))
 import Data.GraphViz.Attributes (Labellable, toLabelValue)
 
