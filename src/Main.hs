@@ -11,9 +11,11 @@ import qualified Data.Graph.Inductive as DG
 --import Data.Graph.Inductive.Monad
 --import Data.Graph.Inductive.Monad.IOArray
 
-import qualified Luna.DefManager as DefManager
+import           Luna.DefManager  (DefManager)
 import qualified Luna.Graph as Graph
 import           Luna.Graph   (Graph)
+import qualified Luna.Node as Node
+import           Luna.Node   (Node)
 import qualified Luna.NodeDef as NodeDef
 import qualified Luna.Samples as Samples
 import qualified Data.GraphViz as GV
@@ -28,15 +30,17 @@ defaultVis = GV.graphToDot GV.nonClusteredParams
 main :: IO ()
 main = do 
 	let 
-		(nodeDef, manager) = Samples.sample_helloWorld
+		(node, manager) = Samples.sample_helloWorld
+		nodeDef = Node.def node
 		graph = NodeDef.graph nodeDef
 	showGraph graph
-	showCode nodeDef manager
+	showCode node manager
 	return ()
 
-showCode nodeDef manager = putStrLn $ CG.generateCode nodeDef manager
+showCode :: Node -> DefManager -> IO ()
+showCode node manager = putStrLn $ CG.generateCode node manager
 
-showGraph :: Graph -> IO()
+showGraph :: Graph -> IO ()
 showGraph graph = do 
 	let 
 		graphrepr = Graph.repr graph

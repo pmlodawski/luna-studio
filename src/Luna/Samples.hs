@@ -18,13 +18,14 @@ import           Luna.Edge   (Edge(..))
 import qualified Luna.Graph as Graph
 import           Luna.Graph   (Graph)
 import qualified Luna.Node as Node
+import           Luna.Node   (Node)
 import qualified Luna.NodeDef as NodeDef
 import           Luna.NodeDef   (NodeDef(..))
 import           Luna.Library   (Library(..))
 import qualified System.UniPath as UniPath
 
 
-sample_helloWorld :: (NodeDef, DefManager)
+sample_helloWorld :: (Node, DefManager)
 sample_helloWorld = (workspace, manager) where
     
     stdlibKey    = 0
@@ -36,7 +37,7 @@ sample_helloWorld = (workspace, manager) where
     manager = DefManager librariesMap root_graph 
 
     root_graph = Graph.insNodes [(0, Node.PackageNode "std" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_graph      stdlibKey),
-                                 (1, Node.PackageNode "my"  $ workspace)]
+                                 (1, workspace)]
                $ Graph.empty
 
     -- std lib -------------------------------------------------------------------------------------------------------------------
@@ -68,7 +69,7 @@ sample_helloWorld = (workspace, manager) where
 
     -- user generated ------------------------------------------------------------------------------------------------------------
 
-    workspace = NodeDef NodeDef.noPorts NodeDef.noPorts workspaceImports workspaceGraph workspaceKey
+    workspace = Node.FunctionNode "myFun" $ NodeDef NodeDef.noPorts NodeDef.noPorts workspaceImports workspaceGraph workspaceKey
 
     workspaceImports = ["std.io.Console", 
                         "std.io.Console.init", 
