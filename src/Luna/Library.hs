@@ -10,7 +10,7 @@ Library(..),
 LibID
 ) where
 
-import System.UniPath (UniPath)
+import Luna.System.UniPath (UniPath)
 
 type LibID = Int
 

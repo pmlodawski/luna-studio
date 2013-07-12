@@ -8,10 +8,10 @@ build-depends:  base,
 				containers, 
 				mtl, 
 				cereal, 
-				graphviz, 
+				--graphviz, 
 				multimap,
-				split,
-				MissingH
+				split
+				--MissingH
 build-type:		Simple
 
 Executable:     luna

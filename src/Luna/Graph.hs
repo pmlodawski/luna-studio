@@ -30,7 +30,7 @@ import qualified Luna.Node            as Node
 import           Luna.Node              (Node)
 import           Luna.Edge              (Edge)
 import           Luna.Common            (Graph(..))
-import           Data.List              (foldri)
+import           Luna.Data.List         (foldri)
 
 
 empty :: Graph

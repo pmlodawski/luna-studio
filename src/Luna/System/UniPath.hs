@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module System.UniPath(
+module Luna.System.UniPath(
 UniPath,
 empty,
 fromUnixString,
@@ -18,7 +18,8 @@ normalise
 ) where
 
 import Data.List.Split (splitOn)
-import Data.String.Utils (join)
+--import Data.String.Utils (join)
+import Data.List(intersperse)
 
 data PathItem = Node String | Root String | Up | Current| Empty deriving (Eq,Ord,Show)  
 
@@ -26,6 +27,10 @@ type UniPath = [PathItem]
 
 empty :: UniPath
 empty = []
+
+
+join delim l = concat (intersperse delim l)
+
 
 fromUnixString :: String -> UniPath
 fromUnixString []           = empty
