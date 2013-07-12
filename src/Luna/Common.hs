@@ -16,6 +16,7 @@ import qualified Data.Graph.Inductive as DG
 import           Luna.Edge 			    (Edge)
 import           Luna.DefaultValue 	    (DefaultValue)
 import           Data.Map               (Map)
+import qualified Data.MultiMap        as MultiMap
 import           Data.MultiMap          (MultiMap)
 import qualified Luna.Library         as Library
 
@@ -41,7 +42,7 @@ data Node = TypeNode    { name  :: String }
 
 -- FIXME[wd] move the following instance to the right place
 instance (Show k, Show a) => Show (MultiMap k a) where
-    show a = show a
+    show a = show $ MultiMap.toMap a
 
 
 -----------------------------------------------------------------

@@ -58,7 +58,7 @@ instance Serialize EdgeCls where
   get   = liftM (read :: String -> EdgeCls) (get :: Get String)
 
 instance Serialize Edge where
-  put i = put (Edge.inn i, Edge.out i, Edge.cls i)
+  put i = put (Edge.source i, Edge.target i, Edge.cls i)
   get   = do
             (x,y,z) <- get
             return $ Edge x y z

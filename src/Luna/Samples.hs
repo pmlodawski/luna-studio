@@ -9,66 +9,80 @@ module Luna.Samples(
 sample_helloWorld
 ) where
 
-import qualified Data.Graph.Inductive as DG
+import qualified Data.Map     as Map
 
+import           Luna.DefManager   (DefManager(..))
+import qualified Luna.DefaultValue as DefaultValue
 import qualified Luna.Edge as Edge
-import           Luna.Edge   (Edge)
-import qualified Luna.DefManager as DefManager
-import           Luna.DefManager   (DefManager)
+import           Luna.Edge   (Edge(..))
 import qualified Luna.Graph as Graph
 import           Luna.Graph   (Graph)
+import qualified Luna.Node as Node
+import qualified Luna.NodeDef as NodeDef
+import           Luna.NodeDef   (NodeDef(..))
+import           Luna.Library   (Library(..))
+import qualified System.UniPath as UniPath
+
 
 sample_helloWorld :: (Graph, DefManager)
-sample_helloWorld = (graph, manager) where
-	graph = Graph.empty
-	manager = DefManager.empty
---	consoleGraph = DG.insNodes [(0, Luna.Node "std.io.Console.init"),
---								(1, Luna.Node "std.io.Console.print")]
---				 $ Graph.empty
+sample_helloWorld = (workspaceGraph, manager) where
+    
+    stdlibKey    = 0
+    workspaceKey = 1
 
---	stringGraph  = DG.insNodes [(0, Luna.Node "std.types.String.init")]
---				 $ Graph.empty	
+    librariesMap = Map.fromList [(stdlibKey,    Library $ UniPath.fromUnixString "stdlib"),
+                                 (workspaceKey, Library $ UniPath.fromUnixString "workspace")]
+    
+    manager = DefManager librariesMap root_graph 
 
---	typesGraph   = DG.insNodes [(0, Luna.Node "std.types.String"),
---								(1, Luna.Node "std.types.new"),
---								(2, Luna.Node "std.types.type")]
---				 $ Graph.empty
+    root_graph = Graph.insNodes [(0, Node.PackageNode "std" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_graph      stdlibKey),
+                                 (1, Node.PackageNode "my"  $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports workspaceGraph workspaceKey)]
+               $ Graph.empty
 
---	stdGraph     = DG.insNodes [(0, Luna.Node "std.io"),
---								(1, Luna.Node "std.types")]
---				 $ Graph.empty
+    std_graph
+     = Graph.insNodes [(0, Node.PackageNode "types" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_types_graph stdlibKey),
+                       (1, Node.PackageNode "io"    $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_io_graph    stdlibKey)]
+     $ Graph.empty
 
---	manager = DefManager.insert ["std", "io", "Console", "print"]  (Luna.Class    $ NodeDef.NodeDef "Console" Graph.empty  ["self", "value"] ["console"]) 
---			$ DefManager.insert ["std", "io", "Console", "init"]   (Luna.Function $ NodeDef.NodeDef "init" 	  Graph.empty  ["self"]   		["instance"])
---			$ DefManager.insert ["std", "io", "Console"] 		   (Luna.Class    $ NodeDef.NodeDef "Console" consoleGraph NodeDef.noPorts   NodeDef.noPorts) 
---			$ DefManager.insert ["std", "io"] 					   (Luna.Package  $ NodeDef.NodeDef "io"      Graph.empty  NodeDef.noPorts   NodeDef.noPorts) 
---			$ DefManager.insert ["std", "types", "String", "init"] (Luna.Function $ NodeDef.NodeDef "init"    Graph.empty  ["self", "value"] ["instance"])    
---			$ DefManager.insert ["std", "types", "String"] 		   (Luna.Class    $ NodeDef.NodeDef "String"  stringGraph  NodeDef.noPorts   NodeDef.noPorts) 
---			$ DefManager.insert ["std", "types", "new"] 		   (Luna.Function $ NodeDef.NodeDef "new"     Graph.empty  ["type"]          ["instance"])    
---			$ DefManager.insert ["std", "types", "type"] 		   (Luna.Function $ NodeDef.NodeDef "type"    Graph.empty  ["name"]          ["type"])        
---			$ DefManager.insert ["std", "types"] 				   (Luna.Package  $ NodeDef.NodeDef "types"   typesGraph   NodeDef.noPorts   NodeDef.noPorts) 
---			$ DefManager.insert ["std"] 						   (Luna.Package  $ NodeDef.NodeDef "std"     stdGraph     NodeDef.noPorts   NodeDef.noPorts) 
---			$ DefManager.empty
+    std_types_graph 
+     = Graph.insNodes [(0, Node.ClassNode    "String" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_types_String_graph stdlibKey),
+                       (1, Node.FunctionNode "new"    $ NodeDef ["type"]        ["instance"]    NodeDef.noImports Graph.empty            stdlibKey),
+                       (2, Node.FunctionNode "type"   $ NodeDef ["name"]        ["type"]        NodeDef.noImports Graph.empty            stdlibKey)]
+     $ Graph.empty
 
---	graph   = DG.insEdges [ (0,1,Luna.Edge "value" "name" Edge.Standard),
---							(1,2,Luna.Edge "type" "type" Edge.Standard),
---							(2,3,Luna.Edge "instance" "self" Edge.Standard),
---							(4,5,Luna.Edge "value" "name" Edge.Standard),
---							(5,6,Luna.Edge "type" "type" Edge.Standard),
---							(6,8,Luna.Edge "instance" "self" Edge.Standard),
---							(7,8,Luna.Edge "value" "value" Edge.Standard),
---							(3,9,Luna.Edge "instance" "self" Edge.Standard),
---							(8,9,Luna.Edge "instance" "value" Edge.Standard)
---			  			  ]
---			$ DG.insNodes [ (0, Luna.DefaultNode $ Luna.DefaultString "std.types.Console"),
---							(1, Luna.Node "std.types.type"),
---							(2, Luna.Node "std.types.new"),
---							(3, Luna.Node "std.types.Console.init"),
---							(4, Luna.DefaultNode $ Luna.DefaultString "std.types.String"),
---							(5, Luna.Node "std.types.type"),
---							(6, Luna.Node "std.types.new"),
---							(7, Luna.DefaultNode $ Luna.DefaultString "hello world!"),
---							(8, Luna.Node "std.types.String.init"),
---							(9, Luna.Node "std.types.Console.print")
---						  ]
---		  	$ Graph.empty
+    std_types_String_graph 
+     = Graph.insNode (0, Node.FunctionNode "init" $ NodeDef ["self", "value"] ["instance"] NodeDef.noImports Graph.empty stdlibKey)
+     $ Graph.empty
+
+    std_io_graph
+     = Graph.insNode (0, Node.ClassNode "Console" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_io_Console_graph stdlibKey)
+     $ Graph.empty
+
+    std_io_Console_graph 
+     = Graph.insNodes [(0, Node.FunctionNode "print" $ NodeDef ["self", "value"] ["console"] NodeDef.noImports Graph.empty stdlibKey),
+                       (1, Node.FunctionNode "init"  $ NodeDef ["self"]         ["instance"] NodeDef.noImports Graph.empty stdlibKey)]
+     $ Graph.empty
+
+    workspaceGraph
+     =  Graph.insEdges [(0, 1, Edge "value" "name" Edge.Standard),
+                        (1, 2, Edge "type" "type" Edge.Standard),
+                        (2, 3, Edge "instance" "self" Edge.Standard),
+                        (4, 5, Edge "value" "name" Edge.Standard),
+                        (5, 6, Edge "type" "type" Edge.Standard),
+                        (6, 8, Edge "instance" "self" Edge.Standard),
+                        (7, 8, Edge "value" "value" Edge.Standard),
+                        (3, 9, Edge "instance" "self" Edge.Standard),
+                        (8, 9, Edge "instance" "value" Edge.Standard)]
+
+     $ Graph.insNodes [(0, Node.DefaultNode $ DefaultValue.DefaultString "std.types.Console"),
+                       (1, Node.TypeNode "std.types.type"),
+                       (2, Node.CallNode "std.types.new"),
+                       (3, Node.CallNode "std.types.Console.init"),
+                       (4, Node.DefaultNode $ DefaultValue.DefaultString "std.types.String"),
+                       (5, Node.TypeNode "std.types.type"),
+                       (6, Node.CallNode "std.types.new"),
+                       (7, Node.DefaultNode $ DefaultValue.DefaultString "hello world!"),
+                       (8, Node.CallNode "std.types.String.init"),
+                       (9, Node.CallNode "std.types.Console.print")]
+     $ Graph.empty
+

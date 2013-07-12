@@ -19,8 +19,8 @@ noEdges :: [Edge]
 noEdges = [] 
 
 data Edge = Edge { 
-	inn :: String,
-	out :: String,
+	source :: String,
+	target :: String,
 	cls :: EdgeCls
 } deriving (Show, Read, Ord, Eq)
 

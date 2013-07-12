@@ -15,6 +15,5 @@ import System.UniPath (UniPath)
 type LibID = Int
 
 data Library =  Library{
-	path :: UniPath,
-	id	 :: LibID
+	path :: UniPath
 } deriving (Show)
