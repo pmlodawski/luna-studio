@@ -11,7 +11,6 @@ NodeDef(..),
 noPorts
 ) where
 
-
 import Luna.Common(NodeDef(..))
 
 noPorts :: [String]

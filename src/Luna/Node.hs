@@ -10,7 +10,7 @@ module Luna.Node(
 Node(..)
 ) where
 
-
+import Data.Word(Word8)
 import Luna.Common(Node(..))
 import Data.GraphViz.Attributes (Labellable, toLabelValue)
 
