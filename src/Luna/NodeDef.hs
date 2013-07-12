@@ -7,11 +7,15 @@
 
 module Luna.NodeDef(
 NodeDef(..),
+empty,
 noPorts
 ) where
 
+import           Luna.Common(NodeDef(..))
+import qualified Luna.Graph as Graph
 
-import Luna.Common(NodeDef(..))
+empty :: NodeDef
+empty = NodeDef noPorts noPorts [] Graph.empty 0 --FIXME[PM] defaultLibrary = ?
 
 noPorts :: [String]
 noPorts = []

@@ -7,6 +7,7 @@
 
 module Luna.DefManager(
 DefManager(..),
+empty,
 library
 ) where
 
@@ -24,7 +25,8 @@ data DefManager = DefManager{
 	defs      :: Node
 } deriving (Show)
 
-
+empty :: DefManager
+empty = DefManager Map.empty $ Node.PackageNode "." NodeDef.empty --FIXME[PM] defaultLibrary = ?
 
 library :: Node -> DefManager -> Maybe Library
 library node manager = Map.lookup (NodeDef.libID $ Node.def node) $ libraries manager

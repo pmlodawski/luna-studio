@@ -6,18 +6,22 @@
 ---------------------------------------------------------------------------
 
 module Luna.Samples(
---sample_helloWorld
+sample_helloWorld
 ) where
 
 import qualified Data.Graph.Inductive as DG
 
 import qualified Luna.Edge as Edge
+import           Luna.Edge   (Edge)
 import qualified Luna.DefManager as DefManager
+import           Luna.DefManager   (DefManager)
 import qualified Luna.Graph as Graph
+import           Luna.Graph   (Graph)
 
---sample_helloWorld :: (DG.Gr Luna.Node Edge.Edge, DefManager.DefManager)
---sample_helloWorld = (graph, manager) where
-
+sample_helloWorld :: (Graph, DefManager)
+sample_helloWorld = (graph, manager) where
+	graph = Graph.empty
+	manager = DefManager.empty
 --	consoleGraph = DG.insNodes [(0, Luna.Node "std.io.Console.init"),
 --								(1, Luna.Node "std.io.Console.print")]
 --				 $ Graph.empty
