@@ -8,6 +8,11 @@ cabal-dev
 *~
 
 
-#emacs backup files
+# emacs backup files
 .\#*
 \#*\#
+
+# eclipse files
+.dist-buildwrapper/
+.project
+.settings
