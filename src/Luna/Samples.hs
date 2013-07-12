@@ -24,8 +24,8 @@ import           Luna.Library   (Library(..))
 import qualified System.UniPath as UniPath
 
 
-sample_helloWorld :: (Graph, DefManager)
-sample_helloWorld = (workspaceGraph, manager) where
+sample_helloWorld :: (NodeDef, DefManager)
+sample_helloWorld = (workspace, manager) where
     
     stdlibKey    = 0
     workspaceKey = 1
@@ -36,8 +36,10 @@ sample_helloWorld = (workspaceGraph, manager) where
     manager = DefManager librariesMap root_graph 
 
     root_graph = Graph.insNodes [(0, Node.PackageNode "std" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_graph      stdlibKey),
-                                 (1, Node.PackageNode "my"  $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports workspaceGraph workspaceKey)]
+                                 (1, Node.PackageNode "my"  $ workspace)]
                $ Graph.empty
+
+    -- std lib -------------------------------------------------------------------------------------------------------------------
 
     std_graph
      = Graph.insNodes [(0, Node.PackageNode "types" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_types_graph stdlibKey),
@@ -63,6 +65,18 @@ sample_helloWorld = (workspaceGraph, manager) where
                        (1, Node.FunctionNode "init"  $ NodeDef ["self"]         ["instance"] NodeDef.noImports Graph.empty stdlibKey)]
      $ Graph.empty
 
+
+    -- user generated ------------------------------------------------------------------------------------------------------------
+
+    workspace = NodeDef NodeDef.noPorts NodeDef.noPorts workspaceImports workspaceGraph workspaceKey
+
+    workspaceImports = ["std.io.Console", 
+                        "std.io.Console.init", 
+                        "std.io.Console.print", 
+                        "std.types.type", 
+                        "std.types.new", 
+                        "std.types.String"]
+
     workspaceGraph
      =  Graph.insEdges [(0, 1, Edge "value" "name" Edge.Standard),
                         (1, 2, Edge "type" "type" Edge.Standard),
@@ -74,15 +88,15 @@ sample_helloWorld = (workspaceGraph, manager) where
                         (3, 9, Edge "instance" "self" Edge.Standard),
                         (8, 9, Edge "instance" "value" Edge.Standard)]
 
-     $ Graph.insNodes [(0, Node.DefaultNode $ DefaultValue.DefaultString "std.types.Console"),
+     $ Graph.insNodes [(0, Node.DefaultNode $ DefaultValue.DefaultString "std.io.Console"),
                        (1, Node.TypeNode "std.types.type"),
                        (2, Node.CallNode "std.types.new"),
-                       (3, Node.CallNode "std.types.Console.init"),
+                       (3, Node.CallNode "std.io.Console.init"),
                        (4, Node.DefaultNode $ DefaultValue.DefaultString "std.types.String"),
                        (5, Node.TypeNode "std.types.type"),
                        (6, Node.CallNode "std.types.new"),
                        (7, Node.DefaultNode $ DefaultValue.DefaultString "hello world!"),
                        (8, Node.CallNode "std.types.String.init"),
-                       (9, Node.CallNode "std.types.Console.print")]
+                       (9, Node.CallNode "std.io.Console.print")]
      $ Graph.empty
 

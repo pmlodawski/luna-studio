@@ -13,9 +13,11 @@ import qualified Data.Graph.Inductive as DG
 
 import qualified Luna.DefManager as DefManager
 import qualified Luna.Graph as Graph
+import           Luna.Graph   (Graph)
+import qualified Luna.NodeDef as NodeDef
 import qualified Luna.Samples as Samples
 import qualified Data.GraphViz as GV
-
+import qualified Luna.CodeGenerator as CG
 
 --import Text.Show.Pretty
 --import Text.Groom
@@ -25,14 +27,21 @@ defaultVis = GV.graphToDot GV.nonClusteredParams
 
 main :: IO ()
 main = do 
-	showGraph Samples.sample_helloWorld
+	let 
+		(nodeDef, manager) = Samples.sample_helloWorld
+		graph = NodeDef.graph nodeDef
+	showGraph graph
+	showCode nodeDef manager
 	return ()
 
-showGraph :: (Graph.Graph, DefManager.DefManager) -> IO()
-showGraph (graph, manager) = do 
-	print graph
-	print manager
-	print $ defaultVis $ Graph.repr graph -- prints dot graphviz representation
-	GV.preview $ Graph.repr graph -- shows interactive view while compiling from sublime
-	--return ()
+showCode nodeDef manager = putStrLn $ CG.generateCode nodeDef manager
+
+showGraph :: Graph -> IO()
+showGraph graph = do 
+	let 
+		graphrepr = Graph.repr graph
+	print $ defaultVis graphrepr  -- prints dot graphviz representation
+	GV.preview $ graphrepr-- shows interactive view while compiling from sublime
+
+	return ()
 

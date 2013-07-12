@@ -87,19 +87,19 @@ delEdge :: DG.Edge -> Graph -> Graph
 delEdge edge graph = graph{repr = DG.delEdge edge $ repr graph}
 
 
-nodeById :: DG.Node -> Graph -> Node
-nodeById id_ graph = let
+nodeById :: Graph -> DG.Node -> Node
+nodeById graph id_ = let
 	(_, node) = DG.labNode' $ DG.context (repr graph) id_
 	in node
 
 nodeByName :: Ord k => (Graph -> Map.Map k DG.Node) -> k -> Graph -> Maybe Node
 nodeByName getter name graph = 
 	case Map.lookup name $ getter graph of
-	 	Just id_ -> Just(nodeById id_ graph)
+	 	Just id_ -> Just(nodeById graph id_)
 	 	Nothing  -> Nothing
 
 nodesByName :: Ord k => (Graph -> MultiMap k DG.Node) -> k -> Graph -> [Node]
-nodesByName getter name graph = [nodeById elid graph | elid <- ids] where
+nodesByName getter name graph = [nodeById graph elid | elid <- ids] where
 	ids = MultiMap.lookup name $ getter graph
 	
 typeByName :: String -> Graph -> Maybe Node
