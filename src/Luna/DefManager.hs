@@ -11,6 +11,8 @@ empty,
 library
 ) where
 
+import qualified Luna.Graph   as Graph
+import           Luna.Graph     (Graph)
 import qualified Luna.Node    as Node
 import           Luna.Node      (Node)
 import qualified Luna.NodeDef as NodeDef
@@ -22,11 +24,11 @@ import           Luna.Library   (Library)
 
 data DefManager = DefManager{
 	libraries :: Map Library.LibID Library,
-	defs      :: Node
+	defs      :: Graph
 } deriving (Show)
 
 empty :: DefManager
-empty = DefManager Map.empty $ Node.PackageNode "." NodeDef.empty --FIXME[PM] defaultLibrary = ?
+empty = DefManager Map.empty Graph.empty
 
 library :: Node -> DefManager -> Maybe Library
 library node manager = Map.lookup (NodeDef.libID $ Node.def node) $ libraries manager
