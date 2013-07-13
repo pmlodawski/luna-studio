@@ -15,10 +15,10 @@ def main():
     from jester.config import base # needed
     jester.resolve()
 
-    # try:
-    jester.run()
-    # except Exception as e:
-    #     logger.error(str(e))
+    try:
+        jester.run()
+    except Exception as e:
+        logger.error(str(e))
 
 
 if __name__ == "__main__":
