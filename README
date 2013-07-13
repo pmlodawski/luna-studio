@@ -11,13 +11,15 @@
 
 To set up Luna Project do the following:
 1) Install required libraries:
-    a) ghc
-    b) haskell-platform
-    c) LLVM 3.3
-    d) graphviz (optional)
-    e) gitflow
-2) Configure project with $ cabal configure
-3) Build with $ cabal build
+    - ghc
+    - haste
+    - haskell-platform
+    - LLVM 3.3
+    - graphviz (optional)
+    - gitflow
+2) Configure project with $ jester configure (--target {native, js})
+3) Build with $ jester build
+4) Run with $ jester run
 
 The project uses gitflow for git management.
 Read the docs! http://danielkummer.github.io/git-flow-cheatsheet/
