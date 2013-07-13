@@ -28,23 +28,22 @@ scanner = re.Scanner([
     (r"\s+", None),
     ])
 
-class Parser:
-    def tokenize(self, s):
-        tokens, rest = scanner.scan(s)
-        if rest:
-            raise Exception ("Parser error. Could not parse:\n"+rest)
-        return tokens
+def tokenize(s):
+    tokens, rest = scanner.scan(s)
+    if rest:
+        raise Exception ("Parser error. Could not parse:\n"+rest)
+    return tokens
 
-    def parse(self, s):
-        tokens = self.tokenize(s)
-        section = []
-        out = {'__global__':section}
-        for token in tokens:
-            if token.type == tokcls.SECTION:
-                section = []
-                out[token.value] = section
-            elif token.type == tokcls.TXT:
-                section.append(token.value)
-            else:
-                pass
-        return out
+def parse(s):
+    tokens = tokenize(s)
+    section = []
+    out = {'__global__':section}
+    for token in tokens:
+        if token.type == tokcls.SECTION:
+            section = []
+            out[token.value] = section
+        elif token.type == tokcls.TXT:
+            section.append(token.value)
+        else:
+            pass
+    return out
