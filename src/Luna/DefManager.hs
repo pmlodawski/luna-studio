@@ -22,6 +22,14 @@ import           Data.Map       (Map)
 import qualified Luna.Library as Library
 import           Luna.Library   (Library, LibID)
 
+import qualified System.UniPath as UniPath
+import           System.UniPath   (UniPath)
+
+import System.Directory.Tree   as SDT
+import qualified Data.Foldable as F
+import qualified Data.Traversable as T
+
+import qualified Data.ByteString as BS
 
 
 data DefManager = DefManager{
@@ -40,8 +48,28 @@ newId manager = case Map.keys $ libraries manager of
 	              []    -> 0
 	              list  -> 1 + maximum list
 
-load :: Library -> DefManager -> DefManager
-load library manager = manager{libraries = Map.insert (newId manager) library $ libraries manager}
+isFile :: SDT.DirTree a -> Bool
+isFile SDT.Dir {}    = False
+isFile SDT.File  {}  = True
+isFile SDT.Failed {} = False
+
+collectFiles :: SDT.DirTree a -> [SDT.DirTree a]
+collectFiles (Dir _ contents') = filter isFile contents' 
+
+loadDirectory :: DirTree BS.ByteString -> DefManager -> IO DefManager
+loadDirectory tree manager = let
+                               processFile :: DefManager -> BS.ByteString -> DefManager
+                               processFile = undefined
+                               fileContents :: [BS.ByteString]
+                               fileContents = map file $ collectFiles tree
+                             in
+                               return $ foldl processFile manager fileContents
+
+load :: Library -> DefManager -> IO DefManager
+load library' manager = do
+                      dir <- readDirectoryWithL BS.readFile $ UniPath.toUnixString $ Library.path library'
+                      let mngr =  manager{libraries = Map.insert (newId manager) library' $ libraries manager}
+                      loadDirectory (SDT.dirTree dir) mngr
 
 --import System.Directory.Tree
 --import qualified Data.Foldable as F
