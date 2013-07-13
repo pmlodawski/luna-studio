@@ -10,7 +10,7 @@ module Luna.Graph(
 Graph(..),
 empty,
 
-insNode, insNodes,
+insNode, insNodes, insFreshNode,
 delNode, delNodes,
 insEdge, insEdges,
 delEdge, delEdges,
@@ -30,7 +30,7 @@ import qualified Luna.Node            as Node
 import           Luna.Node              (Node)
 import           Luna.Edge              (Edge)
 import           Luna.Common            (Graph(..))
-import           Data.List              (foldri)
+import           Luna.List              (foldri)
 
 
 empty :: Graph
@@ -53,6 +53,15 @@ insNode lnode@(id_, node) graph =
 		Node.FunctionNode _ _ -> newgraph{functions = updateNodeMultiMap $ functions graph}
 		Node.PackageNode  _ _ -> newgraph{packages  = updateNodeMap      $ packages graph}
 		_                     -> newgraph
+
+freshNodeID :: Graph -> Int
+freshNodeID gr = case DG.nodes $ repr gr of
+                   []       -> 0
+                   nodeList -> 1 + maximum nodeList
+
+insFreshNode :: Node -> Graph -> Graph
+insFreshNode node gr = insNode ((freshNodeID gr), node) gr 
+
 
 delNodes :: [DG.Node] -> Graph -> Graph
 delNodes = foldri delNode

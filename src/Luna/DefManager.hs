@@ -26,11 +26,10 @@ import qualified System.UniPath as UniPath
 import           System.UniPath   (UniPath)
 
 import System.Directory.Tree   as SDT
-import qualified Data.Foldable as F
-import qualified Data.Traversable as T
 
 import qualified Data.ByteString as BS
-
+import qualified Data.Serialize as DS
+import System.IO.Unsafe(unsafeInterleaveIO)
 
 data DefManager = DefManager{
 	libraries :: Map LibID Library,
@@ -53,23 +52,25 @@ isFile SDT.Dir {}    = False
 isFile SDT.File  {}  = True
 isFile SDT.Failed {} = False
 
-collectFiles :: SDT.DirTree a -> [SDT.DirTree a]
-collectFiles (Dir _ contents') = filter isFile contents' 
+lazyReadFile :: UniPath -> IO BS.ByteString
+lazyReadFile path = unsafeInterleaveIO $ BS.readFile $ UniPath.toUnixString path
 
-loadDirectory :: DirTree BS.ByteString -> DefManager -> IO DefManager
-loadDirectory tree manager = let
-                               processFile :: DefManager -> BS.ByteString -> DefManager
-                               processFile = undefined
-                               fileContents :: [BS.ByteString]
-                               fileContents = map file $ collectFiles tree
-                             in
-                               return $ foldl processFile manager fileContents
+
+processFile :: DefManager -> String -> BS.ByteString -> DefManager
+processFile mngr name' contents' = let
+                           ndef ::Either String NodeDef.NodeDef
+                           ndef = DS.decode contents'
+                        in
+                           case ndef of
+                             Left _ -> mngr
+                             Right def -> mngr{defs = Graph.insFreshNode ( Node.PackageNode name' def) $ defs mngr}
+                                 
 
 load :: Library -> DefManager -> IO DefManager
 load library' manager = do
-                      dir <- readDirectoryWithL BS.readFile $ UniPath.toUnixString $ Library.path library'
+                      dir <-lazyReadFile $ Library.path library'
                       let mngr =  manager{libraries = Map.insert (newId manager) library' $ libraries manager}
-                      loadDirectory (SDT.dirTree dir) mngr
+                      return $ processFile mngr (UniPath.fileName $ Library.path library') dir 
 
 --import System.Directory.Tree
 --import qualified Data.Foldable as F
