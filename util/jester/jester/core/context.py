@@ -5,6 +5,7 @@
 ## Flowbox Team <contact@flowbox.io>, 2013
 ###########################################################################
 
-def enum(*sequential, **named):
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    return type('Enum', (), enums)
+class Context(object):
+    toolchain = None
+    config    = None
+    target    = None

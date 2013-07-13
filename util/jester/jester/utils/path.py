@@ -5,6 +5,12 @@
 ## Flowbox Team <contact@flowbox.io>, 2013
 ###########################################################################
 
-def enum(*sequential, **named):
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    return type('Enum', (), enums)
+import os
+import fnmatch
+
+def glob_recursive(pathlist, regex='*.*'):
+    paths = [os.path.join(dirpath, f)
+             for path in pathlist
+             for dirpath, dirnames, files in os.walk(path)
+             for f in fnmatch.filter(files, regex)]
+    return list(set([os.path.normpath(path) for path in paths]))

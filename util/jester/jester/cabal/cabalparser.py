@@ -1,3 +1,10 @@
+###########################################################################
+## Copyright (C) Flowbox, Inc # All Rights Reserved
+## Unauthorized copying of this file, via any medium is strictly prohibited
+## Proprietary and confidential
+## Flowbox Team <contact@flowbox.io>, 2013
+###########################################################################
+
 import re
 
 def enum(*sequential, **named):
@@ -14,7 +21,7 @@ class Token:
 
 tokcls = enum('SECTION', 'TXT', 'SEPARATOR', 'COMMENT')
 
-def s_section   (scanner, value): return Token(tokcls.SECTION, value[:-1].lstrip().rstrip())
+def s_section   (scanner, value): return Token(tokcls.SECTION, value[:-1].lstrip().rstrip().lower())
 def s_txt       (scanner, value): return Token(tokcls.TXT, value.lstrip().rstrip())
 def s_separator (scanner, value): return Token(tokcls.SEPARATOR, value)
 def s_comment   (scanner, value): return Token(tokcls.COMMENT, value)

@@ -1,115 +1,58 @@
+###########################################################################
+## Copyright (C) Flowbox, Inc # All Rights Reserved
+## Unauthorized copying of this file, via any medium is strictly prohibited
+## Proprietary and confidential
+## Flowbox Team <contact@flowbox.io>, 2013
+###########################################################################
+
 from collections import defaultdict
 import argparse
 from jester import logger as jlogger
 import sys
 import inspect
 import subprocess
-from jester.utils.sys import which
+
+from jester.config import default
+from core.config import PyConfigManager
 
 import logging
 logger = logging.getLogger(__name__)
-
-
-class Target(object):
-    def __init__(self, name, cls):
-        self.__name = name
-        self.__cls  = cls
-
-    def check(self):
-        logger.info("Checking for %s" % self.__cls.compiler)
-        binpath = which(self.__cls.compiler)
-        if not binpath:
-            logger.info("Not found.")
-        else:
-            logger.info("Found: %s" % binpath)
-        return binpath
-
-    def get_instance(self):
-        return self.__cls()
-
-
-class ToolChain(object):
-    def __init__(self, name, cls):
-        self.__name    = name
-        self.__cls     = cls
-        self.__targets = defaultdict(list)
-
-    def init(self):
-        logger.debug("Initialising toolchain '%s'" % self.__name)
-        self.__tool = self.__cls()
-        for name, func in inspect.getmembers(self.__tool, predicate=inspect.ismethod):
-            jester.parsers.add_parser(name).set_defaults(func=func)
-        logger.debug("Toolchain '%s' initialised." % self.__name)
-
-    def add_target(self, name, cls):
-        self.__targets[name].append(cls)
-
-    def targets(self):
-        return self.__targets.keys()
-
-    def target(self, name):
-        return self.__targets[name]
-
-    # def target(self, name):
-
-
-
-import types
-
-class PyConfig(object):
-    def __init__(self, path):
-        self.path = path
-        self.reset()
-
-    def reset(self):
-        self.__funcs = defaultdict(lambda: lambda(ctx): None)
-
-    def load(self):
-        with open(self.path, 'r') as file:
-            s = file.read()
-        exec s
-        self.reset()
-        for k,v in locals().iteritems():
-            if isinstance(v, types.FunctionType):
-                self.__funcs[k] = v
-
-    def func(self, name):
-        return self.__funcs[name]
-
-class Context(object):
-    toolchain = None
-    config    = None
-    target    = None
 
 class Jester(object):
     def __init__(self):
         self.__toolchains = defaultdict(lambda: None)
         self.__toolchain_actions = []
         self.__target_actions = []
-
         self.__parser = argparse.ArgumentParser(description='Compile multitarget Haskell code.')
-
+        self.cfg_manager = PyConfigManager('jesterconf.py')
+        self.cfg_manager.set(inspect.getsource(default))
 
     def init(self):
         self.__parser.add_argument('--verbose', '-v', action='store_true', help='Verbose mode.')
         self.__parser.add_argument('--target', '-t', nargs=1, default=[None], help='Destination target.')
+        self.__parser.add_argument('--generate-config', action='store_true', help='Generate default jester config.')
         args = self.__parser.parse_known_args()[0]
         jlogger.init(args.verbose)
         self.parsers     = self.__parser.add_subparsers()
+        self.parsers.add_parser('jester').set_defaults(func=lambda(ctx):None)
+        if args.generate_config:
+            self.cfg_manager.store()
 
     def run(self):
-        cfg = PyConfig('util/jester/jester/config/default.py')
-        cfg.load()
+        try:
+            self.cfg_manager.load_file()
+        except:
+            logger.warning("No project configuration found. Using default one. Use 'jester --generate-config' to generate default configuration.")
+        cfg = self.cfg_manager.load()
         ctx = Context()
         ctx.config = cfg
-
-        cfg.func('init')(ctx)
+        cfg.init(ctx)
 
         if not ctx.toolchain:
             logger.error("No toolchain defined.")
             return
         logger.debug("Searching for toolchain '%s' definition" % ctx.toolchain)
-        toolchain = jester.toolchain(ctx.toolchain)
+        toolchain = self.toolchain(ctx.toolchain)
         if not toolchain:
             logger.error("Toolchain '%s' definition not found." % ctx.toolchain)
             return
@@ -140,10 +83,8 @@ class Jester(object):
         if not binpath:
             raise Exception("No tools found")
 
-        # call toolchain function
+        logger.debug("Executing toolchain commands.")
         args.func(ctx)
-        # print args.func
-        # print args
 
 
     def toolchain(self, name):
@@ -158,6 +99,7 @@ class Jester(object):
 
     def register_toolchain(self, name):
         def dec(cls):
+            cls.name = name
             def action():
                 logger.debug("Registering toolchain '%s'" % name)
                 self.__toolchains[name] = ToolChain(name, cls)
@@ -166,12 +108,12 @@ class Jester(object):
 
     def register_target(self, toolchain, name):
         def register_dec(cls):
+            cls.name = name
             def action():
                 logger.debug("Registering target '%s'" % name)
                 self.__toolchains[toolchain].add_target(name, Target(name,cls))
             self.__target_actions.append(action)
         return register_dec
-
 
     def resolve(self):
         logger.debug('Registering toolchains')
@@ -182,6 +124,13 @@ class Jester(object):
         for action in self.__target_actions:
             action()
 
-
-
 jester = Jester()
+
+from core.context import Context
+from core.toolchain import ToolChain
+from core.target import Target
+
+
+
+
+
