@@ -15,7 +15,8 @@ append,
 prepend,
 toPathItem,
 normalise,
-fileName
+fileName,
+basePath
 ) where
 
 import Data.List.Split (splitOn)
@@ -84,3 +85,9 @@ fileName :: UniPath -> String
 fileName path = case last $ normalise path of
                   Node fname -> intercalate "." $ splitOn "." fname
                   _          -> error "something is wrong with the path " ++ toUnixString path
+
+--removes the name of a file, if present
+basePath :: UniPath -> UniPath
+basePath path = normalise $ case last $ normalise path of
+                              Node _ -> path ++ [Up]
+                              _      -> path
