@@ -5,21 +5,12 @@
 ## Flowbox Team <contact@flowbox.io>, 2013
 ###########################################################################
 
-from jester import jester
+import os
+import fnmatch
 
-import logging
-logger = logging.getLogger(__name__)
-
-def main():
-    jester.init()
-    from jester.config import base # needed
-    jester.resolve()
-
-    # try:
-    jester.run()
-    # except Exception as e:
-    #     logger.error(str(e))
-
-
-if __name__ == "__main__":
-    main()
+def glob_recursive(pathlist, regex='*.*'):
+    paths = [os.path.join(dirpath, f)
+             for path in pathlist
+             for dirpath, dirnames, files in os.walk(path)
+             for f in fnmatch.filter(files, regex)]
+    return list(set([os.path.normpath(path) for path in paths]))

@@ -18,7 +18,10 @@ cabal-dev
 .settings
 
 # haste compilation files
-.jsmod
+*.jsmod
 
 # python files
 *.py[cod]
+
+# jester
+.jester
