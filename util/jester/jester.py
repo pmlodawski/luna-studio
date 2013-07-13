@@ -6,14 +6,44 @@ import jester.cabal.configparser as cabalparser
 import os
 import fnmatch
 
-# def register_target(name):
-#     def register_dec(cls):
-#         print name, cls
-#     return register_dec
+from jester import logger
 
-# @register_target('js')
-# class JSTarget:
+from jester import jester
+
+jester.init()
+
+import logging
+logger = logging.getLogger('__name__')
+
+
+# @jester.register_target('ghc', 'js')
+# class HasteCompiler:
 #     compiler = 'haste-inst'
+#
+# @jester.register_target('ghc', 'native')
+# class CabalTarget:
+#     compiler = 'cabal'
+#
+#
+# @jester.register_toolchain('ghc')
+# class CabalToolchain:
+#     def __init__(self):
+#         parser_config = jester.parser.add_parser('configure', help='Configure project.')
+#         parser_config.add_argument('--target', '-t', nargs=1, choices=['native', 'js'], default=[None], help='Target compilation platform')
+#         parser_build     = jester.parser.add_parser('build', help='Build project.')
+#         parser_clean     = jester.parser.add_parser('clean', help='Clean project.')
+#         parser_config.set_defaults(func=self.configure)
+#         parser_build. set_defaults(func=self.build)
+#         parser_clean. set_defaults(func=self.clean)
+#
+#     def configure(self):
+#         pass
+#
+#     def build(self):
+#         pass
+#
+#     def clean(self):
+#         pass
     
 
 class ConfigObject(object):
@@ -35,15 +65,16 @@ class ConfigObject(object):
         with open (self.path, 'r') as file:
             self.deserialize(file.read())
 
+
 class UserConfig(ConfigObject):
     default_target = 'native'
     compilers      = {'native':'cabal', 'js':'haste-inst'}
+
 
 class ProjectConfig(ConfigObject):
     target    = None
     main      = None
     compiler  = None
-
 
 
 def glob_recursive(pathlist, regex='*.*'):
@@ -55,54 +86,54 @@ def glob_recursive(pathlist, regex='*.*'):
 
 
 def call(args):
-    print "Calling: '%s'."%(' '.join(args))
+    logger.debug("Calling: '%s'."%(' '.join(args)))
     return subprocess.call(args)
 
 def configure(args, subargs):
     # fix the argparser
     args.target = args.target[0]
 
-    print 'Searching for cabal configuration file'
+    logger.debug('Searching for cabal configuration file')
     cabalconf_path = find_file('.cabal')
     if not cabalconf_path:
-        print "[Error] No '.cabal' config file found."
+        logger.error("[Error] No '.cabal' config file found.")
         return
-    print "Found Cabal configuration file '%s'." % cabalconf_path
+    logger.debug("Found Cabal configuration file '%s'." % cabalconf_path)
 
-    print "Reading Cabal configuration file."
+    logger.debug("Reading Cabal configuration file.")
     with open (cabalconf_path, 'r') as file:
         cabalconf = file.read()
 
-    print "Parsing Cabal configuration file."
+    logger.debug("Parsing Cabal configuration file.")
     config = cabalparser.parse(cabalconf)
 
     main_name     = config['Main-Is'][0]
     src_paths     = config['Hs-source-dirs']
 
-    print "Searching for main '%s' files in src paths: %s" % (main_name, src_paths)
+    logger.debug("Searching for main '%s' files in src paths: %s" % (main_name, src_paths))
     mainpaths = glob_recursive(src_paths, main_name)
 
     mainpaths_len = len(mainpaths)
     if mainpaths_len == 1:
         mainpath = mainpaths[0]
-        print "Found main file: %s." % repr(mainpath)
+        logger.debug("Found main file: %s." % repr(mainpath))
     else:
-        print "[Error] Cannot identify main source file. Found %s candidates: %s" %(mainpaths_len, mainpaths)
+        logger.error("Cannot identify main source file. Found %s candidates: %s" %(mainpaths_len, mainpaths))
         return
 
     userconf = UserConfig('jester.config')
     try:    userconf.load()
-    except: print "No 'jester.config' file found. Using default configuration."
+    except: logger.warning("No 'jester.config' file found. Using default configuration.")
     projconf           = ProjectConfig('.jester')
     projconf.main      = mainpath
     projconf.target    = args.target if args.target else userconf.default_target
     projconf.compiler  = userconf.compilers[projconf.target]
-    print "Confiuration target '%s'." % projconf.target
+    logger.debug("Confiuration target '%s'." % projconf.target)
     projconf.store()
 
     ###############################
-    
-    print "Using compiler '%s'."%projconf.compiler
+
+    logger.debug("Using compiler '%s'."%projconf.compiler)
     
     call([projconf.compiler, 'configure']+subargs)
 
@@ -119,9 +150,9 @@ def run_compiler(args):
     projconf = ProjectConfig('.jester')
     try:    projconf.load()
     except:
-        print "Run the 'configure' command first"
+        logger.error("Run the 'configure' command first")
         return
-    print "Using compiler '%s'."%projconf.compiler
+    logger.debug("Using compiler '%s'."%projconf.compiler)
     status = call([projconf.compiler]+args)
     if status != 0:
         raise Exception ("Command error")
