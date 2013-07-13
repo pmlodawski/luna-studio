@@ -38,7 +38,10 @@ generateCode node manager = generateImports def
 
 generateImports :: NodeDef -> String
 generateImports nodeDef = foldr (++) "" imports where
-    imports = map (++"\n") $ map ("import "++ ) $ NodeDef.imports nodeDef
+    imports = map (\a -> "import " ++ a ++ "\n") $ NodeDef.imports nodeDef
+
+indent :: Int -> String
+indent num = replicate (num*4) ' '
 
 --- function generation ---------------------------------------------------------
 
@@ -53,14 +56,24 @@ generateFunctionHeader node = name ++ " " ++ arguments ++ " = \n" where
     arguments = "" -- TODO [PM] arguments lists
 
 generateFunctionBody :: NodeDef -> String
-generateFunctionBody nodeDef = show nodes ++ "\n" where
+generateFunctionBody nodeDef = foldr (++) "" nodesCodes where
     graph = NodeDef.graph nodeDef
     rgraph = Graph.repr graph
     vertices = DG.topsort rgraph
-    nodes = map (Graph.nodeById graph) vertices -- TODO [PM] finish implementation
+    nodes = map (Graph.lnodeById graph) vertices
+    nodesCodes = map generateNodeCodeLine nodes
+
+generateNodeCodeLine :: DG.LNode Node -> String
+generateNodeCodeLine lnode = (indent 1) ++ (generateNodeCode lnode) ++ "\n"
+
+generateNodeCode :: DG.LNode Node -> String -- TODO [PM] finish implementation
+generateNodeCode (nid, Node.TypeNode name) = name ++ " (" ++ show nid ++ ")"
+generateNodeCode (nid, Node.CallNode name) = name ++ " (" ++ show nid ++ ")"
+generateNodeCode (nid, Node.DefaultNode (DefaultValue.DefaultInt val)) = show val ++ " (" ++ show nid ++ ")"
+generateNodeCode (nid, Node.DefaultNode (DefaultValue.DefaultString val)) = val ++ " (" ++ show nid ++ ")"
 
 generateFunctionReturn :: NodeDef -> String
-generateFunctionReturn nodeDef = "    in ()\n" -- TODO[PM] result list
+generateFunctionReturn nodeDef = (indent 1) ++ "in ()\n" -- TODO[PM] result list
 
 
 

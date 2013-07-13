@@ -15,7 +15,7 @@ delNode, delNodes,
 insEdge, insEdges,
 delEdge, delEdges,
 
-nodeById,
+lnodeById, nodeById,
 
 typeByName, callByName, classByName, packageByName, functionsByName
 
@@ -86,11 +86,12 @@ delEdges = foldri delEdge
 delEdge :: DG.Edge -> Graph -> Graph
 delEdge edge graph = graph{repr = DG.delEdge edge $ repr graph}
 
+lnodeById :: Graph -> DG.Node -> DG.LNode Node
+lnodeById graph id_ = DG.labNode' $ DG.context (repr graph) id_
 
 nodeById :: Graph -> DG.Node -> Node
-nodeById graph id_ = let
-	(_, node) = DG.labNode' $ DG.context (repr graph) id_
-	in node
+nodeById graph id_ = node where
+	(_, node) = lnodeById graph id_
 
 nodeByName :: Ord k => (Graph -> Map.Map k DG.Node) -> k -> Graph -> Maybe Node
 nodeByName getter name graph = 
