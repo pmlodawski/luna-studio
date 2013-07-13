@@ -31,7 +31,7 @@ def postbuild(ctx):
             logger.error("Result js file '%s' does not exist." % main)
         binname   = ctx.executable + '.js'
         buildpath = os.path.join('dist', 'build', binname)
-        maindst = os.path.join(buildpath,binname)
+        maindst = os.path.join(buildpath, binname)
         try:
             os.makedirs(buildpath)
         except:
@@ -39,3 +39,13 @@ def postbuild(ctx):
         logger.debug("Moving result file to '%s'" % maindst)
         shutil.move(main, maindst)
     pass
+
+def run(ctx):
+    import os
+    from jester import jester
+    if ctx.target.name == 'js':
+        raise Exception("Not yet implemented for JavaScript")
+    distpath = os.path.join('dist', 'build', ctx.executable)
+    exefile = ctx.executable
+    exepath = os.path.join(distpath, exefile)
+    jester.call(exepath)

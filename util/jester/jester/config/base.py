@@ -92,3 +92,7 @@ class CabalToolchain:
         collect_cabal_info(ctx)
         ctx.config.clean(ctx)
         ctx.target.clean(ctx)
+
+    def run(self, ctx):
+        collect_cabal_info(ctx)
+        ctx.config.run(ctx)

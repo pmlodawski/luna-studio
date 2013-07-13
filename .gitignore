@@ -25,3 +25,6 @@ cabal-dev
 
 # jester
 .jester
+
+#IntelliJ IDEA
+.idea
