@@ -6,6 +6,7 @@
 ###########################################################################
 
 from jester import jester
+import errno, sys
 
 import logging
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ def main():
         jester.run()
     except Exception as e:
         logger.error(str(e))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
