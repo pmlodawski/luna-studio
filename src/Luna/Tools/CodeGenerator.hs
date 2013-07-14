@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.CodeGenerator(
+module Luna.Tools.CodeGenerator(
 generateCode
 ) where
 
