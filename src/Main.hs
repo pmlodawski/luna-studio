@@ -13,26 +13,26 @@ import qualified Data.Graph.Inductive as DG
 
 import qualified Luna.DefManager as DefManager
 import qualified Luna.Library as Library
-import qualified System.UniPath as Path
+import qualified Luna.System.UniPath as Path
 
 import qualified Luna.Graph as Graph
 import qualified Luna.Samples as Samples
-import qualified Data.GraphViz as GV
+--import qualified Data.GraphViz as GV
 
 
 --import Text.Show.Pretty
 --import Text.Groom
 
-defaultVis :: (DG.Graph gr) => gr nl el -> GV.DotGraph DG.Node
-defaultVis = GV.graphToDot GV.nonClusteredParams
+--defaultVis :: (DG.Graph gr) => gr nl el -> GV.DotGraph DG.Node
+--defaultVis = GV.graphToDot GV.nonClusteredParams
 
 main :: IO ()
 main = do 
 	let
-		lib = Library.Library $ Path.fromUnixString "/home/wdanilo/tmp/lunalib/std.node"
+		lib = Library.Library $ Path.fromUnixString "lunalib/std.node"
 		manager = DefManager.load lib
 			    $ DefManager.empty
-	print manager
+	--print manager
 	-- showGraph Samples.sample_helloWorld
 	return ()
 

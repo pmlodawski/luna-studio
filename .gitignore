@@ -16,3 +16,15 @@ cabal-dev
 .dist-buildwrapper/
 .project
 .settings
+
+# haste compilation files
+*.jsmod
+
+# python files
+*.py[cod]
+
+# jester
+.jester
+
+#IntelliJ IDEA
+.idea

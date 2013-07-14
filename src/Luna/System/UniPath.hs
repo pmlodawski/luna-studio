@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module System.UniPath(
+module Luna.System.UniPath(
 UniPath,
 empty,
 fromUnixString,
@@ -20,12 +20,17 @@ basePath
 ) where
 
 import Data.List.Split (splitOn)
-import Data.List (intercalate)
-import Data.String.Utils (join)
+import Data.List (intercalate, intersperse)
+-- import Data.String.Utils (join)
+
 
 data PathItem = Node String | Root String | Up | Current| Empty deriving (Eq,Ord,Show)  
 
 type UniPath = [PathItem]
+
+-- This function is defined vecause Data.StringUtils(join) cannot be used in JS right now: https://github.com/valderman/haste-compiler/issues/63
+join :: [a] -> [[a]] -> [a]
+join delim l = concat (intersperse delim l)
 
 empty :: UniPath
 empty = []
@@ -33,18 +38,18 @@ empty = []
 fromUnixString :: String -> UniPath
 fromUnixString []           = empty
 fromUnixString spath@(x:xs) = case x of
-	'/' -> fromList $ "/" : splitOn "/" xs
-	_   -> fromList $ splitOn "/" spath
+        '/' -> fromList $ "/" : splitOn "/" xs
+        _   -> fromList $ splitOn "/" spath
 
 
 toUnixString :: UniPath -> String
 toUnixString path = join "/" $ fmap str path where
-	str item = case item of
-		Node txt -> txt
-		Root txt -> txt
-		Up       -> ".."
-		Current  -> "."
-		Empty    -> ""
+        str item = case item of
+                Node txt -> txt
+                Root txt -> txt
+                Up       -> ".."
+                Current  -> "."
+                Empty    -> ""
 
 fromList :: [String] -> UniPath
 fromList path = foldr prepend empty path
@@ -57,29 +62,29 @@ prepend snode path = (toPathItem snode):path
 
 toPathItem :: String -> PathItem
 toPathItem snode = case snode of
-	"/"  -> Root "/"
-	".." -> Up
-	"."  -> Current
-	""   -> Empty
-	txt  -> Node txt
+        "/"  -> Root "/"
+        ".." -> Up
+        "."  -> Current
+        ""   -> Empty
+        txt  -> Node txt
 
 normalise :: UniPath -> UniPath
 normalise path = case reverse (normalise_r (reverse path) $ 0) of
-	[] -> [Current]
-	p  -> p
+        [] -> [Current]
+        p  -> p
 
 normalise_r :: UniPath -> Int -> UniPath
 normalise_r path undo = case path of
-	[] -> replicate undo Up
-	x:xs -> case x of
-		root@(Root _) -> [root]
-		Up            -> normalise_r xs (undo+1)
-		Current       -> normalise_r xs undo
-		Empty         -> normalise_r xs undo
-		_             -> if undo>0 then
-			                 normalise_r xs (undo-1)
-			             else x:normalise_r xs (undo)
-		
+        [] -> replicate undo Up
+        x:xs -> case x of
+                root@(Root _) -> [root]
+                Up            -> normalise_r xs (undo+1)
+                Current       -> normalise_r xs undo
+                Empty         -> normalise_r xs undo
+                _             -> if undo>0 then
+                                         normalise_r xs (undo-1)
+                                     else x:normalise_r xs (undo)
+                
 
 fileName :: UniPath -> String
 fileName path = case last $ normalise path of

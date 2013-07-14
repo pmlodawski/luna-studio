@@ -8,12 +8,12 @@ build-depends:  base,
 				containers, 
 				mtl, 
 				cereal, 
-				graphviz, 
+				--graphviz, 
 				multimap,
 				split,
-				MissingH,
-                directory-tree,
-                bytestring
+				--MissingH,
+				bytestring,
+				directory-tree
 build-type:		Simple
 
 Executable:     luna

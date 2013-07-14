@@ -5,15 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Library(
-Library(..),
-LibID
+module Luna.Data.List(
+foldri
 ) where
 
-import Luna.System.UniPath (UniPath)
-
-type LibID = Int
-
-data Library =  Library{
-	path :: UniPath
-} deriving (Show)
+foldri :: (a -> b -> b) -> [a] -> b -> b
+foldri a b c = foldr a c b

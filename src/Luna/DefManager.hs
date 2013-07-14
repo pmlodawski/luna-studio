@@ -12,27 +12,24 @@ library,
 load
 ) where
 
-import qualified Data.Graph.Inductive as DG
-import qualified Data.MultiMap as MultiMap
-import qualified Luna.Graph   as Graph
-import           Luna.Graph     (Graph)
-import qualified Luna.Node    as Node
-import           Luna.Node      (Node)
-import qualified Luna.NodeDef as NodeDef
-import qualified Data.Map     as Map
-import           Data.Map       (Map)
-import qualified Luna.Library as Library
-import           Luna.Library   (Library, LibID)
-
-import qualified System.UniPath as UniPath
-import           System.UniPath   (UniPath)
-
-import System.Directory.Tree   as SDT
-
-import qualified Data.ByteString as BS
-import qualified Data.Serialize as DS
-import System.IO.Unsafe(unsafeInterleaveIO)
-import Control.Monad(foldM)
+import qualified Data.Graph.Inductive  as DG
+import qualified Data.MultiMap         as MultiMap
+import qualified Luna.Graph            as Graph
+import           Luna.Graph              (Graph)
+import qualified Luna.Node             as Node
+import           Luna.Node               (Node)
+import qualified Luna.NodeDef          as NodeDef
+import qualified Data.Map              as Map
+import           Data.Map                (Map)
+import qualified Luna.Library          as Library
+import           Luna.Library            (Library, LibID)
+import qualified Luna.System.UniPath   as UniPath
+import           Luna.System.UniPath     (UniPath)
+--import           System.Directory.Tree as SDT
+import qualified Data.ByteString       as BS
+import qualified Data.Serialize        as DS
+import           System.IO.Unsafe        (unsafeInterleaveIO)
+import           Control.Monad           (foldM)
 
 data DefManager = DefManager{
 	libraries :: Map LibID Library,
@@ -50,10 +47,10 @@ newId manager = case Map.keys $ libraries manager of
 	              []    -> 0
 	              list  -> 1 + maximum list
 
-isFile :: SDT.DirTree a -> Bool
-isFile SDT.Dir {}    = False
-isFile SDT.File  {}  = True
-isFile SDT.Failed {} = False
+--isFile :: SDT.DirTree a -> Bool
+--isFile SDT.Dir {}    = False
+--isFile SDT.File  {}  = True
+--isFile SDT.Failed {} = False
 
 lazyReadFile :: UniPath -> IO BS.ByteString
 lazyReadFile path = unsafeInterleaveIO $ BS.readFile $ UniPath.toUnixString path
