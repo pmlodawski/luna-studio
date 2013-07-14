@@ -25,14 +25,16 @@ import qualified Luna.Samples as Samples
 
 main :: IO ()
 main = do 
-	showGraph Samples.sample_helloWorld
-	return ()
+    showGraph Samples.sample_helloWorld
+    return ()
 
 showGraph :: (Graph.Graph, DefManager.DefManager) -> IO()
 showGraph (graph, manager) = do 
-	print graph
-	print manager
-	--print $ defaultVis $ Graph.repr graph -- prints dot graphviz representation
-	--GV.preview $ Graph.repr graph -- shows interactive view while compiling from sublime
-	--return ()
+    print graph
+    print manager
+    print $ show $ DefManager.nodesByCName "std" manager
+    print $ show $ DefManager.nodesByCName "std.io.Console.print" manager
+    --print $ defaultVis $ Graph.repr graph -- prints dot graphviz representation
+    --GV.preview $ Graph.repr graph -- shows interactive view while compiling from sublime
+    --return ()
 
