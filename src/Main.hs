@@ -15,7 +15,7 @@ import qualified Luna.DefManager as DefManager
 import qualified Luna.Graph as Graph
 import qualified Luna.Samples as Samples
 --import qualified Data.GraphViz as GV
-
+import qualified Luna.Tools.TypeChecker as TC
 
 --import Text.Show.Pretty
 --import Text.Groom
@@ -32,8 +32,7 @@ showGraph :: (Graph.Graph, DefManager.DefManager) -> IO()
 showGraph (graph, manager) = do 
     print graph
     print manager
-    print $ show $ DefManager.nodesByCName "std" manager
-    print $ show $ DefManager.nodesByCName "std.io.Console.print" manager
+    print $ show $ TC.typeCheck graph manager
     --print $ defaultVis $ Graph.repr graph -- prints dot graphviz representation
     --GV.preview $ Graph.repr graph -- shows interactive view while compiling from sublime
     --return ()
