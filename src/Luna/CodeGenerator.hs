@@ -23,7 +23,6 @@ import           Luna.Node   (Node)
 import qualified Luna.NodeDef as NodeDef
 import           Luna.NodeDef   (NodeDef(..))
 import           Luna.Library   (Library(..))
-import qualified System.UniPath as UniPath
 
 
 generateCode :: Node -> DefManager -> String

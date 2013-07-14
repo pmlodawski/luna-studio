@@ -9,20 +9,21 @@ module Luna.Samples(
 sample_helloWorld
 ) where
 
-import qualified Data.Map     as Map
 
-import           Luna.DefManager   (DefManager(..))
-import qualified Luna.DefaultValue as DefaultValue
-import qualified Luna.Edge as Edge
-import           Luna.Edge   (Edge(..))
-import qualified Luna.Graph as Graph
-import           Luna.Graph   (Graph)
-import qualified Luna.Node as Node
-import           Luna.Node   (Node)
-import qualified Luna.NodeDef as NodeDef
-import           Luna.NodeDef   (NodeDef(..))
-import           Luna.Library   (Library(..))
-import qualified System.UniPath as UniPath
+import qualified Data.Map            as Map
+import           Luna.DefManager       (DefManager(..))
+import qualified Luna.DefaultValue   as DefaultValue
+import qualified Luna.Edge           as Edge
+import           Luna.Edge             (Edge(..))
+import qualified Luna.Graph          as Graph
+import           Luna.Graph            (Graph)
+import qualified Luna.Node           as Node
+import           Luna.Node             (Node)
+import qualified Luna.NodeDef        as NodeDef
+import           Luna.NodeDef          (NodeDef(..))
+import           Luna.Library          (Library(..))
+import qualified Luna.System.UniPath as UniPath
+
 
 
 sample_helloWorld :: (Node, DefManager)

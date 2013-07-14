@@ -15,7 +15,7 @@ import qualified Data.Serialize       as Serialize
 import           Data.Serialize         (Serialize)
 
 import Control.Monad(liftM)
-import Data.GraphViz.Attributes (Labellable, toLabelValue)
+--import Data.GraphViz.Attributes (Labellable, toLabelValue)
 	
 data EdgeCls = Standard | Arrow deriving (Show, Read, Ord, Eq)
 
@@ -27,9 +27,6 @@ data Edge = Edge {
 	target :: String,
 	cls :: EdgeCls
 } deriving (Show, Read, Ord, Eq)
-
-instance Labellable Edge where
-	toLabelValue = toLabelValue . show
 
 ------------------------- INSTANCES -------------------------
 
