@@ -10,19 +10,20 @@ generateCode
 ) where
 
 import qualified Data.Graph.Inductive as DG
-import qualified Data.Map   as Map
+import qualified Data.List            as List
+import qualified Data.Map             as Map
 
-import           Luna.DefManager   (DefManager(..))
-import qualified Luna.DefaultValue as DefaultValue
-import qualified Luna.Edge as Edge
-import           Luna.Edge   (Edge(..))
-import qualified Luna.Graph as Graph
-import           Luna.Graph   (Graph(..))
-import qualified Luna.Node as Node
-import           Luna.Node   (Node)
-import qualified Luna.NodeDef as NodeDef
-import           Luna.NodeDef   (NodeDef(..))
-import           Luna.Library   (Library(..))
+import           Luna.DefManager        (DefManager(..))
+import qualified Luna.DefaultValue    as DefaultValue
+import qualified Luna.Edge            as Edge
+import           Luna.Edge              (Edge(..))
+import qualified Luna.Graph           as Graph
+import           Luna.Graph             (Graph(..))
+import qualified Luna.Node            as Node
+import           Luna.Node              (Node)
+import qualified Luna.NodeDef         as NodeDef
+import           Luna.NodeDef           (NodeDef(..))
+-- import           Luna.Library           (Library(..))
 
 
 generateCode :: Node -> DefManager -> String
@@ -42,6 +43,9 @@ generateImports nodeDef = foldr (++) "" imports where
 indent :: Int -> String
 indent num = replicate (num*4) ' '
 
+comment :: String
+comment = "-- "
+
 --- function generation ---------------------------------------------------------
 
 generateFunction :: Node -> String
@@ -52,7 +56,7 @@ generateFunction node@(Node.FunctionNode name def) = generateFunctionHeader node
 generateFunctionHeader :: Node -> String
 generateFunctionHeader node = name ++ " " ++ arguments ++ " = \n" where
     name = Node.name node
-    arguments = "" -- TODO [PM] arguments lists
+    arguments = List.intercalate " " (NodeDef.inputs $ Node.def node)
 
 generateFunctionBody :: NodeDef -> String
 generateFunctionBody nodeDef = foldr (++) "" nodesCodes where
@@ -60,16 +64,20 @@ generateFunctionBody nodeDef = foldr (++) "" nodesCodes where
     rgraph = Graph.repr graph
     vertices = DG.topsort rgraph
     nodes = map (Graph.lnodeById graph) vertices
-    nodesCodes = map generateNodeCodeLine nodes
+    nodesCodes = map (generateNodeCodeLine graph) nodes
 
-generateNodeCodeLine :: DG.LNode Node -> String
-generateNodeCodeLine lnode = (indent 1) ++ (generateNodeCode lnode) ++ "\n"
+generateNodeCodeLine :: Graph -> DG.LNode Node -> String
+generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) ++ "\n"
 
-generateNodeCode :: DG.LNode Node -> String -- TODO [PM] finish implementation
-generateNodeCode (nid, Node.TypeNode name) = name ++ " (" ++ show nid ++ ")"
-generateNodeCode (nid, Node.CallNode name) = name ++ " (" ++ show nid ++ ")"
-generateNodeCode (nid, Node.DefaultNode (DefaultValue.DefaultInt val)) = show val ++ " (" ++ show nid ++ ")"
-generateNodeCode (nid, Node.DefaultNode (DefaultValue.DefaultString val)) = val ++ " (" ++ show nid ++ ")"
+generateNodeCode :: Graph -> DG.LNode Node -> String -- TODO [PM] finish implementation
+generateNodeCode graph (nid, Node.TypeNode name) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+generateNodeCode graph (nid, Node.CallNode name) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+generateNodeCode graph (nid, Node.DefaultNode (DefaultValue.DefaultInt val)) = comment ++ show val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+generateNodeCode graph (nid, Node.DefaultNode (DefaultValue.DefaultString val)) = comment ++ val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+
+generateNodeInputs :: Graph -> DG.Node -> String
+generateNodeInputs graph nid = inputs where
+    inputs = show $ DG.inn (Graph.repr graph) nid
 
 generateFunctionReturn :: NodeDef -> String
 generateFunctionReturn nodeDef = (indent 1) ++ "in ()\n" -- TODO[PM] result list

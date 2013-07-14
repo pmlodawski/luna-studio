@@ -16,7 +16,6 @@ import qualified Luna.DefaultValue   as DefaultValue
 import qualified Luna.Edge           as Edge
 import           Luna.Edge             (Edge(..))
 import qualified Luna.Graph          as Graph
-import           Luna.Graph            (Graph)
 import qualified Luna.Node           as Node
 import           Luna.Node             (Node)
 import qualified Luna.NodeDef        as NodeDef
@@ -70,7 +69,7 @@ sample_helloWorld = (workspace, manager) where
 
     -- user generated ------------------------------------------------------------------------------------------------------------
 
-    workspace = Node.FunctionNode "myFun" $ NodeDef NodeDef.noPorts NodeDef.noPorts workspaceImports workspaceGraph workspaceKey
+    workspace = Node.FunctionNode "myFun" $ NodeDef ["in1", "in2"] NodeDef.noPorts workspaceImports workspaceGraph workspaceKey
 
     workspaceImports = ["std.io.Console", 
                         "std.io.Console.init", 

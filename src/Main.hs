@@ -10,13 +10,13 @@
 --import Data.Graph.Inductive.Monad
 --import Data.Graph.Inductive.Monad.IOArray
 
-import           Luna.DefManager  (DefManager)
-import qualified Luna.Node as Node
-import           Luna.Node   (Node)
-import qualified Luna.NodeDef as NodeDef
-import qualified Luna.Samples as Samples
+import           Luna.DefManager            (DefManager)
+import qualified Luna.Node                as Node
+import           Luna.Node                  (Node)
+import qualified Luna.NodeDef             as NodeDef
+import qualified Luna.Samples             as Samples
 import qualified Luna.Tools.CodeGenerator as CG
-import qualified Luna.Tools.Graphviz as Graphviz
+import qualified Luna.Tools.Graphviz      as Graphviz
 --import Text.Show.Pretty
 --import Text.Groom
 
