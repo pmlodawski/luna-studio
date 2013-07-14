@@ -73,15 +73,15 @@ sample_helloWorld = (workspaceGraph, manager) where
                         (3, 9, Edge "instance" "self" Edge.Standard),
                         (8, 9, Edge "instance" "value" Edge.Standard)]
 
-     $ Graph.insNodes [(0, Node.DefaultNode $ DefaultValue.DefaultString "std.types.Console"),
+     $ Graph.insNodes [(0, Node.DefaultNode $ DefaultValue.DefaultString "std.io.Console"),
                        (1, Node.TypeNode "std.types.type"),
                        (2, Node.CallNode "std.types.new"),
-                       (3, Node.CallNode "std.types.Console.init"),
+                       (3, Node.CallNode "std.io.Console.init"),
                        (4, Node.DefaultNode $ DefaultValue.DefaultString "std.types.String"),
                        (5, Node.TypeNode "std.types.type"),
                        (6, Node.CallNode "std.types.new"),
                        (7, Node.DefaultNode $ DefaultValue.DefaultString "hello world!"),
                        (8, Node.CallNode "std.types.String.init"),
-                       (9, Node.CallNode "std.types.Console.print")]
+                       (9, Node.CallNode "std.io.Console.print")]
      $ Graph.empty
 
