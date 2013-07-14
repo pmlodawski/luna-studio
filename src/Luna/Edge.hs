@@ -14,6 +14,7 @@ noEdges
 import qualified Data.Serialize       as Serialize
 import           Data.Serialize         (Serialize)
 
+
 import Control.Monad(liftM)
 --import Data.GraphViz.Attributes (Labellable, toLabelValue)
 	
