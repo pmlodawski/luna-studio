@@ -5,13 +5,36 @@
 ## Flowbox Team <contact@flowbox.io>, 2013
 ###########################################################################
 
+
+
 from jester import jester
 from jester.cabal import cabalparser
 from glob import glob
 from jester.utils.path import glob_recursive
+import re
 
 import logging
 logger = logging.getLogger(__name__)
+
+@jester.register_ioprocessor
+class Preprocessing(object):
+    def __init__(self):
+        self.__map = {}
+
+    def write(self, s):
+        prog = re.compile(r"(^%\[preprocessing\](?P<src>[^%]+)%(?P<dst>[^%]+))", re.MULTILINE)
+        match = prog.match(s)
+        if match:
+            src = match.group('src').lstrip().rstrip()
+            dst = match.group('dst').lstrip().rstrip()
+            self.__map[dst] = src
+            s = '' # hide the [preprocessing] messages
+        else:
+            for k,v in self.__map.iteritems():
+                pos = s.find(k)
+                if pos != -1:
+                    s = s[:pos]+v+s[pos+len(k):]
+        return s
 
 @jester.register_target('cabal', 'js')
 class HasteCompiler:

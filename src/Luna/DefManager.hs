@@ -8,9 +8,11 @@
 module Luna.DefManager(
 DefManager(..),
 empty,
-library
+library,
+nodesByCName
 ) where
 
+import qualified Data.List.Split as Split
 import qualified Luna.Graph   as Graph
 import           Luna.Graph     (Graph)
 import qualified Luna.Node    as Node
@@ -23,8 +25,8 @@ import           Luna.Library   (Library)
 
 
 data DefManager = DefManager{
-	libraries :: Map Library.LibID Library,
-	defs      :: Graph
+    libraries :: Map Library.LibID Library,
+    defs      :: Graph
 } deriving (Show)
 
 empty :: DefManager
@@ -33,5 +35,16 @@ empty = DefManager Map.empty Graph.empty
 library :: Node -> DefManager -> Maybe Library
 library node manager = Map.lookup (NodeDef.libID $ Node.def node) $ libraries manager
 
---load :: 
+nodesByCName :: String -> DefManager -> [Node]
+nodesByCName cname manager = node where
+    node = nodesByCName' (Split.splitOn "." cname) (defs manager)
+
+nodesByCName' :: [String] -> Graph -> [Node]
+nodesByCName' [cname] graph = nodes where
+    nodes = (Graph.childrenByName cname graph)
+nodesByCName' (cname_head:cname_tail) graph = nodes where
+    children = Graph.childrenByName cname_head graph
+    graphs = map (NodeDef.graph . Node.def) children
+    nodes = concat $ map (nodesByCName' cname_tail) graphs
+
 

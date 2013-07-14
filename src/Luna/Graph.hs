@@ -17,6 +17,7 @@ delEdge, delEdges,
 
 lnodeById, nodeById,
 
+childrenByName,
 typeByName, callByName, classByName, packageByName, functionsByName
 
 ) where
@@ -34,7 +35,7 @@ import           Luna.Data.List         (foldri)
 
 
 empty :: Graph
-empty = Graph DG.empty Map.empty Map.empty Map.empty MultiMap.empty Map.empty
+empty = Graph DG.empty MultiMap.empty Map.empty Map.empty Map.empty MultiMap.empty Map.empty
 
 
 insNodes :: [DG.LNode Node] -> Graph -> Graph
@@ -42,35 +43,37 @@ insNodes = foldri insNode
 
 insNode :: DG.LNode Node -> Graph -> Graph
 insNode lnode@(id_, node) graph =
-	let 
-		newgraph = graph{repr=DG.insNode lnode $ repr graph}
-		updateNodeMap 	   = Map.insert      (Node.name node) id_
-		updateNodeMultiMap = MultiMap.insert (Node.name node) id_
-	in case node of
-		Node.TypeNode     _   -> newgraph{types  	  = updateNodeMap      $ types graph}
-		Node.CallNode     _   -> newgraph{calls  	  = updateNodeMap      $ calls graph}
-		Node.ClassNode    _ _ -> newgraph{classes	  = updateNodeMap      $ classes graph}
-		Node.FunctionNode _ _ -> newgraph{functions = updateNodeMultiMap $ functions graph}
-		Node.PackageNode  _ _ -> newgraph{packages  = updateNodeMap      $ packages graph}
-		_                     -> newgraph
+    let 
+        newgraph = graph{repr=DG.insNode lnode $ repr graph}
+        updateNodeMap      = Map.insert      (Node.name node) id_
+        updateNodeMultiMap = MultiMap.insert (Node.name node) id_
+        updatechildrenMap graph = newgraph{children=updateNodeMultiMap $ children graph}
+    in case node of
+        Node.TypeNode     _   -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph     }
+        Node.CallNode     _   -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph     }
+        Node.ClassNode    _ _ -> updatechildrenMap newgraph{classes   = updateNodeMap      $ classes graph   }
+        Node.FunctionNode _ _ -> updatechildrenMap newgraph{functions = updateNodeMultiMap $ functions graph }
+        Node.PackageNode  _ _ -> updatechildrenMap newgraph{packages  = updateNodeMap      $ packages graph  }
+        _                     -> newgraph
 
 delNodes :: [DG.Node] -> Graph -> Graph
 delNodes = foldri delNode
 
 delNode :: DG.Node -> Graph -> Graph
 delNode id_ graph =
-	let
-		newgraph = graph{repr=DG.delNode id_ $ repr graph}
-		(_, node)     = DG.labNode' $ DG.context (repr graph) id_
-		updateNodeMap 	   = Map.delete      (Node.name node)
-		updateNodeMultiMap = MultiMap.delete (Node.name node)
-	in case node of
-		Node.TypeNode     _   -> newgraph{types  	  = updateNodeMap      $ types graph}
-		Node.CallNode     _   -> newgraph{calls  	  = updateNodeMap      $ calls graph}
-		Node.ClassNode    _ _ -> newgraph{classes	  = updateNodeMap      $ classes graph}
-		Node.FunctionNode _ _ -> newgraph{functions = updateNodeMultiMap $ functions graph}
-		Node.PackageNode  _ _ -> newgraph{packages  = updateNodeMap      $ packages graph}
-		_                     -> newgraph
+    let
+        newgraph = graph{repr=DG.delNode id_ $ repr graph }
+        (_, node)     = DG.labNode' $ DG.context (repr graph) id_
+        updateNodeMap      = Map.delete      (Node.name node)
+        updateNodeMultiMap = MultiMap.delete (Node.name node)
+        updatechildrenMap graph = newgraph{children=updateNodeMultiMap $ children graph}
+    in case node of
+        Node.TypeNode     _   -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph}
+        Node.CallNode     _   -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph}
+        Node.ClassNode    _ _ -> updatechildrenMap newgraph{classes   = updateNodeMap      $ classes graph}
+        Node.FunctionNode _ _ -> updatechildrenMap newgraph{functions = updateNodeMultiMap $ functions graph}
+        Node.PackageNode  _ _ -> updatechildrenMap newgraph{packages  = updateNodeMap      $ packages graph}
+        _                     -> newgraph
 
 
 insEdges :: [DG.LEdge Edge] -> Graph -> Graph
@@ -93,27 +96,30 @@ nodeById :: Graph -> DG.Node -> Node
 nodeById graph id_ = node where
 	(_, node) = lnodeById graph id_
 
-nodeByName :: Ord k => (Graph -> Map.Map k DG.Node) -> k -> Graph -> Maybe Node
-nodeByName getter name graph = 
-	case Map.lookup name $ getter graph of
-	 	Just id_ -> Just(nodeById graph id_)
-	 	Nothing  -> Nothing
+nodeByNameFrom :: Ord k => (Graph -> Map.Map k DG.Node) -> k -> Graph -> Maybe Node
+nodeByNameFrom getter name graph = 
+    case Map.lookup name $ getter graph of
+        Just id_ -> Just(nodeById graph id_)
+        Nothing  -> Nothing
 
-nodesByName :: Ord k => (Graph -> MultiMap k DG.Node) -> k -> Graph -> [Node]
-nodesByName getter name graph = [nodeById graph elid | elid <- ids] where
-	ids = MultiMap.lookup name $ getter graph
-	
+nodesByNameFrom :: Ord k => (Graph -> MultiMap k DG.Node) -> k -> Graph -> [Node]
+nodesByNameFrom getter name graph = [nodeById graph elid | elid <- ids] where
+    ids = MultiMap.lookup name $ getter graph
+
+childrenByName :: String -> Graph -> [Node]
+childrenByName = nodesByNameFrom children
+
 typeByName :: String -> Graph -> Maybe Node
-typeByName 		= nodeByName  types
+typeByName      = nodeByNameFrom  types
 
 callByName :: String -> Graph -> Maybe Node
-callByName 		= nodeByName  calls
+callByName      = nodeByNameFrom  calls
 
 classByName :: String -> Graph -> Maybe Node
-classByName 	= nodeByName  classes
+classByName     = nodeByNameFrom  classes
 
 packageByName :: String -> Graph -> Maybe Node
-packageByName 	= nodeByName  packages
+packageByName   = nodeByNameFrom  packages
 
 functionsByName :: String -> Graph -> [Node]
-functionsByName = nodesByName functions
+functionsByName = nodesByNameFrom functions
