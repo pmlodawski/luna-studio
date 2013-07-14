@@ -2,4 +2,5 @@
 
 import sys
 from subprocess import call
-call(['python', 'util/jester/jester.py'] + sys.argv[1:])
+ret = call(['python', 'util/jester/jester.py'] + sys.argv[1:])
+sys.exit(ret)
