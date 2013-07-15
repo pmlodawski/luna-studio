@@ -15,7 +15,7 @@ delNode, delNodes,
 insEdge, insEdges,
 delEdge, delEdges,
 
-nodeById,
+nodeById, nodeByIdFl,
 
 childrenByName,
 typeByName, callByName, classByName, packageByName, functionsByName
@@ -102,6 +102,9 @@ nodeById :: DG.Node -> Graph -> Node
 nodeById id_ graph = let
     (_, node) = DG.labNode' $ DG.context (repr graph) id_
     in node
+
+nodeByIdFl :: Graph -> DG.Node -> Node
+nodeByIdFl = flip nodeById
 
 nodeByNameFrom :: Ord k => (Graph -> Map.Map k DG.Node) -> k -> Graph -> Maybe Node
 nodeByNameFrom getter name graph = 

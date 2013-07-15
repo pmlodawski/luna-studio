@@ -30,6 +30,7 @@ main :: IO ()
 main = do 
 	let
 	  lib = Library.Library $ Path.fromUnixString "lunalib/std.node"
+        DefManager.saveManager (Path.fromUnixString "tempSave") $ snd Samples.sample_helloWorld
 	manager <- DefManager.load lib DefManager.empty
 	print manager
 	putStrLn "=================================="
