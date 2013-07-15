@@ -29,10 +29,9 @@ import qualified Luna.Samples as Samples
 main :: IO ()
 main = do 
 	let
-		lib = Library.Library $ Path.fromUnixString "lunalib/std.node"
-		manager = DefManager.load lib
-			    $ DefManager.empty
-	--print manager
+	  lib = Library.Library $ Path.fromUnixString "lunalib/std.node"
+	manager <- DefManager.load lib DefManager.empty
+	print manager
 	-- showGraph Samples.sample_helloWorld
 	return ()
 
