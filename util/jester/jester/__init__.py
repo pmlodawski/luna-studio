@@ -23,6 +23,7 @@ class Jester(object):
         self.__toolchains = defaultdict(lambda: None)
         self.__toolchain_actions = []
         self.__target_actions = []
+        self.__ioprocessors = []
         self.__parser = argparse.ArgumentParser(description='Compile multitarget Haskell code.')
         self.cfg_manager = PyConfigManager('jesterconf.py')
         self.cfg_manager.set(inspect.getsource(default))
@@ -93,9 +94,30 @@ class Jester(object):
     def call(self, *args):
         args = list(args)
         logger.debug("Calling: '%s'." % (' '.join(args)))
-        rcode = subprocess.call(args)
+        # rcode = subprocess.call(args)
+        p = subprocess.Popen(' '.join(args), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+        line = ''
+        while True:
+          inchar = p.stdout.read(1)
+          if inchar: #neither empty string nor None
+            line += inchar
+            if inchar == '\n':
+                self.write(line)
+                line = ''
+            # sys.stdout.write(str(inchar)) #or end=None to flush immediately
+          else:
+            print('') #flush for implicit line-buffering
+            break
+        rcode = p.wait()
         if rcode != 0:
             raise Exception("Command failed.")
+
+    def write(self, s):
+        for proc in self.__ioprocessors:
+            s = proc.write(s)
+        sys.stdout.write(s)
+
 
     def register_toolchain(self, name):
         def dec(cls):
@@ -114,6 +136,9 @@ class Jester(object):
                 self.__toolchains[toolchain].add_target(name, Target(name,cls))
             self.__target_actions.append(action)
         return register_dec
+
+    def register_ioprocessor(self, cls):
+        self.__ioprocessors.append(cls())
 
     def resolve(self):
         logger.debug('Registering toolchains')

@@ -27,6 +27,7 @@ import           Data.Word              (Word8)
 
 data Graph = Graph {
 	repr      :: DG.Gr Node Edge,
+  children  :: MultiMap String DG.Node,
 	types     :: Map 	  String DG.Node,
 	calls     :: Map 	  String DG.Node,
 	classes   :: Map 	  String DG.Node,
@@ -64,10 +65,10 @@ data NodeDef = NotLoaded
 ------------------------- INSTANCES -------------------------
 
 instance Serialize Graph where
-  put i = Serialize.put (repr i, types i, calls i, classes i, MultiMap.toMap $ functions i, packages i)
+  put i = Serialize.put (repr i, MultiMap.toMap $ children i, types i, calls i, classes i, MultiMap.toMap $ functions i, packages i)
   get   = do 
-            (repr', types', calls', classes', functions', packages') <- Serialize.get
-            return $ Graph repr' types' calls' classes' (MultiMap.fromMap functions') packages'
+            (repr', children', types', calls', classes', functions', packages') <- Serialize.get
+            return $ Graph repr' (MultiMap.fromMap children') types' calls' classes' (MultiMap.fromMap functions') packages'
 
 
 instance (Serialize a, Serialize b) => Serialize (DG.Gr a b) where

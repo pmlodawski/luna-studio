@@ -9,9 +9,11 @@ module Luna.DefManager(
 DefManager(..),
 empty,
 library,
-load
+load,
+nodesByCName
 ) where
 
+import qualified Data.List.Split as Split
 import qualified Data.Graph.Inductive  as DG
 import qualified Data.MultiMap         as MultiMap
 import qualified Luna.Graph            as Graph
@@ -31,9 +33,10 @@ import qualified Data.Serialize        as DS
 import           System.IO.Unsafe        (unsafeInterleaveIO)
 import           Control.Monad           (foldM)
 
+
 data DefManager = DefManager{
-	libraries :: Map LibID Library,
-	defs      :: Graph
+    libraries :: Map Library.LibID Library,
+    defs      :: Graph
 } deriving (Show)
 
 empty :: DefManager
@@ -59,7 +62,7 @@ nodeToFile :: UniPath -> Node -> UniPath
 nodeToFile basePath node = UniPath.append (Node.name node) basePath
 
 getFilesToLoad :: UniPath -> Graph -> [UniPath]
-getFilesToLoad basePath gr@(Graph.Graph _ _ _ classes functions packages) =
+getFilesToLoad basePath gr@(Graph.Graph _ _ _ _ classes functions packages) =
   let
     nodeToNode :: DG.Node -> Node
     nodeToNode = (flip Graph.nodeById) gr
@@ -103,6 +106,19 @@ loadFile path manager = do
 --import System.Directory.Tree
 --import qualified Data.Foldable as F
 --import qualified Data.Traversable as T
+
+nodesByCName :: String -> DefManager -> [Node]
+nodesByCName cname manager = node where
+    node = nodesByCName' (Split.splitOn "." cname) (defs manager)
+
+nodesByCName' :: [String] -> Graph -> [Node]
+nodesByCName' [cname] graph = nodes where
+    nodes = (Graph.childrenByName cname graph)
+nodesByCName' (cname_head:cname_tail) graph = nodes where
+    children = Graph.childrenByName cname_head graph
+    graphs = map (NodeDef.graph . Node.def) children
+    nodes = concat $ map (nodesByCName' cname_tail) graphs
+
 
 --main = do
 --	dir <- readDirectoryWithL readFile "directory"

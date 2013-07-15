@@ -18,6 +18,7 @@ build-type:		Simple
 
 Executable:     luna
 Hs-source-dirs: src
-GHC-Options:    -Wall
+GHC-Options:    -Wall 
+-- -F -pgmF ./util/preprocessors/imports.py
 --extensions:     StandaloneDeriving, FlexibleContexts
 Main-Is:        Main.hs
