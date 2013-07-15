@@ -1,22 +1,30 @@
 Name:           luna
 Version:        0.1
+Cabal-Version:  >= 1.2
 License-file:   LICENSE
-Author:			Flowbox <contact@flowbox.io>
-Maintainer:		Flowbox <contact@flowbox.io>
-build-depends:  base, 
-				fgl, 
-				containers, 
-				mtl, 
-				cereal, 
-				--graphviz, 
-				multimap,
-				split
-				--MissingH
-build-type:		Simple
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
 
-Executable:     luna
-Hs-source-dirs: src
-GHC-Options:    -Wall 
--- -F -pgmF ./util/preprocessors/imports.py
---extensions:     StandaloneDeriving, FlexibleContexts
-Main-Is:        Main.hs
+Flag Debug
+  Description: Enable debug support
+  Default:     False
+
+
+Executable luna
+  Hs-Source-Dirs: src
+  if flag(debug)
+    GHC-Options: -csacc
+  GHC-Options:    -Wall 
+  -- -F -pgmF ./util/preprocessors/imports.py
+  --Extensions:     StandaloneDeriving, FlexibleContexts
+  Main-Is:        Main.hs
+  Build-Depends:  base, 
+                  fgl, 
+                  containers, 
+                  mtl, 
+                  cereal, 
+                  --graphviz, 
+                  multimap,
+                  split
+                  --MissingH
