@@ -96,3 +96,17 @@ basePath :: UniPath -> UniPath
 basePath path = normalise $ case last $ normalise path of
                               Node _ -> path ++ [Up]
                               _      -> path
+
+setExtension :: String -> UniPath -> UniPath
+setExtension ext path =
+  normalise $ path ++ [Up] ++ [Node $ (fileName path) ++ ext]
+  
+
+
+
+
+
+
+
+
+

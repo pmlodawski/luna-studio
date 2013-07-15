@@ -30,7 +30,7 @@ import qualified Luna.Tools.TypeChecker as TC
 main :: IO ()
 main = do 
 	let
-	  lib = Library.Library $ Path.fromUnixString "lunalib/std.node"
+	  lib = Library.Library $ Path.fromUnixString "lunalib/std"
         putStrLn "Hello programmer! I am Lunac, the Luna compiler"
         pwd <- System.Directory.getCurrentDirectory
         putStrLn $ "My PWD is " ++ pwd
