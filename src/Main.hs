@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 
 import qualified Data.Graph.Inductive as DG
+import qualified System.Directory     as System.Directory
 --import Control.Monad.State
 --import Data.Graph.Inductive.Tree
 --import Data.Graph.Inductive.Monad
@@ -30,6 +31,9 @@ main :: IO ()
 main = do 
 	let
 	  lib = Library.Library $ Path.fromUnixString "lunalib/std.node"
+        putStrLn "Hello programmer! I am Lunac, the Luna compiler"
+        pwd <- System.Directory.getCurrentDirectory
+        putStrLn $ "My PWD is " ++ pwd
         DefManager.saveManager (Path.fromUnixString "tempSave") $ snd Samples.sample_helloWorld
 	manager <- DefManager.load lib DefManager.empty
 	print manager

@@ -125,8 +125,8 @@ saveGraph basePath graph =
         funcs = Map.toList $ MultiMap.toMap $ Graph.functions graph
     in
       do
-        --saveThings funcs
-        putStrLn $ (UniPath.toUnixString basePath) ++ show nameDefs
+        -- saveThings funcs
+        -- putStrLn $ (UniPath.toUnixString basePath) ++ (show $ Graph.repr graph)
         foldM (\_ -> saveNodeToFile basePath) () nameDefs
 
 

@@ -13,7 +13,8 @@ build-depends:  base,
 				split,
 				--MissingH,
 				bytestring,
-				directory-tree
+				directory-tree,
+                directory
 build-type:		Simple
 
 Executable:     luna

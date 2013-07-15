@@ -46,7 +46,7 @@ insNode lnode@(id_, node) graph =
         newgraph                 = graph{repr=DG.insNode lnode $ repr graph}
         updateNodeMap            = Map.insert      (Node.name node) id_
         updateNodeMultiMap       = MultiMap.insert (Node.name node) id_
-        updatechildrenMap graph' = newgraph{children=updateNodeMultiMap $ children graph'}
+        updatechildrenMap graph' = graph'{children=updateNodeMultiMap $ children graph'}
     in case node of
         Node.TypeNode     _   -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph     }
         Node.CallNode     _   -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph     }
