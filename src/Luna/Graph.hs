@@ -37,17 +37,16 @@ import           Luna.Data.List         (foldri)
 empty :: Graph
 empty = Graph DG.empty MultiMap.empty Map.empty Map.empty Map.empty MultiMap.empty Map.empty
 
-
 insNodes :: [DG.LNode Node] -> Graph -> Graph
 insNodes = foldri insNode
 
 insNode :: DG.LNode Node -> Graph -> Graph
 insNode lnode@(id_, node) graph =
     let 
-        newgraph = graph{repr=DG.insNode lnode $ repr graph}
-        updateNodeMap      = Map.insert      (Node.name node) id_
-        updateNodeMultiMap = MultiMap.insert (Node.name node) id_
-        updatechildrenMap graph = newgraph{children=updateNodeMultiMap $ children graph}
+        newgraph                 = graph{repr=DG.insNode lnode $ repr graph}
+        updateNodeMap            = Map.insert      (Node.name node) id_
+        updateNodeMultiMap       = MultiMap.insert (Node.name node) id_
+        updatechildrenMap graph' = newgraph{children=updateNodeMultiMap $ children graph'}
     in case node of
         Node.TypeNode     _   -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph     }
         Node.CallNode     _   -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph     }
@@ -62,11 +61,11 @@ delNodes = foldri delNode
 delNode :: DG.Node -> Graph -> Graph
 delNode id_ graph =
     let
-        newgraph = graph{repr=DG.delNode id_ $ repr graph }
-        (_, node)     = DG.labNode' $ DG.context (repr graph) id_
-        updateNodeMap      = Map.delete      (Node.name node)
-        updateNodeMultiMap = MultiMap.delete (Node.name node)
-        updatechildrenMap graph = newgraph{children=updateNodeMultiMap $ children graph}
+        newgraph                 = graph{repr=DG.delNode id_ $ repr graph }
+        (_, node)                = DG.labNode' $ DG.context (repr graph) id_
+        updateNodeMap            = Map.delete      (Node.name node)
+        updateNodeMultiMap       = MultiMap.delete (Node.name node)
+        updatechildrenMap graph' = newgraph{children=updateNodeMultiMap $ children graph'}
     in case node of
         Node.TypeNode     _   -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph}
         Node.CallNode     _   -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph}
