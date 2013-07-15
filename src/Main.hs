@@ -34,7 +34,7 @@ main = do
         putStrLn "Hello programmer! I am Lunac, the Luna compiler"
         pwd <- System.Directory.getCurrentDirectory
         putStrLn $ "My PWD is " ++ pwd
-        DefManager.saveManager (Path.fromUnixString "tempSave") $ snd Samples.sample_helloWorld
+        DefManager.saveManager (Path.fromUnixString "lunalib") $ snd Samples.sample_helloWorld
 	manager <- DefManager.load lib DefManager.empty
 	print manager
 	putStrLn "=================================="

@@ -22,4 +22,5 @@ Hs-source-dirs: src
 GHC-Options:    -Wall 
 -- -F -pgmF ./util/preprocessors/imports.py
 --extensions:     StandaloneDeriving, FlexibleContexts
+extensions:     DoAndIfThenElse
 Main-Is:        Main.hs

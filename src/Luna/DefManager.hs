@@ -18,6 +18,7 @@ import qualified Data.List.Split       as Split
 import qualified Data.Graph.Inductive  as DG
 import qualified Data.MultiMap         as MultiMap
 import qualified Data.Serialize        as DS
+import qualified System.Directory      as System.Directory
 import qualified Luna.Graph            as Graph
 import           Luna.Graph              (Graph)
 import qualified Luna.Node             as Node
@@ -108,15 +109,20 @@ loadFile path manager = do
 
 saveNodeToFile :: UniPath -> Node -> IO ()
 saveNodeToFile basePath node =
-  let path   = UniPath.append ((Node.name node) ++ ".node") basePath
-      folder = UniPath.append (Node.name node) basePath
+  let path = UniPath.append ((Node.name node) ++ ".node") basePath
+      dir  = UniPath.append (Node.name node) basePath
   in
     do
       -- save .node file
       putStrLn (UniPath.toUnixString path)
       BS.writeFile (UniPath.toUnixString path) $ DS.encode $ Node.def node
       -- save things defined inside
-      saveGraph folder $ NodeDef.graph $ Node.def node
+      directoryExists <- System.Directory.doesDirectoryExist $ UniPath.toUnixString dir
+      if not directoryExists then
+         System.Directory.createDirectory $ UniPath.toUnixString dir
+      else
+        return ()
+      saveGraph dir $ NodeDef.graph $ Node.def node
 
 saveGraph :: UniPath -> Graph -> IO ()
 saveGraph basePath graph =
