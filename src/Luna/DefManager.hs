@@ -74,32 +74,55 @@ lazyReadFile path = unsafeInterleaveIO $ do
 nodeToFile :: UniPath -> Node -> UniPath
 nodeToFile basePath node = UniPath.append (Node.name node) basePath
 
-getFilesToLoad :: UniPath -> Graph -> [UniPath]
+getFilesToLoad :: UniPath -> Graph -> ([UniPath], [UniPath], [UniPath])
 getFilesToLoad basePath gr@(Graph.Graph _ _ _ _ classes functions packages) =
   let
-    interestingNodes :: [DG.Node]
-    interestingNodes = (Map.elems classes) ++ (concat $ MultiMap.elems functions) ++ (Map.elems packages) 
+    mapper = map $ (nodeToFile basePath) . (Graph.nodeByIdFl gr)
   in
-    map ((nodeToFile basePath) . (Graph.nodeByIdFl gr)) interestingNodes 
+    (mapper $ Map.elems classes,
+     mapper $ concat $ MultiMap.elems functions,
+     mapper $ Map.elems packages)
 
 recursiveLoad :: NodeDef.NodeDef -> UniPath -> String -> DefManager -> IO DefManager
 recursiveLoad ndef basePath folderName mngr =
   let newPath = UniPath.append folderName basePath
-      filesToLoad :: [UniPath]
-      filesToLoad = case ndef of
-                      NodeDef.NotLoaded -> []
-                      NodeDef.NodeDef _ _ _ gr _ -> getFilesToLoad newPath gr
+      classes, functions, packages :: [UniPath]
+      (classes, functions, packages) = 
+        case ndef of
+          NodeDef.NotLoaded -> ([], [], [])
+          NodeDef.NodeDef _ _ _ gr _ -> getFilesToLoad newPath gr
   in
-    foldM (flip loadFile) mngr filesToLoad 
+    do
+      m1 <- foldM (flip $ loadFile Node.ClassNode) mngr classes
+      m2 <- foldM (flip $ loadFile Node.FunctionNode) m1 functions
+      foldM (flip $ loadFile Node.PackageNode) m2 packages
 
-processFile :: DefManager -> UniPath -> String -> BS.ByteString -> IO DefManager
-processFile mngr basePath name' contents' = let
-                           ndef :: Either String NodeDef.NodeDef
-                           ndef = DS.decode contents'
-                        in
-                           case ndef of
-                             Left _ -> return mngr
-                             Right def -> recursiveLoad def basePath name' mngr{defs = Graph.insFreshNode ( Node.PackageNode name' def) $ defs mngr}
+processFile :: DefManager -> UniPath -> String -> (String -> NodeDef.NodeDef -> Node) -> BS.ByteString -> IO DefManager
+processFile mngr basePath name' nodeCtor contents' =
+  let
+    ndef :: Either String NodeDef.NodeDef
+    ndef = DS.decode contents'
+  in
+    case ndef of
+      Left _ -> return mngr
+      Right def -> 
+        let
+          substNode :: Node -> Node
+          substNode node =
+            if name' == Node.name node then
+              nodeCtor name' def
+            else
+              node
+          nodeExists :: Graph -> Bool
+          nodeExists gr = any ((== name') . (Node.name) . snd) $ DG.labNodes $ Graph.repr gr
+          newDefs :: Graph -> Graph
+          newDefs oldGr  = oldGr{Graph.repr = DG.nmap substNode $ Graph.repr $ defs mngr}
+        in
+          recursiveLoad def basePath name' mngr{defs = 
+            if nodeExists $ defs mngr then
+              newDefs $ defs mngr
+            else
+              Graph.insFreshNode ( nodeCtor name' def) $ defs mngr}
 
 
 load :: Library -> DefManager -> IO DefManager
@@ -107,12 +130,13 @@ load lib mngr = let
                   --manager with library
                   mngrwl =  mngr{libraries = Map.insert (newId mngr) lib $ libraries mngr}
                 in
-                  loadFile (Library.path lib) mngrwl
+                  loadFile Node.PackageNode (Library.path lib) mngrwl
 
-loadFile :: UniPath -> DefManager -> IO DefManager
-loadFile path manager = do
-                      dir <-lazyReadFile $ UniPath.setExtension ".node" path
-                      processFile manager (UniPath.basePath path) (UniPath.fileName path) dir 
+loadFile :: (String -> NodeDef.NodeDef -> Node) -> UniPath -> DefManager -> IO DefManager
+loadFile ftype path manager = 
+  do
+    dir <- lazyReadFile $ UniPath.setExtension ".node" path
+    processFile manager (UniPath.basePath path) (UniPath.fileName path) ftype dir 
 
 --import System.Directory.Tree
 --import qualified Data.Foldable as F
