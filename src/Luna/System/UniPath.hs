@@ -16,7 +16,8 @@ prepend,
 toPathItem,
 normalise,
 fileName,
-basePath
+basePath,
+setExtension
 ) where
 
 import Data.List.Split (splitOn)

@@ -58,7 +58,18 @@ newId manager = case Map.keys $ libraries manager of
 --isFile SDT.Failed {} = False
 
 lazyReadFile :: UniPath -> IO BS.ByteString
-lazyReadFile path = unsafeInterleaveIO $ BS.readFile $ UniPath.toUnixString path
+-- lazyReadFile path = unsafeInterleaveIO $ BS.readFile $
+-- UniPath.toUnixString path
+lazyReadFile path = unsafeInterleaveIO $ do
+    let strPath = UniPath.toUnixString path
+    exists <- System.Directory.doesFileExist strPath
+    if exists then
+      BS.readFile strPath
+    else
+      do
+       putStrLn $ "no " ++ strPath
+       return $ BS.empty
+
 
 nodeToFile :: UniPath -> Node -> UniPath
 nodeToFile basePath node = UniPath.append (Node.name node) basePath
@@ -83,7 +94,7 @@ recursiveLoad ndef basePath folderName mngr =
 
 processFile :: DefManager -> UniPath -> String -> BS.ByteString -> IO DefManager
 processFile mngr basePath name' contents' = let
-                           ndef ::Either String NodeDef.NodeDef
+                           ndef :: Either String NodeDef.NodeDef
                            ndef = DS.decode contents'
                         in
                            case ndef of
@@ -100,7 +111,7 @@ load lib mngr = let
 
 loadFile :: UniPath -> DefManager -> IO DefManager
 loadFile path manager = do
-                      dir <-lazyReadFile path
+                      dir <-lazyReadFile $ UniPath.setExtension ".node" path
                       processFile manager (UniPath.basePath path) (UniPath.fileName path) dir 
 
 --import System.Directory.Tree
@@ -146,6 +157,7 @@ nodesByCName cname manager = node where
     node = nodesByCName' (Split.splitOn "." cname) (defs manager)
 
 nodesByCName' :: [String] -> Graph -> [Node]
+nodesByCName' [] _ = []
 nodesByCName' [cname] graph = nodes where
     nodes = (Graph.childrenByName cname graph)
 nodesByCName' (cname_head:cname_tail) graph = nodes where
