@@ -9,22 +9,24 @@ module Luna.Samples(
 sample_helloWorld
 ) where
 
+
 import qualified Data.Map            as Map
 import           Luna.DefManager       (DefManager(..))
 import qualified Luna.DefaultValue   as DefaultValue
 import qualified Luna.Edge           as Edge
 import           Luna.Edge             (Edge(..))
 import qualified Luna.Graph          as Graph
-import           Luna.Graph            (Graph)
 import qualified Luna.Node           as Node
+import           Luna.Node             (Node)
 import qualified Luna.NodeDef        as NodeDef
 import           Luna.NodeDef          (NodeDef(..))
 import           Luna.Library          (Library(..))
 import qualified Luna.System.UniPath as UniPath
 
 
-sample_helloWorld :: (Graph, DefManager)
-sample_helloWorld = (workspaceGraph, manager) where
+
+sample_helloWorld :: (Node, DefManager)
+sample_helloWorld = (workspace, manager) where
     
     stdlibKey    = 0
     workspaceKey = 1
@@ -35,8 +37,10 @@ sample_helloWorld = (workspaceGraph, manager) where
     manager = DefManager librariesMap root_graph 
 
     root_graph = Graph.insNodes [(0, Node.PackageNode "std" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_graph      stdlibKey),
-                                 (1, Node.PackageNode "my"  $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports workspaceGraph workspaceKey)]
+                                 (1, workspace)]
                $ Graph.empty
+
+    -- std lib -------------------------------------------------------------------------------------------------------------------
 
     std_graph
      = Graph.insNodes [(0, Node.PackageNode "types" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_types_graph stdlibKey),
@@ -61,6 +65,18 @@ sample_helloWorld = (workspaceGraph, manager) where
      = Graph.insNodes [(0, Node.FunctionNode "print" $ NodeDef ["self", "value"] ["console"] NodeDef.noImports Graph.empty stdlibKey),
                        (1, Node.FunctionNode "init"  $ NodeDef ["self"]         ["instance"] NodeDef.noImports Graph.empty stdlibKey)]
      $ Graph.empty
+
+
+    -- user generated ------------------------------------------------------------------------------------------------------------
+
+    workspace = Node.FunctionNode "myFun" $ NodeDef ["in1", "in2"] NodeDef.noPorts workspaceImports workspaceGraph workspaceKey
+
+    workspaceImports = ["std.io.Console", 
+                        "std.io.Console.init", 
+                        "std.io.Console.print", 
+                        "std.types.type", 
+                        "std.types.new", 
+                        "std.types.String"]
 
     workspaceGraph
      =  Graph.insEdges [(0, 1, Edge "value" "name" Edge.Standard),

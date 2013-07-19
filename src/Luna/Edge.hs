@@ -29,9 +29,6 @@ data Edge = Edge {
 	cls :: EdgeCls
 } deriving (Show, Read, Ord, Eq)
 
---instance Labellable Edge where
---	toLabelValue = toLabelValue . show
-
 ------------------------- INSTANCES -------------------------
 
 instance Serialize EdgeCls where

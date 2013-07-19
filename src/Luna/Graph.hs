@@ -15,7 +15,7 @@ delNode, delNodes,
 insEdge, insEdges,
 delEdge, delEdges,
 
-nodeById,
+lnodeById, nodeById,
 
 childrenByName,
 typeByName, callByName, classByName, packageByName, functionsByName
@@ -90,20 +90,21 @@ delEdges = foldri delEdge
 delEdge :: DG.Edge -> Graph -> Graph
 delEdge edge graph = graph{repr = DG.delEdge edge $ repr graph}
 
+lnodeById :: Graph -> DG.Node -> DG.LNode Node
+lnodeById graph id_ = DG.labNode' $ DG.context (repr graph) id_
 
-nodeById :: DG.Node -> Graph -> Node
-nodeById id_ graph = let
-    (_, node) = DG.labNode' $ DG.context (repr graph) id_
-    in node
+nodeById :: Graph -> DG.Node -> Node
+nodeById graph id_ = node where
+	(_, node) = lnodeById graph id_
 
 nodeByNameFrom :: Ord k => (Graph -> Map.Map k DG.Node) -> k -> Graph -> Maybe Node
 nodeByNameFrom getter name graph = 
     case Map.lookup name $ getter graph of
-        Just id_ -> Just(nodeById id_ graph)
+        Just id_ -> Just(nodeById graph id_)
         Nothing  -> Nothing
 
 nodesByNameFrom :: Ord k => (Graph -> MultiMap k DG.Node) -> k -> Graph -> [Node]
-nodesByNameFrom getter name graph = [nodeById elid graph | elid <- ids] where
+nodesByNameFrom getter name graph = [nodeById graph elid | elid <- ids] where
     ids = MultiMap.lookup name $ getter graph
 
 childrenByName :: String -> Graph -> [Node]

@@ -14,8 +14,8 @@ NodeDef (..),
 
 
 import qualified Data.Graph.Inductive as DG
-import           Luna.Edge 			    (Edge)
-import           Luna.DefaultValue 	    (DefaultValue)
+import           Luna.Edge          (Edge)
+import           Luna.DefaultValue      (DefaultValue)
 import           Data.Map               (Map)
 import qualified Data.MultiMap        as MultiMap
 import           Data.MultiMap          (MultiMap)
@@ -37,13 +37,13 @@ data Graph = Graph {
 
 -----------------------------------------------------------------
 
-data Node = TypeNode    { name  :: String }
-		  | CallNode    { name  :: String }
-		  | ClassNode   { name  :: String, def :: NodeDef }
-		  | FunctionNode{ name  :: String, def :: NodeDef }
-		  | PackageNode { name  :: String, def :: NodeDef }
-		  | DefaultNode { value :: DefaultValue }
-		  deriving (Show)
+data Node = TypeNode     { name  :: String }
+          | CallNode     { name  :: String }
+          | ClassNode    { name  :: String, def :: NodeDef }
+          | FunctionNode { name  :: String, def :: NodeDef }
+          | PackageNode  { name  :: String, def :: NodeDef }
+          | DefaultNode  { value :: DefaultValue }
+          deriving (Show)
 
 
 -- FIXME[wd] move the following instance to the right place
@@ -54,13 +54,13 @@ instance (Show k, Show a) => Show (MultiMap k a) where
 -----------------------------------------------------------------
 
 data NodeDef = NotLoaded
-	         | NodeDef {
-			       inputs 	:: [String],
-				   outputs  :: [String],
-				   imports  :: [String],
-				   graph	:: Graph,
-				   libID	:: Library.LibID
-			   } deriving (Show)
+             | NodeDef {
+                 inputs   :: [String],
+                 outputs  :: [String],
+                 imports  :: [String],
+                 graph  :: Graph,
+                 libID  :: Library.LibID
+               } deriving (Show)
 
 ------------------------- INSTANCES -------------------------
 

@@ -11,7 +11,5 @@ Node(..)
 ) where
 
 import Luna.Common(Node(..))
---import Data.GraphViz.Attributes (Labellable, toLabelValue)
 
---instance Labellable Node where
---	toLabelValue = toLabelValue . show
+
