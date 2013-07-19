@@ -79,15 +79,15 @@ sample_helloWorld = (workspace, manager) where
                         "std.types.String"]
 
     workspaceGraph
-     =  Graph.insEdges [(0, 1, Edge "value" "name" Edge.Standard),
-                        (1, 2, Edge "type" "type" Edge.Standard),
-                        (2, 3, Edge "instance" "self" Edge.Standard),
-                        (4, 5, Edge "value" "name" Edge.Standard),
-                        (5, 6, Edge "type" "type" Edge.Standard),
-                        (6, 8, Edge "instance" "self" Edge.Standard),
-                        (7, 8, Edge "value" "value" Edge.Standard),
-                        (3, 9, Edge "instance" "self" Edge.Standard),
-                        (8, 9, Edge "instance" "value" Edge.Standard)]
+     =  Graph.insEdges [(0, 1, Edge 0 0 Edge.Standard),
+                        (1, 2, Edge 0 0 Edge.Standard),
+                        (2, 3, Edge 0 0 Edge.Standard),
+                        (4, 5, Edge 0 0 Edge.Standard),
+                        (5, 6, Edge 0 0 Edge.Standard),
+                        (6, 8, Edge 0 0 Edge.Standard),
+                        (7, 8, Edge 0 0 Edge.Standard),
+                        (3, 9, Edge 0 0 Edge.Standard),
+                        (8, 9, Edge 0 1 Edge.Standard)]
 
      $ Graph.insNodes [(0, Node.DefaultNode $ DefaultValue.DefaultString "std.io.Console"),
                        (1, Node.TypeNode "std.types.type"),

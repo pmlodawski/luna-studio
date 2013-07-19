@@ -24,8 +24,8 @@ noEdges :: [Edge]
 noEdges = [] 
 
 data Edge = Edge { 
-	source :: String,
-	target :: String,
+	src :: Int,
+	dst :: Int,
 	cls :: EdgeCls
 } deriving (Show, Read, Ord, Eq)
 
@@ -37,7 +37,7 @@ instance Serialize EdgeCls where
 
 
 instance Serialize Edge where
-  put i = Serialize.put (source i, target i, cls i)
+  put i = Serialize.put (src i, dst i, cls i)
   get   = do
-            (source', target', cls') <- Serialize.get
-            return $ Edge source' target' cls'
+            (src', dst', cls') <- Serialize.get
+            return $ Edge src' dst' cls'
