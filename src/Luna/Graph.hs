@@ -37,7 +37,7 @@ import           Luna.Node              (Node)
 
 
 empty :: Graph
-empty = Graph DG.empty MultiMap.empty Map.empty Map.empty Map.empty MultiMap.empty Map.empty
+empty = Graph DG.empty Map.empty Map.empty Map.empty Map.empty Map.empty Map.empty
 
 insNodes :: [DG.LNode Node] -> Graph -> Graph
 insNodes = foldri insNode
@@ -46,8 +46,8 @@ insNode :: DG.LNode Node -> Graph -> Graph
 insNode lnode@(nid, node) graph =
     let 
         newgraph                 = graph{repr=DG.insNode lnode $ repr graph}
-        updateNodeMap            = Map.insert      (Node.name node) nid
-        updateNodeMultiMap       = MultiMap.insert (Node.name node) nid
+        updateNodeMap            = Map.insert (Node.name node) nid
+        updateNodeMultiMap       = Map.insert (Node.name node) nid
         updatechildrenMap graph' = graph'{children=updateNodeMultiMap $ children graph'}
     in case node of
         Node.TypeNode     _   -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph     }
@@ -75,13 +75,12 @@ delNode id_ graph =
         newgraph                 = graph{repr=DG.delNode id_ $ repr graph }
         (_, node)                = DG.labNode' $ DG.context (repr graph) id_
         updateNodeMap            = Map.delete      (Node.name node)
-        updateNodeMultiMap       = MultiMap.delete (Node.name node)
-        updatechildrenMap graph' = newgraph{children=updateNodeMultiMap $ children graph'}
+        updatechildrenMap graph' = newgraph{children=updateNodeMap $ children graph'}
     in case node of
         Node.TypeNode     _   -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph}
         Node.CallNode     _   -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph}
         Node.ClassNode    _ _ -> updatechildrenMap newgraph{classes   = updateNodeMap      $ classes graph}
-        Node.FunctionNode _ _ -> updatechildrenMap newgraph{functions = updateNodeMultiMap $ functions graph}
+        Node.FunctionNode _ _ -> updatechildrenMap newgraph{functions = updateNodeMap $ functions graph}
         Node.PackageNode  _ _ -> updatechildrenMap newgraph{packages  = updateNodeMap      $ packages graph}
         _                     -> newgraph
 
@@ -118,8 +117,8 @@ nodesByNameFrom :: Ord k => (Graph -> MultiMap k DG.Node) -> k -> Graph -> [Node
 nodesByNameFrom getter name graph = [nodeById elid graph | elid <- ids] where
     ids = MultiMap.lookup name $ getter graph
 
-childrenByName :: String -> Graph -> [Node]
-childrenByName = nodesByNameFrom children
+childrenByName :: String -> Graph -> Maybe Node
+childrenByName = nodeByNameFrom children
 
 typeByName :: String -> Graph -> Maybe Node
 typeByName      = nodeByNameFrom  types
@@ -133,5 +132,5 @@ classByName     = nodeByNameFrom  classes
 packageByName :: String -> Graph -> Maybe Node
 packageByName   = nodeByNameFrom  packages
 
-functionsByName :: String -> Graph -> [Node]
-functionsByName = nodesByNameFrom functions
+functionsByName :: String -> Graph -> Maybe Node
+functionsByName = nodeByNameFrom functions

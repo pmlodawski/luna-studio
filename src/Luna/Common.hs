@@ -26,13 +26,13 @@ import           Data.Serialize         (Serialize)
 import           Data.Word              (Word8)
 
 data Graph = Graph {
-	repr      :: DG.Gr Node Edge,
-  children  :: MultiMap String DG.Node,
-	types     :: Map 	  String DG.Node,
-	calls     :: Map 	  String DG.Node,
-	classes   :: Map 	  String DG.Node,
-	functions :: MultiMap String DG.Node,
-	packages  :: Map 	  String DG.Node
+  repr      :: DG.Gr Node Edge,
+  children  :: Map String DG.Node,
+  types     :: Map String DG.Node,
+  calls     :: Map String DG.Node,
+  classes   :: Map String DG.Node,
+  functions :: Map String DG.Node,
+  packages  :: Map String DG.Node
 } deriving (Show)
 
 -----------------------------------------------------------------
@@ -55,20 +55,20 @@ instance (Show k, Show a) => Show (MultiMap k a) where
 
 data NodeDef = NotLoaded
 	         | NodeDef {
-			       inputs 	:: [String],
-				   outputs  :: [String],
-				   imports  :: [String],
-				   graph	:: Graph,
-				   libID	:: Library.LibID
+	             inputs  :: [String],
+	             outputs :: [String],
+	             imports :: [String],
+		     graph   :: Graph,	
+		     libID   :: Library.LibID
 			   } deriving (Show)
 
 ------------------------- INSTANCES -------------------------
 
 instance Serialize Graph where
-  put i = Serialize.put (repr i, MultiMap.toMap $ children i, types i, calls i, classes i, MultiMap.toMap $ functions i, packages i)
+  put i = Serialize.put (repr i, children i, types i, calls i, classes i, functions i, packages i)
   get   = do 
             (repr', children', types', calls', classes', functions', packages') <- Serialize.get
-            return $ Graph repr' (MultiMap.fromMap children') types' calls' classes' (MultiMap.fromMap functions') packages'
+            return $ Graph repr' children' types' calls' classes' functions' packages'
 
 
 instance (Serialize a, Serialize b) => Serialize (DG.Gr a b) where

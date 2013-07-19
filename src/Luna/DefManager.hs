@@ -16,7 +16,6 @@ nodesByCName
 
 import qualified Data.List.Split       as Split
 import qualified Data.Graph.Inductive  as DG
-import qualified Data.MultiMap         as MultiMap
 import qualified Data.Serialize        as DS
 import qualified System.Directory      as System.Directory
 import qualified Luna.Graph            as Graph
@@ -32,8 +31,9 @@ import qualified Luna.System.UniPath   as UniPath
 import           Luna.System.UniPath     (UniPath)
 --import           System.Directory.Tree as SDT
 import qualified Data.ByteString       as BS
-import           System.IO.Unsafe        (unsafeInterleaveIO)
+import           System.IO.Unsafe        (unsafeInterleaveIO, unsafePerformIO)
 import           Control.Monad           (foldM)
+import           Debug.Trace
 
 
 data DefManager = DefManager{
@@ -80,7 +80,7 @@ getFilesToLoad basePath gr@(Graph.Graph _ _ _ _ classes functions packages) =
     mapper = map $ (nodeToFile basePath) . (Graph.nodeByIdFl gr)
   in
     (mapper $ Map.elems classes,
-     mapper $ concat $ MultiMap.elems functions,
+     mapper $ Map.elems functions,
      mapper $ Map.elems packages)
 
 recursiveLoad :: NodeDef.NodeDef -> UniPath -> String -> DefManager -> IO DefManager
@@ -122,7 +122,7 @@ processFile mngr basePath name' nodeCtor contents' =
             if nodeExists $ defs mngr then
               newDefs $ defs mngr
             else
-              Graph.insFreshNode ( nodeCtor name' def) $ defs mngr}
+              Graph.insFreshNode ( nodeCtor name' def) $ defs mngr }
 
 
 load :: Library -> DefManager -> IO DefManager
@@ -162,8 +162,7 @@ saveNodeToFile basePath node =
 saveGraph :: UniPath -> Graph -> IO ()
 saveGraph basePath graph =
     let
-        nameDefs = map (Graph.nodeByIdFl graph) $ Map.elems $ Map.union (Graph.classes graph) (Graph.packages graph)
-        funcs = Map.toList $ MultiMap.toMap $ Graph.functions graph
+        nameDefs = map (Graph.nodeByIdFl graph) $ Map.elems $ Map.unions [Graph.classes graph, Graph.packages graph, Graph.functions graph]
     in
       do
         -- saveThings funcs
@@ -176,18 +175,18 @@ saveManager basePath manager =
     saveGraph basePath $ defs manager
                      
 
-nodesByCName :: String -> DefManager -> [Node]
+nodesByCName :: String -> DefManager -> Maybe Node
 nodesByCName cname manager = node where
     node = nodesByCName' (Split.splitOn "." cname) (defs manager)
 
-nodesByCName' :: [String] -> Graph -> [Node]
-nodesByCName' [] _ = []
+nodesByCName' :: [String] -> Graph -> Maybe Node
+nodesByCName' [] _ = Nothing
 nodesByCName' [cname] graph = nodes where
     nodes = (Graph.childrenByName cname graph)
 nodesByCName' (cname_head:cname_tail) graph = nodes where
     children = Graph.childrenByName cname_head graph
-    graphs = map (NodeDef.graph . Node.def) children
-    nodes = concat $ map (nodesByCName' cname_tail) graphs
+    graphs = fmap (NodeDef.graph . Node.def) children
+    nodes =  (=<<) (nodesByCName' cname_tail) graphs
 
 
 --main = do
