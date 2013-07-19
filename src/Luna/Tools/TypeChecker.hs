@@ -22,7 +22,7 @@ import           Luna.Node      (Node)
 -- import qualified Luna.NodeDef as NodeDef
 
 
-typeCheck :: Graph -> DefManager -> Map DG.Node [Node]
+typeCheck :: Graph -> DefManager -> Map DG.Node (Maybe Node)
 typeCheck graph manager = m where -- TODO[PM] implement typeCheck
     nodes = DG.labNodes $ Graph.repr graph
     callNodes = filter (\(_, node) -> case node of 

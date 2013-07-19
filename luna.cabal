@@ -10,8 +10,11 @@ build-depends:  base,
 				cereal, 
 				graphviz, 
 				multimap,
-				split
-				--MissingH
+				split,
+				--MissingH,
+				bytestring,
+				directory-tree,
+                directory
 build-type:		Simple
 
 Executable:     luna
@@ -19,4 +22,5 @@ Hs-source-dirs: src
 GHC-Options:    -Wall 
 -- -F -pgmF ./util/preprocessors/imports.py
 --extensions:     StandaloneDeriving, FlexibleContexts
+extensions:     DoAndIfThenElse
 Main-Is:        Main.hs
