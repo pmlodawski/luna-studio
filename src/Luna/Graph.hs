@@ -27,27 +27,28 @@ import qualified Data.Graph.Inductive as DG
 import qualified Data.Map             as Map
 import qualified Data.MultiMap        as MultiMap
 import           Data.MultiMap          (MultiMap)
-import qualified Luna.Node            as Node
-import           Luna.Node              (Node)
-import           Luna.Edge              (Edge)
+
 import           Luna.Common            (Graph(..))
 import           Luna.Data.List         (foldri)
+import           Luna.Edge              (Edge)
+import qualified Luna.Node            as Node
+import           Luna.Node              (Node)
+
 
 
 empty :: Graph
 empty = Graph DG.empty MultiMap.empty Map.empty Map.empty Map.empty MultiMap.empty Map.empty
 
-
 insNodes :: [DG.LNode Node] -> Graph -> Graph
 insNodes = foldri insNode
 
 insNode :: DG.LNode Node -> Graph -> Graph
-insNode lnode@(id_, node) graph =
+insNode lnode@(nid, node) graph =
     let 
-        newgraph = graph{repr=DG.insNode lnode $ repr graph}
-        updateNodeMap      = Map.insert      (Node.name node) id_
-        updateNodeMultiMap = MultiMap.insert (Node.name node) id_
-        updatechildrenMap graph = newgraph{children=updateNodeMultiMap $ children graph}
+        newgraph                 = graph{repr=DG.insNode lnode $ repr graph}
+        updateNodeMap            = Map.insert      (Node.name node) nid
+        updateNodeMultiMap       = MultiMap.insert (Node.name node) nid
+        updatechildrenMap graph' = newgraph{children=updateNodeMultiMap $ children graph'}
     in case node of
         Node.TypeNode     _   -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph     }
         Node.CallNode     _   -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph     }
@@ -62,11 +63,11 @@ delNodes = foldri delNode
 delNode :: DG.Node -> Graph -> Graph
 delNode id_ graph =
     let
-        newgraph = graph{repr=DG.delNode id_ $ repr graph }
-        (_, node)     = DG.labNode' $ DG.context (repr graph) id_
-        updateNodeMap      = Map.delete      (Node.name node)
-        updateNodeMultiMap = MultiMap.delete (Node.name node)
-        updatechildrenMap graph = newgraph{children=updateNodeMultiMap $ children graph}
+        newgraph                 = graph{repr=DG.delNode id_ $ repr graph }
+        (_, node)                = DG.labNode' $ DG.context (repr graph) id_
+        updateNodeMap            = Map.delete      (Node.name node)
+        updateNodeMultiMap       = MultiMap.delete (Node.name node)
+        updatechildrenMap graph' = newgraph{children=updateNodeMultiMap $ children graph'}
     in case node of
         Node.TypeNode     _   -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph}
         Node.CallNode     _   -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph}
