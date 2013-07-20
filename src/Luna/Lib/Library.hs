@@ -5,15 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Library(
+module Luna.Lib.Library(
 Library(..),
-LibID
+LibID,
+LibNode(..)
 ) where
 
 import Luna.System.UniPath (UniPath)
 
-type LibID = Int
 
 data Library =  Library{
 	path :: UniPath
 } deriving (Show)
+
+
+type LibID   = Int
+type LibNode = (LibID, Library)

@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Luna.Common(
+module Luna.Graph.GraphBase(
 Graph   (..),
 Node    (..),
 NodeDef (..),

@@ -28,6 +28,7 @@ import qualified Data.Map             as Map
 import qualified Data.MultiMap        as MultiMap
 import           Data.MultiMap          (MultiMap)
 
+import qualified Luna.Common.Graph    as CommonG
 import           Luna.Common            (Graph(..))
 import           Luna.Data.List         (foldri)
 import           Luna.Edge              (Edge)
@@ -99,11 +100,10 @@ delEdge :: DG.Edge -> Graph -> Graph
 delEdge edge graph = graph{repr = DG.delEdge edge $ repr graph}
 
 lnodeById :: Graph -> DG.Node -> DG.LNode Node
-lnodeById graph id_ = DG.labNode' $ DG.context (repr graph) id_
+lnodeById graph nid = CommonG.lnodeById (repr graph) nid
 
 nodeById :: Graph -> DG.Node -> Node
-nodeById graph id_ = node where
-	(_, node) = lnodeById graph id_
+nodeById graph nid = CommonG.nodeById (repr graph) nid
 
 nodeByNameFrom :: Ord k => (Graph -> Map.Map k DG.Node) -> k -> Graph -> Maybe Node
 nodeByNameFrom getter name graph = 
