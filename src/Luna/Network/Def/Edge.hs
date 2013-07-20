@@ -5,17 +5,21 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Lib.Library(
-Library(..),
-ID
+module Luna.Network.Def.Edge(
+Edge(..),
+EdgeCls(..),
+noEdges
 ) where
 
-import Luna.System.UniPath (UniPath)
+import qualified Luna.Network.Def.NodeDef as NodeDef
+	
+data EdgeCls = Standard deriving (Show, Read, Ord, Eq)
 
+noEdges :: [Edge]
+noEdges = [] 
 
-data Library =  Library{
-	path :: UniPath
-} deriving (Show)
-
-
-type ID  = Int
+data Edge = Edge { 
+	src :: NodeDef.ID,
+	dst :: NodeDef.ID,
+	cls :: EdgeCls
+} deriving (Show, Read, Ord, Eq)

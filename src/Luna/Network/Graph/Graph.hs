@@ -4,9 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Luna.Graph(
+module Luna.Network.Graph.Graph(
 Graph(..),
 empty,
 
@@ -23,18 +22,28 @@ typeByName, callByName, classByName, packageByName, functionsByName
 ) where
 
 
-import qualified Data.Graph.Inductive as DG
-import qualified Data.Map             as Map
-import qualified Data.MultiMap        as MultiMap
-import           Data.MultiMap          (MultiMap)
+import qualified Data.Graph.Inductive    as DG
+import qualified Data.Map                as Map
+import           Data.Map                  (Map)
+import qualified Data.MultiMap           as MultiMap
+import           Data.MultiMap             (MultiMap)
 
-import qualified Luna.Common.Graph    as CommonG
-import           Luna.Common            (Graph(..))
-import           Luna.Data.List         (foldri)
-import           Luna.Edge              (Edge)
-import qualified Luna.Node            as Node
-import           Luna.Node              (Node)
+import qualified Luna.Common.Graph       as CommonG
+import           Luna.Data.List            (foldri)
+import           Luna.Network.Graph.Edge   (Edge)
+import qualified Luna.Network.Graph.Node as Node
+import           Luna.Network.Graph.Node   (Node)
 
+
+data Graph = Graph {
+  repr      :: DG.Gr Node Edge,
+  children  :: Map String DG.Node,
+  types     :: Map String DG.Node,
+  calls     :: Map String DG.Node,
+  classes   :: Map String DG.Node,
+  functions :: Map String DG.Node,
+  packages  :: Map String DG.Node
+} deriving (Show)
 
 
 empty :: Graph
@@ -132,3 +141,23 @@ packageByName   = nodeByNameFrom  packages
 
 functionsByName :: String -> Graph -> Maybe Node
 functionsByName = nodeByNameFrom functions
+
+------------------------- INSTANCES -------------------------
+
+--instance Serialize Graph where
+--  put i = Serialize.put (repr i, children i, types i, calls i, classes i, functions i, packages i)
+--  get   = do 
+--            (repr', children', types', calls', classes', functions', packages') <- Serialize.get
+--            return $ Graph repr' children' types' calls' classes' functions' packages'
+
+
+--instance (Serialize a, Serialize b) => Serialize (DG.Gr a b) where
+--  put i = Serialize.put (DG.labNodes i, DG.labEdges i)
+--  get = do
+--          (nd, edg) <- Serialize.get
+--          return $ DG.mkGraph nd edg
+
+
+---- FIXME[wd] move the following instance to the right place
+--instance (Show k, Show a) => Show (MultiMap k a) where
+--    show a = show $ MultiMap.toMap a

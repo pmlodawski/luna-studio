@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Edge(
+module Luna.Network.Graph.Edge(
 Edge(..),
 EdgeCls(..),
 noEdges

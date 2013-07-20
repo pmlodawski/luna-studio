@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.DefaultValue(
+module Luna.Network.Graph.DefaultValue(
 DefaultValue(..)
 ) where
 

@@ -31,7 +31,7 @@
 --import Text.Show.Pretty
 --import Text.Groom
 
-import Luna.Lib.Library (Library(..), LibNode(..))
+import Luna.Lib.Library (Library(..))
 import qualified Luna.Lib.LibManager as LibManager
 import qualified Luna.System.UniPath as UniPath
 
@@ -39,9 +39,9 @@ import qualified Luna.System.UniPath as UniPath
 main :: IO ()
 main = do 
     let
-        stdlib = Library $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib"
-        libman = LibManager.register (0, stdlib)
-               $ LibManager.empty
+        --stdlib = Library $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib"
+        --libman = LibManager.register (0, stdlib)
+        --       $ LibManager.empty
         
     return ()
 
