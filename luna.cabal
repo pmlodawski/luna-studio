@@ -14,7 +14,8 @@ build-depends:  base,
 				--MissingH,
 				bytestring,
 				directory-tree,
-                directory
+                directory,
+                lens
 build-type:		Simple
 
 Executable:     luna
@@ -23,4 +24,5 @@ GHC-Options:    -Wall
 -- -F -pgmF ./util/preprocessors/imports.py
 --extensions:     StandaloneDeriving, FlexibleContexts
 extensions:     DoAndIfThenElse
+				MultiParamTypeClasses
 Main-Is:        Main.hs

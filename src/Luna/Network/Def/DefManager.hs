@@ -6,19 +6,40 @@
 ---------------------------------------------------------------------------
 
 module Luna.Network.Def.DefManager(
-DefManager(..)
---empty
+DefManager(..),
+empty,
+add
 ) where
 
 import qualified Data.Graph.Inductive     as DG
 import           Luna.Network.Def.NodeDef   (NodeDef)
 import           Luna.Network.Def.Edge      (Edge)
+import Control.Lens
 
 
 data DefManager = DefManager{
     repr      :: DG.Gr NodeDef Edge
 } deriving (Show)
 
--- empty :: DefManager
--- empty = DefManager Map.empty Graph.empty
+empty :: DefManager
+empty = DefManager DG.empty
 
+add :: DG.LNode NodeDef -> DefManager -> DefManager
+add def manager = manager {repr = DG.insNode def $ repr manager}
+
+
+
+--class Graph gr a b where
+--	empty' :: DG.Gr a b
+--	empty' = DG.empty
+
+--	repr' :: gr -> DG.Gr a b
+
+--	add' :: a -> gr -> gr
+--	add' el g = g{repr' = DG.insNode el $ repr' g}
+	--repr'  :: gr a b -> DG.Gr a b
+	--add'   :: a -> gr a b -> gr a b
+
+
+--instance Graph DefManager where
+--	empty' = DefManager DG.empty

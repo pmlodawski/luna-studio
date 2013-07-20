@@ -7,27 +7,28 @@
 
 module Luna.Lib.LibManager(
 	LibManager(..),
-	--empty,
+	empty,
 	newIds,
 	register,
 	reload
 ) where
 
-import qualified Data.Graph.Inductive as DG
-import           Luna.Lib.Edge          (Edge)
-import qualified Luna.Lib.Library     as Library
-import           Luna.Lib.Library       (Library)
-import           Luna.Common.Graph      (newNodes)
-import qualified Luna.Common.Graph    as CommonG
-import           Luna.Network.Def.DefManager (DefManager)
+import qualified Data.Graph.Inductive        as DG
+import           Luna.Lib.Edge                 (Edge)
+import qualified Luna.Lib.Library            as Library
+import           Luna.Lib.Library              (Library)
+import           Luna.Common.Graph             (newNodes)
+import qualified Luna.Common.Graph           as CommonG
+import           Luna.Network.Def.DefManager   (DefManager)
+import qualified Luna.Network.Def.DefManager as DefManager
 
 data LibManager = LibManager {
 	repr       :: DG.Gr Library Edge,
 	defmanager :: DefManager
 } deriving (Show)
 
---empty :: LibManager
---empty = LibManager DG.empty
+empty :: LibManager
+empty = LibManager DG.empty DefManager.empty
 
 newIds :: LibManager -> [Library.ID]
 newIds manager = newNodes $ repr manager

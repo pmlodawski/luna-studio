@@ -17,4 +17,5 @@ data Type = Undefined
           | Tuple        {items  :: [Type]}
           | List         {item   :: Type  }
           | Interface    {fields :: [Type], methods :: [Type]}
+          | Package      {name   :: String}
           deriving (Show)

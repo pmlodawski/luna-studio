@@ -35,13 +35,22 @@ import Luna.Lib.Library (Library(..))
 import qualified Luna.Lib.LibManager as LibManager
 import qualified Luna.System.UniPath as UniPath
 
+import qualified Luna.Network.Def.NodeDef as NodeDef
+import qualified Luna.Type.Type           as Type
+import qualified Luna.Network.Def.DefManager as DefManager
+
 
 main :: IO ()
 main = do 
     let
-        --stdlib = Library $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib"
-        --libman = LibManager.register (0, stdlib)
-        --       $ LibManager.empty
+        stdlib = Library $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib"
+        libman = LibManager.register (0, stdlib)
+               $ LibManager.empty
+
+        n_std   = NodeDef.empty $ Type.Package "std"
+        manager = DefManager.add (0, n_std)
+        	    $ DefManager.empty
+        
         
     return ()
 

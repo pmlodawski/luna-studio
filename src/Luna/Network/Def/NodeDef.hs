@@ -8,6 +8,7 @@
 module Luna.Network.Def.NodeDef(
 NodeDef(..),
 ID,
+empty,
 noImports,
 noPorts
 ) where
