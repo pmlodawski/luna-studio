@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 
 module Luna.Lib.Edge(
-Edge(..),
-EdgeCls(..),
-noEdges
+    Edge(..),
+    EdgeCls(..),
+    noEdges
 ) where
 
 import qualified Luna.Lib.Library as Library

@@ -24,7 +24,7 @@ import qualified Luna.Network.Def.DefManager as DefManager
 
 data LibManager = LibManager {
     repr       :: DG.Gr Library Edge,
-    defmanager :: DefManager
+    defManager :: DefManager
 } deriving (Show)
 
 empty :: LibManager

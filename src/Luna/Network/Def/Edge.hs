@@ -7,19 +7,6 @@
 
 module Luna.Network.Def.Edge(
 Edge(..),
-EdgeCls(..),
-noEdges
 ) where
-
-import qualified Luna.Network.Def.NodeDef as NodeDef
     
-data EdgeCls = Standard deriving (Show, Read, Ord, Eq)
-
-noEdges :: [Edge]
-noEdges = [] 
-
-data Edge = Edge { 
-    src :: NodeDef.ID,
-    dst :: NodeDef.ID,
-    cls :: EdgeCls
-} deriving (Show, Read, Ord, Eq)
+data Edge = Contain  deriving (Show, Read, Ord, Eq)

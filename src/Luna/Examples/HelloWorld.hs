@@ -32,17 +32,22 @@ import qualified Luna.Type.Type                  as Type
 
 sample :: LibManager
 sample = libman where
-    stdlibKey = 0
-    stdlib = Library $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib"
-
-    libman = LibManager.register (0, stdlib)
-           $ LibManager.empty
-
-    n_std   = NodeDef.empty $ Type.Package "std"
-    manager = DefManager.add (0, n_std)
+    defman = DefManager.addToParentMany [
+                                        (8, 9, NodeDef.empty $ Type.Package "init"),
+                                    (5, 8, NodeDef.empty $ Type.Package "String"),
+                                    (5, 7, NodeDef.empty $ Type.Package "type"),
+                                    (5, 6, NodeDef.empty $ Type.Package "new"),
+                                (0, 5, NodeDef.empty $ Type.Package "types"),
+                                        (2, 4, NodeDef.empty $ Type.Function "print" [Type.Class "std.io.Console", Type.Class "std.types.String"] [Type.Class "std.io.Console"]),
+                                        (2, 3, NodeDef.empty $ Type.Function "init" [Type.Class "std.io.Console"] [Type.Class "std.io.Console"]),
+                                    (1, 2, NodeDef.empty $ Type.Class "Console"),
+                                (0, 1, NodeDef.empty $ Type.Package "io") ]
+            $ DefManager.add (0, NodeDef.empty $ Type.Package "std")
             $ DefManager.empty
 
-    
+    libman = LibManager.register (0, Library "std" $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib")
+           $ LibManager.empty {defManager = defman}
+
     --workspaceKey = 1
 
     --librariesMap = Map.fromList [(stdlibKey,    Library $ UniPath.fromUnixString "stdlib"),
@@ -53,33 +58,6 @@ sample = libman where
     --root_graph = Graph.insNodes [(0, Node.PackageNode "std" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_graph      stdlibKey),
     --                             (1, workspace)]
     --           $ Graph.empty
-
-    ---- std lib -------------------------------------------------------------------------------------------------------------------
-
-    --std_graph
-    -- = Graph.insNodes [(0, Node.PackageNode "types" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_types_graph stdlibKey),
-    --                   (1, Node.PackageNode "io"    $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_io_graph    stdlibKey)]
-    -- $ Graph.empty
-
-    --std_types_graph 
-    -- = Graph.insNodes [(0, Node.ClassNode    "String" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_types_String_graph stdlibKey),
-    --                   (1, Node.FunctionNode "new"    $ NodeDef ["type"]        ["instance"]    NodeDef.noImports Graph.empty            stdlibKey),
-    --                   (2, Node.FunctionNode "type"   $ NodeDef ["name"]        ["type"]        NodeDef.noImports Graph.empty            stdlibKey)]
-    -- $ Graph.empty
-
-    --std_types_String_graph 
-    -- = Graph.insNode (0, Node.FunctionNode "init" $ NodeDef ["self", "value"] ["instance"] NodeDef.noImports Graph.empty stdlibKey)
-    -- $ Graph.empty
-
-    --std_io_graph
-    -- = Graph.insNode (0, Node.ClassNode "Console" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_io_Console_graph stdlibKey)
-    -- $ Graph.empty
-
-    --std_io_Console_graph 
-    -- = Graph.insNodes [(0, Node.FunctionNode "print" $ NodeDef ["self", "value"] ["console"] NodeDef.noImports Graph.empty stdlibKey),
-    --                   (1, Node.FunctionNode "init"  $ NodeDef ["self"]         ["instance"] NodeDef.noImports Graph.empty stdlibKey)]
-    -- $ Graph.empty
-
 
     ---- user generated ------------------------------------------------------------------------------------------------------------
 

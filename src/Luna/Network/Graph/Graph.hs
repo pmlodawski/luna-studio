@@ -6,20 +6,19 @@
 ---------------------------------------------------------------------------
 
 module Luna.Network.Graph.Graph(
-Graph(..),
-empty,
+    Graph(..),
+    empty,
 
---insFreshNode, 
-add,        addMany, 
-delete,     deleteMany,
-connect,    connectMany,
-disconnect, disconnectMany,
+    --insFreshNode, 
+    add,        addMany, 
+    delete,     deleteMany,
+    connect,    connectMany,
+    disconnect, disconnectMany,
 
-lnodeById, nodeById, 
+    lnodeById, nodeById, 
 
-childrenByName,
-typeByName, callByName, classByName, packageByName, functionsByName
-
+    childrenByName,
+    typeByName, callByName, classByName, packageByName, functionsByName
 ) where
 
 

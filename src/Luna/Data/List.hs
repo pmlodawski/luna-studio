@@ -11,3 +11,6 @@ module Luna.Data.List(
 
 foldri :: (a -> b -> b) -> [a] -> b -> b
 foldri a b c = foldr a c b
+
+--foldli :: (a -> b -> b) -> [a] -> b -> b
+--foldli a b c = foldr a c b

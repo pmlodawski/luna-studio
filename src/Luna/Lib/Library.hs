@@ -6,14 +6,16 @@
 ---------------------------------------------------------------------------
 
 module Luna.Lib.Library(
-Library(..),
-ID
+    Library(..),
+    ID
 ) where
 
 import Luna.System.UniPath (UniPath)
 
 
 data Library =  Library{
+    name :: String,
+    --version :: Version,
     path :: UniPath
 } deriving (Show)
 

@@ -13,7 +13,7 @@ Type(..)
 data Type = Undefined
           | TypeVariable {name   :: String}
           | Class        {name   :: String}
-          | Function     {inputs :: [Type], outputs :: [Type]}
+          | Function     {name   :: String, inputs :: [Type], outputs :: [Type]}
           | Tuple        {items  :: [Type]}
           | List         {item   :: Type  }
           | Interface    {fields :: [Type], methods :: [Type]}

@@ -7,14 +7,20 @@
 
 module Luna.Network.Def.DefManager(
     DefManager(..),
+    
     empty,
-    add
+    
+    add,         addMany,
+    addToParent, addToParentMany
 ) where
 
+import           Control.Lens
+
+import           Luna.Data.List             (foldri)
 import qualified Data.Graph.Inductive     as DG
 import           Luna.Network.Def.NodeDef   (NodeDef)
-import           Luna.Network.Def.Edge      (Edge)
-import           Control.Lens
+import qualified Luna.Network.Def.Edge    as Edge
+import           Luna.Network.Def.Edge      (Edge(..))
 
 
 data DefManager = DefManager{
@@ -24,9 +30,20 @@ data DefManager = DefManager{
 empty :: DefManager
 empty = DefManager DG.empty
 
+
 add :: DG.LNode NodeDef -> DefManager -> DefManager
 add def manager = manager {repr = DG.insNode def $ repr manager}
 
+addMany :: [DG.LNode NodeDef] -> DefManager -> DefManager
+addMany = foldri add
+
+addToParent :: (DG.Node, DG.Node, NodeDef) -> DefManager -> DefManager
+addToParent (parentID, nodeID, lnode) manager = 
+    manager {repr = DG.insEdge (parentID, nodeID, Edge.Contain) $
+                    DG.insNode (nodeID, lnode) $ repr manager}
+
+addToParentMany :: [(DG.Node, DG.Node, NodeDef)] -> DefManager -> DefManager
+addToParentMany = foldri addToParent
 
 
 --class Graph gr a b where
