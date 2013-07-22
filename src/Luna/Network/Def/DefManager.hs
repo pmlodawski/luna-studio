@@ -6,15 +6,15 @@
 ---------------------------------------------------------------------------
 
 module Luna.Network.Def.DefManager(
-DefManager(..),
-empty,
-add
+    DefManager(..),
+    empty,
+    add
 ) where
 
 import qualified Data.Graph.Inductive     as DG
 import           Luna.Network.Def.NodeDef   (NodeDef)
 import           Luna.Network.Def.Edge      (Edge)
-import Control.Lens
+import           Control.Lens
 
 
 data DefManager = DefManager{
