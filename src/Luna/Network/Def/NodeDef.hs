@@ -21,8 +21,6 @@ import qualified Luna.Network.Graph.Graph as Graph
 data NodeDef = NotLoaded
              | NodeDef {
                  cls     :: Type,
-                 inputs  :: [String],
-                 outputs :: [String],
                  imports :: [String],
                  graph   :: Graph,
                  libID   :: Library.ID
@@ -30,9 +28,8 @@ data NodeDef = NotLoaded
 
 type ID   = Int
 
---FIXME[wd]: Czy libID powinno być ustawiane na 0?
-empty :: Type -> NodeDef
-empty t = NodeDef t noPorts noPorts noImports Graph.empty 0
+empty :: Type -> Library.ID -> NodeDef
+empty t lib = NodeDef t noImports Graph.empty lib
 
 noImports :: [String]
 noImports = []

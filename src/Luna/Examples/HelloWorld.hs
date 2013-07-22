@@ -35,21 +35,23 @@ sample = libman where
 
     ---- user generated ------------------------------------------------------------------------------------------------------------
 
+    stdLibKey = 0
+    userLibKey = 1
 
     defman = DefManager.addToParentMany [
                                         ]
-           $ DefManager.add (100, NodeDef.empty $ Type.Package "user")
+           $ DefManager.add (100, NodeDef.empty (Type.Package "user") userLibKey )
            $ DefManager.addToParentMany [
-                                        (8, 9, NodeDef.empty $ Type.Package "init"),
-                                    (5, 8, NodeDef.empty $ Type.Package "String"),
-                                    (5, 7, NodeDef.empty $ Type.Package "type"),
-                                    (5, 6, NodeDef.empty $ Type.Package "new"),
-                                (0, 5, NodeDef.empty $ Type.Package "types"),
-                                        (2, 4, NodeDef.empty $ Type.Function "print" [Type.Class "std.io.Console", Type.Class "std.types.String"] [Type.Class "std.io.Console"]),
-                                        (2, 3, NodeDef.empty $ Type.Function "init" [Type.Class "std.io.Console"] [Type.Class "std.io.Console"]),
-                                    (1, 2, NodeDef.empty $ Type.Class "Console"),
-                                (0, 1, NodeDef.empty $ Type.Package "io") ]
-           $ DefManager.add (0, NodeDef.empty $ Type.Package "std")
+                                        (8, 9, NodeDef.empty (Type.Package "init") stdLibKey),
+                                    (5, 8, NodeDef.empty (Type.Package "String") stdLibKey),
+                                    (5, 7, NodeDef.empty (Type.Package "type") stdLibKey),
+                                    (5, 6, NodeDef.empty (Type.Package "new") stdLibKey),
+                                (0, 5, NodeDef.empty (Type.Package "types") stdLibKey),
+                                        (2, 4, NodeDef.empty (Type.Function "print" [Type.Class "std.io.Console", Type.Class "std.types.String"] [Type.Class "std.io.Console"]) stdLibKey),
+                                        (2, 3, NodeDef.empty (Type.Function "init" [Type.Class "std.io.Console"] [Type.Class "std.io.Console"]) stdLibKey),
+                                    (1, 2, NodeDef.empty (Type.Class "Console") stdLibKey),
+                                (0, 1, NodeDef.empty (Type.Package "io") stdLibKey) ]
+           $ DefManager.add (0, NodeDef.empty (Type.Package "std") stdLibKey)
            $ DefManager.empty
 
     libman = LibManager.register (1, Library "user" $ UniPath.fromUnixString "~/luna-projects")
