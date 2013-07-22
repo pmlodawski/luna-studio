@@ -16,36 +16,24 @@ module Luna.Network.Graph.Graph(
     disconnect, disconnectMany,
 
     lnodeById, nodeById, 
-
-    childrenByName,
-    typeByName, callByName, classByName, packageByName, functionsByName
 ) where
 
 
 import qualified Data.Graph.Inductive    as DG
-import qualified Data.Map                as Map
-import           Data.Map                  (Map)
 
 import qualified Luna.Common.Graph       as CommonG
 import           Luna.Data.List            (foldri)
 import           Luna.Network.Graph.Edge   (Edge)
-import qualified Luna.Network.Graph.Node as Node
 import           Luna.Network.Graph.Node   (Node)
 
 
 data Graph = Graph {
-    repr      :: DG.Gr Node Edge,
-    children  :: Map String DG.Node,
-    types     :: Map String DG.Node,
-    calls     :: Map String DG.Node,
-    classes   :: Map String DG.Node,
-    functions :: Map String DG.Node,
-    packages  :: Map String DG.Node
+    repr      :: DG.Gr Node Edge
 } deriving (Show)
 
 
 empty :: Graph
-empty = Graph DG.empty Map.empty Map.empty Map.empty Map.empty Map.empty Map.empty
+empty = Graph DG.empty
 
 ------------------------- EDITION ---------------------------
 
@@ -53,19 +41,7 @@ addMany :: [DG.LNode Node] -> Graph -> Graph
 addMany = foldri add
 
 add :: DG.LNode Node -> Graph -> Graph
-add lnode@(nid, node) graph =
-    let 
-        newgraph                 = graph{repr=DG.insNode lnode $ repr graph}
-        updateNodeMap            = Map.insert (Node.name node) nid
-        updateNodeMultiMap       = Map.insert (Node.name node) nid
-        updatechildrenMap graph' = graph'{children=updateNodeMultiMap $ children graph'}
-    in case node of
-        Node.TypeNode _ _ _ -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph     }
-        Node.CallNode _ _ _ -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph     }
-        Node.ClassNode    _ -> updatechildrenMap newgraph{classes   = updateNodeMap      $ classes graph   }
-        Node.FunctionNode _ -> updatechildrenMap newgraph{functions = updateNodeMultiMap $ functions graph }
-        Node.PackageNode  _ -> updatechildrenMap newgraph{packages  = updateNodeMap      $ packages graph  }
-        _                   -> newgraph
+add lnode graph = graph{repr=DG.insNode lnode $ repr graph}
 
 -- deprecated
 freshNodeID :: Graph -> Int 
@@ -83,19 +59,7 @@ deleteMany = foldri delete
 
 delete :: DG.Node -> Graph -> Graph
 delete id_ graph =
-    let
-        newgraph                 = graph{repr=DG.delNode id_ $ repr graph }
-        (_, node)                = DG.labNode' $ DG.context (repr graph) id_
-        updateNodeMap            = Map.delete      (Node.name node)
-        updatechildrenMap graph' = newgraph{children=updateNodeMap $ children graph'}
-    in case node of
-        Node.TypeNode _ _ _ -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph}
-        Node.CallNode _ _ _ -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph}
-        Node.ClassNode    _ -> updatechildrenMap newgraph{classes   = updateNodeMap      $ classes graph}
-        Node.FunctionNode _ -> updatechildrenMap newgraph{functions = updateNodeMap $ functions graph}
-        Node.PackageNode  _ -> updatechildrenMap newgraph{packages  = updateNodeMap      $ packages graph}
-        _                     -> newgraph
-
+    graph{repr=DG.delNode id_ $ repr graph }
 
 connectMany :: [DG.LEdge Edge] -> Graph -> Graph
 connectMany = foldri connect 
@@ -117,30 +81,6 @@ lnodeById graph nid = CommonG.lnodeById (repr graph) nid
 
 nodeById :: Graph -> DG.Node -> Node
 nodeById graph nid = CommonG.nodeById (repr graph) nid
-
-nodeByNameFrom :: Ord k => (Graph -> Map.Map k DG.Node) -> k -> Graph -> Maybe Node
-nodeByNameFrom getter name graph = 
-    case Map.lookup name $ getter graph of
-        Just id_ -> Just(nodeById graph id_)
-        Nothing  -> Nothing
-
-childrenByName :: String -> Graph -> Maybe Node
-childrenByName = nodeByNameFrom children
-
-typeByName :: String -> Graph -> Maybe Node
-typeByName      = nodeByNameFrom  types
-
-callByName :: String -> Graph -> Maybe Node
-callByName      = nodeByNameFrom  calls
-
-classByName :: String -> Graph -> Maybe Node
-classByName     = nodeByNameFrom  classes
-
-packageByName :: String -> Graph -> Maybe Node
-packageByName   = nodeByNameFrom  packages
-
-functionsByName :: String -> Graph -> Maybe Node
-functionsByName = nodeByNameFrom functions
 
 ------------------------- INSTANCES -------------------------
 
