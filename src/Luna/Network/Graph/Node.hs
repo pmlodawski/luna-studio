@@ -16,8 +16,8 @@ import           Luna.Network.Attributes           (Attributes)
 
 type NodeDefID = Int
 
-data Node = TypeNode     { name :: String, flags :: Flags, attributes :: Attributes }
-          | CallNode     { name :: String, flags :: Flags, attributes :: Attributes }
+data Node = TypeNode     { typename :: String, flags :: Flags, attributes :: Attributes }
+          | CallNode     { callname :: String, flags :: Flags, attributes :: Attributes }
           | ClassNode    { did :: NodeDefID }
           | FunctionNode { did :: NodeDefID }
           | PackageNode  { did :: NodeDefID }

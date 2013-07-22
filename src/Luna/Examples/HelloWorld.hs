@@ -11,6 +11,8 @@ module Luna.Examples.HelloWorld(
 
 
 import qualified Data.Map                        as Map
+import qualified Luna.Network.Flags              as Flags
+import qualified Luna.Network.Attributes         as Attributes
 import qualified Luna.Network.Def.DefManager     as DefManager
 import           Luna.Network.Def.DefManager       (DefManager(..))
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
@@ -39,8 +41,8 @@ sample = libman where
     userLibKey = 1
 
     defman = DefManager.addToParentMany [
-                                        ]
-           $ DefManager.add (100, NodeDef.make (Type.makePackage "user") userLibKey )
+                                (100, 101, myFun)]
+           $ DefManager.add (100, NodeDef.make (Type.Package "user" workspaceImports) userLibKey )
            $ DefManager.addToParentMany [
                                         (8, 9, NodeDef.make (Type.makePackage "init") stdLibKey),
                                     (5, 8, NodeDef.make (Type.makePackage "String") stdLibKey),
@@ -60,35 +62,42 @@ sample = libman where
 
     ---- user generated ------------------------------------------------------------------------------------------------------------
 
-    --workspace = Node.FunctionNode "myFun" $ NodeDef ["in1", "in2"] NodeDef.noPorts workspaceImports workspaceGraph workspaceKey
+    workspaceImports = ["std.io.Console", 
+                        "std.io.Console.init", 
+                        "std.io.Console.print", 
+                        "std.types.type", 
+                        "std.types.new", 
+                        "std.types.String"]
 
-    --workspaceImports = ["std.io.Console", 
-    --                    "std.io.Console.init", 
-    --                    "std.io.Console.print", 
-    --                    "std.types.type", 
-    --                    "std.types.new", 
-    --                    "std.types.String"]
+    myFun = NodeDef (Type.Function "myFun" myFunInputs Type.noOutputs) 
+                     myFunGraph 
+                     Flags.empty 
+                     Attributes.empty 
+                     userLibKey
 
-    --workspaceGraph
-    -- =  Graph.insEdges [(0, 1, Edge 0 0 Edge.Standard),
-    --                    (1, 2, Edge 0 0 Edge.Standard),
-    --                    (2, 3, Edge 0 0 Edge.Standard),
-    --                    (4, 5, Edge 0 0 Edge.Standard),
-    --                    (5, 6, Edge 0 0 Edge.Standard),
-    --                    (6, 8, Edge 0 0 Edge.Standard),
-    --                    (7, 8, Edge 0 0 Edge.Standard),
-    --                    (3, 9, Edge 0 0 Edge.Standard),
-    --                    (8, 9, Edge 0 1 Edge.Standard)]
+    myFunInputs = [Type.TypeVariable "a", 
+                   Type.Named "in1" $ Type.TypeVariable "b"]
 
-    -- $ Graph.insNodes [(0, Node.DefaultNode $ DefaultValue.DefaultString "std.io.Console"),
-    --                   (1, Node.TypeNode "std.types.type"),
-    --                   (2, Node.CallNode "std.types.new"),
-    --                   (3, Node.CallNode "std.io.Console.init"),
-    --                   (4, Node.DefaultNode $ DefaultValue.DefaultString "std.types.String"),
-    --                   (5, Node.TypeNode "std.types.type"),
-    --                   (6, Node.CallNode "std.types.new"),
-    --                   (7, Node.DefaultNode $ DefaultValue.DefaultString "hello world!"),
-    --                   (8, Node.CallNode "std.types.String.init"),
-    --                   (9, Node.CallNode "std.io.Console.print")]
-    -- $ Graph.empty
+    myFunGraph
+     = Graph.connectMany [(0, 1, Edge 0 0 Edge.Standard),
+                          (1, 2, Edge 0 0 Edge.Standard),
+                          (2, 3, Edge 0 0 Edge.Standard),
+                          (4, 5, Edge 0 0 Edge.Standard),
+                          (5, 6, Edge 0 0 Edge.Standard),
+                          (6, 8, Edge 0 0 Edge.Standard),
+                          (7, 8, Edge 0 0 Edge.Standard),
+                          (3, 9, Edge 0 0 Edge.Standard),
+                          (8, 9, Edge 0 1 Edge.Standard)]
+
+     $ Graph.addMany [(0, Node.DefaultNode $ DefaultValue.DefaultString "std.io.Console"),
+                      (1, Node.TypeNode "std.types.type" Flags.empty Attributes.empty),
+                      (2, Node.CallNode "std.types.new" Flags.empty Attributes.empty),
+                      (3, Node.CallNode "std.io.Console.init" Flags.empty Attributes.empty),
+                      (4, Node.DefaultNode $ DefaultValue.DefaultString "std.types.String"),
+                      (5, Node.TypeNode "std.types.type" Flags.empty Attributes.empty),
+                      (6, Node.CallNode "std.types.new" Flags.empty Attributes.empty),
+                      (7, Node.DefaultNode $ DefaultValue.DefaultString "hello world!"),
+                      (8, Node.CallNode "std.types.String.init" Flags.empty Attributes.empty),
+                      (9, Node.CallNode "std.io.Console.print" Flags.empty Attributes.empty)]
+     $ Graph.empty
 

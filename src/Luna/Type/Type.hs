@@ -31,13 +31,13 @@ data Type = Undefined
 noImports :: [String]
 noImports = []
 
-noInputs :: [String]
+noInputs :: [Type]
 noInputs = []
 
-noOutputs :: [String]
+noOutputs :: [Type]
 noOutputs = []
 
-noParams :: [String]
+noParams :: [Type]
 noParams = []
 
 makePackage :: String -> Type
