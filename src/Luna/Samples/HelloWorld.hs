@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Examples.HelloWorld(
+module Luna.Samples.HelloWorld(
     sample
 ) where
 

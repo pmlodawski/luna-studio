@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import qualified Luna.Examples.HelloWorld as HelloWorld
+import qualified Luna.Samples.HelloWorld as HelloWorld
 
 main :: IO ()
 main = do 
