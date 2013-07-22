@@ -54,8 +54,8 @@ sample = libman where
            $ DefManager.add (0, NodeDef.make (Type.makePackage "std") stdLibKey)
            $ DefManager.empty
 
-    libman = LibManager.register (1, Library "user" $ UniPath.fromUnixString "~/luna-projects")
-           $ LibManager.register (0, Library "std" $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib")
+    libman = LibManager.register (userLibKey, Library "user" $ UniPath.fromUnixString "~/luna-projects")
+           $ LibManager.register (stdLibKey,  Library "std" $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib")
            $ LibManager.empty {defManager = defman }
 
     ---- user generated ------------------------------------------------------------------------------------------------------------

@@ -43,17 +43,6 @@ addMany = foldri add
 add :: DG.LNode Node -> Graph -> Graph
 add lnode graph = graph{repr=DG.insNode lnode $ repr graph}
 
--- deprecated
-freshNodeID :: Graph -> Int 
-freshNodeID gr = case DG.nodes $ repr gr of
-                   []       -> 0
-                   nodeList -> 1 + maximum nodeList
-
--- deprecated
-insFreshNode :: Node -> Graph -> Graph
-insFreshNode node gr = add ((freshNodeID gr), node) gr 
-
-
 deleteMany :: [DG.Node] -> Graph -> Graph
 deleteMany = foldri delete
 

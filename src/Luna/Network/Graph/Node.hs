@@ -6,13 +6,12 @@
 ---------------------------------------------------------------------------
 
 module Luna.Network.Graph.Node(
-Node(..)
+    Node(..),
+    ID
 ) where
 
 import           Luna.Network.Graph.DefaultValue   (DefaultValue)
-import qualified Luna.Network.Flags              as Flags
 import           Luna.Network.Flags                (Flags)
-import qualified Luna.Network.Attributes         as Attributes
 import           Luna.Network.Attributes           (Attributes)
 
 type NodeDefID = Int

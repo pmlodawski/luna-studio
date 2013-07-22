@@ -14,8 +14,6 @@ module Luna.Network.Def.DefManager(
     addToParent, addToParentMany
 ) where
 
-import           Control.Lens
-
 import           Luna.Data.List             (foldri)
 import qualified Data.Graph.Inductive     as DG
 import           Luna.Network.Def.NodeDef   (NodeDef)
