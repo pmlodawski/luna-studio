@@ -12,10 +12,11 @@ Type(..)
 
 data Type = Undefined
           | TypeVariable {name   :: String}
-          | Class        {name   :: String}
+          | Class        {name   :: String, params :: [Type]}
           | Function     {name   :: String, inputs :: [Type], outputs :: [Type]}
           | Tuple        {items  :: [Type]}
-          | List         {item   :: Type  }
+          | List         {item   ::  Type }
           | Interface    {fields :: [Type], methods :: [Type]}
           | Package      {name   :: String}
+          | Named        {name   :: String, cls :: Type}
           deriving (Show)

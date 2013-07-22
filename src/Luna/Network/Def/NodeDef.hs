@@ -9,7 +9,7 @@ module Luna.Network.Def.NodeDef(
     NodeDef(..),
     ID,
 
-    empty,
+    make,
 
     noImports,
     noPorts
@@ -37,8 +37,8 @@ data NodeDef = NotLoaded
 
 type ID   = Int
 
-empty :: Type -> Library.ID -> NodeDef
-empty t lib = NodeDef t noImports Graph.empty Flags.empty Attributes.empty lib
+make :: Type -> Library.ID -> NodeDef
+make t lib = NodeDef t noImports Graph.empty Flags.empty Attributes.empty lib
 
 noImports :: [String]
 noImports = []
