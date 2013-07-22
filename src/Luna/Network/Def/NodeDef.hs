@@ -11,7 +11,6 @@ module Luna.Network.Def.NodeDef(
 
     make,
 
-    noImports,
     noPorts
 ) where
 
@@ -28,7 +27,6 @@ import           Luna.Network.Attributes    (Attributes)
 data NodeDef = NotLoaded
              | NodeDef {
                    cls        :: Type,
-                   imports    :: [String],
                    graph      :: Graph,
                    flags      :: Flags, 
                    attributes :: Attributes,
@@ -38,10 +36,7 @@ data NodeDef = NotLoaded
 type ID   = Int
 
 make :: Type -> Library.ID -> NodeDef
-make t lib = NodeDef t noImports Graph.empty Flags.empty Attributes.empty lib
-
-noImports :: [String]
-noImports = []
+make t lib = NodeDef t Graph.empty Flags.empty Attributes.empty lib
 
 noPorts :: [String]
 noPorts = []

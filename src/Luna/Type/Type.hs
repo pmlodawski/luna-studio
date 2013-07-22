@@ -6,7 +6,14 @@
 ---------------------------------------------------------------------------
 
 module Luna.Type.Type(
-Type(..)
+Type(..),
+
+noImports,
+noInputs,
+noOutputs,
+noParams,
+
+makePackage
 ) where
 
 
@@ -17,6 +24,21 @@ data Type = Undefined
           | Tuple        {items  :: [Type]}
           | List         {item   ::  Type }
           | Interface    {fields :: [Type], methods :: [Type]}
-          | Package      {name   :: String}
+          | Package      {name   :: String, imports :: [String]}
           | Named        {name   :: String, cls :: Type}
           deriving (Show)
+
+noImports :: [String]
+noImports = []
+
+noInputs :: [String]
+noInputs = []
+
+noOutputs :: [String]
+noOutputs = []
+
+noParams :: [String]
+noParams = []
+
+makePackage :: String -> Type
+makePackage name' = Package name' noImports

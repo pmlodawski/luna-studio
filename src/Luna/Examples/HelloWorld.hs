@@ -40,18 +40,18 @@ sample = libman where
 
     defman = DefManager.addToParentMany [
                                         ]
-           $ DefManager.add (100, NodeDef.make (Type.Package "user") userLibKey )
+           $ DefManager.add (100, NodeDef.make (Type.makePackage "user") userLibKey )
            $ DefManager.addToParentMany [
-                                        (8, 9, NodeDef.make (Type.Package "init") stdLibKey),
-                                    (5, 8, NodeDef.make (Type.Package "String") stdLibKey),
-                                    (5, 7, NodeDef.make (Type.Package "type") stdLibKey),
-                                    (5, 6, NodeDef.make (Type.Package "new") stdLibKey),
-                                (0, 5, NodeDef.make (Type.Package "types") stdLibKey),
+                                        (8, 9, NodeDef.make (Type.makePackage "init") stdLibKey),
+                                    (5, 8, NodeDef.make (Type.makePackage "String") stdLibKey),
+                                    (5, 7, NodeDef.make (Type.makePackage "type") stdLibKey),
+                                    (5, 6, NodeDef.make (Type.makePackage "new") stdLibKey),
+                                (0, 5, NodeDef.make (Type.makePackage "types") stdLibKey),
                                         (2, 4, NodeDef.make (Type.Function "print" [Type.Class "std.io.Console" [], Type.Class "std.types.String" []] [Type.Class "std.io.Console"[]]) stdLibKey),
                                         (2, 3, NodeDef.make (Type.Function "init" [Type.Class "std.io.Console" []] [Type.Class "std.io.Console"[]]) stdLibKey),
                                     (1, 2, NodeDef.make (Type.Class "Console" []) stdLibKey),
-                                (0, 1, NodeDef.make (Type.Package "io") stdLibKey) ]
-           $ DefManager.add (0, NodeDef.make (Type.Package "std") stdLibKey)
+                                (0, 1, NodeDef.make (Type.makePackage "io") stdLibKey) ]
+           $ DefManager.add (0, NodeDef.make (Type.makePackage "std") stdLibKey)
            $ DefManager.empty
 
     libman = LibManager.register (1, Library "user" $ UniPath.fromUnixString "~/luna-projects")
