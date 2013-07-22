@@ -6,30 +6,39 @@
 ---------------------------------------------------------------------------
 
 module Luna.Network.Def.NodeDef(
-NodeDef(..),
-ID,
-empty,
-noImports,
-noPorts
+    NodeDef(..),
+    ID,
+
+    empty,
+
+    noImports,
+    noPorts
 ) where
 
 import           Luna.Type.Type             (Type)
 import qualified Luna.Lib.Library         as Library
 import           Luna.Network.Graph.Graph   (Graph)
 import qualified Luna.Network.Graph.Graph as Graph
+import qualified Luna.Network.Flags       as Flags
+import           Luna.Network.Flags         (Flags)
+import qualified Luna.Network.Attributes  as Attributes
+import           Luna.Network.Attributes    (Attributes)
+
 
 data NodeDef = NotLoaded
              | NodeDef {
-                 cls     :: Type,
-                 imports :: [String],
-                 graph   :: Graph,
-                 libID   :: Library.ID
+                   cls        :: Type,
+                   imports    :: [String],
+                   graph      :: Graph,
+                   flags      :: Flags, 
+                   attributes :: Attributes,
+                   libID      :: Library.ID
                } deriving (Show)
 
 type ID   = Int
 
 empty :: Type -> Library.ID -> NodeDef
-empty t lib = NodeDef t noImports Graph.empty lib
+empty t lib = NodeDef t noImports Graph.empty Flags.empty Attributes.empty lib
 
 noImports :: [String]
 noImports = []

@@ -60,12 +60,12 @@ add lnode@(nid, node) graph =
         updateNodeMultiMap       = Map.insert (Node.name node) nid
         updatechildrenMap graph' = graph'{children=updateNodeMultiMap $ children graph'}
     in case node of
-        Node.TypeNode     _   -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph     }
-        Node.CallNode     _   -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph     }
-        Node.ClassNode    _ _ -> updatechildrenMap newgraph{classes   = updateNodeMap      $ classes graph   }
-        Node.FunctionNode _ _ -> updatechildrenMap newgraph{functions = updateNodeMultiMap $ functions graph }
-        Node.PackageNode  _ _ -> updatechildrenMap newgraph{packages  = updateNodeMap      $ packages graph  }
-        _                     -> newgraph
+        Node.TypeNode _ _ _ -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph     }
+        Node.CallNode _ _ _ -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph     }
+        Node.ClassNode    _ -> updatechildrenMap newgraph{classes   = updateNodeMap      $ classes graph   }
+        Node.FunctionNode _ -> updatechildrenMap newgraph{functions = updateNodeMultiMap $ functions graph }
+        Node.PackageNode  _ -> updatechildrenMap newgraph{packages  = updateNodeMap      $ packages graph  }
+        _                   -> newgraph
 
 -- deprecated
 freshNodeID :: Graph -> Int 
@@ -89,11 +89,11 @@ delete id_ graph =
         updateNodeMap            = Map.delete      (Node.name node)
         updatechildrenMap graph' = newgraph{children=updateNodeMap $ children graph'}
     in case node of
-        Node.TypeNode     _   -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph}
-        Node.CallNode     _   -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph}
-        Node.ClassNode    _ _ -> updatechildrenMap newgraph{classes   = updateNodeMap      $ classes graph}
-        Node.FunctionNode _ _ -> updatechildrenMap newgraph{functions = updateNodeMap $ functions graph}
-        Node.PackageNode  _ _ -> updatechildrenMap newgraph{packages  = updateNodeMap      $ packages graph}
+        Node.TypeNode _ _ _ -> updatechildrenMap newgraph{types     = updateNodeMap      $ types graph}
+        Node.CallNode _ _ _ -> updatechildrenMap newgraph{calls     = updateNodeMap      $ calls graph}
+        Node.ClassNode    _ -> updatechildrenMap newgraph{classes   = updateNodeMap      $ classes graph}
+        Node.FunctionNode _ -> updatechildrenMap newgraph{functions = updateNodeMap $ functions graph}
+        Node.PackageNode  _ -> updatechildrenMap newgraph{packages  = updateNodeMap      $ packages graph}
         _                     -> newgraph
 
 

@@ -9,15 +9,19 @@ module Luna.Network.Graph.Node(
 Node(..)
 ) where
 
-import Luna.Network.Graph.DefaultValue (DefaultValue)
+import           Luna.Network.Graph.DefaultValue   (DefaultValue)
+import qualified Luna.Network.Flags              as Flags
+import           Luna.Network.Flags                (Flags)
+import qualified Luna.Network.Attributes         as Attributes
+import           Luna.Network.Attributes           (Attributes)
 
 type NodeDefID = Int
 
-data Node = TypeNode     { name  :: String }
-          | CallNode     { name  :: String }
-          | ClassNode    { name  :: String, did :: NodeDefID }
-          | FunctionNode { name  :: String, did :: NodeDefID }
-          | PackageNode  { name  :: String, did :: NodeDefID }
+data Node = TypeNode     { name :: String, flags :: Flags, attributes :: Attributes }
+          | CallNode     { name :: String, flags :: Flags, attributes :: Attributes }
+          | ClassNode    { did :: NodeDefID }
+          | FunctionNode { did :: NodeDefID }
+          | PackageNode  { did :: NodeDefID }
           | DefaultNode  { value :: DefaultValue }
           deriving (Show)
 
@@ -33,7 +37,6 @@ type ID     = Int
 --            FunctionNode name'  _ -> Serialize.put (3 :: Word8, name')
 --            PackageNode  name'  _ -> Serialize.put (4 :: Word8, name')
 --            DefaultNode  value'   -> Serialize.put (5 :: Word8, value')
-
 --  get   = do 
 --            t <- Serialize.get :: Serialize.Get Word8
 --            case t of 
