@@ -32,15 +32,17 @@ import qualified Luna.Type.Type                  as Type
 
 sample :: LibManager
 sample = libman where
-           stdlib = Library $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib"
-           libman = LibManager.register (0, stdlib)
-                  $ LibManager.empty
+    stdlibKey = 0
+    stdlib = Library $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib"
 
-           n_std   = NodeDef.empty $ Type.Package "std"
-           manager = DefManager.add (0, n_std)
-                   $ DefManager.empty
+    libman = LibManager.register (0, stdlib)
+           $ LibManager.empty
 
-    --stdlibKey    = 0
+    n_std   = NodeDef.empty $ Type.Package "std"
+    manager = DefManager.add (0, n_std)
+            $ DefManager.empty
+
+    
     --workspaceKey = 1
 
     --librariesMap = Map.fromList [(stdlibKey,    Library $ UniPath.fromUnixString "stdlib"),

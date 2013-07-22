@@ -9,10 +9,11 @@ module Luna.Network.Graph.Graph(
 Graph(..),
 empty,
 
-insNode, insNodes, insFreshNode,
-delNode, delNodes,
-insEdge, insEdges,
-delEdge, delEdges,
+--insFreshNode, 
+add,        addMany, 
+delete,     deleteMany,
+connect,    connectMany,
+disconnect, disconnectMany,
 
 lnodeById, nodeById, 
 
@@ -25,8 +26,6 @@ typeByName, callByName, classByName, packageByName, functionsByName
 import qualified Data.Graph.Inductive    as DG
 import qualified Data.Map                as Map
 import           Data.Map                  (Map)
-import qualified Data.MultiMap           as MultiMap
-import           Data.MultiMap             (MultiMap)
 
 import qualified Luna.Common.Graph       as CommonG
 import           Luna.Data.List            (foldri)
@@ -49,11 +48,13 @@ data Graph = Graph {
 empty :: Graph
 empty = Graph DG.empty Map.empty Map.empty Map.empty Map.empty Map.empty Map.empty
 
-insNodes :: [DG.LNode Node] -> Graph -> Graph
-insNodes = foldri insNode
+------------------------- EDITION ---------------------------
 
-insNode :: DG.LNode Node -> Graph -> Graph
-insNode lnode@(nid, node) graph =
+addMany :: [DG.LNode Node] -> Graph -> Graph
+addMany = foldri add
+
+add :: DG.LNode Node -> Graph -> Graph
+add lnode@(nid, node) graph =
     let 
         newgraph                 = graph{repr=DG.insNode lnode $ repr graph}
         updateNodeMap            = Map.insert (Node.name node) nid
@@ -67,20 +68,22 @@ insNode lnode@(nid, node) graph =
         Node.PackageNode  _ _ -> updatechildrenMap newgraph{packages  = updateNodeMap      $ packages graph  }
         _                     -> newgraph
 
-freshNodeID :: Graph -> Int
+-- deprecated
+freshNodeID :: Graph -> Int 
 freshNodeID gr = case DG.nodes $ repr gr of
                    []       -> 0
                    nodeList -> 1 + maximum nodeList
 
+-- deprecated
 insFreshNode :: Node -> Graph -> Graph
-insFreshNode node gr = insNode ((freshNodeID gr), node) gr 
+insFreshNode node gr = add ((freshNodeID gr), node) gr 
 
 
-delNodes :: [DG.Node] -> Graph -> Graph
-delNodes = foldri delNode
+deleteMany :: [DG.Node] -> Graph -> Graph
+deleteMany = foldri delete
 
-delNode :: DG.Node -> Graph -> Graph
-delNode id_ graph =
+delete :: DG.Node -> Graph -> Graph
+delete id_ graph =
     let
         newgraph                 = graph{repr=DG.delNode id_ $ repr graph }
         (_, node)                = DG.labNode' $ DG.context (repr graph) id_
@@ -95,18 +98,20 @@ delNode id_ graph =
         _                     -> newgraph
 
 
-insEdges :: [DG.LEdge Edge] -> Graph -> Graph
-insEdges = foldri insEdge 
+connectMany :: [DG.LEdge Edge] -> Graph -> Graph
+connectMany = foldri connect 
 
-insEdge :: DG.LEdge Edge -> Graph -> Graph
-insEdge ledge graph = graph{repr = DG.insEdge ledge $ repr graph}
+connect :: DG.LEdge Edge -> Graph -> Graph
+connect ledge graph = graph{repr = DG.insEdge ledge $ repr graph}
 
 
-delEdges :: [DG.Edge] -> Graph -> Graph
-delEdges = foldri delEdge 
+disconnectMany :: [DG.Edge] -> Graph -> Graph
+disconnectMany = foldri disconnect 
 
-delEdge :: DG.Edge -> Graph -> Graph
-delEdge edge graph = graph{repr = DG.delEdge edge $ repr graph}
+disconnect :: DG.Edge -> Graph -> Graph
+disconnect edge graph = graph{repr = DG.delEdge edge $ repr graph}
+
+------------------------- GETTERS ---------------------------
 
 lnodeById :: Graph -> DG.Node -> DG.LNode Node
 lnodeById graph nid = CommonG.lnodeById (repr graph) nid
@@ -119,10 +124,6 @@ nodeByNameFrom getter name graph =
     case Map.lookup name $ getter graph of
         Just id_ -> Just(nodeById graph id_)
         Nothing  -> Nothing
-
-nodesByNameFrom :: Ord k => (Graph -> MultiMap k DG.Node) -> k -> Graph -> [Node]
-nodesByNameFrom getter name graph = [nodeById graph elid | elid <- ids] where
-    ids = MultiMap.lookup name $ getter graph
 
 childrenByName :: String -> Graph -> Maybe Node
 childrenByName = nodeByNameFrom children
