@@ -12,14 +12,14 @@ noEdges
 ) where
 
 import qualified Luna.Lib.Library as Library
-	
+
 data EdgeCls = Standard deriving (Show, Read, Ord, Eq)
 
 noEdges :: [Edge]
 noEdges = [] 
 
 data Edge = Edge { 
-	src :: Library.ID,
-	dst :: Library.ID,
-	cls :: EdgeCls
+    src :: Library.ID,
+    dst :: Library.ID,
+    cls :: EdgeCls
 } deriving (Show, Read, Ord, Eq)

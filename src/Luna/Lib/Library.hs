@@ -14,7 +14,7 @@ import Luna.System.UniPath (UniPath)
 
 
 data Library =  Library{
-	path :: UniPath
+    path :: UniPath
 } deriving (Show)
 
 

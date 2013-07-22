@@ -12,14 +12,14 @@ noEdges
 ) where
 
 import qualified Luna.Network.Def.NodeDef as NodeDef
-	
+    
 data EdgeCls = Standard deriving (Show, Read, Ord, Eq)
 
 noEdges :: [Edge]
 noEdges = [] 
 
 data Edge = Edge { 
-	src :: NodeDef.ID,
-	dst :: NodeDef.ID,
-	cls :: EdgeCls
+    src :: NodeDef.ID,
+    dst :: NodeDef.ID,
+    cls :: EdgeCls
 } deriving (Show, Read, Ord, Eq)

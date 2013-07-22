@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 
 module Luna.Lib.LibManager(
-	LibManager(..),
-	empty,
-	newIds,
-	register,
-	reload
+    LibManager(..),
+    empty,
+    newIds,
+    register,
+    reload
 ) where
 
 import qualified Data.Graph.Inductive        as DG
@@ -23,8 +23,8 @@ import           Luna.Network.Def.DefManager   (DefManager)
 import qualified Luna.Network.Def.DefManager as DefManager
 
 data LibManager = LibManager {
-	repr       :: DG.Gr Library Edge,
-	defmanager :: DefManager
+    repr       :: DG.Gr Library Edge,
+    defmanager :: DefManager
 } deriving (Show)
 
 empty :: LibManager

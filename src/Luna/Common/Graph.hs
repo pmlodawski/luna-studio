@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 
 module Luna.Common.Graph(
-	newNodes,
-	lnodeById,
-	nodeById
+    newNodes,
+    lnodeById,
+    nodeById
 ) where
 
 import qualified Data.Graph.Inductive as DG

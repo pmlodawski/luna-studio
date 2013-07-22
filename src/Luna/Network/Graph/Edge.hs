@@ -17,16 +17,16 @@ import           Data.Serialize         (Serialize)
 
 import Control.Monad(liftM)
 --import Data.GraphViz.Attributes (Labellable, toLabelValue)
-	
+    
 data EdgeCls = Standard | Arrow deriving (Show, Read, Ord, Eq)
 
 noEdges :: [Edge]
 noEdges = [] 
 
 data Edge = Edge { 
-	src :: Int,
-	dst :: Int,
-	cls :: EdgeCls
+    src :: Int,
+    dst :: Int,
+    cls :: EdgeCls
 } deriving (Show, Read, Ord, Eq)
 
 ------------------------- INSTANCES -------------------------

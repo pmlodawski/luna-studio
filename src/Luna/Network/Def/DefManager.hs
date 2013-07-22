@@ -30,16 +30,16 @@ add def manager = manager {repr = DG.insNode def $ repr manager}
 
 
 --class Graph gr a b where
---	empty' :: DG.Gr a b
---	empty' = DG.empty
+--  empty' :: DG.Gr a b
+--  empty' = DG.empty
 
---	repr' :: gr -> DG.Gr a b
+--  repr' :: gr -> DG.Gr a b
 
---	add' :: a -> gr -> gr
---	add' el g = g{repr' = DG.insNode el $ repr' g}
-	--repr'  :: gr a b -> DG.Gr a b
-	--add'   :: a -> gr a b -> gr a b
+--  add' :: a -> gr -> gr
+--  add' el g = g{repr' = DG.insNode el $ repr' g}
+    --repr'  :: gr a b -> DG.Gr a b
+    --add'   :: a -> gr a b -> gr a b
 
 
 --instance Graph DefManager where
---	empty' = DefManager DG.empty
+--  empty' = DefManager DG.empty

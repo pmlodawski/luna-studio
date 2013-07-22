@@ -21,17 +21,17 @@ import           Luna.Node       (Node)
 
 showGraph :: Graph -> IO ()
 showGraph graph = do 
-	let 
-		graphrepr = Graph.repr graph
-	print $ defaultVis graphrepr  -- prints dot graphviz representation
-	GV.preview $ graphrepr-- shows interactive view while compiling from sublime
+    let 
+        graphrepr = Graph.repr graph
+    print $ defaultVis graphrepr  -- prints dot graphviz representation
+    GV.preview $ graphrepr-- shows interactive view while compiling from sublime
 
 defaultVis :: (DG.Graph gr) => gr nl el -> GV.DotGraph DG.Node
 defaultVis = GV.graphToDot GV.nonClusteredParams
 
 
 instance GV.Labellable Edge where
-	toLabelValue = GV.toLabelValue . show
+    toLabelValue = GV.toLabelValue . show
 
 instance GV.Labellable Node where
         toLabelValue = GV.toLabelValue . show

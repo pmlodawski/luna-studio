@@ -36,13 +36,13 @@ import           Luna.Network.Graph.Node   (Node)
 
 
 data Graph = Graph {
-  repr      :: DG.Gr Node Edge,
-  children  :: Map String DG.Node,
-  types     :: Map String DG.Node,
-  calls     :: Map String DG.Node,
-  classes   :: Map String DG.Node,
-  functions :: Map String DG.Node,
-  packages  :: Map String DG.Node
+    repr      :: DG.Gr Node Edge,
+    children  :: Map String DG.Node,
+    types     :: Map String DG.Node,
+    calls     :: Map String DG.Node,
+    classes   :: Map String DG.Node,
+    functions :: Map String DG.Node,
+    packages  :: Map String DG.Node
 } deriving (Show)
 
 

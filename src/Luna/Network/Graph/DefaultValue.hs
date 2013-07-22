@@ -14,8 +14,8 @@ import           Data.Serialize         (Serialize)
 import           Data.Word              (Word8)
 
 data DefaultValue = DefaultInt Int
-				  | DefaultString String 
-				  deriving (Show, Read, Ord, Eq)
+                  | DefaultString String 
+                  deriving (Show, Read, Ord, Eq)
 
 
 

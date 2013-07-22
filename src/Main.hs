@@ -49,8 +49,9 @@ main = do
 
         n_std   = NodeDef.empty $ Type.Package "std"
         manager = DefManager.add (0, n_std)
-        	    $ DefManager.empty
+                $ DefManager.empty
         
+    print manager
         
     return ()
 
@@ -67,7 +68,7 @@ main = do
 
 
 --testSerialization = do
---    	let 
+--      let 
 --            lib = Library.Library $ Path.fromUnixString "lunalib/std"
 --        putStrLn "Hello programmer! I am Lunac, the Luna compiler"
 --        pwd <- System.Directory.getCurrentDirectory
@@ -77,8 +78,8 @@ main = do
 --        print "====================================="
 --        print "load.save :"
 --        DefManager.saveManager (Path.fromUnixString "lunalib") $ snd Samples.sample_helloWorld
---    	manager <- DefManager.load lib DefManager.empty
---    	print manager
+--      manager <- DefManager.load lib DefManager.empty
+--      print manager
         
 
 --showCode :: Node -> DefManager -> IO ()
