@@ -32,7 +32,14 @@ import qualified Luna.Type.Type                  as Type
 
 sample :: LibManager
 sample = libman where
+
+    ---- user generated ------------------------------------------------------------------------------------------------------------
+
+
     defman = DefManager.addToParentMany [
+                                        ]
+           $ DefManager.add (100, NodeDef.empty $ Type.Package "user")
+           $ DefManager.addToParentMany [
                                         (8, 9, NodeDef.empty $ Type.Package "init"),
                                     (5, 8, NodeDef.empty $ Type.Package "String"),
                                     (5, 7, NodeDef.empty $ Type.Package "type"),
@@ -42,22 +49,12 @@ sample = libman where
                                         (2, 3, NodeDef.empty $ Type.Function "init" [Type.Class "std.io.Console"] [Type.Class "std.io.Console"]),
                                     (1, 2, NodeDef.empty $ Type.Class "Console"),
                                 (0, 1, NodeDef.empty $ Type.Package "io") ]
-            $ DefManager.add (0, NodeDef.empty $ Type.Package "std")
-            $ DefManager.empty
+           $ DefManager.add (0, NodeDef.empty $ Type.Package "std")
+           $ DefManager.empty
 
-    libman = LibManager.register (0, Library "std" $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib")
-           $ LibManager.empty {defManager = defman}
-
-    --workspaceKey = 1
-
-    --librariesMap = Map.fromList [(stdlibKey,    Library $ UniPath.fromUnixString "stdlib"),
-    --                             (workspaceKey, Library $ UniPath.fromUnixString "workspace")]
-    
-    --manager = DefManager librariesMap root_graph 
-
-    --root_graph = Graph.insNodes [(0, Node.PackageNode "std" $ NodeDef NodeDef.noPorts NodeDef.noPorts NodeDef.noImports std_graph      stdlibKey),
-    --                             (1, workspace)]
-    --           $ Graph.empty
+    libman = LibManager.register (1, Library "user" $ UniPath.fromUnixString "~/luna-projects")
+           $ LibManager.register (0, Library "std" $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib")
+           $ LibManager.empty {defManager = defman }
 
     ---- user generated ------------------------------------------------------------------------------------------------------------
 
