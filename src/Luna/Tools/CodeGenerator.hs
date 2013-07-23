@@ -6,81 +6,121 @@
 ---------------------------------------------------------------------------
 
 module Luna.Tools.CodeGenerator(
-generateCode
+generateImportCode,
+generateImportsCode,
+generateTypeCode
 ) where
 
-import qualified Data.Graph.Inductive as DG
-import qualified Data.List            as List
-import qualified Data.Map             as Map
 
-import           Luna.DefManager        (DefManager(..))
-import qualified Luna.DefaultValue    as DefaultValue
-import qualified Luna.Edge            as Edge
-import           Luna.Edge              (Edge(..))
-import qualified Luna.Graph           as Graph
-import           Luna.Graph             (Graph(..))
-import qualified Luna.Node            as Node
-import           Luna.Node              (Node)
-import qualified Luna.NodeDef         as NodeDef
-import           Luna.NodeDef           (NodeDef(..))
+import Debug.Trace
+
+--import qualified Data.Graph.Inductive as DG
+--import qualified Data.List            as List
+--import qualified Data.Map             as Map
+
+--import           Luna.DefManager        (DefManager(..))
+--import qualified Luna.DefaultValue    as DefaultValue
+--import qualified Luna.Edge            as Edge
+--import           Luna.Edge              (Edge(..))
+
+--import qualified Luna.Node            as Node
+--import           Luna.Node              (Node)
+--import qualified Luna.NodeDef         as NodeDef
+--import           Luna.NodeDef           (NodeDef(..))
 -- import           Luna.Library           (Library(..))
 
+import           Data.String.Utils                 (join)
 
-generateCode :: Node -> DefManager -> String
-generateCode node manager = generateImports def
-                         ++ "\n\n" 
-                         ++ case node of 
-                            Node.FunctionNode _ _ -> generateFunction node
-    where
-        def = Node.def node
+import qualified Luna.Type.Type                  as Type
+import           Luna.Type.Type                    (Type)
+import qualified Luna.Network.Path.Import        as Import
+import           Luna.Network.Path.Import          (Import(..))
+import qualified Luna.Network.Path.Path          as Path
+import qualified Luna.Network.Graph.Graph        as Graph
+import           Luna.Network.Graph.Graph          (Graph(..))
 
---- common stuff generation -----------------------------------------------------
 
-generateImports :: NodeDef -> String
-generateImports nodeDef = foldr (++) "" imports where
-    imports = map (\a -> "import " ++ a ++ "\n") $ NodeDef.imports nodeDef
+generateImportCode :: Import -> String
+generateImportCode i = let
+    segments = Path.segments $ Import.path i
+    items    = Import.items i
+    import_list       = [(join "." (segments++[i]),i) | i <- items]
+    simple_imports    = ["import           " ++ path ++ " as " ++ item         | (path, item) <-import_list]
+    qualified_imports = ["import qualified " ++ path ++ " (" ++ item ++"(..))" | (path, item) <-import_list]
+    in join "\n" (simple_imports++qualified_imports)
 
-indent :: Int -> String
-indent num = replicate (num*4) ' '
 
-comment :: String
-comment = "-- "
+generateImportsCode :: [Import] -> String
+generateImportsCode i = join "\n" $ fmap generateImportCode i
 
---- function generation ---------------------------------------------------------
 
-generateFunction :: Node -> String
-generateFunction node@(Node.FunctionNode name def) = generateFunctionHeader node
-                                                  ++ generateFunctionBody def
-                                                  ++ generateFunctionReturn def
+generateTypeCode :: Type -> String 
+generateTypeCode t = code where
+    code = case t of
+        Type.Package name imports -> generateImportsCode imports
+        otherwise    -> "ERROR"
 
-generateFunctionHeader :: Node -> String
-generateFunctionHeader node = name ++ " " ++ arguments ++ " = \n" where
-    name = Node.name node
-    arguments = List.intercalate " " (NodeDef.inputs $ Node.def node)
+generateGraphCode :: Graph -> String
+generateGraphCode g = undefined
 
-generateFunctionBody :: NodeDef -> String
-generateFunctionBody nodeDef = foldr (++) "" nodesCodes where
-    graph = NodeDef.graph nodeDef
-    rgraph = Graph.repr graph
-    vertices = DG.topsort rgraph
-    nodes = map (Graph.lnodeById graph) vertices
-    nodesCodes = map (generateNodeCodeLine graph) nodes
+--generateNodeCode graph (nid, Node.TypeNode name) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+--generateNodeCode graph (nid, Node.CallNode name) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+--generateNodeCode graph (nid, Node.DefaultNode (DefaultValue.DefaultInt val)) = comment ++ show val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+--generateNodeCode graph (nid, Node.DefaultNode (DefaultValue.DefaultString val)) = comment ++ val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
 
-generateNodeCodeLine :: Graph -> DG.LNode Node -> String
-generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) ++ "\n"
 
-generateNodeCode :: Graph -> DG.LNode Node -> String -- TODO [PM] finish implementation
-generateNodeCode graph (nid, Node.TypeNode name) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
-generateNodeCode graph (nid, Node.CallNode name) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
-generateNodeCode graph (nid, Node.DefaultNode (DefaultValue.DefaultInt val)) = comment ++ show val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
-generateNodeCode graph (nid, Node.DefaultNode (DefaultValue.DefaultString val)) = comment ++ val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
 
-generateNodeInputs :: Graph -> DG.Node -> String
-generateNodeInputs graph nid = inputs where
-    inputs = show $ DG.inn (Graph.repr graph) nid
 
-generateFunctionReturn :: NodeDef -> String
-generateFunctionReturn nodeDef = (indent 1) ++ "in ()\n" -- TODO[PM] result list
+--generateCode :: Node -> DefManager -> String
+--generateCode node manager = generateImports def
+--                         ++ "\n\n" 
+--                         ++ case node of 
+--                            Node.FunctionNode _ _ -> generateFunction node
+--    where
+--        def = Node.def node
+
+----- common stuff generation -----------------------------------------------------
+
+--generateImports :: NodeDef -> String
+--generateImports nodeDef = foldr (++) "" imports where
+--    imports = map (\a -> "import " ++ a ++ "\n") $ NodeDef.imports nodeDef
+
+--indent :: Int -> String
+--indent num = replicate (num*4) ' '
+
+--comment :: String
+--comment = "-- "
+
+----- function generation ---------------------------------------------------------
+
+--generateFunction :: Node -> String
+--generateFunction node@(Node.FunctionNode name def) = generateFunctionHeader node
+--                                                  ++ generateFunctionBody def
+--                                                  ++ generateFunctionReturn def
+
+--generateFunctionHeader :: Node -> String
+--generateFunctionHeader node = name ++ " " ++ arguments ++ " = \n" where
+--    name = Node.name node
+--    arguments = List.intercalate " " (NodeDef.inputs $ Node.def node)
+
+--generateFunctionBody :: NodeDef -> String
+--generateFunctionBody nodeDef = foldr (++) "" nodesCodes where
+--    graph = NodeDef.graph nodeDef
+--    rgraph = Graph.repr graph
+--    vertices = DG.topsort rgraph
+--    nodes = map (Graph.lnodeById graph) vertices
+--    nodesCodes = map (generateNodeCodeLine graph) nodes
+
+--generateNodeCodeLine :: Graph -> DG.LNode Node -> String
+--generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) ++ "\n"
+
+
+--generateNodeInputs :: Graph -> DG.Node -> String
+--generateNodeInputs graph nid = inputs where
+--    inputs = show $ DG.inn (Graph.repr graph) nid
+
+--generateFunctionReturn :: NodeDef -> String
+--generateFunctionReturn nodeDef = (indent 1) ++ "in ()\n" -- TODO[PM] result list
 
 
 

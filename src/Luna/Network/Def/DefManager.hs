@@ -36,9 +36,9 @@ addMany :: [DG.LNode NodeDef] -> DefManager -> DefManager
 addMany = foldri add
 
 addToParent :: (DG.Node, DG.Node, NodeDef) -> DefManager -> DefManager
-addToParent (parentID, nodeID, lnode) manager = 
+addToParent (parentID, nodeID, def) manager = 
     manager {repr = DG.insEdge (parentID, nodeID, Edge.Contain) $
-                    DG.insNode (nodeID, lnode) $ repr manager}
+                    DG.insNode (nodeID, def) $ repr manager}
 
 addToParentMany :: [(DG.Node, DG.Node, NodeDef)] -> DefManager -> DefManager
 addToParentMany = foldri addToParent

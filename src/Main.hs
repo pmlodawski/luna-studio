@@ -6,11 +6,12 @@
 ---------------------------------------------------------------------------
 
 import qualified Luna.Samples.HelloWorld as HelloWorld
+import qualified Luna.Tools.CodeGenerator as CG
+
 
 main :: IO ()
 main = do 
-    let libman = HelloWorld.sample
-    print libman
+    putStrLn $ CG.generateTypeCode $ HelloWorld.base_workspace
         
     return ()
 

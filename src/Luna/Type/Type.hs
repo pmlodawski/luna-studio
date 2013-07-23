@@ -13,7 +13,7 @@ noInputs,
 noOutputs,
 noParams,
 
-makePackage
+mkPackage
 ) where
 
 import           Luna.Network.Path.Import          (Import(..))
@@ -42,5 +42,5 @@ noOutputs = []
 noParams :: [Type]
 noParams = []
 
-makePackage :: String -> Type
-makePackage name' = Package name' noImports
+mkPackage :: String -> Type
+mkPackage name' = Package name' noImports

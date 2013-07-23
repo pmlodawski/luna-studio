@@ -18,10 +18,8 @@ type NodeDefID = Int
 
 data Node = TypeNode     { typename :: String, flags :: Flags, attributes :: Attributes }
           | CallNode     { callname :: String, flags :: Flags, attributes :: Attributes }
-          | ClassNode    { did :: NodeDefID }
-          | FunctionNode { did :: NodeDefID }
-          | PackageNode  { did :: NodeDefID }
           | DefaultNode  { value :: DefaultValue }
+          
           deriving (Show)
 
 type ID     = Int
