@@ -16,9 +16,9 @@ import           Luna.Network.Attributes           (Attributes)
 
 type NodeDefID = Int
 
-data Node = TypeNode     { typename :: String, flags :: Flags, attributes :: Attributes }
-          | CallNode     { callname :: String, flags :: Flags, attributes :: Attributes }
-          | DefaultNode  { value :: DefaultValue }
+data Node = Type     { typename :: String, flags :: Flags, attributes :: Attributes }
+          | Call     { callname :: String, flags :: Flags, attributes :: Attributes }
+          | Default  { value :: DefaultValue }
           
           deriving (Show)
 

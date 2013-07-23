@@ -44,3 +44,6 @@ noParams = []
 
 mkPackage :: String -> Type
 mkPackage name' = Package name' noImports
+
+mkFunction :: String -> Type
+mkFunction name' = Function name' noInputs noOutputs

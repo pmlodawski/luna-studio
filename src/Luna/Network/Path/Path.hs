@@ -6,7 +6,15 @@
 ---------------------------------------------------------------------------
 
 module Luna.Network.Path.Path(
-    Path(..)
+    Path(..),
+    append,
+    prepend
 ) where
 
 newtype Path = Path {segments :: [String]} deriving (Show)
+
+append :: String -> Path -> Path
+append segment path = Path $ (segments path) ++ [segment]
+
+prepend :: String -> Path -> Path
+prepend segment path = Path $ segment:(segments path)

@@ -7,7 +7,10 @@
 
 module Luna.Samples.HelloWorld(
     workspaceImports,
-    base_workspace
+    base_workspace,
+    base_manager,
+    full_manager,
+    myFun
 ) where
 
 
@@ -69,52 +72,62 @@ base_libman = libman where
     
 
     
---    myFunGraph = Graph.connectMany [(0, 1, Edge 0 0 Edge.Standard),
---                          (1, 2, Edge 0 0 Edge.Standard),
---                          (2, 3, Edge 0 0 Edge.Standard),
---                          (4, 5, Edge 0 0 Edge.Standard),
---                          (5, 6, Edge 0 0 Edge.Standard),
---                          (6, 8, Edge 0 0 Edge.Standard),
---                          (7, 8, Edge 0 0 Edge.Standard),
---                          (3, 9, Edge 0 0 Edge.Standard),
---                          (8, 9, Edge 0 1 Edge.Standard)]
+myFunGraph = Graph.connectMany [(0, 1, Edge 0 0 Edge.Standard),
+                                (1, 2, Edge 0 0 Edge.Standard),
+                                (3, 4, Edge 0 0 Edge.Standard),
+                                (4, 6, Edge 0 0 Edge.Standard),
+                                (5, 6, Edge 0 0 Edge.Standard),
+                                (2, 7, Edge 0 0 Edge.Standard),
+                                (6, 7, Edge 0 1 Edge.Standard)]
 
---               $ Graph.addMany [(0, Node.DefaultNode $ DefaultValue.DefaultString "std.io.Console"),
---                                (1, Node.TypeNode "std.types.type" Flags.empty Attributes.empty),
---                                (2, Node.CallNode "std.types.new" Flags.empty Attributes.empty),
---                                (3, Node.CallNode "std.io.Console.init" Flags.empty Attributes.empty),
---                                (4, Node.DefaultNode $ DefaultValue.DefaultString "std.types.String"),
---                                (5, Node.TypeNode "std.types.type" Flags.empty Attributes.empty),
---                                (6, Node.CallNode "std.types.new" Flags.empty Attributes.empty),
---                                (7, Node.DefaultNode $ DefaultValue.DefaultString "hello world!"),
---                                (8, Node.CallNode "std.types.String.init" Flags.empty Attributes.empty),
---                                (9, Node.CallNode "std.io.Console.print" Flags.empty Attributes.empty)]
---               $ Graph.empty
+           $ Graph.addMany [(0, Node.Type "Console" Flags.empty Attributes.empty),
+                            (1, Node.Call "new" Flags.empty Attributes.empty),
+                            (2, Node.Call "init" Flags.empty Attributes.empty),
+                            (3, Node.Type "String" Flags.empty Attributes.empty),
+                            (4, Node.Call "new" Flags.empty Attributes.empty),
+                            (5, Node.Default $ DefaultValue.DefaultString "hello world!"),
+                            (6, Node.Call "init" Flags.empty Attributes.empty),
+                            (7, Node.Call "print" Flags.empty Attributes.empty)]
+           $ Graph.empty
 
---    myFunInputs = [Type.TypeVariable "a", 
---                   Type.Named "in1" $ Type.TypeVariable "b"]
+myFunInputs = [Type.TypeVariable "a", 
+               Type.Named "in1" $ Type.TypeVariable "b"]
 
---    myFun = NodeDef (Type.Function "myFun" myFunInputs Type.noOutputs) 
---                     myFunGraph 
---                     Flags.empty 
---                     Attributes.empty 
---                     userLibKey
+myFun = NodeDef (Type.Function "myFun" myFunInputs Type.noOutputs) 
+                 myFunGraph 
+                 Flags.empty 
+                 Attributes.empty 
+                 userLibKey
 
+
+
+
+
+--full_manager :: DefManager
+--full_manager =  DefManager.addToParentMany [
+--                         (8, 9, NodeDef.make (Type.mkPackage "Init") stdLibKey),
+--                     (5, 8, NodeDef.make (Type.mkPackage "String") stdLibKey),
+--                     (5, 7, NodeDef.make (Type.mkPackage "Type") stdLibKey),
+--                     (5, 6, NodeDef.make (Type.mkPackage "New") stdLibKey),
+--                 (0, 5, NodeDef.make (Type.mkPackage "Types") stdLibKey),
+--                         (2, 4, NodeDef.make (Type.Function "Print" [Type.Class "Console" [], Type.Class "String" []] [Type.Class "Console"[]]) stdLibKey),
+--                         (2, 3, NodeDef.make (Type.Function "Init" [Type.Class "Console" []] [Type.Class "Console"[]]) stdLibKey),
+--                     (1, 2, NodeDef.make (Type.Class "Console" []) stdLibKey),
+--                 (0, 1, NodeDef.make (Type.mkPackage "IO") stdLibKey) ]
+--             $ DefManager.add (0, NodeDef.make (Type.mkPackage "Std") stdLibKey)
+--             $ base_manager
 
 
 
 
 full_manager :: DefManager
 full_manager =  DefManager.addToParentMany [
-                         (8, 9, NodeDef.make (Type.mkPackage "Init") stdLibKey),
-                     (5, 8, NodeDef.make (Type.mkPackage "String") stdLibKey),
-                     (5, 7, NodeDef.make (Type.mkPackage "Type") stdLibKey),
-                     (5, 6, NodeDef.make (Type.mkPackage "New") stdLibKey),
-                 (0, 5, NodeDef.make (Type.mkPackage "Types") stdLibKey),
-                         (2, 4, NodeDef.make (Type.Function "Print" [Type.Class "Console" [], Type.Class "String" []] [Type.Class "Console"[]]) stdLibKey),
-                         (2, 3, NodeDef.make (Type.Function "Init" [Type.Class "Console" []] [Type.Class "Console"[]]) stdLibKey),
-                     (1, 2, NodeDef.make (Type.Class "Console" []) stdLibKey),
-                 (0, 1, NodeDef.make (Type.mkPackage "IO") stdLibKey) ]
+                 (0, 1, NodeDef.make (Type.Function "Print" 
+                                                    [Type.Named "in1" $ Type.Class "Console" [], 
+                                                     Type.Named "in2" $ Type.Class "String" []] 
+                                                    [Type.Class "Console"[]]
+                                     ) stdLibKey) 
+                ]
              $ DefManager.add (0, NodeDef.make (Type.mkPackage "Std") stdLibKey)
              $ base_manager
 

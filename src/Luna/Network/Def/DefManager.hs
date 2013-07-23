@@ -11,15 +11,20 @@ module Luna.Network.Def.DefManager(
     empty,
     
     add,         addMany,
-    addToParent, addToParentMany
+    addToParent, addToParentMany,
+    pathOf,nodeById
 ) where
 
+import qualified Luna.Common.Graph        as CommonG
 import           Luna.Data.List             (foldri)
 import qualified Data.Graph.Inductive     as DG
-import           Luna.Network.Def.NodeDef   (NodeDef)
+import qualified Luna.Network.Def.NodeDef as NodeDef
+import           Luna.Network.Def.NodeDef   (NodeDef(..))
 import qualified Luna.Network.Def.Edge    as Edge
 import           Luna.Network.Def.Edge      (Edge(..))
-
+import qualified Luna.Network.Path.Path   as Path
+import           Luna.Network.Path.Path     (Path(..))
+import qualified Luna.Type.Type           as Type
 
 data DefManager = DefManager{
     repr      :: DG.Gr NodeDef Edge
@@ -43,6 +48,16 @@ addToParent (parentID, nodeID, def) manager =
 addToParentMany :: [(DG.Node, DG.Node, NodeDef)] -> DefManager -> DefManager
 addToParentMany = foldri addToParent
 
+pathOf :: DG.Node -> DefManager -> Path
+pathOf nid manager = case DG.pre (repr manager) nid of
+    []       -> Path [name]
+    [parent] -> Path.append name $ pathOf parent manager
+    _        -> error "Node has multiple parents"
+    where name = Type.name $ NodeDef.cls $ nodeById manager nid
+
+
+nodeById manager = CommonG.nodeById (repr manager)
+ -- -- 
 
 --class Graph gr a b where
 --  empty' :: DG.Gr a b
