@@ -28,6 +28,8 @@ import qualified Luna.Lib.LibManager             as LibManager
 import           Luna.Lib.LibManager               (LibManager(..))
 import qualified Luna.System.UniPath             as UniPath
 import qualified Luna.Type.Type                  as Type
+import           Luna.Network.Path.Path            (Path(..))
+import           Luna.Network.Path.Import          (Import(..))
 
 
 
@@ -62,12 +64,9 @@ sample = libman where
 
     ---- user generated ------------------------------------------------------------------------------------------------------------
 
-    workspaceImports = ["std.io.Console", 
-                        "std.io.Console.init", 
-                        "std.io.Console.print", 
-                        "std.types.type", 
-                        "std.types.new", 
-                        "std.types.String"]
+    workspaceImports = [ Import (Path ["std","io","Console"]) ["init", "print"]
+                       , Import (Path ["std","types"])        ["type", "new", "String"]
+                       ]
 
     myFun = NodeDef (Type.Function "myFun" myFunInputs Type.noOutputs) 
                      myFunGraph 

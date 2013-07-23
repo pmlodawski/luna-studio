@@ -16,6 +16,8 @@ noParams,
 makePackage
 ) where
 
+import           Luna.Network.Path.Import          (Import(..))
+
 
 data Type = Undefined
           | TypeVariable {name   :: String}
@@ -24,11 +26,11 @@ data Type = Undefined
           | Tuple        {items  :: [Type]}
           | List         {item   ::  Type }
           | Interface    {fields :: [Type], methods :: [Type]}
-          | Package      {name   :: String, imports :: [String]}
+          | Package      {name   :: String, imports :: [Import]}
           | Named        {name   :: String, cls :: Type}
           deriving (Show)
 
-noImports :: [String]
+noImports :: [Import]
 noImports = []
 
 noInputs :: [Type]
