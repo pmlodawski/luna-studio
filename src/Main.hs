@@ -31,6 +31,10 @@ import qualified Luna.Tools.TypeChecker as TC
 --import Text.Show.Pretty
 --import Text.Groom
 
+foreign export ccall main2 :: IO ()
+
+main2 = main
+
 main :: IO ()
 main = do 
 
