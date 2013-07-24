@@ -12,7 +12,8 @@ module Luna.Network.Graph.Node(
     mkCall,
     mkInputs,
     mkOutputs,
-    mkTuple
+    mkTuple,
+    mkNew
 ) where
 
 import           Luna.Network.Graph.DefaultValue   (DefaultValue)
@@ -21,7 +22,7 @@ import           Luna.Network.Flags                (Flags)
 import qualified Luna.Network.Attributes         as Attributes
 import           Luna.Network.Attributes           (Attributes)
 
-type NodeDefID = Int
+--type NodeDefID = Int
 
 data Node = Type     { typename :: String, flags :: Flags, attributes :: Attributes }
           | Call     { callname :: String, flags :: Flags, attributes :: Attributes }
@@ -29,6 +30,7 @@ data Node = Type     { typename :: String, flags :: Flags, attributes :: Attribu
           | Inputs   {flags :: Flags, attributes :: Attributes}
           | Outputs  {flags :: Flags, attributes :: Attributes}
           | Tuple    {flags :: Flags, attributes :: Attributes}
+          | New      {flags :: Flags, attributes :: Attributes}
           
           deriving (Show)
 
@@ -48,6 +50,9 @@ mkOutputs = Outputs Flags.empty Attributes.empty
 
 mkTuple :: Node
 mkTuple = Tuple Flags.empty Attributes.empty
+
+mkNew :: Node
+mkNew = New Flags.empty Attributes.empty
  
 ------------------------- INSTANCES -------------------------
 

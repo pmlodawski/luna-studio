@@ -18,7 +18,7 @@ import           Luna.Lib.Edge                 (Edge)
 import qualified Luna.Lib.Library            as Library
 import           Luna.Lib.Library              (Library)
 import           Luna.Common.Graph             (newNodes)
-import qualified Luna.Common.Graph           as CommonG
+--import qualified Luna.Common.Graph           as CommonG
 import           Luna.Network.Def.DefManager   (DefManager)
 import qualified Luna.Network.Def.DefManager as DefManager
 
@@ -39,8 +39,8 @@ register libnode manager = manager {repr=DG.insNode libnode $ repr manager}
 reload :: Library.ID -> LibManager -> LibManager
 reload = undefined
 
-libnodeById :: LibManager -> Library.ID -> DG.LNode Library 
-libnodeById manager lid = CommonG.lnodeById (repr manager) lid
+--libnodeById :: LibManager -> Library.ID -> DG.LNode Library 
+--libnodeById manager lid = CommonG.lnodeById (repr manager) lid
 
-libById :: LibManager -> Library.ID -> Library
-libById manager lid = CommonG.nodeById (repr manager) lid
+--libById :: LibManager -> Library.ID -> Library
+--libById manager lid = CommonG.nodeById (repr manager) lid

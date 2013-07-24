@@ -72,18 +72,37 @@ base_libman = libman where
     
 
     
-myFunGraph = Graph.connectMany [(0, 1, Edge.Standard),
-                                (2, 4, Edge.Standard),
+myFunGraph = Graph.connectMany [
+                                (0, 1, Edge.Standard),
+                                (1, 2, Edge.Standard),
+                                (2, 3, Edge.Standard),
                                 (3, 4, Edge.Standard),
-                                (1, 5, Edge.Standard),
-                                (4, 5, Edge.Standard)]
+                                (5, 6, Edge.Standard),
+                                (6, 8, Edge.Standard),
+                                (7, 8, Edge.Standard),
+                                (8, 9, Edge.Standard),
+                                (9, 10, Edge.Standard),
+                                (4, 11, Edge.Standard),
+                                (10, 11, Edge.Standard),
+                                (11, 12, Edge.Standard)
+                               ]
 
-           $ Graph.addMany [(0, Node.mkType "Console"),
-                            (1, Node.mkCall "init"),
-                            (2, Node.mkType "String"),
-                            (3, Node.Default $ DefaultValue.DefaultString "hello world!"),
-                            (4, Node.mkCall "init"),
-                            (5, Node.mkCall "print")]
+           $ Graph.addMany [(0,  Node.mkType     "Console" ),
+                            (1,  Node.mkNew                ),
+                            (2,  Node.mkTuple              ),
+                            (3,  Node.mkCall     "init"    ),
+                            (4,  Node.mkCall     "select0" ),
+                            (5,  Node.mkType     "String"  ),
+                            (6,  Node.mkNew                ),
+                            (7,  Node.Default $ DefaultValue.DefaultString "hello world!"),
+                            (8,  Node.mkTuple              ),
+                            (9,  Node.mkCall     "init"    ),
+                            (10, Node.mkCall     "select0" ),
+                            (11, Node.mkTuple              ),
+                            (12, Node.mkCall     "print"   ),
+                            (13, Node.mkInputs             ),
+                            (14, Node.mkOutputs            )
+                           ]
            $ Graph.empty
 
 myFunInputs = Type.Tuple [Type.TypeVariable "a", 
@@ -105,13 +124,13 @@ myFunGraph2 = Graph.connectMany [(0, 1, Edge.Standard),
                                  (4, 5, Edge.Standard)
                                 ]
 
-           $ Graph.addMany [(0, Node.mkInputs),
-                            (1, Node.mkCall "select0"),
-                            (2, Node.mkCall "select1"),
-                            (3, Node.mkTuple),
-                            (4, Node.mkCall "add"),
-                            (5, Node.mkOutputs)
-                            ]
+           $ Graph.addMany [(0, Node.mkInputs             ),
+                            (1, Node.mkCall     "select0" ),
+                            (2, Node.mkCall     "select1" ),
+                            (3, Node.mkTuple              ),
+                            (4, Node.mkCall     "add"     ),
+                            (5, Node.mkOutputs            )
+                           ]
            $ Graph.empty
 
 myFunInputs2 = Type.Tuple [Type.TypeVariable "a", 

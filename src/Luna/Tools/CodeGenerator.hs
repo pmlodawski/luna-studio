@@ -10,7 +10,8 @@ generateImportCode,
 generateImportsCode,
 --generateTypeCode,
 --generateDefCode,
-generateFunctionBody
+generateFunctionBody,
+generateFunction
 ) where
 
 
@@ -20,20 +21,15 @@ import           Data.String.Utils                 (join)
 import qualified Data.Graph.Inductive            as DG
 
 import qualified Luna.Type.Type                  as Type
-import           Luna.Type.Type                    (Type)
 import qualified Luna.Network.Path.Import        as Import
-import           Luna.Network.Path.Import          (Import(..))
+import           Luna.Network.Path.Import          (Import)
 import qualified Luna.Network.Path.Path          as Path
 import qualified Luna.Network.Graph.Graph        as Graph
-import           Luna.Network.Graph.Graph          (Graph(..))
+import           Luna.Network.Graph.Graph          (Graph)
 import qualified Luna.Network.Def.NodeDef        as NodeDef
-import           Luna.Network.Def.NodeDef          (NodeDef(..))
-import qualified Luna.Network.Def.DefManager     as DefManager
-import           Luna.Network.Def.DefManager       (DefManager)
+import           Luna.Network.Def.NodeDef          (NodeDef)
 import qualified Luna.Network.Graph.Node         as Node
 import           Luna.Network.Graph.Node           (Node)
-import qualified Luna.Network.Graph.Edge         as Edge
-import           Luna.Network.Graph.Edge           (Edge(..))
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
 
 
@@ -41,7 +37,7 @@ generateImportCode :: Import -> String
 generateImportCode i = let
     segments = Path.segments $ Import.path i
     items    = Import.items i
-    import_list       = [(join "." (segments++[i]),i) | i <- items]
+    import_list       = [(join "." (segments++[item]),item) | item <- items]
     simple_imports    = ["import           " ++ path ++ " as " ++ item         | (path, item) <-import_list]
     qualified_imports = ["import qualified " ++ path ++ " (" ++ item ++"(..))" | (path, item) <-import_list]
     in join "\n" (simple_imports++qualified_imports)
@@ -57,8 +53,8 @@ generateImportsCode i = join "\n" $ fmap generateImportCode i
 --        Type.Package name imports -> generateImportsCode imports
 --        otherwise    -> "ERROR"
 
-generateGraphCode :: Graph -> String
-generateGraphCode g = undefined
+--generateGraphCode :: Graph -> String
+--generateGraphCode g = undefined
 
 ---------------------
 --generateDefCode :: DG.Node -> DefManager -> String
@@ -87,30 +83,33 @@ indent num = replicate (num*4) ' '
 ----generateImports nodeDef = foldr (++) "" imports where
 ----    imports = map (\a -> "import " ++ a ++ "\n") $ NodeDef.imports nodeDef
 
---generateFunctionHeader :: NodeDef -> String
---generateFunctionHeader def = name ++ " " ++ arguments ++ " = \n" where
---    t    = NodeDef.cls def
---    name = Type.name t
---    arguments = join " " (Type.inputs t)
+generateFunctionHeader :: NodeDef -> String
+generateFunctionHeader def = name ++ " " ++ inputs ++ " = \n" where
+    t    = NodeDef.cls def
+    name = Type.name t
+    --arguments = join " " (Type.inputs t)
 
-generateFunctionBody :: NodeDef -> String
-generateFunctionBody nodeDef = foldr (++) "" nodesCodes where
+
+generateFunctionBody :: NodeDef -> [String]
+generateFunctionBody nodeDef = nodesCodes where
     graph      = NodeDef.graph nodeDef
     vertices   = DG.topsort $ Graph.repr graph
     nodes      = map (Graph.lnodeById graph) vertices
-    nodesCodes = map (generateNodeCodeLine graph) nodes
+    nodesCodes = map (generateNodeCode graph) nodes
 
-generateNodeCodeLine :: Graph -> DG.LNode Node -> String
-generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) ++ "\n"
+--generateNodeCodeLine :: Graph -> DG.LNode Node -> String
+--generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) ++ "\n"
 
 --generateFunctionReturn :: NodeDef -> String
 --generateFunctionReturn nodeDef = (indent 1) ++ "in ()\n" -- TODO[PM] result list
 
 
---generateFunction :: NodeDef -> String
---generateFunction def = generateFunctionHeader def
---                    -- ++ generateFunctionBody   def
---                    -- ++ generateFunctionReturn def
+generateFunction :: NodeDef -> String
+generateFunction def = generateFunctionHeader def
+                     ++ indent 1 ++ "let\n"
+                     ++ indent 2 ++ join ("\n" ++ indent 2) (generateFunctionBody def) ++ "\n"
+                     ++ indent 1 ++ "in\n"
+                     ++ indent 2 ++ outputs
 
 
 --generateCode :: DG.Node -> DefManager -> String
@@ -128,28 +127,54 @@ generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) 
 --generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultString val)) = comment ++ "<default> " ++ val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
 --generateNodeCode graph (nid, Node.Inputs _ _) = ""
 --generateNodeCode graph (nid, Node.Outputs _ _) = "<outputs>"
---generateNodeCode graph (nid, Node.Tuple _ _) = "<tuple>"
 
+outvar :: Show a => a -> [Char]
+outvar x = "out'" ++ show x
 
---generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultString val)) = "out'" ++ show nid ++ " = OneTuple \"" ++ val ++ "\"" 
---generateNodeCode graph (nid, Node.Type name _ _ )                            = "out'" ++ show nid ++ " = OneTuple " ++ name 
+inputs :: String
+inputs = "inputs'"
+
+outputs :: String
+outputs = "outputs'"
+
+collectInputNum :: Graph -> Int -> [DG.Node]
+collectInputNum graph nid = [num | (num,_,_) <- inedges] where
+    inedges = Graph.inn graph nid
+
+generateNodeCode :: Graph -> (Int, Node) -> String
+generateNodeCode graph (nid, Node.New _ _) = 
+    outvar nid ++ " = " ++ generateDefaultOutput graph nid
+
+generateNodeCode _ (nid, Node.Default (DefaultValue.DefaultString val)) = outvar nid ++ " = \"" ++ val ++ "\"" 
+
+generateNodeCode _ (nid, Node.Default (DefaultValue.DefaultInt val)) = outvar nid ++ " = " ++ show val
+
+generateNodeCode _ (nid, Node.Type name _ _ ) = 
+    --"type Type'" ++ show nid ++ " = " ++ name ++ "\n" ++
+    outvar nid ++ " = " ++ name
+
 generateNodeCode graph (nid, Node.Call name _ _ ) =                          
-    "out'" ++ show nid ++ " = " ++ name ++ " " ++ join " " args where
-        inedges = Graph.inn graph nid
-        args = ["out'" ++ show num | (num,_,_) <- inedges]
-        -- args = fmap (("out#"++).show) innumbers
+    outvar nid ++ " = " ++ name ++ " " ++ generateDefaultOutput graph nid
 
 generateNodeCode graph (nid, Node.Tuple _ _) =
-    "out'" ++ show nid ++ " = (" ++ join ", " args ++ ")" where
-        inedges = Graph.inn graph nid
-        args = ["out'" ++ show num | (num,_,_) <- inedges]
-
-generateNodeCode graph (nid, Node.Inputs _ _ ) = "out'" ++ show nid ++ " = inputs'"
+    outvar nid ++ " = " ++ body where
+        inputnums = collectInputNum graph nid
+        elements = join ", " $ fmap outvar inputnums
+        body = if length inputnums == 1
+            then "OneTuple " ++ elements
+            else "(" ++ elements ++ ")"
+            
+generateNodeCode _ (nid, Node.Inputs _ _ ) = outvar nid ++ " = " ++ inputs
 generateNodeCode graph (nid, Node.Outputs _ _ ) = 
-    "outputs' = " ++  join " " args where
-        inedges = Graph.inn graph nid
-        args = ["out'" ++ show num | (num,_,_) <- inedges]
+    outputs ++ " = " ++ generateDefaultOutput graph nid
 
+
+generateDefaultOutput :: Graph -> Int -> [Char]
+generateDefaultOutput graph nid = body where 
+    inputnums = collectInputNum graph nid
+    body = if null inputnums
+        then "()"
+        else join " " $ fmap outvar inputnums
 
 
 
@@ -165,8 +190,8 @@ generateNodeCode graph (nid, Node.Outputs _ _ ) =
 
 ------- common stuff generation -----------------------------------------------------
 
-comment :: String
-comment = "-- "
+--comment :: String
+--comment = "-- "
 
 ------- function generation ---------------------------------------------------------
 
@@ -177,11 +202,9 @@ comment = "-- "
 
 
 
-generateNodeInputs :: Graph -> DG.Node -> String
-generateNodeInputs graph nid = inputs where
-    inputs = show $ DG.inn (Graph.repr graph) nid
-
-
+--generateNodeInputs :: Graph -> DG.Node -> String
+--generateNodeInputs graph nid = inputs where
+--    inputs = show $ DG.inn (Graph.repr graph) nid
 
 
 

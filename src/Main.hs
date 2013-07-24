@@ -16,15 +16,16 @@ data    Vector a b = Vector {x::a, y::b}
 newtype T1 a = T1 {realtype :: Vector Int a}
 out x y = realtype (T1 $ Vector x y)
 
+type X = Vector
 
 main :: IO ()
 main = do 
     let
-
+    	x = Vector
     --print $ DefManager.pathOf 1 HelloWorld.full_manager
     --putStrLn $ CG.generateTypeCode $ HelloWorld.base_workspace
     --putStrLn $ CG.generateDefCode 1 HelloWorld.full_manager
-    putStrLn $ CG.generateFunctionBody $ HelloWorld.myFun2
+    putStrLn $ CG.generateFunction $ HelloWorld.myFun2
     --putStrLn $ Cg.generateDefCode $
     return ()
 

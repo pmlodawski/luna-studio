@@ -56,6 +56,7 @@ pathOf nid manager = case DG.pre (repr manager) nid of
     where name = Type.name $ NodeDef.cls $ nodeById manager nid
 
 
+nodeById :: DefManager -> DG.Node -> NodeDef
 nodeById manager = CommonG.nodeById (repr manager)
  -- -- 
 
