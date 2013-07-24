@@ -18,6 +18,10 @@ out x y = realtype (T1 $ Vector x y)
 
 type X = Vector
 
+foreign export ccall main2 :: IO ()
+
+main2 = main
+
 main :: IO ()
 main = do 
     let
