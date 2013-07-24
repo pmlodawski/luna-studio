@@ -32,6 +32,8 @@ import qualified Luna.Network.Def.DefManager     as DefManager
 import           Luna.Network.Def.DefManager       (DefManager)
 import qualified Luna.Network.Graph.Node         as Node
 import           Luna.Network.Graph.Node           (Node)
+import qualified Luna.Network.Graph.Edge         as Edge
+import           Luna.Network.Graph.Edge           (Edge(..))
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
 
 
@@ -120,12 +122,22 @@ generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) 
 ---------------------------------------------
 
 --generateNodeCode graph (nid, Node.Type name _ _) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
-generateNodeCode graph (nid, Node.Call name _ _) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
-generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultInt val)) = comment ++ "<default> " ++ show val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+--generateNodeCode graph (nid, Node.Call name _ _) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+--generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultInt val)) = comment ++ "<default> " ++ show val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
 --generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultString val)) = comment ++ "<default> " ++ val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
 
-generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultString val)) = "out_" ++ show nid ++ " = \"" ++ val ++ "\"" 
-generateNodeCode graph (nid, Node.Type name _ _)                            = "type Type_" ++ show nid ++ " = " ++ name 
+generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultString val)) = "out'" ++ show nid ++ " = OneTuple \"" ++ val ++ "\"" 
+generateNodeCode graph (nid, Node.Type name _ _ )                            = "out'" ++ show nid ++ " = OneTuple " ++ name 
+generateNodeCode graph (nid, Node.Call name _ _ )                           
+    = "out'" ++ show nid ++ " = " ++ name ++ " " ++ join " " args where
+        inedges = Edge.sortBydstL $ Graph.inn graph nid
+        args = ["(sel" ++ show src ++ " out'" ++ show num ++ ")" | (num,_,Edge src dst cls) <- inedges]
+        -- args = fmap (("out#"++).show) innumbers
+
+generateNodeCode graph (nid, Node.Inputs _ _ ) = "out'" ++ show nid ++ " = inputs'"
+generateNodeCode graph (nid, Node.Outputs _ _ ) = "outputs' = "
+
+
 
 
 --generateNodeCode graph (nid, Node.TypeNode name _ _) = 

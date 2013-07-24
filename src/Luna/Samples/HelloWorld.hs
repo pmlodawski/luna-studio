@@ -10,7 +10,7 @@ module Luna.Samples.HelloWorld(
     base_workspace,
     base_manager,
     full_manager,
-    myFun
+    myFun, myFun2
 ) where
 
 
@@ -73,21 +73,17 @@ base_libman = libman where
 
     
 myFunGraph = Graph.connectMany [(0, 1, Edge 0 0 Edge.Standard),
-                                (1, 2, Edge 0 0 Edge.Standard),
+                                (2, 4, Edge 0 0 Edge.Standard),
                                 (3, 4, Edge 0 0 Edge.Standard),
-                                (4, 6, Edge 0 0 Edge.Standard),
-                                (5, 6, Edge 0 0 Edge.Standard),
-                                (2, 7, Edge 0 0 Edge.Standard),
-                                (6, 7, Edge 0 1 Edge.Standard)]
+                                (1, 5, Edge 0 0 Edge.Standard),
+                                (4, 5, Edge 0 1 Edge.Standard)]
 
            $ Graph.addMany [(0, Node.Type "Console" Flags.empty Attributes.empty),
-                            (1, Node.Call "new" Flags.empty Attributes.empty),
-                            (2, Node.Call "init" Flags.empty Attributes.empty),
-                            (3, Node.Type "String" Flags.empty Attributes.empty),
-                            (4, Node.Call "new" Flags.empty Attributes.empty),
-                            (5, Node.Default $ DefaultValue.DefaultString "hello world!"),
-                            (6, Node.Call "init" Flags.empty Attributes.empty),
-                            (7, Node.Call "print" Flags.empty Attributes.empty)]
+                            (1, Node.Call "init" Flags.empty Attributes.empty),
+                            (2, Node.Type "String" Flags.empty Attributes.empty),
+                            (3, Node.Default $ DefaultValue.DefaultString "hello world!"),
+                            (4, Node.Call "init" Flags.empty Attributes.empty),
+                            (5, Node.Call "print" Flags.empty Attributes.empty)]
            $ Graph.empty
 
 myFunInputs = [Type.TypeVariable "a", 
@@ -95,6 +91,28 @@ myFunInputs = [Type.TypeVariable "a",
 
 myFun = NodeDef (Type.Function "myFun" myFunInputs Type.noOutputs) 
                  myFunGraph 
+                 Flags.empty 
+                 Attributes.empty 
+                 userLibKey
+
+
+
+myFunGraph2 = Graph.connectMany [(0, 2, Edge 0 0 Edge.Standard),
+                                 (0, 2, Edge 1 1 Edge.Standard),
+                                 (2, 1, Edge 0 0 Edge.Standard)
+                                ]
+
+           $ Graph.addMany [(0, Node.Inputs Flags.empty Attributes.empty),
+                            (1, Node.Outputs Flags.empty Attributes.empty),
+                            (2, Node.Call "add" Flags.empty Attributes.empty)
+                            ]
+           $ Graph.empty
+
+myFunInputs2 = [Type.TypeVariable "a", 
+               Type.Named "in1" $ Type.TypeVariable "b"]
+
+myFun2 = NodeDef (Type.Function "myFun2" myFunInputs2 Type.noOutputs) 
+                 myFunGraph2 
                  Flags.empty 
                  Attributes.empty 
                  userLibKey

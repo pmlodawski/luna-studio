@@ -15,7 +15,7 @@ module Luna.Network.Graph.Graph(
     connect,    connectMany,
     disconnect, disconnectMany,
 
-    lnodeById, nodeById, 
+    lnodeById, nodeById, inn,
 ) where
 
 
@@ -70,6 +70,9 @@ lnodeById graph nid = CommonG.lnodeById (repr graph) nid
 
 nodeById :: Graph -> DG.Node -> Node
 nodeById graph nid = CommonG.nodeById (repr graph) nid
+
+inn :: Graph -> DG.Node -> [DG.LEdge Edge]
+inn graph nid = DG.inn (repr graph) nid
 
 ------------------------- INSTANCES -------------------------
 

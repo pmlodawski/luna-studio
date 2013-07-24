@@ -19,6 +19,8 @@ type NodeDefID = Int
 data Node = Type     { typename :: String, flags :: Flags, attributes :: Attributes }
           | Call     { callname :: String, flags :: Flags, attributes :: Attributes }
           | Default  { value :: DefaultValue }
+          | Inputs   {flags :: Flags, attributes :: Attributes}
+          | Outputs  {flags :: Flags, attributes :: Attributes}
           
           deriving (Show)
 
