@@ -25,4 +25,5 @@ GHC-Options:    -Wall
 --extensions:     StandaloneDeriving, FlexibleContexts
 extensions:     DoAndIfThenElse
 				MultiParamTypeClasses
+                -- DataKinds
 Main-Is:        Main.hs

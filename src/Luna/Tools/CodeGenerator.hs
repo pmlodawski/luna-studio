@@ -8,8 +8,8 @@
 module Luna.Tools.CodeGenerator(
 generateImportCode,
 generateImportsCode,
-generateTypeCode,
-generateDefCode,
+--generateTypeCode,
+--generateDefCode,
 generateFunctionBody
 ) where
 
@@ -60,21 +60,22 @@ generateImportsCode i = join "\n" $ fmap generateImportCode i
 generateGraphCode :: Graph -> String
 generateGraphCode g = undefined
 
-generateDefCode :: DG.Node -> DefManager -> String
-generateDefCode did manager = 
-    let
-        def = DefManager.nodeById manager did 
-        cls = NodeDef.cls def
-        code = case cls of
-            Type.Package name imports         -> generateImportsCode imports
-            func@(Type.Function name inputs outputs) -> generateTypeCode func
-            _                         -> "err"
-    in code
+---------------------
+--generateDefCode :: DG.Node -> DefManager -> String
+--generateDefCode did manager = 
+--    let
+--        def = DefManager.nodeById manager did 
+--        cls = NodeDef.cls def
+--        code = case cls of
+--            Type.Package name imports         -> generateImportsCode imports
+--            func@(Type.Function name inputs outputs) -> generateTypeCode func
+--            _                         -> "err"
+--    in code
 
-generateTypeCode :: Type -> String
-generateTypeCode t = case t of
-    Type.Function name inputs outputs -> name ++ " " ++ join " " signature ++ " = "
-        where signature = fmap Type.name inputs
+--generateTypeCode :: Type -> String
+--generateTypeCode t = case t of
+--    Type.Function name inputs outputs -> name ++ " " ++ join " " signature ++ " = "
+--        where signature = fmap Type.name inputs
 
 
 

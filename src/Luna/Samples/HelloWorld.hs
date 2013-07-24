@@ -86,8 +86,8 @@ myFunGraph = Graph.connectMany [(0, 1, Edge 0 0 Edge.Standard),
                             (5, Node.Call "print" Flags.empty Attributes.empty)]
            $ Graph.empty
 
-myFunInputs = [Type.TypeVariable "a", 
-               Type.Named "in1" $ Type.TypeVariable "b"]
+myFunInputs = Type.Tuple [Type.TypeVariable "a", 
+                          Type.Named "in1" $ Type.TypeVariable "b"]
 
 myFun = NodeDef (Type.Function "myFun" myFunInputs Type.noOutputs) 
                  myFunGraph 
@@ -108,8 +108,8 @@ myFunGraph2 = Graph.connectMany [(0, 2, Edge 0 0 Edge.Standard),
                             ]
            $ Graph.empty
 
-myFunInputs2 = [Type.TypeVariable "a", 
-               Type.Named "in1" $ Type.TypeVariable "b"]
+myFunInputs2 = Type.Tuple [Type.TypeVariable "a", 
+                           Type.Named "in1" $ Type.TypeVariable "b"]
 
 myFun2 = NodeDef (Type.Function "myFun2" myFunInputs2 Type.noOutputs) 
                  myFunGraph2 
@@ -141,9 +141,9 @@ myFun2 = NodeDef (Type.Function "myFun2" myFunInputs2 Type.noOutputs)
 full_manager :: DefManager
 full_manager =  DefManager.addToParentMany [
                  (0, 1, NodeDef.make (Type.Function "Print" 
-                                                    [Type.Named "in1" $ Type.Class "Console" [], 
-                                                     Type.Named "in2" $ Type.Class "String" []] 
-                                                    [Type.Class "Console"[]]
+                                                    (Tuple [Type.Named "in1" $ Type.Class "Console" [], 
+                                                           Type.Named "in2" $ Type.Class "String" []])
+                                                    (Tuple [Type.Class "Console"[]])
                                      ) stdLibKey) 
                 ]
              $ DefManager.add (0, NodeDef.make (Type.mkPackage "Std") stdLibKey)

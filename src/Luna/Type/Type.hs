@@ -22,7 +22,7 @@ import           Luna.Network.Path.Import          (Import(..))
 data Type = Undefined
           | TypeVariable {name   :: String}
           | Class        {name   :: String, params :: [Type]}
-          | Function     {name   :: String, inputs :: [Type], outputs :: [Type]}
+          | Function     {name   :: String, inputs :: Type, outputs :: Type}
           | Tuple        {items  :: [Type]}
           | List         {item   ::  Type }
           | Interface    {fields :: [Type], methods :: [Type]}
@@ -33,11 +33,11 @@ data Type = Undefined
 noImports :: [Import]
 noImports = []
 
-noInputs :: [Type]
-noInputs = []
+noInputs :: Type
+noInputs = Tuple []
 
-noOutputs :: [Type]
-noOutputs = []
+noOutputs :: Type
+noOutputs = Tuple []
 
 noParams :: [Type]
 noParams = []
