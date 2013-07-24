@@ -72,18 +72,18 @@ base_libman = libman where
     
 
     
-myFunGraph = Graph.connectMany [(0, 1, Edge 0 0 Edge.Standard),
-                                (2, 4, Edge 0 0 Edge.Standard),
-                                (3, 4, Edge 0 0 Edge.Standard),
-                                (1, 5, Edge 0 0 Edge.Standard),
-                                (4, 5, Edge 0 1 Edge.Standard)]
+myFunGraph = Graph.connectMany [(0, 1, Edge.Standard),
+                                (2, 4, Edge.Standard),
+                                (3, 4, Edge.Standard),
+                                (1, 5, Edge.Standard),
+                                (4, 5, Edge.Standard)]
 
-           $ Graph.addMany [(0, Node.Type "Console" Flags.empty Attributes.empty),
-                            (1, Node.Call "init" Flags.empty Attributes.empty),
-                            (2, Node.Type "String" Flags.empty Attributes.empty),
+           $ Graph.addMany [(0, Node.mkType "Console"),
+                            (1, Node.mkCall "init"),
+                            (2, Node.mkType "String"),
                             (3, Node.Default $ DefaultValue.DefaultString "hello world!"),
-                            (4, Node.Call "init" Flags.empty Attributes.empty),
-                            (5, Node.Call "print" Flags.empty Attributes.empty)]
+                            (4, Node.mkCall "init"),
+                            (5, Node.mkCall "print")]
            $ Graph.empty
 
 myFunInputs = Type.Tuple [Type.TypeVariable "a", 
@@ -97,14 +97,20 @@ myFun = NodeDef (Type.Function "myFun" myFunInputs Type.noOutputs)
 
 
 
-myFunGraph2 = Graph.connectMany [(0, 2, Edge 0 0 Edge.Standard),
-                                 (0, 2, Edge 1 1 Edge.Standard),
-                                 (2, 1, Edge 0 0 Edge.Standard)
+myFunGraph2 = Graph.connectMany [(0, 1, Edge.Standard),
+                                 (0, 2, Edge.Standard),
+                                 (1, 3, Edge.Standard),
+                                 (2, 3, Edge.Standard),
+                                 (3, 4, Edge.Standard),
+                                 (4, 5, Edge.Standard)
                                 ]
 
-           $ Graph.addMany [(0, Node.Inputs Flags.empty Attributes.empty),
-                            (1, Node.Outputs Flags.empty Attributes.empty),
-                            (2, Node.Call "add" Flags.empty Attributes.empty)
+           $ Graph.addMany [(0, Node.mkInputs),
+                            (1, Node.mkCall "select0"),
+                            (2, Node.mkCall "select1"),
+                            (3, Node.mkTuple),
+                            (4, Node.mkCall "add"),
+                            (5, Node.mkOutputs)
                             ]
            $ Graph.empty
 

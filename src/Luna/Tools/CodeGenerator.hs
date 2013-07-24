@@ -126,17 +126,29 @@ generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) 
 --generateNodeCode graph (nid, Node.Call name _ _) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
 --generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultInt val)) = comment ++ "<default> " ++ show val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
 --generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultString val)) = comment ++ "<default> " ++ val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+--generateNodeCode graph (nid, Node.Inputs _ _) = ""
+--generateNodeCode graph (nid, Node.Outputs _ _) = "<outputs>"
+--generateNodeCode graph (nid, Node.Tuple _ _) = "<tuple>"
 
-generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultString val)) = "out'" ++ show nid ++ " = OneTuple \"" ++ val ++ "\"" 
-generateNodeCode graph (nid, Node.Type name _ _ )                            = "out'" ++ show nid ++ " = OneTuple " ++ name 
-generateNodeCode graph (nid, Node.Call name _ _ )                           
-    = "out'" ++ show nid ++ " = " ++ name ++ " " ++ join " " args where
-        inedges = Edge.sortBydstL $ Graph.inn graph nid
-        args = ["(sel" ++ show src ++ " out'" ++ show num ++ ")" | (num,_,Edge src dst cls) <- inedges]
+
+--generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultString val)) = "out'" ++ show nid ++ " = OneTuple \"" ++ val ++ "\"" 
+--generateNodeCode graph (nid, Node.Type name _ _ )                            = "out'" ++ show nid ++ " = OneTuple " ++ name 
+generateNodeCode graph (nid, Node.Call name _ _ ) =                          
+    "out'" ++ show nid ++ " = " ++ name ++ " " ++ join " " args where
+        inedges = Graph.inn graph nid
+        args = ["out'" ++ show num | (num,_,_) <- inedges]
         -- args = fmap (("out#"++).show) innumbers
 
+generateNodeCode graph (nid, Node.Tuple _ _) =
+    "out'" ++ show nid ++ " = (" ++ join ", " args ++ ")" where
+        inedges = Graph.inn graph nid
+        args = ["out'" ++ show num | (num,_,_) <- inedges]
+
 generateNodeCode graph (nid, Node.Inputs _ _ ) = "out'" ++ show nid ++ " = inputs'"
-generateNodeCode graph (nid, Node.Outputs _ _ ) = "outputs' = "
+generateNodeCode graph (nid, Node.Outputs _ _ ) = 
+    "outputs' = " ++  join " " args where
+        inedges = Graph.inn graph nid
+        args = ["out'" ++ show num | (num,_,_) <- inedges]
 
 
 

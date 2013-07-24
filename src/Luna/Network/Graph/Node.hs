@@ -7,11 +7,18 @@
 
 module Luna.Network.Graph.Node(
     Node(..),
-    ID
+    ID,
+    mkType,
+    mkCall,
+    mkInputs,
+    mkOutputs,
+    mkTuple
 ) where
 
 import           Luna.Network.Graph.DefaultValue   (DefaultValue)
+import qualified Luna.Network.Flags              as Flags
 import           Luna.Network.Flags                (Flags)
+import qualified Luna.Network.Attributes         as Attributes
 import           Luna.Network.Attributes           (Attributes)
 
 type NodeDefID = Int
@@ -21,11 +28,27 @@ data Node = Type     { typename :: String, flags :: Flags, attributes :: Attribu
           | Default  { value :: DefaultValue }
           | Inputs   {flags :: Flags, attributes :: Attributes}
           | Outputs  {flags :: Flags, attributes :: Attributes}
+          | Tuple    {flags :: Flags, attributes :: Attributes}
           
           deriving (Show)
 
 type ID     = Int
 
+mkType :: String -> Node
+mkType name = Type name Flags.empty Attributes.empty
+
+mkCall :: String -> Node
+mkCall name = Call name Flags.empty Attributes.empty
+
+mkInputs :: Node
+mkInputs = Inputs Flags.empty Attributes.empty
+
+mkOutputs :: Node
+mkOutputs = Outputs Flags.empty Attributes.empty
+
+mkTuple :: Node
+mkTuple = Tuple Flags.empty Attributes.empty
+ 
 ------------------------- INSTANCES -------------------------
 
 --instance Serialize Node where
