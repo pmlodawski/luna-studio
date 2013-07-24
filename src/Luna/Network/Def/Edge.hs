@@ -5,12 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Data.List(
-    foldri
+module Luna.Network.Def.Edge(
+Edge(..),
 ) where
-
-foldri :: (a -> b -> b) -> [a] -> b -> b
-foldri a b c = foldr a c b
-
---foldli :: (a -> b -> b) -> [a] -> b -> b
---foldli a b c = foldr a c b
+    
+data Edge = Contain  deriving (Show, Read, Ord, Eq)

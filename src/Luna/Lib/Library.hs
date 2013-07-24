@@ -4,22 +4,20 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Luna.NodeDef(
-NodeDef(..),
---empty,
-noImports,
-noPorts
+module Luna.Lib.Library(
+    Library(..),
+    ID
 ) where
 
-import           Luna.Common(NodeDef(..))
+import Luna.System.UniPath (UniPath)
 
---empty :: NodeDef
---empty = NodeDef noPorts noPorts [] Graph.empty 0 --FIXME[PM] defaultibrary = ?
 
-noImports :: [String]
-noImports = []
+data Library =  Library{
+    name :: String,
+    --version :: Version,
+    path :: UniPath
+} deriving (Show)
 
-noPorts :: [String]
-noPorts = []
+
+type ID  = Int

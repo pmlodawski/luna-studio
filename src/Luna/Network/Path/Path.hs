@@ -4,14 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Luna.Node(
-Node(..)
+module Luna.Network.Path.Path(
+    Path(..),
+    append,
+    prepend
 ) where
 
-import Luna.Common(Node(..))
---import Data.GraphViz.Attributes (Labellable, toLabelValue)
+newtype Path = Path {segments :: [String]} deriving (Show)
 
---instance Labellable Node where
---	toLabelValue = toLabelValue . show
+append :: String -> Path -> Path
+append segment path = Path $ (segments path) ++ [segment]
+
+prepend :: String -> Path -> Path
+prepend segment path = Path $ segment:(segments path)

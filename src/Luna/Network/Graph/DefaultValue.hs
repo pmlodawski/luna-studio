@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.DefaultValue(
+module Luna.Network.Graph.DefaultValue(
 DefaultValue(..)
 ) where
 
@@ -14,8 +14,8 @@ import           Data.Serialize         (Serialize)
 import           Data.Word              (Word8)
 
 data DefaultValue = DefaultInt Int
-				  | DefaultString String 
-				  deriving (Show, Read, Ord, Eq)
+                  | DefaultString String 
+                  deriving (Show, Read, Ord, Eq)
 
 
 

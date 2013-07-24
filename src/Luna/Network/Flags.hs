@@ -5,12 +5,15 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Data.List(
-    foldri
+module Luna.Network.Flags(
+    Flags(..),
+    empty
 ) where
 
-foldri :: (a -> b -> b) -> [a] -> b -> b
-foldri a b c = foldr a c b
+data Flags = Flags {
+                 io :: Bool,
+                 omit :: Bool
+             } deriving (Show)
 
---foldli :: (a -> b -> b) -> [a] -> b -> b
---foldli a b c = foldr a c b
+empty :: Flags
+empty = Flags False False

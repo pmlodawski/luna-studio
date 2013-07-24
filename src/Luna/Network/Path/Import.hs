@@ -5,12 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Data.List(
-    foldri
+module Luna.Network.Path.Import(
+    Import(..)
 ) where
 
-foldri :: (a -> b -> b) -> [a] -> b -> b
-foldri a b c = foldr a c b
+import           Luna.Network.Path.Path            (Path)
 
---foldli :: (a -> b -> b) -> [a] -> b -> b
---foldli a b c = foldr a c b
+data Import = Import {path :: Path, items :: [String]} deriving (Show)

@@ -5,12 +5,15 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Data.List(
-    foldri
+module Luna.Network.Attributes (
+    Attributes(..),
+    empty
 ) where
 
-foldri :: (a -> b -> b) -> [a] -> b -> b
-foldri a b c = foldr a c b
+import qualified Data.Map as Map
+import           Data.Map   (Map)
 
---foldli :: (a -> b -> b) -> [a] -> b -> b
---foldli a b c = foldr a c b
+type Attributes = Map String String -- TODO [PM] implement Attributes
+
+empty :: Attributes
+empty = Map.empty
