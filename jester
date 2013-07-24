@@ -1,6 +1,0 @@
-#!/usr/bin/python
-
-import sys
-from subprocess import call
-ret = call(['python', 'util/jester/jester.py'] + sys.argv[1:])
-sys.exit(ret)

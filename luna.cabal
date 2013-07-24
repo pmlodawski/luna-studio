@@ -1,30 +1,36 @@
-Name:           luna
+Name:           flowbox
 Version:        0.1
+Cabal-Version:  >= 1.2
 License-file:   LICENSE
-Author:			Flowbox <contact@flowbox.io>
-Maintainer:		Flowbox <contact@flowbox.io>
-build-depends:  base, 
-				fgl, 
-				containers, 
-				mtl, 
-				cereal, 
-				graphviz, 
-				multimap,
-				split,
-				MissingH,
-				bytestring,
-				directory-tree,
-                directory,
-                lens
-build-type:		Simple
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
 
-Executable:     luna
-Hs-source-dirs: src
-GHC-Options:    -Wall -stubdir=cpp-api/include
--- -F -pgmF ./util/preprocessors/imports.py
---extensions:     StandaloneDeriving, FlexibleContexts
-extensions:     DoAndIfThenElse
-                ForeignFunctionInterface
-				MultiParamTypeClasses
-                -- DataKinds
-Main-Is:        Main.hs
+Flag Debug
+  Description: Enable debug support
+  Default:     False
+
+
+Executable luna
+  Hs-Source-Dirs: tools/lunac/src
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall 
+                  -- -F -pgmF ./util/preprocessors/imports.py
+  Extensions:     DoAndIfThenElse
+                  ForeignFunctionInterface
+                  MultiParamTypeClasses
+  Main-Is:        Main.hs
+  Build-Depends:  base, 
+                  fgl, 
+                  containers, 
+                  mtl, 
+                  cereal, 
+                  graphviz, 
+                  multimap,
+                  split,
+                  MissingH,
+                  bytestring,
+                  directory-tree,
+                  directory,
+                  lens
