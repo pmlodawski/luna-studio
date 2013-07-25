@@ -1,3 +1,4 @@
+
 ---------------------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
@@ -31,6 +32,7 @@ import           Luna.Network.Def.NodeDef          (NodeDef)
 import qualified Luna.Network.Graph.Node         as Node
 import           Luna.Network.Graph.Node           (Node)
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
+import qualified Luna.Network.Flags              as Flags
 
 
 generateImportCode :: Import -> String
@@ -40,7 +42,7 @@ generateImportCode i = let
     import_list       = [(join "." (segments++[item]),item) | item <- items]
     simple_imports    = ["import           " ++ path ++ " as " ++ item         | (path, item) <-import_list]
     qualified_imports = ["import qualified " ++ path ++ " (" ++ item ++"(..))" | (path, item) <-import_list]
-    in join "\n" (simple_imports++qualified_imports)
+    in join "\n" (simple_imports ++ qualified_imports)
 
 
 generateImportsCode :: [Import] -> String
@@ -131,17 +133,29 @@ generateFunction def = generateFunctionHeader def
 outvar :: Show a => a -> [Char]
 outvar x = "out'" ++ show x
 
+
 inputs :: String
 inputs = "inputs'"
 
+
 outputs :: String
 outputs = "outputs'"
+
 
 collectInputNum :: Graph -> Int -> [DG.Node]
 collectInputNum graph nid = [num | (num,_,_) <- inedges] where
     inedges = Graph.inn graph nid
 
-generateNodeCode :: Graph -> (Int, Node) -> String
+
+generateDefaultOutput :: Graph -> Int -> [Char]
+generateDefaultOutput graph nid = body where 
+    inputnums = collectInputNum graph nid
+    body = if null inputnums
+        then "()"
+        else join " " $ fmap outvar inputnums
+
+
+generateNodeCode :: Graph -> DG.LNode Node -> String
 generateNodeCode graph (nid, Node.New _ _) = 
     outvar nid ++ " = " ++ generateDefaultOutput graph nid
 
@@ -153,8 +167,11 @@ generateNodeCode _ (nid, Node.Type name _ _ ) =
     --"type Type'" ++ show nid ++ " = " ++ name ++ "\n" ++
     outvar nid ++ " = " ++ name
 
-generateNodeCode graph (nid, Node.Call name _ _ ) =                          
-    outvar nid ++ " = " ++ name ++ " " ++ generateDefaultOutput graph nid
+generateNodeCode graph (nid, Node.Call name flags _ ) =                          
+    outvar nid ++ " " ++ op ++ " " ++ fname ++ " " ++ generateDefaultOutput graph nid where
+        (op, fname) = if Flags.io flags
+            then ("<-", name ++ "''IO")
+            else ("=" , name)
 
 generateNodeCode graph (nid, Node.Tuple _ _) =
     outvar nid ++ " = " ++ body where
@@ -169,12 +186,7 @@ generateNodeCode graph (nid, Node.Outputs _ _ ) =
     outputs ++ " = " ++ generateDefaultOutput graph nid
 
 
-generateDefaultOutput :: Graph -> Int -> [Char]
-generateDefaultOutput graph nid = body where 
-    inputnums = collectInputNum graph nid
-    body = if null inputnums
-        then "()"
-        else join " " $ fmap outvar inputnums
+
 
 
 

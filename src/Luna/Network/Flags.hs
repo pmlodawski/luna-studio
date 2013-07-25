@@ -10,10 +10,9 @@ module Luna.Network.Flags(
     empty
 ) where
 
-data Flags = Flags {
-                 io :: Bool,
-                 omit :: Bool
-             } deriving (Show)
+data Flags = Flags {io :: Bool, omit :: Bool } deriving (Show)
+
+--type Flags = [Flag]
 
 empty :: Flags
 empty = Flags False False
