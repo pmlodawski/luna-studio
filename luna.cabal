@@ -34,3 +34,12 @@ Executable luna
                   directory-tree,
                   directory,
                   lens
+
+Executable builder
+  Hs-Source-Dirs: tools/builder/src
+  GHC-Options:    -Wall 
+  Extensions:     
+  Main-Is:        Main.hs
+  Build-Depends:  base,
+                  zeromq3-haskell,
+                  utf8-string
