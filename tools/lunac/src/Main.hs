@@ -29,7 +29,7 @@ main = do
     --print $ DefManager.pathOf 1 HelloWorld.full_manager
     --putStrLn $ CG.generateTypeCode $ HelloWorld.base_workspace
     --putStrLn $ CG.generateDefCode 1 HelloWorld.full_manager
-    putStrLn $ CG.generateFunction $ HelloWorld.myFun2
+    putStrLn $ CG.generateFunction $ HelloWorld.myFun3
     --putStrLn $ Cg.generateDefCode $
     return ()
 

@@ -10,7 +10,7 @@ module Luna.Samples.HelloWorld(
     base_workspace,
     base_manager,
     full_manager,
-    myFun, myFun2
+    myFun, myFun2, myFun3
 ) where
 
 
@@ -138,6 +138,46 @@ myFunInputs2 = Type.Tuple [Type.TypeVariable "a",
 
 myFun2 = NodeDef (Type.Function "myFun2" myFunInputs2 Type.noOutputs) 
                  myFunGraph2 
+                 Flags.empty 
+                 Attributes.empty 
+                 userLibKey
+
+
+myFunGraph3 = Graph.connectMany [
+                                (0, 1, Edge.Standard),
+                                (1, 2, Edge.Standard),
+                                (2, 3, Edge.Standard),
+                                (3, 4, Edge.Standard),
+                                (5, 6, Edge.Standard),
+                                (5, 7, Edge.Standard),
+                                (6, 8, Edge.Standard),
+                                (7, 8, Edge.Standard),
+                                (8, 9, Edge.Standard),
+                                (4, 10, Edge.Standard),
+                                (9, 10, Edge.Standard),
+                                (10, 11, Edge.Standard)
+                               ]
+
+           $ Graph.addMany [(0,  Node.mkType     "Console" ),
+                            (1,  Node.mkNew                ),
+                            (2,  Node.mkTuple              ),
+                            (3,  Node.mkCall     "init"    ),
+                            (4,  Node.mkCall     "select0" ),
+                            (5,  Node.mkInputs             ),
+                            (6,  Node.mkCall     "select0" ),
+                            (7,  Node.mkCall     "select1" ),
+                            (8,  Node.mkCall     "add"     ),
+                            (9,  Node.mkCall     "select0" ),
+                            (10, Node.mkTuple              ),
+                            (11, Node.mkCall     "print"   )
+                           ]
+           $ Graph.empty
+
+myFunInputs3 = Type.Tuple [Type.TypeVariable "a", 
+                          Type.Named "in1" $ Type.TypeVariable "b"]
+
+myFun3 = NodeDef (Type.Function "myFun3" myFunInputs3 Type.noOutputs) 
+                 myFunGraph3 
                  Flags.empty 
                  Attributes.empty 
                  userLibKey
