@@ -7,15 +7,20 @@
 
 module Luna.Codegen.GenState(
     GenState(..),
-    Expr(..),
     make
 ) where
 
 import           Luna.Network.Graph.Graph          (Graph)
+import           Luna.Codegen.Context            as Context
+import           Luna.Codegen.Context              (Context)
+import           Luna.Codegen.Mode               as Mode
+import           Luna.Codegen.Mode                 (Mode)
 
-data GenState = GenState {graph :: Graph, mode :: Expr, expr :: Expr, lastexpr :: Expr} deriving (Show)
-
-data Expr = Pure | IO deriving (Show, Eq)
+data GenState = GenState {graph    :: Graph, 
+                          mode     :: Mode, 
+                          ctx      :: Context, 
+                          lastctx  :: Context
+                         } deriving (Show)
 
 make :: Graph -> GenState
-make g = GenState g IO Pure Pure
+make g = GenState g Mode.Auto Context.Pure Context.Pure
