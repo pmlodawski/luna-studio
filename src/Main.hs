@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 import qualified Luna.Samples.HelloWorld        as HelloWorld
-import qualified Luna.Tools.CodeGenerator       as CG
+import qualified Luna.Codegen.CodeGenerator       as CG
 import qualified Luna.Network.Def.DefManager    as DefManager
 
 
