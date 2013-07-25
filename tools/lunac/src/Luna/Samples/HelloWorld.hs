@@ -158,7 +158,9 @@ myFunGraph3 = Graph.connectMany [
                                 (8, 9, Edge.Standard),
                                 (4, 10, Edge.Standard),
                                 (9, 10, Edge.Standard),
-                                (10, 11, Edge.Standard)
+                                (10, 11, Edge.Standard),
+                                (11, 13, Edge.Standard),
+                                (13, 12, Edge.Standard)
                                ]
 
            $ Graph.addMany [(0,  Node.mkType     "Console" ),
@@ -172,7 +174,9 @@ myFunGraph3 = Graph.connectMany [
                             (8,  Node.mkCall     "add"     ),
                             (9,  Node.mkCall     "select0" ),
                             (10, Node.mkTuple              ),
-                            (11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty)
+                            (11, Node.Call       "print"   Flags.empty Attributes.empty),
+                            (12, Node.mkOutputs            ),
+                            (13, Node.mkCall     "dummy" )
                            ]
            $ Graph.empty
 
