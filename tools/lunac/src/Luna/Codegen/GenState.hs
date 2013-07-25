@@ -6,9 +6,16 @@
 ---------------------------------------------------------------------------
 
 module Luna.Codegen.GenState(
-    GenState(..)
+    GenState(..),
+    Expr(..),
+    make
 ) where
 
 import           Luna.Network.Graph.Graph          (Graph)
 
-data GenState = GenState {graph :: Graph} deriving (Show)
+data GenState = GenState {graph :: Graph, io :: Bool, expr :: Expr} deriving (Show)
+
+data Expr = Pure | IO deriving (Show, Eq)
+
+make :: Graph -> GenState
+make g = GenState g False Pure

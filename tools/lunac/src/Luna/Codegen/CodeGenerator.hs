@@ -101,7 +101,7 @@ generateFunctionBody nodeDef = code where
     nodes      = map (Graph.lnodeById graph) vertices
     nodesCodes = [] --map (generateNodeCode graph) nodes
 
-    (code, state) = runState (generateNodeCodes nodes) $ GenState graph
+    (code, state) = runState (generateNodeCodes nodes) $ GenState.make graph
 
 
 generateNodeCodes :: [DG.LNode Node] -> State GenState String
@@ -109,11 +109,21 @@ generateNodeCodes []           = return ""
 generateNodeCodes (node:nodes) = do
     --a <- begin
     --b <- test a
+    prestate  <- get
     code      <- generateNodeCode  node
+    poststate <- get
     childcode <- generateNodeCodes nodes
     --code = "ala" -- name node ++ "\n" ++ childcode
     -- return $ name node ++ "\n" ++ childcode
-    return $ code ++ "\n" ++ childcode
+    let
+        expr = GenState.expr poststate
+        prefix = if expr /= (GenState.expr prestate)
+            then case expr of
+                GenState.IO -> ""
+            else case expr of
+                GenState.IO -> ""
+                GenState.Pure -> indent 1
+    return $ prefix ++ indent 1 ++ code ++ "\n" ++ childcode
 
 --generateNodeCodeLine :: Graph -> DG.LNode Node -> String
 --generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) ++ "\n"
@@ -127,8 +137,7 @@ generateFunction def = generateFunctionHeader def
                      ++ indent 1 ++ "let\n"
                      ++ generateFunctionBody def
                      -- ++ indent 2 ++ join ("\n" ++ indent 2) (generateFunctionBody def) ++ "\n"
-                     ++ indent 1 ++ "in\n"
-                     ++ indent 2 ++ outputs
+                     ++ indent 1 ++ "in " ++ outputs
 
 
 --generateCode :: DG.Node -> DefManager -> String
@@ -189,11 +198,19 @@ generateNodeCode (nid, Node.Type name _ _ ) =
     return $ outvar nid ++ " = " ++ name
 
 generateNodeCode (nid, Node.Call name flags _ ) = do
-    defout <- generateDefaultOutput nid                      
-    return $ outvar nid ++ " " ++ op ++ " " ++ fname ++ " " ++ defout where
-        (op, fname) = if Flags.io flags
+    state <- get
+    defout <- generateDefaultOutput nid    
+    let isio = Flags.io flags
+        (op, fname) = if isio
             then ("<-", name ++ "''IO")
             else ("=" , name)
+        code = outvar nid ++ " " ++ op ++ " " ++ fname ++ " " ++ defout
+    
+    if isio
+        then do put $ state{io=True, expr=GenState.IO}
+        else do put $ state{expr=GenState.Pure} 
+    return code
+        
 
 generateNodeCode (nid, Node.Tuple _ _) = do
     state <- get 
