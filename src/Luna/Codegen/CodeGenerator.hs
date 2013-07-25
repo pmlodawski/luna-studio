@@ -88,20 +88,23 @@ indent num = replicate (num*4) ' '
 ----    imports = map (\a -> "import " ++ a ++ "\n") $ NodeDef.imports nodeDef
 
 generateFunctionHeader :: NodeDef -> String
-generateFunctionHeader def = name ++ " " ++ inputs ++ " = \n" where
+generateFunctionHeader def = name ++ " " ++ inputs ++ " = " where
     t    = NodeDef.cls def
     name = Type.name t
     --arguments = join " " (Type.inputs t)
 
 
 --generateFunctionBody :: NodeDef -> [String]
-generateFunctionBody nodeDef = code where
-    graph      = NodeDef.graph nodeDef
-    vertices   = DG.topsort $ Graph.repr graph
-    nodes      = map (Graph.lnodeById graph) vertices
-    nodesCodes = [] --map (generateNodeCode graph) nodes
 
-    (code, state) = runState (generateNodeCodes nodes) $ GenState.make graph
+generateFunctionBody :: NodeDef -> State GenState String
+generateFunctionBody nodeDef = do
+    let
+        graph      = NodeDef.graph nodeDef
+        vertices   = DG.topsort $ Graph.repr graph
+        nodes      = map (Graph.lnodeById graph) vertices
+        nodesCodes = [] --map (generateNodeCode graph) nodes
+    generateNodeCodes nodes
+
 
 
 generateNodeCodes :: [DG.LNode Node] -> State GenState String
@@ -116,12 +119,13 @@ generateNodeCodes (node:nodes) = do
     --code = "ala" -- name node ++ "\n" ++ childcode
     -- return $ name node ++ "\n" ++ childcode
     let
-        expr = GenState.expr poststate
-        prefix = if expr /= (GenState.expr prestate)
+        expr = GenState.lastexpr poststate
+        prefix = if expr /= (GenState.lastexpr prestate)
             then case expr of
-                GenState.IO -> ""
+                GenState.IO   -> ""
+                GenState.Pure -> indent 1 ++ "let\n" ++ indent 1
             else case expr of
-                GenState.IO -> ""
+                GenState.IO   -> ""
                 GenState.Pure -> indent 1
     return $ prefix ++ indent 1 ++ code ++ "\n" ++ childcode
 
@@ -133,11 +137,21 @@ generateNodeCodes (node:nodes) = do
 
 
 generateFunction :: NodeDef -> String
-generateFunction def = generateFunctionHeader def
-                     ++ indent 1 ++ "let\n"
-                     ++ generateFunctionBody def
-                     -- ++ indent 2 ++ join ("\n" ++ indent 2) (generateFunctionBody def) ++ "\n"
-                     ++ indent 1 ++ "in " ++ outputs
+generateFunction def = code where
+    graph         = NodeDef.graph def
+    header        = generateFunctionHeader def
+    (body, state) = runState (generateFunctionBody def) $ GenState.make graph
+    (ret, prefix) = case GenState.expr state of
+        GenState.Pure -> ("in "     ++ outputs, "\n"   ++ indent 1 ++ "let\n")
+        GenState.IO   -> ("return " ++ outputs, "do\n" ++ indent 1 ++ "let\n")
+    code =  header ++ prefix
+         ++ body
+         ++ indent 1 ++ ret
+    --
+    -- ++ indent 1 ++ "let\n"
+    -- ++ generateFunctionBody def
+    -- -- ++ indent 2 ++ join ("\n" ++ indent 2) (generateFunctionBody def) ++ "\n"
+    -- ++ indent 1 ++ "in " ++ outputs
 
 
 --generateCode :: DG.Node -> DefManager -> String
@@ -207,8 +221,8 @@ generateNodeCode (nid, Node.Call name flags _ ) = do
         code = outvar nid ++ " " ++ op ++ " " ++ fname ++ " " ++ defout
     
     if isio
-        then do put $ state{io=True, expr=GenState.IO}
-        else do put $ state{expr=GenState.Pure} 
+        then do put $ state{expr=GenState.IO, lastexpr=GenState.IO}
+        else do put $ state{lastexpr=GenState.Pure} 
     return code
         
 
