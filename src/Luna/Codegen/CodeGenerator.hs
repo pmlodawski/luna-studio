@@ -33,8 +33,10 @@ import qualified Luna.Network.Graph.Node         as Node
 import           Luna.Network.Graph.Node           (Node)
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Luna.Network.Flags              as Flags
-import           Luna.Codegen.GenState             (GenState(..))
+import           Luna.Codegen.GenState             (GenState)
 import qualified Luna.Codegen.GenState           as GenState
+import qualified Luna.Codegen.Context            as Context
+import qualified Luna.Codegen.Mode               as Mode
 
 
 generateImportCode :: Import -> String
@@ -115,14 +117,14 @@ generateNodeCodes (node:nodes) = do
     --code = "ala" -- name node ++ "\n" ++ childcode
     -- return $ name node ++ "\n" ++ childcode
     let
-        expr = GenState.lastexpr poststate
-        prefix = if expr /= (GenState.lastexpr prestate)
-            then case expr of
-                GenState.IO   -> ""
-                GenState.Pure -> indent 1 ++ "let\n" ++ indent 1
-            else case expr of
-                GenState.IO   -> ""
-                GenState.Pure -> indent 1
+        ctx = GenState.lastctx poststate
+        prefix = if ctx /= (GenState.lastctx prestate)
+            then case ctx of
+                Context.IO   -> ""
+                Context.Pure -> indent 1 ++ "let\n" ++ indent 1
+            else case ctx of
+                Context.IO   -> ""
+                Context.Pure -> indent 1
     return $ prefix ++ indent 1 ++ code ++ "\n" ++ childcode
 
 --generateNodeCodeLine :: Graph -> DG.LNode Node -> String
@@ -135,8 +137,8 @@ generateFunctionHeader :: NodeDef -> State GenState String
 generateFunctionHeader def = do
     state <- get
     let t    = NodeDef.cls def
-        name = Type.name t ++ if GenState.expr state == GenState.IO
-            then "''IO"
+        name = Type.name t ++ if GenState.ctx state == Context.IO || GenState.mode state == Mode.ForceIO
+            then mpostfix
             else ""
     return $ name ++ " " ++ inputs ++ " = " 
 
@@ -144,9 +146,12 @@ generateFunctionHeader def = do
 generateFunction :: NodeDef -> String
 generateFunction def = codes where
     graph         = NodeDef.graph def
-    (code, state) = runState (generateFunctionCode def) $ GenState.make graph
-    (code2, _)    = runState (generateFunctionCode def) $ (GenState.make graph){mode=GenState.Pure}
-    codes = code ++ "\n\n" ++ code2
+    (code1, state) = runState (generateFunctionCode def) $ GenState.make graph
+    mode = if GenState.ctx state == Context.IO
+        then Mode.ForcePure
+        else Mode.ForceIO
+    (code2, _)     = runState (generateFunctionCode def) $ (GenState.make graph){GenState.mode=mode}
+    codes = code1 ++ "\n\n" ++ code2
 
 
 generateFunctionCode :: NodeDef -> State GenState String
@@ -155,9 +160,9 @@ generateFunctionCode def = do
     header <- generateFunctionHeader def
     state <- get
     let
-        (ret, prefix) = case GenState.expr state of
-            GenState.Pure -> ("in "     ++ outputs, "\n"   ++ indent 1 ++ "let\n")
-            GenState.IO   -> ("return " ++ outputs, "do\n" ++ indent 1 ++ "let\n")
+        (ret, prefix) = if GenState.ctx state == Context.IO || GenState.mode state == Mode.ForceIO
+            then ("return " ++ outputs, "do\n" ++ indent 1 ++ "let\n")
+            else ("in "     ++ outputs, "\n"   ++ indent 1 ++ "let\n")
         code =  header ++ prefix
              ++ body
              ++ indent 1 ++ ret 
@@ -188,6 +193,9 @@ generateFunctionCode def = do
 
 outvar :: Show a => a -> [Char]
 outvar x = "out'" ++ show x
+
+mpostfix :: String
+mpostfix = "''M"
 
 
 inputs :: String
@@ -230,15 +238,15 @@ generateNodeCode (nid, Node.Type name _ _ ) =
 generateNodeCode (nid, Node.Call name flags _ ) = do
     state <- get
     defout <- generateDefaultOutput nid    
-    let isio = Flags.io flags && (GenState.mode state /= GenState.Pure)
+    let isio = Flags.io flags && (GenState.mode state /= Mode.ForcePure)
         (op, fname) = if isio 
-            then ("<-", name ++ "''IO")
+            then ("<-", name ++ mpostfix)
             else ("=" , name)
         code = outvar nid ++ " " ++ op ++ " " ++ fname ++ " " ++ defout
     
     if isio
-        then do put $ state{expr=GenState.IO, lastexpr=GenState.IO}
-        else do put $ state{lastexpr=GenState.Pure} 
+        then do put $ state{GenState.ctx=Context.IO, GenState.lastctx=Context.IO  }
+        else do put $ state{                         GenState.lastctx=Context.Pure} 
     return code
         
 
