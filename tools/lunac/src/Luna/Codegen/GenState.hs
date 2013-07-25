@@ -13,9 +13,9 @@ module Luna.Codegen.GenState(
 
 import           Luna.Network.Graph.Graph          (Graph)
 
-data GenState = GenState {graph :: Graph, expr :: Expr, lastexpr :: Expr} deriving (Show)
+data GenState = GenState {graph :: Graph, mode :: Expr, expr :: Expr, lastexpr :: Expr} deriving (Show)
 
 data Expr = Pure | IO deriving (Show, Eq)
 
 make :: Graph -> GenState
-make g = GenState g Pure Pure
+make g = GenState g IO Pure Pure

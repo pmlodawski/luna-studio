@@ -87,11 +87,7 @@ indent num = replicate (num*4) ' '
 ----generateImports nodeDef = foldr (++) "" imports where
 ----    imports = map (\a -> "import " ++ a ++ "\n") $ NodeDef.imports nodeDef
 
-generateFunctionHeader :: NodeDef -> String
-generateFunctionHeader def = name ++ " " ++ inputs ++ " = " where
-    t    = NodeDef.cls def
-    name = Type.name t
-    --arguments = join " " (Type.inputs t)
+
 
 
 --generateFunctionBody :: NodeDef -> [String]
@@ -135,18 +131,38 @@ generateNodeCodes (node:nodes) = do
 --generateFunctionReturn :: NodeDef -> String
 --generateFunctionReturn nodeDef = (indent 1) ++ "in ()\n" -- TODO[PM] result list
 
+generateFunctionHeader :: NodeDef -> State GenState String
+generateFunctionHeader def = do
+    state <- get
+    let t    = NodeDef.cls def
+        name = Type.name t ++ if GenState.expr state == GenState.IO
+            then "''IO"
+            else ""
+    return $ name ++ " " ++ inputs ++ " = " 
+
 
 generateFunction :: NodeDef -> String
-generateFunction def = code where
+generateFunction def = codes where
     graph         = NodeDef.graph def
-    header        = generateFunctionHeader def
-    (body, state) = runState (generateFunctionBody def) $ GenState.make graph
-    (ret, prefix) = case GenState.expr state of
-        GenState.Pure -> ("in "     ++ outputs, "\n"   ++ indent 1 ++ "let\n")
-        GenState.IO   -> ("return " ++ outputs, "do\n" ++ indent 1 ++ "let\n")
-    code =  header ++ prefix
-         ++ body
-         ++ indent 1 ++ ret
+    (code, state) = runState (generateFunctionCode def) $ GenState.make graph
+    (code2, _)    = runState (generateFunctionCode def) $ (GenState.make graph){mode=GenState.Pure}
+    codes = code ++ "\n\n" ++ code2
+
+
+generateFunctionCode :: NodeDef -> State GenState String
+generateFunctionCode def = do
+    body   <- generateFunctionBody def
+    header <- generateFunctionHeader def
+    state <- get
+    let
+        (ret, prefix) = case GenState.expr state of
+            GenState.Pure -> ("in "     ++ outputs, "\n"   ++ indent 1 ++ "let\n")
+            GenState.IO   -> ("return " ++ outputs, "do\n" ++ indent 1 ++ "let\n")
+        code =  header ++ prefix
+             ++ body
+             ++ indent 1 ++ ret 
+    return code
+
     --
     -- ++ indent 1 ++ "let\n"
     -- ++ generateFunctionBody def
@@ -214,8 +230,8 @@ generateNodeCode (nid, Node.Type name _ _ ) =
 generateNodeCode (nid, Node.Call name flags _ ) = do
     state <- get
     defout <- generateDefaultOutput nid    
-    let isio = Flags.io flags
-        (op, fname) = if isio
+    let isio = Flags.io flags && (GenState.mode state /= GenState.Pure)
+        (op, fname) = if isio 
             then ("<-", name ++ "''IO")
             else ("=" , name)
         code = outvar nid ++ " " ++ op ++ " " ++ fname ++ " " ++ defout
