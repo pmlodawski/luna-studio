@@ -115,6 +115,9 @@ myFun = NodeDef (Type.Function "myFun" myFunInputs Type.noOutputs)
                  userLibKey
 
 
+-----------------------------------------------------------------------
+
+
 
 myFunGraph2 = Graph.connectMany [(0, 1, Edge.Standard),
                                  (0, 2, Edge.Standard),
@@ -169,7 +172,7 @@ myFunGraph3 = Graph.connectMany [
                             (8,  Node.mkCall     "add"     ),
                             (9,  Node.mkCall     "select0" ),
                             (10, Node.mkTuple              ),
-                            (11, Node.mkCall     "print"   )
+                            (11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty)
                            ]
            $ Graph.empty
 
