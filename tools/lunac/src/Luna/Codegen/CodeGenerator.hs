@@ -1,4 +1,3 @@
-
 ---------------------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
@@ -6,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Tools.CodeGenerator(
+module Luna.Codegen.CodeGenerator(
 generateImportCode,
 generateImportsCode,
 --generateTypeCode,
@@ -20,6 +19,7 @@ import Debug.Trace
 
 import           Data.String.Utils                 (join)
 import qualified Data.Graph.Inductive            as DG
+import           Control.Monad.State               (runState)
 
 import qualified Luna.Type.Type                  as Type
 import qualified Luna.Network.Path.Import        as Import
@@ -33,6 +33,7 @@ import qualified Luna.Network.Graph.Node         as Node
 import           Luna.Network.Graph.Node           (Node)
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Luna.Network.Flags              as Flags
+import           Luna.Codegen.GenState             (GenState(..))
 
 
 generateImportCode :: Import -> String
@@ -97,7 +98,18 @@ generateFunctionBody nodeDef = nodesCodes where
     graph      = NodeDef.graph nodeDef
     vertices   = DG.topsort $ Graph.repr graph
     nodes      = map (Graph.lnodeById graph) vertices
-    nodesCodes = map (generateNodeCode graph) nodes
+    nodesCodes = [] --map (generateNodeCode graph) nodes
+
+    (code, state) = runState (generateNodeCodes [nodes]) $ GenState graph
+
+generateNodeCodes []           = return ""
+generateNodeCodes (node:nodes) = do
+    --a <- begin
+    --b <- test a
+    childcode <- generateNodeCodes nodes
+    --code = "ala" -- name node ++ "\n" ++ childcode
+    -- return $ name node ++ "\n" ++ childcode
+    return "ala"
 
 --generateNodeCodeLine :: Graph -> DG.LNode Node -> String
 --generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) ++ "\n"
@@ -182,8 +194,8 @@ generateNodeCode graph (nid, Node.Tuple _ _) =
             else "(" ++ elements ++ ")"
             
 generateNodeCode _ (nid, Node.Inputs _ _ ) = outvar nid ++ " = " ++ inputs
-generateNodeCode graph (nid, Node.Outputs _ _ ) = 
-    outputs ++ " = " ++ generateDefaultOutput graph nid
+
+generateNodeCode graph (nid, Node.Outputs _ _ ) = outputs ++ " = " ++ generateDefaultOutput graph nid
 
 
 
