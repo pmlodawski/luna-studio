@@ -19,7 +19,7 @@ import Debug.Trace
 
 import           Data.String.Utils                 (join)
 import qualified Data.Graph.Inductive            as DG
-import           Control.Monad.State               (runState)
+import           Control.Monad.State               (runState, get, put, State)
 
 import qualified Luna.Type.Type                  as Type
 import qualified Luna.Network.Path.Import        as Import
@@ -34,6 +34,7 @@ import           Luna.Network.Graph.Node           (Node)
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Luna.Network.Flags              as Flags
 import           Luna.Codegen.GenState             (GenState(..))
+import qualified Luna.Codegen.GenState           as GenState
 
 
 generateImportCode :: Import -> String
@@ -93,23 +94,26 @@ generateFunctionHeader def = name ++ " " ++ inputs ++ " = \n" where
     --arguments = join " " (Type.inputs t)
 
 
-generateFunctionBody :: NodeDef -> [String]
-generateFunctionBody nodeDef = nodesCodes where
+--generateFunctionBody :: NodeDef -> [String]
+generateFunctionBody nodeDef = code where
     graph      = NodeDef.graph nodeDef
     vertices   = DG.topsort $ Graph.repr graph
     nodes      = map (Graph.lnodeById graph) vertices
     nodesCodes = [] --map (generateNodeCode graph) nodes
 
-    (code, state) = runState (generateNodeCodes [nodes]) $ GenState graph
+    (code, state) = runState (generateNodeCodes nodes) $ GenState graph
 
+
+generateNodeCodes :: [DG.LNode Node] -> State GenState String
 generateNodeCodes []           = return ""
 generateNodeCodes (node:nodes) = do
     --a <- begin
     --b <- test a
+    code      <- generateNodeCode  node
     childcode <- generateNodeCodes nodes
     --code = "ala" -- name node ++ "\n" ++ childcode
     -- return $ name node ++ "\n" ++ childcode
-    return "ala"
+    return $ code ++ "\n" ++ childcode
 
 --generateNodeCodeLine :: Graph -> DG.LNode Node -> String
 --generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) ++ "\n"
@@ -121,7 +125,8 @@ generateNodeCodes (node:nodes) = do
 generateFunction :: NodeDef -> String
 generateFunction def = generateFunctionHeader def
                      ++ indent 1 ++ "let\n"
-                     ++ indent 2 ++ join ("\n" ++ indent 2) (generateFunctionBody def) ++ "\n"
+                     ++ generateFunctionBody def
+                     -- ++ indent 2 ++ join ("\n" ++ indent 2) (generateFunctionBody def) ++ "\n"
                      ++ indent 1 ++ "in\n"
                      ++ indent 2 ++ outputs
 
@@ -159,45 +164,55 @@ collectInputNum graph nid = [num | (num,_,_) <- inedges] where
     inedges = Graph.inn graph nid
 
 
-generateDefaultOutput :: Graph -> Int -> [Char]
-generateDefaultOutput graph nid = body where 
-    inputnums = collectInputNum graph nid
-    body = if null inputnums
-        then "()"
-        else join " " $ fmap outvar inputnums
+generateDefaultOutput :: Int -> State GenState String
+generateDefaultOutput nid = do
+    state <- get 
+    let
+        inputnums = collectInputNum (GenState.graph state) nid
+        body = if null inputnums
+            then "()"
+            else join " " $ fmap outvar inputnums
+    return body
 
 
-generateNodeCode :: Graph -> DG.LNode Node -> String
-generateNodeCode graph (nid, Node.New _ _) = 
-    outvar nid ++ " = " ++ generateDefaultOutput graph nid
+generateNodeCode :: DG.LNode Node -> State GenState String
+generateNodeCode (nid, Node.New _ _) = do
+    defout <- generateDefaultOutput nid
+    return $ outvar nid ++ " = " ++ defout
 
-generateNodeCode _ (nid, Node.Default (DefaultValue.DefaultString val)) = outvar nid ++ " = \"" ++ val ++ "\"" 
+generateNodeCode (nid, Node.Default (DefaultValue.DefaultString val)) = return $ outvar nid ++ " = \"" ++ val ++ "\"" 
 
-generateNodeCode _ (nid, Node.Default (DefaultValue.DefaultInt val)) = outvar nid ++ " = " ++ show val
+generateNodeCode (nid, Node.Default (DefaultValue.DefaultInt val)) = return $  outvar nid ++ " = " ++ show val
 
-generateNodeCode _ (nid, Node.Type name _ _ ) = 
+generateNodeCode (nid, Node.Type name _ _ ) = 
     --"type Type'" ++ show nid ++ " = " ++ name ++ "\n" ++
-    outvar nid ++ " = " ++ name
+    return $ outvar nid ++ " = " ++ name
 
-generateNodeCode graph (nid, Node.Call name flags _ ) =                          
-    outvar nid ++ " " ++ op ++ " " ++ fname ++ " " ++ generateDefaultOutput graph nid where
+generateNodeCode (nid, Node.Call name flags _ ) = do
+    defout <- generateDefaultOutput nid                      
+    return $ outvar nid ++ " " ++ op ++ " " ++ fname ++ " " ++ defout where
         (op, fname) = if Flags.io flags
             then ("<-", name ++ "''IO")
             else ("=" , name)
 
-generateNodeCode graph (nid, Node.Tuple _ _) =
-    outvar nid ++ " = " ++ body where
-        inputnums = collectInputNum graph nid
+generateNodeCode (nid, Node.Tuple _ _) = do
+    state <- get 
+    let 
+        inputnums = collectInputNum (GenState.graph state) nid
         elements = join ", " $ fmap outvar inputnums
         body = if length inputnums == 1
             then "OneTuple " ++ elements
             else "(" ++ elements ++ ")"
+    return $ outvar nid ++ " = " ++ body
+        
             
-generateNodeCode _ (nid, Node.Inputs _ _ ) = outvar nid ++ " = " ++ inputs
+generateNodeCode (nid, Node.Inputs _ _ ) = return $ outvar nid ++ " = " ++ inputs
 
-generateNodeCode graph (nid, Node.Outputs _ _ ) = outputs ++ " = " ++ generateDefaultOutput graph nid
+generateNodeCode (nid, Node.Outputs _ _ ) = do
+    defout <- generateDefaultOutput nid
+    return $ outputs ++ " = " ++ defout
 
-
+generateNodeCode (nid, node) = return "<not implemented>"
 
 
 
