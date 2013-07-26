@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Codegen.GenState(
-    GenState(..),
+module Luna.Codegen.State.FuncState(
+    FuncState(..),
     make
 ) where
 
@@ -16,11 +16,11 @@ import           Luna.Codegen.Context              (Context)
 import           Luna.Codegen.Mode               as Mode
 import           Luna.Codegen.Mode                 (Mode)
 
-data GenState = GenState {graph    :: Graph, 
-                          mode     :: Mode, 
-                          ctx      :: Context, 
-                          lastctx  :: Context
-                         } deriving (Show)
+data FuncState = FuncState {graph    :: Graph, 
+                            mode     :: Mode, 
+                            ctx      :: Context, 
+                            lastctx  :: Context
+                           } deriving (Show)
 
-make :: Graph -> GenState
-make g = GenState g Mode.Auto Context.Pure Context.Pure
+make :: Graph -> FuncState
+make g = FuncState g Mode.Auto Context.Pure Context.Pure

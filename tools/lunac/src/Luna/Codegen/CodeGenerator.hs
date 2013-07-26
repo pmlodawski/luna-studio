@@ -33,8 +33,8 @@ import qualified Luna.Network.Graph.Node         as Node
 import           Luna.Network.Graph.Node           (Node)
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Luna.Network.Flags              as Flags
-import           Luna.Codegen.GenState             (GenState)
-import qualified Luna.Codegen.GenState           as GenState
+import           Luna.Codegen.State.FuncState      (FuncState)
+import qualified Luna.Codegen.State.FuncState    as FuncState
 import qualified Luna.Codegen.Context            as Context
 import qualified Luna.Codegen.Mode               as Mode
 
@@ -94,7 +94,7 @@ indent num = replicate (num*4) ' '
 
 --generateFunctionBody :: NodeDef -> [String]
 
-generateFunctionBody :: NodeDef -> State GenState String
+generateFunctionBody :: NodeDef -> State FuncState String
 generateFunctionBody nodeDef = do
     let
         graph      = NodeDef.graph nodeDef
@@ -105,7 +105,7 @@ generateFunctionBody nodeDef = do
 
 
 
-generateNodeCodes :: [DG.LNode Node] -> State GenState String
+generateNodeCodes :: [DG.LNode Node] -> State FuncState String
 generateNodeCodes []           = return ""
 generateNodeCodes (node:nodes) = do
     --a <- begin
@@ -117,8 +117,8 @@ generateNodeCodes (node:nodes) = do
     --code = "ala" -- name node ++ "\n" ++ childcode
     -- return $ name node ++ "\n" ++ childcode
     let
-        ctx = GenState.lastctx poststate
-        prefix = if ctx /= (GenState.lastctx prestate)
+        ctx = FuncState.lastctx poststate
+        prefix = if ctx /= (FuncState.lastctx prestate)
             then case ctx of
                 Context.IO   -> ""
                 Context.Pure -> indent 1 ++ "let\n" ++ indent 1
@@ -133,11 +133,11 @@ generateNodeCodes (node:nodes) = do
 --generateFunctionReturn :: NodeDef -> String
 --generateFunctionReturn nodeDef = (indent 1) ++ "in ()\n" -- TODO[PM] result list
 
-generateFunctionHeader :: NodeDef -> State GenState String
+generateFunctionHeader :: NodeDef -> State FuncState String
 generateFunctionHeader def = do
     state <- get
     let t    = NodeDef.cls def
-        name = Type.name t ++ if GenState.ctx state == Context.IO || GenState.mode state == Mode.ForceIO
+        name = Type.name t ++ if FuncState.ctx state == Context.IO || FuncState.mode state == Mode.ForceIO
             then mpostfix
             else ""
     return $ name ++ " " ++ inputs ++ " = " 
@@ -146,21 +146,21 @@ generateFunctionHeader def = do
 generateFunction :: NodeDef -> String
 generateFunction def = codes where
     graph         = NodeDef.graph def
-    (code1, state) = runState (generateFunctionCode def) $ GenState.make graph
-    mode = if GenState.ctx state == Context.IO
+    (code1, state) = runState (generateFunctionCode def) $ FuncState.make graph
+    mode = if FuncState.ctx state == Context.IO
         then Mode.ForcePure
         else Mode.ForceIO
-    (code2, _)     = runState (generateFunctionCode def) $ (GenState.make graph){GenState.mode=mode}
+    (code2, _)     = runState (generateFunctionCode def) $ (FuncState.make graph){FuncState.mode=mode}
     codes = code1 ++ "\n\n" ++ code2
 
 
-generateFunctionCode :: NodeDef -> State GenState String
+generateFunctionCode :: NodeDef -> State FuncState String
 generateFunctionCode def = do
     body   <- generateFunctionBody def
     header <- generateFunctionHeader def
     state <- get
     let
-        (ret, prefix) = if GenState.ctx state == Context.IO || GenState.mode state == Mode.ForceIO
+        (ret, prefix) = if FuncState.ctx state == Context.IO || FuncState.mode state == Mode.ForceIO
             then ("return " ++ outputs, "do\n" ++ indent 1 ++ "let\n")
             else ("in "     ++ outputs, "\n"   ++ indent 1 ++ "let\n")
         code =  header ++ prefix
@@ -211,21 +211,22 @@ collectInputNum graph nid = [num | (num,_,_) <- inedges] where
     inedges = Graph.inn graph nid
 
 
-generateDefaultOutput :: Int -> State GenState String
+generateDefaultOutput :: Int -> State FuncState String
 generateDefaultOutput nid = do
     state <- get 
     let
-        inputnums = collectInputNum (GenState.graph state) nid
+        inputnums = collectInputNum (FuncState.graph state) nid
         body = if null inputnums
             then "()"
             else join " " $ fmap outvar inputnums
     return body
 
 
-generateNodeCode :: DG.LNode Node -> State GenState String
+generateNodeCode :: DG.LNode Node -> State FuncState String
 generateNodeCode (nid, Node.New _ _) = do
     defout <- generateDefaultOutput nid
     return $ outvar nid ++ " = " ++ defout
+
 
 generateNodeCode (nid, Node.Default (DefaultValue.DefaultString val)) = return $ outvar nid ++ " = \"" ++ val ++ "\"" 
 
@@ -238,22 +239,22 @@ generateNodeCode (nid, Node.Type name _ _ ) =
 generateNodeCode (nid, Node.Call name flags _ ) = do
     state <- get
     defout <- generateDefaultOutput nid    
-    let isio = Flags.io flags && (GenState.mode state /= Mode.ForcePure)
+    let isio = Flags.io flags && (FuncState.mode state /= Mode.ForcePure)
         (op, fname) = if isio 
             then ("<-", name ++ mpostfix)
             else ("=" , name)
         code = outvar nid ++ " " ++ op ++ " " ++ fname ++ " " ++ defout
     
     if isio
-        then do put $ state{GenState.ctx=Context.IO, GenState.lastctx=Context.IO  }
-        else do put $ state{                         GenState.lastctx=Context.Pure} 
+        then do put $ state{FuncState.ctx=Context.IO, FuncState.lastctx=Context.IO  }
+        else do put $ state{                         FuncState.lastctx=Context.Pure} 
     return code
         
 
 generateNodeCode (nid, Node.Tuple _ _) = do
     state <- get 
     let 
-        inputnums = collectInputNum (GenState.graph state) nid
+        inputnums = collectInputNum (FuncState.graph state) nid
         elements = join ", " $ fmap outvar inputnums
         body = if length inputnums == 1
             then "OneTuple " ++ elements

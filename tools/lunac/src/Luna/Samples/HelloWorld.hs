@@ -44,12 +44,14 @@ workspaceImports = [ Import (Path ["Std","IO","Console"]) ["Init", "Print"]
                    , Import (Path ["Std","Types"])        ["Type", "New", "String"]
                    ]
 
-base_workspace :: Type
-base_workspace = Type.Package "__workspace__" workspaceImports
+
+base_workspace = NodeDef.empty{ NodeDef.cls = Type.Module "__workspace__" workspaceImports
+                              , NodeDef.libID=userLibKey
+                              }
 
 base_manager :: DefManager
 base_manager = manager where
-    manager = DefManager.add (100, NodeDef.make base_workspace userLibKey )
+    manager = DefManager.add (100, base_workspace)
             $ DefManager.empty 
 
 
@@ -135,8 +137,9 @@ myFunGraph2 = Graph.connectMany [(0, 1, Edge.standard),
                            ]
            $ Graph.empty
 
-myFunInputs2 = Type.Tuple [Type.TypeVariable "a", 
-                           Type.Named "in1" $ Type.TypeVariable "b"]
+myFunInputs2 = Type.Tuple [ Type.Named "in1" $ Type.TypeVariable "a"
+                          , Type.Named "in2" $ Type.TypeVariable "b"
+                          ]
 
 
 myFun2 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun2" myFunInputs2 Type.noOutputs)
@@ -212,15 +215,21 @@ myFun3 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun3" myFunInputs3 Typ
 
 
 full_manager :: DefManager
-full_manager =  DefManager.addToParentMany [
-                 (0, 1, NodeDef.make (Type.Function "Print" 
-                                                    (Tuple [Type.Named "in1" $ Type.Class "Console" [], 
-                                                           Type.Named "in2" $ Type.Class "String" []])
-                                                    (Tuple [Type.Class "Console"[]])
-                                     ) stdLibKey) 
-                ]
-             $ DefManager.add (0, NodeDef.make (Type.mkPackage "Std") stdLibKey)
+full_manager =  DefManager.addToParentMany [ (100, 1, myFun2)
+                                           ]
              $ base_manager
+
+
+--full_manager :: DefManager
+--full_manager =  DefManager.addToParentMany [
+--                 (0, 1, NodeDef.make (Type.Function "Print" 
+--                                                    (Tuple [Type.Named "in1" $ Type.Class "Console" [], 
+--                                                           Type.Named "in2" $ Type.Class "String" []])
+--                                                    (Tuple [Type.Class "Console"[]])
+--                                     ) stdLibKey) 
+--                ]
+--             $ DefManager.add (0, NodeDef.make (Type.mkPackage "Std") stdLibKey)
+--             $ base_manager
 
     
 
