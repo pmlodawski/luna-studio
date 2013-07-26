@@ -5,8 +5,5 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Codegen.Mode(
-    Mode(..)
+module Luna.Codegen.ModGenerator(
 ) where
-
-data Mode    = Auto | ForcePure | ForceIO deriving (Show, Eq)

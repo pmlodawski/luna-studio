@@ -7,12 +7,12 @@
 
 module Luna.Network.Def.DefManager(
     DefManager(..),
-    
     empty,
-    
     add,         addMany,
     addToParent, addToParentMany,
-    pathOf,nodeById
+    pathOf,
+    nodeById,
+    out
 ) where
 
 import qualified Luna.Common.Graph        as CommonG
@@ -42,7 +42,7 @@ addMany = foldri add
 
 addToParent :: (DG.Node, DG.Node, NodeDef) -> DefManager -> DefManager
 addToParent (parentID, nodeID, def) manager = 
-    manager {repr = DG.insEdge (parentID, nodeID, Edge.Contain) $
+    manager {repr = DG.insEdge (parentID, nodeID, Edge parentID nodeID) $
                     DG.insNode (nodeID, def) $ repr manager}
 
 addToParentMany :: [(DG.Node, DG.Node, NodeDef)] -> DefManager -> DefManager
@@ -58,6 +58,11 @@ pathOf nid manager = case DG.pre (repr manager) nid of
 
 nodeById :: DefManager -> DG.Node -> NodeDef
 nodeById manager = CommonG.nodeById (repr manager)
+
+
+out :: DefManager -> DG.Node -> [Edge]
+out manager did = [edge | (_,_,edge) <- DG.out (repr manager) did]
+
  -- -- 
 
 --class Graph gr a b where

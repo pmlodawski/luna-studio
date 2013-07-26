@@ -7,7 +7,7 @@
 
 module Luna.Samples.HelloWorld(
     workspaceImports,
-    base_workspace,
+    workspace,
     base_manager,
     full_manager,
     myFun, myFun2, myFun3
@@ -45,13 +45,14 @@ workspaceImports = [ Import (Path ["Std","IO","Console"]) ["Init", "Print"]
                    ]
 
 
-base_workspace = NodeDef.empty{ NodeDef.cls = Type.Module "__workspace__" workspaceImports
-                              , NodeDef.libID=userLibKey
-                              }
+workspace = NodeDef.empty{ NodeDef.cls     = Type.Module "Workspace'" 
+                         , NodeDef.imports = workspaceImports
+                         , NodeDef.libID   = userLibKey
+                         }
 
 base_manager :: DefManager
 base_manager = manager where
-    manager = DefManager.add (100, base_workspace)
+    manager = DefManager.add (100, workspace)
             $ DefManager.empty 
 
 
