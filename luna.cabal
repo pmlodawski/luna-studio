@@ -43,7 +43,7 @@ Executable luna
 
 Executable batch
   Hs-Source-Dirs: tools/batch/src,
-                  tools/batch/src/gen-hs
+                  tools/batch/gen-hs
   GHC-Options:    -Wall 
   Extensions:     
   Main-Is:        Main.hs
