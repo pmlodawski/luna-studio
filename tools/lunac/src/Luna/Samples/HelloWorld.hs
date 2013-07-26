@@ -73,18 +73,18 @@ base_libman = libman where
 
     
 myFunGraph = Graph.connectMany [
-                                (0, 1, Edge.Standard),
-                                (1, 2, Edge.Standard),
-                                (2, 3, Edge.Standard),
-                                (3, 4, Edge.Standard),
-                                (5, 6, Edge.Standard),
-                                (6, 8, Edge.Standard),
-                                (7, 8, Edge.Standard),
-                                (8, 9, Edge.Standard),
-                                (9, 10, Edge.Standard),
-                                (4, 11, Edge.Standard),
-                                (10, 11, Edge.Standard),
-                                (11, 12, Edge.Standard)
+                                (0, 1, Edge.standard),
+                                (1, 2, Edge.standard),
+                                (2, 3, Edge.standard),
+                                (3, 4, Edge.standard),
+                                (5, 6, Edge.standard),
+                                (6, 8, Edge.standard),
+                                (7, 8, Edge.standard),
+                                (8, 9, Edge.standard),
+                                (9, 10, Edge.standard),
+                                (4, 11, Edge.standard),
+                                (10, 11, Edge.standard),
+                                (11, 12, Edge.standard)
                                ]
 
            $ Graph.addMany [(0,  Node.mkType     "Console" ),
@@ -108,23 +108,22 @@ myFunGraph = Graph.connectMany [
 myFunInputs = Type.Tuple [Type.TypeVariable "a", 
                           Type.Named "in1" $ Type.TypeVariable "b"]
 
-myFun = NodeDef (Type.Function "myFun" myFunInputs Type.noOutputs) 
-                 myFunGraph 
-                 Flags.empty 
-                 Attributes.empty 
-                 userLibKey
+myFun = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun" myFunInputs Type.noOutputs)
+                     , NodeDef.graph = myFunGraph
+                     , NodeDef.libID = userLibKey
+                     }
 
 
 -----------------------------------------------------------------------
 
 
 
-myFunGraph2 = Graph.connectMany [(0, 1, Edge.Standard),
-                                 (0, 2, Edge.Standard),
-                                 (1, 3, Edge.Standard),
-                                 (2, 3, Edge.Standard),
-                                 (3, 4, Edge.Standard),
-                                 (4, 5, Edge.Standard)
+myFunGraph2 = Graph.connectMany [(0, 1, Edge.standard),
+                                 (0, 2, Edge.standard),
+                                 (1, 3, Edge.standard),
+                                 (2, 3, Edge.standard),
+                                 (3, 4, Edge.standard),
+                                 (4, 5, Edge.standard)
                                 ]
 
            $ Graph.addMany [(0, Node.mkInputs             ),
@@ -139,28 +138,27 @@ myFunGraph2 = Graph.connectMany [(0, 1, Edge.Standard),
 myFunInputs2 = Type.Tuple [Type.TypeVariable "a", 
                            Type.Named "in1" $ Type.TypeVariable "b"]
 
-myFun2 = NodeDef (Type.Function "myFun2" myFunInputs2 Type.noOutputs) 
-                 myFunGraph2 
-                 Flags.empty 
-                 Attributes.empty 
-                 userLibKey
 
+myFun2 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun2" myFunInputs2 Type.noOutputs)
+                      , NodeDef.graph = myFunGraph2
+                      , NodeDef.libID = userLibKey
+                      }
 
 myFunGraph3 = Graph.connectMany [
-                                (0, 1, Edge.Standard),
-                                (1, 2, Edge.Standard),
-                                (2, 3, Edge.Standard),
-                                (3, 4, Edge.Standard),
-                                (5, 6, Edge.Standard),
-                                (5, 7, Edge.Standard),
-                                (6, 8, Edge.Standard),
-                                (7, 8, Edge.Standard),
-                                (8, 9, Edge.Standard),
-                                (4, 10, Edge.Standard),
-                                (9, 10, Edge.Standard),
-                                (10, 11, Edge.Standard),
-                                (11, 13, Edge.Standard),
-                                (13, 12, Edge.Standard)
+                                (0, 1, Edge.standard),
+                                (1, 2, Edge.standard),
+                                (2, 3, Edge.standard),
+                                (3, 4, Edge.standard),
+                                (5, 6, Edge.standard),
+                                (5, 7, Edge.standard),
+                                (6, 8, Edge.standard),
+                                (7, 8, Edge.standard),
+                                (8, 9, Edge.standard),
+                                (4, 10, Edge.standard),
+                                (9, 10, Edge.standard),
+                                (10, 11, Edge.standard),
+                                (11, 13, Edge.standard),
+                                (13, 12, Edge.standard)
                                ]
 
            $ Graph.addMany [(0,  Node.mkType     "Console" ),
@@ -184,11 +182,13 @@ myFunGraph3 = Graph.connectMany [
 myFunInputs3 = Type.Tuple [Type.TypeVariable "a", 
                           Type.Named "in1" $ Type.TypeVariable "b"]
 
-myFun3 = NodeDef (Type.Function "myFun3" myFunInputs3 Type.noOutputs) 
-                 myFunGraph3 
-                 Flags.empty 
-                 Attributes.empty 
-                 userLibKey
+
+myFun3 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun3" myFunInputs3 Type.noOutputs)
+                      , NodeDef.graph = myFunGraph3
+                      , NodeDef.libID = userLibKey
+                      }
+
+
 
 
 

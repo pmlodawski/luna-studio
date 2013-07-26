@@ -8,12 +8,12 @@
 module Luna.Network.Def.NodeDef(
     NodeDef(..),
     ID,
-
+    empty,
     make,
-
     noPorts
 ) where
 
+import qualified Luna.Type.Type           as Type
 import           Luna.Type.Type             (Type)
 import qualified Luna.Lib.Library         as Library
 import           Luna.Network.Graph.Graph   (Graph)
@@ -34,6 +34,9 @@ data NodeDef = NotLoaded
                } deriving (Show)
 
 type ID   = Int
+
+empty :: NodeDef
+empty = NodeDef Type.Undefined Graph.empty Flags.empty Attributes.empty 0
 
 make :: Type -> Library.ID -> NodeDef
 make t lib = NodeDef t Graph.empty Flags.empty Attributes.empty lib
