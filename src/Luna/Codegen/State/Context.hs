@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Network.Def.Edge(
-    Edge(..)
+module Luna.Codegen.State.Context(
+    Context(..)
 ) where
-    
-data Edge = Edge {src :: Int, dst :: Int} deriving (Show, Read, Ord, Eq)
+
+data Context = Pure | IO deriving (Show, Eq)

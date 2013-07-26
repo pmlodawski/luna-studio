@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Codegen.State.FuncState(
+module Luna.Codegen.State.DefState(
     FuncState(..),
     make
 ) where
@@ -16,11 +16,9 @@ import           Luna.Codegen.State.Context        (Context)
 import           Luna.Codegen.State.Mode         as Mode
 import           Luna.Codegen.State.Mode           (Mode)
 
-data FuncState = FuncState {graph    :: Graph, 
-                            mode     :: Mode, 
-                            ctx      :: Context, 
-                            lastctx  :: Context
-                           } deriving (Show)
+data DefState = DefState {manager  :: DefManager, 
+                          path     :: Path, 
+                         } deriving (Show)
 
-make :: Graph -> FuncState
-make g = FuncState g Mode.Auto Context.Pure Context.Pure
+make :: NodeDef -> DefManager -> DefState
+make def = FuncState g Mode.Auto Context.Pure Context.Pure

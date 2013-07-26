@@ -5,8 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Codegen.Context(
-    Context(..)
+module Luna.Codegen.State.DefState(
 ) where
 
-data Context = Pure | IO deriving (Show, Eq)
+
+data Struct = Module { imports :: [Import]
+    
+                     }

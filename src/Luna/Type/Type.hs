@@ -8,7 +8,6 @@
 module Luna.Type.Type(
 Type(..),
 
-noImports,
 noInputs,
 noOutputs,
 noParams,
@@ -16,22 +15,16 @@ mkFunction,
 mkModule
 ) where
 
-import           Luna.Network.Path.Import          (Import(..))
-
-
 data Type = Undefined
           | TypeVariable {name   :: String}
           | Class        {name   :: String, params :: [Type]}
-          | Function     {name   :: String, inputs :: Type, outputs :: Type}
+          | Function     {name   :: String, inputs ::  Type, outputs :: Type}
           | Tuple        {items  :: [Type]}
           | List         {item   ::  Type }
           | Interface    {fields :: [Type], methods :: [Type]}
-          | Module       {name   :: String, imports :: [Import]}
+          | Module       {name   :: String}
           | Named        {name   :: String, cls :: Type}
           deriving (Show)
-
-noImports :: [Import]
-noImports = []
 
 noInputs :: Type
 noInputs = Tuple []
@@ -43,7 +36,7 @@ noParams :: [Type]
 noParams = []
 
 mkModule :: String -> Type
-mkModule name' = Module name' noImports
+mkModule name' = Module name'
 
 mkFunction :: String -> Type
 mkFunction name' = Function name' noInputs noOutputs
