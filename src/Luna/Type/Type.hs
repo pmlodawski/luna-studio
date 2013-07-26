@@ -13,7 +13,7 @@ noInputs,
 noOutputs,
 noParams,
 mkFunction,
-mkPackage
+mkModule
 ) where
 
 import           Luna.Network.Path.Import          (Import(..))
@@ -26,7 +26,7 @@ data Type = Undefined
           | Tuple        {items  :: [Type]}
           | List         {item   ::  Type }
           | Interface    {fields :: [Type], methods :: [Type]}
-          | Package      {name   :: String, imports :: [Import]}
+          | Module       {name   :: String, imports :: [Import]}
           | Named        {name   :: String, cls :: Type}
           deriving (Show)
 
@@ -42,8 +42,8 @@ noOutputs = Tuple []
 noParams :: [Type]
 noParams = []
 
-mkPackage :: String -> Type
-mkPackage name' = Package name' noImports
+mkModule :: String -> Type
+mkModule name' = Module name' noImports
 
 mkFunction :: String -> Type
 mkFunction name' = Function name' noInputs noOutputs
