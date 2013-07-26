@@ -32,9 +32,9 @@ import qualified Data.Vector as Vector
 import Thrift
 import Thrift.Types ()
 
-import Attrs_Types
-import Libs_Types
-import Types_Types
+import Attrs_Types -- deleted qualified keyword to fix compilation error
+import Libs_Types  -- deleted qualified keyword to fix compilation error
+import Types_Types -- deleted qualified keyword to fix compilation error
 
 
 data NodeDefinition = NodeDefinition{f_NodeDefinition_cls :: Maybe Types_Types.TypeContainer,f_NodeDefinition_libID :: Maybe Int32,f_NodeDefinition_flags :: Maybe Attrs_Types.Flags,f_NodeDefinition_attribs :: Maybe Attrs_Types.Attributes} deriving (Show,Eq,Typeable)

@@ -14,6 +14,7 @@ include "graph.thrift"
 include "libs.thrift"
 include "types.thrift"
 
+
 service Batch {
     void ping()
 }

@@ -5,6 +5,7 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
+
 enum TypeType {
     Undefined,
     Package,
@@ -17,6 +18,7 @@ enum TypeType {
     List;
 }
 
+
 struct Type {
     1: required TypeType  cls
     2: optional string    name
@@ -26,6 +28,7 @@ struct Type {
     6: optional list<i32> outputs
     7: optional i32 type
 }
+
 
 struct TypeContainer { 
     1: optional list<Type> types

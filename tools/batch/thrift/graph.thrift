@@ -8,6 +8,7 @@
 
 include "attrs.thrift"
 
+
 enum NodeType {
     Type,
     Call,
