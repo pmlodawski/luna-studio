@@ -22,21 +22,28 @@ Executable luna
                   MultiParamTypeClasses
   Main-Is:        Main.hs
   Build-Depends:  base, 
-                  fgl, 
-                  containers, 
-                  mtl, 
-                  cereal, 
-                  graphviz, 
-                  multimap,
-                  split,
-                  MissingH,
                   bytestring,
-                  directory-tree,
+                  cereal, 
+                  containers, 
                   directory,
-                  lens
+                  directory-tree,
+                  fgl, 
+                  graphviz,
+                  hashable,
+                  lens,
+                  MissingH,
+                  mtl, 
+                  multimap,
+                  network,
+                  split,
+                  text,
+                  thrift,
+                  unordered-containers,
+                  vector
 
 Executable batch
-  Hs-Source-Dirs: tools/batch/src
+  Hs-Source-Dirs: tools/batch/src,
+                  tools/batch/src/gen-hs
   GHC-Options:    -Wall 
   Extensions:     
   Main-Is:        Main.hs

@@ -5,8 +5,8 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-namespace cpp flowbox.batch
-namespace hs  flowbox.batch
+//namespace cpp flowbox.batch
+//namespace hs  flowbox.batch
 
 include "attrs.thrift"
 include "defs.thrift"
@@ -14,3 +14,6 @@ include "graph.thrift"
 include "libs.thrift"
 include "types.thrift"
 
+service Batch {
+    void ping()
+}

@@ -5,12 +5,14 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
+
+
 struct Flags {
     1: optional bool io
     2: optional bool omit
 }
 
 struct Attributes {
-    1: optional map<string, map<string, string>> spaces
+    1: optional map<string, map<string, string>>  spaces
 }
 

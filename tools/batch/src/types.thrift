@@ -18,7 +18,7 @@ enum TypeType {
 }
 
 struct Type {
-    1: required TypeType  type
+    1: required TypeType  cls
     2: optional string    name
     3: optional list<i32> items
     4: optional list<i32> params
