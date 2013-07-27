@@ -52,15 +52,15 @@ workspace = NodeDef.empty{ NodeDef.cls     = Type.Module "Workspace'"
 
 base_manager :: DefManager
 base_manager = manager where
-    manager = DefManager.add (100, workspace)
+    manager = DefManager.insNode (100, workspace)
             $ DefManager.empty 
 
 
 base_libman :: LibManager
 base_libman = libman where
-    libman = LibManager.register (userLibKey, Library "__workspace__" $ UniPath.fromUnixString "~/flowbox/project1")
-           $ LibManager.register (stdLibKey,  Library "std"           $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib")
-           $ LibManager.empty {defManager = base_manager }
+    libman = LibManager.insNode (userLibKey, Library "__workspace__" $ UniPath.fromUnixString "~/flowbox/project1")
+           $ LibManager.insNode (stdLibKey,  Library "std"           $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib")
+           $ LibManager.empty
 
 
 
@@ -75,7 +75,7 @@ base_libman = libman where
     
 
     
-myFunGraph = Graph.connectMany [
+myFunGraph = Graph.insEdges [
                                 (0, 1, Edge.standard),
                                 (1, 2, Edge.standard),
                                 (2, 3, Edge.standard),
@@ -90,22 +90,22 @@ myFunGraph = Graph.connectMany [
                                 (11, 12, Edge.standard)
                                ]
 
-           $ Graph.addMany [(0,  Node.mkType     "Console" ),
-                            (1,  Node.mkNew                ),
-                            (2,  Node.mkTuple              ),
-                            (3,  Node.mkCall     "init"    ),
-                            (4,  Node.mkCall     "select0" ),
-                            (5,  Node.mkType     "String"  ),
-                            (6,  Node.mkNew                ),
-                            (7,  Node.Default $ DefaultValue.DefaultString "hello world!"),
-                            (8,  Node.mkTuple              ),
-                            (9,  Node.mkCall     "init"    ),
-                            (10, Node.mkCall     "select0" ),
-                            (11, Node.mkTuple              ),
-                            (12, Node.mkCall     "print"   ),
-                            (13, Node.mkInputs             ),
-                            (14, Node.mkOutputs            )
-                           ]
+           $ Graph.insNodes [(0,  Node.mkType     "Console" ),
+                             (1,  Node.mkNew                ),
+                             (2,  Node.mkTuple              ),
+                             (3,  Node.mkCall     "init"    ),
+                             (4,  Node.mkCall     "select0" ),
+                             (5,  Node.mkType     "String"  ),
+                             (6,  Node.mkNew                ),
+                             (7,  Node.Default $ DefaultValue.DefaultString "hello world!"),
+                             (8,  Node.mkTuple              ),
+                             (9,  Node.mkCall     "init"    ),
+                             (10, Node.mkCall     "select0" ),
+                             (11, Node.mkTuple              ),
+                             (12, Node.mkCall     "print"   ),
+                             (13, Node.mkInputs             ),
+                             (14, Node.mkOutputs            )
+                            ]
            $ Graph.empty
 
 myFunInputs = Type.Tuple [Type.TypeVariable "a", 
@@ -121,21 +121,21 @@ myFun = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun" myFunInputs Type.n
 
 
 
-myFunGraph2 = Graph.connectMany [(0, 1, Edge.standard),
-                                 (0, 2, Edge.standard),
-                                 (1, 3, Edge.standard),
-                                 (2, 3, Edge.standard),
-                                 (3, 4, Edge.standard),
-                                 (4, 5, Edge.standard)
-                                ]
+myFunGraph2 = Graph.insEdges [(0, 1, Edge.standard),
+                              (0, 2, Edge.standard),
+                              (1, 3, Edge.standard),
+                              (2, 3, Edge.standard),
+                              (3, 4, Edge.standard),
+                              (4, 5, Edge.standard)
+                             ] 
 
-           $ Graph.addMany [(0, Node.mkInputs             ),
-                            (1, Node.mkCall     "select0" ),
-                            (2, Node.mkCall     "select1" ),
-                            (3, Node.mkTuple              ),
-                            (4, Node.mkCall     "add"     ),
-                            (5, Node.mkOutputs            )
-                           ]
+           $ Graph.insNodes [(0, Node.mkInputs             ),
+                             (1, Node.mkCall     "select0" ),
+                             (2, Node.mkCall     "select1" ),
+                             (3, Node.mkTuple              ),
+                             (4, Node.mkCall     "add"     ),
+                             (5, Node.mkOutputs            )
+                            ]
            $ Graph.empty
 
 myFunInputs2 = Type.Tuple [ Type.Named "in1" $ Type.TypeVariable "a"
@@ -148,39 +148,39 @@ myFun2 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun2" myFunInputs2 Typ
                       , NodeDef.libID = userLibKey
                       }
 
-myFunGraph3 = Graph.connectMany [
-                                (0, 1, Edge.standard),
-                                (1, 2, Edge.standard),
-                                (2, 3, Edge.standard),
-                                (3, 4, Edge.standard),
-                                (5, 6, Edge.standard),
-                                (5, 7, Edge.standard),
-                                (6, 8, Edge.standard),
-                                (7, 8, Edge.standard),
-                                (8, 9, Edge.standard),
-                                (4, 10, Edge.standard),
-                                (9, 10, Edge.standard),
-                                (10, 11, Edge.standard),
-                                (11, 13, Edge.standard),
-                                (13, 12, Edge.standard)
-                               ]
+myFunGraph3 = Graph.insEdges [
+                              (0, 1, Edge.standard),
+                              (1, 2, Edge.standard),
+                              (2, 3, Edge.standard),
+                              (3, 4, Edge.standard),
+                              (5, 6, Edge.standard),
+                              (5, 7, Edge.standard),
+                              (6, 8, Edge.standard),
+                              (7, 8, Edge.standard),
+                              (8, 9, Edge.standard),
+                              (4, 10, Edge.standard),
+                              (9, 10, Edge.standard),
+                              (10, 11, Edge.standard),
+                              (11, 13, Edge.standard),
+                              (13, 12, Edge.standard)
+                             ]
 
-           $ Graph.addMany [(0,  Node.mkType     "Console" ),
-                            (1,  Node.mkNew                ),
-                            (2,  Node.mkTuple              ),
-                            (3,  Node.mkCall     "init"    ),
-                            (4,  Node.mkCall     "select0" ),
-                            (5,  Node.mkInputs             ),
-                            (6,  Node.mkCall     "select0" ),
-                            (7,  Node.mkCall     "select1" ),
-                            (8,  Node.mkCall     "add"     ),
-                            (9,  Node.mkCall     "select0" ),
-                            (10, Node.mkTuple              ),
-                            --(11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty),
-                            (11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty),
-                            (12, Node.mkOutputs            ),
-                            (13, Node.mkCall     "dummy" )
-                           ]
+           $ Graph.insNodes [(0,  Node.mkType     "Console" ),
+                             (1,  Node.mkNew                ),
+                             (2,  Node.mkTuple              ),
+                             (3,  Node.mkCall     "init"    ),
+                             (4,  Node.mkCall     "select0" ),
+                             (5,  Node.mkInputs             ),
+                             (6,  Node.mkCall     "select0" ),
+                             (7,  Node.mkCall     "select1" ),
+                             (8,  Node.mkCall     "add"     ),
+                             (9,  Node.mkCall     "select0" ),
+                             (10, Node.mkTuple              ),
+                             --(11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty),
+                             (11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty),
+                             (12, Node.mkOutputs            ),
+                             (13, Node.mkCall     "dummy" )
+                            ]
            $ Graph.empty
 
 myFunInputs3 = Type.Tuple [Type.TypeVariable "a", 

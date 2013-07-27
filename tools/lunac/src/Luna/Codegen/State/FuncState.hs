@@ -15,12 +15,15 @@ import           Luna.Codegen.State.Context      as Context
 import           Luna.Codegen.State.Context        (Context)
 import           Luna.Codegen.State.Mode         as Mode
 import           Luna.Codegen.State.Mode           (Mode)
+import qualified Luna.Network.Def.NodeDef        as NodeDef
+import           Luna.Network.Def.NodeDef          (NodeDef)
 
-data FuncState = FuncState {graph    :: Graph, 
+data FuncState = FuncState {def      :: NodeDef,
+							graph    :: Graph, 
                             mode     :: Mode, 
                             ctx      :: Context, 
                             lastctx  :: Context
                            } deriving (Show)
 
-make :: Graph -> FuncState
-make g = FuncState g Mode.Auto Context.Pure Context.Pure
+make :: NodeDef -> Graph -> FuncState
+make d g = FuncState d g Mode.Auto Context.Pure Context.Pure

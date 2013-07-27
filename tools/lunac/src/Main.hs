@@ -10,12 +10,12 @@ import qualified Luna.Codegen.CodeGenerator     as CG
 import qualified Luna.Codegen.DefGenerator      as DG
 import qualified Luna.Network.Def.DefManager    as DefManager
 
-
+import Luna.Data.Graph
 
 main :: IO ()
 main = do 
-    --putStrLn $ CG.generateFunction HelloWorld.myFun3
-    putStrLn $ DG.generateModule 100 HelloWorld.full_manager
+    putStrLn $ CG.generateFunction HelloWorld.myFun3
+    --putStrLn $ DG.generateModule 100 HelloWorld.full_manager
 
     --putStrLn $ Cg.generateDefCode $
     return ()
