@@ -24,7 +24,7 @@ import Batch
 import Batch_Iface
 
 port :: PortNumber
-port = 70521
+port = 30521
 
 data BatchHandler = BatchHandler
 
