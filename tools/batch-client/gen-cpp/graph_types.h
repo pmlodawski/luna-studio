@@ -31,10 +31,15 @@ struct NodeType {
 
 extern const std::map<int, const char*> _NodeType_VALUES_TO_NAMES;
 
+typedef int32_t NodeID;
+
+typedef std::vector<int32_t>  PortDescriptor;
+
 typedef struct _Node__isset {
-  _Node__isset() : cls(false), name(false), flags(false), attrs(false) {}
+  _Node__isset() : cls(false), name(false), nodeID(false), flags(false), attrs(false) {}
   bool cls;
   bool name;
+  bool nodeID;
   bool flags;
   bool attrs;
 } _Node__isset;
@@ -42,16 +47,17 @@ typedef struct _Node__isset {
 class Node {
  public:
 
-  static const char* ascii_fingerprint; // = "2E2E354F61ED971A305E1FF4FAD0A533";
-  static const uint8_t binary_fingerprint[16]; // = {0x2E,0x2E,0x35,0x4F,0x61,0xED,0x97,0x1A,0x30,0x5E,0x1F,0xF4,0xFA,0xD0,0xA5,0x33};
+  static const char* ascii_fingerprint; // = "5F9145A514865E1FC587B553E8ECE2F6";
+  static const uint8_t binary_fingerprint[16]; // = {0x5F,0x91,0x45,0xA5,0x14,0x86,0x5E,0x1F,0xC5,0x87,0xB5,0x53,0xE8,0xEC,0xE2,0xF6};
 
-  Node() : cls((NodeType::type)0), name() {
+  Node() : cls((NodeType::type)0), name(), nodeID(0) {
   }
 
   virtual ~Node() throw() {}
 
   NodeType::type cls;
   std::string name;
+  NodeID nodeID;
    ::Flags flags;
    ::Attributes attrs;
 
@@ -65,6 +71,11 @@ class Node {
   void __set_name(const std::string& val) {
     name = val;
     __isset.name = true;
+  }
+
+  void __set_nodeID(const NodeID val) {
+    nodeID = val;
+    __isset.nodeID = true;
   }
 
   void __set_flags(const  ::Flags& val) {
@@ -86,6 +97,10 @@ class Node {
     if (__isset.name != rhs.__isset.name)
       return false;
     else if (__isset.name && !(name == rhs.name))
+      return false;
+    if (__isset.nodeID != rhs.__isset.nodeID)
+      return false;
+    else if (__isset.nodeID && !(nodeID == rhs.nodeID))
       return false;
     if (__isset.flags != rhs.__isset.flags)
       return false;

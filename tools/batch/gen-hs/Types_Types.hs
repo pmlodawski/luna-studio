@@ -148,13 +148,13 @@ read_Type iprot = do
   record <- read_Type_fields iprot (Type{f_Type_cls=Nothing,f_Type_name=Nothing,f_Type_items=Nothing,f_Type_params=Nothing,f_Type_inputs=Nothing,f_Type_outputs=Nothing,f_Type_type=Nothing})
   readStructEnd iprot
   return record
-data TypeContainer = TypeContainer{f_TypeContainer_types :: Maybe (Vector.Vector Type)} deriving (Show,Eq,Typeable)
+data TypeContainer = TypeContainer{f_TypeContainer_typs :: Maybe (Vector.Vector Type)} deriving (Show,Eq,Typeable)
 instance Hashable TypeContainer where
-  hashWithSalt salt record = salt   `hashWithSalt` f_TypeContainer_types record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_TypeContainer_typs record  
 write_TypeContainer oprot record = do
   writeStructBegin oprot "TypeContainer"
-  case f_TypeContainer_types record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("types",T_LIST,1)
+  case f_TypeContainer_typs record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("typs",T_LIST,1)
     (let f = Vector.mapM_ (\_viter31 -> write_Type oprot _viter31) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   writeFieldStop oprot
@@ -165,7 +165,7 @@ read_TypeContainer_fields iprot record = do
     case _id34 of 
       1 -> if _t33 == T_LIST then do
         s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Type iprot)) in do {(_etype38,_size35) <- readListBegin iprot; f _size35})
-        read_TypeContainer_fields iprot record{f_TypeContainer_types=Just s}
+        read_TypeContainer_fields iprot record{f_TypeContainer_typs=Just s}
         else do
           skip iprot _t33
           read_TypeContainer_fields iprot record
@@ -175,6 +175,6 @@ read_TypeContainer_fields iprot record = do
         read_TypeContainer_fields iprot record
 read_TypeContainer iprot = do
   _ <- readStructBegin iprot
-  record <- read_TypeContainer_fields iprot (TypeContainer{f_TypeContainer_types=Nothing})
+  record <- read_TypeContainer_fields iprot (TypeContainer{f_TypeContainer_typs=Nothing})
   readStructEnd iprot
   return record

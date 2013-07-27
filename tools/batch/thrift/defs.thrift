@@ -10,9 +10,12 @@ include "attrs.thrift"
 include "libs.thrift"
 include "types.thrift"
 
+typedef i32 DefID
+
 struct NodeDefinition {
     1: optional types.TypeContainer cls
     2: optional libs.LibID          libID
-    3: optional attrs.Flags         flags
-    4: optional attrs.Attributes    attribs
+    3: optional DefID               defID
+    4: optional attrs.Flags         flags
+    5: optional attrs.Attributes    attribs
 }

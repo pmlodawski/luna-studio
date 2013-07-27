@@ -30,8 +30,8 @@ const char* _kNodeTypeNames[] = {
 };
 const std::map<int, const char*> _NodeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(7, _kNodeTypeValues, _kNodeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
-const char* Node::ascii_fingerprint = "2E2E354F61ED971A305E1FF4FAD0A533";
-const uint8_t Node::binary_fingerprint[16] = {0x2E,0x2E,0x35,0x4F,0x61,0xED,0x97,0x1A,0x30,0x5E,0x1F,0xF4,0xFA,0xD0,0xA5,0x33};
+const char* Node::ascii_fingerprint = "5F9145A514865E1FC587B553E8ECE2F6";
+const uint8_t Node::binary_fingerprint[16] = {0x5F,0x91,0x45,0xA5,0x14,0x86,0x5E,0x1F,0xC5,0x87,0xB5,0x53,0xE8,0xEC,0xE2,0xF6};
 
 uint32_t Node::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -72,6 +72,14 @@ uint32_t Node::read(::apache::thrift::protocol::TProtocol* iprot) {
         }
         break;
       case 3:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->nodeID);
+          this->__isset.nodeID = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += this->flags.read(iprot);
           this->__isset.flags = true;
@@ -79,7 +87,7 @@ uint32_t Node::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 4:
+      case 5:
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += this->attrs.read(iprot);
           this->__isset.attrs = true;
@@ -113,13 +121,18 @@ uint32_t Node::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeString(this->name);
     xfer += oprot->writeFieldEnd();
   }
+  if (this->__isset.nodeID) {
+    xfer += oprot->writeFieldBegin("nodeID", ::apache::thrift::protocol::T_I32, 3);
+    xfer += oprot->writeI32(this->nodeID);
+    xfer += oprot->writeFieldEnd();
+  }
   if (this->__isset.flags) {
-    xfer += oprot->writeFieldBegin("flags", ::apache::thrift::protocol::T_STRUCT, 3);
+    xfer += oprot->writeFieldBegin("flags", ::apache::thrift::protocol::T_STRUCT, 4);
     xfer += this->flags.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.attrs) {
-    xfer += oprot->writeFieldBegin("attrs", ::apache::thrift::protocol::T_STRUCT, 4);
+    xfer += oprot->writeFieldBegin("attrs", ::apache::thrift::protocol::T_STRUCT, 5);
     xfer += this->attrs.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
@@ -132,6 +145,7 @@ void swap(Node &a, Node &b) {
   using ::std::swap;
   swap(a.cls, b.cls);
   swap(a.name, b.name);
+  swap(a.nodeID, b.nodeID);
   swap(a.flags, b.flags);
   swap(a.attrs, b.attrs);
   swap(a.__isset, b.__isset);

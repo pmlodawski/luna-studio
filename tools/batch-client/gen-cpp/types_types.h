@@ -141,8 +141,8 @@ class Type {
 void swap(Type &a, Type &b);
 
 typedef struct _TypeContainer__isset {
-  _TypeContainer__isset() : types(false) {}
-  bool types;
+  _TypeContainer__isset() : typs(false) {}
+  bool typs;
 } _TypeContainer__isset;
 
 class TypeContainer {
@@ -156,20 +156,20 @@ class TypeContainer {
 
   virtual ~TypeContainer() throw() {}
 
-  std::vector<Type>  types;
+  std::vector<Type>  typs;
 
   _TypeContainer__isset __isset;
 
-  void __set_types(const std::vector<Type> & val) {
-    types = val;
-    __isset.types = true;
+  void __set_typs(const std::vector<Type> & val) {
+    typs = val;
+    __isset.typs = true;
   }
 
   bool operator == (const TypeContainer & rhs) const
   {
-    if (__isset.types != rhs.__isset.types)
+    if (__isset.typs != rhs.__isset.typs)
       return false;
-    else if (__isset.types && !(types == rhs.types))
+    else if (__isset.typs && !(typs == rhs.typs))
       return false;
     return true;
   }

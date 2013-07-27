@@ -291,19 +291,19 @@ uint32_t TypeContainer::read(::apache::thrift::protocol::TProtocol* iprot) {
       case 1:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
-            this->types.clear();
+            this->typs.clear();
             uint32_t _size25;
             ::apache::thrift::protocol::TType _etype28;
             xfer += iprot->readListBegin(_etype28, _size25);
-            this->types.resize(_size25);
+            this->typs.resize(_size25);
             uint32_t _i29;
             for (_i29 = 0; _i29 < _size25; ++_i29)
             {
-              xfer += this->types[_i29].read(iprot);
+              xfer += this->typs[_i29].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
-          this->__isset.types = true;
+          this->__isset.typs = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -324,12 +324,12 @@ uint32_t TypeContainer::write(::apache::thrift::protocol::TProtocol* oprot) cons
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("TypeContainer");
 
-  if (this->__isset.types) {
-    xfer += oprot->writeFieldBegin("types", ::apache::thrift::protocol::T_LIST, 1);
+  if (this->__isset.typs) {
+    xfer += oprot->writeFieldBegin("typs", ::apache::thrift::protocol::T_LIST, 1);
     {
-      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->types.size()));
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->typs.size()));
       std::vector<Type> ::const_iterator _iter30;
-      for (_iter30 = this->types.begin(); _iter30 != this->types.end(); ++_iter30)
+      for (_iter30 = this->typs.begin(); _iter30 != this->typs.end(); ++_iter30)
       {
         xfer += (*_iter30).write(oprot);
       }
@@ -344,7 +344,7 @@ uint32_t TypeContainer::write(::apache::thrift::protocol::TProtocol* oprot) cons
 
 void swap(TypeContainer &a, TypeContainer &b) {
   using ::std::swap;
-  swap(a.types, b.types);
+  swap(a.typs, b.typs);
   swap(a.__isset, b.__isset);
 }
 

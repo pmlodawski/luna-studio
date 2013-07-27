@@ -15,6 +15,21 @@
 class BatchIf {
  public:
   virtual ~BatchIf() {}
+  virtual void libraries(std::vector< ::Library> & _return) = 0;
+  virtual void registerLibrary(const  ::Library& library) = 0;
+  virtual void updateLibrary(const  ::Library& library) = 0;
+  virtual void unregisterLibrary(const  ::Library& library) = 0;
+  virtual void addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent, const  ::Library& library) = 0;
+  virtual void updateDefinition(const  ::NodeDefinition& definition) = 0;
+  virtual void removeDefinition(const  ::NodeDefinition& definition) = 0;
+  virtual void definitionChildren(std::vector< ::NodeDefinition> & _return, const  ::NodeDefinition& definition) = 0;
+  virtual void definitionParent( ::NodeDefinition& _return, const  ::NodeDefinition& definition) = 0;
+  virtual void nodes(std::vector< ::Node> & _return, const  ::NodeDefinition& definition) = 0;
+  virtual void addNode(const  ::Node& node, const  ::NodeDefinition& definition) = 0;
+  virtual void updateNode(const  ::Node& node, const  ::NodeDefinition& definition) = 0;
+  virtual void removeNode(const  ::Node& node, const  ::NodeDefinition& definition) = 0;
+  virtual void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) = 0;
+  virtual void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) = 0;
   virtual void ping() = 0;
 };
 
@@ -45,9 +60,1557 @@ class BatchIfSingletonFactory : virtual public BatchIfFactory {
 class BatchNull : virtual public BatchIf {
  public:
   virtual ~BatchNull() {}
+  void libraries(std::vector< ::Library> & /* _return */) {
+    return;
+  }
+  void registerLibrary(const  ::Library& /* library */) {
+    return;
+  }
+  void updateLibrary(const  ::Library& /* library */) {
+    return;
+  }
+  void unregisterLibrary(const  ::Library& /* library */) {
+    return;
+  }
+  void addDefinition(const  ::NodeDefinition& /* definition */, const  ::NodeDefinition& /* parent */, const  ::Library& /* library */) {
+    return;
+  }
+  void updateDefinition(const  ::NodeDefinition& /* definition */) {
+    return;
+  }
+  void removeDefinition(const  ::NodeDefinition& /* definition */) {
+    return;
+  }
+  void definitionChildren(std::vector< ::NodeDefinition> & /* _return */, const  ::NodeDefinition& /* definition */) {
+    return;
+  }
+  void definitionParent( ::NodeDefinition& /* _return */, const  ::NodeDefinition& /* definition */) {
+    return;
+  }
+  void nodes(std::vector< ::Node> & /* _return */, const  ::NodeDefinition& /* definition */) {
+    return;
+  }
+  void addNode(const  ::Node& /* node */, const  ::NodeDefinition& /* definition */) {
+    return;
+  }
+  void updateNode(const  ::Node& /* node */, const  ::NodeDefinition& /* definition */) {
+    return;
+  }
+  void removeNode(const  ::Node& /* node */, const  ::NodeDefinition& /* definition */) {
+    return;
+  }
+  void connect(const  ::Node& /* srcNode */, const  ::PortDescriptor& /* srcPort */, const  ::Node& /* dstNode */, const  ::PortDescriptor& /* dstPort */, const  ::NodeDefinition& /* definition */) {
+    return;
+  }
+  void disconnect(const  ::Node& /* srcNode */, const  ::PortDescriptor& /* srcPort */, const  ::Node& /* dstNode */, const  ::PortDescriptor& /* dstPort */, const  ::NodeDefinition& /* definition */) {
+    return;
+  }
   void ping() {
     return;
   }
+};
+
+
+class Batch_libraries_args {
+ public:
+
+  Batch_libraries_args() {
+  }
+
+  virtual ~Batch_libraries_args() throw() {}
+
+
+  bool operator == (const Batch_libraries_args & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_libraries_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_libraries_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_libraries_pargs {
+ public:
+
+
+  virtual ~Batch_libraries_pargs() throw() {}
+
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_libraries_result__isset {
+  _Batch_libraries_result__isset() : success(false) {}
+  bool success;
+} _Batch_libraries_result__isset;
+
+class Batch_libraries_result {
+ public:
+
+  Batch_libraries_result() {
+  }
+
+  virtual ~Batch_libraries_result() throw() {}
+
+  std::vector< ::Library>  success;
+
+  _Batch_libraries_result__isset __isset;
+
+  void __set_success(const std::vector< ::Library> & val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_libraries_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_libraries_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_libraries_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_libraries_presult__isset {
+  _Batch_libraries_presult__isset() : success(false) {}
+  bool success;
+} _Batch_libraries_presult__isset;
+
+class Batch_libraries_presult {
+ public:
+
+
+  virtual ~Batch_libraries_presult() throw() {}
+
+  std::vector< ::Library> * success;
+
+  _Batch_libraries_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_registerLibrary_args__isset {
+  _Batch_registerLibrary_args__isset() : library(false) {}
+  bool library;
+} _Batch_registerLibrary_args__isset;
+
+class Batch_registerLibrary_args {
+ public:
+
+  Batch_registerLibrary_args() {
+  }
+
+  virtual ~Batch_registerLibrary_args() throw() {}
+
+   ::Library library;
+
+  _Batch_registerLibrary_args__isset __isset;
+
+  void __set_library(const  ::Library& val) {
+    library = val;
+  }
+
+  bool operator == (const Batch_registerLibrary_args & rhs) const
+  {
+    if (!(library == rhs.library))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_registerLibrary_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_registerLibrary_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_registerLibrary_pargs {
+ public:
+
+
+  virtual ~Batch_registerLibrary_pargs() throw() {}
+
+  const  ::Library* library;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_registerLibrary_result {
+ public:
+
+  Batch_registerLibrary_result() {
+  }
+
+  virtual ~Batch_registerLibrary_result() throw() {}
+
+
+  bool operator == (const Batch_registerLibrary_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_registerLibrary_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_registerLibrary_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_registerLibrary_presult {
+ public:
+
+
+  virtual ~Batch_registerLibrary_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_updateLibrary_args__isset {
+  _Batch_updateLibrary_args__isset() : library(false) {}
+  bool library;
+} _Batch_updateLibrary_args__isset;
+
+class Batch_updateLibrary_args {
+ public:
+
+  Batch_updateLibrary_args() {
+  }
+
+  virtual ~Batch_updateLibrary_args() throw() {}
+
+   ::Library library;
+
+  _Batch_updateLibrary_args__isset __isset;
+
+  void __set_library(const  ::Library& val) {
+    library = val;
+  }
+
+  bool operator == (const Batch_updateLibrary_args & rhs) const
+  {
+    if (!(library == rhs.library))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_updateLibrary_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_updateLibrary_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_updateLibrary_pargs {
+ public:
+
+
+  virtual ~Batch_updateLibrary_pargs() throw() {}
+
+  const  ::Library* library;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_updateLibrary_result {
+ public:
+
+  Batch_updateLibrary_result() {
+  }
+
+  virtual ~Batch_updateLibrary_result() throw() {}
+
+
+  bool operator == (const Batch_updateLibrary_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_updateLibrary_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_updateLibrary_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_updateLibrary_presult {
+ public:
+
+
+  virtual ~Batch_updateLibrary_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_unregisterLibrary_args__isset {
+  _Batch_unregisterLibrary_args__isset() : library(false) {}
+  bool library;
+} _Batch_unregisterLibrary_args__isset;
+
+class Batch_unregisterLibrary_args {
+ public:
+
+  Batch_unregisterLibrary_args() {
+  }
+
+  virtual ~Batch_unregisterLibrary_args() throw() {}
+
+   ::Library library;
+
+  _Batch_unregisterLibrary_args__isset __isset;
+
+  void __set_library(const  ::Library& val) {
+    library = val;
+  }
+
+  bool operator == (const Batch_unregisterLibrary_args & rhs) const
+  {
+    if (!(library == rhs.library))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_unregisterLibrary_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_unregisterLibrary_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_unregisterLibrary_pargs {
+ public:
+
+
+  virtual ~Batch_unregisterLibrary_pargs() throw() {}
+
+  const  ::Library* library;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_unregisterLibrary_result {
+ public:
+
+  Batch_unregisterLibrary_result() {
+  }
+
+  virtual ~Batch_unregisterLibrary_result() throw() {}
+
+
+  bool operator == (const Batch_unregisterLibrary_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_unregisterLibrary_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_unregisterLibrary_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_unregisterLibrary_presult {
+ public:
+
+
+  virtual ~Batch_unregisterLibrary_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_addDefinition_args__isset {
+  _Batch_addDefinition_args__isset() : definition(false), parent(false), library(false) {}
+  bool definition;
+  bool parent;
+  bool library;
+} _Batch_addDefinition_args__isset;
+
+class Batch_addDefinition_args {
+ public:
+
+  Batch_addDefinition_args() {
+  }
+
+  virtual ~Batch_addDefinition_args() throw() {}
+
+   ::NodeDefinition definition;
+   ::NodeDefinition parent;
+   ::Library library;
+
+  _Batch_addDefinition_args__isset __isset;
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  void __set_parent(const  ::NodeDefinition& val) {
+    parent = val;
+  }
+
+  void __set_library(const  ::Library& val) {
+    library = val;
+  }
+
+  bool operator == (const Batch_addDefinition_args & rhs) const
+  {
+    if (!(definition == rhs.definition))
+      return false;
+    if (!(parent == rhs.parent))
+      return false;
+    if (!(library == rhs.library))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_addDefinition_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_addDefinition_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_addDefinition_pargs {
+ public:
+
+
+  virtual ~Batch_addDefinition_pargs() throw() {}
+
+  const  ::NodeDefinition* definition;
+  const  ::NodeDefinition* parent;
+  const  ::Library* library;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_addDefinition_result {
+ public:
+
+  Batch_addDefinition_result() {
+  }
+
+  virtual ~Batch_addDefinition_result() throw() {}
+
+
+  bool operator == (const Batch_addDefinition_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_addDefinition_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_addDefinition_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_addDefinition_presult {
+ public:
+
+
+  virtual ~Batch_addDefinition_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_updateDefinition_args__isset {
+  _Batch_updateDefinition_args__isset() : definition(false) {}
+  bool definition;
+} _Batch_updateDefinition_args__isset;
+
+class Batch_updateDefinition_args {
+ public:
+
+  Batch_updateDefinition_args() {
+  }
+
+  virtual ~Batch_updateDefinition_args() throw() {}
+
+   ::NodeDefinition definition;
+
+  _Batch_updateDefinition_args__isset __isset;
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  bool operator == (const Batch_updateDefinition_args & rhs) const
+  {
+    if (!(definition == rhs.definition))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_updateDefinition_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_updateDefinition_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_updateDefinition_pargs {
+ public:
+
+
+  virtual ~Batch_updateDefinition_pargs() throw() {}
+
+  const  ::NodeDefinition* definition;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_updateDefinition_result {
+ public:
+
+  Batch_updateDefinition_result() {
+  }
+
+  virtual ~Batch_updateDefinition_result() throw() {}
+
+
+  bool operator == (const Batch_updateDefinition_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_updateDefinition_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_updateDefinition_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_updateDefinition_presult {
+ public:
+
+
+  virtual ~Batch_updateDefinition_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_removeDefinition_args__isset {
+  _Batch_removeDefinition_args__isset() : definition(false) {}
+  bool definition;
+} _Batch_removeDefinition_args__isset;
+
+class Batch_removeDefinition_args {
+ public:
+
+  Batch_removeDefinition_args() {
+  }
+
+  virtual ~Batch_removeDefinition_args() throw() {}
+
+   ::NodeDefinition definition;
+
+  _Batch_removeDefinition_args__isset __isset;
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  bool operator == (const Batch_removeDefinition_args & rhs) const
+  {
+    if (!(definition == rhs.definition))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_removeDefinition_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_removeDefinition_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_removeDefinition_pargs {
+ public:
+
+
+  virtual ~Batch_removeDefinition_pargs() throw() {}
+
+  const  ::NodeDefinition* definition;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_removeDefinition_result {
+ public:
+
+  Batch_removeDefinition_result() {
+  }
+
+  virtual ~Batch_removeDefinition_result() throw() {}
+
+
+  bool operator == (const Batch_removeDefinition_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_removeDefinition_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_removeDefinition_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_removeDefinition_presult {
+ public:
+
+
+  virtual ~Batch_removeDefinition_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_definitionChildren_args__isset {
+  _Batch_definitionChildren_args__isset() : definition(false) {}
+  bool definition;
+} _Batch_definitionChildren_args__isset;
+
+class Batch_definitionChildren_args {
+ public:
+
+  Batch_definitionChildren_args() {
+  }
+
+  virtual ~Batch_definitionChildren_args() throw() {}
+
+   ::NodeDefinition definition;
+
+  _Batch_definitionChildren_args__isset __isset;
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  bool operator == (const Batch_definitionChildren_args & rhs) const
+  {
+    if (!(definition == rhs.definition))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_definitionChildren_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_definitionChildren_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_definitionChildren_pargs {
+ public:
+
+
+  virtual ~Batch_definitionChildren_pargs() throw() {}
+
+  const  ::NodeDefinition* definition;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_definitionChildren_result__isset {
+  _Batch_definitionChildren_result__isset() : success(false) {}
+  bool success;
+} _Batch_definitionChildren_result__isset;
+
+class Batch_definitionChildren_result {
+ public:
+
+  Batch_definitionChildren_result() {
+  }
+
+  virtual ~Batch_definitionChildren_result() throw() {}
+
+  std::vector< ::NodeDefinition>  success;
+
+  _Batch_definitionChildren_result__isset __isset;
+
+  void __set_success(const std::vector< ::NodeDefinition> & val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_definitionChildren_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_definitionChildren_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_definitionChildren_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_definitionChildren_presult__isset {
+  _Batch_definitionChildren_presult__isset() : success(false) {}
+  bool success;
+} _Batch_definitionChildren_presult__isset;
+
+class Batch_definitionChildren_presult {
+ public:
+
+
+  virtual ~Batch_definitionChildren_presult() throw() {}
+
+  std::vector< ::NodeDefinition> * success;
+
+  _Batch_definitionChildren_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_definitionParent_args__isset {
+  _Batch_definitionParent_args__isset() : definition(false) {}
+  bool definition;
+} _Batch_definitionParent_args__isset;
+
+class Batch_definitionParent_args {
+ public:
+
+  Batch_definitionParent_args() {
+  }
+
+  virtual ~Batch_definitionParent_args() throw() {}
+
+   ::NodeDefinition definition;
+
+  _Batch_definitionParent_args__isset __isset;
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  bool operator == (const Batch_definitionParent_args & rhs) const
+  {
+    if (!(definition == rhs.definition))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_definitionParent_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_definitionParent_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_definitionParent_pargs {
+ public:
+
+
+  virtual ~Batch_definitionParent_pargs() throw() {}
+
+  const  ::NodeDefinition* definition;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_definitionParent_result__isset {
+  _Batch_definitionParent_result__isset() : success(false) {}
+  bool success;
+} _Batch_definitionParent_result__isset;
+
+class Batch_definitionParent_result {
+ public:
+
+  Batch_definitionParent_result() {
+  }
+
+  virtual ~Batch_definitionParent_result() throw() {}
+
+   ::NodeDefinition success;
+
+  _Batch_definitionParent_result__isset __isset;
+
+  void __set_success(const  ::NodeDefinition& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_definitionParent_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_definitionParent_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_definitionParent_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_definitionParent_presult__isset {
+  _Batch_definitionParent_presult__isset() : success(false) {}
+  bool success;
+} _Batch_definitionParent_presult__isset;
+
+class Batch_definitionParent_presult {
+ public:
+
+
+  virtual ~Batch_definitionParent_presult() throw() {}
+
+   ::NodeDefinition* success;
+
+  _Batch_definitionParent_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_nodes_args__isset {
+  _Batch_nodes_args__isset() : definition(false) {}
+  bool definition;
+} _Batch_nodes_args__isset;
+
+class Batch_nodes_args {
+ public:
+
+  Batch_nodes_args() {
+  }
+
+  virtual ~Batch_nodes_args() throw() {}
+
+   ::NodeDefinition definition;
+
+  _Batch_nodes_args__isset __isset;
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  bool operator == (const Batch_nodes_args & rhs) const
+  {
+    if (!(definition == rhs.definition))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_nodes_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_nodes_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_nodes_pargs {
+ public:
+
+
+  virtual ~Batch_nodes_pargs() throw() {}
+
+  const  ::NodeDefinition* definition;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_nodes_result__isset {
+  _Batch_nodes_result__isset() : success(false) {}
+  bool success;
+} _Batch_nodes_result__isset;
+
+class Batch_nodes_result {
+ public:
+
+  Batch_nodes_result() {
+  }
+
+  virtual ~Batch_nodes_result() throw() {}
+
+  std::vector< ::Node>  success;
+
+  _Batch_nodes_result__isset __isset;
+
+  void __set_success(const std::vector< ::Node> & val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_nodes_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_nodes_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_nodes_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_nodes_presult__isset {
+  _Batch_nodes_presult__isset() : success(false) {}
+  bool success;
+} _Batch_nodes_presult__isset;
+
+class Batch_nodes_presult {
+ public:
+
+
+  virtual ~Batch_nodes_presult() throw() {}
+
+  std::vector< ::Node> * success;
+
+  _Batch_nodes_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_addNode_args__isset {
+  _Batch_addNode_args__isset() : node(false), definition(false) {}
+  bool node;
+  bool definition;
+} _Batch_addNode_args__isset;
+
+class Batch_addNode_args {
+ public:
+
+  Batch_addNode_args() {
+  }
+
+  virtual ~Batch_addNode_args() throw() {}
+
+   ::Node node;
+   ::NodeDefinition definition;
+
+  _Batch_addNode_args__isset __isset;
+
+  void __set_node(const  ::Node& val) {
+    node = val;
+  }
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  bool operator == (const Batch_addNode_args & rhs) const
+  {
+    if (!(node == rhs.node))
+      return false;
+    if (!(definition == rhs.definition))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_addNode_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_addNode_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_addNode_pargs {
+ public:
+
+
+  virtual ~Batch_addNode_pargs() throw() {}
+
+  const  ::Node* node;
+  const  ::NodeDefinition* definition;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_addNode_result {
+ public:
+
+  Batch_addNode_result() {
+  }
+
+  virtual ~Batch_addNode_result() throw() {}
+
+
+  bool operator == (const Batch_addNode_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_addNode_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_addNode_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_addNode_presult {
+ public:
+
+
+  virtual ~Batch_addNode_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_updateNode_args__isset {
+  _Batch_updateNode_args__isset() : node(false), definition(false) {}
+  bool node;
+  bool definition;
+} _Batch_updateNode_args__isset;
+
+class Batch_updateNode_args {
+ public:
+
+  Batch_updateNode_args() {
+  }
+
+  virtual ~Batch_updateNode_args() throw() {}
+
+   ::Node node;
+   ::NodeDefinition definition;
+
+  _Batch_updateNode_args__isset __isset;
+
+  void __set_node(const  ::Node& val) {
+    node = val;
+  }
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  bool operator == (const Batch_updateNode_args & rhs) const
+  {
+    if (!(node == rhs.node))
+      return false;
+    if (!(definition == rhs.definition))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_updateNode_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_updateNode_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_updateNode_pargs {
+ public:
+
+
+  virtual ~Batch_updateNode_pargs() throw() {}
+
+  const  ::Node* node;
+  const  ::NodeDefinition* definition;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_updateNode_result {
+ public:
+
+  Batch_updateNode_result() {
+  }
+
+  virtual ~Batch_updateNode_result() throw() {}
+
+
+  bool operator == (const Batch_updateNode_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_updateNode_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_updateNode_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_updateNode_presult {
+ public:
+
+
+  virtual ~Batch_updateNode_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_removeNode_args__isset {
+  _Batch_removeNode_args__isset() : node(false), definition(false) {}
+  bool node;
+  bool definition;
+} _Batch_removeNode_args__isset;
+
+class Batch_removeNode_args {
+ public:
+
+  Batch_removeNode_args() {
+  }
+
+  virtual ~Batch_removeNode_args() throw() {}
+
+   ::Node node;
+   ::NodeDefinition definition;
+
+  _Batch_removeNode_args__isset __isset;
+
+  void __set_node(const  ::Node& val) {
+    node = val;
+  }
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  bool operator == (const Batch_removeNode_args & rhs) const
+  {
+    if (!(node == rhs.node))
+      return false;
+    if (!(definition == rhs.definition))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_removeNode_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_removeNode_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_removeNode_pargs {
+ public:
+
+
+  virtual ~Batch_removeNode_pargs() throw() {}
+
+  const  ::Node* node;
+  const  ::NodeDefinition* definition;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_removeNode_result {
+ public:
+
+  Batch_removeNode_result() {
+  }
+
+  virtual ~Batch_removeNode_result() throw() {}
+
+
+  bool operator == (const Batch_removeNode_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_removeNode_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_removeNode_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_removeNode_presult {
+ public:
+
+
+  virtual ~Batch_removeNode_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_connect_args__isset {
+  _Batch_connect_args__isset() : srcNode(false), srcPort(false), dstNode(false), dstPort(false), definition(false) {}
+  bool srcNode;
+  bool srcPort;
+  bool dstNode;
+  bool dstPort;
+  bool definition;
+} _Batch_connect_args__isset;
+
+class Batch_connect_args {
+ public:
+
+  Batch_connect_args() {
+  }
+
+  virtual ~Batch_connect_args() throw() {}
+
+   ::Node srcNode;
+   ::PortDescriptor srcPort;
+   ::Node dstNode;
+   ::PortDescriptor dstPort;
+   ::NodeDefinition definition;
+
+  _Batch_connect_args__isset __isset;
+
+  void __set_srcNode(const  ::Node& val) {
+    srcNode = val;
+  }
+
+  void __set_srcPort(const  ::PortDescriptor& val) {
+    srcPort = val;
+  }
+
+  void __set_dstNode(const  ::Node& val) {
+    dstNode = val;
+  }
+
+  void __set_dstPort(const  ::PortDescriptor& val) {
+    dstPort = val;
+  }
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  bool operator == (const Batch_connect_args & rhs) const
+  {
+    if (!(srcNode == rhs.srcNode))
+      return false;
+    if (!(srcPort == rhs.srcPort))
+      return false;
+    if (!(dstNode == rhs.dstNode))
+      return false;
+    if (!(dstPort == rhs.dstPort))
+      return false;
+    if (!(definition == rhs.definition))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_connect_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_connect_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_connect_pargs {
+ public:
+
+
+  virtual ~Batch_connect_pargs() throw() {}
+
+  const  ::Node* srcNode;
+  const  ::PortDescriptor* srcPort;
+  const  ::Node* dstNode;
+  const  ::PortDescriptor* dstPort;
+  const  ::NodeDefinition* definition;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_connect_result {
+ public:
+
+  Batch_connect_result() {
+  }
+
+  virtual ~Batch_connect_result() throw() {}
+
+
+  bool operator == (const Batch_connect_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_connect_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_connect_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_connect_presult {
+ public:
+
+
+  virtual ~Batch_connect_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_disconnect_args__isset {
+  _Batch_disconnect_args__isset() : srcNode(false), srcPort(false), dstNode(false), dstPort(false), definition(false) {}
+  bool srcNode;
+  bool srcPort;
+  bool dstNode;
+  bool dstPort;
+  bool definition;
+} _Batch_disconnect_args__isset;
+
+class Batch_disconnect_args {
+ public:
+
+  Batch_disconnect_args() {
+  }
+
+  virtual ~Batch_disconnect_args() throw() {}
+
+   ::Node srcNode;
+   ::PortDescriptor srcPort;
+   ::Node dstNode;
+   ::PortDescriptor dstPort;
+   ::NodeDefinition definition;
+
+  _Batch_disconnect_args__isset __isset;
+
+  void __set_srcNode(const  ::Node& val) {
+    srcNode = val;
+  }
+
+  void __set_srcPort(const  ::PortDescriptor& val) {
+    srcPort = val;
+  }
+
+  void __set_dstNode(const  ::Node& val) {
+    dstNode = val;
+  }
+
+  void __set_dstPort(const  ::PortDescriptor& val) {
+    dstPort = val;
+  }
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  bool operator == (const Batch_disconnect_args & rhs) const
+  {
+    if (!(srcNode == rhs.srcNode))
+      return false;
+    if (!(srcPort == rhs.srcPort))
+      return false;
+    if (!(dstNode == rhs.dstNode))
+      return false;
+    if (!(dstPort == rhs.dstPort))
+      return false;
+    if (!(definition == rhs.definition))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_disconnect_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_disconnect_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_disconnect_pargs {
+ public:
+
+
+  virtual ~Batch_disconnect_pargs() throw() {}
+
+  const  ::Node* srcNode;
+  const  ::PortDescriptor* srcPort;
+  const  ::Node* dstNode;
+  const  ::PortDescriptor* dstPort;
+  const  ::NodeDefinition* definition;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_disconnect_result {
+ public:
+
+  Batch_disconnect_result() {
+  }
+
+  virtual ~Batch_disconnect_result() throw() {}
+
+
+  bool operator == (const Batch_disconnect_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_disconnect_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_disconnect_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_disconnect_presult {
+ public:
+
+
+  virtual ~Batch_disconnect_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
 };
 
 
@@ -144,6 +1707,51 @@ class BatchClient : virtual public BatchIf {
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
+  void libraries(std::vector< ::Library> & _return);
+  void send_libraries();
+  void recv_libraries(std::vector< ::Library> & _return);
+  void registerLibrary(const  ::Library& library);
+  void send_registerLibrary(const  ::Library& library);
+  void recv_registerLibrary();
+  void updateLibrary(const  ::Library& library);
+  void send_updateLibrary(const  ::Library& library);
+  void recv_updateLibrary();
+  void unregisterLibrary(const  ::Library& library);
+  void send_unregisterLibrary(const  ::Library& library);
+  void recv_unregisterLibrary();
+  void addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent, const  ::Library& library);
+  void send_addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent, const  ::Library& library);
+  void recv_addDefinition();
+  void updateDefinition(const  ::NodeDefinition& definition);
+  void send_updateDefinition(const  ::NodeDefinition& definition);
+  void recv_updateDefinition();
+  void removeDefinition(const  ::NodeDefinition& definition);
+  void send_removeDefinition(const  ::NodeDefinition& definition);
+  void recv_removeDefinition();
+  void definitionChildren(std::vector< ::NodeDefinition> & _return, const  ::NodeDefinition& definition);
+  void send_definitionChildren(const  ::NodeDefinition& definition);
+  void recv_definitionChildren(std::vector< ::NodeDefinition> & _return);
+  void definitionParent( ::NodeDefinition& _return, const  ::NodeDefinition& definition);
+  void send_definitionParent(const  ::NodeDefinition& definition);
+  void recv_definitionParent( ::NodeDefinition& _return);
+  void nodes(std::vector< ::Node> & _return, const  ::NodeDefinition& definition);
+  void send_nodes(const  ::NodeDefinition& definition);
+  void recv_nodes(std::vector< ::Node> & _return);
+  void addNode(const  ::Node& node, const  ::NodeDefinition& definition);
+  void send_addNode(const  ::Node& node, const  ::NodeDefinition& definition);
+  void recv_addNode();
+  void updateNode(const  ::Node& node, const  ::NodeDefinition& definition);
+  void send_updateNode(const  ::Node& node, const  ::NodeDefinition& definition);
+  void recv_updateNode();
+  void removeNode(const  ::Node& node, const  ::NodeDefinition& definition);
+  void send_removeNode(const  ::Node& node, const  ::NodeDefinition& definition);
+  void recv_removeNode();
+  void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition);
+  void send_connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition);
+  void recv_connect();
+  void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition);
+  void send_disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition);
+  void recv_disconnect();
   void ping();
   void send_ping();
   void recv_ping();
@@ -162,10 +1770,40 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   typedef  void (BatchProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
   typedef std::map<std::string, ProcessFunction> ProcessMap;
   ProcessMap processMap_;
+  void process_libraries(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_registerLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_updateLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_unregisterLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_addDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_updateDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_removeDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_definitionChildren(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_definitionParent(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_nodes(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_addNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_updateNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_removeNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_connect(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_disconnect(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_ping(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   BatchProcessor(boost::shared_ptr<BatchIf> iface) :
     iface_(iface) {
+    processMap_["libraries"] = &BatchProcessor::process_libraries;
+    processMap_["registerLibrary"] = &BatchProcessor::process_registerLibrary;
+    processMap_["updateLibrary"] = &BatchProcessor::process_updateLibrary;
+    processMap_["unregisterLibrary"] = &BatchProcessor::process_unregisterLibrary;
+    processMap_["addDefinition"] = &BatchProcessor::process_addDefinition;
+    processMap_["updateDefinition"] = &BatchProcessor::process_updateDefinition;
+    processMap_["removeDefinition"] = &BatchProcessor::process_removeDefinition;
+    processMap_["definitionChildren"] = &BatchProcessor::process_definitionChildren;
+    processMap_["definitionParent"] = &BatchProcessor::process_definitionParent;
+    processMap_["nodes"] = &BatchProcessor::process_nodes;
+    processMap_["addNode"] = &BatchProcessor::process_addNode;
+    processMap_["updateNode"] = &BatchProcessor::process_updateNode;
+    processMap_["removeNode"] = &BatchProcessor::process_removeNode;
+    processMap_["connect"] = &BatchProcessor::process_connect;
+    processMap_["disconnect"] = &BatchProcessor::process_disconnect;
     processMap_["ping"] = &BatchProcessor::process_ping;
   }
 
@@ -195,6 +1833,145 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_.push_back(iface);
   }
  public:
+  void libraries(std::vector< ::Library> & _return) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->libraries(_return);
+    }
+    ifaces_[i]->libraries(_return);
+    return;
+  }
+
+  void registerLibrary(const  ::Library& library) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->registerLibrary(library);
+    }
+    ifaces_[i]->registerLibrary(library);
+  }
+
+  void updateLibrary(const  ::Library& library) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->updateLibrary(library);
+    }
+    ifaces_[i]->updateLibrary(library);
+  }
+
+  void unregisterLibrary(const  ::Library& library) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->unregisterLibrary(library);
+    }
+    ifaces_[i]->unregisterLibrary(library);
+  }
+
+  void addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent, const  ::Library& library) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->addDefinition(definition, parent, library);
+    }
+    ifaces_[i]->addDefinition(definition, parent, library);
+  }
+
+  void updateDefinition(const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->updateDefinition(definition);
+    }
+    ifaces_[i]->updateDefinition(definition);
+  }
+
+  void removeDefinition(const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->removeDefinition(definition);
+    }
+    ifaces_[i]->removeDefinition(definition);
+  }
+
+  void definitionChildren(std::vector< ::NodeDefinition> & _return, const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->definitionChildren(_return, definition);
+    }
+    ifaces_[i]->definitionChildren(_return, definition);
+    return;
+  }
+
+  void definitionParent( ::NodeDefinition& _return, const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->definitionParent(_return, definition);
+    }
+    ifaces_[i]->definitionParent(_return, definition);
+    return;
+  }
+
+  void nodes(std::vector< ::Node> & _return, const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->nodes(_return, definition);
+    }
+    ifaces_[i]->nodes(_return, definition);
+    return;
+  }
+
+  void addNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->addNode(node, definition);
+    }
+    ifaces_[i]->addNode(node, definition);
+  }
+
+  void updateNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->updateNode(node, definition);
+    }
+    ifaces_[i]->updateNode(node, definition);
+  }
+
+  void removeNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->removeNode(node, definition);
+    }
+    ifaces_[i]->removeNode(node, definition);
+  }
+
+  void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->connect(srcNode, srcPort, dstNode, dstPort, definition);
+    }
+    ifaces_[i]->connect(srcNode, srcPort, dstNode, dstPort, definition);
+  }
+
+  void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->disconnect(srcNode, srcPort, dstNode, dstPort, definition);
+    }
+    ifaces_[i]->disconnect(srcNode, srcPort, dstNode, dstPort, definition);
+  }
+
   void ping() {
     size_t sz = ifaces_.size();
     size_t i = 0;

@@ -22,6 +22,81 @@ class BatchHandler : virtual public BatchIf {
     // Your initialization goes here
   }
 
+  void libraries(std::vector< ::Library> & _return) {
+    // Your implementation goes here
+    printf("libraries\n");
+  }
+
+  void registerLibrary(const  ::Library& library) {
+    // Your implementation goes here
+    printf("registerLibrary\n");
+  }
+
+  void updateLibrary(const  ::Library& library) {
+    // Your implementation goes here
+    printf("updateLibrary\n");
+  }
+
+  void unregisterLibrary(const  ::Library& library) {
+    // Your implementation goes here
+    printf("unregisterLibrary\n");
+  }
+
+  void addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent, const  ::Library& library) {
+    // Your implementation goes here
+    printf("addDefinition\n");
+  }
+
+  void updateDefinition(const  ::NodeDefinition& definition) {
+    // Your implementation goes here
+    printf("updateDefinition\n");
+  }
+
+  void removeDefinition(const  ::NodeDefinition& definition) {
+    // Your implementation goes here
+    printf("removeDefinition\n");
+  }
+
+  void definitionChildren(std::vector< ::NodeDefinition> & _return, const  ::NodeDefinition& definition) {
+    // Your implementation goes here
+    printf("definitionChildren\n");
+  }
+
+  void definitionParent( ::NodeDefinition& _return, const  ::NodeDefinition& definition) {
+    // Your implementation goes here
+    printf("definitionParent\n");
+  }
+
+  void nodes(std::vector< ::Node> & _return, const  ::NodeDefinition& definition) {
+    // Your implementation goes here
+    printf("nodes\n");
+  }
+
+  void addNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+    // Your implementation goes here
+    printf("addNode\n");
+  }
+
+  void updateNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+    // Your implementation goes here
+    printf("updateNode\n");
+  }
+
+  void removeNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+    // Your implementation goes here
+    printf("removeNode\n");
+  }
+
+  void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) {
+    // Your implementation goes here
+    printf("connect\n");
+  }
+
+  void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) {
+    // Your implementation goes here
+    printf("disconnect\n");
+  }
+
   void ping() {
     // Your implementation goes here
     printf("ping\n");

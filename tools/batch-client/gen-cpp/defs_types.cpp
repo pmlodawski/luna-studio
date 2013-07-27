@@ -10,8 +10,8 @@
 
 
 
-const char* NodeDefinition::ascii_fingerprint = "2F8CC4D5EA0E61C5288B7B3CA0CC9F22";
-const uint8_t NodeDefinition::binary_fingerprint[16] = {0x2F,0x8C,0xC4,0xD5,0xEA,0x0E,0x61,0xC5,0x28,0x8B,0x7B,0x3C,0xA0,0xCC,0x9F,0x22};
+const char* NodeDefinition::ascii_fingerprint = "A9431E373B1B9F79D91BA1A7490ED5DC";
+const uint8_t NodeDefinition::binary_fingerprint[16] = {0xA9,0x43,0x1E,0x37,0x3B,0x1B,0x9F,0x79,0xD9,0x1B,0xA1,0xA7,0x49,0x0E,0xD5,0xDC};
 
 uint32_t NodeDefinition::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -50,6 +50,14 @@ uint32_t NodeDefinition::read(::apache::thrift::protocol::TProtocol* iprot) {
         }
         break;
       case 3:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->defID);
+          this->__isset.defID = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += this->flags.read(iprot);
           this->__isset.flags = true;
@@ -57,7 +65,7 @@ uint32_t NodeDefinition::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 4:
+      case 5:
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += this->attribs.read(iprot);
           this->__isset.attribs = true;
@@ -91,13 +99,18 @@ uint32_t NodeDefinition::write(::apache::thrift::protocol::TProtocol* oprot) con
     xfer += oprot->writeI32(this->libID);
     xfer += oprot->writeFieldEnd();
   }
+  if (this->__isset.defID) {
+    xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 3);
+    xfer += oprot->writeI32(this->defID);
+    xfer += oprot->writeFieldEnd();
+  }
   if (this->__isset.flags) {
-    xfer += oprot->writeFieldBegin("flags", ::apache::thrift::protocol::T_STRUCT, 3);
+    xfer += oprot->writeFieldBegin("flags", ::apache::thrift::protocol::T_STRUCT, 4);
     xfer += this->flags.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.attribs) {
-    xfer += oprot->writeFieldBegin("attribs", ::apache::thrift::protocol::T_STRUCT, 4);
+    xfer += oprot->writeFieldBegin("attribs", ::apache::thrift::protocol::T_STRUCT, 5);
     xfer += this->attribs.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
@@ -110,6 +123,7 @@ void swap(NodeDefinition &a, NodeDefinition &b) {
   using ::std::swap;
   swap(a.cls, b.cls);
   swap(a.libID, b.libID);
+  swap(a.defID, b.defID);
   swap(a.flags, b.flags);
   swap(a.attribs, b.attribs);
   swap(a.__isset, b.__isset);

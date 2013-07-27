@@ -42,4 +42,19 @@ import qualified Types_Types
 import Batch_Types
 
 class Batch_Iface a where
+  libraries :: a -> IO (Vector.Vector Libs_Types.Library)
+  registerLibrary :: a -> Maybe Libs_Types.Library -> IO ()
+  updateLibrary :: a -> Maybe Libs_Types.Library -> IO ()
+  unregisterLibrary :: a -> Maybe Libs_Types.Library -> IO ()
+  addDefinition :: a -> Maybe Defs_Types.NodeDefinition -> Maybe Defs_Types.NodeDefinition -> Maybe Libs_Types.Library -> IO ()
+  updateDefinition :: a -> Maybe Defs_Types.NodeDefinition -> IO ()
+  removeDefinition :: a -> Maybe Defs_Types.NodeDefinition -> IO ()
+  definitionChildren :: a -> Maybe Defs_Types.NodeDefinition -> IO (Vector.Vector Defs_Types.NodeDefinition)
+  definitionParent :: a -> Maybe Defs_Types.NodeDefinition -> IO Defs_Types.NodeDefinition
+  nodes :: a -> Maybe Defs_Types.NodeDefinition -> IO (Vector.Vector Graph_Types.Node)
+  addNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.NodeDefinition -> IO ()
+  updateNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.NodeDefinition -> IO ()
+  removeNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.NodeDefinition -> IO ()
+  connect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Defs_Types.NodeDefinition -> IO ()
+  disconnect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Defs_Types.NodeDefinition -> IO ()
   ping :: a -> IO ()

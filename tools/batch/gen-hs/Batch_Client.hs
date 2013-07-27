@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(ping) where
+module Batch_Client(libraries,registerLibrary,updateLibrary,unregisterLibrary,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,nodes,addNode,updateNode,removeNode,connect,disconnect,ping) where
 import Data.IORef
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -43,6 +43,318 @@ import qualified Types_Types
 import Batch_Types
 import Batch
 seqid = newIORef 0
+libraries (ip,op) = do
+  send_libraries op
+  recv_libraries ip
+send_libraries op = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("libraries", M_CALL, seqn)
+  write_Libraries_args op (Libraries_args{})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_libraries ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_Libraries_result ip
+  readMessageEnd ip
+  case f_Libraries_result_success res of
+    Just v -> return v
+    Nothing -> do
+      throw (AppExn AE_MISSING_RESULT "libraries failed: unknown result")
+registerLibrary (ip,op) arg_library = do
+  send_registerLibrary op arg_library
+  recv_registerLibrary ip
+send_registerLibrary op arg_library = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("registerLibrary", M_CALL, seqn)
+  write_RegisterLibrary_args op (RegisterLibrary_args{f_RegisterLibrary_args_library=Just arg_library})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_registerLibrary ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_RegisterLibrary_result ip
+  readMessageEnd ip
+  return ()
+updateLibrary (ip,op) arg_library = do
+  send_updateLibrary op arg_library
+  recv_updateLibrary ip
+send_updateLibrary op arg_library = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("updateLibrary", M_CALL, seqn)
+  write_UpdateLibrary_args op (UpdateLibrary_args{f_UpdateLibrary_args_library=Just arg_library})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_updateLibrary ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_UpdateLibrary_result ip
+  readMessageEnd ip
+  return ()
+unregisterLibrary (ip,op) arg_library = do
+  send_unregisterLibrary op arg_library
+  recv_unregisterLibrary ip
+send_unregisterLibrary op arg_library = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("unregisterLibrary", M_CALL, seqn)
+  write_UnregisterLibrary_args op (UnregisterLibrary_args{f_UnregisterLibrary_args_library=Just arg_library})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_unregisterLibrary ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_UnregisterLibrary_result ip
+  readMessageEnd ip
+  return ()
+addDefinition (ip,op) arg_definition arg_parent arg_library = do
+  send_addDefinition op arg_definition arg_parent arg_library
+  recv_addDefinition ip
+send_addDefinition op arg_definition arg_parent arg_library = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("addDefinition", M_CALL, seqn)
+  write_AddDefinition_args op (AddDefinition_args{f_AddDefinition_args_definition=Just arg_definition,f_AddDefinition_args_parent=Just arg_parent,f_AddDefinition_args_library=Just arg_library})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_addDefinition ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_AddDefinition_result ip
+  readMessageEnd ip
+  return ()
+updateDefinition (ip,op) arg_definition = do
+  send_updateDefinition op arg_definition
+  recv_updateDefinition ip
+send_updateDefinition op arg_definition = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("updateDefinition", M_CALL, seqn)
+  write_UpdateDefinition_args op (UpdateDefinition_args{f_UpdateDefinition_args_definition=Just arg_definition})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_updateDefinition ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_UpdateDefinition_result ip
+  readMessageEnd ip
+  return ()
+removeDefinition (ip,op) arg_definition = do
+  send_removeDefinition op arg_definition
+  recv_removeDefinition ip
+send_removeDefinition op arg_definition = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("removeDefinition", M_CALL, seqn)
+  write_RemoveDefinition_args op (RemoveDefinition_args{f_RemoveDefinition_args_definition=Just arg_definition})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_removeDefinition ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_RemoveDefinition_result ip
+  readMessageEnd ip
+  return ()
+definitionChildren (ip,op) arg_definition = do
+  send_definitionChildren op arg_definition
+  recv_definitionChildren ip
+send_definitionChildren op arg_definition = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("definitionChildren", M_CALL, seqn)
+  write_DefinitionChildren_args op (DefinitionChildren_args{f_DefinitionChildren_args_definition=Just arg_definition})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_definitionChildren ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_DefinitionChildren_result ip
+  readMessageEnd ip
+  case f_DefinitionChildren_result_success res of
+    Just v -> return v
+    Nothing -> do
+      throw (AppExn AE_MISSING_RESULT "definitionChildren failed: unknown result")
+definitionParent (ip,op) arg_definition = do
+  send_definitionParent op arg_definition
+  recv_definitionParent ip
+send_definitionParent op arg_definition = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("definitionParent", M_CALL, seqn)
+  write_DefinitionParent_args op (DefinitionParent_args{f_DefinitionParent_args_definition=Just arg_definition})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_definitionParent ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_DefinitionParent_result ip
+  readMessageEnd ip
+  case f_DefinitionParent_result_success res of
+    Just v -> return v
+    Nothing -> do
+      throw (AppExn AE_MISSING_RESULT "definitionParent failed: unknown result")
+nodes (ip,op) arg_definition = do
+  send_nodes op arg_definition
+  recv_nodes ip
+send_nodes op arg_definition = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("nodes", M_CALL, seqn)
+  write_Nodes_args op (Nodes_args{f_Nodes_args_definition=Just arg_definition})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_nodes ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_Nodes_result ip
+  readMessageEnd ip
+  case f_Nodes_result_success res of
+    Just v -> return v
+    Nothing -> do
+      throw (AppExn AE_MISSING_RESULT "nodes failed: unknown result")
+addNode (ip,op) arg_node arg_definition = do
+  send_addNode op arg_node arg_definition
+  recv_addNode ip
+send_addNode op arg_node arg_definition = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("addNode", M_CALL, seqn)
+  write_AddNode_args op (AddNode_args{f_AddNode_args_node=Just arg_node,f_AddNode_args_definition=Just arg_definition})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_addNode ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_AddNode_result ip
+  readMessageEnd ip
+  return ()
+updateNode (ip,op) arg_node arg_definition = do
+  send_updateNode op arg_node arg_definition
+  recv_updateNode ip
+send_updateNode op arg_node arg_definition = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("updateNode", M_CALL, seqn)
+  write_UpdateNode_args op (UpdateNode_args{f_UpdateNode_args_node=Just arg_node,f_UpdateNode_args_definition=Just arg_definition})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_updateNode ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_UpdateNode_result ip
+  readMessageEnd ip
+  return ()
+removeNode (ip,op) arg_node arg_definition = do
+  send_removeNode op arg_node arg_definition
+  recv_removeNode ip
+send_removeNode op arg_node arg_definition = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("removeNode", M_CALL, seqn)
+  write_RemoveNode_args op (RemoveNode_args{f_RemoveNode_args_node=Just arg_node,f_RemoveNode_args_definition=Just arg_definition})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_removeNode ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_RemoveNode_result ip
+  readMessageEnd ip
+  return ()
+connect (ip,op) arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_definition = do
+  send_connect op arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_definition
+  recv_connect ip
+send_connect op arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_definition = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("connect", M_CALL, seqn)
+  write_Connect_args op (Connect_args{f_Connect_args_srcNode=Just arg_srcNode,f_Connect_args_srcPort=Just arg_srcPort,f_Connect_args_dstNode=Just arg_dstNode,f_Connect_args_dstPort=Just arg_dstPort,f_Connect_args_definition=Just arg_definition})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_connect ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_Connect_result ip
+  readMessageEnd ip
+  return ()
+disconnect (ip,op) arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_definition = do
+  send_disconnect op arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_definition
+  recv_disconnect ip
+send_disconnect op arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_definition = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("disconnect", M_CALL, seqn)
+  write_Disconnect_args op (Disconnect_args{f_Disconnect_args_srcNode=Just arg_srcNode,f_Disconnect_args_srcPort=Just arg_srcPort,f_Disconnect_args_dstNode=Just arg_dstNode,f_Disconnect_args_dstPort=Just arg_dstPort,f_Disconnect_args_definition=Just arg_definition})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_disconnect ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_Disconnect_result ip
+  readMessageEnd ip
+  return ()
 ping (ip,op) = do
   send_ping op
   recv_ping ip

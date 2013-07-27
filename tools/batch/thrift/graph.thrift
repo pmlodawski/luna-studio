@@ -8,6 +8,7 @@
 
 include "attrs.thrift"
 
+typedef i32 NodeID
 
 enum NodeType {
     Type,
@@ -22,11 +23,14 @@ enum NodeType {
 struct Node {
     1: optional NodeType cls
     2: optional string name
-    3: optional attrs.Flags flags
-    4: optional attrs.Attributes attrs
+    3: optional NodeID nodeID
+    4: optional attrs.Flags flags
+    5: optional attrs.Attributes attrs
 }
 
 struct Edge {
     1: i32 src
     2: i32 dst
 }
+
+typedef list<i32> PortDescriptor

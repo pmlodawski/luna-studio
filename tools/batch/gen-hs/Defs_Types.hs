@@ -32,14 +32,16 @@ import qualified Data.Vector as Vector
 import Thrift
 import Thrift.Types ()
 
-import Attrs_Types -- deleted qualified keyword to fix compilation error
-import Libs_Types  -- deleted qualified keyword to fix compilation error
-import Types_Types -- deleted qualified keyword to fix compilation error
+import Attrs_Types
+import Libs_Types
+import Types_Types
 
 
-data NodeDefinition = NodeDefinition{f_NodeDefinition_cls :: Maybe Types_Types.TypeContainer,f_NodeDefinition_libID :: Maybe Int32,f_NodeDefinition_flags :: Maybe Attrs_Types.Flags,f_NodeDefinition_attribs :: Maybe Attrs_Types.Attributes} deriving (Show,Eq,Typeable)
+type DefID = Int32
+
+data NodeDefinition = NodeDefinition{f_NodeDefinition_cls :: Maybe Types_Types.TypeContainer,f_NodeDefinition_libID :: Maybe Int32,f_NodeDefinition_defID :: Maybe Int32,f_NodeDefinition_flags :: Maybe Attrs_Types.Flags,f_NodeDefinition_attribs :: Maybe Attrs_Types.Attributes} deriving (Show,Eq,Typeable)
 instance Hashable NodeDefinition where
-  hashWithSalt salt record = salt   `hashWithSalt` f_NodeDefinition_cls record   `hashWithSalt` f_NodeDefinition_libID record   `hashWithSalt` f_NodeDefinition_flags record   `hashWithSalt` f_NodeDefinition_attribs record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_NodeDefinition_cls record   `hashWithSalt` f_NodeDefinition_libID record   `hashWithSalt` f_NodeDefinition_defID record   `hashWithSalt` f_NodeDefinition_flags record   `hashWithSalt` f_NodeDefinition_attribs record  
 write_NodeDefinition oprot record = do
   writeStructBegin oprot "NodeDefinition"
   case f_NodeDefinition_cls record of {Nothing -> return (); Just _v -> do
@@ -50,12 +52,16 @@ write_NodeDefinition oprot record = do
     writeFieldBegin oprot ("libID",T_I32,2)
     writeI32 oprot _v
     writeFieldEnd oprot}
+  case f_NodeDefinition_defID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("defID",T_I32,3)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
   case f_NodeDefinition_flags record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("flags",T_STRUCT,3)
+    writeFieldBegin oprot ("flags",T_STRUCT,4)
     Attrs_Types.write_Flags oprot _v
     writeFieldEnd oprot}
   case f_NodeDefinition_attribs record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("attribs",T_STRUCT,4)
+    writeFieldBegin oprot ("attribs",T_STRUCT,5)
     Attrs_Types.write_Attributes oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
@@ -76,13 +82,19 @@ read_NodeDefinition_fields iprot record = do
         else do
           skip iprot _t3
           read_NodeDefinition_fields iprot record
-      3 -> if _t3 == T_STRUCT then do
+      3 -> if _t3 == T_I32 then do
+        s <- readI32 iprot
+        read_NodeDefinition_fields iprot record{f_NodeDefinition_defID=Just s}
+        else do
+          skip iprot _t3
+          read_NodeDefinition_fields iprot record
+      4 -> if _t3 == T_STRUCT then do
         s <- (read_Flags iprot)
         read_NodeDefinition_fields iprot record{f_NodeDefinition_flags=Just s}
         else do
           skip iprot _t3
           read_NodeDefinition_fields iprot record
-      4 -> if _t3 == T_STRUCT then do
+      5 -> if _t3 == T_STRUCT then do
         s <- (read_Attributes iprot)
         read_NodeDefinition_fields iprot record{f_NodeDefinition_attribs=Just s}
         else do
@@ -94,6 +106,6 @@ read_NodeDefinition_fields iprot record = do
         read_NodeDefinition_fields iprot record
 read_NodeDefinition iprot = do
   _ <- readStructBegin iprot
-  record <- read_NodeDefinition_fields iprot (NodeDefinition{f_NodeDefinition_cls=Nothing,f_NodeDefinition_libID=Nothing,f_NodeDefinition_flags=Nothing,f_NodeDefinition_attribs=Nothing})
+  record <- read_NodeDefinition_fields iprot (NodeDefinition{f_NodeDefinition_cls=Nothing,f_NodeDefinition_libID=Nothing,f_NodeDefinition_defID=Nothing,f_NodeDefinition_flags=Nothing,f_NodeDefinition_attribs=Nothing})
   readStructEnd iprot
   return record

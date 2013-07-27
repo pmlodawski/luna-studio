@@ -31,5 +31,5 @@ struct Type {
 
 
 struct TypeContainer { 
-    1: optional list<Type> types
+    1: optional list<Type> typs
 }

@@ -56,9 +56,13 @@ instance Enum NodeType where
     _ -> throw ThriftException
 instance Hashable NodeType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
-data Node = Node{f_Node_cls :: Maybe NodeType,f_Node_name :: Maybe Text,f_Node_flags :: Maybe Attrs_Types.Flags,f_Node_attrs :: Maybe Attrs_Types.Attributes} deriving (Show,Eq,Typeable)
+type NodeID = Int32
+
+type PortDescriptor = Vector.Vector Int32
+
+data Node = Node{f_Node_cls :: Maybe NodeType,f_Node_name :: Maybe Text,f_Node_nodeID :: Maybe Int32,f_Node_flags :: Maybe Attrs_Types.Flags,f_Node_attrs :: Maybe Attrs_Types.Attributes} deriving (Show,Eq,Typeable)
 instance Hashable Node where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Node_cls record   `hashWithSalt` f_Node_name record   `hashWithSalt` f_Node_flags record   `hashWithSalt` f_Node_attrs record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_Node_cls record   `hashWithSalt` f_Node_name record   `hashWithSalt` f_Node_nodeID record   `hashWithSalt` f_Node_flags record   `hashWithSalt` f_Node_attrs record  
 write_Node oprot record = do
   writeStructBegin oprot "Node"
   case f_Node_cls record of {Nothing -> return (); Just _v -> do
@@ -69,12 +73,16 @@ write_Node oprot record = do
     writeFieldBegin oprot ("name",T_STRING,2)
     writeString oprot _v
     writeFieldEnd oprot}
+  case f_Node_nodeID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("nodeID",T_I32,3)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
   case f_Node_flags record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("flags",T_STRUCT,3)
+    writeFieldBegin oprot ("flags",T_STRUCT,4)
     Attrs_Types.write_Flags oprot _v
     writeFieldEnd oprot}
   case f_Node_attrs record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("attrs",T_STRUCT,4)
+    writeFieldBegin oprot ("attrs",T_STRUCT,5)
     Attrs_Types.write_Attributes oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
@@ -95,13 +103,19 @@ read_Node_fields iprot record = do
         else do
           skip iprot _t3
           read_Node_fields iprot record
-      3 -> if _t3 == T_STRUCT then do
+      3 -> if _t3 == T_I32 then do
+        s <- readI32 iprot
+        read_Node_fields iprot record{f_Node_nodeID=Just s}
+        else do
+          skip iprot _t3
+          read_Node_fields iprot record
+      4 -> if _t3 == T_STRUCT then do
         s <- (read_Flags iprot)
         read_Node_fields iprot record{f_Node_flags=Just s}
         else do
           skip iprot _t3
           read_Node_fields iprot record
-      4 -> if _t3 == T_STRUCT then do
+      5 -> if _t3 == T_STRUCT then do
         s <- (read_Attributes iprot)
         read_Node_fields iprot record{f_Node_attrs=Just s}
         else do
@@ -113,7 +127,7 @@ read_Node_fields iprot record = do
         read_Node_fields iprot record
 read_Node iprot = do
   _ <- readStructBegin iprot
-  record <- read_Node_fields iprot (Node{f_Node_cls=Nothing,f_Node_name=Nothing,f_Node_flags=Nothing,f_Node_attrs=Nothing})
+  record <- read_Node_fields iprot (Node{f_Node_cls=Nothing,f_Node_name=Nothing,f_Node_nodeID=Nothing,f_Node_flags=Nothing,f_Node_attrs=Nothing})
   readStructEnd iprot
   return record
 data Edge = Edge{f_Edge_src :: Maybe Int32,f_Edge_dst :: Maybe Int32} deriving (Show,Eq,Typeable)

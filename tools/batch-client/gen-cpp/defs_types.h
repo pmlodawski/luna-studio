@@ -19,10 +19,13 @@
 
 
 
+typedef int32_t DefID;
+
 typedef struct _NodeDefinition__isset {
-  _NodeDefinition__isset() : cls(false), libID(false), flags(false), attribs(false) {}
+  _NodeDefinition__isset() : cls(false), libID(false), defID(false), flags(false), attribs(false) {}
   bool cls;
   bool libID;
+  bool defID;
   bool flags;
   bool attribs;
 } _NodeDefinition__isset;
@@ -30,16 +33,17 @@ typedef struct _NodeDefinition__isset {
 class NodeDefinition {
  public:
 
-  static const char* ascii_fingerprint; // = "2F8CC4D5EA0E61C5288B7B3CA0CC9F22";
-  static const uint8_t binary_fingerprint[16]; // = {0x2F,0x8C,0xC4,0xD5,0xEA,0x0E,0x61,0xC5,0x28,0x8B,0x7B,0x3C,0xA0,0xCC,0x9F,0x22};
+  static const char* ascii_fingerprint; // = "A9431E373B1B9F79D91BA1A7490ED5DC";
+  static const uint8_t binary_fingerprint[16]; // = {0xA9,0x43,0x1E,0x37,0x3B,0x1B,0x9F,0x79,0xD9,0x1B,0xA1,0xA7,0x49,0x0E,0xD5,0xDC};
 
-  NodeDefinition() : libID(0) {
+  NodeDefinition() : libID(0), defID(0) {
   }
 
   virtual ~NodeDefinition() throw() {}
 
    ::TypeContainer cls;
    ::LibID libID;
+  DefID defID;
    ::Flags flags;
    ::Attributes attribs;
 
@@ -53,6 +57,11 @@ class NodeDefinition {
   void __set_libID(const  ::LibID val) {
     libID = val;
     __isset.libID = true;
+  }
+
+  void __set_defID(const DefID val) {
+    defID = val;
+    __isset.defID = true;
   }
 
   void __set_flags(const  ::Flags& val) {
@@ -74,6 +83,10 @@ class NodeDefinition {
     if (__isset.libID != rhs.__isset.libID)
       return false;
     else if (__isset.libID && !(libID == rhs.libID))
+      return false;
+    if (__isset.defID != rhs.__isset.defID)
+      return false;
+    else if (__isset.defID && !(defID == rhs.defID))
       return false;
     if (__isset.flags != rhs.__isset.flags)
       return false;
