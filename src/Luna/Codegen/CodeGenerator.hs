@@ -43,6 +43,22 @@ import qualified Luna.Codegen.State.Context      as Context
 import qualified Luna.Codegen.State.Mode         as Mode
 
 
+outvar :: Show a => a -> [Char]
+outvar x = "out'" ++ show x
+
+mpostfix :: String
+mpostfix = "''M"
+
+
+inputs :: String
+inputs = "inputs'"
+
+
+outputs :: String
+outputs = "outputs'"
+
+indent :: Int -> String
+indent num = replicate (num*4) ' '
 
 generateImportCode :: Import -> String
 generateImportCode i = let
@@ -58,103 +74,41 @@ generateImportsCode :: [Import] -> String
 generateImportsCode i = join "\n" $ fmap generateImportCode i
 
 
---generateTypeCode :: Type -> String 
---generateTypeCode t = code where
---    code = case t of
---        Type.Package name imports -> generateImportsCode imports
---        otherwise    -> "ERROR"
-
---generateGraphCode :: Graph -> String
---generateGraphCode g = undefined
-
----------------------
---generateDefCode :: DG.Node -> DefManager -> String
---generateDefCode did manager = 
---    let
---        def = DefManager.nodeById manager did 
---        cls = NodeDef.cls def
---        code = case cls of
---            Type.Package name imports         -> generateImportsCode imports
---            func@(Type.Function name inputs outputs) -> generateTypeCode func
---            _                         -> "err"
---    in code
-
---generateTypeCode :: Type -> String
---generateTypeCode t = case t of
---    Type.Function name inputs outputs -> name ++ " " ++ join " " signature ++ " = "
---        where signature = fmap Type.name inputs
-
-
-
-indent :: Int -> String
-indent num = replicate (num*4) ' '
-
-
-----generateImports :: NodeDef -> String
-----generateImports nodeDef = foldr (++) "" imports where
-----    imports = map (\a -> "import " ++ a ++ "\n") $ NodeDef.imports nodeDef
-
-
-
-
---generateFunctionBody :: NodeDef -> [String]
-
-
-
-
-
-
-
-
-
---generateNodeCodeLine :: Graph -> DG.LNode Node -> String
---generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) ++ "\n"
-
---generateFunctionReturn :: NodeDef -> String
---generateFunctionReturn nodeDef = (indent 1) ++ "in ()\n" -- TODO[PM] result list
-
-
-
-
-
-
--------------------------------------------------------------------
-
 generateFunction :: NodeDef -> String
 generateFunction def = codes where
-    graph         = NodeDef.graph def
-    (code1, state) = runState (generateFunctionCode def) $ FuncState.make graph
+    graph            = NodeDef.graph def
+    (code1, state)   = runState generateFunctionCode $ FuncState.make def graph
     mode = if FuncState.ctx state == Context.IO
         then Mode.ForcePure
         else Mode.ForceIO
-    (code2, _)     = runState (generateFunctionCode def) $ (FuncState.make graph){FuncState.mode=mode}
+    (code2, _)     = runState generateFunctionCode $ (FuncState.make def graph){FuncState.mode=mode}
     codes = code1 ++ "\n\n" ++ code2
 
 
-generateFunctionBody :: NodeDef -> State FuncState String
-generateFunctionBody nodeDef = do
+generateFunctionBody :: State FuncState String
+generateFunctionBody = do
+    state <- get
     let
-        graph      = NodeDef.graph nodeDef
-        vertices   = DG.topsort $ Graph.repr graph
-        nodes      = map (Graph.lnodeById graph) vertices
-        nodesCodes = [] --map (generateNodeCode graph) nodes
+        graph      = FuncState.graph state
+        vertices   = Graph.topsort graph
+        nodes      = Graph.labVtxs graph vertices
     generateNodeCodes nodes
 
 
-generateFunctionHeader :: NodeDef -> State FuncState String
-generateFunctionHeader def = do
+generateFunctionHeader :: State FuncState String
+generateFunctionHeader = do
     state <- get
-    let t    = NodeDef.cls def
+    let t    = NodeDef.cls $ FuncState.def state
         name = Type.name t ++ if FuncState.ctx state == Context.IO || FuncState.mode state == Mode.ForceIO
             then mpostfix
             else ""
     return $ name ++ " " ++ inputs ++ " = " 
 
 
-generateFunctionCode :: NodeDef -> State FuncState String
-generateFunctionCode def = do
-    body   <- generateFunctionBody def
-    header <- generateFunctionHeader def
+generateFunctionCode :: State FuncState String
+generateFunctionCode = do
+    body   <- generateFunctionBody
+    header <- generateFunctionHeader
     state  <- get
     let
         (ret, prefix) = if FuncState.ctx state == Context.IO || FuncState.mode state == Mode.ForceIO
@@ -169,14 +123,11 @@ generateFunctionCode def = do
 generateNodeCodes :: [DG.LNode Node] -> State FuncState String
 generateNodeCodes []           = return ""
 generateNodeCodes (node:nodes) = do
-    --a <- begin
-    --b <- test a
     prestate  <- get
     code      <- generateNodeCode  node
     poststate <- get
     childcode <- generateNodeCodes nodes
-    --code = "ala" -- name node ++ "\n" ++ childcode
-    -- return $ name node ++ "\n" ++ childcode
+
     let
         ctx = FuncState.lastctx poststate
         prefix = if ctx /= (FuncState.lastctx prestate)
@@ -187,44 +138,6 @@ generateNodeCodes (node:nodes) = do
                 Context.IO   -> ""
                 Context.Pure -> indent 1
     return $ prefix ++ indent 1 ++ code ++ "\n" ++ childcode
-
-
-    --
-    -- ++ indent 1 ++ "let\n"
-    -- ++ generateFunctionBody def
-    -- -- ++ indent 2 ++ join ("\n" ++ indent 2) (generateFunctionBody def) ++ "\n"
-    -- ++ indent 1 ++ "in " ++ outputs
-
-
---generateCode :: DG.Node -> DefManager -> String
---generateCode nid manager =  case NodeDef.cls def of 
---                            Type.Function {} -> generateFunction def
---    where
---        def = DefManager.nodeById manager nid 
-
-
----------------------------------------------
-
---generateNodeCode graph (nid, Node.Type name _ _) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
---generateNodeCode graph (nid, Node.Call name _ _) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
---generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultInt val)) = comment ++ "<default> " ++ show val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
---generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultString val)) = comment ++ "<default> " ++ val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
---generateNodeCode graph (nid, Node.Inputs _ _) = ""
---generateNodeCode graph (nid, Node.Outputs _ _) = "<outputs>"
-
-outvar :: Show a => a -> [Char]
-outvar x = "out'" ++ show x
-
-mpostfix :: String
-mpostfix = "''M"
-
-
-inputs :: String
-inputs = "inputs'"
-
-
-outputs :: String
-outputs = "outputs'"
 
 
 collectInputNum :: Graph -> Int -> [DG.Node]
@@ -248,7 +161,6 @@ generateNodeCode (nid, Node.New _ _) = do
     defout <- generateDefaultOutput nid
     return $ outvar nid ++ " = " ++ defout
 
-
 generateNodeCode (nid, Node.Default (DefaultValue.DefaultString val)) = return $ outvar nid ++ " = \"" ++ val ++ "\"" 
 
 generateNodeCode (nid, Node.Default (DefaultValue.DefaultInt val)) = return $  outvar nid ++ " = " ++ show val
@@ -271,7 +183,6 @@ generateNodeCode (nid, Node.Call name flags _ ) = do
         else do put $ state{                          FuncState.lastctx=Context.Pure} 
     return code
         
-
 generateNodeCode (nid, Node.Tuple _ _) = do
     state <- get 
     let 
@@ -281,8 +192,7 @@ generateNodeCode (nid, Node.Tuple _ _) = do
             then "OneTuple " ++ elements
             else "(" ++ elements ++ ")"
     return $ outvar nid ++ " = " ++ body
-        
-            
+                  
 generateNodeCode (nid, Node.Inputs _ _ ) = return $ outvar nid ++ " = " ++ inputs
 
 generateNodeCode (nid, Node.Outputs _ _ ) = do
@@ -325,3 +235,76 @@ generateNodeCode (nid, node) = return "<not implemented>"
 
 
 
+----generateImports :: NodeDef -> String
+----generateImports nodeDef = foldr (++) "" imports where
+----    imports = map (\a -> "import " ++ a ++ "\n") $ NodeDef.imports nodeDef
+
+
+
+
+--generateFunctionBody :: NodeDef -> [String]
+
+
+
+
+
+
+
+
+
+--generateNodeCodeLine :: Graph -> DG.LNode Node -> String
+--generateNodeCodeLine graph lnode = (indent 1) ++ (generateNodeCode graph lnode) ++ "\n"
+
+--generateFunctionReturn :: NodeDef -> String
+--generateFunctionReturn nodeDef = (indent 1) ++ "in ()\n" -- TODO[PM] result list
+
+
+
+
+
+
+-------------------------------------------------------------------
+
+
+--generateCode :: DG.Node -> DefManager -> String
+--generateCode nid manager =  case NodeDef.cls def of 
+--                            Type.Function {} -> generateFunction def
+--    where
+--        def = DefManager.nodeById manager nid 
+
+
+---------------------------------------------
+
+--generateNodeCode graph (nid, Node.Type name _ _) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+--generateNodeCode graph (nid, Node.Call name _ _) = comment ++ name ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+--generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultInt val)) = comment ++ "<default> " ++ show val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+--generateNodeCode graph (nid, Node.Default (DefaultValue.DefaultString val)) = comment ++ "<default> " ++ val ++ " (" ++ show nid ++ ") " ++ generateNodeInputs graph nid
+--generateNodeCode graph (nid, Node.Inputs _ _) = ""
+--generateNodeCode graph (nid, Node.Outputs _ _) = "<outputs>"
+
+
+--generateTypeCode :: Type -> String 
+--generateTypeCode t = code where
+--    code = case t of
+--        Type.Package name imports -> generateImportsCode imports
+--        otherwise    -> "ERROR"
+
+--generateGraphCode :: Graph -> String
+--generateGraphCode g = undefined
+
+---------------------
+--generateDefCode :: DG.Node -> DefManager -> String
+--generateDefCode did manager = 
+--    let
+--        def = DefManager.nodeById manager did 
+--        cls = NodeDef.cls def
+--        code = case cls of
+--            Type.Package name imports         -> generateImportsCode imports
+--            func@(Type.Function name inputs outputs) -> generateTypeCode func
+--            _                         -> "err"
+--    in code
+
+--generateTypeCode :: Type -> String
+--generateTypeCode t = case t of
+--    Type.Function name inputs outputs -> name ++ " " ++ join " " signature ++ " = "
+--        where signature = fmap Type.name inputs

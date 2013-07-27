@@ -9,4 +9,4 @@ module Luna.Network.Def.Edge(
     Edge(..)
 ) where
     
-data Edge = Edge {src :: Int, dst :: Int} deriving (Show, Read, Ord, Eq)
+data Edge = Edge deriving (Show, Read, Ord, Eq)

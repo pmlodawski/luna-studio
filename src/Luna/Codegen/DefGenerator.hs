@@ -25,23 +25,24 @@ import           Luna.Network.Def.Edge             (Edge(..))
 import qualified Luna.Type.Type                  as Type
 import qualified Luna.Network.Path.Import        as Import
 
+import qualified Luna.Data.Graph                 as Graph
+
+
 generateModule :: DG.Node -> DefManager -> String
 generateModule = generateModuleCode
 
+
 generateModuleCode :: DG.Node -> DefManager -> String
-generateModuleCode did manager = out where
-    path        = DefManager.pathOf did manager
-    header      = "module " ++ Path.toModulePath path
-    edges       = DefManager.out manager did
-    outnums     = [dst | Edge src dst <- edges]
-    outnodes    = fmap (DefManager.nodeById manager) $ outnums
+generateModuleCode vtx manager = out where
+    path        = Path.fromList $ DefManager.pathNames manager vtx 
+    outnodes    = DefManager.suc_ manager vtx
     outnames    = fmap (Type.name . NodeDef.cls) outnodes
     outpaths    = fmap ((Path.add path) . Path.single) outnames
     imports     = zipWith Import.single outpaths outnames
     importstxt  = join "\n" $ fmap Import.genCode imports
+    header      = "module " ++ Path.toModulePath path
     out         = header ++ generateModuleReturn ++ importstxt
 
 
-
 generateModuleReturn :: String
-generateModuleReturn = "where\n"
+generateModuleReturn = " where\n"

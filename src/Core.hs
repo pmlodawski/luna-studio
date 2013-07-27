@@ -5,17 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna(
-DefaultValue(..),
-Node(..),
-Edge(..),
-NodeDef(..),
-Graph
+module Lua.Core(
+
 ) where
 
 
-import Luna.DefaultValue
-import Luna.Edge
-import Luna.Graph
-import Luna.NodeDef
+import Luna.Lib.LibManager (LibManager)
+import Luna.Network.Def.DefManager (DefManager)
 
