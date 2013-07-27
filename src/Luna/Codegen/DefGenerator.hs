@@ -6,43 +6,27 @@
 ---------------------------------------------------------------------------
 
 module Luna.Codegen.DefGenerator(
-    generateModule
+    generateDefinition
 ) where
 
 
 import Debug.Trace
 
-import           Data.String.Utils                 (join)
-
-import qualified Data.Graph.Inductive            as DG
-import qualified Luna.Network.Def.DefManager     as DefManager
-import           Luna.Network.Def.DefManager       (DefManager)
-import qualified Luna.Network.Path.Path          as Path
+import qualified Luna.Codegen.ModGenerator       as MG
+import qualified Luna.Codegen.FuncGenerator      as FG
+import qualified Luna.Data.Graph                 as Graph
+import qualified Luna.Type.Type                  as Type
 import qualified Luna.Network.Def.NodeDef        as NodeDef
 import           Luna.Network.Def.NodeDef          (NodeDef)
-import qualified Luna.Network.Def.Edge           as Edge
-import           Luna.Network.Def.Edge             (Edge(..))
-import qualified Luna.Type.Type                  as Type
-import qualified Luna.Network.Path.Import        as Import
-
-import qualified Luna.Data.Graph                 as Graph
+import qualified Luna.Network.Def.DefManager     as DefManager
+import           Luna.Network.Def.DefManager       (DefManager)
 
 
-generateModule :: DG.Node -> DefManager -> String
-generateModule = generateModuleCode
+generateDefinition :: Graph.Vertex -> DefManager -> String
+generateDefinition vtx manager = code where
+	def = Graph.lab manager vtx
+	cls = NodeDef.cls def
+	code = case cls of
+		Type.Function {} -> MG.generateModule vtx manager ++ FG.generateFunction def
+		Type.Module   {} -> MG.generateModule vtx manager
 
-
-generateModuleCode :: DG.Node -> DefManager -> String
-generateModuleCode vtx manager = out where
-    path        = Path.fromList $ DefManager.pathNames manager vtx 
-    outnodes    = DefManager.suc_ manager vtx
-    outnames    = fmap (Type.name . NodeDef.cls) outnodes
-    outpaths    = fmap ((Path.add path) . Path.single) outnames
-    imports     = zipWith Import.single outpaths outnames
-    importstxt  = join "\n" $ fmap Import.genCode imports
-    header      = "module " ++ Path.toModulePath path
-    out         = header ++ generateModuleReturn ++ importstxt
-
-
-generateModuleReturn :: String
-generateModuleReturn = " where\n"
