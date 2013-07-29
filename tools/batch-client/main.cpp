@@ -9,7 +9,7 @@ using namespace apache::thrift::protocol;
 using namespace apache::thrift::transport;
 
 using namespace flowbox::batch;
-
+using namespace std;
 
 int main(int argc, char **argv) {
     boost::shared_ptr<TSocket> socket(new TSocket("localhost", 30521));
@@ -19,8 +19,11 @@ int main(int argc, char **argv) {
     BatchClient batch(protocol);
     transport->open();
     
+    batch.ping();
 
     /* Libraries */
+
+    vector<Library> registeredLibs;
 
     Library stdlib;
     stdlib.name = "/opt/luna/lib";
@@ -32,11 +35,14 @@ int main(int argc, char **argv) {
 
     batch.loadLibrary(stdlib);
     batch.loadLibrary(userlib);
+    batch.libraries(registeredLibs);
     batch.unloadLibrary(userlib);
-        
-    for(int i = 0; i < 5 ; ++i)
-        batch.ping();
-
+    batch.libraries(registeredLibs);
+    batch.loadLibrary(userlib);
+    batch.libraries(registeredLibs);
+    
+    /* Add new definition */
+    
     transport->close();
 
     return 0;
