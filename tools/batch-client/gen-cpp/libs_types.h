@@ -19,24 +19,26 @@
 typedef int32_t LibID;
 
 typedef struct _Library__isset {
-  _Library__isset() : libID(false), name(false) {}
+  _Library__isset() : libID(false), name(false), path(false) {}
   bool libID;
   bool name;
+  bool path;
 } _Library__isset;
 
 class Library {
  public:
 
-  static const char* ascii_fingerprint; // = "A7801670116150C65ACA43E6F679BA79";
-  static const uint8_t binary_fingerprint[16]; // = {0xA7,0x80,0x16,0x70,0x11,0x61,0x50,0xC6,0x5A,0xCA,0x43,0xE6,0xF6,0x79,0xBA,0x79};
+  static const char* ascii_fingerprint; // = "EA49C8C1262074DF53C913E79A866B9E";
+  static const uint8_t binary_fingerprint[16]; // = {0xEA,0x49,0xC8,0xC1,0x26,0x20,0x74,0xDF,0x53,0xC9,0x13,0xE7,0x9A,0x86,0x6B,0x9E};
 
-  Library() : libID(0), name() {
+  Library() : libID(0), name(), path() {
   }
 
   virtual ~Library() throw() {}
 
   LibID libID;
   std::string name;
+  std::string path;
 
   _Library__isset __isset;
 
@@ -50,6 +52,11 @@ class Library {
     __isset.name = true;
   }
 
+  void __set_path(const std::string& val) {
+    path = val;
+    __isset.path = true;
+  }
+
   bool operator == (const Library & rhs) const
   {
     if (__isset.libID != rhs.__isset.libID)
@@ -59,6 +66,10 @@ class Library {
     if (__isset.name != rhs.__isset.name)
       return false;
     else if (__isset.name && !(name == rhs.name))
+      return false;
+    if (__isset.path != rhs.__isset.path)
+      return false;
+    else if (__isset.path && !(path == rhs.path))
       return false;
     return true;
   }

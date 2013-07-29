@@ -10,7 +10,7 @@
 #include <thrift/TDispatchProcessor.h>
 #include "batch_types.h"
 
-
+namespace flowbox { namespace batch {
 
 class BatchIf {
  public:
@@ -3093,6 +3093,6 @@ class BatchMultiface : virtual public BatchIf {
 
 };
 
-
+}} // namespace
 
 #endif

@@ -19,8 +19,8 @@
 #include "types_types.h"
 
 
+namespace flowbox { namespace batch {
 
-
-
+}} // namespace
 
 #endif

@@ -12,4 +12,5 @@ typedef i32 LibID
 struct Library {
     1: optional LibID libID
     2: optional string name
+    3: optional string path;
 }

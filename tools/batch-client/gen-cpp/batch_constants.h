@@ -9,7 +9,7 @@
 
 #include "batch_types.h"
 
-
+namespace flowbox { namespace batch {
 
 class batchConstants {
  public:
@@ -19,6 +19,6 @@ class batchConstants {
 
 extern const batchConstants g_batch_constants;
 
-
+}} // namespace
 
 #endif

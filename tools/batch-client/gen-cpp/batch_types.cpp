@@ -8,6 +8,6 @@
 
 #include <algorithm>
 
+namespace flowbox { namespace batch {
 
-
-
+}} // namespace

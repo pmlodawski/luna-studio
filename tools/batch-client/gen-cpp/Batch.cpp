@@ -6,7 +6,7 @@
  */
 #include "Batch.h"
 
-
+namespace flowbox { namespace batch {
 
 uint32_t Batch_libraries_args::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -6720,5 +6720,5 @@ void BatchProcessor::process_ping(int32_t seqid, ::apache::thrift::protocol::TPr
   ::boost::shared_ptr< ::apache::thrift::TProcessor > processor(new BatchProcessor(handler));
   return processor;
 }
-
+}} // namespace
 

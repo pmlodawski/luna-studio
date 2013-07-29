@@ -6,12 +6,12 @@
  */
 #include "batch_constants.h"
 
-
+namespace flowbox { namespace batch {
 
 const batchConstants g_batch_constants;
 
 batchConstants::batchConstants() {
 }
 
-
+}} // namespace
 

@@ -35,9 +35,9 @@ import Thrift.Types ()
 
 type LibID = Int32
 
-data Library = Library{f_Library_libID :: Maybe Int32,f_Library_name :: Maybe Text} deriving (Show,Eq,Typeable)
+data Library = Library{f_Library_libID :: Maybe Int32,f_Library_name :: Maybe Text,f_Library_path :: Maybe Text} deriving (Show,Eq,Typeable)
 instance Hashable Library where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Library_libID record   `hashWithSalt` f_Library_name record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_Library_libID record   `hashWithSalt` f_Library_name record   `hashWithSalt` f_Library_path record  
 write_Library oprot record = do
   writeStructBegin oprot "Library"
   case f_Library_libID record of {Nothing -> return (); Just _v -> do
@@ -46,6 +46,10 @@ write_Library oprot record = do
     writeFieldEnd oprot}
   case f_Library_name record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("name",T_STRING,2)
+    writeString oprot _v
+    writeFieldEnd oprot}
+  case f_Library_path record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("path",T_STRING,3)
     writeString oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
@@ -66,12 +70,18 @@ read_Library_fields iprot record = do
         else do
           skip iprot _t3
           read_Library_fields iprot record
+      3 -> if _t3 == T_STRING then do
+        s <- readString iprot
+        read_Library_fields iprot record{f_Library_path=Just s}
+        else do
+          skip iprot _t3
+          read_Library_fields iprot record
       _ -> do
         skip iprot _t3
         readFieldEnd iprot
         read_Library_fields iprot record
 read_Library iprot = do
   _ <- readStructBegin iprot
-  record <- read_Library_fields iprot (Library{f_Library_libID=Nothing,f_Library_name=Nothing})
+  record <- read_Library_fields iprot (Library{f_Library_libID=Nothing,f_Library_name=Nothing,f_Library_path=Nothing})
   readStructEnd iprot
   return record

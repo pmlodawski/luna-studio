@@ -14,7 +14,7 @@ using namespace ::apache::thrift::server;
 
 using boost::shared_ptr;
 
-using namespace  ;
+using namespace  ::flowbox::batch;
 
 class BatchHandler : virtual public BatchIf {
  public:

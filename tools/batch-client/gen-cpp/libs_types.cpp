@@ -10,8 +10,8 @@
 
 
 
-const char* Library::ascii_fingerprint = "A7801670116150C65ACA43E6F679BA79";
-const uint8_t Library::binary_fingerprint[16] = {0xA7,0x80,0x16,0x70,0x11,0x61,0x50,0xC6,0x5A,0xCA,0x43,0xE6,0xF6,0x79,0xBA,0x79};
+const char* Library::ascii_fingerprint = "EA49C8C1262074DF53C913E79A866B9E";
+const uint8_t Library::binary_fingerprint[16] = {0xEA,0x49,0xC8,0xC1,0x26,0x20,0x74,0xDF,0x53,0xC9,0x13,0xE7,0x9A,0x86,0x6B,0x9E};
 
 uint32_t Library::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -49,6 +49,14 @@ uint32_t Library::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->path);
+          this->__isset.path = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -75,6 +83,11 @@ uint32_t Library::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeString(this->name);
     xfer += oprot->writeFieldEnd();
   }
+  if (this->__isset.path) {
+    xfer += oprot->writeFieldBegin("path", ::apache::thrift::protocol::T_STRING, 3);
+    xfer += oprot->writeString(this->path);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -84,6 +97,7 @@ void swap(Library &a, Library &b) {
   using ::std::swap;
   swap(a.libID, b.libID);
   swap(a.name, b.name);
+  swap(a.path, b.path);
   swap(a.__isset, b.__isset);
 }
 
