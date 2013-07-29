@@ -19,7 +19,7 @@
 struct TypeType {
   enum type {
     Undefined = 0,
-    Package = 1,
+    Module = 1,
     Function = 2,
     Class = 3,
     Interface = 4,

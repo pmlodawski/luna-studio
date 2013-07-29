@@ -25,10 +25,10 @@ INC := -I$(THRIFT_DIR) -I$(BOOST_DIR)
 all:  batch_client
 
 %.o: %.cpp 
-	$(CXX) -Wall -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H $(INC) -c $< -o $@
+	$(CXX) --std=c++11 -Wall -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H $(INC) -c $< -o $@
 
 batch_client: main.o $(GEN_OBJ)
-	$(CXX) $^ -o $@ -L/usr/local/lib -lthrift 
+	$(CXX) $^ -o $@ -L/usr/local/lib -lthrift
 
 clean:
 	$(RM) *.o gen-cpp/*.o batch_client

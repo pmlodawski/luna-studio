@@ -8,7 +8,7 @@
 
 enum TypeType {
     Undefined,
-    Package,
+    Module,
     Function,
     Class,
     Interface,

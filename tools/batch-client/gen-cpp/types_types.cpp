@@ -12,7 +12,7 @@
 
 int _kTypeTypeValues[] = {
   TypeType::Undefined,
-  TypeType::Package,
+  TypeType::Module,
   TypeType::Function,
   TypeType::Class,
   TypeType::Interface,
@@ -23,7 +23,7 @@ int _kTypeTypeValues[] = {
 };
 const char* _kTypeTypeNames[] = {
   "Undefined",
-  "Package",
+  "Module",
   "Function",
   "Class",
   "Interface",

@@ -33,11 +33,11 @@ import Thrift
 import Thrift.Types ()
 
 
-data TypeType = Undefined|Package|Function|Class|Interface|Named|TypeVariable|Tuple|List  deriving (Show,Eq, Typeable, Ord)
+data TypeType = Undefined|Module|Function|Class|Interface|Named|TypeVariable|Tuple|List  deriving (Show,Eq, Typeable, Ord)
 instance Enum TypeType where
   fromEnum t = case t of
     Undefined -> 0
-    Package -> 1
+    Module -> 1
     Function -> 2
     Class -> 3
     Interface -> 4
@@ -47,7 +47,7 @@ instance Enum TypeType where
     List -> 8
   toEnum t = case t of
     0 -> Undefined
-    1 -> Package
+    1 -> Module
     2 -> Function
     3 -> Class
     4 -> Interface
