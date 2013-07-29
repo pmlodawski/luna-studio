@@ -21,16 +21,22 @@ enum NodeType {
 }
 
 struct Node {
-    1: optional NodeType cls
-    2: optional string name
-    3: optional NodeID nodeID
-    4: optional attrs.Flags flags
+    1: optional NodeType         cls
+    2: optional string           name
+    3: optional NodeID           nodeID
+    4: optional attrs.Flags      flags
     5: optional attrs.Attributes attrs
 }
 
+typedef list<i32> PortDescriptor
+
 struct Edge {
-    1: i32 src
-    2: i32 dst
+    1: optional NodeID src
+    2: optional NodeID dst
 }
 
-typedef list<i32> PortDescriptor
+struct Graph {
+    1: optional map<NodeID, Node> nodes
+    2: optional list<Edge>        edges
+}
+

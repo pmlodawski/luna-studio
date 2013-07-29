@@ -34,10 +34,10 @@ const char* _kTypeTypeNames[] = {
 };
 const std::map<int, const char*> _TypeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(9, _kTypeTypeValues, _kTypeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
-const char* Type::ascii_fingerprint = "8AE658BECF35742FA6D2BF892CC73B6F";
-const uint8_t Type::binary_fingerprint[16] = {0x8A,0xE6,0x58,0xBE,0xCF,0x35,0x74,0x2F,0xA6,0xD2,0xBF,0x89,0x2C,0xC7,0x3B,0x6F};
+const char* TypeProto::ascii_fingerprint = "8AE658BECF35742FA6D2BF892CC73B6F";
+const uint8_t TypeProto::binary_fingerprint[16] = {0x8A,0xE6,0x58,0xBE,0xCF,0x35,0x74,0x2F,0xA6,0xD2,0xBF,0x89,0x2C,0xC7,0x3B,0x6F};
 
-uint32_t Type::read(::apache::thrift::protocol::TProtocol* iprot) {
+uint32_t TypeProto::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   uint32_t xfer = 0;
   std::string fname;
@@ -178,9 +178,9 @@ uint32_t Type::read(::apache::thrift::protocol::TProtocol* iprot) {
   return xfer;
 }
 
-uint32_t Type::write(::apache::thrift::protocol::TProtocol* oprot) const {
+uint32_t TypeProto::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
-  xfer += oprot->writeStructBegin("Type");
+  xfer += oprot->writeStructBegin("TypeProto");
 
   xfer += oprot->writeFieldBegin("cls", ::apache::thrift::protocol::T_I32, 1);
   xfer += oprot->writeI32((int32_t)this->cls);
@@ -253,7 +253,7 @@ uint32_t Type::write(::apache::thrift::protocol::TProtocol* oprot) const {
   return xfer;
 }
 
-void swap(Type &a, Type &b) {
+void swap(TypeProto &a, TypeProto &b) {
   using ::std::swap;
   swap(a.cls, b.cls);
   swap(a.name, b.name);
@@ -265,10 +265,10 @@ void swap(Type &a, Type &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* TypeContainer::ascii_fingerprint = "266812D7B08D83CE59DBDB712EC9B334";
-const uint8_t TypeContainer::binary_fingerprint[16] = {0x26,0x68,0x12,0xD7,0xB0,0x8D,0x83,0xCE,0x59,0xDB,0xDB,0x71,0x2E,0xC9,0xB3,0x34};
+const char* Type::ascii_fingerprint = "266812D7B08D83CE59DBDB712EC9B334";
+const uint8_t Type::binary_fingerprint[16] = {0x26,0x68,0x12,0xD7,0xB0,0x8D,0x83,0xCE,0x59,0xDB,0xDB,0x71,0x2E,0xC9,0xB3,0x34};
 
-uint32_t TypeContainer::read(::apache::thrift::protocol::TProtocol* iprot) {
+uint32_t Type::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   uint32_t xfer = 0;
   std::string fname;
@@ -291,19 +291,19 @@ uint32_t TypeContainer::read(::apache::thrift::protocol::TProtocol* iprot) {
       case 1:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
-            this->typs.clear();
+            this->types.clear();
             uint32_t _size25;
             ::apache::thrift::protocol::TType _etype28;
             xfer += iprot->readListBegin(_etype28, _size25);
-            this->typs.resize(_size25);
+            this->types.resize(_size25);
             uint32_t _i29;
             for (_i29 = 0; _i29 < _size25; ++_i29)
             {
-              xfer += this->typs[_i29].read(iprot);
+              xfer += this->types[_i29].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
-          this->__isset.typs = true;
+          this->__isset.types = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -320,16 +320,16 @@ uint32_t TypeContainer::read(::apache::thrift::protocol::TProtocol* iprot) {
   return xfer;
 }
 
-uint32_t TypeContainer::write(::apache::thrift::protocol::TProtocol* oprot) const {
+uint32_t Type::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
-  xfer += oprot->writeStructBegin("TypeContainer");
+  xfer += oprot->writeStructBegin("Type");
 
-  if (this->__isset.typs) {
-    xfer += oprot->writeFieldBegin("typs", ::apache::thrift::protocol::T_LIST, 1);
+  if (this->__isset.types) {
+    xfer += oprot->writeFieldBegin("types", ::apache::thrift::protocol::T_LIST, 1);
     {
-      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->typs.size()));
-      std::vector<Type> ::const_iterator _iter30;
-      for (_iter30 = this->typs.begin(); _iter30 != this->typs.end(); ++_iter30)
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->types.size()));
+      std::vector<TypeProto> ::const_iterator _iter30;
+      for (_iter30 = this->types.begin(); _iter30 != this->types.end(); ++_iter30)
       {
         xfer += (*_iter30).write(oprot);
       }
@@ -342,9 +342,9 @@ uint32_t TypeContainer::write(::apache::thrift::protocol::TProtocol* oprot) cons
   return xfer;
 }
 
-void swap(TypeContainer &a, TypeContainer &b) {
+void swap(Type &a, Type &b) {
   using ::std::swap;
-  swap(a.typs, b.typs);
+  swap(a.types, b.types);
   swap(a.__isset, b.__isset);
 }
 

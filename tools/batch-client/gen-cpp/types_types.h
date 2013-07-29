@@ -32,26 +32,26 @@ struct TypeType {
 
 extern const std::map<int, const char*> _TypeType_VALUES_TO_NAMES;
 
-typedef struct _Type__isset {
-  _Type__isset() : name(false), items(false), params(false), inputs(false), outputs(false), type(false) {}
+typedef struct _TypeProto__isset {
+  _TypeProto__isset() : name(false), items(false), params(false), inputs(false), outputs(false), type(false) {}
   bool name;
   bool items;
   bool params;
   bool inputs;
   bool outputs;
   bool type;
-} _Type__isset;
+} _TypeProto__isset;
 
-class Type {
+class TypeProto {
  public:
 
   static const char* ascii_fingerprint; // = "8AE658BECF35742FA6D2BF892CC73B6F";
   static const uint8_t binary_fingerprint[16]; // = {0x8A,0xE6,0x58,0xBE,0xCF,0x35,0x74,0x2F,0xA6,0xD2,0xBF,0x89,0x2C,0xC7,0x3B,0x6F};
 
-  Type() : cls((TypeType::type)0), name(), type(0) {
+  TypeProto() : cls((TypeType::type)0), name(), type(0) {
   }
 
-  virtual ~Type() throw() {}
+  virtual ~TypeProto() throw() {}
 
   TypeType::type cls;
   std::string name;
@@ -61,7 +61,7 @@ class Type {
   std::vector<int32_t>  outputs;
   int32_t type;
 
-  _Type__isset __isset;
+  _TypeProto__isset __isset;
 
   void __set_cls(const TypeType::type val) {
     cls = val;
@@ -97,7 +97,7 @@ class Type {
     __isset.type = true;
   }
 
-  bool operator == (const Type & rhs) const
+  bool operator == (const TypeProto & rhs) const
   {
     if (!(cls == rhs.cls))
       return false;
@@ -127,6 +127,52 @@ class Type {
       return false;
     return true;
   }
+  bool operator != (const TypeProto &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const TypeProto & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(TypeProto &a, TypeProto &b);
+
+typedef struct _Type__isset {
+  _Type__isset() : types(false) {}
+  bool types;
+} _Type__isset;
+
+class Type {
+ public:
+
+  static const char* ascii_fingerprint; // = "266812D7B08D83CE59DBDB712EC9B334";
+  static const uint8_t binary_fingerprint[16]; // = {0x26,0x68,0x12,0xD7,0xB0,0x8D,0x83,0xCE,0x59,0xDB,0xDB,0x71,0x2E,0xC9,0xB3,0x34};
+
+  Type() {
+  }
+
+  virtual ~Type() throw() {}
+
+  std::vector<TypeProto>  types;
+
+  _Type__isset __isset;
+
+  void __set_types(const std::vector<TypeProto> & val) {
+    types = val;
+    __isset.types = true;
+  }
+
+  bool operator == (const Type & rhs) const
+  {
+    if (__isset.types != rhs.__isset.types)
+      return false;
+    else if (__isset.types && !(types == rhs.types))
+      return false;
+    return true;
+  }
   bool operator != (const Type &rhs) const {
     return !(*this == rhs);
   }
@@ -139,52 +185,6 @@ class Type {
 };
 
 void swap(Type &a, Type &b);
-
-typedef struct _TypeContainer__isset {
-  _TypeContainer__isset() : typs(false) {}
-  bool typs;
-} _TypeContainer__isset;
-
-class TypeContainer {
- public:
-
-  static const char* ascii_fingerprint; // = "266812D7B08D83CE59DBDB712EC9B334";
-  static const uint8_t binary_fingerprint[16]; // = {0x26,0x68,0x12,0xD7,0xB0,0x8D,0x83,0xCE,0x59,0xDB,0xDB,0x71,0x2E,0xC9,0xB3,0x34};
-
-  TypeContainer() {
-  }
-
-  virtual ~TypeContainer() throw() {}
-
-  std::vector<Type>  typs;
-
-  _TypeContainer__isset __isset;
-
-  void __set_typs(const std::vector<Type> & val) {
-    typs = val;
-    __isset.typs = true;
-  }
-
-  bool operator == (const TypeContainer & rhs) const
-  {
-    if (__isset.typs != rhs.__isset.typs)
-      return false;
-    else if (__isset.typs && !(typs == rhs.typs))
-      return false;
-    return true;
-  }
-  bool operator != (const TypeContainer &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const TypeContainer & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-void swap(TypeContainer &a, TypeContainer &b);
 
 
 

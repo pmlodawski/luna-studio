@@ -19,7 +19,7 @@ enum TypeType {
 }
 
 
-struct Type {
+struct TypeProto {
     1: required TypeType  cls
     2: optional string    name
     3: optional list<i32> items
@@ -30,6 +30,6 @@ struct Type {
 }
 
 
-struct TypeContainer { 
-    1: optional list<Type> typs
+struct Type { 
+    1: optional list<TypeProto> types
 }

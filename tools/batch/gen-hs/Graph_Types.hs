@@ -32,7 +32,7 @@ import qualified Data.Vector as Vector
 import Thrift
 import Thrift.Types ()
 
-import Attrs_Types
+import  Attrs_Types
 
 
 data NodeType = Type|Call|Default|New|Inputs|Outputs|Tuple  deriving (Show,Eq, Typeable, Ord)
@@ -168,5 +168,45 @@ read_Edge_fields iprot record = do
 read_Edge iprot = do
   _ <- readStructBegin iprot
   record <- read_Edge_fields iprot (Edge{f_Edge_src=Nothing,f_Edge_dst=Nothing})
+  readStructEnd iprot
+  return record
+data Graph = Graph{f_Graph_nodes :: Maybe (Map.HashMap Int32 Node),f_Graph_edges :: Maybe (Vector.Vector Edge)} deriving (Show,Eq,Typeable)
+instance Hashable Graph where
+  hashWithSalt salt record = salt   `hashWithSalt` f_Graph_nodes record   `hashWithSalt` f_Graph_edges record  
+write_Graph oprot record = do
+  writeStructBegin oprot "Graph"
+  case f_Graph_nodes record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("nodes",T_MAP,1)
+    (let {f [] = return (); f ((_kiter12,_viter13):t) = do {do {writeI32 oprot _kiter12;write_Node oprot _viter13};f t}} in do {writeMapBegin oprot (T_I32,T_STRUCT,fromIntegral $ Map.size _v); f (Map.toList _v);writeMapEnd oprot})
+    writeFieldEnd oprot}
+  case f_Graph_edges record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("edges",T_LIST,2)
+    (let f = Vector.mapM_ (\_viter14 -> write_Edge oprot _viter14) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_Graph_fields iprot record = do
+  (_,_t16,_id17) <- readFieldBegin iprot
+  if _t16 == T_STOP then return record else
+    case _id17 of 
+      1 -> if _t16 == T_MAP then do
+        s <- (let {f 0 = return []; f n = do {k <- readI32 iprot; v <- (read_Node iprot);r <- f (n-1); return $ (k,v):r}} in do {(_ktype19,_vtype20,_size18) <- readMapBegin iprot; l <- f _size18; return $ Map.fromList l})
+        read_Graph_fields iprot record{f_Graph_nodes=Just s}
+        else do
+          skip iprot _t16
+          read_Graph_fields iprot record
+      2 -> if _t16 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Edge iprot)) in do {(_etype26,_size23) <- readListBegin iprot; f _size23})
+        read_Graph_fields iprot record{f_Graph_edges=Just s}
+        else do
+          skip iprot _t16
+          read_Graph_fields iprot record
+      _ -> do
+        skip iprot _t16
+        readFieldEnd iprot
+        read_Graph_fields iprot record
+read_Graph iprot = do
+  _ <- readStructBegin iprot
+  record <- read_Graph_fields iprot (Graph{f_Graph_nodes=Nothing,f_Graph_edges=Nothing})
   readStructEnd iprot
   return record

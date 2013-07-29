@@ -22,46 +22,36 @@
 typedef int32_t DefID;
 
 typedef struct _NodeDefinition__isset {
-  _NodeDefinition__isset() : cls(false), libID(false), defID(false), flags(false), attribs(false) {}
+  _NodeDefinition__isset() : cls(false), flags(false), attribs(false), libID(true), defID(true) {}
   bool cls;
-  bool libID;
-  bool defID;
   bool flags;
   bool attribs;
+  bool libID;
+  bool defID;
 } _NodeDefinition__isset;
 
 class NodeDefinition {
  public:
 
-  static const char* ascii_fingerprint; // = "A9431E373B1B9F79D91BA1A7490ED5DC";
-  static const uint8_t binary_fingerprint[16]; // = {0xA9,0x43,0x1E,0x37,0x3B,0x1B,0x9F,0x79,0xD9,0x1B,0xA1,0xA7,0x49,0x0E,0xD5,0xDC};
+  static const char* ascii_fingerprint; // = "114446A26C9C2D0FBC93CDAA2A1E1A7D";
+  static const uint8_t binary_fingerprint[16]; // = {0x11,0x44,0x46,0xA2,0x6C,0x9C,0x2D,0x0F,0xBC,0x93,0xCD,0xAA,0x2A,0x1E,0x1A,0x7D};
 
-  NodeDefinition() : libID(0), defID(0) {
+  NodeDefinition() : libID(-1), defID(-1) {
   }
 
   virtual ~NodeDefinition() throw() {}
 
-   ::TypeContainer cls;
-   ::LibID libID;
-  DefID defID;
+   ::Type cls;
    ::Flags flags;
    ::Attributes attribs;
+   ::LibID libID;
+  DefID defID;
 
   _NodeDefinition__isset __isset;
 
-  void __set_cls(const  ::TypeContainer& val) {
+  void __set_cls(const  ::Type& val) {
     cls = val;
     __isset.cls = true;
-  }
-
-  void __set_libID(const  ::LibID val) {
-    libID = val;
-    __isset.libID = true;
-  }
-
-  void __set_defID(const DefID val) {
-    defID = val;
-    __isset.defID = true;
   }
 
   void __set_flags(const  ::Flags& val) {
@@ -74,19 +64,21 @@ class NodeDefinition {
     __isset.attribs = true;
   }
 
+  void __set_libID(const  ::LibID val) {
+    libID = val;
+    __isset.libID = true;
+  }
+
+  void __set_defID(const DefID val) {
+    defID = val;
+    __isset.defID = true;
+  }
+
   bool operator == (const NodeDefinition & rhs) const
   {
     if (__isset.cls != rhs.__isset.cls)
       return false;
     else if (__isset.cls && !(cls == rhs.cls))
-      return false;
-    if (__isset.libID != rhs.__isset.libID)
-      return false;
-    else if (__isset.libID && !(libID == rhs.libID))
-      return false;
-    if (__isset.defID != rhs.__isset.defID)
-      return false;
-    else if (__isset.defID && !(defID == rhs.defID))
       return false;
     if (__isset.flags != rhs.__isset.flags)
       return false;
@@ -95,6 +87,14 @@ class NodeDefinition {
     if (__isset.attribs != rhs.__isset.attribs)
       return false;
     else if (__isset.attribs && !(attribs == rhs.attribs))
+      return false;
+    if (__isset.libID != rhs.__isset.libID)
+      return false;
+    else if (__isset.libID && !(libID == rhs.libID))
+      return false;
+    if (__isset.defID != rhs.__isset.defID)
+      return false;
+    else if (__isset.defID && !(defID == rhs.defID))
       return false;
     return true;
   }

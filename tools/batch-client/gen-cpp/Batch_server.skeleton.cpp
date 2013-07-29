@@ -27,22 +27,22 @@ class BatchHandler : virtual public BatchIf {
     printf("libraries\n");
   }
 
-  void registerLibrary(const  ::Library& library) {
+  void loadLibrary(const  ::Library& library) {
     // Your implementation goes here
-    printf("registerLibrary\n");
+    printf("loadLibrary\n");
   }
 
-  void updateLibrary(const  ::Library& library) {
+  void unloadLibrary(const  ::Library& library) {
     // Your implementation goes here
-    printf("updateLibrary\n");
+    printf("unloadLibrary\n");
   }
 
-  void unregisterLibrary(const  ::Library& library) {
+  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs) {
     // Your implementation goes here
-    printf("unregisterLibrary\n");
+    printf("newDefinition\n");
   }
 
-  void addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent, const  ::Library& library) {
+  void addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent) {
     // Your implementation goes here
     printf("addDefinition\n");
   }
@@ -67,12 +67,52 @@ class BatchHandler : virtual public BatchIf {
     printf("definitionParent\n");
   }
 
-  void nodes(std::vector< ::Node> & _return, const  ::NodeDefinition& definition) {
+  void newTypeModule( ::Type& _return, const std::string& name) {
     // Your implementation goes here
-    printf("nodes\n");
+    printf("newTypeModule\n");
   }
 
-  void addNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+  void newTypeClass( ::Type& _return, const std::string& name, const  ::Type& params) {
+    // Your implementation goes here
+    printf("newTypeClass\n");
+  }
+
+  void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs) {
+    // Your implementation goes here
+    printf("newTypeFunction\n");
+  }
+
+  void newTypeUdefined( ::Type& _return) {
+    // Your implementation goes here
+    printf("newTypeUdefined\n");
+  }
+
+  void newTypeNamed( ::Type& _return, const std::string& name) {
+    // Your implementation goes here
+    printf("newTypeNamed\n");
+  }
+
+  void newTypeVariable( ::Type& _return, const std::string& name, const  ::Type& type) {
+    // Your implementation goes here
+    printf("newTypeVariable\n");
+  }
+
+  void newTypeList( ::Type& _return, const  ::Type& type) {
+    // Your implementation goes here
+    printf("newTypeList\n");
+  }
+
+  void newTypeTuple( ::Type& _return, const std::vector< ::Type> & types) {
+    // Your implementation goes here
+    printf("newTypeTuple\n");
+  }
+
+  void graph( ::Graph& _return, const  ::NodeDefinition& definition) {
+    // Your implementation goes here
+    printf("graph\n");
+  }
+
+  void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDefinition& definition) {
     // Your implementation goes here
     printf("addNode\n");
   }

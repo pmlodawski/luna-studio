@@ -28,6 +28,7 @@ port = 30521
 
 data BatchHandler = BatchHandler
 
+newBatchHandler :: IO BatchHandler
 newBatchHandler = do
     return $ BatchHandler
 

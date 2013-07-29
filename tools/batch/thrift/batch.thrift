@@ -23,15 +23,15 @@ service Batch {
 
     list<libs.Library> libraries()
 
-    void   registerLibrary(1: libs.Library library)
-    void     updateLibrary(1: libs.Library library)
-    void unregisterLibrary(1: libs.Library library)
+    void    loadLibrary(1: libs.Library library)
+    void  unloadLibrary(1: libs.Library library)
 
     /*
      * Definitions
      */
 
-    void    addDefinition(1: defs.NodeDefinition definition, 2: defs.NodeDefinition parent, 3: libs.Library library)
+    defs.NodeDefinition newDefinition(1: types.Type type, 2: attrs.Flags flags, 3: attrs.Attributes attrs)
+    defs.NodeDefinition addDefinition(1: defs.NodeDefinition definition, 2: defs.NodeDefinition parent)
     void updateDefinition(1: defs.NodeDefinition definition)
     void removeDefinition(1: defs.NodeDefinition definition)
 
@@ -39,14 +39,27 @@ service Batch {
          defs.NodeDefinition  definitionParent  (1: defs.NodeDefinition definition)
 
     /*
+     * Types
+     */
+
+    types.Type newTypeModule   (1: string name)
+    types.Type newTypeClass    (1: string name, 2: types.Type params)
+    types.Type newTypeFunction (1: string name, 2: types.Type inputs, 3: types.Type outputs)
+    types.Type newTypeUdefined ()
+    types.Type newTypeNamed    (1: string name, )
+    types.Type newTypeVariable (1: string name, 2: types.Type type)
+    types.Type newTypeList     (1: types.Type type)
+    types.Type newTypeTuple    (1: list<types.Type> types)
+
+    /*
      * Graph
      */
     
-    list<graph.Node> nodes(1: defs.NodeDefinition definition)
+    graph.Graph     graph(1: defs.NodeDefinition definition)
 
-    void    addNode(1: graph.Node node, 2: defs.NodeDefinition definition)
-    void updateNode(1: graph.Node node, 2: defs.NodeDefinition definition)
-    void removeNode(1: graph.Node node, 2: defs.NodeDefinition definition)
+    graph.Node    addNode(1: graph.Node node, 2: defs.NodeDefinition definition)
+    void       updateNode(1: graph.Node node, 2: defs.NodeDefinition definition)
+    void       removeNode(1: graph.Node node, 2: defs.NodeDefinition definition)
 
     void    connect(1: graph.Node srcNode, 2: graph.PortDescriptor srcPort,
                     3: graph.Node dstNode, 4: graph.PortDescriptor dstPort, 5: defs.NodeDefinition definition)

@@ -10,7 +10,12 @@ INC := -I$(THRIFT_DIR) -I$(BOOST_DIR)
 
 all:  Batch_client
 # Batch_server
-%.o: %.cpp
+
+gen-cpp/%.o: gen-cpp/*.cpp
+	$(CXX) -Wall -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H $(INC) -c $< -o $@
+
+
+%.o: %.cpp 
 	$(CXX) -Wall -DHAVE_INTTYPES_H -DHAVE_NETINET_IN_H $(INC) -c $< -o $@
 
 # Batch_server: Batch_server.o $(GEN_OBJ)

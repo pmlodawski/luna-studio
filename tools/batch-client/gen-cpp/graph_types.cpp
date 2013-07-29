@@ -151,8 +151,8 @@ void swap(Node &a, Node &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* Edge::ascii_fingerprint = "989D1F1AE8D148D5E2119FFEC4BBBEE3";
-const uint8_t Edge::binary_fingerprint[16] = {0x98,0x9D,0x1F,0x1A,0xE8,0xD1,0x48,0xD5,0xE2,0x11,0x9F,0xFE,0xC4,0xBB,0xBE,0xE3};
+const char* Edge::ascii_fingerprint = "C1241AF5AA92C586B664FD41DC97C576";
+const uint8_t Edge::binary_fingerprint[16] = {0xC1,0x24,0x1A,0xF5,0xAA,0x92,0xC5,0x86,0xB6,0x64,0xFD,0x41,0xDC,0x97,0xC5,0x76};
 
 uint32_t Edge::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -206,14 +206,16 @@ uint32_t Edge::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("Edge");
 
-  xfer += oprot->writeFieldBegin("src", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32(this->src);
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("dst", ::apache::thrift::protocol::T_I32, 2);
-  xfer += oprot->writeI32(this->dst);
-  xfer += oprot->writeFieldEnd();
-
+  if (this->__isset.src) {
+    xfer += oprot->writeFieldBegin("src", ::apache::thrift::protocol::T_I32, 1);
+    xfer += oprot->writeI32(this->src);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.dst) {
+    xfer += oprot->writeFieldBegin("dst", ::apache::thrift::protocol::T_I32, 2);
+    xfer += oprot->writeI32(this->dst);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -223,6 +225,127 @@ void swap(Edge &a, Edge &b) {
   using ::std::swap;
   swap(a.src, b.src);
   swap(a.dst, b.dst);
+  swap(a.__isset, b.__isset);
+}
+
+const char* Graph::ascii_fingerprint = "8F82169939B00598BEF3C6948B1AD350";
+const uint8_t Graph::binary_fingerprint[16] = {0x8F,0x82,0x16,0x99,0x39,0xB0,0x05,0x98,0xBE,0xF3,0xC6,0x94,0x8B,0x1A,0xD3,0x50};
+
+uint32_t Graph::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_MAP) {
+          {
+            this->nodes.clear();
+            uint32_t _size1;
+            ::apache::thrift::protocol::TType _ktype2;
+            ::apache::thrift::protocol::TType _vtype3;
+            xfer += iprot->readMapBegin(_ktype2, _vtype3, _size1);
+            uint32_t _i5;
+            for (_i5 = 0; _i5 < _size1; ++_i5)
+            {
+              NodeID _key6;
+              xfer += iprot->readI32(_key6);
+              Node& _val7 = this->nodes[_key6];
+              xfer += _val7.read(iprot);
+            }
+            xfer += iprot->readMapEnd();
+          }
+          this->__isset.nodes = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->edges.clear();
+            uint32_t _size8;
+            ::apache::thrift::protocol::TType _etype11;
+            xfer += iprot->readListBegin(_etype11, _size8);
+            this->edges.resize(_size8);
+            uint32_t _i12;
+            for (_i12 = 0; _i12 < _size8; ++_i12)
+            {
+              xfer += this->edges[_i12].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.edges = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t Graph::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("Graph");
+
+  if (this->__isset.nodes) {
+    xfer += oprot->writeFieldBegin("nodes", ::apache::thrift::protocol::T_MAP, 1);
+    {
+      xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->nodes.size()));
+      std::map<NodeID, Node> ::const_iterator _iter13;
+      for (_iter13 = this->nodes.begin(); _iter13 != this->nodes.end(); ++_iter13)
+      {
+        xfer += oprot->writeI32(_iter13->first);
+        xfer += _iter13->second.write(oprot);
+      }
+      xfer += oprot->writeMapEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.edges) {
+    xfer += oprot->writeFieldBegin("edges", ::apache::thrift::protocol::T_LIST, 2);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->edges.size()));
+      std::vector<Edge> ::const_iterator _iter14;
+      for (_iter14 = this->edges.begin(); _iter14 != this->edges.end(); ++_iter14)
+      {
+        xfer += (*_iter14).write(oprot);
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(Graph &a, Graph &b) {
+  using ::std::swap;
+  swap(a.nodes, b.nodes);
+  swap(a.edges, b.edges);
   swap(a.__isset, b.__isset);
 }
 

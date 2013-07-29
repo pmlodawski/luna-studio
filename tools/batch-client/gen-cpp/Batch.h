@@ -16,16 +16,24 @@ class BatchIf {
  public:
   virtual ~BatchIf() {}
   virtual void libraries(std::vector< ::Library> & _return) = 0;
-  virtual void registerLibrary(const  ::Library& library) = 0;
-  virtual void updateLibrary(const  ::Library& library) = 0;
-  virtual void unregisterLibrary(const  ::Library& library) = 0;
-  virtual void addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent, const  ::Library& library) = 0;
+  virtual void loadLibrary(const  ::Library& library) = 0;
+  virtual void unloadLibrary(const  ::Library& library) = 0;
+  virtual void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs) = 0;
+  virtual void addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent) = 0;
   virtual void updateDefinition(const  ::NodeDefinition& definition) = 0;
   virtual void removeDefinition(const  ::NodeDefinition& definition) = 0;
   virtual void definitionChildren(std::vector< ::NodeDefinition> & _return, const  ::NodeDefinition& definition) = 0;
   virtual void definitionParent( ::NodeDefinition& _return, const  ::NodeDefinition& definition) = 0;
-  virtual void nodes(std::vector< ::Node> & _return, const  ::NodeDefinition& definition) = 0;
-  virtual void addNode(const  ::Node& node, const  ::NodeDefinition& definition) = 0;
+  virtual void newTypeModule( ::Type& _return, const std::string& name) = 0;
+  virtual void newTypeClass( ::Type& _return, const std::string& name, const  ::Type& params) = 0;
+  virtual void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs) = 0;
+  virtual void newTypeUdefined( ::Type& _return) = 0;
+  virtual void newTypeNamed( ::Type& _return, const std::string& name) = 0;
+  virtual void newTypeVariable( ::Type& _return, const std::string& name, const  ::Type& type) = 0;
+  virtual void newTypeList( ::Type& _return, const  ::Type& type) = 0;
+  virtual void newTypeTuple( ::Type& _return, const std::vector< ::Type> & types) = 0;
+  virtual void graph( ::Graph& _return, const  ::NodeDefinition& definition) = 0;
+  virtual void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDefinition& definition) = 0;
   virtual void updateNode(const  ::Node& node, const  ::NodeDefinition& definition) = 0;
   virtual void removeNode(const  ::Node& node, const  ::NodeDefinition& definition) = 0;
   virtual void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) = 0;
@@ -63,16 +71,16 @@ class BatchNull : virtual public BatchIf {
   void libraries(std::vector< ::Library> & /* _return */) {
     return;
   }
-  void registerLibrary(const  ::Library& /* library */) {
+  void loadLibrary(const  ::Library& /* library */) {
     return;
   }
-  void updateLibrary(const  ::Library& /* library */) {
+  void unloadLibrary(const  ::Library& /* library */) {
     return;
   }
-  void unregisterLibrary(const  ::Library& /* library */) {
+  void newDefinition( ::NodeDefinition& /* _return */, const  ::Type& /* type */, const  ::Flags& /* flags */, const  ::Attributes& /* attrs */) {
     return;
   }
-  void addDefinition(const  ::NodeDefinition& /* definition */, const  ::NodeDefinition& /* parent */, const  ::Library& /* library */) {
+  void addDefinition( ::NodeDefinition& /* _return */, const  ::NodeDefinition& /* definition */, const  ::NodeDefinition& /* parent */) {
     return;
   }
   void updateDefinition(const  ::NodeDefinition& /* definition */) {
@@ -87,10 +95,34 @@ class BatchNull : virtual public BatchIf {
   void definitionParent( ::NodeDefinition& /* _return */, const  ::NodeDefinition& /* definition */) {
     return;
   }
-  void nodes(std::vector< ::Node> & /* _return */, const  ::NodeDefinition& /* definition */) {
+  void newTypeModule( ::Type& /* _return */, const std::string& /* name */) {
     return;
   }
-  void addNode(const  ::Node& /* node */, const  ::NodeDefinition& /* definition */) {
+  void newTypeClass( ::Type& /* _return */, const std::string& /* name */, const  ::Type& /* params */) {
+    return;
+  }
+  void newTypeFunction( ::Type& /* _return */, const std::string& /* name */, const  ::Type& /* inputs */, const  ::Type& /* outputs */) {
+    return;
+  }
+  void newTypeUdefined( ::Type& /* _return */) {
+    return;
+  }
+  void newTypeNamed( ::Type& /* _return */, const std::string& /* name */) {
+    return;
+  }
+  void newTypeVariable( ::Type& /* _return */, const std::string& /* name */, const  ::Type& /* type */) {
+    return;
+  }
+  void newTypeList( ::Type& /* _return */, const  ::Type& /* type */) {
+    return;
+  }
+  void newTypeTuple( ::Type& /* _return */, const std::vector< ::Type> & /* types */) {
+    return;
+  }
+  void graph( ::Graph& /* _return */, const  ::NodeDefinition& /* definition */) {
+    return;
+  }
+  void addNode( ::Node& /* _return */, const  ::Node& /* node */, const  ::NodeDefinition& /* definition */) {
     return;
   }
   void updateNode(const  ::Node& /* node */, const  ::NodeDefinition& /* definition */) {
@@ -204,38 +236,38 @@ class Batch_libraries_presult {
 
 };
 
-typedef struct _Batch_registerLibrary_args__isset {
-  _Batch_registerLibrary_args__isset() : library(false) {}
+typedef struct _Batch_loadLibrary_args__isset {
+  _Batch_loadLibrary_args__isset() : library(false) {}
   bool library;
-} _Batch_registerLibrary_args__isset;
+} _Batch_loadLibrary_args__isset;
 
-class Batch_registerLibrary_args {
+class Batch_loadLibrary_args {
  public:
 
-  Batch_registerLibrary_args() {
+  Batch_loadLibrary_args() {
   }
 
-  virtual ~Batch_registerLibrary_args() throw() {}
+  virtual ~Batch_loadLibrary_args() throw() {}
 
    ::Library library;
 
-  _Batch_registerLibrary_args__isset __isset;
+  _Batch_loadLibrary_args__isset __isset;
 
   void __set_library(const  ::Library& val) {
     library = val;
   }
 
-  bool operator == (const Batch_registerLibrary_args & rhs) const
+  bool operator == (const Batch_loadLibrary_args & rhs) const
   {
     if (!(library == rhs.library))
       return false;
     return true;
   }
-  bool operator != (const Batch_registerLibrary_args &rhs) const {
+  bool operator != (const Batch_loadLibrary_args &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_registerLibrary_args & ) const;
+  bool operator < (const Batch_loadLibrary_args & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -243,11 +275,11 @@ class Batch_registerLibrary_args {
 };
 
 
-class Batch_registerLibrary_pargs {
+class Batch_loadLibrary_pargs {
  public:
 
 
-  virtual ~Batch_registerLibrary_pargs() throw() {}
+  virtual ~Batch_loadLibrary_pargs() throw() {}
 
   const  ::Library* library;
 
@@ -256,24 +288,24 @@ class Batch_registerLibrary_pargs {
 };
 
 
-class Batch_registerLibrary_result {
+class Batch_loadLibrary_result {
  public:
 
-  Batch_registerLibrary_result() {
+  Batch_loadLibrary_result() {
   }
 
-  virtual ~Batch_registerLibrary_result() throw() {}
+  virtual ~Batch_loadLibrary_result() throw() {}
 
 
-  bool operator == (const Batch_registerLibrary_result & /* rhs */) const
+  bool operator == (const Batch_loadLibrary_result & /* rhs */) const
   {
     return true;
   }
-  bool operator != (const Batch_registerLibrary_result &rhs) const {
+  bool operator != (const Batch_loadLibrary_result &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_registerLibrary_result & ) const;
+  bool operator < (const Batch_loadLibrary_result & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -281,49 +313,49 @@ class Batch_registerLibrary_result {
 };
 
 
-class Batch_registerLibrary_presult {
+class Batch_loadLibrary_presult {
  public:
 
 
-  virtual ~Batch_registerLibrary_presult() throw() {}
+  virtual ~Batch_loadLibrary_presult() throw() {}
 
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
 };
 
-typedef struct _Batch_updateLibrary_args__isset {
-  _Batch_updateLibrary_args__isset() : library(false) {}
+typedef struct _Batch_unloadLibrary_args__isset {
+  _Batch_unloadLibrary_args__isset() : library(false) {}
   bool library;
-} _Batch_updateLibrary_args__isset;
+} _Batch_unloadLibrary_args__isset;
 
-class Batch_updateLibrary_args {
+class Batch_unloadLibrary_args {
  public:
 
-  Batch_updateLibrary_args() {
+  Batch_unloadLibrary_args() {
   }
 
-  virtual ~Batch_updateLibrary_args() throw() {}
+  virtual ~Batch_unloadLibrary_args() throw() {}
 
    ::Library library;
 
-  _Batch_updateLibrary_args__isset __isset;
+  _Batch_unloadLibrary_args__isset __isset;
 
   void __set_library(const  ::Library& val) {
     library = val;
   }
 
-  bool operator == (const Batch_updateLibrary_args & rhs) const
+  bool operator == (const Batch_unloadLibrary_args & rhs) const
   {
     if (!(library == rhs.library))
       return false;
     return true;
   }
-  bool operator != (const Batch_updateLibrary_args &rhs) const {
+  bool operator != (const Batch_unloadLibrary_args &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_updateLibrary_args & ) const;
+  bool operator < (const Batch_unloadLibrary_args & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -331,11 +363,11 @@ class Batch_updateLibrary_args {
 };
 
 
-class Batch_updateLibrary_pargs {
+class Batch_unloadLibrary_pargs {
  public:
 
 
-  virtual ~Batch_updateLibrary_pargs() throw() {}
+  virtual ~Batch_unloadLibrary_pargs() throw() {}
 
   const  ::Library* library;
 
@@ -344,24 +376,24 @@ class Batch_updateLibrary_pargs {
 };
 
 
-class Batch_updateLibrary_result {
+class Batch_unloadLibrary_result {
  public:
 
-  Batch_updateLibrary_result() {
+  Batch_unloadLibrary_result() {
   }
 
-  virtual ~Batch_updateLibrary_result() throw() {}
+  virtual ~Batch_unloadLibrary_result() throw() {}
 
 
-  bool operator == (const Batch_updateLibrary_result & /* rhs */) const
+  bool operator == (const Batch_unloadLibrary_result & /* rhs */) const
   {
     return true;
   }
-  bool operator != (const Batch_updateLibrary_result &rhs) const {
+  bool operator != (const Batch_unloadLibrary_result &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_updateLibrary_result & ) const;
+  bool operator < (const Batch_unloadLibrary_result & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -369,49 +401,65 @@ class Batch_updateLibrary_result {
 };
 
 
-class Batch_updateLibrary_presult {
+class Batch_unloadLibrary_presult {
  public:
 
 
-  virtual ~Batch_updateLibrary_presult() throw() {}
+  virtual ~Batch_unloadLibrary_presult() throw() {}
 
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
 };
 
-typedef struct _Batch_unregisterLibrary_args__isset {
-  _Batch_unregisterLibrary_args__isset() : library(false) {}
-  bool library;
-} _Batch_unregisterLibrary_args__isset;
+typedef struct _Batch_newDefinition_args__isset {
+  _Batch_newDefinition_args__isset() : type(false), flags(false), attrs(false) {}
+  bool type;
+  bool flags;
+  bool attrs;
+} _Batch_newDefinition_args__isset;
 
-class Batch_unregisterLibrary_args {
+class Batch_newDefinition_args {
  public:
 
-  Batch_unregisterLibrary_args() {
+  Batch_newDefinition_args() {
   }
 
-  virtual ~Batch_unregisterLibrary_args() throw() {}
+  virtual ~Batch_newDefinition_args() throw() {}
 
-   ::Library library;
+   ::Type type;
+   ::Flags flags;
+   ::Attributes attrs;
 
-  _Batch_unregisterLibrary_args__isset __isset;
+  _Batch_newDefinition_args__isset __isset;
 
-  void __set_library(const  ::Library& val) {
-    library = val;
+  void __set_type(const  ::Type& val) {
+    type = val;
   }
 
-  bool operator == (const Batch_unregisterLibrary_args & rhs) const
+  void __set_flags(const  ::Flags& val) {
+    flags = val;
+  }
+
+  void __set_attrs(const  ::Attributes& val) {
+    attrs = val;
+  }
+
+  bool operator == (const Batch_newDefinition_args & rhs) const
   {
-    if (!(library == rhs.library))
+    if (!(type == rhs.type))
+      return false;
+    if (!(flags == rhs.flags))
+      return false;
+    if (!(attrs == rhs.attrs))
       return false;
     return true;
   }
-  bool operator != (const Batch_unregisterLibrary_args &rhs) const {
+  bool operator != (const Batch_newDefinition_args &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_unregisterLibrary_args & ) const;
+  bool operator < (const Batch_newDefinition_args & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -419,60 +467,81 @@ class Batch_unregisterLibrary_args {
 };
 
 
-class Batch_unregisterLibrary_pargs {
+class Batch_newDefinition_pargs {
  public:
 
 
-  virtual ~Batch_unregisterLibrary_pargs() throw() {}
+  virtual ~Batch_newDefinition_pargs() throw() {}
 
-  const  ::Library* library;
+  const  ::Type* type;
+  const  ::Flags* flags;
+  const  ::Attributes* attrs;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
+typedef struct _Batch_newDefinition_result__isset {
+  _Batch_newDefinition_result__isset() : success(false) {}
+  bool success;
+} _Batch_newDefinition_result__isset;
 
-class Batch_unregisterLibrary_result {
+class Batch_newDefinition_result {
  public:
 
-  Batch_unregisterLibrary_result() {
+  Batch_newDefinition_result() {
   }
 
-  virtual ~Batch_unregisterLibrary_result() throw() {}
+  virtual ~Batch_newDefinition_result() throw() {}
 
+   ::NodeDefinition success;
 
-  bool operator == (const Batch_unregisterLibrary_result & /* rhs */) const
+  _Batch_newDefinition_result__isset __isset;
+
+  void __set_success(const  ::NodeDefinition& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_newDefinition_result & rhs) const
   {
+    if (!(success == rhs.success))
+      return false;
     return true;
   }
-  bool operator != (const Batch_unregisterLibrary_result &rhs) const {
+  bool operator != (const Batch_newDefinition_result &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_unregisterLibrary_result & ) const;
+  bool operator < (const Batch_newDefinition_result & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
+typedef struct _Batch_newDefinition_presult__isset {
+  _Batch_newDefinition_presult__isset() : success(false) {}
+  bool success;
+} _Batch_newDefinition_presult__isset;
 
-class Batch_unregisterLibrary_presult {
+class Batch_newDefinition_presult {
  public:
 
 
-  virtual ~Batch_unregisterLibrary_presult() throw() {}
+  virtual ~Batch_newDefinition_presult() throw() {}
 
+   ::NodeDefinition* success;
+
+  _Batch_newDefinition_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
 };
 
 typedef struct _Batch_addDefinition_args__isset {
-  _Batch_addDefinition_args__isset() : definition(false), parent(false), library(false) {}
+  _Batch_addDefinition_args__isset() : definition(false), parent(false) {}
   bool definition;
   bool parent;
-  bool library;
 } _Batch_addDefinition_args__isset;
 
 class Batch_addDefinition_args {
@@ -485,7 +554,6 @@ class Batch_addDefinition_args {
 
    ::NodeDefinition definition;
    ::NodeDefinition parent;
-   ::Library library;
 
   _Batch_addDefinition_args__isset __isset;
 
@@ -497,17 +565,11 @@ class Batch_addDefinition_args {
     parent = val;
   }
 
-  void __set_library(const  ::Library& val) {
-    library = val;
-  }
-
   bool operator == (const Batch_addDefinition_args & rhs) const
   {
     if (!(definition == rhs.definition))
       return false;
     if (!(parent == rhs.parent))
-      return false;
-    if (!(library == rhs.library))
       return false;
     return true;
   }
@@ -531,12 +593,15 @@ class Batch_addDefinition_pargs {
 
   const  ::NodeDefinition* definition;
   const  ::NodeDefinition* parent;
-  const  ::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
+typedef struct _Batch_addDefinition_result__isset {
+  _Batch_addDefinition_result__isset() : success(false) {}
+  bool success;
+} _Batch_addDefinition_result__isset;
 
 class Batch_addDefinition_result {
  public:
@@ -546,9 +611,18 @@ class Batch_addDefinition_result {
 
   virtual ~Batch_addDefinition_result() throw() {}
 
+   ::NodeDefinition success;
 
-  bool operator == (const Batch_addDefinition_result & /* rhs */) const
+  _Batch_addDefinition_result__isset __isset;
+
+  void __set_success(const  ::NodeDefinition& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_addDefinition_result & rhs) const
   {
+    if (!(success == rhs.success))
+      return false;
     return true;
   }
   bool operator != (const Batch_addDefinition_result &rhs) const {
@@ -562,6 +636,10 @@ class Batch_addDefinition_result {
 
 };
 
+typedef struct _Batch_addDefinition_presult__isset {
+  _Batch_addDefinition_presult__isset() : success(false) {}
+  bool success;
+} _Batch_addDefinition_presult__isset;
 
 class Batch_addDefinition_presult {
  public:
@@ -569,6 +647,9 @@ class Batch_addDefinition_presult {
 
   virtual ~Batch_addDefinition_presult() throw() {}
 
+   ::NodeDefinition* success;
+
+  _Batch_addDefinition_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -966,38 +1047,38 @@ class Batch_definitionParent_presult {
 
 };
 
-typedef struct _Batch_nodes_args__isset {
-  _Batch_nodes_args__isset() : definition(false) {}
-  bool definition;
-} _Batch_nodes_args__isset;
+typedef struct _Batch_newTypeModule_args__isset {
+  _Batch_newTypeModule_args__isset() : name(false) {}
+  bool name;
+} _Batch_newTypeModule_args__isset;
 
-class Batch_nodes_args {
+class Batch_newTypeModule_args {
  public:
 
-  Batch_nodes_args() {
+  Batch_newTypeModule_args() : name() {
   }
 
-  virtual ~Batch_nodes_args() throw() {}
+  virtual ~Batch_newTypeModule_args() throw() {}
 
-   ::NodeDefinition definition;
+  std::string name;
 
-  _Batch_nodes_args__isset __isset;
+  _Batch_newTypeModule_args__isset __isset;
 
-  void __set_definition(const  ::NodeDefinition& val) {
-    definition = val;
+  void __set_name(const std::string& val) {
+    name = val;
   }
 
-  bool operator == (const Batch_nodes_args & rhs) const
+  bool operator == (const Batch_newTypeModule_args & rhs) const
   {
-    if (!(definition == rhs.definition))
+    if (!(name == rhs.name))
       return false;
     return true;
   }
-  bool operator != (const Batch_nodes_args &rhs) const {
+  bool operator != (const Batch_newTypeModule_args &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_nodes_args & ) const;
+  bool operator < (const Batch_newTypeModule_args & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -1005,11 +1086,897 @@ class Batch_nodes_args {
 };
 
 
-class Batch_nodes_pargs {
+class Batch_newTypeModule_pargs {
  public:
 
 
-  virtual ~Batch_nodes_pargs() throw() {}
+  virtual ~Batch_newTypeModule_pargs() throw() {}
+
+  const std::string* name;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeModule_result__isset {
+  _Batch_newTypeModule_result__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeModule_result__isset;
+
+class Batch_newTypeModule_result {
+ public:
+
+  Batch_newTypeModule_result() {
+  }
+
+  virtual ~Batch_newTypeModule_result() throw() {}
+
+   ::Type success;
+
+  _Batch_newTypeModule_result__isset __isset;
+
+  void __set_success(const  ::Type& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_newTypeModule_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeModule_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeModule_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeModule_presult__isset {
+  _Batch_newTypeModule_presult__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeModule_presult__isset;
+
+class Batch_newTypeModule_presult {
+ public:
+
+
+  virtual ~Batch_newTypeModule_presult() throw() {}
+
+   ::Type* success;
+
+  _Batch_newTypeModule_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_newTypeClass_args__isset {
+  _Batch_newTypeClass_args__isset() : name(false), params(false) {}
+  bool name;
+  bool params;
+} _Batch_newTypeClass_args__isset;
+
+class Batch_newTypeClass_args {
+ public:
+
+  Batch_newTypeClass_args() : name() {
+  }
+
+  virtual ~Batch_newTypeClass_args() throw() {}
+
+  std::string name;
+   ::Type params;
+
+  _Batch_newTypeClass_args__isset __isset;
+
+  void __set_name(const std::string& val) {
+    name = val;
+  }
+
+  void __set_params(const  ::Type& val) {
+    params = val;
+  }
+
+  bool operator == (const Batch_newTypeClass_args & rhs) const
+  {
+    if (!(name == rhs.name))
+      return false;
+    if (!(params == rhs.params))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeClass_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeClass_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_newTypeClass_pargs {
+ public:
+
+
+  virtual ~Batch_newTypeClass_pargs() throw() {}
+
+  const std::string* name;
+  const  ::Type* params;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeClass_result__isset {
+  _Batch_newTypeClass_result__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeClass_result__isset;
+
+class Batch_newTypeClass_result {
+ public:
+
+  Batch_newTypeClass_result() {
+  }
+
+  virtual ~Batch_newTypeClass_result() throw() {}
+
+   ::Type success;
+
+  _Batch_newTypeClass_result__isset __isset;
+
+  void __set_success(const  ::Type& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_newTypeClass_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeClass_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeClass_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeClass_presult__isset {
+  _Batch_newTypeClass_presult__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeClass_presult__isset;
+
+class Batch_newTypeClass_presult {
+ public:
+
+
+  virtual ~Batch_newTypeClass_presult() throw() {}
+
+   ::Type* success;
+
+  _Batch_newTypeClass_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_newTypeFunction_args__isset {
+  _Batch_newTypeFunction_args__isset() : name(false), inputs(false), outputs(false) {}
+  bool name;
+  bool inputs;
+  bool outputs;
+} _Batch_newTypeFunction_args__isset;
+
+class Batch_newTypeFunction_args {
+ public:
+
+  Batch_newTypeFunction_args() : name() {
+  }
+
+  virtual ~Batch_newTypeFunction_args() throw() {}
+
+  std::string name;
+   ::Type inputs;
+   ::Type outputs;
+
+  _Batch_newTypeFunction_args__isset __isset;
+
+  void __set_name(const std::string& val) {
+    name = val;
+  }
+
+  void __set_inputs(const  ::Type& val) {
+    inputs = val;
+  }
+
+  void __set_outputs(const  ::Type& val) {
+    outputs = val;
+  }
+
+  bool operator == (const Batch_newTypeFunction_args & rhs) const
+  {
+    if (!(name == rhs.name))
+      return false;
+    if (!(inputs == rhs.inputs))
+      return false;
+    if (!(outputs == rhs.outputs))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeFunction_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeFunction_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_newTypeFunction_pargs {
+ public:
+
+
+  virtual ~Batch_newTypeFunction_pargs() throw() {}
+
+  const std::string* name;
+  const  ::Type* inputs;
+  const  ::Type* outputs;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeFunction_result__isset {
+  _Batch_newTypeFunction_result__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeFunction_result__isset;
+
+class Batch_newTypeFunction_result {
+ public:
+
+  Batch_newTypeFunction_result() {
+  }
+
+  virtual ~Batch_newTypeFunction_result() throw() {}
+
+   ::Type success;
+
+  _Batch_newTypeFunction_result__isset __isset;
+
+  void __set_success(const  ::Type& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_newTypeFunction_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeFunction_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeFunction_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeFunction_presult__isset {
+  _Batch_newTypeFunction_presult__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeFunction_presult__isset;
+
+class Batch_newTypeFunction_presult {
+ public:
+
+
+  virtual ~Batch_newTypeFunction_presult() throw() {}
+
+   ::Type* success;
+
+  _Batch_newTypeFunction_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+
+class Batch_newTypeUdefined_args {
+ public:
+
+  Batch_newTypeUdefined_args() {
+  }
+
+  virtual ~Batch_newTypeUdefined_args() throw() {}
+
+
+  bool operator == (const Batch_newTypeUdefined_args & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_newTypeUdefined_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeUdefined_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_newTypeUdefined_pargs {
+ public:
+
+
+  virtual ~Batch_newTypeUdefined_pargs() throw() {}
+
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeUdefined_result__isset {
+  _Batch_newTypeUdefined_result__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeUdefined_result__isset;
+
+class Batch_newTypeUdefined_result {
+ public:
+
+  Batch_newTypeUdefined_result() {
+  }
+
+  virtual ~Batch_newTypeUdefined_result() throw() {}
+
+   ::Type success;
+
+  _Batch_newTypeUdefined_result__isset __isset;
+
+  void __set_success(const  ::Type& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_newTypeUdefined_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeUdefined_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeUdefined_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeUdefined_presult__isset {
+  _Batch_newTypeUdefined_presult__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeUdefined_presult__isset;
+
+class Batch_newTypeUdefined_presult {
+ public:
+
+
+  virtual ~Batch_newTypeUdefined_presult() throw() {}
+
+   ::Type* success;
+
+  _Batch_newTypeUdefined_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_newTypeNamed_args__isset {
+  _Batch_newTypeNamed_args__isset() : name(false) {}
+  bool name;
+} _Batch_newTypeNamed_args__isset;
+
+class Batch_newTypeNamed_args {
+ public:
+
+  Batch_newTypeNamed_args() : name() {
+  }
+
+  virtual ~Batch_newTypeNamed_args() throw() {}
+
+  std::string name;
+
+  _Batch_newTypeNamed_args__isset __isset;
+
+  void __set_name(const std::string& val) {
+    name = val;
+  }
+
+  bool operator == (const Batch_newTypeNamed_args & rhs) const
+  {
+    if (!(name == rhs.name))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeNamed_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeNamed_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_newTypeNamed_pargs {
+ public:
+
+
+  virtual ~Batch_newTypeNamed_pargs() throw() {}
+
+  const std::string* name;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeNamed_result__isset {
+  _Batch_newTypeNamed_result__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeNamed_result__isset;
+
+class Batch_newTypeNamed_result {
+ public:
+
+  Batch_newTypeNamed_result() {
+  }
+
+  virtual ~Batch_newTypeNamed_result() throw() {}
+
+   ::Type success;
+
+  _Batch_newTypeNamed_result__isset __isset;
+
+  void __set_success(const  ::Type& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_newTypeNamed_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeNamed_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeNamed_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeNamed_presult__isset {
+  _Batch_newTypeNamed_presult__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeNamed_presult__isset;
+
+class Batch_newTypeNamed_presult {
+ public:
+
+
+  virtual ~Batch_newTypeNamed_presult() throw() {}
+
+   ::Type* success;
+
+  _Batch_newTypeNamed_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_newTypeVariable_args__isset {
+  _Batch_newTypeVariable_args__isset() : name(false), type(false) {}
+  bool name;
+  bool type;
+} _Batch_newTypeVariable_args__isset;
+
+class Batch_newTypeVariable_args {
+ public:
+
+  Batch_newTypeVariable_args() : name() {
+  }
+
+  virtual ~Batch_newTypeVariable_args() throw() {}
+
+  std::string name;
+   ::Type type;
+
+  _Batch_newTypeVariable_args__isset __isset;
+
+  void __set_name(const std::string& val) {
+    name = val;
+  }
+
+  void __set_type(const  ::Type& val) {
+    type = val;
+  }
+
+  bool operator == (const Batch_newTypeVariable_args & rhs) const
+  {
+    if (!(name == rhs.name))
+      return false;
+    if (!(type == rhs.type))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeVariable_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeVariable_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_newTypeVariable_pargs {
+ public:
+
+
+  virtual ~Batch_newTypeVariable_pargs() throw() {}
+
+  const std::string* name;
+  const  ::Type* type;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeVariable_result__isset {
+  _Batch_newTypeVariable_result__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeVariable_result__isset;
+
+class Batch_newTypeVariable_result {
+ public:
+
+  Batch_newTypeVariable_result() {
+  }
+
+  virtual ~Batch_newTypeVariable_result() throw() {}
+
+   ::Type success;
+
+  _Batch_newTypeVariable_result__isset __isset;
+
+  void __set_success(const  ::Type& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_newTypeVariable_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeVariable_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeVariable_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeVariable_presult__isset {
+  _Batch_newTypeVariable_presult__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeVariable_presult__isset;
+
+class Batch_newTypeVariable_presult {
+ public:
+
+
+  virtual ~Batch_newTypeVariable_presult() throw() {}
+
+   ::Type* success;
+
+  _Batch_newTypeVariable_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_newTypeList_args__isset {
+  _Batch_newTypeList_args__isset() : type(false) {}
+  bool type;
+} _Batch_newTypeList_args__isset;
+
+class Batch_newTypeList_args {
+ public:
+
+  Batch_newTypeList_args() {
+  }
+
+  virtual ~Batch_newTypeList_args() throw() {}
+
+   ::Type type;
+
+  _Batch_newTypeList_args__isset __isset;
+
+  void __set_type(const  ::Type& val) {
+    type = val;
+  }
+
+  bool operator == (const Batch_newTypeList_args & rhs) const
+  {
+    if (!(type == rhs.type))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeList_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeList_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_newTypeList_pargs {
+ public:
+
+
+  virtual ~Batch_newTypeList_pargs() throw() {}
+
+  const  ::Type* type;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeList_result__isset {
+  _Batch_newTypeList_result__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeList_result__isset;
+
+class Batch_newTypeList_result {
+ public:
+
+  Batch_newTypeList_result() {
+  }
+
+  virtual ~Batch_newTypeList_result() throw() {}
+
+   ::Type success;
+
+  _Batch_newTypeList_result__isset __isset;
+
+  void __set_success(const  ::Type& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_newTypeList_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeList_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeList_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeList_presult__isset {
+  _Batch_newTypeList_presult__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeList_presult__isset;
+
+class Batch_newTypeList_presult {
+ public:
+
+
+  virtual ~Batch_newTypeList_presult() throw() {}
+
+   ::Type* success;
+
+  _Batch_newTypeList_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_newTypeTuple_args__isset {
+  _Batch_newTypeTuple_args__isset() : types(false) {}
+  bool types;
+} _Batch_newTypeTuple_args__isset;
+
+class Batch_newTypeTuple_args {
+ public:
+
+  Batch_newTypeTuple_args() {
+  }
+
+  virtual ~Batch_newTypeTuple_args() throw() {}
+
+  std::vector< ::Type>  types;
+
+  _Batch_newTypeTuple_args__isset __isset;
+
+  void __set_types(const std::vector< ::Type> & val) {
+    types = val;
+  }
+
+  bool operator == (const Batch_newTypeTuple_args & rhs) const
+  {
+    if (!(types == rhs.types))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeTuple_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeTuple_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_newTypeTuple_pargs {
+ public:
+
+
+  virtual ~Batch_newTypeTuple_pargs() throw() {}
+
+  const std::vector< ::Type> * types;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeTuple_result__isset {
+  _Batch_newTypeTuple_result__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeTuple_result__isset;
+
+class Batch_newTypeTuple_result {
+ public:
+
+  Batch_newTypeTuple_result() {
+  }
+
+  virtual ~Batch_newTypeTuple_result() throw() {}
+
+   ::Type success;
+
+  _Batch_newTypeTuple_result__isset __isset;
+
+  void __set_success(const  ::Type& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_newTypeTuple_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_newTypeTuple_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_newTypeTuple_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_newTypeTuple_presult__isset {
+  _Batch_newTypeTuple_presult__isset() : success(false) {}
+  bool success;
+} _Batch_newTypeTuple_presult__isset;
+
+class Batch_newTypeTuple_presult {
+ public:
+
+
+  virtual ~Batch_newTypeTuple_presult() throw() {}
+
+   ::Type* success;
+
+  _Batch_newTypeTuple_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_graph_args__isset {
+  _Batch_graph_args__isset() : definition(false) {}
+  bool definition;
+} _Batch_graph_args__isset;
+
+class Batch_graph_args {
+ public:
+
+  Batch_graph_args() {
+  }
+
+  virtual ~Batch_graph_args() throw() {}
+
+   ::NodeDefinition definition;
+
+  _Batch_graph_args__isset __isset;
+
+  void __set_definition(const  ::NodeDefinition& val) {
+    definition = val;
+  }
+
+  bool operator == (const Batch_graph_args & rhs) const
+  {
+    if (!(definition == rhs.definition))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_graph_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_graph_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_graph_pargs {
+ public:
+
+
+  virtual ~Batch_graph_pargs() throw() {}
 
   const  ::NodeDefinition* definition;
 
@@ -1017,58 +1984,58 @@ class Batch_nodes_pargs {
 
 };
 
-typedef struct _Batch_nodes_result__isset {
-  _Batch_nodes_result__isset() : success(false) {}
+typedef struct _Batch_graph_result__isset {
+  _Batch_graph_result__isset() : success(false) {}
   bool success;
-} _Batch_nodes_result__isset;
+} _Batch_graph_result__isset;
 
-class Batch_nodes_result {
+class Batch_graph_result {
  public:
 
-  Batch_nodes_result() {
+  Batch_graph_result() {
   }
 
-  virtual ~Batch_nodes_result() throw() {}
+  virtual ~Batch_graph_result() throw() {}
 
-  std::vector< ::Node>  success;
+   ::Graph success;
 
-  _Batch_nodes_result__isset __isset;
+  _Batch_graph_result__isset __isset;
 
-  void __set_success(const std::vector< ::Node> & val) {
+  void __set_success(const  ::Graph& val) {
     success = val;
   }
 
-  bool operator == (const Batch_nodes_result & rhs) const
+  bool operator == (const Batch_graph_result & rhs) const
   {
     if (!(success == rhs.success))
       return false;
     return true;
   }
-  bool operator != (const Batch_nodes_result &rhs) const {
+  bool operator != (const Batch_graph_result &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_nodes_result & ) const;
+  bool operator < (const Batch_graph_result & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
-typedef struct _Batch_nodes_presult__isset {
-  _Batch_nodes_presult__isset() : success(false) {}
+typedef struct _Batch_graph_presult__isset {
+  _Batch_graph_presult__isset() : success(false) {}
   bool success;
-} _Batch_nodes_presult__isset;
+} _Batch_graph_presult__isset;
 
-class Batch_nodes_presult {
+class Batch_graph_presult {
  public:
 
 
-  virtual ~Batch_nodes_presult() throw() {}
+  virtual ~Batch_graph_presult() throw() {}
 
-  std::vector< ::Node> * success;
+   ::Graph* success;
 
-  _Batch_nodes_presult__isset __isset;
+  _Batch_graph_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -1134,6 +2101,10 @@ class Batch_addNode_pargs {
 
 };
 
+typedef struct _Batch_addNode_result__isset {
+  _Batch_addNode_result__isset() : success(false) {}
+  bool success;
+} _Batch_addNode_result__isset;
 
 class Batch_addNode_result {
  public:
@@ -1143,9 +2114,18 @@ class Batch_addNode_result {
 
   virtual ~Batch_addNode_result() throw() {}
 
+   ::Node success;
 
-  bool operator == (const Batch_addNode_result & /* rhs */) const
+  _Batch_addNode_result__isset __isset;
+
+  void __set_success(const  ::Node& val) {
+    success = val;
+  }
+
+  bool operator == (const Batch_addNode_result & rhs) const
   {
+    if (!(success == rhs.success))
+      return false;
     return true;
   }
   bool operator != (const Batch_addNode_result &rhs) const {
@@ -1159,6 +2139,10 @@ class Batch_addNode_result {
 
 };
 
+typedef struct _Batch_addNode_presult__isset {
+  _Batch_addNode_presult__isset() : success(false) {}
+  bool success;
+} _Batch_addNode_presult__isset;
 
 class Batch_addNode_presult {
  public:
@@ -1166,6 +2150,9 @@ class Batch_addNode_presult {
 
   virtual ~Batch_addNode_presult() throw() {}
 
+   ::Node* success;
+
+  _Batch_addNode_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -1710,18 +2697,18 @@ class BatchClient : virtual public BatchIf {
   void libraries(std::vector< ::Library> & _return);
   void send_libraries();
   void recv_libraries(std::vector< ::Library> & _return);
-  void registerLibrary(const  ::Library& library);
-  void send_registerLibrary(const  ::Library& library);
-  void recv_registerLibrary();
-  void updateLibrary(const  ::Library& library);
-  void send_updateLibrary(const  ::Library& library);
-  void recv_updateLibrary();
-  void unregisterLibrary(const  ::Library& library);
-  void send_unregisterLibrary(const  ::Library& library);
-  void recv_unregisterLibrary();
-  void addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent, const  ::Library& library);
-  void send_addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent, const  ::Library& library);
-  void recv_addDefinition();
+  void loadLibrary(const  ::Library& library);
+  void send_loadLibrary(const  ::Library& library);
+  void recv_loadLibrary();
+  void unloadLibrary(const  ::Library& library);
+  void send_unloadLibrary(const  ::Library& library);
+  void recv_unloadLibrary();
+  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs);
+  void send_newDefinition(const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs);
+  void recv_newDefinition( ::NodeDefinition& _return);
+  void addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent);
+  void send_addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent);
+  void recv_addDefinition( ::NodeDefinition& _return);
   void updateDefinition(const  ::NodeDefinition& definition);
   void send_updateDefinition(const  ::NodeDefinition& definition);
   void recv_updateDefinition();
@@ -1734,12 +2721,36 @@ class BatchClient : virtual public BatchIf {
   void definitionParent( ::NodeDefinition& _return, const  ::NodeDefinition& definition);
   void send_definitionParent(const  ::NodeDefinition& definition);
   void recv_definitionParent( ::NodeDefinition& _return);
-  void nodes(std::vector< ::Node> & _return, const  ::NodeDefinition& definition);
-  void send_nodes(const  ::NodeDefinition& definition);
-  void recv_nodes(std::vector< ::Node> & _return);
-  void addNode(const  ::Node& node, const  ::NodeDefinition& definition);
+  void newTypeModule( ::Type& _return, const std::string& name);
+  void send_newTypeModule(const std::string& name);
+  void recv_newTypeModule( ::Type& _return);
+  void newTypeClass( ::Type& _return, const std::string& name, const  ::Type& params);
+  void send_newTypeClass(const std::string& name, const  ::Type& params);
+  void recv_newTypeClass( ::Type& _return);
+  void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs);
+  void send_newTypeFunction(const std::string& name, const  ::Type& inputs, const  ::Type& outputs);
+  void recv_newTypeFunction( ::Type& _return);
+  void newTypeUdefined( ::Type& _return);
+  void send_newTypeUdefined();
+  void recv_newTypeUdefined( ::Type& _return);
+  void newTypeNamed( ::Type& _return, const std::string& name);
+  void send_newTypeNamed(const std::string& name);
+  void recv_newTypeNamed( ::Type& _return);
+  void newTypeVariable( ::Type& _return, const std::string& name, const  ::Type& type);
+  void send_newTypeVariable(const std::string& name, const  ::Type& type);
+  void recv_newTypeVariable( ::Type& _return);
+  void newTypeList( ::Type& _return, const  ::Type& type);
+  void send_newTypeList(const  ::Type& type);
+  void recv_newTypeList( ::Type& _return);
+  void newTypeTuple( ::Type& _return, const std::vector< ::Type> & types);
+  void send_newTypeTuple(const std::vector< ::Type> & types);
+  void recv_newTypeTuple( ::Type& _return);
+  void graph( ::Graph& _return, const  ::NodeDefinition& definition);
+  void send_graph(const  ::NodeDefinition& definition);
+  void recv_graph( ::Graph& _return);
+  void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDefinition& definition);
   void send_addNode(const  ::Node& node, const  ::NodeDefinition& definition);
-  void recv_addNode();
+  void recv_addNode( ::Node& _return);
   void updateNode(const  ::Node& node, const  ::NodeDefinition& definition);
   void send_updateNode(const  ::Node& node, const  ::NodeDefinition& definition);
   void recv_updateNode();
@@ -1771,15 +2782,23 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   typedef std::map<std::string, ProcessFunction> ProcessMap;
   ProcessMap processMap_;
   void process_libraries(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_registerLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_updateLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_unregisterLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_loadLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_unloadLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_newDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_addDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_updateDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_removeDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_definitionChildren(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_definitionParent(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_nodes(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_newTypeModule(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_newTypeClass(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_newTypeFunction(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_newTypeUdefined(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_newTypeNamed(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_newTypeVariable(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_newTypeList(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_newTypeTuple(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_graph(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_addNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_updateNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_removeNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -1790,15 +2809,23 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   BatchProcessor(boost::shared_ptr<BatchIf> iface) :
     iface_(iface) {
     processMap_["libraries"] = &BatchProcessor::process_libraries;
-    processMap_["registerLibrary"] = &BatchProcessor::process_registerLibrary;
-    processMap_["updateLibrary"] = &BatchProcessor::process_updateLibrary;
-    processMap_["unregisterLibrary"] = &BatchProcessor::process_unregisterLibrary;
+    processMap_["loadLibrary"] = &BatchProcessor::process_loadLibrary;
+    processMap_["unloadLibrary"] = &BatchProcessor::process_unloadLibrary;
+    processMap_["newDefinition"] = &BatchProcessor::process_newDefinition;
     processMap_["addDefinition"] = &BatchProcessor::process_addDefinition;
     processMap_["updateDefinition"] = &BatchProcessor::process_updateDefinition;
     processMap_["removeDefinition"] = &BatchProcessor::process_removeDefinition;
     processMap_["definitionChildren"] = &BatchProcessor::process_definitionChildren;
     processMap_["definitionParent"] = &BatchProcessor::process_definitionParent;
-    processMap_["nodes"] = &BatchProcessor::process_nodes;
+    processMap_["newTypeModule"] = &BatchProcessor::process_newTypeModule;
+    processMap_["newTypeClass"] = &BatchProcessor::process_newTypeClass;
+    processMap_["newTypeFunction"] = &BatchProcessor::process_newTypeFunction;
+    processMap_["newTypeUdefined"] = &BatchProcessor::process_newTypeUdefined;
+    processMap_["newTypeNamed"] = &BatchProcessor::process_newTypeNamed;
+    processMap_["newTypeVariable"] = &BatchProcessor::process_newTypeVariable;
+    processMap_["newTypeList"] = &BatchProcessor::process_newTypeList;
+    processMap_["newTypeTuple"] = &BatchProcessor::process_newTypeTuple;
+    processMap_["graph"] = &BatchProcessor::process_graph;
     processMap_["addNode"] = &BatchProcessor::process_addNode;
     processMap_["updateNode"] = &BatchProcessor::process_updateNode;
     processMap_["removeNode"] = &BatchProcessor::process_removeNode;
@@ -1843,40 +2870,42 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void registerLibrary(const  ::Library& library) {
+  void loadLibrary(const  ::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->registerLibrary(library);
+      ifaces_[i]->loadLibrary(library);
     }
-    ifaces_[i]->registerLibrary(library);
+    ifaces_[i]->loadLibrary(library);
   }
 
-  void updateLibrary(const  ::Library& library) {
+  void unloadLibrary(const  ::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->updateLibrary(library);
+      ifaces_[i]->unloadLibrary(library);
     }
-    ifaces_[i]->updateLibrary(library);
+    ifaces_[i]->unloadLibrary(library);
   }
 
-  void unregisterLibrary(const  ::Library& library) {
+  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->unregisterLibrary(library);
+      ifaces_[i]->newDefinition(_return, type, flags, attrs);
     }
-    ifaces_[i]->unregisterLibrary(library);
+    ifaces_[i]->newDefinition(_return, type, flags, attrs);
+    return;
   }
 
-  void addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent, const  ::Library& library) {
+  void addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->addDefinition(definition, parent, library);
+      ifaces_[i]->addDefinition(_return, definition, parent);
     }
-    ifaces_[i]->addDefinition(definition, parent, library);
+    ifaces_[i]->addDefinition(_return, definition, parent);
+    return;
   }
 
   void updateDefinition(const  ::NodeDefinition& definition) {
@@ -1917,23 +2946,104 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void nodes(std::vector< ::Node> & _return, const  ::NodeDefinition& definition) {
+  void newTypeModule( ::Type& _return, const std::string& name) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->nodes(_return, definition);
+      ifaces_[i]->newTypeModule(_return, name);
     }
-    ifaces_[i]->nodes(_return, definition);
+    ifaces_[i]->newTypeModule(_return, name);
     return;
   }
 
-  void addNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+  void newTypeClass( ::Type& _return, const std::string& name, const  ::Type& params) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->addNode(node, definition);
+      ifaces_[i]->newTypeClass(_return, name, params);
     }
-    ifaces_[i]->addNode(node, definition);
+    ifaces_[i]->newTypeClass(_return, name, params);
+    return;
+  }
+
+  void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->newTypeFunction(_return, name, inputs, outputs);
+    }
+    ifaces_[i]->newTypeFunction(_return, name, inputs, outputs);
+    return;
+  }
+
+  void newTypeUdefined( ::Type& _return) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->newTypeUdefined(_return);
+    }
+    ifaces_[i]->newTypeUdefined(_return);
+    return;
+  }
+
+  void newTypeNamed( ::Type& _return, const std::string& name) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->newTypeNamed(_return, name);
+    }
+    ifaces_[i]->newTypeNamed(_return, name);
+    return;
+  }
+
+  void newTypeVariable( ::Type& _return, const std::string& name, const  ::Type& type) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->newTypeVariable(_return, name, type);
+    }
+    ifaces_[i]->newTypeVariable(_return, name, type);
+    return;
+  }
+
+  void newTypeList( ::Type& _return, const  ::Type& type) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->newTypeList(_return, type);
+    }
+    ifaces_[i]->newTypeList(_return, type);
+    return;
+  }
+
+  void newTypeTuple( ::Type& _return, const std::vector< ::Type> & types) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->newTypeTuple(_return, types);
+    }
+    ifaces_[i]->newTypeTuple(_return, types);
+    return;
+  }
+
+  void graph( ::Graph& _return, const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->graph(_return, definition);
+    }
+    ifaces_[i]->graph(_return, definition);
+    return;
+  }
+
+  void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDefinition& definition) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->addNode(_return, node, definition);
+    }
+    ifaces_[i]->addNode(_return, node, definition);
+    return;
   }
 
   void updateNode(const  ::Node& node, const  ::NodeDefinition& definition) {

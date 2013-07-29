@@ -10,8 +10,8 @@
 
 
 
-const char* NodeDefinition::ascii_fingerprint = "A9431E373B1B9F79D91BA1A7490ED5DC";
-const uint8_t NodeDefinition::binary_fingerprint[16] = {0xA9,0x43,0x1E,0x37,0x3B,0x1B,0x9F,0x79,0xD9,0x1B,0xA1,0xA7,0x49,0x0E,0xD5,0xDC};
+const char* NodeDefinition::ascii_fingerprint = "114446A26C9C2D0FBC93CDAA2A1E1A7D";
+const uint8_t NodeDefinition::binary_fingerprint[16] = {0x11,0x44,0x46,0xA2,0x6C,0x9C,0x2D,0x0F,0xBC,0x93,0xCD,0xAA,0x2A,0x1E,0x1A,0x7D};
 
 uint32_t NodeDefinition::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -42,22 +42,6 @@ uint32_t NodeDefinition::read(::apache::thrift::protocol::TProtocol* iprot) {
         }
         break;
       case 2:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->libID);
-          this->__isset.libID = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      case 3:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->defID);
-          this->__isset.defID = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      case 4:
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += this->flags.read(iprot);
           this->__isset.flags = true;
@@ -65,10 +49,26 @@ uint32_t NodeDefinition::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 5:
+      case 3:
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += this->attribs.read(iprot);
           this->__isset.attribs = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->libID);
+          this->__isset.libID = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 5:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->defID);
+          this->__isset.defID = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -94,24 +94,24 @@ uint32_t NodeDefinition::write(::apache::thrift::protocol::TProtocol* oprot) con
     xfer += this->cls.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
-  if (this->__isset.libID) {
-    xfer += oprot->writeFieldBegin("libID", ::apache::thrift::protocol::T_I32, 2);
-    xfer += oprot->writeI32(this->libID);
-    xfer += oprot->writeFieldEnd();
-  }
-  if (this->__isset.defID) {
-    xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 3);
-    xfer += oprot->writeI32(this->defID);
-    xfer += oprot->writeFieldEnd();
-  }
   if (this->__isset.flags) {
-    xfer += oprot->writeFieldBegin("flags", ::apache::thrift::protocol::T_STRUCT, 4);
+    xfer += oprot->writeFieldBegin("flags", ::apache::thrift::protocol::T_STRUCT, 2);
     xfer += this->flags.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.attribs) {
-    xfer += oprot->writeFieldBegin("attribs", ::apache::thrift::protocol::T_STRUCT, 5);
+    xfer += oprot->writeFieldBegin("attribs", ::apache::thrift::protocol::T_STRUCT, 3);
     xfer += this->attribs.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.libID) {
+    xfer += oprot->writeFieldBegin("libID", ::apache::thrift::protocol::T_I32, 4);
+    xfer += oprot->writeI32(this->libID);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.defID) {
+    xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 5);
+    xfer += oprot->writeI32(this->defID);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -122,10 +122,10 @@ uint32_t NodeDefinition::write(::apache::thrift::protocol::TProtocol* oprot) con
 void swap(NodeDefinition &a, NodeDefinition &b) {
   using ::std::swap;
   swap(a.cls, b.cls);
-  swap(a.libID, b.libID);
-  swap(a.defID, b.defID);
   swap(a.flags, b.flags);
   swap(a.attribs, b.attribs);
+  swap(a.libID, b.libID);
+  swap(a.defID, b.defID);
   swap(a.__isset, b.__isset);
 }
 

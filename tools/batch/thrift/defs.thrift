@@ -13,9 +13,9 @@ include "types.thrift"
 typedef i32 DefID
 
 struct NodeDefinition {
-    1: optional types.TypeContainer cls
-    2: optional libs.LibID          libID
-    3: optional DefID               defID
-    4: optional attrs.Flags         flags
-    5: optional attrs.Attributes    attribs
+    1: optional types.Type       cls
+    2: optional attrs.Flags      flags
+    3: optional attrs.Attributes attribs
+    4: optional libs.LibID       libID   = -1
+    5: optional DefID            defID   = -1
 }

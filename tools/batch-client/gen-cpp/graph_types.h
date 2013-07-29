@@ -134,32 +134,38 @@ typedef struct _Edge__isset {
 class Edge {
  public:
 
-  static const char* ascii_fingerprint; // = "989D1F1AE8D148D5E2119FFEC4BBBEE3";
-  static const uint8_t binary_fingerprint[16]; // = {0x98,0x9D,0x1F,0x1A,0xE8,0xD1,0x48,0xD5,0xE2,0x11,0x9F,0xFE,0xC4,0xBB,0xBE,0xE3};
+  static const char* ascii_fingerprint; // = "C1241AF5AA92C586B664FD41DC97C576";
+  static const uint8_t binary_fingerprint[16]; // = {0xC1,0x24,0x1A,0xF5,0xAA,0x92,0xC5,0x86,0xB6,0x64,0xFD,0x41,0xDC,0x97,0xC5,0x76};
 
   Edge() : src(0), dst(0) {
   }
 
   virtual ~Edge() throw() {}
 
-  int32_t src;
-  int32_t dst;
+  NodeID src;
+  NodeID dst;
 
   _Edge__isset __isset;
 
-  void __set_src(const int32_t val) {
+  void __set_src(const NodeID val) {
     src = val;
+    __isset.src = true;
   }
 
-  void __set_dst(const int32_t val) {
+  void __set_dst(const NodeID val) {
     dst = val;
+    __isset.dst = true;
   }
 
   bool operator == (const Edge & rhs) const
   {
-    if (!(src == rhs.src))
+    if (__isset.src != rhs.__isset.src)
       return false;
-    if (!(dst == rhs.dst))
+    else if (__isset.src && !(src == rhs.src))
+      return false;
+    if (__isset.dst != rhs.__isset.dst)
+      return false;
+    else if (__isset.dst && !(dst == rhs.dst))
       return false;
     return true;
   }
@@ -175,6 +181,63 @@ class Edge {
 };
 
 void swap(Edge &a, Edge &b);
+
+typedef struct _Graph__isset {
+  _Graph__isset() : nodes(false), edges(false) {}
+  bool nodes;
+  bool edges;
+} _Graph__isset;
+
+class Graph {
+ public:
+
+  static const char* ascii_fingerprint; // = "8F82169939B00598BEF3C6948B1AD350";
+  static const uint8_t binary_fingerprint[16]; // = {0x8F,0x82,0x16,0x99,0x39,0xB0,0x05,0x98,0xBE,0xF3,0xC6,0x94,0x8B,0x1A,0xD3,0x50};
+
+  Graph() {
+  }
+
+  virtual ~Graph() throw() {}
+
+  std::map<NodeID, Node>  nodes;
+  std::vector<Edge>  edges;
+
+  _Graph__isset __isset;
+
+  void __set_nodes(const std::map<NodeID, Node> & val) {
+    nodes = val;
+    __isset.nodes = true;
+  }
+
+  void __set_edges(const std::vector<Edge> & val) {
+    edges = val;
+    __isset.edges = true;
+  }
+
+  bool operator == (const Graph & rhs) const
+  {
+    if (__isset.nodes != rhs.__isset.nodes)
+      return false;
+    else if (__isset.nodes && !(nodes == rhs.nodes))
+      return false;
+    if (__isset.edges != rhs.__isset.edges)
+      return false;
+    else if (__isset.edges && !(edges == rhs.edges))
+      return false;
+    return true;
+  }
+  bool operator != (const Graph &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Graph & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(Graph &a, Graph &b);
 
 
 
