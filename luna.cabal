@@ -41,5 +41,4 @@ Executable builder
   Extensions:     
   Main-Is:        Main.hs
   Build-Depends:  base,
-                  zeromq3-haskell,
                   utf8-string
