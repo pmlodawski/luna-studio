@@ -5,66 +5,81 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+
 module Luna.Tools.Serialization.GraphSerialization where
 
 --import Control.Monad
 --import qualified  Data.Graph.Inductive as DG
---import Data.Serialize
---import Data.Word
 --import qualified Data.MultiMap as MMap
 
---import qualified Luna.Edge as Edge
---import           Luna.Edge   (Edge(..), EdgeCls)
---import qualified Luna.Graph as Graph
---import           Luna.Graph   (Graph(..))
---import qualified Luna.Node as Node
---import           Luna.Node   (Node)
---import qualified Luna.NodeDef as NodeDef
---import           Luna.NodeDef   (NodeDef(..))
+import qualified Data.HashMap.Strict as Map
+import Data.Int
+import qualified Data.Text.Lazy      as Text
+
+import qualified Attrs_Types
+import qualified Graph_Types
+import qualified Luna.Network.Def.NodeDef as NodeDef
+import           Luna.Network.Def.NodeDef   (NodeDef(..))
+import qualified Luna.Network.Graph.Edge as Edge
+import           Luna.Network.Graph.Edge   (Edge(..))
+import qualified Luna.Network.Graph.Graph as Graph
+import           Luna.Network.Graph.Graph   (Graph(..))
+import qualified Luna.Network.Graph.Node as Node
+import           Luna.Network.Graph.Node   (Node)
+import           Luna.Tools.Serialization
+import           Luna.Tools.Serialization.AttrsSerialization
 
 
---instance Serialize Graph where
---  put i = put (Graph.repr i, Graph.types i, Graph.calls i, Graph.classes i, MMap.toMap $ Graph.functions i, Graph.packages i)
---  get   = do 
---            (repr, types, calls, classes, functions, packages) <- get
---            return $ Graph repr types calls classes (MMap.fromMap functions) packages
+instance Serialize Edge Graph_Types.Edge where
+  encode a = 
+    let 
+      src = fromIntegral $ Edge.src a :: Int32
+      dst = fromIntegral $ Edge.dst a :: Int32
+    in Graph_Types.Edge (Just src) (Just dst)
+  decode b = undefined
 
---instance Serialize Node where
---  put i = case i of 
---            Node.TypeNode     name     -> put ((0 :: Word8), name)
---            Node.CallNode     name     -> put ((1 :: Word8), name)
---            Node.ClassNode    name def -> put ((2 :: Word8), name, def)
---            Node.FunctionNode name def -> put ((3 :: Word8), name, def)
---            Node.PackageNode  name def -> put ((4 :: Word8), name, def)
+instance Serialize Graph Graph_Types.Graph where
+  encode a = 
+    let
+      nodes :: Map.HashMap Int32 Graph_Types.Node
+      nodes = undefined
+      edges = undefined
+    in
+      Graph_Types.Graph (Just nodes) $ Just edges
+  decode b = undefined
 
---  get   = do 
---            t <- get :: Get Word8
---            case t of 
---              0 -> do name        <- get; return $ Node.TypeNode name
---              1 -> do name        <- get; return $ Node.CallNode name
---              2 -> do (name, def) <- get; return $ Node.ClassNode    name def
---              3 -> do (name, def) <- get; return $ Node.FunctionNode name def
---              4 -> do (name, def) <- get; return $ Node.PackageNode  name def
-
-
---instance Serialize NodeDef where
---  put i = put (NodeDef.inputs i, NodeDef.outputs i, NodeDef.imports i, NodeDef.graph i, NodeDef.libID i)
---  get   = do
---            (inputs, outputs, imports, graph, libID) <- get
---            return $ NodeDef inputs outputs imports graph libID
-
---instance Serialize EdgeCls where
---  put i = put $ show i
---  get   = liftM (read :: String -> EdgeCls) (get :: Get String)
-
---instance Serialize Edge where
---  put i = put (Edge.source i, Edge.target i, Edge.cls i)
---  get   = do
---            (x,y,z) <- get
---            return $ Edge x y z
-
---instance (Serialize a, Serialize b) => Serialize (DG.Gr a b) where
---  put i = put (DG.labNodes i, DG.labEdges i)
---  get = do
---          (nd, edg) <- get
---          return $ DG.mkGraph nd edg
+instance Serialize (Node, Int32) Graph_Types.Node where
+  encode (a, nid) =
+    let
+      nodeType :: Graph_Types.NodeType
+      nodeType = case a of
+                   Node.Type {}    -> Graph_Types.Type
+                   Node.Call {}    -> Graph_Types.Call
+                   Node.Default {} -> Graph_Types.Default
+                   Node.Inputs {}  -> Graph_Types.Inputs
+                   Node.Outputs {} -> Graph_Types.Outputs
+                   Node.Tuple {}   -> Graph_Types.Tuple
+                   Node.New {}     -> Graph_Types.New
+      nodeName :: Maybe Text.Text
+      nodeName = fmap Text.pack $ case a of
+                   Node.Type tname _ _ -> Just tname
+                   Node.Call cname _ _ -> Just cname
+                   _                   -> Nothing
+      nodeID :: Int32
+      nodeID = nid
+      nodeFlags :: Maybe Attrs_Types.Flags
+      nodeFlags = fmap encode $ case a of
+                   Node.Type _ flags _ -> Just flags
+                   Node.Call _ flags _ -> Just flags
+                   _                   -> Nothing
+      nodeAttrs :: Maybe Attrs_Types.Attributes
+      nodeAttrs = fmap encode $ case a of
+                   Node.Inputs  _ attrs -> Just attrs
+                   Node.Outputs _ attrs -> Just attrs
+                   Node.Tuple   _ attrs -> Just attrs
+                   Node.New     _ attrs -> Just attrs
+                   _                    -> Nothing
+    in
+      Graph_Types.Node (Just nodeType) nodeName (Just nodeID) nodeFlags nodeAttrs
+  decode b = undefined

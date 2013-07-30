@@ -13,7 +13,7 @@ module Luna.Network.Attributes (
 import qualified Data.Map as Map
 import           Data.Map   (Map)
 
-type Attributes = Map String String -- TODO [PM] implement Attributes
+type Attributes = Map String (Map String String)
 
 empty :: Attributes
 empty = Map.empty
