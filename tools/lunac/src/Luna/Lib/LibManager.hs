@@ -7,7 +7,7 @@
 
 module Luna.Lib.LibManager(
     module Luna.Data.Graph,
-    LibManager(..)
+    LibManager
 ) where
 
 import           Luna.Lib.Library       (Library)
@@ -18,3 +18,4 @@ import qualified Luna.Data.Graph         as DG
 
 
 type LibManager = DG.Graph Library Edge
+

@@ -8,6 +8,7 @@
 --import Data.List
 --import System.IO
 import Network
+import Data.IORef
 --import System.Environment(getArgs)
 
 
@@ -22,22 +23,25 @@ import Thrift.Server (runBasicServer)
 import qualified Batch
 import           Batch_Iface
 
-
 import qualified DefinitionHandler
 import qualified GraphHandler
 import qualified LibraryHandler
 import qualified TypesHandler
 
-import qualified Luna.Core
+import qualified Luna.Core as Core
+import           Luna.Core   (Core)
+
+
 
 port :: PortNumber
 port = 30521
 
-data BatchHandler = BatchHandler
+type BatchHandler = IORef Core
 
 newBatchHandler :: IO BatchHandler
 newBatchHandler = do
-    return $ BatchHandler
+    ref <- newIORef Core.empty
+    return ref
 
 instance Batch_Iface BatchHandler where
     libraries     = LibraryHandler.libraries

@@ -18,6 +18,7 @@ module Luna.Data.Graph (
     labs,
     labVtx,
     labVtxs,
+    newNodes,
     out,
     out_,
     inn,

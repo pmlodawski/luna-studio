@@ -97,8 +97,10 @@ Executable batch
   Main-Is:        Main.hs
 
   GHC-Options:    -Wall 
-  
-  Extensions:     
+
+  Extensions:     FlexibleInstances,
+                  TypeSynonymInstances
+
   Build-Depends:  base,
                   bytestring,
                   flowbox,
