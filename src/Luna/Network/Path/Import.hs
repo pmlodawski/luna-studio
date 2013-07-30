@@ -9,7 +9,7 @@ module Luna.Network.Path.Import(
     Import(..),
     single,
     multi,
-    genCode
+    --genCode
 ) where
 
 import qualified Luna.Network.Path.Path          as Path
@@ -24,5 +24,5 @@ single path item = Import path [item]
 multi :: Path -> [String] -> Import
 multi path items' = Import path items'
 
-genCode :: Import -> String
-genCode imp = "import " ++ Path.toModulePath (path imp) ++ " (" ++ join "," (items imp) ++ ")"
+--genCode :: Import -> String
+--genCode imp = "import " ++ Path.toModulePath (path imp) ++ " (" ++ join "," (items imp) ++ ")"

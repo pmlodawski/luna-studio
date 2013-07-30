@@ -5,8 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Codegen.State.Mode(
-    Mode(..)
-) where
+module Luna.Codegen.Hs.AST.Function (
+    Function(..),
+    empty
+)where
 
-data Mode    = Auto | ForcePure | ForceIO deriving (Show, Eq)
+data Function = Function { name       :: String
+                         } deriving (Show)
+
+
+empty :: Function
+empty = Function ""
+
+genCode :: Function -> String
+genCode func = name func ++ " = "
