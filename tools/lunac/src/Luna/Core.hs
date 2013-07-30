@@ -5,11 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Lua.Core(
+module Luna.Core(
 
 ) where
 
 
 import Luna.Lib.LibManager (LibManager)
 import Luna.Network.Def.DefManager (DefManager)
+
+
+data Core = Core {
+    libManager :: LibManager,
+    defManager :: DefManager
+} deriving(Show)
 

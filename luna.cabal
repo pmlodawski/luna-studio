@@ -1,6 +1,6 @@
 Name:           flowbox
 Version:        0.1
-Cabal-Version:  >= 1.2
+Cabal-Version:  >= 1.8
 License-file:   LICENSE
 Author:         Flowbox <contact@flowbox.io>
 Maintainer:     Flowbox <contact@flowbox.io>
@@ -11,7 +11,7 @@ Flag Debug
   Default:     False
 
 
-Executable luna
+Library
   Hs-Source-Dirs: tools/lunac/src
   if flag(debug)
     GHC-Options:  -csacc
@@ -20,25 +20,75 @@ Executable luna
   Extensions:     DoAndIfThenElse
                   ForeignFunctionInterface
                   MultiParamTypeClasses
-  Main-Is:        Main.hs
-  Build-Depends:  base, 
-                  fgl, 
-                  containers, 
-                  mtl, 
-                  cereal, 
-                  graphviz, 
-                  multimap,
-                  split,
-                  MissingH,
-                  bytestring,
-                  directory-tree,
-                  directory,
-                  lens
+  Exposed-modules:
+                  Luna.Core
+                  Luna.Data.Graph,
+                  Luna.Data.List,
+                  Luna.Lib.Edge,
+                  Luna.Lib.LibManager,
+                  Luna.Lib.Library,
+                  Luna.Network.Def.DefManager,
+                  Luna.Network.Def.Edge,
+                  Luna.Network.Def.NodeDef,
+                  Luna.Network.Graph.DefaultValue,
+                  Luna.Network.Graph.Edge,
+                  Luna.Network.Graph.Graph,
+                  Luna.Network.Graph.GraphSerialization,
+                  Luna.Network.Graph.Node
+                  Luna.Network.Path.Import,
+                  Luna.Network.Path.Path,
+                  Luna.Network.Attributes,
+                  Luna.Network.Flags,
+                  Luna.System.UniPath,
+                  Luna.Tools.Graphviz,
+                  Luna.Tools.TypeChecker,
+                  Luna.Type.Type
 
-Executable builder
-  Hs-Source-Dirs: tools/builder/src
-  GHC-Options:    -Wall 
-  Extensions:     
+  
+  Build-Depends:  base, 
+                  cereal,
+                  containers,
+                  fgl,
+                  graphviz,
+                  MissingH,
+                  split
+
+
+Executable lunac 
   Main-Is:        Main.hs
+  Hs-Source-Dirs: tools/lunac/src
+
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall 
+
+  Extensions:     DoAndIfThenElse
+                  MultiParamTypeClasses
   Build-Depends:  base,
-                  utf8-string
+                  cereal,
+                  containers,
+                  fgl,
+                  flowbox,
+                  MissingH,
+                  mtl,
+                  split
+
+
+Executable batch
+  Hs-Source-Dirs: tools/batch/src,
+                  tools/batch/gen-hs
+  Main-Is:        Main.hs
+
+  GHC-Options:    -Wall 
+  
+  Extensions:     
+  Build-Depends:  base,
+                  bytestring,
+                  flowbox,
+                  hashable,
+                  network,
+                  text,
+                  thrift,
+                  unordered-containers,
+                  vector
+
