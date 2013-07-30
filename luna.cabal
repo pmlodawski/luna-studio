@@ -34,7 +34,6 @@ Library
                   Luna.Network.Graph.DefaultValue,
                   Luna.Network.Graph.Edge,
                   Luna.Network.Graph.Graph,
-                  Luna.Network.Graph.GraphSerialization,
                   Luna.Network.Graph.Node
                   Luna.Network.Path.Import,
                   Luna.Network.Path.Path,
@@ -43,6 +42,7 @@ Library
                   Luna.System.UniPath,
                   Luna.Tools.Graphviz,
                   Luna.Tools.TypeChecker,
+                  Luna.Tools.Serialization.GraphSerialization,
                   Luna.Type.Type,
                   Attrs_Consts,
                   Attrs_Types,
