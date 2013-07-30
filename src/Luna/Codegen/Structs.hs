@@ -5,8 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna(
+module Luna.Codegen.State.DefState(
 ) where
 
 
-
+data Struct = Module { imports :: [Import]
+    
+                     }
