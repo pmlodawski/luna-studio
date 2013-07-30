@@ -7,6 +7,7 @@
 
 --import Data.List
 --import System.IO
+import Data.Int
 import Network
 --import System.Environment(getArgs)
 
@@ -28,7 +29,30 @@ import qualified GraphHandler
 import qualified LibraryHandler
 import qualified TypesHandler
 
+
+import qualified Libs_Types
+
 import qualified Luna.Core
+
+import qualified Luna.Lib.Library   as Library
+import           Luna.Lib.Library     (Library(..))
+import qualified Luna.System.UniPath as UniPath
+import           Luna.Tools.Serialization
+import           Luna.Tools.Serialization.LibsSerialization
+
+
+
+main :: IO ()
+main = do
+    let 
+        l = Library "std" $ UniPath.fromUnixString "/opt/luna/lib/std"
+        l2 = encode (l, 2::Int32)
+        l3 = (decode l2) :: Either String (Library, Int32)
+    print l
+    print l2
+    print l3
+    return ()
+
 
 port :: PortNumber
 port = 30521
@@ -70,9 +94,9 @@ instance Batch_Iface BatchHandler where
     ping _ = putStrLn "ping"
 
 
-main :: IO ()
-main = do
-    handler <- newBatchHandler
-    putStrLn "Starting the server..."
-    _ <- runBasicServer handler Batch.process port
-    putStrLn "done."
+--main :: IO ()
+--main = do
+--    handler <- newBatchHandler
+--    putStrLn "Starting the server..."
+--    _ <- runBasicServer handler Batch.process port
+--    putStrLn "done."
