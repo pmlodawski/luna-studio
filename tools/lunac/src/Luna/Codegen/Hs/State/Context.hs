@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Codegen.State.Context(
+module Luna.Codegen.Hs.State.Context(
     Context(..)
 ) where
 

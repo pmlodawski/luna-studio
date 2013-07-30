@@ -27,7 +27,8 @@ module Luna.Data.Graph (
     pre,
     pre_,
     topsort,
-    path
+    path,
+    newIds
 ) where
 
 import qualified Data.Graph.Inductive            as DG
@@ -77,3 +78,6 @@ path g vtx = case pre g vtx of
     [parent] -> path g parent ++ [vtx]
     _        -> error "Node has multiple parents"
 
+
+newIds :: Graph a b -> [Vertex]
+newIds g = [n+1..] where (_,n) = nodeRange g

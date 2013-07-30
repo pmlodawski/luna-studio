@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Codegen.State.DefState(
+module Luna.Codegen.Hs.State.DefState(
     FuncState(..),
     make
 ) where

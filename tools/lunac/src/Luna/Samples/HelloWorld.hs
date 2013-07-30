@@ -50,6 +50,13 @@ workspace = NodeDef.empty{ NodeDef.cls     = Type.Module "Workspace'"
                          , NodeDef.libID   = userLibKey
                          }
 
+
+testmod  = NodeDef.empty{ NodeDef.cls     = Type.Module "Testmod" 
+                         , NodeDef.imports = workspaceImports
+                         , NodeDef.libID   = userLibKey
+                         }
+
+
 base_manager :: DefManager
 base_manager = manager where
     manager = DefManager.insNode (100, workspace)
@@ -214,11 +221,16 @@ myFun3 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun3" myFunInputs3 Typ
 
 
 
-
 full_manager :: DefManager
-full_manager =  DefManager.addToParentMany [ (100, 1, myFun2)
+full_manager =  DefManager.addToParentMany [      (1, 2, myFun3)
+                                           , (100, 1, myFun2)
                                            ]
              $ base_manager
+
+--full_manager :: DefManager
+--full_manager =  DefManager.addToParentMany [ (100, 101, testmod)
+--                                           ]
+--             $ base_manager
 
 
 --full_manager :: DefManager

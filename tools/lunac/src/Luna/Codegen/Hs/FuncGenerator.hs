@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Codegen.FuncGenerator(
+module Luna.Codegen.Hs.FuncGenerator(
 generateImportCode,
 generateImportsCode,
 --generateTypeCode,
@@ -37,11 +37,14 @@ import           Luna.Network.Graph.Node           (Node)
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Luna.Network.Flags              as Flags
 import qualified Luna.Network.Path.Path          as Path
-import           Luna.Codegen.State.FuncState      (FuncState)
-import qualified Luna.Codegen.State.FuncState    as FuncState
-import qualified Luna.Codegen.State.Context      as Context
-import qualified Luna.Codegen.State.Mode         as Mode
+import           Luna.Codegen.Hs.State.FuncState   (FuncState)
+import qualified Luna.Codegen.Hs.State.FuncState as FuncState
+import qualified Luna.Codegen.Hs.State.Context   as Context
+import qualified Luna.Codegen.Hs.State.Mode      as Mode
 
+
+import qualified Luna.Codegen.Hs.AST.Function    as Function
+import           Luna.Codegen.Hs.AST.Function      (Function(..))
 
 outvar :: Show a => a -> [Char]
 outvar x = "out'" ++ show x
@@ -76,15 +79,32 @@ generateImportsCode :: [Import] -> String
 generateImportsCode i = join "\n" $ fmap generateImportCode i
 
 
-generateFunction :: NodeDef -> String
-generateFunction def = codes where
-    graph            = NodeDef.graph def
-    (code1, state)   = runState generateFunctionCode $ FuncState.make def graph
-    mode = if FuncState.ctx state == Context.IO
-        then Mode.ForcePure
-        else Mode.ForceIO
-    (code2, _)     = runState generateFunctionCode $ (FuncState.make def graph){FuncState.mode=mode}
-    codes = code1 ++ "\n\n" ++ code2
+generateFunction def = 
+    generateFunctionBody
+    $ Function.empty {name = "a"}
+
+
+
+generateFunctionBody = do
+    state <- get
+    let
+        graph      = FuncState.graph state
+        vertices   = Graph.topsort graph
+        nodes      = Graph.labVtxs graph vertices
+    generateNodeCodes nodes
+
+
+
+
+--generateFunction :: NodeDef -> String
+--generateFunction def = codes where
+--    graph            = NodeDef.graph def
+--    (code1, state)   = runState generateFunctionCode $ FuncState.make def graph
+--    mode = if FuncState.ctx state == Context.IO
+--        then Mode.ForcePure
+--        else Mode.ForceIO
+--    (code2, _)     = runState generateFunctionCode $ (FuncState.make def graph){FuncState.mode=mode}
+--    codes = code1 ++ "\n\n" ++ code2
 
 
 generateFunctionBody :: State FuncState String

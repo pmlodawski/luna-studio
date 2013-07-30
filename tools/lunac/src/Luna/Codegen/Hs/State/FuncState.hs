@@ -5,18 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Codegen.State.FuncState(
+module Luna.Codegen.Hs.State.FuncState(
     FuncState(..),
     make
 ) where
 
 import           Luna.Network.Graph.Graph          (Graph)
-import           Luna.Codegen.State.Context      as Context
-import           Luna.Codegen.State.Context        (Context)
-import           Luna.Codegen.State.Mode         as Mode
-import           Luna.Codegen.State.Mode           (Mode)
 import qualified Luna.Network.Def.NodeDef        as NodeDef
 import           Luna.Network.Def.NodeDef          (NodeDef)
+import           Luna.Codegen.Hs.State.Context   as Context
+import           Luna.Codegen.Hs.State.Context     (Context)
+import           Luna.Codegen.Hs.State.Mode      as Mode
+import           Luna.Codegen.Hs.State.Mode        (Mode)
 
 data FuncState = FuncState {def      :: NodeDef,
 							graph    :: Graph, 
