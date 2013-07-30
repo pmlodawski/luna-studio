@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.GraphSerialization where
+module Luna.Tools.Serialization.GraphSerialization where
 
 import Control.Monad
 import qualified  Data.Graph.Inductive as DG
