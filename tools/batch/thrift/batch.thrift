@@ -8,11 +8,11 @@
 namespace cpp flowbox.batch
 namespace hs  flowbox.batch
 
-include "attrs.thrift"
-include "defs.thrift"
-include "graph.thrift"
-include "libs.thrift"
-include "types.thrift"
+include "../../lunac/thrift/attrs.thrift"
+include "../../lunac/thrift/defs.thrift"
+include "../../lunac/thrift/graph.thrift"
+include "../../lunac/thrift/libs.thrift"
+include "../../lunac/thrift/types.thrift"
 
 
 service Batch {

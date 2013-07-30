@@ -12,7 +12,8 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: tools/lunac/src
+  Hs-Source-Dirs: tools/lunac/src,
+                  tools/lunac/gen-hs
   if flag(debug)
     GHC-Options:  -csacc
   GHC-Options:    -Wall 
@@ -42,16 +43,32 @@ Library
                   Luna.System.UniPath,
                   Luna.Tools.Graphviz,
                   Luna.Tools.TypeChecker,
-                  Luna.Type.Type
+                  Luna.Type.Type,
+                  Attrs_Consts,
+                  Attrs_Types,
+                  Defs_Consts,
+                  Defs_Types,
+                  Graph_Consts,
+                  Graph_Types,
+                  Libs_Consts,
+                  Libs_Types,
+                  Types_Consts,
+                  Types_Types
 
   
   Build-Depends:  base, 
+                  bytestring,
                   cereal,
                   containers,
                   fgl,
                   graphviz,
+                  hashable,
                   MissingH,
-                  split
+                  split,
+                  text,
+                  thrift,
+                  unordered-containers,
+                  vector
 
 
 Executable lunac 
@@ -75,7 +92,7 @@ Executable lunac
 
 
 Executable batch
-  Hs-Source-Dirs: tools/batch/src,
+  Hs-Source-Dirs: tools/batch/src
                   tools/batch/gen-hs
   Main-Is:        Main.hs
 
