@@ -7,31 +7,31 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Luna.Tools.Graphviz(
-showGraph
+--showGraph
 ) where
 
-import qualified Data.Graph.Inductive as DG
-import qualified Data.GraphViz as GV
+--import qualified Data.Graph.Inductive as DG
+--import qualified Data.GraphViz as GV
 
-import           Luna.Edge       (Edge)
-import qualified Luna.Graph    as Graph
-import           Luna.Graph      (Graph)
-import           Luna.Node       (Node)
-
-
-showGraph :: Graph -> IO ()
-showGraph graph = do 
-    let 
-        graphrepr = Graph.repr graph
-    print $ defaultVis graphrepr  -- prints dot graphviz representation
-    GV.preview $ graphrepr-- shows interactive view while compiling from sublime
-
-defaultVis :: (DG.Graph gr) => gr nl el -> GV.DotGraph DG.Node
-defaultVis = GV.graphToDot GV.nonClusteredParams
+--import           Luna.Network.Graph.Edge       (Edge)
+--import qualified Luna.Network.Graph.Graph    as Graph
+--import           Luna.Network.Graph.Graph      (Graph)
+--import           Luna.Network.Graph.Node       (Node)
 
 
-instance GV.Labellable Edge where
-    toLabelValue = GV.toLabelValue . show
+--showGraph :: Graph -> IO ()
+--showGraph graph = do 
+--    let 
+--        graphrepr = Graph.repr graph
+--    print $ defaultVis graphrepr  -- prints dot graphviz representation
+--    GV.preview $ graphrepr-- shows interactive view while compiling from sublime
 
-instance GV.Labellable Node where
-        toLabelValue = GV.toLabelValue . show
+--defaultVis :: (DG.Graph gr) => gr nl el -> GV.DotGraph DG.Node
+--defaultVis = GV.graphToDot GV.nonClusteredParams
+
+
+--instance GV.Labellable Edge where
+--    toLabelValue = GV.toLabelValue . show
+
+--instance GV.Labellable Node where
+--        toLabelValue = GV.toLabelValue . show

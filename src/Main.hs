@@ -10,7 +10,7 @@ import qualified Luna.Codegen.FuncGenerator     as FG
 import qualified Luna.Codegen.DefGenerator      as DG
 import qualified Luna.Network.Def.DefManager    as DefManager
 
-import Luna.Data.Graph
+
 
 main :: IO ()
 main = do 
@@ -21,6 +21,7 @@ main = do
 
 	--putStrLn $ Cg.generateDefCode $
 	return ()
+
 
 --        let 
 --                (node, manager) = Samples.sample_helloWorld
