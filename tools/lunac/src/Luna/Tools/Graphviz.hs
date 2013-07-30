@@ -13,10 +13,10 @@ showGraph
 import qualified Data.Graph.Inductive as DG
 import qualified Data.GraphViz as GV
 
-import           Luna.Edge       (Edge)
-import qualified Luna.Graph    as Graph
-import           Luna.Graph      (Graph)
-import           Luna.Node       (Node)
+import           Luna.Network.Graph.Edge       (Edge)
+import qualified Luna.Network.Graph.Graph    as Graph
+import           Luna.Network.Graph.Graph      (Graph)
+import           Luna.Network.Graph.Node       (Node)
 
 
 showGraph :: Graph -> IO ()

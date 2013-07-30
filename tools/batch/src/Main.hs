@@ -28,6 +28,7 @@ import qualified GraphHandler
 import qualified LibraryHandler
 import qualified TypesHandler
 
+import qualified Luna
 
 port :: PortNumber
 port = 30521
