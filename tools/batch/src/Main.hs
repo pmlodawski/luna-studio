@@ -42,8 +42,8 @@ import           Luna.Tools.Serialization.LibsSerialization
 
 
 
-main :: IO ()
-main = do
+test :: IO ()
+test = do
     let 
         l = Library "std" $ UniPath.fromUnixString "/opt/luna/lib/std"
         l2 = encode (l, 2::Int32)
@@ -94,9 +94,10 @@ instance Batch_Iface BatchHandler where
     ping _ = putStrLn "ping"
 
 
---main :: IO ()
---main = do
---    handler <- newBatchHandler
---    putStrLn "Starting the server..."
---    _ <- runBasicServer handler Batch.process port
---    putStrLn "done."
+main :: IO ()
+main = do
+    test
+    handler <- newBatchHandler
+    putStrLn "Starting the server..."
+    _ <- runBasicServer handler Batch.process port
+    putStrLn "done."
