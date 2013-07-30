@@ -7,11 +7,12 @@
 
 module Luna.Lib.Library(
     Library(..),
-    ID
+    ID,
+    empty
 ) where
 
-import Luna.System.UniPath (UniPath)
-
+import qualified Luna.System.UniPath as UniPath
+import           Luna.System.UniPath   (UniPath)
 
 data Library =  Library{
     name :: String,
@@ -19,5 +20,7 @@ data Library =  Library{
     path :: UniPath
 } deriving (Show)
 
+empty :: Library
+empty = Library "" UniPath.empty
 
 type ID  = Int
