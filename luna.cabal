@@ -42,6 +42,8 @@ Library
                   Luna.Network.Flags,
                   Luna.System.UniPath,
                   Luna.Tools.Graphviz,
+                  Luna.Tools.Serialization,
+                  Luna.Tools.Serialization.LibsSerialization,
                   Luna.Tools.TypeChecker,
                   Luna.Type.Type,
                   Attrs_Consts,

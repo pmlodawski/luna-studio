@@ -11,43 +11,60 @@ unloadLibrary
 ) 
 where
 
+import           Data.Int
 import           Data.IORef
 import qualified Data.Vector as Vector
 import           Data.Vector   (Vector)
 
-import qualified Luna.Core   as Core
+import qualified Libs_Types
+
+import qualified Luna.Core           as Core
 import qualified Luna.Lib.LibManager as LibManager
 import qualified Luna.Lib.Library    as Library
+import           Luna.Lib.Library      (Library(..))
+import           Luna.Tools.Serialization
+import           Luna.Tools.Serialization.LibsSerialization
+
+
 
 libraries batchHandler = do 
+    putStr "getting libraries...\t\t"
     core <- readIORef batchHandler
-    let
-        libManager = Core.libManager core
-    putStrLn "NOT IMPLEMENTED - libraries"
+    let libManager =  Core.libManager core
+        --libraries = LibManager.labNodes libManager
+        --tlibraries = map encode libraries
+        --tlibrariesVector = Vector.fromList tlibraries
+    
+    putStrLn "failed! NOT IMPLEMENTED"
+    --return tlibrariesVector
     return $ Vector.fromList []
 
 
-loadLibrary batchHandler (Just library) = do
-    putStrLn "NOT IMPLEMENTED - loadLibrary"
-
+loadLibrary batchHandler (Just tlibrary) = do
+    putStr "loading library...\t\t"
     core <- readIORef batchHandler
     let 
         libManager = Core.libManager core
-        [lID] = LibManager.newNodes 1 libManager
-        newCore = core { Core.libManager = LibManager.insNode (lID, Library.empty) libManager  }
-    putStrLn $ "Library added with LibID = " ++ show lID
+        [lID]      = LibManager.newNodes 1 libManager
+
+        Right (_, library) = decode tlibrary :: Either String (Int, Library)
+
+        newCore = core { Core.libManager = LibManager.insNode (lID, library) libManager  }
     writeIORef batchHandler newCore
-    
+
+    putStrLn "success!"
     return ()
 
 
-unloadLibrary batchHandler (Just library) = do
-    putStrLn "NOT IMPLEMENTED - unloadLibrary"
-    
+unloadLibrary batchHandler (Just tlibrary) = do
+    putStr "unloading library...\t\t"
     core <- readIORef batchHandler
     let 
         libManager = Core.libManager core
-        newCore = core --{ Core.libManager = LibManager.delNode ... }
+        Right (lID, _) = decode tlibrary :: Either String (Int, Library)
+        newCore = core { Core.libManager = LibManager.delNode lID libManager }
     writeIORef batchHandler newCore
     
+    putStrLn "success!"
     return ()
+
