@@ -6,19 +6,22 @@
 ---------------------------------------------------------------------------
 
 import qualified Luna.Samples.HelloWorld        as HelloWorld
-import qualified Luna.Tools.CodeGenerator       as CG
+import qualified Luna.Codegen.FuncGenerator     as FG
+import qualified Luna.Codegen.DefGenerator      as DG
 import qualified Luna.Network.Def.DefManager    as DefManager
 
 
 
 main :: IO ()
 main = do 
-    --print $ DefManager.pathOf 1 HelloWorld.full_manager
-    --putStrLn $ CG.generateTypeCode $ HelloWorld.base_workspace
-    --putStrLn $ CG.generateDefCode 1 HelloWorld.full_manager
-    putStrLn $ CG.generateFunction $ HelloWorld.myFun2
-    --putStrLn $ Cg.generateDefCode $
-    return ()
+	putStrLn "------------\n"
+
+	--putStrLn $ FG.generateFunction HelloWorld.myFun3
+	putStrLn $ DG.generateDefinition 1 HelloWorld.full_manager
+
+	--putStrLn $ Cg.generateDefCode $
+	return ()
+
 
 --        let 
 --                (node, manager) = Samples.sample_helloWorld

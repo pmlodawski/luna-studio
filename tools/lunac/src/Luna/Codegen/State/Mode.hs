@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Network.Def.Edge(
-    Edge(..)
+module Luna.Codegen.State.Mode(
+    Mode(..)
 ) where
-    
-data Edge = Edge deriving (Show, Read, Ord, Eq)
+
+data Mode    = Auto | ForcePure | ForceIO deriving (Show, Eq)

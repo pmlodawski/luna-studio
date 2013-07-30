@@ -5,8 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Network.Def.Edge(
-    Edge(..)
+module Luna.Core(
+
 ) where
-    
-data Edge = Edge deriving (Show, Read, Ord, Eq)
+
+
+import Luna.Lib.LibManager (LibManager)
+import Luna.Network.Def.DefManager (DefManager)
+
+
+data Core = Core {
+    libManager :: LibManager,
+    defManager :: DefManager
+} deriving(Show)
+

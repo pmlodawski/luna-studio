@@ -20,8 +20,9 @@ Library
   Extensions:     DoAndIfThenElse
                   ForeignFunctionInterface
                   MultiParamTypeClasses
-  Exposed-modules: Luna,
-                  Luna.Common.Graph,
+  Exposed-modules:
+                  Luna.Core
+                  Luna.Data.Graph,
                   Luna.Data.List,
                   Luna.Lib.Edge,
                   Luna.Lib.LibManager,
@@ -39,7 +40,6 @@ Library
                   Luna.Network.Attributes,
                   Luna.Network.Flags,
                   Luna.System.UniPath,
-                  Luna.Tools.CodeGenerator,
                   Luna.Tools.Graphviz,
                   Luna.Tools.TypeChecker,
                   Luna.Type.Type
@@ -53,7 +53,8 @@ Library
                   MissingH,
                   split
 
-Executable luna 
+
+Executable lunac 
   Main-Is:        Main.hs
   Hs-Source-Dirs: tools/lunac/src
 
@@ -69,7 +70,10 @@ Executable luna
                   fgl,
                   flowbox,
                   MissingH,
+                  mtl,
                   split
+
+
 Executable batch
   Hs-Source-Dirs: tools/batch/src,
                   tools/batch/gen-hs
@@ -87,3 +91,4 @@ Executable batch
                   thrift,
                   unordered-containers,
                   vector
+
