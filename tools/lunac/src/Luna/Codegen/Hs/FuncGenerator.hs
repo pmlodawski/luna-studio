@@ -75,26 +75,35 @@ generateNodeExprs graph (node:nodes) func = nfunc where
 generateNodeExpr graph lnode func = Function.addExpr expr func where 
     nid   = sel1 lnode
     node  = sel2 lnode
-    expr  = Expr.Assignment (Expr.VarRef nid) value where 
-    value = case node of
-        Node.New _ _            -> Expr.VarRef cvtx where
+    expr  = Expr.Assignment src value ctx where 
+    src   = case node of
+        Node.Outputs {}         -> Expr.Var outputs
+        _                       -> Expr.VarRef nid
+
+    (value, ctx) = case node of
+        Node.New _ _            -> (Expr.VarRef cvtx, Expr.Pure) where
                                        cvtx:vtxs = Graph.innvtx graph nid
                                        -- TODO[wd] exception when too many inputs
 
-        Node.Type name _ _      -> Expr.Var name
+        Node.Type name _ _      -> (Expr.Var name, Expr.Pure)
 
-        Node.Tuple _ _          -> Expr.Tuple args where
+        Node.Tuple _ _          -> (Expr.Tuple args, Expr.Pure) where
                                        vtxs = Graph.innvtx graph nid
                                        args = map Expr.VarRef vtxs
 
-        Node.Call name flags _  -> Expr.Call name args where
+        Node.Call name flags _  -> (Expr.Call name args cctx, cctx) where
                                        vtxs = Graph.innvtx graph nid
                                        args = map Expr.VarRef vtxs
+                                       cctx = if Flags.io flags
+                                           then Expr.IO
+                                           else Expr.Pure
 
-        Node.Inputs  _ _        -> Expr.Var inputs
-        Node.Outputs _ _        -> Expr.Var outputs
+        Node.Inputs  _ _        -> (Expr.Var inputs, Expr.Pure)
+        Node.Outputs _ _        -> (Expr.VarRef cvtx, Expr.Pure) where
+                                        cvtx:vtxs = Graph.innvtx graph nid
+                                        -- TODO[wd] exception when too many inputs
 
-        Node.Default d          -> Expr.Default val where 
+        Node.Default d          -> (Expr.Default val, Expr.Pure) where 
                                        val = case d of
                                            DefaultValue.DefaultString v -> "\"" ++ v ++ "\""
                                            DefaultValue.DefaultInt    v -> show v

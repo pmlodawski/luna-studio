@@ -11,12 +11,18 @@ module Luna.Codegen.Hs.AST.Module (
     genCode
 )where
 
-import qualified Luna.Codegen.Hs.Path as  Path
-import           Luna.Codegen.Hs.Path    (Path)
+import qualified Luna.Codegen.Hs.Path            as Path
+import           Luna.Codegen.Hs.Path              (Path)
+import qualified Luna.Codegen.Hs.Import          as Import
+import           Luna.Codegen.Hs.Import            (Import)
+import qualified Luna.Codegen.Hs.AST.Function    as Function
+import           Luna.Codegen.Hs.AST.Function      (Function)
+import           Data.String.Utils                 (join)
 
 data Module = Module { path       :: Path
                      , submodules :: [Module]
-                     --, functions :: [Function]
+                     , functions  :: [Function]
+                     , imports    :: [Import]
                      --, datatypes :: [DataType]
                      --, classes   
 
@@ -24,7 +30,11 @@ data Module = Module { path       :: Path
                      } deriving (Show)
 
 empty :: Module
-empty = Module Path.empty []
+empty = Module Path.empty [] [] []
 
 genCode :: Module -> String
-genCode mod = "module " ++ Path.toModulePath (path mod) ++ " where\n\n"
+genCode mod = "module " ++ mypath ++ " where\n" ++ imps ++ "\n" ++ funcs
+    where
+        mypath = (Path.toModulePath . path) mod
+        imps   = join "\n" $ map Import.genCode (imports mod)
+        funcs  = join "\n" $ map Function.genCode (functions mod)

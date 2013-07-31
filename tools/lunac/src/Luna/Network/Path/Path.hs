@@ -12,9 +12,12 @@ module Luna.Network.Path.Path(
     prepend,
     single,
     fromList,
-    add
+    add,
+    last
 ) where
 import Data.String.Utils (join)
+import qualified Prelude
+import Prelude hiding (last)
 
 newtype Path = Path {segments :: [String]} deriving (Show)
 
@@ -40,6 +43,8 @@ prepend :: String -> Path -> Path
 prepend segment path = Path $ segment:(segments path)
 
 
+last :: Path -> String
+last path = Prelude.last $ segments path
 
 
 --instance Show Path where

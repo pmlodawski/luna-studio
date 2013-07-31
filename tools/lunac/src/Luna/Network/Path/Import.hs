@@ -7,6 +7,8 @@
 
 module Luna.Network.Path.Import(
     Import(..),
+    noItems,
+    simple,
     single,
     multi,
     --genCode
@@ -18,11 +20,14 @@ import           Data.String.Utils                 (join)
 
 data Import = Import {path :: Path, items :: [String]} deriving (Show)
 
+noItems :: [String]
+noItems = []
+
+simple :: Path -> Import
+simple path = Import path noItems
+
 single :: Path -> String -> Import
 single path item = Import path [item]
 
 multi :: Path -> [String] -> Import
 multi path items' = Import path items'
-
---genCode :: Import -> String
---genCode imp = "import " ++ Path.toModulePath (path imp) ++ " (" ++ join "," (items imp) ++ ")"

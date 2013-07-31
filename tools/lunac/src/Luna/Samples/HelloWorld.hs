@@ -183,7 +183,7 @@ myFunGraph3 = Graph.insEdges [
                              (8,  Node.mkCall     "add"     ),
                              (9,  Node.mkCall     "select0" ),
                              (10, Node.mkTuple              ),
-                             ----(11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty),
+                             --(11, Node.Call       "print"   Flags.empty Attributes.empty),
                              (11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty),
                              (12, Node.mkOutputs            ),
                              (13, Node.mkCall     "dummy" )
@@ -222,8 +222,8 @@ myFun3 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun3" myFunInputs3 Typ
 
 
 full_manager :: DefManager
-full_manager =  DefManager.addToParentMany [      (1, 2, myFun3)
-                                           , (100, 1, myFun2)
+full_manager =  DefManager.addToParentMany [ (1, 2, myFun3),
+                                           (100, 1, myFun2)
                                            ]
              $ base_manager
 
