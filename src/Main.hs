@@ -11,6 +11,8 @@ import qualified Luna.Codegen.Hs.DefGenerator   as DG
 import qualified Luna.Codegen.Hs.ModGenerator   as MG
 import qualified Luna.Network.Def.DefManager    as DefManager
 
+import qualified Luna.Codegen.Hs.AST.Function   as Function
+
 import Luna.Data.Graph
 
 main :: IO ()
@@ -19,7 +21,8 @@ main = do
     --putStrLn $ FG.generateFunction HelloWorld.myFun3
     --putStrLn $ DG.generateDefinition 1 HelloWorld.full_manager
     --print $ MG.generateModule HelloWorld.full_manager 100
-    print $ FG.generateFunction HelloWorld.myFun2
+    print $ FG.generateFunction HelloWorld.myFun
+    putStrLn $ Function.genCode $ FG.generateFunction HelloWorld.myFun
 
     --putStrLn $ Cg.generateDefCode $
     return ()

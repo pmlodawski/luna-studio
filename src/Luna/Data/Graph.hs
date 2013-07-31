@@ -22,6 +22,7 @@ module Luna.Data.Graph (
     out_,
     inn,
     inn_,
+    innvtx,
     suc,
     suc_,
     pre,
@@ -62,6 +63,10 @@ out_ g vtx = [el | (_,_,el) <- out g vtx]
 
 inn_ :: Graph a b -> Vertex -> [b]
 inn_ g vtx = [el | (_,_,el) <- inn g vtx]
+
+
+innvtx :: Graph a b -> Vertex -> [Vertex]
+innvtx g vtx = [pvtx | (pvtx,_,_) <- inn g vtx]
 
 
 suc_ :: Graph a b -> Vertex -> [a]
