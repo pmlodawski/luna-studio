@@ -33,7 +33,8 @@ Executable luna
                   bytestring,
                   directory-tree,
                   directory,
-                  lens
+                  lens,
+                  tuple
 
 Executable builder
   Hs-Source-Dirs: tools/builder/src

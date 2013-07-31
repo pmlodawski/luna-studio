@@ -183,7 +183,7 @@ myFunGraph3 = Graph.insEdges [
                              (8,  Node.mkCall     "add"     ),
                              (9,  Node.mkCall     "select0" ),
                              (10, Node.mkTuple              ),
-                             --(11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty),
+                             ----(11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty),
                              (11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty),
                              (12, Node.mkOutputs            ),
                              (13, Node.mkCall     "dummy" )
