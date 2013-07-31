@@ -22,7 +22,8 @@ import           Luna.Tools.Serialization
 instance Serialize Flags Attrs_Types.Flags where
   encode (Flags io omit) = Attrs_Types.Flags (Just io) (Just omit)
   decode (Attrs_Types.Flags (Just io) (Just omit)) = Right $ Flags io omit
-  decode (Attrs_Types.Flags {}) = Left "Some fields are missing"
+  decode (Attrs_Types.Flags (Just io) Nothing    ) = Left "`omit` field is missing"
+  decode (Attrs_Types.Flags {}                   ) = Left "`io` field is missing"
 
 
 instance Serialize Attributes Attrs_Types.Attributes where
@@ -36,7 +37,7 @@ instance Serialize Attributes Attrs_Types.Attributes where
                                             hItems = HashMap.toList h
                                             hcItems = map convertItemBack hItems
                                             m = Attributes.fromList hcItems
-    (Attrs_Types.Attributes Nothing)  ->  Left "map field is missing"
+    (Attrs_Types.Attributes Nothing)  ->  Left "`map` field is missing"
 
 
 convertItem (k, v) = (ck, cv) where
