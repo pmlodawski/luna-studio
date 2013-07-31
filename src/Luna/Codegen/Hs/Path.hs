@@ -7,17 +7,26 @@
 
 module Luna.Codegen.Hs.Path (
     module Luna.Network.Path.Path,
-    toModulePath
+    toModulePath,
+    toModulePaths
 )where
 
 import           Luna.Network.Path.Path 
 import           Data.Char                      (isLower)
+import           Data.String.Utils                 (join)
 
 
 toModulePath :: Path -> String
-toModulePath (Path []) = ""
-toModulePath (Path [segment@(x:xs)]) = name where
-    name = if isLower x
-        then "U'" ++ segment
-        else segment
-toModulePath (Path (x:xs)) = toModulePath (Path [x]) ++ "." ++ toModulePath (Path xs)
+toModulePath path = join "." (toModulePaths path)
+
+
+toModulePaths :: Path -> [String]
+toModulePaths path = case path of
+    Path []                -> []
+    Path [segment@(x:xs)]  -> [name] where
+                                  name = if isLower x
+                                      then "U'" ++ segment
+                                      else segment
+    Path (x:xs)            -> toModulePaths (Path [x]) ++ toModulePaths (Path xs)
+
+

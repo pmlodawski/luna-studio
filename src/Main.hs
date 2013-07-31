@@ -10,8 +10,11 @@ import qualified Luna.Codegen.Hs.FuncGenerator  as FG
 import qualified Luna.Codegen.Hs.DefGenerator   as DG
 import qualified Luna.Codegen.Hs.ModGenerator   as MG
 import qualified Luna.Network.Def.DefManager    as DefManager
+import qualified Luna.Codegen.Hs.GenContext     as GenContext
+import           Luna.Codegen.Hs.GenContext       (GenContext)
 
 import qualified Luna.Codegen.Hs.AST.Function   as Function
+import qualified Luna.Codegen.Hs.AST.Module     as Module
 
 import Luna.Data.Graph
 
@@ -19,10 +22,11 @@ main :: IO ()
 main = do 
     putStrLn "------------\n"
     --putStrLn $ FG.generateFunction HelloWorld.myFun3
-    --putStrLn $ DG.generateDefinition 1 HelloWorld.full_manager
+    --putStrLn $ MG.generateDefinition HelloWorld.full_manager 1
     --print $ MG.generateModule HelloWorld.full_manager 100
-    print $ FG.generateFunction HelloWorld.myFun
-    putStrLn $ Function.genCode $ FG.generateFunction HelloWorld.myFun
+    putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 1
+    --print $ FG.generateFunction HelloWorld.myFun3
+    --putStrLn $ Function.genCode GenContext.empty $ FG.generateFunction HelloWorld.myFun3
 
     --putStrLn $ Cg.generateDefCode $
     return ()

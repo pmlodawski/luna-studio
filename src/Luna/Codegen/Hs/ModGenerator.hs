@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Luna.Codegen.Hs.ModGenerator(
+    generateDefinition,
     generateModule
 ) where
 
@@ -23,11 +24,15 @@ import           Luna.Network.Def.NodeDef          (NodeDef)
 import qualified Luna.Network.Def.Edge           as Edge
 import           Luna.Network.Def.Edge             (Edge(..))
 import qualified Luna.Type.Type                  as Type
-import qualified Luna.Network.Path.Import        as Import
+import qualified Luna.Codegen.Hs.Import          as Import
 import qualified Luna.Data.Graph                 as Graph
 
 import qualified Luna.Codegen.Hs.AST.Module      as Module
-import           Luna.Codegen.Hs.AST.Module        (Module(..))
+import           Luna.Codegen.Hs.AST.Module        (Module)
+import qualified Luna.Codegen.Hs.FuncGenerator   as FG
+import qualified Luna.Codegen.Hs.Path            as Path
+import           Luna.Codegen.Hs.Path              (Path)
+import qualified Luna.Codegen.Hs.AST.Function    as Function
 
 
 
@@ -37,8 +42,27 @@ generateDefinition manager vtx = code where
   def = Graph.lab manager vtx
   cls = NodeDef.cls def
   code = case cls of
-      Type.Module   {} -> generateModule manager vtx 
-      --Type.Function {} -> MG.generateModule manager vtx  ++ FG.generateFunction def
+      Type.Module   {} -> mod where
+          basemod  = generateModule manager vtx
+          submods  = Module.submodules basemod
+          subpaths = map Module.path submods
+          subimps  = map Import.simple subpaths 
+          mod      = basemod {Module.imports = subimps}
+
+      Type.Function {} -> mod where
+          basemod  = generateModule manager vtx
+          submods  = Module.submodules basemod
+          subpaths = map Module.path submods
+          subimps  = map Import.qualified subpaths
+          
+          subnames = map Path.last subpaths
+          subsrcs  = map Path.toModulePath subpaths
+          aliases  = [(name, src ++ "." ++ name) | (name, src) <- zip subnames subsrcs]
+          basefunc = FG.generateFunction def
+          func     = foldr Function.addVarAlias basefunc aliases
+          mod      = basemod { Module.imports   = subimps
+                             , Module.functions = [func]
+                             }
 
 
 generateModule :: DefManager -> Graph.Vertex -> Module
@@ -46,8 +70,8 @@ generateModule manager vtx  = let
     path        = Path.fromList $ DefManager.pathNames manager vtx 
     outnodes    = DefManager.suc manager vtx
     modules     = map (generateDefinition manager) outnodes
-    mod         = Module.empty{ path       = path
-                              , submodules = modules
+    mod         = Module.empty{ Module.path       = path
+                              , Module.submodules = modules
                               }
 
     in mod

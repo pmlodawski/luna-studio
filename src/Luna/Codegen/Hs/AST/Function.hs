@@ -9,12 +9,15 @@ module Luna.Codegen.Hs.AST.Function (
     Function(..),
     empty,
     genCode,
-    addExpr
+    addExpr,
+    addVarAlias
 )where
 
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 import           Luna.Codegen.Hs.AST.Expr          (Expr)
 import           Data.String.Utils                 (join)
+import qualified Luna.Codegen.Hs.GenContext         as GenContext
+import           Luna.Codegen.Hs.GenContext           (GenContext)
 
 
 data Function = Function { name       :: String,
@@ -26,9 +29,14 @@ data Function = Function { name       :: String,
 empty :: Function
 empty = Function "" [] []
 
-genCode :: Function -> String
+--genCode :: GenContext -> Function -> String
 genCode func =  name func ++ " " ++ join " " (inputs func) ++ " = \n"
-             ++ join "\n" (map Expr.genCode (exprs func)) 
+                 ++ "    let\n"
+                 ++ join "\n" (map Expr.genCode (exprs func)) 
 
 addExpr :: Expr -> Function -> Function
 addExpr expr func = func { exprs = expr : exprs func }
+
+
+addVarAlias :: (String, String) -> Function -> Function
+addVarAlias (n1, n2) = addExpr (Expr.Assignment (Expr.Var n1) (Expr.Var n2) Expr.Pure)
