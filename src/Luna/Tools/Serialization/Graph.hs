@@ -10,9 +10,9 @@
 module Luna.Tools.Serialization.Graph where
 
 --import Control.Monad
---import qualified  Data.Graph.Inductive as DG
 --import qualified Data.MultiMap as MMap
 
+import qualified Data.Graph.Inductive       as DG
 import qualified Data.HashMap.Strict        as Map
 import           Data.Int
 import qualified Data.Text.Lazy             as Text
@@ -62,7 +62,19 @@ instance Serialize Graph Graph_Types.Graph where
         map (\(_, _, label) -> label) $ Graph.labEdges a
     in
       Graph_Types.Graph (Just nodes) $ Just edges
-  decode b = undefined
+  decode b =
+    case Graph_Types.f_Graph_nodes b of
+      Just nodes ->
+        case Graph_Types.f_Graph_edges b of
+          Just edges ->
+            let
+              goodNodes :: [DG.LNode Node]
+              goodNodes = undefined
+              goodEdges :: [DG.LEdge Edge]
+              goodEdges = undefined
+            in Right $ Graph.mkGraph goodNodes goodEdges
+          Nothing    -> Left "Edges are not defined"
+      Nothing    -> Left "Nodes are not defined"
 
 instance Serialize (Node, Int) Graph_Types.Node where
   encode (a, nid) =
