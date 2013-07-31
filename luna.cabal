@@ -44,6 +44,7 @@ Library
                   Luna.Tools.TypeChecker,
                   Luna.Tools.Serialization,
                   Luna.Tools.Serialization.Attrs,
+                  Luna.Tools.Serialization.Defs,
                   Luna.Tools.Serialization.Graph,
                   Luna.Tools.Serialization.Libs,
                   Luna.Tools.Serialization.Types,
