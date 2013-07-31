@@ -12,6 +12,7 @@ module Luna.Network.Path.Path(
     toModulePath,
     single,
     fromList,
+    toList,
     add
 ) where
 import Data.String.Utils (join)
@@ -26,6 +27,8 @@ single s = Path [s]
 fromList :: [String] -> Path
 fromList s = Path s
 
+toList :: Path -> [String]
+toList = segments
 
 add :: Path -> Path -> Path
 add (Path s1) (Path s2) = Path $ s1 ++ s2
