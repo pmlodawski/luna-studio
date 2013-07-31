@@ -7,7 +7,7 @@
 
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
-module Luna.Tools.Serialization.LibsSerialization where
+module Luna.Tools.Serialization.Libs where
 
 
 import qualified Data.HashMap.Strict as Map

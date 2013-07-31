@@ -25,7 +25,7 @@ import qualified Luna.Core           as Core
 import qualified Luna.Lib.LibManager as LibManager
 import           Luna.Lib.Library      (Library(..))
 import           Luna.Tools.Serialization
-import           Luna.Tools.Serialization.LibsSerialization ()
+import           Luna.Tools.Serialization.Libs ()
 
 
 

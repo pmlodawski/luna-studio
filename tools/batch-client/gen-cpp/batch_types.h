@@ -29,8 +29,8 @@ typedef struct _MissingFieldsException__isset {
 class MissingFieldsException : public ::apache::thrift::TException {
  public:
 
-  static const char* ascii_fingerprint; // = "EFB929595D312AC8F305D5A794CFEDA1";
-  static const uint8_t binary_fingerprint[16]; // = {0xEF,0xB9,0x29,0x59,0x5D,0x31,0x2A,0xC8,0xF3,0x05,0xD5,0xA7,0x94,0xCF,0xED,0xA1};
+  static const char* ascii_fingerprint; // = "66E694018C17E5B65A59AE8F55CCA3CD";
+  static const uint8_t binary_fingerprint[16]; // = {0x66,0xE6,0x94,0x01,0x8C,0x17,0xE5,0xB6,0x5A,0x59,0xAE,0x8F,0x55,0xCC,0xA3,0xCD};
 
   MissingFieldsException() : message() {
   }
@@ -43,11 +43,14 @@ class MissingFieldsException : public ::apache::thrift::TException {
 
   void __set_message(const std::string& val) {
     message = val;
+    __isset.message = true;
   }
 
   bool operator == (const MissingFieldsException & rhs) const
   {
-    if (!(message == rhs.message))
+    if (__isset.message != rhs.__isset.message)
+      return false;
+    else if (__isset.message && !(message == rhs.message))
       return false;
     return true;
   }
