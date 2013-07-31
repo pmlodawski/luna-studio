@@ -17,6 +17,7 @@ module Luna.Data.Graph (
     insEdges,
     lab,
     labNodes,
+    labEdges,
     labs,
     labVtx,
     labVtxs,
