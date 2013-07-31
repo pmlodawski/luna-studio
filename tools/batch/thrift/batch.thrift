@@ -41,7 +41,8 @@ service Batch {
      * Definitions
      */
 
-    defs.NodeDefinition newDefinition(1: types.Type type, 2: attrs.Flags flags, 3: attrs.Attributes attrs)
+    defs.NodeDefinition newDefinition(1: types.Type type, 2: defs.Imports imports, 
+                                      3: attrs.Flags flags, 4: attrs.Attributes attrs)
     defs.NodeDefinition addDefinition(1: defs.NodeDefinition definition, 2: defs.NodeDefinition parent)
     void updateDefinition(1: defs.NodeDefinition definition)
     void removeDefinition(1: defs.NodeDefinition definition)

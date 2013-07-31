@@ -115,14 +115,14 @@ recv_unloadLibrary ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-newDefinition (ip,op) arg_type arg_flags arg_attrs = do
-  send_newDefinition op arg_type arg_flags arg_attrs
+newDefinition (ip,op) arg_type arg_imports arg_flags arg_attrs = do
+  send_newDefinition op arg_type arg_imports arg_flags arg_attrs
   recv_newDefinition ip
-send_newDefinition op arg_type arg_flags arg_attrs = do
+send_newDefinition op arg_type arg_imports arg_flags arg_attrs = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("newDefinition", M_CALL, seqn)
-  write_NewDefinition_args op (NewDefinition_args{f_NewDefinition_args_type=Just arg_type,f_NewDefinition_args_flags=Just arg_flags,f_NewDefinition_args_attrs=Just arg_attrs})
+  write_NewDefinition_args op (NewDefinition_args{f_NewDefinition_args_type=Just arg_type,f_NewDefinition_args_imports=Just arg_imports,f_NewDefinition_args_flags=Just arg_flags,f_NewDefinition_args_attrs=Just arg_attrs})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_newDefinition ip = do

@@ -37,7 +37,7 @@ class BatchHandler : virtual public BatchIf {
     printf("unloadLibrary\n");
   }
 
-  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs) {
+  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs) {
     // Your implementation goes here
     printf("newDefinition\n");
   }

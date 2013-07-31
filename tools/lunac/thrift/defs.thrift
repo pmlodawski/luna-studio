@@ -12,10 +12,20 @@ include "types.thrift"
 
 typedef i32 DefID
 
+
+struct Import {
+    1: optional list<string> path
+    2: optional list<string> items
+}
+
+typedef list<Import> Imports
+
+
 struct NodeDefinition {
     1: optional types.Type       cls
-    2: optional attrs.Flags      flags
-    3: optional attrs.Attributes attribs
-    4: optional libs.LibID       libID   = -1
-    5: optional DefID            defID   = -1
+    2: optional Imports          imports
+    3: optional attrs.Flags      flags
+    4: optional attrs.Attributes attribs
+    5: optional libs.LibID       libID   = -1
+    6: optional DefID            defID   = -1
 }

@@ -18,7 +18,7 @@ class BatchIf {
   virtual void libraries(std::vector< ::Library> & _return) = 0;
   virtual void loadLibrary( ::Library& _return, const  ::Library& library) = 0;
   virtual void unloadLibrary(const  ::Library& library) = 0;
-  virtual void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs) = 0;
+  virtual void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs) = 0;
   virtual void addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent) = 0;
   virtual void updateDefinition(const  ::NodeDefinition& definition) = 0;
   virtual void removeDefinition(const  ::NodeDefinition& definition) = 0;
@@ -77,7 +77,7 @@ class BatchNull : virtual public BatchIf {
   void unloadLibrary(const  ::Library& /* library */) {
     return;
   }
-  void newDefinition( ::NodeDefinition& /* _return */, const  ::Type& /* type */, const  ::Flags& /* flags */, const  ::Attributes& /* attrs */) {
+  void newDefinition( ::NodeDefinition& /* _return */, const  ::Type& /* type */, const  ::Imports& /* imports */, const  ::Flags& /* flags */, const  ::Attributes& /* attrs */) {
     return;
   }
   void addDefinition( ::NodeDefinition& /* _return */, const  ::NodeDefinition& /* definition */, const  ::NodeDefinition& /* parent */) {
@@ -463,8 +463,9 @@ class Batch_unloadLibrary_presult {
 };
 
 typedef struct _Batch_newDefinition_args__isset {
-  _Batch_newDefinition_args__isset() : type(false), flags(false), attrs(false) {}
+  _Batch_newDefinition_args__isset() : type(false), imports(false), flags(false), attrs(false) {}
   bool type;
+  bool imports;
   bool flags;
   bool attrs;
 } _Batch_newDefinition_args__isset;
@@ -478,6 +479,7 @@ class Batch_newDefinition_args {
   virtual ~Batch_newDefinition_args() throw() {}
 
    ::Type type;
+   ::Imports imports;
    ::Flags flags;
    ::Attributes attrs;
 
@@ -485,6 +487,10 @@ class Batch_newDefinition_args {
 
   void __set_type(const  ::Type& val) {
     type = val;
+  }
+
+  void __set_imports(const  ::Imports& val) {
+    imports = val;
   }
 
   void __set_flags(const  ::Flags& val) {
@@ -498,6 +504,8 @@ class Batch_newDefinition_args {
   bool operator == (const Batch_newDefinition_args & rhs) const
   {
     if (!(type == rhs.type))
+      return false;
+    if (!(imports == rhs.imports))
       return false;
     if (!(flags == rhs.flags))
       return false;
@@ -524,6 +532,7 @@ class Batch_newDefinition_pargs {
   virtual ~Batch_newDefinition_pargs() throw() {}
 
   const  ::Type* type;
+  const  ::Imports* imports;
   const  ::Flags* flags;
   const  ::Attributes* attrs;
 
@@ -2753,8 +2762,8 @@ class BatchClient : virtual public BatchIf {
   void unloadLibrary(const  ::Library& library);
   void send_unloadLibrary(const  ::Library& library);
   void recv_unloadLibrary();
-  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs);
-  void send_newDefinition(const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs);
+  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs);
+  void send_newDefinition(const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs);
   void recv_newDefinition( ::NodeDefinition& _return);
   void addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent);
   void send_addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent);
@@ -2939,13 +2948,13 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->unloadLibrary(library);
   }
 
-  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs) {
+  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->newDefinition(_return, type, flags, attrs);
+      ifaces_[i]->newDefinition(_return, type, imports, flags, attrs);
     }
-    ifaces_[i]->newDefinition(_return, type, flags, attrs);
+    ifaces_[i]->newDefinition(_return, type, imports, flags, attrs);
     return;
   }
 

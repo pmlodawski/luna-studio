@@ -23,9 +23,9 @@ import qualified Defs_Types as TDefs
 
 
 
-newDefinition a type' flags attrs = do 
+newDefinition a type' imports flags attrs = do 
     putStrLn "NOT IMPLEMENTED - newDefinition"
-    return $ TDefs.NodeDefinition type' flags attrs (Just 0) (Just 0)
+    return $ TDefs.NodeDefinition type' imports flags attrs (Just 0) (Just 0)
 
 
 addDefinition a (Just definition) parent = do
