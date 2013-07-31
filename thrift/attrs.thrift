@@ -7,8 +7,8 @@
 
 
 struct Flags {
-    1: optional bool io
-    2: optional bool omit
+    1: optional bool io   = false
+    2: optional bool omit = false
 }
 
 struct Attributes {

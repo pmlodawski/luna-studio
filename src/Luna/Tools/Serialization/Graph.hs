@@ -7,7 +7,7 @@
 
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
-module Luna.Tools.Serialization.GraphSerialization where
+module Luna.Tools.Serialization.Graph where
 
 --import Control.Monad
 --import qualified  Data.Graph.Inductive as DG
@@ -28,7 +28,7 @@ import           Luna.Network.Graph.Graph   (Graph(..))
 import qualified Luna.Network.Graph.Node as Node
 import           Luna.Network.Graph.Node   (Node)
 import           Luna.Tools.Serialization
-import           Luna.Tools.Serialization.AttrsSerialization
+import           Luna.Tools.Serialization.Attrs
 
 
 instance Serialize Edge Graph_Types.Edge where
