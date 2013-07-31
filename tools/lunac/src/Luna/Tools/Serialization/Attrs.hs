@@ -26,18 +26,19 @@ instance Serialize Flags Attrs_Types.Flags where
 
 
 instance Serialize Attributes Attrs_Types.Attributes where
-  encode m = let mItems = Attributes.toList m
+  encode m = Attrs_Types.Attributes $ Just h where
+                 mItems = Attributes.toList m
                  mcItems = map convertItem mItems
                  h = HashMap.fromList mcItems
-             in Attrs_Types.Attributes $ Just h
-  decode (Attrs_Types.Attributes (Just h)) = 
-            let hItems = HashMap.toList h
-                hcItems = map convertItemBack hItems
-                m = Attributes.fromList hcItems
-            in Right m
-  decode (Attrs_Types.Attributes Nothing) = Left "map field is missing"
 
-  
+  decode el = case el of
+    (Attrs_Types.Attributes (Just h)) -> Right m where
+                                            hItems = HashMap.toList h
+                                            hcItems = map convertItemBack hItems
+                                            m = Attributes.fromList hcItems
+    (Attrs_Types.Attributes Nothing)  ->  Left "map field is missing"
+
+
 convertItem (k, v) = (ck, cv) where
     ck = Text.pack k
     cv = HashMap.fromList $ map (\(k1, v1) -> (Text.pack k1, Text.pack v1)) $ Attributes.toList v

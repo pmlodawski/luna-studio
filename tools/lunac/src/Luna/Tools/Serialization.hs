@@ -12,3 +12,4 @@ module Luna.Tools.Serialization where
 class Serialize a b | a -> b where
   encode :: a -> b
   decode :: b -> Either String a 
+
