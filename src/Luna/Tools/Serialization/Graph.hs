@@ -10,12 +10,14 @@
 module Luna.Tools.Serialization.Graph where
 
 --import Control.Monad
---import qualified  Data.Graph.Inductive as DG
 --import qualified Data.MultiMap as MMap
 
-import qualified Data.HashMap.Strict as Map
-import Data.Int
-import qualified Data.Text.Lazy      as Text
+import qualified Data.Graph.Inductive       as DG
+import qualified Data.HashMap.Strict        as Map
+import           Data.Int
+import qualified Data.Text.Lazy             as Text
+import qualified Data.Vector                as Vector
+import           Data.Vector                  (Vector(..))
 
 import qualified Attrs_Types
 import qualified Graph_Types
@@ -37,19 +39,44 @@ instance Serialize Edge Graph_Types.Edge where
       src = fromIntegral $ Edge.src a :: Int32
       dst = fromIntegral $ Edge.dst a :: Int32
     in Graph_Types.Edge (Just src) (Just dst)
-  decode b = undefined
+  decode b =
+    case Graph_Types.f_Edge_src b of
+      Just src ->
+        case Graph_Types.f_Edge_dst b of
+          Just dst ->
+            let
+              srci = fromIntegral $ src :: Int
+              dsti = fromIntegral $ dst :: Int
+            in Right $ Edge srci dsti
+          Nothing  -> Left "No destination specified"
+      Nothing  -> Left "No source specified!"
 
 instance Serialize Graph Graph_Types.Graph where
   encode a = 
     let
       nodes :: Map.HashMap Int32 Graph_Types.Node
-      nodes = undefined
-      edges = undefined
+      nodes = Map.fromList $
+        map (\(a, b) -> (fromIntegral a :: Int32, encode (b, a))) $ Graph.labNodes a
+      edges :: Vector Graph_Types.Edge
+      edges = Vector.fromList $ map encode $
+        map (\(_, _, label) -> label) $ Graph.labEdges a
     in
       Graph_Types.Graph (Just nodes) $ Just edges
-  decode b = undefined
+  decode b =
+    case Graph_Types.f_Graph_nodes b of
+      Just nodes ->
+        case Graph_Types.f_Graph_edges b of
+          Just edges ->
+            let
+              goodNodes :: [DG.LNode Node]
+              goodNodes = undefined
+              goodEdges :: [DG.LEdge Edge]
+              goodEdges = undefined
+            in Right $ Graph.mkGraph goodNodes goodEdges
+          Nothing    -> Left "Edges are not defined"
+      Nothing    -> Left "Nodes are not defined"
 
-instance Serialize (Node, Int32) Graph_Types.Node where
+instance Serialize (Node, Int) Graph_Types.Node where
   encode (a, nid) =
     let
       nodeType :: Graph_Types.NodeType
@@ -67,7 +94,7 @@ instance Serialize (Node, Int32) Graph_Types.Node where
                    Node.Call cname _ _ -> Just cname
                    _                   -> Nothing
       nodeID :: Int32
-      nodeID = nid
+      nodeID = fromIntegral nid :: Int32
       nodeFlags :: Maybe Attrs_Types.Flags
       nodeFlags = fmap encode $ case a of
                    Node.Type _ flags _ -> Just flags
