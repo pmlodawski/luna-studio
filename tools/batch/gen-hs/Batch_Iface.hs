@@ -43,7 +43,7 @@ import Batch_Types
 
 class Batch_Iface a where
   libraries :: a -> IO (Vector.Vector Libs_Types.Library)
-  loadLibrary :: a -> Maybe Libs_Types.Library -> IO ()
+  loadLibrary :: a -> Maybe Libs_Types.Library -> IO Libs_Types.Library
   unloadLibrary :: a -> Maybe Libs_Types.Library -> IO ()
   newDefinition :: a -> Maybe Types_Types.Type -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes -> IO Defs_Types.NodeDefinition
   addDefinition :: a -> Maybe Defs_Types.NodeDefinition -> Maybe Defs_Types.NodeDefinition -> IO Defs_Types.NodeDefinition

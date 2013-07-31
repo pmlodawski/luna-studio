@@ -5,66 +5,80 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 module LibraryHandler (
-libraries,
-loadLibrary,
-unloadLibrary
+    libraries,
+    loadLibrary,
+    unloadLibrary
 ) 
 where
-
-import           Data.Int
+    
+import           Control.Exception
 import           Data.IORef
-import qualified Data.Vector as Vector
-import           Data.Vector   (Vector)
+import qualified Data.Text.Lazy as Text
+import qualified Data.Vector    as Vector
+import           Data.Vector      (Vector)
+
 
 import qualified Libs_Types
+import           Batch_Types (MissingFieldsException(..))
 
 import qualified Luna.Core           as Core
 import qualified Luna.Lib.LibManager as LibManager
-import qualified Luna.Lib.Library    as Library
 import           Luna.Lib.Library      (Library(..))
 import           Luna.Tools.Serialization
-import           Luna.Tools.Serialization.LibsSerialization
+import           Luna.Tools.Serialization.LibsSerialization ()
 
 
 
+libraries :: IORef Core.Core -> IO (Vector Libs_Types.Library)
 libraries batchHandler = do 
     putStr "getting libraries...\t\t"
     core <- readIORef batchHandler
     let libManager =  Core.libManager core
-        --libraries = LibManager.labNodes libManager
-        --tlibraries = map encode libraries
-        --tlibrariesVector = Vector.fromList tlibraries
+        libs = LibManager.labNodes libManager
+        tlibs = map encode libs
+        tlibsVector = Vector.fromList tlibs
     
-    putStrLn "failed! NOT IMPLEMENTED"
-    --return tlibrariesVector
-    return $ Vector.fromList []
+    putStrLn "success!"
+    return tlibsVector
 
-
+loadLibrary :: IORef Core.Core -> Maybe Libs_Types.Library -> IO Libs_Types.Library
 loadLibrary batchHandler (Just tlibrary) = do
-    putStr "loading library...\t\t"
+    putStr $ "loading library...\t" ++ (show tlibrary) ++ "\t"
     core <- readIORef batchHandler
     let 
         libManager = Core.libManager core
         [lID]      = LibManager.newNodes 1 libManager
 
-        Right (_, library) = decode tlibrary :: Either String (Int, Library)
+    case decode tlibrary :: Either String (Int, Library) of
+        Right (_, library) -> do 
+                                  let newTLibrary = encode (lID, library)
+                                      newCore = core { Core.libManager = LibManager.insNode (lID, library) libManager }
+                                  writeIORef batchHandler newCore
+                                  putStrLn "success!"
+                                  return newTLibrary
+        Left message       -> do
+                                  putStrLn $ "failed: " ++ message
+                                  throw $ MissingFieldsException $ Just $ Text.pack message
 
-        newCore = core { Core.libManager = LibManager.insNode (lID, library) libManager  }
-    writeIORef batchHandler newCore
+loadLibrary _ Nothing = do
+    throw $ MissingFieldsException $ Just $ Text.pack "Library argument is missing";
 
-    putStrLn "success!"
-    return ()
-
-
+unloadLibrary :: IORef Core.Core -> Maybe Libs_Types.Library -> IO ()
 unloadLibrary batchHandler (Just tlibrary) = do
-    putStr "unloading library...\t\t"
+    putStr $ "unloading library...\t" ++ (show tlibrary) ++ "\t"
     core <- readIORef batchHandler
     let 
         libManager = Core.libManager core
-        Right (lID, _) = decode tlibrary :: Either String (Int, Library)
-        newCore = core { Core.libManager = LibManager.delNode lID libManager }
-    writeIORef batchHandler newCore
-    
-    putStrLn "success!"
-    return ()
+ 
+    case decode tlibrary :: Either String (Int, Library) of
+        Right (lID, _) -> do 
+                                  let newCore = core { Core.libManager = LibManager.delNode lID libManager }
+                                  writeIORef batchHandler newCore
+                                  putStrLn "success!"
+                                  return ()
+        Left message       -> do
+                                  putStrLn $ "failed: " ++ message
+                                  throw $ MissingFieldsException $ Just $ Text.pack message
 
+unloadLibrary _ Nothing = do
+    throw $ MissingFieldsException $ Just $ Text.pack "Library argument is missing";

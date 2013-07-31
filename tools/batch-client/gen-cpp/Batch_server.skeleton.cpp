@@ -27,7 +27,7 @@ class BatchHandler : virtual public BatchIf {
     printf("libraries\n");
   }
 
-  void loadLibrary(const  ::Library& library) {
+  void loadLibrary( ::Library& _return, const  ::Library& library) {
     // Your implementation goes here
     printf("loadLibrary\n");
   }
