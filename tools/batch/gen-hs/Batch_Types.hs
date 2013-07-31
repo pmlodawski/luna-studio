@@ -39,3 +39,34 @@ import qualified Libs_Types
 import qualified Types_Types
 
 
+data MissingFieldsException = MissingFieldsException{f_MissingFieldsException_message :: Maybe Text} deriving (Show,Eq,Typeable)
+instance Exception MissingFieldsException
+instance Hashable MissingFieldsException where
+  hashWithSalt salt record = salt   `hashWithSalt` f_MissingFieldsException_message record  
+write_MissingFieldsException oprot record = do
+  writeStructBegin oprot "MissingFieldsException"
+  case f_MissingFieldsException_message record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("message",T_STRING,1)
+    writeString oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_MissingFieldsException_fields iprot record = do
+  (_,_t3,_id4) <- readFieldBegin iprot
+  if _t3 == T_STOP then return record else
+    case _id4 of 
+      1 -> if _t3 == T_STRING then do
+        s <- readString iprot
+        read_MissingFieldsException_fields iprot record{f_MissingFieldsException_message=Just s}
+        else do
+          skip iprot _t3
+          read_MissingFieldsException_fields iprot record
+      _ -> do
+        skip iprot _t3
+        readFieldEnd iprot
+        read_MissingFieldsException_fields iprot record
+read_MissingFieldsException iprot = do
+  _ <- readStructBegin iprot
+  record <- read_MissingFieldsException_fields iprot (MissingFieldsException{f_MissingFieldsException_message=Nothing})
+  readStructEnd iprot
+  return record

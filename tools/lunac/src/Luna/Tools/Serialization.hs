@@ -5,17 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Lib.LibManager(
-    module Luna.Data.Graph,
-    LibManager
-) where
+{-# LANGUAGE FunctionalDependencies #-}
 
-import           Luna.Lib.Library       (Library)
-import           Luna.Lib.Edge          (Edge)
+module Luna.Tools.Serialization where
 
-import           Luna.Data.Graph         hiding(Graph, Edge)
-import qualified Luna.Data.Graph         as DG
-
-
-type LibManager = DG.Graph Library Edge
-
+class Serialize a b | a -> b where
+  encode :: a -> b
+  decode :: b -> Either String a 

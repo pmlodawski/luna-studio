@@ -19,7 +19,7 @@
 typedef int32_t LibID;
 
 typedef struct _Library__isset {
-  _Library__isset() : libID(false), name(false), path(false) {}
+  _Library__isset() : libID(true), name(false), path(false) {}
   bool libID;
   bool name;
   bool path;
@@ -31,7 +31,7 @@ class Library {
   static const char* ascii_fingerprint; // = "EA49C8C1262074DF53C913E79A866B9E";
   static const uint8_t binary_fingerprint[16]; // = {0xEA,0x49,0xC8,0xC1,0x26,0x20,0x74,0xDF,0x53,0xC9,0x13,0xE7,0x9A,0x86,0x6B,0x9E};
 
-  Library() : libID(0), name(), path() {
+  Library() : libID(-1), name(), path() {
   }
 
   virtual ~Library() throw() {}

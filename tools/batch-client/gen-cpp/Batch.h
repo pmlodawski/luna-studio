@@ -16,7 +16,7 @@ class BatchIf {
  public:
   virtual ~BatchIf() {}
   virtual void libraries(std::vector< ::Library> & _return) = 0;
-  virtual void loadLibrary(const  ::Library& library) = 0;
+  virtual void loadLibrary( ::Library& _return, const  ::Library& library) = 0;
   virtual void unloadLibrary(const  ::Library& library) = 0;
   virtual void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs) = 0;
   virtual void addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent) = 0;
@@ -71,7 +71,7 @@ class BatchNull : virtual public BatchIf {
   void libraries(std::vector< ::Library> & /* _return */) {
     return;
   }
-  void loadLibrary(const  ::Library& /* library */) {
+  void loadLibrary( ::Library& /* _return */, const  ::Library& /* library */) {
     return;
   }
   void unloadLibrary(const  ::Library& /* library */) {
@@ -287,6 +287,11 @@ class Batch_loadLibrary_pargs {
 
 };
 
+typedef struct _Batch_loadLibrary_result__isset {
+  _Batch_loadLibrary_result__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_loadLibrary_result__isset;
 
 class Batch_loadLibrary_result {
  public:
@@ -296,9 +301,25 @@ class Batch_loadLibrary_result {
 
   virtual ~Batch_loadLibrary_result() throw() {}
 
+   ::Library success;
+  MissingFieldsException missingFields;
 
-  bool operator == (const Batch_loadLibrary_result & /* rhs */) const
+  _Batch_loadLibrary_result__isset __isset;
+
+  void __set_success(const  ::Library& val) {
+    success = val;
+  }
+
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_loadLibrary_result & rhs) const
   {
+    if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_loadLibrary_result &rhs) const {
@@ -312,6 +333,11 @@ class Batch_loadLibrary_result {
 
 };
 
+typedef struct _Batch_loadLibrary_presult__isset {
+  _Batch_loadLibrary_presult__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_loadLibrary_presult__isset;
 
 class Batch_loadLibrary_presult {
  public:
@@ -319,6 +345,10 @@ class Batch_loadLibrary_presult {
 
   virtual ~Batch_loadLibrary_presult() throw() {}
 
+   ::Library* success;
+  MissingFieldsException missingFields;
+
+  _Batch_loadLibrary_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -375,6 +405,10 @@ class Batch_unloadLibrary_pargs {
 
 };
 
+typedef struct _Batch_unloadLibrary_result__isset {
+  _Batch_unloadLibrary_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_unloadLibrary_result__isset;
 
 class Batch_unloadLibrary_result {
  public:
@@ -384,9 +418,18 @@ class Batch_unloadLibrary_result {
 
   virtual ~Batch_unloadLibrary_result() throw() {}
 
+  MissingFieldsException missingFields;
 
-  bool operator == (const Batch_unloadLibrary_result & /* rhs */) const
+  _Batch_unloadLibrary_result__isset __isset;
+
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_unloadLibrary_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_unloadLibrary_result &rhs) const {
@@ -400,6 +443,10 @@ class Batch_unloadLibrary_result {
 
 };
 
+typedef struct _Batch_unloadLibrary_presult__isset {
+  _Batch_unloadLibrary_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_unloadLibrary_presult__isset;
 
 class Batch_unloadLibrary_presult {
  public:
@@ -407,6 +454,9 @@ class Batch_unloadLibrary_presult {
 
   virtual ~Batch_unloadLibrary_presult() throw() {}
 
+  MissingFieldsException missingFields;
+
+  _Batch_unloadLibrary_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -2697,9 +2747,9 @@ class BatchClient : virtual public BatchIf {
   void libraries(std::vector< ::Library> & _return);
   void send_libraries();
   void recv_libraries(std::vector< ::Library> & _return);
-  void loadLibrary(const  ::Library& library);
+  void loadLibrary( ::Library& _return, const  ::Library& library);
   void send_loadLibrary(const  ::Library& library);
-  void recv_loadLibrary();
+  void recv_loadLibrary( ::Library& _return);
   void unloadLibrary(const  ::Library& library);
   void send_unloadLibrary(const  ::Library& library);
   void recv_unloadLibrary();
@@ -2870,13 +2920,14 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void loadLibrary(const  ::Library& library) {
+  void loadLibrary( ::Library& _return, const  ::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->loadLibrary(library);
+      ifaces_[i]->loadLibrary(_return, library);
     }
-    ifaces_[i]->loadLibrary(library);
+    ifaces_[i]->loadLibrary(_return, library);
+    return;
   }
 
   void unloadLibrary(const  ::Library& library) {

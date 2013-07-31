@@ -85,7 +85,13 @@ recv_loadLibrary ip = do
     else return ()
   res <- read_LoadLibrary_result ip
   readMessageEnd ip
-  return ()
+  case f_LoadLibrary_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_LoadLibrary_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "loadLibrary failed: unknown result")
 unloadLibrary (ip,op) arg_library = do
   send_unloadLibrary op arg_library
   recv_unloadLibrary ip
@@ -105,6 +111,9 @@ recv_unloadLibrary ip = do
     else return ()
   res <- read_UnloadLibrary_result ip
   readMessageEnd ip
+  case f_UnloadLibrary_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 newDefinition (ip,op) arg_type arg_flags arg_attrs = do
   send_newDefinition op arg_type arg_flags arg_attrs

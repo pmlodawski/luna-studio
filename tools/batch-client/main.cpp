@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "gen-cpp/Batch.h"
 
 #include <transport/TSocket.h>
@@ -29,20 +31,34 @@ int main(int argc, char **argv) {
     vector<Library> registeredLibs;
 
     Library stdlib;
-    stdlib.name = "/opt/luna/lib";
-    stdlib.path = "std";
+    stdlib.__set_name("std");
+    stdlib.__set_path("/opt/luna/lib");
 
     Library userlib;
-    userlib.name = "~/luna-projects/myproj";
-    userlib.path = "my";  
+    userlib.__set_name("my");
+    userlib.__set_path("~/luna-projects/myproj");
 
-    batch.loadLibrary(stdlib);
-    batch.loadLibrary(userlib);
+    batch.loadLibrary(stdlib, stdlib);
+    batch.loadLibrary(userlib, userlib);
     batch.libraries(registeredLibs);
+    cout << "Libraries loaded: " << registeredLibs.size() << endl;
     batch.unloadLibrary(userlib);
     batch.libraries(registeredLibs);
-    batch.loadLibrary(userlib);
+    cout << "Libraries loaded: " << registeredLibs.size() << endl;
+    batch.loadLibrary(userlib, userlib);
+
+    try {
+        Library brokenLib;
+        brokenLib.__set_name("brokenLib");
+        batch.loadLibrary(brokenLib, brokenLib);
+    } catch (MissingFieldsException e) {
+        cout << e.message << endl;
+    }
+
     batch.libraries(registeredLibs);
+    cout << "Libraries loaded: " << registeredLibs.size() << endl;
+
+
 
     /* Add new definition */
     
@@ -78,7 +94,7 @@ int main(int argc, char **argv) {
     dummy.name = "dummy";
     batch.addNode(dummy, dummy, fun);
     batch.removeNode(dummy, fun);
-
+    
     /* Finalize */
 
     transport->close();
