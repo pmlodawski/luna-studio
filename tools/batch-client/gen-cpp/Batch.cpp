@@ -265,7 +265,28 @@ uint32_t Batch_loadLibrary_result::read(::apache::thrift::protocol::TProtocol* i
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->success.read(iprot);
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -280,6 +301,15 @@ uint32_t Batch_loadLibrary_result::write(::apache::thrift::protocol::TProtocol* 
 
   xfer += oprot->writeStructBegin("Batch_loadLibrary_result");
 
+  if (this->__isset.success) {
+    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
+    xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -303,7 +333,28 @@ uint32_t Batch_loadLibrary_presult::read(::apache::thrift::protocol::TProtocol* 
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += (*(this->success)).read(iprot);
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -396,7 +447,20 @@ uint32_t Batch_unloadLibrary_result::read(::apache::thrift::protocol::TProtocol*
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -411,6 +475,11 @@ uint32_t Batch_unloadLibrary_result::write(::apache::thrift::protocol::TProtocol
 
   xfer += oprot->writeStructBegin("Batch_unloadLibrary_result");
 
+  if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -434,7 +503,20 @@ uint32_t Batch_unloadLibrary_presult::read(::apache::thrift::protocol::TProtocol
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -4103,10 +4185,10 @@ void BatchClient::recv_libraries(std::vector< ::Library> & _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "libraries failed: unknown result");
 }
 
-void BatchClient::loadLibrary(const  ::Library& library)
+void BatchClient::loadLibrary( ::Library& _return, const  ::Library& library)
 {
   send_loadLibrary(library);
-  recv_loadLibrary();
+  recv_loadLibrary(_return);
 }
 
 void BatchClient::send_loadLibrary(const  ::Library& library)
@@ -4123,7 +4205,7 @@ void BatchClient::send_loadLibrary(const  ::Library& library)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_loadLibrary()
+void BatchClient::recv_loadLibrary( ::Library& _return)
 {
 
   int32_t rseqid = 0;
@@ -4149,11 +4231,19 @@ void BatchClient::recv_loadLibrary()
     iprot_->getTransport()->readEnd();
   }
   Batch_loadLibrary_presult result;
+  result.success = &_return;
   result.read(iprot_);
   iprot_->readMessageEnd();
   iprot_->getTransport()->readEnd();
 
-  return;
+  if (result.__isset.success) {
+    // _return pointer has now been filled
+    return;
+  }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
+  throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "loadLibrary failed: unknown result");
 }
 
 void BatchClient::unloadLibrary(const  ::Library& library)
@@ -4206,6 +4296,9 @@ void BatchClient::recv_unloadLibrary()
   iprot_->readMessageEnd();
   iprot_->getTransport()->readEnd();
 
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   return;
 }
 
@@ -5504,7 +5597,11 @@ void BatchProcessor::process_loadLibrary(int32_t seqid, ::apache::thrift::protoc
 
   Batch_loadLibrary_result result;
   try {
-    iface_->loadLibrary(args.library);
+    iface_->loadLibrary(result.success, args.library);
+    result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.loadLibrary");
@@ -5558,6 +5655,9 @@ void BatchProcessor::process_unloadLibrary(int32_t seqid, ::apache::thrift::prot
   Batch_unloadLibrary_result result;
   try {
     iface_->unloadLibrary(args.library);
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.unloadLibrary");

@@ -6,12 +6,15 @@
 ---------------------------------------------------------------------------
 
 module Luna.Core(
-
+Core(..),
+empty
 ) where
 
+import qualified Luna.Lib.LibManager         as LibManager
+import           Luna.Lib.LibManager           (LibManager)
+import qualified Luna.Network.Def.DefManager as DefManager
+import           Luna.Network.Def.DefManager   (DefManager)
 
-import Luna.Lib.LibManager (LibManager)
-import Luna.Network.Def.DefManager (DefManager)
 
 
 data Core = Core {
@@ -19,3 +22,5 @@ data Core = Core {
     defManager :: DefManager
 } deriving(Show)
 
+empty :: Core
+empty = Core LibManager.empty DefManager.empty

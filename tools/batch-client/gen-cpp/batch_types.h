@@ -21,6 +21,49 @@
 
 namespace flowbox { namespace batch {
 
+typedef struct _MissingFieldsException__isset {
+  _MissingFieldsException__isset() : message(false) {}
+  bool message;
+} _MissingFieldsException__isset;
+
+class MissingFieldsException : public ::apache::thrift::TException {
+ public:
+
+  static const char* ascii_fingerprint; // = "EFB929595D312AC8F305D5A794CFEDA1";
+  static const uint8_t binary_fingerprint[16]; // = {0xEF,0xB9,0x29,0x59,0x5D,0x31,0x2A,0xC8,0xF3,0x05,0xD5,0xA7,0x94,0xCF,0xED,0xA1};
+
+  MissingFieldsException() : message() {
+  }
+
+  virtual ~MissingFieldsException() throw() {}
+
+  std::string message;
+
+  _MissingFieldsException__isset __isset;
+
+  void __set_message(const std::string& val) {
+    message = val;
+  }
+
+  bool operator == (const MissingFieldsException & rhs) const
+  {
+    if (!(message == rhs.message))
+      return false;
+    return true;
+  }
+  bool operator != (const MissingFieldsException &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const MissingFieldsException & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(MissingFieldsException &a, MissingFieldsException &b);
+
 }} // namespace
 
 #endif

@@ -14,6 +14,17 @@ include "../../lunac/thrift/graph.thrift"
 include "../../lunac/thrift/libs.thrift"
 include "../../lunac/thrift/types.thrift"
 
+/*
+ * Exceptions
+ */
+
+exception MissingFieldsException {
+    1: optional string message;
+}
+
+/*
+ * Batch service
+ */
 
 service Batch {
 
@@ -23,8 +34,8 @@ service Batch {
 
     list<libs.Library> libraries()
 
-    void    loadLibrary(1: libs.Library library)
-    void  unloadLibrary(1: libs.Library library)
+    libs.Library   loadLibrary(1: libs.Library library) throws (1:MissingFieldsException missingFields)
+    void         unloadLibrary(1: libs.Library library) throws (1:MissingFieldsException missingFields)
 
     /*
      * Definitions

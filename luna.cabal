@@ -40,7 +40,7 @@ Library
                   Luna.Network.Attributes,
                   Luna.Network.Flags,
                   Luna.System.UniPath,
-                  Luna.Tools.Graphviz,
+                  Luna.Tools.Graphviz,              
                   Luna.Tools.TypeChecker,
                   Luna.Tools.Serialization,
                   Luna.Tools.Serialization.GraphSerialization,
@@ -99,8 +99,10 @@ Executable batch
   Main-Is:        Main.hs
 
   GHC-Options:    -Wall 
-  
-  Extensions:     
+
+  Extensions:     FlexibleInstances,
+                  TypeSynonymInstances
+
   Build-Depends:  base,
                   bytestring,
                   flowbox,
