@@ -18,7 +18,7 @@ include "../../lunac/thrift/types.thrift"
  * Exceptions
  */
 
-exception MissingFieldsException {
+exception ArgumentException {
     1: optional string message;
 }
 
@@ -34,49 +34,50 @@ service Batch {
 
     list<libs.Library> libraries()
 
-    libs.Library   loadLibrary(1: libs.Library library) throws (1:MissingFieldsException missingFields)
-    void         unloadLibrary(1: libs.Library library) throws (1:MissingFieldsException missingFields)
+    libs.Library    loadLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
+    void          unloadLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
 
+    defs.NodeDef libraryRootDef(1: libs.Library library) throws (1: ArgumentException missingFields)
     /*
      * Definitions
      */
 
-    defs.NodeDefinition newDefinition(1: types.Type type, 2: defs.Imports imports, 
+    defs.NodeDef newDefinition(1: types.Type type, 2: defs.Imports imports, 
                                       3: attrs.Flags flags, 4: attrs.Attributes attrs)
-    defs.NodeDefinition addDefinition(1: defs.NodeDefinition definition, 2: defs.NodeDefinition parent) throws (1:MissingFieldsException missingFields)
-    void updateDefinition(1: defs.NodeDefinition definition) throws (1:MissingFieldsException missingFields)
-    void removeDefinition(1: defs.NodeDefinition definition) throws (1:MissingFieldsException missingFields)
+    defs.NodeDef addDefinition(1: defs.NodeDef definition, 2: defs.NodeDef parent) throws (1: ArgumentException missingFields)
+    void      updateDefinition(1: defs.NodeDef definition) throws (1: ArgumentException missingFields)
+    void      removeDefinition(1: defs.NodeDef definition) throws (1: ArgumentException missingFields)
 
-    list<defs.NodeDefinition> definitionChildren(1: defs.NodeDefinition definition) throws (1:MissingFieldsException missingFields)
-         defs.NodeDefinition  definitionParent  (1: defs.NodeDefinition definition) throws (1:MissingFieldsException missingFields)
+    list<defs.NodeDef> definitionChildren(1: defs.NodeDef definition) throws (1: ArgumentException missingFields)
+         defs.NodeDef  definitionParent  (1: defs.NodeDef definition) throws (1: ArgumentException missingFields)
 
     /*
      * Types
      */
 
-    types.Type newTypeModule   (1: string name) throws (1:MissingFieldsException missingFields)
-    types.Type newTypeClass    (1: string name, 2: types.Type params) throws (1:MissingFieldsException missingFields)
-    types.Type newTypeFunction (1: string name, 2: types.Type inputs, 3: types.Type outputs) throws (1:MissingFieldsException missingFields)
-    types.Type newTypeUdefined () throws (1:MissingFieldsException missingFields)
-    types.Type newTypeNamed    (1: string name, ) throws (1:MissingFieldsException missingFields)
-    types.Type newTypeVariable (1: string name, 2: types.Type type) throws (1:MissingFieldsException missingFields)
-    types.Type newTypeList     (1: types.Type type) throws (1:MissingFieldsException missingFields)
-    types.Type newTypeTuple    (1: list<types.Type> types) throws (1:MissingFieldsException missingFields)
+    types.Type newTypeModule   (1: string name) throws (1: ArgumentException missingFields)
+    types.Type newTypeClass    (1: string name, 2: types.Type params) throws (1: ArgumentException missingFields)
+    types.Type newTypeFunction (1: string name, 2: types.Type inputs, 3: types.Type outputs) throws (1: ArgumentException missingFields)
+    types.Type newTypeUdefined () throws (1: ArgumentException missingFields)
+    types.Type newTypeNamed    (1: string name, ) throws (1: ArgumentException missingFields)
+    types.Type newTypeVariable (1: string name, 2: types.Type type) throws (1: ArgumentException missingFields)
+    types.Type newTypeList     (1: types.Type type) throws (1: ArgumentException missingFields)
+    types.Type newTypeTuple    (1: list<types.Type> types) throws (1: ArgumentException missingFields)
 
     /*
      * Graph
      */
     
-    graph.Graph     graph(1: defs.NodeDefinition definition) throws (1:MissingFieldsException missingFields)
+    graph.Graph     graph(1: defs.NodeDef definition) throws (1: ArgumentException missingFields)
 
-    graph.Node    addNode(1: graph.Node node, 2: defs.NodeDefinition definition) throws (1:MissingFieldsException missingFields)
-    void       updateNode(1: graph.Node node, 2: defs.NodeDefinition definition) throws (1:MissingFieldsException missingFields)
-    void       removeNode(1: graph.Node node, 2: defs.NodeDefinition definition) throws (1:MissingFieldsException missingFields)
+    graph.Node    addNode(1: graph.Node node, 2: defs.NodeDef definition) throws (1: ArgumentException missingFields)
+    void       updateNode(1: graph.Node node, 2: defs.NodeDef definition) throws (1: ArgumentException missingFields)
+    void       removeNode(1: graph.Node node, 2: defs.NodeDef definition) throws (1: ArgumentException missingFields)
 
     void    connect(1: graph.Node srcNode, 2: graph.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: graph.PortDescriptor dstPort, 5: defs.NodeDefinition definition) throws (1:MissingFieldsException missingFields)
+                    3: graph.Node dstNode, 4: graph.PortDescriptor dstPort, 5: defs.NodeDef definition) throws (1: ArgumentException missingFields)
     void disconnect(1: graph.Node srcNode, 2: graph.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: graph.PortDescriptor dstPort, 5: defs.NodeDefinition definition) throws (1:MissingFieldsException missingFields)
+                    3: graph.Node dstNode, 4: graph.PortDescriptor dstPort, 5: defs.NodeDef definition) throws (1: ArgumentException missingFields)
 
     /*
      * Other

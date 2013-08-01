@@ -6,9 +6,8 @@
 ---------------------------------------------------------------------------
 
 --import Data.List
---import System.IO
-import Network
 import Data.IORef
+import Network
 --import System.Environment(getArgs)
 
 
@@ -49,6 +48,7 @@ instance Batch_Iface BatchHandler where
     libraries     = LibraryHandler.libraries
     loadLibrary   = LibraryHandler.loadLibrary
     unloadLibrary = LibraryHandler.unloadLibrary
+    libraryRootDef = LibraryHandler.libraryRootDef
 
     newDefinition      = DefinitionHandler.newDefinition
     addDefinition      = DefinitionHandler.addDefinition
@@ -73,7 +73,7 @@ instance Batch_Iface BatchHandler where
     connect    = GraphHandler.connect
     disconnect = GraphHandler.disconnect
 
-    ping _ = putStrLn "ping"
+    ping _     = putStrLn "ping"
 
 
 main :: IO ()

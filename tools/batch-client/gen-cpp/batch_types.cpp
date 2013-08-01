@@ -10,10 +10,10 @@
 
 namespace flowbox { namespace batch {
 
-const char* MissingFieldsException::ascii_fingerprint = "66E694018C17E5B65A59AE8F55CCA3CD";
-const uint8_t MissingFieldsException::binary_fingerprint[16] = {0x66,0xE6,0x94,0x01,0x8C,0x17,0xE5,0xB6,0x5A,0x59,0xAE,0x8F,0x55,0xCC,0xA3,0xCD};
+const char* ArgumentException::ascii_fingerprint = "66E694018C17E5B65A59AE8F55CCA3CD";
+const uint8_t ArgumentException::binary_fingerprint[16] = {0x66,0xE6,0x94,0x01,0x8C,0x17,0xE5,0xB6,0x5A,0x59,0xAE,0x8F,0x55,0xCC,0xA3,0xCD};
 
-uint32_t MissingFieldsException::read(::apache::thrift::protocol::TProtocol* iprot) {
+uint32_t ArgumentException::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   uint32_t xfer = 0;
   std::string fname;
@@ -53,9 +53,9 @@ uint32_t MissingFieldsException::read(::apache::thrift::protocol::TProtocol* ipr
   return xfer;
 }
 
-uint32_t MissingFieldsException::write(::apache::thrift::protocol::TProtocol* oprot) const {
+uint32_t ArgumentException::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
-  xfer += oprot->writeStructBegin("MissingFieldsException");
+  xfer += oprot->writeStructBegin("ArgumentException");
 
   if (this->__isset.message) {
     xfer += oprot->writeFieldBegin("message", ::apache::thrift::protocol::T_STRING, 1);
@@ -67,7 +67,7 @@ uint32_t MissingFieldsException::write(::apache::thrift::protocol::TProtocol* op
   return xfer;
 }
 
-void swap(MissingFieldsException &a, MissingFieldsException &b) {
+void swap(ArgumentException &a, ArgumentException &b) {
   using ::std::swap;
   swap(a.message, b.message);
   swap(a.__isset, b.__isset);

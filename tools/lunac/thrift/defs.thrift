@@ -21,7 +21,7 @@ struct Import {
 typedef list<Import> Imports
 
 
-struct NodeDefinition {
+struct NodeDef {
     1: optional types.Type       cls
     2: optional Imports          imports
     3: optional attrs.Flags      flags

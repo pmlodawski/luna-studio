@@ -80,26 +80,26 @@ class Import {
 
 void swap(Import &a, Import &b);
 
-typedef struct _NodeDefinition__isset {
-  _NodeDefinition__isset() : cls(false), imports(false), flags(false), attribs(false), libID(true), defID(true) {}
+typedef struct _NodeDef__isset {
+  _NodeDef__isset() : cls(false), imports(false), flags(false), attribs(false), libID(true), defID(true) {}
   bool cls;
   bool imports;
   bool flags;
   bool attribs;
   bool libID;
   bool defID;
-} _NodeDefinition__isset;
+} _NodeDef__isset;
 
-class NodeDefinition {
+class NodeDef {
  public:
 
   static const char* ascii_fingerprint; // = "D9CB0AF3DE14C9550504EB04D3E1A1B4";
   static const uint8_t binary_fingerprint[16]; // = {0xD9,0xCB,0x0A,0xF3,0xDE,0x14,0xC9,0x55,0x05,0x04,0xEB,0x04,0xD3,0xE1,0xA1,0xB4};
 
-  NodeDefinition() : libID(-1), defID(-1) {
+  NodeDef() : libID(-1), defID(-1) {
   }
 
-  virtual ~NodeDefinition() throw() {}
+  virtual ~NodeDef() throw() {}
 
    ::Type cls;
   Imports imports;
@@ -108,7 +108,7 @@ class NodeDefinition {
    ::LibID libID;
   DefID defID;
 
-  _NodeDefinition__isset __isset;
+  _NodeDef__isset __isset;
 
   void __set_cls(const  ::Type& val) {
     cls = val;
@@ -140,7 +140,7 @@ class NodeDefinition {
     __isset.defID = true;
   }
 
-  bool operator == (const NodeDefinition & rhs) const
+  bool operator == (const NodeDef & rhs) const
   {
     if (__isset.cls != rhs.__isset.cls)
       return false;
@@ -168,18 +168,18 @@ class NodeDefinition {
       return false;
     return true;
   }
-  bool operator != (const NodeDefinition &rhs) const {
+  bool operator != (const NodeDef &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const NodeDefinition & ) const;
+  bool operator < (const NodeDef & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
-void swap(NodeDefinition &a, NodeDefinition &b);
+void swap(NodeDef &a, NodeDef &b);
 
 
 

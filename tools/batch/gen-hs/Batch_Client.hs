@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(libraries,loadLibrary,unloadLibrary,newDefinition,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,graph,addNode,updateNode,removeNode,connect,disconnect,ping) where
+module Batch_Client(libraries,loadLibrary,unloadLibrary,libraryRootDef,newDefinition,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,graph,addNode,updateNode,removeNode,connect,disconnect,ping) where
 import Data.IORef
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -115,6 +115,32 @@ recv_unloadLibrary ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
+libraryRootDef (ip,op) arg_library = do
+  send_libraryRootDef op arg_library
+  recv_libraryRootDef ip
+send_libraryRootDef op arg_library = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("libraryRootDef", M_CALL, seqn)
+  write_LibraryRootDef_args op (LibraryRootDef_args{f_LibraryRootDef_args_library=Just arg_library})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_libraryRootDef ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_LibraryRootDef_result ip
+  readMessageEnd ip
+  case f_LibraryRootDef_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_LibraryRootDef_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "libraryRootDef failed: unknown result")
 newDefinition (ip,op) arg_type arg_imports arg_flags arg_attrs = do
   send_newDefinition op arg_type arg_imports arg_flags arg_attrs
   recv_newDefinition ip

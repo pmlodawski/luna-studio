@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
             Library brokenLib;
             brokenLib.__set_name("brokenLib");
             batch.loadLibrary(brokenLib, brokenLib);
-        } catch (MissingFieldsException e) {
+        } catch (ArgumentException e) {
             cout << e.message << endl;
         }
 
@@ -71,9 +71,9 @@ int main(int argc, char **argv) {
         Type funType;
         batch.newTypeFunction(funType, "fun", funInputsType, funOutputsType);
 
-        NodeDefinition myModule;// TODO [PM] How can I get "my" module?
+        NodeDef myModule;// TODO [PM] How can I get "my" module?
 
-        NodeDefinition fun;
+        NodeDef fun;
         fun.cls = funType;
         batch.addDefinition(fun, fun, myModule);
 
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
         batch.addNode(dummy, dummy, fun);
         batch.removeNode(dummy, fun);
 
-    } catch (MissingFieldsException e) {
+    } catch (ArgumentException e) {
         cout << "Batch returned an error: "<< endl
              << "\t" << e.message << endl;
     }

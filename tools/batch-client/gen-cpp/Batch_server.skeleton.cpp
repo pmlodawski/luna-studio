@@ -37,32 +37,37 @@ class BatchHandler : virtual public BatchIf {
     printf("unloadLibrary\n");
   }
 
-  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs) {
+  void libraryRootDef( ::NodeDef& _return, const  ::Library& library) {
+    // Your implementation goes here
+    printf("libraryRootDef\n");
+  }
+
+  void newDefinition( ::NodeDef& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs) {
     // Your implementation goes here
     printf("newDefinition\n");
   }
 
-  void addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent) {
+  void addDefinition( ::NodeDef& _return, const  ::NodeDef& definition, const  ::NodeDef& parent) {
     // Your implementation goes here
     printf("addDefinition\n");
   }
 
-  void updateDefinition(const  ::NodeDefinition& definition) {
+  void updateDefinition(const  ::NodeDef& definition) {
     // Your implementation goes here
     printf("updateDefinition\n");
   }
 
-  void removeDefinition(const  ::NodeDefinition& definition) {
+  void removeDefinition(const  ::NodeDef& definition) {
     // Your implementation goes here
     printf("removeDefinition\n");
   }
 
-  void definitionChildren(std::vector< ::NodeDefinition> & _return, const  ::NodeDefinition& definition) {
+  void definitionChildren(std::vector< ::NodeDef> & _return, const  ::NodeDef& definition) {
     // Your implementation goes here
     printf("definitionChildren\n");
   }
 
-  void definitionParent( ::NodeDefinition& _return, const  ::NodeDefinition& definition) {
+  void definitionParent( ::NodeDef& _return, const  ::NodeDef& definition) {
     // Your implementation goes here
     printf("definitionParent\n");
   }
@@ -107,32 +112,32 @@ class BatchHandler : virtual public BatchIf {
     printf("newTypeTuple\n");
   }
 
-  void graph( ::Graph& _return, const  ::NodeDefinition& definition) {
+  void graph( ::Graph& _return, const  ::NodeDef& definition) {
     // Your implementation goes here
     printf("graph\n");
   }
 
-  void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDefinition& definition) {
+  void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDef& definition) {
     // Your implementation goes here
     printf("addNode\n");
   }
 
-  void updateNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+  void updateNode(const  ::Node& node, const  ::NodeDef& definition) {
     // Your implementation goes here
     printf("updateNode\n");
   }
 
-  void removeNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+  void removeNode(const  ::Node& node, const  ::NodeDef& definition) {
     // Your implementation goes here
     printf("removeNode\n");
   }
 
-  void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) {
+  void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition) {
     // Your implementation goes here
     printf("connect\n");
   }
 
-  void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) {
+  void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition) {
     // Your implementation goes here
     printf("disconnect\n");
   }

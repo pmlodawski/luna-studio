@@ -50,7 +50,7 @@ instance Serialize [Import] Defs_Types.Imports where
         imports = convert imports1
 
 
-instance Serialize (Int, NodeDef) (Defs_Types.NodeDefinition, Graph) where
+instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
   encode (defID, NodeDef cls graph imports flags attributes libID) = (tdef, graph) where
      ttype       = Nothing -- TODO [PM] : make work here: Just $ encode cls
      timports    = Just $ encode imports
@@ -58,9 +58,9 @@ instance Serialize (Int, NodeDef) (Defs_Types.NodeDefinition, Graph) where
      tattributes = Just $ encode attributes
      tlibID      = Just $ hashInt libID
      tdefID      = Just $ hashInt defID
-     tdef = Defs_Types.NodeDefinition ttype timports tflags tattributes tlibID tdefID 
+     tdef = Defs_Types.NodeDef ttype timports tflags tattributes tlibID tdefID 
   decode td = case td of 
-     (Defs_Types.NodeDefinition Nothing (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), graph)
+     (Defs_Types.NodeDef Nothing (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), graph)
            -> d where
                     d = case (decode timports :: Either String [Import], decode tflags, decode tattributes) of
                         (Right imports, Right flags, Right attributes)
@@ -74,7 +74,7 @@ instance Serialize (Int, NodeDef) (Defs_Types.NodeDefinition, Graph) where
                                -> Left $ "Failed to deserialize flags : " ++ message
                         (Left message , _           , _           )
                                -> Left $ "Failed to deserialize imports : " ++ message
-     (Defs_Types.NodeDefinition {}, _) -> Left "Some fields are missing"
+     (Defs_Types.NodeDef {}, _) -> Left "Some fields are missing"
 
 
 convert :: [Either String a] -> Either String [a]

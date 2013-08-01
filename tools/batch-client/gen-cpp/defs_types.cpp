@@ -127,10 +127,10 @@ void swap(Import &a, Import &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* NodeDefinition::ascii_fingerprint = "D9CB0AF3DE14C9550504EB04D3E1A1B4";
-const uint8_t NodeDefinition::binary_fingerprint[16] = {0xD9,0xCB,0x0A,0xF3,0xDE,0x14,0xC9,0x55,0x05,0x04,0xEB,0x04,0xD3,0xE1,0xA1,0xB4};
+const char* NodeDef::ascii_fingerprint = "D9CB0AF3DE14C9550504EB04D3E1A1B4";
+const uint8_t NodeDef::binary_fingerprint[16] = {0xD9,0xCB,0x0A,0xF3,0xDE,0x14,0xC9,0x55,0x05,0x04,0xEB,0x04,0xD3,0xE1,0xA1,0xB4};
 
-uint32_t NodeDefinition::read(::apache::thrift::protocol::TProtocol* iprot) {
+uint32_t NodeDef::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   uint32_t xfer = 0;
   std::string fname;
@@ -222,9 +222,9 @@ uint32_t NodeDefinition::read(::apache::thrift::protocol::TProtocol* iprot) {
   return xfer;
 }
 
-uint32_t NodeDefinition::write(::apache::thrift::protocol::TProtocol* oprot) const {
+uint32_t NodeDef::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
-  xfer += oprot->writeStructBegin("NodeDefinition");
+  xfer += oprot->writeStructBegin("NodeDef");
 
   if (this->__isset.cls) {
     xfer += oprot->writeFieldBegin("cls", ::apache::thrift::protocol::T_STRUCT, 1);
@@ -269,7 +269,7 @@ uint32_t NodeDefinition::write(::apache::thrift::protocol::TProtocol* oprot) con
   return xfer;
 }
 
-void swap(NodeDefinition &a, NodeDefinition &b) {
+void swap(NodeDef &a, NodeDef &b) {
   using ::std::swap;
   swap(a.cls, b.cls);
   swap(a.imports, b.imports);

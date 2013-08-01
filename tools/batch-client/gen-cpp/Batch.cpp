@@ -525,6 +525,188 @@ uint32_t Batch_unloadLibrary_presult::read(::apache::thrift::protocol::TProtocol
   return xfer;
 }
 
+uint32_t Batch_libraryRootDef_args::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->library.read(iprot);
+          this->__isset.library = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t Batch_libraryRootDef_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("Batch_libraryRootDef_args");
+
+  xfer += oprot->writeFieldBegin("library", ::apache::thrift::protocol::T_STRUCT, 1);
+  xfer += this->library.write(oprot);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t Batch_libraryRootDef_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("Batch_libraryRootDef_pargs");
+
+  xfer += oprot->writeFieldBegin("library", ::apache::thrift::protocol::T_STRUCT, 1);
+  xfer += (*(this->library)).write(oprot);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t Batch_libraryRootDef_result::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->success.read(iprot);
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t Batch_libraryRootDef_result::write(::apache::thrift::protocol::TProtocol* oprot) const {
+
+  uint32_t xfer = 0;
+
+  xfer += oprot->writeStructBegin("Batch_libraryRootDef_result");
+
+  if (this->__isset.success) {
+    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
+    xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t Batch_libraryRootDef_presult::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += (*(this->success)).read(iprot);
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
 uint32_t Batch_newDefinition_args::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   uint32_t xfer = 0;
@@ -1421,7 +1603,7 @@ uint32_t Batch_definitionChildren_result::write(::apache::thrift::protocol::TPro
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_LIST, 0);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->success.size()));
-      std::vector< ::NodeDefinition> ::const_iterator _iter23;
+      std::vector< ::NodeDef> ::const_iterator _iter23;
       for (_iter23 = this->success.begin(); _iter23 != this->success.end(); ++_iter23)
       {
         xfer += (*_iter23).write(oprot);
@@ -4792,7 +4974,68 @@ void BatchClient::recv_unloadLibrary()
   return;
 }
 
-void BatchClient::newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs)
+void BatchClient::libraryRootDef( ::NodeDef& _return, const  ::Library& library)
+{
+  send_libraryRootDef(library);
+  recv_libraryRootDef(_return);
+}
+
+void BatchClient::send_libraryRootDef(const  ::Library& library)
+{
+  int32_t cseqid = 0;
+  oprot_->writeMessageBegin("libraryRootDef", ::apache::thrift::protocol::T_CALL, cseqid);
+
+  Batch_libraryRootDef_pargs args;
+  args.library = &library;
+  args.write(oprot_);
+
+  oprot_->writeMessageEnd();
+  oprot_->getTransport()->writeEnd();
+  oprot_->getTransport()->flush();
+}
+
+void BatchClient::recv_libraryRootDef( ::NodeDef& _return)
+{
+
+  int32_t rseqid = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TMessageType mtype;
+
+  iprot_->readMessageBegin(fname, mtype, rseqid);
+  if (mtype == ::apache::thrift::protocol::T_EXCEPTION) {
+    ::apache::thrift::TApplicationException x;
+    x.read(iprot_);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+    throw x;
+  }
+  if (mtype != ::apache::thrift::protocol::T_REPLY) {
+    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+  }
+  if (fname.compare("libraryRootDef") != 0) {
+    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+  }
+  Batch_libraryRootDef_presult result;
+  result.success = &_return;
+  result.read(iprot_);
+  iprot_->readMessageEnd();
+  iprot_->getTransport()->readEnd();
+
+  if (result.__isset.success) {
+    // _return pointer has now been filled
+    return;
+  }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
+  throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "libraryRootDef failed: unknown result");
+}
+
+void BatchClient::newDefinition( ::NodeDef& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs)
 {
   send_newDefinition(type, imports, flags, attrs);
   recv_newDefinition(_return);
@@ -4815,7 +5058,7 @@ void BatchClient::send_newDefinition(const  ::Type& type, const  ::Imports& impo
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_newDefinition( ::NodeDefinition& _return)
+void BatchClient::recv_newDefinition( ::NodeDef& _return)
 {
 
   int32_t rseqid = 0;
@@ -4853,13 +5096,13 @@ void BatchClient::recv_newDefinition( ::NodeDefinition& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newDefinition failed: unknown result");
 }
 
-void BatchClient::addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent)
+void BatchClient::addDefinition( ::NodeDef& _return, const  ::NodeDef& definition, const  ::NodeDef& parent)
 {
   send_addDefinition(definition, parent);
   recv_addDefinition(_return);
 }
 
-void BatchClient::send_addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent)
+void BatchClient::send_addDefinition(const  ::NodeDef& definition, const  ::NodeDef& parent)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("addDefinition", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -4874,7 +5117,7 @@ void BatchClient::send_addDefinition(const  ::NodeDefinition& definition, const 
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_addDefinition( ::NodeDefinition& _return)
+void BatchClient::recv_addDefinition( ::NodeDef& _return)
 {
 
   int32_t rseqid = 0;
@@ -4915,13 +5158,13 @@ void BatchClient::recv_addDefinition( ::NodeDefinition& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "addDefinition failed: unknown result");
 }
 
-void BatchClient::updateDefinition(const  ::NodeDefinition& definition)
+void BatchClient::updateDefinition(const  ::NodeDef& definition)
 {
   send_updateDefinition(definition);
   recv_updateDefinition();
 }
 
-void BatchClient::send_updateDefinition(const  ::NodeDefinition& definition)
+void BatchClient::send_updateDefinition(const  ::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("updateDefinition", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -4971,13 +5214,13 @@ void BatchClient::recv_updateDefinition()
   return;
 }
 
-void BatchClient::removeDefinition(const  ::NodeDefinition& definition)
+void BatchClient::removeDefinition(const  ::NodeDef& definition)
 {
   send_removeDefinition(definition);
   recv_removeDefinition();
 }
 
-void BatchClient::send_removeDefinition(const  ::NodeDefinition& definition)
+void BatchClient::send_removeDefinition(const  ::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("removeDefinition", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5027,13 +5270,13 @@ void BatchClient::recv_removeDefinition()
   return;
 }
 
-void BatchClient::definitionChildren(std::vector< ::NodeDefinition> & _return, const  ::NodeDefinition& definition)
+void BatchClient::definitionChildren(std::vector< ::NodeDef> & _return, const  ::NodeDef& definition)
 {
   send_definitionChildren(definition);
   recv_definitionChildren(_return);
 }
 
-void BatchClient::send_definitionChildren(const  ::NodeDefinition& definition)
+void BatchClient::send_definitionChildren(const  ::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("definitionChildren", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5047,7 +5290,7 @@ void BatchClient::send_definitionChildren(const  ::NodeDefinition& definition)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_definitionChildren(std::vector< ::NodeDefinition> & _return)
+void BatchClient::recv_definitionChildren(std::vector< ::NodeDef> & _return)
 {
 
   int32_t rseqid = 0;
@@ -5088,13 +5331,13 @@ void BatchClient::recv_definitionChildren(std::vector< ::NodeDefinition> & _retu
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "definitionChildren failed: unknown result");
 }
 
-void BatchClient::definitionParent( ::NodeDefinition& _return, const  ::NodeDefinition& definition)
+void BatchClient::definitionParent( ::NodeDef& _return, const  ::NodeDef& definition)
 {
   send_definitionParent(definition);
   recv_definitionParent(_return);
 }
 
-void BatchClient::send_definitionParent(const  ::NodeDefinition& definition)
+void BatchClient::send_definitionParent(const  ::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("definitionParent", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5108,7 +5351,7 @@ void BatchClient::send_definitionParent(const  ::NodeDefinition& definition)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_definitionParent( ::NodeDefinition& _return)
+void BatchClient::recv_definitionParent( ::NodeDef& _return)
 {
 
   int32_t rseqid = 0;
@@ -5640,13 +5883,13 @@ void BatchClient::recv_newTypeTuple( ::Type& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeTuple failed: unknown result");
 }
 
-void BatchClient::graph( ::Graph& _return, const  ::NodeDefinition& definition)
+void BatchClient::graph( ::Graph& _return, const  ::NodeDef& definition)
 {
   send_graph(definition);
   recv_graph(_return);
 }
 
-void BatchClient::send_graph(const  ::NodeDefinition& definition)
+void BatchClient::send_graph(const  ::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("graph", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5701,13 +5944,13 @@ void BatchClient::recv_graph( ::Graph& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "graph failed: unknown result");
 }
 
-void BatchClient::addNode( ::Node& _return, const  ::Node& node, const  ::NodeDefinition& definition)
+void BatchClient::addNode( ::Node& _return, const  ::Node& node, const  ::NodeDef& definition)
 {
   send_addNode(node, definition);
   recv_addNode(_return);
 }
 
-void BatchClient::send_addNode(const  ::Node& node, const  ::NodeDefinition& definition)
+void BatchClient::send_addNode(const  ::Node& node, const  ::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("addNode", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5763,13 +6006,13 @@ void BatchClient::recv_addNode( ::Node& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "addNode failed: unknown result");
 }
 
-void BatchClient::updateNode(const  ::Node& node, const  ::NodeDefinition& definition)
+void BatchClient::updateNode(const  ::Node& node, const  ::NodeDef& definition)
 {
   send_updateNode(node, definition);
   recv_updateNode();
 }
 
-void BatchClient::send_updateNode(const  ::Node& node, const  ::NodeDefinition& definition)
+void BatchClient::send_updateNode(const  ::Node& node, const  ::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("updateNode", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5820,13 +6063,13 @@ void BatchClient::recv_updateNode()
   return;
 }
 
-void BatchClient::removeNode(const  ::Node& node, const  ::NodeDefinition& definition)
+void BatchClient::removeNode(const  ::Node& node, const  ::NodeDef& definition)
 {
   send_removeNode(node, definition);
   recv_removeNode();
 }
 
-void BatchClient::send_removeNode(const  ::Node& node, const  ::NodeDefinition& definition)
+void BatchClient::send_removeNode(const  ::Node& node, const  ::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("removeNode", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5877,13 +6120,13 @@ void BatchClient::recv_removeNode()
   return;
 }
 
-void BatchClient::connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition)
+void BatchClient::connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition)
 {
   send_connect(srcNode, srcPort, dstNode, dstPort, definition);
   recv_connect();
 }
 
-void BatchClient::send_connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition)
+void BatchClient::send_connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("connect", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5937,13 +6180,13 @@ void BatchClient::recv_connect()
   return;
 }
 
-void BatchClient::disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition)
+void BatchClient::disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition)
 {
   send_disconnect(srcNode, srcPort, dstNode, dstPort, definition);
   recv_disconnect();
 }
 
-void BatchClient::send_disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition)
+void BatchClient::send_disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("disconnect", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -6147,7 +6390,7 @@ void BatchProcessor::process_loadLibrary(int32_t seqid, ::apache::thrift::protoc
   try {
     iface_->loadLibrary(result.success, args.library);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6203,7 +6446,7 @@ void BatchProcessor::process_unloadLibrary(int32_t seqid, ::apache::thrift::prot
   Batch_unloadLibrary_result result;
   try {
     iface_->unloadLibrary(args.library);
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6232,6 +6475,63 @@ void BatchProcessor::process_unloadLibrary(int32_t seqid, ::apache::thrift::prot
 
   if (this->eventHandler_.get() != NULL) {
     this->eventHandler_->postWrite(ctx, "Batch.unloadLibrary", bytes);
+  }
+}
+
+void BatchProcessor::process_libraryRootDef(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext)
+{
+  void* ctx = NULL;
+  if (this->eventHandler_.get() != NULL) {
+    ctx = this->eventHandler_->getContext("Batch.libraryRootDef", callContext);
+  }
+  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "Batch.libraryRootDef");
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preRead(ctx, "Batch.libraryRootDef");
+  }
+
+  Batch_libraryRootDef_args args;
+  args.read(iprot);
+  iprot->readMessageEnd();
+  uint32_t bytes = iprot->getTransport()->readEnd();
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postRead(ctx, "Batch.libraryRootDef", bytes);
+  }
+
+  Batch_libraryRootDef_result result;
+  try {
+    iface_->libraryRootDef(result.success, args.library);
+    result.__isset.success = true;
+  } catch (ArgumentException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
+  } catch (const std::exception& e) {
+    if (this->eventHandler_.get() != NULL) {
+      this->eventHandler_->handlerError(ctx, "Batch.libraryRootDef");
+    }
+
+    ::apache::thrift::TApplicationException x(e.what());
+    oprot->writeMessageBegin("libraryRootDef", ::apache::thrift::protocol::T_EXCEPTION, seqid);
+    x.write(oprot);
+    oprot->writeMessageEnd();
+    oprot->getTransport()->writeEnd();
+    oprot->getTransport()->flush();
+    return;
+  }
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preWrite(ctx, "Batch.libraryRootDef");
+  }
+
+  oprot->writeMessageBegin("libraryRootDef", ::apache::thrift::protocol::T_REPLY, seqid);
+  result.write(oprot);
+  oprot->writeMessageEnd();
+  bytes = oprot->getTransport()->writeEnd();
+  oprot->getTransport()->flush();
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postWrite(ctx, "Batch.libraryRootDef", bytes);
   }
 }
 
@@ -6314,7 +6614,7 @@ void BatchProcessor::process_addDefinition(int32_t seqid, ::apache::thrift::prot
   try {
     iface_->addDefinition(result.success, args.definition, args.parent);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6370,7 +6670,7 @@ void BatchProcessor::process_updateDefinition(int32_t seqid, ::apache::thrift::p
   Batch_updateDefinition_result result;
   try {
     iface_->updateDefinition(args.definition);
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6426,7 +6726,7 @@ void BatchProcessor::process_removeDefinition(int32_t seqid, ::apache::thrift::p
   Batch_removeDefinition_result result;
   try {
     iface_->removeDefinition(args.definition);
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6483,7 +6783,7 @@ void BatchProcessor::process_definitionChildren(int32_t seqid, ::apache::thrift:
   try {
     iface_->definitionChildren(result.success, args.definition);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6540,7 +6840,7 @@ void BatchProcessor::process_definitionParent(int32_t seqid, ::apache::thrift::p
   try {
     iface_->definitionParent(result.success, args.definition);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6597,7 +6897,7 @@ void BatchProcessor::process_newTypeModule(int32_t seqid, ::apache::thrift::prot
   try {
     iface_->newTypeModule(result.success, args.name);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6654,7 +6954,7 @@ void BatchProcessor::process_newTypeClass(int32_t seqid, ::apache::thrift::proto
   try {
     iface_->newTypeClass(result.success, args.name, args.params);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6711,7 +7011,7 @@ void BatchProcessor::process_newTypeFunction(int32_t seqid, ::apache::thrift::pr
   try {
     iface_->newTypeFunction(result.success, args.name, args.inputs, args.outputs);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6768,7 +7068,7 @@ void BatchProcessor::process_newTypeUdefined(int32_t seqid, ::apache::thrift::pr
   try {
     iface_->newTypeUdefined(result.success);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6825,7 +7125,7 @@ void BatchProcessor::process_newTypeNamed(int32_t seqid, ::apache::thrift::proto
   try {
     iface_->newTypeNamed(result.success, args.name);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6882,7 +7182,7 @@ void BatchProcessor::process_newTypeVariable(int32_t seqid, ::apache::thrift::pr
   try {
     iface_->newTypeVariable(result.success, args.name, args.type);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6939,7 +7239,7 @@ void BatchProcessor::process_newTypeList(int32_t seqid, ::apache::thrift::protoc
   try {
     iface_->newTypeList(result.success, args.type);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -6996,7 +7296,7 @@ void BatchProcessor::process_newTypeTuple(int32_t seqid, ::apache::thrift::proto
   try {
     iface_->newTypeTuple(result.success, args.types);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -7053,7 +7353,7 @@ void BatchProcessor::process_graph(int32_t seqid, ::apache::thrift::protocol::TP
   try {
     iface_->graph(result.success, args.definition);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -7110,7 +7410,7 @@ void BatchProcessor::process_addNode(int32_t seqid, ::apache::thrift::protocol::
   try {
     iface_->addNode(result.success, args.node, args.definition);
     result.__isset.success = true;
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -7166,7 +7466,7 @@ void BatchProcessor::process_updateNode(int32_t seqid, ::apache::thrift::protoco
   Batch_updateNode_result result;
   try {
     iface_->updateNode(args.node, args.definition);
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -7222,7 +7522,7 @@ void BatchProcessor::process_removeNode(int32_t seqid, ::apache::thrift::protoco
   Batch_removeNode_result result;
   try {
     iface_->removeNode(args.node, args.definition);
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -7278,7 +7578,7 @@ void BatchProcessor::process_connect(int32_t seqid, ::apache::thrift::protocol::
   Batch_connect_result result;
   try {
     iface_->connect(args.srcNode, args.srcPort, args.dstNode, args.dstPort, args.definition);
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
@@ -7334,7 +7634,7 @@ void BatchProcessor::process_disconnect(int32_t seqid, ::apache::thrift::protoco
   Batch_disconnect_result result;
   try {
     iface_->disconnect(args.srcNode, args.srcPort, args.dstNode, args.dstPort, args.definition);
-  } catch (MissingFieldsException &missingFields) {
+  } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
   } catch (const std::exception& e) {
