@@ -17,7 +17,7 @@ mkModule
 
 data Type = Undefined
           | TypeVariable {name   :: String}
-          | Class        {name   :: String, params :: [Type]}
+          | Class        {name   :: String, typeparams :: [String], params :: [Type]}
           | Function     {name   :: String, inputs ::  Type, outputs :: Type}
           | Tuple        {items  :: [Type]}
           | List         {item   ::  Type }

@@ -10,7 +10,8 @@ module Luna.Samples.HelloWorld(
     workspace,
     base_manager,
     full_manager,
-    myFun, myFun2, myFun3
+    myFun, myFun2, myFun3,
+    cls1
 ) where
 
 
@@ -205,6 +206,12 @@ myFun3 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun3" myFunInputs3 Typ
 
 
 
+cls1 = NodeDef.empty{ NodeDef.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
+                    , NodeDef.graph = Graph.empty
+                    , NodeDef.libID = userLibKey
+                    }
+
+
 --full_manager :: DefManager
 --full_manager =  DefManager.addToParentMany [
 --                         (8, 9, NodeDef.make (Type.mkPackage "Init") stdLibKey),
@@ -222,8 +229,9 @@ myFun3 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun3" myFunInputs3 Typ
 
 
 full_manager :: DefManager
-full_manager =  DefManager.addToParentMany [ (1, 2, myFun3),
-                                           (100, 1, myFun2)
+full_manager =  DefManager.addToParentMany [ --(1, 2, myFun2),
+                                           (10, 1, myFun3),
+                                           (100, 10, cls1)
                                            ]
              $ base_manager
 
