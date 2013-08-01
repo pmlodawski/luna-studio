@@ -45,7 +45,7 @@ addDefinition batchHandler (Just tdefinition) (Just tparent) = do
     case (decode (tdefinition, Graph.empty) :: Either String (Int, NodeDef) ) of 
         Right (_, definition) -> do putStrLn "NOT IMPLEMENTED - addDefinition"
                                     return $ tdefinition
-        Left message          -> throw $ MissingFieldsException $ Just $ Text.pack "Some fields are missing"
+        Left message          -> throw $ MissingFieldsException $ Just $ Text.pack ("Failed to decode `definition`: " ++ message)
 
 addDefinition batchHandler _ _ = do
     throw $ MissingFieldsException $ Just $ Text.pack "Some fields are missing"
