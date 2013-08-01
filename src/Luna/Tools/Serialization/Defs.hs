@@ -10,7 +10,6 @@
 module Luna.Tools.Serialization.Defs where
 
 import           Data.Int
-import           Data.HashTable
 import qualified Data.Text.Lazy as Text
 import qualified Data.Vector    as Vector
 import           Data.Vector      (Vector)
@@ -56,8 +55,8 @@ instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
      timports    = Just $ encode imports
      tflags      = Just $ encode flags
      tattributes = Just $ encode attributes
-     tlibID      = Just $ hashInt libID
-     tdefID      = Just $ hashInt defID
+     tlibID      = Just $ (fromInteger . toInteger::Int -> Int32) libID
+     tdefID      = Just $ (fromInteger . toInteger::Int -> Int32) defID
      tdef = Defs_Types.NodeDef ttype timports tflags tattributes tlibID tdefID 
   decode td = case td of 
      (Defs_Types.NodeDef Nothing (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), graph)
