@@ -105,4 +105,5 @@ defParentOperation operation batchHandler tdefinition tparent = case (tdefinitio
                               -> do operation batchHandler definition parent
             (_, Left message) -> throw $ ArgumentException $ Just $ Text.pack ("Failed to decode `definition`: " ++ message)
             (Left message, _) -> throw $ ArgumentException $ Just $ Text.pack ("Failed to decode `definition`: " ++ message)
-    (_, _)            -> throw $ ArgumentException $ Just $ Text.pack "`Some fields are missing"
+    ( _       , Nothing )            -> throw $ ArgumentException $ Just $ Text.pack "`parent` field is missing"
+    ( _       , _       )            -> throw $ ArgumentException $ Just $ Text.pack "`definition` field is missing"
