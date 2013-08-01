@@ -43,8 +43,6 @@ import           Luna.Codegen.Hs.AST.Function      (Function)
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 import           Luna.Codegen.Hs.AST.Expr          (Expr)
 
-import Data.Tuple.Select
-
 
 
 inputs :: String
@@ -64,18 +62,17 @@ generateFunction def = func where
     funcproto  = Function.empty { Function.name = Type.name $ NodeDef.cls def
                                 , Function.inputs = [inputs]
                                 }
-    func       =  generateNodeExprs graph nodes funcproto
+    func       = foldr (generateNodeExpr graph) funcproto nodes 
 
 
-generateNodeExprs graph [] func           = func
-generateNodeExprs graph (node:nodes) func = nfunc where
-    nfunc = generateNodeExpr graph node $ generateNodeExprs graph nodes func
-
-
-generateNodeExpr graph lnode func = Function.addExpr expr func where 
-    nid   = sel1 lnode
-    node  = sel2 lnode
-    expr  = Expr.Assignment src value ctx where 
+generateNodeExpr graph lnode func = nfunc where
+    nfunc = Function.addExpr expr 
+          $ case ctx of
+                Expr.IO -> Function.setCtx ctx func
+                _       -> func
+          
+    (nid, node) = lnode
+    expr  = Expr.Assignment src value ctx 
     src   = case node of
         Node.Outputs {}         -> Expr.Var outputs
         _                       -> Expr.VarRef nid
@@ -105,7 +102,7 @@ generateNodeExpr graph lnode func = Function.addExpr expr func where
 
         Node.Default d          -> (Expr.Default val, Expr.Pure) where 
                                        val = case d of
-                                           DefaultValue.DefaultString v -> "\"" ++ v ++ "\""
+                                           DefaultValue.DefaultString v -> show v
                                            DefaultValue.DefaultInt    v -> show v
 
 

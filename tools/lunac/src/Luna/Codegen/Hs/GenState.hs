@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Codegen.Hs.GenContext (
-    GenContext,
+module Luna.Codegen.Hs.GenState (
+    GenState,
     empty,
     modIndend,
     incIndend,
@@ -14,20 +14,20 @@ module Luna.Codegen.Hs.GenContext (
 )where
 
 
-data GenContext = GenContext { indent :: Int }
+data GenState = GenState { indent :: Int }
           deriving (Show)
 
-empty :: GenContext
-empty = GenContext 0
+empty :: GenState
+empty = GenState 0
 
 
-modIndend :: Int -> GenContext -> GenContext
-modIndend i ctx = GenContext $ indent ctx + i
+modIndend :: Int -> GenState -> GenState
+modIndend i ctx = GenState $ indent ctx + i
 
 
-incIndend :: GenContext -> GenContext
+incIndend :: GenState -> GenState
 incIndend = modIndend 1
 
 
-decIndend :: GenContext -> GenContext
+decIndend :: GenState -> GenState
 decIndend = modIndend (-1)

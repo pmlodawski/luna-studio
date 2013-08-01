@@ -10,8 +10,6 @@ import qualified Luna.Codegen.Hs.FuncGenerator  as FG
 import qualified Luna.Codegen.Hs.DefGenerator   as DG
 import qualified Luna.Codegen.Hs.ModGenerator   as MG
 import qualified Luna.Network.Def.DefManager    as DefManager
-import qualified Luna.Codegen.Hs.GenContext     as GenContext
-import           Luna.Codegen.Hs.GenContext       (GenContext)
 
 import qualified Luna.Codegen.Hs.AST.Function   as Function
 import qualified Luna.Codegen.Hs.AST.Module     as Module
@@ -24,7 +22,7 @@ main = do
     --putStrLn $ FG.generateFunction HelloWorld.myFun3
     --putStrLn $ MG.generateDefinition HelloWorld.full_manager 1
     --print $ MG.generateModule HelloWorld.full_manager 100
-    putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 1
+    putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 10
     --print $ FG.generateFunction HelloWorld.myFun3
     --putStrLn $ Function.genCode GenContext.empty $ FG.generateFunction HelloWorld.myFun3
 

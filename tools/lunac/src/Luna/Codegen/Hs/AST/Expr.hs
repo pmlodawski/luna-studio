@@ -12,6 +12,8 @@ module Luna.Codegen.Hs.AST.Expr (
 )where
 
 import           Data.String.Utils                 (join)
+--import qualified Luna.Codegen.Hs.GenState         as GenState
+--import           Luna.Codegen.Hs.GenState           (GenState)
 
 data Context = Pure | IO deriving (Show, Eq)
 
@@ -37,10 +39,10 @@ genCode expr = case expr of
     Var        name          -> name
     Default    val           -> val
     VarRef     vid           -> "v'" ++ show vid
-    Call       name args ctx -> name ++ suffix ++ " " ++ join " " (map (genCode) args) where
-                                    suffix = case ctx of
-                                        Pure -> ""
-                                        IO   -> mpostfix
+    Call       name args ctx -> fname ++ " " ++ join " " (map (genCode) args) where
+                                    fname = case ctx of
+                                        Pure -> name
+                                        IO   -> name ++ mpostfix
     Tuple      elems         -> if length elems == 1
                                    then "OneTuple " ++ body
                                    else "(" ++ body ++ ")"
