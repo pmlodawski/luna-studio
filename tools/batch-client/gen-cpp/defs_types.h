@@ -21,37 +21,103 @@
 
 typedef int32_t DefID;
 
-typedef struct _NodeDefinition__isset {
-  _NodeDefinition__isset() : cls(false), flags(false), attribs(false), libID(true), defID(true) {}
+typedef std::vector<class Import>  Imports;
+
+typedef struct _Import__isset {
+  _Import__isset() : path(false), items(false) {}
+  bool path;
+  bool items;
+} _Import__isset;
+
+class Import {
+ public:
+
+  static const char* ascii_fingerprint; // = "92AA23526EDCB0628C830C8758ED7059";
+  static const uint8_t binary_fingerprint[16]; // = {0x92,0xAA,0x23,0x52,0x6E,0xDC,0xB0,0x62,0x8C,0x83,0x0C,0x87,0x58,0xED,0x70,0x59};
+
+  Import() {
+  }
+
+  virtual ~Import() throw() {}
+
+  std::vector<std::string>  path;
+  std::vector<std::string>  items;
+
+  _Import__isset __isset;
+
+  void __set_path(const std::vector<std::string> & val) {
+    path = val;
+    __isset.path = true;
+  }
+
+  void __set_items(const std::vector<std::string> & val) {
+    items = val;
+    __isset.items = true;
+  }
+
+  bool operator == (const Import & rhs) const
+  {
+    if (__isset.path != rhs.__isset.path)
+      return false;
+    else if (__isset.path && !(path == rhs.path))
+      return false;
+    if (__isset.items != rhs.__isset.items)
+      return false;
+    else if (__isset.items && !(items == rhs.items))
+      return false;
+    return true;
+  }
+  bool operator != (const Import &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Import & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(Import &a, Import &b);
+
+typedef struct _NodeDef__isset {
+  _NodeDef__isset() : cls(false), imports(false), flags(false), attribs(false), libID(true), defID(true) {}
   bool cls;
+  bool imports;
   bool flags;
   bool attribs;
   bool libID;
   bool defID;
-} _NodeDefinition__isset;
+} _NodeDef__isset;
 
-class NodeDefinition {
+class NodeDef {
  public:
 
-  static const char* ascii_fingerprint; // = "114446A26C9C2D0FBC93CDAA2A1E1A7D";
-  static const uint8_t binary_fingerprint[16]; // = {0x11,0x44,0x46,0xA2,0x6C,0x9C,0x2D,0x0F,0xBC,0x93,0xCD,0xAA,0x2A,0x1E,0x1A,0x7D};
+  static const char* ascii_fingerprint; // = "D9CB0AF3DE14C9550504EB04D3E1A1B4";
+  static const uint8_t binary_fingerprint[16]; // = {0xD9,0xCB,0x0A,0xF3,0xDE,0x14,0xC9,0x55,0x05,0x04,0xEB,0x04,0xD3,0xE1,0xA1,0xB4};
 
-  NodeDefinition() : libID(-1), defID(-1) {
+  NodeDef() : libID(-1), defID(-1) {
   }
 
-  virtual ~NodeDefinition() throw() {}
+  virtual ~NodeDef() throw() {}
 
    ::Type cls;
+  Imports imports;
    ::Flags flags;
    ::Attributes attribs;
    ::LibID libID;
   DefID defID;
 
-  _NodeDefinition__isset __isset;
+  _NodeDef__isset __isset;
 
   void __set_cls(const  ::Type& val) {
     cls = val;
     __isset.cls = true;
+  }
+
+  void __set_imports(const Imports& val) {
+    imports = val;
+    __isset.imports = true;
   }
 
   void __set_flags(const  ::Flags& val) {
@@ -74,11 +140,15 @@ class NodeDefinition {
     __isset.defID = true;
   }
 
-  bool operator == (const NodeDefinition & rhs) const
+  bool operator == (const NodeDef & rhs) const
   {
     if (__isset.cls != rhs.__isset.cls)
       return false;
     else if (__isset.cls && !(cls == rhs.cls))
+      return false;
+    if (__isset.imports != rhs.__isset.imports)
+      return false;
+    else if (__isset.imports && !(imports == rhs.imports))
       return false;
     if (__isset.flags != rhs.__isset.flags)
       return false;
@@ -98,18 +168,18 @@ class NodeDefinition {
       return false;
     return true;
   }
-  bool operator != (const NodeDefinition &rhs) const {
+  bool operator != (const NodeDef &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const NodeDefinition & ) const;
+  bool operator < (const NodeDef & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
-void swap(NodeDefinition &a, NodeDefinition &b);
+void swap(NodeDef &a, NodeDef &b);
 
 
 

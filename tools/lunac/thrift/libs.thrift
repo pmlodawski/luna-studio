@@ -5,12 +5,15 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
+#include "defs.thrift"
+
 
 typedef i32 LibID
 
 
 struct Library {
-    1: optional LibID libID = -1
+    1: optional LibID  libID = -1
     2: optional string name
     3: optional string path
+    4: optional i32    rootNodeDefID = -1
 }

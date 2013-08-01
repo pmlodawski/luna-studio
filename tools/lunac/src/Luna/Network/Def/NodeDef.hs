@@ -37,7 +37,7 @@ data NodeDef = NotLoaded
 type ID   = Int
 
 empty :: NodeDef
-empty = NodeDef Type.Undefined Graph.empty noImports Flags.empty Attributes.empty 0
+empty = NodeDef Type.Undefined Graph.empty noImports Flags.empty Attributes.empty (-1)
 
 noImports :: [Import]
 noImports = []

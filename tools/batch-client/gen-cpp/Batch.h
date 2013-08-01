@@ -18,12 +18,13 @@ class BatchIf {
   virtual void libraries(std::vector< ::Library> & _return) = 0;
   virtual void loadLibrary( ::Library& _return, const  ::Library& library) = 0;
   virtual void unloadLibrary(const  ::Library& library) = 0;
-  virtual void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs) = 0;
-  virtual void addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent) = 0;
-  virtual void updateDefinition(const  ::NodeDefinition& definition) = 0;
-  virtual void removeDefinition(const  ::NodeDefinition& definition) = 0;
-  virtual void definitionChildren(std::vector< ::NodeDefinition> & _return, const  ::NodeDefinition& definition) = 0;
-  virtual void definitionParent( ::NodeDefinition& _return, const  ::NodeDefinition& definition) = 0;
+  virtual void libraryRootDef( ::NodeDef& _return, const  ::Library& library) = 0;
+  virtual void newDefinition( ::NodeDef& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs) = 0;
+  virtual void addDefinition( ::NodeDef& _return, const  ::NodeDef& definition, const  ::NodeDef& parent) = 0;
+  virtual void updateDefinition(const  ::NodeDef& definition) = 0;
+  virtual void removeDefinition(const  ::NodeDef& definition) = 0;
+  virtual void definitionChildren(std::vector< ::NodeDef> & _return, const  ::NodeDef& definition) = 0;
+  virtual void definitionParent( ::NodeDef& _return, const  ::NodeDef& definition) = 0;
   virtual void newTypeModule( ::Type& _return, const std::string& name) = 0;
   virtual void newTypeClass( ::Type& _return, const std::string& name, const  ::Type& params) = 0;
   virtual void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs) = 0;
@@ -32,12 +33,12 @@ class BatchIf {
   virtual void newTypeVariable( ::Type& _return, const std::string& name, const  ::Type& type) = 0;
   virtual void newTypeList( ::Type& _return, const  ::Type& type) = 0;
   virtual void newTypeTuple( ::Type& _return, const std::vector< ::Type> & types) = 0;
-  virtual void graph( ::Graph& _return, const  ::NodeDefinition& definition) = 0;
-  virtual void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDefinition& definition) = 0;
-  virtual void updateNode(const  ::Node& node, const  ::NodeDefinition& definition) = 0;
-  virtual void removeNode(const  ::Node& node, const  ::NodeDefinition& definition) = 0;
-  virtual void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) = 0;
-  virtual void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) = 0;
+  virtual void graph( ::Graph& _return, const  ::NodeDef& definition) = 0;
+  virtual void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDef& definition) = 0;
+  virtual void updateNode(const  ::Node& node, const  ::NodeDef& definition) = 0;
+  virtual void removeNode(const  ::Node& node, const  ::NodeDef& definition) = 0;
+  virtual void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition) = 0;
+  virtual void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition) = 0;
   virtual void ping() = 0;
 };
 
@@ -77,22 +78,25 @@ class BatchNull : virtual public BatchIf {
   void unloadLibrary(const  ::Library& /* library */) {
     return;
   }
-  void newDefinition( ::NodeDefinition& /* _return */, const  ::Type& /* type */, const  ::Flags& /* flags */, const  ::Attributes& /* attrs */) {
+  void libraryRootDef( ::NodeDef& /* _return */, const  ::Library& /* library */) {
     return;
   }
-  void addDefinition( ::NodeDefinition& /* _return */, const  ::NodeDefinition& /* definition */, const  ::NodeDefinition& /* parent */) {
+  void newDefinition( ::NodeDef& /* _return */, const  ::Type& /* type */, const  ::Imports& /* imports */, const  ::Flags& /* flags */, const  ::Attributes& /* attrs */) {
     return;
   }
-  void updateDefinition(const  ::NodeDefinition& /* definition */) {
+  void addDefinition( ::NodeDef& /* _return */, const  ::NodeDef& /* definition */, const  ::NodeDef& /* parent */) {
     return;
   }
-  void removeDefinition(const  ::NodeDefinition& /* definition */) {
+  void updateDefinition(const  ::NodeDef& /* definition */) {
     return;
   }
-  void definitionChildren(std::vector< ::NodeDefinition> & /* _return */, const  ::NodeDefinition& /* definition */) {
+  void removeDefinition(const  ::NodeDef& /* definition */) {
     return;
   }
-  void definitionParent( ::NodeDefinition& /* _return */, const  ::NodeDefinition& /* definition */) {
+  void definitionChildren(std::vector< ::NodeDef> & /* _return */, const  ::NodeDef& /* definition */) {
+    return;
+  }
+  void definitionParent( ::NodeDef& /* _return */, const  ::NodeDef& /* definition */) {
     return;
   }
   void newTypeModule( ::Type& /* _return */, const std::string& /* name */) {
@@ -119,22 +123,22 @@ class BatchNull : virtual public BatchIf {
   void newTypeTuple( ::Type& /* _return */, const std::vector< ::Type> & /* types */) {
     return;
   }
-  void graph( ::Graph& /* _return */, const  ::NodeDefinition& /* definition */) {
+  void graph( ::Graph& /* _return */, const  ::NodeDef& /* definition */) {
     return;
   }
-  void addNode( ::Node& /* _return */, const  ::Node& /* node */, const  ::NodeDefinition& /* definition */) {
+  void addNode( ::Node& /* _return */, const  ::Node& /* node */, const  ::NodeDef& /* definition */) {
     return;
   }
-  void updateNode(const  ::Node& /* node */, const  ::NodeDefinition& /* definition */) {
+  void updateNode(const  ::Node& /* node */, const  ::NodeDef& /* definition */) {
     return;
   }
-  void removeNode(const  ::Node& /* node */, const  ::NodeDefinition& /* definition */) {
+  void removeNode(const  ::Node& /* node */, const  ::NodeDef& /* definition */) {
     return;
   }
-  void connect(const  ::Node& /* srcNode */, const  ::PortDescriptor& /* srcPort */, const  ::Node& /* dstNode */, const  ::PortDescriptor& /* dstPort */, const  ::NodeDefinition& /* definition */) {
+  void connect(const  ::Node& /* srcNode */, const  ::PortDescriptor& /* srcPort */, const  ::Node& /* dstNode */, const  ::PortDescriptor& /* dstPort */, const  ::NodeDef& /* definition */) {
     return;
   }
-  void disconnect(const  ::Node& /* srcNode */, const  ::PortDescriptor& /* srcPort */, const  ::Node& /* dstNode */, const  ::PortDescriptor& /* dstPort */, const  ::NodeDefinition& /* definition */) {
+  void disconnect(const  ::Node& /* srcNode */, const  ::PortDescriptor& /* srcPort */, const  ::Node& /* dstNode */, const  ::PortDescriptor& /* dstPort */, const  ::NodeDef& /* definition */) {
     return;
   }
   void ping() {
@@ -302,7 +306,7 @@ class Batch_loadLibrary_result {
   virtual ~Batch_loadLibrary_result() throw() {}
 
    ::Library success;
-  MissingFieldsException missingFields;
+  ArgumentException missingFields;
 
   _Batch_loadLibrary_result__isset __isset;
 
@@ -310,7 +314,7 @@ class Batch_loadLibrary_result {
     success = val;
   }
 
-  void __set_missingFields(const MissingFieldsException& val) {
+  void __set_missingFields(const ArgumentException& val) {
     missingFields = val;
   }
 
@@ -346,7 +350,7 @@ class Batch_loadLibrary_presult {
   virtual ~Batch_loadLibrary_presult() throw() {}
 
    ::Library* success;
-  MissingFieldsException missingFields;
+  ArgumentException missingFields;
 
   _Batch_loadLibrary_presult__isset __isset;
 
@@ -418,11 +422,11 @@ class Batch_unloadLibrary_result {
 
   virtual ~Batch_unloadLibrary_result() throw() {}
 
-  MissingFieldsException missingFields;
+  ArgumentException missingFields;
 
   _Batch_unloadLibrary_result__isset __isset;
 
-  void __set_missingFields(const MissingFieldsException& val) {
+  void __set_missingFields(const ArgumentException& val) {
     missingFields = val;
   }
 
@@ -454,7 +458,7 @@ class Batch_unloadLibrary_presult {
 
   virtual ~Batch_unloadLibrary_presult() throw() {}
 
-  MissingFieldsException missingFields;
+  ArgumentException missingFields;
 
   _Batch_unloadLibrary_presult__isset __isset;
 
@@ -462,9 +466,128 @@ class Batch_unloadLibrary_presult {
 
 };
 
+typedef struct _Batch_libraryRootDef_args__isset {
+  _Batch_libraryRootDef_args__isset() : library(false) {}
+  bool library;
+} _Batch_libraryRootDef_args__isset;
+
+class Batch_libraryRootDef_args {
+ public:
+
+  Batch_libraryRootDef_args() {
+  }
+
+  virtual ~Batch_libraryRootDef_args() throw() {}
+
+   ::Library library;
+
+  _Batch_libraryRootDef_args__isset __isset;
+
+  void __set_library(const  ::Library& val) {
+    library = val;
+  }
+
+  bool operator == (const Batch_libraryRootDef_args & rhs) const
+  {
+    if (!(library == rhs.library))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_libraryRootDef_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_libraryRootDef_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_libraryRootDef_pargs {
+ public:
+
+
+  virtual ~Batch_libraryRootDef_pargs() throw() {}
+
+  const  ::Library* library;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_libraryRootDef_result__isset {
+  _Batch_libraryRootDef_result__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_libraryRootDef_result__isset;
+
+class Batch_libraryRootDef_result {
+ public:
+
+  Batch_libraryRootDef_result() {
+  }
+
+  virtual ~Batch_libraryRootDef_result() throw() {}
+
+   ::NodeDef success;
+  ArgumentException missingFields;
+
+  _Batch_libraryRootDef_result__isset __isset;
+
+  void __set_success(const  ::NodeDef& val) {
+    success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_libraryRootDef_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_libraryRootDef_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_libraryRootDef_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_libraryRootDef_presult__isset {
+  _Batch_libraryRootDef_presult__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_libraryRootDef_presult__isset;
+
+class Batch_libraryRootDef_presult {
+ public:
+
+
+  virtual ~Batch_libraryRootDef_presult() throw() {}
+
+   ::NodeDef* success;
+  ArgumentException missingFields;
+
+  _Batch_libraryRootDef_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 typedef struct _Batch_newDefinition_args__isset {
-  _Batch_newDefinition_args__isset() : type(false), flags(false), attrs(false) {}
+  _Batch_newDefinition_args__isset() : type(false), imports(false), flags(false), attrs(false) {}
   bool type;
+  bool imports;
   bool flags;
   bool attrs;
 } _Batch_newDefinition_args__isset;
@@ -478,6 +601,7 @@ class Batch_newDefinition_args {
   virtual ~Batch_newDefinition_args() throw() {}
 
    ::Type type;
+   ::Imports imports;
    ::Flags flags;
    ::Attributes attrs;
 
@@ -485,6 +609,10 @@ class Batch_newDefinition_args {
 
   void __set_type(const  ::Type& val) {
     type = val;
+  }
+
+  void __set_imports(const  ::Imports& val) {
+    imports = val;
   }
 
   void __set_flags(const  ::Flags& val) {
@@ -498,6 +626,8 @@ class Batch_newDefinition_args {
   bool operator == (const Batch_newDefinition_args & rhs) const
   {
     if (!(type == rhs.type))
+      return false;
+    if (!(imports == rhs.imports))
       return false;
     if (!(flags == rhs.flags))
       return false;
@@ -524,6 +654,7 @@ class Batch_newDefinition_pargs {
   virtual ~Batch_newDefinition_pargs() throw() {}
 
   const  ::Type* type;
+  const  ::Imports* imports;
   const  ::Flags* flags;
   const  ::Attributes* attrs;
 
@@ -544,11 +675,11 @@ class Batch_newDefinition_result {
 
   virtual ~Batch_newDefinition_result() throw() {}
 
-   ::NodeDefinition success;
+   ::NodeDef success;
 
   _Batch_newDefinition_result__isset __isset;
 
-  void __set_success(const  ::NodeDefinition& val) {
+  void __set_success(const  ::NodeDef& val) {
     success = val;
   }
 
@@ -580,7 +711,7 @@ class Batch_newDefinition_presult {
 
   virtual ~Batch_newDefinition_presult() throw() {}
 
-   ::NodeDefinition* success;
+   ::NodeDef* success;
 
   _Batch_newDefinition_presult__isset __isset;
 
@@ -602,16 +733,16 @@ class Batch_addDefinition_args {
 
   virtual ~Batch_addDefinition_args() throw() {}
 
-   ::NodeDefinition definition;
-   ::NodeDefinition parent;
+   ::NodeDef definition;
+   ::NodeDef parent;
 
   _Batch_addDefinition_args__isset __isset;
 
-  void __set_definition(const  ::NodeDefinition& val) {
+  void __set_definition(const  ::NodeDef& val) {
     definition = val;
   }
 
-  void __set_parent(const  ::NodeDefinition& val) {
+  void __set_parent(const  ::NodeDef& val) {
     parent = val;
   }
 
@@ -641,16 +772,17 @@ class Batch_addDefinition_pargs {
 
   virtual ~Batch_addDefinition_pargs() throw() {}
 
-  const  ::NodeDefinition* definition;
-  const  ::NodeDefinition* parent;
+  const  ::NodeDef* definition;
+  const  ::NodeDef* parent;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
 typedef struct _Batch_addDefinition_result__isset {
-  _Batch_addDefinition_result__isset() : success(false) {}
+  _Batch_addDefinition_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_addDefinition_result__isset;
 
 class Batch_addDefinition_result {
@@ -661,17 +793,24 @@ class Batch_addDefinition_result {
 
   virtual ~Batch_addDefinition_result() throw() {}
 
-   ::NodeDefinition success;
+   ::NodeDef success;
+  ArgumentException missingFields;
 
   _Batch_addDefinition_result__isset __isset;
 
-  void __set_success(const  ::NodeDefinition& val) {
+  void __set_success(const  ::NodeDef& val) {
     success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
   }
 
   bool operator == (const Batch_addDefinition_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -687,8 +826,9 @@ class Batch_addDefinition_result {
 };
 
 typedef struct _Batch_addDefinition_presult__isset {
-  _Batch_addDefinition_presult__isset() : success(false) {}
+  _Batch_addDefinition_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_addDefinition_presult__isset;
 
 class Batch_addDefinition_presult {
@@ -697,7 +837,8 @@ class Batch_addDefinition_presult {
 
   virtual ~Batch_addDefinition_presult() throw() {}
 
-   ::NodeDefinition* success;
+   ::NodeDef* success;
+  ArgumentException missingFields;
 
   _Batch_addDefinition_presult__isset __isset;
 
@@ -718,11 +859,11 @@ class Batch_updateDefinition_args {
 
   virtual ~Batch_updateDefinition_args() throw() {}
 
-   ::NodeDefinition definition;
+   ::NodeDef definition;
 
   _Batch_updateDefinition_args__isset __isset;
 
-  void __set_definition(const  ::NodeDefinition& val) {
+  void __set_definition(const  ::NodeDef& val) {
     definition = val;
   }
 
@@ -750,12 +891,16 @@ class Batch_updateDefinition_pargs {
 
   virtual ~Batch_updateDefinition_pargs() throw() {}
 
-  const  ::NodeDefinition* definition;
+  const  ::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
+typedef struct _Batch_updateDefinition_result__isset {
+  _Batch_updateDefinition_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_updateDefinition_result__isset;
 
 class Batch_updateDefinition_result {
  public:
@@ -765,9 +910,18 @@ class Batch_updateDefinition_result {
 
   virtual ~Batch_updateDefinition_result() throw() {}
 
+  ArgumentException missingFields;
 
-  bool operator == (const Batch_updateDefinition_result & /* rhs */) const
+  _Batch_updateDefinition_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_updateDefinition_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_updateDefinition_result &rhs) const {
@@ -781,6 +935,10 @@ class Batch_updateDefinition_result {
 
 };
 
+typedef struct _Batch_updateDefinition_presult__isset {
+  _Batch_updateDefinition_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_updateDefinition_presult__isset;
 
 class Batch_updateDefinition_presult {
  public:
@@ -788,6 +946,9 @@ class Batch_updateDefinition_presult {
 
   virtual ~Batch_updateDefinition_presult() throw() {}
 
+  ArgumentException missingFields;
+
+  _Batch_updateDefinition_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -806,11 +967,11 @@ class Batch_removeDefinition_args {
 
   virtual ~Batch_removeDefinition_args() throw() {}
 
-   ::NodeDefinition definition;
+   ::NodeDef definition;
 
   _Batch_removeDefinition_args__isset __isset;
 
-  void __set_definition(const  ::NodeDefinition& val) {
+  void __set_definition(const  ::NodeDef& val) {
     definition = val;
   }
 
@@ -838,12 +999,16 @@ class Batch_removeDefinition_pargs {
 
   virtual ~Batch_removeDefinition_pargs() throw() {}
 
-  const  ::NodeDefinition* definition;
+  const  ::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
+typedef struct _Batch_removeDefinition_result__isset {
+  _Batch_removeDefinition_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_removeDefinition_result__isset;
 
 class Batch_removeDefinition_result {
  public:
@@ -853,9 +1018,18 @@ class Batch_removeDefinition_result {
 
   virtual ~Batch_removeDefinition_result() throw() {}
 
+  ArgumentException missingFields;
 
-  bool operator == (const Batch_removeDefinition_result & /* rhs */) const
+  _Batch_removeDefinition_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_removeDefinition_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_removeDefinition_result &rhs) const {
@@ -869,6 +1043,10 @@ class Batch_removeDefinition_result {
 
 };
 
+typedef struct _Batch_removeDefinition_presult__isset {
+  _Batch_removeDefinition_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_removeDefinition_presult__isset;
 
 class Batch_removeDefinition_presult {
  public:
@@ -876,6 +1054,9 @@ class Batch_removeDefinition_presult {
 
   virtual ~Batch_removeDefinition_presult() throw() {}
 
+  ArgumentException missingFields;
+
+  _Batch_removeDefinition_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -894,11 +1075,11 @@ class Batch_definitionChildren_args {
 
   virtual ~Batch_definitionChildren_args() throw() {}
 
-   ::NodeDefinition definition;
+   ::NodeDef definition;
 
   _Batch_definitionChildren_args__isset __isset;
 
-  void __set_definition(const  ::NodeDefinition& val) {
+  void __set_definition(const  ::NodeDef& val) {
     definition = val;
   }
 
@@ -926,15 +1107,16 @@ class Batch_definitionChildren_pargs {
 
   virtual ~Batch_definitionChildren_pargs() throw() {}
 
-  const  ::NodeDefinition* definition;
+  const  ::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
 typedef struct _Batch_definitionChildren_result__isset {
-  _Batch_definitionChildren_result__isset() : success(false) {}
+  _Batch_definitionChildren_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_definitionChildren_result__isset;
 
 class Batch_definitionChildren_result {
@@ -945,17 +1127,24 @@ class Batch_definitionChildren_result {
 
   virtual ~Batch_definitionChildren_result() throw() {}
 
-  std::vector< ::NodeDefinition>  success;
+  std::vector< ::NodeDef>  success;
+  ArgumentException missingFields;
 
   _Batch_definitionChildren_result__isset __isset;
 
-  void __set_success(const std::vector< ::NodeDefinition> & val) {
+  void __set_success(const std::vector< ::NodeDef> & val) {
     success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
   }
 
   bool operator == (const Batch_definitionChildren_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -971,8 +1160,9 @@ class Batch_definitionChildren_result {
 };
 
 typedef struct _Batch_definitionChildren_presult__isset {
-  _Batch_definitionChildren_presult__isset() : success(false) {}
+  _Batch_definitionChildren_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_definitionChildren_presult__isset;
 
 class Batch_definitionChildren_presult {
@@ -981,7 +1171,8 @@ class Batch_definitionChildren_presult {
 
   virtual ~Batch_definitionChildren_presult() throw() {}
 
-  std::vector< ::NodeDefinition> * success;
+  std::vector< ::NodeDef> * success;
+  ArgumentException missingFields;
 
   _Batch_definitionChildren_presult__isset __isset;
 
@@ -1002,11 +1193,11 @@ class Batch_definitionParent_args {
 
   virtual ~Batch_definitionParent_args() throw() {}
 
-   ::NodeDefinition definition;
+   ::NodeDef definition;
 
   _Batch_definitionParent_args__isset __isset;
 
-  void __set_definition(const  ::NodeDefinition& val) {
+  void __set_definition(const  ::NodeDef& val) {
     definition = val;
   }
 
@@ -1034,15 +1225,16 @@ class Batch_definitionParent_pargs {
 
   virtual ~Batch_definitionParent_pargs() throw() {}
 
-  const  ::NodeDefinition* definition;
+  const  ::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
 typedef struct _Batch_definitionParent_result__isset {
-  _Batch_definitionParent_result__isset() : success(false) {}
+  _Batch_definitionParent_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_definitionParent_result__isset;
 
 class Batch_definitionParent_result {
@@ -1053,17 +1245,24 @@ class Batch_definitionParent_result {
 
   virtual ~Batch_definitionParent_result() throw() {}
 
-   ::NodeDefinition success;
+   ::NodeDef success;
+  ArgumentException missingFields;
 
   _Batch_definitionParent_result__isset __isset;
 
-  void __set_success(const  ::NodeDefinition& val) {
+  void __set_success(const  ::NodeDef& val) {
     success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
   }
 
   bool operator == (const Batch_definitionParent_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1079,8 +1278,9 @@ class Batch_definitionParent_result {
 };
 
 typedef struct _Batch_definitionParent_presult__isset {
-  _Batch_definitionParent_presult__isset() : success(false) {}
+  _Batch_definitionParent_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_definitionParent_presult__isset;
 
 class Batch_definitionParent_presult {
@@ -1089,7 +1289,8 @@ class Batch_definitionParent_presult {
 
   virtual ~Batch_definitionParent_presult() throw() {}
 
-   ::NodeDefinition* success;
+   ::NodeDef* success;
+  ArgumentException missingFields;
 
   _Batch_definitionParent_presult__isset __isset;
 
@@ -1149,8 +1350,9 @@ class Batch_newTypeModule_pargs {
 };
 
 typedef struct _Batch_newTypeModule_result__isset {
-  _Batch_newTypeModule_result__isset() : success(false) {}
+  _Batch_newTypeModule_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeModule_result__isset;
 
 class Batch_newTypeModule_result {
@@ -1162,6 +1364,7 @@ class Batch_newTypeModule_result {
   virtual ~Batch_newTypeModule_result() throw() {}
 
    ::Type success;
+  ArgumentException missingFields;
 
   _Batch_newTypeModule_result__isset __isset;
 
@@ -1169,9 +1372,15 @@ class Batch_newTypeModule_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeModule_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1187,8 +1396,9 @@ class Batch_newTypeModule_result {
 };
 
 typedef struct _Batch_newTypeModule_presult__isset {
-  _Batch_newTypeModule_presult__isset() : success(false) {}
+  _Batch_newTypeModule_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeModule_presult__isset;
 
 class Batch_newTypeModule_presult {
@@ -1198,6 +1408,7 @@ class Batch_newTypeModule_presult {
   virtual ~Batch_newTypeModule_presult() throw() {}
 
    ::Type* success;
+  ArgumentException missingFields;
 
   _Batch_newTypeModule_presult__isset __isset;
 
@@ -1266,8 +1477,9 @@ class Batch_newTypeClass_pargs {
 };
 
 typedef struct _Batch_newTypeClass_result__isset {
-  _Batch_newTypeClass_result__isset() : success(false) {}
+  _Batch_newTypeClass_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeClass_result__isset;
 
 class Batch_newTypeClass_result {
@@ -1279,6 +1491,7 @@ class Batch_newTypeClass_result {
   virtual ~Batch_newTypeClass_result() throw() {}
 
    ::Type success;
+  ArgumentException missingFields;
 
   _Batch_newTypeClass_result__isset __isset;
 
@@ -1286,9 +1499,15 @@ class Batch_newTypeClass_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeClass_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1304,8 +1523,9 @@ class Batch_newTypeClass_result {
 };
 
 typedef struct _Batch_newTypeClass_presult__isset {
-  _Batch_newTypeClass_presult__isset() : success(false) {}
+  _Batch_newTypeClass_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeClass_presult__isset;
 
 class Batch_newTypeClass_presult {
@@ -1315,6 +1535,7 @@ class Batch_newTypeClass_presult {
   virtual ~Batch_newTypeClass_presult() throw() {}
 
    ::Type* success;
+  ArgumentException missingFields;
 
   _Batch_newTypeClass_presult__isset __isset;
 
@@ -1392,8 +1613,9 @@ class Batch_newTypeFunction_pargs {
 };
 
 typedef struct _Batch_newTypeFunction_result__isset {
-  _Batch_newTypeFunction_result__isset() : success(false) {}
+  _Batch_newTypeFunction_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeFunction_result__isset;
 
 class Batch_newTypeFunction_result {
@@ -1405,6 +1627,7 @@ class Batch_newTypeFunction_result {
   virtual ~Batch_newTypeFunction_result() throw() {}
 
    ::Type success;
+  ArgumentException missingFields;
 
   _Batch_newTypeFunction_result__isset __isset;
 
@@ -1412,9 +1635,15 @@ class Batch_newTypeFunction_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeFunction_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1430,8 +1659,9 @@ class Batch_newTypeFunction_result {
 };
 
 typedef struct _Batch_newTypeFunction_presult__isset {
-  _Batch_newTypeFunction_presult__isset() : success(false) {}
+  _Batch_newTypeFunction_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeFunction_presult__isset;
 
 class Batch_newTypeFunction_presult {
@@ -1441,6 +1671,7 @@ class Batch_newTypeFunction_presult {
   virtual ~Batch_newTypeFunction_presult() throw() {}
 
    ::Type* success;
+  ArgumentException missingFields;
 
   _Batch_newTypeFunction_presult__isset __isset;
 
@@ -1486,8 +1717,9 @@ class Batch_newTypeUdefined_pargs {
 };
 
 typedef struct _Batch_newTypeUdefined_result__isset {
-  _Batch_newTypeUdefined_result__isset() : success(false) {}
+  _Batch_newTypeUdefined_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeUdefined_result__isset;
 
 class Batch_newTypeUdefined_result {
@@ -1499,6 +1731,7 @@ class Batch_newTypeUdefined_result {
   virtual ~Batch_newTypeUdefined_result() throw() {}
 
    ::Type success;
+  ArgumentException missingFields;
 
   _Batch_newTypeUdefined_result__isset __isset;
 
@@ -1506,9 +1739,15 @@ class Batch_newTypeUdefined_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeUdefined_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1524,8 +1763,9 @@ class Batch_newTypeUdefined_result {
 };
 
 typedef struct _Batch_newTypeUdefined_presult__isset {
-  _Batch_newTypeUdefined_presult__isset() : success(false) {}
+  _Batch_newTypeUdefined_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeUdefined_presult__isset;
 
 class Batch_newTypeUdefined_presult {
@@ -1535,6 +1775,7 @@ class Batch_newTypeUdefined_presult {
   virtual ~Batch_newTypeUdefined_presult() throw() {}
 
    ::Type* success;
+  ArgumentException missingFields;
 
   _Batch_newTypeUdefined_presult__isset __isset;
 
@@ -1594,8 +1835,9 @@ class Batch_newTypeNamed_pargs {
 };
 
 typedef struct _Batch_newTypeNamed_result__isset {
-  _Batch_newTypeNamed_result__isset() : success(false) {}
+  _Batch_newTypeNamed_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeNamed_result__isset;
 
 class Batch_newTypeNamed_result {
@@ -1607,6 +1849,7 @@ class Batch_newTypeNamed_result {
   virtual ~Batch_newTypeNamed_result() throw() {}
 
    ::Type success;
+  ArgumentException missingFields;
 
   _Batch_newTypeNamed_result__isset __isset;
 
@@ -1614,9 +1857,15 @@ class Batch_newTypeNamed_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeNamed_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1632,8 +1881,9 @@ class Batch_newTypeNamed_result {
 };
 
 typedef struct _Batch_newTypeNamed_presult__isset {
-  _Batch_newTypeNamed_presult__isset() : success(false) {}
+  _Batch_newTypeNamed_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeNamed_presult__isset;
 
 class Batch_newTypeNamed_presult {
@@ -1643,6 +1893,7 @@ class Batch_newTypeNamed_presult {
   virtual ~Batch_newTypeNamed_presult() throw() {}
 
    ::Type* success;
+  ArgumentException missingFields;
 
   _Batch_newTypeNamed_presult__isset __isset;
 
@@ -1711,8 +1962,9 @@ class Batch_newTypeVariable_pargs {
 };
 
 typedef struct _Batch_newTypeVariable_result__isset {
-  _Batch_newTypeVariable_result__isset() : success(false) {}
+  _Batch_newTypeVariable_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeVariable_result__isset;
 
 class Batch_newTypeVariable_result {
@@ -1724,6 +1976,7 @@ class Batch_newTypeVariable_result {
   virtual ~Batch_newTypeVariable_result() throw() {}
 
    ::Type success;
+  ArgumentException missingFields;
 
   _Batch_newTypeVariable_result__isset __isset;
 
@@ -1731,9 +1984,15 @@ class Batch_newTypeVariable_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeVariable_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1749,8 +2008,9 @@ class Batch_newTypeVariable_result {
 };
 
 typedef struct _Batch_newTypeVariable_presult__isset {
-  _Batch_newTypeVariable_presult__isset() : success(false) {}
+  _Batch_newTypeVariable_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeVariable_presult__isset;
 
 class Batch_newTypeVariable_presult {
@@ -1760,6 +2020,7 @@ class Batch_newTypeVariable_presult {
   virtual ~Batch_newTypeVariable_presult() throw() {}
 
    ::Type* success;
+  ArgumentException missingFields;
 
   _Batch_newTypeVariable_presult__isset __isset;
 
@@ -1819,8 +2080,9 @@ class Batch_newTypeList_pargs {
 };
 
 typedef struct _Batch_newTypeList_result__isset {
-  _Batch_newTypeList_result__isset() : success(false) {}
+  _Batch_newTypeList_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeList_result__isset;
 
 class Batch_newTypeList_result {
@@ -1832,6 +2094,7 @@ class Batch_newTypeList_result {
   virtual ~Batch_newTypeList_result() throw() {}
 
    ::Type success;
+  ArgumentException missingFields;
 
   _Batch_newTypeList_result__isset __isset;
 
@@ -1839,9 +2102,15 @@ class Batch_newTypeList_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeList_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1857,8 +2126,9 @@ class Batch_newTypeList_result {
 };
 
 typedef struct _Batch_newTypeList_presult__isset {
-  _Batch_newTypeList_presult__isset() : success(false) {}
+  _Batch_newTypeList_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeList_presult__isset;
 
 class Batch_newTypeList_presult {
@@ -1868,6 +2138,7 @@ class Batch_newTypeList_presult {
   virtual ~Batch_newTypeList_presult() throw() {}
 
    ::Type* success;
+  ArgumentException missingFields;
 
   _Batch_newTypeList_presult__isset __isset;
 
@@ -1927,8 +2198,9 @@ class Batch_newTypeTuple_pargs {
 };
 
 typedef struct _Batch_newTypeTuple_result__isset {
-  _Batch_newTypeTuple_result__isset() : success(false) {}
+  _Batch_newTypeTuple_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeTuple_result__isset;
 
 class Batch_newTypeTuple_result {
@@ -1940,6 +2212,7 @@ class Batch_newTypeTuple_result {
   virtual ~Batch_newTypeTuple_result() throw() {}
 
    ::Type success;
+  ArgumentException missingFields;
 
   _Batch_newTypeTuple_result__isset __isset;
 
@@ -1947,9 +2220,15 @@ class Batch_newTypeTuple_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeTuple_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1965,8 +2244,9 @@ class Batch_newTypeTuple_result {
 };
 
 typedef struct _Batch_newTypeTuple_presult__isset {
-  _Batch_newTypeTuple_presult__isset() : success(false) {}
+  _Batch_newTypeTuple_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeTuple_presult__isset;
 
 class Batch_newTypeTuple_presult {
@@ -1976,6 +2256,7 @@ class Batch_newTypeTuple_presult {
   virtual ~Batch_newTypeTuple_presult() throw() {}
 
    ::Type* success;
+  ArgumentException missingFields;
 
   _Batch_newTypeTuple_presult__isset __isset;
 
@@ -1996,11 +2277,11 @@ class Batch_graph_args {
 
   virtual ~Batch_graph_args() throw() {}
 
-   ::NodeDefinition definition;
+   ::NodeDef definition;
 
   _Batch_graph_args__isset __isset;
 
-  void __set_definition(const  ::NodeDefinition& val) {
+  void __set_definition(const  ::NodeDef& val) {
     definition = val;
   }
 
@@ -2028,15 +2309,16 @@ class Batch_graph_pargs {
 
   virtual ~Batch_graph_pargs() throw() {}
 
-  const  ::NodeDefinition* definition;
+  const  ::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
 typedef struct _Batch_graph_result__isset {
-  _Batch_graph_result__isset() : success(false) {}
+  _Batch_graph_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_graph_result__isset;
 
 class Batch_graph_result {
@@ -2048,6 +2330,7 @@ class Batch_graph_result {
   virtual ~Batch_graph_result() throw() {}
 
    ::Graph success;
+  ArgumentException missingFields;
 
   _Batch_graph_result__isset __isset;
 
@@ -2055,9 +2338,15 @@ class Batch_graph_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_graph_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -2073,8 +2362,9 @@ class Batch_graph_result {
 };
 
 typedef struct _Batch_graph_presult__isset {
-  _Batch_graph_presult__isset() : success(false) {}
+  _Batch_graph_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_graph_presult__isset;
 
 class Batch_graph_presult {
@@ -2084,6 +2374,7 @@ class Batch_graph_presult {
   virtual ~Batch_graph_presult() throw() {}
 
    ::Graph* success;
+  ArgumentException missingFields;
 
   _Batch_graph_presult__isset __isset;
 
@@ -2106,7 +2397,7 @@ class Batch_addNode_args {
   virtual ~Batch_addNode_args() throw() {}
 
    ::Node node;
-   ::NodeDefinition definition;
+   ::NodeDef definition;
 
   _Batch_addNode_args__isset __isset;
 
@@ -2114,7 +2405,7 @@ class Batch_addNode_args {
     node = val;
   }
 
-  void __set_definition(const  ::NodeDefinition& val) {
+  void __set_definition(const  ::NodeDef& val) {
     definition = val;
   }
 
@@ -2145,15 +2436,16 @@ class Batch_addNode_pargs {
   virtual ~Batch_addNode_pargs() throw() {}
 
   const  ::Node* node;
-  const  ::NodeDefinition* definition;
+  const  ::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
 typedef struct _Batch_addNode_result__isset {
-  _Batch_addNode_result__isset() : success(false) {}
+  _Batch_addNode_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_addNode_result__isset;
 
 class Batch_addNode_result {
@@ -2165,6 +2457,7 @@ class Batch_addNode_result {
   virtual ~Batch_addNode_result() throw() {}
 
    ::Node success;
+  ArgumentException missingFields;
 
   _Batch_addNode_result__isset __isset;
 
@@ -2172,9 +2465,15 @@ class Batch_addNode_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_addNode_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -2190,8 +2489,9 @@ class Batch_addNode_result {
 };
 
 typedef struct _Batch_addNode_presult__isset {
-  _Batch_addNode_presult__isset() : success(false) {}
+  _Batch_addNode_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_addNode_presult__isset;
 
 class Batch_addNode_presult {
@@ -2201,6 +2501,7 @@ class Batch_addNode_presult {
   virtual ~Batch_addNode_presult() throw() {}
 
    ::Node* success;
+  ArgumentException missingFields;
 
   _Batch_addNode_presult__isset __isset;
 
@@ -2223,7 +2524,7 @@ class Batch_updateNode_args {
   virtual ~Batch_updateNode_args() throw() {}
 
    ::Node node;
-   ::NodeDefinition definition;
+   ::NodeDef definition;
 
   _Batch_updateNode_args__isset __isset;
 
@@ -2231,7 +2532,7 @@ class Batch_updateNode_args {
     node = val;
   }
 
-  void __set_definition(const  ::NodeDefinition& val) {
+  void __set_definition(const  ::NodeDef& val) {
     definition = val;
   }
 
@@ -2262,12 +2563,16 @@ class Batch_updateNode_pargs {
   virtual ~Batch_updateNode_pargs() throw() {}
 
   const  ::Node* node;
-  const  ::NodeDefinition* definition;
+  const  ::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
+typedef struct _Batch_updateNode_result__isset {
+  _Batch_updateNode_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_updateNode_result__isset;
 
 class Batch_updateNode_result {
  public:
@@ -2277,9 +2582,18 @@ class Batch_updateNode_result {
 
   virtual ~Batch_updateNode_result() throw() {}
 
+  ArgumentException missingFields;
 
-  bool operator == (const Batch_updateNode_result & /* rhs */) const
+  _Batch_updateNode_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_updateNode_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_updateNode_result &rhs) const {
@@ -2293,6 +2607,10 @@ class Batch_updateNode_result {
 
 };
 
+typedef struct _Batch_updateNode_presult__isset {
+  _Batch_updateNode_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_updateNode_presult__isset;
 
 class Batch_updateNode_presult {
  public:
@@ -2300,6 +2618,9 @@ class Batch_updateNode_presult {
 
   virtual ~Batch_updateNode_presult() throw() {}
 
+  ArgumentException missingFields;
+
+  _Batch_updateNode_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -2320,7 +2641,7 @@ class Batch_removeNode_args {
   virtual ~Batch_removeNode_args() throw() {}
 
    ::Node node;
-   ::NodeDefinition definition;
+   ::NodeDef definition;
 
   _Batch_removeNode_args__isset __isset;
 
@@ -2328,7 +2649,7 @@ class Batch_removeNode_args {
     node = val;
   }
 
-  void __set_definition(const  ::NodeDefinition& val) {
+  void __set_definition(const  ::NodeDef& val) {
     definition = val;
   }
 
@@ -2359,12 +2680,16 @@ class Batch_removeNode_pargs {
   virtual ~Batch_removeNode_pargs() throw() {}
 
   const  ::Node* node;
-  const  ::NodeDefinition* definition;
+  const  ::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
+typedef struct _Batch_removeNode_result__isset {
+  _Batch_removeNode_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_removeNode_result__isset;
 
 class Batch_removeNode_result {
  public:
@@ -2374,9 +2699,18 @@ class Batch_removeNode_result {
 
   virtual ~Batch_removeNode_result() throw() {}
 
+  ArgumentException missingFields;
 
-  bool operator == (const Batch_removeNode_result & /* rhs */) const
+  _Batch_removeNode_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_removeNode_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_removeNode_result &rhs) const {
@@ -2390,6 +2724,10 @@ class Batch_removeNode_result {
 
 };
 
+typedef struct _Batch_removeNode_presult__isset {
+  _Batch_removeNode_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_removeNode_presult__isset;
 
 class Batch_removeNode_presult {
  public:
@@ -2397,6 +2735,9 @@ class Batch_removeNode_presult {
 
   virtual ~Batch_removeNode_presult() throw() {}
 
+  ArgumentException missingFields;
+
+  _Batch_removeNode_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -2423,7 +2764,7 @@ class Batch_connect_args {
    ::PortDescriptor srcPort;
    ::Node dstNode;
    ::PortDescriptor dstPort;
-   ::NodeDefinition definition;
+   ::NodeDef definition;
 
   _Batch_connect_args__isset __isset;
 
@@ -2443,7 +2784,7 @@ class Batch_connect_args {
     dstPort = val;
   }
 
-  void __set_definition(const  ::NodeDefinition& val) {
+  void __set_definition(const  ::NodeDef& val) {
     definition = val;
   }
 
@@ -2483,12 +2824,16 @@ class Batch_connect_pargs {
   const  ::PortDescriptor* srcPort;
   const  ::Node* dstNode;
   const  ::PortDescriptor* dstPort;
-  const  ::NodeDefinition* definition;
+  const  ::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
+typedef struct _Batch_connect_result__isset {
+  _Batch_connect_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_connect_result__isset;
 
 class Batch_connect_result {
  public:
@@ -2498,9 +2843,18 @@ class Batch_connect_result {
 
   virtual ~Batch_connect_result() throw() {}
 
+  ArgumentException missingFields;
 
-  bool operator == (const Batch_connect_result & /* rhs */) const
+  _Batch_connect_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_connect_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_connect_result &rhs) const {
@@ -2514,6 +2868,10 @@ class Batch_connect_result {
 
 };
 
+typedef struct _Batch_connect_presult__isset {
+  _Batch_connect_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_connect_presult__isset;
 
 class Batch_connect_presult {
  public:
@@ -2521,6 +2879,9 @@ class Batch_connect_presult {
 
   virtual ~Batch_connect_presult() throw() {}
 
+  ArgumentException missingFields;
+
+  _Batch_connect_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -2547,7 +2908,7 @@ class Batch_disconnect_args {
    ::PortDescriptor srcPort;
    ::Node dstNode;
    ::PortDescriptor dstPort;
-   ::NodeDefinition definition;
+   ::NodeDef definition;
 
   _Batch_disconnect_args__isset __isset;
 
@@ -2567,7 +2928,7 @@ class Batch_disconnect_args {
     dstPort = val;
   }
 
-  void __set_definition(const  ::NodeDefinition& val) {
+  void __set_definition(const  ::NodeDef& val) {
     definition = val;
   }
 
@@ -2607,12 +2968,16 @@ class Batch_disconnect_pargs {
   const  ::PortDescriptor* srcPort;
   const  ::Node* dstNode;
   const  ::PortDescriptor* dstPort;
-  const  ::NodeDefinition* definition;
+  const  ::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
+typedef struct _Batch_disconnect_result__isset {
+  _Batch_disconnect_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_disconnect_result__isset;
 
 class Batch_disconnect_result {
  public:
@@ -2622,9 +2987,18 @@ class Batch_disconnect_result {
 
   virtual ~Batch_disconnect_result() throw() {}
 
+  ArgumentException missingFields;
 
-  bool operator == (const Batch_disconnect_result & /* rhs */) const
+  _Batch_disconnect_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_disconnect_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_disconnect_result &rhs) const {
@@ -2638,6 +3012,10 @@ class Batch_disconnect_result {
 
 };
 
+typedef struct _Batch_disconnect_presult__isset {
+  _Batch_disconnect_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_disconnect_presult__isset;
 
 class Batch_disconnect_presult {
  public:
@@ -2645,6 +3023,9 @@ class Batch_disconnect_presult {
 
   virtual ~Batch_disconnect_presult() throw() {}
 
+  ArgumentException missingFields;
+
+  _Batch_disconnect_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -2753,24 +3134,27 @@ class BatchClient : virtual public BatchIf {
   void unloadLibrary(const  ::Library& library);
   void send_unloadLibrary(const  ::Library& library);
   void recv_unloadLibrary();
-  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs);
-  void send_newDefinition(const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs);
-  void recv_newDefinition( ::NodeDefinition& _return);
-  void addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent);
-  void send_addDefinition(const  ::NodeDefinition& definition, const  ::NodeDefinition& parent);
-  void recv_addDefinition( ::NodeDefinition& _return);
-  void updateDefinition(const  ::NodeDefinition& definition);
-  void send_updateDefinition(const  ::NodeDefinition& definition);
+  void libraryRootDef( ::NodeDef& _return, const  ::Library& library);
+  void send_libraryRootDef(const  ::Library& library);
+  void recv_libraryRootDef( ::NodeDef& _return);
+  void newDefinition( ::NodeDef& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs);
+  void send_newDefinition(const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs);
+  void recv_newDefinition( ::NodeDef& _return);
+  void addDefinition( ::NodeDef& _return, const  ::NodeDef& definition, const  ::NodeDef& parent);
+  void send_addDefinition(const  ::NodeDef& definition, const  ::NodeDef& parent);
+  void recv_addDefinition( ::NodeDef& _return);
+  void updateDefinition(const  ::NodeDef& definition);
+  void send_updateDefinition(const  ::NodeDef& definition);
   void recv_updateDefinition();
-  void removeDefinition(const  ::NodeDefinition& definition);
-  void send_removeDefinition(const  ::NodeDefinition& definition);
+  void removeDefinition(const  ::NodeDef& definition);
+  void send_removeDefinition(const  ::NodeDef& definition);
   void recv_removeDefinition();
-  void definitionChildren(std::vector< ::NodeDefinition> & _return, const  ::NodeDefinition& definition);
-  void send_definitionChildren(const  ::NodeDefinition& definition);
-  void recv_definitionChildren(std::vector< ::NodeDefinition> & _return);
-  void definitionParent( ::NodeDefinition& _return, const  ::NodeDefinition& definition);
-  void send_definitionParent(const  ::NodeDefinition& definition);
-  void recv_definitionParent( ::NodeDefinition& _return);
+  void definitionChildren(std::vector< ::NodeDef> & _return, const  ::NodeDef& definition);
+  void send_definitionChildren(const  ::NodeDef& definition);
+  void recv_definitionChildren(std::vector< ::NodeDef> & _return);
+  void definitionParent( ::NodeDef& _return, const  ::NodeDef& definition);
+  void send_definitionParent(const  ::NodeDef& definition);
+  void recv_definitionParent( ::NodeDef& _return);
   void newTypeModule( ::Type& _return, const std::string& name);
   void send_newTypeModule(const std::string& name);
   void recv_newTypeModule( ::Type& _return);
@@ -2795,23 +3179,23 @@ class BatchClient : virtual public BatchIf {
   void newTypeTuple( ::Type& _return, const std::vector< ::Type> & types);
   void send_newTypeTuple(const std::vector< ::Type> & types);
   void recv_newTypeTuple( ::Type& _return);
-  void graph( ::Graph& _return, const  ::NodeDefinition& definition);
-  void send_graph(const  ::NodeDefinition& definition);
+  void graph( ::Graph& _return, const  ::NodeDef& definition);
+  void send_graph(const  ::NodeDef& definition);
   void recv_graph( ::Graph& _return);
-  void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDefinition& definition);
-  void send_addNode(const  ::Node& node, const  ::NodeDefinition& definition);
+  void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDef& definition);
+  void send_addNode(const  ::Node& node, const  ::NodeDef& definition);
   void recv_addNode( ::Node& _return);
-  void updateNode(const  ::Node& node, const  ::NodeDefinition& definition);
-  void send_updateNode(const  ::Node& node, const  ::NodeDefinition& definition);
+  void updateNode(const  ::Node& node, const  ::NodeDef& definition);
+  void send_updateNode(const  ::Node& node, const  ::NodeDef& definition);
   void recv_updateNode();
-  void removeNode(const  ::Node& node, const  ::NodeDefinition& definition);
-  void send_removeNode(const  ::Node& node, const  ::NodeDefinition& definition);
+  void removeNode(const  ::Node& node, const  ::NodeDef& definition);
+  void send_removeNode(const  ::Node& node, const  ::NodeDef& definition);
   void recv_removeNode();
-  void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition);
-  void send_connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition);
+  void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition);
+  void send_connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition);
   void recv_connect();
-  void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition);
-  void send_disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition);
+  void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition);
+  void send_disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition);
   void recv_disconnect();
   void ping();
   void send_ping();
@@ -2834,6 +3218,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_libraries(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_loadLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_unloadLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_libraryRootDef(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_newDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_addDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_updateDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -2861,6 +3246,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["libraries"] = &BatchProcessor::process_libraries;
     processMap_["loadLibrary"] = &BatchProcessor::process_loadLibrary;
     processMap_["unloadLibrary"] = &BatchProcessor::process_unloadLibrary;
+    processMap_["libraryRootDef"] = &BatchProcessor::process_libraryRootDef;
     processMap_["newDefinition"] = &BatchProcessor::process_newDefinition;
     processMap_["addDefinition"] = &BatchProcessor::process_addDefinition;
     processMap_["updateDefinition"] = &BatchProcessor::process_updateDefinition;
@@ -2939,17 +3325,27 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->unloadLibrary(library);
   }
 
-  void newDefinition( ::NodeDefinition& _return, const  ::Type& type, const  ::Flags& flags, const  ::Attributes& attrs) {
+  void libraryRootDef( ::NodeDef& _return, const  ::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->newDefinition(_return, type, flags, attrs);
+      ifaces_[i]->libraryRootDef(_return, library);
     }
-    ifaces_[i]->newDefinition(_return, type, flags, attrs);
+    ifaces_[i]->libraryRootDef(_return, library);
     return;
   }
 
-  void addDefinition( ::NodeDefinition& _return, const  ::NodeDefinition& definition, const  ::NodeDefinition& parent) {
+  void newDefinition( ::NodeDef& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->newDefinition(_return, type, imports, flags, attrs);
+    }
+    ifaces_[i]->newDefinition(_return, type, imports, flags, attrs);
+    return;
+  }
+
+  void addDefinition( ::NodeDef& _return, const  ::NodeDef& definition, const  ::NodeDef& parent) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -2959,7 +3355,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void updateDefinition(const  ::NodeDefinition& definition) {
+  void updateDefinition(const  ::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -2968,7 +3364,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->updateDefinition(definition);
   }
 
-  void removeDefinition(const  ::NodeDefinition& definition) {
+  void removeDefinition(const  ::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -2977,7 +3373,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->removeDefinition(definition);
   }
 
-  void definitionChildren(std::vector< ::NodeDefinition> & _return, const  ::NodeDefinition& definition) {
+  void definitionChildren(std::vector< ::NodeDef> & _return, const  ::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -2987,7 +3383,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void definitionParent( ::NodeDefinition& _return, const  ::NodeDefinition& definition) {
+  void definitionParent( ::NodeDef& _return, const  ::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3077,7 +3473,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void graph( ::Graph& _return, const  ::NodeDefinition& definition) {
+  void graph( ::Graph& _return, const  ::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3087,7 +3483,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDefinition& definition) {
+  void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3097,7 +3493,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void updateNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+  void updateNode(const  ::Node& node, const  ::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3106,7 +3502,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->updateNode(node, definition);
   }
 
-  void removeNode(const  ::Node& node, const  ::NodeDefinition& definition) {
+  void removeNode(const  ::Node& node, const  ::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3115,7 +3511,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->removeNode(node, definition);
   }
 
-  void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) {
+  void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3124,7 +3520,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->connect(srcNode, srcPort, dstNode, dstPort, definition);
   }
 
-  void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDefinition& definition) {
+  void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {

@@ -39,73 +39,125 @@ import  Types_Types
 
 type DefID = Int32
 
-data NodeDefinition = NodeDefinition{f_NodeDefinition_cls :: Maybe Types_Types.Type,f_NodeDefinition_flags :: Maybe Attrs_Types.Flags,f_NodeDefinition_attribs :: Maybe Attrs_Types.Attributes,f_NodeDefinition_libID :: Maybe Int32,f_NodeDefinition_defID :: Maybe Int32} deriving (Show,Eq,Typeable)
-instance Hashable NodeDefinition where
-  hashWithSalt salt record = salt   `hashWithSalt` f_NodeDefinition_cls record   `hashWithSalt` f_NodeDefinition_flags record   `hashWithSalt` f_NodeDefinition_attribs record   `hashWithSalt` f_NodeDefinition_libID record   `hashWithSalt` f_NodeDefinition_defID record  
-write_NodeDefinition oprot record = do
-  writeStructBegin oprot "NodeDefinition"
-  case f_NodeDefinition_cls record of {Nothing -> return (); Just _v -> do
+type Imports = Vector.Vector Import
+
+data Import = Import{f_Import_path :: Maybe (Vector.Vector Text),f_Import_items :: Maybe (Vector.Vector Text)} deriving (Show,Eq,Typeable)
+instance Hashable Import where
+  hashWithSalt salt record = salt   `hashWithSalt` f_Import_path record   `hashWithSalt` f_Import_items record  
+write_Import oprot record = do
+  writeStructBegin oprot "Import"
+  case f_Import_path record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("path",T_LIST,1)
+    (let f = Vector.mapM_ (\_viter2 -> writeString oprot _viter2) in do {writeListBegin oprot (T_STRING,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    writeFieldEnd oprot}
+  case f_Import_items record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("items",T_LIST,2)
+    (let f = Vector.mapM_ (\_viter3 -> writeString oprot _viter3) in do {writeListBegin oprot (T_STRING,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_Import_fields iprot record = do
+  (_,_t5,_id6) <- readFieldBegin iprot
+  if _t5 == T_STOP then return record else
+    case _id6 of 
+      1 -> if _t5 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readString iprot) in do {(_etype10,_size7) <- readListBegin iprot; f _size7})
+        read_Import_fields iprot record{f_Import_path=Just s}
+        else do
+          skip iprot _t5
+          read_Import_fields iprot record
+      2 -> if _t5 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readString iprot) in do {(_etype15,_size12) <- readListBegin iprot; f _size12})
+        read_Import_fields iprot record{f_Import_items=Just s}
+        else do
+          skip iprot _t5
+          read_Import_fields iprot record
+      _ -> do
+        skip iprot _t5
+        readFieldEnd iprot
+        read_Import_fields iprot record
+read_Import iprot = do
+  _ <- readStructBegin iprot
+  record <- read_Import_fields iprot (Import{f_Import_path=Nothing,f_Import_items=Nothing})
+  readStructEnd iprot
+  return record
+data NodeDef = NodeDef{f_NodeDef_cls :: Maybe Types_Types.Type,f_NodeDef_imports :: Maybe (Vector.Vector Import),f_NodeDef_flags :: Maybe Attrs_Types.Flags,f_NodeDef_attribs :: Maybe Attrs_Types.Attributes,f_NodeDef_libID :: Maybe Int32,f_NodeDef_defID :: Maybe Int32} deriving (Show,Eq,Typeable)
+instance Hashable NodeDef where
+  hashWithSalt salt record = salt   `hashWithSalt` f_NodeDef_cls record   `hashWithSalt` f_NodeDef_imports record   `hashWithSalt` f_NodeDef_flags record   `hashWithSalt` f_NodeDef_attribs record   `hashWithSalt` f_NodeDef_libID record   `hashWithSalt` f_NodeDef_defID record  
+write_NodeDef oprot record = do
+  writeStructBegin oprot "NodeDef"
+  case f_NodeDef_cls record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("cls",T_STRUCT,1)
     Types_Types.write_Type oprot _v
     writeFieldEnd oprot}
-  case f_NodeDefinition_flags record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("flags",T_STRUCT,2)
+  case f_NodeDef_imports record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("imports",T_LIST,2)
+    (let f = Vector.mapM_ (\_viter19 -> write_Import oprot _viter19) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    writeFieldEnd oprot}
+  case f_NodeDef_flags record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("flags",T_STRUCT,3)
     Attrs_Types.write_Flags oprot _v
     writeFieldEnd oprot}
-  case f_NodeDefinition_attribs record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("attribs",T_STRUCT,3)
+  case f_NodeDef_attribs record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("attribs",T_STRUCT,4)
     Attrs_Types.write_Attributes oprot _v
     writeFieldEnd oprot}
-  case f_NodeDefinition_libID record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("libID",T_I32,4)
+  case f_NodeDef_libID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("libID",T_I32,5)
     writeI32 oprot _v
     writeFieldEnd oprot}
-  case f_NodeDefinition_defID record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("defID",T_I32,5)
+  case f_NodeDef_defID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("defID",T_I32,6)
     writeI32 oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
-read_NodeDefinition_fields iprot record = do
-  (_,_t3,_id4) <- readFieldBegin iprot
-  if _t3 == T_STOP then return record else
-    case _id4 of 
-      1 -> if _t3 == T_STRUCT then do
+read_NodeDef_fields iprot record = do
+  (_,_t21,_id22) <- readFieldBegin iprot
+  if _t21 == T_STOP then return record else
+    case _id22 of 
+      1 -> if _t21 == T_STRUCT then do
         s <- (read_Type iprot)
-        read_NodeDefinition_fields iprot record{f_NodeDefinition_cls=Just s}
+        read_NodeDef_fields iprot record{f_NodeDef_cls=Just s}
         else do
-          skip iprot _t3
-          read_NodeDefinition_fields iprot record
-      2 -> if _t3 == T_STRUCT then do
+          skip iprot _t21
+          read_NodeDef_fields iprot record
+      2 -> if _t21 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Import iprot)) in do {(_etype26,_size23) <- readListBegin iprot; f _size23})
+        read_NodeDef_fields iprot record{f_NodeDef_imports=Just s}
+        else do
+          skip iprot _t21
+          read_NodeDef_fields iprot record
+      3 -> if _t21 == T_STRUCT then do
         s <- (read_Flags iprot)
-        read_NodeDefinition_fields iprot record{f_NodeDefinition_flags=Just s}
+        read_NodeDef_fields iprot record{f_NodeDef_flags=Just s}
         else do
-          skip iprot _t3
-          read_NodeDefinition_fields iprot record
-      3 -> if _t3 == T_STRUCT then do
+          skip iprot _t21
+          read_NodeDef_fields iprot record
+      4 -> if _t21 == T_STRUCT then do
         s <- (read_Attributes iprot)
-        read_NodeDefinition_fields iprot record{f_NodeDefinition_attribs=Just s}
+        read_NodeDef_fields iprot record{f_NodeDef_attribs=Just s}
         else do
-          skip iprot _t3
-          read_NodeDefinition_fields iprot record
-      4 -> if _t3 == T_I32 then do
+          skip iprot _t21
+          read_NodeDef_fields iprot record
+      5 -> if _t21 == T_I32 then do
         s <- readI32 iprot
-        read_NodeDefinition_fields iprot record{f_NodeDefinition_libID=Just s}
+        read_NodeDef_fields iprot record{f_NodeDef_libID=Just s}
         else do
-          skip iprot _t3
-          read_NodeDefinition_fields iprot record
-      5 -> if _t3 == T_I32 then do
+          skip iprot _t21
+          read_NodeDef_fields iprot record
+      6 -> if _t21 == T_I32 then do
         s <- readI32 iprot
-        read_NodeDefinition_fields iprot record{f_NodeDefinition_defID=Just s}
+        read_NodeDef_fields iprot record{f_NodeDef_defID=Just s}
         else do
-          skip iprot _t3
-          read_NodeDefinition_fields iprot record
+          skip iprot _t21
+          read_NodeDef_fields iprot record
       _ -> do
-        skip iprot _t3
+        skip iprot _t21
         readFieldEnd iprot
-        read_NodeDefinition_fields iprot record
-read_NodeDefinition iprot = do
+        read_NodeDef_fields iprot record
+read_NodeDef iprot = do
   _ <- readStructBegin iprot
-  record <- read_NodeDefinition_fields iprot (NodeDefinition{f_NodeDefinition_cls=Nothing,f_NodeDefinition_flags=Nothing,f_NodeDefinition_attribs=Nothing,f_NodeDefinition_libID=Nothing,f_NodeDefinition_defID=Nothing})
+  record <- read_NodeDef_fields iprot (NodeDef{f_NodeDef_cls=Nothing,f_NodeDef_imports=Nothing,f_NodeDef_flags=Nothing,f_NodeDef_attribs=Nothing,f_NodeDef_libID=Nothing,f_NodeDef_defID=Nothing})
   readStructEnd iprot
   return record

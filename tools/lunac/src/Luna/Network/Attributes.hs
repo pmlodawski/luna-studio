@@ -7,13 +7,11 @@
 
 module Luna.Network.Attributes (
     Attributes(..),
-    empty
+    module Data.Map
 ) where
 
-import qualified Data.Map as Map
-import           Data.Map   (Map)
+import Data.Map
 
-type Attributes = Map String String -- TODO [PM] implement Attributes
+type Attributes = Map String (Map String String)
 
-empty :: Attributes
-empty = Map.empty
+

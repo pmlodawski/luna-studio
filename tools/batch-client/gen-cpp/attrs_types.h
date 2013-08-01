@@ -17,7 +17,7 @@
 
 
 typedef struct _Flags__isset {
-  _Flags__isset() : io(false), omit(false) {}
+  _Flags__isset() : io(true), omit(true) {}
   bool io;
   bool omit;
 } _Flags__isset;
@@ -28,7 +28,7 @@ class Flags {
   static const char* ascii_fingerprint; // = "1959DF646639D95C0F1375CF60F71F5B";
   static const uint8_t binary_fingerprint[16]; // = {0x19,0x59,0xDF,0x64,0x66,0x39,0xD9,0x5C,0x0F,0x13,0x75,0xCF,0x60,0xF7,0x1F,0x5B};
 
-  Flags() : io(0), omit(0) {
+  Flags() : io(false), omit(false) {
   }
 
   virtual ~Flags() throw() {}
