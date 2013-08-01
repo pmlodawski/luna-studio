@@ -58,8 +58,9 @@ base_manager = manager where
 
 base_libman :: LibManager
 base_libman = libman where
-    libman = LibManager.insNode (userLibKey, Library "__workspace__" $ UniPath.fromUnixString "~/flowbox/project1")
-           $ LibManager.insNode (stdLibKey,  Library "std"           $ UniPath.fromUnixString "/opt/flowbox/luna/stdlib")
+  -- TODO [PM] : insert proper root nodeDef' ids in lines below
+    libman = LibManager.insNode (userLibKey, Library "__workspace__" (UniPath.fromUnixString "~/flowbox/project1") (-1) ) 
+           $ LibManager.insNode (stdLibKey,  Library "std"           (UniPath.fromUnixString "/opt/flowbox/luna/stdlib") (-2))
            $ LibManager.empty
 
 
@@ -149,17 +150,17 @@ myFun2 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun2" myFunInputs2 Typ
                       }
 
 myFunGraph3 = Graph.insEdges [
-                              (0, 1, Edge.standard),
-                              (1, 2, Edge.standard),
-                              (2, 3, Edge.standard),
-                              (3, 4, Edge.standard),
-                              (5, 6, Edge.standard),
-                              (5, 7, Edge.standard),
-                              (6, 8, Edge.standard),
-                              (7, 8, Edge.standard),
-                              (8, 9, Edge.standard),
-                              (4, 10, Edge.standard),
-                              (9, 10, Edge.standard),
+                              (0,  1,  Edge.standard),
+                              (1,  2,  Edge.standard),
+                              (2,  3,  Edge.standard),
+                              (3,  4,  Edge.standard),
+                              (5,  6,  Edge.standard),
+                              (5,  7,  Edge.standard),
+                              (6,  8,  Edge.standard),
+                              (7,  8,  Edge.standard),
+                              (8,  9,  Edge.standard),
+                              (4,  10, Edge.standard),
+                              (9,  10, Edge.standard),
                               (10, 11, Edge.standard),
                               (11, 13, Edge.standard),
                               (13, 12, Edge.standard)

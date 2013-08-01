@@ -15,12 +15,13 @@ import qualified Luna.System.UniPath as UniPath
 import           Luna.System.UniPath   (UniPath)
 
 data Library =  Library{
-    name :: String,
+    name          :: String,
     --version :: Version,
-    path :: UniPath
+    path          :: UniPath,
+    rootNodeDefID :: Int
 } deriving (Show)
 
 empty :: Library
-empty = Library "" UniPath.empty
+empty = Library "" UniPath.empty (-1)
 
 type ID  = Int
