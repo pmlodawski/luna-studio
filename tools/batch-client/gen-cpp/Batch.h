@@ -658,8 +658,9 @@ class Batch_addDefinition_pargs {
 };
 
 typedef struct _Batch_addDefinition_result__isset {
-  _Batch_addDefinition_result__isset() : success(false) {}
+  _Batch_addDefinition_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_addDefinition_result__isset;
 
 class Batch_addDefinition_result {
@@ -671,6 +672,7 @@ class Batch_addDefinition_result {
   virtual ~Batch_addDefinition_result() throw() {}
 
    ::NodeDefinition success;
+  MissingFieldsException missingFields;
 
   _Batch_addDefinition_result__isset __isset;
 
@@ -678,9 +680,15 @@ class Batch_addDefinition_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_addDefinition_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -696,8 +704,9 @@ class Batch_addDefinition_result {
 };
 
 typedef struct _Batch_addDefinition_presult__isset {
-  _Batch_addDefinition_presult__isset() : success(false) {}
+  _Batch_addDefinition_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_addDefinition_presult__isset;
 
 class Batch_addDefinition_presult {
@@ -707,6 +716,7 @@ class Batch_addDefinition_presult {
   virtual ~Batch_addDefinition_presult() throw() {}
 
    ::NodeDefinition* success;
+  MissingFieldsException missingFields;
 
   _Batch_addDefinition_presult__isset __isset;
 
@@ -765,6 +775,10 @@ class Batch_updateDefinition_pargs {
 
 };
 
+typedef struct _Batch_updateDefinition_result__isset {
+  _Batch_updateDefinition_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_updateDefinition_result__isset;
 
 class Batch_updateDefinition_result {
  public:
@@ -774,9 +788,18 @@ class Batch_updateDefinition_result {
 
   virtual ~Batch_updateDefinition_result() throw() {}
 
+  MissingFieldsException missingFields;
 
-  bool operator == (const Batch_updateDefinition_result & /* rhs */) const
+  _Batch_updateDefinition_result__isset __isset;
+
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_updateDefinition_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_updateDefinition_result &rhs) const {
@@ -790,6 +813,10 @@ class Batch_updateDefinition_result {
 
 };
 
+typedef struct _Batch_updateDefinition_presult__isset {
+  _Batch_updateDefinition_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_updateDefinition_presult__isset;
 
 class Batch_updateDefinition_presult {
  public:
@@ -797,6 +824,9 @@ class Batch_updateDefinition_presult {
 
   virtual ~Batch_updateDefinition_presult() throw() {}
 
+  MissingFieldsException missingFields;
+
+  _Batch_updateDefinition_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -853,6 +883,10 @@ class Batch_removeDefinition_pargs {
 
 };
 
+typedef struct _Batch_removeDefinition_result__isset {
+  _Batch_removeDefinition_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_removeDefinition_result__isset;
 
 class Batch_removeDefinition_result {
  public:
@@ -862,9 +896,18 @@ class Batch_removeDefinition_result {
 
   virtual ~Batch_removeDefinition_result() throw() {}
 
+  MissingFieldsException missingFields;
 
-  bool operator == (const Batch_removeDefinition_result & /* rhs */) const
+  _Batch_removeDefinition_result__isset __isset;
+
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_removeDefinition_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_removeDefinition_result &rhs) const {
@@ -878,6 +921,10 @@ class Batch_removeDefinition_result {
 
 };
 
+typedef struct _Batch_removeDefinition_presult__isset {
+  _Batch_removeDefinition_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_removeDefinition_presult__isset;
 
 class Batch_removeDefinition_presult {
  public:
@@ -885,6 +932,9 @@ class Batch_removeDefinition_presult {
 
   virtual ~Batch_removeDefinition_presult() throw() {}
 
+  MissingFieldsException missingFields;
+
+  _Batch_removeDefinition_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -942,8 +992,9 @@ class Batch_definitionChildren_pargs {
 };
 
 typedef struct _Batch_definitionChildren_result__isset {
-  _Batch_definitionChildren_result__isset() : success(false) {}
+  _Batch_definitionChildren_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_definitionChildren_result__isset;
 
 class Batch_definitionChildren_result {
@@ -955,6 +1006,7 @@ class Batch_definitionChildren_result {
   virtual ~Batch_definitionChildren_result() throw() {}
 
   std::vector< ::NodeDefinition>  success;
+  MissingFieldsException missingFields;
 
   _Batch_definitionChildren_result__isset __isset;
 
@@ -962,9 +1014,15 @@ class Batch_definitionChildren_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_definitionChildren_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -980,8 +1038,9 @@ class Batch_definitionChildren_result {
 };
 
 typedef struct _Batch_definitionChildren_presult__isset {
-  _Batch_definitionChildren_presult__isset() : success(false) {}
+  _Batch_definitionChildren_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_definitionChildren_presult__isset;
 
 class Batch_definitionChildren_presult {
@@ -991,6 +1050,7 @@ class Batch_definitionChildren_presult {
   virtual ~Batch_definitionChildren_presult() throw() {}
 
   std::vector< ::NodeDefinition> * success;
+  MissingFieldsException missingFields;
 
   _Batch_definitionChildren_presult__isset __isset;
 
@@ -1050,8 +1110,9 @@ class Batch_definitionParent_pargs {
 };
 
 typedef struct _Batch_definitionParent_result__isset {
-  _Batch_definitionParent_result__isset() : success(false) {}
+  _Batch_definitionParent_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_definitionParent_result__isset;
 
 class Batch_definitionParent_result {
@@ -1063,6 +1124,7 @@ class Batch_definitionParent_result {
   virtual ~Batch_definitionParent_result() throw() {}
 
    ::NodeDefinition success;
+  MissingFieldsException missingFields;
 
   _Batch_definitionParent_result__isset __isset;
 
@@ -1070,9 +1132,15 @@ class Batch_definitionParent_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_definitionParent_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1088,8 +1156,9 @@ class Batch_definitionParent_result {
 };
 
 typedef struct _Batch_definitionParent_presult__isset {
-  _Batch_definitionParent_presult__isset() : success(false) {}
+  _Batch_definitionParent_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_definitionParent_presult__isset;
 
 class Batch_definitionParent_presult {
@@ -1099,6 +1168,7 @@ class Batch_definitionParent_presult {
   virtual ~Batch_definitionParent_presult() throw() {}
 
    ::NodeDefinition* success;
+  MissingFieldsException missingFields;
 
   _Batch_definitionParent_presult__isset __isset;
 
@@ -1158,8 +1228,9 @@ class Batch_newTypeModule_pargs {
 };
 
 typedef struct _Batch_newTypeModule_result__isset {
-  _Batch_newTypeModule_result__isset() : success(false) {}
+  _Batch_newTypeModule_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeModule_result__isset;
 
 class Batch_newTypeModule_result {
@@ -1171,6 +1242,7 @@ class Batch_newTypeModule_result {
   virtual ~Batch_newTypeModule_result() throw() {}
 
    ::Type success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeModule_result__isset __isset;
 
@@ -1178,9 +1250,15 @@ class Batch_newTypeModule_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeModule_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1196,8 +1274,9 @@ class Batch_newTypeModule_result {
 };
 
 typedef struct _Batch_newTypeModule_presult__isset {
-  _Batch_newTypeModule_presult__isset() : success(false) {}
+  _Batch_newTypeModule_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeModule_presult__isset;
 
 class Batch_newTypeModule_presult {
@@ -1207,6 +1286,7 @@ class Batch_newTypeModule_presult {
   virtual ~Batch_newTypeModule_presult() throw() {}
 
    ::Type* success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeModule_presult__isset __isset;
 
@@ -1275,8 +1355,9 @@ class Batch_newTypeClass_pargs {
 };
 
 typedef struct _Batch_newTypeClass_result__isset {
-  _Batch_newTypeClass_result__isset() : success(false) {}
+  _Batch_newTypeClass_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeClass_result__isset;
 
 class Batch_newTypeClass_result {
@@ -1288,6 +1369,7 @@ class Batch_newTypeClass_result {
   virtual ~Batch_newTypeClass_result() throw() {}
 
    ::Type success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeClass_result__isset __isset;
 
@@ -1295,9 +1377,15 @@ class Batch_newTypeClass_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeClass_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1313,8 +1401,9 @@ class Batch_newTypeClass_result {
 };
 
 typedef struct _Batch_newTypeClass_presult__isset {
-  _Batch_newTypeClass_presult__isset() : success(false) {}
+  _Batch_newTypeClass_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeClass_presult__isset;
 
 class Batch_newTypeClass_presult {
@@ -1324,6 +1413,7 @@ class Batch_newTypeClass_presult {
   virtual ~Batch_newTypeClass_presult() throw() {}
 
    ::Type* success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeClass_presult__isset __isset;
 
@@ -1401,8 +1491,9 @@ class Batch_newTypeFunction_pargs {
 };
 
 typedef struct _Batch_newTypeFunction_result__isset {
-  _Batch_newTypeFunction_result__isset() : success(false) {}
+  _Batch_newTypeFunction_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeFunction_result__isset;
 
 class Batch_newTypeFunction_result {
@@ -1414,6 +1505,7 @@ class Batch_newTypeFunction_result {
   virtual ~Batch_newTypeFunction_result() throw() {}
 
    ::Type success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeFunction_result__isset __isset;
 
@@ -1421,9 +1513,15 @@ class Batch_newTypeFunction_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeFunction_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1439,8 +1537,9 @@ class Batch_newTypeFunction_result {
 };
 
 typedef struct _Batch_newTypeFunction_presult__isset {
-  _Batch_newTypeFunction_presult__isset() : success(false) {}
+  _Batch_newTypeFunction_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeFunction_presult__isset;
 
 class Batch_newTypeFunction_presult {
@@ -1450,6 +1549,7 @@ class Batch_newTypeFunction_presult {
   virtual ~Batch_newTypeFunction_presult() throw() {}
 
    ::Type* success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeFunction_presult__isset __isset;
 
@@ -1495,8 +1595,9 @@ class Batch_newTypeUdefined_pargs {
 };
 
 typedef struct _Batch_newTypeUdefined_result__isset {
-  _Batch_newTypeUdefined_result__isset() : success(false) {}
+  _Batch_newTypeUdefined_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeUdefined_result__isset;
 
 class Batch_newTypeUdefined_result {
@@ -1508,6 +1609,7 @@ class Batch_newTypeUdefined_result {
   virtual ~Batch_newTypeUdefined_result() throw() {}
 
    ::Type success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeUdefined_result__isset __isset;
 
@@ -1515,9 +1617,15 @@ class Batch_newTypeUdefined_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeUdefined_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1533,8 +1641,9 @@ class Batch_newTypeUdefined_result {
 };
 
 typedef struct _Batch_newTypeUdefined_presult__isset {
-  _Batch_newTypeUdefined_presult__isset() : success(false) {}
+  _Batch_newTypeUdefined_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeUdefined_presult__isset;
 
 class Batch_newTypeUdefined_presult {
@@ -1544,6 +1653,7 @@ class Batch_newTypeUdefined_presult {
   virtual ~Batch_newTypeUdefined_presult() throw() {}
 
    ::Type* success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeUdefined_presult__isset __isset;
 
@@ -1603,8 +1713,9 @@ class Batch_newTypeNamed_pargs {
 };
 
 typedef struct _Batch_newTypeNamed_result__isset {
-  _Batch_newTypeNamed_result__isset() : success(false) {}
+  _Batch_newTypeNamed_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeNamed_result__isset;
 
 class Batch_newTypeNamed_result {
@@ -1616,6 +1727,7 @@ class Batch_newTypeNamed_result {
   virtual ~Batch_newTypeNamed_result() throw() {}
 
    ::Type success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeNamed_result__isset __isset;
 
@@ -1623,9 +1735,15 @@ class Batch_newTypeNamed_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeNamed_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1641,8 +1759,9 @@ class Batch_newTypeNamed_result {
 };
 
 typedef struct _Batch_newTypeNamed_presult__isset {
-  _Batch_newTypeNamed_presult__isset() : success(false) {}
+  _Batch_newTypeNamed_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeNamed_presult__isset;
 
 class Batch_newTypeNamed_presult {
@@ -1652,6 +1771,7 @@ class Batch_newTypeNamed_presult {
   virtual ~Batch_newTypeNamed_presult() throw() {}
 
    ::Type* success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeNamed_presult__isset __isset;
 
@@ -1720,8 +1840,9 @@ class Batch_newTypeVariable_pargs {
 };
 
 typedef struct _Batch_newTypeVariable_result__isset {
-  _Batch_newTypeVariable_result__isset() : success(false) {}
+  _Batch_newTypeVariable_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeVariable_result__isset;
 
 class Batch_newTypeVariable_result {
@@ -1733,6 +1854,7 @@ class Batch_newTypeVariable_result {
   virtual ~Batch_newTypeVariable_result() throw() {}
 
    ::Type success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeVariable_result__isset __isset;
 
@@ -1740,9 +1862,15 @@ class Batch_newTypeVariable_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeVariable_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1758,8 +1886,9 @@ class Batch_newTypeVariable_result {
 };
 
 typedef struct _Batch_newTypeVariable_presult__isset {
-  _Batch_newTypeVariable_presult__isset() : success(false) {}
+  _Batch_newTypeVariable_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeVariable_presult__isset;
 
 class Batch_newTypeVariable_presult {
@@ -1769,6 +1898,7 @@ class Batch_newTypeVariable_presult {
   virtual ~Batch_newTypeVariable_presult() throw() {}
 
    ::Type* success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeVariable_presult__isset __isset;
 
@@ -1828,8 +1958,9 @@ class Batch_newTypeList_pargs {
 };
 
 typedef struct _Batch_newTypeList_result__isset {
-  _Batch_newTypeList_result__isset() : success(false) {}
+  _Batch_newTypeList_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeList_result__isset;
 
 class Batch_newTypeList_result {
@@ -1841,6 +1972,7 @@ class Batch_newTypeList_result {
   virtual ~Batch_newTypeList_result() throw() {}
 
    ::Type success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeList_result__isset __isset;
 
@@ -1848,9 +1980,15 @@ class Batch_newTypeList_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeList_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1866,8 +2004,9 @@ class Batch_newTypeList_result {
 };
 
 typedef struct _Batch_newTypeList_presult__isset {
-  _Batch_newTypeList_presult__isset() : success(false) {}
+  _Batch_newTypeList_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeList_presult__isset;
 
 class Batch_newTypeList_presult {
@@ -1877,6 +2016,7 @@ class Batch_newTypeList_presult {
   virtual ~Batch_newTypeList_presult() throw() {}
 
    ::Type* success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeList_presult__isset __isset;
 
@@ -1936,8 +2076,9 @@ class Batch_newTypeTuple_pargs {
 };
 
 typedef struct _Batch_newTypeTuple_result__isset {
-  _Batch_newTypeTuple_result__isset() : success(false) {}
+  _Batch_newTypeTuple_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeTuple_result__isset;
 
 class Batch_newTypeTuple_result {
@@ -1949,6 +2090,7 @@ class Batch_newTypeTuple_result {
   virtual ~Batch_newTypeTuple_result() throw() {}
 
    ::Type success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeTuple_result__isset __isset;
 
@@ -1956,9 +2098,15 @@ class Batch_newTypeTuple_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_newTypeTuple_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1974,8 +2122,9 @@ class Batch_newTypeTuple_result {
 };
 
 typedef struct _Batch_newTypeTuple_presult__isset {
-  _Batch_newTypeTuple_presult__isset() : success(false) {}
+  _Batch_newTypeTuple_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_newTypeTuple_presult__isset;
 
 class Batch_newTypeTuple_presult {
@@ -1985,6 +2134,7 @@ class Batch_newTypeTuple_presult {
   virtual ~Batch_newTypeTuple_presult() throw() {}
 
    ::Type* success;
+  MissingFieldsException missingFields;
 
   _Batch_newTypeTuple_presult__isset __isset;
 
@@ -2044,8 +2194,9 @@ class Batch_graph_pargs {
 };
 
 typedef struct _Batch_graph_result__isset {
-  _Batch_graph_result__isset() : success(false) {}
+  _Batch_graph_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_graph_result__isset;
 
 class Batch_graph_result {
@@ -2057,6 +2208,7 @@ class Batch_graph_result {
   virtual ~Batch_graph_result() throw() {}
 
    ::Graph success;
+  MissingFieldsException missingFields;
 
   _Batch_graph_result__isset __isset;
 
@@ -2064,9 +2216,15 @@ class Batch_graph_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_graph_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -2082,8 +2240,9 @@ class Batch_graph_result {
 };
 
 typedef struct _Batch_graph_presult__isset {
-  _Batch_graph_presult__isset() : success(false) {}
+  _Batch_graph_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_graph_presult__isset;
 
 class Batch_graph_presult {
@@ -2093,6 +2252,7 @@ class Batch_graph_presult {
   virtual ~Batch_graph_presult() throw() {}
 
    ::Graph* success;
+  MissingFieldsException missingFields;
 
   _Batch_graph_presult__isset __isset;
 
@@ -2161,8 +2321,9 @@ class Batch_addNode_pargs {
 };
 
 typedef struct _Batch_addNode_result__isset {
-  _Batch_addNode_result__isset() : success(false) {}
+  _Batch_addNode_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_addNode_result__isset;
 
 class Batch_addNode_result {
@@ -2174,6 +2335,7 @@ class Batch_addNode_result {
   virtual ~Batch_addNode_result() throw() {}
 
    ::Node success;
+  MissingFieldsException missingFields;
 
   _Batch_addNode_result__isset __isset;
 
@@ -2181,9 +2343,15 @@ class Batch_addNode_result {
     success = val;
   }
 
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_addNode_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -2199,8 +2367,9 @@ class Batch_addNode_result {
 };
 
 typedef struct _Batch_addNode_presult__isset {
-  _Batch_addNode_presult__isset() : success(false) {}
+  _Batch_addNode_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_addNode_presult__isset;
 
 class Batch_addNode_presult {
@@ -2210,6 +2379,7 @@ class Batch_addNode_presult {
   virtual ~Batch_addNode_presult() throw() {}
 
    ::Node* success;
+  MissingFieldsException missingFields;
 
   _Batch_addNode_presult__isset __isset;
 
@@ -2277,6 +2447,10 @@ class Batch_updateNode_pargs {
 
 };
 
+typedef struct _Batch_updateNode_result__isset {
+  _Batch_updateNode_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_updateNode_result__isset;
 
 class Batch_updateNode_result {
  public:
@@ -2286,9 +2460,18 @@ class Batch_updateNode_result {
 
   virtual ~Batch_updateNode_result() throw() {}
 
+  MissingFieldsException missingFields;
 
-  bool operator == (const Batch_updateNode_result & /* rhs */) const
+  _Batch_updateNode_result__isset __isset;
+
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_updateNode_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_updateNode_result &rhs) const {
@@ -2302,6 +2485,10 @@ class Batch_updateNode_result {
 
 };
 
+typedef struct _Batch_updateNode_presult__isset {
+  _Batch_updateNode_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_updateNode_presult__isset;
 
 class Batch_updateNode_presult {
  public:
@@ -2309,6 +2496,9 @@ class Batch_updateNode_presult {
 
   virtual ~Batch_updateNode_presult() throw() {}
 
+  MissingFieldsException missingFields;
+
+  _Batch_updateNode_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -2374,6 +2564,10 @@ class Batch_removeNode_pargs {
 
 };
 
+typedef struct _Batch_removeNode_result__isset {
+  _Batch_removeNode_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_removeNode_result__isset;
 
 class Batch_removeNode_result {
  public:
@@ -2383,9 +2577,18 @@ class Batch_removeNode_result {
 
   virtual ~Batch_removeNode_result() throw() {}
 
+  MissingFieldsException missingFields;
 
-  bool operator == (const Batch_removeNode_result & /* rhs */) const
+  _Batch_removeNode_result__isset __isset;
+
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_removeNode_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_removeNode_result &rhs) const {
@@ -2399,6 +2602,10 @@ class Batch_removeNode_result {
 
 };
 
+typedef struct _Batch_removeNode_presult__isset {
+  _Batch_removeNode_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_removeNode_presult__isset;
 
 class Batch_removeNode_presult {
  public:
@@ -2406,6 +2613,9 @@ class Batch_removeNode_presult {
 
   virtual ~Batch_removeNode_presult() throw() {}
 
+  MissingFieldsException missingFields;
+
+  _Batch_removeNode_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -2498,6 +2708,10 @@ class Batch_connect_pargs {
 
 };
 
+typedef struct _Batch_connect_result__isset {
+  _Batch_connect_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_connect_result__isset;
 
 class Batch_connect_result {
  public:
@@ -2507,9 +2721,18 @@ class Batch_connect_result {
 
   virtual ~Batch_connect_result() throw() {}
 
+  MissingFieldsException missingFields;
 
-  bool operator == (const Batch_connect_result & /* rhs */) const
+  _Batch_connect_result__isset __isset;
+
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_connect_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_connect_result &rhs) const {
@@ -2523,6 +2746,10 @@ class Batch_connect_result {
 
 };
 
+typedef struct _Batch_connect_presult__isset {
+  _Batch_connect_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_connect_presult__isset;
 
 class Batch_connect_presult {
  public:
@@ -2530,6 +2757,9 @@ class Batch_connect_presult {
 
   virtual ~Batch_connect_presult() throw() {}
 
+  MissingFieldsException missingFields;
+
+  _Batch_connect_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -2622,6 +2852,10 @@ class Batch_disconnect_pargs {
 
 };
 
+typedef struct _Batch_disconnect_result__isset {
+  _Batch_disconnect_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_disconnect_result__isset;
 
 class Batch_disconnect_result {
  public:
@@ -2631,9 +2865,18 @@ class Batch_disconnect_result {
 
   virtual ~Batch_disconnect_result() throw() {}
 
+  MissingFieldsException missingFields;
 
-  bool operator == (const Batch_disconnect_result & /* rhs */) const
+  _Batch_disconnect_result__isset __isset;
+
+  void __set_missingFields(const MissingFieldsException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_disconnect_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_disconnect_result &rhs) const {
@@ -2647,6 +2890,10 @@ class Batch_disconnect_result {
 
 };
 
+typedef struct _Batch_disconnect_presult__isset {
+  _Batch_disconnect_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_disconnect_presult__isset;
 
 class Batch_disconnect_presult {
  public:
@@ -2654,6 +2901,9 @@ class Batch_disconnect_presult {
 
   virtual ~Batch_disconnect_presult() throw() {}
 
+  MissingFieldsException missingFields;
+
+  _Batch_disconnect_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 

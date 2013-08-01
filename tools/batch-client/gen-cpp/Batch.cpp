@@ -873,6 +873,14 @@ uint32_t Batch_addDefinition_result::read(::apache::thrift::protocol::TProtocol*
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -894,6 +902,10 @@ uint32_t Batch_addDefinition_result::write(::apache::thrift::protocol::TProtocol
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -925,6 +937,14 @@ uint32_t Batch_addDefinition_presult::read(::apache::thrift::protocol::TProtocol
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -1025,7 +1045,20 @@ uint32_t Batch_updateDefinition_result::read(::apache::thrift::protocol::TProtoc
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -1040,6 +1073,11 @@ uint32_t Batch_updateDefinition_result::write(::apache::thrift::protocol::TProto
 
   xfer += oprot->writeStructBegin("Batch_updateDefinition_result");
 
+  if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -1063,7 +1101,20 @@ uint32_t Batch_updateDefinition_presult::read(::apache::thrift::protocol::TProto
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -1156,7 +1207,20 @@ uint32_t Batch_removeDefinition_result::read(::apache::thrift::protocol::TProtoc
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -1171,6 +1235,11 @@ uint32_t Batch_removeDefinition_result::write(::apache::thrift::protocol::TProto
 
   xfer += oprot->writeStructBegin("Batch_removeDefinition_result");
 
+  if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -1194,7 +1263,20 @@ uint32_t Batch_removeDefinition_presult::read(::apache::thrift::protocol::TProto
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -1309,6 +1391,14 @@ uint32_t Batch_definitionChildren_result::read(::apache::thrift::protocol::TProt
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -1338,6 +1428,10 @@ uint32_t Batch_definitionChildren_result::write(::apache::thrift::protocol::TPro
       }
       xfer += oprot->writeListEnd();
     }
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -1381,6 +1475,14 @@ uint32_t Batch_definitionChildren_presult::read(::apache::thrift::protocol::TPro
             xfer += iprot->readListEnd();
           }
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -1491,6 +1593,14 @@ uint32_t Batch_definitionParent_result::read(::apache::thrift::protocol::TProtoc
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -1512,6 +1622,10 @@ uint32_t Batch_definitionParent_result::write(::apache::thrift::protocol::TProto
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -1543,6 +1657,14 @@ uint32_t Batch_definitionParent_presult::read(::apache::thrift::protocol::TProto
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -1653,6 +1775,14 @@ uint32_t Batch_newTypeModule_result::read(::apache::thrift::protocol::TProtocol*
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -1674,6 +1804,10 @@ uint32_t Batch_newTypeModule_result::write(::apache::thrift::protocol::TProtocol
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -1705,6 +1839,14 @@ uint32_t Batch_newTypeModule_presult::read(::apache::thrift::protocol::TProtocol
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -1831,6 +1973,14 @@ uint32_t Batch_newTypeClass_result::read(::apache::thrift::protocol::TProtocol* 
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -1852,6 +2002,10 @@ uint32_t Batch_newTypeClass_result::write(::apache::thrift::protocol::TProtocol*
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -1883,6 +2037,14 @@ uint32_t Batch_newTypeClass_presult::read(::apache::thrift::protocol::TProtocol*
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -2025,6 +2187,14 @@ uint32_t Batch_newTypeFunction_result::read(::apache::thrift::protocol::TProtoco
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -2046,6 +2216,10 @@ uint32_t Batch_newTypeFunction_result::write(::apache::thrift::protocol::TProtoc
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -2077,6 +2251,14 @@ uint32_t Batch_newTypeFunction_presult::read(::apache::thrift::protocol::TProtoc
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -2166,6 +2348,14 @@ uint32_t Batch_newTypeUdefined_result::read(::apache::thrift::protocol::TProtoco
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -2187,6 +2377,10 @@ uint32_t Batch_newTypeUdefined_result::write(::apache::thrift::protocol::TProtoc
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -2218,6 +2412,14 @@ uint32_t Batch_newTypeUdefined_presult::read(::apache::thrift::protocol::TProtoc
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -2328,6 +2530,14 @@ uint32_t Batch_newTypeNamed_result::read(::apache::thrift::protocol::TProtocol* 
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -2349,6 +2559,10 @@ uint32_t Batch_newTypeNamed_result::write(::apache::thrift::protocol::TProtocol*
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -2380,6 +2594,14 @@ uint32_t Batch_newTypeNamed_presult::read(::apache::thrift::protocol::TProtocol*
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -2506,6 +2728,14 @@ uint32_t Batch_newTypeVariable_result::read(::apache::thrift::protocol::TProtoco
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -2527,6 +2757,10 @@ uint32_t Batch_newTypeVariable_result::write(::apache::thrift::protocol::TProtoc
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -2558,6 +2792,14 @@ uint32_t Batch_newTypeVariable_presult::read(::apache::thrift::protocol::TProtoc
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -2668,6 +2910,14 @@ uint32_t Batch_newTypeList_result::read(::apache::thrift::protocol::TProtocol* i
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -2689,6 +2939,10 @@ uint32_t Batch_newTypeList_result::write(::apache::thrift::protocol::TProtocol* 
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -2720,6 +2974,14 @@ uint32_t Batch_newTypeList_presult::read(::apache::thrift::protocol::TProtocol* 
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -2858,6 +3120,14 @@ uint32_t Batch_newTypeTuple_result::read(::apache::thrift::protocol::TProtocol* 
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -2879,6 +3149,10 @@ uint32_t Batch_newTypeTuple_result::write(::apache::thrift::protocol::TProtocol*
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -2910,6 +3184,14 @@ uint32_t Batch_newTypeTuple_presult::read(::apache::thrift::protocol::TProtocol*
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -3020,6 +3302,14 @@ uint32_t Batch_graph_result::read(::apache::thrift::protocol::TProtocol* iprot) 
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -3041,6 +3331,10 @@ uint32_t Batch_graph_result::write(::apache::thrift::protocol::TProtocol* oprot)
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -3072,6 +3366,14 @@ uint32_t Batch_graph_presult::read(::apache::thrift::protocol::TProtocol* iprot)
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -3198,6 +3500,14 @@ uint32_t Batch_addNode_result::read(::apache::thrift::protocol::TProtocol* iprot
           xfer += iprot->skip(ftype);
         }
         break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -3219,6 +3529,10 @@ uint32_t Batch_addNode_result::write(::apache::thrift::protocol::TProtocol* opro
   if (this->__isset.success) {
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
     xfer += this->success.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -3250,6 +3564,14 @@ uint32_t Batch_addNode_presult::read(::apache::thrift::protocol::TProtocol* ipro
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += (*(this->success)).read(iprot);
           this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -3366,7 +3688,20 @@ uint32_t Batch_updateNode_result::read(::apache::thrift::protocol::TProtocol* ip
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -3381,6 +3716,11 @@ uint32_t Batch_updateNode_result::write(::apache::thrift::protocol::TProtocol* o
 
   xfer += oprot->writeStructBegin("Batch_updateNode_result");
 
+  if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -3404,7 +3744,20 @@ uint32_t Batch_updateNode_presult::read(::apache::thrift::protocol::TProtocol* i
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -3513,7 +3866,20 @@ uint32_t Batch_removeNode_result::read(::apache::thrift::protocol::TProtocol* ip
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -3528,6 +3894,11 @@ uint32_t Batch_removeNode_result::write(::apache::thrift::protocol::TProtocol* o
 
   xfer += oprot->writeStructBegin("Batch_removeNode_result");
 
+  if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -3551,7 +3922,20 @@ uint32_t Batch_removeNode_presult::read(::apache::thrift::protocol::TProtocol* i
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -3764,7 +4148,20 @@ uint32_t Batch_connect_result::read(::apache::thrift::protocol::TProtocol* iprot
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -3779,6 +4176,11 @@ uint32_t Batch_connect_result::write(::apache::thrift::protocol::TProtocol* opro
 
   xfer += oprot->writeStructBegin("Batch_connect_result");
 
+  if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -3802,7 +4204,20 @@ uint32_t Batch_connect_presult::read(::apache::thrift::protocol::TProtocol* ipro
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -4015,7 +4430,20 @@ uint32_t Batch_disconnect_result::read(::apache::thrift::protocol::TProtocol* ip
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -4030,6 +4458,11 @@ uint32_t Batch_disconnect_result::write(::apache::thrift::protocol::TProtocol* o
 
   xfer += oprot->writeStructBegin("Batch_disconnect_result");
 
+  if (this->__isset.missingFields) {
+    xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->missingFields.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -4053,7 +4486,20 @@ uint32_t Batch_disconnect_presult::read(::apache::thrift::protocol::TProtocol* i
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->missingFields.read(iprot);
+          this->__isset.missingFields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -4463,6 +4909,9 @@ void BatchClient::recv_addDefinition( ::NodeDefinition& _return)
     // _return pointer has now been filled
     return;
   }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "addDefinition failed: unknown result");
 }
 
@@ -4516,6 +4965,9 @@ void BatchClient::recv_updateDefinition()
   iprot_->readMessageEnd();
   iprot_->getTransport()->readEnd();
 
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   return;
 }
 
@@ -4569,6 +5021,9 @@ void BatchClient::recv_removeDefinition()
   iprot_->readMessageEnd();
   iprot_->getTransport()->readEnd();
 
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   return;
 }
 
@@ -4626,6 +5081,9 @@ void BatchClient::recv_definitionChildren(std::vector< ::NodeDefinition> & _retu
   if (result.__isset.success) {
     // _return pointer has now been filled
     return;
+  }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
   }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "definitionChildren failed: unknown result");
 }
@@ -4685,6 +5143,9 @@ void BatchClient::recv_definitionParent( ::NodeDefinition& _return)
     // _return pointer has now been filled
     return;
   }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "definitionParent failed: unknown result");
 }
 
@@ -4742,6 +5203,9 @@ void BatchClient::recv_newTypeModule( ::Type& _return)
   if (result.__isset.success) {
     // _return pointer has now been filled
     return;
+  }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
   }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeModule failed: unknown result");
 }
@@ -4801,6 +5265,9 @@ void BatchClient::recv_newTypeClass( ::Type& _return)
   if (result.__isset.success) {
     // _return pointer has now been filled
     return;
+  }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
   }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeClass failed: unknown result");
 }
@@ -4862,6 +5329,9 @@ void BatchClient::recv_newTypeFunction( ::Type& _return)
     // _return pointer has now been filled
     return;
   }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeFunction failed: unknown result");
 }
 
@@ -4918,6 +5388,9 @@ void BatchClient::recv_newTypeUdefined( ::Type& _return)
   if (result.__isset.success) {
     // _return pointer has now been filled
     return;
+  }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
   }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeUdefined failed: unknown result");
 }
@@ -4976,6 +5449,9 @@ void BatchClient::recv_newTypeNamed( ::Type& _return)
   if (result.__isset.success) {
     // _return pointer has now been filled
     return;
+  }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
   }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeNamed failed: unknown result");
 }
@@ -5036,6 +5512,9 @@ void BatchClient::recv_newTypeVariable( ::Type& _return)
     // _return pointer has now been filled
     return;
   }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeVariable failed: unknown result");
 }
 
@@ -5093,6 +5572,9 @@ void BatchClient::recv_newTypeList( ::Type& _return)
   if (result.__isset.success) {
     // _return pointer has now been filled
     return;
+  }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
   }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeList failed: unknown result");
 }
@@ -5152,6 +5634,9 @@ void BatchClient::recv_newTypeTuple( ::Type& _return)
     // _return pointer has now been filled
     return;
   }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeTuple failed: unknown result");
 }
 
@@ -5209,6 +5694,9 @@ void BatchClient::recv_graph( ::Graph& _return)
   if (result.__isset.success) {
     // _return pointer has now been filled
     return;
+  }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
   }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "graph failed: unknown result");
 }
@@ -5269,6 +5757,9 @@ void BatchClient::recv_addNode( ::Node& _return)
     // _return pointer has now been filled
     return;
   }
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "addNode failed: unknown result");
 }
 
@@ -5323,6 +5814,9 @@ void BatchClient::recv_updateNode()
   iprot_->readMessageEnd();
   iprot_->getTransport()->readEnd();
 
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   return;
 }
 
@@ -5377,6 +5871,9 @@ void BatchClient::recv_removeNode()
   iprot_->readMessageEnd();
   iprot_->getTransport()->readEnd();
 
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   return;
 }
 
@@ -5434,6 +5931,9 @@ void BatchClient::recv_connect()
   iprot_->readMessageEnd();
   iprot_->getTransport()->readEnd();
 
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   return;
 }
 
@@ -5491,6 +5991,9 @@ void BatchClient::recv_disconnect()
   iprot_->readMessageEnd();
   iprot_->getTransport()->readEnd();
 
+  if (result.__isset.missingFields) {
+    throw result.missingFields;
+  }
   return;
 }
 
@@ -5811,6 +6314,9 @@ void BatchProcessor::process_addDefinition(int32_t seqid, ::apache::thrift::prot
   try {
     iface_->addDefinition(result.success, args.definition, args.parent);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.addDefinition");
@@ -5864,6 +6370,9 @@ void BatchProcessor::process_updateDefinition(int32_t seqid, ::apache::thrift::p
   Batch_updateDefinition_result result;
   try {
     iface_->updateDefinition(args.definition);
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.updateDefinition");
@@ -5917,6 +6426,9 @@ void BatchProcessor::process_removeDefinition(int32_t seqid, ::apache::thrift::p
   Batch_removeDefinition_result result;
   try {
     iface_->removeDefinition(args.definition);
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.removeDefinition");
@@ -5971,6 +6483,9 @@ void BatchProcessor::process_definitionChildren(int32_t seqid, ::apache::thrift:
   try {
     iface_->definitionChildren(result.success, args.definition);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.definitionChildren");
@@ -6025,6 +6540,9 @@ void BatchProcessor::process_definitionParent(int32_t seqid, ::apache::thrift::p
   try {
     iface_->definitionParent(result.success, args.definition);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.definitionParent");
@@ -6079,6 +6597,9 @@ void BatchProcessor::process_newTypeModule(int32_t seqid, ::apache::thrift::prot
   try {
     iface_->newTypeModule(result.success, args.name);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.newTypeModule");
@@ -6133,6 +6654,9 @@ void BatchProcessor::process_newTypeClass(int32_t seqid, ::apache::thrift::proto
   try {
     iface_->newTypeClass(result.success, args.name, args.params);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.newTypeClass");
@@ -6187,6 +6711,9 @@ void BatchProcessor::process_newTypeFunction(int32_t seqid, ::apache::thrift::pr
   try {
     iface_->newTypeFunction(result.success, args.name, args.inputs, args.outputs);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.newTypeFunction");
@@ -6241,6 +6768,9 @@ void BatchProcessor::process_newTypeUdefined(int32_t seqid, ::apache::thrift::pr
   try {
     iface_->newTypeUdefined(result.success);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.newTypeUdefined");
@@ -6295,6 +6825,9 @@ void BatchProcessor::process_newTypeNamed(int32_t seqid, ::apache::thrift::proto
   try {
     iface_->newTypeNamed(result.success, args.name);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.newTypeNamed");
@@ -6349,6 +6882,9 @@ void BatchProcessor::process_newTypeVariable(int32_t seqid, ::apache::thrift::pr
   try {
     iface_->newTypeVariable(result.success, args.name, args.type);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.newTypeVariable");
@@ -6403,6 +6939,9 @@ void BatchProcessor::process_newTypeList(int32_t seqid, ::apache::thrift::protoc
   try {
     iface_->newTypeList(result.success, args.type);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.newTypeList");
@@ -6457,6 +6996,9 @@ void BatchProcessor::process_newTypeTuple(int32_t seqid, ::apache::thrift::proto
   try {
     iface_->newTypeTuple(result.success, args.types);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.newTypeTuple");
@@ -6511,6 +7053,9 @@ void BatchProcessor::process_graph(int32_t seqid, ::apache::thrift::protocol::TP
   try {
     iface_->graph(result.success, args.definition);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.graph");
@@ -6565,6 +7110,9 @@ void BatchProcessor::process_addNode(int32_t seqid, ::apache::thrift::protocol::
   try {
     iface_->addNode(result.success, args.node, args.definition);
     result.__isset.success = true;
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.addNode");
@@ -6618,6 +7166,9 @@ void BatchProcessor::process_updateNode(int32_t seqid, ::apache::thrift::protoco
   Batch_updateNode_result result;
   try {
     iface_->updateNode(args.node, args.definition);
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.updateNode");
@@ -6671,6 +7222,9 @@ void BatchProcessor::process_removeNode(int32_t seqid, ::apache::thrift::protoco
   Batch_removeNode_result result;
   try {
     iface_->removeNode(args.node, args.definition);
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.removeNode");
@@ -6724,6 +7278,9 @@ void BatchProcessor::process_connect(int32_t seqid, ::apache::thrift::protocol::
   Batch_connect_result result;
   try {
     iface_->connect(args.srcNode, args.srcPort, args.dstNode, args.dstPort, args.definition);
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.connect");
@@ -6777,6 +7334,9 @@ void BatchProcessor::process_disconnect(int32_t seqid, ::apache::thrift::protoco
   Batch_disconnect_result result;
   try {
     iface_->disconnect(args.srcNode, args.srcPort, args.dstNode, args.dstPort, args.definition);
+  } catch (MissingFieldsException &missingFields) {
+    result.missingFields = missingFields;
+    result.__isset.missingFields = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "Batch.disconnect");

@@ -160,6 +160,9 @@ recv_addDefinition ip = do
   case f_AddDefinition_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_AddDefinition_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "addDefinition failed: unknown result")
 updateDefinition (ip,op) arg_definition = do
   send_updateDefinition op arg_definition
@@ -180,6 +183,9 @@ recv_updateDefinition ip = do
     else return ()
   res <- read_UpdateDefinition_result ip
   readMessageEnd ip
+  case f_UpdateDefinition_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 removeDefinition (ip,op) arg_definition = do
   send_removeDefinition op arg_definition
@@ -200,6 +206,9 @@ recv_removeDefinition ip = do
     else return ()
   res <- read_RemoveDefinition_result ip
   readMessageEnd ip
+  case f_RemoveDefinition_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 definitionChildren (ip,op) arg_definition = do
   send_definitionChildren op arg_definition
@@ -223,6 +232,9 @@ recv_definitionChildren ip = do
   case f_DefinitionChildren_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_DefinitionChildren_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "definitionChildren failed: unknown result")
 definitionParent (ip,op) arg_definition = do
   send_definitionParent op arg_definition
@@ -246,6 +258,9 @@ recv_definitionParent ip = do
   case f_DefinitionParent_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_DefinitionParent_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "definitionParent failed: unknown result")
 newTypeModule (ip,op) arg_name = do
   send_newTypeModule op arg_name
@@ -269,6 +284,9 @@ recv_newTypeModule ip = do
   case f_NewTypeModule_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_NewTypeModule_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "newTypeModule failed: unknown result")
 newTypeClass (ip,op) arg_name arg_params = do
   send_newTypeClass op arg_name arg_params
@@ -292,6 +310,9 @@ recv_newTypeClass ip = do
   case f_NewTypeClass_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_NewTypeClass_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "newTypeClass failed: unknown result")
 newTypeFunction (ip,op) arg_name arg_inputs arg_outputs = do
   send_newTypeFunction op arg_name arg_inputs arg_outputs
@@ -315,6 +336,9 @@ recv_newTypeFunction ip = do
   case f_NewTypeFunction_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_NewTypeFunction_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "newTypeFunction failed: unknown result")
 newTypeUdefined (ip,op) = do
   send_newTypeUdefined op
@@ -338,6 +362,9 @@ recv_newTypeUdefined ip = do
   case f_NewTypeUdefined_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_NewTypeUdefined_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "newTypeUdefined failed: unknown result")
 newTypeNamed (ip,op) arg_name = do
   send_newTypeNamed op arg_name
@@ -361,6 +388,9 @@ recv_newTypeNamed ip = do
   case f_NewTypeNamed_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_NewTypeNamed_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "newTypeNamed failed: unknown result")
 newTypeVariable (ip,op) arg_name arg_type = do
   send_newTypeVariable op arg_name arg_type
@@ -384,6 +414,9 @@ recv_newTypeVariable ip = do
   case f_NewTypeVariable_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_NewTypeVariable_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "newTypeVariable failed: unknown result")
 newTypeList (ip,op) arg_type = do
   send_newTypeList op arg_type
@@ -407,6 +440,9 @@ recv_newTypeList ip = do
   case f_NewTypeList_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_NewTypeList_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "newTypeList failed: unknown result")
 newTypeTuple (ip,op) arg_types = do
   send_newTypeTuple op arg_types
@@ -430,6 +466,9 @@ recv_newTypeTuple ip = do
   case f_NewTypeTuple_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_NewTypeTuple_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "newTypeTuple failed: unknown result")
 graph (ip,op) arg_definition = do
   send_graph op arg_definition
@@ -453,6 +492,9 @@ recv_graph ip = do
   case f_Graph_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_Graph_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "graph failed: unknown result")
 addNode (ip,op) arg_node arg_definition = do
   send_addNode op arg_node arg_definition
@@ -476,6 +518,9 @@ recv_addNode ip = do
   case f_AddNode_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_AddNode_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "addNode failed: unknown result")
 updateNode (ip,op) arg_node arg_definition = do
   send_updateNode op arg_node arg_definition
@@ -496,6 +541,9 @@ recv_updateNode ip = do
     else return ()
   res <- read_UpdateNode_result ip
   readMessageEnd ip
+  case f_UpdateNode_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 removeNode (ip,op) arg_node arg_definition = do
   send_removeNode op arg_node arg_definition
@@ -516,6 +564,9 @@ recv_removeNode ip = do
     else return ()
   res <- read_RemoveNode_result ip
   readMessageEnd ip
+  case f_RemoveNode_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 connect (ip,op) arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_definition = do
   send_connect op arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_definition
@@ -536,6 +587,9 @@ recv_connect ip = do
     else return ()
   res <- read_Connect_result ip
   readMessageEnd ip
+  case f_Connect_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 disconnect (ip,op) arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_definition = do
   send_disconnect op arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_definition
@@ -556,6 +610,9 @@ recv_disconnect ip = do
     else return ()
   res <- read_Disconnect_result ip
   readMessageEnd ip
+  case f_Disconnect_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 ping (ip,op) = do
   send_ping op
