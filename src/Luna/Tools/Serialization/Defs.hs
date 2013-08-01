@@ -53,30 +53,32 @@ instance Serialize [Import] Defs_Types.Imports where
 instance Serialize (Int, NodeDef) (Defs_Types.NodeDefinition, Graph) where
   encode (defID, NodeDef cls graph imports flags attributes libID) = (tdef, graph) where
      ttype       = Nothing -- TODO [PM] : make work here: Just $ encode cls
-     timports    = Nothing -- TODO [PM] : make work here: Just $ encode imports
+     timports    = Just $ encode imports
      tflags      = Just $ encode flags
      tattributes = Just $ encode attributes
      tlibID      = Just $ hashInt libID
      tdefID      = Just $ hashInt defID
      tdef = Defs_Types.NodeDefinition ttype timports tflags tattributes tlibID tdefID 
   decode td = case td of 
-     (Defs_Types.NodeDefinition Nothing Nothing (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), graph)
+     (Defs_Types.NodeDefinition Nothing (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), graph)
            -> d where
-                    d = case (decode tflags, decode tattributes) of
-                        (Right flags, Right attributes)
-                               -> let imports = [] :: [Import]
-                                      libID = (fromInteger. toInteger::Int32 -> Int) tlibID
+                    d = case (decode timports :: Either String [Import], decode tflags, decode tattributes) of
+                        (Right imports, Right flags, Right attributes)
+                               -> let libID = (fromInteger. toInteger::Int32 -> Int) tlibID
                                       nodeDef = NodeDef Type.Undefined graph imports flags attributes libID
                                       defID = 1
                                   in Right (defID, nodeDef)
-                        (Right flags, Left message) 
+                        (Right imports, Right flags , Left message) 
                                -> Left $ "Failed to deserialize attributes : " ++ message
-                        (Left message, _) 
+                        (Right imports, Left message, _           ) 
                                -> Left $ "Failed to deserialize flags : " ++ message
+                        (Left message , _           , _           )
+                               -> Left $ "Failed to deserialize imports : " ++ message
      (Defs_Types.NodeDefinition {}, _) -> Left "Some fields are missing"
 
 
 convert :: [Either String a] -> Either String [a]
+convert []       = Right []
 convert [h]      = case h of 
     Left m  -> Left m
     Right a -> Right [a]
