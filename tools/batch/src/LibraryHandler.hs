@@ -26,8 +26,10 @@ import           Batch_Types (ArgumentException(..))
 import qualified Luna.Core                   as Core
 import           Luna.Core                     (Core(..))
 import qualified Luna.Lib.LibManager         as LibManager
+import qualified Luna.Lib.Library            as Library
 import           Luna.Lib.Library              (Library(..))
 import           Luna.Tools.Serialization
+import           Luna.Tools.Serialization.Defs ()
 import           Luna.Tools.Serialization.Libs ()
 
 
@@ -35,47 +37,50 @@ import           Luna.Tools.Serialization.Libs ()
 ------ public api helpers -----------------------------------------
 libOperation :: (IORef Core -> (Int, Library) -> a)
              ->  IORef Core -> Maybe Libs_Types.Library -> a
-libOperation operation batchHandler tlibrary =  case tlibrary of 
-    (Just tlib) -> do 
-        case decode tlib :: Either String (Int, Library) of
-            Right library -> operation batchHandler library
-            Left  message -> throw $ ArgumentException $ Just $ Text.pack message
-    Nothing     -> throw $ ArgumentException $ Just $ Text.pack "`library` argument is missing";
+libOperation operation batchHandler tlibrary = case tlibrary of 
+        (Just tlib) -> do 
+            case decode tlib :: Either String (Int, Library) of
+                Right library -> operation batchHandler library
+                Left  message -> throw $ ArgumentException $ Just $ Text.pack message
+        Nothing     -> throw $ ArgumentException $ Just $ Text.pack "`library` argument is missing";
 
 
 ------ public api -------------------------------------------------
 libraries :: IORef Core -> IO (Vector Libs_Types.Library)
 libraries batchHandler = do 
-    putStr "getting libraries...\t\t"
+    putStrLn "call libraries"
     core <- readIORef batchHandler
     let libManager' =  Core.libManager core
         libs        = LibManager.labNodes libManager'
         tlibs       = map encode libs
         tlibsVector = Vector.fromList tlibs
-    putStrLn "success!"
     return tlibsVector
 
 
 loadLibrary :: IORef Core -> Maybe Libs_Types.Library -> IO Libs_Types.Library
 loadLibrary = libOperation (\ batchHandler (_, library) -> do
+    putStrLn "call loadLibrary"
     core <- readIORef batchHandler
     let (newCore, newLibrary, newLibID) = Core.loadLibrary core library
         newTLibrary = encode (newLibID, newLibrary)
     writeIORef batchHandler newCore
-    putStrLn "success!"
     return newTLibrary)
 
 
 unloadLibrary :: IORef Core -> Maybe Libs_Types.Library -> IO ()
 unloadLibrary = libOperation (\ batchHandler (libID, _) -> do
+    putStrLn "call unloadLibrary"
     core <- readIORef batchHandler
     let newCore = Core.unloadLibrary core libID
     writeIORef batchHandler newCore)
 
 
 libraryRootDef :: IORef Core -> Maybe Libs_Types.Library -> IO Defs_Types.NodeDef
-libraryRootDef = libOperation (\ batchHandler (libID, library) -> do
+libraryRootDef = libOperation (\ batchHandler (_, library) -> do
+    putStrLn "call libraryRootDef"
     core <- readIORef batchHandler
-    putStr $ "libraryRootDef - NOT IMPLEMENTED"
-    return undefined)
+    let rootNodeDefID' = Library.rootNodeDefID library
+        rootDef = Core.nodeDefByID core rootNodeDefID'
+        (trootDef, _) = encode (rootNodeDefID', rootDef)
+    return trootDef)
 

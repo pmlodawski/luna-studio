@@ -71,8 +71,10 @@ int main(int argc, char **argv) {
         Type funType;
         batch.newTypeFunction(funType, "fun", funInputsType, funOutputsType);
 
-        NodeDef myModule;// TODO [PM] How can I get "my" module?
+        NodeDef myModule;
+        batch.libraryRootDef(myModule, userlib);
 
+        cout << myModule.defID << endl;
         NodeDef fun;
         fun.cls = funType;
         batch.addDefinition(fun, fun, myModule);

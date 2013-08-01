@@ -9,7 +9,8 @@ module Luna.Core(
 Core(..),
 empty,
 loadLibrary,
-unloadLibrary
+unloadLibrary,
+nodeDefByID
 ) where
 
 import qualified Luna.Lib.LibManager         as LibManager
@@ -58,3 +59,8 @@ unloadLibrary (Core libManager' defManager') libID' = newCore where
     newLibManager = LibManager.delNode libID' libManager'
     newDefManager = defManager' -- TODO [PM] : unload all nodes asociated with library
     newCore       = Core newLibManager newDefManager
+
+
+nodeDefByID :: Core -> NodeDef.ID -> NodeDef
+nodeDefByID (Core _ defManager) defID = def where
+    def = DefManager.lab defManager defID
