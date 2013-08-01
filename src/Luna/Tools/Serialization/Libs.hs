@@ -22,15 +22,17 @@ import           Luna.Tools.Serialization
 import qualified Luna.System.UniPath      as UniPath
 
 instance Serialize (Int, Library) Libs_Types.Library where
-    encode (libID, Library name path) = Libs_Types.Library tlibID tname tpath where
+    encode (libID, Library name path rootNodeDefID) = Libs_Types.Library tlibID tname tpath trootNodeDefID where
         tlibID = Just $ hashInt libID
         tname  = Just $ Text.pack name
         tpath  = Just $ Text.pack $ UniPath.toUnixString path
-    decode (Libs_Types.Library (Just tlibID) (Just tname) (Just tpath)) = 
-        Right (libID, Library name path) where
-            name = Text.unpack tname
-            path =  UniPath.fromUnixString $ Text.unpack tpath
+        trootNodeDefID = Just $ hashInt rootNodeDefID
+    decode (Libs_Types.Library (Just tlibID) (Just tname) (Just tpath) (Just trootNodeDefID)) = 
+        Right (libID, Library name path rootNodeDefID) where
+            name  = Text.unpack tname
+            path  = UniPath.fromUnixString $ Text.unpack tpath
             libID = (fromInteger. toInteger::Int32 -> Int) tlibID
+            rootNodeDefID = (fromInteger. toInteger::Int32 -> Int) trootNodeDefID
     decode (Libs_Types.Library {}) = 
         Left "Some fields are missing."
 
