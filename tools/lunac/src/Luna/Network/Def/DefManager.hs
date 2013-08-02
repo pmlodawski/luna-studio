@@ -25,8 +25,8 @@ type DefManager = Graph NodeDef Edge
 
 
 addToParent :: (Vertex, Vertex, NodeDef) -> DefManager -> DefManager
-addToParent (parentID, nodeID, def) manager = insEdge (parentID, nodeID, Edge) $
-                                              insNode (nodeID, def) manager
+addToParent (parentID, defID, def) manager = insEdge (parentID, defID, Edge) $
+                                             insNode (defID, def) manager
 
 addToParentMany :: [(Vertex, Vertex, NodeDef)] -> DefManager -> DefManager
 addToParentMany = foldri addToParent

@@ -44,15 +44,18 @@ newDefinition _ ttype timports tflags tattrs = do
 
 addDefinition :: IORef Core -> Maybe Defs_Types.NodeDef
               -> Maybe Defs_Types.NodeDef -> IO Defs_Types.NodeDef
-addDefinition = defParentOperation (\batchHandler definition parent -> do
+addDefinition = defParentOperation (\batchHandler definition parentID -> do
+    putStrLn "call libraryRootDef"
     core <- readIORef batchHandler
     let defManager = Core.defManager core
-        [dID]      = DefManager.newNodes 1 defManager
-        newCore    = core { Core.defManager = DefManager.insNode (dID, definition) defManager }
-        (newTDefinition, _) = encode (dID, definition)
-    writeIORef batchHandler core
-    putStrLn "NOT IMPLEMENTED - addDefinition"
-    return $ newTDefinition)
+    case DefManager.gelem parentID defManager of 
+        True -> do
+                let [defID]    = DefManager.newNodes 1 defManager
+                    newCore    = core { Core.defManager = DefManager.addToParent (parentID, defID, definition) defManager }
+                    (newTDefinition, _) = encode (defID, definition)
+                writeIORef batchHandler newCore
+                return $ newTDefinition
+        False -> throw $ ArgumentException $ Just $ Text.pack "Wrong `defID` in `parent` field")
 
 
 updateDefinition :: IORef Core -> Maybe Defs_Types.NodeDef -> IO ()
@@ -95,14 +98,14 @@ defOperation operation batchHandler tdefinition  = case tdefinition of
     Nothing            -> throw $ ArgumentException $ Just $ Text.pack "`definition` field is missing"
 
 
-defParentOperation :: (IORef Core -> NodeDef -> NodeDef -> a) -> IORef Core
+defParentOperation :: (IORef Core -> NodeDef -> Int -> a) -> IORef Core
                    -> Maybe Defs_Types.NodeDef -> Maybe Defs_Types.NodeDef -> a
 defParentOperation operation batchHandler tdefinition tparent = case (tdefinition, tparent) of 
     (Just tdef, Just tpar) -> do
         case (decode (tdef,  Graph.empty) :: Either String (Int, NodeDef) ,
-              decode (tpar,      Graph.empty) :: Either String (Int, NodeDef) ) of 
-            (Right (_, definition), Right (_, parent))
-                              -> do operation batchHandler definition parent
+              decode (tpar,  Graph.empty) :: Either String (Int, NodeDef) ) of 
+            (Right (_, definition), Right (parentID, _))
+                              -> do operation batchHandler definition parentID
             (_, Left message) -> throw $ ArgumentException $ Just $ Text.pack ("Failed to decode `parent`: " ++ message)
             (Left message, _) -> throw $ ArgumentException $ Just $ Text.pack ("Failed to decode `definition` 1: " ++ message)
     ( _       , Nothing )            -> throw $ ArgumentException $ Just $ Text.pack "`parent` field is missing"

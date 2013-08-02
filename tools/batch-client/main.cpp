@@ -77,6 +77,7 @@ int main(int argc, char **argv) {
         cout << myModule.defID << endl;
         NodeDef fun;
         fun.__set_cls(funType);
+        
         batch.addDefinition(fun, fun, myModule);
 
         /* Add some nodes */

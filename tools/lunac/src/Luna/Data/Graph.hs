@@ -11,6 +11,7 @@ module Luna.Data.Graph (
     Edge,
     empty,
     delNode,
+    gelem, -- Graph gr => Node -> gr a b -> BoolSource  -  True if the Node is present in the Graph.
     insNode,
     insNodes,
     insEdge,
