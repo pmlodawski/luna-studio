@@ -79,7 +79,9 @@ int main(int argc, char **argv) {
         fun.__set_cls(funType);
         
         batch.addDefinition(fun, fun, myModule);
-
+        batch.updateDefinition(fun);
+        batch.removeDefinition(fun);
+        batch.addDefinition(fun, fun, myModule);
         /* Add some nodes */
 
         Node inputs;

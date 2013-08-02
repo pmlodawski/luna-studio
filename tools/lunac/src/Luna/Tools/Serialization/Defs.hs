@@ -14,6 +14,7 @@ import qualified Data.Text.Lazy as Text
 import qualified Data.Vector    as Vector
 
 import qualified Defs_Types
+import qualified Types_Types
 import           Luna.Network.Graph.Graph   (Graph)
 import           Luna.Network.Def.NodeDef   (NodeDef(..))
 import           Luna.Network.Path.Import   (Import(..))
@@ -47,7 +48,7 @@ instance Serialize [Import] Defs_Types.Imports where
 
 instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
   encode (defID, NodeDef acls agraph aimports aflags aattributes alibID) = (tdef, agraph) where
-     ttype       = Nothing -- TODO [PM] : make work here: Just $ encode acls
+     ttype       = Just $ Types_Types.Type Nothing -- TODO [PM] : make work here: Just $ encode acls
      timports    = Just $ encode aimports
      tflags      = Just $ encode aflags
      tattributes = Just $ encode aattributes
@@ -65,17 +66,17 @@ instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
                                       adefID = i32toi tdefID
                                   in Right (adefID, nodeDef)
                         (Right _      , Right _     , Left message) 
-                               -> Left $ "Failed to deserialize attributes : " ++ message
+                               -> Left $ "Failed to deserialize `attributes` : " ++ message
                         (Right _      , Left message, _           ) 
-                               -> Left $ "Failed to deserialize flags : " ++ message
+                               -> Left $ "Failed to deserialize `flags` : " ++ message
                         (Left message , _           , _           )
-                               -> Left $ "Failed to deserialize imports : " ++ message
+                               -> Left $ "Failed to deserialize `imports` : " ++ message
      (Defs_Types.NodeDef (Just _) (Just _) (Just _) (Just _) (Just _) Nothing, _) -> Left "`defID` field is missing"
      (Defs_Types.NodeDef (Just _) (Just _) (Just _) (Just _) Nothing  _      , _) -> Left "`libID` field is missing"
      (Defs_Types.NodeDef (Just _) (Just _) (Just _) Nothing  _        _      , _) -> Left "`attributes` field is missing"
      (Defs_Types.NodeDef (Just _) (Just _) Nothing  _        _        _      , _) -> Left "`flags` field is missing"
      (Defs_Types.NodeDef (Just _) Nothing  _        _        _        _      , _) -> Left "`imports` field is missing"
-     (Defs_Types.NodeDef Nothing _        _        _        _        _      , _) -> Left "`type` field is missing"
+     (Defs_Types.NodeDef Nothing  _        _        _        _        _      , _) -> Left "`type` field is missing"
 
 
 convert :: [Either String a] -> Either String [a]
