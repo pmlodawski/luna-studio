@@ -49,7 +49,7 @@ instance Serialize [Import] Defs_Types.Imports where
 
 instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
   encode (defID, NodeDef acls agraph aimports aflags aattributes alibID) = (tdef, agraph) where
-     ttype       = Just $ Types_Types.Type Nothing -- TODO [PM] : make work here: Just $ encode acls
+     ttype       = Just $ encode acls
      timports    = Just $ encode aimports
      tflags      = Just $ encode aflags
      tattributes = Just $ encode aattributes
@@ -59,19 +59,20 @@ instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
   decode td = case td of 
      (Defs_Types.NodeDef (Just tcls) (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), agraph)
            -> d where
-                    d = case (decode timports :: Either String [Import], decode tflags, decode tattributes) of
-                        (Right aimports, Right aflags, Right aattributes)
+                    d = case (decode tcls, decode timports, decode tflags, decode tattributes) of
+                        (Right acls, Right aimports, Right aflags, Right aattributes)
                                -> let alibID = i32toi tlibID
-                                      acls = Type.Undefined -- tcls
                                       nodeDef = NodeDef acls agraph aimports aflags aattributes alibID
                                       adefID = i32toi tdefID
                                   in Right (adefID, nodeDef)
-                        (Right _      , Right _     , Left message) 
+                        (Right _   , Right _      , Right _     , Left message) 
                                -> Left $ "Failed to deserialize `attributes` : " ++ message
-                        (Right _      , Left message, _           ) 
+                        (Right _   , Right _      , Left message, _           ) 
                                -> Left $ "Failed to deserialize `flags` : " ++ message
-                        (Left message , _           , _           )
+                        (Right _   , Left message , _           , _           )
                                -> Left $ "Failed to deserialize `imports` : " ++ message
+                        (Left message, _          , _           , _           )
+                               -> Left $ "Failed to deserialize `cls` : " ++ message
      (Defs_Types.NodeDef (Just _) (Just _) (Just _) (Just _) (Just _) Nothing, _) -> Left "`defID` field is missing"
      (Defs_Types.NodeDef (Just _) (Just _) (Just _) (Just _) Nothing  _      , _) -> Left "`libID` field is missing"
      (Defs_Types.NodeDef (Just _) (Just _) (Just _) Nothing  _        _      , _) -> Left "`attributes` field is missing"
