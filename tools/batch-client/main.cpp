@@ -76,9 +76,19 @@ int main(int argc, char **argv) {
 
         cout << myModule.defID << endl;
         NodeDef fun;
-        fun.cls = funType;
+        fun.__set_cls(funType);
+        
+        batch.addDefinition(fun, fun, myModule);
+        batch.updateDefinition(fun);
+        batch.removeDefinition(fun);
         batch.addDefinition(fun, fun, myModule);
 
+        vector<NodeDef> children;
+        batch.definitionChildren(children, myModule);
+        cout << "`my` module has " << children.size() << " children." << endl;
+
+        NodeDef parent;
+        batch.definitionParent(parent, fun);
         /* Add some nodes */
 
         Node inputs;

@@ -12,6 +12,6 @@ struct Flags {
 }
 
 struct Attributes {
-    1: optional map<string, map<string, string>>  spaces
+    1: optional map<string, map<string, string>> spaces = {}
 }
 

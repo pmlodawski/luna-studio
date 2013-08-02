@@ -81,6 +81,9 @@ libraryRootDef = libOperation (\ batchHandler (_, library) -> do
     core <- readIORef batchHandler
     let rootNodeDefID' = Library.rootNodeDefID library
         rootDef = Core.nodeDefByID core rootNodeDefID'
-        (trootDef, _) = encode (rootNodeDefID', rootDef)
-    return trootDef)
+    case rootDef of 
+        Just rd -> do
+                   let (trootDef, _) = encode (rootNodeDefID', rd)
+                   return trootDef
+        Nothing -> throw $ ArgumentException $ Just $ Text.pack "Wrong `rootNodeDefID` in `library` argument")
 

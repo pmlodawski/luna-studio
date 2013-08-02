@@ -9,7 +9,17 @@
 
 module Luna.Tools.Serialization where
 
+import           Data.Int
+
+
 class Serialize a b | a -> b where
   encode :: a -> b
   decode :: b -> Either String a 
 
+
+i32toi :: Int32 -> Int
+i32toi = fromInteger . toInteger
+
+
+itoi32 :: Int -> Int32
+itoi32 = fromInteger . toInteger
