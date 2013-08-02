@@ -17,16 +17,22 @@ import           Luna.Codegen.Hs.AST.Cons          (Cons(..))
 import qualified Luna.Codegen.Hs.AST.Field       as Field
 import           Luna.Codegen.Hs.AST.Field         (Field(..))
 import qualified Luna.Type.Type                  as Type
+import qualified Luna.Codegen.Hs.Path            as Path
+import qualified Luna.Codegen.Hs.AST.Module      as Module
+import           Luna.Codegen.Hs.AST.Module        (Module)
 
-generateClass def = datatype where
-	cls        = NodeDef.cls def
-	clsname    = Type.name cls
-	params     = Type.params cls
-	paramnames = map Type.name params
-	paramtypes = map (Type.name . Type.cls) params
-	fields     = zipWith Field paramnames paramtypes
-	datatype   = DataType.empty { DataType.name       = clsname
-								, DataType.typeparams = Type.typeparams cls
-								, DataType.cons       = [Cons clsname fields]
-								}
+generateClass :: NodeDef -> Module -> Module
+generateClass def = nmod where
+    cls        = NodeDef.cls def
+    clsname    = Type.name cls
+    params     = Type.params cls
+    paramnames = map (Path.mkFieldName . Type.name) params
+    paramtypes = map (Type.name . Type.cls) params
+    fields     = zipWith Field paramnames paramtypes
+    datatype   = DataType.empty { DataType.name       = clsname
+                                , DataType.typeparams = Type.typeparams cls
+                                , DataType.cons       = [Cons clsname fields]
+                                }
+    nmod       = Module.addDataType datatype
+
 

@@ -8,7 +8,13 @@
 module Luna.Codegen.Hs.Path (
     module Luna.Network.Path.Path,
     toModulePath,
-    toModulePaths
+    toModulePaths,
+    mkTemplateName,
+    mkMonadName,
+    mkLensName,
+    mkFieldName,
+    inputs,
+    outputs
 )where
 
 import           Luna.Network.Path.Path 
@@ -30,3 +36,23 @@ toModulePaths path = case path of
     Path (x:xs)            -> toModulePaths (Path [x]) ++ toModulePaths (Path xs)
 
 
+    
+mkTemplateName :: String -> String
+mkTemplateName name = name ++ "'T"
+
+mkMonadName :: String -> String
+mkMonadName name = name ++ "''M"
+
+mkLensName :: String -> String
+mkLensName name = '_' : name
+
+mkFieldName :: String -> String
+mkFieldName name = name ++ "'F"
+
+
+inputs :: String
+inputs = "inputs'"
+
+
+outputs :: String
+outputs = "outputs'"

@@ -13,7 +13,8 @@ module Luna.Network.Path.Path(
     single,
     fromList,
     add,
-    last
+    last,
+    toString
 ) where
 import Data.String.Utils (join)
 import qualified Prelude
@@ -36,7 +37,7 @@ add (Path s1) (Path s2) = Path $ s1 ++ s2
 
 
 append :: String -> Path -> Path
-append segment path = Path $ segment : (segments path) ++ [segment]
+append segment path = Path $ (segments path) ++ [segment]
 
 
 prepend :: String -> Path -> Path
@@ -45,6 +46,10 @@ prepend segment path = Path $ segment:(segments path)
 
 last :: Path -> String
 last path = Prelude.last $ segments path
+
+
+toString :: Path -> String
+toString path = join "." $ segments path
 
 
 --instance Show Path where
