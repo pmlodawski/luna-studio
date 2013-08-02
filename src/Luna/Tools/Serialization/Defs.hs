@@ -59,7 +59,7 @@ instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
      tdefID      = Just $ itoi32 defID
      tdef = Defs_Types.NodeDef ttype timports tflags tattributes tlibID tdefID 
   decode td = case td of 
-     (Defs_Types.NodeDef Nothing (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), graph)
+     (Defs_Types.NodeDef _       (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), graph)
            -> d where
                     d = case (decode timports :: Either String [Import], decode tflags, decode tattributes) of
                         (Right imports, Right flags, Right attributes)
@@ -73,7 +73,12 @@ instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
                                -> Left $ "Failed to deserialize flags : " ++ message
                         (Left message , _           , _           )
                                -> Left $ "Failed to deserialize imports : " ++ message
-     (Defs_Types.NodeDef {}, _) -> Left "Some fields are missing"
+     (Defs_Types.NodeDef _       (Just _) (Just _) (Just _) (Just _) Nothing, _) -> Left "`defID` field is missing"
+     (Defs_Types.NodeDef _       (Just _) (Just _) (Just _) Nothing  _      , _) -> Left "`libID` field is missing"
+     (Defs_Types.NodeDef _       (Just _) (Just _) Nothing  _        _      , _) -> Left "`attributes` field is missing"
+     (Defs_Types.NodeDef _       (Just _) Nothing  _        _        _      , _) -> Left "`flags` field is missing"
+     (Defs_Types.NodeDef _       Nothing  _        _        _        _      , _) -> Left "`imports` field is missing"
+     (Defs_Types.NodeDef _       _        _        _        _        _      , _) -> Left "`type` field is missing"
 
 
 convert :: [Either String a] -> Either String [a]

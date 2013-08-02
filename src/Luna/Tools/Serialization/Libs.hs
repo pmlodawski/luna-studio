@@ -31,6 +31,8 @@ instance Serialize (Int, Library) Libs_Types.Library where
             path  = UniPath.fromUnixString $ Text.unpack tpath
             libID = i32toi tlibID
             rootNodeDefID = i32toi trootNodeDefID
-    decode (Libs_Types.Library {}) = 
-        Left "Some fields are missing."
+    decode (Libs_Types.Library (Just _) (Just _) (Just _) Nothing ) = Left "`rootNodeDefID` field is missing."
+    decode (Libs_Types.Library (Just _) (Just _) Nothing  _       ) = Left "`path` field is missing."
+    decode (Libs_Types.Library (Just _) Nothing  _        _       ) = Left "`name` field is missing."
+    decode (Libs_Types.Library Nothing  _        _        _       ) = Left "`libID` field is missing."
 
