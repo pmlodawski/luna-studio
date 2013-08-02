@@ -210,46 +210,68 @@ class Node {
 void swap(Node &a, Node &b);
 
 typedef struct _Edge__isset {
-  _Edge__isset() : src(false), dst(false) {}
-  bool src;
-  bool dst;
+  _Edge__isset() : portSrc(false), portDst(false), nodeSrc(false), nodeDst(false) {}
+  bool portSrc;
+  bool portDst;
+  bool nodeSrc;
+  bool nodeDst;
 } _Edge__isset;
 
 class Edge {
  public:
 
-  static const char* ascii_fingerprint; // = "C1241AF5AA92C586B664FD41DC97C576";
-  static const uint8_t binary_fingerprint[16]; // = {0xC1,0x24,0x1A,0xF5,0xAA,0x92,0xC5,0x86,0xB6,0x64,0xFD,0x41,0xDC,0x97,0xC5,0x76};
+  static const char* ascii_fingerprint; // = "E3E2F869E2831D70F619B6B13F64FB99";
+  static const uint8_t binary_fingerprint[16]; // = {0xE3,0xE2,0xF8,0x69,0xE2,0x83,0x1D,0x70,0xF6,0x19,0xB6,0xB1,0x3F,0x64,0xFB,0x99};
 
-  Edge() : src(0), dst(0) {
+  Edge() : portSrc(0), portDst(0), nodeSrc(0), nodeDst(0) {
   }
 
   virtual ~Edge() throw() {}
 
-  NodeID src;
-  NodeID dst;
+  int32_t portSrc;
+  int32_t portDst;
+  NodeID nodeSrc;
+  NodeID nodeDst;
 
   _Edge__isset __isset;
 
-  void __set_src(const NodeID val) {
-    src = val;
-    __isset.src = true;
+  void __set_portSrc(const int32_t val) {
+    portSrc = val;
+    __isset.portSrc = true;
   }
 
-  void __set_dst(const NodeID val) {
-    dst = val;
-    __isset.dst = true;
+  void __set_portDst(const int32_t val) {
+    portDst = val;
+    __isset.portDst = true;
+  }
+
+  void __set_nodeSrc(const NodeID val) {
+    nodeSrc = val;
+    __isset.nodeSrc = true;
+  }
+
+  void __set_nodeDst(const NodeID val) {
+    nodeDst = val;
+    __isset.nodeDst = true;
   }
 
   bool operator == (const Edge & rhs) const
   {
-    if (__isset.src != rhs.__isset.src)
+    if (__isset.portSrc != rhs.__isset.portSrc)
       return false;
-    else if (__isset.src && !(src == rhs.src))
+    else if (__isset.portSrc && !(portSrc == rhs.portSrc))
       return false;
-    if (__isset.dst != rhs.__isset.dst)
+    if (__isset.portDst != rhs.__isset.portDst)
       return false;
-    else if (__isset.dst && !(dst == rhs.dst))
+    else if (__isset.portDst && !(portDst == rhs.portDst))
+      return false;
+    if (__isset.nodeSrc != rhs.__isset.nodeSrc)
+      return false;
+    else if (__isset.nodeSrc && !(nodeSrc == rhs.nodeSrc))
+      return false;
+    if (__isset.nodeDst != rhs.__isset.nodeDst)
+      return false;
+    else if (__isset.nodeDst && !(nodeDst == rhs.nodeDst))
       return false;
     return true;
   }
@@ -275,8 +297,8 @@ typedef struct _Graph__isset {
 class Graph {
  public:
 
-  static const char* ascii_fingerprint; // = "67EBD711CFE1CCAA6DDC2B5FD0D071B2";
-  static const uint8_t binary_fingerprint[16]; // = {0x67,0xEB,0xD7,0x11,0xCF,0xE1,0xCC,0xAA,0x6D,0xDC,0x2B,0x5F,0xD0,0xD0,0x71,0xB2};
+  static const char* ascii_fingerprint; // = "EA2C91D29359A645800FF7F1BA743F1D";
+  static const uint8_t binary_fingerprint[16]; // = {0xEA,0x2C,0x91,0xD2,0x93,0x59,0xA6,0x45,0x80,0x0F,0xF7,0xF1,0xBA,0x74,0x3F,0x1D};
 
   Graph() {
   }

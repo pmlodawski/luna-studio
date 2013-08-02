@@ -270,8 +270,8 @@ void swap(Node &a, Node &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* Edge::ascii_fingerprint = "C1241AF5AA92C586B664FD41DC97C576";
-const uint8_t Edge::binary_fingerprint[16] = {0xC1,0x24,0x1A,0xF5,0xAA,0x92,0xC5,0x86,0xB6,0x64,0xFD,0x41,0xDC,0x97,0xC5,0x76};
+const char* Edge::ascii_fingerprint = "E3E2F869E2831D70F619B6B13F64FB99";
+const uint8_t Edge::binary_fingerprint[16] = {0xE3,0xE2,0xF8,0x69,0xE2,0x83,0x1D,0x70,0xF6,0x19,0xB6,0xB1,0x3F,0x64,0xFB,0x99};
 
 uint32_t Edge::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -295,16 +295,32 @@ uint32_t Edge::read(::apache::thrift::protocol::TProtocol* iprot) {
     {
       case 1:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->src);
-          this->__isset.src = true;
+          xfer += iprot->readI32(this->portSrc);
+          this->__isset.portSrc = true;
         } else {
           xfer += iprot->skip(ftype);
         }
         break;
       case 2:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->dst);
-          this->__isset.dst = true;
+          xfer += iprot->readI32(this->portDst);
+          this->__isset.portDst = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->nodeSrc);
+          this->__isset.nodeSrc = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->nodeDst);
+          this->__isset.nodeDst = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -325,14 +341,24 @@ uint32_t Edge::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("Edge");
 
-  if (this->__isset.src) {
-    xfer += oprot->writeFieldBegin("src", ::apache::thrift::protocol::T_I32, 1);
-    xfer += oprot->writeI32(this->src);
+  if (this->__isset.portSrc) {
+    xfer += oprot->writeFieldBegin("portSrc", ::apache::thrift::protocol::T_I32, 1);
+    xfer += oprot->writeI32(this->portSrc);
     xfer += oprot->writeFieldEnd();
   }
-  if (this->__isset.dst) {
-    xfer += oprot->writeFieldBegin("dst", ::apache::thrift::protocol::T_I32, 2);
-    xfer += oprot->writeI32(this->dst);
+  if (this->__isset.portDst) {
+    xfer += oprot->writeFieldBegin("portDst", ::apache::thrift::protocol::T_I32, 2);
+    xfer += oprot->writeI32(this->portDst);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.nodeSrc) {
+    xfer += oprot->writeFieldBegin("nodeSrc", ::apache::thrift::protocol::T_I32, 3);
+    xfer += oprot->writeI32(this->nodeSrc);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.nodeDst) {
+    xfer += oprot->writeFieldBegin("nodeDst", ::apache::thrift::protocol::T_I32, 4);
+    xfer += oprot->writeI32(this->nodeDst);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -342,13 +368,15 @@ uint32_t Edge::write(::apache::thrift::protocol::TProtocol* oprot) const {
 
 void swap(Edge &a, Edge &b) {
   using ::std::swap;
-  swap(a.src, b.src);
-  swap(a.dst, b.dst);
+  swap(a.portSrc, b.portSrc);
+  swap(a.portDst, b.portDst);
+  swap(a.nodeSrc, b.nodeSrc);
+  swap(a.nodeDst, b.nodeDst);
   swap(a.__isset, b.__isset);
 }
 
-const char* Graph::ascii_fingerprint = "67EBD711CFE1CCAA6DDC2B5FD0D071B2";
-const uint8_t Graph::binary_fingerprint[16] = {0x67,0xEB,0xD7,0x11,0xCF,0xE1,0xCC,0xAA,0x6D,0xDC,0x2B,0x5F,0xD0,0xD0,0x71,0xB2};
+const char* Graph::ascii_fingerprint = "EA2C91D29359A645800FF7F1BA743F1D";
+const uint8_t Graph::binary_fingerprint[16] = {0xEA,0x2C,0x91,0xD2,0x93,0x59,0xA6,0x45,0x80,0x0F,0xF7,0xF1,0xBA,0x74,0x3F,0x1D};
 
 uint32_t Graph::read(::apache::thrift::protocol::TProtocol* iprot) {
 

@@ -201,17 +201,25 @@ read_Node iprot = do
   record <- read_Node_fields iprot (Node{f_Node_cls=Nothing,f_Node_name=Nothing,f_Node_nodeID=Nothing,f_Node_flags=Nothing,f_Node_attrs=Nothing,f_Node_defVal=Nothing})
   readStructEnd iprot
   return record
-data Edge = Edge{f_Edge_src :: Maybe Int32,f_Edge_dst :: Maybe Int32} deriving (Show,Eq,Typeable)
+data Edge = Edge{f_Edge_portSrc :: Maybe Int32,f_Edge_portDst :: Maybe Int32,f_Edge_nodeSrc :: Maybe Int32,f_Edge_nodeDst :: Maybe Int32} deriving (Show,Eq,Typeable)
 instance Hashable Edge where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Edge_src record   `hashWithSalt` f_Edge_dst record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_Edge_portSrc record   `hashWithSalt` f_Edge_portDst record   `hashWithSalt` f_Edge_nodeSrc record   `hashWithSalt` f_Edge_nodeDst record  
 write_Edge oprot record = do
   writeStructBegin oprot "Edge"
-  case f_Edge_src record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("src",T_I32,1)
+  case f_Edge_portSrc record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("portSrc",T_I32,1)
     writeI32 oprot _v
     writeFieldEnd oprot}
-  case f_Edge_dst record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("dst",T_I32,2)
+  case f_Edge_portDst record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("portDst",T_I32,2)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  case f_Edge_nodeSrc record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("nodeSrc",T_I32,3)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  case f_Edge_nodeDst record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("nodeDst",T_I32,4)
     writeI32 oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
@@ -222,13 +230,25 @@ read_Edge_fields iprot record = do
     case _id14 of 
       1 -> if _t13 == T_I32 then do
         s <- readI32 iprot
-        read_Edge_fields iprot record{f_Edge_src=Just s}
+        read_Edge_fields iprot record{f_Edge_portSrc=Just s}
         else do
           skip iprot _t13
           read_Edge_fields iprot record
       2 -> if _t13 == T_I32 then do
         s <- readI32 iprot
-        read_Edge_fields iprot record{f_Edge_dst=Just s}
+        read_Edge_fields iprot record{f_Edge_portDst=Just s}
+        else do
+          skip iprot _t13
+          read_Edge_fields iprot record
+      3 -> if _t13 == T_I32 then do
+        s <- readI32 iprot
+        read_Edge_fields iprot record{f_Edge_nodeSrc=Just s}
+        else do
+          skip iprot _t13
+          read_Edge_fields iprot record
+      4 -> if _t13 == T_I32 then do
+        s <- readI32 iprot
+        read_Edge_fields iprot record{f_Edge_nodeDst=Just s}
         else do
           skip iprot _t13
           read_Edge_fields iprot record
@@ -238,7 +258,7 @@ read_Edge_fields iprot record = do
         read_Edge_fields iprot record
 read_Edge iprot = do
   _ <- readStructBegin iprot
-  record <- read_Edge_fields iprot (Edge{f_Edge_src=Nothing,f_Edge_dst=Nothing})
+  record <- read_Edge_fields iprot (Edge{f_Edge_portSrc=Nothing,f_Edge_portDst=Nothing,f_Edge_nodeSrc=Nothing,f_Edge_nodeDst=Nothing})
   readStructEnd iprot
   return record
 data Graph = Graph{f_Graph_nodes :: Maybe (Map.HashMap Int32 Node),f_Graph_edges :: Maybe (Vector.Vector Edge)} deriving (Show,Eq,Typeable)
