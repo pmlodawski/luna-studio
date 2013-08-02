@@ -36,6 +36,9 @@ import           Luna.Tools.Serialization
 import           Luna.Tools.Serialization.Defs    ()
 
 
+-- TODO [PM] : refactor needed
+
+
 ------ public api helpers -----------------------------------------
 defOperation :: (IORef Core -> NodeDef.ID -> NodeDef -> a) -> IORef Core 
              -> Maybe Defs_Types.NodeDef -> a
@@ -102,21 +105,33 @@ removeDefinition = defOperation (\batchHandler defID _ -> do
     case DefManager.gelem defID defManager of 
         True -> do let newCore = core{ Core.defManager= DefManager.delNode defID defManager }
                    writeIORef batchHandler newCore
-        False -> throw $ ArgumentException $ Just $ Text.pack "Wrong `defID` in `parent` field")
+        False -> throw $ ArgumentException $ Just $ Text.pack "Wrong `defID` in `definition` field")
 
 
 definitionChildren :: IORef Core -> Maybe Defs_Types.NodeDef -> IO (Vector Defs_Types.NodeDef)
-definitionChildren = defOperation (\batchHandler defID definition -> do
+definitionChildren = defOperation (\batchHandler defID _ -> do
+    putStrLn "call definitionChildren"  
     core <- readIORef batchHandler
     let defManager = Core.defManager core
-    putStrLn "call definitionChildren - NOT IMPLEMENTED, sorry."  
-    return $ Vector.fromList [] :: IO (Vector Defs_Types.NodeDef))
+    case DefManager.gelem defID defManager of 
+        True -> do let children = DefManager.children defManager defID
+                       tchildrenWithGraph = map (encode) children
+                       tchildren = map (\(def, _) -> def) tchildrenWithGraph
+                   return $ Vector.fromList tchildren
+        False -> throw $ ArgumentException $ Just $ Text.pack "Wrong `defID` in `definition` field")
 
 
 definitionParent :: IORef Core -> Maybe Defs_Types.NodeDef -> IO Defs_Types.NodeDef
-definitionParent = defOperation (\batchHandler defID definition -> do
+definitionParent = defOperation (\batchHandler defID _ -> do
+    putStrLn "call definitionParent"
     core <- readIORef batchHandler
     let defManager = Core.defManager core
-    putStrLn "call definitionParent - NOT IMPLEMENTED, sorry."
-    return undefined)
+    case DefManager.gelem defID defManager of 
+        True -> do let parent = DefManager.parent defManager defID
+                   case parent of 
+                       Just p  -> do let (tparent, _) = encode p
+                                     return tparent
+                       Nothing -> -- TODO [PM] : what if there is no parent?
+                                  undefined
+        False -> throw $ ArgumentException $ Just $ Text.pack "Wrong `defID` in `definition` field")
 

@@ -7,7 +7,7 @@
 
 module Luna.Network.Graph.Graph(
     module Luna.Data.Graph,
-    Graph(..)
+    Graph
 ) where
 
 import           Luna.Network.Graph.Edge   (Edge)
