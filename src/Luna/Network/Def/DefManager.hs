@@ -10,7 +10,9 @@ module Luna.Network.Def.DefManager(
     DefManager,
     addToParent,
     addToParentMany,
-    pathNames
+    pathNames,
+    children,
+    parent
 ) where
 
 import qualified Luna.Type.Type                  as Type
@@ -24,12 +26,22 @@ import           Luna.Data.List                    (foldri)
 type DefManager = Graph NodeDef Edge
 
 
-addToParent :: (Vertex, Vertex, NodeDef) -> DefManager -> DefManager
+addToParent :: (NodeDef.ID, NodeDef.ID, NodeDef) -> DefManager -> DefManager
 addToParent (parentID, defID, def) manager = insEdge (parentID, defID, Edge) $
                                              insNode (defID, def) manager
 
-addToParentMany :: [(Vertex, Vertex, NodeDef)] -> DefManager -> DefManager
+addToParentMany :: [(NodeDef.ID, NodeDef.ID, NodeDef)] -> DefManager -> DefManager
 addToParentMany = foldri addToParent
 
-pathNames :: DefManager -> Vertex -> [String]
+pathNames :: DefManager -> NodeDef.ID -> [String]
 pathNames g vtx = fmap (Type.name . NodeDef.cls . (lab_deprecated g)) $ path g vtx
+
+
+children :: DefManager -> NodeDef.ID -> [(NodeDef.ID, NodeDef)]
+children = sucl
+
+parent :: DefManager -> NodeDef.ID -> Maybe (NodeDef.ID, NodeDef)
+parent defManager defID = case prel defManager defID of 
+    [] -> Nothing
+    [a] -> Just a
+    a -> error $ (show defID) ++ " has multiple parents!"

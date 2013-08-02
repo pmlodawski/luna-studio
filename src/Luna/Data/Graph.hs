@@ -31,8 +31,10 @@ module Luna.Data.Graph (
     inn_,
     suc,
     suc_,
+    sucl,
     pre,
     pre_,
+    prel,
     topsort,
     path
 ) where
@@ -74,8 +76,16 @@ suc_ :: Graph a b -> Vertex -> [a]
 suc_ g vtx = map (lab_deprecated g) $ suc g vtx
 
 
+sucl :: Graph a b -> Vertex -> [(Vertex, a)]
+sucl g vtx = map (\v -> (v, lab_deprecated g v)) $ suc g vtx
+
+
 pre_ :: Graph a b -> Vertex -> [a]
 pre_ g vtx = map (lab_deprecated g) $ pre g vtx
+
+
+prel :: Graph a b -> Vertex -> [(Vertex, a)]
+prel g vtx = map (\v -> (v, lab_deprecated g v)) $ pre g vtx
 
 
 path :: Graph a b -> Vertex -> [Vertex]
