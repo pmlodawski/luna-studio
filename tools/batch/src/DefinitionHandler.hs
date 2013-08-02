@@ -91,7 +91,7 @@ defOperation operation batchHandler tdefinition  = case tdefinition of
     (Just tdef) -> do
         case (decode (tdef, Graph.empty) :: Either String (Int, NodeDef) ) of 
             Right (_, definition) -> do operation batchHandler definition
-            Left message          -> throw $ ArgumentException $ Just $ Text.pack ("Failed to decode `definition`: " ++ message)
+            Left message          -> throw $ ArgumentException $ Just $ Text.pack ("Failed to decode `definition` 2: " ++ message)
     Nothing            -> throw $ ArgumentException $ Just $ Text.pack "`definition` field is missing"
 
 
@@ -103,7 +103,7 @@ defParentOperation operation batchHandler tdefinition tparent = case (tdefinitio
               decode (tpar,      Graph.empty) :: Either String (Int, NodeDef) ) of 
             (Right (_, definition), Right (_, parent))
                               -> do operation batchHandler definition parent
-            (_, Left message) -> throw $ ArgumentException $ Just $ Text.pack ("Failed to decode `definition`: " ++ message)
-            (Left message, _) -> throw $ ArgumentException $ Just $ Text.pack ("Failed to decode `definition`: " ++ message)
+            (_, Left message) -> throw $ ArgumentException $ Just $ Text.pack ("Failed to decode `parent`: " ++ message)
+            (Left message, _) -> throw $ ArgumentException $ Just $ Text.pack ("Failed to decode `definition` 1: " ++ message)
     ( _       , Nothing )            -> throw $ ArgumentException $ Just $ Text.pack "`parent` field is missing"
     ( _       , _       )            -> throw $ ArgumentException $ Just $ Text.pack "`definition` field is missing"
