@@ -8,7 +8,9 @@
 module Luna.Codegen.Hs.AST.Expr (
     Expr(..),
     Context(..),
-    genCode
+    genCode,
+    mkAlias,
+    mkCall
 )where
 
 import           Data.String.Utils                 (join)
@@ -47,3 +49,11 @@ genCode expr = case expr of
                                    then "OneTuple " ++ body
                                    else "(" ++ body ++ ")"
                                 where body = join ", " (map (genCode) elems)
+
+
+mkAlias :: (String, String) -> Expr
+mkAlias (n1, n2) = Assignment (Var n1) (Var n2) Pure
+
+
+mkCall :: String -> [String] -> Expr
+mkCall name args = Call name (map Var args) Pure

@@ -8,7 +8,12 @@
 module Luna.Codegen.Hs.AST.Module (
     Module(..),
     empty,
-    genCode
+    addExpr,
+    addAlias,
+    genCode,
+    mkInst,
+    addDataType,
+    addFunction
 )where
 
 import qualified Luna.Codegen.Hs.Path            as Path
@@ -39,9 +44,31 @@ empty :: Module
 empty = Module Path.empty [] [] [] [] []
 
 genCode :: Module -> String
-genCode mod = "module " ++ mypath ++ " where\n" ++ imps ++ "\n" ++ dtypes ++ funcs
+genCode mod = "module " ++ mypath ++ " where\n" ++ join "\n" [imps, dtypes, funcs, exps]
     where
         mypath = (Path.toModulePath . path) mod
         imps   = join "\n" $ map Import.genCode   (imports mod)
         dtypes = join "\n" $ map DataType.genCode (datatypes mod)
         funcs  = join "\n" $ map Function.genCode (functions mod)
+        exps   = join "\n" $ map Expr.genCode     (exprs mod)
+
+
+
+addExpr :: Expr -> Module -> Module
+addExpr expr self = self { exprs = expr : exprs self }
+
+
+addAlias :: (String, String) -> Module -> Module
+addAlias alias = addExpr (Expr.mkAlias alias)
+
+
+mkInst :: (String, String, String) -> Module -> Module
+mkInst (nameT, nameMT, name) = addExpr (Expr.mkCall "mkInst''" [nameT, nameMT, name])
+
+
+addDataType :: DataType -> Module -> Module
+addDataType dt self = self {datatypes = dt : datatypes self}
+
+
+addFunction :: Function -> Module -> Module
+addFunction func self = self {functions = func : functions self}

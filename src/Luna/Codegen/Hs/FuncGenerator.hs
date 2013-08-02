@@ -19,8 +19,6 @@ import           Control.Monad.State               (runState, get, put, State)
 import qualified Luna.Type.Type                  as Type
 import qualified Luna.Network.Path.Import        as Import
 import           Luna.Network.Path.Import          (Import)
-import qualified Luna.Network.Path.Path          as Path
-import           Luna.Network.Path.Path            (Path)
 import qualified Luna.Network.Graph.Graph        as Graph
 import           Luna.Network.Graph.Graph          (Graph)
 import qualified Luna.Network.Def.NodeDef        as NodeDef
@@ -31,7 +29,7 @@ import qualified Luna.Network.Graph.Node         as Node
 import           Luna.Network.Graph.Node           (Node)
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Luna.Network.Flags              as Flags
-import qualified Luna.Network.Path.Path          as Path
+import qualified Luna.Codegen.Hs.Path            as Path
 import           Luna.Codegen.Hs.State.FuncState   (FuncState)
 import qualified Luna.Codegen.Hs.State.FuncState as FuncState
 import qualified Luna.Codegen.Hs.State.Context   as Context
@@ -42,27 +40,17 @@ import qualified Luna.Codegen.Hs.AST.Function    as Function
 import           Luna.Codegen.Hs.AST.Function      (Function)
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 import           Luna.Codegen.Hs.AST.Expr          (Expr)
-
-
-
-inputs :: String
-inputs = "inputs'"
-
-
-outputs :: String
-outputs = "outputs'"
-
-
+import           Luna.Data.List
 
 
 generateFunction def = func where
     graph      = NodeDef.graph def
     vertices   = Graph.topsort graph
     nodes      = Graph.labVtxs graph vertices
-    funcproto  = Function.empty { Function.name = Type.name $ NodeDef.cls def
-                                , Function.inputs = [inputs]
+    func       = foldri (generateNodeExpr graph) nodes
+               $ Function.empty { Function.name = Type.name $ NodeDef.cls def
+                                , Function.inputs = [Path.inputs]
                                 }
-    func       = foldr (generateNodeExpr graph) funcproto nodes 
 
 
 generateNodeExpr graph lnode func = nfunc where
@@ -74,7 +62,7 @@ generateNodeExpr graph lnode func = nfunc where
     (nid, node) = lnode
     expr  = Expr.Assignment src value ctx 
     src   = case node of
-        Node.Outputs {}         -> Expr.Var outputs
+        Node.Outputs {}         -> Expr.Var Path.outputs
         _                       -> Expr.VarRef nid
 
     (value, ctx) = case node of
@@ -95,7 +83,7 @@ generateNodeExpr graph lnode func = nfunc where
                                            then Expr.IO
                                            else Expr.Pure
 
-        Node.Inputs  _ _        -> (Expr.Var inputs, Expr.Pure)
+        Node.Inputs  _ _        -> (Expr.Var Path.inputs, Expr.Pure)
         Node.Outputs _ _        -> (Expr.VarRef cvtx, Expr.Pure) where
                                         cvtx:vtxs = Graph.innvtx graph nid
                                         -- TODO[wd] exception when too many inputs
