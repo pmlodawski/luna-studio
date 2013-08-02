@@ -33,4 +33,4 @@ addToParentMany = foldri addToParent
 
 
 pathNames :: DefManager -> Vertex -> [String]
-pathNames g vtx = fmap (Type.name . NodeDef.cls . (lab g)) $ path g vtx
+pathNames g vtx = fmap (Type.name . NodeDef.cls . (lab_deprecated g)) $ path g vtx
