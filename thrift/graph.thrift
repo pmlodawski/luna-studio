@@ -43,8 +43,10 @@ struct Node {
 typedef list<i32> PortDescriptor
 
 struct Edge {
-    1: optional NodeID src
-    2: optional NodeID dst
+    1: optional i32 portSrc
+    2: optional i32 portDst
+    3: optional NodeID nodeSrc
+    4: optional NodeID nodeDst
 }
 
 struct Graph {

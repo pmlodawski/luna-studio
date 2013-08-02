@@ -39,23 +39,26 @@ import           Luna.Tools.Serialization
 import           Luna.Tools.Serialization.Attrs
 
 
-instance Serialize Edge Graph_Types.Edge where
-  encode a = 
+instance Serialize (Int, Int, Edge) Graph_Types.Edge where
+  encode (nsrc, ndst, a) = 
     let 
       src = itoi32 $ Edge.src a
       dst = itoi32 $ Edge.dst a
-    in Graph_Types.Edge (Just src) (Just dst)
+    in Graph_Types.Edge (Just src) (Just dst) (Just $ itoi32 nsrc) (Just $ itoi32 ndst)
   decode b =
-    case Graph_Types.f_Edge_src b of
+    case Graph_Types.f_Edge_portSrc b of
       Just src ->
-        case Graph_Types.f_Edge_dst b of
+        case Graph_Types.f_Edge_portDst b of
           Just dst ->
-            let
-              srci = i32toi src
-              dsti = i32toi dst
-            in Right $ Edge srci dsti
-          Nothing  -> Left "No destination specified"
-      Nothing  -> Left "No source specified!"
+            case Graph_Types.f_Edge_nodeSrc b of
+              Just nodeSrc ->
+                case Graph_Types.f_Edge_nodeDst b of
+                  Just nodeDst ->
+                    Right $ (i32toi nodeSrc, i32toi nodeDst, Edge (i32toi src) (i32toi dst))
+                  Nothing      -> Left "No destination node specified"
+              Nothing      ->  Left "No source node specified"
+          Nothing  -> Left "No destination port specified"
+      Nothing  -> Left "No source port specified!"
 
 instance Serialize Graph Graph_Types.Graph where
   encode a = 
@@ -64,21 +67,33 @@ instance Serialize Graph Graph_Types.Graph where
       nodes = Map.fromList $
         map (\(a, b) -> (itoi32 a, encode (b, a))) $ Graph.labNodes a
       edges :: Vector Graph_Types.Edge
-      edges = Vector.fromList $ map encode $
-        map (\(_, _, label) -> label) $ Graph.labEdges a
+      edges =  Vector.fromList $ map encode $ Graph.labEdges a
     in
-      Graph_Types.Graph (Just nodes) $ Just edges
+      Graph_Types.Graph (Just nodes) (Just edges)
   decode b =
     case Graph_Types.f_Graph_nodes b of
       Just nodes ->
         case Graph_Types.f_Graph_edges b of
           Just edges ->
             let
-              goodNodes :: [DG.LNode Node]
-              goodNodes = undefined
-              goodEdges :: [DG.LEdge Edge]
-              goodEdges = undefined
-            in Right $ Graph.mkGraph goodNodes goodEdges
+              transformNode :: (Int32, Graph_Types.Node) -> Either String (Int, Node)
+              transformNode (i, lab) =
+                case decode lab of
+                  Right (node, ii) -> Right (i32toi i, node)
+                  Left msg         -> Left msg
+              goodNodes :: Either String [DG.LNode Node]
+              goodNodes = sequence $ map transformNode $
+                Map.toList nodes 
+
+              goodEdges :: Either String [DG.LEdge Edge]
+              goodEdges =  sequence $ map decode $ Vector.toList edges
+            in
+              case goodNodes of
+                Right gnodes ->
+                  case goodEdges of
+                    Right gedges -> Right $ Graph.mkGraph gnodes gedges
+                    Left msg     -> Left msg
+                Left msg     -> Left msg
           Nothing    -> Left "Edges are not defined"
       Nothing    -> Left "Nodes are not defined"
 
@@ -122,11 +137,17 @@ instance Serialize (Node, Int) Graph_Types.Node where
       nodeID = itoi32 nid
       nodeFlags :: Maybe Attrs_Types.Flags
       nodeFlags = fmap encode $ case a of
-                   Node.Type _ flags _ -> Just flags
-                   Node.Call _ flags _ -> Just flags
-                   _                   -> Nothing
+                   Node.Type  _ flags _ -> Just flags
+                   Node.Call  _ flags _ -> Just flags
+                   Node.Inputs  flags _ -> Just flags
+                   Node.Outputs flags _ -> Just flags
+                   Node.Tuple   flags _ -> Just flags
+                   Node.New     flags _ -> Just flags
+                   _                    -> Nothing
       nodeAttrs :: Maybe Attrs_Types.Attributes
       nodeAttrs = fmap encode $ case a of
+                   Node.Type  _ _ attrs -> Just attrs
+                   Node.Call  _ _ attrs -> Just attrs
                    Node.Inputs  _ attrs -> Just attrs
                    Node.Outputs _ attrs -> Just attrs
                    Node.Tuple   _ attrs -> Just attrs
