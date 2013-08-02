@@ -32,11 +32,11 @@ import qualified Data.Vector as Vector
 import Thrift
 import Thrift.Types ()
 
-import  Attrs_Types
-import  Defs_Types
-import  Graph_Types
-import  Libs_Types
-import  Types_Types
+import Attrs_Types
+import Defs_Types
+import Graph_Types
+import Libs_Types
+import Types_Types
 
 
 import Batch_Types

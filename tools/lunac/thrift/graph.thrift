@@ -10,6 +10,17 @@ include "attrs.thrift"
 
 typedef i32 NodeID
 
+enum DefaultValueType {
+    StringV,
+    IntV
+}
+
+struct DefaultValue {
+    1: required DefaultValueType cls,
+    2: optional i32 i,
+    3: optional string s
+}
+
 enum NodeType {
     Type,
     Call,
@@ -26,6 +37,7 @@ struct Node {
     3: optional NodeID           nodeID
     4: optional attrs.Flags      flags
     5: optional attrs.Attributes attrs
+    6: optional DefaultValue     defVal
 }
 
 typedef list<i32> PortDescriptor

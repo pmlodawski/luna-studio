@@ -25,7 +25,7 @@ graph a definition = do
 
 addNode a node definition = do
     putStrLn "NOT IMPLEMENTED - addNode"
-    return $ TGraph.Node Nothing Nothing Nothing Nothing Nothing
+    return $ TGraph.Node Nothing Nothing Nothing Nothing Nothing Nothing
 
 
 updateNode a node definition = do

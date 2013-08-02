@@ -17,6 +17,15 @@
 
 
 
+struct DefaultValueType {
+  enum type {
+    StringV = 0,
+    IntV = 1
+  };
+};
+
+extern const std::map<int, const char*> _DefaultValueType_VALUES_TO_NAMES;
+
 struct NodeType {
   enum type {
     Type = 0,
@@ -35,20 +44,85 @@ typedef int32_t NodeID;
 
 typedef std::vector<int32_t>  PortDescriptor;
 
+typedef struct _DefaultValue__isset {
+  _DefaultValue__isset() : i(false), s(false) {}
+  bool i;
+  bool s;
+} _DefaultValue__isset;
+
+class DefaultValue {
+ public:
+
+  static const char* ascii_fingerprint; // = "69ED04DC035A4CF78CE4B470902F18B3";
+  static const uint8_t binary_fingerprint[16]; // = {0x69,0xED,0x04,0xDC,0x03,0x5A,0x4C,0xF7,0x8C,0xE4,0xB4,0x70,0x90,0x2F,0x18,0xB3};
+
+  DefaultValue() : cls((DefaultValueType::type)0), i(0), s() {
+  }
+
+  virtual ~DefaultValue() throw() {}
+
+  DefaultValueType::type cls;
+  int32_t i;
+  std::string s;
+
+  _DefaultValue__isset __isset;
+
+  void __set_cls(const DefaultValueType::type val) {
+    cls = val;
+  }
+
+  void __set_i(const int32_t val) {
+    i = val;
+    __isset.i = true;
+  }
+
+  void __set_s(const std::string& val) {
+    s = val;
+    __isset.s = true;
+  }
+
+  bool operator == (const DefaultValue & rhs) const
+  {
+    if (!(cls == rhs.cls))
+      return false;
+    if (__isset.i != rhs.__isset.i)
+      return false;
+    else if (__isset.i && !(i == rhs.i))
+      return false;
+    if (__isset.s != rhs.__isset.s)
+      return false;
+    else if (__isset.s && !(s == rhs.s))
+      return false;
+    return true;
+  }
+  bool operator != (const DefaultValue &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DefaultValue & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(DefaultValue &a, DefaultValue &b);
+
 typedef struct _Node__isset {
-  _Node__isset() : cls(false), name(false), nodeID(false), flags(false), attrs(false) {}
+  _Node__isset() : cls(false), name(false), nodeID(false), flags(false), attrs(false), defVal(false) {}
   bool cls;
   bool name;
   bool nodeID;
   bool flags;
   bool attrs;
+  bool defVal;
 } _Node__isset;
 
 class Node {
  public:
 
-  static const char* ascii_fingerprint; // = "5F9145A514865E1FC587B553E8ECE2F6";
-  static const uint8_t binary_fingerprint[16]; // = {0x5F,0x91,0x45,0xA5,0x14,0x86,0x5E,0x1F,0xC5,0x87,0xB5,0x53,0xE8,0xEC,0xE2,0xF6};
+  static const char* ascii_fingerprint; // = "43F200EE3F1FC1EF3015F9446E707ADF";
+  static const uint8_t binary_fingerprint[16]; // = {0x43,0xF2,0x00,0xEE,0x3F,0x1F,0xC1,0xEF,0x30,0x15,0xF9,0x44,0x6E,0x70,0x7A,0xDF};
 
   Node() : cls((NodeType::type)0), name(), nodeID(0) {
   }
@@ -60,6 +134,7 @@ class Node {
   NodeID nodeID;
    ::Flags flags;
    ::Attributes attrs;
+  DefaultValue defVal;
 
   _Node__isset __isset;
 
@@ -88,6 +163,11 @@ class Node {
     __isset.attrs = true;
   }
 
+  void __set_defVal(const DefaultValue& val) {
+    defVal = val;
+    __isset.defVal = true;
+  }
+
   bool operator == (const Node & rhs) const
   {
     if (__isset.cls != rhs.__isset.cls)
@@ -109,6 +189,10 @@ class Node {
     if (__isset.attrs != rhs.__isset.attrs)
       return false;
     else if (__isset.attrs && !(attrs == rhs.attrs))
+      return false;
+    if (__isset.defVal != rhs.__isset.defVal)
+      return false;
+    else if (__isset.defVal && !(defVal == rhs.defVal))
       return false;
     return true;
   }
@@ -191,8 +275,8 @@ typedef struct _Graph__isset {
 class Graph {
  public:
 
-  static const char* ascii_fingerprint; // = "8F82169939B00598BEF3C6948B1AD350";
-  static const uint8_t binary_fingerprint[16]; // = {0x8F,0x82,0x16,0x99,0x39,0xB0,0x05,0x98,0xBE,0xF3,0xC6,0x94,0x8B,0x1A,0xD3,0x50};
+  static const char* ascii_fingerprint; // = "67EBD711CFE1CCAA6DDC2B5FD0D071B2";
+  static const uint8_t binary_fingerprint[16]; // = {0x67,0xEB,0xD7,0x11,0xCF,0xE1,0xCC,0xAA,0x6D,0xDC,0x2B,0x5F,0xD0,0xD0,0x71,0xB2};
 
   Graph() {
   }

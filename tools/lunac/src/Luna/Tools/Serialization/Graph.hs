@@ -21,8 +21,14 @@ import           Data.Vector                  (Vector(..))
 
 import qualified Attrs_Types
 import qualified Graph_Types
-import qualified Luna.Network.Def.NodeDef as NodeDef
+import qualified Luna.Network.Attributes as Attributes
+import           Luna.Network.Attributes   (Attributes(..))
+import qualified Luna.Network.Def.NodeDef as NodeDef  
 import           Luna.Network.Def.NodeDef   (NodeDef(..))
+import qualified Luna.Network.Flags as Flags
+import           Luna.Network.Flags   (Flags(..))
+import qualified Luna.Network.Graph.DefaultValue as DefaultValue
+import           Luna.Network.Graph.DefaultValue   (DefaultValue(..))
 import qualified Luna.Network.Graph.Edge as Edge
 import           Luna.Network.Graph.Edge   (Edge(..))
 import qualified Luna.Network.Graph.Graph as Graph
@@ -76,6 +82,25 @@ instance Serialize Graph Graph_Types.Graph where
           Nothing    -> Left "Edges are not defined"
       Nothing    -> Left "Nodes are not defined"
 
+instance Serialize DefaultValue Graph_Types.DefaultValue where
+  encode a =
+    case a of
+      DefaultInt ii ->
+        Graph_Types.DefaultValue (Just Graph_Types.IntV) (Just $ (fromIntegral ii :: Int32)) Nothing
+      DefaultString ss ->
+        Graph_Types.DefaultValue (Just Graph_Types.StringV) Nothing (Just $ Text.pack ss)
+  decode b =
+    case Graph_Types.f_DefaultValue_cls b of
+      Just Graph_Types.IntV ->
+        case Graph_Types.f_DefaultValue_i b of
+          Just ii -> Right $ DefaultInt (fromIntegral ii :: Int)
+          Nothing -> Left "No integral default value specified"
+      Just Graph_Types.StringV ->
+        case Graph_Types.f_DefaultValue_s b of
+          Just ss -> Right $ DefaultString (Text.unpack ss)
+          Nothing -> Left "No string default value specified"
+      Nothing -> Left "No default value type specified"    
+
 instance Serialize (Node, Int) Graph_Types.Node where
   encode (a, nid) =
     let
@@ -107,6 +132,78 @@ instance Serialize (Node, Int) Graph_Types.Node where
                    Node.Tuple   _ attrs -> Just attrs
                    Node.New     _ attrs -> Just attrs
                    _                    -> Nothing
+
+      defValue :: Maybe Graph_Types.DefaultValue
+      defValue = fmap encode $ case a of
+                   Node.Default val -> Just val
+                   _                -> Nothing
     in
-      Graph_Types.Node (Just nodeType) nodeName (Just nodeID) nodeFlags nodeAttrs
-  decode b = undefined
+      Graph_Types.Node (Just nodeType) nodeName (Just nodeID) nodeFlags nodeAttrs defValue
+  decode b =
+    let
+      gname = case Graph_Types.f_Node_name b of
+                  Just nname -> Right $ Text.unpack nname
+                  Nothing    -> Left "Node name not defined"
+
+      gID = case Graph_Types.f_Node_nodeID b of
+              Just nid -> Right $ (fromIntegral nid :: Int)
+              Nothing  -> Left "Node ID not defined"
+
+      gflags :: Either String Flags
+      gflags = case Graph_Types.f_Node_flags b of
+                 Just nflags -> decode nflags
+                 Nothing     -> Left "Node flags not defined"
+      
+      gattrs :: Either String Attributes
+      gattrs = case Graph_Types.f_Node_attrs b of
+                Just nattrs -> decode nattrs
+                Nothing     -> Left "Node attributes not defined"
+
+      gdefval :: Either String DefaultValue
+      gdefval = case Graph_Types.f_Node_defVal b of
+                 Just ndefval -> decode ndefval
+                 Nothing      -> Left "Default value not defined"
+
+      gnode :: Either String Node
+      gnode =  case Graph_Types.f_Node_cls b of
+            Just ntype ->
+              case ntype of
+                Graph_Types.Type -> do
+                  ggname <- gname
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.Type ggname ggflags ggattrs
+                Graph_Types.Call -> do
+                  ggname <- gname
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.Call ggname ggflags ggattrs
+                Graph_Types.Default -> do
+                  ggdefval <- gdefval
+                  Right $ Node.Default ggdefval
+                Graph_Types.New -> do
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.New ggflags ggattrs
+                Graph_Types.Inputs -> do
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.Inputs ggflags ggattrs
+                Graph_Types.Outputs -> do
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.Outputs ggflags ggattrs
+                Graph_Types.Tuple -> do
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.Tuple ggflags ggattrs
+            Nothing     -> Left "Node type not defined"
+
+    in
+      do
+        ggnode <- gnode
+        ggID <- gID
+        Right $ (ggnode, ggID)
+       
+  
+      
