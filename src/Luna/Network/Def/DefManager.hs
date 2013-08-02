@@ -31,6 +31,5 @@ addToParent (parentID, defID, def) manager = insEdge (parentID, defID, Edge) $
 addToParentMany :: [(Vertex, Vertex, NodeDef)] -> DefManager -> DefManager
 addToParentMany = foldri addToParent
 
-
 pathNames :: DefManager -> Vertex -> [String]
 pathNames g vtx = fmap (Type.name . NodeDef.cls . (lab_deprecated g)) $ path g vtx

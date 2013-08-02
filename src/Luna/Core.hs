@@ -62,5 +62,5 @@ unloadLibrary (Core libManager' defManager') libID' = newCore where
 
 
 nodeDefByID :: Core -> NodeDef.ID -> Maybe NodeDef
-nodeDefByID (Core _ defManager) defID = def where
-    def = DefManager.lab defManager defID
+nodeDefByID (Core _ adefManager) defID = def where
+    def = DefManager.lab adefManager defID
