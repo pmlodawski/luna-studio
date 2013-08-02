@@ -19,6 +19,8 @@ import qualified Types_Types
 import           Luna.Tools.Serialization
 import           Luna.Type.Type        (Type(..))
 
+
+
 type2typeProtoList :: Int -> Type -> [Types_Types.TypeProto]
 type2typeProtoList level t = case t of 
     Undefined       -> [s] where
@@ -30,6 +32,6 @@ type2typeProtoList level t = case t of
 
 
 instance Serialize Type Types_Types.Type where
-  encode t = tc where list = type2typeProtoList 0 t
-                      tc = Types_Types.Type $ Just $ Vector.fromList list
-  decode a = undefined
+  encode t = tt where list = type2typeProtoList 0 t
+                      tt = Types_Types.Type $ Just $ Vector.fromList list
+  decode tt = undefined

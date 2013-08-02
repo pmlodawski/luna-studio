@@ -81,7 +81,7 @@ class Import {
 void swap(Import &a, Import &b);
 
 typedef struct _NodeDef__isset {
-  _NodeDef__isset() : cls(false), imports(false), flags(false), attribs(false), libID(true), defID(true) {}
+  _NodeDef__isset() : cls(false), imports(true), flags(true), attribs(true), libID(true), defID(true) {}
   bool cls;
   bool imports;
   bool flags;
@@ -97,6 +97,9 @@ class NodeDef {
   static const uint8_t binary_fingerprint[16]; // = {0xD9,0xCB,0x0A,0xF3,0xDE,0x14,0xC9,0x55,0x05,0x04,0xEB,0x04,0xD3,0xE1,0xA1,0xB4};
 
   NodeDef() : libID(-1), defID(-1) {
+
+
+
   }
 
   virtual ~NodeDef() throw() {}

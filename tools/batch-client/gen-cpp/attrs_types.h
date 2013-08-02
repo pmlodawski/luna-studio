@@ -74,7 +74,7 @@ class Flags {
 void swap(Flags &a, Flags &b);
 
 typedef struct _Attributes__isset {
-  _Attributes__isset() : spaces(false) {}
+  _Attributes__isset() : spaces(true) {}
   bool spaces;
 } _Attributes__isset;
 
@@ -85,6 +85,7 @@ class Attributes {
   static const uint8_t binary_fingerprint[16]; // = {0x95,0x19,0x45,0xF8,0x45,0x3D,0x39,0xBB,0x0F,0x43,0xC3,0x36,0xD8,0xA2,0xE4,0x3A};
 
   Attributes() {
+
   }
 
   virtual ~Attributes() throw() {}
