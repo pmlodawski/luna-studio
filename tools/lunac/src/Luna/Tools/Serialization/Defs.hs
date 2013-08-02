@@ -9,7 +9,7 @@
 
 module Luna.Tools.Serialization.Defs where
 
-import           Data.Int
+
 import qualified Data.Text.Lazy as Text
 import qualified Data.Vector    as Vector
 import           Data.Vector      (Vector)
@@ -55,15 +55,15 @@ instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
      timports    = Just $ encode imports
      tflags      = Just $ encode flags
      tattributes = Just $ encode attributes
-     tlibID      = Just $ (fromInteger . toInteger::Int -> Int32) libID
-     tdefID      = Just $ (fromInteger . toInteger::Int -> Int32) defID
+     tlibID      = Just $ itoi32 libID
+     tdefID      = Just $ itoi32 defID
      tdef = Defs_Types.NodeDef ttype timports tflags tattributes tlibID tdefID 
   decode td = case td of 
      (Defs_Types.NodeDef Nothing (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), graph)
            -> d where
                     d = case (decode timports :: Either String [Import], decode tflags, decode tattributes) of
                         (Right imports, Right flags, Right attributes)
-                               -> let libID = (fromInteger. toInteger::Int32 -> Int) tlibID
+                               -> let libID = i32toi tlibID
                                       nodeDef = NodeDef Type.Undefined graph imports flags attributes libID
                                       defID = 1
                                   in Right (defID, nodeDef)
