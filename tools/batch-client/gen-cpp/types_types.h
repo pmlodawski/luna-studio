@@ -45,10 +45,10 @@ typedef struct _TypeProto__isset {
 class TypeProto {
  public:
 
-  static const char* ascii_fingerprint; // = "8AE658BECF35742FA6D2BF892CC73B6F";
-  static const uint8_t binary_fingerprint[16]; // = {0x8A,0xE6,0x58,0xBE,0xCF,0x35,0x74,0x2F,0xA6,0xD2,0xBF,0x89,0x2C,0xC7,0x3B,0x6F};
+  static const char* ascii_fingerprint; // = "2E68E04A896B98564C800E8EB3D65F7F";
+  static const uint8_t binary_fingerprint[16]; // = {0x2E,0x68,0xE0,0x4A,0x89,0x6B,0x98,0x56,0x4C,0x80,0x0E,0x8E,0xB3,0xD6,0x5F,0x7F};
 
-  TypeProto() : cls((TypeType::type)0), name(), type(0) {
+  TypeProto() : cls((TypeType::type)0), name(), inputs(0), outputs(0), type(0) {
   }
 
   virtual ~TypeProto() throw() {}
@@ -57,8 +57,8 @@ class TypeProto {
   std::string name;
   std::vector<int32_t>  items;
   std::vector<int32_t>  params;
-  std::vector<int32_t>  inputs;
-  std::vector<int32_t>  outputs;
+  int32_t inputs;
+  int32_t outputs;
   int32_t type;
 
   _TypeProto__isset __isset;
@@ -82,12 +82,12 @@ class TypeProto {
     __isset.params = true;
   }
 
-  void __set_inputs(const std::vector<int32_t> & val) {
+  void __set_inputs(const int32_t val) {
     inputs = val;
     __isset.inputs = true;
   }
 
-  void __set_outputs(const std::vector<int32_t> & val) {
+  void __set_outputs(const int32_t val) {
     outputs = val;
     __isset.outputs = true;
   }
@@ -148,8 +148,8 @@ typedef struct _Type__isset {
 class Type {
  public:
 
-  static const char* ascii_fingerprint; // = "266812D7B08D83CE59DBDB712EC9B334";
-  static const uint8_t binary_fingerprint[16]; // = {0x26,0x68,0x12,0xD7,0xB0,0x8D,0x83,0xCE,0x59,0xDB,0xDB,0x71,0x2E,0xC9,0xB3,0x34};
+  static const char* ascii_fingerprint; // = "A7BED1A0E925509A55B985F0FDF15A5D";
+  static const uint8_t binary_fingerprint[16]; // = {0xA7,0xBE,0xD1,0xA0,0xE9,0x25,0x50,0x9A,0x55,0xB9,0x85,0xF0,0xFD,0xF1,0x5A,0x5D};
 
   Type() {
   }

@@ -22,6 +22,7 @@ import qualified Luna.Network.Path.Path   as Path
 import qualified Luna.Type.Type           as Type
 import           Luna.Tools.Serialization
 import           Luna.Tools.Serialization.Attrs ()
+import           Luna.Tools.Serialization.Types ()
 
 
 instance Serialize Import Defs_Types.Import where
@@ -79,14 +80,4 @@ instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
      (Defs_Types.NodeDef Nothing  _        _        _        _        _      , _) -> Left "`type` field is missing"
 
 
-convert :: [Either String a] -> Either String [a]
-convert []       = Right []
-convert [h]      = case h of 
-    Left m  -> Left m
-    Right a -> Right [a]
-convert (h:t) = case h of 
-    Left m  -> Left m
-    Right a -> case (convert t) of 
-        Left m1 -> Left m1
-        Right a1 -> Right (a:a1)
 

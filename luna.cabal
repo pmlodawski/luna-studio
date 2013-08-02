@@ -93,7 +93,9 @@ Executable lunac
                   flowbox,
                   MissingH,
                   mtl,
-                  split
+                  split,
+                  text,
+                  vector
 
 
 Executable batch
