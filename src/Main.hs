@@ -11,16 +11,24 @@ import qualified Luna.Codegen.DefGenerator      as DG
 import qualified Luna.Network.Def.DefManager    as DefManager
 
 
+import qualified Types_Types
+import           Luna.Tools.Serialization
+import           Luna.Tools.Serialization.Types ()
+import           Luna.Type.Type        (Type(..))
 
 main :: IO ()
 main = do 
-	putStrLn "------------\n"
+    let t = Function "f" (Undefined) (Undefined)
+        tt = encode t
+    print t
+    print tt
+    putStrLn "------------\n"
 
-	--putStrLn $ FG.generateFunction HelloWorld.myFun3
-	putStrLn $ DG.generateDefinition 1 HelloWorld.full_manager
+    --putStrLn $ FG.generateFunction HelloWorld.myFun3
+    --putStrLn $ DG.generateDefinition 1 HelloWorld.full_manager
 
-	--putStrLn $ Cg.generateDefCode $
-	return ()
+    --putStrLn $ Cg.generateDefCode $
+    return ()
 
 
 --        let 
