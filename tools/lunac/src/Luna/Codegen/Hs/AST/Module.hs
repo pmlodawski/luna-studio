@@ -19,6 +19,8 @@ import qualified Luna.Codegen.Hs.AST.Function    as Function
 import           Luna.Codegen.Hs.AST.Function      (Function)
 import qualified Luna.Codegen.Hs.AST.DataType    as DataType
 import           Luna.Codegen.Hs.AST.DataType      (DataType)
+import qualified Luna.Codegen.Hs.AST.Expr        as Expr
+import           Luna.Codegen.Hs.AST.Expr          (Expr)
 import           Data.String.Utils                 (join)
 
 data Module = Module { path       :: Path
@@ -26,6 +28,7 @@ data Module = Module { path       :: Path
                      , datatypes  :: [DataType]
                      , functions  :: [Function]
                      , imports    :: [Import]
+                     , exprs      :: [Expr]
                      --, datatypes :: [DataType]
                      --, classes   
 
@@ -33,7 +36,7 @@ data Module = Module { path       :: Path
                      } deriving (Show)
 
 empty :: Module
-empty = Module Path.empty [] [] [] []
+empty = Module Path.empty [] [] [] [] []
 
 genCode :: Module -> String
 genCode mod = "module " ++ mypath ++ " where\n" ++ imps ++ "\n" ++ dtypes ++ funcs
