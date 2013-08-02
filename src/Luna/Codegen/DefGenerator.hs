@@ -24,7 +24,7 @@ import           Luna.Network.Def.DefManager       (DefManager)
 
 generateDefinition :: Graph.Vertex -> DefManager -> String
 generateDefinition vtx manager = code where
-	def = Graph.lab manager vtx
+	def = Graph.lab_deprecated manager vtx
 	cls = NodeDef.cls def
 	code = case cls of
 		Type.Function {} -> MG.generateModule vtx manager ++ FG.generateFunction def

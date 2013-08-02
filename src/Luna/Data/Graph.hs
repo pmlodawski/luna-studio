@@ -16,6 +16,7 @@ module Luna.Data.Graph (
     insEdge,
     insEdges,
     lab,
+    lab_deprecated,
     labEdges,
     labNodes,
     labs,
@@ -36,7 +37,7 @@ module Luna.Data.Graph (
 ) where
 
 import qualified Data.Graph.Inductive            as DG
-import           Data.Graph.Inductive            hiding (lab, Graph)
+import           Data.Graph.Inductive            hiding (Graph)
 
 
 type Graph a b = DG.Gr a b
@@ -44,16 +45,16 @@ type Vertex    = DG.Node
 type LVertex a = DG.LNode a
 
 
-lab :: Graph a b -> Vertex -> a
-lab g vtx = DG.lab' $ DG.context g vtx
+lab_deprecated :: Graph a b -> Vertex -> a
+lab_deprecated g vtx = DG.lab' $ DG.context g vtx
 
 
 labs :: Graph a b -> [Vertex] -> [a]
-labs g vtxs = map (lab g) vtxs
+labs g vtxs = map (lab_deprecated g) vtxs
 
 
 labVtx :: Graph a b -> Vertex -> LVertex a
-labVtx g vtx = (vtx, lab g vtx)
+labVtx g vtx = (vtx, lab_deprecated g vtx)
 
 
 labVtxs :: Graph a b -> [Vertex] -> [LVertex a]
@@ -69,11 +70,11 @@ inn_ g vtx = [el | (_,_,el) <- inn g vtx]
 
 
 suc_ :: Graph a b -> Vertex -> [a]
-suc_ g vtx = map (lab g) $ suc g vtx
+suc_ g vtx = map (lab_deprecated g) $ suc g vtx
 
 
 pre_ :: Graph a b -> Vertex -> [a]
-pre_ g vtx = map (lab g) $ pre g vtx
+pre_ g vtx = map (lab_deprecated g) $ pre g vtx
 
 
 path :: Graph a b -> Vertex -> [Vertex]
