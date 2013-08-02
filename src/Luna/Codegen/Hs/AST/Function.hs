@@ -11,8 +11,15 @@ module Luna.Codegen.Hs.AST.Function (
     genCode,
     addExpr,
     addAlias,
-    setCtx
+    setCtx,
+    getter,
+    setter,
+    getterM,
+    setterM
 )where
+
+import Debug.Trace
+
 
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 import           Luna.Codegen.Hs.AST.Expr          (Expr)
@@ -56,5 +63,15 @@ addExpr expr func = func { exprs = expr : exprs func }
 addAlias :: (String, String) -> Function -> Function
 addAlias alias = addExpr (Expr.mkAlias alias)
 
+getter :: String -> String -> String -> Expr
+getter obj name param = Expr.Call "getter" [Expr.Var obj, Expr.Var param] Expr.Pure
 
---getter = simple (name ++ "'GS") (Expr.Call  Expr.Pure)
+setter :: String -> String -> String -> Expr
+setter obj name param = Expr.Call "setter" [Expr.Var obj, Expr.Var param] Expr.Pure
+
+
+getterM :: String -> String -> String -> Expr
+getterM obj name param = Expr.Call "getter''M" [Expr.Var obj, Expr.Var param] Expr.Pure
+
+setterM :: String -> String -> String -> Expr
+setterM obj name param = Expr.Call "setter''M" [Expr.Var obj, Expr.Var param] Expr.Pure

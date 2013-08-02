@@ -50,6 +50,10 @@ mkFieldName :: String -> String
 mkFieldName name = name ++ "'F"
 
 
+mkGSName :: String -> String
+mkGSName name = name ++ "'GS"
+
+
 inputs :: String
 inputs = "inputs'"
 

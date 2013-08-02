@@ -9,12 +9,18 @@ module Luna.Codegen.Hs.AST.Module (
     Module(..),
     empty,
     addExpr,
+    addExprs,
     addAlias,
     genCode,
     mkInst,
     addDataType,
-    addFunction
+    addFunction,
+    addImport,
+    addImports
 )where
+
+import           Data.Set                          (Set)
+import qualified Data.Set                        as Set
 
 import qualified Luna.Codegen.Hs.Path            as Path
 import           Luna.Codegen.Hs.Path              (Path)
@@ -30,9 +36,9 @@ import           Data.String.Utils                 (join)
 
 data Module = Module { path       :: Path
                      , submodules :: [Module]
+                     , imports    :: Set Import
                      , datatypes  :: [DataType]
                      , functions  :: [Function]
-                     , imports    :: [Import]
                      , exprs      :: [Expr]
                      --, datatypes :: [DataType]
                      --, classes   
@@ -41,13 +47,17 @@ data Module = Module { path       :: Path
                      } deriving (Show)
 
 empty :: Module
-empty = Module Path.empty [] [] [] [] []
+empty = Module Path.empty [] Set.empty [] [] []
 
 genCode :: Module -> String
-genCode mod = "module " ++ mypath ++ " where\n" ++ join "\n" [imps, dtypes, funcs, exps]
+genCode mod =  "module " ++ mypath ++    " where\n\n" 
+            ++ "-- imports\n"     ++ imps   ++ "\n\n"
+            ++ "-- datatypes\n"   ++ dtypes ++ "\n\n"
+            ++ "-- functions\n"   ++ funcs  ++ "\n\n"
+            ++ "-- expressions\n" ++ exps  
     where
         mypath = (Path.toModulePath . path) mod
-        imps   = join "\n" $ map Import.genCode   (imports mod)
+        imps   = join "\n" $ map Import.genCode   (Set.elems $ imports mod)
         dtypes = join "\n" $ map DataType.genCode (datatypes mod)
         funcs  = join "\n" $ map Function.genCode (functions mod)
         exps   = join "\n" $ map Expr.genCode     (exprs mod)
@@ -56,6 +66,10 @@ genCode mod = "module " ++ mypath ++ " where\n" ++ join "\n" [imps, dtypes, func
 
 addExpr :: Expr -> Module -> Module
 addExpr expr self = self { exprs = expr : exprs self }
+
+
+addExprs :: [Expr] -> Module -> Module
+addExprs exprs self = foldr addExpr self exprs
 
 
 addAlias :: (String, String) -> Module -> Module
@@ -72,3 +86,10 @@ addDataType dt self = self {datatypes = dt : datatypes self}
 
 addFunction :: Function -> Module -> Module
 addFunction func self = self {functions = func : functions self}
+
+
+addImport :: Import -> Module -> Module
+addImport imp self = self {imports = Set.insert imp $ imports self}
+
+addImports :: [Import] -> Module -> Module
+addImports imps self = foldr addImport self imps

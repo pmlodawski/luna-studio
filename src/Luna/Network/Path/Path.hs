@@ -20,7 +20,7 @@ import Data.String.Utils (join)
 import qualified Prelude
 import Prelude hiding (last)
 
-newtype Path = Path {segments :: [String]} deriving (Show)
+newtype Path = Path {segments :: [String]} deriving (Show, Ord, Eq)
 
 empty :: Path
 empty = Path []

@@ -38,19 +38,22 @@ import qualified Luna.Codegen.Hs.AST.Function    as Function
 import           Luna.Data.List
 
 
+--import Control.Monad.State
 
+--generateDefinition manager vtx = runState
 
 generateDefinition :: DefManager -> Graph.Vertex -> Module
-generateDefinition manager vtx = code where
+generateDefinition manager vtx = nmod where
     def = Graph.lab manager vtx
     cls = NodeDef.cls def
-    code = case cls of
+    nmod = case cls of
         Type.Module   {} -> mod where
             basemod  = generateModule manager vtx
             submods  = Module.submodules basemod
             subpaths = map Module.path submods
             subimps  = map Import.simple subpaths 
-            mod      = basemod {Module.imports = subimps}
+            mod      = Module.addImports subimps basemod
+            --mod      = basemod {Module.imports = subimps}
 
         Type.Function {} -> mod where
             basemod  = generateModule manager vtx
@@ -58,15 +61,13 @@ generateDefinition manager vtx = code where
             subpaths = map Module.path submods
             subimps  = map Import.qualified subpaths
             subnames = map Path.last subpaths
-            subsrcs  = map Path.toModulePath subpaths
-            impfuncs = map Path.toString $ zipWith Path.append subnames  subpaths
+            impfuncs = map Path.toString $ zipWith Path.append subnames subpaths
             aliases  = zip subnames impfuncs
-            --aliases  = [(name, src ++ "." ++ name) | (name, src) <- zip subnames subsrcs]
-            basefunc = FG.generateFunction def
+            (basefunc, basemod2) = FG.generateFunction def basemod
             func     = foldr Function.addAlias basefunc aliases
-            mod      = basemod { Module.imports   = subimps
-                               , Module.functions = [func]
-                               }
+            mod      = Module.addFunction func
+                     $ Module.addImports subimps
+                     $ basemod2
 
         Type.Class {} -> mod where
             basemod  = generateModule manager vtx
@@ -84,7 +85,8 @@ generateDefinition manager vtx = code where
             aliases    = zip subnamesT impfuncs ++ zip subnamesMT impfuncsM
 
             modproto = CG.generateClass def 
-                     $ basemod { Module.imports   = subimps }
+                     $ Module.addImports subimps 
+                     $ basemod
 
             instargs = zip3 subnamesT subnamesMT subnames
 
