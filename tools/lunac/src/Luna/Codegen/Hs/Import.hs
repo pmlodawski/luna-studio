@@ -21,7 +21,7 @@ import           Data.String.Utils                 (join)
 
 data Import = Regular   {path :: Path, item :: String} 
             | Qualified {path :: Path}
-            deriving (Show)
+            deriving (Show, Ord, Eq)
 
 
 noItems :: String

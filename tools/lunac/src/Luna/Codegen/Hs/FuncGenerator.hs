@@ -17,8 +17,8 @@ import qualified Data.Graph.Inductive            as DG
 import           Control.Monad.State               (runState, get, put, State)
 
 import qualified Luna.Type.Type                  as Type
-import qualified Luna.Network.Path.Import        as Import
-import           Luna.Network.Path.Import          (Import)
+import qualified Luna.Codegen.Hs.Import          as Import
+import           Luna.Codegen.Hs.Import            (Import)
 import qualified Luna.Network.Graph.Graph        as Graph
 import           Luna.Network.Graph.Graph          (Graph)
 import qualified Luna.Network.Def.NodeDef        as NodeDef
@@ -30,6 +30,7 @@ import           Luna.Network.Graph.Node           (Node)
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Luna.Network.Flags              as Flags
 import qualified Luna.Codegen.Hs.Path            as Path
+import           Luna.Codegen.Hs.Path              (Path(..))
 import           Luna.Codegen.Hs.State.FuncState   (FuncState)
 import qualified Luna.Codegen.Hs.State.FuncState as FuncState
 import qualified Luna.Codegen.Hs.State.Context   as Context
@@ -40,20 +41,23 @@ import qualified Luna.Codegen.Hs.AST.Function    as Function
 import           Luna.Codegen.Hs.AST.Function      (Function)
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 import           Luna.Codegen.Hs.AST.Expr          (Expr)
+import qualified Luna.Codegen.Hs.AST.Module      as Module
+import           Luna.Codegen.Hs.AST.Module        (Module)
+
 import           Luna.Data.List
 
 
-generateFunction def = func where
+generateFunction def mod = (func, nmod) where
     graph      = NodeDef.graph def
     vertices   = Graph.topsort graph
     nodes      = Graph.labVtxs graph vertices
-    func       = foldri (generateNodeExpr graph) nodes
-               $ Function.empty { Function.name = Type.name $ NodeDef.cls def
+    basefunc   = Function.empty { Function.name = Type.name $ NodeDef.cls def
                                 , Function.inputs = [Path.inputs]
                                 }
+    (func, nmod) = foldri (generateNodeExpr graph) nodes (basefunc, mod)
 
 
-generateNodeExpr graph lnode func = nfunc where
+generateNodeExpr graph lnode (func, mod) = (nfunc, nmod) where
     nfunc = Function.addExpr expr 
           $ case ctx of
                 Expr.IO -> Function.setCtx ctx func
@@ -92,6 +96,11 @@ generateNodeExpr graph lnode func = nfunc where
                                        val = case d of
                                            DefaultValue.DefaultString v -> show v
                                            DefaultValue.DefaultInt    v -> show v
+
+    nmod = case node of 
+        Node.Call name flags _  -> Module.addImport (Import.simple $ Path ["Common'", name])
+                                 $ mod
+        _                       -> mod
 
 
 

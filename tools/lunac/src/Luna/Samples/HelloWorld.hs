@@ -211,6 +211,9 @@ cls1 = NodeDef.empty{ NodeDef.cls   = Type.Class "Vector" ["a"] [Type.Named "x" 
                     , NodeDef.libID = userLibKey
                     }
 
+--iface1 = NodeDef.empty{  NodeDef.cls = Type.Interface "Ivector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
+                      --}
+
 
 --full_manager :: DefManager
 --full_manager =  DefManager.addToParentMany [
@@ -229,7 +232,7 @@ cls1 = NodeDef.empty{ NodeDef.cls   = Type.Class "Vector" ["a"] [Type.Named "x" 
 
 
 full_manager :: DefManager
-full_manager =  DefManager.addToParentMany [ --(1, 2, myFun2),
+full_manager =  DefManager.addToParentMany [ (1, 2, myFun2),
                                            (10, 1, myFun3),
                                            (100, 10, cls1)
                                            ]
