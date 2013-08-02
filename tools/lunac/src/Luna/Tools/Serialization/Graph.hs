@@ -42,8 +42,8 @@ import           Luna.Tools.Serialization.Attrs
 instance Serialize Edge Graph_Types.Edge where
   encode a = 
     let 
-      src = fromIntegral $ Edge.src a :: Int32
-      dst = fromIntegral $ Edge.dst a :: Int32
+      src = itoi32 $ Edge.src a
+      dst = itoi32 $ Edge.dst a
     in Graph_Types.Edge (Just src) (Just dst)
   decode b =
     case Graph_Types.f_Edge_src b of
@@ -51,8 +51,8 @@ instance Serialize Edge Graph_Types.Edge where
         case Graph_Types.f_Edge_dst b of
           Just dst ->
             let
-              srci = fromIntegral $ src :: Int
-              dsti = fromIntegral $ dst :: Int
+              srci = i32toi src
+              dsti = i32toi dst
             in Right $ Edge srci dsti
           Nothing  -> Left "No destination specified"
       Nothing  -> Left "No source specified!"
@@ -62,7 +62,7 @@ instance Serialize Graph Graph_Types.Graph where
     let
       nodes :: Map.HashMap Int32 Graph_Types.Node
       nodes = Map.fromList $
-        map (\(a, b) -> (fromIntegral a :: Int32, encode (b, a))) $ Graph.labNodes a
+        map (\(a, b) -> (itoi32 a, encode (b, a))) $ Graph.labNodes a
       edges :: Vector Graph_Types.Edge
       edges = Vector.fromList $ map encode $
         map (\(_, _, label) -> label) $ Graph.labEdges a
@@ -86,18 +86,18 @@ instance Serialize DefaultValue Graph_Types.DefaultValue where
   encode a =
     case a of
       DefaultInt ii ->
-        Graph_Types.DefaultValue (Just Graph_Types.IntV) (Just $ (fromIntegral ii :: Int32)) Nothing
+        Graph_Types.DefaultValue (Just Graph_Types.IntV) (Just $ itoi32 ii) Nothing
       DefaultString ss ->
         Graph_Types.DefaultValue (Just Graph_Types.StringV) Nothing (Just $ Text.pack ss)
   decode b =
     case Graph_Types.f_DefaultValue_cls b of
       Just Graph_Types.IntV ->
         case Graph_Types.f_DefaultValue_i b of
-          Just ii -> Right $ DefaultInt (fromIntegral ii :: Int)
+          Just ii -> Right $ DefaultInt $ i32toi ii
           Nothing -> Left "No integral default value specified"
       Just Graph_Types.StringV ->
         case Graph_Types.f_DefaultValue_s b of
-          Just ss -> Right $ DefaultString (Text.unpack ss)
+          Just ss -> Right $ DefaultString $ Text.unpack ss
           Nothing -> Left "No string default value specified"
       Nothing -> Left "No default value type specified"    
 
@@ -119,7 +119,7 @@ instance Serialize (Node, Int) Graph_Types.Node where
                    Node.Call cname _ _ -> Just cname
                    _                   -> Nothing
       nodeID :: Int32
-      nodeID = fromIntegral nid :: Int32
+      nodeID = itoi32 nid
       nodeFlags :: Maybe Attrs_Types.Flags
       nodeFlags = fmap encode $ case a of
                    Node.Type _ flags _ -> Just flags
@@ -146,7 +146,7 @@ instance Serialize (Node, Int) Graph_Types.Node where
                   Nothing    -> Left "Node name not defined"
 
       gID = case Graph_Types.f_Node_nodeID b of
-              Just nid -> Right $ (fromIntegral nid :: Int)
+              Just nid -> Right $ i32toi nid
               Nothing  -> Left "Node ID not defined"
 
       gflags :: Either String Flags
