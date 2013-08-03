@@ -148,3 +148,8 @@ instance Serialize Type Types_Types.Type where
     Types_Types.Type Nothing       -> Left "`types` field is missing"
 
 
+
+instance Serialize [Type] [Types_Types.Type] where
+  encode t  = map (encode) t
+  decode tt = convert $ map (decode) tt
+ 

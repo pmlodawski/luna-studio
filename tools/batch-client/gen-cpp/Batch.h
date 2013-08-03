@@ -26,11 +26,11 @@ class BatchIf {
   virtual void definitionChildren(std::vector< ::NodeDef> & _return, const  ::NodeDef& definition) = 0;
   virtual void definitionParent( ::NodeDef& _return, const  ::NodeDef& definition) = 0;
   virtual void newTypeModule( ::Type& _return, const std::string& name) = 0;
-  virtual void newTypeClass( ::Type& _return, const std::string& name, const  ::Type& params) = 0;
+  virtual void newTypeClass( ::Type& _return, const std::string& name, const std::vector< ::Type> & params) = 0;
   virtual void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs) = 0;
   virtual void newTypeUdefined( ::Type& _return) = 0;
-  virtual void newTypeNamed( ::Type& _return, const std::string& name) = 0;
-  virtual void newTypeVariable( ::Type& _return, const std::string& name, const  ::Type& type) = 0;
+  virtual void newTypeNamed( ::Type& _return, const std::string& name, const  ::Type& type) = 0;
+  virtual void newTypeVariable( ::Type& _return, const std::string& name) = 0;
   virtual void newTypeList( ::Type& _return, const  ::Type& type) = 0;
   virtual void newTypeTuple( ::Type& _return, const std::vector< ::Type> & types) = 0;
   virtual void graph( ::Graph& _return, const  ::NodeDef& definition) = 0;
@@ -102,7 +102,7 @@ class BatchNull : virtual public BatchIf {
   void newTypeModule( ::Type& /* _return */, const std::string& /* name */) {
     return;
   }
-  void newTypeClass( ::Type& /* _return */, const std::string& /* name */, const  ::Type& /* params */) {
+  void newTypeClass( ::Type& /* _return */, const std::string& /* name */, const std::vector< ::Type> & /* params */) {
     return;
   }
   void newTypeFunction( ::Type& /* _return */, const std::string& /* name */, const  ::Type& /* inputs */, const  ::Type& /* outputs */) {
@@ -111,10 +111,10 @@ class BatchNull : virtual public BatchIf {
   void newTypeUdefined( ::Type& /* _return */) {
     return;
   }
-  void newTypeNamed( ::Type& /* _return */, const std::string& /* name */) {
+  void newTypeNamed( ::Type& /* _return */, const std::string& /* name */, const  ::Type& /* type */) {
     return;
   }
-  void newTypeVariable( ::Type& /* _return */, const std::string& /* name */, const  ::Type& /* type */) {
+  void newTypeVariable( ::Type& /* _return */, const std::string& /* name */) {
     return;
   }
   void newTypeList( ::Type& /* _return */, const  ::Type& /* type */) {
@@ -1431,7 +1431,7 @@ class Batch_newTypeClass_args {
   virtual ~Batch_newTypeClass_args() throw() {}
 
   std::string name;
-   ::Type params;
+  std::vector< ::Type>  params;
 
   _Batch_newTypeClass_args__isset __isset;
 
@@ -1439,7 +1439,7 @@ class Batch_newTypeClass_args {
     name = val;
   }
 
-  void __set_params(const  ::Type& val) {
+  void __set_params(const std::vector< ::Type> & val) {
     params = val;
   }
 
@@ -1470,7 +1470,7 @@ class Batch_newTypeClass_pargs {
   virtual ~Batch_newTypeClass_pargs() throw() {}
 
   const std::string* name;
-  const  ::Type* params;
+  const std::vector< ::Type> * params;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -1717,9 +1717,8 @@ class Batch_newTypeUdefined_pargs {
 };
 
 typedef struct _Batch_newTypeUdefined_result__isset {
-  _Batch_newTypeUdefined_result__isset() : success(false), missingFields(false) {}
+  _Batch_newTypeUdefined_result__isset() : success(false) {}
   bool success;
-  bool missingFields;
 } _Batch_newTypeUdefined_result__isset;
 
 class Batch_newTypeUdefined_result {
@@ -1731,7 +1730,6 @@ class Batch_newTypeUdefined_result {
   virtual ~Batch_newTypeUdefined_result() throw() {}
 
    ::Type success;
-  ArgumentException missingFields;
 
   _Batch_newTypeUdefined_result__isset __isset;
 
@@ -1739,15 +1737,9 @@ class Batch_newTypeUdefined_result {
     success = val;
   }
 
-  void __set_missingFields(const ArgumentException& val) {
-    missingFields = val;
-  }
-
   bool operator == (const Batch_newTypeUdefined_result & rhs) const
   {
     if (!(success == rhs.success))
-      return false;
-    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1763,9 +1755,8 @@ class Batch_newTypeUdefined_result {
 };
 
 typedef struct _Batch_newTypeUdefined_presult__isset {
-  _Batch_newTypeUdefined_presult__isset() : success(false), missingFields(false) {}
+  _Batch_newTypeUdefined_presult__isset() : success(false) {}
   bool success;
-  bool missingFields;
 } _Batch_newTypeUdefined_presult__isset;
 
 class Batch_newTypeUdefined_presult {
@@ -1775,7 +1766,6 @@ class Batch_newTypeUdefined_presult {
   virtual ~Batch_newTypeUdefined_presult() throw() {}
 
    ::Type* success;
-  ArgumentException missingFields;
 
   _Batch_newTypeUdefined_presult__isset __isset;
 
@@ -1784,8 +1774,9 @@ class Batch_newTypeUdefined_presult {
 };
 
 typedef struct _Batch_newTypeNamed_args__isset {
-  _Batch_newTypeNamed_args__isset() : name(false) {}
+  _Batch_newTypeNamed_args__isset() : name(false), type(false) {}
   bool name;
+  bool type;
 } _Batch_newTypeNamed_args__isset;
 
 class Batch_newTypeNamed_args {
@@ -1797,6 +1788,7 @@ class Batch_newTypeNamed_args {
   virtual ~Batch_newTypeNamed_args() throw() {}
 
   std::string name;
+   ::Type type;
 
   _Batch_newTypeNamed_args__isset __isset;
 
@@ -1804,9 +1796,15 @@ class Batch_newTypeNamed_args {
     name = val;
   }
 
+  void __set_type(const  ::Type& val) {
+    type = val;
+  }
+
   bool operator == (const Batch_newTypeNamed_args & rhs) const
   {
     if (!(name == rhs.name))
+      return false;
+    if (!(type == rhs.type))
       return false;
     return true;
   }
@@ -1829,6 +1827,7 @@ class Batch_newTypeNamed_pargs {
   virtual ~Batch_newTypeNamed_pargs() throw() {}
 
   const std::string* name;
+  const  ::Type* type;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -1902,9 +1901,8 @@ class Batch_newTypeNamed_presult {
 };
 
 typedef struct _Batch_newTypeVariable_args__isset {
-  _Batch_newTypeVariable_args__isset() : name(false), type(false) {}
+  _Batch_newTypeVariable_args__isset() : name(false) {}
   bool name;
-  bool type;
 } _Batch_newTypeVariable_args__isset;
 
 class Batch_newTypeVariable_args {
@@ -1916,7 +1914,6 @@ class Batch_newTypeVariable_args {
   virtual ~Batch_newTypeVariable_args() throw() {}
 
   std::string name;
-   ::Type type;
 
   _Batch_newTypeVariable_args__isset __isset;
 
@@ -1924,15 +1921,9 @@ class Batch_newTypeVariable_args {
     name = val;
   }
 
-  void __set_type(const  ::Type& val) {
-    type = val;
-  }
-
   bool operator == (const Batch_newTypeVariable_args & rhs) const
   {
     if (!(name == rhs.name))
-      return false;
-    if (!(type == rhs.type))
       return false;
     return true;
   }
@@ -1955,7 +1946,6 @@ class Batch_newTypeVariable_pargs {
   virtual ~Batch_newTypeVariable_pargs() throw() {}
 
   const std::string* name;
-  const  ::Type* type;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -3158,8 +3148,8 @@ class BatchClient : virtual public BatchIf {
   void newTypeModule( ::Type& _return, const std::string& name);
   void send_newTypeModule(const std::string& name);
   void recv_newTypeModule( ::Type& _return);
-  void newTypeClass( ::Type& _return, const std::string& name, const  ::Type& params);
-  void send_newTypeClass(const std::string& name, const  ::Type& params);
+  void newTypeClass( ::Type& _return, const std::string& name, const std::vector< ::Type> & params);
+  void send_newTypeClass(const std::string& name, const std::vector< ::Type> & params);
   void recv_newTypeClass( ::Type& _return);
   void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs);
   void send_newTypeFunction(const std::string& name, const  ::Type& inputs, const  ::Type& outputs);
@@ -3167,11 +3157,11 @@ class BatchClient : virtual public BatchIf {
   void newTypeUdefined( ::Type& _return);
   void send_newTypeUdefined();
   void recv_newTypeUdefined( ::Type& _return);
-  void newTypeNamed( ::Type& _return, const std::string& name);
-  void send_newTypeNamed(const std::string& name);
+  void newTypeNamed( ::Type& _return, const std::string& name, const  ::Type& type);
+  void send_newTypeNamed(const std::string& name, const  ::Type& type);
   void recv_newTypeNamed( ::Type& _return);
-  void newTypeVariable( ::Type& _return, const std::string& name, const  ::Type& type);
-  void send_newTypeVariable(const std::string& name, const  ::Type& type);
+  void newTypeVariable( ::Type& _return, const std::string& name);
+  void send_newTypeVariable(const std::string& name);
   void recv_newTypeVariable( ::Type& _return);
   void newTypeList( ::Type& _return, const  ::Type& type);
   void send_newTypeList(const  ::Type& type);
@@ -3403,7 +3393,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeClass( ::Type& _return, const std::string& name, const  ::Type& params) {
+  void newTypeClass( ::Type& _return, const std::string& name, const std::vector< ::Type> & params) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3433,23 +3423,23 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeNamed( ::Type& _return, const std::string& name) {
+  void newTypeNamed( ::Type& _return, const std::string& name, const  ::Type& type) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->newTypeNamed(_return, name);
+      ifaces_[i]->newTypeNamed(_return, name, type);
     }
-    ifaces_[i]->newTypeNamed(_return, name);
+    ifaces_[i]->newTypeNamed(_return, name, type);
     return;
   }
 
-  void newTypeVariable( ::Type& _return, const std::string& name, const  ::Type& type) {
+  void newTypeVariable( ::Type& _return, const std::string& name) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->newTypeVariable(_return, name, type);
+      ifaces_[i]->newTypeVariable(_return, name);
     }
-    ifaces_[i]->newTypeVariable(_return, name, type);
+    ifaces_[i]->newTypeVariable(_return, name);
     return;
   }
 
