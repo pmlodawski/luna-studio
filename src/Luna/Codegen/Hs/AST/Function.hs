@@ -79,11 +79,13 @@ addExpr expr func = func { exprs = expr : exprs func }
 addAlias :: (String, String) -> Function -> Function
 addAlias alias = addExpr (Expr.mkAlias alias)
 
+
 getter :: String -> String -> String -> Expr
-getter obj name param = Expr.Call "getter''" [Expr.Var obj, Expr.Var param] Expr.Pure
+getter obj name param = Expr.Call "getter''" [Expr.THTypeCtx obj, Expr.THExprCtx param] Expr.Pure
+
 
 setter :: String -> String -> String -> Expr
-setter obj name param = Expr.Call "setter''" [Expr.Var obj, Expr.Var param] Expr.Pure
+setter obj name param = Expr.Call "setter''" [Expr.THTypeCtx obj, Expr.THExprCtx param] Expr.Pure
 
 
 

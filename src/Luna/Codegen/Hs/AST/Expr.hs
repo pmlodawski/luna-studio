@@ -26,6 +26,8 @@ data Expr = Assignment { src   :: Expr    , dst  :: Expr   , ctx :: Context }
           | Tuple      { elems :: [Expr]                                    }
           | Call       { name  :: String  , args :: [Expr] , ctx :: Context }
           | Default    { val   :: String                                    }
+          | THExprCtx  { name  :: String                                    }
+          | THTypeCtx  { name  :: String                                    }
           deriving (Show)
 
 
@@ -50,6 +52,9 @@ genCode expr = case expr of
                                    then "OneTuple " ++ body
                                    else "(" ++ body ++ ")"
                                 where body = join ", " (map (genCode) elems)
+    THExprCtx  name          -> "'"  ++ name
+    THTypeCtx  name          -> "''" ++ name
+
 
 
 mkPure expr = case expr of
@@ -57,6 +62,7 @@ mkPure expr = case expr of
     Tuple      elems         -> Tuple $ map mkPure elems
     Call       name args ctx -> Call name (map mkPure args) Pure
     other                    -> other
+
 
 mkAlias :: (String, String) -> Expr
 mkAlias (n1, n2) = Assignment (Var n1) (Var n2) Pure

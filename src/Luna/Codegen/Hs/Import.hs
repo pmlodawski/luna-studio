@@ -47,8 +47,8 @@ common name = simple $ Path ["Common'", Path.mkClassName name]
 
 genCode :: Import -> String
 genCode imp = "import " ++ body where
-    paths = Path.toModulePaths (path imp) 
-    src = join "." paths
+    paths = Path.toModulePath (path imp) 
+    src = Path.toString paths
     body = case imp of
         Regular _ item -> src ++ els where
                                els = if item == ""
