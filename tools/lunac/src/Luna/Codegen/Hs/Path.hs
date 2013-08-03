@@ -8,7 +8,6 @@
 module Luna.Codegen.Hs.Path (
     module Luna.Network.Path.Path,
     toModulePath,
-    toModulePaths,
     mkTemplateName,
     mkMonadName,
     mkLensName,
@@ -19,6 +18,7 @@ module Luna.Codegen.Hs.Path (
     mkGetter,
     mkSetter,
     mkIndent,
+    mkTHPointer,
     mkClassName
 )where
 
@@ -27,20 +27,15 @@ import           Data.Char                      (isLower)
 import           Data.String.Utils                 (join)
 
 
-toModulePath :: Path -> String
-toModulePath path = join "." (toModulePaths path)
-
-
-toModulePaths :: Path -> [String]
-toModulePaths path = case path of
-    Path []                -> []
-    Path [segment@(x:xs)]  -> [name] where
-                                  name = if isLower x
-                                      then "U'" ++ segment
-                                      else segment
-    Path (x:xs)            -> toModulePaths (Path [x]) ++ toModulePaths (Path xs)
-
-
+toModulePath :: Path -> Path
+toModulePath path = case path of
+    Path []                       -> Path []
+    Path (segment@(preffix:_):xs) -> npath where
+                                         name = if isLower preffix
+                                            then "U'" ++ segment
+                                            else segment
+                                         npath = prepend name $ toModulePath (Path xs)
+                                  
     
 mkTemplateName :: String -> String
 mkTemplateName name = name ++ "'T"
@@ -68,6 +63,10 @@ mkGetter name = name ++ "'Getter"
 
 mkSetter :: String -> String
 mkSetter name = name ++ "'Setter"
+
+
+mkTHPointer :: String -> String
+mkTHPointer name = "'" ++ name
 
 
 inputs :: String

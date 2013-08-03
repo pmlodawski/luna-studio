@@ -71,7 +71,7 @@ genCode mod =  header
             ++ "-- expressions\n" ++ exps  
     where
         exts   = Extension.genCode $ extensions mod
-        mypath = (Path.toModulePath . path) mod
+        mypath = (Path.toString . Path.toModulePath . path) mod
         imps   = join "\n" $ map Import.genCode   (Set.elems $ imports mod)
         dtypes = join "\n" $ map DataType.genCode (datatypes mod)
         funcs  = join "\n" $ map Function.genCode (functions mod)
@@ -95,8 +95,8 @@ addExt :: Extension -> Module -> Module
 addExt ext self = self {extensions = ext : extensions self}
 
 
-mkInst :: (String, String, String) -> Module -> Module
-mkInst (nameT, nameMT, name) = addExpr (Expr.mkCall "mkInst''" [nameT, nameMT, name])
+mkInst :: (String, String, String, String) -> Module -> Module
+mkInst (nameC, nameT, nameMT, name) = addExpr $ Expr.Call "mkInst''" (Expr.THTypeCtx nameC : map Expr.THExprCtx [nameT, nameMT, name]) Expr.Pure
 
 
 addDataType :: DataType -> Module -> Module

@@ -14,6 +14,7 @@ module Luna.Codegen.Hs.ModGenerator(
 import Debug.Trace
 
 import           Data.String.Utils                 (join)
+import           Data.List                         (zip4)
 
 import qualified Data.Graph.Inductive            as DG
 import qualified Luna.Network.Def.DefManager     as DefManager
@@ -64,7 +65,7 @@ generateDefinition manager vtx = nmod where
             subnames = map Path.last subpaths
             impfuncs = map Path.toString $ zipWith Path.append subnames subpaths
             --aliases  = zip subnames impfuncs
-            subsrcs  = map Path.toModulePath subpaths
+            subsrcs  = map (Path.toString . Path.toModulePath) subpaths
             aliases  = [(name, src ++ "." ++ name) | (name, src) <- zip subnames subsrcs]
             (basefunc, basemod2) = FG.generateFunction def basemod
             func     = foldr Function.addAlias basefunc aliases
@@ -80,13 +81,11 @@ generateDefinition manager vtx = nmod where
             subnames  = map Path.last subpaths
             subnamesM = map Path.mkMonadName subnames
             commimps  = map Import.common subnames
-            
-            --subnamesT  = map Path.mkTemplateName subnames
-            
-            --subnamesMT = map Path.mkTemplateName subnamesM
-            impfuncs  = map Path.toString $ zipWith Path.append subnames  subpaths
-            impfuncsM = map Path.toString $ zipWith Path.append subnamesM subpaths
-            --aliases    = zip subnamesT impfuncs ++ zip subnamesMT impfuncsM
+
+            csubnames   = map Path.mkClassName subnames
+            modsubpaths = map Path.toModulePath subpaths
+            impfuncs  = map Path.toString $ zipWith Path.append subnames  modsubpaths
+            impfuncsM = map Path.toString $ zipWith Path.append subnamesM modsubpaths
 
             modproto = CG.generateClass def 
                      $ Module.addImports subimps 
@@ -94,11 +93,11 @@ generateDefinition manager vtx = nmod where
                      $ Module.addExt Extension.TemplateHaskell
                      $ basemod
 
-            instargs = zip3 impfuncs impfuncsM subnames
+            instargs = zip4 csubnames impfuncs impfuncsM subnames
 
 
             mod      = --foldri Module.addAlias aliases 
-                     foldri Module.mkInst   instargs 
+                     foldri Module.mkInst instargs 
                      $ modproto
 
             --mkInstIO ''F_len 'len_ 'len_IO 'len
