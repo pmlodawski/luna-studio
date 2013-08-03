@@ -10,7 +10,8 @@ module Luna.Codegen.Hs.AST.Expr (
     Context(..),
     genCode,
     mkAlias,
-    mkCall
+    mkCall,
+    mkPure
 )where
 
 import           Data.String.Utils                 (join)
@@ -50,6 +51,12 @@ genCode expr = case expr of
                                    else "(" ++ body ++ ")"
                                 where body = join ", " (map (genCode) elems)
 
+
+mkPure expr = case expr of
+    Assignment src dst ctx   -> Assignment (mkPure src) (mkPure dst) Pure
+    Tuple      elems         -> Tuple $ map mkPure elems
+    Call       name args ctx -> Call name (map mkPure args) Pure
+    other                    -> other
 
 mkAlias :: (String, String) -> Expr
 mkAlias (n1, n2) = Assignment (Var n1) (Var n2) Pure

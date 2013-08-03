@@ -62,7 +62,9 @@ generateDefinition manager vtx = nmod where
             subimps  = map Import.qualified subpaths
             subnames = map Path.last subpaths
             impfuncs = map Path.toString $ zipWith Path.append subnames subpaths
-            aliases  = zip subnames impfuncs
+            --aliases  = zip subnames impfuncs
+            subsrcs  = map Path.toModulePath subpaths
+            aliases  = [(name, src ++ "." ++ name) | (name, src) <- zip subnames subsrcs]
             (basefunc, basemod2) = FG.generateFunction def basemod
             func     = foldr Function.addAlias basefunc aliases
             mod      = Module.addFunction func
@@ -104,7 +106,7 @@ generateModule manager vtx  = mod where
     path        = Path.fromList $ DefManager.pathNames manager vtx 
     outnodes    = DefManager.suc manager vtx
     modules     = map (generateDefinition manager) outnodes
-    mod         = Module.empty{ Module.path       = path
+    mod         = Module.base { Module.path       = path
                               , Module.submodules = modules
                               }
 

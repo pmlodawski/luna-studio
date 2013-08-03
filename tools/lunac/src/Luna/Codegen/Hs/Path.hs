@@ -14,7 +14,9 @@ module Luna.Codegen.Hs.Path (
     mkLensName,
     mkFieldName,
     inputs,
-    outputs
+    outputs,
+    indent,
+    mkIndent
 )where
 
 import           Luna.Network.Path.Path 
@@ -60,3 +62,9 @@ inputs = "inputs'"
 
 outputs :: String
 outputs = "outputs'"
+
+indent :: String
+indent = replicate 4 ' '
+
+mkIndent :: Int -> String
+mkIndent i = concat $ replicate i indent
