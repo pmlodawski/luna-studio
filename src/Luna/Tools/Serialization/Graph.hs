@@ -21,8 +21,14 @@ import           Data.Vector                  (Vector(..))
 
 import qualified Attrs_Types
 import qualified Graph_Types
-import qualified Luna.Network.Def.NodeDef as NodeDef
+import qualified Luna.Network.Attributes as Attributes
+import           Luna.Network.Attributes   (Attributes(..))
+import qualified Luna.Network.Def.NodeDef as NodeDef  
 import           Luna.Network.Def.NodeDef   (NodeDef(..))
+import qualified Luna.Network.Flags as Flags
+import           Luna.Network.Flags   (Flags(..))
+import qualified Luna.Network.Graph.DefaultValue as DefaultValue
+import           Luna.Network.Graph.DefaultValue   (DefaultValue(..))
 import qualified Luna.Network.Graph.Edge as Edge
 import           Luna.Network.Graph.Edge   (Edge(..))
 import qualified Luna.Network.Graph.Graph as Graph
@@ -33,48 +39,82 @@ import           Luna.Tools.Serialization
 import           Luna.Tools.Serialization.Attrs
 
 
-instance Serialize Edge Graph_Types.Edge where
-  encode a = 
+instance Serialize (Int, Int, Edge) Graph_Types.Edge where
+  encode (nsrc, ndst, a) = 
     let 
-      src = fromIntegral $ Edge.src a :: Int32
-      dst = fromIntegral $ Edge.dst a :: Int32
-    in Graph_Types.Edge (Just src) (Just dst)
+      src = itoi32 $ Edge.src a
+      dst = itoi32 $ Edge.dst a
+    in Graph_Types.Edge (Just src) (Just dst) (Just $ itoi32 nsrc) (Just $ itoi32 ndst)
   decode b =
-    case Graph_Types.f_Edge_src b of
+    case Graph_Types.f_Edge_portSrc b of
       Just src ->
-        case Graph_Types.f_Edge_dst b of
+        case Graph_Types.f_Edge_portDst b of
           Just dst ->
-            let
-              srci = fromIntegral $ src :: Int
-              dsti = fromIntegral $ dst :: Int
-            in Right $ Edge srci dsti
-          Nothing  -> Left "No destination specified"
-      Nothing  -> Left "No source specified!"
+            case Graph_Types.f_Edge_nodeSrc b of
+              Just nodeSrc ->
+                case Graph_Types.f_Edge_nodeDst b of
+                  Just nodeDst ->
+                    Right $ (i32toi nodeSrc, i32toi nodeDst, Edge (i32toi src) (i32toi dst))
+                  Nothing      -> Left "No destination node specified"
+              Nothing      ->  Left "No source node specified"
+          Nothing  -> Left "No destination port specified"
+      Nothing  -> Left "No source port specified!"
 
 instance Serialize Graph Graph_Types.Graph where
   encode a = 
     let
       nodes :: Map.HashMap Int32 Graph_Types.Node
       nodes = Map.fromList $
-        map (\(a, b) -> (fromIntegral a :: Int32, encode (b, a))) $ Graph.labNodes a
+        map (\(a, b) -> (itoi32 a, encode (b, a))) $ Graph.labNodes a
       edges :: Vector Graph_Types.Edge
-      edges = Vector.fromList $ map encode $
-        map (\(_, _, label) -> label) $ Graph.labEdges a
+      edges =  Vector.fromList $ map encode $ Graph.labEdges a
     in
-      Graph_Types.Graph (Just nodes) $ Just edges
+      Graph_Types.Graph (Just nodes) (Just edges)
   decode b =
     case Graph_Types.f_Graph_nodes b of
       Just nodes ->
         case Graph_Types.f_Graph_edges b of
           Just edges ->
             let
-              goodNodes :: [DG.LNode Node]
-              goodNodes = undefined
-              goodEdges :: [DG.LEdge Edge]
-              goodEdges = undefined
-            in Right $ Graph.mkGraph goodNodes goodEdges
+              transformNode :: (Int32, Graph_Types.Node) -> Either String (Int, Node)
+              transformNode (i, lab) =
+                case decode lab of
+                  Right (node, ii) -> Right (i32toi i, node)
+                  Left msg         -> Left msg
+              goodNodes :: Either String [DG.LNode Node]
+              goodNodes = sequence $ map transformNode $
+                Map.toList nodes 
+
+              goodEdges :: Either String [DG.LEdge Edge]
+              goodEdges =  sequence $ map decode $ Vector.toList edges
+            in
+              case goodNodes of
+                Right gnodes ->
+                  case goodEdges of
+                    Right gedges -> Right $ Graph.mkGraph gnodes gedges
+                    Left msg     -> Left msg
+                Left msg     -> Left msg
           Nothing    -> Left "Edges are not defined"
       Nothing    -> Left "Nodes are not defined"
+
+instance Serialize DefaultValue Graph_Types.DefaultValue where
+  encode a =
+    case a of
+      DefaultInt ii ->
+        Graph_Types.DefaultValue (Just Graph_Types.IntV) (Just $ itoi32 ii) Nothing
+      DefaultString ss ->
+        Graph_Types.DefaultValue (Just Graph_Types.StringV) Nothing (Just $ Text.pack ss)
+  decode b =
+    case Graph_Types.f_DefaultValue_cls b of
+      Just Graph_Types.IntV ->
+        case Graph_Types.f_DefaultValue_i b of
+          Just ii -> Right $ DefaultInt $ i32toi ii
+          Nothing -> Left "No integral default value specified"
+      Just Graph_Types.StringV ->
+        case Graph_Types.f_DefaultValue_s b of
+          Just ss -> Right $ DefaultString $ Text.unpack ss
+          Nothing -> Left "No string default value specified"
+      Nothing -> Left "No default value type specified"    
 
 instance Serialize (Node, Int) Graph_Types.Node where
   encode (a, nid) =
@@ -94,19 +134,97 @@ instance Serialize (Node, Int) Graph_Types.Node where
                    Node.Call cname _ _ -> Just cname
                    _                   -> Nothing
       nodeID :: Int32
-      nodeID = fromIntegral nid :: Int32
+      nodeID = itoi32 nid
       nodeFlags :: Maybe Attrs_Types.Flags
       nodeFlags = fmap encode $ case a of
-                   Node.Type _ flags _ -> Just flags
-                   Node.Call _ flags _ -> Just flags
-                   _                   -> Nothing
+                   Node.Type  _ flags _ -> Just flags
+                   Node.Call  _ flags _ -> Just flags
+                   Node.Inputs  flags _ -> Just flags
+                   Node.Outputs flags _ -> Just flags
+                   Node.Tuple   flags _ -> Just flags
+                   Node.New     flags _ -> Just flags
+                   _                    -> Nothing
       nodeAttrs :: Maybe Attrs_Types.Attributes
       nodeAttrs = fmap encode $ case a of
+                   Node.Type  _ _ attrs -> Just attrs
+                   Node.Call  _ _ attrs -> Just attrs
                    Node.Inputs  _ attrs -> Just attrs
                    Node.Outputs _ attrs -> Just attrs
                    Node.Tuple   _ attrs -> Just attrs
                    Node.New     _ attrs -> Just attrs
                    _                    -> Nothing
+
+      defValue :: Maybe Graph_Types.DefaultValue
+      defValue = fmap encode $ case a of
+                   Node.Default val -> Just val
+                   _                -> Nothing
     in
-      Graph_Types.Node (Just nodeType) nodeName (Just nodeID) nodeFlags nodeAttrs
-  decode b = undefined
+      Graph_Types.Node (Just nodeType) nodeName (Just nodeID) nodeFlags nodeAttrs defValue
+  decode b =
+    let
+      gname = case Graph_Types.f_Node_name b of
+                  Just nname -> Right $ Text.unpack nname
+                  Nothing    -> Left "Node name not defined"
+
+      gID = case Graph_Types.f_Node_nodeID b of
+              Just nid -> Right $ i32toi nid
+              Nothing  -> Left "Node ID not defined"
+
+      gflags :: Either String Flags
+      gflags = case Graph_Types.f_Node_flags b of
+                 Just nflags -> decode nflags
+                 Nothing     -> Left "Node flags not defined"
+      
+      gattrs :: Either String Attributes
+      gattrs = case Graph_Types.f_Node_attrs b of
+                Just nattrs -> decode nattrs
+                Nothing     -> Left "Node attributes not defined"
+
+      gdefval :: Either String DefaultValue
+      gdefval = case Graph_Types.f_Node_defVal b of
+                 Just ndefval -> decode ndefval
+                 Nothing      -> Left "Default value not defined"
+
+      gnode :: Either String Node
+      gnode =  case Graph_Types.f_Node_cls b of
+            Just ntype ->
+              case ntype of
+                Graph_Types.Type -> do
+                  ggname <- gname
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.Type ggname ggflags ggattrs
+                Graph_Types.Call -> do
+                  ggname <- gname
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.Call ggname ggflags ggattrs
+                Graph_Types.Default -> do
+                  ggdefval <- gdefval
+                  Right $ Node.Default ggdefval
+                Graph_Types.New -> do
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.New ggflags ggattrs
+                Graph_Types.Inputs -> do
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.Inputs ggflags ggattrs
+                Graph_Types.Outputs -> do
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.Outputs ggflags ggattrs
+                Graph_Types.Tuple -> do
+                  ggflags <- gflags
+                  ggattrs <- gattrs
+                  Right $ Node.Tuple ggflags ggattrs
+            Nothing     -> Left "Node type not defined"
+
+    in
+      do
+        ggnode <- gnode
+        ggID <- gID
+        Right $ (ggnode, ggID)
+       
+  
+      

@@ -9,7 +9,11 @@ import qualified Luna.Samples.HelloWorld        as HelloWorld
 import qualified Luna.Codegen.FuncGenerator     as FG
 import qualified Luna.Codegen.DefGenerator      as DG
 import qualified Luna.Network.Def.DefManager    as DefManager
-
+import qualified Luna.Network.Def.NodeDef       as NodeDef
+import qualified Luna.Network.Graph.Graph       as Graph
+import           Luna.Network.Graph.Graph         (Graph(..))
+import           Luna.Tools.Serialization
+import           Luna.Tools.Serialization.Graph
 
 import qualified Types_Types
 import           Luna.Tools.Serialization
@@ -18,16 +22,21 @@ import           Luna.Type.Type        (Type(..))
 
 main :: IO ()
 main = do 
-    let t = Function "f" (Undefined) (Undefined)
-        tt = encode t
-    print t
-    print tt
     putStrLn "------------\n"
 
-    --putStrLn $ FG.generateFunction HelloWorld.myFun3
-    --putStrLn $ DG.generateDefinition 1 HelloWorld.full_manager
+	--putStrLn $ FG.generateFunction HelloWorld.myFun3
+    putStrLn $ DG.generateDefinition 1 HelloWorld.full_manager
 
-    --putStrLn $ Cg.generateDefCode $
+    let 
+      testGraph :: Graph
+      testGraph = NodeDef.graph HelloWorld.myFun3
+    print "-----------------------------------\n"
+    print testGraph
+    print "-----------------------------------\n"
+    print $ encode testGraph
+    print "-----------------------------------\n"
+    print $ decode $ encode testGraph
+	--putStrLn $ Cg.generateDefCode $
     return ()
 
 
