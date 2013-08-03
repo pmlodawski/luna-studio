@@ -40,14 +40,33 @@ empty :: Function
 empty = Function "" [] [] Expr.Pure
 
 --genCode :: GenContext -> Function -> String
-genCode func =  header ++ begin ++ body where
-    header = name func ++ " " ++ join " " (inputs func)
-    begin  = case ctx func of
-                 Expr.IO -> " = do\n"
-                 _       -> " = \n"
-    body =  "    let\n"
-         ++ join "\n" (map Expr.genCode (exprs func)) 
+genCode :: Function -> String
+genCode func =  header  ++ signature ++ " = " ++ body ++ "\n"
+             ++ headerM ++ signature ++ " = " ++ bodyM where
+    signature = join " " (inputs func)
+    fname  = name func 
+    header = fname ++ " "
+    headerM = Path.mkMonadName fname ++ " "
+    body   = genBodyPure func
+    bodyM  = genBodyM    func
 
+genBodyM :: Function -> String
+genBodyM func = "do\n" ++ genExprCode (exprs func, Expr.IO) ++ "    return " ++ Path.outputs ++ "\n"
+
+genBodyPure :: Function -> String
+genBodyPure func = "\n" ++ genExprCode (map Expr.mkPure $ exprs func, Expr.IO) ++ "    in " ++ Path.outputs ++ "\n"
+
+genExprCode :: ([Expr], Expr.Context) -> String
+genExprCode (exprs, ctx) = case exprs of
+    []     -> ""
+    x : xs -> prefix ++ indent ++ Expr.genCode x ++ "\n" ++ genExprCode (xs, ectx) where
+        ectx = Expr.ctx x
+        indent = case ectx of
+            Expr.Pure -> Path.mkIndent 2
+            _         -> Path.mkIndent 1
+        prefix = if ctx == Expr.IO && ectx == Expr.Pure
+            then Path.mkIndent 1 ++ "let\n"
+            else ""
 
 simple :: String -> Expr -> Function
 simple name expr = Function name [Path.inputs] [expr] Expr.Pure

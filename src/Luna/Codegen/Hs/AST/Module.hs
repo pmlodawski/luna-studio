@@ -8,6 +8,7 @@
 module Luna.Codegen.Hs.AST.Module (
     Module(..),
     empty,
+    base,
     addExpr,
     addExprs,
     addAlias,
@@ -48,6 +49,8 @@ data Module = Module { path       :: Path
 
 empty :: Module
 empty = Module Path.empty [] Set.empty [] [] []
+
+base = empty {imports = Set.singleton $ Import.simple (Path.fromList ["Flowbox", "Core"])}
 
 genCode :: Module -> String
 genCode mod =  "module " ++ mypath ++    " where\n\n" 
