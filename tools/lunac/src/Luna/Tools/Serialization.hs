@@ -12,7 +12,7 @@ module Luna.Tools.Serialization where
 import           Data.Int
 
 
-class Serialize a b | a -> b where
+class Serialize a b | a -> b, b -> a where
   encode :: a -> b
   decode :: b -> Either String a 
 
