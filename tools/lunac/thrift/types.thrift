@@ -24,8 +24,8 @@ struct TypeProto {
     2: optional string    name
     3: optional list<i32> items
     4: optional list<i32> params
-    5: optional list<i32> inputs
-    6: optional list<i32> outputs
+    5: optional i32 inputs
+    6: optional i32 outputs
     7: optional i32 type
 }
 

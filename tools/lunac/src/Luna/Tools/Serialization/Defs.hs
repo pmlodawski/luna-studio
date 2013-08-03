@@ -14,16 +14,15 @@ import qualified Data.Text.Lazy as Text
 import qualified Data.Vector    as Vector
 
 import qualified Defs_Types
-import qualified Types_Types
 import           Luna.Network.Graph.Graph   (Graph)
 import           Luna.Network.Def.NodeDef   (NodeDef(..))
 import           Luna.Network.Path.Import   (Import(..))
 import qualified Luna.Network.Path.Path   as Path
-import qualified Luna.Type.Type           as Type
 import           Luna.Tools.Serialization
 import           Luna.Tools.Serialization.Attrs ()
+import           Luna.Tools.Serialization.Types ()
 
-
+ 
 instance Serialize Import Defs_Types.Import where
     encode (Import apath aitems) = timport where
         tpath   = Just $ Vector.fromList $ map (Text.pack) $ Path.toList apath
@@ -33,7 +32,7 @@ instance Serialize Import Defs_Types.Import where
         Defs_Types.Import (Just tpath) (Just titems) -> Right $ Import apath aitems where
                                                         apath = Path.fromList $ map (Text.unpack) $ Vector.toList tpath
                                                         aitems = map (Text.unpack) $ Vector.toList titems
-        Defs_Types.Import (Just _)     Nothing       -> Left "`items` field is missing"
+        Defs_Types.Import (Just _    ) Nothing       -> Left "`items` field is missing"
         Defs_Types.Import Nothing      _             -> Left "`path` field is missing"
 
 
@@ -48,7 +47,7 @@ instance Serialize [Import] Defs_Types.Imports where
 
 instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
   encode (defID, NodeDef acls agraph aimports aflags aattributes alibID) = (tdef, agraph) where
-     ttype       = Just $ Types_Types.Type Nothing -- TODO [PM] : make work here: Just $ encode acls
+     ttype       = Just $ encode acls
      timports    = Just $ encode aimports
      tflags      = Just $ encode aflags
      tattributes = Just $ encode aattributes
@@ -58,19 +57,20 @@ instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
   decode td = case td of 
      (Defs_Types.NodeDef (Just tcls) (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), agraph)
            -> d where
-                    d = case (decode timports :: Either String [Import], decode tflags, decode tattributes) of
-                        (Right aimports, Right aflags, Right aattributes)
-                               -> let alibID = i32toi tlibID
-                                      acls = Type.Undefined -- tcls
-                                      nodeDef = NodeDef acls agraph aimports aflags aattributes alibID
-                                      adefID = i32toi tdefID
-                                  in Right (adefID, nodeDef)
-                        (Right _      , Right _     , Left message) 
+                    d = case (decode tcls, decode timports, decode tflags, decode tattributes) of
+                        (Right acls, Right aimports, Right aflags, Right aattributes)
+                               -> Right (adefID, nodeDef) where
+                                  alibID = i32toi tlibID
+                                  nodeDef = NodeDef acls agraph aimports aflags aattributes alibID
+                                  adefID = i32toi tdefID
+                        (Right _   , Right _      , Right _     , Left message) 
                                -> Left $ "Failed to deserialize `attributes` : " ++ message
-                        (Right _      , Left message, _           ) 
+                        (Right _   , Right _      , Left message, _           ) 
                                -> Left $ "Failed to deserialize `flags` : " ++ message
-                        (Left message , _           , _           )
+                        (Right _   , Left message , _           , _           )
                                -> Left $ "Failed to deserialize `imports` : " ++ message
+                        (Left message, _          , _           , _           )
+                               -> Left $ "Failed to deserialize `cls` : " ++ message
      (Defs_Types.NodeDef (Just _) (Just _) (Just _) (Just _) (Just _) Nothing, _) -> Left "`defID` field is missing"
      (Defs_Types.NodeDef (Just _) (Just _) (Just _) (Just _) Nothing  _      , _) -> Left "`libID` field is missing"
      (Defs_Types.NodeDef (Just _) (Just _) (Just _) Nothing  _        _      , _) -> Left "`attributes` field is missing"
@@ -79,14 +79,4 @@ instance Serialize (Int, NodeDef) (Defs_Types.NodeDef, Graph) where
      (Defs_Types.NodeDef Nothing  _        _        _        _        _      , _) -> Left "`type` field is missing"
 
 
-convert :: [Either String a] -> Either String [a]
-convert []       = Right []
-convert [h]      = case h of 
-    Left m  -> Left m
-    Right a -> Right [a]
-convert (h:t) = case h of 
-    Left m  -> Left m
-    Right a -> case (convert t) of 
-        Left m1 -> Left m1
-        Right a1 -> Right (a:a1)
 
