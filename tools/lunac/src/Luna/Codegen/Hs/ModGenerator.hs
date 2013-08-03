@@ -34,6 +34,7 @@ import qualified Luna.Codegen.Hs.ClassGenerator  as CG
 import qualified Luna.Codegen.Hs.Path            as Path
 import           Luna.Codegen.Hs.Path              (Path)
 import qualified Luna.Codegen.Hs.AST.Function    as Function
+import qualified Luna.Codegen.Hs.AST.Extension   as Extension
 
 import           Luna.Data.List
 
@@ -72,29 +73,32 @@ generateDefinition manager vtx = nmod where
                      $ basemod2
 
         Type.Class {} -> mod where
-            basemod  = generateModule manager vtx
-            submods  = Module.submodules basemod
-            subpaths = map Module.path submods
-            subimps  = map Import.qualified subpaths
+            basemod   = generateModule manager vtx
+            submods   = Module.submodules basemod
+            subpaths  = map Module.path submods
+            subimps   = map Import.qualified subpaths
+            subnames  = map Path.last subpaths
+            subnamesM = map Path.mkMonadName subnames
+            commimps  = map Import.common subnames
             
-
-            subnames   = map Path.last subpaths
-            subnamesT  = map Path.mkTemplateName subnames
-            subnamesM  = map Path.mkMonadName subnames
-            subnamesMT = map Path.mkTemplateName subnamesM
-            impfuncs   = map Path.toString $ zipWith Path.append subnames  subpaths
-            impfuncsM  = map Path.toString $ zipWith Path.append subnamesM subpaths
-            aliases    = zip subnamesT impfuncs ++ zip subnamesMT impfuncsM
+            --subnamesT  = map Path.mkTemplateName subnames
+            
+            --subnamesMT = map Path.mkTemplateName subnamesM
+            impfuncs  = map Path.toString $ zipWith Path.append subnames  subpaths
+            impfuncsM = map Path.toString $ zipWith Path.append subnamesM subpaths
+            --aliases    = zip subnamesT impfuncs ++ zip subnamesMT impfuncsM
 
             modproto = CG.generateClass def 
                      $ Module.addImports subimps 
+                     $ Module.addImports commimps 
+                     $ Module.addExt Extension.TemplateHaskell
                      $ basemod
 
-            instargs = zip3 subnamesT subnamesMT subnames
+            instargs = zip3 impfuncs impfuncsM subnames
 
 
-            mod      = foldri Module.addAlias aliases 
-                     $ foldri Module.mkInst   instargs 
+            mod      = --foldri Module.addAlias aliases 
+                     foldri Module.mkInst   instargs 
                      $ modproto
 
             --mkInstIO ''F_len 'len_ 'len_IO 'len

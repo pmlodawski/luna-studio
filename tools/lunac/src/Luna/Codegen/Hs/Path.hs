@@ -16,7 +16,10 @@ module Luna.Codegen.Hs.Path (
     inputs,
     outputs,
     indent,
-    mkIndent
+    mkGetter,
+    mkSetter,
+    mkIndent,
+    mkClassName
 )where
 
 import           Luna.Network.Path.Path 
@@ -52,8 +55,19 @@ mkFieldName :: String -> String
 mkFieldName name = name ++ "'F"
 
 
+mkClassName :: String -> String
+mkClassName name = "C''" ++ name
+
 mkGSName :: String -> String
 mkGSName name = name ++ "'GS"
+
+
+mkGetter :: String -> String
+mkGetter name = name ++ "'Getter"
+
+
+mkSetter :: String -> String
+mkSetter name = name ++ "'Setter"
 
 
 inputs :: String

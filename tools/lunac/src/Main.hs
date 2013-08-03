@@ -22,7 +22,7 @@ main = do
     --putStrLn $ FG.generateFunction HelloWorld.myFun3
     --putStrLn $ MG.generateDefinition HelloWorld.full_manager 1
     --print $ MG.generateModule HelloWorld.full_manager 100
-    putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 1
+    putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 10
     --print $ FG.generateFunction HelloWorld.myFun3
     --putStrLn $ Function.genCode GenContext.empty $ FG.generateFunction HelloWorld.myFun3
 

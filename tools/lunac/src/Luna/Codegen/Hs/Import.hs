@@ -11,11 +11,12 @@ module Luna.Codegen.Hs.Import (
     qualified,
     simple,
     regular,
+    common,
     genCode
 )where
 
 import qualified Luna.Codegen.Hs.Path            as Path
-import           Luna.Codegen.Hs.Path              (Path)
+import           Luna.Codegen.Hs.Path              (Path(..))
 import           Data.String.Utils                 (join)
 
 
@@ -38,6 +39,10 @@ simple path = Regular path noItems
 
 regular :: Path -> String -> Import
 regular path item = Regular path item
+
+
+common :: String -> Import
+common name = simple $ Path ["Common'", Path.mkClassName name]
 
 
 genCode :: Import -> String
