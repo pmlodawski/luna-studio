@@ -10,41 +10,45 @@
 module Luna.Tools.Serialization.Attrs where
 
 import qualified Data.HashMap.Strict as HashMap
-import qualified Data.Text.Lazy      as Text
+import           Data.HashMap.Strict   (HashMap)
+import           Data.Text.Lazy        (Text, pack, unpack)
 
-import qualified Attrs_Types
+import qualified Attrs_Types             as TAttrs
 import           Luna.Network.Flags        (Flags(..))
 import qualified Luna.Network.Attributes as Attributes
-import           Luna.Network.Attributes   (Attributes(..))
+import           Luna.Network.Attributes   (Attributes)
 import           Luna.Tools.Serialization
 
 
-instance Serialize Flags Attrs_Types.Flags where
-  encode (Flags io omit) = Attrs_Types.Flags (Just io) (Just omit)
-  decode (Attrs_Types.Flags (Just io) (Just omit)) = Right $ Flags io omit
-  decode (Attrs_Types.Flags (Just io) Nothing    ) = Left "`omit` field is missing"
-  decode (Attrs_Types.Flags {}                   ) = Left "`io` field is missing"
+instance Serialize Flags TAttrs.Flags where
+  encode (Flags aio aomit) = TAttrs.Flags (Just aio) (Just aomit)
+  decode (TAttrs.Flags (Just aio) (Just aomit)) = Right $ Flags aio aomit
+  decode (TAttrs.Flags (Just _  ) Nothing     ) = Left "`omit` field is missing"
+  decode (TAttrs.Flags {}                     ) = Left "`io` field is missing"
 
 
-instance Serialize Attributes Attrs_Types.Attributes where
-  encode m = Attrs_Types.Attributes $ Just h where
+instance Serialize Attributes TAttrs.Attributes where
+  encode m = TAttrs.Attributes $ Just h where
                  mItems = Attributes.toList m
                  mcItems = map convertItem mItems
                  h = HashMap.fromList mcItems
 
   decode el = case el of
-    (Attrs_Types.Attributes (Just h)) -> Right m where
+    (TAttrs.Attributes (Just h)) -> Right m where
                                             hItems = HashMap.toList h
                                             hcItems = map convertItemBack hItems
                                             m = Attributes.fromList hcItems
-    (Attrs_Types.Attributes Nothing)  ->  Left "`map` field is missing"
+    (TAttrs.Attributes Nothing)  ->  Left "`map` field is missing"
 
 
+convertItem :: (String, Attributes.Map String String) -> (Text, HashMap Text Text)
 convertItem (k, v) = (ck, cv) where
-    ck = Text.pack k
-    cv = HashMap.fromList $ map (\(k1, v1) -> (Text.pack k1, Text.pack v1)) $ Attributes.toList v
+    ck = pack k
+    cv = HashMap.fromList $ map (\(k1, v1) -> (pack k1, pack v1)) $ Attributes.toList v
 
+
+convertItemBack :: (Text, HashMap Text Text) -> (String, Attributes.Map String String)
 convertItemBack (k, v) = (ck, cv) where
-    ck = Text.unpack k
-    cv = Attributes.fromList $ map (\(k1, v1) -> (Text.unpack k1, Text.unpack v1)) $ HashMap.toList v
+    ck = unpack k
+    cv = Attributes.fromList $ map (\(k1, v1) -> (unpack k1, unpack v1)) $ HashMap.toList v
 

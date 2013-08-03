@@ -9,7 +9,7 @@
 
 module Luna.Tools.Serialization where
 
-import           Data.Int
+import Data.Int
 
 
 class Serialize a b | a -> b, b -> a where
