@@ -24,8 +24,8 @@ import           Data.Vector      (Vector)
 
 import qualified Attrs_Types
 import           Batch_Types (ArgumentException(..))
-import qualified Defs_Types
-import qualified Types_Types
+import qualified Defs_Types                    as TDefs
+import qualified Types_Types                   as TTypes
 import qualified Luna.Core                     as Core
 import           Luna.Core                       (Core)
 import qualified Luna.Network.Def.DefManager   as DefManager
@@ -41,7 +41,7 @@ import           Luna.Tools.Serialization.Defs    ()
 
 ------ public api helpers -----------------------------------------
 defOperation :: (IORef Core -> NodeDef.ID -> NodeDef -> a) -> IORef Core 
-             -> Maybe Defs_Types.NodeDef -> a
+             -> Maybe TDefs.NodeDef -> a
 defOperation operation batchHandler tdefinition  = case tdefinition of 
     (Just tdef) -> do
         case (decode (tdef, Graph.empty) :: Either String (Int, NodeDef) ) of 
@@ -51,7 +51,7 @@ defOperation operation batchHandler tdefinition  = case tdefinition of
 
 
 defParentOperation :: (IORef Core -> NodeDef -> Int -> a) -> IORef Core
-                   -> Maybe Defs_Types.NodeDef -> Maybe Defs_Types.NodeDef -> a
+                   -> Maybe TDefs.NodeDef -> Maybe TDefs.NodeDef -> a
 defParentOperation operation batchHandler tdefinition tparent = case (tdefinition, tparent) of 
     (Just tdef, Just tpar) -> do
         case (decode (tdef,  Graph.empty) :: Either String (Int, NodeDef) ,
@@ -65,16 +65,16 @@ defParentOperation operation batchHandler tdefinition tparent = case (tdefinitio
 
 
 ------ public api -------------------------------------------------
-newDefinition :: IORef Core -> Maybe Types_Types.Type -> Maybe (Vector Defs_Types.Import)
+newDefinition :: IORef Core -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
                             -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes
-                            -> IO Defs_Types.NodeDef
+                            -> IO TDefs.NodeDef
 newDefinition _ ttype timports tflags tattrs = do 
     putStrLn "Creating new definition...\t\tsuccess!"
-    return $ Defs_Types.NodeDef ttype timports tflags tattrs (Just 0) (Just 0)
+    return $ TDefs.NodeDef ttype timports tflags tattrs (Just 0) (Just 0)
 
 
-addDefinition :: IORef Core -> Maybe Defs_Types.NodeDef
-              -> Maybe Defs_Types.NodeDef -> IO Defs_Types.NodeDef
+addDefinition :: IORef Core -> Maybe TDefs.NodeDef
+              -> Maybe TDefs.NodeDef -> IO TDefs.NodeDef
 addDefinition = defParentOperation (\batchHandler definition parentID -> do
     putStrLn "call addDefinition"
     core <- readIORef batchHandler
@@ -89,7 +89,7 @@ addDefinition = defParentOperation (\batchHandler definition parentID -> do
         False -> throw $ ArgumentException $ Just $ Text.pack "Wrong `defID` in `parent` field")
 
 
-updateDefinition :: IORef Core -> Maybe Defs_Types.NodeDef -> IO ()
+updateDefinition :: IORef Core -> Maybe TDefs.NodeDef -> IO ()
 updateDefinition = defOperation (\batchHandler defID definition -> do
     putStrLn "call updateDefinition - NOT IMPLEMENTED, sorry."
     core <- readIORef batchHandler
@@ -97,7 +97,7 @@ updateDefinition = defOperation (\batchHandler defID definition -> do
     return ())
 
 
-removeDefinition :: IORef Core -> Maybe Defs_Types.NodeDef -> IO ()
+removeDefinition :: IORef Core -> Maybe TDefs.NodeDef -> IO ()
 removeDefinition = defOperation (\batchHandler defID _ -> do
     putStrLn "call removeDefinition"
     core <- readIORef batchHandler
@@ -108,7 +108,7 @@ removeDefinition = defOperation (\batchHandler defID _ -> do
         False -> throw $ ArgumentException $ Just $ Text.pack "Wrong `defID` in `definition` field")
 
 
-definitionChildren :: IORef Core -> Maybe Defs_Types.NodeDef -> IO (Vector Defs_Types.NodeDef)
+definitionChildren :: IORef Core -> Maybe TDefs.NodeDef -> IO (Vector TDefs.NodeDef)
 definitionChildren = defOperation (\batchHandler defID _ -> do
     putStrLn "call definitionChildren"  
     core <- readIORef batchHandler
@@ -121,7 +121,7 @@ definitionChildren = defOperation (\batchHandler defID _ -> do
         False -> throw $ ArgumentException $ Just $ Text.pack "Wrong `defID` in `definition` field")
 
 
-definitionParent :: IORef Core -> Maybe Defs_Types.NodeDef -> IO Defs_Types.NodeDef
+definitionParent :: IORef Core -> Maybe TDefs.NodeDef -> IO TDefs.NodeDef
 definitionParent = defOperation (\batchHandler defID _ -> do
     putStrLn "call definitionParent"
     core <- readIORef batchHandler
