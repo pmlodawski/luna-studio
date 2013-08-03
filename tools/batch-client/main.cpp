@@ -91,6 +91,9 @@ int main(int argc, char **argv) {
         batch.definitionParent(parent, fun);
         /* Add some nodes */
 
+        Graph graph;
+        batch.graph(graph, fun);
+
         Node inputs;
         inputs.cls = NodeType::Inputs;
         inputs.name = "inputs";
