@@ -98,7 +98,7 @@ generateNodeExpr graph lnode (func, mod) = (nfunc, nmod) where
                                            DefaultValue.DefaultInt    v -> show v
 
     nmod = case node of 
-        Node.Call name flags _  -> Module.addImport (Import.simple $ Path ["Common'", name])
+        Node.Call name flags _  -> Module.addImport (Import.common name)
                                  $ mod
         _                       -> mod
 

@@ -12,6 +12,7 @@ module Luna.Codegen.Hs.AST.Module (
     addExpr,
     addExprs,
     addAlias,
+    addExt,
     genCode,
     mkInst,
     addDataType,
@@ -33,6 +34,8 @@ import qualified Luna.Codegen.Hs.AST.DataType    as DataType
 import           Luna.Codegen.Hs.AST.DataType      (DataType)
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 import           Luna.Codegen.Hs.AST.Expr          (Expr)
+import qualified Luna.Codegen.Hs.AST.Extension   as Extension
+import           Luna.Codegen.Hs.AST.Extension     (Extension)
 import           Data.String.Utils                 (join)
 
 data Module = Module { path       :: Path
@@ -41,6 +44,7 @@ data Module = Module { path       :: Path
                      , datatypes  :: [DataType]
                      , functions  :: [Function]
                      , exprs      :: [Expr]
+                     , extensions :: [Extension]
                      --, datatypes :: [DataType]
                      --, classes   
 
@@ -48,17 +52,25 @@ data Module = Module { path       :: Path
                      } deriving (Show)
 
 empty :: Module
-empty = Module Path.empty [] Set.empty [] [] []
+empty = Module Path.empty [] Set.empty [] [] [] []
 
-base = empty {imports = Set.singleton $ Import.simple (Path.fromList ["Flowbox", "Core"])}
+base :: Module
+base = empty {imports = Set.singleton $ Import.simple (Path.fromList ["Flowbox'", "Core"])}
+
+
+header = "-- This is Flowbox generated file.\n\n"
+
 
 genCode :: Module -> String
-genCode mod =  "module " ++ mypath ++    " where\n\n" 
+genCode mod =  header
+            ++ exts
+            ++ "module "          ++ mypath ++ " where\n\n" 
             ++ "-- imports\n"     ++ imps   ++ "\n\n"
             ++ "-- datatypes\n"   ++ dtypes ++ "\n\n"
             ++ "-- functions\n"   ++ funcs  ++ "\n\n"
             ++ "-- expressions\n" ++ exps  
     where
+        exts   = Extension.genCode $ extensions mod
         mypath = (Path.toModulePath . path) mod
         imps   = join "\n" $ map Import.genCode   (Set.elems $ imports mod)
         dtypes = join "\n" $ map DataType.genCode (datatypes mod)
@@ -79,6 +91,10 @@ addAlias :: (String, String) -> Module -> Module
 addAlias alias = addExpr (Expr.mkAlias alias)
 
 
+addExt :: Extension -> Module -> Module
+addExt ext self = self {extensions = ext : extensions self}
+
+
 mkInst :: (String, String, String) -> Module -> Module
 mkInst (nameT, nameMT, name) = addExpr (Expr.mkCall "mkInst''" [nameT, nameMT, name])
 
@@ -93,6 +109,7 @@ addFunction func self = self {functions = func : functions self}
 
 addImport :: Import -> Module -> Module
 addImport imp self = self {imports = Set.insert imp $ imports self}
+
 
 addImports :: [Import] -> Module -> Module
 addImports imps self = foldr addImport self imps

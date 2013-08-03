@@ -25,6 +25,7 @@ import qualified Luna.Codegen.Hs.AST.Module      as Module
 import           Luna.Codegen.Hs.AST.Module        (Module)
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 import qualified Luna.Codegen.Hs.AST.Function    as Function
+import qualified Luna.Codegen.Hs.Import          as Import
 
 generateClass :: NodeDef -> Module -> Module
 generateClass def mod = nmod where
@@ -41,10 +42,10 @@ generateClass def mod = nmod where
                                 }
     getters    = zipWith (Function.getter clsname) paramnames fieldnames
     setters    = zipWith (Function.setter clsname) paramnames fieldnames
-    gettersM   = zipWith (Function.getterM clsname) paramnames fieldnames
-    settersM   = zipWith (Function.setterM clsname) paramnames fieldnames
-    nmod       = Module.addExprs settersM
-               $ Module.addExprs gettersM
+    getnames   = map Path.mkGetter paramnames
+    setnames   = map Path.mkSetter paramnames
+    commimps   = map Import.common (getnames ++ setnames)
+    nmod       = Module.addImports commimps
                $ Module.addExprs setters
                $ Module.addExprs getters
                $ Module.addDataType datatype

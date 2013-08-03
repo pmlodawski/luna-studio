@@ -10,7 +10,7 @@ module Luna.Samples.HelloWorld(
     workspace,
     base_manager,
     full_manager,
-    myFun, myFun2, myFun3,
+    myFun, myFun2, myFun3, myFun4,
     cls1
 ) where
 
@@ -203,6 +203,43 @@ myFun3 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun3" myFunInputs3 Typ
 
 
 
+myFunGraph4 = Graph.insEdges [
+                              (0, 1, Edge.standard),
+                              (1, 2, Edge.standard),
+                              (2, 3, Edge.standard),
+                              (4, 5, Edge.standard),
+                              (3, 5, Edge.standard),
+                              (5, 6, Edge.standard),
+                              (6, 7, Edge.standard),
+                              (7, 8, Edge.standard),
+                              (3, 8, Edge.standard),
+                              (8, 9, Edge.standard),
+                              (9, 10, Edge.standard)
+                             ]
+
+           $ Graph.insNodes [(0,  Node.mkInputs             ),
+                             (1,  Node.mkCall     "select0" ),
+                             (2,  Node.mkCall     "getx"    ),
+                             (3,  Node.mkCall     "select0" ),
+                             (4,  Node.Default $ DefaultValue.DefaultInt 1),
+                             (5,  Node.mkTuple              ),
+                             (6,  Node.mkCall     "add"     ),
+                             (7,  Node.mkCall     "select0" ),
+                             (8,  Node.mkTuple              ),
+                             (9,  Node.mkCall     "setx"    ),
+                             (10, Node.mkOutputs            )
+                            ]
+           $ Graph.empty
+
+myFunInputs4 = Type.Tuple [Type.TypeVariable "a", 
+                          Type.Named "in1" $ Type.TypeVariable "b"]
+
+
+myFun4 = NodeDef.empty{ NodeDef.cls   = (Type.Function "incx" myFunInputs4 Type.noOutputs)
+                      , NodeDef.graph = myFunGraph4
+                      , NodeDef.libID = userLibKey
+                      }
+
 
 
 
@@ -232,8 +269,8 @@ cls1 = NodeDef.empty{ NodeDef.cls   = Type.Class "Vector" ["a"] [Type.Named "x" 
 
 
 full_manager :: DefManager
-full_manager =  DefManager.addToParentMany [ (1, 2, myFun2),
-                                           (10, 1, myFun3),
+full_manager =  DefManager.addToParentMany [ --(1, 2, myFun2),
+                                           (10, 1, myFun4),
                                            (100, 10, cls1)
                                            ]
              $ base_manager
