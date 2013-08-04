@@ -91,6 +91,15 @@ data Extension = AlternativeLayoutRule
                | NoExtendedDefaultRules               
                | NoFlexibleContexts                   
                | NoFlexibleInstances                  
+               | NoForeignFunctionInterface           
+               | NoFunctionalDependencies             
+               | NoGADTSyntax                         
+               | NoGADTs                              
+               | NoGHCForeignImportPrim               
+               | NoGeneralizedNewtypeDeriving         
+               | NoGenerics                           
+               | NoImplicitParams                     
+               | NoImplicitPrelude
                | NoImpredicativeTypes
                | NoIncoherentInstances
                | NoInstanceSigs
@@ -170,7 +179,15 @@ data Extension = AlternativeLayoutRule
                | Trustworthy
                | TupleSections
                | TypeFamilies
-			   deriving (Show)
+               | TypeOperators
+               | TypeSynonymInstances
+               | UnboxedTuples
+               | UndecidableInstances
+               | UnicodeSyntax
+               | UnliftedFFITypes
+               | Unsafe
+               | ViewPatterns
+			deriving (Show)
 
 
 genCode :: [Extension] -> String

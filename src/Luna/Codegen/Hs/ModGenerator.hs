@@ -36,6 +36,7 @@ import qualified Luna.Codegen.Hs.Path            as Path
 import           Luna.Codegen.Hs.Path              (Path)
 import qualified Luna.Codegen.Hs.AST.Function    as Function
 import qualified Luna.Codegen.Hs.AST.Extension   as Extension
+import qualified Luna.Codegen.Hs.AST.Deriving    as Deriving
 
 import           Luna.Data.List
 
@@ -91,6 +92,9 @@ generateDefinition manager vtx = nmod where
                      $ Module.addImports subimps 
                      $ Module.addImports commimps 
                      $ Module.addExt Extension.TemplateHaskell
+                     $ Module.addExt Extension.FlexibleInstances
+                     $ Module.addExt Extension.MultiParamTypeClasses
+                     $ Module.addExt Extension.UndecidableInstances       --FIXME[wd]: Czy mozna sie tego pozbyc?
                      $ basemod
 
             instargs = zip4 csubnames impfuncs impfuncsM subnames

@@ -219,14 +219,14 @@ myFunGraph4 = Graph.insEdges [
 
            $ Graph.insNodes [(0,  Node.mkInputs             ),
                              (1,  Node.mkCall     "select0" ),
-                             (2,  Node.mkCall     "getx"    ),
+                             (2,  Node.mkCall     "x'getter"    ),
                              (3,  Node.mkCall     "select0" ),
                              (4,  Node.Default $ DefaultValue.DefaultInt 1),
                              (5,  Node.mkTuple              ),
                              (6,  Node.mkCall     "add"     ),
                              (7,  Node.mkCall     "select0" ),
                              (8,  Node.mkTuple              ),
-                             (9,  Node.mkCall     "setx"    ),
+                             (9,  Node.mkCall     "x'setter"    ),
                              (10, Node.mkOutputs            )
                             ]
            $ Graph.empty

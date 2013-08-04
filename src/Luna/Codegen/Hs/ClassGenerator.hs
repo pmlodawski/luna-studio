@@ -26,6 +26,7 @@ import           Luna.Codegen.Hs.AST.Module        (Module)
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 import qualified Luna.Codegen.Hs.AST.Function    as Function
 import qualified Luna.Codegen.Hs.Import          as Import
+import qualified Luna.Codegen.Hs.AST.Deriving    as Deriving
 
 generateClass :: NodeDef -> Module -> Module
 generateClass def mod = nmod where
@@ -36,7 +37,8 @@ generateClass def mod = nmod where
     fieldnames = map Path.mkFieldName paramnames
     paramtypes = map (Type.name . Type.cls) params
     fields     = zipWith Field fieldnames paramtypes
-    datatype   = DataType.empty { DataType.name       = clsname
+    datatype   = DataType.addDeriving Deriving.Show
+               $ DataType.empty { DataType.name       = clsname
                                 , DataType.typeparams = Type.typeparams cls
                                 , DataType.cons       = [Cons clsname fields]
                                 }
