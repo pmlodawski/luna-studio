@@ -11,8 +11,9 @@ main = do
 		y = 2::Int
 		z = 3::Int
 		v = Vector x y z
+		--v2 :: OneTuple Int
 		v2 = incx $ OneTuple v
 		--l = Vector.len v
-		
+
 	print v2
 	return ()

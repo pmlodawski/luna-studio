@@ -15,17 +15,18 @@ import Flowbox'.Core
 -- functions
 incx inputs' = 
     let
-        v'4 = 1 :: Int
+        v'5 = 1 :: Int
         v'0 = inputs'
         v'1 = select0 v'0
-        v'2 = x'getter v'1
-        v'3 = select0 v'2
-        v'5 = (v'4, v'3)
-        v'6 = add v'5
-        v'7 = select0 v'6
-        v'8 = (v'1, v'7)
-        v'9 = x'setter v'8
-        outputs' = v'9
+        v'2 = OneTuple v'1
+        v'3 = x'getter v'2
+        v'4 = select0 v'3
+        --v'6 = (v'5, v'4)
+        --v'7 = add v'6
+        --v'8 = select0 v'7
+        --v'9 = (v'1, v'8)
+        --v'10 = x'setter v'9
+        outputs' = v'3
     in outputs'
 
 incx''M inputs' = return $ incx inputs'
