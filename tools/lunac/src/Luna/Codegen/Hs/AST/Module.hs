@@ -57,12 +57,12 @@ empty = Module Path.empty [] Set.empty [] [] [] []
 base :: Module
 base = empty {imports = Set.singleton $ Import.simple (Path.fromList ["Flowbox'", "Core"])}
 
-
+header :: String
 header = "-- This is Flowbox generated file.\n\n"
 
 
 genCode :: Module -> String
-genCode mod =  header
+genCode m =  header
             ++ exts
             ++ "module "          ++ mypath ++ " where\n\n" 
             ++ "-- imports\n"     ++ imps   ++ "\n\n"
@@ -70,12 +70,12 @@ genCode mod =  header
             ++ "-- functions\n"   ++ funcs  ++ "\n\n"
             ++ "-- expressions\n" ++ exps  
     where
-        exts   = Extension.genCode $ extensions mod
-        mypath = (Path.toString . Path.toModulePath . path) mod
-        imps   = join "\n" $ map Import.genCode   (Set.elems $ imports mod)
-        dtypes = join "\n" $ map DataType.genCode (datatypes mod)
-        funcs  = join "\n" $ map Function.genCode (functions mod)
-        exps   = join "\n" $ map Expr.genCode     (exprs mod)
+        exts   = Extension.genCode $ extensions m
+        mypath = (Path.toString . Path.toModulePath . path) m
+        imps   = join "\n" $ map Import.genCode   (Set.elems $ imports m)
+        dtypes = join "\n" $ map DataType.genCode (datatypes m)
+        funcs  = join "\n" $ map Function.genCode (functions m)
+        exps   = join "\n" $ map Expr.genCode     (exprs m)
 
 
 
@@ -84,7 +84,7 @@ addExpr expr self = self { exprs = expr : exprs self }
 
 
 addExprs :: [Expr] -> Module -> Module
-addExprs exprs self = foldr addExpr self exprs
+addExprs exprs' self = foldr addExpr self exprs'
 
 
 addAlias :: (String, String) -> Module -> Module

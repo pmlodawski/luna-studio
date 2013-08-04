@@ -10,54 +10,41 @@ generateFunction
 ) where
 
 
-import Debug.Trace
-
-import           Data.String.Utils                 (join)
-import qualified Data.Graph.Inductive            as DG
-import           Control.Monad.State               (runState, get, put, State)
-
 import qualified Luna.Type.Type                  as Type
 import qualified Luna.Codegen.Hs.Import          as Import
-import           Luna.Codegen.Hs.Import            (Import)
 import qualified Luna.Network.Graph.Graph        as Graph
 import           Luna.Network.Graph.Graph          (Graph)
 import qualified Luna.Network.Def.NodeDef        as NodeDef
 import           Luna.Network.Def.NodeDef          (NodeDef)
-import qualified Luna.Network.Def.DefManager     as DefManager
-import           Luna.Network.Def.DefManager       (DefManager)
 import qualified Luna.Network.Graph.Node         as Node
 import           Luna.Network.Graph.Node           (Node)
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Luna.Network.Flags              as Flags
 import qualified Luna.Codegen.Hs.Path            as Path
-import           Luna.Codegen.Hs.Path              (Path(..))
-import           Luna.Codegen.Hs.State.FuncState   (FuncState)
-import qualified Luna.Codegen.Hs.State.FuncState as FuncState
-import qualified Luna.Codegen.Hs.State.Context   as Context
-import qualified Luna.Codegen.Hs.State.Mode      as Mode
 
 
 import qualified Luna.Codegen.Hs.AST.Function    as Function
 import           Luna.Codegen.Hs.AST.Function      (Function)
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
-import           Luna.Codegen.Hs.AST.Expr          (Expr)
 import qualified Luna.Codegen.Hs.AST.Module      as Module
 import           Luna.Codegen.Hs.AST.Module        (Module)
 
 import           Luna.Data.List
 
 
-generateFunction def mod = (func, nmod) where
+generateFunction :: NodeDef -> Module -> (Function, Module)
+generateFunction def m = (func, nmod) where
     graph      = NodeDef.graph def
     vertices   = Graph.topsort graph
     nodes      = Graph.labVtxs graph vertices
     basefunc   = Function.empty { Function.name = Type.name $ NodeDef.cls def
                                 , Function.inputs = [Path.inputs]
                                 }
-    (func, nmod) = foldri (generateNodeExpr graph) nodes (basefunc, mod)
+    (func, nmod) = foldri (generateNodeExpr graph) nodes (basefunc, m)
 
 
-generateNodeExpr graph lnode (func, mod) = (nfunc, nmod) where
+generateNodeExpr :: Graph -> Graph.LVertex Node -> (Function, Module) -> (Function, Module)
+generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
     nfunc = Function.addExpr expr 
           $ case ctx of
                 Expr.IO -> Function.setCtx ctx func
@@ -71,7 +58,7 @@ generateNodeExpr graph lnode (func, mod) = (nfunc, nmod) where
 
     (value, ctx) = case node of
         Node.New _ _            -> (Expr.VarRef cvtx, Expr.Pure) where
-                                       cvtx:vtxs = Graph.innvtx graph nid
+                                       cvtx:_ = Graph.innvtx graph nid
                                        -- TODO[wd] exception when too many inputs
 
         Node.Type name _ _      -> (Expr.Var name, Expr.Pure)
@@ -89,7 +76,7 @@ generateNodeExpr graph lnode (func, mod) = (nfunc, nmod) where
 
         Node.Inputs  _ _        -> (Expr.Var Path.inputs, Expr.Pure)
         Node.Outputs _ _        -> (Expr.VarRef cvtx, Expr.Pure) where
-                                        cvtx:vtxs = Graph.innvtx graph nid
+                                        cvtx:_ = Graph.innvtx graph nid
                                         -- TODO[wd] exception when too many inputs
 
         Node.Default d          -> (Expr.Default val, Expr.Pure) where 
@@ -98,9 +85,9 @@ generateNodeExpr graph lnode (func, mod) = (nfunc, nmod) where
                                            DefaultValue.DefaultInt    v -> show v ++ " :: Int"
 
     nmod = case node of 
-        Node.Call name flags _  -> Module.addImport (Import.common name)
-                                 $ mod
-        _                       -> mod
+        Node.Call name _ _  -> Module.addImport (Import.common name)
+                             $ m
+        _                   -> m
 
 
 

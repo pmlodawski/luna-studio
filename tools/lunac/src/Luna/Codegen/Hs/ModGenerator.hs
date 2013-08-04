@@ -11,19 +11,12 @@ module Luna.Codegen.Hs.ModGenerator(
 ) where
 
 
-import Debug.Trace
-
-import           Data.String.Utils                 (join)
 import           Data.List                         (zip4)
 
-import qualified Data.Graph.Inductive            as DG
 import qualified Luna.Network.Def.DefManager     as DefManager
 import           Luna.Network.Def.DefManager       (DefManager)
 import qualified Luna.Network.Path.Path          as Path
 import qualified Luna.Network.Def.NodeDef        as NodeDef
-import           Luna.Network.Def.NodeDef          (NodeDef)
-import qualified Luna.Network.Def.Edge           as Edge
-import           Luna.Network.Def.Edge             (Edge(..))
 import qualified Luna.Type.Type                  as Type
 import qualified Luna.Codegen.Hs.Import          as Import
 import qualified Luna.Data.Graph                 as Graph
@@ -33,7 +26,6 @@ import           Luna.Codegen.Hs.AST.Module        (Module)
 import qualified Luna.Codegen.Hs.FuncGenerator   as FG
 import qualified Luna.Codegen.Hs.ClassGenerator  as CG
 import qualified Luna.Codegen.Hs.Path            as Path
-import           Luna.Codegen.Hs.Path              (Path)
 import qualified Luna.Codegen.Hs.AST.Function    as Function
 import qualified Luna.Codegen.Hs.AST.Extension   as Extension
 
@@ -50,29 +42,28 @@ generateDefinition manager vtx = nmod where
     def = Graph.lab manager vtx
     cls = NodeDef.cls def
     nmod = case cls of
-        Type.Module   {} -> mod where
+        Type.Module   {} -> m where
             basemod  = generateModule manager vtx
             submods  = Module.submodules basemod
             subpaths = map Module.path submods
             subimps  = map Import.simple subpaths 
-            mod      = Module.addImports subimps basemod
+            m        = Module.addImports subimps basemod
 
-        Type.Function {} -> mod where
+        Type.Function {} -> m where
             basemod  = generateModule manager vtx
             submods  = Module.submodules basemod
             subpaths = map Module.path submods
             subimps  = map Import.qualified subpaths
             subnames = map Path.last subpaths
-            impfuncs = map Path.toString $ zipWith Path.append subnames subpaths
             subsrcs  = map (Path.toString . Path.toModulePath) subpaths
             aliases  = [(name, src ++ "." ++ name) | (name, src) <- zip subnames subsrcs]
             (basefunc, basemod2) = FG.generateFunction def basemod
             func     = foldr Function.addAlias basefunc aliases
-            mod      = Module.addFunction func
+            m        = Module.addFunction func
                      $ Module.addImports subimps
                      $ basemod2
 
-        Type.Class {} -> mod where
+        Type.Class {} -> m where
             basemod   = generateModule manager vtx
             submods   = Module.submodules basemod
             subpaths  = map Module.path submods
@@ -98,20 +89,22 @@ generateDefinition manager vtx = nmod where
             instargs = zip4 csubnames impfuncs impfuncsM subnames
 
 
-            mod      = --foldri Module.addAlias aliases 
+            m        = --foldri Module.addAlias aliases 
                      foldri Module.mkInst instargs 
                      $ modproto
 
             --mkInstIO ''F_len 'len_ 'len_IO 'len
 
+        _            -> error "Not known type conversion."
+
 
 
 generateModule :: DefManager -> Graph.Vertex -> Module
-generateModule manager vtx  = mod where
+generateModule manager vtx  = m where
     path        = Path.fromList $ DefManager.pathNames manager vtx 
     outnodes    = DefManager.suc manager vtx
     modules     = map (generateDefinition manager) outnodes
-    mod         = Module.base { Module.path       = path
+    m           = Module.base { Module.path       = path
                               , Module.submodules = modules
                               }
 

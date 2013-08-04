@@ -9,27 +9,21 @@ module Luna.Codegen.Hs.ClassGenerator(
 generateClass
 ) where
 
-import Debug.Trace
-
-
 import qualified Luna.Network.Def.NodeDef        as NodeDef
 import           Luna.Network.Def.NodeDef          (NodeDef)
 import qualified Luna.Codegen.Hs.AST.DataType    as DataType
 import qualified Luna.Codegen.Hs.AST.Cons        as Cons
-import           Luna.Codegen.Hs.AST.Cons          (Cons(..))
-import qualified Luna.Codegen.Hs.AST.Field       as Field
 import           Luna.Codegen.Hs.AST.Field         (Field(..))
 import qualified Luna.Type.Type                  as Type
 import qualified Luna.Codegen.Hs.Path            as Path
 import qualified Luna.Codegen.Hs.AST.Module      as Module
 import           Luna.Codegen.Hs.AST.Module        (Module)
-import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 import qualified Luna.Codegen.Hs.AST.Function    as Function
 import qualified Luna.Codegen.Hs.Import          as Import
 import qualified Luna.Codegen.Hs.AST.Deriving    as Deriving
 
 generateClass :: NodeDef -> Module -> Module
-generateClass def mod = nmod where
+generateClass def m = nmod where
     cls        = NodeDef.cls def
     clsname    = Type.name cls
     params     = Type.params cls
@@ -40,7 +34,7 @@ generateClass def mod = nmod where
     datatype   = DataType.addDeriving Deriving.Show
                $ DataType.empty { DataType.name       = clsname
                                 , DataType.typeparams = Type.typeparams cls
-                                , DataType.cons       = [Cons clsname fields]
+                                , DataType.cons       = [Cons.Cons clsname fields]
                                 }
     getters    = zipWith (Function.getter clsname) paramnames fieldnames
     setters    = zipWith (Function.setter clsname) paramnames fieldnames
@@ -51,6 +45,6 @@ generateClass def mod = nmod where
                $ Module.addExprs setters
                $ Module.addExprs getters
                $ Module.addDataType datatype
-               $ mod
+               $ m
 
 

@@ -14,14 +14,8 @@ module Luna.Codegen.Hs.AST.DataType (
 
 import           Data.String.Utils                 (join)
 
-import qualified Luna.Codegen.Hs.AST.Expr        as Expr
-import           Luna.Codegen.Hs.AST.Expr          (Expr)
-import qualified Luna.Codegen.Hs.GenState        as GenState
-import           Luna.Codegen.Hs.GenState          (GenState)
 import qualified Luna.Codegen.Hs.AST.Cons        as Cons
 import           Luna.Codegen.Hs.AST.Cons          (Cons)
-import qualified Luna.Codegen.Hs.AST.Field       as Field
-import           Luna.Codegen.Hs.AST.Field         (Field)
 import qualified Luna.Codegen.Hs.AST.Deriving    as Deriving
 import           Luna.Codegen.Hs.AST.Deriving      (Deriving)
 
@@ -36,7 +30,8 @@ data DataType = DataType { name         :: String,
 empty :: DataType
 empty = DataType "" [] [] []
 
---genCode :: GenContext -> Function -> String
+
+genCode :: DataType -> String
 genCode dt =  "data " ++ name dt ++ " " ++ join " " (typeparams dt) ++ " = " 
            ++ join " | "  (map Cons.genCode (cons dt))
            ++ Deriving.genCode (derivings dt)

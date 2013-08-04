@@ -7,7 +7,7 @@
 
 module Luna.Lib.LibManager(
     module Luna.Data.Graph,
-    LibManager(..)
+    LibManager
 ) where
 
 import           Luna.Lib.Library       (Library)

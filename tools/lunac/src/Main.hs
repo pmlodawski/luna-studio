@@ -7,7 +7,6 @@
 
 import qualified Luna.Samples.HelloWorld        as HelloWorld
 import qualified Luna.Codegen.Hs.FuncGenerator  as FG
-import qualified Luna.Codegen.Hs.DefGenerator   as DG
 import qualified Luna.Codegen.Hs.ModGenerator   as MG
 import qualified Luna.Network.Def.DefManager    as DefManager
 

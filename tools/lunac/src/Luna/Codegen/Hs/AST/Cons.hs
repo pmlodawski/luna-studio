@@ -23,7 +23,8 @@ data Cons     = Cons { name :: String, fields :: [Field] } deriving (Show)
 empty :: Cons
 empty = Cons "" []
 
---genCode :: GenContext -> Function -> String
+
+genCode :: Cons -> String
 genCode cons = name cons ++ " { " ++ join ", " (map Field.genCode (fields cons)) ++ " }"
 
 
