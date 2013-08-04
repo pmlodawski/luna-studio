@@ -95,7 +95,7 @@ generateNodeExpr graph lnode (func, mod) = (nfunc, nmod) where
         Node.Default d          -> (Expr.Default val, Expr.Pure) where 
                                        val = case d of
                                            DefaultValue.DefaultString v -> show v
-                                           DefaultValue.DefaultInt    v -> show v
+                                           DefaultValue.DefaultInt    v -> show v ++ " :: Int"
 
     nmod = case node of 
         Node.Call name flags _  -> Module.addImport (Import.common name)

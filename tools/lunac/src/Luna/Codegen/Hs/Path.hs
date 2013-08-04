@@ -58,11 +58,11 @@ mkGSName name = name ++ "'GS"
 
 
 mkGetter :: String -> String
-mkGetter name = name ++ "'Getter"
+mkGetter name = name ++ "'getter"
 
 
 mkSetter :: String -> String
-mkSetter name = name ++ "'Setter"
+mkSetter name = name ++ "'setter"
 
 
 mkTHPointer :: String -> String

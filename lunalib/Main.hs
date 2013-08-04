@@ -1,11 +1,16 @@
 import qualified Workspace'.Vector as Vector
 import           Workspace'.Vector   (Vector(..))
 
---import Common'.F_len
+import Data.Tuple.OneTuple
+import Common'.C''incx
 
 main = do
 	let
-		v = Vector 2
+		x = 1::Int
+		y = 2::Int
+		z = 3::Int
+		v = Vector x y z
+		v2 = incx v
 		--l = Vector.len v
-	--print l
+	print v2
 	return ()
