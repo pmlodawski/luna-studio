@@ -212,7 +212,7 @@ myFunGraph4 = Graph.insEdges [
                               (5, 6, Edge.standard),
                               (6, 7, Edge.standard),
                               (7, 8, Edge.standard),
-                              (3, 8, Edge.standard),
+                              (1, 8, Edge.standard),
                               (8, 9, Edge.standard),
                               (9, 10, Edge.standard)
                              ]

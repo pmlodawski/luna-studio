@@ -36,7 +36,7 @@ import qualified Luna.Codegen.Hs.Path            as Path
 import           Luna.Codegen.Hs.Path              (Path)
 import qualified Luna.Codegen.Hs.AST.Function    as Function
 import qualified Luna.Codegen.Hs.AST.Extension   as Extension
-import qualified Luna.Codegen.Hs.AST.Deriving    as Deriving
+
 
 import           Luna.Data.List
 
@@ -56,7 +56,6 @@ generateDefinition manager vtx = nmod where
             subpaths = map Module.path submods
             subimps  = map Import.simple subpaths 
             mod      = Module.addImports subimps basemod
-            --mod      = basemod {Module.imports = subimps}
 
         Type.Function {} -> mod where
             basemod  = generateModule manager vtx
@@ -65,7 +64,6 @@ generateDefinition manager vtx = nmod where
             subimps  = map Import.qualified subpaths
             subnames = map Path.last subpaths
             impfuncs = map Path.toString $ zipWith Path.append subnames subpaths
-            --aliases  = zip subnames impfuncs
             subsrcs  = map (Path.toString . Path.toModulePath) subpaths
             aliases  = [(name, src ++ "." ++ name) | (name, src) <- zip subnames subsrcs]
             (basefunc, basemod2) = FG.generateFunction def basemod
