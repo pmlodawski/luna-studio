@@ -207,27 +207,29 @@ myFunGraph4 = Graph.insEdges [
                               (0, 1, Edge.standard),
                               (1, 2, Edge.standard),
                               (2, 3, Edge.standard),
-                              (4, 5, Edge.standard),
-                              (3, 5, Edge.standard),
+                              (3, 4, Edge.standard),
                               (5, 6, Edge.standard),
+                              (4, 6, Edge.standard),
                               (6, 7, Edge.standard),
                               (7, 8, Edge.standard),
-                              (1, 8, Edge.standard),
                               (8, 9, Edge.standard),
-                              (9, 10, Edge.standard)
+                              (1, 9, Edge.standard),
+                              (9, 10, Edge.standard),
+                              (10, 11, Edge.standard)
                              ]
 
            $ Graph.insNodes [(0,  Node.mkInputs             ),
                              (1,  Node.mkCall     "select0" ),
-                             (2,  Node.mkCall     "x'getter"    ),
-                             (3,  Node.mkCall     "select0" ),
-                             (4,  Node.Default $ DefaultValue.DefaultInt 1),
-                             (5,  Node.mkTuple              ),
-                             (6,  Node.mkCall     "add"     ),
-                             (7,  Node.mkCall     "select0" ),
-                             (8,  Node.mkTuple              ),
-                             (9,  Node.mkCall     "x'setter"    ),
-                             (10, Node.mkOutputs            )
+                             (2,  Node.mkTuple              ),
+                             (3,  Node.mkCall     "x'getter"),
+                             (4,  Node.mkCall     "select0" ),
+                             (5,  Node.Default $ DefaultValue.DefaultInt 1),
+                             (6,  Node.mkTuple              ),
+                             (7,  Node.mkCall     "add"     ),
+                             (8,  Node.mkCall     "select0" ),
+                             (9,  Node.mkTuple              ),
+                             (10, Node.mkCall     "x'setter"),
+                             (11, Node.mkOutputs            )
                             ]
            $ Graph.empty
 
