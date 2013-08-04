@@ -3,16 +3,18 @@ module Main where
 import Data.List
 import System.Environment
 
+import           Data.String.Utils                 (join)
+
 main :: IO ()
 main = do
     args <- getArgs
     case args of
         [w, sn] | Just gen <- lookup w gens, [(n,"")] <- reads sn -> do
-	    putStrLn "--snip-----------------"
-	    putStrLn "---- Machine generated code below, see Tools/MkTuple.hs"
-	    putStrLn $ "---- " ++ unwords ("mkTuple" : args)
+            putStrLn "--snip-----------------"
+            putStrLn "---- Machine generated code below, see Tools/MkTuple.hs"
+            putStrLn $ "---- " ++ unwords ("mkTuple" : args)
             gen n
-	_ -> error $ "Usage: MkTuple generator number\n"
+        _ -> error $ "Usage: MkTuple generator number\n"
 
 gens :: [(String, Int -> IO ())]
 gens = [("select", generateSel),
@@ -25,24 +27,26 @@ gens = [("select", generateSel),
 
 generateSel :: Int -> IO ()
 generateSel n = do 
-    putStrLn "module Flowbox.Data.Tuple.Select where"
+    putStrLn "{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}\n"
+    putStrLn "module Flowbox'.Data.Tuple.Select where"
+    putStrLn $ join "\n" (map (("import Common'.C''select" ++) . show) [0..n])
     putStrLn "import Data.Tuple.OneTuple\n"
-    putStrLn "instance C'select0 (OneTuple a) a where select0 (OneTuple x) = x\n"
+    putStrLn "instance C''select0 (OneTuple a) a where select0 (OneTuple x) = x\n"
     mapM_ (generateSelN (n+1)) [0..n]
 
 generateSelN :: Int -> Int -> IO ()
 generateSelN n i = do
     -- putStrLn $ "class Sel" ++ show i ++ " a b | a -> b where sel" ++ show i ++ " :: a -> b"
-    putStrLn $ "import Common'.C'select" ++ show i
-    mapM_ (generateSelNinst i) [i+1..n]
+    --putStrLn $ "import Common'.C''select" ++ show i
+    mapM_ (generateSelNinst i) [i..n-1]
     putStrLn ""
 
 generateSelNinst :: Int -> Int -> IO ()
-generateSelNinst 0 1 = return ()
+generateSelNinst 0 0 = return ()
 generateSelNinst j i = do
-    putStrLn $ "instance C'select" ++ show j ++ " (" ++ intercalate "," ["a" ++ show l | l <- [1..i]] ++ ") a" ++
+    putStrLn $ "instance C''select" ++ show j ++ " (" ++ intercalate "," ["a" ++ show l | l <- [0..i]] ++ ") a" ++
                show j ++ " where select" ++ show j ++ " (" ++ 
-               intercalate "," [if l == (j+1) then "x" else "_" | l <- [1..i]] ++ ") = x"
+               intercalate "," [if l == j then "x" else "_" | l <- [0..i]] ++ ") = x"
 
 ---------
 
@@ -67,7 +71,7 @@ generateCurryN i =
     putStrLn $ "instance Curry (" ++ tup ++ " -> r) (" ++
                intercalate "->" vars ++ " -> r) where\n" ++
                "    curryN f " ++ varsp ++ " = f " ++ tup ++ "\n" ++
-	       "    uncurryN f ~" ++ tup ++ " = f " ++ varsp
+               "    uncurryN f ~" ++ tup ++ " = f " ++ varsp
   where vars = ["a" ++ show j | j <- [1..i]]
         tup = "(" ++ intercalate "," vars ++ ")"
         varsp = unwords vars
