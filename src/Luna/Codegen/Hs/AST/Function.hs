@@ -38,14 +38,18 @@ empty :: Function
 empty = Function "" [] [] Expr.Pure
 
 genCode :: Function -> String
-genCode func =  header  ++ signature ++ " = " ++ body ++ "\n"
-             ++ headerM ++ signature ++ " = " ++ bodyM where
+genCode func =  head  ++ " = " ++ body ++ "\n"
+             ++ headM ++ " = " ++ bodyM where
     signature = join " " (inputs func)
-    fname  = name func 
-    header = fname ++ " "
-    headerM = Path.mkMonadName fname ++ " "
-    body   = genBodyPure func
-    bodyM  = genBodyM    func
+    fname     = name func 
+    head      = header  ++ signature
+    headM     = headerM ++ signature
+    header    = fname ++ " "
+    headerM   = Path.mkMonadName fname ++ " "
+    body      = genBodyPure func
+    bodyM     = case ctx func of
+                    Expr.IO   -> genBodyM func
+                    Expr.Pure -> "return $ " ++ head
 
 genBodyM :: Function -> String
 genBodyM func = "do\n" ++ genExprCode (exprs func, Expr.IO) ++ "    return " ++ Path.outputs ++ "\n"
