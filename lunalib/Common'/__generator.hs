@@ -1,12 +1,7 @@
 import Control.Monad (zipWithM)
 
-names = [ "select0"
-        , "select1"
-        , "select2"
-        , "select3"
-        , "select4"
-        , "select5"
-        , "add"
+names = map (("select" ++) . show) [0..10] ++
+        [ "add"
         , "x'getter"
         , "y'getter"
         , "z'getter"

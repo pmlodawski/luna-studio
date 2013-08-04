@@ -31,7 +31,7 @@ generateSel n = do
     putStrLn "module Flowbox'.Data.Tuple.Select where"
     putStrLn $ join "\n" (map (("import Common'.C''select" ++) . show) [0..n])
     putStrLn "import Data.Tuple.OneTuple\n"
-    putStrLn "instance C''select0 (OneTuple a) a where select0 (OneTuple x) = x\n"
+    putStrLn "instance C''select0 (OneTuple a) a where select0 (OneTuple x) = x; select0''M = return . select0\n"
     mapM_ (generateSelN (n+1)) [0..n]
 
 generateSelN :: Int -> Int -> IO ()
@@ -47,6 +47,8 @@ generateSelNinst j i = do
     putStrLn $ "instance C''select" ++ show j ++ " (" ++ intercalate "," ["a" ++ show l | l <- [0..i]] ++ ") a" ++
                show j ++ " where select" ++ show j ++ " (" ++ 
                intercalate "," [if l == j then "x" else "_" | l <- [0..i]] ++ ") = x"
+               ++ "; "
+               ++ "select" ++ show j ++ "''M = return . select" ++ show j
 
 ---------
 
