@@ -37,30 +37,30 @@ mpostfix = "''M"
 
 genCode :: Expr -> String
 genCode expr = case expr of
-    Assignment src dst ctx   -> genCode src ++ " " ++ operator ++ " " ++ genCode dst where
-                                    operator = case ctx of
-                                        Pure -> "="
-                                        IO   -> "<-"
-    Var        name          -> name
-    Default    val           -> val
-    VarRef     vid           -> "v'" ++ show vid
-    Call       name args ctx -> fname ++ " " ++ join " " (map (genCode) args) where
-                                    fname = case ctx of
-                                        Pure -> name
-                                        IO   -> name ++ mpostfix
-    Tuple      elems         -> if length elems == 1
-                                   then "OneTuple " ++ body
-                                   else "(" ++ body ++ ")"
-                                where body = join ", " (map (genCode) elems)
-    THExprCtx  name          -> "'"  ++ name
-    THTypeCtx  name          -> "''" ++ name
+    Assignment src' dst' ctx'   -> genCode src' ++ " " ++ operator ++ " " ++ genCode dst' where
+                                   operator = case ctx' of
+                                       Pure -> "="
+                                       IO   -> "<-"
+    Var        name'            -> name'
+    Default    val'             -> val'
+    VarRef     vid'             -> "v'" ++ show vid'
+    Call       name' args' ctx' -> fname' ++ " " ++ join " " (map (genCode) args') where
+                                   fname' = case ctx' of
+                                       Pure -> name'
+                                       IO   -> name' ++ mpostfix
+    Tuple      elems'           -> if length elems' == 1
+                                     then "OneTuple " ++ body
+                                     else "(" ++ body ++ ")"
+                                         where body = join ", " (map (genCode) elems')
+    THExprCtx  name'            -> "'"  ++ name'
+    THTypeCtx  name'            -> "''" ++ name'
 
 
-
+mkPure :: Expr -> Expr
 mkPure expr = case expr of
-    Assignment src dst ctx   -> Assignment (mkPure src) (mkPure dst) Pure
-    Tuple      elems         -> Tuple $ map mkPure elems
-    Call       name args ctx -> Call name (map mkPure args) Pure
+    Assignment src' dst' _   -> Assignment (mkPure src') (mkPure dst') Pure
+    Tuple      elems'        -> Tuple $ map mkPure elems'
+    Call       name' args' _ -> Call name' (map mkPure args') Pure
     other                    -> other
 
 
@@ -69,4 +69,4 @@ mkAlias (n1, n2) = Assignment (Var n1) (Var n2) Pure
 
 
 mkCall :: String -> [String] -> Expr
-mkCall name args = Call name (map Var args) Pure
+mkCall name' args' = Call name' (map Var args') Pure

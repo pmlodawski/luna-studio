@@ -8,6 +8,7 @@
 module Luna.Data.Graph (
     Graph,
     Vertex,
+    LVertex,
     Edge,
     empty,
     insNode,

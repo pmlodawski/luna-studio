@@ -17,7 +17,6 @@ module Luna.Codegen.Hs.Import (
 
 import qualified Luna.Codegen.Hs.Path            as Path
 import           Luna.Codegen.Hs.Path              (Path(..))
-import           Data.String.Utils                 (join)
 
 
 data Import = Regular   {path :: Path, item :: String} 
@@ -30,15 +29,15 @@ noItems = ""
 
 
 qualified :: Path -> Import
-qualified path = Qualified path
+qualified path' = Qualified path'
 
 
 simple :: Path -> Import
-simple path = Regular path noItems
+simple path' = Regular path' noItems
 
 
 regular :: Path -> String -> Import
-regular path item = Regular path item
+regular path' item' = Regular path' item'
 
 
 common :: String -> Import
@@ -50,8 +49,8 @@ genCode imp = "import " ++ body where
     paths = Path.toModulePath (path imp) 
     src = Path.toString paths
     body = case imp of
-        Regular _ item -> src ++ els where
-                               els = if item == ""
+        Regular _ item' -> src ++ els where
+                               els = if item' == ""
                                    then ""
-                                   else " (" ++ item ++ ")"
+                                   else " (" ++ item' ++ ")"
         Qualified _     -> "qualified " ++ src -- ++ " as " ++ last paths

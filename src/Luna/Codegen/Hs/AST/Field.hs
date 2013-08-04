@@ -18,7 +18,8 @@ data Field    = Field { name :: String, t :: String} deriving (Show)
 empty :: Field
 empty = Field "" ""
 
---genCode :: GenContext -> Function -> String
+
+genCode :: Field -> [Char]
 genCode field =  name field ++ " :: " ++ t field
 
 

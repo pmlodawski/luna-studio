@@ -14,9 +14,7 @@ module Luna.Network.Path.Import(
     --genCode
 ) where
 
-import qualified Luna.Network.Path.Path          as Path
 import           Luna.Network.Path.Path            (Path)
-import           Data.String.Utils                 (join)
 
 data Import = Import {path :: Path, items :: [String]} deriving (Show)
 
@@ -24,10 +22,10 @@ noItems :: [String]
 noItems = []
 
 simple :: Path -> Import
-simple path = Import path noItems
+simple p = Import p noItems
 
 single :: Path -> String -> Import
-single path item = Import path [item]
+single p item = Import p [item]
 
 multi :: Path -> [String] -> Import
-multi path items' = Import path items'
+multi p items' = Import p items'

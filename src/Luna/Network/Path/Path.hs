@@ -25,6 +25,8 @@ newtype Path = Path {segments :: [String]} deriving (Show, Ord, Eq)
 empty :: Path
 empty = Path []
 
+
+single :: String -> Path
 single s = Path [s]
 
 

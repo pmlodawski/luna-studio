@@ -16,14 +16,10 @@ module Luna.Codegen.Hs.AST.Function (
     setter
 )where
 
-import Debug.Trace
-
 
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 import           Luna.Codegen.Hs.AST.Expr          (Expr)
 import           Data.String.Utils                 (join)
-import qualified Luna.Codegen.Hs.GenState        as GenState
-import           Luna.Codegen.Hs.GenState          (GenState)
 import qualified Luna.Codegen.Hs.Path            as Path
 
 
@@ -38,18 +34,18 @@ empty :: Function
 empty = Function "" [] [] Expr.Pure
 
 genCode :: Function -> String
-genCode func =  head  ++ " = " ++ body ++ "\n"
+genCode func =  head' ++ " = " ++ body ++ "\n"
              ++ headM ++ " = " ++ bodyM where
     signature = join " " (inputs func)
     fname     = name func 
-    head      = header  ++ signature
+    head'     = header  ++ signature
     headM     = headerM ++ signature
     header    = fname ++ " "
     headerM   = Path.mkMonadName fname ++ " "
     body      = genBodyPure func
     bodyM     = case ctx func of
                     Expr.IO   -> genBodyM func
-                    Expr.Pure -> "return $ " ++ head
+                    Expr.Pure -> "return $ " ++ head'
 
 genBodyM :: Function -> String
 genBodyM func = "do\n" ++ genExprCode (exprs func, Expr.IO) ++ "    return " ++ Path.outputs ++ "\n"
@@ -58,19 +54,19 @@ genBodyPure :: Function -> String
 genBodyPure func = "\n" ++ genExprCode (map Expr.mkPure $ exprs func, Expr.IO) ++ "    in " ++ Path.outputs ++ "\n"
 
 genExprCode :: ([Expr], Expr.Context) -> String
-genExprCode (exprs, ctx) = case exprs of
+genExprCode (exprs', ctx') = case exprs' of
     []     -> ""
     x : xs -> prefix ++ indent ++ Expr.genCode x ++ "\n" ++ genExprCode (xs, ectx) where
         ectx = Expr.ctx x
         indent = case ectx of
             Expr.Pure -> Path.mkIndent 2
             _         -> Path.mkIndent 1
-        prefix = if ctx == Expr.IO && ectx == Expr.Pure
+        prefix = if ctx' == Expr.IO && ectx == Expr.Pure
             then Path.mkIndent 1 ++ "let\n"
             else ""
 
-simple :: String -> Expr -> Function
-simple name expr = Function name [Path.inputs] [expr] Expr.Pure
+--simple :: String -> Expr -> Function
+--simple name' expr = Function name' [Path.inputs] [expr] Expr.Pure
 
 setCtx :: Expr.Context -> Function -> Function
 setCtx nctx func = func{ctx = nctx}
@@ -85,11 +81,11 @@ addAlias alias = addExpr (Expr.mkAlias alias)
 
 
 getter :: String -> String -> String -> Expr
-getter obj name param = Expr.Call "getter''" [Expr.THTypeCtx obj, Expr.THExprCtx param] Expr.Pure
+getter obj _ param = Expr.Call "getter''" [Expr.THTypeCtx obj, Expr.THExprCtx param] Expr.Pure
 
 
 setter :: String -> String -> String -> Expr
-setter obj name param = Expr.Call "setter''" [Expr.THTypeCtx obj, Expr.THExprCtx param] Expr.Pure
+setter obj _ param = Expr.Call "setter''" [Expr.THTypeCtx obj, Expr.THExprCtx param] Expr.Pure
 
 
 

@@ -19,12 +19,12 @@ module Luna.Codegen.Hs.Path (
     mkSetter,
     mkIndent,
     mkTHPointer,
-    mkClassName
+    mkClassName,
+    
 )where
 
 import           Luna.Network.Path.Path 
 import           Data.Char                      (isLower)
-import           Data.String.Utils                 (join)
 
 
 toModulePath :: Path -> Path
@@ -53,8 +53,8 @@ mkFieldName name = name ++ "'F"
 mkClassName :: String -> String
 mkClassName name = "C''" ++ name
 
-mkGSName :: String -> String
-mkGSName name = name ++ "'GS"
+--mkGSName :: String -> String
+--mkGSName name = name ++ "'GS"
 
 
 mkGetter :: String -> String
