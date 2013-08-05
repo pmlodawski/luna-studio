@@ -80,13 +80,14 @@ generateDefinition manager vtx = nmod where
             impfuncs  = map Path.toString $ zipWith Path.append subnames  modsubpaths
             impfuncsM = map Path.toString $ zipWith Path.append subnamesM modsubpaths
 
-            --test     = Function.empty { Function.name      = "ala"
-            --                          , Function.signature = [Expr.At Path.inputs (Expr.Tuple ((Expr.Cons "dupa" []):(replicate 3 Expr.Any)))]
-            --                          }
+            test     = Function.empty { Function.name      = "ala"
+                                      , Function.signature = [Expr.At Path.inputs (Expr.Tuple [Expr.Cons (Expr.name cons) [], Expr.Any])]
+                                      }
 
 
-            (basedt, basemod2) = CG.generateClass def basemod
-            modproto = Module.addImports subimps 
+            (cons, basemod2) = CG.generateClass def basemod
+            modproto = Module.addFunction test
+                     $ Module.addImports subimps 
                      $ Module.addImports commimps 
                      $ Module.addExt Extension.TemplateHaskell
                      $ Module.addExt Extension.FlexibleInstances
