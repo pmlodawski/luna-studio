@@ -11,11 +11,12 @@ module Luna.Codegen.Hs.AST.Function (
     basic,
     genCode,
     --addExpr,
-    --addAlias,
-    setCtx,
+    addAlias,
+    --setCtx,
     setBody,
     getter,
-    setter
+    setter,
+    mkSpec
 )where
 
 import Debug.Trace
@@ -28,18 +29,20 @@ import qualified Luna.Codegen.Hs.Path            as Path
 
 data Function = Function { name       :: String,
                            signature  :: [Expr],
-                           body       :: Expr,
-                           ctx        :: Expr.Context
+                           body       :: Expr
                          } deriving (Show)
 
 
 empty :: Function
-empty = Function "" [] (Expr.mkBlock Path.outputs) Expr.Pure
+empty = Function "" [] (Expr.mkBlock Path.outputs) 
 
 
 basic :: Function
 basic = empty { signature = [Expr.Var Path.inputs] }
 
+
+ctx :: Function -> Expr.Context
+ctx func = Expr.ctx $ body func
 
 genCode :: Function -> String
 genCode func =  head' ++ " = " ++ body' ++ "\n"
@@ -57,17 +60,18 @@ genCode func =  head' ++ " = " ++ body' ++ "\n"
 
 
 genBodyM :: Function -> String
-genBodyM func = "do\n" ++ Expr.genCode (body func) -- ++ "    return " ++ Path.outputs ++ "\n"
+genBodyM func = Expr.genCode (body func) 
+
 
 genBodyPure :: Function -> String
-genBodyPure func = "\n" ++ Expr.genCode (Expr.mkPure $ body func) -- ++ "    in " ++ Path.outputs ++ "\n"
+genBodyPure func = Expr.genCode (Expr.mkPure $ body func) 
 
 
 --simple :: String -> Expr -> Function
 --simple name' expr = Function name' [Path.signature] [expr] Expr.Pure
 
-setCtx :: Expr.Context -> Function -> Function
-setCtx nctx func = func{ctx = nctx}
+--setCtx :: Expr.Context -> Function -> Function
+--setCtx nctx func = func{ctx = nctx}
 
 
 setBody :: Expr -> Function -> Function
@@ -77,8 +81,8 @@ setBody expr func = func { body = expr }
 --addExpr expr func = func { body = expr : body func }
 
 
---addAlias :: (String, String) -> Function -> Function
---addAlias alias = addExpr (Expr.mkAlias alias)
+addAlias :: (String, String) -> Function -> Function
+addAlias alias func = setBody (Expr.addExpr (Expr.mkAlias alias) $ body func) func
 
 
 getter :: String -> String -> String -> Expr
@@ -90,6 +94,8 @@ setter obj _ param = Expr.Call "setter''" [Expr.THTypeCtx obj, Expr.THExprCtx pa
 
 
 
---mkSpec name' spec basefunc = Function.empty { name      = name'
---                                            , signature = [Expr.At Path.inputs (Expr.Tuple [spec, Expr.Any])]
---                                            }
+mkSpec :: String -> String -> String -> Function
+mkSpec spec name' basefunc = empty { name      = name'
+                                   , signature = [Expr.At Path.inputs (Expr.Tuple [Expr.Cons spec [], Expr.Any])]
+                                   , body      = Expr.Call basefunc [Expr.Var Path.inputs] Expr.IO
+                                   }

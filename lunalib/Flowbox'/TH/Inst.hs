@@ -4,7 +4,7 @@
 
 module Flowbox'.TH.Inst (
   mkInst,
-  mkInstIO
+  mkInst''
 )
   where
 
@@ -51,8 +51,8 @@ mkInst tcName fromFun toFun =
     inst <- instanceD cxt typ funcs
     return [inst]
 
-mkInstIO :: Name -> Name -> Name -> Name -> DecsQ    
-mkInstIO tcName fromFun fromIOFun toFun =
+mkInst'' :: Name -> Name -> Name -> Name -> DecsQ    
+mkInst'' tcName fromFun fromIOFun toFun =
   do
     (src, ret) <- sourceRetTypes $ getType fromFun
     let typ = return $ AppT (AppT (ConT tcName) src) ret
