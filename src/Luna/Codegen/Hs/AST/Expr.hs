@@ -14,8 +14,11 @@ module Luna.Codegen.Hs.AST.Expr (
     mkPure,
     addExpr,
     mkBlock,
+    mkAssignment,
     empty
 )where
+
+import Debug.Trace
 
 import           Data.String.Utils                 (join)
 import qualified Luna.Codegen.Hs.Path            as Path
@@ -37,7 +40,7 @@ data Expr = Assignment { src   :: Expr    , dst  :: Expr   , ctx :: Context }
           | Typed      { src   :: Expr    , t :: String                     }
           | At         { name  :: String  , dst :: Expr                     }
           | Any        {                                                    }
-          | Block      { body  :: [Expr]                                    }
+          | Block      { body  :: [Expr]  , ctx :: Context                  }
           | BlockRet   { name  :: String  , ctx :: Context                  }
           | NOP        {                                                    }
           deriving (Show)
@@ -51,7 +54,7 @@ mpostfix = "''M"
 
 
 mkBlock :: String -> Expr
-mkBlock retname = Block [BlockRet retname IO]
+mkBlock retname = Block [BlockRet retname IO] Pure
 
 
 genCode :: Expr -> String
@@ -78,7 +81,10 @@ genCode expr = case expr of
     Typed      src' t'          -> genCode src' ++ " :: " ++ t'
     At         name' dst'       -> name' ++ "@" ++ genCode dst'
     Any                         -> "_"
-    Block      body'            -> genBlockCode body' IO
+    Block      body' ctx'       -> prefix ++ genBlockCode body' IO where
+                                       prefix = case ctx' of
+                                           Pure -> "\n"
+                                           IO   -> "do\n"
     BlockRet   name' ctx'       -> case ctx' of
                                        Pure -> "in " ++ name'
                                        IO   -> "return " ++ name'
@@ -101,14 +107,29 @@ genBlockCode exprs' ctx' = case exprs' of
 
 
 addExpr :: Expr -> Expr -> Expr
-addExpr nexpr base = base { body = nexpr : body base }
+addExpr nexpr base = base { body = nexpr : body base,
+                            ctx  = chooseCtx (ctx base) (ctx nexpr)
+                          }
+
+
+
+chooseCtx :: Context -> Context -> Context
+chooseCtx ctx1 ctx2 = case ctx2 of
+    IO   -> IO
+    Pure -> ctx1
+
+
+mkAssignment :: Expr -> Expr -> Expr
+mkAssignment src' dst' = Assignment src' dst' ctx' where
+    ctx' = chooseCtx Pure (ctx dst')
+
 
 mkPure :: Expr -> Expr
 mkPure expr = case expr of
     Assignment src' dst' _   -> Assignment (mkPure src') (mkPure dst') Pure
     Tuple      elems'        -> Tuple $ map mkPure elems'
     Call       name' args' _ -> Call name' (map mkPure args') Pure
-    Block      body'         -> Block (map mkPure body')
+    Block      body' _       -> Block (map mkPure body') Pure
     BlockRet   name' ctx'    -> BlockRet name' Pure
     other                    -> other
 

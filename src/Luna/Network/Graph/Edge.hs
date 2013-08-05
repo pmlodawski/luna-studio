@@ -16,10 +16,10 @@ noEdges,
 --import           Control.Monad             (liftM)
 
 
-data Edge = Edge {src::Int, dst::Int} deriving (Show, Read, Ord, Eq)
+data Edge = Edge {dst::Int} deriving (Show, Read, Ord, Eq)
 
 standard :: Edge
-standard = Edge 0 0
+standard = Edge 0
 
 noEdges :: [Edge]
 noEdges = [] 

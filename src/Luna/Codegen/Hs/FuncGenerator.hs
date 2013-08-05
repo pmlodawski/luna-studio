@@ -50,10 +50,8 @@ generateNodeExpr :: Graph -> Graph.LVertex Node -> (Function, Module) -> (Functi
 generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
     block  = Function.body func
     nblock = Expr.addExpr expr block
-    nfunc  = Function.setBody nblock
-           $ case ctx of
-                 Expr.IO -> Function.setCtx ctx func
-                 _       -> func
+    nfunc  = Function.setBody nblock func
+
           
     (nid, node) = lnode
     expr  = Expr.Assignment src value ctx 

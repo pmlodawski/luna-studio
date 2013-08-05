@@ -61,8 +61,7 @@ generateDefinition manager vtx = nmod where
             subsrcs  = map (Path.toString . Path.toModulePath) subpaths
             aliases  = [(name, src ++ "." ++ name) | (name, src) <- zip subnames subsrcs]
             (basefunc, basemod2) = FG.generateFunction def basemod
-            --func     = foldr Function.addAlias basefunc aliases
-            func = basefunc
+            func     = foldr Function.addAlias basefunc aliases
             m        = Module.addFunction func
                      $ Module.addImports subimps
                      $ basemod2
@@ -77,36 +76,27 @@ generateDefinition manager vtx = nmod where
             commimps  = map Import.common subnames
 
             csubnames   = map Path.mkClassName subnames
+            subnamesT   = map Path.mkTemplateName subnames
+            subnamesTM  = map Path.mkMonadName subnamesT
             modsubpaths = map Path.toModulePath subpaths
             impfuncs    = map Path.toString $ zipWith Path.append subnames  modsubpaths
             impfuncsM   = map Path.toString $ zipWith Path.append subnamesM modsubpaths
 
-            --test     = Function.empty { Function.name      = "ala"
-            --                          , Function.signature = [Expr.At Path.inputs (Expr.Tuple [Expr.Cons (Expr.name cons) [], Expr.Any])]
-            --                          , Function.exprs     = [Expr.Call "dupa" [Expr.Var "inputsss"] Expr.IO]
-            --                          }
+            funcs    = zipWith (Function.mkSpec (Expr.name cons)) subnamesT impfuncs
+        
 
-
-            (cons, basemod2) = CG.generateClass def basemod
-            modproto = --Module.addFunction test
-                     -- $ 
-                     Module.addImports subimps 
+            (cons, modproto) = CG.generateClass def basemod
+            m        = foldri Module.mkInst instargs
+                     $ foldri Module.addFunction funcs
+                     $ Module.addImports subimps 
                      $ Module.addImports commimps 
                      $ Module.addExt Extension.TemplateHaskell
                      $ Module.addExt Extension.FlexibleInstances
                      $ Module.addExt Extension.MultiParamTypeClasses
                      $ Module.addExt Extension.UndecidableInstances       --FIXME[wd]: Czy mozna sie tego pozbyc?
-                     $ basemod2
-
-            instargs = zip4 csubnames impfuncs impfuncsM subnames
-
-
-            m        = trace(show $ impfuncs) $
-            --foldri Module.addAlias aliases 
-                     foldri Module.mkInst instargs 
                      $ modproto
 
-            --mkInstIO ''F_len 'len_ 'len_IO 'len
+            instargs = zip4 csubnames subnamesT subnamesTM subnames
 
         _            -> error "Not known type conversion."
 
