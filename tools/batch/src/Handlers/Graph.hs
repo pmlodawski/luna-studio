@@ -14,14 +14,12 @@ disconnect
 ) 
 where
 
-import           Control.Exception
 import           Control.Monad
 import           Data.IORef
-import           Data.Text.Lazy   (pack, unpack)
 import qualified Data.Vector    as Vector
 import           Data.Vector      (Vector)
 
-import           Batch_Types (ArgumentException(..))
+import           Handlers.Common
 import           Handlers.Defs                   (defOperation)
 import qualified Defs_Types                    as TDefs
 import qualified Graph_Types                   as TGraph
@@ -43,8 +41,8 @@ graph = defOperation (\batchHandler defID definition -> do
     putStrLn "called graph"
     core <- readIORef batchHandler
     let defManager = Core.defManager core
-        graph = NodeDef.graph definition
-    return $ encode graph)
+        agraph = NodeDef.graph definition
+    return $ encode agraph)
 
 
 addNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO TGraph.Node
@@ -71,7 +69,7 @@ updateNode = nodeDefOperation (\batchHandler (nodeID, node) (defID, definition) 
     let defManager    = Core.defManager core
         agraph        = NodeDef.graph definition
     case Graph.gelem nodeID agraph of 
-        False -> throw $ ArgumentException $ Just $ pack $ "Wrong `nodeID` in `node`"
+        False -> throw' $ "Wrong `nodeID` in `node`"
         True  -> do 
             let newGraph      = Graph.updateNode (nodeID, node) agraph
                 newDefinition = definition {NodeDef.graph =  newGraph}
@@ -88,7 +86,7 @@ removeNode = nodeDefOperation (\batchHandler (nodeID, _) (defID, definition) -> 
     let defManager    = Core.defManager core
         agraph        = NodeDef.graph definition
     case Graph.gelem nodeID agraph of 
-        False -> throw $ ArgumentException $ Just $ pack $ "Wrong `nodeID` in `node`"
+        False -> throw' $ "Wrong `nodeID` in `node`"
         True  -> do 
             let newGraph      = Graph.delNode nodeID agraph
                 newDefinition = definition {NodeDef.graph =  newGraph}
@@ -97,13 +95,55 @@ removeNode = nodeDefOperation (\batchHandler (nodeID, _) (defID, definition) -> 
             print newCore
             writeIORef batchHandler newCore)
 
+connect :: IORef Core -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+                      -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+        -> Maybe TDefs.NodeDef -> IO ()
+connect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort 
+                                               (dstNodeID, dstNode) dstPort definition -> do 
+    putStrLn "call connect - NOT IMPLEMENTED")
 
-connect    batchHandler mtsrcNode mtsrcPort mtdstNode mtdstPort mtdefinition = do 
-    putStrLn "NOT IMPLEMENTED - connect"
+
+disconnect :: IORef Core -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+                         -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+           -> Maybe TDefs.NodeDef -> IO ()
+disconnect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort
+                                                  (dstNodeID, dstNode) dstPort definition -> do 
+    putStrLn "call disconnect - NOT IMPLEMENTED")
 
 
-disconnect batchHandler mtsrcNode mtsrcPort mtdstNode mtdstPort mtdefinition = do 
-    putStrLn "NOT IMPLEMENTED - disconnect"
+nodesConnectOperation :: (IORef Core -> (Node.ID, Node) -> [Int]
+                                     -> (Node.ID, Node) -> [Int]
+                                     -> NodeDef -> IO result)
+                      -> IORef Core -> (Maybe TGraph.Node) -> (Maybe TGraph.PortDescriptor)
+                                    -> (Maybe TGraph.Node) -> (Maybe TGraph.PortDescriptor)
+                      -> Maybe TDefs.NodeDef -> IO result
+nodesConnectOperation operation batchHandler mtsrcNode mtsrcPort mtdstNode mtdstPort mtdefinition = do
+    core <- readIORef batchHandler
+    let defManager = Core.defManager core
+    case mtsrcNode of
+        Nothing       -> throw' "`srcNode` field is missing"
+        Just tsrcNode -> case decode tsrcNode of
+            Left message               -> throw' $ "Failed to decode `srcNode` : " ++ message
+            Right (srcNodeID, srcNode) -> case mtsrcPort of
+                Nothing       -> throw' "`srcPort` field is missing"
+                Just tsrcPort -> case mtdstNode of 
+                    Nothing       -> throw' "`dstNode` field is missing"
+                    Just tdstNode -> case decode tdstNode of
+                        Left message               -> throw' $ "Failed to decode `dstNode` : " ++ message
+                        Right (dstNodeID, dstNode) -> case mtdstPort of 
+                            Nothing       -> throw' "`dstPort` field is missing"
+                            Just tdstPort -> case mtdefinition of
+                                Nothing          -> throw' "`definition` field is missing"
+                                Just tdefinition -> do
+                                    let mdefID = liftM i32toi $ TDefs.f_NodeDef_defID tdefinition
+                                    case mdefID of 
+                                        Nothing    -> throw' "`defID` field is missing"
+                                        Just defID -> case DefManager.lab defManager defID of 
+                                            Nothing         -> throw' $ "Wrong `defID` in `definition`"
+                                            Just definition -> let vectorToList = map i32toi . Vector.toList
+                                                                   srcPort = vectorToList tsrcPort
+                                                                   dstPort = vectorToList tdstPort 
+                                                               in operation batchHandler (srcNodeID, srcNode) srcPort (dstNodeID, dstNode) dstPort definition
 
 
 nodeDefOperation :: (IORef Core -> (Node.ID, Node) -> (NodeDef.ID, NodeDef) -> IO result) 
@@ -112,16 +152,16 @@ nodeDefOperation operation batchHandler mtnode mtdefinition = do
     core <- readIORef batchHandler
     let defManager = Core.defManager core
     case mtnode of
-        Nothing    -> throw $ ArgumentException $ Just $ pack "`node` field is missing"
+        Nothing    -> throw' "`node` field is missing"
         Just tnode -> case decode tnode of 
-            Left message         -> throw $ ArgumentException $ Just $ pack $ "Failed to decode `node` field: " ++ message
+            Left message         -> throw' $ "Failed to decode `node` field: " ++ message
             Right (nodeID, node) -> case mtdefinition of 
-                Nothing          -> throw $ ArgumentException $ Just $ pack "`definition` field is missing"
+                Nothing          -> throw' "`definition` field is missing"
                 Just tdefinition -> do
                     let mdefID = liftM i32toi $ TDefs.f_NodeDef_defID tdefinition
                     case mdefID of
-                        Nothing    -> throw $ ArgumentException $ Just $ pack "`defID` field is missing"
+                        Nothing    -> throw' "`defID` field is missing"
                         Just defID -> case DefManager.lab defManager defID of 
-                            Nothing         -> throw $ ArgumentException $ Just $ pack $ "Wrong `defID` in `definition`"
+                            Nothing         -> throw' $ "Wrong `defID` in `definition`"
                             Just definition -> operation batchHandler (nodeID, node) (defID, definition)
             

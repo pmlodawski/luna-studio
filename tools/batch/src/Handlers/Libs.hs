@@ -12,17 +12,14 @@ module Handlers.Libs (
 ) 
 where
     
-import           Control.Exception
 import           Data.IORef
-import qualified Data.Text.Lazy as Text
 import qualified Data.Vector    as Vector
 import           Data.Vector      (Vector)
 
 
 import qualified Defs_Types                  as TDefs
+import           Handlers.Common
 import qualified Libs_Types                  as TLibs
-import           Batch_Types                   (ArgumentException(..))
-
 import qualified Luna.Core                   as Core
 import           Luna.Core                     (Core(..))
 import qualified Luna.Lib.LibManager         as LibManager
@@ -41,8 +38,8 @@ libOperation operation batchHandler tlibrary = case tlibrary of
         (Just tlib) -> do 
             case decode tlib :: Either String (Int, Library) of
                 Right library -> operation batchHandler library
-                Left  message -> throw $ ArgumentException $ Just $ Text.pack message
-        Nothing     -> throw $ ArgumentException $ Just $ Text.pack "`library` argument is missing";
+                Left  message -> throw' message
+        Nothing     -> throw' "`library` argument is missing";
 
 
 ------ public api -------------------------------------------------
@@ -85,5 +82,5 @@ libraryRootDef = libOperation (\ batchHandler (_, library) -> do
         Just rd -> do
                    let (trootDef, _) = encode (rootNodeDefID', rd)
                    return trootDef
-        Nothing -> throw $ ArgumentException $ Just $ Text.pack "Wrong `rootNodeDefID` in `library` argument")
+        Nothing -> throw' "Wrong `rootNodeDefID` in `library` argument")
 
