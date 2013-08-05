@@ -10,9 +10,10 @@ module Luna.Codegen.Hs.AST.Function (
     empty,
     basic,
     genCode,
-    addExpr,
-    addAlias,
+    --addExpr,
+    --addAlias,
     setCtx,
+    setBody,
     getter,
     setter
 )where
@@ -27,13 +28,13 @@ import qualified Luna.Codegen.Hs.Path            as Path
 
 data Function = Function { name       :: String,
                            signature  :: [Expr],
-                           exprs      :: [Expr],
+                           body       :: Expr,
                            ctx        :: Expr.Context
                          } deriving (Show)
 
 
 empty :: Function
-empty = Function "" [] [] Expr.Pure
+empty = Function "" [] (Expr.mkBlock Path.outputs) Expr.Pure
 
 
 basic :: Function
@@ -41,36 +42,26 @@ basic = empty { signature = [Expr.Var Path.inputs] }
 
 
 genCode :: Function -> String
-genCode func =  head' ++ " = " ++ body ++ "\n"
+genCode func =  head' ++ " = " ++ body' ++ "\n"
              ++ headM ++ " = " ++ bodyM where
-    inputs    = join " " (map Expr.genCode $ signature func)
-    fname     = name func 
-    head'     = header  ++ inputs
-    headM     = headerM ++ inputs
-    header    = fname ++ " "
-    headerM   = Path.mkMonadName fname ++ " "
-    body      = genBodyPure func
-    bodyM     = case ctx func of
-                    Expr.IO   -> genBodyM func
-                    Expr.Pure -> "return $ " ++ head'
+    fname    = name func 
+    header   = fname ++ " "
+    headerM  = Path.mkMonadName fname ++ " "
+    inputs   = join " " (map Expr.genCode $ signature func)
+    head'    = header  ++ inputs
+    headM    = headerM ++ inputs
+    body'    = genBodyPure func
+    bodyM    = case ctx func of
+                   Expr.IO   -> genBodyM func
+                   Expr.Pure -> "return $ " ++ head'
+
 
 genBodyM :: Function -> String
-genBodyM func = "do\n" ++ genExprCode (exprs func, Expr.IO) ++ "    return " ++ Path.outputs ++ "\n"
+genBodyM func = "do\n" ++ Expr.genCode (body func) -- ++ "    return " ++ Path.outputs ++ "\n"
 
 genBodyPure :: Function -> String
-genBodyPure func = "\n" ++ genExprCode (map Expr.mkPure $ exprs func, Expr.IO) ++ "    in " ++ Path.outputs ++ "\n"
+genBodyPure func = "\n" ++ Expr.genCode (Expr.mkPure $ body func) -- ++ "    in " ++ Path.outputs ++ "\n"
 
-genExprCode :: ([Expr], Expr.Context) -> String
-genExprCode (exprs', ctx') = case exprs' of
-    []     -> ""
-    x : xs -> prefix ++ indent ++ Expr.genCode x ++ "\n" ++ genExprCode (xs, ectx) where
-        ectx = Expr.ctx x
-        indent = case ectx of
-            Expr.Pure -> Path.mkIndent 2
-            _         -> Path.mkIndent 1
-        prefix = if ctx' == Expr.IO && ectx == Expr.Pure
-            then Path.mkIndent 1 ++ "let\n"
-            else ""
 
 --simple :: String -> Expr -> Function
 --simple name' expr = Function name' [Path.signature] [expr] Expr.Pure
@@ -79,12 +70,15 @@ setCtx :: Expr.Context -> Function -> Function
 setCtx nctx func = func{ctx = nctx}
 
 
-addExpr :: Expr -> Function -> Function
-addExpr expr func = func { exprs = expr : exprs func }
+setBody :: Expr -> Function -> Function
+setBody expr func = func { body = expr }
+
+--addExpr :: Expr -> Function -> Function
+--addExpr expr func = func { body = expr : body func }
 
 
-addAlias :: (String, String) -> Function -> Function
-addAlias alias = addExpr (Expr.mkAlias alias)
+--addAlias :: (String, String) -> Function -> Function
+--addAlias alias = addExpr (Expr.mkAlias alias)
 
 
 getter :: String -> String -> String -> Expr
@@ -96,3 +90,6 @@ setter obj _ param = Expr.Call "setter''" [Expr.THTypeCtx obj, Expr.THExprCtx pa
 
 
 
+--mkSpec name' spec basefunc = Function.empty { name      = name'
+--                                            , signature = [Expr.At Path.inputs (Expr.Tuple [spec, Expr.Any])]
+--                                            }
