@@ -15,7 +15,7 @@ disconnect
 where
 
 import           Control.Exception
-
+import           Control.Monad
 import           Data.IORef
 import           Data.Text.Lazy   (pack, unpack)
 import qualified Data.Vector    as Vector
@@ -31,32 +31,68 @@ import qualified Luna.Network.Def.DefManager   as DefManager
 import qualified Luna.Network.Def.NodeDef      as NodeDef
 import           Luna.Network.Def.NodeDef        (NodeDef)
 import qualified Luna.Network.Graph.Graph      as Graph
+import qualified Luna.Network.Graph.Node       as Node
+import           Luna.Network.Graph.Node         (Node(..))
 import           Luna.Tools.Serialization
+import           Luna.Tools.Serialization.Defs    ()
 import           Luna.Tools.Serialization.Graph   ()
 
 
 graph :: IORef Core -> Maybe TDefs.NodeDef -> IO TGraph.Graph
-graph = defOperation (\batchHandler defID _ ->
-    do core <- readIORef batchHandler
-       let defManager = Core.defManager core
-       case DefManager.lab defManager defID  of 
-           Just definition -> do putStrLn "called graph"
-                                 let graph = NodeDef.graph definition
-                                 return $ encode graph
-           Nothing         -> throw $ ArgumentException $ Just $ pack "Wrong `defID` in `definition` field")
+graph = defOperation (\batchHandler defID definition -> do
+    putStrLn "called graph"
+    core <- readIORef batchHandler
+    let defManager = Core.defManager core
+        graph = NodeDef.graph definition
+    return $ encode graph)
 
 
-addNode batchHandler mtnode mtdefinition = do
-    putStrLn "NOT IMPLEMENTED - addNode"
-    return $ TGraph.Node Nothing Nothing Nothing Nothing Nothing Nothing
+
+addNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO TGraph.Node
+addNode = nodeDefOperation (\batchHandler (_, node) (defID, definition) -> do
+    putStrLn "called addNode"
+    core <- readIORef batchHandler
+    let defManager    = Core.defManager core
+        agraph        = NodeDef.graph definition
+        [nodeID]      = Graph.newNodes 1 agraph
+        newGraph      = Graph.insNode (nodeID, node) agraph
+        newDefinition = definition {NodeDef.graph =  newGraph}
+        newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
+        newCore       = core {Core.defManager = newDefManager}
+    print newCore
+    writeIORef batchHandler newCore
+
+    return $ encode (nodeID, node))
 
 
-updateNode batchHandler mtnode mtdefinition = do
-    putStrLn "NOT IMPLEMENTED - updateNode"
+updateNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO ()
+updateNode = nodeDefOperation (\batchHandler (nodeID, node) (defID, definition) -> do 
+    --TODO [PM] implement case that nodeID not exist
+    putStrLn "called updateNode"
+    core <- readIORef batchHandler
+    let defManager    = Core.defManager core
+        agraph        = NodeDef.graph definition
+        newGraph      = Graph.updateNode (nodeID, node) agraph
+        newDefinition = definition {NodeDef.graph =  newGraph}
+        newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
+        newCore       = core {Core.defManager = newDefManager}
+    print newCore
+    writeIORef batchHandler newCore)
 
 
-removeNode batchHandler mtnode mtdefinition = do
-    putStrLn "NOT IMPLEMENTED - removeNode"
+removeNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO ()
+removeNode = nodeDefOperation (\batchHandler (nodeID, _) (defID, definition) -> do
+    --TODO [PM] implement case that nodeID not exist
+    putStrLn "called removeNode - NOT IMPLEMENTED"
+    core <- readIORef batchHandler
+    let defManager    = Core.defManager core
+        agraph        = NodeDef.graph definition
+        newGraph      = Graph.delNode nodeID agraph
+        newDefinition = definition {NodeDef.graph =  newGraph}
+        newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
+        newCore       = core {Core.defManager = newDefManager}
+    print newCore
+    writeIORef batchHandler newCore)
 
 
 connect    batchHandler mtsrcNode mtsrcPort mtdstNode mtdstPort mtdefinition = do 
@@ -65,3 +101,24 @@ connect    batchHandler mtsrcNode mtsrcPort mtdstNode mtdstPort mtdefinition = d
 
 disconnect batchHandler mtsrcNode mtsrcPort mtdstNode mtdstPort mtdefinition = do 
     putStrLn "NOT IMPLEMENTED - disconnect"
+
+
+nodeDefOperation :: (IORef Core -> (Node.ID, Node) -> (NodeDef.ID, NodeDef) -> IO result) 
+                 -> IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO result
+nodeDefOperation operation batchHandler mtnode mtdefinition = do 
+    core <- readIORef batchHandler
+    let defManager = Core.defManager core
+    case mtnode of
+        Nothing    -> throw $ ArgumentException $ Just $ pack "`node` field is missing"
+        Just tnode -> case decode tnode of 
+            Left message         -> throw $ ArgumentException $ Just $ pack $ "Failed to decode `node` field: " ++ message
+            Right (nodeID, node) -> case mtdefinition of 
+                Nothing          -> throw $ ArgumentException $ Just $ pack "`definition` field is missing"
+                Just tdefinition -> do
+                    let mdefID = liftM i32toi $ TDefs.f_NodeDef_defID tdefinition
+                    case mdefID of
+                        Nothing    -> throw $ ArgumentException $ Just $ pack "`defID` field is missing"
+                        Just defID -> case DefManager.lab defManager defID of 
+                            Nothing         -> throw $ ArgumentException $ Just $ pack $ "Wrong `defID` in `definition`"
+                            Just definition -> operation batchHandler (nodeID, node) (defID, definition)
+            
