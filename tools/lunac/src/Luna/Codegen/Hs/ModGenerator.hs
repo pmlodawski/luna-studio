@@ -29,6 +29,7 @@ import qualified Luna.Codegen.Hs.FuncGenerator   as FG
 import qualified Luna.Codegen.Hs.ClassGenerator  as CG
 import qualified Luna.Codegen.Hs.Path            as Path
 import qualified Luna.Codegen.Hs.AST.Function    as Function
+import qualified Luna.Codegen.Hs.AST.Instance    as Instance
 import qualified Luna.Codegen.Hs.AST.Extension   as Extension
 import qualified Luna.Codegen.Hs.AST.DataType    as DataType
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
@@ -82,12 +83,12 @@ generateDefinition manager vtx = nmod where
             impfuncs    = map Path.toString $ zipWith Path.append subnames  modsubpaths
             impfuncsM   = map Path.toString $ zipWith Path.append subnamesM modsubpaths
 
-            funcs    = zipWith (Function.mkSpec (Expr.name cons)) subnamesT impfuncs
+            --funcs    = zipWith (Function.mkSpec (DataType.name dt)) subnamesT impfuncs
         
 
-            (cons, modproto) = CG.generateClass def basemod
+            (dt, modproto) = CG.generateClass def basemod
             m        = foldri Module.mkInst instargs
-                     $ foldri Module.addFunction funcs
+                     -- $ foldri Module.addFunction funcs
                      $ Module.addImports subimps 
                      $ Module.addImports commimps 
                      $ Module.addExt Extension.TemplateHaskell

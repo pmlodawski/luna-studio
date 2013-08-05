@@ -22,9 +22,17 @@ import           Luna.Codegen.Hs.AST.Module        (Module)
 import qualified Luna.Codegen.Hs.AST.Function    as Function
 import qualified Luna.Codegen.Hs.Import          as Import
 import qualified Luna.Codegen.Hs.AST.Deriving    as Deriving
+import qualified Luna.Codegen.Hs.AST.Instance    as Instance
 
-generateClass :: NodeDef -> Module -> (Expr, Module)
-generateClass def m = (cons, nmod) where
+
+generateClass :: NodeDef -> Module -> (DataType, Module)
+generateClass def m = (datatype, nmod) where
+
+    test     = Instance.empty { Instance.name   = "getter"
+                              , Instance.params = [Expr.NTuple [Expr.Var "a"]]
+                              }
+
+
     cls        = NodeDef.cls def
     clsname    = Type.name cls
     params     = Type.params cls
@@ -35,16 +43,16 @@ generateClass def m = (cons, nmod) where
     fields     = zipWith Expr.Typed fieldtypes paramtypes
     cons       = Expr.Cons clsname fields
     datatype   = DataType.addDeriving Deriving.Show
-               $ DataType.empty { DataType.name       = clsname
-                                , DataType.typeparams = Type.typeparams cls
-                                , DataType.cons       = [cons]
+               $ DataType.empty { DataType.cls    = Expr.Type clsname (Type.typeparams cls)
+                                , DataType.cons   = [cons]
                                 }
     getters    = zipWith (Function.getter clsname) paramnames fieldnames
     setters    = zipWith (Function.setter clsname) paramnames fieldnames
     getnames   = map Path.mkGetter paramnames
     setnames   = map Path.mkSetter paramnames
     commimps   = map Import.common (getnames ++ setnames)
-    nmod       = Module.addImports commimps
+    nmod       = Module.addInstance test
+               $ Module.addImports commimps
                $ Module.addExprs setters
                $ Module.addExprs getters
                $ Module.addDataType datatype

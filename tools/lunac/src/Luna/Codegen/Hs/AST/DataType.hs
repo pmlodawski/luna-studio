@@ -20,21 +20,21 @@ import qualified Luna.Codegen.Hs.AST.Deriving    as Deriving
 import           Luna.Codegen.Hs.AST.Deriving      (Deriving)
 
 
-data DataType = DataType { name         :: String,
-                           typeparams   :: [String],
-                           cons         :: [Expr],
-                           derivings    :: [Deriving]
+data DataType = DataType { cls       :: Expr
+                         , cons      :: [Expr]
+                         , derivings :: [Deriving]
                          } deriving (Show)
 
 
 empty :: DataType
-empty = DataType "" [] [] []
+empty = DataType Expr.empty [] []
 
 
 genCode :: DataType -> String
-genCode dt =  "data " ++ name dt ++ " " ++ join " " (typeparams dt) ++ " = " 
+genCode dt =  "data " ++ Expr.genCode (cls dt) ++ " = " 
            ++ join " | "  (map Expr.genCode (cons dt))
            ++ Deriving.genCode (derivings dt)
+
 
 
 addDeriving :: Deriving -> DataType -> DataType
