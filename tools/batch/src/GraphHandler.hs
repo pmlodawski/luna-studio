@@ -47,7 +47,6 @@ graph = defOperation (\batchHandler defID definition -> do
     return $ encode graph)
 
 
-
 addNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO TGraph.Node
 addNode = nodeDefOperation (\batchHandler (_, node) (defID, definition) -> do
     putStrLn "called addNode"
@@ -67,32 +66,36 @@ addNode = nodeDefOperation (\batchHandler (_, node) (defID, definition) -> do
 
 updateNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO ()
 updateNode = nodeDefOperation (\batchHandler (nodeID, node) (defID, definition) -> do 
-    --TODO [PM] implement case that nodeID not exist
     putStrLn "called updateNode"
     core <- readIORef batchHandler
     let defManager    = Core.defManager core
         agraph        = NodeDef.graph definition
-        newGraph      = Graph.updateNode (nodeID, node) agraph
-        newDefinition = definition {NodeDef.graph =  newGraph}
-        newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
-        newCore       = core {Core.defManager = newDefManager}
-    print newCore
-    writeIORef batchHandler newCore)
+    case Graph.gelem nodeID agraph of 
+        False -> throw $ ArgumentException $ Just $ pack $ "Wrong `nodeID` in `node`"
+        True  -> do 
+            let newGraph      = Graph.updateNode (nodeID, node) agraph
+                newDefinition = definition {NodeDef.graph =  newGraph}
+                newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
+                newCore       = core {Core.defManager = newDefManager}
+            print newCore
+            writeIORef batchHandler newCore)
 
 
 removeNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO ()
 removeNode = nodeDefOperation (\batchHandler (nodeID, _) (defID, definition) -> do
-    --TODO [PM] implement case that nodeID not exist
-    putStrLn "called removeNode - NOT IMPLEMENTED"
+    putStrLn "called removeNode"
     core <- readIORef batchHandler
     let defManager    = Core.defManager core
         agraph        = NodeDef.graph definition
-        newGraph      = Graph.delNode nodeID agraph
-        newDefinition = definition {NodeDef.graph =  newGraph}
-        newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
-        newCore       = core {Core.defManager = newDefManager}
-    print newCore
-    writeIORef batchHandler newCore)
+    case Graph.gelem nodeID agraph of 
+        False -> throw $ ArgumentException $ Just $ pack $ "Wrong `nodeID` in `node`"
+        True  -> do 
+            let newGraph      = Graph.delNode nodeID agraph
+                newDefinition = definition {NodeDef.graph =  newGraph}
+                newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
+                newCore       = core {Core.defManager = newDefManager}
+            print newCore
+            writeIORef batchHandler newCore)
 
 
 connect    batchHandler mtsrcNode mtsrcPort mtdstNode mtdstPort mtdefinition = do 
