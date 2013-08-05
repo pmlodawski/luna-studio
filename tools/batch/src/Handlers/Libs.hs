@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module LibraryHandler (
+module Handlers.Libs (
     libraries,
     loadLibrary,
     unloadLibrary,

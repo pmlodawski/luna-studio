@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module GraphHandler (
+module Handlers.Graph (
 graph,
 addNode,
 updateNode,
@@ -22,7 +22,7 @@ import qualified Data.Vector    as Vector
 import           Data.Vector      (Vector)
 
 import           Batch_Types (ArgumentException(..))
-import           DefinitionHandler               (defOperation)
+import           Handlers.Defs                   (defOperation)
 import qualified Defs_Types                    as TDefs
 import qualified Graph_Types                   as TGraph
 import qualified Luna.Core                     as Core
