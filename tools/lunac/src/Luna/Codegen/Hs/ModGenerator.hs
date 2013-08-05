@@ -61,7 +61,8 @@ generateDefinition manager vtx = nmod where
             subsrcs  = map (Path.toString . Path.toModulePath) subpaths
             aliases  = [(name, src ++ "." ++ name) | (name, src) <- zip subnames subsrcs]
             (basefunc, basemod2) = FG.generateFunction def basemod
-            func     = foldr Function.addAlias basefunc aliases
+            --func     = foldr Function.addAlias basefunc aliases
+            func = basefunc
             m        = Module.addFunction func
                      $ Module.addImports subimps
                      $ basemod2
@@ -77,17 +78,19 @@ generateDefinition manager vtx = nmod where
 
             csubnames   = map Path.mkClassName subnames
             modsubpaths = map Path.toModulePath subpaths
-            impfuncs  = map Path.toString $ zipWith Path.append subnames  modsubpaths
-            impfuncsM = map Path.toString $ zipWith Path.append subnamesM modsubpaths
+            impfuncs    = map Path.toString $ zipWith Path.append subnames  modsubpaths
+            impfuncsM   = map Path.toString $ zipWith Path.append subnamesM modsubpaths
 
-            test     = Function.empty { Function.name      = "ala"
-                                      , Function.signature = [Expr.At Path.inputs (Expr.Tuple [Expr.Cons (Expr.name cons) [], Expr.Any])]
-                                      }
+            --test     = Function.empty { Function.name      = "ala"
+            --                          , Function.signature = [Expr.At Path.inputs (Expr.Tuple [Expr.Cons (Expr.name cons) [], Expr.Any])]
+            --                          , Function.exprs     = [Expr.Call "dupa" [Expr.Var "inputsss"] Expr.IO]
+            --                          }
 
 
             (cons, basemod2) = CG.generateClass def basemod
-            modproto = Module.addFunction test
-                     $ Module.addImports subimps 
+            modproto = --Module.addFunction test
+                     -- $ 
+                     Module.addImports subimps 
                      $ Module.addImports commimps 
                      $ Module.addExt Extension.TemplateHaskell
                      $ Module.addExt Extension.FlexibleInstances
@@ -98,7 +101,7 @@ generateDefinition manager vtx = nmod where
             instargs = zip4 csubnames impfuncs impfuncsM subnames
 
 
-            m        = --trace(show $ length (Expr.fields basedt)) $
+            m        = trace(show $ impfuncs) $
             --foldri Module.addAlias aliases 
                      foldri Module.mkInst instargs 
                      $ modproto

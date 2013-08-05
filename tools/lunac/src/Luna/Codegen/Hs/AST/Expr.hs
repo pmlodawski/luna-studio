@@ -11,10 +11,14 @@ module Luna.Codegen.Hs.AST.Expr (
     genCode,
     mkAlias,
     mkCall,
-    mkPure
+    mkPure,
+    addExpr,
+    mkBlock,
+    empty
 )where
 
 import           Data.String.Utils                 (join)
+import qualified Luna.Codegen.Hs.Path            as Path
 --import qualified Luna.Codegen.Hs.GenState         as GenState
 --import           Luna.Codegen.Hs.GenState           (GenState)
 
@@ -31,13 +35,23 @@ data Expr = Assignment { src   :: Expr    , dst  :: Expr   , ctx :: Context }
           | THTypeCtx  { name  :: String                                    }
           | Cons       { name  :: String  , fields :: [Expr]                }
           | Typed      { src   :: Expr    , t :: String                     }
-          | At         { name  :: String  , body :: Expr                    }
+          | At         { name  :: String  , dst :: Expr                     }
           | Any        {                                                    }
+          | Block      { body  :: [Expr]                                    }
+          | BlockRet   { name  :: String  , ctx :: Context                  }
+          | NOP        {                                                    }
           deriving (Show)
 
 
+empty :: Expr
+empty = NOP
+
 mpostfix :: String
 mpostfix = "''M"
+
+
+mkBlock :: String -> Expr
+mkBlock retname = Block [BlockRet retname IO]
 
 
 genCode :: Expr -> String
@@ -62,15 +76,40 @@ genCode expr = case expr of
     THTypeCtx  name'            -> "''" ++ name'
     Cons       name' fields'    -> name' ++ " {" ++ join ", " (map genCode fields') ++ "}"
     Typed      src' t'          -> genCode src' ++ " :: " ++ t'
-    At         name' body'      -> name' ++ "@" ++ genCode body'
+    At         name' dst'       -> name' ++ "@" ++ genCode dst'
     Any                         -> "_"
+    Block      body'            -> genBlockCode body' IO
+    BlockRet   name' ctx'       -> case ctx' of
+                                       Pure -> "in " ++ name'
+                                       IO   -> "return " ++ name'
+    NOP                         -> ""
 
+
+genBlockCode :: [Expr] -> Context -> String
+genBlockCode exprs' ctx' = case exprs' of
+    []     -> ""
+    x : xs -> prefix ++ indent ++ genCode x ++ "\n" ++ genBlockCode xs ectx where
+        ectx = ctx x
+        indent = case x of
+            BlockRet{} -> Path.mkIndent 1
+            _          -> case ectx of
+                              Pure -> Path.mkIndent 2
+                              _    -> Path.mkIndent 1
+        prefix = if ctx' == IO && ectx == Pure
+            then Path.mkIndent 1 ++ "let\n"
+            else ""
+
+
+addExpr :: Expr -> Expr -> Expr
+addExpr nexpr base = base { body = nexpr : body base }
 
 mkPure :: Expr -> Expr
 mkPure expr = case expr of
     Assignment src' dst' _   -> Assignment (mkPure src') (mkPure dst') Pure
     Tuple      elems'        -> Tuple $ map mkPure elems'
     Call       name' args' _ -> Call name' (map mkPure args') Pure
+    Block      body'         -> Block (map mkPure body')
+    BlockRet   name' ctx'    -> BlockRet name' Pure
     other                    -> other
 
 
