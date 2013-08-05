@@ -17,7 +17,6 @@ newTypeTuple
 ) 
 where
 
-import           Control.Exception
 import           Data.Text.Lazy                (Text, unpack)
 import qualified Data.Vector                 as Vector
 import           Data.Vector                   (Vector)
@@ -32,28 +31,32 @@ import           Luna.Type.Type                (Type(..))
 
 newTypeModule :: b -> Maybe Text -> IO TTypes.Type
 newTypeModule _ mtname = case mtname of 
-    Just tname -> return $ encode $ Module $ unpack tname
     Nothing    -> throw' "`name` field is missing"
-                  
+    Just tname -> return $ encode $ Module $ unpack tname
+
 
 newTypeClass :: b -> Maybe Text -> Maybe (Vector TTypes.Type) -> IO TTypes.Type
-newTypeClass _ mtname mtparams = case (mtname, mtparams) of
-    (Just tname, Just tparams) -> case decode $ Vector.toList tparams of 
-                                Right aparams -> return $ encode $ Class (unpack tname) aparams
-                                Left  message -> throw' ("Failed to decode `params` : " ++ message)
-    (Just _    , Nothing     ) -> throw' "`params` field is missing"
-    (Nothing   , _           ) -> throw' "`name` field is missing"
+newTypeClass _ mtname mtparams = case mtname of
+    Nothing    -> throw' "`name` field is missing"
+    Just tname -> case mtparams of 
+        Nothing      -> throw' "`params` field is missing"
+        Just tparams -> case decode $ Vector.toList tparams of 
+            Left  message -> throw' $ "Failed to decode `params` : " ++ message
+            Right aparams -> return $ encode $ Class (unpack tname) aparams
 
 
 newTypeFunction :: b -> Maybe Text -> Maybe TTypes.Type -> Maybe TTypes.Type -> IO TTypes.Type
-newTypeFunction _ mtname mtinputs mtoutputs = case (mtname, mtinputs, mtoutputs ) of
-    (Just tname, Just tinputs, Just toutputs) -> case (decode tinputs, decode toutputs) of
-                               (Right ainputs, Right aoutputs) -> return $ encode $ Function (unpack tname) ainputs aoutputs
-                               (Right _      , Left message  ) -> throw' ("Failed to decode `outputs` : " ++ message)
-                               (Left message , _             ) -> throw' ("Failed to decode `inputs` : " ++ message)
-    (Just _    , Just _      , Nothing      ) -> throw' "`outputs` field is missing"
-    (Just _    , Nothing     , _            ) -> throw' "`inputs` field is missing"
-    (Nothing   , _           , _            ) -> throw' "`name` field is missing"
+newTypeFunction _ mtname mtinputs mtoutputs = case mtname of
+    Nothing    -> throw' "`name` field is missing"
+    Just tname -> case mtinputs of
+        Nothing      -> throw' "`inputs` field is missing"
+        Just tinputs -> case decode tinputs of
+            Left message  -> throw' ("Failed to decode `inputs` : " ++ message)
+            Right ainputs -> case mtoutputs of 
+                Nothing       -> throw' "`outputs` field is missing"
+                Just toutputs -> case decode toutputs of
+                    Left message   -> throw' ("Failed to decode `outputs` : " ++ message)
+                    Right aoutputs -> return $ encode $ Function (unpack tname) ainputs aoutputs
 
 
 newTypeUdefined :: b -> IO TTypes.Type
@@ -62,32 +65,34 @@ newTypeUdefined _ = do
 
 
 newTypeNamed :: b -> Maybe Text -> Maybe TTypes.Type -> IO TTypes.Type
-newTypeNamed _ mtname mttype = case (mtname, mttype) of 
-    (Just tname, Just ttype) -> case decode ttype of
-                                Right atype  -> return $ encode $ Named (unpack tname) atype
-                                Left message -> throw' ("Failed to decode `type` : " ++ message)
-    (Just _    , Nothing   ) -> throw' "`type` field is missing"
-    (Nothing   , _         ) -> throw' "`name` field is missing"
+newTypeNamed _ mtname mttype = case mtname of 
+    Nothing    -> throw' "`name` field is missing"
+    Just tname -> case mttype of 
+        Nothing -> throw' "`type` field is missing"
+        Just ttype -> case decode ttype of
+            Left message -> throw' ("Failed to decode `type` : " ++ message)
+            Right atype  -> return $ encode $ Named (unpack tname) atype
 
 
 newTypeVariable :: b -> Maybe Text -> IO TTypes.Type
 newTypeVariable _ mtname = case mtname of 
-    Just tname -> return $ encode $ TypeVariable $ unpack tname
     Nothing    -> throw' "`name` field is missing"
+    Just tname -> return $ encode $ TypeVariable $ unpack tname
 
 
 newTypeList :: b -> Maybe TTypes.Type -> IO TTypes.Type
 newTypeList _ mttype = case mttype of
-    Just ttype -> case decode ttype of 
-                                Right atype -> return $ encode $ List atype
-                                Left message -> throw' ("Failed to decode `type` : " ++ message)
     Nothing     -> throw' "`type` fields is missing"
+    Just ttype -> case decode ttype of 
+        Left message -> throw' ("Failed to decode `type` : " ++ message)
+        Right atype -> return $ encode $ List atype
 
 
 newTypeTuple :: b -> Maybe (Vector TTypes.Type) -> IO TTypes.Type
 newTypeTuple _ mttypes = case mttypes of 
-    Just ttypes -> case decode $ Vector.toList ttypes of 
-                                Right atypes -> return $ encode $ Tuple atypes
-                                Left message -> throw' ("Failed to decode `types` : " ++ message)
     Nothing     -> throw' "`types` field is missing"
+    Just ttypes -> case decode $ Vector.toList ttypes of 
+        Left message -> throw' ("Failed to decode `types` : " ++ message)
+        Right atypes -> return $ encode $ Tuple atypes
+    
  
