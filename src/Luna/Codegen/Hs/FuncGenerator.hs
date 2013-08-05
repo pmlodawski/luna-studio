@@ -82,9 +82,11 @@ generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
                                            else Expr.Pure
 
         Node.Inputs  _ _        -> (Expr.Var Path.inputs, Expr.Pure)
-        Node.Outputs _ _        -> (Expr.VarRef cvtx, Expr.Pure) where
-                                        cvtx:_ = Graph.innvtx graph nid
-                                        -- TODO[wd] exception when too many inputs
+        Node.Outputs _ _        -> (expr, Expr.Pure) where
+                                       expr = case Graph.innvtx graph nid of
+                                           []     -> Expr.Tuple []
+                                           cvtx:_ -> Expr.VarRef cvtx
+                                           _      -> error "Too many inputs to node 'Outputs'"
 
         Node.Default d          -> (Expr.Default val, Expr.Pure) where 
                                        val = case d of

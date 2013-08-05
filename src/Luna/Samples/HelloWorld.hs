@@ -10,7 +10,7 @@ module Luna.Samples.HelloWorld(
     workspace,
     base_manager,
     full_manager,
-    myFun, myFun2, myFun3, myFun4,
+    myFun, myFun2, myFun3, myFun4, myFun5,
     cls1
 ) where
 
@@ -245,6 +245,36 @@ myFun4 = NodeDef.empty{ NodeDef.cls   = (Type.Function "incx" myFunInputs4 Type.
 
 
 
+
+
+myFunGraph5 = Graph.insEdges [
+                              (2, 3, Edge.standard),
+                              (3, 5, Edge.standard),
+                              (4, 5, Edge.standard),
+                              (5, 6, Edge.standard)
+                             ]
+
+           $ Graph.insNodes [(0,  Node.mkInputs             ),
+                             (1,  Node.mkOutputs            ),
+                             (2,  Node.mkType     "Console" ),
+                             (3,  Node.mkNew                ),
+                             (4,  Node.Default $ DefaultValue.DefaultString "hello world!"),
+                             (5,  Node.mkNTuple             ),
+                             (6,  Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty)
+                            ]
+           $ Graph.empty
+
+myFunInputs5 = Type.Tuple []
+
+
+myFun5 = NodeDef.empty{ NodeDef.cls   = (Type.Function "mymain" myFunInputs5 Type.noOutputs)
+                      , NodeDef.graph = myFunGraph5
+                      , NodeDef.libID = userLibKey
+                      }
+
+
+
+
 cls1 = NodeDef.empty{ NodeDef.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
                     , NodeDef.graph = Graph.empty
                     , NodeDef.libID = userLibKey
@@ -272,7 +302,7 @@ cls1 = NodeDef.empty{ NodeDef.cls   = Type.Class "Vector" ["a"] [Type.Named "x" 
 
 full_manager :: DefManager
 full_manager =  DefManager.addToParentMany [ --(1, 2, myFun2),
-                                           (10, 1, myFun4),
+                                           (10, 1, myFun5),
                                            (100, 10, cls1)
                                            ]
              $ base_manager

@@ -83,12 +83,12 @@ generateDefinition manager vtx = nmod where
             impfuncs    = map Path.toString $ zipWith Path.append subnames  modsubpaths
             impfuncsM   = map Path.toString $ zipWith Path.append subnamesM modsubpaths
 
-            --funcs    = zipWith (Function.mkSpec (DataType.name dt)) subnamesT impfuncs
+            funcs    = zipWith (Function.mkSpec (DataType.name dt)) subnamesT impfuncs
         
 
             (dt, modproto) = CG.generateClass def basemod
             m        = foldri Module.mkInst instargs
-                     -- $ foldri Module.addFunction funcs
+                     $ foldri Module.addFunction funcs
                      $ Module.addImports subimps 
                      $ Module.addImports commimps 
                      $ Module.addExt Extension.TemplateHaskell
