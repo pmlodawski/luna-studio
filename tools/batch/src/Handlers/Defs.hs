@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module DefinitionHandler (
+module Handlers.Defs (
 newDefinition,
 
 addDefinition,
@@ -18,15 +18,13 @@ defOperation
 ) 
 where
 
-import           Control.Exception
 import           Data.IORef
-import           Data.Text.Lazy   (pack, unpack)
 import qualified Data.Vector    as Vector
 import           Data.Vector      (Vector)
 
 import qualified Attrs_Types
-import           Batch_Types (ArgumentException(..))
 import qualified Defs_Types                    as TDefs
+import           Handlers.Common
 import qualified Types_Types                   as TTypes
 import qualified Luna.Core                     as Core
 import           Luna.Core                       (Core)
@@ -45,26 +43,26 @@ import           Luna.Tools.Serialization.Defs    ()
 defOperation :: (IORef Core -> NodeDef.ID -> NodeDef -> a) -> IORef Core 
              -> Maybe TDefs.NodeDef -> a
 defOperation operation batchHandler tdefinition  = case tdefinition of 
-    (Just tdef) -> do
-        case (decode (tdef, Graph.empty) :: Either String (Int, NodeDef) ) of 
-            Right (defID, definition) -> do operation batchHandler defID definition
-            Left message          -> throw $ ArgumentException $ Just $ pack ("Failed to decode `definition` 2: " ++ message)
-    Nothing            -> throw $ ArgumentException $ Just $ pack "`definition` field is missing"
+    Nothing   -> throw' "`definition` field is missing"
+    Just tdef -> case (decode (tdef, Graph.empty) :: Either String (Int, NodeDef) ) of 
+        Left message              -> throw' ("Failed to decode `definition` 2: " ++ message)
+        Right (defID, definition) -> do operation batchHandler defID definition
+            
+    
 
 
 defParentOperation :: (IORef Core -> NodeDef -> Int -> a) -> IORef Core
                    -> Maybe TDefs.NodeDef -> Maybe TDefs.NodeDef -> a
-defParentOperation operation batchHandler tdefinition tparent = case (tdefinition, tparent) of 
-    (Just tdef, Just tpar) -> do
-        case (decode (tdef,  Graph.empty) :: Either String (Int, NodeDef) ,
-              decode (tpar,  Graph.empty) :: Either String (Int, NodeDef) ) of 
-            (Right (_, definition), Right (parentID, _))
-                              -> do operation batchHandler definition parentID
-            (_, Left message) -> throw $ ArgumentException $ Just $ pack ("Failed to decode `parent`: " ++ message)
-            (Left message, _) -> throw $ ArgumentException $ Just $ pack ("Failed to decode `definition` 1: " ++ message)
-    ( _       , Nothing )            -> throw $ ArgumentException $ Just $ pack "`parent` field is missing"
-    ( _       , _       )            -> throw $ ArgumentException $ Just $ pack "`definition` field is missing"
-
+defParentOperation operation batchHandler mtdefinition mtparent = case mtdefinition of 
+    Nothing   -> throw' "`definition` field is missing"
+    Just tdefinition -> case decode (tdefinition, Graph.empty) :: Either String (NodeDef.ID, NodeDef) of
+        Left message -> throw' $ "Failed to decode `definition` 1: " ++ message
+        Right (_, definition) -> case mtparent of 
+            Nothing -> throw' "`parent` field is missing"
+            Just tparent -> case decode (tparent, Graph.empty) :: Either String (NodeDef.ID, NodeDef) of 
+                Left message -> throw' $ "Failed to decode `parent`: " ++ message
+                Right (parentID, _) -> operation batchHandler definition parentID
+                
 
 ------ public api -------------------------------------------------
 newDefinition :: IORef Core -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
@@ -82,13 +80,12 @@ addDefinition = defParentOperation (\batchHandler definition parentID -> do
     core <- readIORef batchHandler
     let defManager = Core.defManager core
     case DefManager.gelem parentID defManager of 
-        True -> do
-                let [defID]    = DefManager.newNodes 1 defManager
-                    newCore    = core { Core.defManager = DefManager.addToParent (parentID, defID, definition) defManager }
-                    (newTDefinition, _) = encode (defID, definition)
-                writeIORef batchHandler newCore
-                return $ newTDefinition
-        False -> throw $ ArgumentException $ Just $ pack "Wrong `defID` in `parent` field")
+        False -> throw' "Wrong `defID` in `parent` field"
+        True  -> do let [defID]    = DefManager.newNodes 1 defManager
+                        newCore    = core { Core.defManager = DefManager.addToParent (parentID, defID, definition) defManager }
+                        (newTDefinition, _) = encode (defID, definition)
+                    writeIORef batchHandler newCore
+                    return $ newTDefinition)
 
 
 updateDefinition :: IORef Core -> Maybe TDefs.NodeDef -> IO ()
@@ -105,9 +102,9 @@ removeDefinition = defOperation (\batchHandler defID _ -> do
     core <- readIORef batchHandler
     let defManager = Core.defManager core
     case DefManager.gelem defID defManager of 
+        False -> throw' "Wrong `defID` in `definition` field"
         True -> do let newCore = core{ Core.defManager= DefManager.delNode defID defManager }
-                   writeIORef batchHandler newCore
-        False -> throw $ ArgumentException $ Just $ pack "Wrong `defID` in `definition` field")
+                   writeIORef batchHandler newCore)
 
 
 definitionChildren :: IORef Core -> Maybe TDefs.NodeDef -> IO (Vector TDefs.NodeDef)
@@ -116,11 +113,11 @@ definitionChildren = defOperation (\batchHandler defID _ -> do
     core <- readIORef batchHandler
     let defManager = Core.defManager core
     case DefManager.gelem defID defManager of 
+        False -> throw' "Wrong `defID` in `definition` field"
         True -> do let children = DefManager.children defManager defID
                        tchildrenWithGraph = map (encode) children
                        tchildren = map (\(def, _) -> def) tchildrenWithGraph
-                   return $ Vector.fromList tchildren
-        False -> throw $ ArgumentException $ Just $ pack "Wrong `defID` in `definition` field")
+                   return $ Vector.fromList tchildren)
 
 
 definitionParent :: IORef Core -> Maybe TDefs.NodeDef -> IO TDefs.NodeDef
@@ -129,11 +126,11 @@ definitionParent = defOperation (\batchHandler defID _ -> do
     core <- readIORef batchHandler
     let defManager = Core.defManager core
     case DefManager.gelem defID defManager of 
+        False -> throw' "Wrong `defID` in `definition` field"
         True -> do let parent = DefManager.parent defManager defID
                    case parent of 
-                       Just p  -> do let (tparent, _) = encode p
-                                     return tparent
                        Nothing -> -- TODO [PM] : what if there is no parent?
                                   undefined
-        False -> throw $ ArgumentException $ Just $ pack "Wrong `defID` in `definition` field")
+                       Just p  -> do let (tparent, _) = encode p
+                                     return tparent)
 

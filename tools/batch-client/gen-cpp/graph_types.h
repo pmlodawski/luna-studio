@@ -109,7 +109,7 @@ class DefaultValue {
 void swap(DefaultValue &a, DefaultValue &b);
 
 typedef struct _Node__isset {
-  _Node__isset() : cls(false), name(false), nodeID(false), flags(false), attrs(false), defVal(false) {}
+  _Node__isset() : cls(false), name(true), nodeID(true), flags(true), attrs(true), defVal(true) {}
   bool cls;
   bool name;
   bool nodeID;
@@ -124,7 +124,10 @@ class Node {
   static const char* ascii_fingerprint; // = "43F200EE3F1FC1EF3015F9446E707ADF";
   static const uint8_t binary_fingerprint[16]; // = {0x43,0xF2,0x00,0xEE,0x3F,0x1F,0xC1,0xEF,0x30,0x15,0xF9,0x44,0x6E,0x70,0x7A,0xDF};
 
-  Node() : cls((NodeType::type)0), name(), nodeID(0) {
+  Node() : cls((NodeType::type)0), name(""), nodeID(-1) {
+
+
+
   }
 
   virtual ~Node() throw() {}

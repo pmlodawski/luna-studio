@@ -22,15 +22,13 @@ import Thrift.Server (runBasicServer)
 import qualified Batch
 import           Batch_Iface
 
-import qualified DefinitionHandler
-import qualified GraphHandler
-import qualified LibraryHandler
-import qualified TypesHandler
+import qualified Handlers.Defs  as HDefs
+import qualified Handlers.Graph as HGraph
+import qualified Handlers.Libs  as HLibs
+import qualified Handlers.Types as HTypes
 
 import qualified Luna.Core as Core
 import           Luna.Core   (Core)
-
-
 
 
 
@@ -45,33 +43,33 @@ newBatchHandler = do
     return ref
 
 instance Batch_Iface BatchHandler where
-    libraries     = LibraryHandler.libraries
-    loadLibrary   = LibraryHandler.loadLibrary
-    unloadLibrary = LibraryHandler.unloadLibrary
-    libraryRootDef = LibraryHandler.libraryRootDef
+    libraries     = HLibs.libraries
+    loadLibrary   = HLibs.loadLibrary
+    unloadLibrary = HLibs.unloadLibrary
+    libraryRootDef = HLibs.libraryRootDef
 
-    newDefinition      = DefinitionHandler.newDefinition
-    addDefinition      = DefinitionHandler.addDefinition
-    updateDefinition   = DefinitionHandler.updateDefinition
-    removeDefinition   = DefinitionHandler.removeDefinition
-    definitionChildren = DefinitionHandler.definitionChildren
-    definitionParent   = DefinitionHandler.definitionParent
+    newDefinition      = HDefs.newDefinition
+    addDefinition      = HDefs.addDefinition
+    updateDefinition   = HDefs.updateDefinition
+    removeDefinition   = HDefs.removeDefinition
+    definitionChildren = HDefs.definitionChildren
+    definitionParent   = HDefs.definitionParent
 
-    newTypeModule   = TypesHandler.newTypeModule
-    newTypeClass    = TypesHandler.newTypeClass
-    newTypeFunction = TypesHandler.newTypeFunction
-    newTypeUdefined = TypesHandler.newTypeUdefined
-    newTypeNamed    = TypesHandler.newTypeNamed
-    newTypeVariable = TypesHandler.newTypeVariable
-    newTypeList     = TypesHandler.newTypeList
-    newTypeTuple    = TypesHandler.newTypeTuple
+    newTypeModule   = HTypes.newTypeModule
+    newTypeClass    = HTypes.newTypeClass
+    newTypeFunction = HTypes.newTypeFunction
+    newTypeUdefined = HTypes.newTypeUdefined
+    newTypeNamed    = HTypes.newTypeNamed
+    newTypeVariable = HTypes.newTypeVariable
+    newTypeList     = HTypes.newTypeList
+    newTypeTuple    = HTypes.newTypeTuple
 
-    graph      = GraphHandler.graph
-    addNode    = GraphHandler.addNode
-    updateNode = GraphHandler.updateNode
-    removeNode = GraphHandler.removeNode
-    connect    = GraphHandler.connect
-    disconnect = GraphHandler.disconnect
+    graph      = HGraph.graph
+    addNode    = HGraph.addNode
+    updateNode = HGraph.updateNode
+    removeNode = HGraph.removeNode
+    connect    = HGraph.connect
+    disconnect = HGraph.disconnect
 
     ping _     = putStrLn "ping"
 

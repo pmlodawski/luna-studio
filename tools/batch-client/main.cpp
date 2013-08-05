@@ -95,20 +95,20 @@ int main(int argc, char **argv) {
         batch.graph(graph, fun);
 
         Node inputs;
-        inputs.cls = NodeType::Inputs;
-        inputs.name = "inputs";
+        inputs.__set_cls(NodeType::Inputs);
         batch.addNode(inputs, inputs, fun);
 
         Node outputs;
-        outputs.cls = NodeType::Outputs;
+        outputs.__set_cls(NodeType::Outputs);
         batch.addNode(outputs, outputs, fun);
-        outputs.name = "outputs";
         batch.updateNode(outputs, fun);
 
         Node dummy;
-        dummy.cls = NodeType::Call;
-        dummy.name = "dummy";
+        dummy.__set_cls(NodeType::Call);
+        dummy.__set_name("dummy");
         batch.addNode(dummy, dummy, fun);
+        dummy.__set_name("fun");
+        batch.updateNode(dummy, fun);
         batch.removeNode(dummy, fun);
 
     } catch (ArgumentException e) {

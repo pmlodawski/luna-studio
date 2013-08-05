@@ -33,11 +33,11 @@ enum NodeType {
 
 struct Node {
     1: optional NodeType         cls
-    2: optional string           name
-    3: optional NodeID           nodeID
-    4: optional attrs.Flags      flags
-    5: optional attrs.Attributes attrs
-    6: optional DefaultValue     defVal
+    2: optional string           name   = ""
+    3: optional NodeID           nodeID = -1
+    4: optional attrs.Flags      flags  = {}
+    5: optional attrs.Attributes attrs  = {}
+    6: optional DefaultValue     defVal = {}
 }
 
 typedef list<i32> PortDescriptor
