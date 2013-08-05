@@ -32,6 +32,7 @@ data Expr = Assignment { src   :: Expr    , dst  :: Expr   , ctx :: Context }
           | VarRef     { vid   :: Int                                       } 
           | Tuple      { elems :: [Expr]                                    }
           | NTuple     { elems :: [Expr]                                    }
+          | Type       { name  :: String  , params :: [String]              }
           | Call       { name  :: String  , args :: [Expr] , ctx :: Context }
           | Default    { val   :: String                                    }
           | THExprCtx  { name  :: String                                    }
@@ -75,6 +76,7 @@ genCode expr = case expr of
                                      else "(" ++ body ++ ")"
                                          where body = join ", " (map (genCode) elems')
     NTuple     elems'           -> "(" ++ join ", (" (map (genCode) elems') ++ ", ()" ++ replicate (length elems') ')'
+    Type       name' params'    -> name' ++ " " ++ join " " params'
     THExprCtx  name'            -> "'"  ++ name'
     THTypeCtx  name'            -> "''" ++ name'
     Cons       name' fields'    -> name' ++ " {" ++ join ", " (map genCode fields') ++ "}"
