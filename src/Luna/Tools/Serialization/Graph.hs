@@ -63,7 +63,7 @@ instance Serialize Graph TGraph.Graph where
     let
       nodes :: Map.HashMap Int32 TGraph.Node
       nodes = Map.fromList $
-        map (\(a, b) -> (itoi32 a, encode (b, a))) $ Graph.labNodes a
+        map (\(a, b) -> (itoi32 a, encode (a, b))) $ Graph.labNodes a
       edges :: Vector TGraph.Edge
       edges =  Vector.fromList $ map encode $ Graph.labEdges a
     in
@@ -77,7 +77,7 @@ instance Serialize Graph TGraph.Graph where
               transformNode :: (Int32, TGraph.Node) -> Either String (Int, Node)
               transformNode (i, lab) =
                 case decode lab of
-                  Right (node, ii) -> Right (i32toi i, node)
+                  Right (ii, node) -> Right (i32toi i, node)
                   Left msg         -> Left msg
               goodNodes :: Either String [DG.LNode Node]
               goodNodes = sequence $ map transformNode $
@@ -114,8 +114,8 @@ instance Serialize DefaultValue TGraph.DefaultValue where
           Nothing -> Left "No string default value specified"
       Nothing -> Left "No default value type specified"    
 
-instance Serialize (Node, Int) TGraph.Node where
-  encode (a, nid) =
+instance Serialize (Int, Node) TGraph.Node where
+  encode (nid, a) =
     let
       nodeType :: TGraph.NodeType
       nodeType = case a of
@@ -222,7 +222,7 @@ instance Serialize (Node, Int) TGraph.Node where
       do
         ggnode <- gnode
         ggID <- gID
-        Right $ (ggnode, ggID)
+        Right $ (ggID, ggnode)
        
   
       
