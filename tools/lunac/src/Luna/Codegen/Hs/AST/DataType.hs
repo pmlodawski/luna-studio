@@ -9,7 +9,8 @@ module Luna.Codegen.Hs.AST.DataType (
     DataType(..),
     empty,
     genCode,
-    addDeriving
+    addDeriving,
+    name
 )where
 
 import           Data.String.Utils                 (join)
@@ -35,6 +36,9 @@ genCode dt =  "data " ++ Expr.genCode (cls dt) ++ " = "
            ++ join " | "  (map Expr.genCode (cons dt))
            ++ Deriving.genCode (derivings dt)
 
+
+name :: DataType -> String
+name dt = Expr.name $ cls dt
 
 
 addDeriving :: Deriving -> DataType -> DataType
