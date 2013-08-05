@@ -12,8 +12,9 @@ generateClass
 import qualified Luna.Network.Def.NodeDef        as NodeDef
 import           Luna.Network.Def.NodeDef          (NodeDef)
 import qualified Luna.Codegen.Hs.AST.DataType    as DataType
-import qualified Luna.Codegen.Hs.AST.Cons        as Cons
-import           Luna.Codegen.Hs.AST.Field         (Field(..))
+import           Luna.Codegen.Hs.AST.DataType      (DataType)
+import qualified Luna.Codegen.Hs.AST.Expr        as Expr
+import           Luna.Codegen.Hs.AST.Expr          (Expr(..))
 import qualified Luna.Type.Type                  as Type
 import qualified Luna.Codegen.Hs.Path            as Path
 import qualified Luna.Codegen.Hs.AST.Module      as Module
@@ -22,19 +23,21 @@ import qualified Luna.Codegen.Hs.AST.Function    as Function
 import qualified Luna.Codegen.Hs.Import          as Import
 import qualified Luna.Codegen.Hs.AST.Deriving    as Deriving
 
-generateClass :: NodeDef -> Module -> Module
-generateClass def m = nmod where
+generateClass :: NodeDef -> Module -> (Expr, Module)
+generateClass def m = (cons, nmod) where
     cls        = NodeDef.cls def
     clsname    = Type.name cls
     params     = Type.params cls
     paramnames = map Type.name params
     fieldnames = map Path.mkFieldName paramnames
     paramtypes = map (Type.name . Type.cls) params
-    fields     = zipWith Field fieldnames paramtypes
+    fieldtypes = map Expr.Var fieldnames
+    fields     = zipWith Expr.Typed fieldtypes paramtypes
+    cons       = Expr.Cons clsname fields
     datatype   = DataType.addDeriving Deriving.Show
                $ DataType.empty { DataType.name       = clsname
                                 , DataType.typeparams = Type.typeparams cls
-                                , DataType.cons       = [Cons.Cons clsname fields]
+                                , DataType.cons       = [cons]
                                 }
     getters    = zipWith (Function.getter clsname) paramnames fieldnames
     setters    = zipWith (Function.setter clsname) paramnames fieldnames

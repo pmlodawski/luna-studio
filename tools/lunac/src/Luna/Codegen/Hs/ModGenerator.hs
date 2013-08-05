@@ -10,6 +10,8 @@ module Luna.Codegen.Hs.ModGenerator(
     generateModule
 ) where
 
+import Debug.Trace
+
 
 import           Data.List                         (zip4)
 
@@ -28,7 +30,8 @@ import qualified Luna.Codegen.Hs.ClassGenerator  as CG
 import qualified Luna.Codegen.Hs.Path            as Path
 import qualified Luna.Codegen.Hs.AST.Function    as Function
 import qualified Luna.Codegen.Hs.AST.Extension   as Extension
-
+import qualified Luna.Codegen.Hs.AST.DataType    as DataType
+import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 
 import           Luna.Data.List
 
@@ -77,19 +80,25 @@ generateDefinition manager vtx = nmod where
             impfuncs  = map Path.toString $ zipWith Path.append subnames  modsubpaths
             impfuncsM = map Path.toString $ zipWith Path.append subnamesM modsubpaths
 
-            modproto = CG.generateClass def 
-                     $ Module.addImports subimps 
+            --test     = Function.empty { Function.name      = "ala"
+            --                          , Function.signature = [Expr.At Path.inputs (Expr.Tuple ((Expr.Cons "dupa" []):(replicate 3 Expr.Any)))]
+            --                          }
+
+
+            (basedt, basemod2) = CG.generateClass def basemod
+            modproto = Module.addImports subimps 
                      $ Module.addImports commimps 
                      $ Module.addExt Extension.TemplateHaskell
                      $ Module.addExt Extension.FlexibleInstances
                      $ Module.addExt Extension.MultiParamTypeClasses
                      $ Module.addExt Extension.UndecidableInstances       --FIXME[wd]: Czy mozna sie tego pozbyc?
-                     $ basemod
+                     $ basemod2
 
             instargs = zip4 csubnames impfuncs impfuncsM subnames
 
 
-            m        = --foldri Module.addAlias aliases 
+            m        = --trace(show $ length (Expr.fields basedt)) $
+            --foldri Module.addAlias aliases 
                      foldri Module.mkInst instargs 
                      $ modproto
 

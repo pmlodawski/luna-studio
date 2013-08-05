@@ -24,31 +24,32 @@ data Vector2 a = Vector2 { x'F2 :: a, y'F2 :: a, z'F2 :: a } deriving (Show)
 
 
 
-instance C''x'getter (Vector a,()) (a,()) where
-    x'getter v = (x'F (select0 v),())
+instance C''x'getter (OneTuple (Vector a)) (OneTuple a) where
+    x'getter v = OneTuple $ x'F (select0 v)
     x'getter''M = return . x'getter
 
 
 
-instance C''x'setter (Vector a, (a, ())) (Vector a, ()) where
-    x'setter (k, (v, ()))   = (k{x'F = v}, ())
-    x'setter''M args = return $ x'setter args
+instance C''x'setter (Vector a, a) (OneTuple (Vector a)) where
+    x'setter (k, v)   = OneTuple $ k{x'F = v}
+    x'setter''M (k, v)= return $ x'setter (k, v)
 
 
 --incx_''M inputs' = return $ incx inputs'
 
+myincx    inputs'
 
-myincx    inputs'@(Vector{},_) = Workspace'.Vector.U'incx.incx    inputs'
-myincx''M inputs'@(Vector{},_) = Workspace'.Vector.U'incx.incx''M inputs'
+myincx    inputs'@(OneTuple Vector{}) = Workspace'.Vector.U'incx.incx    inputs'
+myincx''M inputs'@(OneTuple Vector{}) = Workspace'.Vector.U'incx.incx''M inputs'
 
 
---myincx2    inputs'@(OneTuple Vector2{}) = Workspace'.Vector.U'incx.incx    inputs'
---myincx2''M inputs'@(OneTuple Vector2{}) = Workspace'.Vector.U'incx.incx''M inputs'
+myincx2    inputs'@(OneTuple Vector2{}) = Workspace'.Vector.U'incx.incx    inputs'
+myincx2''M inputs'@(OneTuple Vector2{}) = Workspace'.Vector.U'incx.incx''M inputs'
 
 mkInstIO ''C''incx 'myincx 'myincx''M 'incx
 
 
---mkInstIO ''C''incx 'myincx2 'myincx2''M 'incx
+mkInstIO ''C''incx 'myincx2 'myincx2''M 'incx
 
 --mkInstIO ''C''incx 'incx_ 'incx_''M 'incx
 

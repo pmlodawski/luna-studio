@@ -8,6 +8,7 @@
 module Luna.Codegen.Hs.AST.Function (
     Function(..),
     empty,
+    basic,
     genCode,
     addExpr,
     addAlias,
@@ -16,6 +17,7 @@ module Luna.Codegen.Hs.AST.Function (
     setter
 )where
 
+import Debug.Trace
 
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 import           Luna.Codegen.Hs.AST.Expr          (Expr)
@@ -24,7 +26,7 @@ import qualified Luna.Codegen.Hs.Path            as Path
 
 
 data Function = Function { name       :: String,
-                           inputs     :: [String],
+                           signature  :: [Expr],
                            exprs      :: [Expr],
                            ctx        :: Expr.Context
                          } deriving (Show)
@@ -33,13 +35,18 @@ data Function = Function { name       :: String,
 empty :: Function
 empty = Function "" [] [] Expr.Pure
 
+
+basic :: Function
+basic = empty { signature = [Expr.Var Path.inputs] }
+
+
 genCode :: Function -> String
 genCode func =  head' ++ " = " ++ body ++ "\n"
              ++ headM ++ " = " ++ bodyM where
-    signature = join " " (inputs func)
+    inputs    = join " " (map Expr.genCode $ signature func)
     fname     = name func 
-    head'     = header  ++ signature
-    headM     = headerM ++ signature
+    head'     = header  ++ inputs
+    headM     = headerM ++ inputs
     header    = fname ++ " "
     headerM   = Path.mkMonadName fname ++ " "
     body      = genBodyPure func
@@ -66,7 +73,7 @@ genExprCode (exprs', ctx') = case exprs' of
             else ""
 
 --simple :: String -> Expr -> Function
---simple name' expr = Function name' [Path.inputs] [expr] Expr.Pure
+--simple name' expr = Function name' [Path.signature] [expr] Expr.Pure
 
 setCtx :: Expr.Context -> Function -> Function
 setCtx nctx func = func{ctx = nctx}

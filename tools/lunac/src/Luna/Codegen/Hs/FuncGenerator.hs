@@ -37,8 +37,11 @@ generateFunction def m = (func, nmod) where
     graph      = NodeDef.graph def
     vertices   = Graph.topsort graph
     nodes      = Graph.labVtxs graph vertices
-    basefunc   = Function.empty { Function.name = Type.name $ NodeDef.cls def
-                                , Function.inputs = [Path.inputs]
+    fcls       = NodeDef.cls def
+    fname      = Type.name fcls
+    --finputs    = Type.inputs fcls
+    basefunc   = Function.basic { Function.name = fname
+                                --, Function.signature = [Expr.At Path.inputs (Expr.Tuple (replicate 3 Expr.Any))]
                                 }
     (func, nmod) = foldri (generateNodeExpr graph) nodes (basefunc, m)
 
@@ -64,6 +67,10 @@ generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
         Node.Type name _ _      -> (Expr.Var name, Expr.Pure)
 
         Node.Tuple _ _          -> (Expr.Tuple args, Expr.Pure) where
+                                       vtxs = Graph.innvtx graph nid
+                                       args = map Expr.VarRef vtxs
+
+        Node.NTuple _ _         -> (Expr.NTuple args, Expr.Pure) where
                                        vtxs = Graph.innvtx graph nid
                                        args = map Expr.VarRef vtxs
 

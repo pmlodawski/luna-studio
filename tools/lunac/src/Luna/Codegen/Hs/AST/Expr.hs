@@ -24,10 +24,15 @@ data Expr = Assignment { src   :: Expr    , dst  :: Expr   , ctx :: Context }
           | Var        { name  :: String                                    }
           | VarRef     { vid   :: Int                                       } 
           | Tuple      { elems :: [Expr]                                    }
+          | NTuple     { elems :: [Expr]                                    }
           | Call       { name  :: String  , args :: [Expr] , ctx :: Context }
           | Default    { val   :: String                                    }
           | THExprCtx  { name  :: String                                    }
           | THTypeCtx  { name  :: String                                    }
+          | Cons       { name  :: String  , fields :: [Expr]                }
+          | Typed      { src   :: Expr    , t :: String                     }
+          | At         { name  :: String  , body :: Expr                    }
+          | Any        {                                                    }
           deriving (Show)
 
 
@@ -52,8 +57,13 @@ genCode expr = case expr of
                                      then "OneTuple " ++ body
                                      else "(" ++ body ++ ")"
                                          where body = join ", " (map (genCode) elems')
+    NTuple     elems'           -> "(" ++ join ", (" (map (genCode) elems') ++ ", ()" ++ replicate (length elems') ')'
     THExprCtx  name'            -> "'"  ++ name'
     THTypeCtx  name'            -> "''" ++ name'
+    Cons       name' fields'    -> name' ++ " {" ++ join ", " (map genCode fields') ++ "}"
+    Typed      src' t'          -> genCode src' ++ " :: " ++ t'
+    At         name' body'      -> name' ++ "@" ++ genCode body'
+    Any                         -> "_"
 
 
 mkPure :: Expr -> Expr
