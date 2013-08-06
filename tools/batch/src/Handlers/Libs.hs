@@ -25,9 +25,9 @@ import           Luna.Core                     (Core(..))
 import qualified Luna.Lib.LibManager         as LibManager
 import qualified Luna.Lib.Library            as Library
 import           Luna.Lib.Library              (Library(..))
-import           Luna.Tools.Serialization
-import           Luna.Tools.Serialization.Defs ()
-import           Luna.Tools.Serialization.Libs ()
+import           Luna.Tools.Conversion
+import           Luna.Tools.Conversion.Defs ()
+import           Luna.Tools.Conversion.Libs ()
 
 
 

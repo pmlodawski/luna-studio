@@ -7,16 +7,16 @@
 
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
-module Luna.Tools.Serialization.Libs where
+module Luna.Tools.Conversion.Libs where
 
 import           Data.Text.Lazy   (pack, unpack)
 
 import qualified Libs_Types               as TLibs
 import           Luna.Lib.Library         as Library
-import           Luna.Tools.Serialization
 import qualified Luna.System.UniPath      as UniPath
+import           Luna.Tools.Conversion
 
-instance Serialize (Int, Library) TLibs.Library where
+instance Convert (Int, Library) TLibs.Library where
     encode (libID, Library aname apath arootNodeDefID) = TLibs.Library tlibID tname tpath trootNodeDefID where
         tlibID = Just $ itoi32 libID
         tname  = Just $ pack aname

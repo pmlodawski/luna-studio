@@ -7,14 +7,14 @@
 
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
-module Luna.Tools.Serialization.Types () where
+module Luna.Tools.Conversion.Types () where
 
 
 import           Data.Text.Lazy   (pack, unpack)
 import qualified Data.Vector    as Vector
 
 import qualified Types_Types              as TTypes
-import           Luna.Tools.Serialization
+import           Luna.Tools.Conversion
 import           Luna.Type.Type             (Type(..))
 
 typeList2typeProtoList :: Int -> [Type] -> ([Int], [TTypes.TypeProto])
@@ -84,7 +84,11 @@ type2typeProtoList level t = case t of
                        tcurrent   = TTypes.TypeProto tcls tname Nothing Nothing Nothing Nothing ttypeLevel
                        
                        ttype      = type2typeProtoList (level+1) atype
-
+    TypeVariable aname -> [tcurrent] where
+                       tcls       = Just TTypes.TypeVariable
+                       tname      = Just $ pack aname
+                       
+                       tcurrent   = TTypes.TypeProto tcls tname   Nothing Nothing Nothing Nothing Nothing 
 
 
 typeFromListAt :: [TTypes.TypeProto] -> Int -> Either String Type
@@ -93,53 +97,53 @@ typeFromListAt list index = t where
     t = case mtcls of 
         Just TTypes.Undefined -> Right Undefined
         Just TTypes.Module    -> case mtname of 
-                                          Just aname     -> Right $ Module $ unpack aname
-                                          Nothing        -> Left  "`name` field is missing"
+                                     Nothing        -> Left  "`name` field is missing"
+                                     Just tname     -> Right $ Module $ unpack tname
         Just TTypes.List      -> case mttypeIndex of
-                                          Just typeIndex -> do aitems <-  typeFromListAt list $ i32toi typeIndex
-                                                               return $ List aitems
-                                          Nothing        -> Left  "`type` field is missing"
-        Just TTypes.Function  -> case (mtname, mtinputsIndex, mtoutputsIndex) of 
-                                          (Just tname, Just tinputsIndex, Just toutputsIndex)
-                                                         -> do ainputs  <- typeFromListAt list $ i32toi tinputsIndex
-                                                               aoutputs <- typeFromListAt list $ i32toi toutputsIndex
-                                                               return $ Function (unpack tname) ainputs aoutputs
-                                          (Just _    , Just _          , Nothing)
-                                                         -> Left "`outputs` field is missing"
-                                          (Just _    , Nothing         , _      )
-                                                         -> Left "`inputs` field is missing"
-                                          (Nothing   , _               , _      )
-                                                         -> Left "`name` field is missing"
+                                     Nothing        -> Left  "`type` field is missing"
+                                     Just typeIndex -> do aitems <- typeFromListAt list $ i32toi typeIndex
+                                                          return $ List aitems
+        Just TTypes.Function  -> case mtname of 
+                                    Nothing                    -> Left "`name` field is missing"
+                                    Just tname                 -> case mtinputsIndex of 
+                                        Nothing                -> Left "`inputs` field is missing"
+                                        Just tinputsIndex      -> case mtoutputsIndex of 
+                                            Nothing            -> Left "`outputs` field is missing"
+                                            Just toutputsIndex -> do
+                                                ainputs  <- typeFromListAt list $ i32toi tinputsIndex
+                                                aoutputs <- typeFromListAt list $ i32toi toutputsIndex
+                                                return $ Function (unpack tname) ainputs aoutputs
         Just TTypes.Tuple     -> case mtitemsInds of
-                                          Just titemsInds
-                                                         -> do let itemsInds = map (i32toi) $ Vector.toList titemsInds
-                                                                   aitems = map (typeFromListAt list) itemsInds
-                                                               aitems' <- convert aitems
-                                                               return $ Tuple aitems'
-                                          Nothing        -> Left "`items` field is missing"
-        Just TTypes.Class     -> case (mtname, mtparamsInds) of
-                                          (Just tname, Just tparamsInds32)
-                                                         -> do let paramsInds = map (i32toi) $ Vector.toList tparamsInds32
-                                                                   aparams = map (typeFromListAt list) paramsInds
-                                                               aparams' <- convert aparams
-                                                               return $ Class (unpack tname) aparams'
-                                          (Just _    , Nothing)
-                                                         -> Left "`params` field is missing"
-                                          (Nothing   , _      )
-                                                         -> Left "`name` field is missing"
-        Just TTypes.Named     -> case (mtname, mttypeIndex) of 
-                                          (Just tname, Just ttypeIndex)
-                                                         -> do internal <- typeFromListAt list (i32toi ttypeIndex)
-                                                               return $ Named (unpack tname) internal
-                                          (Just _    , Nothing)
-                                                        -> Left "`type` field is missing"
-                                          (Nothing   , _     )
-                                                        -> Left "`name` field is missing"
+                                    Nothing         -> Left "`items` field is missing"
+                                    Just titemsInds -> do 
+                                        let itemsInds = map (i32toi) $ Vector.toList titemsInds
+                                            aitems = map (typeFromListAt list) itemsInds
+                                        aitems' <- convert aitems
+                                        return $ Tuple aitems'
+        Just TTypes.Class     -> case mtname of
+                                    Nothing                -> Left "`name` field is missing"
+                                    Just tname             -> case mtparamsInds of
+                                        Nothing            -> Left "`params` field is missing"
+                                        Just tparamsInds32 -> do 
+                                            let paramsInds = map (i32toi) $ Vector.toList tparamsInds32
+                                                aparams = map (typeFromListAt list) paramsInds
+                                            aparams' <- convert aparams
+                                            return $ Class (unpack tname) aparams'
+        Just TTypes.Named     -> case mtname of 
+                                    Nothing             -> Left "`name` field is missing"
+                                    Just tname          -> case mttypeIndex of 
+                                        Nothing         -> Left "`type` field is missing"
+                                        Just ttypeIndex -> do 
+                                            internal <- typeFromListAt list (i32toi ttypeIndex)
+                                            return $ Named (unpack tname) internal
+        Just TTypes.TypeVariable -> case mtname of
+                                            Nothing     -> Left "`name` field is missing" 
+                                            Just tname  -> Right $ TypeVariable $ unpack tname
         Nothing                    -> Left "`cls` field is missing"
         _                          -> Left "Unsupported `cls` (not implemented)"
 
 
-instance Serialize Type TTypes.Type where
+instance Convert Type TTypes.Type where
   encode t = tt where list = type2typeProtoList 0 t
                       tt = TTypes.Type $ Just $ Vector.fromList list
   decode tt = case tt of
@@ -149,7 +153,7 @@ instance Serialize Type TTypes.Type where
 
 
 
-instance Serialize [Type] [TTypes.Type] where
+instance Convert [Type] [TTypes.Type] where
   encode t  = map (encode) t
   decode tt = convert $ map (decode) tt
  
