@@ -7,12 +7,12 @@
 
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Luna.Tools.Serialization where
+module Luna.Tools.Conversion where
 
 import Data.Int
 
 
-class Serialize a b | a -> b, b -> a where
+class Convert a b | a -> b, b -> a where
   encode :: a -> b
   decode :: b -> Either String a 
 

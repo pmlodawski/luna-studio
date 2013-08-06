@@ -7,7 +7,7 @@
 
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
-module Luna.Tools.Serialization.Attrs where
+module Luna.Tools.Conversion.Attrs where
 
 import qualified Data.HashMap.Strict as HashMap
 import           Data.HashMap.Strict   (HashMap)
@@ -17,17 +17,17 @@ import qualified Attrs_Types             as TAttrs
 import           Luna.Network.Flags        (Flags(..))
 import qualified Luna.Network.Attributes as Attributes
 import           Luna.Network.Attributes   (Attributes)
-import           Luna.Tools.Serialization
+import           Luna.Tools.Conversion
 
 
-instance Serialize Flags TAttrs.Flags where
+instance Convert Flags TAttrs.Flags where
   encode (Flags aio aomit) = TAttrs.Flags (Just aio) (Just aomit)
   decode (TAttrs.Flags (Just aio) (Just aomit)) = Right $ Flags aio aomit
   decode (TAttrs.Flags (Just _  ) Nothing     ) = Left "`omit` field is missing"
   decode (TAttrs.Flags {}                     ) = Left "`io` field is missing"
 
 
-instance Serialize Attributes TAttrs.Attributes where
+instance Convert Attributes TAttrs.Attributes where
   encode m = TAttrs.Attributes $ Just h where
                  mItems = Attributes.toList m
                  mcItems = map convertItem mItems
