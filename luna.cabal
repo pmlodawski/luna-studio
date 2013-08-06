@@ -65,6 +65,7 @@ Library
                   bytestring,
                   cereal,
                   containers,
+                  directory,
                   fgl,
                   graphviz,
                   hashable,
@@ -89,12 +90,14 @@ Executable lunac
   Build-Depends:  base,
                   cereal,
                   containers,
+                  directory,
                   fgl,
                   flowbox,
                   MissingH,
                   mtl,
                   split,
                   text,
+                  thrift,
                   unordered-containers,
                   vector
 
