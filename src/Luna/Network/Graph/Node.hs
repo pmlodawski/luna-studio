@@ -13,6 +13,7 @@ module Luna.Network.Graph.Node(
     mkInputs,
     mkOutputs,
     mkTuple,
+    mkNTuple,
     mkNew
 ) where
 
@@ -30,6 +31,7 @@ data Node = Type     { typename :: String, flags :: Flags, attributes :: Attribu
           | Inputs   {flags :: Flags, attributes :: Attributes}
           | Outputs  {flags :: Flags, attributes :: Attributes}
           | Tuple    {flags :: Flags, attributes :: Attributes}
+          | NTuple   {flags :: Flags, attributes :: Attributes}
           | New      {flags :: Flags, attributes :: Attributes}
           
           deriving (Show)
@@ -50,6 +52,9 @@ mkOutputs = Outputs Flags.empty Attributes.empty
 
 mkTuple :: Node
 mkTuple = Tuple Flags.empty Attributes.empty
+
+mkNTuple :: Node
+mkNTuple = NTuple Flags.empty Attributes.empty
 
 mkNew :: Node
 mkNew = New Flags.empty Attributes.empty

@@ -35,25 +35,25 @@ import           Luna.Tools.Conversion.Attrs       ()
 
 
 instance Convert (Int, Int, Edge) TGraph.Edge where
-  encode (nsrc, ndst, a) = 
-    let 
-      src = itoi32 $ Edge.src a
-      dst = itoi32 $ Edge.dst a
-    in TGraph.Edge (Just src) (Just dst) (Just $ itoi32 nsrc) (Just $ itoi32 ndst)
-  decode b =
-    case TGraph.f_Edge_portSrc b of
-      Just src ->
-        case TGraph.f_Edge_portDst b of
-          Just dst ->
-            case TGraph.f_Edge_nodeSrc b of
-              Just nodeSrc ->
-                case TGraph.f_Edge_nodeDst b of
-                  Just nodeDst ->
-                    Right $ (i32toi nodeSrc, i32toi nodeDst, Edge (i32toi src) (i32toi dst))
-                  Nothing      -> Left "No destination node specified"
-              Nothing      ->  Left "No source node specified"
-          Nothing  -> Left "No destination port specified"
-      Nothing  -> Left "No source port specified!"
+  encode (nsrc, ndst, a) = error "fixme"
+  --  let 
+  --    src = itoi32 $ Edge.src a
+  --    dst = itoi32 $ Edge.dst a
+  --  in TGraph.Edge (Just src) (Just dst) (Just $ itoi32 nsrc) (Just $ itoi32 ndst)
+  --decode b =
+  --  case TGraph.f_Edge_portSrc b of
+  --    Just src ->
+  --      case TGraph.f_Edge_portDst b of
+  --        Just dst ->
+  --          case TGraph.f_Edge_nodeSrc b of
+  --            Just nodeSrc ->
+  --              case TGraph.f_Edge_nodeDst b of
+  --                Just nodeDst ->
+  --                  Right $ (i32toi nodeSrc, i32toi nodeDst, Edge (i32toi src) (i32toi dst))
+  --                Nothing      -> Left "No destination node specified"
+  --            Nothing      ->  Left "No source node specified"
+  --        Nothing  -> Left "No destination port specified"
+  --    Nothing  -> Left "No source port specified!"
 
 instance Convert Graph TGraph.Graph where
   encode a = 
