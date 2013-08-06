@@ -17,7 +17,6 @@ where
 import           Control.Monad
 import           Data.IORef
 import qualified Data.Vector    as Vector
-import           Data.Vector      (Vector)
 
 import           Handlers.Common
 import           Handlers.Defs                   (defOperation)
@@ -31,9 +30,9 @@ import           Luna.Network.Def.NodeDef        (NodeDef)
 import qualified Luna.Network.Graph.Graph      as Graph
 import qualified Luna.Network.Graph.Node       as Node
 import           Luna.Network.Graph.Node         (Node(..))
-import           Luna.Tools.Serialization
-import           Luna.Tools.Serialization.Defs    ()
-import           Luna.Tools.Serialization.Graph   ()
+import           Luna.Tools.Conversion
+import           Luna.Tools.Conversion.Defs    ()
+import           Luna.Tools.Conversion.Graph   ()
 
 
 graph :: IORef Core -> Maybe TDefs.NodeDef -> IO TGraph.Graph

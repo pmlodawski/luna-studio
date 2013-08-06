@@ -7,7 +7,7 @@
 
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
-module Luna.Tools.Serialization.Graph where
+module Luna.Tools.Conversion.Graph where
 
 --import Control.Monad
 --import qualified Data.MultiMap as MMap
@@ -22,22 +22,19 @@ import           Data.Vector                  (Vector)
 import qualified Attrs_Types                     as TAttrs
 import qualified Graph_Types                     as TGraph
 import           Luna.Network.Attributes           (Attributes)
-import           Luna.Network.Def.NodeDef          (NodeDef(..))
-import qualified Luna.Network.Flags              as Flags
 import           Luna.Network.Flags                (Flags(..))
-import qualified Luna.Network.Graph.DefaultValue as DefaultValue
 import           Luna.Network.Graph.DefaultValue   (DefaultValue(..))
 import qualified Luna.Network.Graph.Edge         as Edge
 import           Luna.Network.Graph.Edge           (Edge(..))
 import qualified Luna.Network.Graph.Graph        as Graph
-import           Luna.Network.Graph.Graph          (Graph(..))
+import           Luna.Network.Graph.Graph          (Graph)
 import qualified Luna.Network.Graph.Node         as Node
 import           Luna.Network.Graph.Node           (Node)
-import           Luna.Tools.Serialization
-import           Luna.Tools.Serialization.Attrs
+import           Luna.Tools.Conversion
+import           Luna.Tools.Conversion.Attrs       ()
 
 
-instance Serialize (Int, Int, Edge) TGraph.Edge where
+instance Convert (Int, Int, Edge) TGraph.Edge where
   encode (nsrc, ndst, a) = 
     let 
       src = itoi32 $ Edge.src a
@@ -58,7 +55,7 @@ instance Serialize (Int, Int, Edge) TGraph.Edge where
           Nothing  -> Left "No destination port specified"
       Nothing  -> Left "No source port specified!"
 
-instance Serialize Graph TGraph.Graph where
+instance Convert Graph TGraph.Graph where
   encode a = 
     let
       nodes :: Map.HashMap Int32 TGraph.Node
@@ -77,7 +74,7 @@ instance Serialize Graph TGraph.Graph where
               transformNode :: (Int32, TGraph.Node) -> Either String (Int, Node)
               transformNode (i, lab) =
                 case decode lab of
-                  Right (ii, node) -> Right (i32toi i, node)
+                  Right (_, node) -> Right (i32toi i, node)
                   Left msg         -> Left msg
               goodNodes :: Either String [DG.LNode Node]
               goodNodes = sequence $ map transformNode $
@@ -95,7 +92,7 @@ instance Serialize Graph TGraph.Graph where
           Nothing    -> Left "Edges are not defined"
       Nothing    -> Left "Nodes are not defined"
 
-instance Serialize DefaultValue TGraph.DefaultValue where
+instance Convert DefaultValue TGraph.DefaultValue where
   encode a =
     case a of
       DefaultInt ii ->
@@ -114,7 +111,7 @@ instance Serialize DefaultValue TGraph.DefaultValue where
           Nothing -> Left "No string default value specified"
       Nothing -> Left "No default value type specified"    
 
-instance Serialize (Int, Node) TGraph.Node where
+instance Convert (Int, Node) TGraph.Node where
   encode (nid, a) =
     let
       nodeType :: TGraph.NodeType

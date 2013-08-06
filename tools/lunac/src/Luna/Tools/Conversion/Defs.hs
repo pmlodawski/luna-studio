@@ -7,7 +7,7 @@
 
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
-module Luna.Tools.Serialization.Defs where
+module Luna.Tools.Conversion.Defs where
 
 
 import qualified Data.Text.Lazy as Text
@@ -18,12 +18,12 @@ import           Luna.Network.Graph.Graph   (Graph)
 import           Luna.Network.Def.NodeDef   (NodeDef(..))
 import           Luna.Network.Path.Import   (Import(..))
 import qualified Luna.Network.Path.Path   as Path
-import           Luna.Tools.Serialization
-import           Luna.Tools.Serialization.Attrs ()
-import           Luna.Tools.Serialization.Types ()
+import           Luna.Tools.Conversion
+import           Luna.Tools.Conversion.Attrs ()
+import           Luna.Tools.Conversion.Types ()
 
  
-instance Serialize Import TDefs.Import where
+instance Convert Import TDefs.Import where
     encode (Import apath aitems) = timport where
         tpath   = Just $ Vector.fromList $ map (Text.pack) $ Path.toList apath
         titems  = Just $ Vector.fromList $ map (Text.pack) aitems
@@ -37,7 +37,7 @@ instance Serialize Import TDefs.Import where
 
 
 
-instance Serialize [Import] TDefs.Imports where
+instance Convert [Import] TDefs.Imports where
     encode aimports = Vector.fromList $ map (encode) aimports
     decode timports = aimports where
         timportsList = Vector.toList timports
@@ -45,7 +45,7 @@ instance Serialize [Import] TDefs.Imports where
         aimports = convert imports1
 
 
-instance Serialize (Int, NodeDef) (TDefs.NodeDef, Graph) where
+instance Convert (Int, NodeDef) (TDefs.NodeDef, Graph) where
   encode (defID, NodeDef acls agraph aimports aflags aattributes alibID) = (tdef, agraph) where
      ttype       = Just $ encode acls
      timports    = Just $ encode aimports

@@ -7,14 +7,14 @@
 
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
-module Luna.Tools.Serialization.Types () where
+module Luna.Tools.Conversion.Types () where
 
 
 import           Data.Text.Lazy   (pack, unpack)
 import qualified Data.Vector    as Vector
 
 import qualified Types_Types              as TTypes
-import           Luna.Tools.Serialization
+import           Luna.Tools.Conversion
 import           Luna.Type.Type             (Type(..))
 
 typeList2typeProtoList :: Int -> [Type] -> ([Int], [TTypes.TypeProto])
@@ -139,7 +139,7 @@ typeFromListAt list index = t where
         _                          -> Left "Unsupported `cls` (not implemented)"
 
 
-instance Serialize Type TTypes.Type where
+instance Convert Type TTypes.Type where
   encode t = tt where list = type2typeProtoList 0 t
                       tt = TTypes.Type $ Just $ Vector.fromList list
   decode tt = case tt of
@@ -149,7 +149,7 @@ instance Serialize Type TTypes.Type where
 
 
 
-instance Serialize [Type] [TTypes.Type] where
+instance Convert [Type] [TTypes.Type] where
   encode t  = map (encode) t
   decode tt = convert $ map (decode) tt
  

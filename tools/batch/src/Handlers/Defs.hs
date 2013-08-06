@@ -32,8 +32,8 @@ import qualified Luna.Network.Def.DefManager   as DefManager
 import qualified Luna.Network.Def.NodeDef      as NodeDef
 import           Luna.Network.Def.NodeDef        (NodeDef)
 import qualified Luna.Network.Graph.Graph      as Graph
-import           Luna.Tools.Serialization
-import           Luna.Tools.Serialization.Defs    ()
+import           Luna.Tools.Conversion
+import           Luna.Tools.Conversion.Defs    ()
 
 
 -- TODO [PM] : refactor needed
