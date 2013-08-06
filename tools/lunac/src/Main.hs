@@ -5,6 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+import qualified Luna.Core                      as Core
+import           Luna.Core                        (Core(..))
+import qualified Luna.Lib.LibManager            as LibManager
+import qualified Luna.Samples.HelloWorld        as HelloWorld
+import qualified Luna.Tools.Serializer          as Serializer
 import qualified Luna.Samples.HelloWorld        as HelloWorld
 import qualified Luna.Codegen.Hs.FuncGenerator  as FG
 import qualified Luna.Codegen.Hs.ModGenerator   as MG
@@ -19,11 +24,19 @@ import Luna.Data.Graph
 main :: IO ()
 
 main = do 
+    let libManager = HelloWorld.base_libman
+        core = Core libManager HelloWorld.full_manager
+        Just stdLib = LibManager.lab libManager 0 
+    print core
     putStrLn "------------\n"
+
+    Serializer.storeLib core stdLib
+
+    core2 <- Serializer.restoreLib core stdLib
     --putStrLn $ FG.generateFunction HelloWorld.myFun3
     --putStrLn $ MG.generateDefinition HelloWorld.full_manager 1
     --print $ MG.generateModule HelloWorld.full_manager 100
-    putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 1
+    --putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 1
     --print $ FG.generateFunction HelloWorld.myFun3
     --putStrLn $ Function.genCode GenContext.empty $ FG.generateFunction HelloWorld.myFun3
 

@@ -17,7 +17,7 @@
 #include "types_types.h"
 
 
-
+namespace flowbox { namespace batch {
 
 typedef int32_t DefID;
 
@@ -104,16 +104,16 @@ class NodeDef {
 
   virtual ~NodeDef() throw() {}
 
-   ::Type cls;
+   ::flowbox::batch::Type cls;
   Imports imports;
-   ::Flags flags;
-   ::Attributes attribs;
-   ::LibID libID;
+   ::flowbox::batch::Flags flags;
+   ::flowbox::batch::Attributes attribs;
+   ::flowbox::batch::LibID libID;
   DefID defID;
 
   _NodeDef__isset __isset;
 
-  void __set_cls(const  ::Type& val) {
+  void __set_cls(const  ::flowbox::batch::Type& val) {
     cls = val;
     __isset.cls = true;
   }
@@ -123,17 +123,17 @@ class NodeDef {
     __isset.imports = true;
   }
 
-  void __set_flags(const  ::Flags& val) {
+  void __set_flags(const  ::flowbox::batch::Flags& val) {
     flags = val;
     __isset.flags = true;
   }
 
-  void __set_attribs(const  ::Attributes& val) {
+  void __set_attribs(const  ::flowbox::batch::Attributes& val) {
     attribs = val;
     __isset.attribs = true;
   }
 
-  void __set_libID(const  ::LibID val) {
+  void __set_libID(const  ::flowbox::batch::LibID val) {
     libID = val;
     __isset.libID = true;
   }
@@ -184,6 +184,6 @@ class NodeDef {
 
 void swap(NodeDef &a, NodeDef &b);
 
-
+}} // namespace
 
 #endif

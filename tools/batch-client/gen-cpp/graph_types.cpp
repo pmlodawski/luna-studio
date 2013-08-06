@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-
+namespace flowbox { namespace batch {
 
 int _kDefaultValueTypeValues[] = {
   DefaultValueType::StringV,
@@ -27,7 +27,8 @@ int _kNodeTypeValues[] = {
   NodeType::New,
   NodeType::Inputs,
   NodeType::Outputs,
-  NodeType::Tuple
+  NodeType::Tuple,
+  NodeType::NTuple
 };
 const char* _kNodeTypeNames[] = {
   "Type",
@@ -36,9 +37,10 @@ const char* _kNodeTypeNames[] = {
   "New",
   "Inputs",
   "Outputs",
-  "Tuple"
+  "Tuple",
+  "NTuple"
 };
-const std::map<int, const char*> _NodeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(7, _kNodeTypeValues, _kNodeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+const std::map<int, const char*> _NodeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(8, _kNodeTypeValues, _kNodeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
 const char* DefaultValue::ascii_fingerprint = "69ED04DC035A4CF78CE4B470902F18B3";
 const uint8_t DefaultValue::binary_fingerprint[16] = {0x69,0xED,0x04,0xDC,0x03,0x5A,0x4C,0xF7,0x8C,0xE4,0xB4,0x70,0x90,0x2F,0x18,0xB3};
@@ -270,8 +272,8 @@ void swap(Node &a, Node &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* Edge::ascii_fingerprint = "E3E2F869E2831D70F619B6B13F64FB99";
-const uint8_t Edge::binary_fingerprint[16] = {0xE3,0xE2,0xF8,0x69,0xE2,0x83,0x1D,0x70,0xF6,0x19,0xB6,0xB1,0x3F,0x64,0xFB,0x99};
+const char* Edge::ascii_fingerprint = "C19C3C50DCAC5D78DEDA8D5FC1C59402";
+const uint8_t Edge::binary_fingerprint[16] = {0xC1,0x9C,0x3C,0x50,0xDC,0xAC,0x5D,0x78,0xDE,0xDA,0x8D,0x5F,0xC1,0xC5,0x94,0x02};
 
 uint32_t Edge::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -293,14 +295,6 @@ uint32_t Edge::read(::apache::thrift::protocol::TProtocol* iprot) {
     }
     switch (fid)
     {
-      case 1:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->portSrc);
-          this->__isset.portSrc = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
       case 2:
         if (ftype == ::apache::thrift::protocol::T_I32) {
           xfer += iprot->readI32(this->portDst);
@@ -341,11 +335,6 @@ uint32_t Edge::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("Edge");
 
-  if (this->__isset.portSrc) {
-    xfer += oprot->writeFieldBegin("portSrc", ::apache::thrift::protocol::T_I32, 1);
-    xfer += oprot->writeI32(this->portSrc);
-    xfer += oprot->writeFieldEnd();
-  }
   if (this->__isset.portDst) {
     xfer += oprot->writeFieldBegin("portDst", ::apache::thrift::protocol::T_I32, 2);
     xfer += oprot->writeI32(this->portDst);
@@ -368,15 +357,14 @@ uint32_t Edge::write(::apache::thrift::protocol::TProtocol* oprot) const {
 
 void swap(Edge &a, Edge &b) {
   using ::std::swap;
-  swap(a.portSrc, b.portSrc);
   swap(a.portDst, b.portDst);
   swap(a.nodeSrc, b.nodeSrc);
   swap(a.nodeDst, b.nodeDst);
   swap(a.__isset, b.__isset);
 }
 
-const char* Graph::ascii_fingerprint = "EA2C91D29359A645800FF7F1BA743F1D";
-const uint8_t Graph::binary_fingerprint[16] = {0xEA,0x2C,0x91,0xD2,0x93,0x59,0xA6,0x45,0x80,0x0F,0xF7,0xF1,0xBA,0x74,0x3F,0x1D};
+const char* Graph::ascii_fingerprint = "23F28B7CCC26BC5D5B26C2B977C89209";
+const uint8_t Graph::binary_fingerprint[16] = {0x23,0xF2,0x8B,0x7C,0xCC,0x26,0xBC,0x5D,0x5B,0x26,0xC2,0xB9,0x77,0xC8,0x92,0x09};
 
 uint32_t Graph::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -496,4 +484,4 @@ void swap(Graph &a, Graph &b) {
   swap(a.__isset, b.__isset);
 }
 
-
+}} // namespace

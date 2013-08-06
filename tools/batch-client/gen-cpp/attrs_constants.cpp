@@ -6,12 +6,12 @@
  */
 #include "attrs_constants.h"
 
-
+namespace flowbox { namespace batch {
 
 const attrsConstants g_attrs_constants;
 
 attrsConstants::attrsConstants() {
 }
 
-
+}} // namespace
 

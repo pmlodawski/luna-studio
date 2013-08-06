@@ -44,4 +44,4 @@ parent :: DefManager -> NodeDef.ID -> Maybe (NodeDef.ID, NodeDef)
 parent defManager defID = case prel defManager defID of 
     [] -> Nothing
     [a] -> Just a
-    a -> error $ (show defID) ++ " has multiple parents!"
+    _ -> error $ (show defID) ++ " has multiple parents!"

@@ -115,7 +115,7 @@ uint32_t Batch_libraries_result::write(::apache::thrift::protocol::TProtocol* op
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_LIST, 0);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->success.size()));
-      std::vector< ::Library> ::const_iterator _iter5;
+      std::vector< ::flowbox::batch::Library> ::const_iterator _iter5;
       for (_iter5 = this->success.begin(); _iter5 != this->success.end(); ++_iter5)
       {
         xfer += (*_iter5).write(oprot);
@@ -794,7 +794,7 @@ uint32_t Batch_newDefinition_args::write(::apache::thrift::protocol::TProtocol* 
   xfer += oprot->writeFieldBegin("imports", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->imports.size()));
-    std::vector< ::Import> ::const_iterator _iter16;
+    std::vector< ::flowbox::batch::Import> ::const_iterator _iter16;
     for (_iter16 = this->imports.begin(); _iter16 != this->imports.end(); ++_iter16)
     {
       xfer += (*_iter16).write(oprot);
@@ -827,7 +827,7 @@ uint32_t Batch_newDefinition_pargs::write(::apache::thrift::protocol::TProtocol*
   xfer += oprot->writeFieldBegin("imports", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>((*(this->imports)).size()));
-    std::vector< ::Import> ::const_iterator _iter17;
+    std::vector< ::flowbox::batch::Import> ::const_iterator _iter17;
     for (_iter17 = (*(this->imports)).begin(); _iter17 != (*(this->imports)).end(); ++_iter17)
     {
       xfer += (*_iter17).write(oprot);
@@ -1603,7 +1603,7 @@ uint32_t Batch_definitionChildren_result::write(::apache::thrift::protocol::TPro
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_LIST, 0);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->success.size()));
-      std::vector< ::NodeDef> ::const_iterator _iter23;
+      std::vector< ::flowbox::batch::NodeDef> ::const_iterator _iter23;
       for (_iter23 = this->success.begin(); _iter23 != this->success.end(); ++_iter23)
       {
         xfer += (*_iter23).write(oprot);
@@ -2148,7 +2148,7 @@ uint32_t Batch_newTypeClass_args::write(::apache::thrift::protocol::TProtocol* o
   xfer += oprot->writeFieldBegin("params", ::apache::thrift::protocol::T_LIST, 3);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->params.size()));
-    std::vector< ::Type> ::const_iterator _iter40;
+    std::vector< ::flowbox::batch::Type> ::const_iterator _iter40;
     for (_iter40 = this->params.begin(); _iter40 != this->params.end(); ++_iter40)
     {
       xfer += (*_iter40).write(oprot);
@@ -2185,7 +2185,7 @@ uint32_t Batch_newTypeClass_pargs::write(::apache::thrift::protocol::TProtocol* 
   xfer += oprot->writeFieldBegin("params", ::apache::thrift::protocol::T_LIST, 3);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>((*(this->params)).size()));
-    std::vector< ::Type> ::const_iterator _iter42;
+    std::vector< ::flowbox::batch::Type> ::const_iterator _iter42;
     for (_iter42 = (*(this->params)).begin(); _iter42 != (*(this->params)).end(); ++_iter42)
     {
       xfer += (*_iter42).write(oprot);
@@ -3291,7 +3291,7 @@ uint32_t Batch_newTypeTuple_args::write(::apache::thrift::protocol::TProtocol* o
   xfer += oprot->writeFieldBegin("types", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->types.size()));
-    std::vector< ::Type> ::const_iterator _iter48;
+    std::vector< ::flowbox::batch::Type> ::const_iterator _iter48;
     for (_iter48 = this->types.begin(); _iter48 != this->types.end(); ++_iter48)
     {
       xfer += (*_iter48).write(oprot);
@@ -3312,7 +3312,7 @@ uint32_t Batch_newTypeTuple_pargs::write(::apache::thrift::protocol::TProtocol* 
   xfer += oprot->writeFieldBegin("types", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>((*(this->types)).size()));
-    std::vector< ::Type> ::const_iterator _iter49;
+    std::vector< ::flowbox::batch::Type> ::const_iterator _iter49;
     for (_iter49 = (*(this->types)).begin(); _iter49 != (*(this->types)).end(); ++_iter49)
     {
       xfer += (*_iter49).write(oprot);
@@ -4852,7 +4852,7 @@ uint32_t Batch_ping_presult::read(::apache::thrift::protocol::TProtocol* iprot) 
   return xfer;
 }
 
-void BatchClient::libraries(std::vector< ::Library> & _return)
+void BatchClient::libraries(std::vector< ::flowbox::batch::Library> & _return)
 {
   send_libraries();
   recv_libraries(_return);
@@ -4871,7 +4871,7 @@ void BatchClient::send_libraries()
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_libraries(std::vector< ::Library> & _return)
+void BatchClient::recv_libraries(std::vector< ::flowbox::batch::Library> & _return)
 {
 
   int32_t rseqid = 0;
@@ -4909,13 +4909,13 @@ void BatchClient::recv_libraries(std::vector< ::Library> & _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "libraries failed: unknown result");
 }
 
-void BatchClient::loadLibrary( ::Library& _return, const  ::Library& library)
+void BatchClient::loadLibrary( ::flowbox::batch::Library& _return, const  ::flowbox::batch::Library& library)
 {
   send_loadLibrary(library);
   recv_loadLibrary(_return);
 }
 
-void BatchClient::send_loadLibrary(const  ::Library& library)
+void BatchClient::send_loadLibrary(const  ::flowbox::batch::Library& library)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("loadLibrary", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -4929,7 +4929,7 @@ void BatchClient::send_loadLibrary(const  ::Library& library)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_loadLibrary( ::Library& _return)
+void BatchClient::recv_loadLibrary( ::flowbox::batch::Library& _return)
 {
 
   int32_t rseqid = 0;
@@ -4970,13 +4970,13 @@ void BatchClient::recv_loadLibrary( ::Library& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "loadLibrary failed: unknown result");
 }
 
-void BatchClient::unloadLibrary(const  ::Library& library)
+void BatchClient::unloadLibrary(const  ::flowbox::batch::Library& library)
 {
   send_unloadLibrary(library);
   recv_unloadLibrary();
 }
 
-void BatchClient::send_unloadLibrary(const  ::Library& library)
+void BatchClient::send_unloadLibrary(const  ::flowbox::batch::Library& library)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("unloadLibrary", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5026,13 +5026,13 @@ void BatchClient::recv_unloadLibrary()
   return;
 }
 
-void BatchClient::libraryRootDef( ::NodeDef& _return, const  ::Library& library)
+void BatchClient::libraryRootDef( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::Library& library)
 {
   send_libraryRootDef(library);
   recv_libraryRootDef(_return);
 }
 
-void BatchClient::send_libraryRootDef(const  ::Library& library)
+void BatchClient::send_libraryRootDef(const  ::flowbox::batch::Library& library)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("libraryRootDef", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5046,7 +5046,7 @@ void BatchClient::send_libraryRootDef(const  ::Library& library)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_libraryRootDef( ::NodeDef& _return)
+void BatchClient::recv_libraryRootDef( ::flowbox::batch::NodeDef& _return)
 {
 
   int32_t rseqid = 0;
@@ -5087,13 +5087,13 @@ void BatchClient::recv_libraryRootDef( ::NodeDef& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "libraryRootDef failed: unknown result");
 }
 
-void BatchClient::newDefinition( ::NodeDef& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs)
+void BatchClient::newDefinition( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::Type& type, const  ::flowbox::batch::Imports& imports, const  ::flowbox::batch::Flags& flags, const  ::flowbox::batch::Attributes& attrs)
 {
   send_newDefinition(type, imports, flags, attrs);
   recv_newDefinition(_return);
 }
 
-void BatchClient::send_newDefinition(const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs)
+void BatchClient::send_newDefinition(const  ::flowbox::batch::Type& type, const  ::flowbox::batch::Imports& imports, const  ::flowbox::batch::Flags& flags, const  ::flowbox::batch::Attributes& attrs)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("newDefinition", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5110,7 +5110,7 @@ void BatchClient::send_newDefinition(const  ::Type& type, const  ::Imports& impo
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_newDefinition( ::NodeDef& _return)
+void BatchClient::recv_newDefinition( ::flowbox::batch::NodeDef& _return)
 {
 
   int32_t rseqid = 0;
@@ -5148,13 +5148,13 @@ void BatchClient::recv_newDefinition( ::NodeDef& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newDefinition failed: unknown result");
 }
 
-void BatchClient::addDefinition( ::NodeDef& _return, const  ::NodeDef& definition, const  ::NodeDef& parent)
+void BatchClient::addDefinition( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::NodeDef& definition, const  ::flowbox::batch::NodeDef& parent)
 {
   send_addDefinition(definition, parent);
   recv_addDefinition(_return);
 }
 
-void BatchClient::send_addDefinition(const  ::NodeDef& definition, const  ::NodeDef& parent)
+void BatchClient::send_addDefinition(const  ::flowbox::batch::NodeDef& definition, const  ::flowbox::batch::NodeDef& parent)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("addDefinition", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5169,7 +5169,7 @@ void BatchClient::send_addDefinition(const  ::NodeDef& definition, const  ::Node
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_addDefinition( ::NodeDef& _return)
+void BatchClient::recv_addDefinition( ::flowbox::batch::NodeDef& _return)
 {
 
   int32_t rseqid = 0;
@@ -5210,13 +5210,13 @@ void BatchClient::recv_addDefinition( ::NodeDef& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "addDefinition failed: unknown result");
 }
 
-void BatchClient::updateDefinition(const  ::NodeDef& definition)
+void BatchClient::updateDefinition(const  ::flowbox::batch::NodeDef& definition)
 {
   send_updateDefinition(definition);
   recv_updateDefinition();
 }
 
-void BatchClient::send_updateDefinition(const  ::NodeDef& definition)
+void BatchClient::send_updateDefinition(const  ::flowbox::batch::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("updateDefinition", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5266,13 +5266,13 @@ void BatchClient::recv_updateDefinition()
   return;
 }
 
-void BatchClient::removeDefinition(const  ::NodeDef& definition)
+void BatchClient::removeDefinition(const  ::flowbox::batch::NodeDef& definition)
 {
   send_removeDefinition(definition);
   recv_removeDefinition();
 }
 
-void BatchClient::send_removeDefinition(const  ::NodeDef& definition)
+void BatchClient::send_removeDefinition(const  ::flowbox::batch::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("removeDefinition", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5322,13 +5322,13 @@ void BatchClient::recv_removeDefinition()
   return;
 }
 
-void BatchClient::definitionChildren(std::vector< ::NodeDef> & _return, const  ::NodeDef& definition)
+void BatchClient::definitionChildren(std::vector< ::flowbox::batch::NodeDef> & _return, const  ::flowbox::batch::NodeDef& definition)
 {
   send_definitionChildren(definition);
   recv_definitionChildren(_return);
 }
 
-void BatchClient::send_definitionChildren(const  ::NodeDef& definition)
+void BatchClient::send_definitionChildren(const  ::flowbox::batch::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("definitionChildren", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5342,7 +5342,7 @@ void BatchClient::send_definitionChildren(const  ::NodeDef& definition)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_definitionChildren(std::vector< ::NodeDef> & _return)
+void BatchClient::recv_definitionChildren(std::vector< ::flowbox::batch::NodeDef> & _return)
 {
 
   int32_t rseqid = 0;
@@ -5383,13 +5383,13 @@ void BatchClient::recv_definitionChildren(std::vector< ::NodeDef> & _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "definitionChildren failed: unknown result");
 }
 
-void BatchClient::definitionParent( ::NodeDef& _return, const  ::NodeDef& definition)
+void BatchClient::definitionParent( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::NodeDef& definition)
 {
   send_definitionParent(definition);
   recv_definitionParent(_return);
 }
 
-void BatchClient::send_definitionParent(const  ::NodeDef& definition)
+void BatchClient::send_definitionParent(const  ::flowbox::batch::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("definitionParent", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5403,7 +5403,7 @@ void BatchClient::send_definitionParent(const  ::NodeDef& definition)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_definitionParent( ::NodeDef& _return)
+void BatchClient::recv_definitionParent( ::flowbox::batch::NodeDef& _return)
 {
 
   int32_t rseqid = 0;
@@ -5444,7 +5444,7 @@ void BatchClient::recv_definitionParent( ::NodeDef& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "definitionParent failed: unknown result");
 }
 
-void BatchClient::newTypeModule( ::Type& _return, const std::string& name)
+void BatchClient::newTypeModule( ::flowbox::batch::Type& _return, const std::string& name)
 {
   send_newTypeModule(name);
   recv_newTypeModule(_return);
@@ -5464,7 +5464,7 @@ void BatchClient::send_newTypeModule(const std::string& name)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_newTypeModule( ::Type& _return)
+void BatchClient::recv_newTypeModule( ::flowbox::batch::Type& _return)
 {
 
   int32_t rseqid = 0;
@@ -5505,13 +5505,13 @@ void BatchClient::recv_newTypeModule( ::Type& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeModule failed: unknown result");
 }
 
-void BatchClient::newTypeClass( ::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::Type> & params)
+void BatchClient::newTypeClass( ::flowbox::batch::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::Type> & params)
 {
   send_newTypeClass(name, typeparams, params);
   recv_newTypeClass(_return);
 }
 
-void BatchClient::send_newTypeClass(const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::Type> & params)
+void BatchClient::send_newTypeClass(const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::Type> & params)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("newTypeClass", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5527,7 +5527,7 @@ void BatchClient::send_newTypeClass(const std::string& name, const std::vector<s
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_newTypeClass( ::Type& _return)
+void BatchClient::recv_newTypeClass( ::flowbox::batch::Type& _return)
 {
 
   int32_t rseqid = 0;
@@ -5568,13 +5568,13 @@ void BatchClient::recv_newTypeClass( ::Type& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeClass failed: unknown result");
 }
 
-void BatchClient::newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs)
+void BatchClient::newTypeFunction( ::flowbox::batch::Type& _return, const std::string& name, const  ::flowbox::batch::Type& inputs, const  ::flowbox::batch::Type& outputs)
 {
   send_newTypeFunction(name, inputs, outputs);
   recv_newTypeFunction(_return);
 }
 
-void BatchClient::send_newTypeFunction(const std::string& name, const  ::Type& inputs, const  ::Type& outputs)
+void BatchClient::send_newTypeFunction(const std::string& name, const  ::flowbox::batch::Type& inputs, const  ::flowbox::batch::Type& outputs)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("newTypeFunction", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5590,7 +5590,7 @@ void BatchClient::send_newTypeFunction(const std::string& name, const  ::Type& i
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_newTypeFunction( ::Type& _return)
+void BatchClient::recv_newTypeFunction( ::flowbox::batch::Type& _return)
 {
 
   int32_t rseqid = 0;
@@ -5631,7 +5631,7 @@ void BatchClient::recv_newTypeFunction( ::Type& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeFunction failed: unknown result");
 }
 
-void BatchClient::newTypeUdefined( ::Type& _return)
+void BatchClient::newTypeUdefined( ::flowbox::batch::Type& _return)
 {
   send_newTypeUdefined();
   recv_newTypeUdefined(_return);
@@ -5650,7 +5650,7 @@ void BatchClient::send_newTypeUdefined()
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_newTypeUdefined( ::Type& _return)
+void BatchClient::recv_newTypeUdefined( ::flowbox::batch::Type& _return)
 {
 
   int32_t rseqid = 0;
@@ -5688,13 +5688,13 @@ void BatchClient::recv_newTypeUdefined( ::Type& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeUdefined failed: unknown result");
 }
 
-void BatchClient::newTypeNamed( ::Type& _return, const std::string& name, const  ::Type& type)
+void BatchClient::newTypeNamed( ::flowbox::batch::Type& _return, const std::string& name, const  ::flowbox::batch::Type& type)
 {
   send_newTypeNamed(name, type);
   recv_newTypeNamed(_return);
 }
 
-void BatchClient::send_newTypeNamed(const std::string& name, const  ::Type& type)
+void BatchClient::send_newTypeNamed(const std::string& name, const  ::flowbox::batch::Type& type)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("newTypeNamed", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5709,7 +5709,7 @@ void BatchClient::send_newTypeNamed(const std::string& name, const  ::Type& type
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_newTypeNamed( ::Type& _return)
+void BatchClient::recv_newTypeNamed( ::flowbox::batch::Type& _return)
 {
 
   int32_t rseqid = 0;
@@ -5750,7 +5750,7 @@ void BatchClient::recv_newTypeNamed( ::Type& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeNamed failed: unknown result");
 }
 
-void BatchClient::newTypeVariable( ::Type& _return, const std::string& name)
+void BatchClient::newTypeVariable( ::flowbox::batch::Type& _return, const std::string& name)
 {
   send_newTypeVariable(name);
   recv_newTypeVariable(_return);
@@ -5770,7 +5770,7 @@ void BatchClient::send_newTypeVariable(const std::string& name)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_newTypeVariable( ::Type& _return)
+void BatchClient::recv_newTypeVariable( ::flowbox::batch::Type& _return)
 {
 
   int32_t rseqid = 0;
@@ -5811,13 +5811,13 @@ void BatchClient::recv_newTypeVariable( ::Type& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeVariable failed: unknown result");
 }
 
-void BatchClient::newTypeList( ::Type& _return, const  ::Type& type)
+void BatchClient::newTypeList( ::flowbox::batch::Type& _return, const  ::flowbox::batch::Type& type)
 {
   send_newTypeList(type);
   recv_newTypeList(_return);
 }
 
-void BatchClient::send_newTypeList(const  ::Type& type)
+void BatchClient::send_newTypeList(const  ::flowbox::batch::Type& type)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("newTypeList", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5831,7 +5831,7 @@ void BatchClient::send_newTypeList(const  ::Type& type)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_newTypeList( ::Type& _return)
+void BatchClient::recv_newTypeList( ::flowbox::batch::Type& _return)
 {
 
   int32_t rseqid = 0;
@@ -5872,13 +5872,13 @@ void BatchClient::recv_newTypeList( ::Type& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeList failed: unknown result");
 }
 
-void BatchClient::newTypeTuple( ::Type& _return, const std::vector< ::Type> & types)
+void BatchClient::newTypeTuple( ::flowbox::batch::Type& _return, const std::vector< ::flowbox::batch::Type> & types)
 {
   send_newTypeTuple(types);
   recv_newTypeTuple(_return);
 }
 
-void BatchClient::send_newTypeTuple(const std::vector< ::Type> & types)
+void BatchClient::send_newTypeTuple(const std::vector< ::flowbox::batch::Type> & types)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("newTypeTuple", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5892,7 +5892,7 @@ void BatchClient::send_newTypeTuple(const std::vector< ::Type> & types)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_newTypeTuple( ::Type& _return)
+void BatchClient::recv_newTypeTuple( ::flowbox::batch::Type& _return)
 {
 
   int32_t rseqid = 0;
@@ -5933,13 +5933,13 @@ void BatchClient::recv_newTypeTuple( ::Type& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeTuple failed: unknown result");
 }
 
-void BatchClient::graph( ::Graph& _return, const  ::NodeDef& definition)
+void BatchClient::graph( ::flowbox::batch::Graph& _return, const  ::flowbox::batch::NodeDef& definition)
 {
   send_graph(definition);
   recv_graph(_return);
 }
 
-void BatchClient::send_graph(const  ::NodeDef& definition)
+void BatchClient::send_graph(const  ::flowbox::batch::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("graph", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -5953,7 +5953,7 @@ void BatchClient::send_graph(const  ::NodeDef& definition)
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_graph( ::Graph& _return)
+void BatchClient::recv_graph( ::flowbox::batch::Graph& _return)
 {
 
   int32_t rseqid = 0;
@@ -5994,13 +5994,13 @@ void BatchClient::recv_graph( ::Graph& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "graph failed: unknown result");
 }
 
-void BatchClient::addNode( ::Node& _return, const  ::Node& node, const  ::NodeDef& definition)
+void BatchClient::addNode( ::flowbox::batch::Node& _return, const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition)
 {
   send_addNode(node, definition);
   recv_addNode(_return);
 }
 
-void BatchClient::send_addNode(const  ::Node& node, const  ::NodeDef& definition)
+void BatchClient::send_addNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("addNode", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -6015,7 +6015,7 @@ void BatchClient::send_addNode(const  ::Node& node, const  ::NodeDef& definition
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_addNode( ::Node& _return)
+void BatchClient::recv_addNode( ::flowbox::batch::Node& _return)
 {
 
   int32_t rseqid = 0;
@@ -6056,13 +6056,13 @@ void BatchClient::recv_addNode( ::Node& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "addNode failed: unknown result");
 }
 
-void BatchClient::updateNode(const  ::Node& node, const  ::NodeDef& definition)
+void BatchClient::updateNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition)
 {
   send_updateNode(node, definition);
   recv_updateNode();
 }
 
-void BatchClient::send_updateNode(const  ::Node& node, const  ::NodeDef& definition)
+void BatchClient::send_updateNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("updateNode", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -6113,13 +6113,13 @@ void BatchClient::recv_updateNode()
   return;
 }
 
-void BatchClient::removeNode(const  ::Node& node, const  ::NodeDef& definition)
+void BatchClient::removeNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition)
 {
   send_removeNode(node, definition);
   recv_removeNode();
 }
 
-void BatchClient::send_removeNode(const  ::Node& node, const  ::NodeDef& definition)
+void BatchClient::send_removeNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("removeNode", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -6170,13 +6170,13 @@ void BatchClient::recv_removeNode()
   return;
 }
 
-void BatchClient::connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition)
+void BatchClient::connect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition)
 {
   send_connect(srcNode, srcPort, dstNode, dstPort, definition);
   recv_connect();
 }
 
-void BatchClient::send_connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition)
+void BatchClient::send_connect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("connect", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -6230,13 +6230,13 @@ void BatchClient::recv_connect()
   return;
 }
 
-void BatchClient::disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition)
+void BatchClient::disconnect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition)
 {
   send_disconnect(srcNode, srcPort, dstNode, dstPort, definition);
   recv_disconnect();
 }
 
-void BatchClient::send_disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition)
+void BatchClient::send_disconnect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("disconnect", ::apache::thrift::protocol::T_CALL, cseqid);

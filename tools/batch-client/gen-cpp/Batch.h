@@ -15,30 +15,30 @@ namespace flowbox { namespace batch {
 class BatchIf {
  public:
   virtual ~BatchIf() {}
-  virtual void libraries(std::vector< ::Library> & _return) = 0;
-  virtual void loadLibrary( ::Library& _return, const  ::Library& library) = 0;
-  virtual void unloadLibrary(const  ::Library& library) = 0;
-  virtual void libraryRootDef( ::NodeDef& _return, const  ::Library& library) = 0;
-  virtual void newDefinition( ::NodeDef& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs) = 0;
-  virtual void addDefinition( ::NodeDef& _return, const  ::NodeDef& definition, const  ::NodeDef& parent) = 0;
-  virtual void updateDefinition(const  ::NodeDef& definition) = 0;
-  virtual void removeDefinition(const  ::NodeDef& definition) = 0;
-  virtual void definitionChildren(std::vector< ::NodeDef> & _return, const  ::NodeDef& definition) = 0;
-  virtual void definitionParent( ::NodeDef& _return, const  ::NodeDef& definition) = 0;
-  virtual void newTypeModule( ::Type& _return, const std::string& name) = 0;
-  virtual void newTypeClass( ::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::Type> & params) = 0;
-  virtual void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs) = 0;
-  virtual void newTypeUdefined( ::Type& _return) = 0;
-  virtual void newTypeNamed( ::Type& _return, const std::string& name, const  ::Type& type) = 0;
-  virtual void newTypeVariable( ::Type& _return, const std::string& name) = 0;
-  virtual void newTypeList( ::Type& _return, const  ::Type& type) = 0;
-  virtual void newTypeTuple( ::Type& _return, const std::vector< ::Type> & types) = 0;
-  virtual void graph( ::Graph& _return, const  ::NodeDef& definition) = 0;
-  virtual void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDef& definition) = 0;
-  virtual void updateNode(const  ::Node& node, const  ::NodeDef& definition) = 0;
-  virtual void removeNode(const  ::Node& node, const  ::NodeDef& definition) = 0;
-  virtual void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition) = 0;
-  virtual void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition) = 0;
+  virtual void libraries(std::vector< ::flowbox::batch::Library> & _return) = 0;
+  virtual void loadLibrary( ::flowbox::batch::Library& _return, const  ::flowbox::batch::Library& library) = 0;
+  virtual void unloadLibrary(const  ::flowbox::batch::Library& library) = 0;
+  virtual void libraryRootDef( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::Library& library) = 0;
+  virtual void newDefinition( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::Type& type, const  ::flowbox::batch::Imports& imports, const  ::flowbox::batch::Flags& flags, const  ::flowbox::batch::Attributes& attrs) = 0;
+  virtual void addDefinition( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::NodeDef& definition, const  ::flowbox::batch::NodeDef& parent) = 0;
+  virtual void updateDefinition(const  ::flowbox::batch::NodeDef& definition) = 0;
+  virtual void removeDefinition(const  ::flowbox::batch::NodeDef& definition) = 0;
+  virtual void definitionChildren(std::vector< ::flowbox::batch::NodeDef> & _return, const  ::flowbox::batch::NodeDef& definition) = 0;
+  virtual void definitionParent( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::NodeDef& definition) = 0;
+  virtual void newTypeModule( ::flowbox::batch::Type& _return, const std::string& name) = 0;
+  virtual void newTypeClass( ::flowbox::batch::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::Type> & params) = 0;
+  virtual void newTypeFunction( ::flowbox::batch::Type& _return, const std::string& name, const  ::flowbox::batch::Type& inputs, const  ::flowbox::batch::Type& outputs) = 0;
+  virtual void newTypeUdefined( ::flowbox::batch::Type& _return) = 0;
+  virtual void newTypeNamed( ::flowbox::batch::Type& _return, const std::string& name, const  ::flowbox::batch::Type& type) = 0;
+  virtual void newTypeVariable( ::flowbox::batch::Type& _return, const std::string& name) = 0;
+  virtual void newTypeList( ::flowbox::batch::Type& _return, const  ::flowbox::batch::Type& type) = 0;
+  virtual void newTypeTuple( ::flowbox::batch::Type& _return, const std::vector< ::flowbox::batch::Type> & types) = 0;
+  virtual void graph( ::flowbox::batch::Graph& _return, const  ::flowbox::batch::NodeDef& definition) = 0;
+  virtual void addNode( ::flowbox::batch::Node& _return, const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition) = 0;
+  virtual void updateNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition) = 0;
+  virtual void removeNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition) = 0;
+  virtual void connect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition) = 0;
+  virtual void disconnect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition) = 0;
   virtual void ping() = 0;
 };
 
@@ -69,76 +69,76 @@ class BatchIfSingletonFactory : virtual public BatchIfFactory {
 class BatchNull : virtual public BatchIf {
  public:
   virtual ~BatchNull() {}
-  void libraries(std::vector< ::Library> & /* _return */) {
+  void libraries(std::vector< ::flowbox::batch::Library> & /* _return */) {
     return;
   }
-  void loadLibrary( ::Library& /* _return */, const  ::Library& /* library */) {
+  void loadLibrary( ::flowbox::batch::Library& /* _return */, const  ::flowbox::batch::Library& /* library */) {
     return;
   }
-  void unloadLibrary(const  ::Library& /* library */) {
+  void unloadLibrary(const  ::flowbox::batch::Library& /* library */) {
     return;
   }
-  void libraryRootDef( ::NodeDef& /* _return */, const  ::Library& /* library */) {
+  void libraryRootDef( ::flowbox::batch::NodeDef& /* _return */, const  ::flowbox::batch::Library& /* library */) {
     return;
   }
-  void newDefinition( ::NodeDef& /* _return */, const  ::Type& /* type */, const  ::Imports& /* imports */, const  ::Flags& /* flags */, const  ::Attributes& /* attrs */) {
+  void newDefinition( ::flowbox::batch::NodeDef& /* _return */, const  ::flowbox::batch::Type& /* type */, const  ::flowbox::batch::Imports& /* imports */, const  ::flowbox::batch::Flags& /* flags */, const  ::flowbox::batch::Attributes& /* attrs */) {
     return;
   }
-  void addDefinition( ::NodeDef& /* _return */, const  ::NodeDef& /* definition */, const  ::NodeDef& /* parent */) {
+  void addDefinition( ::flowbox::batch::NodeDef& /* _return */, const  ::flowbox::batch::NodeDef& /* definition */, const  ::flowbox::batch::NodeDef& /* parent */) {
     return;
   }
-  void updateDefinition(const  ::NodeDef& /* definition */) {
+  void updateDefinition(const  ::flowbox::batch::NodeDef& /* definition */) {
     return;
   }
-  void removeDefinition(const  ::NodeDef& /* definition */) {
+  void removeDefinition(const  ::flowbox::batch::NodeDef& /* definition */) {
     return;
   }
-  void definitionChildren(std::vector< ::NodeDef> & /* _return */, const  ::NodeDef& /* definition */) {
+  void definitionChildren(std::vector< ::flowbox::batch::NodeDef> & /* _return */, const  ::flowbox::batch::NodeDef& /* definition */) {
     return;
   }
-  void definitionParent( ::NodeDef& /* _return */, const  ::NodeDef& /* definition */) {
+  void definitionParent( ::flowbox::batch::NodeDef& /* _return */, const  ::flowbox::batch::NodeDef& /* definition */) {
     return;
   }
-  void newTypeModule( ::Type& /* _return */, const std::string& /* name */) {
+  void newTypeModule( ::flowbox::batch::Type& /* _return */, const std::string& /* name */) {
     return;
   }
-  void newTypeClass( ::Type& /* _return */, const std::string& /* name */, const std::vector<std::string> & /* typeparams */, const std::vector< ::Type> & /* params */) {
+  void newTypeClass( ::flowbox::batch::Type& /* _return */, const std::string& /* name */, const std::vector<std::string> & /* typeparams */, const std::vector< ::flowbox::batch::Type> & /* params */) {
     return;
   }
-  void newTypeFunction( ::Type& /* _return */, const std::string& /* name */, const  ::Type& /* inputs */, const  ::Type& /* outputs */) {
+  void newTypeFunction( ::flowbox::batch::Type& /* _return */, const std::string& /* name */, const  ::flowbox::batch::Type& /* inputs */, const  ::flowbox::batch::Type& /* outputs */) {
     return;
   }
-  void newTypeUdefined( ::Type& /* _return */) {
+  void newTypeUdefined( ::flowbox::batch::Type& /* _return */) {
     return;
   }
-  void newTypeNamed( ::Type& /* _return */, const std::string& /* name */, const  ::Type& /* type */) {
+  void newTypeNamed( ::flowbox::batch::Type& /* _return */, const std::string& /* name */, const  ::flowbox::batch::Type& /* type */) {
     return;
   }
-  void newTypeVariable( ::Type& /* _return */, const std::string& /* name */) {
+  void newTypeVariable( ::flowbox::batch::Type& /* _return */, const std::string& /* name */) {
     return;
   }
-  void newTypeList( ::Type& /* _return */, const  ::Type& /* type */) {
+  void newTypeList( ::flowbox::batch::Type& /* _return */, const  ::flowbox::batch::Type& /* type */) {
     return;
   }
-  void newTypeTuple( ::Type& /* _return */, const std::vector< ::Type> & /* types */) {
+  void newTypeTuple( ::flowbox::batch::Type& /* _return */, const std::vector< ::flowbox::batch::Type> & /* types */) {
     return;
   }
-  void graph( ::Graph& /* _return */, const  ::NodeDef& /* definition */) {
+  void graph( ::flowbox::batch::Graph& /* _return */, const  ::flowbox::batch::NodeDef& /* definition */) {
     return;
   }
-  void addNode( ::Node& /* _return */, const  ::Node& /* node */, const  ::NodeDef& /* definition */) {
+  void addNode( ::flowbox::batch::Node& /* _return */, const  ::flowbox::batch::Node& /* node */, const  ::flowbox::batch::NodeDef& /* definition */) {
     return;
   }
-  void updateNode(const  ::Node& /* node */, const  ::NodeDef& /* definition */) {
+  void updateNode(const  ::flowbox::batch::Node& /* node */, const  ::flowbox::batch::NodeDef& /* definition */) {
     return;
   }
-  void removeNode(const  ::Node& /* node */, const  ::NodeDef& /* definition */) {
+  void removeNode(const  ::flowbox::batch::Node& /* node */, const  ::flowbox::batch::NodeDef& /* definition */) {
     return;
   }
-  void connect(const  ::Node& /* srcNode */, const  ::PortDescriptor& /* srcPort */, const  ::Node& /* dstNode */, const  ::PortDescriptor& /* dstPort */, const  ::NodeDef& /* definition */) {
+  void connect(const  ::flowbox::batch::Node& /* srcNode */, const  ::flowbox::batch::PortDescriptor& /* srcPort */, const  ::flowbox::batch::Node& /* dstNode */, const  ::flowbox::batch::PortDescriptor& /* dstPort */, const  ::flowbox::batch::NodeDef& /* definition */) {
     return;
   }
-  void disconnect(const  ::Node& /* srcNode */, const  ::PortDescriptor& /* srcPort */, const  ::Node& /* dstNode */, const  ::PortDescriptor& /* dstPort */, const  ::NodeDef& /* definition */) {
+  void disconnect(const  ::flowbox::batch::Node& /* srcNode */, const  ::flowbox::batch::PortDescriptor& /* srcPort */, const  ::flowbox::batch::Node& /* dstNode */, const  ::flowbox::batch::PortDescriptor& /* dstPort */, const  ::flowbox::batch::NodeDef& /* definition */) {
     return;
   }
   void ping() {
@@ -196,11 +196,11 @@ class Batch_libraries_result {
 
   virtual ~Batch_libraries_result() throw() {}
 
-  std::vector< ::Library>  success;
+  std::vector< ::flowbox::batch::Library>  success;
 
   _Batch_libraries_result__isset __isset;
 
-  void __set_success(const std::vector< ::Library> & val) {
+  void __set_success(const std::vector< ::flowbox::batch::Library> & val) {
     success = val;
   }
 
@@ -232,7 +232,7 @@ class Batch_libraries_presult {
 
   virtual ~Batch_libraries_presult() throw() {}
 
-  std::vector< ::Library> * success;
+  std::vector< ::flowbox::batch::Library> * success;
 
   _Batch_libraries_presult__isset __isset;
 
@@ -253,11 +253,11 @@ class Batch_loadLibrary_args {
 
   virtual ~Batch_loadLibrary_args() throw() {}
 
-   ::Library library;
+   ::flowbox::batch::Library library;
 
   _Batch_loadLibrary_args__isset __isset;
 
-  void __set_library(const  ::Library& val) {
+  void __set_library(const  ::flowbox::batch::Library& val) {
     library = val;
   }
 
@@ -285,7 +285,7 @@ class Batch_loadLibrary_pargs {
 
   virtual ~Batch_loadLibrary_pargs() throw() {}
 
-  const  ::Library* library;
+  const  ::flowbox::batch::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -305,12 +305,12 @@ class Batch_loadLibrary_result {
 
   virtual ~Batch_loadLibrary_result() throw() {}
 
-   ::Library success;
+   ::flowbox::batch::Library success;
   ArgumentException missingFields;
 
   _Batch_loadLibrary_result__isset __isset;
 
-  void __set_success(const  ::Library& val) {
+  void __set_success(const  ::flowbox::batch::Library& val) {
     success = val;
   }
 
@@ -349,7 +349,7 @@ class Batch_loadLibrary_presult {
 
   virtual ~Batch_loadLibrary_presult() throw() {}
 
-   ::Library* success;
+   ::flowbox::batch::Library* success;
   ArgumentException missingFields;
 
   _Batch_loadLibrary_presult__isset __isset;
@@ -371,11 +371,11 @@ class Batch_unloadLibrary_args {
 
   virtual ~Batch_unloadLibrary_args() throw() {}
 
-   ::Library library;
+   ::flowbox::batch::Library library;
 
   _Batch_unloadLibrary_args__isset __isset;
 
-  void __set_library(const  ::Library& val) {
+  void __set_library(const  ::flowbox::batch::Library& val) {
     library = val;
   }
 
@@ -403,7 +403,7 @@ class Batch_unloadLibrary_pargs {
 
   virtual ~Batch_unloadLibrary_pargs() throw() {}
 
-  const  ::Library* library;
+  const  ::flowbox::batch::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -479,11 +479,11 @@ class Batch_libraryRootDef_args {
 
   virtual ~Batch_libraryRootDef_args() throw() {}
 
-   ::Library library;
+   ::flowbox::batch::Library library;
 
   _Batch_libraryRootDef_args__isset __isset;
 
-  void __set_library(const  ::Library& val) {
+  void __set_library(const  ::flowbox::batch::Library& val) {
     library = val;
   }
 
@@ -511,7 +511,7 @@ class Batch_libraryRootDef_pargs {
 
   virtual ~Batch_libraryRootDef_pargs() throw() {}
 
-  const  ::Library* library;
+  const  ::flowbox::batch::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -531,12 +531,12 @@ class Batch_libraryRootDef_result {
 
   virtual ~Batch_libraryRootDef_result() throw() {}
 
-   ::NodeDef success;
+   ::flowbox::batch::NodeDef success;
   ArgumentException missingFields;
 
   _Batch_libraryRootDef_result__isset __isset;
 
-  void __set_success(const  ::NodeDef& val) {
+  void __set_success(const  ::flowbox::batch::NodeDef& val) {
     success = val;
   }
 
@@ -575,7 +575,7 @@ class Batch_libraryRootDef_presult {
 
   virtual ~Batch_libraryRootDef_presult() throw() {}
 
-   ::NodeDef* success;
+   ::flowbox::batch::NodeDef* success;
   ArgumentException missingFields;
 
   _Batch_libraryRootDef_presult__isset __isset;
@@ -600,26 +600,26 @@ class Batch_newDefinition_args {
 
   virtual ~Batch_newDefinition_args() throw() {}
 
-   ::Type type;
-   ::Imports imports;
-   ::Flags flags;
-   ::Attributes attrs;
+   ::flowbox::batch::Type type;
+   ::flowbox::batch::Imports imports;
+   ::flowbox::batch::Flags flags;
+   ::flowbox::batch::Attributes attrs;
 
   _Batch_newDefinition_args__isset __isset;
 
-  void __set_type(const  ::Type& val) {
+  void __set_type(const  ::flowbox::batch::Type& val) {
     type = val;
   }
 
-  void __set_imports(const  ::Imports& val) {
+  void __set_imports(const  ::flowbox::batch::Imports& val) {
     imports = val;
   }
 
-  void __set_flags(const  ::Flags& val) {
+  void __set_flags(const  ::flowbox::batch::Flags& val) {
     flags = val;
   }
 
-  void __set_attrs(const  ::Attributes& val) {
+  void __set_attrs(const  ::flowbox::batch::Attributes& val) {
     attrs = val;
   }
 
@@ -653,10 +653,10 @@ class Batch_newDefinition_pargs {
 
   virtual ~Batch_newDefinition_pargs() throw() {}
 
-  const  ::Type* type;
-  const  ::Imports* imports;
-  const  ::Flags* flags;
-  const  ::Attributes* attrs;
+  const  ::flowbox::batch::Type* type;
+  const  ::flowbox::batch::Imports* imports;
+  const  ::flowbox::batch::Flags* flags;
+  const  ::flowbox::batch::Attributes* attrs;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -675,11 +675,11 @@ class Batch_newDefinition_result {
 
   virtual ~Batch_newDefinition_result() throw() {}
 
-   ::NodeDef success;
+   ::flowbox::batch::NodeDef success;
 
   _Batch_newDefinition_result__isset __isset;
 
-  void __set_success(const  ::NodeDef& val) {
+  void __set_success(const  ::flowbox::batch::NodeDef& val) {
     success = val;
   }
 
@@ -711,7 +711,7 @@ class Batch_newDefinition_presult {
 
   virtual ~Batch_newDefinition_presult() throw() {}
 
-   ::NodeDef* success;
+   ::flowbox::batch::NodeDef* success;
 
   _Batch_newDefinition_presult__isset __isset;
 
@@ -733,16 +733,16 @@ class Batch_addDefinition_args {
 
   virtual ~Batch_addDefinition_args() throw() {}
 
-   ::NodeDef definition;
-   ::NodeDef parent;
+   ::flowbox::batch::NodeDef definition;
+   ::flowbox::batch::NodeDef parent;
 
   _Batch_addDefinition_args__isset __isset;
 
-  void __set_definition(const  ::NodeDef& val) {
+  void __set_definition(const  ::flowbox::batch::NodeDef& val) {
     definition = val;
   }
 
-  void __set_parent(const  ::NodeDef& val) {
+  void __set_parent(const  ::flowbox::batch::NodeDef& val) {
     parent = val;
   }
 
@@ -772,8 +772,8 @@ class Batch_addDefinition_pargs {
 
   virtual ~Batch_addDefinition_pargs() throw() {}
 
-  const  ::NodeDef* definition;
-  const  ::NodeDef* parent;
+  const  ::flowbox::batch::NodeDef* definition;
+  const  ::flowbox::batch::NodeDef* parent;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -793,12 +793,12 @@ class Batch_addDefinition_result {
 
   virtual ~Batch_addDefinition_result() throw() {}
 
-   ::NodeDef success;
+   ::flowbox::batch::NodeDef success;
   ArgumentException missingFields;
 
   _Batch_addDefinition_result__isset __isset;
 
-  void __set_success(const  ::NodeDef& val) {
+  void __set_success(const  ::flowbox::batch::NodeDef& val) {
     success = val;
   }
 
@@ -837,7 +837,7 @@ class Batch_addDefinition_presult {
 
   virtual ~Batch_addDefinition_presult() throw() {}
 
-   ::NodeDef* success;
+   ::flowbox::batch::NodeDef* success;
   ArgumentException missingFields;
 
   _Batch_addDefinition_presult__isset __isset;
@@ -859,11 +859,11 @@ class Batch_updateDefinition_args {
 
   virtual ~Batch_updateDefinition_args() throw() {}
 
-   ::NodeDef definition;
+   ::flowbox::batch::NodeDef definition;
 
   _Batch_updateDefinition_args__isset __isset;
 
-  void __set_definition(const  ::NodeDef& val) {
+  void __set_definition(const  ::flowbox::batch::NodeDef& val) {
     definition = val;
   }
 
@@ -891,7 +891,7 @@ class Batch_updateDefinition_pargs {
 
   virtual ~Batch_updateDefinition_pargs() throw() {}
 
-  const  ::NodeDef* definition;
+  const  ::flowbox::batch::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -967,11 +967,11 @@ class Batch_removeDefinition_args {
 
   virtual ~Batch_removeDefinition_args() throw() {}
 
-   ::NodeDef definition;
+   ::flowbox::batch::NodeDef definition;
 
   _Batch_removeDefinition_args__isset __isset;
 
-  void __set_definition(const  ::NodeDef& val) {
+  void __set_definition(const  ::flowbox::batch::NodeDef& val) {
     definition = val;
   }
 
@@ -999,7 +999,7 @@ class Batch_removeDefinition_pargs {
 
   virtual ~Batch_removeDefinition_pargs() throw() {}
 
-  const  ::NodeDef* definition;
+  const  ::flowbox::batch::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -1075,11 +1075,11 @@ class Batch_definitionChildren_args {
 
   virtual ~Batch_definitionChildren_args() throw() {}
 
-   ::NodeDef definition;
+   ::flowbox::batch::NodeDef definition;
 
   _Batch_definitionChildren_args__isset __isset;
 
-  void __set_definition(const  ::NodeDef& val) {
+  void __set_definition(const  ::flowbox::batch::NodeDef& val) {
     definition = val;
   }
 
@@ -1107,7 +1107,7 @@ class Batch_definitionChildren_pargs {
 
   virtual ~Batch_definitionChildren_pargs() throw() {}
 
-  const  ::NodeDef* definition;
+  const  ::flowbox::batch::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -1127,12 +1127,12 @@ class Batch_definitionChildren_result {
 
   virtual ~Batch_definitionChildren_result() throw() {}
 
-  std::vector< ::NodeDef>  success;
+  std::vector< ::flowbox::batch::NodeDef>  success;
   ArgumentException missingFields;
 
   _Batch_definitionChildren_result__isset __isset;
 
-  void __set_success(const std::vector< ::NodeDef> & val) {
+  void __set_success(const std::vector< ::flowbox::batch::NodeDef> & val) {
     success = val;
   }
 
@@ -1171,7 +1171,7 @@ class Batch_definitionChildren_presult {
 
   virtual ~Batch_definitionChildren_presult() throw() {}
 
-  std::vector< ::NodeDef> * success;
+  std::vector< ::flowbox::batch::NodeDef> * success;
   ArgumentException missingFields;
 
   _Batch_definitionChildren_presult__isset __isset;
@@ -1193,11 +1193,11 @@ class Batch_definitionParent_args {
 
   virtual ~Batch_definitionParent_args() throw() {}
 
-   ::NodeDef definition;
+   ::flowbox::batch::NodeDef definition;
 
   _Batch_definitionParent_args__isset __isset;
 
-  void __set_definition(const  ::NodeDef& val) {
+  void __set_definition(const  ::flowbox::batch::NodeDef& val) {
     definition = val;
   }
 
@@ -1225,7 +1225,7 @@ class Batch_definitionParent_pargs {
 
   virtual ~Batch_definitionParent_pargs() throw() {}
 
-  const  ::NodeDef* definition;
+  const  ::flowbox::batch::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -1245,12 +1245,12 @@ class Batch_definitionParent_result {
 
   virtual ~Batch_definitionParent_result() throw() {}
 
-   ::NodeDef success;
+   ::flowbox::batch::NodeDef success;
   ArgumentException missingFields;
 
   _Batch_definitionParent_result__isset __isset;
 
-  void __set_success(const  ::NodeDef& val) {
+  void __set_success(const  ::flowbox::batch::NodeDef& val) {
     success = val;
   }
 
@@ -1289,7 +1289,7 @@ class Batch_definitionParent_presult {
 
   virtual ~Batch_definitionParent_presult() throw() {}
 
-   ::NodeDef* success;
+   ::flowbox::batch::NodeDef* success;
   ArgumentException missingFields;
 
   _Batch_definitionParent_presult__isset __isset;
@@ -1363,12 +1363,12 @@ class Batch_newTypeModule_result {
 
   virtual ~Batch_newTypeModule_result() throw() {}
 
-   ::Type success;
+   ::flowbox::batch::Type success;
   ArgumentException missingFields;
 
   _Batch_newTypeModule_result__isset __isset;
 
-  void __set_success(const  ::Type& val) {
+  void __set_success(const  ::flowbox::batch::Type& val) {
     success = val;
   }
 
@@ -1407,7 +1407,7 @@ class Batch_newTypeModule_presult {
 
   virtual ~Batch_newTypeModule_presult() throw() {}
 
-   ::Type* success;
+   ::flowbox::batch::Type* success;
   ArgumentException missingFields;
 
   _Batch_newTypeModule_presult__isset __isset;
@@ -1433,7 +1433,7 @@ class Batch_newTypeClass_args {
 
   std::string name;
   std::vector<std::string>  typeparams;
-  std::vector< ::Type>  params;
+  std::vector< ::flowbox::batch::Type>  params;
 
   _Batch_newTypeClass_args__isset __isset;
 
@@ -1445,7 +1445,7 @@ class Batch_newTypeClass_args {
     typeparams = val;
   }
 
-  void __set_params(const std::vector< ::Type> & val) {
+  void __set_params(const std::vector< ::flowbox::batch::Type> & val) {
     params = val;
   }
 
@@ -1479,7 +1479,7 @@ class Batch_newTypeClass_pargs {
 
   const std::string* name;
   const std::vector<std::string> * typeparams;
-  const std::vector< ::Type> * params;
+  const std::vector< ::flowbox::batch::Type> * params;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -1499,12 +1499,12 @@ class Batch_newTypeClass_result {
 
   virtual ~Batch_newTypeClass_result() throw() {}
 
-   ::Type success;
+   ::flowbox::batch::Type success;
   ArgumentException missingFields;
 
   _Batch_newTypeClass_result__isset __isset;
 
-  void __set_success(const  ::Type& val) {
+  void __set_success(const  ::flowbox::batch::Type& val) {
     success = val;
   }
 
@@ -1543,7 +1543,7 @@ class Batch_newTypeClass_presult {
 
   virtual ~Batch_newTypeClass_presult() throw() {}
 
-   ::Type* success;
+   ::flowbox::batch::Type* success;
   ArgumentException missingFields;
 
   _Batch_newTypeClass_presult__isset __isset;
@@ -1568,8 +1568,8 @@ class Batch_newTypeFunction_args {
   virtual ~Batch_newTypeFunction_args() throw() {}
 
   std::string name;
-   ::Type inputs;
-   ::Type outputs;
+   ::flowbox::batch::Type inputs;
+   ::flowbox::batch::Type outputs;
 
   _Batch_newTypeFunction_args__isset __isset;
 
@@ -1577,11 +1577,11 @@ class Batch_newTypeFunction_args {
     name = val;
   }
 
-  void __set_inputs(const  ::Type& val) {
+  void __set_inputs(const  ::flowbox::batch::Type& val) {
     inputs = val;
   }
 
-  void __set_outputs(const  ::Type& val) {
+  void __set_outputs(const  ::flowbox::batch::Type& val) {
     outputs = val;
   }
 
@@ -1614,8 +1614,8 @@ class Batch_newTypeFunction_pargs {
   virtual ~Batch_newTypeFunction_pargs() throw() {}
 
   const std::string* name;
-  const  ::Type* inputs;
-  const  ::Type* outputs;
+  const  ::flowbox::batch::Type* inputs;
+  const  ::flowbox::batch::Type* outputs;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -1635,12 +1635,12 @@ class Batch_newTypeFunction_result {
 
   virtual ~Batch_newTypeFunction_result() throw() {}
 
-   ::Type success;
+   ::flowbox::batch::Type success;
   ArgumentException missingFields;
 
   _Batch_newTypeFunction_result__isset __isset;
 
-  void __set_success(const  ::Type& val) {
+  void __set_success(const  ::flowbox::batch::Type& val) {
     success = val;
   }
 
@@ -1679,7 +1679,7 @@ class Batch_newTypeFunction_presult {
 
   virtual ~Batch_newTypeFunction_presult() throw() {}
 
-   ::Type* success;
+   ::flowbox::batch::Type* success;
   ArgumentException missingFields;
 
   _Batch_newTypeFunction_presult__isset __isset;
@@ -1738,11 +1738,11 @@ class Batch_newTypeUdefined_result {
 
   virtual ~Batch_newTypeUdefined_result() throw() {}
 
-   ::Type success;
+   ::flowbox::batch::Type success;
 
   _Batch_newTypeUdefined_result__isset __isset;
 
-  void __set_success(const  ::Type& val) {
+  void __set_success(const  ::flowbox::batch::Type& val) {
     success = val;
   }
 
@@ -1774,7 +1774,7 @@ class Batch_newTypeUdefined_presult {
 
   virtual ~Batch_newTypeUdefined_presult() throw() {}
 
-   ::Type* success;
+   ::flowbox::batch::Type* success;
 
   _Batch_newTypeUdefined_presult__isset __isset;
 
@@ -1797,7 +1797,7 @@ class Batch_newTypeNamed_args {
   virtual ~Batch_newTypeNamed_args() throw() {}
 
   std::string name;
-   ::Type type;
+   ::flowbox::batch::Type type;
 
   _Batch_newTypeNamed_args__isset __isset;
 
@@ -1805,7 +1805,7 @@ class Batch_newTypeNamed_args {
     name = val;
   }
 
-  void __set_type(const  ::Type& val) {
+  void __set_type(const  ::flowbox::batch::Type& val) {
     type = val;
   }
 
@@ -1836,7 +1836,7 @@ class Batch_newTypeNamed_pargs {
   virtual ~Batch_newTypeNamed_pargs() throw() {}
 
   const std::string* name;
-  const  ::Type* type;
+  const  ::flowbox::batch::Type* type;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -1856,12 +1856,12 @@ class Batch_newTypeNamed_result {
 
   virtual ~Batch_newTypeNamed_result() throw() {}
 
-   ::Type success;
+   ::flowbox::batch::Type success;
   ArgumentException missingFields;
 
   _Batch_newTypeNamed_result__isset __isset;
 
-  void __set_success(const  ::Type& val) {
+  void __set_success(const  ::flowbox::batch::Type& val) {
     success = val;
   }
 
@@ -1900,7 +1900,7 @@ class Batch_newTypeNamed_presult {
 
   virtual ~Batch_newTypeNamed_presult() throw() {}
 
-   ::Type* success;
+   ::flowbox::batch::Type* success;
   ArgumentException missingFields;
 
   _Batch_newTypeNamed_presult__isset __isset;
@@ -1974,12 +1974,12 @@ class Batch_newTypeVariable_result {
 
   virtual ~Batch_newTypeVariable_result() throw() {}
 
-   ::Type success;
+   ::flowbox::batch::Type success;
   ArgumentException missingFields;
 
   _Batch_newTypeVariable_result__isset __isset;
 
-  void __set_success(const  ::Type& val) {
+  void __set_success(const  ::flowbox::batch::Type& val) {
     success = val;
   }
 
@@ -2018,7 +2018,7 @@ class Batch_newTypeVariable_presult {
 
   virtual ~Batch_newTypeVariable_presult() throw() {}
 
-   ::Type* success;
+   ::flowbox::batch::Type* success;
   ArgumentException missingFields;
 
   _Batch_newTypeVariable_presult__isset __isset;
@@ -2040,11 +2040,11 @@ class Batch_newTypeList_args {
 
   virtual ~Batch_newTypeList_args() throw() {}
 
-   ::Type type;
+   ::flowbox::batch::Type type;
 
   _Batch_newTypeList_args__isset __isset;
 
-  void __set_type(const  ::Type& val) {
+  void __set_type(const  ::flowbox::batch::Type& val) {
     type = val;
   }
 
@@ -2072,7 +2072,7 @@ class Batch_newTypeList_pargs {
 
   virtual ~Batch_newTypeList_pargs() throw() {}
 
-  const  ::Type* type;
+  const  ::flowbox::batch::Type* type;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -2092,12 +2092,12 @@ class Batch_newTypeList_result {
 
   virtual ~Batch_newTypeList_result() throw() {}
 
-   ::Type success;
+   ::flowbox::batch::Type success;
   ArgumentException missingFields;
 
   _Batch_newTypeList_result__isset __isset;
 
-  void __set_success(const  ::Type& val) {
+  void __set_success(const  ::flowbox::batch::Type& val) {
     success = val;
   }
 
@@ -2136,7 +2136,7 @@ class Batch_newTypeList_presult {
 
   virtual ~Batch_newTypeList_presult() throw() {}
 
-   ::Type* success;
+   ::flowbox::batch::Type* success;
   ArgumentException missingFields;
 
   _Batch_newTypeList_presult__isset __isset;
@@ -2158,11 +2158,11 @@ class Batch_newTypeTuple_args {
 
   virtual ~Batch_newTypeTuple_args() throw() {}
 
-  std::vector< ::Type>  types;
+  std::vector< ::flowbox::batch::Type>  types;
 
   _Batch_newTypeTuple_args__isset __isset;
 
-  void __set_types(const std::vector< ::Type> & val) {
+  void __set_types(const std::vector< ::flowbox::batch::Type> & val) {
     types = val;
   }
 
@@ -2190,7 +2190,7 @@ class Batch_newTypeTuple_pargs {
 
   virtual ~Batch_newTypeTuple_pargs() throw() {}
 
-  const std::vector< ::Type> * types;
+  const std::vector< ::flowbox::batch::Type> * types;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -2210,12 +2210,12 @@ class Batch_newTypeTuple_result {
 
   virtual ~Batch_newTypeTuple_result() throw() {}
 
-   ::Type success;
+   ::flowbox::batch::Type success;
   ArgumentException missingFields;
 
   _Batch_newTypeTuple_result__isset __isset;
 
-  void __set_success(const  ::Type& val) {
+  void __set_success(const  ::flowbox::batch::Type& val) {
     success = val;
   }
 
@@ -2254,7 +2254,7 @@ class Batch_newTypeTuple_presult {
 
   virtual ~Batch_newTypeTuple_presult() throw() {}
 
-   ::Type* success;
+   ::flowbox::batch::Type* success;
   ArgumentException missingFields;
 
   _Batch_newTypeTuple_presult__isset __isset;
@@ -2276,11 +2276,11 @@ class Batch_graph_args {
 
   virtual ~Batch_graph_args() throw() {}
 
-   ::NodeDef definition;
+   ::flowbox::batch::NodeDef definition;
 
   _Batch_graph_args__isset __isset;
 
-  void __set_definition(const  ::NodeDef& val) {
+  void __set_definition(const  ::flowbox::batch::NodeDef& val) {
     definition = val;
   }
 
@@ -2308,7 +2308,7 @@ class Batch_graph_pargs {
 
   virtual ~Batch_graph_pargs() throw() {}
 
-  const  ::NodeDef* definition;
+  const  ::flowbox::batch::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -2328,12 +2328,12 @@ class Batch_graph_result {
 
   virtual ~Batch_graph_result() throw() {}
 
-   ::Graph success;
+   ::flowbox::batch::Graph success;
   ArgumentException missingFields;
 
   _Batch_graph_result__isset __isset;
 
-  void __set_success(const  ::Graph& val) {
+  void __set_success(const  ::flowbox::batch::Graph& val) {
     success = val;
   }
 
@@ -2372,7 +2372,7 @@ class Batch_graph_presult {
 
   virtual ~Batch_graph_presult() throw() {}
 
-   ::Graph* success;
+   ::flowbox::batch::Graph* success;
   ArgumentException missingFields;
 
   _Batch_graph_presult__isset __isset;
@@ -2395,16 +2395,16 @@ class Batch_addNode_args {
 
   virtual ~Batch_addNode_args() throw() {}
 
-   ::Node node;
-   ::NodeDef definition;
+   ::flowbox::batch::Node node;
+   ::flowbox::batch::NodeDef definition;
 
   _Batch_addNode_args__isset __isset;
 
-  void __set_node(const  ::Node& val) {
+  void __set_node(const  ::flowbox::batch::Node& val) {
     node = val;
   }
 
-  void __set_definition(const  ::NodeDef& val) {
+  void __set_definition(const  ::flowbox::batch::NodeDef& val) {
     definition = val;
   }
 
@@ -2434,8 +2434,8 @@ class Batch_addNode_pargs {
 
   virtual ~Batch_addNode_pargs() throw() {}
 
-  const  ::Node* node;
-  const  ::NodeDef* definition;
+  const  ::flowbox::batch::Node* node;
+  const  ::flowbox::batch::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -2455,12 +2455,12 @@ class Batch_addNode_result {
 
   virtual ~Batch_addNode_result() throw() {}
 
-   ::Node success;
+   ::flowbox::batch::Node success;
   ArgumentException missingFields;
 
   _Batch_addNode_result__isset __isset;
 
-  void __set_success(const  ::Node& val) {
+  void __set_success(const  ::flowbox::batch::Node& val) {
     success = val;
   }
 
@@ -2499,7 +2499,7 @@ class Batch_addNode_presult {
 
   virtual ~Batch_addNode_presult() throw() {}
 
-   ::Node* success;
+   ::flowbox::batch::Node* success;
   ArgumentException missingFields;
 
   _Batch_addNode_presult__isset __isset;
@@ -2522,16 +2522,16 @@ class Batch_updateNode_args {
 
   virtual ~Batch_updateNode_args() throw() {}
 
-   ::Node node;
-   ::NodeDef definition;
+   ::flowbox::batch::Node node;
+   ::flowbox::batch::NodeDef definition;
 
   _Batch_updateNode_args__isset __isset;
 
-  void __set_node(const  ::Node& val) {
+  void __set_node(const  ::flowbox::batch::Node& val) {
     node = val;
   }
 
-  void __set_definition(const  ::NodeDef& val) {
+  void __set_definition(const  ::flowbox::batch::NodeDef& val) {
     definition = val;
   }
 
@@ -2561,8 +2561,8 @@ class Batch_updateNode_pargs {
 
   virtual ~Batch_updateNode_pargs() throw() {}
 
-  const  ::Node* node;
-  const  ::NodeDef* definition;
+  const  ::flowbox::batch::Node* node;
+  const  ::flowbox::batch::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -2639,16 +2639,16 @@ class Batch_removeNode_args {
 
   virtual ~Batch_removeNode_args() throw() {}
 
-   ::Node node;
-   ::NodeDef definition;
+   ::flowbox::batch::Node node;
+   ::flowbox::batch::NodeDef definition;
 
   _Batch_removeNode_args__isset __isset;
 
-  void __set_node(const  ::Node& val) {
+  void __set_node(const  ::flowbox::batch::Node& val) {
     node = val;
   }
 
-  void __set_definition(const  ::NodeDef& val) {
+  void __set_definition(const  ::flowbox::batch::NodeDef& val) {
     definition = val;
   }
 
@@ -2678,8 +2678,8 @@ class Batch_removeNode_pargs {
 
   virtual ~Batch_removeNode_pargs() throw() {}
 
-  const  ::Node* node;
-  const  ::NodeDef* definition;
+  const  ::flowbox::batch::Node* node;
+  const  ::flowbox::batch::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -2759,31 +2759,31 @@ class Batch_connect_args {
 
   virtual ~Batch_connect_args() throw() {}
 
-   ::Node srcNode;
-   ::PortDescriptor srcPort;
-   ::Node dstNode;
-   ::PortDescriptor dstPort;
-   ::NodeDef definition;
+   ::flowbox::batch::Node srcNode;
+   ::flowbox::batch::PortDescriptor srcPort;
+   ::flowbox::batch::Node dstNode;
+   ::flowbox::batch::PortDescriptor dstPort;
+   ::flowbox::batch::NodeDef definition;
 
   _Batch_connect_args__isset __isset;
 
-  void __set_srcNode(const  ::Node& val) {
+  void __set_srcNode(const  ::flowbox::batch::Node& val) {
     srcNode = val;
   }
 
-  void __set_srcPort(const  ::PortDescriptor& val) {
+  void __set_srcPort(const  ::flowbox::batch::PortDescriptor& val) {
     srcPort = val;
   }
 
-  void __set_dstNode(const  ::Node& val) {
+  void __set_dstNode(const  ::flowbox::batch::Node& val) {
     dstNode = val;
   }
 
-  void __set_dstPort(const  ::PortDescriptor& val) {
+  void __set_dstPort(const  ::flowbox::batch::PortDescriptor& val) {
     dstPort = val;
   }
 
-  void __set_definition(const  ::NodeDef& val) {
+  void __set_definition(const  ::flowbox::batch::NodeDef& val) {
     definition = val;
   }
 
@@ -2819,11 +2819,11 @@ class Batch_connect_pargs {
 
   virtual ~Batch_connect_pargs() throw() {}
 
-  const  ::Node* srcNode;
-  const  ::PortDescriptor* srcPort;
-  const  ::Node* dstNode;
-  const  ::PortDescriptor* dstPort;
-  const  ::NodeDef* definition;
+  const  ::flowbox::batch::Node* srcNode;
+  const  ::flowbox::batch::PortDescriptor* srcPort;
+  const  ::flowbox::batch::Node* dstNode;
+  const  ::flowbox::batch::PortDescriptor* dstPort;
+  const  ::flowbox::batch::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -2903,31 +2903,31 @@ class Batch_disconnect_args {
 
   virtual ~Batch_disconnect_args() throw() {}
 
-   ::Node srcNode;
-   ::PortDescriptor srcPort;
-   ::Node dstNode;
-   ::PortDescriptor dstPort;
-   ::NodeDef definition;
+   ::flowbox::batch::Node srcNode;
+   ::flowbox::batch::PortDescriptor srcPort;
+   ::flowbox::batch::Node dstNode;
+   ::flowbox::batch::PortDescriptor dstPort;
+   ::flowbox::batch::NodeDef definition;
 
   _Batch_disconnect_args__isset __isset;
 
-  void __set_srcNode(const  ::Node& val) {
+  void __set_srcNode(const  ::flowbox::batch::Node& val) {
     srcNode = val;
   }
 
-  void __set_srcPort(const  ::PortDescriptor& val) {
+  void __set_srcPort(const  ::flowbox::batch::PortDescriptor& val) {
     srcPort = val;
   }
 
-  void __set_dstNode(const  ::Node& val) {
+  void __set_dstNode(const  ::flowbox::batch::Node& val) {
     dstNode = val;
   }
 
-  void __set_dstPort(const  ::PortDescriptor& val) {
+  void __set_dstPort(const  ::flowbox::batch::PortDescriptor& val) {
     dstPort = val;
   }
 
-  void __set_definition(const  ::NodeDef& val) {
+  void __set_definition(const  ::flowbox::batch::NodeDef& val) {
     definition = val;
   }
 
@@ -2963,11 +2963,11 @@ class Batch_disconnect_pargs {
 
   virtual ~Batch_disconnect_pargs() throw() {}
 
-  const  ::Node* srcNode;
-  const  ::PortDescriptor* srcPort;
-  const  ::Node* dstNode;
-  const  ::PortDescriptor* dstPort;
-  const  ::NodeDef* definition;
+  const  ::flowbox::batch::Node* srcNode;
+  const  ::flowbox::batch::PortDescriptor* srcPort;
+  const  ::flowbox::batch::Node* dstNode;
+  const  ::flowbox::batch::PortDescriptor* dstPort;
+  const  ::flowbox::batch::NodeDef* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -3124,77 +3124,77 @@ class BatchClient : virtual public BatchIf {
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
-  void libraries(std::vector< ::Library> & _return);
+  void libraries(std::vector< ::flowbox::batch::Library> & _return);
   void send_libraries();
-  void recv_libraries(std::vector< ::Library> & _return);
-  void loadLibrary( ::Library& _return, const  ::Library& library);
-  void send_loadLibrary(const  ::Library& library);
-  void recv_loadLibrary( ::Library& _return);
-  void unloadLibrary(const  ::Library& library);
-  void send_unloadLibrary(const  ::Library& library);
+  void recv_libraries(std::vector< ::flowbox::batch::Library> & _return);
+  void loadLibrary( ::flowbox::batch::Library& _return, const  ::flowbox::batch::Library& library);
+  void send_loadLibrary(const  ::flowbox::batch::Library& library);
+  void recv_loadLibrary( ::flowbox::batch::Library& _return);
+  void unloadLibrary(const  ::flowbox::batch::Library& library);
+  void send_unloadLibrary(const  ::flowbox::batch::Library& library);
   void recv_unloadLibrary();
-  void libraryRootDef( ::NodeDef& _return, const  ::Library& library);
-  void send_libraryRootDef(const  ::Library& library);
-  void recv_libraryRootDef( ::NodeDef& _return);
-  void newDefinition( ::NodeDef& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs);
-  void send_newDefinition(const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs);
-  void recv_newDefinition( ::NodeDef& _return);
-  void addDefinition( ::NodeDef& _return, const  ::NodeDef& definition, const  ::NodeDef& parent);
-  void send_addDefinition(const  ::NodeDef& definition, const  ::NodeDef& parent);
-  void recv_addDefinition( ::NodeDef& _return);
-  void updateDefinition(const  ::NodeDef& definition);
-  void send_updateDefinition(const  ::NodeDef& definition);
+  void libraryRootDef( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::Library& library);
+  void send_libraryRootDef(const  ::flowbox::batch::Library& library);
+  void recv_libraryRootDef( ::flowbox::batch::NodeDef& _return);
+  void newDefinition( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::Type& type, const  ::flowbox::batch::Imports& imports, const  ::flowbox::batch::Flags& flags, const  ::flowbox::batch::Attributes& attrs);
+  void send_newDefinition(const  ::flowbox::batch::Type& type, const  ::flowbox::batch::Imports& imports, const  ::flowbox::batch::Flags& flags, const  ::flowbox::batch::Attributes& attrs);
+  void recv_newDefinition( ::flowbox::batch::NodeDef& _return);
+  void addDefinition( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::NodeDef& definition, const  ::flowbox::batch::NodeDef& parent);
+  void send_addDefinition(const  ::flowbox::batch::NodeDef& definition, const  ::flowbox::batch::NodeDef& parent);
+  void recv_addDefinition( ::flowbox::batch::NodeDef& _return);
+  void updateDefinition(const  ::flowbox::batch::NodeDef& definition);
+  void send_updateDefinition(const  ::flowbox::batch::NodeDef& definition);
   void recv_updateDefinition();
-  void removeDefinition(const  ::NodeDef& definition);
-  void send_removeDefinition(const  ::NodeDef& definition);
+  void removeDefinition(const  ::flowbox::batch::NodeDef& definition);
+  void send_removeDefinition(const  ::flowbox::batch::NodeDef& definition);
   void recv_removeDefinition();
-  void definitionChildren(std::vector< ::NodeDef> & _return, const  ::NodeDef& definition);
-  void send_definitionChildren(const  ::NodeDef& definition);
-  void recv_definitionChildren(std::vector< ::NodeDef> & _return);
-  void definitionParent( ::NodeDef& _return, const  ::NodeDef& definition);
-  void send_definitionParent(const  ::NodeDef& definition);
-  void recv_definitionParent( ::NodeDef& _return);
-  void newTypeModule( ::Type& _return, const std::string& name);
+  void definitionChildren(std::vector< ::flowbox::batch::NodeDef> & _return, const  ::flowbox::batch::NodeDef& definition);
+  void send_definitionChildren(const  ::flowbox::batch::NodeDef& definition);
+  void recv_definitionChildren(std::vector< ::flowbox::batch::NodeDef> & _return);
+  void definitionParent( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::NodeDef& definition);
+  void send_definitionParent(const  ::flowbox::batch::NodeDef& definition);
+  void recv_definitionParent( ::flowbox::batch::NodeDef& _return);
+  void newTypeModule( ::flowbox::batch::Type& _return, const std::string& name);
   void send_newTypeModule(const std::string& name);
-  void recv_newTypeModule( ::Type& _return);
-  void newTypeClass( ::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::Type> & params);
-  void send_newTypeClass(const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::Type> & params);
-  void recv_newTypeClass( ::Type& _return);
-  void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs);
-  void send_newTypeFunction(const std::string& name, const  ::Type& inputs, const  ::Type& outputs);
-  void recv_newTypeFunction( ::Type& _return);
-  void newTypeUdefined( ::Type& _return);
+  void recv_newTypeModule( ::flowbox::batch::Type& _return);
+  void newTypeClass( ::flowbox::batch::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::Type> & params);
+  void send_newTypeClass(const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::Type> & params);
+  void recv_newTypeClass( ::flowbox::batch::Type& _return);
+  void newTypeFunction( ::flowbox::batch::Type& _return, const std::string& name, const  ::flowbox::batch::Type& inputs, const  ::flowbox::batch::Type& outputs);
+  void send_newTypeFunction(const std::string& name, const  ::flowbox::batch::Type& inputs, const  ::flowbox::batch::Type& outputs);
+  void recv_newTypeFunction( ::flowbox::batch::Type& _return);
+  void newTypeUdefined( ::flowbox::batch::Type& _return);
   void send_newTypeUdefined();
-  void recv_newTypeUdefined( ::Type& _return);
-  void newTypeNamed( ::Type& _return, const std::string& name, const  ::Type& type);
-  void send_newTypeNamed(const std::string& name, const  ::Type& type);
-  void recv_newTypeNamed( ::Type& _return);
-  void newTypeVariable( ::Type& _return, const std::string& name);
+  void recv_newTypeUdefined( ::flowbox::batch::Type& _return);
+  void newTypeNamed( ::flowbox::batch::Type& _return, const std::string& name, const  ::flowbox::batch::Type& type);
+  void send_newTypeNamed(const std::string& name, const  ::flowbox::batch::Type& type);
+  void recv_newTypeNamed( ::flowbox::batch::Type& _return);
+  void newTypeVariable( ::flowbox::batch::Type& _return, const std::string& name);
   void send_newTypeVariable(const std::string& name);
-  void recv_newTypeVariable( ::Type& _return);
-  void newTypeList( ::Type& _return, const  ::Type& type);
-  void send_newTypeList(const  ::Type& type);
-  void recv_newTypeList( ::Type& _return);
-  void newTypeTuple( ::Type& _return, const std::vector< ::Type> & types);
-  void send_newTypeTuple(const std::vector< ::Type> & types);
-  void recv_newTypeTuple( ::Type& _return);
-  void graph( ::Graph& _return, const  ::NodeDef& definition);
-  void send_graph(const  ::NodeDef& definition);
-  void recv_graph( ::Graph& _return);
-  void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDef& definition);
-  void send_addNode(const  ::Node& node, const  ::NodeDef& definition);
-  void recv_addNode( ::Node& _return);
-  void updateNode(const  ::Node& node, const  ::NodeDef& definition);
-  void send_updateNode(const  ::Node& node, const  ::NodeDef& definition);
+  void recv_newTypeVariable( ::flowbox::batch::Type& _return);
+  void newTypeList( ::flowbox::batch::Type& _return, const  ::flowbox::batch::Type& type);
+  void send_newTypeList(const  ::flowbox::batch::Type& type);
+  void recv_newTypeList( ::flowbox::batch::Type& _return);
+  void newTypeTuple( ::flowbox::batch::Type& _return, const std::vector< ::flowbox::batch::Type> & types);
+  void send_newTypeTuple(const std::vector< ::flowbox::batch::Type> & types);
+  void recv_newTypeTuple( ::flowbox::batch::Type& _return);
+  void graph( ::flowbox::batch::Graph& _return, const  ::flowbox::batch::NodeDef& definition);
+  void send_graph(const  ::flowbox::batch::NodeDef& definition);
+  void recv_graph( ::flowbox::batch::Graph& _return);
+  void addNode( ::flowbox::batch::Node& _return, const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition);
+  void send_addNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition);
+  void recv_addNode( ::flowbox::batch::Node& _return);
+  void updateNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition);
+  void send_updateNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition);
   void recv_updateNode();
-  void removeNode(const  ::Node& node, const  ::NodeDef& definition);
-  void send_removeNode(const  ::Node& node, const  ::NodeDef& definition);
+  void removeNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition);
+  void send_removeNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition);
   void recv_removeNode();
-  void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition);
-  void send_connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition);
+  void connect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition);
+  void send_connect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition);
   void recv_connect();
-  void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition);
-  void send_disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition);
+  void disconnect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition);
+  void send_disconnect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition);
   void recv_disconnect();
   void ping();
   void send_ping();
@@ -3295,7 +3295,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_.push_back(iface);
   }
  public:
-  void libraries(std::vector< ::Library> & _return) {
+  void libraries(std::vector< ::flowbox::batch::Library> & _return) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3305,7 +3305,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void loadLibrary( ::Library& _return, const  ::Library& library) {
+  void loadLibrary( ::flowbox::batch::Library& _return, const  ::flowbox::batch::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3315,7 +3315,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void unloadLibrary(const  ::Library& library) {
+  void unloadLibrary(const  ::flowbox::batch::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3324,7 +3324,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->unloadLibrary(library);
   }
 
-  void libraryRootDef( ::NodeDef& _return, const  ::Library& library) {
+  void libraryRootDef( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3334,7 +3334,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newDefinition( ::NodeDef& _return, const  ::Type& type, const  ::Imports& imports, const  ::Flags& flags, const  ::Attributes& attrs) {
+  void newDefinition( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::Type& type, const  ::flowbox::batch::Imports& imports, const  ::flowbox::batch::Flags& flags, const  ::flowbox::batch::Attributes& attrs) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3344,7 +3344,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void addDefinition( ::NodeDef& _return, const  ::NodeDef& definition, const  ::NodeDef& parent) {
+  void addDefinition( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::NodeDef& definition, const  ::flowbox::batch::NodeDef& parent) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3354,7 +3354,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void updateDefinition(const  ::NodeDef& definition) {
+  void updateDefinition(const  ::flowbox::batch::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3363,7 +3363,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->updateDefinition(definition);
   }
 
-  void removeDefinition(const  ::NodeDef& definition) {
+  void removeDefinition(const  ::flowbox::batch::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3372,7 +3372,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->removeDefinition(definition);
   }
 
-  void definitionChildren(std::vector< ::NodeDef> & _return, const  ::NodeDef& definition) {
+  void definitionChildren(std::vector< ::flowbox::batch::NodeDef> & _return, const  ::flowbox::batch::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3382,7 +3382,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void definitionParent( ::NodeDef& _return, const  ::NodeDef& definition) {
+  void definitionParent( ::flowbox::batch::NodeDef& _return, const  ::flowbox::batch::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3392,7 +3392,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeModule( ::Type& _return, const std::string& name) {
+  void newTypeModule( ::flowbox::batch::Type& _return, const std::string& name) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3402,7 +3402,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeClass( ::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::Type> & params) {
+  void newTypeClass( ::flowbox::batch::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::Type> & params) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3412,7 +3412,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs) {
+  void newTypeFunction( ::flowbox::batch::Type& _return, const std::string& name, const  ::flowbox::batch::Type& inputs, const  ::flowbox::batch::Type& outputs) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3422,7 +3422,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeUdefined( ::Type& _return) {
+  void newTypeUdefined( ::flowbox::batch::Type& _return) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3432,7 +3432,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeNamed( ::Type& _return, const std::string& name, const  ::Type& type) {
+  void newTypeNamed( ::flowbox::batch::Type& _return, const std::string& name, const  ::flowbox::batch::Type& type) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3442,7 +3442,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeVariable( ::Type& _return, const std::string& name) {
+  void newTypeVariable( ::flowbox::batch::Type& _return, const std::string& name) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3452,7 +3452,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeList( ::Type& _return, const  ::Type& type) {
+  void newTypeList( ::flowbox::batch::Type& _return, const  ::flowbox::batch::Type& type) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3462,7 +3462,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeTuple( ::Type& _return, const std::vector< ::Type> & types) {
+  void newTypeTuple( ::flowbox::batch::Type& _return, const std::vector< ::flowbox::batch::Type> & types) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3472,7 +3472,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void graph( ::Graph& _return, const  ::NodeDef& definition) {
+  void graph( ::flowbox::batch::Graph& _return, const  ::flowbox::batch::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3482,7 +3482,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void addNode( ::Node& _return, const  ::Node& node, const  ::NodeDef& definition) {
+  void addNode( ::flowbox::batch::Node& _return, const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3492,7 +3492,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void updateNode(const  ::Node& node, const  ::NodeDef& definition) {
+  void updateNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3501,7 +3501,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->updateNode(node, definition);
   }
 
-  void removeNode(const  ::Node& node, const  ::NodeDef& definition) {
+  void removeNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3510,7 +3510,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->removeNode(node, definition);
   }
 
-  void connect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition) {
+  void connect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -3519,7 +3519,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->connect(srcNode, srcPort, dstNode, dstPort, definition);
   }
 
-  void disconnect(const  ::Node& srcNode, const  ::PortDescriptor& srcPort, const  ::Node& dstNode, const  ::PortDescriptor& dstPort, const  ::NodeDef& definition) {
+  void disconnect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::NodeDef& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {

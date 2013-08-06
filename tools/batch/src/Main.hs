@@ -5,6 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 --import Data.List
 import Data.IORef
 import Network

@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-
+namespace flowbox { namespace batch {
 
 const char* Flags::ascii_fingerprint = "1959DF646639D95C0F1375CF60F71F5B";
 const uint8_t Flags::binary_fingerprint[16] = {0x19,0x59,0xDF,0x64,0x66,0x39,0xD9,0x5C,0x0F,0x13,0x75,0xCF,0x60,0xF7,0x1F,0x5B};
@@ -198,4 +198,4 @@ void swap(Attributes &a, Attributes &b) {
   swap(a.__isset, b.__isset);
 }
 
-
+}} // namespace

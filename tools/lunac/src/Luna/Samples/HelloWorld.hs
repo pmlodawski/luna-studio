@@ -8,6 +8,7 @@
 module Luna.Samples.HelloWorld(
     workspaceImports,
     workspace,
+    base_libman,
     base_manager,
     full_manager,
     myFun, myFun2, myFun3, myFun4, myFun5,
@@ -67,8 +68,8 @@ base_manager = manager where
 base_libman :: LibManager
 base_libman = libman where
   -- TODO [PM] : insert proper root nodeDef' ids in lines below
-    libman = LibManager.insNode (userLibKey, Library "__workspace__" (UniPath.fromUnixString "~/flowbox/project1") (-1) ) 
-           $ LibManager.insNode (stdLibKey,  Library "std"           (UniPath.fromUnixString "/opt/flowbox/luna/stdlib") (-2))
+    libman = LibManager.insNode (userLibKey, Library "__workspace__" (UniPath.fromUnixString "lunalib/project") 100 ) 
+           $ LibManager.insNode (stdLibKey,  Library "std"           (UniPath.fromUnixString "lunalib/stdlib") 1)
            $ LibManager.empty
 
 
@@ -302,10 +303,15 @@ cls1 = NodeDef.empty{ NodeDef.cls   = Type.Class "Vector" ["a"] [Type.Named "x" 
 
 
 full_manager :: DefManager
-full_manager =  DefManager.addToParentMany [ --(1, 2, myFun2),
-                                           (10, 1, myFun5),
-                                           (100, 10, cls1)
-                                           ]
+full_manager =  DefManager.addToParentMany [(2, 5, myFun),
+                                            (2, 4, myFun2),
+                                            (2, 3, myFun3),
+                                            (1, 2, myFun3),
+                                            (100, 1, myFun2)]
+--full_manager =  DefManager.addToParentMany [ --(1, 2, myFun2),
+--                                           (10, 1, myFun5),
+--                                           (100, 10, cls1)
+--                                           ]
              $ base_manager
 
 --full_manager :: DefManager

@@ -9,7 +9,7 @@
 
 #include "graph_types.h"
 
-
+namespace flowbox { namespace batch {
 
 class graphConstants {
  public:
@@ -19,6 +19,6 @@ class graphConstants {
 
 extern const graphConstants g_graph_constants;
 
-
+}} // namespace
 
 #endif

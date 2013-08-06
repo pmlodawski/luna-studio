@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-
+namespace flowbox { namespace batch {
 
 const char* Import::ascii_fingerprint = "92AA23526EDCB0628C830C8758ED7059";
 const uint8_t Import::binary_fingerprint[16] = {0x92,0xAA,0x23,0x52,0x6E,0xDC,0xB0,0x62,0x8C,0x83,0x0C,0x87,0x58,0xED,0x70,0x59};
@@ -280,4 +280,4 @@ void swap(NodeDef &a, NodeDef &b) {
   swap(a.__isset, b.__isset);
 }
 
-
+}} // namespace

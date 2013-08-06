@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-
+namespace flowbox { namespace batch {
 
 int _kTypeTypeValues[] = {
   TypeType::Undefined,
@@ -342,4 +342,4 @@ void swap(Type &a, Type &b) {
   swap(a.__isset, b.__isset);
 }
 
-
+}} // namespace
