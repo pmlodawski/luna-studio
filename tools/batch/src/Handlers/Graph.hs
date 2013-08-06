@@ -55,7 +55,6 @@ addNode = nodeDefOperation (\batchHandler (_, node) (defID, definition) -> do
         newDefinition = definition {NodeDef.graph =  newGraph}
         newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
         newCore       = core {Core.defManager = newDefManager}
-    print newCore
     writeIORef batchHandler newCore
 
     return $ encode (nodeID, node))
@@ -74,7 +73,6 @@ updateNode = nodeDefOperation (\batchHandler (nodeID, node) (defID, definition) 
                 newDefinition = definition {NodeDef.graph =  newGraph}
                 newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
                 newCore       = core {Core.defManager = newDefManager}
-            print newCore
             writeIORef batchHandler newCore)
 
 
@@ -91,7 +89,6 @@ removeNode = nodeDefOperation (\batchHandler (nodeID, _) (defID, definition) -> 
                 newDefinition = definition {NodeDef.graph =  newGraph}
                 newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
                 newCore       = core {Core.defManager = newDefManager}
-            print newCore
             writeIORef batchHandler newCore)
 
 connect :: IORef Core -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor

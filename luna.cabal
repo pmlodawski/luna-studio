@@ -39,6 +39,7 @@ Library
                   Luna.Network.Path.Path,
                   Luna.Network.Attributes,
                   Luna.Network.Flags,
+                  Luna.Samples.Packages,
                   Luna.System.UniPath,
                   Luna.Tools.Conversion,
                   Luna.Tools.Conversion.Attrs,

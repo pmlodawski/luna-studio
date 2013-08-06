@@ -32,11 +32,11 @@ int main(int argc, char **argv) {
         vector<Library> registeredLibs;
 
         Library stdlib;
-        stdlib.__set_name("std");
+        stdlib.__set_name("lib1");
         stdlib.__set_path("/opt/luna/lib");
 
         Library userlib;
-        userlib.__set_name("my");
+        userlib.__set_name("lib2");
         userlib.__set_path("~/luna-projects/myproj");
 
         batch.loadLibrary(stdlib, stdlib);
