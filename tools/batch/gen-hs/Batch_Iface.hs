@@ -53,7 +53,7 @@ class Batch_Iface a where
   definitionChildren :: a -> Maybe Defs_Types.NodeDef -> IO (Vector.Vector Defs_Types.NodeDef)
   definitionParent :: a -> Maybe Defs_Types.NodeDef -> IO Defs_Types.NodeDef
   newTypeModule :: a -> Maybe Text -> IO Types_Types.Type
-  newTypeClass :: a -> Maybe Text -> Maybe (Vector.Vector Types_Types.Type) -> IO Types_Types.Type
+  newTypeClass :: a -> Maybe Text -> Maybe (Vector.Vector Text) -> Maybe (Vector.Vector Types_Types.Type) -> IO Types_Types.Type
   newTypeFunction :: a -> Maybe Text -> Maybe Types_Types.Type -> Maybe Types_Types.Type -> IO Types_Types.Type
   newTypeUdefined :: a -> IO Types_Types.Type
   newTypeNamed :: a -> Maybe Text -> Maybe Types_Types.Type -> IO Types_Types.Type

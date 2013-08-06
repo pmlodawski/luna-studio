@@ -26,7 +26,7 @@ class BatchIf {
   virtual void definitionChildren(std::vector< ::NodeDef> & _return, const  ::NodeDef& definition) = 0;
   virtual void definitionParent( ::NodeDef& _return, const  ::NodeDef& definition) = 0;
   virtual void newTypeModule( ::Type& _return, const std::string& name) = 0;
-  virtual void newTypeClass( ::Type& _return, const std::string& name, const std::vector< ::Type> & params) = 0;
+  virtual void newTypeClass( ::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::Type> & params) = 0;
   virtual void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs) = 0;
   virtual void newTypeUdefined( ::Type& _return) = 0;
   virtual void newTypeNamed( ::Type& _return, const std::string& name, const  ::Type& type) = 0;
@@ -102,7 +102,7 @@ class BatchNull : virtual public BatchIf {
   void newTypeModule( ::Type& /* _return */, const std::string& /* name */) {
     return;
   }
-  void newTypeClass( ::Type& /* _return */, const std::string& /* name */, const std::vector< ::Type> & /* params */) {
+  void newTypeClass( ::Type& /* _return */, const std::string& /* name */, const std::vector<std::string> & /* typeparams */, const std::vector< ::Type> & /* params */) {
     return;
   }
   void newTypeFunction( ::Type& /* _return */, const std::string& /* name */, const  ::Type& /* inputs */, const  ::Type& /* outputs */) {
@@ -1417,8 +1417,9 @@ class Batch_newTypeModule_presult {
 };
 
 typedef struct _Batch_newTypeClass_args__isset {
-  _Batch_newTypeClass_args__isset() : name(false), params(false) {}
+  _Batch_newTypeClass_args__isset() : name(false), typeparams(false), params(false) {}
   bool name;
+  bool typeparams;
   bool params;
 } _Batch_newTypeClass_args__isset;
 
@@ -1431,12 +1432,17 @@ class Batch_newTypeClass_args {
   virtual ~Batch_newTypeClass_args() throw() {}
 
   std::string name;
+  std::vector<std::string>  typeparams;
   std::vector< ::Type>  params;
 
   _Batch_newTypeClass_args__isset __isset;
 
   void __set_name(const std::string& val) {
     name = val;
+  }
+
+  void __set_typeparams(const std::vector<std::string> & val) {
+    typeparams = val;
   }
 
   void __set_params(const std::vector< ::Type> & val) {
@@ -1446,6 +1452,8 @@ class Batch_newTypeClass_args {
   bool operator == (const Batch_newTypeClass_args & rhs) const
   {
     if (!(name == rhs.name))
+      return false;
+    if (!(typeparams == rhs.typeparams))
       return false;
     if (!(params == rhs.params))
       return false;
@@ -1470,6 +1478,7 @@ class Batch_newTypeClass_pargs {
   virtual ~Batch_newTypeClass_pargs() throw() {}
 
   const std::string* name;
+  const std::vector<std::string> * typeparams;
   const std::vector< ::Type> * params;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -3148,8 +3157,8 @@ class BatchClient : virtual public BatchIf {
   void newTypeModule( ::Type& _return, const std::string& name);
   void send_newTypeModule(const std::string& name);
   void recv_newTypeModule( ::Type& _return);
-  void newTypeClass( ::Type& _return, const std::string& name, const std::vector< ::Type> & params);
-  void send_newTypeClass(const std::string& name, const std::vector< ::Type> & params);
+  void newTypeClass( ::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::Type> & params);
+  void send_newTypeClass(const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::Type> & params);
   void recv_newTypeClass( ::Type& _return);
   void newTypeFunction( ::Type& _return, const std::string& name, const  ::Type& inputs, const  ::Type& outputs);
   void send_newTypeFunction(const std::string& name, const  ::Type& inputs, const  ::Type& outputs);
@@ -3393,13 +3402,13 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeClass( ::Type& _return, const std::string& name, const std::vector< ::Type> & params) {
+  void newTypeClass( ::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::Type> & params) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->newTypeClass(_return, name, params);
+      ifaces_[i]->newTypeClass(_return, name, typeparams, params);
     }
-    ifaces_[i]->newTypeClass(_return, name, params);
+    ifaces_[i]->newTypeClass(_return, name, typeparams, params);
     return;
   }
 

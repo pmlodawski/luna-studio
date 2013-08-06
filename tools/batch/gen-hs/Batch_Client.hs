@@ -314,14 +314,14 @@ recv_newTypeModule ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "newTypeModule failed: unknown result")
-newTypeClass (ip,op) arg_name arg_params = do
-  send_newTypeClass op arg_name arg_params
+newTypeClass (ip,op) arg_name arg_typeparams arg_params = do
+  send_newTypeClass op arg_name arg_typeparams arg_params
   recv_newTypeClass ip
-send_newTypeClass op arg_name arg_params = do
+send_newTypeClass op arg_name arg_typeparams arg_params = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("newTypeClass", M_CALL, seqn)
-  write_NewTypeClass_args op (NewTypeClass_args{f_NewTypeClass_args_name=Just arg_name,f_NewTypeClass_args_params=Just arg_params})
+  write_NewTypeClass_args op (NewTypeClass_args{f_NewTypeClass_args_name=Just arg_name,f_NewTypeClass_args_typeparams=Just arg_typeparams,f_NewTypeClass_args_params=Just arg_params})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_newTypeClass ip = do
