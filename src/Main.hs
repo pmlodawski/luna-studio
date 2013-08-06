@@ -5,16 +5,27 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import qualified Luna.Samples.HelloWorld        as HelloWorld
+import qualified Luna.Core                      as Core
+import           Luna.Core                        (Core(..))
 import qualified Luna.Codegen.FuncGenerator     as FG
 import qualified Luna.Codegen.DefGenerator      as DG
+import qualified Luna.Lib.LibManager            as LibManager
+import qualified Luna.Samples.HelloWorld        as HelloWorld
+import qualified Luna.Tools.Serializer          as Serializer
 
 main :: IO ()
 main = do 
+    let libManager = HelloWorld.base_libman
+        core = Core libManager HelloWorld.full_manager
+        Just stdLib = LibManager.lab libManager 0 
+    print core
     putStrLn "------------\n"
 
+    Serializer.storeLib core stdLib
+
+    core2 <- Serializer.restoreLib core stdLib
 	--putStrLn $ FG.generateFunction HelloWorld.myFun3
-    putStrLn $ DG.generateDefinition 1 HelloWorld.full_manager
+    --putStrLn $ DG.generateDefinition 1 HelloWorld.full_manager
     return ()
 
 
