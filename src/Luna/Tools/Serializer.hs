@@ -78,7 +78,7 @@ getNameNStoreNode defManager udirpath nodeDefID = do
         Just nodeDef -> do
             case NodeDef.cls nodeDef of 
                 Module   name     -> storeNode defManager udirpath name nodeDefID nodeDef
-                Class    name _   -> storeNode defManager udirpath name nodeDefID nodeDef
+                Class    name _ _ -> storeNode defManager udirpath name nodeDefID nodeDef
                 Function name _ _ -> storeNode defManager udirpath name nodeDefID nodeDef
                 _                 -> error "Inconssistent in defManager: Wrong type of a definition"
 
