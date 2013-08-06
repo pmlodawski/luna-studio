@@ -14,7 +14,7 @@
 
 
 
-
+namespace flowbox { namespace batch {
 
 struct TypeType {
   enum type {
@@ -200,6 +200,6 @@ class Type {
 
 void swap(Type &a, Type &b);
 
-
+}} // namespace
 
 #endif

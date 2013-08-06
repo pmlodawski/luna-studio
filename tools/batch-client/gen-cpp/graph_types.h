@@ -15,7 +15,7 @@
 #include "attrs_types.h"
 
 
-
+namespace flowbox { namespace batch {
 
 struct DefaultValueType {
   enum type {
@@ -136,8 +136,8 @@ class Node {
   NodeType::type cls;
   std::string name;
   NodeID nodeID;
-   ::Flags flags;
-   ::Attributes attrs;
+   ::flowbox::batch::Flags flags;
+   ::flowbox::batch::Attributes attrs;
   DefaultValue defVal;
 
   _Node__isset __isset;
@@ -157,12 +157,12 @@ class Node {
     __isset.nodeID = true;
   }
 
-  void __set_flags(const  ::Flags& val) {
+  void __set_flags(const  ::flowbox::batch::Flags& val) {
     flags = val;
     __isset.flags = true;
   }
 
-  void __set_attrs(const  ::Attributes& val) {
+  void __set_attrs(const  ::flowbox::batch::Attributes& val) {
     attrs = val;
     __isset.attrs = true;
   }
@@ -338,6 +338,6 @@ class Graph {
 
 void swap(Graph &a, Graph &b);
 
-
+}} // namespace
 
 #endif

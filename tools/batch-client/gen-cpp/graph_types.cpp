@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-
+namespace flowbox { namespace batch {
 
 int _kDefaultValueTypeValues[] = {
   DefaultValueType::StringV,
@@ -484,4 +484,4 @@ void swap(Graph &a, Graph &b) {
   swap(a.__isset, b.__isset);
 }
 
-
+}} // namespace

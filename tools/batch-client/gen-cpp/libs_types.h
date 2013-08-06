@@ -14,7 +14,7 @@
 
 
 
-
+namespace flowbox { namespace batch {
 
 typedef int32_t LibID;
 
@@ -97,6 +97,6 @@ class Library {
 
 void swap(Library &a, Library &b);
 
-
+}} // namespace
 
 #endif
