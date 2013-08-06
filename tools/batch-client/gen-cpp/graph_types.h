@@ -34,7 +34,8 @@ struct NodeType {
     New = 3,
     Inputs = 4,
     Outputs = 5,
-    Tuple = 6
+    Tuple = 6,
+    NTuple = 7
   };
 };
 
@@ -213,8 +214,7 @@ class Node {
 void swap(Node &a, Node &b);
 
 typedef struct _Edge__isset {
-  _Edge__isset() : portSrc(false), portDst(false), nodeSrc(false), nodeDst(false) {}
-  bool portSrc;
+  _Edge__isset() : portDst(false), nodeSrc(false), nodeDst(false) {}
   bool portDst;
   bool nodeSrc;
   bool nodeDst;
@@ -223,25 +223,19 @@ typedef struct _Edge__isset {
 class Edge {
  public:
 
-  static const char* ascii_fingerprint; // = "E3E2F869E2831D70F619B6B13F64FB99";
-  static const uint8_t binary_fingerprint[16]; // = {0xE3,0xE2,0xF8,0x69,0xE2,0x83,0x1D,0x70,0xF6,0x19,0xB6,0xB1,0x3F,0x64,0xFB,0x99};
+  static const char* ascii_fingerprint; // = "C19C3C50DCAC5D78DEDA8D5FC1C59402";
+  static const uint8_t binary_fingerprint[16]; // = {0xC1,0x9C,0x3C,0x50,0xDC,0xAC,0x5D,0x78,0xDE,0xDA,0x8D,0x5F,0xC1,0xC5,0x94,0x02};
 
-  Edge() : portSrc(0), portDst(0), nodeSrc(0), nodeDst(0) {
+  Edge() : portDst(0), nodeSrc(0), nodeDst(0) {
   }
 
   virtual ~Edge() throw() {}
 
-  int32_t portSrc;
   int32_t portDst;
   NodeID nodeSrc;
   NodeID nodeDst;
 
   _Edge__isset __isset;
-
-  void __set_portSrc(const int32_t val) {
-    portSrc = val;
-    __isset.portSrc = true;
-  }
 
   void __set_portDst(const int32_t val) {
     portDst = val;
@@ -260,10 +254,6 @@ class Edge {
 
   bool operator == (const Edge & rhs) const
   {
-    if (__isset.portSrc != rhs.__isset.portSrc)
-      return false;
-    else if (__isset.portSrc && !(portSrc == rhs.portSrc))
-      return false;
     if (__isset.portDst != rhs.__isset.portDst)
       return false;
     else if (__isset.portDst && !(portDst == rhs.portDst))
@@ -300,8 +290,8 @@ typedef struct _Graph__isset {
 class Graph {
  public:
 
-  static const char* ascii_fingerprint; // = "EA2C91D29359A645800FF7F1BA743F1D";
-  static const uint8_t binary_fingerprint[16]; // = {0xEA,0x2C,0x91,0xD2,0x93,0x59,0xA6,0x45,0x80,0x0F,0xF7,0xF1,0xBA,0x74,0x3F,0x1D};
+  static const char* ascii_fingerprint; // = "23F28B7CCC26BC5D5B26C2B977C89209";
+  static const uint8_t binary_fingerprint[16]; // = {0x23,0xF2,0x8B,0x7C,0xCC,0x26,0xBC,0x5D,0x5B,0x26,0xC2,0xB9,0x77,0xC8,0x92,0x09};
 
   Graph() {
   }

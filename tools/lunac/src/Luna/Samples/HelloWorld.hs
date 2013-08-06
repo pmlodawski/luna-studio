@@ -11,7 +11,8 @@ module Luna.Samples.HelloWorld(
     base_libman,
     base_manager,
     full_manager,
-    myFun, myFun2, myFun3
+    myFun, myFun2, myFun3, myFun4, myFun5,
+    cls1
 ) where
 
 
@@ -50,6 +51,13 @@ workspace = NodeDef.empty{ NodeDef.cls     = Type.Module "Workspace'"
                          , NodeDef.imports = workspaceImports
                          , NodeDef.libID   = userLibKey
                          }
+
+
+testmod  = NodeDef.empty{ NodeDef.cls     = Type.Module "Testmod" 
+                         , NodeDef.imports = workspaceImports
+                         , NodeDef.libID   = userLibKey
+                         }
+
 
 base_manager :: DefManager
 base_manager = manager where
@@ -94,16 +102,16 @@ myFunGraph = Graph.insEdges [
 
            $ Graph.insNodes [(0,  Node.mkType     "Console" ),
                              (1,  Node.mkNew                ),
-                             (2,  Node.mkTuple              ),
+                             (2,  Node.mkNTuple             ),
                              (3,  Node.mkCall     "init"    ),
                              (4,  Node.mkCall     "select0" ),
                              (5,  Node.mkType     "String"  ),
                              (6,  Node.mkNew                ),
                              (7,  Node.Default $ DefaultValue.DefaultString "hello world!"),
-                             (8,  Node.mkTuple              ),
+                             (8,  Node.mkNTuple             ),
                              (9,  Node.mkCall     "init"    ),
                              (10, Node.mkCall     "select0" ),
-                             (11, Node.mkTuple              ),
+                             (11, Node.mkNTuple             ),
                              (12, Node.mkCall     "print"   ),
                              (13, Node.mkInputs             ),
                              (14, Node.mkOutputs            )
@@ -134,7 +142,7 @@ myFunGraph2 = Graph.insEdges [(0, 1, Edge.standard),
            $ Graph.insNodes [(0, Node.mkInputs             ),
                              (1, Node.mkCall     "select0" ),
                              (2, Node.mkCall     "select1" ),
-                             (3, Node.mkTuple              ),
+                             (3, Node.mkNTuple             ),
                              (4, Node.mkCall     "add"     ),
                              (5, Node.mkOutputs            )
                             ]
@@ -169,7 +177,7 @@ myFunGraph3 = Graph.insEdges [
 
            $ Graph.insNodes [(0,  Node.mkType     "Console" ),
                              (1,  Node.mkNew                ),
-                             (2,  Node.mkTuple              ),
+                             (2,  Node.mkNTuple             ),
                              (3,  Node.mkCall     "init"    ),
                              (4,  Node.mkCall     "select0" ),
                              (5,  Node.mkInputs             ),
@@ -177,8 +185,8 @@ myFunGraph3 = Graph.insEdges [
                              (7,  Node.mkCall     "select1" ),
                              (8,  Node.mkCall     "add"     ),
                              (9,  Node.mkCall     "select0" ),
-                             (10, Node.mkTuple              ),
-                             --(11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty),
+                             (10, Node.mkNTuple             ),
+                             --(11, Node.Call       "print"   Flags.empty Attributes.empty),
                              (11, Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty),
                              (12, Node.mkOutputs            ),
                              (13, Node.mkCall     "dummy" )
@@ -197,7 +205,85 @@ myFun3 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun3" myFunInputs3 Typ
 
 
 
+myFunGraph4 = Graph.insEdges [
+                              (0, 1, Edge.standard),
+                              (1, 2, Edge.standard),
+                              (2, 3, Edge.standard),
+                              (3, 4, Edge.standard),
+                              (5, 6, Edge.standard),
+                              (4, 6, Edge.standard),
+                              (6, 7, Edge.standard),
+                              (7, 8, Edge.standard),
+                              (8, 9, Edge.standard),
+                              (1, 9, Edge.standard),
+                              (9, 10, Edge.standard),
+                              (10, 11, Edge.standard)
+                             ]
 
+           $ Graph.insNodes [(0,  Node.mkInputs             ),
+                             (1,  Node.mkCall     "select0" ),
+                             (2,  Node.mkNTuple             ),
+                             (3,  Node.mkCall     "x'getter"),
+                             (4,  Node.mkCall     "select0" ),
+                             (5,  Node.Default $ DefaultValue.DefaultInt 1),
+                             (6,  Node.mkNTuple             ),
+                             (7,  Node.mkCall     "add"     ),
+                             (8,  Node.mkCall     "select0" ),
+                             (9,  Node.mkNTuple             ),
+                             (10, Node.mkCall     "x'setter"),
+                             (11, Node.mkOutputs            )
+                            ]
+           $ Graph.empty
+
+myFunInputs4 = Type.Tuple [Type.TypeVariable "a", 
+                          Type.Named "in1" $ Type.TypeVariable "b"]
+
+
+myFun4 = NodeDef.empty{ NodeDef.cls   = (Type.Function "incx" myFunInputs4 Type.noOutputs)
+                      , NodeDef.graph = myFunGraph4
+                      , NodeDef.libID = userLibKey
+                      }
+
+
+
+
+
+
+myFunGraph5 = Graph.insEdges [
+                              (2, 3, Edge.standard),
+                              (3, 5, Edge.standard),
+                              (4, 5, Edge.standard),
+                              (5, 6, Edge.standard)
+                             ]
+
+           $ Graph.insNodes [(0,  Node.mkInputs             ),
+                             (1,  Node.mkOutputs            ),
+                             (2,  Node.mkType     "Console" ),
+                             (3,  Node.mkNew                ),
+                             (4,  Node.Default $ DefaultValue.DefaultString "hello world!"),
+                             (5,  Node.mkNTuple             ),
+                             (6,  Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty)
+                            ]
+           $ Graph.empty
+
+myFunInputs5 = Type.Tuple []
+
+
+myFun5 = NodeDef.empty{ NodeDef.cls   = (Type.Function "mymain" myFunInputs5 Type.noOutputs)
+                      , NodeDef.graph = myFunGraph5
+                      , NodeDef.libID = userLibKey
+                      }
+
+
+
+
+cls1 = NodeDef.empty{ NodeDef.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
+                    , NodeDef.graph = Graph.empty
+                    , NodeDef.libID = userLibKey
+                    }
+
+--iface1 = NodeDef.empty{  NodeDef.cls = Type.Interface "Ivector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
+                      --}
 
 
 --full_manager :: DefManager
@@ -216,15 +302,22 @@ myFun3 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun3" myFunInputs3 Typ
 
 
 
-
 full_manager :: DefManager
 full_manager =  DefManager.addToParentMany [(2, 5, myFun),
                                             (2, 4, myFun2),
                                             (2, 3, myFun3),
                                             (1, 2, myFun3),
-                                            (100, 1, myFun2)
-                                           ]
+                                            (100, 1, myFun2)]
+--full_manager =  DefManager.addToParentMany [ --(1, 2, myFun2),
+--                                           (10, 1, myFun5),
+--                                           (100, 10, cls1)
+--                                           ]
              $ base_manager
+
+--full_manager :: DefManager
+--full_manager =  DefManager.addToParentMany [ (100, 101, testmod)
+--                                           ]
+--             $ base_manager
 
 
 --full_manager :: DefManager

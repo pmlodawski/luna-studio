@@ -56,7 +56,7 @@ service Batch {
      */
 
     types.Type newTypeModule   (1: string name)                             throws (1: ArgumentException missingFields)
-    types.Type newTypeClass    (1: string name, 2: list<types.Type> params) throws (1: ArgumentException missingFields)
+    types.Type newTypeClass    (1: string name, 2: list<string> typeparams, 3: list<types.Type> params) throws (1: ArgumentException missingFields)
     types.Type newTypeFunction (1: string name, 2: types.Type inputs, 3: types.Type outputs) throws (1: ArgumentException missingFields)
     types.Type newTypeUdefined ()
     types.Type newTypeNamed    (1: string name, 2: types.Type type) throws (1: ArgumentException missingFields)

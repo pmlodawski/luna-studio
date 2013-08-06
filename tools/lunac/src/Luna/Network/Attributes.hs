@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Luna.Network.Attributes (
-    Attributes(..),
+    Attributes,
     module Data.Map
 ) where
 

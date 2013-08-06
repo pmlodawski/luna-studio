@@ -83,6 +83,14 @@ int main(int argc, char **argv) {
         batch.removeDefinition(fun);
         batch.addDefinition(fun, fun, myModule);
 
+        Type myclassType;
+        batch.newTypeClass(myclassType, "myclass", {}, {});
+        
+        NodeDef myclass;
+        myclass.__set_cls(myclassType);
+
+        batch.addDefinition(myclass, myclass, myModule);
+
         vector<NodeDef> children;
         batch.definitionChildren(children, myModule);
         cout << "`my` module has " << children.size() << " children." << endl;

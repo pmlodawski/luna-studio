@@ -77,7 +77,7 @@ class BatchHandler : virtual public BatchIf {
     printf("newTypeModule\n");
   }
 
-  void newTypeClass( ::Type& _return, const std::string& name, const std::vector< ::Type> & params) {
+  void newTypeClass( ::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::Type> & params) {
     // Your implementation goes here
     printf("newTypeClass\n");
   }

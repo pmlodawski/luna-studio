@@ -7,13 +7,22 @@
 
 import qualified Luna.Core                      as Core
 import           Luna.Core                        (Core(..))
-import qualified Luna.Codegen.FuncGenerator     as FG
-import qualified Luna.Codegen.DefGenerator      as DG
 import qualified Luna.Lib.LibManager            as LibManager
 import qualified Luna.Samples.HelloWorld        as HelloWorld
 import qualified Luna.Tools.Serializer          as Serializer
+import qualified Luna.Samples.HelloWorld        as HelloWorld
+import qualified Luna.Codegen.Hs.FuncGenerator  as FG
+import qualified Luna.Codegen.Hs.ModGenerator   as MG
+import qualified Luna.Network.Def.DefManager    as DefManager
+
+import qualified Luna.Codegen.Hs.AST.Function   as Function
+import qualified Luna.Codegen.Hs.AST.Module     as Module
+
+import Luna.Data.Graph
+
 
 main :: IO ()
+
 main = do 
     let libManager = HelloWorld.base_libman
         core = Core libManager HelloWorld.full_manager
@@ -24,10 +33,15 @@ main = do
     Serializer.storeLib core stdLib
 
     core2 <- Serializer.restoreLib core stdLib
-	--putStrLn $ FG.generateFunction HelloWorld.myFun3
-    --putStrLn $ DG.generateDefinition 1 HelloWorld.full_manager
-    return ()
+    --putStrLn $ FG.generateFunction HelloWorld.myFun3
+    --putStrLn $ MG.generateDefinition HelloWorld.full_manager 1
+    --print $ MG.generateModule HelloWorld.full_manager 100
+    --putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 1
+    --print $ FG.generateFunction HelloWorld.myFun3
+    --putStrLn $ Function.genCode GenContext.empty $ FG.generateFunction HelloWorld.myFun3
 
+    --putStrLn $ Cg.generateDefCode $
+    return ()
 
 --        let 
 --                (node, manager) = Samples.sample_helloWorld

@@ -58,9 +58,9 @@ instance Enum TypeType where
     _ -> throw ThriftException
 instance Hashable TypeType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
-data TypeProto = TypeProto{f_TypeProto_cls :: Maybe TypeType,f_TypeProto_name :: Maybe Text,f_TypeProto_items :: Maybe (Vector.Vector Int32),f_TypeProto_params :: Maybe (Vector.Vector Int32),f_TypeProto_inputs :: Maybe Int32,f_TypeProto_outputs :: Maybe Int32,f_TypeProto_type :: Maybe Int32} deriving (Show,Eq,Typeable)
+data TypeProto = TypeProto{f_TypeProto_cls :: Maybe TypeType,f_TypeProto_name :: Maybe Text,f_TypeProto_items :: Maybe (Vector.Vector Int32),f_TypeProto_typeparams :: Maybe (Vector.Vector Text),f_TypeProto_params :: Maybe (Vector.Vector Int32),f_TypeProto_inputs :: Maybe Int32,f_TypeProto_outputs :: Maybe Int32,f_TypeProto_type :: Maybe Int32} deriving (Show,Eq,Typeable)
 instance Hashable TypeProto where
-  hashWithSalt salt record = salt   `hashWithSalt` f_TypeProto_cls record   `hashWithSalt` f_TypeProto_name record   `hashWithSalt` f_TypeProto_items record   `hashWithSalt` f_TypeProto_params record   `hashWithSalt` f_TypeProto_inputs record   `hashWithSalt` f_TypeProto_outputs record   `hashWithSalt` f_TypeProto_type record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_TypeProto_cls record   `hashWithSalt` f_TypeProto_name record   `hashWithSalt` f_TypeProto_items record   `hashWithSalt` f_TypeProto_typeparams record   `hashWithSalt` f_TypeProto_params record   `hashWithSalt` f_TypeProto_inputs record   `hashWithSalt` f_TypeProto_outputs record   `hashWithSalt` f_TypeProto_type record  
 write_TypeProto oprot record = do
   writeStructBegin oprot "TypeProto"
   case f_TypeProto_cls record of {Nothing -> return (); Just _v -> do
@@ -75,77 +75,87 @@ write_TypeProto oprot record = do
     writeFieldBegin oprot ("items",T_LIST,3)
     (let f = Vector.mapM_ (\_viter2 -> writeI32 oprot _viter2) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
+  case f_TypeProto_typeparams record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("typeparams",T_LIST,4)
+    (let f = Vector.mapM_ (\_viter3 -> writeString oprot _viter3) in do {writeListBegin oprot (T_STRING,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    writeFieldEnd oprot}
   case f_TypeProto_params record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("params",T_LIST,4)
-    (let f = Vector.mapM_ (\_viter3 -> writeI32 oprot _viter3) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    writeFieldBegin oprot ("params",T_LIST,5)
+    (let f = Vector.mapM_ (\_viter4 -> writeI32 oprot _viter4) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_TypeProto_inputs record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("inputs",T_I32,5)
+    writeFieldBegin oprot ("inputs",T_I32,6)
     writeI32 oprot _v
     writeFieldEnd oprot}
   case f_TypeProto_outputs record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("outputs",T_I32,6)
+    writeFieldBegin oprot ("outputs",T_I32,7)
     writeI32 oprot _v
     writeFieldEnd oprot}
   case f_TypeProto_type record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("type",T_I32,7)
+    writeFieldBegin oprot ("type",T_I32,8)
     writeI32 oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_TypeProto_fields iprot record = do
-  (_,_t5,_id6) <- readFieldBegin iprot
-  if _t5 == T_STOP then return record else
-    case _id6 of 
-      1 -> if _t5 == T_I32 then do
+  (_,_t6,_id7) <- readFieldBegin iprot
+  if _t6 == T_STOP then return record else
+    case _id7 of 
+      1 -> if _t6 == T_I32 then do
         s <- (do {i <- readI32 iprot; return $ toEnum $ fromIntegral i})
         read_TypeProto_fields iprot record{f_TypeProto_cls=Just s}
         else do
-          skip iprot _t5
+          skip iprot _t6
           read_TypeProto_fields iprot record
-      2 -> if _t5 == T_STRING then do
+      2 -> if _t6 == T_STRING then do
         s <- readString iprot
         read_TypeProto_fields iprot record{f_TypeProto_name=Just s}
         else do
-          skip iprot _t5
+          skip iprot _t6
           read_TypeProto_fields iprot record
-      3 -> if _t5 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype10,_size7) <- readListBegin iprot; f _size7})
+      3 -> if _t6 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype11,_size8) <- readListBegin iprot; f _size8})
         read_TypeProto_fields iprot record{f_TypeProto_items=Just s}
         else do
-          skip iprot _t5
+          skip iprot _t6
           read_TypeProto_fields iprot record
-      4 -> if _t5 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype15,_size12) <- readListBegin iprot; f _size12})
+      4 -> if _t6 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readString iprot) in do {(_etype16,_size13) <- readListBegin iprot; f _size13})
+        read_TypeProto_fields iprot record{f_TypeProto_typeparams=Just s}
+        else do
+          skip iprot _t6
+          read_TypeProto_fields iprot record
+      5 -> if _t6 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype21,_size18) <- readListBegin iprot; f _size18})
         read_TypeProto_fields iprot record{f_TypeProto_params=Just s}
         else do
-          skip iprot _t5
+          skip iprot _t6
           read_TypeProto_fields iprot record
-      5 -> if _t5 == T_I32 then do
+      6 -> if _t6 == T_I32 then do
         s <- readI32 iprot
         read_TypeProto_fields iprot record{f_TypeProto_inputs=Just s}
         else do
-          skip iprot _t5
+          skip iprot _t6
           read_TypeProto_fields iprot record
-      6 -> if _t5 == T_I32 then do
+      7 -> if _t6 == T_I32 then do
         s <- readI32 iprot
         read_TypeProto_fields iprot record{f_TypeProto_outputs=Just s}
         else do
-          skip iprot _t5
+          skip iprot _t6
           read_TypeProto_fields iprot record
-      7 -> if _t5 == T_I32 then do
+      8 -> if _t6 == T_I32 then do
         s <- readI32 iprot
         read_TypeProto_fields iprot record{f_TypeProto_type=Just s}
         else do
-          skip iprot _t5
+          skip iprot _t6
           read_TypeProto_fields iprot record
       _ -> do
-        skip iprot _t5
+        skip iprot _t6
         readFieldEnd iprot
         read_TypeProto_fields iprot record
 read_TypeProto iprot = do
   _ <- readStructBegin iprot
-  record <- read_TypeProto_fields iprot (TypeProto{f_TypeProto_cls=Nothing,f_TypeProto_name=Nothing,f_TypeProto_items=Nothing,f_TypeProto_params=Nothing,f_TypeProto_inputs=Nothing,f_TypeProto_outputs=Nothing,f_TypeProto_type=Nothing})
+  record <- read_TypeProto_fields iprot (TypeProto{f_TypeProto_cls=Nothing,f_TypeProto_name=Nothing,f_TypeProto_items=Nothing,f_TypeProto_typeparams=Nothing,f_TypeProto_params=Nothing,f_TypeProto_inputs=Nothing,f_TypeProto_outputs=Nothing,f_TypeProto_type=Nothing})
   readStructEnd iprot
   return record
 data Type = Type{f_Type_types :: Maybe (Vector.Vector TypeProto)} deriving (Show,Eq,Typeable)
@@ -155,22 +165,22 @@ write_Type oprot record = do
   writeStructBegin oprot "Type"
   case f_Type_types record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("types",T_LIST,1)
-    (let f = Vector.mapM_ (\_viter19 -> write_TypeProto oprot _viter19) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter25 -> write_TypeProto oprot _viter25) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_Type_fields iprot record = do
-  (_,_t21,_id22) <- readFieldBegin iprot
-  if _t21 == T_STOP then return record else
-    case _id22 of 
-      1 -> if _t21 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_TypeProto iprot)) in do {(_etype26,_size23) <- readListBegin iprot; f _size23})
+  (_,_t27,_id28) <- readFieldBegin iprot
+  if _t27 == T_STOP then return record else
+    case _id28 of 
+      1 -> if _t27 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_TypeProto iprot)) in do {(_etype32,_size29) <- readListBegin iprot; f _size29})
         read_Type_fields iprot record{f_Type_types=Just s}
         else do
-          skip iprot _t21
+          skip iprot _t27
           read_Type_fields iprot record
       _ -> do
-        skip iprot _t21
+        skip iprot _t27
         readFieldEnd iprot
         read_Type_fields iprot record
 read_Type iprot = do
