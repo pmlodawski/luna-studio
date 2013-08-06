@@ -5,7 +5,8 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-#include "defs.thrift"
+namespace cpp flowbox.batch
+namespace hs  flowbox.batch
 
 
 typedef i32 LibID
