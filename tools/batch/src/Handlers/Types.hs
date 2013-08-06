@@ -36,13 +36,14 @@ newTypeModule _ mtname = case mtname of
 
 
 newTypeClass :: b -> Maybe Text -> Maybe (Vector TTypes.Type) -> IO TTypes.Type
-newTypeClass _ mtname mtparams = case mtname of
-    Nothing    -> throw' "`name` field is missing"
-    Just tname -> case mtparams of 
-        Nothing      -> throw' "`params` field is missing"
-        Just tparams -> case decode $ Vector.toList tparams of 
-            Left  message -> throw' $ "Failed to decode `params` : " ++ message
-            Right aparams -> return $ encode $ Class (unpack tname) aparams
+newTypeClass _ mtname mtparams = error "fixme"
+--case mtname of
+--    Nothing    -> throw' "`name` field is missing"
+--    Just tname -> case mtparams of 
+--        Nothing      -> throw' "`params` field is missing"
+--        Just tparams -> case decode $ Vector.toList tparams of 
+--            Left  message -> throw' $ "Failed to decode `params` : " ++ message
+--            Right aparams -> return $ encode $ Class (unpack tname) aparams
 
 
 newTypeFunction :: b -> Maybe Text -> Maybe TTypes.Type -> Maybe TTypes.Type -> IO TTypes.Type

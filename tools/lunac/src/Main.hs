@@ -6,17 +6,29 @@
 ---------------------------------------------------------------------------
 
 import qualified Luna.Samples.HelloWorld        as HelloWorld
-import qualified Luna.Codegen.FuncGenerator     as FG
-import qualified Luna.Codegen.DefGenerator      as DG
+import qualified Luna.Codegen.Hs.FuncGenerator  as FG
+import qualified Luna.Codegen.Hs.ModGenerator   as MG
+import qualified Luna.Network.Def.DefManager    as DefManager
+
+import qualified Luna.Codegen.Hs.AST.Function   as Function
+import qualified Luna.Codegen.Hs.AST.Module     as Module
+
+import Luna.Data.Graph
+
 
 main :: IO ()
+
 main = do 
     putStrLn "------------\n"
+    --putStrLn $ FG.generateFunction HelloWorld.myFun3
+    --putStrLn $ MG.generateDefinition HelloWorld.full_manager 1
+    --print $ MG.generateModule HelloWorld.full_manager 100
+    putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 1
+    --print $ FG.generateFunction HelloWorld.myFun3
+    --putStrLn $ Function.genCode GenContext.empty $ FG.generateFunction HelloWorld.myFun3
 
-	--putStrLn $ FG.generateFunction HelloWorld.myFun3
-    putStrLn $ DG.generateDefinition 1 HelloWorld.full_manager
+    --putStrLn $ Cg.generateDefCode $
     return ()
-
 
 --        let 
 --                (node, manager) = Samples.sample_helloWorld

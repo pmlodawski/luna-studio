@@ -69,13 +69,14 @@ type2typeProtoList level t = case t of
                        (itemsLevels', titems) = typeList2typeProtoList itemsLevel aitems
                        titemsLevels  = Just $ Vector.fromList $ map (itoi32) itemsLevels'
                        tcurrent      = TTypes.TypeProto tcls Nothing titemsLevels Nothing Nothing Nothing Nothing
-    Class aname aparams -> tcurrent : tparams where
-                       tcls          = Just TTypes.Class
-                       tname         = Just $ pack aname
-                       paramsLevel   = level + 1
-                       (tparamsLevels', tparams) = typeList2typeProtoList paramsLevel aparams
-                       tparamsLevels = Just $ Vector.fromList $ map (itoi32) tparamsLevels'
-                       tcurrent      = TTypes.TypeProto tcls tname Nothing tparamsLevels Nothing Nothing Nothing
+    Class aname aparams arg3 -> error "fixme"
+                       --tcurrent : tparams where
+                       --tcls          = Just TTypes.Class
+                       --tname         = Just $ pack aname
+                       --paramsLevel   = level + 1
+                       --(tparamsLevels', tparams) = typeList2typeProtoList paramsLevel aparams
+                       --tparamsLevels = Just $ Vector.fromList $ map (itoi32) tparamsLevels'
+                       --tcurrent      = TTypes.TypeProto tcls tname Nothing tparamsLevels Nothing Nothing Nothing
     Named aname atype -> tcurrent:ttype where
                        tcls       = Just TTypes.Named
                        typeLevel  = level + 1
@@ -120,15 +121,16 @@ typeFromListAt list index = t where
                                             aitems = map (typeFromListAt list) itemsInds
                                         aitems' <- convert aitems
                                         return $ Tuple aitems'
-        Just TTypes.Class     -> case mtname of
-                                    Nothing                -> Left "`name` field is missing"
-                                    Just tname             -> case mtparamsInds of
-                                        Nothing            -> Left "`params` field is missing"
-                                        Just tparamsInds32 -> do 
-                                            let paramsInds = map (i32toi) $ Vector.toList tparamsInds32
-                                                aparams = map (typeFromListAt list) paramsInds
-                                            aparams' <- convert aparams
-                                            return $ Class (unpack tname) aparams'
+        Just TTypes.Class     -> error "fixme"
+                                 --case mtname of
+                                 --   Nothing                -> Left "`name` field is missing"
+                                 --   Just tname             -> case mtparamsInds of
+                                 --       Nothing            -> Left "`params` field is missing"
+                                 --       Just tparamsInds32 -> do 
+                                 --           let paramsInds = map (i32toi) $ Vector.toList tparamsInds32
+                                 --               aparams = map (typeFromListAt list) paramsInds
+                                 --           aparams' <- convert aparams
+                                 --           return $ Class (unpack tname) aparams'
         Just TTypes.Named     -> case mtname of 
                                     Nothing             -> Left "`name` field is missing"
                                     Just tname          -> case mttypeIndex of 

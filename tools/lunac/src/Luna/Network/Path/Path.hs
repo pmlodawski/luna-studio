@@ -7,20 +7,27 @@
 
 module Luna.Network.Path.Path(
     Path(..),
+    empty,
     append,
     prepend,
-    toModulePath,
     single,
     fromList,
     toList,
-    add
+    add,
+    last,
+    toString
 ) where
 import Data.String.Utils (join)
-import Data.Char         (isLower)
+import qualified Prelude
+import Prelude hiding (last)
 
-newtype Path = Path {segments :: [String]} deriving (Show)
+newtype Path = Path {segments :: [String]} deriving (Show, Ord, Eq)
+
+empty :: Path
+empty = Path []
 
 
+single :: String -> Path
 single s = Path [s]
 
 
@@ -35,20 +42,20 @@ add (Path s1) (Path s2) = Path $ s1 ++ s2
 
 
 append :: String -> Path -> Path
-append segment path = Path $ segment : (segments path) ++ [segment]
+append segment path = Path $ (segments path) ++ [segment]
 
 
 prepend :: String -> Path -> Path
 prepend segment path = Path $ segment:(segments path)
 
 
-toModulePath :: Path -> String
-toModulePath (Path []) = ""
-toModulePath (Path [segment@(x:xs)]) = name where
-    name = if isLower x
-        then "U'" ++ segment
-        else segment
-toModulePath (Path (x:xs)) = toModulePath (Path [x]) ++ "." ++ toModulePath (Path xs)
+last :: Path -> String
+last path = Prelude.last $ segments path
+
+
+toString :: Path -> String
+toString path = join "." $ segments path
+
 
 --instance Show Path where
 --    show path = join "." $ segments path
