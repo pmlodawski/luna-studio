@@ -12,25 +12,25 @@ import qualified Luna.Core                       as Core
 import           Luna.Core                         (Core(..))
 import qualified Luna.Network.Def.DefManager     as DefManager
 import           Luna.Network.Def.DefManager       (DefManager(..))
-import qualified Luna.Network.Def.NodeDef        as NodeDef
-import           Luna.Network.Def.NodeDef          (NodeDef(..))
-import qualified Luna.Network.Graph.Graph      as Graph
+import qualified Luna.Network.Def.Definition     as Definition
+import           Luna.Network.Def.Definition       (Definition(..))
+import qualified Luna.Network.Graph.Graph        as Graph
 import qualified Luna.Lib.LibManager             as LibManager
 import           Luna.Lib.LibManager               (LibManager(..))
-import qualified Luna.Lib.Library            as Library
-import           Luna.Lib.Library              (Library(..))
-import qualified Luna.System.UniPath         as UniPath
-import           Luna.System.UniPath           (UniPath)
+import qualified Luna.Lib.Library                as Library
+import           Luna.Lib.Library                  (Library(..))
+import qualified Luna.System.UniPath             as UniPath
+import           Luna.System.UniPath               (UniPath)
 import qualified Luna.Type.Type                  as Type
 import           Luna.Type.Type                    (Type(..))
 
 
-mkNodeDef cls libID = NodeDef.empty{ NodeDef.cls = cls
-                            , NodeDef.graph = Graph.empty
-                            , NodeDef.libID = libID }
+mkDefinition cls libID = Definition.empty{ Definition.cls = cls
+                            , Definition.graph = Graph.empty
+                            , Definition.libID = libID }
 
-mkModule name = mkNodeDef (Module name) 
-mkClass name  = mkNodeDef (Class name [] [])
+mkModule name = mkDefinition (Module name) 
+mkClass name  = mkDefinition (Class name [] [])
 
 listToDefs l start parentID libID= map (\(i, n)-> (parentID, i, mkClass n libID)) $ zip [start..] l
 

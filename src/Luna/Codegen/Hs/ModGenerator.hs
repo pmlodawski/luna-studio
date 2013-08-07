@@ -18,7 +18,7 @@ import           Data.List                         (zip4)
 import qualified Luna.Network.Def.DefManager     as DefManager
 import           Luna.Network.Def.DefManager       (DefManager)
 import qualified Luna.Network.Path.Path          as Path
-import qualified Luna.Network.Def.NodeDef        as NodeDef
+import qualified Luna.Network.Def.Definition        as Definition
 import qualified Luna.Type.Type                  as Type
 import qualified Luna.Codegen.Hs.Import          as Import
 import qualified Luna.Data.Graph                 as Graph
@@ -44,7 +44,7 @@ import           Luna.Data.List
 generateDefinition :: DefManager -> Graph.Vertex -> Module
 generateDefinition manager vtx = nmod where
     def = Graph.lab_deprecated manager vtx
-    cls = NodeDef.cls def
+    cls = Definition.cls def
     nmod = case cls of
         Type.Module   {} -> m where
             basemod  = generateModule manager vtx
@@ -112,7 +112,7 @@ generateModule manager vtx  = m where
                               , Module.submodules = modules
                               }
 
-    --outnames    = fmap (Type.name . NodeDef.cls) outnodes
+    --outnames    = fmap (Type.name . Definition.cls) outnodes
     --outpaths    = fmap ((Path.add path) . Path.single) outnames
     --imports     = zipWith Import.single outpaths outnames
     --importstxt  = join "\n" $ fmap Import.genCode imports

@@ -16,5 +16,5 @@ struct Library {
     1: optional LibID  libID = -1
     2: optional string name
     3: optional string path
-    4: optional i32    rootNodeDefID = -1
+    4: optional i32    rootDefID = -1
 }

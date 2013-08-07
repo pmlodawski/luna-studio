@@ -18,7 +18,7 @@ data Library =  Library{
     name          :: String,
     --version :: Version,
     path          :: UniPath,
-    rootNodeDefID :: Int
+    rootDefID     :: Int
 } deriving (Show)
 
 empty :: Library
