@@ -26,15 +26,15 @@ main :: IO ()
 main = do 
     putStrLn "------------\n"
 
-    --putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 1
+    putStrLn $ Module.genCode $ DG.generateDefinition HelloWorld.full_manager 1
     --putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
 
-    let
-    	s = Section.empty 
-    	c = Config.addSection s
-    		Config.empty { Config.name = "ala"}
+    --let
+    --	s = Section.empty 
+    --	c = Config.addSection s
+    --		Config.empty { Config.name = "ala"}
 
-    putStrLn $ Config.genCode c
+    --putStrLn $ Config.genCode c
 
     return ()
 
