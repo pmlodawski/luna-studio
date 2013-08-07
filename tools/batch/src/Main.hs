@@ -24,26 +24,29 @@ import Thrift.Server (runBasicServer)
 import qualified Batch
 import           Batch_Iface
 
-import qualified Handlers.Defs  as HDefs
-import qualified Handlers.Graph as HGraph
-import qualified Handlers.Libs  as HLibs
-import qualified Handlers.Types as HTypes
+import qualified Handlers.Defs         as HDefs
+import qualified Handlers.Graph        as HGraph
+import qualified Handlers.Libs         as HLibs
+import qualified Handlers.Types        as HTypes
 
-import qualified Luna.Core as Core
-import           Luna.Core   (Core)
+import qualified Luna.Project          as Project
+import           Luna.Project            (Project)
 import qualified Luna.Samples.Packages as Sample
 
 
 port :: PortNumber
 port = 30521
 
-type BatchHandler = IORef Core
+
+type BatchHandler = IORef Project
+
 
 newBatchHandler :: IO BatchHandler
 newBatchHandler = do
-    --ref <- newIORef Core.empty
-    ref <- newIORef Sample.core
+    --ref <- newIORef Project.empty
+    ref <- newIORef Sample.project
     return ref
+
 
 instance Batch_Iface BatchHandler where
     libraries     = HLibs.libraries

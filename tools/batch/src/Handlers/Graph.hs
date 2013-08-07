@@ -22,8 +22,8 @@ import           Handlers.Common
 import           Handlers.Defs                   (defOperation)
 import qualified Defs_Types                    as TDefs
 import qualified Graph_Types                   as TGraph
-import qualified Luna.Core                     as Core
-import           Luna.Core                       (Core)
+import qualified Luna.Project                  as Project
+import           Luna.Project                    (Project)
 import qualified Luna.Network.Def.DefManager   as DefManager
 import qualified Luna.Network.Def.Definition      as Definition
 import           Luna.Network.Def.Definition        (Definition)
@@ -35,36 +35,36 @@ import           Luna.Tools.Conversion.Defs    ()
 import           Luna.Tools.Conversion.Graph   ()
 
 
-graph :: IORef Core -> Maybe TDefs.Definition -> IO TGraph.Graph
+graph :: IORef Project -> Maybe TDefs.Definition -> IO TGraph.Graph
 graph = defOperation (\batchHandler defID definition -> do
     putStrLn "called graph"
-    core <- readIORef batchHandler
-    let defManager = Core.defManager core
+    project <- readIORef batchHandler
+    let defManager = Project.defManager project
         agraph = Definition.graph definition
     return $ encode agraph)
 
 
-addNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO TGraph.Node
+addNode :: IORef Project -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO TGraph.Node
 addNode = nodeDefOperation (\batchHandler (_, node) (defID, definition) -> do
     putStrLn "called addNode"
-    core <- readIORef batchHandler
-    let defManager    = Core.defManager core
+    project <- readIORef batchHandler
+    let defManager    = Project.defManager project
         agraph        = Definition.graph definition
         [nodeID]      = Graph.newNodes 1 agraph
         newGraph      = Graph.insNode (nodeID, node) agraph
         newDefinition = definition {Definition.graph =  newGraph}
         newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
-        newCore       = core {Core.defManager = newDefManager}
-    writeIORef batchHandler newCore
+        newProject       = project {Project.defManager = newDefManager}
+    writeIORef batchHandler newProject
 
     return $ encode (nodeID, node))
 
 
-updateNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO ()
+updateNode :: IORef Project -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO ()
 updateNode = nodeDefOperation (\batchHandler (nodeID, node) (defID, definition) -> do 
     putStrLn "called updateNode"
-    core <- readIORef batchHandler
-    let defManager    = Core.defManager core
+    project <- readIORef batchHandler
+    let defManager    = Project.defManager project
         agraph        = Definition.graph definition
     case Graph.gelem nodeID agraph of 
         False -> throw' $ "Wrong `nodeID` in `node`"
@@ -72,15 +72,15 @@ updateNode = nodeDefOperation (\batchHandler (nodeID, node) (defID, definition) 
             let newGraph      = Graph.updateNode (nodeID, node) agraph
                 newDefinition = definition {Definition.graph =  newGraph}
                 newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
-                newCore       = core {Core.defManager = newDefManager}
-            writeIORef batchHandler newCore)
+                newProject       = project {Project.defManager = newDefManager}
+            writeIORef batchHandler newProject)
 
 
-removeNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO ()
+removeNode :: IORef Project -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO ()
 removeNode = nodeDefOperation (\batchHandler (nodeID, _) (defID, definition) -> do
     putStrLn "called removeNode"
-    core <- readIORef batchHandler
-    let defManager    = Core.defManager core
+    project <- readIORef batchHandler
+    let defManager    = Project.defManager project
         agraph        = Definition.graph definition
     case Graph.gelem nodeID agraph of 
         False -> throw' $ "Wrong `nodeID` in `node`"
@@ -88,10 +88,10 @@ removeNode = nodeDefOperation (\batchHandler (nodeID, _) (defID, definition) -> 
             let newGraph      = Graph.delNode nodeID agraph
                 newDefinition = definition {Definition.graph =  newGraph}
                 newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
-                newCore       = core {Core.defManager = newDefManager}
-            writeIORef batchHandler newCore)
+                newProject       = project {Project.defManager = newDefManager}
+            writeIORef batchHandler newProject)
 
-connect :: IORef Core -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+connect :: IORef Project -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
                       -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
         -> Maybe TDefs.Definition -> IO ()
 connect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort 
@@ -99,7 +99,7 @@ connect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort
     putStrLn "call connect - NOT IMPLEMENTED")
 
 
-disconnect :: IORef Core -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+disconnect :: IORef Project -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
                          -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
            -> Maybe TDefs.Definition -> IO ()
 disconnect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort
@@ -107,15 +107,15 @@ disconnect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort
     putStrLn "call disconnect - NOT IMPLEMENTED")
 
 
-nodesConnectOperation :: (IORef Core -> (Node.ID, Node) -> [Int]
+nodesConnectOperation :: (IORef Project -> (Node.ID, Node) -> [Int]
                                      -> (Node.ID, Node) -> [Int]
                                      -> Definition -> IO result)
-                      -> IORef Core -> (Maybe TGraph.Node) -> (Maybe TGraph.PortDescriptor)
+                      -> IORef Project -> (Maybe TGraph.Node) -> (Maybe TGraph.PortDescriptor)
                                     -> (Maybe TGraph.Node) -> (Maybe TGraph.PortDescriptor)
                       -> Maybe TDefs.Definition -> IO result
 nodesConnectOperation operation batchHandler mtsrcNode mtsrcPort mtdstNode mtdstPort mtdefinition = do
-    core <- readIORef batchHandler
-    let defManager = Core.defManager core
+    project <- readIORef batchHandler
+    let defManager = Project.defManager project
     case mtsrcNode of
         Nothing       -> throw' "`srcNode` field is missing"
         Just tsrcNode -> case decode tsrcNode of
@@ -142,11 +142,11 @@ nodesConnectOperation operation batchHandler mtsrcNode mtsrcPort mtdstNode mtdst
                                                                in operation batchHandler (srcNodeID, srcNode) srcPort (dstNodeID, dstNode) dstPort definition
 
 
-nodeDefOperation :: (IORef Core -> (Node.ID, Node) -> (Definition.ID, Definition) -> IO result) 
-                 -> IORef Core -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO result
+nodeDefOperation :: (IORef Project -> (Node.ID, Node) -> (Definition.ID, Definition) -> IO result) 
+                 -> IORef Project -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO result
 nodeDefOperation operation batchHandler mtnode mtdefinition = do 
-    core <- readIORef batchHandler
-    let defManager = Core.defManager core
+    project <- readIORef batchHandler
+    let defManager = Project.defManager project
     case mtnode of
         Nothing    -> throw' "`node` field is missing"
         Just tnode -> case decode tnode of 

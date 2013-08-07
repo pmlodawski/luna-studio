@@ -18,25 +18,25 @@ import Thrift.Transport.Handle
 import Thrift.Protocol
 import Thrift.Protocol.Binary
 
-import qualified Defs_Types                  as TDefs
-import qualified Graph_Types                 as TGraph
-import qualified Luna.Core                   as Core
-import           Luna.Core                     (Core)
-import qualified Luna.Network.Def.DefManager as DefManager
-import           Luna.Network.Def.DefManager   (DefManager)
-import qualified Luna.Network.Def.Definition    as Definition
-import           Luna.Network.Def.Definition      (Definition)
-import qualified Luna.Lib.Library            as Library
-import           Luna.Lib.Library              (Library)
-import qualified Luna.System.UniPath         as UniPath
-import           Luna.System.UniPath           (UniPath)
-import qualified Luna.Type.Type              as Type
-import           Luna.Type.Type                (Type(..))
+import qualified Defs_Types                       as TDefs
+import qualified Graph_Types                      as TGraph
+import qualified Luna.Project                     as Project
+import           Luna.Project                       (Project)
+import qualified Luna.Network.Def.DefManager      as DefManager
+import           Luna.Network.Def.DefManager        (DefManager)
+import qualified Luna.Network.Def.Definition      as Definition
+import           Luna.Network.Def.Definition        (Definition)
+import qualified Luna.Lib.Library                 as Library
+import           Luna.Lib.Library                   (Library)
+import qualified Luna.System.UniPath              as UniPath
+import           Luna.System.UniPath                (UniPath)
+import qualified Luna.Type.Type                   as Type
+import           Luna.Type.Type                     (Type(..))
 import           Luna.Tools.Conversion
-import qualified Luna.Tools.Conversion.Defs    ()
-import qualified Luna.Tools.Conversion.Graph   ()
-import qualified Luna.Tools.Serializer       as Serializer
-import           Luna.Tools.Serializer          (Serializable(..))
+import qualified Luna.Tools.Conversion.Defs         ()
+import qualified Luna.Tools.Conversion.Graph        ()
+import qualified Luna.Tools.Serializer.Serializer as Serializer
+import           Luna.Tools.Serializer.Serializer   (Serializable(..))
 
 
 
@@ -48,27 +48,29 @@ graphFileExtension :: String
 graphFileExtension = ".graph"
 
 
+save :: Handle -> (BinaryProtocol Handle -> object -> IO()) -> object -> IO()
+save h method object = do 
+    let protocol = BinaryProtocol h
+    method protocol object
+
+
 generate :: DefManager -> UniPath -> Definition.ID -> Definition -> [Serializable]
 generate defManager upath defID def = sdef:sgraph:schildren where 
     children  = DefManager.suc defManager defID
     schildren = foldr (\child rest -> checkedGenerate defManager upath child ++ rest) [] children
 
     (tdef, graph) = encode (defID, def)
-    tgraph = encode graph
+    tgraph        = encode graph
 
-    defFilename = UniPath.setExtension nodeFileExtension upath
-    saveDef = (\h -> do 
-        let protocol = BinaryProtocol h
-        TDefs.write_Definition protocol tdef)
+    defFilename   = UniPath.setExtension nodeFileExtension upath
+    saveDef h     = save h TDefs.write_Definition tdef
 
-    sdef = File defFilename saveDef
+    sdef          = Serializable defFilename saveDef
 
     graphFilename = UniPath.setExtension graphFileExtension upath
-    saveGraph = (\h -> do 
-        let protocol = BinaryProtocol h
-        TGraph.write_Graph protocol tgraph)
+    saveGraph h   = save h TGraph.write_Graph tgraph
 
-    sgraph = File graphFilename saveGraph
+    sgraph        = Serializable graphFilename saveGraph
 
 
 
@@ -80,15 +82,15 @@ checkedGenerate defManager udirpath defID = s where
                 Module   aname     -> gen aname
                 Class    aname _ _ -> gen aname
                 Function aname _ _ -> gen aname
-                _                 -> error "Inconssistent in defManager: Wrong type of a definition"
+                _                  -> error "Inconssistent in defManager: Wrong type of a definition"
                 where gen aname = generate defManager (UniPath.append aname udirpath) defID def
 
 
 
-storeLib :: Core -> Library -> IO ()
-storeLib core lib = do 
-    let defManager = Core.defManager core
-        rootPath = Library.path lib
+storeLib :: Project -> Library -> IO ()
+storeLib project lib = do 
+    let defManager   = Project.defManager project
+        rootPath     = Library.path lib
         libRootDefID = Library.rootDefID lib
 
         defs = checkedGenerate defManager rootPath libRootDefID 
@@ -115,14 +117,14 @@ storeLib core lib = do
 --          folderFilePattern  = "[A-Za-z0-9]+$"
 
 
---restoreLib :: Core -> Library -> IO Core
---restoreLib core lib = do 
---    let defManager = Core.defManager core
+--restoreLib :: Project -> Library -> IO Project
+--restoreLib project lib = do 
+--    let defManager = Project.defManager project
 --        rootPath = Library.path lib
 
 --    newDefManager <- restoreNode defManager rootPath
 
---    return $ core {Core.defManager = newDefManager}
+--    return $ project {Project.defManager = newDefManager}
 
 
 

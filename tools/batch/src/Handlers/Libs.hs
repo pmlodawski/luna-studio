@@ -22,8 +22,8 @@ import           Data.Vector      (Vector)
 import qualified Defs_Types                  as TDefs
 import           Handlers.Common
 import qualified Libs_Types                  as TLibs
-import qualified Luna.Core                   as Core
-import           Luna.Core                     (Core(..))
+import qualified Luna.Project                as Project
+import           Luna.Project                  (Project(..))
 import qualified Luna.Lib.LibManager         as LibManager
 import qualified Luna.Lib.Library            as Library
 import           Luna.Lib.Library              (Library(..))
@@ -34,8 +34,8 @@ import           Luna.Tools.Conversion.Libs ()
 
 
 ------ public api helpers -----------------------------------------
-libOperation :: (IORef Core -> (Int, Library) -> a)
-             ->  IORef Core -> Maybe TLibs.Library -> a
+libOperation :: (IORef Project -> (Int, Library) -> a)
+             ->  IORef Project -> Maybe TLibs.Library -> a
 libOperation operation batchHandler tlibrary = case tlibrary of 
         (Just tlib) -> do 
             case decode tlib :: Either String (Int, Library) of
@@ -45,52 +45,52 @@ libOperation operation batchHandler tlibrary = case tlibrary of
 
 
 ------ public api -------------------------------------------------
-libraries :: IORef Core -> IO (Vector TLibs.Library)
+libraries :: IORef Project -> IO (Vector TLibs.Library)
 libraries batchHandler = do 
     putStrLn "call libraries"
-    core <- readIORef batchHandler
-    let libManager' =  Core.libManager core
+    project <- readIORef batchHandler
+    let libManager' =  Project.libManager project
         libs        = LibManager.labNodes libManager'
         tlibs       = map encode libs
         tlibsVector = Vector.fromList tlibs
     return tlibsVector
 
 
-createLibrary :: IORef Core -> Maybe TLibs.Library -> IO TLibs.Library
+createLibrary :: IORef Project -> Maybe TLibs.Library -> IO TLibs.Library
 createLibrary = libOperation (\ batchHandler (_, library) -> do
     putStrLn "call createLibrary - NOT YET IMPLEMENTED"
     return $ encode (-1, library))
 
 
-loadLibrary :: IORef Core -> Maybe TLibs.Library -> IO TLibs.Library
+loadLibrary :: IORef Project -> Maybe TLibs.Library -> IO TLibs.Library
 loadLibrary = libOperation (\ batchHandler (_, library) -> do
     putStrLn "call loadLibrary"
-    core <- readIORef batchHandler
-    let (newCore, newLibrary, newLibID) = Core.loadLibrary core library
+    project <- readIORef batchHandler
+    let (newProject, newLibrary, newLibID) = Project.loadLibrary project library
         newTLibrary = encode (newLibID, newLibrary)
-    writeIORef batchHandler newCore
+    writeIORef batchHandler newProject
     return newTLibrary)
 
 
-unloadLibrary :: IORef Core -> Maybe TLibs.Library -> IO ()
+unloadLibrary :: IORef Project -> Maybe TLibs.Library -> IO ()
 unloadLibrary = libOperation (\ batchHandler (libID, _) -> do
     putStrLn "call unloadLibrary"
-    core <- readIORef batchHandler
-    let newCore = Core.unloadLibrary core libID
-    writeIORef batchHandler newCore)
+    project <- readIORef batchHandler
+    let newProject = Project.unloadLibrary project libID
+    writeIORef batchHandler newProject)
 
 
-storeLibrary :: IORef Core -> Maybe TLibs.Library -> IO ()
+storeLibrary :: IORef Project -> Maybe TLibs.Library -> IO ()
 storeLibrary = libOperation (\ batchHandler (libID, _) -> do
     putStrLn "call storeLibrary - NOT YET IMPLEMENTED")
 
 
-libraryRootDef :: IORef Core -> Maybe TLibs.Library -> IO TDefs.Definition
+libraryRootDef :: IORef Project -> Maybe TLibs.Library -> IO TDefs.Definition
 libraryRootDef = libOperation (\ batchHandler (_, library) -> do
     putStrLn "call libraryRootDef"
-    core <- readIORef batchHandler
+    project <- readIORef batchHandler
     let rootDefID' = Library.rootDefID library
-        rootDef = Core.nodeDefByID core rootDefID'
+        rootDef = Project.nodeDefByID project rootDefID'
     case rootDef of 
         Just rd -> do
                    let (trootDef, _) = encode (rootDefID', rd)
