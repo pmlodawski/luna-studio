@@ -9,6 +9,7 @@ module Luna.Codegen.Hs.Cabal.Config (
     Config(..),
     empty,
     genCode,
+    addSection
 )where
 
 import Debug.Trace
@@ -47,5 +48,8 @@ genCode conf =  genField "Name"          (name conf)
              ++ genField "Version"       (version conf)
              ++ genField "Cabal-Version" (cabalVersion conf)
              ++ genField "Build-Type"    (buildType conf)
-             ++ join "\n" (map Section.genCode $ sections conf)
+             ++ "\n" ++  join "\n\n" (map Section.genCode $ sections conf)
    
+
+addSection :: Section -> Config -> Config
+addSection s conf = conf { sections = s:sections conf }

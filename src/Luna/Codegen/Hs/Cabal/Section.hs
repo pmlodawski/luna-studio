@@ -7,6 +7,7 @@
 
 module Luna.Codegen.Hs.Cabal.Section (
     Section(..),
+    empty,
     genCode,
 )where
 
@@ -22,7 +23,11 @@ import qualified Luna.Codegen.Hs.AST.Extension   as Extension
 import           Luna.Codegen.Hs.AST.Extension     (Extension)
 
 
-data Section = Library { hsSourceDirs   :: [String]
+data SectionType = Library | Executable deriving(Show)
+
+
+data Section = Section { cls            :: SectionType
+                       , hsSourceDirs   :: [String]
                        , ghcOptions     :: [String]
                        , extensions     :: [Extension]
                        , exposedModules :: [String]
@@ -30,14 +35,29 @@ data Section = Library { hsSourceDirs   :: [String]
                      } deriving (Show)
 
 
+empty :: Section
+empty = Section Library ["src"] ["-Wall"] [] [] []
+
+
 defaultIndent :: String
 defaultIndent = replicate 18 ' '
 
+ident :: String
+ident = replicate 4 ' '
+
+
 genField :: String -> [String] -> String
-genField name' values =  name' ++ ":" ++ replicate (18 - length name') ' ' 
-                      ++ join (",\n" ++ defaultIndent) values
+genField name' values = if null values
+	then ""
+	else ident ++ name' ++ ":" ++ replicate (18 - length name') ' ' 
+         ++ join (",\n" ++ defaultIndent) values ++ "\n"
 
 
 genCode :: Section -> String
-genCode s = genField "Hs-Source-Dirs" (hsSourceDirs s)
+genCode s =  show (cls s) ++ "\n"
+	      ++ genField "Hs-Source-Dirs"  (hsSourceDirs s)
+          ++ genField "GHC-Options"     (ghcOptions s)
+          ++ genField "Extensions"      (map show $ extensions s)
+          ++ genField "Exposed-modules" (exposedModules s)
+          ++ genField "Build-Depends"   (buildDepends s)
    
