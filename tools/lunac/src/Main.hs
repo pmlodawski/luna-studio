@@ -16,6 +16,7 @@ import qualified Luna.Codegen.Hs.AST.Module     as Module
 
 import           Luna.Codegen.Hs.Cabal.Config      (Config)
 import qualified Luna.Codegen.Hs.Cabal.Config    as Config
+import qualified Luna.Codegen.Hs.Cabal.Section   as Section
 
 import Luna.Data.Graph
 
@@ -29,7 +30,9 @@ main = do
     --putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
 
     let
-    	c = Config.empty
+    	s = Section.empty 
+    	c = Config.addSection s
+    		Config.empty { Config.name = "ala"}
 
     putStrLn $ Config.genCode c
 
