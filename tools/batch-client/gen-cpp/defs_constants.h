@@ -9,7 +9,7 @@
 
 #include "defs_types.h"
 
-namespace flowbox { namespace batch {
+namespace flowbox { namespace batch { namespace defs {
 
 class defsConstants {
  public:
@@ -19,6 +19,6 @@ class defsConstants {
 
 extern const defsConstants g_defs_constants;
 
-}} // namespace
+}}} // namespace
 
 #endif

@@ -36,18 +36,25 @@ import qualified Attrs_Types
 import qualified Defs_Types
 import qualified Graph_Types
 import qualified Libs_Types
+import qualified Projects_Types
 import qualified Types_Types
 
 
 import Batch_Types
 
 class Batch_Iface a where
+  projects :: a -> IO (Vector.Vector Projects_Types.Project)
+  createProject :: a -> Maybe Projects_Types.Project -> IO Projects_Types.Project
+  openProject :: a -> Maybe Projects_Types.Project -> IO Projects_Types.Project
+  closeProject :: a -> Maybe Projects_Types.Project -> IO ()
+  setActiveProject :: a -> Maybe Projects_Types.Project -> IO ()
   libraries :: a -> IO (Vector.Vector Libs_Types.Library)
   createLibrary :: a -> Maybe Libs_Types.Library -> IO Libs_Types.Library
   loadLibrary :: a -> Maybe Libs_Types.Library -> IO Libs_Types.Library
   unloadLibrary :: a -> Maybe Libs_Types.Library -> IO ()
   storeLibrary :: a -> Maybe Libs_Types.Library -> IO ()
   libraryRootDef :: a -> Maybe Libs_Types.Library -> IO Defs_Types.Definition
+  defsGraph :: a -> IO Defs_Types.DefsGraph
   newDefinition :: a -> Maybe Types_Types.Type -> Maybe (Vector.Vector Defs_Types.Import) -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes -> IO Defs_Types.Definition
   addDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Defs_Types.Definition -> IO Defs_Types.Definition
   updateDefinition :: a -> Maybe Defs_Types.Definition -> IO ()

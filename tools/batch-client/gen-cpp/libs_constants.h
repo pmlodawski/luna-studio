@@ -9,7 +9,7 @@
 
 #include "libs_types.h"
 
-namespace flowbox { namespace batch {
+namespace flowbox { namespace batch { namespace libs {
 
 class libsConstants {
  public:
@@ -19,6 +19,6 @@ class libsConstants {
 
 extern const libsConstants g_libs_constants;
 
-}} // namespace
+}}} // namespace
 
 #endif

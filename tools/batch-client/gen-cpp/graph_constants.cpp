@@ -6,12 +6,12 @@
  */
 #include "graph_constants.h"
 
-namespace flowbox { namespace batch {
+namespace flowbox { namespace batch { namespace graph {
 
 const graphConstants g_graph_constants;
 
 graphConstants::graphConstants() {
 }
 
-}} // namespace
+}}} // namespace
 

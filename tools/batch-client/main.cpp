@@ -11,6 +11,12 @@ using namespace apache::thrift::protocol;
 using namespace apache::thrift::transport;
 
 using namespace flowbox::batch;
+using namespace flowbox::batch::defs;
+using namespace flowbox::batch::graph;
+using namespace flowbox::batch::libs;
+using namespace flowbox::batch::projects;
+using namespace flowbox::batch::types;
+
 using namespace std;
 
 int main(int argc, char **argv) {

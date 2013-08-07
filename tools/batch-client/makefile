@@ -10,6 +10,8 @@ gen-cpp/graph_constants.cpp \
 gen-cpp/graph_types.cpp \
 gen-cpp/libs_constants.cpp \
 gen-cpp/libs_types.cpp \
+gen-cpp/projects_constants.cpp \
+gen-cpp/projects_types.cpp \
 gen-cpp/types_constants.cpp \
 gen-cpp/types_types.cpp
 

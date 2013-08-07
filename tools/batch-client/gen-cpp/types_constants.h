@@ -9,7 +9,7 @@
 
 #include "types_types.h"
 
-namespace flowbox { namespace batch {
+namespace flowbox { namespace batch { namespace types {
 
 class typesConstants {
  public:
@@ -19,6 +19,6 @@ class typesConstants {
 
 extern const typesConstants g_types_constants;
 
-}} // namespace
+}}} // namespace
 
 #endif

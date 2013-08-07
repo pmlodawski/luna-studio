@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,libraryRootDef,newDefinition,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,graph,addNode,updateNode,removeNode,connect,disconnect,ping) where
+module Batch_Client(projects,createProject,openProject,closeProject,setActiveProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,libraryRootDef,defsGraph,newDefinition,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,graph,addNode,updateNode,removeNode,connect,disconnect,ping) where
 import Data.IORef
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -37,12 +37,134 @@ import qualified Attrs_Types
 import qualified Defs_Types
 import qualified Graph_Types
 import qualified Libs_Types
+import qualified Projects_Types
 import qualified Types_Types
 
 
 import Batch_Types
 import Batch
 seqid = newIORef 0
+projects (ip,op) = do
+  send_projects op
+  recv_projects ip
+send_projects op = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("projects", M_CALL, seqn)
+  write_Projects_args op (Projects_args{})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_projects ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_Projects_result ip
+  readMessageEnd ip
+  case f_Projects_result_success res of
+    Just v -> return v
+    Nothing -> do
+      throw (AppExn AE_MISSING_RESULT "projects failed: unknown result")
+createProject (ip,op) arg_project = do
+  send_createProject op arg_project
+  recv_createProject ip
+send_createProject op arg_project = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("createProject", M_CALL, seqn)
+  write_CreateProject_args op (CreateProject_args{f_CreateProject_args_project=Just arg_project})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_createProject ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_CreateProject_result ip
+  readMessageEnd ip
+  case f_CreateProject_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_CreateProject_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "createProject failed: unknown result")
+openProject (ip,op) arg_project = do
+  send_openProject op arg_project
+  recv_openProject ip
+send_openProject op arg_project = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("openProject", M_CALL, seqn)
+  write_OpenProject_args op (OpenProject_args{f_OpenProject_args_project=Just arg_project})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_openProject ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_OpenProject_result ip
+  readMessageEnd ip
+  case f_OpenProject_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_OpenProject_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "openProject failed: unknown result")
+closeProject (ip,op) arg_project = do
+  send_closeProject op arg_project
+  recv_closeProject ip
+send_closeProject op arg_project = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("closeProject", M_CALL, seqn)
+  write_CloseProject_args op (CloseProject_args{f_CloseProject_args_project=Just arg_project})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_closeProject ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_CloseProject_result ip
+  readMessageEnd ip
+  case f_CloseProject_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
+  return ()
+setActiveProject (ip,op) arg_project = do
+  send_setActiveProject op arg_project
+  recv_setActiveProject ip
+send_setActiveProject op arg_project = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("setActiveProject", M_CALL, seqn)
+  write_SetActiveProject_args op (SetActiveProject_args{f_SetActiveProject_args_project=Just arg_project})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_setActiveProject ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_SetActiveProject_result ip
+  readMessageEnd ip
+  case f_SetActiveProject_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
+  return ()
 libraries (ip,op) = do
   send_libraries op
   recv_libraries ip
@@ -190,6 +312,29 @@ recv_libraryRootDef ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "libraryRootDef failed: unknown result")
+defsGraph (ip,op) = do
+  send_defsGraph op
+  recv_defsGraph ip
+send_defsGraph op = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("defsGraph", M_CALL, seqn)
+  write_DefsGraph_args op (DefsGraph_args{})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_defsGraph ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_DefsGraph_result ip
+  readMessageEnd ip
+  case f_DefsGraph_result_success res of
+    Just v -> return v
+    Nothing -> do
+      throw (AppExn AE_MISSING_RESULT "defsGraph failed: unknown result")
 newDefinition (ip,op) arg_type arg_imports arg_flags arg_attrs = do
   send_newDefinition op arg_type arg_imports arg_flags arg_attrs
   recv_newDefinition ip

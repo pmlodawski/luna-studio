@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Consts where
+module Projects_Consts where
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
                  return, length, IO, fromIntegral, fromEnum, toEnum,
@@ -33,11 +33,6 @@ import Thrift
 import Thrift.Types ()
 
 import qualified Attrs_Types
-import qualified Defs_Types
-import qualified Graph_Types
-import qualified Libs_Types
-import qualified Projects_Types
-import qualified Types_Types
 
 
-import Batch_Types
+import Projects_Types

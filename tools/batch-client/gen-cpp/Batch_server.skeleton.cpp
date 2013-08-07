@@ -22,132 +22,162 @@ class BatchHandler : virtual public BatchIf {
     // Your initialization goes here
   }
 
-  void libraries(std::vector< ::flowbox::batch::Library> & _return) {
+  void projects(std::vector< ::flowbox::batch::projects::Project> & _return) {
+    // Your implementation goes here
+    printf("projects\n");
+  }
+
+  void createProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project) {
+    // Your implementation goes here
+    printf("createProject\n");
+  }
+
+  void openProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project) {
+    // Your implementation goes here
+    printf("openProject\n");
+  }
+
+  void closeProject(const  ::flowbox::batch::projects::Project& project) {
+    // Your implementation goes here
+    printf("closeProject\n");
+  }
+
+  void setActiveProject(const  ::flowbox::batch::projects::Project& project) {
+    // Your implementation goes here
+    printf("setActiveProject\n");
+  }
+
+  void libraries(std::vector< ::flowbox::batch::libs::Library> & _return) {
     // Your implementation goes here
     printf("libraries\n");
   }
 
-  void createLibrary( ::flowbox::batch::Library& _return, const  ::flowbox::batch::Library& library) {
+  void createLibrary( ::flowbox::batch::libs::Library& _return, const  ::flowbox::batch::libs::Library& library) {
     // Your implementation goes here
     printf("createLibrary\n");
   }
 
-  void loadLibrary( ::flowbox::batch::Library& _return, const  ::flowbox::batch::Library& library) {
+  void loadLibrary( ::flowbox::batch::libs::Library& _return, const  ::flowbox::batch::libs::Library& library) {
     // Your implementation goes here
     printf("loadLibrary\n");
   }
 
-  void unloadLibrary(const  ::flowbox::batch::Library& library) {
+  void unloadLibrary(const  ::flowbox::batch::libs::Library& library) {
     // Your implementation goes here
     printf("unloadLibrary\n");
   }
 
-  void storeLibrary(const  ::flowbox::batch::Library& library) {
+  void storeLibrary(const  ::flowbox::batch::libs::Library& library) {
     // Your implementation goes here
     printf("storeLibrary\n");
   }
 
-  void libraryRootDef( ::flowbox::batch::Definition& _return, const  ::flowbox::batch::Library& library) {
+  void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::Library& library) {
     // Your implementation goes here
     printf("libraryRootDef\n");
   }
 
-  void newDefinition( ::flowbox::batch::Definition& _return, const  ::flowbox::batch::Type& type, const  ::flowbox::batch::Imports& imports, const  ::flowbox::batch::Flags& flags, const  ::flowbox::batch::Attributes& attrs) {
+  void defsGraph( ::flowbox::batch::defs::DefsGraph& _return) {
+    // Your implementation goes here
+    printf("defsGraph\n");
+  }
+
+  void newDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::types::Type& type, const  ::flowbox::batch::defs::Imports& imports, const  ::flowbox::batch::attrs::Flags& flags, const  ::flowbox::batch::attrs::Attributes& attrs) {
     // Your implementation goes here
     printf("newDefinition\n");
   }
 
-  void addDefinition( ::flowbox::batch::Definition& _return, const  ::flowbox::batch::Definition& definition, const  ::flowbox::batch::Definition& parent) {
+  void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::Definition& parent) {
     // Your implementation goes here
     printf("addDefinition\n");
   }
 
-  void updateDefinition(const  ::flowbox::batch::Definition& definition) {
+  void updateDefinition(const  ::flowbox::batch::defs::Definition& definition) {
     // Your implementation goes here
     printf("updateDefinition\n");
   }
 
-  void removeDefinition(const  ::flowbox::batch::Definition& definition) {
+  void removeDefinition(const  ::flowbox::batch::defs::Definition& definition) {
     // Your implementation goes here
     printf("removeDefinition\n");
   }
 
-  void definitionChildren(std::vector< ::flowbox::batch::Definition> & _return, const  ::flowbox::batch::Definition& definition) {
+  void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return, const  ::flowbox::batch::defs::Definition& definition) {
     // Your implementation goes here
     printf("definitionChildren\n");
   }
 
-  void definitionParent( ::flowbox::batch::Definition& _return, const  ::flowbox::batch::Definition& definition) {
+  void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition) {
     // Your implementation goes here
     printf("definitionParent\n");
   }
 
-  void newTypeModule( ::flowbox::batch::Type& _return, const std::string& name) {
+  void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name) {
     // Your implementation goes here
     printf("newTypeModule\n");
   }
 
-  void newTypeClass( ::flowbox::batch::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::Type> & params) {
+  void newTypeClass( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::types::Type> & params) {
     // Your implementation goes here
     printf("newTypeClass\n");
   }
 
-  void newTypeFunction( ::flowbox::batch::Type& _return, const std::string& name, const  ::flowbox::batch::Type& inputs, const  ::flowbox::batch::Type& outputs) {
+  void newTypeFunction( ::flowbox::batch::types::Type& _return, const std::string& name, const  ::flowbox::batch::types::Type& inputs, const  ::flowbox::batch::types::Type& outputs) {
     // Your implementation goes here
     printf("newTypeFunction\n");
   }
 
-  void newTypeUdefined( ::flowbox::batch::Type& _return) {
+  void newTypeUdefined( ::flowbox::batch::types::Type& _return) {
     // Your implementation goes here
     printf("newTypeUdefined\n");
   }
 
-  void newTypeNamed( ::flowbox::batch::Type& _return, const std::string& name, const  ::flowbox::batch::Type& type) {
+  void newTypeNamed( ::flowbox::batch::types::Type& _return, const std::string& name, const  ::flowbox::batch::types::Type& type) {
     // Your implementation goes here
     printf("newTypeNamed\n");
   }
 
-  void newTypeVariable( ::flowbox::batch::Type& _return, const std::string& name) {
+  void newTypeVariable( ::flowbox::batch::types::Type& _return, const std::string& name) {
     // Your implementation goes here
     printf("newTypeVariable\n");
   }
 
-  void newTypeList( ::flowbox::batch::Type& _return, const  ::flowbox::batch::Type& type) {
+  void newTypeList( ::flowbox::batch::types::Type& _return, const  ::flowbox::batch::types::Type& type) {
     // Your implementation goes here
     printf("newTypeList\n");
   }
 
-  void newTypeTuple( ::flowbox::batch::Type& _return, const std::vector< ::flowbox::batch::Type> & types) {
+  void newTypeTuple( ::flowbox::batch::types::Type& _return, const std::vector< ::flowbox::batch::types::Type> & types) {
     // Your implementation goes here
     printf("newTypeTuple\n");
   }
 
-  void graph( ::flowbox::batch::Graph& _return, const  ::flowbox::batch::Definition& definition) {
+  void graph( ::flowbox::batch::graph::Graph& _return, const  ::flowbox::batch::defs::Definition& definition) {
     // Your implementation goes here
     printf("graph\n");
   }
 
-  void addNode( ::flowbox::batch::Node& _return, const  ::flowbox::batch::Node& node, const  ::flowbox::batch::Definition& definition) {
+  void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) {
     // Your implementation goes here
     printf("addNode\n");
   }
 
-  void updateNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::Definition& definition) {
+  void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) {
     // Your implementation goes here
     printf("updateNode\n");
   }
 
-  void removeNode(const  ::flowbox::batch::Node& node, const  ::flowbox::batch::Definition& definition) {
+  void removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) {
     // Your implementation goes here
     printf("removeNode\n");
   }
 
-  void connect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::Definition& definition) {
+  void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::Definition& definition) {
     // Your implementation goes here
     printf("connect\n");
   }
 
-  void disconnect(const  ::flowbox::batch::Node& srcNode, const  ::flowbox::batch::PortDescriptor& srcPort, const  ::flowbox::batch::Node& dstNode, const  ::flowbox::batch::PortDescriptor& dstPort, const  ::flowbox::batch::Definition& definition) {
+  void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::Definition& definition) {
     // Your implementation goes here
     printf("disconnect\n");
   }

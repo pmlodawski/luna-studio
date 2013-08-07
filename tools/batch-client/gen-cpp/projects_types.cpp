@@ -4,16 +4,16 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#include "libs_types.h"
+#include "projects_types.h"
 
 #include <algorithm>
 
-namespace flowbox { namespace batch { namespace libs {
+namespace flowbox { namespace batch { namespace projects {
 
-const char* Library::ascii_fingerprint = "8647601436A6884E958535045FA2944B";
-const uint8_t Library::binary_fingerprint[16] = {0x86,0x47,0x60,0x14,0x36,0xA6,0x88,0x4E,0x95,0x85,0x35,0x04,0x5F,0xA2,0x94,0x4B};
+const char* Project::ascii_fingerprint = "DF949FB5BDEF3F5D19F49DCE2593B936";
+const uint8_t Project::binary_fingerprint[16] = {0xDF,0x94,0x9F,0xB5,0xBD,0xEF,0x3F,0x5D,0x19,0xF4,0x9D,0xCE,0x25,0x93,0xB9,0x36};
 
-uint32_t Library::read(::apache::thrift::protocol::TProtocol* iprot) {
+uint32_t Project::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   uint32_t xfer = 0;
   std::string fname;
@@ -34,14 +34,6 @@ uint32_t Library::read(::apache::thrift::protocol::TProtocol* iprot) {
     switch (fid)
     {
       case 1:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->libID);
-          this->__isset.libID = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      case 2:
         if (ftype == ::apache::thrift::protocol::T_STRING) {
           xfer += iprot->readString(this->name);
           this->__isset.name = true;
@@ -49,7 +41,7 @@ uint32_t Library::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 3:
+      case 2:
         if (ftype == ::apache::thrift::protocol::T_STRING) {
           xfer += iprot->readString(this->path);
           this->__isset.path = true;
@@ -57,10 +49,18 @@ uint32_t Library::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->attribs.read(iprot);
+          this->__isset.attribs = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       case 4:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->rootDefID);
-          this->__isset.rootDefID = true;
+          xfer += iprot->readI32(this->projectID);
+          this->__isset.projectID = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -77,28 +77,28 @@ uint32_t Library::read(::apache::thrift::protocol::TProtocol* iprot) {
   return xfer;
 }
 
-uint32_t Library::write(::apache::thrift::protocol::TProtocol* oprot) const {
+uint32_t Project::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
-  xfer += oprot->writeStructBegin("Library");
+  xfer += oprot->writeStructBegin("Project");
 
-  if (this->__isset.libID) {
-    xfer += oprot->writeFieldBegin("libID", ::apache::thrift::protocol::T_I32, 1);
-    xfer += oprot->writeI32(this->libID);
-    xfer += oprot->writeFieldEnd();
-  }
   if (this->__isset.name) {
-    xfer += oprot->writeFieldBegin("name", ::apache::thrift::protocol::T_STRING, 2);
+    xfer += oprot->writeFieldBegin("name", ::apache::thrift::protocol::T_STRING, 1);
     xfer += oprot->writeString(this->name);
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.path) {
-    xfer += oprot->writeFieldBegin("path", ::apache::thrift::protocol::T_STRING, 3);
+    xfer += oprot->writeFieldBegin("path", ::apache::thrift::protocol::T_STRING, 2);
     xfer += oprot->writeString(this->path);
     xfer += oprot->writeFieldEnd();
   }
-  if (this->__isset.rootDefID) {
-    xfer += oprot->writeFieldBegin("rootDefID", ::apache::thrift::protocol::T_I32, 4);
-    xfer += oprot->writeI32(this->rootDefID);
+  if (this->__isset.attribs) {
+    xfer += oprot->writeFieldBegin("attribs", ::apache::thrift::protocol::T_STRUCT, 3);
+    xfer += this->attribs.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.projectID) {
+    xfer += oprot->writeFieldBegin("projectID", ::apache::thrift::protocol::T_I32, 4);
+    xfer += oprot->writeI32(this->projectID);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -106,12 +106,12 @@ uint32_t Library::write(::apache::thrift::protocol::TProtocol* oprot) const {
   return xfer;
 }
 
-void swap(Library &a, Library &b) {
+void swap(Project &a, Project &b) {
   using ::std::swap;
-  swap(a.libID, b.libID);
   swap(a.name, b.name);
   swap(a.path, b.path);
-  swap(a.rootDefID, b.rootDefID);
+  swap(a.attribs, b.attribs);
+  swap(a.projectID, b.projectID);
   swap(a.__isset, b.__isset);
 }
 

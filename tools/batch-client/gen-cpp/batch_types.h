@@ -16,6 +16,7 @@
 #include "defs_types.h"
 #include "graph_types.h"
 #include "libs_types.h"
+#include "projects_types.h"
 #include "types_types.h"
 
 

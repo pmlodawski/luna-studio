@@ -6,12 +6,12 @@
  */
 #include "types_constants.h"
 
-namespace flowbox { namespace batch {
+namespace flowbox { namespace batch { namespace types {
 
 const typesConstants g_types_constants;
 
 typesConstants::typesConstants() {
 }
 
-}} // namespace
+}}} // namespace
 

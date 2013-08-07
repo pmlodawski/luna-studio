@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-namespace flowbox { namespace batch {
+namespace flowbox { namespace batch { namespace defs {
 
 const char* Import::ascii_fingerprint = "92AA23526EDCB0628C830C8758ED7059";
 const uint8_t Import::binary_fingerprint[16] = {0x92,0xAA,0x23,0x52,0x6E,0xDC,0xB0,0x62,0x8C,0x83,0x0C,0x87,0x58,0xED,0x70,0x59};
@@ -280,4 +280,202 @@ void swap(Definition &a, Definition &b) {
   swap(a.__isset, b.__isset);
 }
 
-}} // namespace
+const char* Edge::ascii_fingerprint = "C1241AF5AA92C586B664FD41DC97C576";
+const uint8_t Edge::binary_fingerprint[16] = {0xC1,0x24,0x1A,0xF5,0xAA,0x92,0xC5,0x86,0xB6,0x64,0xFD,0x41,0xDC,0x97,0xC5,0x76};
+
+uint32_t Edge::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->src);
+          this->__isset.src = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->dst);
+          this->__isset.dst = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t Edge::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("Edge");
+
+  if (this->__isset.src) {
+    xfer += oprot->writeFieldBegin("src", ::apache::thrift::protocol::T_I32, 1);
+    xfer += oprot->writeI32(this->src);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.dst) {
+    xfer += oprot->writeFieldBegin("dst", ::apache::thrift::protocol::T_I32, 2);
+    xfer += oprot->writeI32(this->dst);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(Edge &a, Edge &b) {
+  using ::std::swap;
+  swap(a.src, b.src);
+  swap(a.dst, b.dst);
+  swap(a.__isset, b.__isset);
+}
+
+const char* DefsGraph::ascii_fingerprint = "E020BD94EDE625F37DE58CF12D7E61E4";
+const uint8_t DefsGraph::binary_fingerprint[16] = {0xE0,0x20,0xBD,0x94,0xED,0xE6,0x25,0xF3,0x7D,0xE5,0x8C,0xF1,0x2D,0x7E,0x61,0xE4};
+
+uint32_t DefsGraph::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_MAP) {
+          {
+            this->definitions.clear();
+            uint32_t _size18;
+            ::apache::thrift::protocol::TType _ktype19;
+            ::apache::thrift::protocol::TType _vtype20;
+            xfer += iprot->readMapBegin(_ktype19, _vtype20, _size18);
+            uint32_t _i22;
+            for (_i22 = 0; _i22 < _size18; ++_i22)
+            {
+              DefID _key23;
+              xfer += iprot->readI32(_key23);
+              Definition& _val24 = this->definitions[_key23];
+              xfer += _val24.read(iprot);
+            }
+            xfer += iprot->readMapEnd();
+          }
+          this->__isset.definitions = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->edges.clear();
+            uint32_t _size25;
+            ::apache::thrift::protocol::TType _etype28;
+            xfer += iprot->readListBegin(_etype28, _size25);
+            this->edges.resize(_size25);
+            uint32_t _i29;
+            for (_i29 = 0; _i29 < _size25; ++_i29)
+            {
+              xfer += this->edges[_i29].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.edges = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t DefsGraph::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("DefsGraph");
+
+  if (this->__isset.definitions) {
+    xfer += oprot->writeFieldBegin("definitions", ::apache::thrift::protocol::T_MAP, 1);
+    {
+      xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->definitions.size()));
+      std::map<DefID, Definition> ::const_iterator _iter30;
+      for (_iter30 = this->definitions.begin(); _iter30 != this->definitions.end(); ++_iter30)
+      {
+        xfer += oprot->writeI32(_iter30->first);
+        xfer += _iter30->second.write(oprot);
+      }
+      xfer += oprot->writeMapEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.edges) {
+    xfer += oprot->writeFieldBegin("edges", ::apache::thrift::protocol::T_LIST, 2);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->edges.size()));
+      std::vector<Edge> ::const_iterator _iter31;
+      for (_iter31 = this->edges.begin(); _iter31 != this->edges.end(); ++_iter31)
+      {
+        xfer += (*_iter31).write(oprot);
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(DefsGraph &a, DefsGraph &b) {
+  using ::std::swap;
+  swap(a.definitions, b.definitions);
+  swap(a.edges, b.edges);
+  swap(a.__isset, b.__isset);
+}
+
+}}} // namespace

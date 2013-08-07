@@ -17,7 +17,7 @@
 #include "types_types.h"
 
 
-namespace flowbox { namespace batch {
+namespace flowbox { namespace batch { namespace defs {
 
 typedef int32_t DefID;
 
@@ -104,16 +104,16 @@ class Definition {
 
   virtual ~Definition() throw() {}
 
-   ::flowbox::batch::Type cls;
+   ::flowbox::batch::types::Type cls;
   Imports imports;
-   ::flowbox::batch::Flags flags;
-   ::flowbox::batch::Attributes attribs;
-   ::flowbox::batch::LibID libID;
+   ::flowbox::batch::attrs::Flags flags;
+   ::flowbox::batch::attrs::Attributes attribs;
+   ::flowbox::batch::libs::LibID libID;
   DefID defID;
 
   _Definition__isset __isset;
 
-  void __set_cls(const  ::flowbox::batch::Type& val) {
+  void __set_cls(const  ::flowbox::batch::types::Type& val) {
     cls = val;
     __isset.cls = true;
   }
@@ -123,17 +123,17 @@ class Definition {
     __isset.imports = true;
   }
 
-  void __set_flags(const  ::flowbox::batch::Flags& val) {
+  void __set_flags(const  ::flowbox::batch::attrs::Flags& val) {
     flags = val;
     __isset.flags = true;
   }
 
-  void __set_attribs(const  ::flowbox::batch::Attributes& val) {
+  void __set_attribs(const  ::flowbox::batch::attrs::Attributes& val) {
     attribs = val;
     __isset.attribs = true;
   }
 
-  void __set_libID(const  ::flowbox::batch::LibID val) {
+  void __set_libID(const  ::flowbox::batch::libs::LibID val) {
     libID = val;
     __isset.libID = true;
   }
@@ -184,6 +184,120 @@ class Definition {
 
 void swap(Definition &a, Definition &b);
 
-}} // namespace
+typedef struct _Edge__isset {
+  _Edge__isset() : src(false), dst(false) {}
+  bool src;
+  bool dst;
+} _Edge__isset;
+
+class Edge {
+ public:
+
+  static const char* ascii_fingerprint; // = "C1241AF5AA92C586B664FD41DC97C576";
+  static const uint8_t binary_fingerprint[16]; // = {0xC1,0x24,0x1A,0xF5,0xAA,0x92,0xC5,0x86,0xB6,0x64,0xFD,0x41,0xDC,0x97,0xC5,0x76};
+
+  Edge() : src(0), dst(0) {
+  }
+
+  virtual ~Edge() throw() {}
+
+  DefID src;
+  DefID dst;
+
+  _Edge__isset __isset;
+
+  void __set_src(const DefID val) {
+    src = val;
+    __isset.src = true;
+  }
+
+  void __set_dst(const DefID val) {
+    dst = val;
+    __isset.dst = true;
+  }
+
+  bool operator == (const Edge & rhs) const
+  {
+    if (__isset.src != rhs.__isset.src)
+      return false;
+    else if (__isset.src && !(src == rhs.src))
+      return false;
+    if (__isset.dst != rhs.__isset.dst)
+      return false;
+    else if (__isset.dst && !(dst == rhs.dst))
+      return false;
+    return true;
+  }
+  bool operator != (const Edge &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Edge & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(Edge &a, Edge &b);
+
+typedef struct _DefsGraph__isset {
+  _DefsGraph__isset() : definitions(false), edges(false) {}
+  bool definitions;
+  bool edges;
+} _DefsGraph__isset;
+
+class DefsGraph {
+ public:
+
+  static const char* ascii_fingerprint; // = "E020BD94EDE625F37DE58CF12D7E61E4";
+  static const uint8_t binary_fingerprint[16]; // = {0xE0,0x20,0xBD,0x94,0xED,0xE6,0x25,0xF3,0x7D,0xE5,0x8C,0xF1,0x2D,0x7E,0x61,0xE4};
+
+  DefsGraph() {
+  }
+
+  virtual ~DefsGraph() throw() {}
+
+  std::map<DefID, Definition>  definitions;
+  std::vector<Edge>  edges;
+
+  _DefsGraph__isset __isset;
+
+  void __set_definitions(const std::map<DefID, Definition> & val) {
+    definitions = val;
+    __isset.definitions = true;
+  }
+
+  void __set_edges(const std::vector<Edge> & val) {
+    edges = val;
+    __isset.edges = true;
+  }
+
+  bool operator == (const DefsGraph & rhs) const
+  {
+    if (__isset.definitions != rhs.__isset.definitions)
+      return false;
+    else if (__isset.definitions && !(definitions == rhs.definitions))
+      return false;
+    if (__isset.edges != rhs.__isset.edges)
+      return false;
+    else if (__isset.edges && !(edges == rhs.edges))
+      return false;
+    return true;
+  }
+  bool operator != (const DefsGraph &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DefsGraph & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(DefsGraph &a, DefsGraph &b);
+
+}}} // namespace
 
 #endif

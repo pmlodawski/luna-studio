@@ -6,12 +6,12 @@
  */
 #include "defs_constants.h"
 
-namespace flowbox { namespace batch {
+namespace flowbox { namespace batch { namespace defs {
 
 const defsConstants g_defs_constants;
 
 defsConstants::defsConstants() {
 }
 
-}} // namespace
+}}} // namespace
 

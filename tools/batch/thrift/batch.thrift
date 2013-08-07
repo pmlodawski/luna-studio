@@ -12,6 +12,7 @@ include "../../lunac/thrift/attrs.thrift"
 include "../../lunac/thrift/defs.thrift"
 include "../../lunac/thrift/graph.thrift"
 include "../../lunac/thrift/libs.thrift"
+include "../../lunac/thrift/projects.thrift"
 include "../../lunac/thrift/types.thrift"
 
 /*
@@ -29,6 +30,18 @@ exception ArgumentException {
 service Batch {
 
     /*
+     * Projects
+     */
+
+    list<projects.Project> projects()
+
+    projects.Project createProject   (1: projects.Project project) throws (1: ArgumentException missingFields)
+    projects.Project openProject     (1: projects.Project project) throws (1: ArgumentException missingFields)
+    void             closeProject    (1: projects.Project project) throws (1: ArgumentException missingFields)
+
+    void             setActiveProject(1: projects.Project project) throws (1: ArgumentException missingFields)
+
+    /*
      * Libraries
      */
 
@@ -40,9 +53,12 @@ service Batch {
     void           storeLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
 
     defs.Definition libraryRootDef(1: libs.Library library) throws (1: ArgumentException missingFields)
+  
     /*
      * Definitions
      */
+
+    defs.DefsGraph defsGraph()
 
     defs.Definition newDefinition(1: types.Type type, 2: defs.Imports imports, 
                                   3: attrs.Flags flags, 4: attrs.Attributes attrs)

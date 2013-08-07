@@ -59,6 +59,8 @@ Library
                   Graph_Types,
                   Libs_Consts,
                   Libs_Types,
+                  Projects_Consts,
+                  Projects_Types,
                   Types_Consts,
                   Types_Types
 
