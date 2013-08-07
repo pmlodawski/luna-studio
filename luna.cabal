@@ -30,7 +30,7 @@ Library
                   Luna.Lib.Library,
                   Luna.Network.Def.DefManager,
                   Luna.Network.Def.Edge,
-                  Luna.Network.Def.NodeDef,
+                  Luna.Network.Def.Definition,
                   Luna.Network.Graph.DefaultValue,
                   Luna.Network.Graph.Edge,
                   Luna.Network.Graph.Graph,

@@ -19,11 +19,11 @@ namespace flowbox { namespace batch {
 typedef int32_t LibID;
 
 typedef struct _Library__isset {
-  _Library__isset() : libID(true), name(false), path(false), rootNodeDefID(true) {}
+  _Library__isset() : libID(true), name(false), path(false), rootDefID(true) {}
   bool libID;
   bool name;
   bool path;
-  bool rootNodeDefID;
+  bool rootDefID;
 } _Library__isset;
 
 class Library {
@@ -32,7 +32,7 @@ class Library {
   static const char* ascii_fingerprint; // = "8647601436A6884E958535045FA2944B";
   static const uint8_t binary_fingerprint[16]; // = {0x86,0x47,0x60,0x14,0x36,0xA6,0x88,0x4E,0x95,0x85,0x35,0x04,0x5F,0xA2,0x94,0x4B};
 
-  Library() : libID(-1), name(), path(), rootNodeDefID(-1) {
+  Library() : libID(-1), name(), path(), rootDefID(-1) {
   }
 
   virtual ~Library() throw() {}
@@ -40,7 +40,7 @@ class Library {
   LibID libID;
   std::string name;
   std::string path;
-  int32_t rootNodeDefID;
+  int32_t rootDefID;
 
   _Library__isset __isset;
 
@@ -59,9 +59,9 @@ class Library {
     __isset.path = true;
   }
 
-  void __set_rootNodeDefID(const int32_t val) {
-    rootNodeDefID = val;
-    __isset.rootNodeDefID = true;
+  void __set_rootDefID(const int32_t val) {
+    rootDefID = val;
+    __isset.rootDefID = true;
   }
 
   bool operator == (const Library & rhs) const
@@ -78,9 +78,9 @@ class Library {
       return false;
     else if (__isset.path && !(path == rhs.path))
       return false;
-    if (__isset.rootNodeDefID != rhs.__isset.rootNodeDefID)
+    if (__isset.rootDefID != rhs.__isset.rootDefID)
       return false;
-    else if (__isset.rootNodeDefID && !(rootNodeDefID == rhs.rootNodeDefID))
+    else if (__isset.rootDefID && !(rootDefID == rhs.rootDefID))
       return false;
     return true;
   }

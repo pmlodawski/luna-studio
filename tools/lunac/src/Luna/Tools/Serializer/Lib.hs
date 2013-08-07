@@ -24,8 +24,8 @@ import qualified Luna.Core                   as Core
 import           Luna.Core                     (Core)
 import qualified Luna.Network.Def.DefManager as DefManager
 import           Luna.Network.Def.DefManager   (DefManager)
-import qualified Luna.Network.Def.NodeDef    as NodeDef
-import           Luna.Network.Def.NodeDef      (NodeDef)
+import qualified Luna.Network.Def.Definition    as Definition
+import           Luna.Network.Def.Definition      (Definition)
 import qualified Luna.Lib.Library            as Library
 import           Luna.Lib.Library              (Library)
 import qualified Luna.System.UniPath         as UniPath
@@ -48,7 +48,7 @@ graphFileExtension :: String
 graphFileExtension = ".graph"
 
 
-generate :: DefManager -> UniPath -> NodeDef.ID -> NodeDef -> [Serializable]
+generate :: DefManager -> UniPath -> Definition.ID -> Definition -> [Serializable]
 generate defManager upath defID def = sdef:sgraph:schildren where 
     children  = DefManager.suc defManager defID
     schildren = foldr (\child rest -> checkedGenerate defManager upath child ++ rest) [] children
@@ -59,7 +59,7 @@ generate defManager upath defID def = sdef:sgraph:schildren where
     defFilename = UniPath.setExtension nodeFileExtension upath
     saveDef = (\h -> do 
         let protocol = BinaryProtocol h
-        TDefs.write_NodeDef protocol tdef)
+        TDefs.write_Definition protocol tdef)
 
     sdef = File defFilename saveDef
 
@@ -72,11 +72,11 @@ generate defManager upath defID def = sdef:sgraph:schildren where
 
 
 
-checkedGenerate :: DefManager -> UniPath -> NodeDef.ID -> [Serializable]
+checkedGenerate :: DefManager -> UniPath -> Definition.ID -> [Serializable]
 checkedGenerate defManager udirpath defID = s where
     s = case DefManager.lab defManager defID of
         Nothing -> error "Inconssistence in defManager: ID not found"
-        Just def -> case NodeDef.cls def of 
+        Just def -> case Definition.cls def of 
                 Module   aname     -> gen aname
                 Class    aname _ _ -> gen aname
                 Function aname _ _ -> gen aname
@@ -89,9 +89,9 @@ storeLib :: Core -> Library -> IO ()
 storeLib core lib = do 
     let defManager = Core.defManager core
         rootPath = Library.path lib
-        libRootNodeID = Library.rootNodeDefID lib
+        libRootDefID = Library.rootDefID lib
 
-        defs = checkedGenerate defManager rootPath libRootNodeID 
+        defs = checkedGenerate defManager rootPath libRootDefID 
 
     Serializer.serializeMany defs
 

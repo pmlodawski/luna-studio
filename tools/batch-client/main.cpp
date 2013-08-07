@@ -71,11 +71,11 @@ int main(int argc, char **argv) {
         Type funType;
         batch.newTypeFunction(funType, "fun", funInputsType, funOutputsType);
 
-        NodeDef myModule;
+        Definition myModule;
         batch.libraryRootDef(myModule, userlib);
 
         cout << myModule.defID << endl;
-        NodeDef fun;
+        Definition fun;
         fun.__set_cls(funType);
         
         batch.addDefinition(fun, fun, myModule);
@@ -86,16 +86,16 @@ int main(int argc, char **argv) {
         Type myclassType;
         batch.newTypeClass(myclassType, "myclass", {}, {});
         
-        NodeDef myclass;
+        Definition myclass;
         myclass.__set_cls(myclassType);
 
         batch.addDefinition(myclass, myclass, myModule);
 
-        vector<NodeDef> children;
+        vector<Definition> children;
         batch.definitionChildren(children, myModule);
         cout << "`my` module has " << children.size() << " children." << endl;
 
-        NodeDef parent;
+        Definition parent;
         batch.definitionParent(parent, fun);
         /* Add some nodes */
 

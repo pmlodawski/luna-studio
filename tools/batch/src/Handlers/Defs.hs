@@ -29,8 +29,8 @@ import qualified Types_Types                   as TTypes
 import qualified Luna.Core                     as Core
 import           Luna.Core                       (Core)
 import qualified Luna.Network.Def.DefManager   as DefManager
-import qualified Luna.Network.Def.NodeDef      as NodeDef
-import           Luna.Network.Def.NodeDef        (NodeDef)
+import qualified Luna.Network.Def.Definition      as Definition
+import           Luna.Network.Def.Definition        (Definition)
 import qualified Luna.Network.Graph.Graph      as Graph
 import           Luna.Tools.Conversion
 import           Luna.Tools.Conversion.Defs    ()
@@ -40,26 +40,26 @@ import           Luna.Tools.Conversion.Defs    ()
 
 
 ------ public api helpers -----------------------------------------
-defOperation :: (IORef Core -> NodeDef.ID -> NodeDef -> a) -> IORef Core 
-             -> Maybe TDefs.NodeDef -> a
+defOperation :: (IORef Core -> Definition.ID -> Definition -> a) -> IORef Core 
+             -> Maybe TDefs.Definition -> a
 defOperation operation batchHandler tdefinition  = case tdefinition of 
     Nothing   -> throw' "`definition` field is missing"
-    Just tdef -> case (decode (tdef, Graph.empty) :: Either String (Int, NodeDef) ) of 
+    Just tdef -> case (decode (tdef, Graph.empty) :: Either String (Int, Definition) ) of 
         Left message              -> throw' ("Failed to decode `definition` 2: " ++ message)
         Right (defID, definition) -> do operation batchHandler defID definition
             
     
 
 
-defParentOperation :: (IORef Core -> NodeDef -> Int -> a) -> IORef Core
-                   -> Maybe TDefs.NodeDef -> Maybe TDefs.NodeDef -> a
+defParentOperation :: (IORef Core -> Definition -> Int -> a) -> IORef Core
+                   -> Maybe TDefs.Definition -> Maybe TDefs.Definition -> a
 defParentOperation operation batchHandler mtdefinition mtparent = case mtdefinition of 
     Nothing   -> throw' "`definition` field is missing"
-    Just tdefinition -> case decode (tdefinition, Graph.empty) :: Either String (NodeDef.ID, NodeDef) of
+    Just tdefinition -> case decode (tdefinition, Graph.empty) :: Either String (Definition.ID, Definition) of
         Left message -> throw' $ "Failed to decode `definition` 1: " ++ message
         Right (_, definition) -> case mtparent of 
             Nothing -> throw' "`parent` field is missing"
-            Just tparent -> case decode (tparent, Graph.empty) :: Either String (NodeDef.ID, NodeDef) of 
+            Just tparent -> case decode (tparent, Graph.empty) :: Either String (Definition.ID, Definition) of 
                 Left message -> throw' $ "Failed to decode `parent`: " ++ message
                 Right (parentID, _) -> operation batchHandler definition parentID
                 
@@ -67,14 +67,14 @@ defParentOperation operation batchHandler mtdefinition mtparent = case mtdefinit
 ------ public api -------------------------------------------------
 newDefinition :: IORef Core -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
                             -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes
-                            -> IO TDefs.NodeDef
+                            -> IO TDefs.Definition
 newDefinition _ ttype timports tflags tattrs = do 
     putStrLn "Creating new definition...\t\tsuccess!"
-    return $ TDefs.NodeDef ttype timports tflags tattrs (Just 0) (Just 0)
+    return $ TDefs.Definition ttype timports tflags tattrs (Just 0) (Just 0)
 
 
-addDefinition :: IORef Core -> Maybe TDefs.NodeDef
-              -> Maybe TDefs.NodeDef -> IO TDefs.NodeDef
+addDefinition :: IORef Core -> Maybe TDefs.Definition
+              -> Maybe TDefs.Definition -> IO TDefs.Definition
 addDefinition = defParentOperation (\batchHandler definition parentID -> do
     putStrLn "call addDefinition"
     core <- readIORef batchHandler
@@ -88,7 +88,7 @@ addDefinition = defParentOperation (\batchHandler definition parentID -> do
                     return $ newTDefinition)
 
 
-updateDefinition :: IORef Core -> Maybe TDefs.NodeDef -> IO ()
+updateDefinition :: IORef Core -> Maybe TDefs.Definition -> IO ()
 updateDefinition = defOperation (\batchHandler defID definition -> do
     putStrLn "call updateDefinition - NOT IMPLEMENTED, sorry."
     core <- readIORef batchHandler
@@ -96,7 +96,7 @@ updateDefinition = defOperation (\batchHandler defID definition -> do
     return ())
 
 
-removeDefinition :: IORef Core -> Maybe TDefs.NodeDef -> IO ()
+removeDefinition :: IORef Core -> Maybe TDefs.Definition -> IO ()
 removeDefinition = defOperation (\batchHandler defID _ -> do
     putStrLn "call removeDefinition"
     core <- readIORef batchHandler
@@ -107,7 +107,7 @@ removeDefinition = defOperation (\batchHandler defID _ -> do
                    writeIORef batchHandler newCore)
 
 
-definitionChildren :: IORef Core -> Maybe TDefs.NodeDef -> IO (Vector TDefs.NodeDef)
+definitionChildren :: IORef Core -> Maybe TDefs.Definition -> IO (Vector TDefs.Definition)
 definitionChildren = defOperation (\batchHandler defID _ -> do
     putStrLn "call definitionChildren"  
     core <- readIORef batchHandler
@@ -120,7 +120,7 @@ definitionChildren = defOperation (\batchHandler defID _ -> do
                    return $ Vector.fromList tchildren)
 
 
-definitionParent :: IORef Core -> Maybe TDefs.NodeDef -> IO TDefs.NodeDef
+definitionParent :: IORef Core -> Maybe TDefs.Definition -> IO TDefs.Definition
 definitionParent = defOperation (\batchHandler defID _ -> do
     putStrLn "call definitionParent"
     core <- readIORef batchHandler

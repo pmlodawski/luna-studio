@@ -27,8 +27,8 @@ import           Luna.Network.Graph.Edge           (Edge(..))
 import qualified Luna.Network.Graph.Graph        as Graph
 import qualified Luna.Network.Graph.Node         as Node
 import           Luna.Network.Graph.Node           (Node)
-import qualified Luna.Network.Def.NodeDef        as NodeDef
-import           Luna.Network.Def.NodeDef          (NodeDef(..))
+import qualified Luna.Network.Def.Definition        as Definition
+import           Luna.Network.Def.Definition          (Definition(..))
 import           Luna.Lib.Library                  (Library(..))
 import qualified Luna.Lib.LibManager             as LibManager
 import           Luna.Lib.LibManager               (LibManager(..))
@@ -47,15 +47,15 @@ workspaceImports = [ Import (Path ["Std","IO","Console"]) ["Init", "Print"]
                    ]
 
 
-workspace = NodeDef.empty{ NodeDef.cls     = Type.Module "Workspace'" 
-                         , NodeDef.imports = workspaceImports
-                         , NodeDef.libID   = userLibKey
+workspace = Definition.empty{ Definition.cls     = Type.Module "Workspace'" 
+                         , Definition.imports = workspaceImports
+                         , Definition.libID   = userLibKey
                          }
 
 
-testmod  = NodeDef.empty{ NodeDef.cls     = Type.Module "Testmod" 
-                         , NodeDef.imports = workspaceImports
-                         , NodeDef.libID   = userLibKey
+testmod  = Definition.empty{ Definition.cls     = Type.Module "Testmod" 
+                         , Definition.imports = workspaceImports
+                         , Definition.libID   = userLibKey
                          }
 
 
@@ -121,9 +121,9 @@ myFunGraph = Graph.insEdges [
 myFunInputs = Type.Tuple [Type.TypeVariable "a", 
                           Type.Named "in1" $ Type.TypeVariable "b"]
 
-myFun = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun" myFunInputs Type.noOutputs)
-                     , NodeDef.graph = myFunGraph
-                     , NodeDef.libID = userLibKey
+myFun = Definition.empty{ Definition.cls   = (Type.Function "myFun" myFunInputs Type.noOutputs)
+                     , Definition.graph = myFunGraph
+                     , Definition.libID = userLibKey
                      }
 
 
@@ -153,9 +153,9 @@ myFunInputs2 = Type.Tuple [ Type.Named "in1" $ Type.TypeVariable "a"
                           ]
 
 
-myFun2 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun2" myFunInputs2 Type.noOutputs)
-                      , NodeDef.graph = myFunGraph2
-                      , NodeDef.libID = userLibKey
+myFun2 = Definition.empty{ Definition.cls   = (Type.Function "myFun2" myFunInputs2 Type.noOutputs)
+                      , Definition.graph = myFunGraph2
+                      , Definition.libID = userLibKey
                       }
 
 myFunGraph3 = Graph.insEdges [
@@ -197,9 +197,9 @@ myFunInputs3 = Type.Tuple [Type.TypeVariable "a",
                           Type.Named "in1" $ Type.TypeVariable "b"]
 
 
-myFun3 = NodeDef.empty{ NodeDef.cls   = (Type.Function "myFun3" myFunInputs3 Type.noOutputs)
-                      , NodeDef.graph = myFunGraph3
-                      , NodeDef.libID = userLibKey
+myFun3 = Definition.empty{ Definition.cls   = (Type.Function "myFun3" myFunInputs3 Type.noOutputs)
+                      , Definition.graph = myFunGraph3
+                      , Definition.libID = userLibKey
                       }
 
 
@@ -239,9 +239,9 @@ myFunInputs4 = Type.Tuple [Type.TypeVariable "a",
                           Type.Named "in1" $ Type.TypeVariable "b"]
 
 
-myFun4 = NodeDef.empty{ NodeDef.cls   = (Type.Function "incx" myFunInputs4 Type.noOutputs)
-                      , NodeDef.graph = myFunGraph4
-                      , NodeDef.libID = userLibKey
+myFun4 = Definition.empty{ Definition.cls   = (Type.Function "incx" myFunInputs4 Type.noOutputs)
+                      , Definition.graph = myFunGraph4
+                      , Definition.libID = userLibKey
                       }
 
 
@@ -269,35 +269,35 @@ myFunGraph5 = Graph.insEdges [
 myFunInputs5 = Type.Tuple []
 
 
-myFun5 = NodeDef.empty{ NodeDef.cls   = (Type.Function "mymain" myFunInputs5 Type.noOutputs)
-                      , NodeDef.graph = myFunGraph5
-                      , NodeDef.libID = userLibKey
+myFun5 = Definition.empty{ Definition.cls   = (Type.Function "mymain" myFunInputs5 Type.noOutputs)
+                      , Definition.graph = myFunGraph5
+                      , Definition.libID = userLibKey
                       }
 
 
 
 
-cls1 = NodeDef.empty{ NodeDef.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
-                    , NodeDef.graph = Graph.empty
-                    , NodeDef.libID = userLibKey
+cls1 = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
+                    , Definition.graph = Graph.empty
+                    , Definition.libID = userLibKey
                     }
 
---iface1 = NodeDef.empty{  NodeDef.cls = Type.Interface "Ivector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
+--iface1 = Definition.empty{  Definition.cls = Type.Interface "Ivector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
                       --}
 
 
 --full_manager :: DefManager
 --full_manager =  DefManager.addToParentMany [
---                         (8, 9, NodeDef.make (Type.mkPackage "Init") stdLibKey),
---                     (5, 8, NodeDef.make (Type.mkPackage "String") stdLibKey),
---                     (5, 7, NodeDef.make (Type.mkPackage "Type") stdLibKey),
---                     (5, 6, NodeDef.make (Type.mkPackage "New") stdLibKey),
---                 (0, 5, NodeDef.make (Type.mkPackage "Types") stdLibKey),
---                         (2, 4, NodeDef.make (Type.Function "Print" [Type.Class "Console" [], Type.Class "String" []] [Type.Class "Console"[]]) stdLibKey),
---                         (2, 3, NodeDef.make (Type.Function "Init" [Type.Class "Console" []] [Type.Class "Console"[]]) stdLibKey),
---                     (1, 2, NodeDef.make (Type.Class "Console" []) stdLibKey),
---                 (0, 1, NodeDef.make (Type.mkPackage "IO") stdLibKey) ]
---             $ DefManager.add (0, NodeDef.make (Type.mkPackage "Std") stdLibKey)
+--                         (8, 9, Definition.make (Type.mkPackage "Init") stdLibKey),
+--                     (5, 8, Definition.make (Type.mkPackage "String") stdLibKey),
+--                     (5, 7, Definition.make (Type.mkPackage "Type") stdLibKey),
+--                     (5, 6, Definition.make (Type.mkPackage "New") stdLibKey),
+--                 (0, 5, Definition.make (Type.mkPackage "Types") stdLibKey),
+--                         (2, 4, Definition.make (Type.Function "Print" [Type.Class "Console" [], Type.Class "String" []] [Type.Class "Console"[]]) stdLibKey),
+--                         (2, 3, Definition.make (Type.Function "Init" [Type.Class "Console" []] [Type.Class "Console"[]]) stdLibKey),
+--                     (1, 2, Definition.make (Type.Class "Console" []) stdLibKey),
+--                 (0, 1, Definition.make (Type.mkPackage "IO") stdLibKey) ]
+--             $ DefManager.add (0, Definition.make (Type.mkPackage "Std") stdLibKey)
 --             $ base_manager
 
 
@@ -322,13 +322,13 @@ full_manager =  DefManager.addToParentMany [(2, 5, myFun),
 
 --full_manager :: DefManager
 --full_manager =  DefManager.addToParentMany [
---                 (0, 1, NodeDef.make (Type.Function "Print" 
+--                 (0, 1, Definition.make (Type.Function "Print" 
 --                                                    (Tuple [Type.Named "in1" $ Type.Class "Console" [], 
 --                                                           Type.Named "in2" $ Type.Class "String" []])
 --                                                    (Tuple [Type.Class "Console"[]])
 --                                     ) stdLibKey) 
 --                ]
---             $ DefManager.add (0, NodeDef.make (Type.mkPackage "Std") stdLibKey)
+--             $ DefManager.add (0, Definition.make (Type.mkPackage "Std") stdLibKey)
 --             $ base_manager
 
     

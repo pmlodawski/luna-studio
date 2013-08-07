@@ -6,8 +6,10 @@
 ---------------------------------------------------------------------------
 module Handlers.Libs (
     libraries,
+    createLibrary,
     loadLibrary,
     unloadLibrary,
+    storeLibrary,
     libraryRootDef
 ) 
 where
@@ -54,6 +56,12 @@ libraries batchHandler = do
     return tlibsVector
 
 
+createLibrary :: IORef Core -> Maybe TLibs.Library -> IO TLibs.Library
+createLibrary = libOperation (\ batchHandler (_, library) -> do
+    putStrLn "call createLibrary - NOT YET IMPLEMENTED"
+    return $ encode (-1, library))
+
+
 loadLibrary :: IORef Core -> Maybe TLibs.Library -> IO TLibs.Library
 loadLibrary = libOperation (\ batchHandler (_, library) -> do
     putStrLn "call loadLibrary"
@@ -72,15 +80,20 @@ unloadLibrary = libOperation (\ batchHandler (libID, _) -> do
     writeIORef batchHandler newCore)
 
 
-libraryRootDef :: IORef Core -> Maybe TLibs.Library -> IO TDefs.NodeDef
+storeLibrary :: IORef Core -> Maybe TLibs.Library -> IO ()
+storeLibrary = libOperation (\ batchHandler (libID, _) -> do
+    putStrLn "call storeLibrary - NOT YET IMPLEMENTED")
+
+
+libraryRootDef :: IORef Core -> Maybe TLibs.Library -> IO TDefs.Definition
 libraryRootDef = libOperation (\ batchHandler (_, library) -> do
     putStrLn "call libraryRootDef"
     core <- readIORef batchHandler
-    let rootNodeDefID' = Library.rootNodeDefID library
-        rootDef = Core.nodeDefByID core rootNodeDefID'
+    let rootDefID' = Library.rootDefID library
+        rootDef = Core.nodeDefByID core rootDefID'
     case rootDef of 
         Just rd -> do
-                   let (trootDef, _) = encode (rootNodeDefID', rd)
+                   let (trootDef, _) = encode (rootDefID', rd)
                    return trootDef
-        Nothing -> throw' "Wrong `rootNodeDefID` in `library` argument")
+        Nothing -> throw' "Wrong `rootDefID` in `library` argument")
 

@@ -80,29 +80,29 @@ class Import {
 
 void swap(Import &a, Import &b);
 
-typedef struct _NodeDef__isset {
-  _NodeDef__isset() : cls(false), imports(true), flags(true), attribs(true), libID(true), defID(true) {}
+typedef struct _Definition__isset {
+  _Definition__isset() : cls(false), imports(true), flags(true), attribs(true), libID(true), defID(true) {}
   bool cls;
   bool imports;
   bool flags;
   bool attribs;
   bool libID;
   bool defID;
-} _NodeDef__isset;
+} _Definition__isset;
 
-class NodeDef {
+class Definition {
  public:
 
   static const char* ascii_fingerprint; // = "DFA58221D08704BE864C77CAE04E43F5";
   static const uint8_t binary_fingerprint[16]; // = {0xDF,0xA5,0x82,0x21,0xD0,0x87,0x04,0xBE,0x86,0x4C,0x77,0xCA,0xE0,0x4E,0x43,0xF5};
 
-  NodeDef() : libID(-1), defID(-1) {
+  Definition() : libID(-1), defID(-1) {
 
 
 
   }
 
-  virtual ~NodeDef() throw() {}
+  virtual ~Definition() throw() {}
 
    ::flowbox::batch::Type cls;
   Imports imports;
@@ -111,7 +111,7 @@ class NodeDef {
    ::flowbox::batch::LibID libID;
   DefID defID;
 
-  _NodeDef__isset __isset;
+  _Definition__isset __isset;
 
   void __set_cls(const  ::flowbox::batch::Type& val) {
     cls = val;
@@ -143,7 +143,7 @@ class NodeDef {
     __isset.defID = true;
   }
 
-  bool operator == (const NodeDef & rhs) const
+  bool operator == (const Definition & rhs) const
   {
     if (__isset.cls != rhs.__isset.cls)
       return false;
@@ -171,18 +171,18 @@ class NodeDef {
       return false;
     return true;
   }
-  bool operator != (const NodeDef &rhs) const {
+  bool operator != (const Definition &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const NodeDef & ) const;
+  bool operator < (const Definition & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
-void swap(NodeDef &a, NodeDef &b);
+void swap(Definition &a, Definition &b);
 
 }} // namespace
 

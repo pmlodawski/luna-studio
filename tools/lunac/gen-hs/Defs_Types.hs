@@ -81,83 +81,83 @@ read_Import iprot = do
   record <- read_Import_fields iprot (Import{f_Import_path=Nothing,f_Import_items=Nothing})
   readStructEnd iprot
   return record
-data NodeDef = NodeDef{f_NodeDef_cls :: Maybe Types_Types.Type,f_NodeDef_imports :: Maybe (Vector.Vector Import),f_NodeDef_flags :: Maybe Attrs_Types.Flags,f_NodeDef_attribs :: Maybe Attrs_Types.Attributes,f_NodeDef_libID :: Maybe Int32,f_NodeDef_defID :: Maybe Int32} deriving (Show,Eq,Typeable)
-instance Hashable NodeDef where
-  hashWithSalt salt record = salt   `hashWithSalt` f_NodeDef_cls record   `hashWithSalt` f_NodeDef_imports record   `hashWithSalt` f_NodeDef_flags record   `hashWithSalt` f_NodeDef_attribs record   `hashWithSalt` f_NodeDef_libID record   `hashWithSalt` f_NodeDef_defID record  
-write_NodeDef oprot record = do
-  writeStructBegin oprot "NodeDef"
-  case f_NodeDef_cls record of {Nothing -> return (); Just _v -> do
+data Definition = Definition{f_Definition_cls :: Maybe Types_Types.Type,f_Definition_imports :: Maybe (Vector.Vector Import),f_Definition_flags :: Maybe Attrs_Types.Flags,f_Definition_attribs :: Maybe Attrs_Types.Attributes,f_Definition_libID :: Maybe Int32,f_Definition_defID :: Maybe Int32} deriving (Show,Eq,Typeable)
+instance Hashable Definition where
+  hashWithSalt salt record = salt   `hashWithSalt` f_Definition_cls record   `hashWithSalt` f_Definition_imports record   `hashWithSalt` f_Definition_flags record   `hashWithSalt` f_Definition_attribs record   `hashWithSalt` f_Definition_libID record   `hashWithSalt` f_Definition_defID record  
+write_Definition oprot record = do
+  writeStructBegin oprot "Definition"
+  case f_Definition_cls record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("cls",T_STRUCT,1)
     Types_Types.write_Type oprot _v
     writeFieldEnd oprot}
-  case f_NodeDef_imports record of {Nothing -> return (); Just _v -> do
+  case f_Definition_imports record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("imports",T_LIST,2)
     (let f = Vector.mapM_ (\_viter19 -> write_Import oprot _viter19) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
-  case f_NodeDef_flags record of {Nothing -> return (); Just _v -> do
+  case f_Definition_flags record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("flags",T_STRUCT,3)
     Attrs_Types.write_Flags oprot _v
     writeFieldEnd oprot}
-  case f_NodeDef_attribs record of {Nothing -> return (); Just _v -> do
+  case f_Definition_attribs record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("attribs",T_STRUCT,4)
     Attrs_Types.write_Attributes oprot _v
     writeFieldEnd oprot}
-  case f_NodeDef_libID record of {Nothing -> return (); Just _v -> do
+  case f_Definition_libID record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("libID",T_I32,5)
     writeI32 oprot _v
     writeFieldEnd oprot}
-  case f_NodeDef_defID record of {Nothing -> return (); Just _v -> do
+  case f_Definition_defID record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("defID",T_I32,6)
     writeI32 oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
-read_NodeDef_fields iprot record = do
+read_Definition_fields iprot record = do
   (_,_t21,_id22) <- readFieldBegin iprot
   if _t21 == T_STOP then return record else
     case _id22 of 
       1 -> if _t21 == T_STRUCT then do
         s <- (read_Type iprot)
-        read_NodeDef_fields iprot record{f_NodeDef_cls=Just s}
+        read_Definition_fields iprot record{f_Definition_cls=Just s}
         else do
           skip iprot _t21
-          read_NodeDef_fields iprot record
+          read_Definition_fields iprot record
       2 -> if _t21 == T_LIST then do
         s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Import iprot)) in do {(_etype26,_size23) <- readListBegin iprot; f _size23})
-        read_NodeDef_fields iprot record{f_NodeDef_imports=Just s}
+        read_Definition_fields iprot record{f_Definition_imports=Just s}
         else do
           skip iprot _t21
-          read_NodeDef_fields iprot record
+          read_Definition_fields iprot record
       3 -> if _t21 == T_STRUCT then do
         s <- (read_Flags iprot)
-        read_NodeDef_fields iprot record{f_NodeDef_flags=Just s}
+        read_Definition_fields iprot record{f_Definition_flags=Just s}
         else do
           skip iprot _t21
-          read_NodeDef_fields iprot record
+          read_Definition_fields iprot record
       4 -> if _t21 == T_STRUCT then do
         s <- (read_Attributes iprot)
-        read_NodeDef_fields iprot record{f_NodeDef_attribs=Just s}
+        read_Definition_fields iprot record{f_Definition_attribs=Just s}
         else do
           skip iprot _t21
-          read_NodeDef_fields iprot record
+          read_Definition_fields iprot record
       5 -> if _t21 == T_I32 then do
         s <- readI32 iprot
-        read_NodeDef_fields iprot record{f_NodeDef_libID=Just s}
+        read_Definition_fields iprot record{f_Definition_libID=Just s}
         else do
           skip iprot _t21
-          read_NodeDef_fields iprot record
+          read_Definition_fields iprot record
       6 -> if _t21 == T_I32 then do
         s <- readI32 iprot
-        read_NodeDef_fields iprot record{f_NodeDef_defID=Just s}
+        read_Definition_fields iprot record{f_Definition_defID=Just s}
         else do
           skip iprot _t21
-          read_NodeDef_fields iprot record
+          read_Definition_fields iprot record
       _ -> do
         skip iprot _t21
         readFieldEnd iprot
-        read_NodeDef_fields iprot record
-read_NodeDef iprot = do
+        read_Definition_fields iprot record
+read_Definition iprot = do
   _ <- readStructBegin iprot
-  record <- read_NodeDef_fields iprot (NodeDef{f_NodeDef_cls=Nothing,f_NodeDef_imports=Nothing,f_NodeDef_flags=Nothing,f_NodeDef_attribs=Nothing,f_NodeDef_libID=Nothing,f_NodeDef_defID=Nothing})
+  record <- read_Definition_fields iprot (Definition{f_Definition_cls=Nothing,f_Definition_imports=Nothing,f_Definition_flags=Nothing,f_Definition_attribs=Nothing,f_Definition_libID=Nothing,f_Definition_defID=Nothing})
   readStructEnd iprot
   return record

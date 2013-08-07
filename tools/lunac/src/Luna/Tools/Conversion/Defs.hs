@@ -16,7 +16,7 @@ import qualified Data.Vector    as Vector
 
 import qualified Defs_Types               as TDefs
 import           Luna.Network.Graph.Graph   (Graph)
-import           Luna.Network.Def.NodeDef   (NodeDef(..))
+import           Luna.Network.Def.Definition   (Definition(..))
 import           Luna.Network.Path.Import   (Import(..))
 import qualified Luna.Network.Path.Path   as Path
 import           Luna.Tools.Conversion
@@ -46,23 +46,23 @@ instance Convert [Import] TDefs.Imports where
         aimports = convert imports1
 
 
-instance Convert (Int, NodeDef) (TDefs.NodeDef, Graph) where
-  encode (defID, NodeDef acls agraph aimports aflags aattributes alibID) = (tdef, agraph) where
+instance Convert (Int, Definition) (TDefs.Definition, Graph) where
+  encode (defID, Definition acls agraph aimports aflags aattributes alibID) = (tdef, agraph) where
      ttype       = Just $ encode acls
      timports    = Just $ encode aimports
      tflags      = Just $ encode aflags
      tattributes = Just $ encode aattributes
      tlibID      = Just $ itoi32 alibID
      tdefID      = Just $ itoi32 defID
-     tdef = TDefs.NodeDef ttype timports tflags tattributes tlibID tdefID 
+     tdef = TDefs.Definition ttype timports tflags tattributes tlibID tdefID 
   decode td = case td of 
-     (TDefs.NodeDef (Just tcls) (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), agraph)
+     (TDefs.Definition (Just tcls) (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), agraph)
            -> d where
                     d = case (decode tcls, decode timports, decode tflags, decode tattributes) of
                         (Right acls, Right aimports, Right aflags, Right aattributes)
                                -> Right (adefID, nodeDef) where
                                   alibID = i32toi tlibID
-                                  nodeDef = NodeDef acls agraph aimports aflags aattributes alibID
+                                  nodeDef = Definition acls agraph aimports aflags aattributes alibID
                                   adefID = i32toi tdefID
                         (Right _   , Right _      , Right _     , Left message) 
                                -> Left $ "Failed to deserialize `attributes` : " ++ message
@@ -72,12 +72,12 @@ instance Convert (Int, NodeDef) (TDefs.NodeDef, Graph) where
                                -> Left $ "Failed to deserialize `imports` : " ++ message
                         (Left message, _          , _           , _           )
                                -> Left $ "Failed to deserialize `cls` : " ++ message
-     (TDefs.NodeDef (Just _) (Just _) (Just _) (Just _) (Just _) Nothing, _) -> Left "`defID` field is missing"
-     (TDefs.NodeDef (Just _) (Just _) (Just _) (Just _) Nothing  _      , _) -> Left "`libID` field is missing"
-     (TDefs.NodeDef (Just _) (Just _) (Just _) Nothing  _        _      , _) -> Left "`attributes` field is missing"
-     (TDefs.NodeDef (Just _) (Just _) Nothing  _        _        _      , _) -> Left "`flags` field is missing"
-     (TDefs.NodeDef (Just _) Nothing  _        _        _        _      , _) -> Left "`imports` field is missing"
-     (TDefs.NodeDef Nothing  _        _        _        _        _      , _) -> Left "`type` field is missing"
+     (TDefs.Definition (Just _) (Just _) (Just _) (Just _) (Just _) Nothing, _) -> Left "`defID` field is missing"
+     (TDefs.Definition (Just _) (Just _) (Just _) (Just _) Nothing  _      , _) -> Left "`libID` field is missing"
+     (TDefs.Definition (Just _) (Just _) (Just _) Nothing  _        _      , _) -> Left "`attributes` field is missing"
+     (TDefs.Definition (Just _) (Just _) Nothing  _        _        _      , _) -> Left "`flags` field is missing"
+     (TDefs.Definition (Just _) Nothing  _        _        _        _      , _) -> Left "`imports` field is missing"
+     (TDefs.Definition Nothing  _        _        _        _        _      , _) -> Left "`type` field is missing"
 
 
 

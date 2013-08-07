@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Network.Def.NodeDef(
-    NodeDef(..),
+module Luna.Network.Def.Definition(
+    Definition(..),
     ID,
     empty,
     noImports
@@ -24,8 +24,8 @@ import           Luna.Network.Attributes    (Attributes)
 import           Luna.Network.Path.Import   (Import)
 
 
-data NodeDef = NotLoaded
-             | NodeDef {
+data Definition = NotLoaded
+             | Definition {
                    cls        :: Type,
                    graph      :: Graph,
                    imports    :: [Import],
@@ -36,21 +36,21 @@ data NodeDef = NotLoaded
 
 type ID   = Int
 
-empty :: NodeDef
-empty = NodeDef Type.Undefined Graph.empty noImports Flags.empty Attributes.empty (-1)
+empty :: Definition
+empty = Definition Type.Undefined Graph.empty noImports Flags.empty Attributes.empty (-1)
 
 noImports :: [Import]
 noImports = []
 
---make :: Type -> Library.ID -> NodeDef
---make t lib = NodeDef t Graph.empty Flags.empty Attributes.empty lib
+--make :: Type -> Library.ID -> Definition
+--make t lib = Definition t Graph.empty Flags.empty Attributes.empty lib
 
 
 
 ------------------------- INSTANCES -------------------------
 
---instance Serialize NodeDef where
+--instance Serialize Definition where
 --  put i = Serialize.put (inputs i, outputs i, imports i, graph i, libID i)
 --  get   = do
 --            (inputs', outputs', imports', graph', libID') <- Serialize.get
---            return $ NodeDef inputs' outputs' imports' graph' libID'
+--            return $ Definition inputs' outputs' imports' graph' libID'

@@ -47,8 +47,10 @@ newBatchHandler = do
 
 instance Batch_Iface BatchHandler where
     libraries     = HLibs.libraries
+    createLibrary = HLibs.createLibrary
     loadLibrary   = HLibs.loadLibrary
     unloadLibrary = HLibs.unloadLibrary
+    storeLibrary  = HLibs.storeLibrary
     libraryRootDef = HLibs.libraryRootDef
 
     newDefinition      = HDefs.newDefinition

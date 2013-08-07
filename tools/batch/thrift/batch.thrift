@@ -34,22 +34,24 @@ service Batch {
 
     list<libs.Library> libraries()
 
+    libs.Library  createLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
     libs.Library    loadLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
     void          unloadLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
+    void           storeLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
 
-    defs.NodeDef libraryRootDef(1: libs.Library library) throws (1: ArgumentException missingFields)
+    defs.Definition libraryRootDef(1: libs.Library library) throws (1: ArgumentException missingFields)
     /*
      * Definitions
      */
 
-    defs.NodeDef newDefinition(1: types.Type type, 2: defs.Imports imports, 
-                                      3: attrs.Flags flags, 4: attrs.Attributes attrs)
-    defs.NodeDef addDefinition(1: defs.NodeDef definition, 2: defs.NodeDef parent) throws (1: ArgumentException missingFields)
-    void      updateDefinition(1: defs.NodeDef definition) throws (1: ArgumentException missingFields)
-    void      removeDefinition(1: defs.NodeDef definition) throws (1: ArgumentException missingFields)
+    defs.Definition newDefinition(1: types.Type type, 2: defs.Imports imports, 
+                                  3: attrs.Flags flags, 4: attrs.Attributes attrs)
+    defs.Definition addDefinition(1: defs.Definition definition, 2: defs.Definition parent) throws (1: ArgumentException missingFields)
+    void      updateDefinition(1: defs.Definition definition) throws (1: ArgumentException missingFields)
+    void      removeDefinition(1: defs.Definition definition) throws (1: ArgumentException missingFields)
 
-    list<defs.NodeDef> definitionChildren(1: defs.NodeDef definition) throws (1: ArgumentException missingFields)
-         defs.NodeDef  definitionParent  (1: defs.NodeDef definition) throws (1: ArgumentException missingFields)
+    list<defs.Definition> definitionChildren(1: defs.Definition definition) throws (1: ArgumentException missingFields)
+         defs.Definition  definitionParent  (1: defs.Definition definition) throws (1: ArgumentException missingFields)
 
     /*
      * Types
@@ -68,16 +70,16 @@ service Batch {
      * Graph
      */
     
-    graph.Graph     graph(1: defs.NodeDef definition) throws (1: ArgumentException missingFields)
+    graph.Graph     graph(1: defs.Definition definition) throws (1: ArgumentException missingFields)
 
-    graph.Node    addNode(1: graph.Node node, 2: defs.NodeDef definition) throws (1: ArgumentException missingFields)
-    void       updateNode(1: graph.Node node, 2: defs.NodeDef definition) throws (1: ArgumentException missingFields)
-    void       removeNode(1: graph.Node node, 2: defs.NodeDef definition) throws (1: ArgumentException missingFields)
+    graph.Node    addNode(1: graph.Node node, 2: defs.Definition definition) throws (1: ArgumentException missingFields)
+    void       updateNode(1: graph.Node node, 2: defs.Definition definition) throws (1: ArgumentException missingFields)
+    void       removeNode(1: graph.Node node, 2: defs.Definition definition) throws (1: ArgumentException missingFields)
 
     void    connect(1: graph.Node srcNode, 2: graph.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: graph.PortDescriptor dstPort, 5: defs.NodeDef definition) throws (1: ArgumentException missingFields)
+                    3: graph.Node dstNode, 4: graph.PortDescriptor dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
     void disconnect(1: graph.Node srcNode, 2: graph.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: graph.PortDescriptor dstPort, 5: defs.NodeDef definition) throws (1: ArgumentException missingFields)
+                    3: graph.Node dstNode, 4: graph.PortDescriptor dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
 
     /*
      * Other
