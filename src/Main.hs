@@ -33,6 +33,7 @@ main = do
     Serializer.storeLib core stdLib
 
     core2 <- Serializer.restoreLib core stdLib
+    print core2
     --putStrLn $ FG.generateFunction HelloWorld.myFun3
     --putStrLn $ MG.generateDefinition HelloWorld.full_manager 1
     --print $ MG.generateModule HelloWorld.full_manager 100
