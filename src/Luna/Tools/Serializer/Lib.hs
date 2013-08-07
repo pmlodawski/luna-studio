@@ -39,52 +39,49 @@ import qualified Luna.Tools.Serializer       as Serializer
 import           Luna.Tools.Serializer          (Serializable(..))
 
 
---nodeFIleExtension :: String
---nodeFIleExtension = ".node"
+
+nodeFileExtension :: String
+nodeFileExtension = ".node"
 
 
---storeNode :: DefManager -> UniPath -> String -> NodeDef.ID -> NodeDef -> IO()
---storeNode defManager udirpath nodeDefName nodeDefID nodeDef = do
---    let dirpath  = UniPath.toUnixString udirpath
---        ubasePath = UniPath.append nodeDefName udirpath
---        filePath = (UniPath.toUnixString ubasePath) ++ nodeFIleExtension
-    
---    createDirectoryIfMissing True dirpath
-
---    withFile filePath WriteMode (\h -> do
---        let protocol = BinaryProtocol h
---            (tnodeDef, graph) = encode (nodeDefID, nodeDef)
---            tgraph = encode graph
-
---        TDefs.write_NodeDef protocol tnodeDef
---        TGraph.write_Graph  protocol tgraph)
-
---    _ <- sequence $ map (getNameNStoreNode defManager ubasePath) $ DefManager.suc defManager nodeDefID
-
---    --- DEBUG [
---    --withFile filePath ReadMode (\h -> do
---    --    let protocol = BinaryProtocol h
---    --    d <- TDefs.read_NodeDef protocol 
---    --    print d
---    --    print "==========="
---    --    w <- TGraph.read_Graph protocol
---    --    print w)
---    --- ] DEBUG
-
---    return ()
+graphFileExtension :: String
+graphFileExtension = ".graph"
 
 
-serializables2 = undefined
+generate :: DefManager -> UniPath -> NodeDef.ID -> NodeDef -> [Serializable]
+generate defManager upath defID def = sdef:sgraph:schildren where 
+    children  = DefManager.suc defManager defID
+    schildren = foldr (\child rest -> checkedGenerate defManager upath child ++ rest) [] children
 
-serializables :: DefManager -> UniPath -> NodeDef.ID -> [Serializable]
-serializables defManager udirpath nodeDefID = s where
-    s = case DefManager.lab defManager nodeDefID of
+    (tdef, graph) = encode (defID, def)
+    tgraph = encode graph
+
+    defFilename = UniPath.setExtension nodeFileExtension upath
+    saveDef = (\h -> do 
+        let protocol = BinaryProtocol h
+        TDefs.write_NodeDef protocol tdef)
+
+    sdef = File defFilename saveDef
+
+    graphFilename = UniPath.setExtension graphFileExtension upath
+    saveGraph = (\h -> do 
+        let protocol = BinaryProtocol h
+        TGraph.write_Graph protocol tgraph)
+
+    sgraph = File graphFilename saveGraph
+
+
+
+checkedGenerate :: DefManager -> UniPath -> NodeDef.ID -> [Serializable]
+checkedGenerate defManager udirpath defID = s where
+    s = case DefManager.lab defManager defID of
         Nothing -> error "Inconssistence in defManager: ID not found"
-        Just nodeDef -> case NodeDef.cls nodeDef of 
-                Module   name     -> serializables2 defManager udirpath name nodeDefID nodeDef
-                Class    name _ _ -> serializables2 defManager udirpath name nodeDefID nodeDef
-                Function name _ _ -> serializables2 defManager udirpath name nodeDefID nodeDef
+        Just def -> case NodeDef.cls def of 
+                Module   aname     -> gen aname
+                Class    aname _ _ -> gen aname
+                Function aname _ _ -> gen aname
                 _                 -> error "Inconssistent in defManager: Wrong type of a definition"
+                where gen aname = generate defManager (UniPath.append aname udirpath) defID def
 
 
 
@@ -94,7 +91,7 @@ storeLib core lib = do
         rootPath = Library.path lib
         libRootNodeID = Library.rootNodeDefID lib
 
-        defs = serializables defManager rootPath libRootNodeID 
+        defs = checkedGenerate defManager rootPath libRootNodeID 
 
     Serializer.serializeMany defs
 
