@@ -26,8 +26,8 @@ import qualified Attrs_Types
 import qualified Defs_Types                    as TDefs
 import           Handlers.Common
 import qualified Types_Types                   as TTypes
-import qualified Luna.Core                     as Core
-import           Luna.Core                       (Core)
+import qualified Luna.Project                  as Project
+import           Luna.Project                    (Project)
 import qualified Luna.Network.Def.DefManager   as DefManager
 import qualified Luna.Network.Def.Definition      as Definition
 import           Luna.Network.Def.Definition        (Definition)
@@ -40,7 +40,7 @@ import           Luna.Tools.Conversion.Defs    ()
 
 
 ------ public api helpers -----------------------------------------
-defOperation :: (IORef Core -> Definition.ID -> Definition -> a) -> IORef Core 
+defOperation :: (IORef Project -> Definition.ID -> Definition -> a) -> IORef Project 
              -> Maybe TDefs.Definition -> a
 defOperation operation batchHandler tdefinition  = case tdefinition of 
     Nothing   -> throw' "`definition` field is missing"
@@ -51,7 +51,7 @@ defOperation operation batchHandler tdefinition  = case tdefinition of
     
 
 
-defParentOperation :: (IORef Core -> Definition -> Int -> a) -> IORef Core
+defParentOperation :: (IORef Project -> Definition -> Int -> a) -> IORef Project
                    -> Maybe TDefs.Definition -> Maybe TDefs.Definition -> a
 defParentOperation operation batchHandler mtdefinition mtparent = case mtdefinition of 
     Nothing   -> throw' "`definition` field is missing"
@@ -65,7 +65,7 @@ defParentOperation operation batchHandler mtdefinition mtparent = case mtdefinit
                 
 
 ------ public api -------------------------------------------------
-newDefinition :: IORef Core -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
+newDefinition :: IORef Project -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
                             -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes
                             -> IO TDefs.Definition
 newDefinition _ ttype timports tflags tattrs = do 
@@ -73,45 +73,45 @@ newDefinition _ ttype timports tflags tattrs = do
     return $ TDefs.Definition ttype timports tflags tattrs (Just 0) (Just 0)
 
 
-addDefinition :: IORef Core -> Maybe TDefs.Definition
+addDefinition :: IORef Project -> Maybe TDefs.Definition
               -> Maybe TDefs.Definition -> IO TDefs.Definition
 addDefinition = defParentOperation (\batchHandler definition parentID -> do
     putStrLn "call addDefinition"
-    core <- readIORef batchHandler
-    let defManager = Core.defManager core
+    project <- readIORef batchHandler
+    let defManager = Project.defManager project
     case DefManager.gelem parentID defManager of 
         False -> throw' "Wrong `defID` in `parent` field"
         True  -> do let [defID]    = DefManager.newNodes 1 defManager
-                        newCore    = core { Core.defManager = DefManager.addToParent (parentID, defID, definition) defManager }
+                        newProject    = project { Project.defManager = DefManager.addToParent (parentID, defID, definition) defManager }
                         (newTDefinition, _) = encode (defID, definition)
-                    writeIORef batchHandler newCore
+                    writeIORef batchHandler newProject
                     return $ newTDefinition)
 
 
-updateDefinition :: IORef Core -> Maybe TDefs.Definition -> IO ()
+updateDefinition :: IORef Project -> Maybe TDefs.Definition -> IO ()
 updateDefinition = defOperation (\batchHandler defID definition -> do
     putStrLn "call updateDefinition - NOT IMPLEMENTED, sorry."
-    core <- readIORef batchHandler
-    let defManager = Core.defManager core
+    project <- readIORef batchHandler
+    let defManager = Project.defManager project
     return ())
 
 
-removeDefinition :: IORef Core -> Maybe TDefs.Definition -> IO ()
+removeDefinition :: IORef Project -> Maybe TDefs.Definition -> IO ()
 removeDefinition = defOperation (\batchHandler defID _ -> do
     putStrLn "call removeDefinition"
-    core <- readIORef batchHandler
-    let defManager = Core.defManager core
+    project <- readIORef batchHandler
+    let defManager = Project.defManager project
     case DefManager.gelem defID defManager of 
         False -> throw' "Wrong `defID` in `definition` field"
-        True -> do let newCore = core{ Core.defManager= DefManager.delNode defID defManager }
-                   writeIORef batchHandler newCore)
+        True -> do let newProject = project{ Project.defManager= DefManager.delNode defID defManager }
+                   writeIORef batchHandler newProject)
 
 
-definitionChildren :: IORef Core -> Maybe TDefs.Definition -> IO (Vector TDefs.Definition)
+definitionChildren :: IORef Project -> Maybe TDefs.Definition -> IO (Vector TDefs.Definition)
 definitionChildren = defOperation (\batchHandler defID _ -> do
     putStrLn "call definitionChildren"  
-    core <- readIORef batchHandler
-    let defManager = Core.defManager core
+    project <- readIORef batchHandler
+    let defManager = Project.defManager project
     case DefManager.gelem defID defManager of 
         False -> throw' "Wrong `defID` in `definition` field"
         True -> do let children = DefManager.children defManager defID
@@ -120,11 +120,11 @@ definitionChildren = defOperation (\batchHandler defID _ -> do
                    return $ Vector.fromList tchildren)
 
 
-definitionParent :: IORef Core -> Maybe TDefs.Definition -> IO TDefs.Definition
+definitionParent :: IORef Project -> Maybe TDefs.Definition -> IO TDefs.Definition
 definitionParent = defOperation (\batchHandler defID _ -> do
     putStrLn "call definitionParent"
-    core <- readIORef batchHandler
-    let defManager = Core.defManager core
+    project <- readIORef batchHandler
+    let defManager = Project.defManager project
     case DefManager.gelem defID defManager of 
         False -> throw' "Wrong `defID` in `definition` field"
         True -> do let parent = DefManager.parent defManager defID

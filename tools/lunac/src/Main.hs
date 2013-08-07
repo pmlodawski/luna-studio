@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import qualified Luna.Core                      as Core
-import           Luna.Core                        (Core(..))
+import qualified Luna.Project                      as Project
+import           Luna.Project                        (Project(..))
 import qualified Luna.Lib.LibManager            as LibManager
 import qualified Luna.Samples.HelloWorld        as HelloWorld
 import qualified Luna.Tools.Serializer          as Serializer
@@ -26,15 +26,15 @@ main :: IO ()
 
 main = do 
     let libManager = HelloWorld.base_libman
-        core = Core libManager HelloWorld.full_manager
+        project = Project libManager HelloWorld.full_manager
         Just stdLib = LibManager.lab libManager 0 
-    print core
+    print project
     putStrLn "------------\n"
 
-    LibSerializer.storeLib core stdLib
+    LibSerializer.storeLib project stdLib
 
-    --core2 <- Serializer.restoreLib core stdLib
-    --print core2
+    --project2 <- Serializer.restoreLib project stdLib
+    --print project2
     --putStrLn $ FG.generateFunction HelloWorld.myFun3
     --putStrLn $ MG.generateDefinition HelloWorld.full_manager 1
     --print $ MG.generateModule HelloWorld.full_manager 100

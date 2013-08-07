@@ -22,7 +22,8 @@ Library
                   ForeignFunctionInterface
                   MultiParamTypeClasses
   Exposed-modules:
-                  Luna.Core
+                  Luna.Project,
+                  Luna.ProjectManager,
                   Luna.Data.Graph,
                   Luna.Data.List,
                   Luna.Lib.Edge,
