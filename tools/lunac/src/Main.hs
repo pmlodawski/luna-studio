@@ -7,11 +7,15 @@
 
 import qualified Luna.Samples.HelloWorld        as HelloWorld
 import qualified Luna.Codegen.Hs.FuncGenerator  as FG
-import qualified Luna.Codegen.Hs.ModGenerator   as MG
+import qualified Luna.Codegen.Hs.DefGenerator   as DG
+import qualified Luna.Codegen.Hs.CodeGenerator  as CG
 import qualified Luna.Network.Def.DefManager    as DefManager
 
 import qualified Luna.Codegen.Hs.AST.Function   as Function
 import qualified Luna.Codegen.Hs.AST.Module     as Module
+
+import           Luna.Codegen.Hs.Cabal.Config      (Config)
+import qualified Luna.Codegen.Hs.Cabal.Config    as Config
 
 import Luna.Data.Graph
 
@@ -22,7 +26,7 @@ main = do
     putStrLn "------------\n"
 
     --putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 1
-    putStrLn $ Module.genCode $ MG.generateCommonCls "select0"
+    putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
 
     return ()
 
