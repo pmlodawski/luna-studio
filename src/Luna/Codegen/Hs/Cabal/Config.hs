@@ -39,9 +39,13 @@ defaultIndent = replicate 18 ' '
 
 
 genField :: String -> String -> String
-genField name' value = name' ++ ":" ++ replicate (18 - length name') ' ' ++ value
+genField name' value = name' ++ ":" ++ replicate (18 - length name') ' ' ++ value ++ "\n"
 
 
 genCode :: Config -> String
-genCode conf = genField "Name" (name conf)
+genCode conf =  genField "Name"          (name conf)
+             ++ genField "Version"       (version conf)
+             ++ genField "Cabal-Version" (cabalVersion conf)
+             ++ genField "Build-Type"    (buildType conf)
+             ++ join "\n" (map Section.genCode $ sections conf)
    
