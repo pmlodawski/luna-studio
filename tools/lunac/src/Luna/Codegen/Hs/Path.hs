@@ -79,11 +79,11 @@ mkTHPointer name = "'" ++ name
 
 
 inputs :: String
-inputs = "inputs'"
+inputs = "inputs''"
 
 
 outputs :: String
-outputs = "outputs'"
+outputs = "outputs''"
 
 indent :: String
 indent = replicate 4 ' '

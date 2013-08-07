@@ -41,11 +41,6 @@ import           Luna.Data.List
 
 
 
-
-
-
-
-
 generateCommonCls :: String -> Module
 generateCommonCls name = m where
 
@@ -67,11 +62,5 @@ generateCommonCls name = m where
                 $ Module.addClass cls
                 $ Module.base { Module.path = path }
 
-    --outnames    = fmap (Type.name . NodeDef.cls) outnodes
-    --outpaths    = fmap ((Path.add path) . Path.single) outnames
-    --imports     = zipWith Import.single outpaths outnames
-    --importstxt  = join "\n" $ fmap Import.genCode imports
-    --header      = "module " ++ Path.toModulePath path
-    --out         = header ++ MG.generateModuleReturn ++ importstxt ++ "\n\n"
 
 
