@@ -161,3 +161,83 @@ read_Definition iprot = do
   record <- read_Definition_fields iprot (Definition{f_Definition_cls=Nothing,f_Definition_imports=Nothing,f_Definition_flags=Nothing,f_Definition_attribs=Nothing,f_Definition_libID=Nothing,f_Definition_defID=Nothing})
   readStructEnd iprot
   return record
+data Edge = Edge{f_Edge_src :: Maybe Int32,f_Edge_dst :: Maybe Int32} deriving (Show,Eq,Typeable)
+instance Hashable Edge where
+  hashWithSalt salt record = salt   `hashWithSalt` f_Edge_src record   `hashWithSalt` f_Edge_dst record  
+write_Edge oprot record = do
+  writeStructBegin oprot "Edge"
+  case f_Edge_src record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("src",T_I32,1)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  case f_Edge_dst record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("dst",T_I32,2)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_Edge_fields iprot record = do
+  (_,_t31,_id32) <- readFieldBegin iprot
+  if _t31 == T_STOP then return record else
+    case _id32 of 
+      1 -> if _t31 == T_I32 then do
+        s <- readI32 iprot
+        read_Edge_fields iprot record{f_Edge_src=Just s}
+        else do
+          skip iprot _t31
+          read_Edge_fields iprot record
+      2 -> if _t31 == T_I32 then do
+        s <- readI32 iprot
+        read_Edge_fields iprot record{f_Edge_dst=Just s}
+        else do
+          skip iprot _t31
+          read_Edge_fields iprot record
+      _ -> do
+        skip iprot _t31
+        readFieldEnd iprot
+        read_Edge_fields iprot record
+read_Edge iprot = do
+  _ <- readStructBegin iprot
+  record <- read_Edge_fields iprot (Edge{f_Edge_src=Nothing,f_Edge_dst=Nothing})
+  readStructEnd iprot
+  return record
+data DefsGraph = DefsGraph{f_DefsGraph_definitions :: Maybe (Map.HashMap Int32 Definition),f_DefsGraph_edges :: Maybe (Vector.Vector Edge)} deriving (Show,Eq,Typeable)
+instance Hashable DefsGraph where
+  hashWithSalt salt record = salt   `hashWithSalt` f_DefsGraph_definitions record   `hashWithSalt` f_DefsGraph_edges record  
+write_DefsGraph oprot record = do
+  writeStructBegin oprot "DefsGraph"
+  case f_DefsGraph_definitions record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("definitions",T_MAP,1)
+    (let {f [] = return (); f ((_kiter35,_viter36):t) = do {do {writeI32 oprot _kiter35;write_Definition oprot _viter36};f t}} in do {writeMapBegin oprot (T_I32,T_STRUCT,fromIntegral $ Map.size _v); f (Map.toList _v);writeMapEnd oprot})
+    writeFieldEnd oprot}
+  case f_DefsGraph_edges record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("edges",T_LIST,2)
+    (let f = Vector.mapM_ (\_viter37 -> write_Edge oprot _viter37) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_DefsGraph_fields iprot record = do
+  (_,_t39,_id40) <- readFieldBegin iprot
+  if _t39 == T_STOP then return record else
+    case _id40 of 
+      1 -> if _t39 == T_MAP then do
+        s <- (let {f 0 = return []; f n = do {k <- readI32 iprot; v <- (read_Definition iprot);r <- f (n-1); return $ (k,v):r}} in do {(_ktype42,_vtype43,_size41) <- readMapBegin iprot; l <- f _size41; return $ Map.fromList l})
+        read_DefsGraph_fields iprot record{f_DefsGraph_definitions=Just s}
+        else do
+          skip iprot _t39
+          read_DefsGraph_fields iprot record
+      2 -> if _t39 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Edge iprot)) in do {(_etype49,_size46) <- readListBegin iprot; f _size46})
+        read_DefsGraph_fields iprot record{f_DefsGraph_edges=Just s}
+        else do
+          skip iprot _t39
+          read_DefsGraph_fields iprot record
+      _ -> do
+        skip iprot _t39
+        readFieldEnd iprot
+        read_DefsGraph_fields iprot record
+read_DefsGraph iprot = do
+  _ <- readStructBegin iprot
+  record <- read_DefsGraph_fields iprot (DefsGraph{f_DefsGraph_definitions=Nothing,f_DefsGraph_edges=Nothing})
+  readStructEnd iprot
+  return record

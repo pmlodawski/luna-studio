@@ -5,8 +5,8 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-namespace cpp flowbox.batch
-namespace hs  flowbox.batch
+namespace cpp flowbox.batch.graph
+namespace hs  flowbox.batch.graph
 
 
 include "attrs.thrift"

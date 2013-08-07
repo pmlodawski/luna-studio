@@ -5,8 +5,8 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-namespace cpp flowbox.batch
-namespace hs  flowbox.batch
+namespace cpp flowbox.batch.defs
+namespace hs  flowbox.batch.defs
 
 
 include "attrs.thrift"
@@ -31,4 +31,16 @@ struct Definition {
     4: optional attrs.Attributes attribs = {}
     5: optional libs.LibID       libID   = -1
     6: optional DefID            defID   = -1
+}
+
+
+struct Edge {
+    1: optional DefID src
+    2: optional DefID dst
+}
+
+
+struct DefsGraph {
+	1: optional map<DefID, Definition> definitions
+    2: optional list<Edge>             edges
 }

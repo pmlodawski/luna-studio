@@ -5,8 +5,8 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-namespace cpp flowbox.batch
-namespace hs  flowbox.batch
+namespace cpp flowbox.batch.attrs
+namespace hs  flowbox.batch.attrs
 
 
 struct Flags {

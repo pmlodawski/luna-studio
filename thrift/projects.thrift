@@ -5,16 +5,17 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-namespace cpp flowbox.batch.libs
-namespace hs  flowbox.batch.libs
+namespace cpp flowbox.batch.projects
+namespace hs  flowbox.batch.projects
+
+include "attrs.thrift"
 
 
-typedef i32 LibID
+typedef i32 ProjectID
 
-
-struct Library {
-    1: optional LibID  libID = -1
-    2: optional string name
-    3: optional string path
-    4: optional i32    rootDefID = -1
+struct Project {
+    1: optional string           name
+    2: optional string           path
+	3: optional attrs.Attributes attribs   = {}
+    4: optional ProjectID        projectID = -1
 }
