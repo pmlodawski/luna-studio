@@ -16,31 +16,31 @@ module Luna.Network.Def.DefManager(
 ) where
 
 import qualified Luna.Type.Type                  as Type
-import qualified Luna.Network.Def.NodeDef        as NodeDef
-import           Luna.Network.Def.NodeDef          (NodeDef(..))
+import qualified Luna.Network.Def.Definition     as Definition
+import           Luna.Network.Def.Definition       (Definition(..))
 import           Luna.Network.Def.Edge             (Edge(..))
 
 import           Luna.Data.Graph                                   hiding(Edge)
 import           Luna.Data.List                    (foldri)
 
-type DefManager = Graph NodeDef Edge
+type DefManager = Graph Definition Edge
 
 
-addToParent :: (NodeDef.ID, NodeDef.ID, NodeDef) -> DefManager -> DefManager
+addToParent :: (Definition.ID, Definition.ID, Definition) -> DefManager -> DefManager
 addToParent (parentID, defID, def) manager = insEdge (parentID, defID, Edge) $
                                              insNode (defID, def) manager
 
-addToParentMany :: [(NodeDef.ID, NodeDef.ID, NodeDef)] -> DefManager -> DefManager
+addToParentMany :: [(Definition.ID, Definition.ID, Definition)] -> DefManager -> DefManager
 addToParentMany = foldri addToParent
 
-pathNames :: DefManager -> NodeDef.ID -> [String]
-pathNames g vtx = fmap (Type.name . NodeDef.cls . (lab_deprecated g)) $ path g vtx
+pathNames :: DefManager -> Definition.ID -> [String]
+pathNames g vtx = fmap (Type.name . Definition.cls . (lab_deprecated g)) $ path g vtx
 
 
-children :: DefManager -> NodeDef.ID -> [(NodeDef.ID, NodeDef)]
+children :: DefManager -> Definition.ID -> [(Definition.ID, Definition)]
 children = sucl
 
-parent :: DefManager -> NodeDef.ID -> Maybe (NodeDef.ID, NodeDef)
+parent :: DefManager -> Definition.ID -> Maybe (Definition.ID, Definition)
 parent defManager defID = case prel defManager defID of 
     [] -> Nothing
     [a] -> Just a

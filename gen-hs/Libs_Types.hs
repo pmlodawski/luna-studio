@@ -35,9 +35,9 @@ import Thrift.Types ()
 
 type LibID = Int32
 
-data Library = Library{f_Library_libID :: Maybe Int32,f_Library_name :: Maybe Text,f_Library_path :: Maybe Text,f_Library_rootNodeDefID :: Maybe Int32} deriving (Show,Eq,Typeable)
+data Library = Library{f_Library_libID :: Maybe Int32,f_Library_name :: Maybe Text,f_Library_path :: Maybe Text,f_Library_rootDefID :: Maybe Int32} deriving (Show,Eq,Typeable)
 instance Hashable Library where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Library_libID record   `hashWithSalt` f_Library_name record   `hashWithSalt` f_Library_path record   `hashWithSalt` f_Library_rootNodeDefID record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_Library_libID record   `hashWithSalt` f_Library_name record   `hashWithSalt` f_Library_path record   `hashWithSalt` f_Library_rootDefID record  
 write_Library oprot record = do
   writeStructBegin oprot "Library"
   case f_Library_libID record of {Nothing -> return (); Just _v -> do
@@ -52,8 +52,8 @@ write_Library oprot record = do
     writeFieldBegin oprot ("path",T_STRING,3)
     writeString oprot _v
     writeFieldEnd oprot}
-  case f_Library_rootNodeDefID record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("rootNodeDefID",T_I32,4)
+  case f_Library_rootDefID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("rootDefID",T_I32,4)
     writeI32 oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
@@ -82,7 +82,7 @@ read_Library_fields iprot record = do
           read_Library_fields iprot record
       4 -> if _t3 == T_I32 then do
         s <- readI32 iprot
-        read_Library_fields iprot record{f_Library_rootNodeDefID=Just s}
+        read_Library_fields iprot record{f_Library_rootDefID=Just s}
         else do
           skip iprot _t3
           read_Library_fields iprot record
@@ -92,6 +92,6 @@ read_Library_fields iprot record = do
         read_Library_fields iprot record
 read_Library iprot = do
   _ <- readStructBegin iprot
-  record <- read_Library_fields iprot (Library{f_Library_libID=Nothing,f_Library_name=Nothing,f_Library_path=Nothing,f_Library_rootNodeDefID=Nothing})
+  record <- read_Library_fields iprot (Library{f_Library_libID=Nothing,f_Library_name=Nothing,f_Library_path=Nothing,f_Library_rootDefID=Nothing})
   readStructEnd iprot
   return record

@@ -18,7 +18,7 @@ import           Data.List                         (zip4)
 import qualified Luna.Network.Def.DefManager     as DefManager
 import           Luna.Network.Def.DefManager       (DefManager)
 import qualified Luna.Network.Path.Path          as Path
-import qualified Luna.Network.Def.NodeDef        as NodeDef
+import qualified Luna.Network.Def.Definition     as Definition
 import qualified Luna.Type.Type                  as Type
 import qualified Luna.Codegen.Hs.Import          as Import
 import qualified Luna.Data.Graph                 as Graph

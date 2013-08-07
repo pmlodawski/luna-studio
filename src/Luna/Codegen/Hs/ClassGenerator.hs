@@ -9,8 +9,8 @@ module Luna.Codegen.Hs.ClassGenerator(
 generateClass
 ) where
 
-import qualified Luna.Network.Def.NodeDef        as NodeDef
-import           Luna.Network.Def.NodeDef          (NodeDef)
+import qualified Luna.Network.Def.Definition     as Definition
+import           Luna.Network.Def.Definition       (Definition)
 import qualified Luna.Codegen.Hs.AST.DataType    as DataType
 import           Luna.Codegen.Hs.AST.DataType      (DataType)
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
@@ -25,7 +25,7 @@ import qualified Luna.Codegen.Hs.AST.Deriving    as Deriving
 import qualified Luna.Codegen.Hs.AST.Instance    as Instance
 
 
-generateClass :: NodeDef -> Module -> (DataType, Module)
+generateClass :: Definition -> Module -> (DataType, Module)
 generateClass def m = (datatype, nmod) where
 
     --test     = Instance.empty { Instance.name   = "getter"
@@ -33,7 +33,7 @@ generateClass def m = (datatype, nmod) where
     --                          }
 
 
-    cls        = NodeDef.cls def
+    cls        = Definition.cls def
     clsname    = Type.name cls
     params     = Type.params cls
     paramnames = map Type.name params

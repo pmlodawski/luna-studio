@@ -5,6 +5,9 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
+namespace cpp flowbox.batch
+namespace hs  flowbox.batch
+
 
 struct Flags {
     1: optional bool io   = false

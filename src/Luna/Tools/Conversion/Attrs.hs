@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Luna.Tools.Conversion.Attrs where
 

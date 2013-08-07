@@ -5,6 +5,9 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
+namespace cpp flowbox.batch
+namespace hs  flowbox.batch
+
 
 include "attrs.thrift"
 
@@ -28,7 +31,8 @@ enum NodeType {
     New,
     Inputs,
     Outputs,
-    Tuple
+    Tuple,
+    NTuple
 }
 
 struct Node {
@@ -43,7 +47,6 @@ struct Node {
 typedef list<i32> PortDescriptor
 
 struct Edge {
-    1: optional i32 portSrc
     2: optional i32 portDst
     3: optional NodeID nodeSrc
     4: optional NodeID nodeDst

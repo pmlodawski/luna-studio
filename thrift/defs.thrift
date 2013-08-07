@@ -5,6 +5,9 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
+namespace cpp flowbox.batch
+namespace hs  flowbox.batch
+
 
 include "attrs.thrift"
 include "libs.thrift"
@@ -21,7 +24,7 @@ struct Import {
 typedef list<Import> Imports
 
 
-struct NodeDef {
+struct Definition {
     1: optional types.Type       cls
     2: optional Imports          imports = []
     3: optional attrs.Flags      flags   = {}
