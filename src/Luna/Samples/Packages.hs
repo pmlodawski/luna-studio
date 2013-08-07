@@ -8,8 +8,8 @@
 module Luna.Samples.Packages where
 
 
-import qualified Luna.Core                       as Core
-import           Luna.Core                         (Core(..))
+import qualified Luna.Project                    as Project
+import           Luna.Project                      (Project(..))
 import qualified Luna.Network.Def.DefManager     as DefManager
 import           Luna.Network.Def.DefManager       (DefManager(..))
 import qualified Luna.Network.Def.Definition     as Definition
@@ -54,4 +54,4 @@ adefManager = DefManager.addToParentMany (listToDefs atrybuty 2000 20 0)
             $ DefManager.empty 
 
 
-core = Core alibManager adefManager
+project = Project alibManager adefManager

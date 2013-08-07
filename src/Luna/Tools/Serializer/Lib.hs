@@ -20,8 +20,8 @@ import Thrift.Protocol.Binary
 
 import qualified Defs_Types                  as TDefs
 import qualified Graph_Types                 as TGraph
-import qualified Luna.Core                   as Core
-import           Luna.Core                     (Core)
+import qualified Luna.Project                as Project
+import           Luna.Project                  (Project)
 import qualified Luna.Network.Def.DefManager as DefManager
 import           Luna.Network.Def.DefManager   (DefManager)
 import qualified Luna.Network.Def.Definition    as Definition
@@ -85,9 +85,9 @@ checkedGenerate defManager udirpath defID = s where
 
 
 
-storeLib :: Core -> Library -> IO ()
-storeLib core lib = do 
-    let defManager = Core.defManager core
+storeLib :: Project -> Library -> IO ()
+storeLib project lib = do 
+    let defManager = Project.defManager project
         rootPath = Library.path lib
         libRootDefID = Library.rootDefID lib
 
@@ -115,14 +115,14 @@ storeLib core lib = do
 --          folderFilePattern  = "[A-Za-z0-9]+$"
 
 
---restoreLib :: Core -> Library -> IO Core
---restoreLib core lib = do 
---    let defManager = Core.defManager core
+--restoreLib :: Project -> Library -> IO Project
+--restoreLib project lib = do 
+--    let defManager = Project.defManager project
 --        rootPath = Library.path lib
 
 --    newDefManager <- restoreNode defManager rootPath
 
---    return $ core {Core.defManager = newDefManager}
+--    return $ project {Project.defManager = newDefManager}
 
 
 
