@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-
+namespace flowbox { namespace batch {
 
 int _kTypeTypeValues[] = {
   TypeType::Undefined,
@@ -34,8 +34,8 @@ const char* _kTypeTypeNames[] = {
 };
 const std::map<int, const char*> _TypeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(9, _kTypeTypeValues, _kTypeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
-const char* TypeProto::ascii_fingerprint = "2E68E04A896B98564C800E8EB3D65F7F";
-const uint8_t TypeProto::binary_fingerprint[16] = {0x2E,0x68,0xE0,0x4A,0x89,0x6B,0x98,0x56,0x4C,0x80,0x0E,0x8E,0xB3,0xD6,0x5F,0x7F};
+const char* TypeProto::ascii_fingerprint = "41C95B9BAE14CE08755F6104411F858E";
+const uint8_t TypeProto::binary_fingerprint[16] = {0x41,0xC9,0x5B,0x9B,0xAE,0x14,0xCE,0x08,0x75,0x5F,0x61,0x04,0x41,0x1F,0x85,0x8E};
 
 uint32_t TypeProto::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -99,15 +99,35 @@ uint32_t TypeProto::read(::apache::thrift::protocol::TProtocol* iprot) {
       case 4:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
-            this->params.clear();
+            this->typeparams.clear();
             uint32_t _size6;
             ::apache::thrift::protocol::TType _etype9;
             xfer += iprot->readListBegin(_etype9, _size6);
-            this->params.resize(_size6);
+            this->typeparams.resize(_size6);
             uint32_t _i10;
             for (_i10 = 0; _i10 < _size6; ++_i10)
             {
-              xfer += iprot->readI32(this->params[_i10]);
+              xfer += iprot->readString(this->typeparams[_i10]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.typeparams = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 5:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->params.clear();
+            uint32_t _size11;
+            ::apache::thrift::protocol::TType _etype14;
+            xfer += iprot->readListBegin(_etype14, _size11);
+            this->params.resize(_size11);
+            uint32_t _i15;
+            for (_i15 = 0; _i15 < _size11; ++_i15)
+            {
+              xfer += iprot->readI32(this->params[_i15]);
             }
             xfer += iprot->readListEnd();
           }
@@ -116,7 +136,7 @@ uint32_t TypeProto::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 5:
+      case 6:
         if (ftype == ::apache::thrift::protocol::T_I32) {
           xfer += iprot->readI32(this->inputs);
           this->__isset.inputs = true;
@@ -124,7 +144,7 @@ uint32_t TypeProto::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 6:
+      case 7:
         if (ftype == ::apache::thrift::protocol::T_I32) {
           xfer += iprot->readI32(this->outputs);
           this->__isset.outputs = true;
@@ -132,7 +152,7 @@ uint32_t TypeProto::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 7:
+      case 8:
         if (ftype == ::apache::thrift::protocol::T_I32) {
           xfer += iprot->readI32(this->type);
           this->__isset.type = true;
@@ -171,40 +191,53 @@ uint32_t TypeProto::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeFieldBegin("items", ::apache::thrift::protocol::T_LIST, 3);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->items.size()));
-      std::vector<int32_t> ::const_iterator _iter11;
-      for (_iter11 = this->items.begin(); _iter11 != this->items.end(); ++_iter11)
+      std::vector<int32_t> ::const_iterator _iter16;
+      for (_iter16 = this->items.begin(); _iter16 != this->items.end(); ++_iter16)
       {
-        xfer += oprot->writeI32((*_iter11));
+        xfer += oprot->writeI32((*_iter16));
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.typeparams) {
+    xfer += oprot->writeFieldBegin("typeparams", ::apache::thrift::protocol::T_LIST, 4);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->typeparams.size()));
+      std::vector<std::string> ::const_iterator _iter17;
+      for (_iter17 = this->typeparams.begin(); _iter17 != this->typeparams.end(); ++_iter17)
+      {
+        xfer += oprot->writeString((*_iter17));
       }
       xfer += oprot->writeListEnd();
     }
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.params) {
-    xfer += oprot->writeFieldBegin("params", ::apache::thrift::protocol::T_LIST, 4);
+    xfer += oprot->writeFieldBegin("params", ::apache::thrift::protocol::T_LIST, 5);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->params.size()));
-      std::vector<int32_t> ::const_iterator _iter12;
-      for (_iter12 = this->params.begin(); _iter12 != this->params.end(); ++_iter12)
+      std::vector<int32_t> ::const_iterator _iter18;
+      for (_iter18 = this->params.begin(); _iter18 != this->params.end(); ++_iter18)
       {
-        xfer += oprot->writeI32((*_iter12));
+        xfer += oprot->writeI32((*_iter18));
       }
       xfer += oprot->writeListEnd();
     }
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.inputs) {
-    xfer += oprot->writeFieldBegin("inputs", ::apache::thrift::protocol::T_I32, 5);
+    xfer += oprot->writeFieldBegin("inputs", ::apache::thrift::protocol::T_I32, 6);
     xfer += oprot->writeI32(this->inputs);
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.outputs) {
-    xfer += oprot->writeFieldBegin("outputs", ::apache::thrift::protocol::T_I32, 6);
+    xfer += oprot->writeFieldBegin("outputs", ::apache::thrift::protocol::T_I32, 7);
     xfer += oprot->writeI32(this->outputs);
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.type) {
-    xfer += oprot->writeFieldBegin("type", ::apache::thrift::protocol::T_I32, 7);
+    xfer += oprot->writeFieldBegin("type", ::apache::thrift::protocol::T_I32, 8);
     xfer += oprot->writeI32(this->type);
     xfer += oprot->writeFieldEnd();
   }
@@ -218,6 +251,7 @@ void swap(TypeProto &a, TypeProto &b) {
   swap(a.cls, b.cls);
   swap(a.name, b.name);
   swap(a.items, b.items);
+  swap(a.typeparams, b.typeparams);
   swap(a.params, b.params);
   swap(a.inputs, b.inputs);
   swap(a.outputs, b.outputs);
@@ -225,8 +259,8 @@ void swap(TypeProto &a, TypeProto &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* Type::ascii_fingerprint = "A7BED1A0E925509A55B985F0FDF15A5D";
-const uint8_t Type::binary_fingerprint[16] = {0xA7,0xBE,0xD1,0xA0,0xE9,0x25,0x50,0x9A,0x55,0xB9,0x85,0xF0,0xFD,0xF1,0x5A,0x5D};
+const char* Type::ascii_fingerprint = "185A0137F50C4C459C9AE3958F05F421";
+const uint8_t Type::binary_fingerprint[16] = {0x18,0x5A,0x01,0x37,0xF5,0x0C,0x4C,0x45,0x9C,0x9A,0xE3,0x95,0x8F,0x05,0xF4,0x21};
 
 uint32_t Type::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -252,14 +286,14 @@ uint32_t Type::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->types.clear();
-            uint32_t _size13;
-            ::apache::thrift::protocol::TType _etype16;
-            xfer += iprot->readListBegin(_etype16, _size13);
-            this->types.resize(_size13);
-            uint32_t _i17;
-            for (_i17 = 0; _i17 < _size13; ++_i17)
+            uint32_t _size19;
+            ::apache::thrift::protocol::TType _etype22;
+            xfer += iprot->readListBegin(_etype22, _size19);
+            this->types.resize(_size19);
+            uint32_t _i23;
+            for (_i23 = 0; _i23 < _size19; ++_i23)
             {
-              xfer += this->types[_i17].read(iprot);
+              xfer += this->types[_i23].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -288,10 +322,10 @@ uint32_t Type::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeFieldBegin("types", ::apache::thrift::protocol::T_LIST, 1);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->types.size()));
-      std::vector<TypeProto> ::const_iterator _iter18;
-      for (_iter18 = this->types.begin(); _iter18 != this->types.end(); ++_iter18)
+      std::vector<TypeProto> ::const_iterator _iter24;
+      for (_iter24 = this->types.begin(); _iter24 != this->types.end(); ++_iter24)
       {
-        xfer += (*_iter18).write(oprot);
+        xfer += (*_iter24).write(oprot);
       }
       xfer += oprot->writeListEnd();
     }
@@ -308,4 +342,4 @@ void swap(Type &a, Type &b) {
   swap(a.__isset, b.__isset);
 }
 
-
+}} // namespace

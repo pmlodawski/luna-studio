@@ -32,11 +32,11 @@ int main(int argc, char **argv) {
         vector<Library> registeredLibs;
 
         Library stdlib;
-        stdlib.__set_name("std");
+        stdlib.__set_name("lib1");
         stdlib.__set_path("/opt/luna/lib");
 
         Library userlib;
-        userlib.__set_name("my");
+        userlib.__set_name("lib2");
         userlib.__set_path("~/luna-projects/myproj");
 
         batch.loadLibrary(stdlib, stdlib);
@@ -71,11 +71,11 @@ int main(int argc, char **argv) {
         Type funType;
         batch.newTypeFunction(funType, "fun", funInputsType, funOutputsType);
 
-        NodeDef myModule;
+        Definition myModule;
         batch.libraryRootDef(myModule, userlib);
 
         cout << myModule.defID << endl;
-        NodeDef fun;
+        Definition fun;
         fun.__set_cls(funType);
         
         batch.addDefinition(fun, fun, myModule);
@@ -83,11 +83,19 @@ int main(int argc, char **argv) {
         batch.removeDefinition(fun);
         batch.addDefinition(fun, fun, myModule);
 
-        vector<NodeDef> children;
+        Type myclassType;
+        batch.newTypeClass(myclassType, "myclass", {}, {});
+        
+        Definition myclass;
+        myclass.__set_cls(myclassType);
+
+        batch.addDefinition(myclass, myclass, myModule);
+
+        vector<Definition> children;
         batch.definitionChildren(children, myModule);
         cout << "`my` module has " << children.size() << " children." << endl;
 
-        NodeDef parent;
+        Definition parent;
         batch.definitionParent(parent, fun);
         /* Add some nodes */
 

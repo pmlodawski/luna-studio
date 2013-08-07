@@ -9,7 +9,7 @@
 
 #include "attrs_types.h"
 
-
+namespace flowbox { namespace batch {
 
 class attrsConstants {
  public:
@@ -19,6 +19,6 @@ class attrsConstants {
 
 extern const attrsConstants g_attrs_constants;
 
-
+}} // namespace
 
 #endif

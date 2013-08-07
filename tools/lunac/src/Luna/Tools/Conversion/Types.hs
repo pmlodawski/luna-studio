@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Luna.Tools.Conversion.Types () where
 
@@ -35,18 +36,18 @@ type2typeProtoList :: Int -> Type -> [TTypes.TypeProto]
 type2typeProtoList level t = case t of 
     Undefined       -> [tcurrent] where
                        tcls       = Just TTypes.Undefined
-                       tcurrent   = TTypes.TypeProto tcls Nothing Nothing Nothing Nothing Nothing Nothing
+                       tcurrent   = TTypes.TypeProto tcls Nothing Nothing Nothing Nothing Nothing Nothing Nothing
     Module aname     -> [tcurrent] where
                        tcls       = Just TTypes.Module
                        tname      = Just $ pack aname
                        
-                       tcurrent   = TTypes.TypeProto tcls tname   Nothing Nothing Nothing Nothing Nothing 
+                       tcurrent   = TTypes.TypeProto tcls tname   Nothing Nothing Nothing Nothing Nothing Nothing
     List aitem       -> tcurrent:titem where
                        tcls       = Just TTypes.List
                        itemLevel  = level + 1
                        titemLevel = Just $ itoi32 itemLevel
                        
-                       tcurrent   = TTypes.TypeProto tcls Nothing Nothing Nothing Nothing Nothing titemLevel
+                       tcurrent   = TTypes.TypeProto tcls Nothing Nothing Nothing Nothing Nothing Nothing titemLevel
                        
                        titem      = type2typeProtoList (level+1) aitem
     Function aname ainputs aoutputs 
@@ -62,39 +63,39 @@ type2typeProtoList level t = case t of
                        toutputsLevel = Just $ itoi32 outputsLevel
                        toutputs      = type2typeProtoList outputsLevel aoutputs
                        
-                       tcurrent      = TTypes.TypeProto tcls tname   Nothing Nothing tinputsLevel toutputsLevel Nothing
+                       tcurrent      = TTypes.TypeProto tcls tname   Nothing Nothing Nothing tinputsLevel toutputsLevel Nothing
     Tuple aitems     -> tcurrent : titems where
                        tcls          = Just TTypes.Tuple
                        itemsLevel    = level + 1
                        (itemsLevels', titems) = typeList2typeProtoList itemsLevel aitems
                        titemsLevels  = Just $ Vector.fromList $ map (itoi32) itemsLevels'
-                       tcurrent      = TTypes.TypeProto tcls Nothing titemsLevels Nothing Nothing Nothing Nothing
-    Class aname aparams arg3 -> error "fixme"
-                       --tcurrent : tparams where
-                       --tcls          = Just TTypes.Class
-                       --tname         = Just $ pack aname
-                       --paramsLevel   = level + 1
-                       --(tparamsLevels', tparams) = typeList2typeProtoList paramsLevel aparams
-                       --tparamsLevels = Just $ Vector.fromList $ map (itoi32) tparamsLevels'
-                       --tcurrent      = TTypes.TypeProto tcls tname Nothing tparamsLevels Nothing Nothing Nothing
+                       tcurrent      = TTypes.TypeProto tcls Nothing titemsLevels Nothing Nothing Nothing Nothing Nothing
+    Class aname atypeparams aparams -> tcurrent : tparams where
+                       tcls          = Just TTypes.Class
+                       tname         = Just $ pack aname
+                       ttypeparams   = Just $ Vector.fromList $ map (pack) atypeparams
+                       paramsLevel   = level + 1
+                       (tparamsLevels', tparams) = typeList2typeProtoList paramsLevel aparams
+                       tparamsLevels = Just $ Vector.fromList $ map (itoi32) tparamsLevels'
+                       tcurrent      = TTypes.TypeProto tcls tname Nothing ttypeparams tparamsLevels  Nothing Nothing Nothing
     Named aname atype -> tcurrent:ttype where
                        tcls       = Just TTypes.Named
                        typeLevel  = level + 1
                        ttypeLevel = Just $ itoi32 typeLevel
                        tname      = Just $ pack aname
-                       tcurrent   = TTypes.TypeProto tcls tname Nothing Nothing Nothing Nothing ttypeLevel
+                       tcurrent   = TTypes.TypeProto tcls tname Nothing Nothing Nothing Nothing Nothing ttypeLevel
                        
                        ttype      = type2typeProtoList (level+1) atype
     TypeVariable aname -> [tcurrent] where
                        tcls       = Just TTypes.TypeVariable
                        tname      = Just $ pack aname
                        
-                       tcurrent   = TTypes.TypeProto tcls tname   Nothing Nothing Nothing Nothing Nothing 
+                       tcurrent   = TTypes.TypeProto tcls tname   Nothing Nothing Nothing Nothing Nothing Nothing 
 
 
 typeFromListAt :: [TTypes.TypeProto] -> Int -> Either String Type
 typeFromListAt list index = t where
-    (TTypes.TypeProto mtcls mtname mtitemsInds mtparamsInds mtinputsIndex mtoutputsIndex mttypeIndex) = list !! index
+    (TTypes.TypeProto mtcls mtname mtitemsInds mttypeparams mtparamsInds mtinputsIndex mtoutputsIndex mttypeIndex) = list !! index
     t = case mtcls of 
         Just TTypes.Undefined -> Right Undefined
         Just TTypes.Module    -> case mtname of 
@@ -121,16 +122,18 @@ typeFromListAt list index = t where
                                             aitems = map (typeFromListAt list) itemsInds
                                         aitems' <- convert aitems
                                         return $ Tuple aitems'
-        Just TTypes.Class     -> error "fixme"
-                                 --case mtname of
-                                 --   Nothing                -> Left "`name` field is missing"
-                                 --   Just tname             -> case mtparamsInds of
-                                 --       Nothing            -> Left "`params` field is missing"
-                                 --       Just tparamsInds32 -> do 
-                                 --           let paramsInds = map (i32toi) $ Vector.toList tparamsInds32
-                                 --               aparams = map (typeFromListAt list) paramsInds
-                                 --           aparams' <- convert aparams
-                                 --           return $ Class (unpack tname) aparams'
+        Just TTypes.Class     -> case mtname of
+                                    Nothing                -> Left "`name` field is missing"
+                                    Just tname             -> case mttypeparams of
+                                        Nothing            -> Left "`typeparams` field is missing"
+                                        Just ttypeparams   -> case mtparamsInds of
+                                            Nothing            -> Left "`params` field is missing"
+                                            Just tparamsInds32 -> do 
+                                                let atypeparams = map (unpack) $ Vector.toList ttypeparams
+                                                    paramsInds = map (i32toi) $ Vector.toList tparamsInds32
+                                                    aparams = map (typeFromListAt list) paramsInds
+                                                aparams' <- convert aparams
+                                                return $ Class (unpack tname) atypeparams aparams'
         Just TTypes.Named     -> case mtname of 
                                     Nothing             -> Left "`name` field is missing"
                                     Just tname          -> case mttypeIndex of 

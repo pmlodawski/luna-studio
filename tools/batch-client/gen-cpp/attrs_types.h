@@ -14,7 +14,7 @@
 
 
 
-
+namespace flowbox { namespace batch {
 
 typedef struct _Flags__isset {
   _Flags__isset() : io(true), omit(true) {}
@@ -120,6 +120,6 @@ class Attributes {
 
 void swap(Attributes &a, Attributes &b);
 
-
+}} // namespace
 
 #endif

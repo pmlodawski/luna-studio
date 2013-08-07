@@ -14,7 +14,7 @@
 
 
 
-
+namespace flowbox { namespace batch {
 
 struct TypeType {
   enum type {
@@ -33,9 +33,10 @@ struct TypeType {
 extern const std::map<int, const char*> _TypeType_VALUES_TO_NAMES;
 
 typedef struct _TypeProto__isset {
-  _TypeProto__isset() : name(false), items(false), params(false), inputs(false), outputs(false), type(false) {}
+  _TypeProto__isset() : name(false), items(true), typeparams(true), params(true), inputs(false), outputs(false), type(false) {}
   bool name;
   bool items;
+  bool typeparams;
   bool params;
   bool inputs;
   bool outputs;
@@ -45,10 +46,13 @@ typedef struct _TypeProto__isset {
 class TypeProto {
  public:
 
-  static const char* ascii_fingerprint; // = "2E68E04A896B98564C800E8EB3D65F7F";
-  static const uint8_t binary_fingerprint[16]; // = {0x2E,0x68,0xE0,0x4A,0x89,0x6B,0x98,0x56,0x4C,0x80,0x0E,0x8E,0xB3,0xD6,0x5F,0x7F};
+  static const char* ascii_fingerprint; // = "41C95B9BAE14CE08755F6104411F858E";
+  static const uint8_t binary_fingerprint[16]; // = {0x41,0xC9,0x5B,0x9B,0xAE,0x14,0xCE,0x08,0x75,0x5F,0x61,0x04,0x41,0x1F,0x85,0x8E};
 
   TypeProto() : cls((TypeType::type)0), name(), inputs(0), outputs(0), type(0) {
+
+
+
   }
 
   virtual ~TypeProto() throw() {}
@@ -56,6 +60,7 @@ class TypeProto {
   TypeType::type cls;
   std::string name;
   std::vector<int32_t>  items;
+  std::vector<std::string>  typeparams;
   std::vector<int32_t>  params;
   int32_t inputs;
   int32_t outputs;
@@ -75,6 +80,11 @@ class TypeProto {
   void __set_items(const std::vector<int32_t> & val) {
     items = val;
     __isset.items = true;
+  }
+
+  void __set_typeparams(const std::vector<std::string> & val) {
+    typeparams = val;
+    __isset.typeparams = true;
   }
 
   void __set_params(const std::vector<int32_t> & val) {
@@ -108,6 +118,10 @@ class TypeProto {
     if (__isset.items != rhs.__isset.items)
       return false;
     else if (__isset.items && !(items == rhs.items))
+      return false;
+    if (__isset.typeparams != rhs.__isset.typeparams)
+      return false;
+    else if (__isset.typeparams && !(typeparams == rhs.typeparams))
       return false;
     if (__isset.params != rhs.__isset.params)
       return false;
@@ -148,8 +162,8 @@ typedef struct _Type__isset {
 class Type {
  public:
 
-  static const char* ascii_fingerprint; // = "A7BED1A0E925509A55B985F0FDF15A5D";
-  static const uint8_t binary_fingerprint[16]; // = {0xA7,0xBE,0xD1,0xA0,0xE9,0x25,0x50,0x9A,0x55,0xB9,0x85,0xF0,0xFD,0xF1,0x5A,0x5D};
+  static const char* ascii_fingerprint; // = "185A0137F50C4C459C9AE3958F05F421";
+  static const uint8_t binary_fingerprint[16]; // = {0x18,0x5A,0x01,0x37,0xF5,0x0C,0x4C,0x45,0x9C,0x9A,0xE3,0x95,0x8F,0x05,0xF4,0x21};
 
   Type() {
   }
@@ -186,6 +200,6 @@ class Type {
 
 void swap(Type &a, Type &b);
 
-
+}} // namespace
 
 #endif

@@ -6,12 +6,12 @@
  */
 #include "libs_constants.h"
 
-
+namespace flowbox { namespace batch {
 
 const libsConstants g_libs_constants;
 
 libsConstants::libsConstants() {
 }
 
-
+}} // namespace
 

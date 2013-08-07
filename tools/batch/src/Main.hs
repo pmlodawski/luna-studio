@@ -5,6 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 --import Data.List
 import Data.IORef
 import Network
@@ -29,7 +31,7 @@ import qualified Handlers.Types as HTypes
 
 import qualified Luna.Core as Core
 import           Luna.Core   (Core)
-
+import qualified Luna.Samples.Packages as Sample
 
 
 port :: PortNumber
@@ -39,13 +41,16 @@ type BatchHandler = IORef Core
 
 newBatchHandler :: IO BatchHandler
 newBatchHandler = do
-    ref <- newIORef Core.empty
+    --ref <- newIORef Core.empty
+    ref <- newIORef Sample.core
     return ref
 
 instance Batch_Iface BatchHandler where
     libraries     = HLibs.libraries
+    createLibrary = HLibs.createLibrary
     loadLibrary   = HLibs.loadLibrary
     unloadLibrary = HLibs.unloadLibrary
+    storeLibrary  = HLibs.storeLibrary
     libraryRootDef = HLibs.libraryRootDef
 
     newDefinition      = HDefs.newDefinition

@@ -25,8 +25,8 @@ import qualified Graph_Types                   as TGraph
 import qualified Luna.Core                     as Core
 import           Luna.Core                       (Core)
 import qualified Luna.Network.Def.DefManager   as DefManager
-import qualified Luna.Network.Def.NodeDef      as NodeDef
-import           Luna.Network.Def.NodeDef        (NodeDef)
+import qualified Luna.Network.Def.Definition      as Definition
+import           Luna.Network.Def.Definition        (Definition)
 import qualified Luna.Network.Graph.Graph      as Graph
 import qualified Luna.Network.Graph.Node       as Node
 import           Luna.Network.Graph.Node         (Node(..))
@@ -35,68 +35,65 @@ import           Luna.Tools.Conversion.Defs    ()
 import           Luna.Tools.Conversion.Graph   ()
 
 
-graph :: IORef Core -> Maybe TDefs.NodeDef -> IO TGraph.Graph
+graph :: IORef Core -> Maybe TDefs.Definition -> IO TGraph.Graph
 graph = defOperation (\batchHandler defID definition -> do
     putStrLn "called graph"
     core <- readIORef batchHandler
     let defManager = Core.defManager core
-        agraph = NodeDef.graph definition
+        agraph = Definition.graph definition
     return $ encode agraph)
 
 
-addNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO TGraph.Node
+addNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO TGraph.Node
 addNode = nodeDefOperation (\batchHandler (_, node) (defID, definition) -> do
     putStrLn "called addNode"
     core <- readIORef batchHandler
     let defManager    = Core.defManager core
-        agraph        = NodeDef.graph definition
+        agraph        = Definition.graph definition
         [nodeID]      = Graph.newNodes 1 agraph
         newGraph      = Graph.insNode (nodeID, node) agraph
-        newDefinition = definition {NodeDef.graph =  newGraph}
+        newDefinition = definition {Definition.graph =  newGraph}
         newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
         newCore       = core {Core.defManager = newDefManager}
-    print newCore
     writeIORef batchHandler newCore
 
     return $ encode (nodeID, node))
 
 
-updateNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO ()
+updateNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO ()
 updateNode = nodeDefOperation (\batchHandler (nodeID, node) (defID, definition) -> do 
     putStrLn "called updateNode"
     core <- readIORef batchHandler
     let defManager    = Core.defManager core
-        agraph        = NodeDef.graph definition
+        agraph        = Definition.graph definition
     case Graph.gelem nodeID agraph of 
         False -> throw' $ "Wrong `nodeID` in `node`"
         True  -> do 
             let newGraph      = Graph.updateNode (nodeID, node) agraph
-                newDefinition = definition {NodeDef.graph =  newGraph}
+                newDefinition = definition {Definition.graph =  newGraph}
                 newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
                 newCore       = core {Core.defManager = newDefManager}
-            print newCore
             writeIORef batchHandler newCore)
 
 
-removeNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO ()
+removeNode :: IORef Core -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO ()
 removeNode = nodeDefOperation (\batchHandler (nodeID, _) (defID, definition) -> do
     putStrLn "called removeNode"
     core <- readIORef batchHandler
     let defManager    = Core.defManager core
-        agraph        = NodeDef.graph definition
+        agraph        = Definition.graph definition
     case Graph.gelem nodeID agraph of 
         False -> throw' $ "Wrong `nodeID` in `node`"
         True  -> do 
             let newGraph      = Graph.delNode nodeID agraph
-                newDefinition = definition {NodeDef.graph =  newGraph}
+                newDefinition = definition {Definition.graph =  newGraph}
                 newDefManager = DefManager.updateNode (defID, newDefinition) defManager 
                 newCore       = core {Core.defManager = newDefManager}
-            print newCore
             writeIORef batchHandler newCore)
 
 connect :: IORef Core -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
                       -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
-        -> Maybe TDefs.NodeDef -> IO ()
+        -> Maybe TDefs.Definition -> IO ()
 connect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort 
                                                (dstNodeID, dstNode) dstPort definition -> do 
     putStrLn "call connect - NOT IMPLEMENTED")
@@ -104,7 +101,7 @@ connect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort
 
 disconnect :: IORef Core -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
                          -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
-           -> Maybe TDefs.NodeDef -> IO ()
+           -> Maybe TDefs.Definition -> IO ()
 disconnect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort
                                                   (dstNodeID, dstNode) dstPort definition -> do 
     putStrLn "call disconnect - NOT IMPLEMENTED")
@@ -112,10 +109,10 @@ disconnect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort
 
 nodesConnectOperation :: (IORef Core -> (Node.ID, Node) -> [Int]
                                      -> (Node.ID, Node) -> [Int]
-                                     -> NodeDef -> IO result)
+                                     -> Definition -> IO result)
                       -> IORef Core -> (Maybe TGraph.Node) -> (Maybe TGraph.PortDescriptor)
                                     -> (Maybe TGraph.Node) -> (Maybe TGraph.PortDescriptor)
-                      -> Maybe TDefs.NodeDef -> IO result
+                      -> Maybe TDefs.Definition -> IO result
 nodesConnectOperation operation batchHandler mtsrcNode mtsrcPort mtdstNode mtdstPort mtdefinition = do
     core <- readIORef batchHandler
     let defManager = Core.defManager core
@@ -134,7 +131,7 @@ nodesConnectOperation operation batchHandler mtsrcNode mtsrcPort mtdstNode mtdst
                             Just tdstPort -> case mtdefinition of
                                 Nothing          -> throw' "`definition` field is missing"
                                 Just tdefinition -> do
-                                    let mdefID = liftM i32toi $ TDefs.f_NodeDef_defID tdefinition
+                                    let mdefID = liftM i32toi $ TDefs.f_Definition_defID tdefinition
                                     case mdefID of 
                                         Nothing    -> throw' "`defID` field is missing"
                                         Just defID -> case DefManager.lab defManager defID of 
@@ -145,8 +142,8 @@ nodesConnectOperation operation batchHandler mtsrcNode mtsrcPort mtdstNode mtdst
                                                                in operation batchHandler (srcNodeID, srcNode) srcPort (dstNodeID, dstNode) dstPort definition
 
 
-nodeDefOperation :: (IORef Core -> (Node.ID, Node) -> (NodeDef.ID, NodeDef) -> IO result) 
-                 -> IORef Core -> Maybe TGraph.Node -> Maybe TDefs.NodeDef -> IO result
+nodeDefOperation :: (IORef Core -> (Node.ID, Node) -> (Definition.ID, Definition) -> IO result) 
+                 -> IORef Core -> Maybe TGraph.Node -> Maybe TDefs.Definition -> IO result
 nodeDefOperation operation batchHandler mtnode mtdefinition = do 
     core <- readIORef batchHandler
     let defManager = Core.defManager core
@@ -157,7 +154,7 @@ nodeDefOperation operation batchHandler mtnode mtdefinition = do
             Right (nodeID, node) -> case mtdefinition of 
                 Nothing          -> throw' "`definition` field is missing"
                 Just tdefinition -> do
-                    let mdefID = liftM i32toi $ TDefs.f_NodeDef_defID tdefinition
+                    let mdefID = liftM i32toi $ TDefs.f_Definition_defID tdefinition
                     case mdefID of
                         Nothing    -> throw' "`defID` field is missing"
                         Just defID -> case DefManager.lab defManager defID of 

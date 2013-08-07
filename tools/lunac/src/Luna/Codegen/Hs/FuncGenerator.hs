@@ -14,8 +14,8 @@ import qualified Luna.Type.Type                  as Type
 import qualified Luna.Codegen.Hs.Import          as Import
 import qualified Luna.Network.Graph.Graph        as Graph
 import           Luna.Network.Graph.Graph          (Graph)
-import qualified Luna.Network.Def.NodeDef        as NodeDef
-import           Luna.Network.Def.NodeDef          (NodeDef)
+import qualified Luna.Network.Def.Definition        as Definition
+import           Luna.Network.Def.Definition          (Definition)
 import qualified Luna.Network.Graph.Node         as Node
 import           Luna.Network.Graph.Node           (Node)
 import qualified Luna.Network.Graph.DefaultValue as DefaultValue
@@ -32,12 +32,12 @@ import           Luna.Codegen.Hs.AST.Module        (Module)
 import           Luna.Data.List
 
 
-generateFunction :: NodeDef -> Module -> (Function, Module)
+generateFunction :: Definition -> Module -> (Function, Module)
 generateFunction def m = (func, nmod) where
-    graph      = NodeDef.graph def
+    graph      = Definition.graph def
     vertices   = Graph.topsort graph
     nodes      = Graph.labVtxs graph vertices
-    fcls       = NodeDef.cls def
+    fcls       = Definition.cls def
     fname      = Type.name fcls
     --finputs    = Type.inputs fcls
     basefunc   = Function.basic { Function.name = fname
@@ -151,7 +151,7 @@ generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
 --generateFunctionHeader :: State FuncState String
 --generateFunctionHeader = do
 --    state <- get
---    let t    = NodeDef.cls $ FuncState.def state
+--    let t    = Definition.cls $ FuncState.def state
 --        name = Type.name t ++ if FuncState.ctx state == Context.IO || FuncState.mode state == Mode.ForceIO
 --            then mpostfix
 --            else ""

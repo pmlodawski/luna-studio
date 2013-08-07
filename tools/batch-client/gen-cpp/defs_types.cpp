@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-
+namespace flowbox { namespace batch {
 
 const char* Import::ascii_fingerprint = "92AA23526EDCB0628C830C8758ED7059";
 const uint8_t Import::binary_fingerprint[16] = {0x92,0xAA,0x23,0x52,0x6E,0xDC,0xB0,0x62,0x8C,0x83,0x0C,0x87,0x58,0xED,0x70,0x59};
@@ -127,10 +127,10 @@ void swap(Import &a, Import &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* NodeDef::ascii_fingerprint = "4A0C9D09D635991405A1E60843986AB5";
-const uint8_t NodeDef::binary_fingerprint[16] = {0x4A,0x0C,0x9D,0x09,0xD6,0x35,0x99,0x14,0x05,0xA1,0xE6,0x08,0x43,0x98,0x6A,0xB5};
+const char* Definition::ascii_fingerprint = "DFA58221D08704BE864C77CAE04E43F5";
+const uint8_t Definition::binary_fingerprint[16] = {0xDF,0xA5,0x82,0x21,0xD0,0x87,0x04,0xBE,0x86,0x4C,0x77,0xCA,0xE0,0x4E,0x43,0xF5};
 
-uint32_t NodeDef::read(::apache::thrift::protocol::TProtocol* iprot) {
+uint32_t Definition::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   uint32_t xfer = 0;
   std::string fname;
@@ -222,9 +222,9 @@ uint32_t NodeDef::read(::apache::thrift::protocol::TProtocol* iprot) {
   return xfer;
 }
 
-uint32_t NodeDef::write(::apache::thrift::protocol::TProtocol* oprot) const {
+uint32_t Definition::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
-  xfer += oprot->writeStructBegin("NodeDef");
+  xfer += oprot->writeStructBegin("Definition");
 
   if (this->__isset.cls) {
     xfer += oprot->writeFieldBegin("cls", ::apache::thrift::protocol::T_STRUCT, 1);
@@ -269,7 +269,7 @@ uint32_t NodeDef::write(::apache::thrift::protocol::TProtocol* oprot) const {
   return xfer;
 }
 
-void swap(NodeDef &a, NodeDef &b) {
+void swap(Definition &a, Definition &b) {
   using ::std::swap;
   swap(a.cls, b.cls);
   swap(a.imports, b.imports);
@@ -280,4 +280,4 @@ void swap(NodeDef &a, NodeDef &b) {
   swap(a.__isset, b.__isset);
 }
 
-
+}} // namespace

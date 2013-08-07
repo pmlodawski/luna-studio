@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-
+namespace flowbox { namespace batch {
 
 const char* Library::ascii_fingerprint = "8647601436A6884E958535045FA2944B";
 const uint8_t Library::binary_fingerprint[16] = {0x86,0x47,0x60,0x14,0x36,0xA6,0x88,0x4E,0x95,0x85,0x35,0x04,0x5F,0xA2,0x94,0x4B};
@@ -59,8 +59,8 @@ uint32_t Library::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 4:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->rootNodeDefID);
-          this->__isset.rootNodeDefID = true;
+          xfer += iprot->readI32(this->rootDefID);
+          this->__isset.rootDefID = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -96,9 +96,9 @@ uint32_t Library::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeString(this->path);
     xfer += oprot->writeFieldEnd();
   }
-  if (this->__isset.rootNodeDefID) {
-    xfer += oprot->writeFieldBegin("rootNodeDefID", ::apache::thrift::protocol::T_I32, 4);
-    xfer += oprot->writeI32(this->rootNodeDefID);
+  if (this->__isset.rootDefID) {
+    xfer += oprot->writeFieldBegin("rootDefID", ::apache::thrift::protocol::T_I32, 4);
+    xfer += oprot->writeI32(this->rootDefID);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -111,8 +111,8 @@ void swap(Library &a, Library &b) {
   swap(a.libID, b.libID);
   swap(a.name, b.name);
   swap(a.path, b.path);
-  swap(a.rootNodeDefID, b.rootNodeDefID);
+  swap(a.rootDefID, b.rootDefID);
   swap(a.__isset, b.__isset);
 }
 
-
+}} // namespace
