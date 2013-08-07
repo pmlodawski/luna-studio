@@ -11,6 +11,7 @@ restoreLib
 
 import System.Directory
 import System.IO
+import Text.Regex.Posix
 
 import Thrift
 import Thrift.Transport.Handle
@@ -93,13 +94,22 @@ storeLib core lib = do
     getNameNStoreNode defManager rootPath libRootNodeID
     return ()
 
+
+
 -- mocked
 restoreNode :: DefManager -> UniPath -> IO DefManager 
-restoreNode defManager udirpath = do
-    let dirpath = UniPath.toUnixString udirpath
-    contents <- getDirectoryContents dirpath
-    print contents
-    return defManager
+restoreNode defManager udirpath  -- =
+    | dirpath =~ nodeDefFilePattern = do putStrLn $ "file! " ++ dirpath
+                                         return defManager
+    | dirpath =~ folderFilePattern  = do putStrLn $ "folder " ++ dirpath 
+                                         contents <- getDirectoryContents dirpath
+                                         _ <- sequence $ map (\c -> restoreNode defManager $ UniPath.append c udirpath) contents
+                                         return defManager
+    | otherwise                     = do putStrLn $ "other " ++ dirpath 
+                                         return defManager
+    where dirpath = UniPath.toUnixString udirpath
+          nodeDefFilePattern = "[.]node$"
+          folderFilePattern  = "[A-Za-z0-9]+$"
 
 
 restoreLib :: Core -> Library -> IO Core
