@@ -5,10 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Luna.Codegen.Hs.ModGenerator(
+module Luna.Codegen.Hs.DefGenerator(
     generateDefinition,
-    generateModule,
-    generateCommonCls
+    generateModule
 ) where
 
 import Debug.Trace
@@ -38,10 +37,6 @@ import qualified Luna.Codegen.Hs.AST.Expr        as Expr
 
 import           Luna.Data.List
 
-
---import Control.Monad.State
-
---generateDefinition manager vtx = runState
 
 generateDefinition :: DefManager -> Graph.Vertex -> Module
 generateDefinition manager vtx = nmod where
@@ -104,7 +99,6 @@ generateDefinition manager vtx = nmod where
         _            -> error "Not known type conversion."
 
 
-
 generateModule :: DefManager -> Graph.Vertex -> Module
 generateModule manager vtx  = m where
     path        = Path.fromList $ DefManager.pathNames manager vtx 
@@ -113,33 +107,5 @@ generateModule manager vtx  = m where
     m           = Module.base { Module.path       = path
                               , Module.submodules = modules
                               }
-
-
-generateCommonCls :: String -> Module
-generateCommonCls name = m where
-    path       = Path.fromList ["Flowbox", "Common", name]
-    params     = [Expr.Type "a" [], Expr.Type "b" []]
-    paramsM    = [Expr.Type "a" [], Expr.Type "IO" ["b"]]
-    functype   = Expr.FuncType params
-    functypeM  = Expr.FuncType paramsM
-    nameM      = Path.mkMonadName name
-    cls        = Class.empty { Class.name   = Path.toModuleName name
-                             , Class.params = params
-                             , Class.deps   = [functype]
-                             , Class.fields = [ Expr.Typed (Expr.Var name)  functype
-                                              , Expr.Typed (Expr.Var nameM) functypeM
-                                              ]
-                             }
-    m           = Module.addExt Extension.FunctionalDependencies
-                $ Module.addExt Extension.FlexibleInstances
-                $ Module.addClass cls
-                $ Module.base { Module.path = path }
-
-    --outnames    = fmap (Type.name . NodeDef.cls) outnodes
-    --outpaths    = fmap ((Path.add path) . Path.single) outnames
-    --imports     = zipWith Import.single outpaths outnames
-    --importstxt  = join "\n" $ fmap Import.genCode imports
-    --header      = "module " ++ Path.toModulePath path
-    --out         = header ++ generateModuleReturn ++ importstxt ++ "\n\n"
 
 
