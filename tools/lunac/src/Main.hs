@@ -26,7 +26,12 @@ main = do
     putStrLn "------------\n"
 
     --putStrLn $ Module.genCode $ MG.generateDefinition HelloWorld.full_manager 1
-    putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
+    --putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
+
+    let
+    	c = Config.empty
+
+    putStrLn $ Config.genCode c
 
     return ()
 
