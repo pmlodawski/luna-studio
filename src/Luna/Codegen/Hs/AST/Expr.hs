@@ -38,11 +38,12 @@ data Expr = Assignment { src   :: Expr    , dst  :: Expr   , ctx :: Context }
           | THExprCtx  { name  :: String                                    }
           | THTypeCtx  { name  :: String                                    }
           | Cons       { name  :: String  , fields :: [Expr]                }
-          | Typed      { src   :: Expr    , t :: String                     }
+          | Typed      { src   :: Expr    , t :: Expr                       }
           | At         { name  :: String  , dst :: Expr                     }
           | Any        {                                                    }
           | Block      { body  :: [Expr]  , ctx :: Context                  }
           | BlockRet   { name  :: String  , ctx :: Context                  }
+          | FuncType   { elems :: [Expr]                                    }
           | NOP        {                                                    }
           deriving (Show)
 
@@ -76,11 +77,11 @@ genCode expr = case expr of
                                      else "(" ++ body ++ ")"
                                          where body = join ", " (map (genCode) elems')
     NTuple     elems'           -> "(" ++ join ", (" (map (genCode) elems') ++ ", ()" ++ replicate (length elems') ')'
-    Type       name' params'    -> name' ++ " " ++ join " " params'
+    Type       name' params'    -> name' ++ (if null params' then "" else " " ++ join " " params')
     THExprCtx  name'            -> "'"  ++ name'
     THTypeCtx  name'            -> "''" ++ name'
     Cons       name' fields'    -> name' ++ " {" ++ join ", " (map genCode fields') ++ "}"
-    Typed      src' t'          -> genCode src' ++ " :: " ++ t'
+    Typed      src' t'          -> genCode src' ++ " :: " ++ genCode t'
     At         name' dst'       -> name' ++ "@" ++ genCode dst'
     Any                         -> "_"
     Block      body' ctx'       -> prefix ++ genBlockCode body' IO where
@@ -90,6 +91,7 @@ genCode expr = case expr of
     BlockRet   name' ctx'       -> case ctx' of
                                        Pure -> "in " ++ name'
                                        IO   -> "return " ++ name'
+    FuncType   elems'           -> join " -> " (map genCode elems')
     NOP                         -> ""
 
 
@@ -130,9 +132,11 @@ mkPure :: Expr -> Expr
 mkPure expr = case expr of
     Assignment src' dst' _   -> Assignment (mkPure src') (mkPure dst') Pure
     Tuple      elems'        -> Tuple $ map mkPure elems'
+    Typed      src' t'       -> Typed (mkPure src') (mkPure t')
     Call       name' args' _ -> Call name' (map mkPure args') Pure
     Block      body' _       -> Block (map mkPure body') Pure
     BlockRet   name' ctx'    -> BlockRet name' Pure
+    FuncType   elems'        -> FuncType $ map mkPure elems'
     other                    -> other
 
 
