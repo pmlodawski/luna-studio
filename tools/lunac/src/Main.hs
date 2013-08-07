@@ -10,6 +10,7 @@ import           Luna.Core                        (Core(..))
 import qualified Luna.Lib.LibManager            as LibManager
 import qualified Luna.Samples.HelloWorld        as HelloWorld
 import qualified Luna.Tools.Serializer          as Serializer
+import qualified Luna.Tools.Serializer.Lib      as LibSerializer
 import qualified Luna.Samples.HelloWorld        as HelloWorld
 import qualified Luna.Codegen.Hs.FuncGenerator  as FG
 import qualified Luna.Codegen.Hs.ModGenerator   as MG
@@ -30,9 +31,10 @@ main = do
     print core
     putStrLn "------------\n"
 
-    Serializer.storeLib core stdLib
+    LibSerializer.storeLib core stdLib
 
-    core2 <- Serializer.restoreLib core stdLib
+    --core2 <- Serializer.restoreLib core stdLib
+    --print core2
     --putStrLn $ FG.generateFunction HelloWorld.myFun3
     --putStrLn $ MG.generateDefinition HelloWorld.full_manager 1
     --print $ MG.generateModule HelloWorld.full_manager 100
