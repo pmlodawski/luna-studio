@@ -5,19 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import qualified Luna.Project                      as Project
-import           Luna.Project                        (Project(..))
-import qualified Luna.Lib.LibManager            as LibManager
-import qualified Luna.Samples.HelloWorld        as HelloWorld
-import qualified Luna.Tools.Serializer          as Serializer
-import qualified Luna.Tools.Serializer.Lib      as LibSerializer
-import qualified Luna.Samples.HelloWorld        as HelloWorld
-import qualified Luna.Codegen.Hs.FuncGenerator  as FG
-import qualified Luna.Codegen.Hs.ModGenerator   as MG
-import qualified Luna.Network.Def.DefManager    as DefManager
+import qualified Luna.Project                     as Project
+import           Luna.Project                       (Project(..))
+import qualified Luna.Lib.LibManager              as LibManager
+import qualified Luna.Samples.HelloWorld          as HelloWorld
+import qualified Luna.Tools.Serializer.Serializer as Serializer
+import qualified Luna.Tools.Serializer.Lib        as LibSerializer
+import qualified Luna.Samples.HelloWorld          as HelloWorld
+import qualified Luna.Codegen.Hs.FuncGenerator    as FG
+import qualified Luna.Codegen.Hs.ModGenerator     as MG
+import qualified Luna.Network.Def.DefManager      as DefManager
 
-import qualified Luna.Codegen.Hs.AST.Function   as Function
-import qualified Luna.Codegen.Hs.AST.Module     as Module
+import qualified Luna.Codegen.Hs.AST.Function     as Function
+import qualified Luna.Codegen.Hs.AST.Module       as Module
 
 import Luna.Data.Graph
 
