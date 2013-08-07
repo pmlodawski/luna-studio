@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Luna.Tools.Serializer(
+module Luna.Tools.Serializer.Serializer(
     Serializable(..),
 
     serializeMany,
@@ -18,7 +18,7 @@ import qualified Luna.System.UniPath         as UniPath
 import           Luna.System.UniPath           (UniPath)
 
 
-data Serializable = File UniPath (Handle -> IO())
+data Serializable = Serializable UniPath (Handle -> IO())
 
 
 serializeMany :: [Serializable] -> IO()
@@ -28,7 +28,7 @@ serializeMany serializables = do
 
 
 serialize :: Serializable -> IO()
-serialize (File upath save) = do
+serialize (Serializable upath save) = do
     let foldername = UniPath.toUnixString $ init upath
         filename   = UniPath.toUnixString upath
     createDirectoryIfMissing True foldername
