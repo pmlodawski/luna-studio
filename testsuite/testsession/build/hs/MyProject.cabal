@@ -1,0 +1,29 @@
+Name:           MyProject
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+
+
+Executable MyProject 
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: src
+
+  GHC-Options:    -Wall 
+
+  Extensions:     DoAndIfThenElse
+                  MultiParamTypeClasses
+  Build-Depends:  base,
+                  cereal,
+                  containers,
+                  fgl,
+                  --flowbox,
+                  MissingH,
+                  mtl,
+                  split,
+                  text,
+                  unordered-containers,
+                  vector

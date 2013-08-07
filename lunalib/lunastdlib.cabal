@@ -1,0 +1,39 @@
+Name:           lunastdlib
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+
+Library
+  Hs-Source-Dirs: src
+  GHC-Options:    -Wall 
+  Extensions:     DoAndIfThenElse
+                  ForeignFunctionInterface
+                  MultiParamTypeClasses
+  Exposed-modules:
+                  Std.Core,
+                  Std.Common,
+                  Std.Data.NTuple.Select,
+                  Std.Data.Tuple.Select,
+                  Std.System.Console
+
+  
+  Build-Depends:  base, 
+                  template-haskell,
+                  bytestring,
+                  cereal,
+                  containers,
+                  fgl,
+                  graphviz,
+                  hashable,
+                  MissingH,
+                  split,
+                  text,
+                  thrift,
+                  unordered-containers,
+                  vector
+
+

@@ -7,7 +7,8 @@
 
 module Luna.Codegen.Hs.ModGenerator(
     generateDefinition,
-    generateModule
+    generateModule,
+    generateCommonCls
 ) where
 
 import Debug.Trace
@@ -30,6 +31,7 @@ import qualified Luna.Codegen.Hs.ClassGenerator  as CG
 import qualified Luna.Codegen.Hs.Path            as Path
 import qualified Luna.Codegen.Hs.AST.Function    as Function
 import qualified Luna.Codegen.Hs.AST.Instance    as Instance
+import qualified Luna.Codegen.Hs.AST.Class       as Class
 import qualified Luna.Codegen.Hs.AST.Extension   as Extension
 import qualified Luna.Codegen.Hs.AST.DataType    as DataType
 import qualified Luna.Codegen.Hs.AST.Expr        as Expr
@@ -111,6 +113,27 @@ generateModule manager vtx  = m where
     m           = Module.base { Module.path       = path
                               , Module.submodules = modules
                               }
+
+
+generateCommonCls :: String -> Module
+generateCommonCls name = m where
+    path       = Path.fromList ["Flowbox", "Common", name]
+    params     = [Expr.Type "a" [], Expr.Type "b" []]
+    paramsM    = [Expr.Type "a" [], Expr.Type "IO" ["b"]]
+    functype   = Expr.FuncType params
+    functypeM  = Expr.FuncType paramsM
+    nameM      = Path.mkMonadName name
+    cls        = Class.empty { Class.name   = Path.toModuleName name
+                             , Class.params = params
+                             , Class.deps   = [functype]
+                             , Class.fields = [ Expr.Typed (Expr.Var name)  functype
+                                              , Expr.Typed (Expr.Var nameM) functypeM
+                                              ]
+                             }
+    m           = Module.addExt Extension.FunctionalDependencies
+                $ Module.addExt Extension.FlexibleInstances
+                $ Module.addClass cls
+                $ Module.base { Module.path = path }
 
     --outnames    = fmap (Type.name . NodeDef.cls) outnodes
     --outpaths    = fmap ((Path.add path) . Path.single) outnames
