@@ -83,6 +83,6 @@ Library
                   regex-posix,
                   split,
                   text,
-                  thrift,
+                  thrift >= 0.9,
                   unordered-containers,
                   vector
