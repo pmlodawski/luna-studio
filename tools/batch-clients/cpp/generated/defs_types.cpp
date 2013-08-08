@@ -383,7 +383,7 @@ uint32_t DefsGraph::read(::apache::thrift::protocol::TProtocol* iprot) {
       case 1:
         if (ftype == ::apache::thrift::protocol::T_MAP) {
           {
-            this->definitions.clear();
+            this->defs.clear();
             uint32_t _size18;
             ::apache::thrift::protocol::TType _ktype19;
             ::apache::thrift::protocol::TType _vtype20;
@@ -393,12 +393,12 @@ uint32_t DefsGraph::read(::apache::thrift::protocol::TProtocol* iprot) {
             {
               DefID _key23;
               xfer += iprot->readI32(_key23);
-              Definition& _val24 = this->definitions[_key23];
+              Definition& _val24 = this->defs[_key23];
               xfer += _val24.read(iprot);
             }
             xfer += iprot->readMapEnd();
           }
-          this->__isset.definitions = true;
+          this->__isset.defs = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -439,12 +439,12 @@ uint32_t DefsGraph::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("DefsGraph");
 
-  if (this->__isset.definitions) {
-    xfer += oprot->writeFieldBegin("definitions", ::apache::thrift::protocol::T_MAP, 1);
+  if (this->__isset.defs) {
+    xfer += oprot->writeFieldBegin("defs", ::apache::thrift::protocol::T_MAP, 1);
     {
-      xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->definitions.size()));
+      xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->defs.size()));
       std::map<DefID, Definition> ::const_iterator _iter30;
-      for (_iter30 = this->definitions.begin(); _iter30 != this->definitions.end(); ++_iter30)
+      for (_iter30 = this->defs.begin(); _iter30 != this->defs.end(); ++_iter30)
       {
         xfer += oprot->writeI32(_iter30->first);
         xfer += _iter30->second.write(oprot);
@@ -473,7 +473,7 @@ uint32_t DefsGraph::write(::apache::thrift::protocol::TProtocol* oprot) const {
 
 void swap(DefsGraph &a, DefsGraph &b) {
   using ::std::swap;
-  swap(a.definitions, b.definitions);
+  swap(a.defs, b.defs);
   swap(a.edges, b.edges);
   swap(a.__isset, b.__isset);
 }

@@ -1,5 +1,5 @@
-COMMON_FILES_BASE=libs/luna/Flowbox/Luna/Tools/Serialize/Thrift
-BATCH_FILES_BASE=tools/batch/Flowbox/Batch/Server/Thrift
+COMMON_FILES_BASE=libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift
+BATCH_FILES_BASE=tools/batch-srv/src/Flowbox/Batch/Server/Thrift
 
 COMMON_FILES=$COMMON_FILES_BASE/*.thrift
 BATCH_FILES=$BATCH_FILES_BASE/*.thrift

@@ -242,8 +242,8 @@ class Edge {
 void swap(Edge &a, Edge &b);
 
 typedef struct _DefsGraph__isset {
-  _DefsGraph__isset() : definitions(false), edges(false) {}
-  bool definitions;
+  _DefsGraph__isset() : defs(false), edges(false) {}
+  bool defs;
   bool edges;
 } _DefsGraph__isset;
 
@@ -258,14 +258,14 @@ class DefsGraph {
 
   virtual ~DefsGraph() throw() {}
 
-  std::map<DefID, Definition>  definitions;
+  std::map<DefID, Definition>  defs;
   std::vector<Edge>  edges;
 
   _DefsGraph__isset __isset;
 
-  void __set_definitions(const std::map<DefID, Definition> & val) {
-    definitions = val;
-    __isset.definitions = true;
+  void __set_defs(const std::map<DefID, Definition> & val) {
+    defs = val;
+    __isset.defs = true;
   }
 
   void __set_edges(const std::vector<Edge> & val) {
@@ -275,9 +275,9 @@ class DefsGraph {
 
   bool operator == (const DefsGraph & rhs) const
   {
-    if (__isset.definitions != rhs.__isset.definitions)
+    if (__isset.defs != rhs.__isset.defs)
       return false;
-    else if (__isset.definitions && !(definitions == rhs.definitions))
+    else if (__isset.defs && !(defs == rhs.defs))
       return false;
     if (__isset.edges != rhs.__isset.edges)
       return false;
