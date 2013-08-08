@@ -13,18 +13,36 @@ p_lunac    = os.path.join(dir, 'tools', 'lunac')
 
 
 def check(name):
-	print "Checking if '%s' is installed" % name
-	(out, err) = Popen(name, stdout=PIPE, shell=True).communicate()
-	if not out:
-		print "Please install '%s' to continue" % name
-		sys.exit()	
+    print "Checking if '%s' is installed" % name
+    (out, err) = Popen(name, stdout=PIPE, shell=True).communicate()
+    if not out:
+        print "Please install '%s' to continue" % name
+        sys.exit()  
 
 check('cabal-dev')
 
 print "Registering thrift library"
 if call(['cabal-dev', 'add-source', p_thrift]):
-	sys.exit()
+    print "ERROR"
+    sys.exit()
 
-print "Compiling projects"
-call(['cabal-dev', 'install', p_luna, p_batch, p_batchsrv, p_lunac])
+print "Compiling luna"
+if call(['cabal-dev', 'install', p_luna, '--force-reinstalls']):
+    print "ERROR"
+    sys.exit()
+
+print "Compiling batch"
+if call(['cabal-dev', 'install', p_batch, '--force-reinstalls']):
+    print "ERROR"
+    sys.exit()
+
+print "Compiling batchsrv"
+if call(['cabal-dev', 'install', p_batchsrv, '--force-reinstalls']):
+    print "ERROR"
+    sys.exit()
+
+print "Compiling lunac"
+if call(['cabal-dev', 'install', p_lunac, '--force-reinstalls']):
+    print "ERROR"
+    sys.exit()
 
