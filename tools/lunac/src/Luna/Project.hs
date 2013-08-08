@@ -13,31 +13,35 @@ unloadLibrary,
 nodeDefByID
 ) where
 
-import qualified Luna.Lib.LibManager         as LibManager
-import           Luna.Lib.LibManager           (LibManager)
-import qualified Luna.Lib.Library            as Library
-import           Luna.Lib.Library              (Library(..))
-import qualified Luna.Network.Attributes     as Attributes
-import qualified Luna.Network.Def.DefManager as DefManager
-import           Luna.Network.Def.DefManager   (DefManager)
-import qualified Luna.Network.Def.Definition as Definition
-import           Luna.Network.Def.Definition   (Definition(..))
-import qualified Luna.Network.Flags          as Flags
-import qualified Luna.Network.Graph.Graph    as Graph
-import qualified Luna.Type.Type              as Type
+import qualified Luna.Lib.LibManager             as LibManager
+import           Luna.Lib.LibManager               (LibManager)
+import qualified Luna.Lib.Library                as Library
+import           Luna.Lib.Library                  (Library(..))
+import qualified Luna.Network.Attributes         as Attributes
+import           Luna.Network.Attributes           (Attributes)
+import qualified Luna.Network.Def.DefManager     as DefManager
+import           Luna.Network.Def.DefManager       (DefManager)
+import qualified Luna.Network.Def.Definition     as Definition
+import           Luna.Network.Def.Definition       (Definition(..))
+import qualified Luna.Network.Flags              as Flags
+import qualified Luna.Network.Graph.Graph        as Graph
+import qualified Luna.Type.Type                  as Type
+
 
 
 data Project = Project {
     libManager :: LibManager,
-    defManager :: DefManager
+    defManager :: DefManager,
+    attrs      :: Attributes
 } deriving(Show)
 
+
 empty :: Project
-empty = Project LibManager.empty DefManager.empty
+empty = Project LibManager.empty DefManager.empty Attributes.empty
 
 
 loadLibrary :: Project -> Library -> (Project, Library, Library.ID)
-loadLibrary (Project libManager' defManager') library = (newProject, newLibrary, libID') where
+loadLibrary (Project libManager' defManager' attrs') library = (newProject, newLibrary, libID') where
     
     rootDefName  = Library.name library
     [rootDefID'] = DefManager.newNodes 1 defManager'
@@ -51,16 +55,16 @@ loadLibrary (Project libManager' defManager') library = (newProject, newLibrary,
     newLibrary      = library{ Library.rootDefID = rootDefID' }
     newLibManager   = LibManager.insNode (libID', newLibrary) libManager'
 
-    newProject         = Project newLibManager newDefManager    
+    newProject      = Project newLibManager newDefManager attrs'   
 
 
 unloadLibrary :: Project -> Library.ID -> Project
-unloadLibrary (Project libManager' defManager') libID' = newProject where
+unloadLibrary (Project libManager' defManager' attrs') libID' = newProject where
     newLibManager = LibManager.delNode libID' libManager'
     newDefManager = defManager' -- TODO [PM] : unload all nodes asociated with library
-    newProject       = Project newLibManager newDefManager
+    newProject       = Project newLibManager newDefManager attrs'
 
 
 nodeDefByID :: Project -> Definition.ID -> Maybe Definition
-nodeDefByID (Project _ adefManager) defID = def where
+nodeDefByID (Project _ adefManager _) defID = def where
     def = DefManager.lab adefManager defID

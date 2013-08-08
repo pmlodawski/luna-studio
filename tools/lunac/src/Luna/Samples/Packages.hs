@@ -8,21 +8,22 @@
 module Luna.Samples.Packages where
 
 
-import qualified Luna.Project                    as Project
-import           Luna.Project                      (Project(..))
-import qualified Luna.Network.Def.DefManager     as DefManager
-import           Luna.Network.Def.DefManager       (DefManager(..))
-import qualified Luna.Network.Def.Definition     as Definition
-import           Luna.Network.Def.Definition       (Definition(..))
-import qualified Luna.Network.Graph.Graph        as Graph
-import qualified Luna.Lib.LibManager             as LibManager
-import           Luna.Lib.LibManager               (LibManager(..))
-import qualified Luna.Lib.Library                as Library
-import           Luna.Lib.Library                  (Library(..))
-import qualified Luna.System.UniPath             as UniPath
-import           Luna.System.UniPath               (UniPath)
-import qualified Luna.Type.Type                  as Type
-import           Luna.Type.Type                    (Type(..))
+import qualified Luna.Project                     as Project
+import           Luna.Project                       (Project(..))
+import qualified Luna.Network.Attributes          as Attributes
+import qualified Luna.Network.Def.DefManager      as DefManager
+import           Luna.Network.Def.DefManager        (DefManager(..))
+import qualified Luna.Network.Def.Definition      as Definition
+import           Luna.Network.Def.Definition        (Definition(..))
+import qualified Luna.Network.Graph.Graph         as Graph
+import qualified Luna.Lib.LibManager              as LibManager
+import           Luna.Lib.LibManager                (LibManager(..))
+import qualified Luna.Lib.Library                 as Library
+import           Luna.Lib.Library                   (Library(..))
+import qualified Luna.System.UniPath              as UniPath
+import           Luna.System.UniPath                (UniPath)
+import qualified Luna.Type.Type                   as Type
+import           Luna.Type.Type                     (Type(..))
 
 
 mkDefinition cls libID = Definition.empty{ Definition.cls = cls
@@ -53,5 +54,5 @@ adefManager = DefManager.addToParentMany (listToDefs atrybuty 2000 20 0)
                                    (100, mkModule "user" 1)]
             $ DefManager.empty 
 
-
-project = Project alibManager adefManager
+project :: Project
+project = Project alibManager adefManager Attributes.empty
