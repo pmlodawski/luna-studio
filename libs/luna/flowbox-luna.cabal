@@ -79,7 +79,7 @@ Library
                   fgl,
                   graphviz,
                   hashable,
-                  MissingH,
+                  MissingH == 1.2.0.0,
                   regex-posix,
                   split,
                   text,

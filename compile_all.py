@@ -33,7 +33,7 @@ if call(['cabal-dev', 'add-source', p_thrift]):
     sys.exit()
 	
 print "Registering MissingH library (to work on windows)"
-if call(['cabal-dev', 'install', p_thrift]):
+if call(['cabal-dev', 'add-source', p_missingh]):
     print "ERROR"
     sys.exit()
 
