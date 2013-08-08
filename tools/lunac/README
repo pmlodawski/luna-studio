@@ -1,0 +1,25 @@
+8 8888      8 8888      88 b.             8          .8.          
+8 8888      8 8888      88 888o.          8         .888.         
+8 8888      8 8888      88 Y88888o.       8        :88888.        
+8 8888      8 8888      88 .`Y888888o.    8       . `88888.       
+8 8888      8 8888      88 8o. `Y888888o. 8      .8. `88888.      
+8 8888      8 8888      88 8`Y8o. `Y88888o8     .8`8. `88888.     
+8 8888      8 8888      88 8   `Y8o. `Y8888    .8' `8. `88888.    
+8 8888      ` 8888     ,8P 8      `Y8o. `Y8   .8'   `8. `88888.   
+8 8888        8888   ,d8P  8         `Y8o.`  .888888888. `88888.  
+8 888888888888 `Y88888P'   8            `Yo .8'       `8. `88888.
+
+To set up Luna Project do the following:
+1) Install required libraries:
+    - ghc
+    - haste
+    - haskell-platform
+    - LLVM 3.3
+    - graphviz (optional)
+    - gitflow
+2) Configure project with $ jester configure (--target {native, js})
+3) Build with $ jester build
+4) Run with $ jester run
+
+The project uses gitflow for git management.
+Read the docs! http://danielkummer.github.io/git-flow-cheatsheet/

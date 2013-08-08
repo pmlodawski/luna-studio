@@ -1,4 +1,4 @@
-Name:           flowbox
+Name:           flowbox-luna
 Version:        0.1
 Cabal-Version:  >= 1.8
 License-file:   LICENSE
@@ -12,8 +12,8 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: libs/luna
-                  libs/luna/Flowbox/Luna/Tools/Serialize/Thrift/Generated
+  Hs-Source-Dirs: src
+                  src/Flowbox/Luna/Tools/Serialize/Thrift/Generated
   if flag(debug)
     GHC-Options:  -csacc
   GHC-Options:    -Wall 
@@ -82,54 +82,6 @@ Library
                   MissingH,
                   regex-posix,
                   split,
-                  text,
-                  thrift,
-                  unordered-containers,
-                  vector
-
-
-Executable lunac 
-  Main-Is:        Main.hs
-  Hs-Source-Dirs: tools/lunac
-
-  if flag(debug)
-    GHC-Options:  -csacc
-  GHC-Options:    -Wall 
-
-  Extensions:     DoAndIfThenElse
-                  MultiParamTypeClasses
-  Build-Depends:  base,
-                  cereal,
-                  containers,
-                  directory,
-                  fgl,
-                  flowbox,
-                  MissingH,
-                  mtl,
-                  regex-posix,
-                  split,
-                  text,
-                  thrift,
-                  unordered-containers,
-                  vector
-
-
-Executable batch-srv
-  Hs-Source-Dirs: tools/batch,
-                  tools/batch/Flowbox/Batch/Server/Thrift/Generated
-  Main-Is:        Flowbox/Batch/Server/Main.hs
-
-  GHC-Options:    -Wall 
-
-  Extensions:     FlexibleInstances,
-                  TypeSynonymInstances
-
-  Build-Depends:  base,
-                  bytestring,
-                  containers,
-                  flowbox,
-                  hashable,
-                  network,
                   text,
                   thrift,
                   unordered-containers,

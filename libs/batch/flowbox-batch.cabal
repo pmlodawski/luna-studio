@@ -1,0 +1,36 @@
+Name:               flowbox-batch
+Version:            0.1
+Cabal-Version:      >= 1.8
+License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Simple
+
+Flag Debug
+  Description:      Enable debug support
+  Default:          False
+
+
+Library
+    Hs-Source-Dirs: src
+
+    GHC-Options:    -Wall 
+
+    Extensions:     FlexibleInstances,
+                    TypeSynonymInstances
+ 
+    Exposed-modules:
+                    Flowbox.Batch.Project.Project
+                    Flowbox.Batch.Project.ProjectManager
+
+    Build-Depends:  base,
+                    bytestring,
+                    containers,
+                    flowbox-luna,
+                    hashable,
+                    network,
+                    text,
+                    thrift,
+                    unordered-containers,
+                    vector
+
