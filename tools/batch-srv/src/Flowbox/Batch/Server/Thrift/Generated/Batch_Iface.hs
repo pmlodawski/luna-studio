@@ -47,6 +47,7 @@ class Batch_Iface a where
   createProject :: a -> Maybe Projects_Types.Project -> IO Projects_Types.Project
   openProject :: a -> Maybe Projects_Types.Project -> IO Projects_Types.Project
   closeProject :: a -> Maybe Projects_Types.Project -> IO ()
+  storeProject :: a -> Maybe Projects_Types.Project -> IO ()
   setActiveProject :: a -> Maybe Projects_Types.Project -> IO ()
   libraries :: a -> IO (Vector.Vector Libs_Types.Library)
   createLibrary :: a -> Maybe Libs_Types.Library -> IO Libs_Types.Library

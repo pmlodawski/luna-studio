@@ -38,6 +38,7 @@ service Batch {
     projects.Project createProject   (1: projects.Project project) throws (1: ArgumentException missingFields)
     projects.Project openProject     (1: projects.Project project) throws (1: ArgumentException missingFields)
     void             closeProject    (1: projects.Project project) throws (1: ArgumentException missingFields)
+    void             storeProject    (1: projects.Project project) throws (1: ArgumentException missingFields)
 
     void             setActiveProject(1: projects.Project project) throws (1: ArgumentException missingFields)
 

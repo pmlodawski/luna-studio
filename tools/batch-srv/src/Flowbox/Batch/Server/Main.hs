@@ -27,6 +27,7 @@ import           Batch_Iface
 import qualified Flowbox.Batch.Server.Handlers.Defs         as HDefs
 import qualified Flowbox.Batch.Server.Handlers.Graph        as HGraph
 import qualified Flowbox.Batch.Server.Handlers.Libs         as HLibs
+import qualified Flowbox.Batch.Server.Handlers.Projects     as HProjects
 import qualified Flowbox.Batch.Server.Handlers.Types        as HTypes
 
 import qualified Flowbox.Batch.Project.Project              as Project
@@ -48,8 +49,14 @@ newBatchHandler = do
                                      , Project.core = Sample.core } 
     return ref
 
-
+ 
 instance Batch_Iface BatchHandler where
+    projects         = HProjects.projects
+    createProject    = HProjects.createProject
+    openProject      = HProjects.openProject
+    storeProject     = HProjects.storeProject
+    setActiveProject = HProjects.setActiveProject
+
     libraries     = HLibs.libraries
     createLibrary = HLibs.createLibrary
     loadLibrary   = HLibs.loadLibrary

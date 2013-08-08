@@ -42,6 +42,11 @@ class BatchHandler : virtual public BatchIf {
     printf("closeProject\n");
   }
 
+  void storeProject(const  ::flowbox::batch::projects::Project& project) {
+    // Your implementation goes here
+    printf("storeProject\n");
+  }
+
   void setActiveProject(const  ::flowbox::batch::projects::Project& project) {
     // Your implementation goes here
     printf("setActiveProject\n");
