@@ -6,6 +6,7 @@ from subprocess import call, Popen, PIPE
 dir = os.path.dirname(os.path.realpath(__file__))
 third_party = os.path.join(dir, 'third-party')
 p_thrift   = os.path.join(third_party,  'thrift-0.9')
+p_missingh = os.path.join(third_party,  'MissingH-1.2.0.0-winpatch')
 p_luna     = os.path.join(dir, 'libs',  'luna')
 p_batch    = os.path.join(dir, 'libs',  'batch')
 p_batchsrv = os.path.join(dir, 'tools', 'batch-srv')
@@ -23,6 +24,11 @@ check('cabal-dev')
 
 print "Registering thrift library"
 if call(['cabal-dev', 'add-source', p_thrift]):
+    print "ERROR"
+    sys.exit()
+	
+print "Registering MissingH library (to work on windows)"
+if call(['cabal-dev', 'install', p_thrift]):
     print "ERROR"
     sys.exit()
 
