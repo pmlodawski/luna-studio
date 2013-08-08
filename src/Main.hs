@@ -14,6 +14,7 @@ import qualified Luna.Tools.Serializer.Lib        as LibSerializer
 import qualified Luna.Samples.HelloWorld          as HelloWorld
 import qualified Luna.Codegen.Hs.FuncGenerator    as FG
 import qualified Luna.Codegen.Hs.ModGenerator     as MG
+import qualified Luna.Network.Attributes          as Attributes
 import qualified Luna.Network.Def.DefManager      as DefManager
 
 import qualified Luna.Codegen.Hs.AST.Function     as Function
@@ -26,7 +27,7 @@ main :: IO ()
 
 main = do 
     let libManager = HelloWorld.base_libman
-        project = Project libManager HelloWorld.full_manager
+        project = Project libManager HelloWorld.full_manager Attributes.empty
         Just stdLib = LibManager.lab libManager 0 
     print project
     putStrLn "------------\n"
