@@ -19,8 +19,7 @@ Library
   GHC-Options:    -Wall 
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse
-                  ForeignFunctionInterface
-                  MultiParamTypeClasses
+  
   Exposed-modules:
                   Flowbox.Luna.Core,
                   Flowbox.Luna.Data.Graph,

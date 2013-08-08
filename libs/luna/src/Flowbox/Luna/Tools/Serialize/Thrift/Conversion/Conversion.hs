@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FunctionalDependencies, MultiParamTypeClasses #-}
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion where
 
