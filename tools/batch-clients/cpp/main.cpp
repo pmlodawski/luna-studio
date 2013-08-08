@@ -103,6 +103,14 @@ int main(int argc, char **argv) {
 
         Definition parent;
         batch.definitionParent(parent, fun);
+
+
+        DefsGraph defsGraph;
+        batch.defsGraph(defsGraph);
+        cout << "DefsGraph has " 
+             << defsGraph.defs.size() << " defs and " 
+             << defsGraph.edges.size() << " edges" << endl;
+
         /* Add some nodes */
 
         Graph graph;

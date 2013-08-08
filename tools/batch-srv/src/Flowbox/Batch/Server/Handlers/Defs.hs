@@ -5,6 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 module Flowbox.Batch.Server.Handlers.Defs (
+defsGraph,
+
 newDefinition,
 
 addDefinition,
@@ -67,6 +69,18 @@ defParentOperation operation batchHandler mtdefinition mtparent = case mtdefinit
                 
 
 ------ public api -------------------------------------------------
+
+
+defsGraph :: IORef Project -> IO TDefs.DefsGraph
+defsGraph batchHandler = do
+    putStrLn "call defsGraph"
+    project <- readIORef batchHandler
+    let core       = Project.core project
+        defManager = Core.defManager core
+        tdefManager = encode defManager
+    return tdefManager
+
+
 newDefinition :: IORef Project -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
                             -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes
                             -> IO TDefs.Definition

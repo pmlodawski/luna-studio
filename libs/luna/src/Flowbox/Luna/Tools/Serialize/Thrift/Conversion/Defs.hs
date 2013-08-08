@@ -10,29 +10,60 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs where
 
+import           Data.Int
+import           Data.Text.Lazy                                              (pack, unpack)
+import qualified Data.HashMap.Strict                                       as HashMap
+import qualified Data.Vector                                               as Vector
 
-import qualified Data.Text.Lazy as Text
-import qualified Data.Vector    as Vector
-
-import qualified Defs_Types               as TDefs
-import           Flowbox.Luna.Network.Graph.Graph   (Graph)
-import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
-import           Flowbox.Luna.Network.Path.Import   (Import(..))
-import qualified Flowbox.Luna.Network.Path.Path   as Path
+import qualified Defs_Types                                                as TDefs
+import           Flowbox.Luna.Network.Graph.Graph                            (Graph)
+import           Flowbox.Luna.Network.Def.Edge                               (Edge(..))
+import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
+import           Flowbox.Luna.Network.Def.Definition                         (Definition(..))
+import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
+import           Flowbox.Luna.Network.Def.DefManager                         (DefManager(..))
+import           Flowbox.Luna.Network.Path.Import                            (Import(..))
+import qualified Flowbox.Luna.Network.Path.Path                            as Path
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs ()
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types ()
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs        ()
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types        ()
 
- 
+
+encodeLabNode :: (Definition.ID, Definition) -> (Int32, TDefs.Definition)
+encodeLabNode node@(defID, _) = tnode where
+    tnode = (itoi32 defID, encodeDef node)
+
+    encodeDef d = td where
+        (td, _) = encode d
+
+
+instance Convert (Int, Int, Edge) TDefs.Edge where
+    encode (asrc, adst, _) = tedge where
+        tedge = TDefs.Edge (Just $ itoi32 asrc) (Just $ itoi32 adst)
+    decode = error "Not implemented" --TODO [PM] not implemented
+
+
+instance Convert DefManager TDefs.DefsGraph where
+    encode defManager = tdefGraph where
+        labNodesList = DefManager.labNodes defManager
+        tdefs        = HashMap.fromList $ map (encodeLabNode) labNodesList
+
+        labEdgesList = DefManager.labEdges defManager
+        tedges       = Vector.fromList $ map (encode) labEdgesList
+        tdefGraph    = TDefs.DefsGraph (Just tdefs) (Just tedges)
+    decode tdefGraph = defManager where
+        defManager = error "Not implemented" --TODO [PM] not implemented
+        
+
 instance Convert Import TDefs.Import where
     encode (Import apath aitems) = timport where
-        tpath   = Just $ Vector.fromList $ map (Text.pack) $ Path.toList apath
-        titems  = Just $ Vector.fromList $ map (Text.pack) aitems
+        tpath   = Just $ Vector.fromList $ map (pack) $ Path.toList apath
+        titems  = Just $ Vector.fromList $ map (pack) aitems
         timport = TDefs.Import tpath titems
     decode timport = case timport of 
         TDefs.Import (Just tpath) (Just titems) -> Right $ Import apath aitems where
-                                                        apath = Path.fromList $ map (Text.unpack) $ Vector.toList tpath
-                                                        aitems = map (Text.unpack) $ Vector.toList titems
+                                                        apath = Path.fromList $ map (unpack) $ Vector.toList tpath
+                                                        aitems = map (unpack) $ Vector.toList titems
         TDefs.Import (Just _    ) Nothing       -> Left "`items` field is missing"
         TDefs.Import Nothing      _             -> Left "`path` field is missing"
 

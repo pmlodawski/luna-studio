@@ -8,12 +8,12 @@
 namespace cpp flowbox.batch
 namespace hs  flowbox.batch
 
-include "../../../../../../libs/luna/Flowbox/Luna/Tools/Serialize/Thrift/attrs.thrift"
-include "../../../../../../libs/luna/Flowbox/Luna/Tools/Serialize/Thrift/defs.thrift"
-include "../../../../../../libs/luna/Flowbox/Luna/Tools/Serialize/Thrift/graph.thrift"
-include "../../../../../../libs/luna/Flowbox/Luna/Tools/Serialize/Thrift/libs.thrift"
-include "../../../../../../libs/luna/Flowbox/Luna/Tools/Serialize/Thrift/projects.thrift"
-include "../../../../../../libs/luna/Flowbox/Luna/Tools/Serialize/Thrift/types.thrift"
+include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/attrs.thrift"
+include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/defs.thrift"
+include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/graph.thrift"
+include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/libs.thrift"
+include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/projects.thrift"
+include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/types.thrift"
 
 /*
  * Exceptions

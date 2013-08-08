@@ -41,6 +41,6 @@ struct Edge {
 
 
 struct DefsGraph {
-	1: optional map<DefID, Definition> definitions
+	1: optional map<DefID, Definition> defs
     2: optional list<Edge>             edges
 }

@@ -57,6 +57,7 @@ instance Batch_Iface BatchHandler where
     storeLibrary  = HLibs.storeLibrary
     libraryRootDef = HLibs.libraryRootDef
 
+    defsGraph          = HDefs.defsGraph
     newDefinition      = HDefs.newDefinition
     addDefinition      = HDefs.addDefinition
     updateDefinition   = HDefs.updateDefinition
