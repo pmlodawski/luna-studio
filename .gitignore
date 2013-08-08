@@ -8,10 +8,11 @@ cabal-dev
 .virthualenv
 *~
 *.imports
-tools/batch-client/batch_client
+tools/batch-clients/cpp/batch_client
 
 # luna library files
 *.node
+*.graph
 
 # emacs backup files
 .\#*
