@@ -5,29 +5,28 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import qualified Luna.Project                     as Project
-import           Luna.Project                       (Project(..))
-import qualified Luna.Lib.LibManager              as LibManager
-import qualified Luna.Samples.HelloWorld          as HelloWorld
-import qualified Luna.Tools.Serializer.Serializer as Serializer
-import qualified Luna.Tools.Serializer.Lib        as LibSerializer
-import qualified Luna.Samples.HelloWorld          as HelloWorld
-import qualified Luna.Codegen.Hs.FuncGenerator    as FG
-import qualified Luna.Codegen.Hs.ModGenerator     as MG
-import qualified Luna.Network.Attributes          as Attributes
-import qualified Luna.Network.Def.DefManager      as DefManager
+import qualified Flowbox.Luna.Core                        as Core
+import           Flowbox.Luna.Core                          (Core(..))
+import qualified Flowbox.Luna.Lib.LibManager              as LibManager
+import qualified Flowbox.Luna.Samples.HelloWorld          as HelloWorld
+import qualified Flowbox.Luna.Tools.Serialize.Serializer  as Serializer
+import qualified Flowbox.Luna.Tools.Serialize.Lib         as LibSerializer
+import qualified Flowbox.Luna.Samples.HelloWorld          as HelloWorld
+import qualified Flowbox.Luna.Codegen.Hs.FuncGenerator    as FG
+import qualified Flowbox.Luna.Codegen.Hs.ModGenerator     as MG
+import qualified Flowbox.Luna.Network.Def.DefManager      as DefManager
 
-import qualified Luna.Codegen.Hs.AST.Function     as Function
-import qualified Luna.Codegen.Hs.AST.Module       as Module
+import qualified Flowbox.Luna.Codegen.Hs.AST.Function     as Function
+import qualified Flowbox.Luna.Codegen.Hs.AST.Module       as Module
 
-import Luna.Data.Graph
+import Flowbox.Luna.Data.Graph
 
 
 main :: IO ()
 
 main = do 
     let libManager = HelloWorld.base_libman
-        project = Project libManager HelloWorld.full_manager Attributes.empty
+        project = Core libManager HelloWorld.full_manager
         Just stdLib = LibManager.lab libManager 0 
     print project
     putStrLn "------------\n"
