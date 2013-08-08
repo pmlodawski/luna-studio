@@ -12,8 +12,8 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: tools/lunac/src,
-                  tools/lunac/gen-hs
+  Hs-Source-Dirs: libs/luna
+                  libs/luna/Flowbox/Luna/Tools/Serialize/Thrift/Generated
   if flag(debug)
     GHC-Options:  -csacc
   GHC-Options:    -Wall 
@@ -22,35 +22,41 @@ Library
                   ForeignFunctionInterface
                   MultiParamTypeClasses
   Exposed-modules:
-                  Luna.Data.Graph,
-                  Luna.Data.List,
-                  Luna.Lib.Edge,
-                  Luna.Lib.LibManager,
-                  Luna.Lib.Library,
-                  Luna.Network.Def.DefManager,
-                  Luna.Network.Def.Edge,
-                  Luna.Network.Def.Definition,
-                  Luna.Network.Graph.DefaultValue,
-                  Luna.Network.Graph.Edge,
-                  Luna.Network.Graph.Graph,
-                  Luna.Network.Graph.Node
-                  Luna.Network.Path.Import,
-                  Luna.Network.Path.Path,
-                  Luna.Network.Attributes,
-                  Luna.Network.Flags,
-                  Luna.Project,
-                  Luna.ProjectManager,
-                  Luna.Samples.Packages,
-                  Luna.System.UniPath,
-                  Luna.Tools.Conversion,
-                  Luna.Tools.Conversion.Attrs,
-                  Luna.Tools.Conversion.Defs,
-                  Luna.Tools.Conversion.Graph,
-                  Luna.Tools.Conversion.Libs,
-                  Luna.Tools.Conversion.Types,
-                  Luna.Tools.Graphviz,              
-                  Luna.Tools.TypeChecker,
-                  Luna.Type.Type,
+                  Flowbox.Luna.Core,
+                  Flowbox.Luna.Data.Graph,
+                  Flowbox.Luna.Data.List,
+                  Flowbox.Luna.Lib.Edge,
+                  Flowbox.Luna.Lib.LibManager,
+                  Flowbox.Luna.Lib.Library,
+                  Flowbox.Luna.Codegen.Hs.AST.Function,
+                  Flowbox.Luna.Codegen.Hs.AST.Module,
+                  Flowbox.Luna.Codegen.Hs.FuncGenerator,
+                  Flowbox.Luna.Codegen.Hs.ModGenerator,
+                  Flowbox.Luna.Network.Def.DefManager,
+                  Flowbox.Luna.Network.Def.Edge,
+                  Flowbox.Luna.Network.Def.Definition,
+                  Flowbox.Luna.Network.Graph.DefaultValue,
+                  Flowbox.Luna.Network.Graph.Edge,
+                  Flowbox.Luna.Network.Graph.Graph,
+                  Flowbox.Luna.Network.Graph.Node
+                  Flowbox.Luna.Network.Path.Import,
+                  Flowbox.Luna.Network.Path.Path,
+                  Flowbox.Luna.Network.Attributes,
+                  Flowbox.Luna.Network.Flags,
+                  Flowbox.Luna.Samples.HelloWorld,
+                  Flowbox.Luna.Samples.Packages,
+                  Flowbox.Luna.System.UniPath,
+                  Flowbox.Luna.Tools.Graphviz,
+                  Flowbox.Luna.Tools.Serialize.Lib,
+                  Flowbox.Luna.Tools.Serialize.Serializer,
+                  Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs,
+                  Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion,
+                  Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs,
+                  Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph,
+                  Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs,
+                  Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types,
+                  Flowbox.Luna.Tools.TypeChecker,
+                  Flowbox.Luna.Type.Type,
                   Attrs_Consts,
                   Attrs_Types,
                   Defs_Consts,
@@ -84,7 +90,7 @@ Library
 
 Executable lunac 
   Main-Is:        Main.hs
-  Hs-Source-Dirs: tools/lunac/src
+  Hs-Source-Dirs: tools/lunac
 
   if flag(debug)
     GHC-Options:  -csacc
@@ -108,10 +114,10 @@ Executable lunac
                   vector
 
 
-Executable batch
-  Hs-Source-Dirs: tools/batch/src
-                  tools/batch/gen-hs
-  Main-Is:        Main.hs
+Executable batch-srv
+  Hs-Source-Dirs: tools/batch,
+                  tools/batch/Flowbox/Batch/Server/Thrift/Generated
+  Main-Is:        Flowbox/Batch/Server/Main.hs
 
   GHC-Options:    -Wall 
 
