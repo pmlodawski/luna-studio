@@ -54,6 +54,7 @@ instance Batch_Iface BatchHandler where
     projects         = HProjects.projects
     createProject    = HProjects.createProject
     openProject      = HProjects.openProject
+    closeProject     = HProjects.closeProject
     storeProject     = HProjects.storeProject
     setActiveProject = HProjects.setActiveProject
 

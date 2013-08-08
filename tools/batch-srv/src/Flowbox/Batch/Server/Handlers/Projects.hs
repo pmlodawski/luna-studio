@@ -8,6 +8,7 @@ module Flowbox.Batch.Server.Handlers.Projects (
     projects,
     createProject,
     openProject, 
+    closeProject,
     storeProject,
     setActiveProject
 ) where

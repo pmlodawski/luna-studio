@@ -19,3 +19,8 @@ import           Flowbox.Luna.Network.Flags        (Flags(..))
 import qualified Flowbox.Luna.Network.Attributes as Attributes
 import           Flowbox.Luna.Network.Attributes   (Attributes)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
+
+
+instance Convert Project TProjects.Project where
+    encode project = tproject where
+    	

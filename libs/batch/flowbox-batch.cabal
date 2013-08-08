@@ -13,6 +13,7 @@ Flag Debug
 
 Library
     Hs-Source-Dirs: src
+                    src/Flowbox/Batch/Tools/Serialize/Thrift/Generated
 
     GHC-Options:    -Wall 
 
@@ -22,6 +23,9 @@ Library
     Exposed-modules:
                     Flowbox.Batch.Project.Project
                     Flowbox.Batch.Project.ProjectManager
+                    Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects
+                    Projects_Consts
+                    Projects_Types
 
     Build-Depends:  base,
                     bytestring,
