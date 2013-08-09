@@ -5,18 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 module Flowbox.Batch.Server.Handlers.Defs (
-defsGraph,
+    defsGraph,
 
-newDefinition,
+    newDefinition,
 
-addDefinition,
-updateDefinition,
-removeDefinition,
+    addDefinition,
+    updateDefinition,
+    removeDefinition,
 
-definitionChildren,
-definitionParent,
+    definitionChildren,
+    definitionParent,
 
-defOperation
+    defOperation
 ) 
 where
 

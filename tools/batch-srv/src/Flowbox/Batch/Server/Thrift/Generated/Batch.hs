@@ -124,15 +124,11 @@ read_CreateProject_args iprot = do
   record <- read_CreateProject_args_fields iprot (CreateProject_args{f_CreateProject_args_project=Nothing})
   readStructEnd iprot
   return record
-data CreateProject_result = CreateProject_result{f_CreateProject_result_success :: Maybe Projects_Types.Project,f_CreateProject_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
+data CreateProject_result = CreateProject_result{f_CreateProject_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
 instance Hashable CreateProject_result where
-  hashWithSalt salt record = salt   `hashWithSalt` f_CreateProject_result_success record   `hashWithSalt` f_CreateProject_result_missingFields record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_CreateProject_result_missingFields record  
 write_CreateProject_result oprot record = do
   writeStructBegin oprot "CreateProject_result"
-  case f_CreateProject_result_success record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("success",T_STRUCT,0)
-    Projects_Types.write_Project oprot _v
-    writeFieldEnd oprot}
   case f_CreateProject_result_missingFields record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("missingFields",T_STRUCT,1)
     write_ArgumentException oprot _v
@@ -143,12 +139,6 @@ read_CreateProject_result_fields iprot record = do
   (_,_t29,_id30) <- readFieldBegin iprot
   if _t29 == T_STOP then return record else
     case _id30 of 
-      0 -> if _t29 == T_STRUCT then do
-        s <- (read_Project iprot)
-        read_CreateProject_result_fields iprot record{f_CreateProject_result_success=Just s}
-        else do
-          skip iprot _t29
-          read_CreateProject_result_fields iprot record
       1 -> if _t29 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_CreateProject_result_fields iprot record{f_CreateProject_result_missingFields=Just s}
@@ -161,7 +151,7 @@ read_CreateProject_result_fields iprot record = do
         read_CreateProject_result_fields iprot record
 read_CreateProject_result iprot = do
   _ <- readStructBegin iprot
-  record <- read_CreateProject_result_fields iprot (CreateProject_result{f_CreateProject_result_success=Nothing,f_CreateProject_result_missingFields=Nothing})
+  record <- read_CreateProject_result_fields iprot (CreateProject_result{f_CreateProject_result_missingFields=Nothing})
   readStructEnd iprot
   return record
 data OpenProject_args = OpenProject_args{f_OpenProject_args_project :: Maybe Projects_Types.Project} deriving (Show,Eq,Typeable)
@@ -2408,11 +2398,11 @@ process_projects (seqid, iprot, oprot, handler) = do
 process_createProject (seqid, iprot, oprot, handler) = do
   args <- read_CreateProject_args iprot
   readMessageEnd iprot
-  rs <- return (CreateProject_result Nothing Nothing)
+  rs <- return (CreateProject_result Nothing)
   res <- (Control.Exception.catch
     (do
-      res <- Iface.createProject handler (f_CreateProject_args_project args)
-      return rs{f_CreateProject_result_success= Just res})
+      Iface.createProject handler (f_CreateProject_args_project args)
+      return rs)
     (\e  -> 
       return rs{f_CreateProject_result_missingFields =Just e}))
   writeMessageBegin oprot ("createProject", M_REPLY, seqid);

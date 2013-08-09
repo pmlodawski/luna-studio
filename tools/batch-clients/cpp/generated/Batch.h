@@ -16,7 +16,7 @@ class BatchIf {
  public:
   virtual ~BatchIf() {}
   virtual void projects(std::vector< ::flowbox::batch::projects::Project> & _return) = 0;
-  virtual void createProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project) = 0;
+  virtual void createProject(const  ::flowbox::batch::projects::Project& project) = 0;
   virtual void openProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project) = 0;
   virtual void closeProject(const  ::flowbox::batch::projects::Project& project) = 0;
   virtual void storeProject(const  ::flowbox::batch::projects::Project& project) = 0;
@@ -81,7 +81,7 @@ class BatchNull : virtual public BatchIf {
   void projects(std::vector< ::flowbox::batch::projects::Project> & /* _return */) {
     return;
   }
-  void createProject( ::flowbox::batch::projects::Project& /* _return */, const  ::flowbox::batch::projects::Project& /* project */) {
+  void createProject(const  ::flowbox::batch::projects::Project& /* project */) {
     return;
   }
   void openProject( ::flowbox::batch::projects::Project& /* _return */, const  ::flowbox::batch::projects::Project& /* project */) {
@@ -328,8 +328,7 @@ class Batch_createProject_pargs {
 };
 
 typedef struct _Batch_createProject_result__isset {
-  _Batch_createProject_result__isset() : success(false), missingFields(false) {}
-  bool success;
+  _Batch_createProject_result__isset() : missingFields(false) {}
   bool missingFields;
 } _Batch_createProject_result__isset;
 
@@ -341,14 +340,9 @@ class Batch_createProject_result {
 
   virtual ~Batch_createProject_result() throw() {}
 
-   ::flowbox::batch::projects::Project success;
   ArgumentException missingFields;
 
   _Batch_createProject_result__isset __isset;
-
-  void __set_success(const  ::flowbox::batch::projects::Project& val) {
-    success = val;
-  }
 
   void __set_missingFields(const ArgumentException& val) {
     missingFields = val;
@@ -356,8 +350,6 @@ class Batch_createProject_result {
 
   bool operator == (const Batch_createProject_result & rhs) const
   {
-    if (!(success == rhs.success))
-      return false;
     if (!(missingFields == rhs.missingFields))
       return false;
     return true;
@@ -374,8 +366,7 @@ class Batch_createProject_result {
 };
 
 typedef struct _Batch_createProject_presult__isset {
-  _Batch_createProject_presult__isset() : success(false), missingFields(false) {}
-  bool success;
+  _Batch_createProject_presult__isset() : missingFields(false) {}
   bool missingFields;
 } _Batch_createProject_presult__isset;
 
@@ -385,7 +376,6 @@ class Batch_createProject_presult {
 
   virtual ~Batch_createProject_presult() throw() {}
 
-   ::flowbox::batch::projects::Project* success;
   ArgumentException missingFields;
 
   _Batch_createProject_presult__isset __isset;
@@ -4137,9 +4127,9 @@ class BatchClient : virtual public BatchIf {
   void projects(std::vector< ::flowbox::batch::projects::Project> & _return);
   void send_projects();
   void recv_projects(std::vector< ::flowbox::batch::projects::Project> & _return);
-  void createProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project);
+  void createProject(const  ::flowbox::batch::projects::Project& project);
   void send_createProject(const  ::flowbox::batch::projects::Project& project);
-  void recv_createProject( ::flowbox::batch::projects::Project& _return);
+  void recv_createProject();
   void openProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project);
   void send_openProject(const  ::flowbox::batch::projects::Project& project);
   void recv_openProject( ::flowbox::batch::projects::Project& _return);
@@ -4360,14 +4350,13 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void createProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project) {
+  void createProject(const  ::flowbox::batch::projects::Project& project) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->createProject(_return, project);
+      ifaces_[i]->createProject(project);
     }
-    ifaces_[i]->createProject(_return, project);
-    return;
+    ifaces_[i]->createProject(project);
   }
 
   void openProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project) {

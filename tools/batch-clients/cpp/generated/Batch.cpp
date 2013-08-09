@@ -267,14 +267,6 @@ uint32_t Batch_createProject_result::read(::apache::thrift::protocol::TProtocol*
     }
     switch (fid)
     {
-      case 0:
-        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
-          xfer += this->success.read(iprot);
-          this->__isset.success = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
       case 1:
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += this->missingFields.read(iprot);
@@ -301,11 +293,7 @@ uint32_t Batch_createProject_result::write(::apache::thrift::protocol::TProtocol
 
   xfer += oprot->writeStructBegin("Batch_createProject_result");
 
-  if (this->__isset.success) {
-    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
-    xfer += this->success.write(oprot);
-    xfer += oprot->writeFieldEnd();
-  } else if (this->__isset.missingFields) {
+  if (this->__isset.missingFields) {
     xfer += oprot->writeFieldBegin("missingFields", ::apache::thrift::protocol::T_STRUCT, 1);
     xfer += this->missingFields.write(oprot);
     xfer += oprot->writeFieldEnd();
@@ -335,14 +323,6 @@ uint32_t Batch_createProject_presult::read(::apache::thrift::protocol::TProtocol
     }
     switch (fid)
     {
-      case 0:
-        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
-          xfer += (*(this->success)).read(iprot);
-          this->__isset.success = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
       case 1:
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += this->missingFields.read(iprot);
@@ -6417,10 +6397,10 @@ void BatchClient::recv_projects(std::vector< ::flowbox::batch::projects::Project
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "projects failed: unknown result");
 }
 
-void BatchClient::createProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project)
+void BatchClient::createProject(const  ::flowbox::batch::projects::Project& project)
 {
   send_createProject(project);
-  recv_createProject(_return);
+  recv_createProject();
 }
 
 void BatchClient::send_createProject(const  ::flowbox::batch::projects::Project& project)
@@ -6437,7 +6417,7 @@ void BatchClient::send_createProject(const  ::flowbox::batch::projects::Project&
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_createProject( ::flowbox::batch::projects::Project& _return)
+void BatchClient::recv_createProject()
 {
 
   int32_t rseqid = 0;
@@ -6463,19 +6443,14 @@ void BatchClient::recv_createProject( ::flowbox::batch::projects::Project& _retu
     iprot_->getTransport()->readEnd();
   }
   Batch_createProject_presult result;
-  result.success = &_return;
   result.read(iprot_);
   iprot_->readMessageEnd();
   iprot_->getTransport()->readEnd();
 
-  if (result.__isset.success) {
-    // _return pointer has now been filled
-    return;
-  }
   if (result.__isset.missingFields) {
     throw result.missingFields;
   }
-  throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "createProject failed: unknown result");
+  return;
 }
 
 void BatchClient::openProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project)
@@ -8467,8 +8442,7 @@ void BatchProcessor::process_createProject(int32_t seqid, ::apache::thrift::prot
 
   Batch_createProject_result result;
   try {
-    iface_->createProject(result.success, args.project);
-    result.__isset.success = true;
+    iface_->createProject(args.project);
   } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;

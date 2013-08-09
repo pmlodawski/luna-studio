@@ -33,7 +33,6 @@ import qualified Flowbox.Batch.Server.Handlers.Projects     as HProjects
 import qualified Flowbox.Batch.Server.Handlers.Types        as HTypes
 
 import qualified Flowbox.Batch.Project.Project              as Project
-import           Flowbox.Batch.Project.Project                (Project)
 import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
 import qualified Flowbox.Luna.Samples.Packages              as Sample
 
@@ -47,7 +46,7 @@ type BatchHandler = IORef Batch
 
 newBatchHandler :: IO BatchHandler
 newBatchHandler = do
-    --ref <- newIORef Project.empty
+    --ref <- newIORef Batch.empty
     ref <- newIORef $ Batch { Batch.projectManager = ProjectManager.mkGraph [
                                                                 (0, Project.empty { Project.name = "project"
                                                                                   , Project.core = Sample.core })] []
@@ -56,12 +55,12 @@ newBatchHandler = do
 
  
 instance Batch_Iface BatchHandler where
-    --projects         = HProjects.projects
-    --createProject    = HProjects.createProject
-    --openProject      = HProjects.openProject
-    --closeProject     = HProjects.closeProject
-    --storeProject     = HProjects.storeProject
-    --setActiveProject = HProjects.setActiveProject
+    projects         = HProjects.projects
+    createProject    = HProjects.createProject
+    openProject      = HProjects.openProject
+    closeProject     = HProjects.closeProject
+    storeProject     = HProjects.storeProject
+    setActiveProject = HProjects.setActiveProject
 
     libraries     = HLibs.libraries
     createLibrary = HLibs.createLibrary

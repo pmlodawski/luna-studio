@@ -189,12 +189,12 @@ projects batch = projectList where
     projectList     = ProjectManager.projects aprojectManager
 
 
-createProject :: Batch -> Project -> IO ()
-createProject _ = ProjectManager.createProject
+createProject :: Project -> Batch -> IO ()
+createProject project _ = ProjectManager.createProject project
 
 
-openProject :: Batch -> Project -> IO (Batch, (Project.ID, Project))
-openProject batch project = do
+openProject :: Project -> Batch -> IO (Batch, (Project.ID, Project))
+openProject project batch = do
     let aprojectManager = projectManager batch
     (newProjectManager, newP) <- ProjectManager.openProject aprojectManager project
     let newBatch = batch {projectManager = newProjectManager}
@@ -202,8 +202,8 @@ openProject batch project = do
 
 
 
-closeProject :: Batch -> Project.ID -> IO Batch
-closeProject batch projectID = do
+closeProject :: Project.ID -> Batch -> IO Batch
+closeProject projectID batch = do
     let aprojectManager = projectManager batch
     newProjectManager <- ProjectManager.closeProject aprojectManager projectID
     let newBatch = batch {projectManager = newProjectManager}
@@ -211,15 +211,15 @@ closeProject batch projectID = do
 
 
 
-storeProject :: Batch -> Project.ID -> IO ()
-storeProject batch projectID = do
+storeProject :: Project.ID -> Batch -> IO ()
+storeProject projectID batch = do
     let aprojectManager = projectManager batch
     _ <- ProjectManager.storeProject aprojectManager projectID
     return ()
 
 
-setActiveProject :: Batch -> Project.ID -> Batch
-setActiveProject batch projectID = newBatch where
+setActiveProject :: Project.ID -> Batch -> Batch
+setActiveProject projectID batch = newBatch where
     newBatch = batch { activeProjectID = projectID }
 
 

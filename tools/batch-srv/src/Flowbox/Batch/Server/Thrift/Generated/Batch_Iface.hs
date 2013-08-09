@@ -44,7 +44,7 @@ import Batch_Types
 
 class Batch_Iface a where
   projects :: a -> IO (Vector.Vector Projects_Types.Project)
-  createProject :: a -> Maybe Projects_Types.Project -> IO Projects_Types.Project
+  createProject :: a -> Maybe Projects_Types.Project -> IO ()
   openProject :: a -> Maybe Projects_Types.Project -> IO Projects_Types.Project
   closeProject :: a -> Maybe Projects_Types.Project -> IO ()
   storeProject :: a -> Maybe Projects_Types.Project -> IO ()
