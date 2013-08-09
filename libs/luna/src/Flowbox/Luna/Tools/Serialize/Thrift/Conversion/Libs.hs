@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs where
@@ -16,6 +16,7 @@ import qualified Libs_Types               as TLibs
 import           Flowbox.Luna.Lib.Library         as Library
 import qualified Flowbox.Luna.System.UniPath      as UniPath
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
+
 
 instance Convert (Int, Library) TLibs.Library where
     encode (libID, Library aname apath arootNodeDefID) = TLibs.Library tlibID tname tpath trootNodeDefID where

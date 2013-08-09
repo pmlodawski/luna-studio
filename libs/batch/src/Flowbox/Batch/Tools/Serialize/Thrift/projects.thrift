@@ -8,7 +8,7 @@
 namespace cpp flowbox.batch.projects
 namespace hs  flowbox.batch.projects
 
-include "attrs.thrift"
+include "../../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/attrs.thrift"
 
 
 typedef i32 ProjectID

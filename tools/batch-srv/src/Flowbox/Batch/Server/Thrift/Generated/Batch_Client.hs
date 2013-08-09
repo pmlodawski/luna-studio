@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,createProject,openProject,closeProject,setActiveProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,libraryRootDef,defsGraph,newDefinition,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,graph,addNode,updateNode,removeNode,connect,disconnect,ping) where
+module Batch_Client(projects,createProject,openProject,closeProject,storeProject,setActiveProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,libraryRootDef,defsGraph,newDefinition,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,graph,addNode,updateNode,removeNode,connect,disconnect,ping) where
 import Data.IORef
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -139,6 +139,29 @@ recv_closeProject ip = do
   res <- read_CloseProject_result ip
   readMessageEnd ip
   case f_CloseProject_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
+  return ()
+storeProject (ip,op) arg_project = do
+  send_storeProject op arg_project
+  recv_storeProject ip
+send_storeProject op arg_project = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("storeProject", M_CALL, seqn)
+  write_StoreProject_args op (StoreProject_args{f_StoreProject_args_project=Just arg_project})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_storeProject ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_StoreProject_result ip
+  readMessageEnd ip
+  case f_StoreProject_result_missingFields res of
     Nothing -> return ()
     Just _v -> throw _v
   return ()

@@ -7,7 +7,8 @@
 
 module Flowbox.Batch.Project.Project(
     Project(..),
-    empty
+	ID,
+	empty
 ) where
 
 import qualified Flowbox.Luna.Core                        as Core
@@ -29,11 +30,14 @@ import           Flowbox.Luna.System.UniPath                (UniPath)
 import qualified Flowbox.Luna.Type.Type                   as Type
 
 
+
 data Project = Project { core  :: Core
                        , name  :: String
                        , path  :: UniPath
                        , attrs :: Attributes
                        } deriving(Show)
+
+type ID = Int
 
 
 empty :: Project
