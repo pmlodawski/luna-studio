@@ -28,14 +28,15 @@ import qualified Attrs_Types
 import qualified Defs_Types                                                as TDefs
 import           Flowbox.Batch.Server.Handlers.Common
 import qualified Types_Types                                               as TTypes
-import qualified Flowbox.Batch.Project.Project                             as Project
-import           Flowbox.Batch.Project.Project                               (Project)
+import qualified Flowbox.Batch.Batch                                       as Batch
+import           Flowbox.Batch.Batch                                         (Batch(..))
 import qualified Flowbox.Luna.Core                                         as Core
 import           Flowbox.Luna.Core                                           (Core(..))
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
 import           Flowbox.Luna.Network.Def.Definition                         (Definition)
 import qualified Flowbox.Luna.Network.Graph.Graph                          as Graph
+import           Flowbox.Luna.Network.Graph.Graph                            (Graph)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 
@@ -44,7 +45,7 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 
 
 ------ public api helpers -----------------------------------------
-defOperation :: (IORef Project -> Definition.ID -> Definition -> a) -> IORef Project 
+defOperation :: (IORef Batch -> Definition.ID -> Definition -> a) -> IORef Batch 
              -> Maybe TDefs.Definition -> a
 defOperation operation batchHandler tdefinition  = case tdefinition of 
     Nothing                       -> throw' "`definition` field is missing"
@@ -55,7 +56,7 @@ defOperation operation batchHandler tdefinition  = case tdefinition of
     
 
 
-defParentOperation :: (IORef Project -> Definition -> Int -> a) -> IORef Project
+defParentOperation :: (IORef Batch -> Definition -> Int -> a) -> IORef Batch
                    -> Maybe TDefs.Definition -> Maybe TDefs.Definition -> a
 defParentOperation operation batchHandler mtdefinition mtparent = case mtdefinition of 
     Nothing                         -> throw' "`definition` field is missing"
@@ -71,17 +72,16 @@ defParentOperation operation batchHandler mtdefinition mtparent = case mtdefinit
 ------ public api -------------------------------------------------
 
 
-defsGraph :: IORef Project -> IO TDefs.DefsGraph
+defsGraph :: IORef Batch -> IO TDefs.DefsGraph
 defsGraph batchHandler = do
     putStrLn "call defsGraph"
-    project <- readIORef batchHandler
-    let core       = Project.core project
-        defManager = Core.defManager core
-        tdefManager = encode defManager
-    return tdefManager
+    batch <- readIORef batchHandler
+    case Batch.defsGraph batch of
+        Left message -> throw' message
+        Right defManager -> return $ encode defManager
 
 
-newDefinition :: IORef Project -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
+newDefinition :: IORef Batch -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
                             -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes
                             -> IO TDefs.Definition
 newDefinition _ ttype timports tflags tattrs = do 
@@ -89,73 +89,60 @@ newDefinition _ ttype timports tflags tattrs = do
     return $ TDefs.Definition ttype timports tflags tattrs (Just 0) (Just 0)
 
 
-addDefinition :: IORef Project -> Maybe TDefs.Definition
+addDefinition :: IORef Batch -> Maybe TDefs.Definition
               -> Maybe TDefs.Definition -> IO TDefs.Definition
 addDefinition = defParentOperation (\batchHandler definition parentID -> do
     putStrLn "call addDefinition"
-    project <- readIORef batchHandler
-    let core       = Project.core project
-        defManager = Core.defManager core
-    case DefManager.gelem parentID defManager of 
-        False -> throw' "Wrong `defID` in `parent` field"
-        True  -> do let [defID]       = DefManager.newNodes 1 defManager
-                        newDefManager = DefManager.addToParent (parentID, defID, definition) defManager
-                        newCore       = core    { Core.defManager = newDefManager }
-                        newProject    = project { Project.core = newCore }
-                        (newTDefinition, _) = encode (defID, definition)
-                    writeIORef batchHandler newProject
-                    return $ newTDefinition)
+    batch <- readIORef batchHandler
+    case Batch.addDefinition definition parentID batch of
+        Left message            -> throw' message
+        Right (newBatch, defID) ->  do 
+            let (newTDefinition, _) = encode (defID, definition)
+            writeIORef batchHandler newBatch
+            return $ newTDefinition)
 
 
-updateDefinition :: IORef Project -> Maybe TDefs.Definition -> IO ()
+updateDefinition :: IORef Batch -> Maybe TDefs.Definition -> IO ()
 updateDefinition = defOperation (\batchHandler defID definition -> do
     putStrLn "call updateDefinition - NOT IMPLEMENTED, sorry."
-    project <- readIORef batchHandler
-    let core       = Project.core project
-        defManager = Core.defManager core
-    return ())
+    batch <- readIORef batchHandler
+    case Batch.updateDefinition (defID, definition) batch of
+        Left message   -> throw' message
+        Right newBatch -> do 
+            writeIORef batchHandler newBatch
+            return ())
 
 
-removeDefinition :: IORef Project -> Maybe TDefs.Definition -> IO ()
+removeDefinition :: IORef Batch -> Maybe TDefs.Definition -> IO ()
 removeDefinition = defOperation (\batchHandler defID _ -> do
     putStrLn "call removeDefinition"
-    project <- readIORef batchHandler
-    let core       = Project.core project
-        defManager = Core.defManager core
-    case DefManager.gelem defID defManager of 
-        False -> throw' "Wrong `defID` in `definition` field"
-        True -> do let newDefManager = DefManager.delNode defID defManager
-                       newCore       = core    { Core.defManager = newDefManager }
-                       newProject    = project { Project.core = newCore }
-                   writeIORef batchHandler newProject)
+    batch <- readIORef batchHandler
+    case Batch.removeDefinition defID batch of
+        Left message   -> throw' message
+        Right newBatch -> do 
+            writeIORef batchHandler newBatch
+            return ())
 
 
-definitionChildren :: IORef Project -> Maybe TDefs.Definition -> IO (Vector TDefs.Definition)
+definitionChildren :: IORef Batch -> Maybe TDefs.Definition -> IO (Vector TDefs.Definition)
 definitionChildren = defOperation (\batchHandler defID _ -> do
     putStrLn "call definitionChildren"  
-    project <- readIORef batchHandler
-    let core       = Project.core project
-        defManager = Core.defManager core
-    case DefManager.gelem defID defManager of 
-        False -> throw' "Wrong `defID` in `definition` field"
-        True -> do let children = DefManager.children defManager defID
-                       tchildrenWithGraph = map (encode) children
-                       tchildren = map (\(def, _) -> def) tchildrenWithGraph
-                   return $ Vector.fromList tchildren)
+    batch <- readIORef batchHandler
+    case Batch.definitionChildren defID batch of
+        Left message   -> throw' message
+        Right children -> do 
+           let tchildrenWithGraph = map (encode) children
+               tchildren = map (\(def, _) -> def) tchildrenWithGraph
+           return $ Vector.fromList tchildren)
 
 
-definitionParent :: IORef Project -> Maybe TDefs.Definition -> IO TDefs.Definition
+definitionParent :: IORef Batch -> Maybe TDefs.Definition -> IO TDefs.Definition
 definitionParent = defOperation (\batchHandler defID _ -> do
     putStrLn "call definitionParent"
-    project <- readIORef batchHandler
-    let core       = Project.core project
-        defManager = Core.defManager core
-    case DefManager.gelem defID defManager of 
-        False -> throw' "Wrong `defID` in `definition` field"
-        True -> do let parent = DefManager.parent defManager defID
-                   case parent of 
-                       Nothing -> -- TODO [PM] : what if there is no parent?
-                                  undefined
-                       Just p  -> do let (tparent, _) = encode p
-                                     return tparent)
+    batch <- readIORef batchHandler
+    case Batch.definitionParent defID batch of
+        Left message -> throw' message
+        Right parent -> do 
+            let (tparent, _) = encode parent :: (TDefs.Definition, Graph)
+            return tparent)
 

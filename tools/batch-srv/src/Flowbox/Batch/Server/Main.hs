@@ -1,3 +1,4 @@
+
 ---------------------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
@@ -23,7 +24,8 @@ import Thrift.Server (runBasicServer)
 -- Generated files
 import qualified Batch
 import           Batch_Iface
-
+import qualified Flowbox.Batch.Batch                        as Batch
+import           Flowbox.Batch.Batch                          (Batch(..))
 import qualified Flowbox.Batch.Server.Handlers.Defs         as HDefs
 import qualified Flowbox.Batch.Server.Handlers.Graph        as HGraph
 import qualified Flowbox.Batch.Server.Handlers.Libs         as HLibs
@@ -32,6 +34,7 @@ import qualified Flowbox.Batch.Server.Handlers.Types        as HTypes
 
 import qualified Flowbox.Batch.Project.Project              as Project
 import           Flowbox.Batch.Project.Project                (Project)
+import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
 import qualified Flowbox.Luna.Samples.Packages              as Sample
 
 
@@ -39,24 +42,26 @@ port :: PortNumber
 port = 30521
 
 
-type BatchHandler = IORef Project
+type BatchHandler = IORef Batch
 
 
 newBatchHandler :: IO BatchHandler
 newBatchHandler = do
     --ref <- newIORef Project.empty
-    ref <- newIORef $  Project.empty { Project.name = "project"
-                                     , Project.core = Sample.core } 
+    ref <- newIORef $ Batch { Batch.projectManager = ProjectManager.mkGraph [
+                                                                (0, Project.empty { Project.name = "project"
+                                                                                  , Project.core = Sample.core })] []
+                            , Batch.activeProjectID = 0 }
     return ref
 
  
 instance Batch_Iface BatchHandler where
-    projects         = HProjects.projects
-    createProject    = HProjects.createProject
-    openProject      = HProjects.openProject
-    closeProject     = HProjects.closeProject
-    storeProject     = HProjects.storeProject
-    setActiveProject = HProjects.setActiveProject
+    --projects         = HProjects.projects
+    --createProject    = HProjects.createProject
+    --openProject      = HProjects.openProject
+    --closeProject     = HProjects.closeProject
+    --storeProject     = HProjects.storeProject
+    --setActiveProject = HProjects.setActiveProject
 
     libraries     = HLibs.libraries
     createLibrary = HLibs.createLibrary
@@ -86,8 +91,8 @@ instance Batch_Iface BatchHandler where
     addNode    = HGraph.addNode
     updateNode = HGraph.updateNode
     removeNode = HGraph.removeNode
-    connect    = HGraph.connect
-    disconnect = HGraph.disconnect
+    --connect    = HGraph.connect
+    --disconnect = HGraph.disconnect
 
     ping _     = putStrLn "ping"
 

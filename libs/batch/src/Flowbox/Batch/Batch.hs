@@ -20,8 +20,21 @@ module Flowbox.Batch.Batch (
     loadLibrary,
     unloadLibrary,
     storeLibrary,
-    libraryRootDef
+    libraryRootDef,
 
+    defsGraph ,
+    addDefinition,
+    updateDefinition ,
+    removeDefinition,
+    definitionChildren,
+    definitionParent,
+
+    nodesGraph ,
+    addNode,
+    updateNode,
+    removeNode
+    --connect,
+    --disconnect
 ) where
 
 
@@ -239,16 +252,12 @@ storeLibrary libraryID = readonly' . activeCoreOp' (\batch core -> do
     return $ Right (core, ()))
 
 
-libraryRootDef :: Library.ID -> Batch -> Either String (Definition.ID, Definition)
-libraryRootDef libraryID = readonly . activeCoreOp (\batch core -> let 
-    libManager = Core.libManager core
-    in case LibManager.lab libManager libraryID of 
-        Nothing      -> Left "Wrong `libraryID"
-        Just library -> let 
-            rootDefID' = Library.rootDefID library 
-            in case Core.nodeDefByID core rootDefID' of
-                Nothing      -> Left "Wrong `rootDefID`"
-                Just rootDef -> Right (core, (rootDefID', rootDef)))
+libraryRootDef :: Library -> Batch -> Either String (Definition.ID, Definition)
+libraryRootDef library = readonly . activeCoreOp (\batch core -> let 
+    rootDefID' = Library.rootDefID library 
+    in case Core.nodeDefByID core rootDefID' of
+        Nothing      -> Left "Wrong `rootDefID`"
+        Just rootDef -> Right (core, (rootDefID', rootDef)))
 
 
 -------- Definitions ----------------------------------------------------------
@@ -307,18 +316,18 @@ definitionParent defID = readonly . activeDefManagerOp (\batch defManager ->
 
 -------- Graphs ---------------------------------------------------------------
 
-graph :: Definition.ID -> Batch -> Either String Graph
-graph defID = readonly . activeDefManagerOp (\batch defManager -> 
+nodesGraph :: Definition.ID -> Batch -> Either String Graph
+nodesGraph defID = readonly . activeDefManagerOp (\batch defManager -> 
     case DefManager.lab defManager defID of 
         Nothing  -> Left "Wrong `defID`"
         Just def -> Right (defManager, Definition.graph def))
 
 
-addNode :: Node -> Definition.ID -> Batch -> Either String (Batch, (Node.ID, Node))
+addNode :: Node -> Definition.ID -> Batch -> Either String (Batch, Node.ID)
 addNode node defID = activeDefManagerOp (\batch defManager -> 
     case DefManager.lab defManager defID of 
         Nothing         -> Left "Wrong `defID`"
-        Just definition -> Right (newDefManager, (nodeID, node)) where
+        Just definition -> Right (newDefManager, nodeID) where
             agraph        = Definition.graph definition
             [nodeID]      = Graph.newNodes 1 agraph
             newGraph      = Graph.insNode (nodeID, node) agraph
