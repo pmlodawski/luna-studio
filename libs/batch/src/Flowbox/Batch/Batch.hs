@@ -130,6 +130,18 @@ activeLibManagerOp operation =
             Right (newLibManager, r) -> Right (newCore, r) where
                                             newCore = core { Core.libManager = newLibManager })
 
+activeDefManagerOp :: (Batch -> DefManager -> Either String (DefManager, r))
+                   -> Batch 
+                   -> Either String (Batch, r)
+activeDefManagerOp operation = 
+    activeCoreOp (\batch core -> let
+        defManager = Core.defManager core
+        in case operation batch defManager of 
+            Left message             -> Left message
+            Right (newDefManager, r) -> Right (newCore, r) where
+                                            newCore = core { Core.defManager = newDefManager })
+
+
 
 readonly :: Either String (a, r) -> Either String r
 readonly op = case op of 
@@ -231,11 +243,63 @@ libraryRootDef libraryID = readonly . activeCoreOp (\batch core -> let
         Just library -> let 
             rootDefID' = Library.rootDefID library 
             in case Core.nodeDefByID core rootDefID' of
-                Nothing      -> Left "Wrong `rootDefID` in `library`"
+                Nothing      -> Left "Wrong `rootDefID`"
                 Just rootDef -> Right (core, (rootDefID', rootDef)))
 
 
 -------- Definitions ----------------------------------------------------------
+
+
+defsGraph :: Batch -> Either String DefManager
+defsGraph = readonly . activeDefManagerOp (\_ defManager -> Right (defManager, defManager) )
+
+
+--newDefinition :: IORef Project -> Maybe TTypes.Type -> Maybe (Vector Import)
+--                            -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes
+--                            -> IO Definition
+--newDefinition _ ttype timports tflags tattrs = do 
+--    putStrLn "Creating new definition...\t\tsuccess!"
+--    return $ Definition ttype timports tflags tattrs (Just 0) (Just 0)
+
+
+addDefinition :: Definition -> Definition.ID -> Batch -> Either String (Batch, Definition.ID)
+addDefinition definition parentID = activeDefManagerOp (\batch defManager ->
+    case DefManager.gelem parentID defManager of 
+        False -> Left "Wrong `defID`"
+        True  -> Right (newDefManager, defID) where
+                        [defID]       = DefManager.newNodes 1 defManager
+                        newDefManager = DefManager.addToParent (parentID, defID, definition) defManager)
+
+
+updateDefinition :: (Definition.ID, Definition) -> Batch -> Either String Batch
+updateDefinition (defID, def) = noresult .activeDefManagerOp (\batch defManager ->
+    -- putStrLn "call updateDefinition - NOT IMPLEMENTED, sorry."
+    Right (defManager, ()))
+
+
+removeDefinition :: Definition.ID -> Batch -> Either String Batch 
+removeDefinition defID = noresult . activeDefManagerOp (\batch defManager -> 
+    case DefManager.gelem defID defManager of 
+        False -> Left "Wrong `defID`"
+        True  -> Right (newDefManager, ()) where 
+                        newDefManager = DefManager.delNode defID defManager)
+
+
+definitionChildren :: Definition.ID -> Batch -> Either String [(Definition.ID, Definition)]
+definitionChildren defID = readonly . activeDefManagerOp (\batch defManager -> 
+    case DefManager.gelem defID defManager of 
+        False -> Left "Wrong `defID`"
+        True  -> Right (defManager, children) where
+                       children = DefManager.children defManager defID)
+
+
+definitionParent :: Definition.ID -> Batch -> Either String (Definition.ID, Definition)
+definitionParent defID = readonly . activeDefManagerOp (\batch defManager -> 
+    case DefManager.gelem defID defManager of 
+        False           -> Left "Wrong `defID`"
+        True            -> case DefManager.parent defManager defID of
+            Nothing     -> Left "Definition has no parent"
+            Just parent -> Right (defManager, parent))
 
 
 -------- Graphs ---------------------------------------------------------------
