@@ -38,6 +38,8 @@ import qualified Flowbox.Luna.Samples.Packages              as Sample
 import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
 import           Flowbox.Batch.Project.ProjectManager         (ProjectManager)
 import qualified Flowbox.Luna.Network.Graph.Graph              as Graph
+import qualified Flowbox.Luna.System.UniPath              as UniPath
+import           Flowbox.Luna.System.UniPath                (UniPath)
 
 port :: PortNumber
 port = 30521
@@ -105,7 +107,9 @@ main = do
     let
         pm = ProjectManager.empty
         --g = Graph.empty
-        p = Project.empty 
+        p = Project.empty { Project.name = "TestProject"
+                          , Project.path = UniPath.fromUnixString "/tmp/workspace/TestProject"
+                          }
 
     print p
     return ()

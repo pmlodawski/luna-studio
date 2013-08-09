@@ -21,8 +21,8 @@ import           Flowbox.Luna.System.UniPath                (UniPath)
 
 
 data Project = Project { name  :: String
-                       , core  :: Core
                        , path  :: UniPath
+                       , core  :: Core
                        , attrs :: Attributes
                        } deriving(Show)
 
@@ -30,4 +30,4 @@ type ID = Int
 
 
 empty :: Project
-empty = Project "" Core.empty UniPath.empty Attributes.empty
+empty = Project "" UniPath.empty Core.empty Attributes.empty
