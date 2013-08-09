@@ -28,26 +28,28 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 
 
 instance Convert (Project.ID, Project) (TProjects.Project, Core) where
-    encode (projectID, project) = (tproject, core) where
-        Project core name path attrs = project
-        tname      = pack name
-        tpath      = pack $ UniPath.toUnixString path
-        tattrs     = encode attrs
-        tprojectID = itoi32 projectID
-        tproject   = TProjects.Project (Just tname) (Just tpath) (Just tattrs) (Just tprojectID)
-    decode (TProjects.Project mtname mtpath mtattrs mtprojectID, core) = case mtname of
-        Nothing                             -> Left "`name` field is missing"
-        Just tname                          -> case mtpath of
-            Nothing                         -> Left "`path` field is missing"
-            Just tpath                      -> case mtattrs of
-                Nothing                     -> Left "`attrs` field is missing"
-                Just tattrs                 -> case decode tattrs of
-                    Left message            -> Left $ "Failed to decode `attrs`: " ++ message
-                    Right attrs             -> case mtprojectID of
-                        Nothing             -> Left "`projectID` field is missing"
-                        Just tprojectID     -> Right (projectID, project) where
-                            name      = unpack tname
-                            path      = UniPath.fromUnixString $ unpack tpath
-                            projectID = i32toi tprojectID
-                            project   = Project core name path attrs
+    encode (projectID, project) = error "fixme"
+        --(tproject, core) where
+        --Project core name path attrs = project
+        --tname      = pack name
+        --tpath      = pack $ UniPath.toUnixString path
+        --tattrs     = encode attrs
+        --tprojectID = itoi32 projectID
+        --tproject   = TProjects.Project (Just tname) (Just tpath) (Just tattrs) (Just tprojectID)
+    decode (TProjects.Project mtname mtpath mtattrs mtprojectID, core) = error "fixme"
+        --case mtname of
+        --Nothing                             -> Left "`name` field is missing"
+        --Just tname                          -> case mtpath of
+        --    Nothing                         -> Left "`path` field is missing"
+        --    Just tpath                      -> case mtattrs of
+        --        Nothing                     -> Left "`attrs` field is missing"
+        --        Just tattrs                 -> case decode tattrs of
+        --            Left message            -> Left $ "Failed to decode `attrs`: " ++ message
+        --            Right attrs             -> case mtprojectID of
+        --                Nothing             -> Left "`projectID` field is missing"
+        --                Just tprojectID     -> Right (projectID, project) where
+        --                    name      = unpack tname
+        --                    path      = UniPath.fromUnixString $ unpack tpath
+        --                    projectID = i32toi tprojectID
+        --                    project   = Project core name path attrs
 

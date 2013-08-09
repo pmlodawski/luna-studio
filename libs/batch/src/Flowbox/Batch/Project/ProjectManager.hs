@@ -8,7 +8,7 @@
 module Flowbox.Batch.Project.ProjectManager (
     module Flowbox.Luna.Data.Graph,
     ProjectManager,
-
+    empty,
 	projects,
 	createProject,
 	openProject,
@@ -19,11 +19,14 @@ module Flowbox.Batch.Project.ProjectManager (
 import qualified Flowbox.Batch.Project.Project as Project
 import           Flowbox.Batch.Project.Project    (Project)
 
-import           Flowbox.Luna.Data.Graph         hiding(Graph, Edge)
+import           Flowbox.Luna.Data.Graph         hiding(Graph, Edge, empty)
 import qualified Flowbox.Luna.Data.Graph         as DG
 
 
 type ProjectManager = DG.Graph Project ()
+
+empty :: ProjectManager
+empty = DG.empty
 
 
 projects :: ProjectManager -> [(Project.ID, Project)]

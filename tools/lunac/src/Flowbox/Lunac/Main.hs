@@ -18,6 +18,8 @@ import           Flowbox.Luna.Codegen.Hs.Cabal.Config      (Config)
 import qualified Flowbox.Luna.Codegen.Hs.Cabal.Config    as Config
 import qualified Flowbox.Luna.Codegen.Hs.Cabal.Section   as Section
 
+import qualified Flowbox.Luna.Network.Graph.Graph              as Graph
+
 import Flowbox.Luna.Data.Graph
 
 
