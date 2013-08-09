@@ -11,8 +11,8 @@ module Flowbox.Luna.Lib.Library(
     empty
 ) where
 
-import qualified Flowbox.Luna.System.UniPath as UniPath
-import           Flowbox.Luna.System.UniPath   (UniPath)
+import qualified Flowbox.System.UniPath as UniPath
+import           Flowbox.System.UniPath   (UniPath)
 
 data Library =  Library{
     name          :: String,

@@ -29,8 +29,8 @@ import qualified Flowbox.Luna.Network.Def.Definition      as Definition
 import           Flowbox.Luna.Network.Def.Definition        (Definition(..))
 import qualified Flowbox.Luna.Network.Flags               as Flags
 import qualified Flowbox.Luna.Network.Graph.Graph         as Graph
-import qualified Flowbox.Luna.System.UniPath              as UniPath
-import           Flowbox.Luna.System.UniPath                (UniPath)
+import qualified Flowbox.System.UniPath                   as UniPath
+import           Flowbox.System.UniPath                     (UniPath)
 import qualified Flowbox.Luna.Type.Type                   as Type
 
 
@@ -45,13 +45,13 @@ empty = Batch ProjectManager.empty (-1)
 -------- Projects -------------------------------------------------------------
 
 projects :: Batch -> [(Project.ID, Project)]
-projects batch = projectList where
-    aprojectManager = projectManager batch
-    projectList     = ProjectManager.projects aprojectManager
+projects batch = ProjectManager.projects (projectManager batch)
+
 
 
 createProject :: Batch -> Project -> IO ()
 createProject _ = ProjectManager.createProject
+
 
 
 openProject :: Batch -> Project -> IO (Batch, (Project.ID, Project))
@@ -73,15 +73,12 @@ closeProject batch projectID = do
 
 
 storeProject :: Batch -> Project.ID -> IO ()
-storeProject batch projectID = do
-    let aprojectManager = projectManager batch
-    _ <- ProjectManager.storeProject aprojectManager projectID
-    return ()
+storeProject batch projectID = ProjectManager.storeProject (projectManager batch) projectID
+
 
 
 setActiveProject :: Batch -> Project.ID -> Batch
-setActiveProject batch projectID = newBatch where
-    newBatch = batch { activeProjectID = projectID }
+setActiveProject batch projectID = batch { activeProjectID = projectID }
 
 
 -------- Libraries ------------------------------------------------------------

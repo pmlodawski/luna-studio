@@ -11,14 +11,14 @@ module Flowbox.Luna.Tools.Serialize.Serializer(
     serialize
 ) where
 
-import System.Directory
-import System.IO
+import System.Directory                              as Dir
+import qualified System.IO                           as IO
 
-import qualified Flowbox.Luna.System.UniPath         as UniPath
-import           Flowbox.Luna.System.UniPath           (UniPath)
+import qualified Flowbox.System.UniPath         as UniPath
+import           Flowbox.System.UniPath           (UniPath)
 
 
-data Serializable = Serializable UniPath (Handle -> IO())
+data Serializable = Serializable UniPath (IO.Handle -> IO())
 
 
 serializeMany :: [Serializable] -> IO()
@@ -31,6 +31,6 @@ serialize :: Serializable -> IO()
 serialize (Serializable upath save) = do
     let foldername = UniPath.toUnixString $ init upath
         filename   = UniPath.toUnixString upath
-    createDirectoryIfMissing True foldername
-    withFile filename WriteMode save
+    Dir.createDirectoryIfMissing True foldername
+    IO.withFile filename IO.WriteMode save
 

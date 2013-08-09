@@ -7,7 +7,8 @@
 
 module Flowbox.Luna.Samples.Packages where
 
-
+import qualified Flowbox.System.UniPath                   as UniPath
+import           Flowbox.System.UniPath                     (UniPath)
 import qualified Flowbox.Luna.Core                        as Core
 import           Flowbox.Luna.Core                          (Core(..))
 import qualified Flowbox.Luna.Network.Def.DefManager      as DefManager
@@ -19,8 +20,6 @@ import qualified Flowbox.Luna.Lib.LibManager              as LibManager
 import           Flowbox.Luna.Lib.LibManager                (LibManager(..))
 import qualified Flowbox.Luna.Lib.Library                 as Library
 import           Flowbox.Luna.Lib.Library                   (Library(..))
-import qualified Flowbox.Luna.System.UniPath              as UniPath
-import           Flowbox.Luna.System.UniPath                (UniPath)
 import qualified Flowbox.Luna.Type.Type                   as Type
 import           Flowbox.Luna.Type.Type                     (Type(..))
 

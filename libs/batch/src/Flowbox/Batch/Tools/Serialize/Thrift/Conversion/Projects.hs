@@ -14,14 +14,14 @@ import qualified Data.HashMap.Strict as HashMap
 import           Data.HashMap.Strict   (HashMap)
 import           Data.Text.Lazy        (Text, pack, unpack)
 
-import qualified Projects_Types                                            as TProjects
-import qualified Flowbox.Batch.Project.Project                             as Project
-import           Flowbox.Batch.Project.Project                               (Project(..))
-import           Flowbox.Luna.Core                                           (Core(..))
-import           Flowbox.Luna.Network.Flags                                  (Flags(..))
-import qualified Flowbox.Luna.Network.Attributes                           as Attributes
-import           Flowbox.Luna.Network.Attributes                             (Attributes)
-import qualified Flowbox.Luna.System.UniPath                               as UniPath
+import qualified Projects_Types                           as TProjects
+import qualified Flowbox.Batch.Project.Project            as Project
+import           Flowbox.Batch.Project.Project              (Project(..))
+import           Flowbox.Luna.Core                          (Core(..))
+import           Flowbox.Luna.Network.Flags                 (Flags(..))
+import qualified Flowbox.Luna.Network.Attributes          as Attributes
+import           Flowbox.Luna.Network.Attributes            (Attributes)
+import qualified Flowbox.System.UniPath                   as UniPath
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 

@@ -16,7 +16,8 @@ module Flowbox.Luna.Samples.HelloWorld(
 ) where
 
 
-import qualified Data.Map                        as Map
+import qualified Data.Map                                as Map
+import qualified Flowbox.System.UniPath                  as UniPath
 import qualified Flowbox.Luna.Network.Flags              as Flags
 import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
@@ -27,12 +28,11 @@ import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
 import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node)
-import qualified Flowbox.Luna.Network.Def.Definition        as Definition
-import           Flowbox.Luna.Network.Def.Definition          (Definition(..))
+import qualified Flowbox.Luna.Network.Def.Definition     as Definition
+import           Flowbox.Luna.Network.Def.Definition       (Definition(..))
 import           Flowbox.Luna.Lib.Library                  (Library(..))
 import qualified Flowbox.Luna.Lib.LibManager             as LibManager
 import           Flowbox.Luna.Lib.LibManager               (LibManager(..))
-import qualified Flowbox.Luna.System.UniPath             as UniPath
 import qualified Flowbox.Luna.Type.Type                  as Type
 import           Flowbox.Luna.Type.Type                    (Type(..))
 import           Flowbox.Luna.Network.Path.Path            (Path(..))

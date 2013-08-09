@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.System.UniPath(
+module Flowbox.System.UniPath(
 UniPath,
 empty,
 fromUnixString,
@@ -22,16 +22,13 @@ setExtension
 
 import Data.List.Split (splitOn)
 import Data.List (intercalate, intersperse)
--- import Data.String.Utils (join)
+import Data.String.Utils (join)
 
 
 data PathItem = Node String | Root String | Up | Current| Empty deriving (Eq,Ord,Show)  
 
 type UniPath = [PathItem]
 
--- This function is defined vecause Data.StringUtils(join) cannot be used in JS right now: https://github.com/valderman/haste-compiler/issues/63
-join :: [a] -> [[a]] -> [a]
-join delim l = concat (intersperse delim l)
 
 empty :: UniPath
 empty = []

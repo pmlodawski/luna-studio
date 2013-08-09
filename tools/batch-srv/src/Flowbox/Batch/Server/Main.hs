@@ -111,5 +111,7 @@ main = do
                           , Project.path = UniPath.fromUnixString "/tmp/workspace/TestProject"
                           }
 
+    ProjectManager.createProject p
+
     print p
     return ()

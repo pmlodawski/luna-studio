@@ -16,11 +16,13 @@ module Flowbox.Batch.Project.ProjectManager (
 	storeProject
 ) where
 
-import qualified Flowbox.Batch.Project.Project as Project
-import           Flowbox.Batch.Project.Project    (Project)
-
-import           Flowbox.Luna.Data.Graph         hiding(Graph, Edge, empty)
-import qualified Flowbox.Luna.Data.Graph         as DG
+import System.Directory                                   as Dir
+import qualified Flowbox.System.UniPath                   as UniPath
+import           Flowbox.System.UniPath                     (UniPath)
+import qualified Flowbox.Batch.Project.Project            as Project
+import           Flowbox.Batch.Project.Project              (Project)
+import           Flowbox.Luna.Data.Graph                  hiding(Graph, Edge, empty)
+import qualified Flowbox.Luna.Data.Graph                  as DG
 
 
 type ProjectManager = DG.Graph Project ()
@@ -34,7 +36,10 @@ projects = error "Not implemented"
 
 
 createProject :: Project -> IO () 
-createProject = error "Not implemented"
+createProject p = do
+	let
+		path = UniPath.toUnixString $ Project.path p
+	Dir.createDirectoryIfMissing True path
 
 
 openProject :: ProjectManager -> Project -> IO (ProjectManager, (Project.ID, Project))

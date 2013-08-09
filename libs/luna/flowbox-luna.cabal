@@ -73,7 +73,6 @@ Library
         Flowbox.Luna.Network.Def.Edge,
         Flowbox.Luna.Network.Def.DefManager,
         Flowbox.Luna.Network.Def.Definition,
-        Flowbox.Luna.System.UniPath,
                    
         Attrs_Types,
         Types_Consts,
@@ -93,6 +92,7 @@ Library
                   containers,
                   directory,
                   fgl,
+                  flowbox-utils,
                   graphviz,
                   hashable,
                   MissingH == 1.2.0.0,

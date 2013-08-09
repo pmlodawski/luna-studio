@@ -30,6 +30,7 @@ Library
                   containers,
                   directory,
                   fgl,
+                  flowbox-utils,
                   graphviz,
                   hashable,
                   MissingH == 1.2.0.0,
