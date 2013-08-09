@@ -30,7 +30,6 @@ Library
         Flowbox.Luna.Core,
         Flowbox.Luna.Tools.TypeChecker,
         Flowbox.Luna.Tools.Graphviz,
-        Flowbox.Luna.Tools.Serialize.Serializer,
         Flowbox.Luna.Tools.Serialize.Lib,
         Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs,
         Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs,

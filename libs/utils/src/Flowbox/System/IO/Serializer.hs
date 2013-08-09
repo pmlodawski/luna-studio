@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Luna.Tools.Serialize.Serializer(
+module Flowbox.System.IO.Serializer(
     Serializable(..),
 
     serializeMany,

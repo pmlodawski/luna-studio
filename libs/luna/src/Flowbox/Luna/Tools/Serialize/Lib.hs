@@ -35,8 +35,8 @@ import           Flowbox.Luna.Type.Type                     (Type(..))
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
-import qualified Flowbox.Luna.Tools.Serialize.Serializer as Serializer
-import           Flowbox.Luna.Tools.Serialize.Serializer   (Serializable(..))
+import qualified Flowbox.System.IO.Serializer             as Serializer
+import           Flowbox.System.IO.Serializer               (Serializable(..))
 
 
 
