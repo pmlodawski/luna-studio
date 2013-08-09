@@ -20,6 +20,8 @@ import           Data.Vector      (Vector)
 
 import           Flowbox.Batch.Server.Handlers.Common
 import qualified Projects_Types                                            as TProjects
+import qualified Flowbox.Batch.Batch                                       as Batch
+import           Flowbox.Batch.Batch                                         (Batch(..))
 import qualified Flowbox.Batch.Project.Project                             as Project
 import           Flowbox.Batch.Project.Project                               (Project(..))
 import qualified Flowbox.Luna.Core                                         as Core
@@ -29,8 +31,8 @@ import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects    ()
 
 
 ------ public api helpers -----------------------------------------
-projectOperation :: (IORef Project -> (Project.ID, Project) -> a)
-                 ->  IORef Project -> Maybe TProjects.Project -> a
+projectOperation :: (IORef Batch -> (Project.ID, Project) -> a)
+                 ->  IORef Batch -> Maybe TProjects.Project -> a
 projectOperation operation batchHandler mtproject = case mtproject of 
     Nothing       -> throw' "`project` argument is missing";
     Just tproject -> case decode (tproject, Core.empty) of
@@ -40,60 +42,47 @@ projectOperation operation batchHandler mtproject = case mtproject of
 
 ------ public api -------------------------------------------------
 
-projects :: IORef Project -> IO (Vector TProjects.Project)
+projects :: IORef Batch -> IO (Vector TProjects.Project)
 projects batchHandler = do
-    putStrLn "NOT IMPLEMENTED"
-    return undefined
-    --putStrLn "call libraries"
-    --project <- readIORef batchHandler
-    --let core        = Project.core project
-    --    libManager' = Core.libManager core
-    --    libs        = LibManager.labNodes libManager'
-    --    tlibs       = map encode libs
-    --    tlibsVector = Vector.fromList tlibs
-    --return tlibsVector
+    batch <- readIORef batchHandler
+    let projects        = Batch.projects batch
+        tprojectsWCore  = map encode projects
+        tprojects       = map (\(p, _) -> p) tprojectsWCore
+        tprojectsVector = Vector.fromList tprojects
+    return tprojectsVector
 
 
-createProject :: IORef Project -> Maybe TProjects.Project -> IO TProjects.Project
-createProject = projectOperation (\ batchHandler (projectID, project) -> do
-    putStrLn "NOT IMPLEMENTED"
-    return undefined) --libOperation (\ batchHandler (_, library) -> do
-    --putStrLn "call createLibrary - NOT YET IMPLEMENTED"
-    --return $ encode (-1, library))
+createProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
+createProject = projectOperation (\ batchHandler (_, project) -> do
+    batch <- readIORef batchHandler
+    Batch.createProject project batch)
 
 
-openProject :: IORef Project -> Maybe TProjects.Project -> IO TProjects.Project
-openProject = projectOperation (\ batchHandler (projectID, project) -> do
-    putStrLn "NOT IMPLEMENTED"
-    return undefined) --libOperation (\ batchHandler (_, library) -> do
-    --putStrLn "call loadLibrary"
-    --project <- readIORef batchHandler
-    --let core        = Project.core project
-    --    (newCore, newLibrary, newLibID) = Core.loadLibrary core library
-    --    newTLibrary = encode (newLibID, newLibrary)
-    --    newProject = project{Project.core = newCore}
-    --writeIORef batchHandler newProject
-    --return newTLibrary)
+openProject :: IORef Batch -> Maybe TProjects.Project -> IO TProjects.Project
+openProject = projectOperation (\ batchHandler (_, project) -> do
+    batch <- readIORef batchHandler
+    (newBatch, (projectID, project)) <- Batch.openProject project batch
+    writeIORef batchHandler newBatch
+    let (tproject, _) = encode (projectID, project)
+    return tproject)
 
 
-closeProject :: IORef Project -> Maybe TProjects.Project -> IO ()
-closeProject = projectOperation (\ batchHandler (projectID, project) -> do
-    putStrLn "NOT IMPLEMENTED") --libOperation (\ batchHandler (libID, _) -> do
-    --putStrLn "call unloadLibrary"
-    --project <- readIORef batchHandler
-    --let core       = Project.core project
-    --    newCore = Core.unloadLibrary core libID
-    --    newProject = project{Project.core = newCore}
-    --writeIORef batchHandler newProject)
+
+closeProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
+closeProject = projectOperation (\ batchHandler (projectID, _) -> do
+    batch <- readIORef batchHandler
+    newBatch <- Batch.closeProject projectID batch
+    writeIORef batchHandler newBatch)
 
 
-storeProject :: IORef Project -> Maybe TProjects.Project -> IO ()
-storeProject = projectOperation (\ batchHandler (projectID, project) -> do
-    putStrLn "NOT IMPLEMENTED") --libOperation (\ batchHandler (libID, _) -> do
-    --putStrLn "call storeLibrary - NOT YET IMPLEMENTED")
+storeProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
+storeProject = projectOperation (\ batchHandler (projectID, _) -> do
+    batch <- readIORef batchHandler
+    Batch.storeProject projectID batch)
 
 
-setActiveProject :: IORef Project -> Maybe TProjects.Project -> IO ()
-setActiveProject = projectOperation (\ batchHandler (projectID, project) -> do
-    putStrLn "NOT IMPLEMENTED")
-
+setActiveProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
+setActiveProject = projectOperation (\ batchHandler (projectID, _) -> do
+    batch <- readIORef batchHandler
+    let newBatch = Batch.setActiveProject projectID batch
+    writeIORef batchHandler newBatch)

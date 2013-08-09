@@ -27,7 +27,7 @@ class BatchHandler : virtual public BatchIf {
     printf("projects\n");
   }
 
-  void createProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project) {
+  void createProject(const  ::flowbox::batch::projects::Project& project) {
     // Your implementation goes here
     printf("createProject\n");
   }

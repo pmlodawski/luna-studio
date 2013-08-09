@@ -86,13 +86,10 @@ recv_createProject ip = do
     else return ()
   res <- read_CreateProject_result ip
   readMessageEnd ip
-  case f_CreateProject_result_success res of
-    Just v -> return v
-    Nothing -> do
-      case f_CreateProject_result_missingFields res of
-        Nothing -> return ()
-        Just _v -> throw _v
-      throw (AppExn AE_MISSING_RESULT "createProject failed: unknown result")
+  case f_CreateProject_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
+  return ()
 openProject (ip,op) arg_project = do
   send_openProject op arg_project
   recv_openProject ip

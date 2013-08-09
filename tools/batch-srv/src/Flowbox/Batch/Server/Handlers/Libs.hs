@@ -18,10 +18,11 @@ import           Data.IORef
 import qualified Data.Vector    as Vector
 import           Data.Vector      (Vector)
 
-
 import qualified Defs_Types                                                as TDefs
 import           Flowbox.Batch.Server.Handlers.Common
 import qualified Libs_Types                                                as TLibs
+import qualified Flowbox.Batch.Batch                                       as Batch
+import           Flowbox.Batch.Batch                                         (Batch(..))
 import qualified Flowbox.Batch.Project.Project                             as Project
 import           Flowbox.Batch.Project.Project                               (Project(..))
 import qualified Flowbox.Luna.Core                                         as Core
@@ -36,8 +37,8 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs         ()
 
 
 ------ public api helpers -----------------------------------------
-libOperation :: (IORef Project -> (Int, Library) -> a)
-             ->  IORef Project -> Maybe TLibs.Library -> a
+libOperation :: (IORef Batch -> (Int, Library) -> a)
+             ->  IORef Batch -> Maybe TLibs.Library -> a
 libOperation operation batchHandler tlibrary = case tlibrary of 
         (Just tlib) -> do 
             case decode tlib :: Either String (Int, Library) of
@@ -47,61 +48,63 @@ libOperation operation batchHandler tlibrary = case tlibrary of
 
 
 ------ public api -------------------------------------------------
-libraries :: IORef Project -> IO (Vector TLibs.Library)
+libraries :: IORef Batch -> IO (Vector TLibs.Library)
 libraries batchHandler = do 
     putStrLn "call libraries"
-    project <- readIORef batchHandler
-    let core        = Project.core project
-        libManager' = Core.libManager core
-        libs        = LibManager.labNodes libManager'
-        tlibs       = map encode libs
-        tlibsVector = Vector.fromList tlibs
-    return tlibsVector
+    batch <- readIORef batchHandler
+    case Batch.libraries batch of
+        Left message -> throw' message
+        Right libs -> do 
+            let tlibs       = map encode libs
+                tlibsVector = Vector.fromList tlibs
+            return tlibsVector
 
 
-createLibrary :: IORef Project -> Maybe TLibs.Library -> IO TLibs.Library
+createLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
 createLibrary = libOperation (\ batchHandler (_, library) -> do
     putStrLn "call createLibrary - NOT YET IMPLEMENTED"
     return $ encode (-1, library))
 
 
-loadLibrary :: IORef Project -> Maybe TLibs.Library -> IO TLibs.Library
+loadLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
 loadLibrary = libOperation (\ batchHandler (_, library) -> do
     putStrLn "call loadLibrary"
-    project <- readIORef batchHandler
-    let core        = Project.core project
-        (newCore, newLibrary, newLibID) = Core.loadLibrary core library
-        newTLibrary = encode (newLibID, newLibrary)
-        newProject = project{Project.core = newCore}
-    writeIORef batchHandler newProject
-    return newTLibrary)
+    batch <- readIORef batchHandler
+    r     <- Batch.loadLibrary library batch
+    case r of
+        Left message                             -> throw' message
+        Right (newBatch, (newLibID, newLibrary)) -> do
+            let newTLibrary = encode (newLibID, newLibrary)
+            writeIORef batchHandler newBatch
+            return newTLibrary)
 
 
-unloadLibrary :: IORef Project -> Maybe TLibs.Library -> IO ()
+unloadLibrary :: IORef Batch -> Maybe TLibs.Library -> IO ()
 unloadLibrary = libOperation (\ batchHandler (libID, _) -> do
     putStrLn "call unloadLibrary"
-    project <- readIORef batchHandler
-    let core       = Project.core project
-        newCore = Core.unloadLibrary core libID
-        newProject = project{Project.core = newCore}
-    writeIORef batchHandler newProject)
+    batch <- readIORef batchHandler
+    case Batch.unloadLibrary libID batch of 
+        Left message   -> throw' message
+        Right newBatch -> do
+            writeIORef batchHandler newBatch)
 
 
-storeLibrary :: IORef Project -> Maybe TLibs.Library -> IO ()
+storeLibrary :: IORef Batch -> Maybe TLibs.Library -> IO ()
 storeLibrary = libOperation (\ batchHandler (libID, _) -> do
-    putStrLn "call storeLibrary - NOT YET IMPLEMENTED")
+    batch <- readIORef batchHandler
+    r     <- Batch.storeLibrary libID batch
+    case r of 
+        Left message -> throw' message
+        Right ()     -> return ())
 
 
-libraryRootDef :: IORef Project -> Maybe TLibs.Library -> IO TDefs.Definition
+libraryRootDef :: IORef Batch -> Maybe TLibs.Library -> IO TDefs.Definition
 libraryRootDef = libOperation (\ batchHandler (_, library) -> do
     putStrLn "call libraryRootDef"
-    project <- readIORef batchHandler
-    let core       = Project.core project
-        rootDefID' = Library.rootDefID library
-        rootDef = Core.nodeDefByID core rootDefID'
-    case rootDef of 
-        Just rd -> do
-                   let (trootDef, _) = encode (rootDefID', rd)
-                   return trootDef
-        Nothing -> throw' "Wrong `rootDefID` in `library` argument")
-
+    batch <- readIORef batchHandler
+    case Batch.libraryRootDef library batch of 
+        Left message               -> throw' message
+        Right (rootDefID, rootDef) -> do 
+            let (trootDef, _) = encode (rootDefID, rootDef)
+            return trootDef)
+         
