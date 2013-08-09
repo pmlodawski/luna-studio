@@ -47,8 +47,8 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 defOperation :: (IORef Project -> Definition.ID -> Definition -> a) -> IORef Project 
              -> Maybe TDefs.Definition -> a
 defOperation operation batchHandler tdefinition  = case tdefinition of 
-    Nothing   -> throw' "`definition` field is missing"
-    Just tdef -> case (decode (tdef, Graph.empty) :: Either String (Int, Definition) ) of 
+    Nothing                       -> throw' "`definition` field is missing"
+    Just tdef                     -> case (decode (tdef, Graph.empty) :: Either String (Int, Definition) ) of 
         Left message              -> throw' ("Failed to decode `definition` 2: " ++ message)
         Right (defID, definition) -> do operation batchHandler defID definition
             
@@ -58,13 +58,13 @@ defOperation operation batchHandler tdefinition  = case tdefinition of
 defParentOperation :: (IORef Project -> Definition -> Int -> a) -> IORef Project
                    -> Maybe TDefs.Definition -> Maybe TDefs.Definition -> a
 defParentOperation operation batchHandler mtdefinition mtparent = case mtdefinition of 
-    Nothing   -> throw' "`definition` field is missing"
-    Just tdefinition -> case decode (tdefinition, Graph.empty) :: Either String (Definition.ID, Definition) of
-        Left message -> throw' $ "Failed to decode `definition` 1: " ++ message
-        Right (_, definition) -> case mtparent of 
-            Nothing -> throw' "`parent` field is missing"
-            Just tparent -> case decode (tparent, Graph.empty) :: Either String (Definition.ID, Definition) of 
-                Left message -> throw' $ "Failed to decode `parent`: " ++ message
+    Nothing                         -> throw' "`definition` field is missing"
+    Just tdefinition                -> case decode (tdefinition, Graph.empty) :: Either String (Definition.ID, Definition) of
+        Left message                -> throw' $ "Failed to decode `definition` 1: " ++ message
+        Right (_, definition)       -> case mtparent of 
+            Nothing                 -> throw' "`parent` field is missing"
+            Just tparent            -> case decode (tparent, Graph.empty) :: Either String (Definition.ID, Definition) of 
+                Left message        -> throw' $ "Failed to decode `parent`: " ++ message
                 Right (parentID, _) -> operation batchHandler definition parentID
                 
 
