@@ -9,13 +9,15 @@ module Flowbox.Batch.Project.ProjectManager (
     module Flowbox.Luna.Data.Graph,
     ProjectManager,
 
+	projects,
 	createProject,
 	openProject,
 	closeProject,
-	projects
+	storeProject
 ) where
 
-import           Flowbox.Batch.Project.Project  (Project)
+import qualified Flowbox.Batch.Project.Project as Project
+import           Flowbox.Batch.Project.Project    (Project)
 
 import           Flowbox.Luna.Data.Graph         hiding(Graph, Edge)
 import qualified Flowbox.Luna.Data.Graph         as DG
@@ -24,17 +26,21 @@ import qualified Flowbox.Luna.Data.Graph         as DG
 type ProjectManager = DG.Graph Project ()
 
 
-createProject :: Project -> IO()
+projects :: ProjectManager -> [(Project.ID, Project)]
+projects = error "Not implemented"
+
+
+createProject :: Project -> IO () 
 createProject = error "Not implemented"
 
 
-openProject :: ProjectManager -> Project -> IO ProjectManager
+openProject :: ProjectManager -> Project -> IO (ProjectManager, (Project.ID, Project))
 openProject = error "Not implemented"
 
 
-closeProject :: ProjectManager -> Project -> IO ProjectManager
+closeProject :: ProjectManager -> Project.ID -> IO ProjectManager
 closeProject = error "Not implemented"
 
 
-projects :: ProjectManager -> [Project]
-projects = error "Not implemented"
+storeProject :: ProjectManager -> Project.ID -> IO ()
+storeProject = error "Not implemented"

@@ -21,6 +21,7 @@ Library
                     TypeSynonymInstances
  
     Exposed-modules:
+                    Flowbox.Batch.Batch
                     Flowbox.Batch.Project.Project
                     Flowbox.Batch.Project.ProjectManager
                     Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects
