@@ -12,7 +12,7 @@ include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/
 include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/defs.thrift"
 include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/graph.thrift"
 include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/libs.thrift"
-include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/projects.thrift"
+include "../../../../../../../libs/batch/src/Flowbox/Batch/Tools/Serialize/Thrift/projects.thrift"
 include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/types.thrift"
 
 /*
