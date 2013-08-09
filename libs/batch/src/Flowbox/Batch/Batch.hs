@@ -43,14 +43,19 @@ import qualified Flowbox.Luna.Network.Def.Definition      as Definition
 import           Flowbox.Luna.Network.Def.Definition        (Definition(..))
 import qualified Flowbox.Luna.Network.Flags               as Flags
 import qualified Flowbox.Luna.Network.Graph.Graph         as Graph
+import           Flowbox.Luna.Network.Graph.Graph           (Graph)
+import qualified Flowbox.Luna.Network.Graph.Node          as Node
+import           Flowbox.Luna.Network.Graph.Node            (Node(..))
 import qualified Flowbox.Luna.System.UniPath              as UniPath
 import           Flowbox.Luna.System.UniPath                (UniPath)
 import qualified Flowbox.Luna.Type.Type                   as Type
 
 
+
 data Batch = Batch { projectManager  :: ProjectManager
                    , activeProjectID :: Project.ID
                    }
+
 
 empty :: Batch
 empty = Batch ProjectManager.empty (-1)
@@ -163,7 +168,6 @@ noresult op = case op of
     Right (a, _) -> Right a
 
 
-
 -------- Projects -------------------------------------------------------------
 
 projects :: Batch -> [(Project.ID, Project)]
@@ -249,7 +253,6 @@ libraryRootDef libraryID = readonly . activeCoreOp (\batch core -> let
 
 -------- Definitions ----------------------------------------------------------
 
-
 defsGraph :: Batch -> Either String DefManager
 defsGraph = readonly . activeDefManagerOp (\_ defManager -> Right (defManager, defManager) )
 
@@ -303,3 +306,63 @@ definitionParent defID = readonly . activeDefManagerOp (\batch defManager ->
 
 
 -------- Graphs ---------------------------------------------------------------
+
+graph :: Definition.ID -> Batch -> Either String Graph
+graph defID = readonly . activeDefManagerOp (\batch defManager -> 
+    case DefManager.lab defManager defID of 
+        Nothing  -> Left "Wrong `defID`"
+        Just def -> Right (defManager, Definition.graph def))
+
+
+addNode :: Node -> Definition.ID -> Batch -> Either String (Batch, (Node.ID, Node))
+addNode node defID = activeDefManagerOp (\batch defManager -> 
+    case DefManager.lab defManager defID of 
+        Nothing         -> Left "Wrong `defID`"
+        Just definition -> Right (newDefManager, (nodeID, node)) where
+            agraph        = Definition.graph definition
+            [nodeID]      = Graph.newNodes 1 agraph
+            newGraph      = Graph.insNode (nodeID, node) agraph
+            newDefinition = definition {Definition.graph =  newGraph}
+            newDefManager = DefManager.updateNode (defID, newDefinition) defManager)
+
+
+updateNode :: (Node.ID, Node) -> Definition.ID -> Batch -> Either String Batch
+updateNode (nodeID, node) defID = noresult . activeDefManagerOp (\batch defManager -> 
+    case DefManager.lab defManager defID of 
+        Nothing         -> Left "Wrong `defID`"
+        Just definition -> let agraph = Definition.graph definition
+            in case Graph.gelem nodeID agraph of 
+                False -> Left "Wrong `nodeID`"
+                True  -> Right (newDefManager, ()) where
+                     newGraph      = Graph.updateNode (nodeID, node) agraph
+                     newDefinition = definition {Definition.graph =  newGraph}
+                     newDefManager = DefManager.updateNode (defID, newDefinition) defManager)
+
+
+removeNode :: Node.ID -> Definition.ID -> Batch -> Either String Batch
+removeNode nodeID defID = noresult . activeDefManagerOp (\batch defManager -> 
+    case DefManager.lab defManager defID of 
+        Nothing         -> Left "Wrong `defID`"
+        Just definition -> let agraph = Definition.graph definition
+            in case Graph.gelem nodeID agraph of 
+                False -> Left "Wrong `nodeID`"
+                True  -> Right (newDefManager, ()) where
+                    newGraph      = Graph.delNode nodeID agraph
+                    newDefinition = definition {Definition.graph =  newGraph}
+                    newDefManager = DefManager.updateNode (defID, newDefinition) defManager)
+
+
+--connect :: IORef Project -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+--                      -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+--        -> Maybe TDefs.Definition -> IO ()
+--connect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort 
+--                                               (dstNodeID, dstNode) dstPort definition -> do 
+--    putStrLn "call connect - NOT IMPLEMENTED")
+
+
+--disconnect :: IORef Project -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+--                         -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+--           -> Maybe TDefs.Definition -> IO ()
+--disconnect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort
+--                                                  (dstNodeID, dstNode) dstPort definition -> do 
+--    putStrLn "call disconnect - NOT IMPLEMENTED")
