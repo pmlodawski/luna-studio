@@ -1,0 +1,41 @@
+Name:           flowbox-luna
+Version:        0.1
+Cabal-Version:  >= 1.8
+License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+Flag Debug
+  Description: Enable debug support
+  Default:     False
+
+
+Library
+  Hs-Source-Dirs: src
+                  src/Flowbox/Luna/Tools/Serialize/Thrift/Generated
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall 
+                  -- -F -pgmF ./util/preprocessors/imports.py
+  Extensions:     DoAndIfThenElse
+  
+  Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*Flowbox/Luna/Tools/Serialize/Thrift/Generated/.*')`,
+                   `findmodules('src/Flowbox/Luna/Tools/Serialize/Thrift/Generated', '.*\.hs')`
+
+  
+  Build-Depends:  base, 
+                  bytestring,
+                  cereal,
+                  containers,
+                  directory,
+                  fgl,
+                  graphviz,
+                  hashable,
+                  MissingH == 1.2.0.0,
+                  regex-posix,
+                  split,
+                  text,
+                  thrift >= 0.9,
+                  unordered-containers,
+                  vector
