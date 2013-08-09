@@ -16,7 +16,9 @@ Library
 
   Exposed-modules: 
         Flowbox.System.UniPath
+        Flowbox.System.IO.Serializer
 
   Build-Depends:  base,
+                  directory,
                   MissingH,
                   split
