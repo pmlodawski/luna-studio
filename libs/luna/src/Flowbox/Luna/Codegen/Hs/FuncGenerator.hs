@@ -74,10 +74,11 @@ generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
                                        vtxs = Graph.innvtx graph nid
                                        args = map Expr.VarRef vtxs
 
-        Node.Call name flags _  -> (Expr.Call name args cctx, cctx) where
-                                       vtxs = Graph.innvtx graph nid
-                                       args = map Expr.VarRef vtxs
-                                       cctx = if Flags.io flags
+        Node.Call name flags _  -> (Expr.Call name' args cctx, cctx) where
+                                       name' = name ++ "'"
+                                       vtxs  = Graph.innvtx graph nid
+                                       args  = map Expr.VarRef vtxs
+                                       cctx  = if Flags.io flags
                                            then Expr.IO
                                            else Expr.Pure
 

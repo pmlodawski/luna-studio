@@ -17,13 +17,14 @@ module Flowbox.Luna.Codegen.Hs.AST.Module (
     mkInst,
     addDataType,
     addFunction,
+    addClass,
     addInstance,
     addImport,
     addImports
 )where
 
-import           Data.Set                                  (Set)
-import qualified Data.Set                                as Set
+import           Data.Set                          (Set)
+import qualified Data.Set                        as Set
 
 import qualified Flowbox.Luna.Codegen.Hs.Path            as Path
 import           Flowbox.Luna.Codegen.Hs.Path              (Path)
@@ -35,6 +36,8 @@ import qualified Flowbox.Luna.Codegen.Hs.AST.Instance    as Instance
 import           Flowbox.Luna.Codegen.Hs.AST.Instance      (Instance)
 import qualified Flowbox.Luna.Codegen.Hs.AST.DataType    as DataType
 import           Flowbox.Luna.Codegen.Hs.AST.DataType      (DataType)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Class       as Class
+import           Flowbox.Luna.Codegen.Hs.AST.Class         (Class)
 import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
 import           Flowbox.Luna.Codegen.Hs.AST.Expr          (Expr)
 import qualified Flowbox.Luna.Codegen.Hs.AST.Extension   as Extension
@@ -46,17 +49,14 @@ data Module = Module { path       :: Path
                      , imports    :: Set Import
                      , datatypes  :: [DataType]
                      , functions  :: [Function]
+                     , classes    :: [Class]
                      , instances  :: [Instance]
                      , exprs      :: [Expr]
                      , extensions :: [Extension]
-                     --, datatypes :: [DataType]
-                     --, classes   
-
-                        
                      } deriving (Show)
 
 empty :: Module
-empty = Module Path.empty [] Set.empty [] [] [] [] []
+empty = Module Path.empty [] Set.empty [] [] [] [] [] []
 
 base :: Module
 base = empty {imports = Set.singleton $ Import.simple (Path.fromList ["Flowbox'", "Core"])}
@@ -68,21 +68,22 @@ header = "-- This is Flowbox generated file.\n\n"
 genCode :: Module -> String
 genCode m =  header
             ++ exts
-            ++ "module "          ++ mypath ++ " where\n\n" 
-            ++ "-- imports\n"     ++ imps   ++ "\n\n"
-            ++ "-- datatypes\n"   ++ dtypes ++ "\n\n"
-            ++ "-- functions\n"   ++ funcs  ++ "\n\n"
-            ++ "-- instances\n"   ++ insts  ++ "\n\n"
-            ++ "-- expressions\n" ++ exps  
+            ++ "module " ++ mypath ++ " where\n\n" 
+            ++ genSection "imports"     Import.genCode   (Set.elems $ imports m)
+            ++ genSection "datatypes"   DataType.genCode (datatypes m)
+            ++ genSection "functions"   Function.genCode (functions m)
+            ++ genSection "classes"     Class.genCode    (classes m)
+            ++ genSection "instances"   Instance.genCode (instances m)
+            ++ genSection "expressions" Expr.genCode     (exprs m)
     where
         exts   = Extension.genCode $ extensions m
         mypath = (Path.toString . Path.toModulePath . path) m
-        imps   = join "\n" $ map Import.genCode   (Set.elems $ imports m)
-        dtypes = join "\n" $ map DataType.genCode (datatypes m)
-        funcs  = join "\n" $ map Function.genCode (functions m)
-        insts  = join "\n" $ map Instance.genCode (instances m)
-        exps   = join "\n" $ map Expr.genCode     (exprs m)
 
+
+genSection :: String -> (a -> String) -> [a] -> String
+genSection header generator d = if null d 
+    then ""
+    else "-- " ++ header ++ "\n" ++ (join "\n" $ map generator d) ++ "\n\n"
 
 
 addExpr :: Expr -> Module -> Module
@@ -111,6 +112,10 @@ addDataType dt self = self {datatypes = dt : datatypes self}
 
 addFunction :: Function -> Module -> Module
 addFunction func self = self {functions = func : functions self}
+
+
+addClass :: Class -> Module -> Module
+addClass cls self = self {classes = cls : classes self}
 
 
 addInstance :: Instance -> Module -> Module

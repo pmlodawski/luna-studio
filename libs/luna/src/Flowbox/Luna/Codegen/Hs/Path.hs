@@ -8,6 +8,7 @@
 module Flowbox.Luna.Codegen.Hs.Path (
     module Flowbox.Luna.Network.Path.Path,
     toModulePath,
+    toModuleName,
     mkTemplateName,
     mkMonadName,
     mkLensName,
@@ -27,14 +28,22 @@ import           Flowbox.Luna.Network.Path.Path
 import           Data.Char                      (isLower)
 
 
+
+--toModulePath path = case path of
+--    Path []                       -> Path []
+--    Path (segment@(preffix:_):xs) -> npath where
+--                                         name = if isLower preffix
+--                                            then "U'" ++ segment
+--                                            else segment
+--                                         npath = prepend name $ toModulePath (Path xs)
+
 toModulePath :: Path -> Path
-toModulePath path = case path of
-    Path []                       -> Path []
-    Path (segment@(preffix:_):xs) -> npath where
-                                         name = if isLower preffix
-                                            then "U'" ++ segment
-                                            else segment
-                                         npath = prepend name $ toModulePath (Path xs)
+toModulePath path = Path $ map toModuleName (segments path)
+
+toModuleName :: String -> String
+toModuleName name@(preffix:_) = if isLower preffix
+        then "U'" ++ name
+        else name
                                   
     
 mkTemplateName :: String -> String
@@ -70,11 +79,11 @@ mkTHPointer name = "'" ++ name
 
 
 inputs :: String
-inputs = "inputs'"
+inputs = "inputs''"
 
 
 outputs :: String
-outputs = "outputs'"
+outputs = "outputs''"
 
 indent :: String
 indent = replicate 4 ' '
