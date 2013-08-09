@@ -1,7 +1,7 @@
 Name:               flowbox-batch-srv
 Version:            0.1
 Cabal-Version:      >= 1.8
-License-file:       LICENSE
+--License-file:       LICENSE
 Author:             Flowbox <contact@flowbox.io>
 Maintainer:         Flowbox <contact@flowbox.io>
 Build-Type:         Simple

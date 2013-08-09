@@ -34,13 +34,6 @@ import qualified Flowbox.Batch.Project.Project              as Project
 import           Flowbox.Batch.Project.Project                (Project)
 import qualified Flowbox.Luna.Samples.Packages              as Sample
 
-
-import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
-import           Flowbox.Batch.Project.ProjectManager         (ProjectManager)
-import qualified Flowbox.Luna.Network.Graph.Graph           as Graph
-import qualified Flowbox.System.UniPath                     as UniPath
-import           Flowbox.System.UniPath                       (UniPath)
-
 port :: PortNumber
 port = 30521
 
@@ -100,18 +93,7 @@ instance Batch_Iface BatchHandler where
 
 main :: IO ()
 main = do
-    --handler <- newBatchHandler
-    --putStrLn "Starting the server..."
-    --_ <- runBasicServer handler Batch.process port
-    --putStrLn "done."
-    let
-        pm = ProjectManager.empty
-        --g = Graph.empty
-        p = Project.empty { Project.name = "TestProject"
-                          , Project.path = UniPath.fromUnixString "/tmp/workspace/TestProject"
-                          }
-
-    ProjectManager.createProject p
-
-    print p
-    return ()
+    handler <- newBatchHandler
+    putStrLn "Starting the server..."
+    _ <- runBasicServer handler Batch.process port
+    putStrLn "done."

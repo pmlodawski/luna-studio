@@ -1,7 +1,7 @@
 Name:               flowbox-batch
 Version:            0.1
 Cabal-Version:      >= 1.8
-License-file:       LICENSE
+--License-file:       LICENSE
 Author:             Flowbox <contact@flowbox.io>
 Maintainer:         Flowbox <contact@flowbox.io>
 Build-Type:         Simple
@@ -41,3 +41,26 @@ Library
                     unordered-containers,
                     vector
 
+
+
+Executable batch 
+  Main-Is:        Flowbox/Batch/Main.hs
+  Hs-Source-Dirs: src
+
+  GHC-Options:    -Wall 
+
+--  Extensions:     DoAndIfThenElse
+--                  MultiParamTypeClasses
+
+  Build-Depends:  base,
+                    bytestring,
+                    containers,
+                    directory,
+                    flowbox-luna,
+                    flowbox-utils,
+                    hashable,
+                    network,
+                    text,
+                    thrift,
+                    unordered-containers,
+                    vector
