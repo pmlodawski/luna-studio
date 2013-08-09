@@ -26,6 +26,7 @@ Executable batch-srv
                     containers,
                     flowbox-batch,
                     flowbox-luna,
+                    flowbox-utils,
                     hashable,
                     network,
                     text,
