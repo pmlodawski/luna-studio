@@ -11,13 +11,14 @@ import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
 import           Flowbox.Batch.Project.ProjectManager   (ProjectManager)
 import qualified Flowbox.System.UniPath               as UniPath
 import           Flowbox.System.UniPath                 (UniPath)
-
+import qualified Flowbox.Luna.Samples.HelloWorld      as HelloWorld
 
 main = do
 	let
 		pm = ProjectManager.empty
 		p = Project.empty { Project.name = "TestProject"
 						  , Project.path = UniPath.fromUnixString "/tmp/workspace/TestProject"
+						  , Project.libs = HelloWorld.libman
 		                  }
 
 	ProjectManager.createProject p

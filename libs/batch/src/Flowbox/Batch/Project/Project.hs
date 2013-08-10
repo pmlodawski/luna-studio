@@ -11,8 +11,8 @@ module Flowbox.Batch.Project.Project(
 	empty
 ) where
 
-import qualified Flowbox.Luna.Core               as Core
-import           Flowbox.Luna.Core                 (Core(..))
+import qualified Flowbox.Luna.Lib.LibManager     as LibManager
+import           Flowbox.Luna.Lib.LibManager       (LibManager(..))
 import qualified Flowbox.Luna.Network.Attributes as Attributes
 import           Flowbox.Luna.Network.Attributes   (Attributes)
 import qualified Flowbox.System.UniPath          as UniPath
@@ -22,7 +22,7 @@ import           Flowbox.System.UniPath            (UniPath)
 
 data Project = Project { name  :: String
                        , path  :: UniPath
-                       , core  :: Core
+                       , libs  :: LibManager
                        , attrs :: Attributes
                        } deriving(Show)
 
@@ -30,4 +30,4 @@ type ID = Int
 
 
 empty :: Project
-empty = Project "" UniPath.empty Core.empty Attributes.empty
+empty = Project "" UniPath.empty LibManager.empty Attributes.empty

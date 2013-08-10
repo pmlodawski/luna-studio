@@ -15,11 +15,14 @@ module Flowbox.Luna.Network.Path.Path(
     toList,
     add,
     last,
-    toString
+    toString,
+    init,
 ) where
+
+import qualified Prelude           
 import           Data.String.Utils   (join)
 import qualified Prelude             
-import Prelude hiding (last)
+import Prelude hiding (last, init)
 
 newtype Path = Path {segments :: [String]} deriving (Show, Ord, Eq)
 
@@ -55,6 +58,12 @@ last path = Prelude.last $ segments path
 
 toString :: Path -> String
 toString path = join "." $ segments path
+
+
+init :: Path -> Path
+init path = Path $ Prelude.init (segments path)
+
+
 
 
 --instance Show Path where

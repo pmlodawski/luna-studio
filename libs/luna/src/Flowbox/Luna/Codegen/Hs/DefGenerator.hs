@@ -41,7 +41,6 @@ import           Flowbox.Luna.Data.List
 
 generateDefinition :: DefManager -> Graph.Vertex -> Module
 generateDefinition manager vtx = nmod where
-    --d   = Graph.lab manager vtx
     def = fromJust $ Graph.lab manager vtx
     cls = Definition.cls def
     nmod = case cls of

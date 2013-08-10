@@ -5,6 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+import           Debug.Trace                             
+
 import qualified Flowbox.Luna.Samples.HelloWorld       as HelloWorld
 import qualified Flowbox.Luna.Codegen.Hs.FuncGenerator as FG
 import qualified Flowbox.Luna.Codegen.Hs.DefGenerator  as DG
@@ -18,25 +20,29 @@ import           Flowbox.Luna.Codegen.Hs.Cabal.Config    (Config)
 import qualified Flowbox.Luna.Codegen.Hs.Cabal.Config  as Config
 import qualified Flowbox.Luna.Codegen.Hs.Cabal.Section as Section
 
-import qualified Flowbox.Luna.Network.Graph.Graph      as Graph
+--import qualified Flowbox.Luna.Network.Graph.Graph      as Graph
 
-import           Flowbox.Luna.Data.Graph                 
+import qualified Flowbox.Luna.Data.Graph               as Graph
+import qualified Flowbox.Luna.Lib.Library              as Library
 
+
+test manager did = out where
+    mod = DG.generateDefinition manager did
+    out = trace(show mod) mod
 
 main :: IO ()
-
 main = do 
     putStrLn "------------\n"
-    putStrLn $ Module.genCode $ DG.generateDefinition HelloWorld.full_manager 1
+    --putStrLn $ Module.genCode $ DG.generateDefinition HelloWorld.full_manager 1
     --putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
+    --putStrLn
 
-    --let
-    --	s = Section.empty 
-    --	c = Config.addSection s
-    --		Config.empty { Config.name = "ala"}
 
-    --putStrLn $ Config.genCode c
+    let
+        manager = HelloWorld.full_manager
+        x = map (test manager)$ DefManager.nodes manager
 
+    Library.store HelloWorld.workspacelib
     return ()
 
 --        let 

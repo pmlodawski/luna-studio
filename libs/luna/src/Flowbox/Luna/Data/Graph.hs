@@ -6,48 +6,33 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Data.Graph (
+    module Data.Graph.Inductive,
     Graph,
     Vertex,
     LVertex,
-    Edge,
-    empty,
-    delNode,
-    gelem, -- Graph gr => Node -> gr a b -> BoolSource  -  True if the Node is present in the Graph.
-    insNode,
-    insNodes,
     updateNode,
-    insEdge,
-    insEdges,
-    lab,
-    labEdges,
-    labNodes,
     labs,
     labVtx,
     labVtxs,
-    mkGraph,
-    newNodes,
-    out,
     out_,
-    inn,
     inn_,
     innvtx,
-    suc,
     suc_,
     sucl,
-    pre,
     pre_,
     prel,
     topsort,
     path,
     newVtxs,
-    newVtx
+    newVtx,
+
     --newIds
 ) where
 
 import           Data.Functor           ((<$>))
 import           Data.Maybe             (fromJust)
 import qualified Data.Graph.Inductive as DG
-import           Data.Graph.Inductive                       hiding (Graph)
+import           Data.Graph.Inductive                       hiding (Node, Graph)
 
 
 type Graph a b = DG.Gr a b

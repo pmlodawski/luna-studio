@@ -6,7 +6,8 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Samples.HelloWorld(
-	workspace,
+    workspacelib,
+    libman,
     full_manager,
     myFun, myFun2, myFun3, myFun4, myFun5,
     cls1
@@ -267,17 +268,24 @@ cls1 = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Name
 --                                            (1, 2, myFun3),
 --                                            (100, 1, myFun2)]
 
+
+base_workspacelib    = Library.make "Workspace" (UniPath.fromUnixString "/tmp/workspace/TestProject/src")
+
+
 full_manager =  DefManager.addToParentMany [ --(1, 2, myFun2),
                                            (0, 1, myFun5)
                                            --(0, 10, cls1)
                                            ]
-             $ Library.definitions workspace_base
+             $ Library.defs base_workspacelib
 
 
 
-workspace_base    = Library.make "Workspace" (UniPath.fromUnixString "src/Workspace")
+workspacelib = base_workspacelib { defs = full_manager }
 
-workspace = workspace_base { definitions = full_manager }
+libman :: LibManager
+libman = libman where
+    libman = LibManager.insNode (0, workspacelib) 
+           $ LibManager.empty
 
 
 --full_manager :: DefManager
