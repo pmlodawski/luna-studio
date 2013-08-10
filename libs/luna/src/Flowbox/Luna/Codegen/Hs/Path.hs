@@ -22,11 +22,13 @@ module Flowbox.Luna.Codegen.Hs.Path (
     mkIndent,
     mkTHPointer,
     mkClassName,
-    
+    toString
 )where
 
 import qualified Prelude
 import Prelude hiding (last, init, tail, last)
+import           Data.String.Utils   (join)
+
 import           Flowbox.Luna.Network.Path.Path   
 import           Data.Char                        (isLower)
 
@@ -98,3 +100,7 @@ indent = replicate 4 ' '
 
 mkIndent :: Int -> String
 mkIndent i = concat $ replicate i indent
+
+
+toString :: Path -> String
+toString path = join "." $ segments path
