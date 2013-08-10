@@ -5,15 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 module Flowbox.Batch.Server.Handlers.Types (
-
-newTypeModule,
-newTypeClass,
-newTypeFunction,
-newTypeUdefined,
-newTypeNamed,
-newTypeVariable,
-newTypeList,
-newTypeTuple
+    newTypeModule,
+    newTypeClass,
+    newTypeFunction,
+    newTypeUdefined,
+    newTypeNamed,
+    newTypeVariable,
+    newTypeList,
+    newTypeTuple
 ) 
 where
 

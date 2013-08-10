@@ -89,8 +89,8 @@ instance Batch_Iface BatchHandler where
     addNode    = HGraph.addNode
     updateNode = HGraph.updateNode
     removeNode = HGraph.removeNode
-    --connect    = HGraph.connect
-    --disconnect = HGraph.disconnect
+    connect    = HGraph.connect
+    disconnect = HGraph.disconnect
 
     ping _     = putStrLn "ping"
 

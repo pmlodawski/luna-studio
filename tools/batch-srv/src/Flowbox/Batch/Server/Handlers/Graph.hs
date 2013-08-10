@@ -5,12 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 module Flowbox.Batch.Server.Handlers.Graph (
-graph,
-addNode,
-updateNode,
-removeNode,
---connect,
---disconnect
+    graph,
+    addNode,
+    updateNode,
+    removeNode,
+    connect,
+    disconnect
 ) 
 where
 
@@ -24,14 +24,7 @@ import qualified Defs_Types                                                as TD
 import qualified Graph_Types                                               as TGraph
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
-import qualified Flowbox.Batch.Project.Project                             as Project
-import           Flowbox.Batch.Project.Project                               (Project)
-import qualified Flowbox.Luna.Core                                         as Core
-import           Flowbox.Luna.Core                                           (Core(..))
-import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
-import           Flowbox.Luna.Network.Def.Definition                         (Definition)
-import qualified Flowbox.Luna.Network.Graph.Graph                          as Graph
 import qualified Flowbox.Luna.Network.Graph.Node                           as Node
 import           Flowbox.Luna.Network.Graph.Node                             (Node(..))
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
@@ -81,18 +74,30 @@ removeNode = nodeDefOperation (\batchHandler (nodeID, _) defID-> do
 connect :: IORef Batch -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
                       -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
         -> Maybe TDefs.Definition -> IO ()
-connect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort 
-                                               (dstNodeID, dstNode) dstPort defID -> do 
-    putStrLn "call connect - NOT IMPLEMENTED")
+connect = nodesConnectOperation (\batchHandler (srcNodeID, _) srcPort 
+                                               (dstNodeID, _) dstPort defID -> do 
+    putStrLn "called connect"
+    batch <- readIORef batchHandler
+    case Batch.connect srcNodeID srcPort dstNodeID dstPort defID batch of
+        Left  message  -> throw' message
+        Right newBatch -> do
+            writeIORef batchHandler newBatch)
 
 
 disconnect :: IORef Batch -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
                          -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
            -> Maybe TDefs.Definition -> IO ()
-disconnect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort
-                                                  (dstNodeID, dstNode) dstPort defID -> do 
-    putStrLn "call disconnect - NOT IMPLEMENTED")
+disconnect = nodesConnectOperation (\batchHandler (srcNodeID, _) srcPort
+                                                  (dstNodeID, _) dstPort defID -> do 
+    putStrLn "called disconnect"
+    batch <- readIORef batchHandler
+    case Batch.disconnect srcNodeID srcPort dstNodeID dstPort defID batch of
+        Left  message  -> throw' message
+        Right newBatch -> do
+            writeIORef batchHandler newBatch)
 
+
+------ public api helpers -----------------------------------------
 
 nodesConnectOperation :: (IORef Batch -> (Node.ID, Node) -> [Int]
                                      -> (Node.ID, Node) -> [Int]

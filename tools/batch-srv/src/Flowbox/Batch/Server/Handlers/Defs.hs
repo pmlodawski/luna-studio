@@ -30,9 +30,6 @@ import           Flowbox.Batch.Server.Handlers.Common
 import qualified Types_Types                                               as TTypes
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
-import qualified Flowbox.Luna.Core                                         as Core
-import           Flowbox.Luna.Core                                           (Core(..))
-import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
 import           Flowbox.Luna.Network.Def.Definition                         (Definition)
 import qualified Flowbox.Luna.Network.Graph.Graph                          as Graph
@@ -40,7 +37,7 @@ import           Flowbox.Luna.Network.Graph.Graph                            (Gr
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 
-
+ 
 -- TODO [PM] : refactor needed
 
 
@@ -78,7 +75,7 @@ defsGraph batchHandler = do
     batch <- readIORef batchHandler
     case Batch.defsGraph batch of
         Left message -> throw' message
-        Right defManager -> return $ encode defManager
+        Right adefManager -> return $ encode adefManager
 
 
 newDefinition :: IORef Batch -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)

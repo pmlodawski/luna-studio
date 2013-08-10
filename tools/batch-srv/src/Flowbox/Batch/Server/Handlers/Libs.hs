@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Batch.Server.Handlers.Libs (
     libraries,
+
     createLibrary,
     loadLibrary,
     unloadLibrary,
@@ -23,12 +24,6 @@ import           Flowbox.Batch.Server.Handlers.Common
 import qualified Libs_Types                                                as TLibs
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
-import qualified Flowbox.Batch.Project.Project                             as Project
-import           Flowbox.Batch.Project.Project                               (Project(..))
-import qualified Flowbox.Luna.Core                                         as Core
-import           Flowbox.Luna.Core                                           (Core(..))
-import qualified Flowbox.Luna.Lib.LibManager                               as LibManager
-import qualified Flowbox.Luna.Lib.Library                                  as Library
 import           Flowbox.Luna.Lib.Library                                    (Library(..))
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
@@ -61,7 +56,7 @@ libraries batchHandler = do
 
 
 createLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
-createLibrary = libOperation (\ batchHandler (_, library) -> do
+createLibrary = libOperation (\ _ (_, library) -> do
     putStrLn "call createLibrary - NOT YET IMPLEMENTED"
     return $ encode (-1, library))
 
@@ -104,7 +99,7 @@ libraryRootDef = libOperation (\ batchHandler (_, library) -> do
     batch <- readIORef batchHandler
     case Batch.libraryRootDef library batch of 
         Left message               -> throw' message
-        Right (rootDefID, rootDef) -> do 
-            let (trootDef, _) = encode (rootDefID, rootDef)
+        Right (arootDefID, rootDef) -> do 
+            let (trootDef, _) = encode (arootDefID, rootDef)
             return trootDef)
          

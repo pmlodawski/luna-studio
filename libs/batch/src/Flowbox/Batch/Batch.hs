@@ -32,9 +32,9 @@ module Flowbox.Batch.Batch (
     nodesGraph ,
     addNode,
     updateNode,
-    removeNode
-    --connect,
-    --disconnect
+    removeNode,
+    connect,
+    disconnect
 ) where
 
 
@@ -54,14 +54,10 @@ import qualified Flowbox.Luna.Network.Def.DefManager      as DefManager
 import           Flowbox.Luna.Network.Def.DefManager        (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition      as Definition
 import           Flowbox.Luna.Network.Def.Definition        (Definition(..))
-import qualified Flowbox.Luna.Network.Flags               as Flags
 import qualified Flowbox.Luna.Network.Graph.Graph         as Graph
 import           Flowbox.Luna.Network.Graph.Graph           (Graph)
 import qualified Flowbox.Luna.Network.Graph.Node          as Node
 import           Flowbox.Luna.Network.Graph.Node            (Node(..))
-import qualified Flowbox.System.UniPath                   as UniPath
-import           Flowbox.System.UniPath                     (UniPath)
-import qualified Flowbox.Luna.Type.Type                   as Type
 
 
 
@@ -224,7 +220,7 @@ setActiveProject projectID batch = newBatch where
 -------- Libraries ------------------------------------------------------------
 
 libraries :: Batch -> Either String [(Library.ID, Library)]
-libraries = readonly . activeLibManagerOp (\batch libManager -> let 
+libraries = readonly . activeLibManagerOp (\_ libManager -> let 
     r = LibManager.labNodes libManager 
     in Right (libManager, r))
 
@@ -233,13 +229,13 @@ libraries = readonly . activeLibManagerOp (\batch libManager -> let
 
 
 loadLibrary :: Library -> Batch -> IO (Either String (Batch, (Library.ID, Library)))
-loadLibrary library = activeCoreOp' (\batch core -> do
+loadLibrary library = activeCoreOp' (\_ core -> do
     let (newCore, newLibrary, newLibID) = Core.loadLibrary core library
     return $ Right (newCore, (newLibID, newLibrary)))
 
 
 unloadLibrary :: Library.ID -> Batch -> Either String Batch
-unloadLibrary libraryID = noresult . activeCoreOp (\batch core ->let 
+unloadLibrary libraryID = noresult . activeCoreOp (\_ core ->let 
     newCore = Core.unloadLibrary core libraryID
     in Right (newCore, ()))
 
@@ -251,7 +247,7 @@ storeLibrary libraryID = readonly' . activeCoreOp' (\batch core -> do
 
 
 libraryRootDef :: Library -> Batch -> Either String (Definition.ID, Definition)
-libraryRootDef library = readonly . activeCoreOp (\batch core -> let 
+libraryRootDef library = readonly . activeCoreOp (\_ core -> let 
     rootDefID' = Library.rootDefID library 
     in case Core.nodeDefByID core rootDefID' of
         Nothing      -> Left "Wrong `rootDefID`"
@@ -273,7 +269,7 @@ defsGraph = readonly . activeDefManagerOp (\_ defManager -> Right (defManager, d
 
 
 addDefinition :: Definition -> Definition.ID -> Batch -> Either String (Batch, Definition.ID)
-addDefinition definition parentID = activeDefManagerOp (\batch defManager ->
+addDefinition definition parentID = activeDefManagerOp (\_ defManager ->
     case DefManager.gelem parentID defManager of 
         False -> Left "Wrong `defID`"
         True  -> Right (newDefManager, defID) where
@@ -288,15 +284,15 @@ updateDefinition (defID, def) = noresult .activeDefManagerOp (\batch defManager 
 
 
 removeDefinition :: Definition.ID -> Batch -> Either String Batch 
-removeDefinition defID = noresult . activeDefManagerOp (\batch defManager -> 
+removeDefinition defID = noresult . activeDefManagerOp (\_ defManager -> 
     case DefManager.gelem defID defManager of 
         False -> Left "Wrong `defID`"
         True  -> Right (newDefManager, ()) where 
-                        newDefManager = DefManager.delNode defID defManager)
+                        newDefManager = DefManager.delete defID defManager)
 
 
 definitionChildren :: Definition.ID -> Batch -> Either String [(Definition.ID, Definition)]
-definitionChildren defID = readonly . activeDefManagerOp (\batch defManager -> 
+definitionChildren defID = readonly . activeDefManagerOp (\_ defManager -> 
     case DefManager.gelem defID defManager of 
         False -> Left "Wrong `defID`"
         True  -> Right (defManager, children) where
@@ -304,7 +300,7 @@ definitionChildren defID = readonly . activeDefManagerOp (\batch defManager ->
 
 
 definitionParent :: Definition.ID -> Batch -> Either String (Definition.ID, Definition)
-definitionParent defID = readonly . activeDefManagerOp (\batch defManager -> 
+definitionParent defID = readonly . activeDefManagerOp (\_ defManager -> 
     case DefManager.gelem defID defManager of 
         False           -> Left "Wrong `defID`"
         True            -> case DefManager.parent defManager defID of
@@ -315,14 +311,14 @@ definitionParent defID = readonly . activeDefManagerOp (\batch defManager ->
 -------- Graphs ---------------------------------------------------------------
 
 nodesGraph :: Definition.ID -> Batch -> Either String Graph
-nodesGraph defID = readonly . activeDefManagerOp (\batch defManager -> 
+nodesGraph defID = readonly . activeDefManagerOp (\_ defManager -> 
     case DefManager.lab defManager defID of 
         Nothing  -> Left "Wrong `defID`"
         Just def -> Right (defManager, Definition.graph def))
 
 
 addNode :: Node -> Definition.ID -> Batch -> Either String (Batch, Node.ID)
-addNode node defID = activeDefManagerOp (\batch defManager -> 
+addNode node defID = activeDefManagerOp (\_ defManager -> 
     case DefManager.lab defManager defID of 
         Nothing         -> Left "Wrong `defID`"
         Just definition -> Right (newDefManager, nodeID) where
@@ -334,7 +330,7 @@ addNode node defID = activeDefManagerOp (\batch defManager ->
 
 
 updateNode :: (Node.ID, Node) -> Definition.ID -> Batch -> Either String Batch
-updateNode (nodeID, node) defID = noresult . activeDefManagerOp (\batch defManager -> 
+updateNode (nodeID, node) defID = noresult . activeDefManagerOp (\_ defManager -> 
     case DefManager.lab defManager defID of 
         Nothing         -> Left "Wrong `defID`"
         Just definition -> let agraph = Definition.graph definition
@@ -347,7 +343,7 @@ updateNode (nodeID, node) defID = noresult . activeDefManagerOp (\batch defManag
 
 
 removeNode :: Node.ID -> Definition.ID -> Batch -> Either String Batch
-removeNode nodeID defID = noresult . activeDefManagerOp (\batch defManager -> 
+removeNode nodeID defID = noresult . activeDefManagerOp (\_ defManager -> 
     case DefManager.lab defManager defID of 
         Nothing         -> Left "Wrong `defID`"
         Just definition -> let agraph = Definition.graph definition
@@ -359,17 +355,10 @@ removeNode nodeID defID = noresult . activeDefManagerOp (\batch defManager ->
                     newDefManager = DefManager.updateNode (defID, newDefinition) defManager)
 
 
---connect :: IORef Project -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
---                      -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
---        -> Maybe TDefs.Definition -> IO ()
---connect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort 
---                                               (dstNodeID, dstNode) dstPort definition -> do 
---    putStrLn "call connect - NOT IMPLEMENTED")
+connect :: Node.ID -> [Int] -> Node.ID -> [Int] -> Definition.ID -> Batch -> Either String Batch
+connect srcNodeID srcPort dstNodeID dstPort defID batch = undefined
 
 
---disconnect :: IORef Project -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
---                         -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
---           -> Maybe TDefs.Definition -> IO ()
---disconnect = nodesConnectOperation (\batchHandler (srcNodeID, srcNode) srcPort
---                                                  (dstNodeID, dstNode) dstPort definition -> do 
---    putStrLn "call disconnect - NOT IMPLEMENTED")
+
+disconnect :: Node.ID -> [Int] -> Node.ID -> [Int] -> Definition.ID -> Batch -> Either String Batch
+disconnect srcNodeID srcPort dstNodeID dstPort defID batch = undefined

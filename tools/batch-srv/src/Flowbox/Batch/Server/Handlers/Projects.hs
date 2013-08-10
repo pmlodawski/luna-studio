@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Batch.Server.Handlers.Projects (
     projects,
+
     createProject,
     openProject, 
     closeProject,
@@ -25,7 +26,6 @@ import           Flowbox.Batch.Batch                                         (Ba
 import qualified Flowbox.Batch.Project.Project                             as Project
 import           Flowbox.Batch.Project.Project                               (Project(..))
 import qualified Flowbox.Luna.Core                                         as Core
-import           Flowbox.Luna.Core                                           (Core(..))
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects    ()
 
@@ -45,8 +45,8 @@ projectOperation operation batchHandler mtproject = case mtproject of
 projects :: IORef Batch -> IO (Vector TProjects.Project)
 projects batchHandler = do
     batch <- readIORef batchHandler
-    let projects        = Batch.projects batch
-        tprojectsWCore  = map encode projects
+    let aprojects       = Batch.projects batch
+        tprojectsWCore  = map encode aprojects
         tprojects       = map (\(p, _) -> p) tprojectsWCore
         tprojectsVector = Vector.fromList tprojects
     return tprojectsVector
@@ -61,9 +61,9 @@ createProject = projectOperation (\ batchHandler (_, project) -> do
 openProject :: IORef Batch -> Maybe TProjects.Project -> IO TProjects.Project
 openProject = projectOperation (\ batchHandler (_, project) -> do
     batch <- readIORef batchHandler
-    (newBatch, (projectID, project)) <- Batch.openProject project batch
+    (newBatch, (projectID, aproject)) <- Batch.openProject project batch
     writeIORef batchHandler newBatch
-    let (tproject, _) = encode (projectID, project)
+    let (tproject, _) = encode (projectID, aproject)
     return tproject)
 
 
