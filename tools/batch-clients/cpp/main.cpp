@@ -132,6 +132,7 @@ int main(int argc, char **argv) {
         dummy.__set_name("fun");
         batch.updateNode(dummy, fun);
         batch.removeNode(dummy, fun);
+        batch.connect(inputs, {1, 2}, outputs, {1}, fun);
 
     } catch (ArgumentException e) {
         cout << "Batch returned an error: "<< endl

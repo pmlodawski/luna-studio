@@ -8,10 +8,12 @@
 module Flowbox.Luna.Network.Graph.Graph(
     module Flowbox.Luna.Data.Graph,
     Graph,
-    empty
+    empty,
+    connect
 ) where
 
-import           Flowbox.Luna.Network.Graph.Edge   (Edge)
+import           Flowbox.Luna.Network.Graph.Edge   (Edge(..))
+import qualified Flowbox.Luna.Network.Graph.Node as Node
 import           Flowbox.Luna.Network.Graph.Node   (Node)
 
 import           Flowbox.Luna.Data.Graph         hiding(Graph, Edge, empty)
@@ -22,3 +24,7 @@ type Graph = DG.Graph Node Edge
 
 empty :: Graph
 empty = DG.empty
+
+
+connect :: Graph -> Node.ID -> Node.ID -> Int -> Graph
+connect graph srcID dstID dstPort = insEdge (srcID, dstID, Edge dstPort) graph

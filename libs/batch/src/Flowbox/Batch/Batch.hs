@@ -37,7 +37,7 @@ module Flowbox.Batch.Batch (
     disconnect
 ) where
 
-
+import qualified Data.Map                                 as Map
 import qualified Flowbox.Batch.Project.Project            as Project
 import           Flowbox.Batch.Project.Project              (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
@@ -50,10 +50,12 @@ import qualified Flowbox.Luna.Lib.Library                 as Library
 import           Flowbox.Luna.Lib.Library                   (Library(..))
 import qualified Flowbox.Luna.Network.Attributes          as Attributes
 import           Flowbox.Luna.Network.Attributes            (Attributes)
+import qualified Flowbox.Luna.Network.Flags               as Flags
 import qualified Flowbox.Luna.Network.Def.DefManager      as DefManager
 import           Flowbox.Luna.Network.Def.DefManager        (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition      as Definition
 import           Flowbox.Luna.Network.Def.Definition        (Definition(..))
+import           Flowbox.Luna.Network.Graph.Edge            (Edge(..))
 import qualified Flowbox.Luna.Network.Graph.Graph         as Graph
 import           Flowbox.Luna.Network.Graph.Graph           (Graph)
 import qualified Flowbox.Luna.Network.Graph.Node          as Node
@@ -63,11 +65,17 @@ import           Flowbox.Luna.Network.Graph.Node            (Node(..))
 
 data Batch = Batch { projectManager  :: ProjectManager
                    , activeProjectID :: Project.ID
-                   }
+                   } deriving (Show)
 
 
 empty :: Batch
 empty = Batch ProjectManager.empty (-1)
+
+
+attributeKey :: String
+attributeKey = "Batch-0.1"
+
+
 
 
 activeProject :: Batch -> Maybe Project
@@ -356,9 +364,42 @@ removeNode nodeID defID = noresult . activeDefManagerOp (\_ defManager ->
 
 
 connect :: Node.ID -> [Int] -> Node.ID -> [Int] -> Definition.ID -> Batch -> Either String Batch
-connect srcNodeID srcPort dstNodeID dstPort defID batch = undefined
+connect srcNodeID srcPort dstNodeID dstPort defID = noresult . activeDefManagerOp (\_ defManager -> 
+    case DefManager.lab defManager defID of 
+        Nothing         -> Left "Wrong `defID`"
+        Just definition -> let 
+            agraph = Definition.graph definition 
+            in case connectG srcNodeID srcPort dstNodeID dstPort agraph of
+                Left message   -> Left message
+                Right newGraph -> Right (newDefManager, ()) where
+                    newDefinition = definition { Definition.graph = newGraph }
+                    newDefManager = DefManager.updateNode (defID, newDefinition) defManager)
 
 
 
 disconnect :: Node.ID -> [Int] -> Node.ID -> [Int] -> Definition.ID -> Batch -> Either String Batch
 disconnect srcNodeID srcPort dstNodeID dstPort defID batch = undefined
+
+
+generatedAttrs :: Attributes
+generatedAttrs = Attributes.fromList [(attributeKey, Map.fromList [("Generated", "True")])]
+
+
+connectG :: Node.ID -> [Int] -> Node.ID -> [Int] ->  Graph -> Either String Graph
+connectG srcNodeID srcPort dstNodeID dstPort graph = case srcPort of 
+    []      -> case dstPort of
+        [dstPortH] -> Right newGraph where
+                    tupleNode = NTuple Flags.empty generatedAttrs
+                    [tupleID] = Graph.newNodes 1 graph
+                    newGraph  = Graph.insEdge (srcNodeID, tupleID, Edge dstPortH)
+                              $ Graph.insEdge (tupleID, dstNodeID, Edge 0)
+                              $ Graph.insNode (tupleID, tupleNode) graph
+
+        _         -> Left "Folding target ports with more than 1 sub ports is not supported"
+    srcPorts -> connectG selectID srcPortsTail dstNodeID dstPort newGraph where
+        srcPortsHead = head srcPorts
+        srcPortsTail = tail srcPorts
+        selectNode = Call ("select" ++ show srcPortsHead) Flags.empty generatedAttrs
+        [selectID] = Graph.newNodes 1 graph
+        newGraph = Graph.insEdge (srcNodeID, selectID, Edge 0)
+                 $ Graph.insNode (selectID, selectNode) graph
