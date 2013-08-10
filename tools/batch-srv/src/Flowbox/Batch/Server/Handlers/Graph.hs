@@ -81,8 +81,7 @@ connect = nodesConnectOperation (\batchHandler (srcNodeID, _) srcPort
     case Batch.connect srcNodeID srcPort dstNodeID dstPort defID batch of
         Left  message  -> throw' message
         Right newBatch -> do
-            writeIORef batchHandler newBatch
-            print newBatch)
+            writeIORef batchHandler newBatch)
 
 
 disconnect :: IORef Batch -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor

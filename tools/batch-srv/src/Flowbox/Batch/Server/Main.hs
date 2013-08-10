@@ -48,7 +48,7 @@ newBatchHandler = do
     --ref <- newIORef Batch.empty
     ref <- newIORef $ Batch { Batch.projectManager = ProjectManager.mkGraph [
                                                                 (0, Project.empty { Project.name = "project"
-                                                                                  --, Project.core = Sample.core 
+                                                                                  , Project.core = Sample.core 
                                                                                   })] []
                             , Batch.activeProjectID = 0 }
     return ref
