@@ -11,11 +11,11 @@ module Flowbox.System.IO.Serializer(
     serialize
 ) where
 
-import System.Directory                              as Dir
-import qualified System.IO                           as IO
+import           System.Directory       as Dir
+import qualified System.IO              as IO
 
-import qualified Flowbox.System.UniPath         as UniPath
-import           Flowbox.System.UniPath           (UniPath)
+import qualified Flowbox.System.UniPath as UniPath
+import           Flowbox.System.UniPath   (UniPath)
 
 
 data Serializable = Serializable UniPath (IO.Handle -> IO())
