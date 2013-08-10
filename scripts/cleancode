@@ -12,7 +12,7 @@ def main ():
 	for (path, body, nbody) in zip(paths, bodys, newbodys):
 		if body != nbody:
 			with open(path, 'w') as file:
-				file.write(body)
+				file.write(nbody)
 
 def clean_imports(src):
 	match = re.compile (r'^import[\t ]*(?P<qualified>qualified)?[\t ]*(?P<path>[^\s]*)[\t ]*(?P<as>as)?[\t ]*(?P<target>[^\s]*|\(.*\))[\t ]*$', re.MULTILINE)
