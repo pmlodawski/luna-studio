@@ -2,102 +2,95 @@
 import os.path
 import sys
 from subprocess import call, Popen, PIPE
+from utils.glob2 import glob
+import re
 
+input = r'''
+module Flowbox.Luna.Codegen.Hs.AST.Module (
+    Module(..),
+    empty,
+    base,
+    addExpr,
+    addExprs,
+    addAlias,
+    addExt,
+    genCode,
+    mkInst,
+    addDataType,
+    addFunction,
+    addClass,
+    addInstance,
+    addImport,
+    addImports
+)where
 
-libs  = []
-execs = []
+import Debug.Trace
 
-options       = set(['all', 'utils', 'lunalib', 'batchlib', 'batchsrv', 'lunac', 'luna', 'batch'])
-opts_all      = options
-opts_utils    = set(['all', 'utils'])
-opts_lunalib  = set(['all', 'lunalib'])
-opts_batchlib = set(['all', 'batchlib'])
-opts_batchsrv = set(['all', 'batchsrv'])
-opts_lunac    = set(['all', 'lunac'])
-opts_luna     = set(['all', 'luna'])
-opts_batch    = set([']all', 'batch'])
+import           Data.Set                          (Set)
+import qualified Data.Set                        as Set
 
+import qualified Flowbox.Luna.Codegen.Hs.Path            as Path
+import           Flowbox.Luna.Codegen.Hs.Path              (Path(..))
+import qualified Flowbox.Luna.Codegen.Hs.Import          as Import
+import           Flowbox.Luna.Codegen.Hs.Import            (Import)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Function    as Function
+import           Flowbox.Luna.Codegen.Hs.AST.Function      (Function)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Instance                 as Instance
+import           Flowbox.Luna.Codegen.Hs.AST.Instance      (Instance)
+import qualified Flowbox.Luna.Codegen.Hs.AST.DataType    as DataType
+import           Flowbox.Luna.Codegen.Hs.AST.DataType      (DataType)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Class       as Class
+import           Flowbox.Luna.Codegen.Hs.AST.Class         (Class)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
+import           Flowbox.Luna.Codegen.Hs.AST.Expr          (Expr)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Extension   as Extension
+import           Flowbox.Luna.Codegen.Hs.AST.Extension     (Extension, e2)
+import           Data.String.Utils                         (join)
 
-# class Library:
-#     def __init__(self, name, path):
-#         self.name = name
-#         self.path = path
-#         libs.append(self)
+data Module = Module { path       :: Path
+                     , submodules :: [Module]
+                     , imports    :: Set Import
+                     , datatypes  :: [DataType]
+                     , functions  :: [Function]
+                     , classes    :: [Class]
+                     , instances  :: [Instance]
+                     , exprs      :: [Expr]
+                     , extensions :: [Extension]
+                     } deriving (Show)
 
+'''
 
-# class Executable:
-#     def __init__(self, name, path):
-#         self.name = name
-#         self.path = path
-#         execs.append(self)
-
-
-
-# dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
-# p_luna     = os.path.join(dir, 'libs',  'luna')
-# p_batch    = os.path.join(dir, 'libs',  'batch')
-# p_batchsrv = os.path.join(dir, 'tools', 'batch-srv')
-# p_lunac    = os.path.join(dir, 'tools', 'lunac')
-
-# Library    ('lunalib' , os.path.join(dir, 'libs',  'luna'))
-# Library    ('batchlib', os.path.join(dir, 'libs',  'batch'))
-# Executable ('batchsrv', os.path.join(dir, 'tools', 'batch-srv'))
-# Executable ('lunac'   , os.path.join(dir, 'tools', 'lunac'))
-
-        
-
-def wrong_use():
-    print_usage()
-    sys.exit()
-
-def error():
-    print "ERROR"
-    sys.exit(1)
-
-def print_usage():
-    print "Usage: compile {%s}" % ", ".join(options)
-
-
-def info(s):
-    print
-    print "=== %s ===" % s
-
-
-def main():
-    cmds = set(sys.argv[1:])
-    if len(cmds) == 0: wrong_use()
-    if not cmds <= options:
-        diff = cmds - options
-        print "Unrecognized options %s" % ", ".join(["'%s'" % opt for opt in diff])
-        wrong_use()
-
-    dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
-    p_utils    = os.path.join(dir, 'libs',  'utils')
-    p_luna     = os.path.join(dir, 'libs',  'luna')
-    p_batch    = os.path.join(dir, 'libs',  'batch')
-    p_batchsrv = os.path.join(dir, 'tools', 'batch-srv')
-    p_lunac    = os.path.join(dir, 'tools', 'lunac')
-
-
-    if cmds & (opts_utils | opts_luna | opts_batch):
-        info("Compiling utils library")
-        if call(['cabal-dev', 'install', p_utils, '--force-reinstalls']): error()
-
-    if cmds & (opts_lunalib | opts_luna | opts_batch):
-        info("Compiling luna library")
-        if call(['cabal-dev', 'install', p_luna, '--force-reinstalls']): error()
-
-    if cmds & (opts_batchlib | opts_batch):
-        info("Compiling batch library")
-        if call(['cabal-dev', 'install', p_batch, '--force-reinstalls']): error()
-
-    if cmds & (opts_batchsrv | opts_batch):
-        info("Compiling batchsrv")
-        if call(['cabal-dev', 'install', p_batchsrv, '--force-reinstalls']): error()
-
-    if cmds & (opts_lunac | opts_luna):
-        info("Compiling lunac")
-        if call(['cabal-dev', 'install', p_lunac, '--force-reinstalls']): error()
-
+def main ():
+	paths = tcabals_paths = glob("**/*.hs")
+	for path in paths:
+		with open(path, 'rw') as file:
+			body = file.read()
+			body = clean_imports(body)
+			file.write(body)
 
 main()
+
+
+
+
+# match = re.compile ("^import\s*(qualified)?\s*[^\s]*\s*(as)?.*$")
+
+
+def clean_imports(src):
+	match = re.compile (r'^import[\t ]*(?P<qualified>qualified)?[\t ]*(?P<path>[^\s]*)[\t ]*(?P<as>as)?[\t ]*(?P<target>[^\s]*|\(.*\))[\t ]*$', re.MULTILINE)
+	matches = [m for m in match.finditer(src)]
+	matches.reverse()
+	paths = [m.group('path') for m in matches]
+	pathmaxlen = max(map(len,paths))
+	for m in matches:
+		qualified = 'qualified '
+		qualified = qualified if m.group('qualified') else ' '*len(qualified)
+		path      = m.group('path')
+		path      = path + ' '*(pathmaxlen - len(path)+1)
+		ask       = 'as ' if m.group('as') else '  '
+		target    = m.group('target')
+		imp = "import " + qualified + path + ask + target
+		src = src[:m.start()] + imp + src[m.end():]
+	return src
+
+# clean_imports(input)
