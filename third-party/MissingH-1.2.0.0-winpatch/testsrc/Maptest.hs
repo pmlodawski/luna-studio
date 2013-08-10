@@ -8,9 +8,9 @@ For license and copyright information, see the file LICENSE
 
 
 module Maptest(tests) where
-import Test.HUnit
-import Data.Map.Utils
-import Data.Map as M
+import           Test.HUnit       
+import           Data.Map.Utils   
+import           Data.Map       as M
 
 test_flipM =
     let f inp exp = TestCase $ (M.fromList exp) @=? flipM (M.fromList inp) in

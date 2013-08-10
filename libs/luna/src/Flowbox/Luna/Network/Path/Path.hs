@@ -17,8 +17,8 @@ module Flowbox.Luna.Network.Path.Path(
     last,
     toString
 ) where
-import Data.String.Utils (join)
-import qualified Prelude
+import           Data.String.Utils   (join)
+import qualified Prelude             
 import Prelude hiding (last)
 
 newtype Path = Path {segments :: [String]} deriving (Show, Ord, Eq)

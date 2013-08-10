@@ -24,17 +24,17 @@ module Thrift.Transport.HttpClient
     , openHttpClient
     ) where
 
-import Thrift.Transport
-import Network.URI
+import           Thrift.Transport          
+import           Network.URI               
 import Network.HTTP hiding (port, host)
 
-import Control.Monad (liftM)
-import Data.Maybe (fromJust)
-import Data.Monoid (mappend, mempty)
-import Control.Exception (throw)
-import Control.Concurrent.MVar
-import qualified Data.Binary.Builder as B
-import qualified Data.ByteString.Lazy as LBS
+import           Control.Monad             (liftM)
+import           Data.Maybe                (fromJust)
+import           Data.Monoid               (mappend, mempty)
+import           Control.Exception         (throw)
+import           Control.Concurrent.MVar   
+import qualified Data.Binary.Builder     as B
+import qualified Data.ByteString.Lazy    as LBS
 
 
 -- | 'HttpClient', or THttpClient implements the Thrift Transport

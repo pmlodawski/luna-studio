@@ -31,20 +31,20 @@ module System.Path(-- * Name processing
                      mktmpdir, brackettmpdir, brackettmpdirCWD
                     )
 where
-import Data.List
-import Data.List.Utils
+import           Data.List                
+import           Data.List.Utils          
 #if !(defined(mingw32_HOST_OS) || defined(mingw32_TARGET_OS) || defined(__MINGW32__))
-import System.Posix.Files
-import System.Posix.Directory (createDirectory)
-import System.Posix.Temp
+import           System.Posix.Files       
+import           System.Posix.Directory   (createDirectory)
+import           System.Posix.Temp        
 import System.Directory hiding (createDirectory)
 #else
-import System.Directory
+import           System.Directory         
 #endif
-import Control.Exception
-import System.IO
-import System.Path.NameManip
-import System.IO.HVFS.Utils
+import           Control.Exception        
+import           System.IO                
+import           System.Path.NameManip    
+import           System.IO.HVFS.Utils     
 
 {- | Splits a pathname into a tuple representing the root of the name and
 the extension.  The extension is considered to be all characters from the last

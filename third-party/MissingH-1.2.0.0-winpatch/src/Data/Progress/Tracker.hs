@@ -47,10 +47,10 @@ module Data.Progress.Tracker (
                                )
 
 where
-import Control.Concurrent.MVar
-import System.Time
-import System.Time.Utils
-import Data.Ratio
+import           Control.Concurrent.MVar   
+import           System.Time               
+import           System.Time.Utils         
+import           Data.Ratio                
 
 {- $introduction
 

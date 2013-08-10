@@ -1,10 +1,10 @@
 -- example code 2 for socketserver
-import MissingH.Network.SocketServer
-import MissingH.IO
-import MissingH.Logging.Logger
-import Data.Char
-import System.IO
-import MissingH.Str
+import           MissingH.Network.SocketServer   
+import           MissingH.IO                     
+import           MissingH.Logging.Logger         
+import           Data.Char                       
+import           System.IO                       
+import           MissingH.Str                    
 
 lineInteraction :: [String] -> [String]
 lineInteraction inp =

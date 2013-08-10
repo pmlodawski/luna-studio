@@ -9,15 +9,15 @@ module Flowbox.Luna.Codegen.Hs.FuncGenerator(
 generateFunction
 ) where
 
-import           Data.Maybe                                 (fromJust)
+import           Data.Maybe                                (fromJust)
 
 
 import qualified Flowbox.Luna.Type.Type                  as Type
 import qualified Flowbox.Luna.Codegen.Hs.Import          as Import
 import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import           Flowbox.Luna.Network.Graph.Graph          (Graph)
-import qualified Flowbox.Luna.Network.Def.Definition        as Definition
-import           Flowbox.Luna.Network.Def.Definition          (Definition)
+import qualified Flowbox.Luna.Network.Def.Definition     as Definition
+import           Flowbox.Luna.Network.Def.Definition       (Definition)
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
@@ -31,7 +31,7 @@ import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
 import qualified Flowbox.Luna.Codegen.Hs.AST.Module      as Module
 import           Flowbox.Luna.Codegen.Hs.AST.Module        (Module)
 
-import           Flowbox.Luna.Data.List
+import           Flowbox.Luna.Data.List                    
 
 
 generateFunction :: Definition -> Module -> (Function, Module)

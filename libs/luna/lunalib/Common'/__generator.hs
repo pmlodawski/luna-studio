@@ -1,4 +1,4 @@
-import Control.Monad (zipWithM)
+import           Control.Monad   (zipWithM)
 
 names = map (("select" ++) . show) [0..10] ++
         [ "add"

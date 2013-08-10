@@ -22,7 +22,7 @@ by default.
 -}
 
 module System.Posix.Consts where
-import System.Posix.Types
+import           System.Posix.Types   
 
 blockSpecialMode :: FileMode
 blockSpecialMode = 0o0060000

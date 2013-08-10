@@ -50,14 +50,14 @@ where
        (module System.IO.StatCompat, module System.IO.WindowsCompat)
 where
 
-import System.Posix.Types
-import Data.Bits
-import System.IO.StatCompat
-import System.Posix.Consts
-import System.Time.Utils
-import System.Directory
-import Data.Time
-import Data.Time.Clock.POSIX
+import           System.Posix.Types      
+import           Data.Bits               
+import           System.IO.StatCompat    
+import           System.Posix.Consts     
+import           System.Time.Utils       
+import           System.Directory        
+import           Data.Time               
+import           Data.Time.Clock.POSIX   
 
 -- these types aren't defined here
 

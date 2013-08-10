@@ -20,9 +20,9 @@ basePath,
 setExtension
 ) where
 
-import Data.List.Split (splitOn)
-import Data.List (intercalate, intersperse)
-import Data.String.Utils (join)
+import           Data.List.Split     (splitOn)
+import           Data.List           (intercalate, intersperse)
+import           Data.String.Utils   (join)
 
 
 data PathItem = Node String | Root String | Up | Current| Empty deriving (Eq,Ord,Show)  

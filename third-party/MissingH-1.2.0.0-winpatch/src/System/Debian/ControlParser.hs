@@ -24,8 +24,8 @@ Written by John Goerzen, jgoerzen\@complete.org
 module System.Debian.ControlParser(control, depPart)
     where
 
-import Text.ParserCombinators.Parsec
-import Data.String.Utils (split)
+import           Text.ParserCombinators.Parsec   
+import           Data.String.Utils               (split)
 
 eol, extline :: GenParser Char st String
 eol = (try (string "\r\n"))

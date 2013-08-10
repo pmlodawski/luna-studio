@@ -14,11 +14,11 @@ module Flowbox.Batch.Server.Handlers.Graph (
 ) 
 where
 
-import           Control.Monad
-import           Data.IORef
-import qualified Data.Vector    as Vector
+import           Control.Monad                                               
+import           Data.IORef                                                  
+import qualified Data.Vector                                               as Vector
 
-import           Flowbox.Batch.Server.Handlers.Common
+import           Flowbox.Batch.Server.Handlers.Common                        
 import           Flowbox.Batch.Server.Handlers.Defs                          (defOperation)
 import qualified Defs_Types                                                as TDefs
 import qualified Graph_Types                                               as TGraph
@@ -27,7 +27,7 @@ import           Flowbox.Batch.Batch                                         (Ba
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
 import qualified Flowbox.Luna.Network.Graph.Node                           as Node
 import           Flowbox.Luna.Network.Graph.Node                             (Node(..))
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
 

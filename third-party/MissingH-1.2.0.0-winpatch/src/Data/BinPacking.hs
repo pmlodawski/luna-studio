@@ -36,8 +36,8 @@ module Data.BinPacking (BinPacker,
                        )
 
 where
-import Data.List
-import Control.Monad.Error
+import           Data.List             
+import           Control.Monad.Error   
 
 {- | Potential errors returned as Left values by 'BinPacker' functions. 
 Calling 'show' on this value will produce a nice error message suitable for

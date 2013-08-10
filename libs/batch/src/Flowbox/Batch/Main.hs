@@ -5,12 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import qualified Flowbox.Batch.Project.Project              as Project
-import           Flowbox.Batch.Project.Project                (Project)
-import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
-import           Flowbox.Batch.Project.ProjectManager         (ProjectManager)
-import qualified Flowbox.System.UniPath                     as UniPath
-import           Flowbox.System.UniPath                       (UniPath)
+import qualified Flowbox.Batch.Project.Project        as Project
+import           Flowbox.Batch.Project.Project          (Project)
+import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
+import           Flowbox.Batch.Project.ProjectManager   (ProjectManager)
+import qualified Flowbox.System.UniPath               as UniPath
+import           Flowbox.System.UniPath                 (UniPath)
 
 
 main = do

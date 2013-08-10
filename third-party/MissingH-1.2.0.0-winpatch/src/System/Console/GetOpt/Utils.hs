@@ -27,8 +27,8 @@ module System.Console.GetOpt.Utils (parseCmdLine,
                         stdOptional
                        )
 where
-import System.Console.GetOpt
-import System.Environment
+import           System.Console.GetOpt   
+import           System.Environment      
 
 {- | Simple command line parser -- a basic wrapper around the system's
 default getOpt.  See the System.Console.GetOpt manual for a description of the

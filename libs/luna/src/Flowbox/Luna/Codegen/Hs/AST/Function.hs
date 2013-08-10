@@ -19,12 +19,12 @@ module Flowbox.Luna.Codegen.Hs.AST.Function (
     mkSpec
 )where
 
-import Debug.Trace
+import           Debug.Trace                        
 
-import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
-import           Flowbox.Luna.Codegen.Hs.AST.Expr          (Expr)
-import           Data.String.Utils                         (join)
-import qualified Flowbox.Luna.Codegen.Hs.Path            as Path
+import qualified Flowbox.Luna.Codegen.Hs.AST.Expr as Expr
+import           Flowbox.Luna.Codegen.Hs.AST.Expr   (Expr)
+import           Data.String.Utils                  (join)
+import qualified Flowbox.Luna.Codegen.Hs.Path     as Path
 
 
 data Function = Function { name       :: String,

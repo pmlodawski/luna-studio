@@ -7,10 +7,10 @@ module Flowbox'.Core (
 )
 where
 
-import Flowbox'.TH.Inst
-import Flowbox'.Common
-import Data.Tuple.OneTuple
-import Flowbox'.Data.NTuple.Select
+import           Flowbox'.TH.Inst              
+import           Flowbox'.Common               
+import           Data.Tuple.OneTuple           
+import           Flowbox'.Data.NTuple.Select   
 
 (.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 -- f .: g = \x y->f (g x y)

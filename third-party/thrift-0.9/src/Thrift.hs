@@ -31,14 +31,14 @@ module Thrift
     , ThriftException(..)
     ) where
 
-import Control.Monad ( when )
-import Control.Exception
+import           Control.Monad       ( when )
+import           Control.Exception   
 
-import Data.Text.Lazy ( pack, unpack )
-import Data.Typeable ( Typeable )
+import           Data.Text.Lazy      ( pack, unpack )
+import           Data.Typeable       ( Typeable )
 
-import Thrift.Transport
-import Thrift.Protocol
+import           Thrift.Transport    
+import           Thrift.Protocol     
 
 
 data ThriftException = ThriftException

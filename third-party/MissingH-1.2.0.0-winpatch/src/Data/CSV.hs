@@ -21,8 +21,8 @@ Written by John Goerzen, jgoerzen\@complete.org
 -}
 
 module Data.CSV (csvFile, genCsvFile) where
-import Text.ParserCombinators.Parsec
-import Data.List (intersperse)
+import           Text.ParserCombinators.Parsec   
+import           Data.List                       (intersperse)
 
 eol :: forall st. GenParser Char st String
 eol = (try $ string "\n\r") <|> (try $ string "\r\n") <|> string "\n" <|>

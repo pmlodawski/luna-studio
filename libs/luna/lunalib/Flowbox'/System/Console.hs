@@ -2,10 +2,10 @@
 
 module Flowbox'.System.Console where
 
-import Common'.C''print
-import Flowbox'.Core
-import qualified Prelude
-import Prelude(return, Show, show)
+import           Common'.C''print   
+import           Flowbox'.Core      
+import qualified Prelude            
+import           Prelude            (return, Show, show)
 
 
 data Console = Console deriving (Show)

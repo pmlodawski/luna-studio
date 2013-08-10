@@ -7,9 +7,9 @@ For license and copyright information, see the file LICENSE
 -}
 
 module MIMETypestest(tests) where
-import Test.HUnit
-import Data.List
-import Data.MIME.Types
+import           Test.HUnit        
+import           Data.List         
+import           Data.MIME.Types   
 
 test_readMIMETypes =
     let omtd = readMIMETypes defaultmtd True "testsrc/mime.types.test"

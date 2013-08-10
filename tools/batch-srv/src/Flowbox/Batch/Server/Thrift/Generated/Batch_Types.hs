@@ -18,26 +18,26 @@ import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  return, length, IO, fromIntegral, fromEnum, toEnum,
                  (.), (&&), (||), (==), (++), ($), (-) )
 
-import Control.Exception
-import Data.ByteString.Lazy
-import Data.Hashable
-import Data.Int
-import Data.Text.Lazy ( Text )
-import qualified Data.Text.Lazy as TL
-import Data.Typeable ( Typeable )
-import qualified Data.HashMap.Strict as Map
-import qualified Data.HashSet as Set
-import qualified Data.Vector as Vector
+import           Control.Exception      
+import           Data.ByteString.Lazy   
+import           Data.Hashable          
+import           Data.Int               
+import           Data.Text.Lazy         ( Text )
+import qualified Data.Text.Lazy       as TL
+import           Data.Typeable          ( Typeable )
+import qualified Data.HashMap.Strict  as Map
+import qualified Data.HashSet         as Set
+import qualified Data.Vector          as Vector
 
-import Thrift
-import Thrift.Types ()
+import           Thrift                 
+import           Thrift.Types           ()
 
-import qualified Attrs_Types
-import qualified Defs_Types
-import qualified Graph_Types
-import qualified Libs_Types
-import qualified Projects_Types
-import qualified Types_Types
+import qualified Attrs_Types            
+import qualified Defs_Types             
+import qualified Graph_Types            
+import qualified Libs_Types             
+import qualified Projects_Types         
+import qualified Types_Types            
 
 
 data ArgumentException = ArgumentException{f_ArgumentException_message :: Maybe Text} deriving (Show,Eq,Typeable)

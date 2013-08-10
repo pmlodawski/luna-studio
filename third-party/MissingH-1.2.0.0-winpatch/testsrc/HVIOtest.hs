@@ -7,12 +7,12 @@ For license and copyright information, see the file LICENSE
 -}
 
 module HVIOtest(tests) where
-import Test.HUnit
-import System.IO.HVIO
-import Test.HUnit.Tools
-import System.IO
-import System.IO.Error
-import Control.Exception
+import           Test.HUnit          
+import           System.IO.HVIO      
+import           Test.HUnit.Tools    
+import           System.IO           
+import           System.IO.Error     
+import           Control.Exception   
 
 ioeq :: (Show a, Eq a) => a -> IO a -> Assertion
 ioeq exp inp = do x <- inp

@@ -11,11 +11,11 @@ module Flowbox.Luna.Lib.LibManager(
     empty
 ) where
 
-import           Flowbox.Luna.Lib.Library       (Library)
-import           Flowbox.Luna.Lib.Edge          (Edge)
+import           Flowbox.Luna.Lib.Library   (Library)
+import           Flowbox.Luna.Lib.Edge      (Edge)
 
 import           Flowbox.Luna.Data.Graph         hiding(Graph, Edge, empty)
-import qualified Flowbox.Luna.Data.Graph         as DG
+import qualified Flowbox.Luna.Data.Graph  as DG
 
 
 type LibManager = DG.Graph Library Edge

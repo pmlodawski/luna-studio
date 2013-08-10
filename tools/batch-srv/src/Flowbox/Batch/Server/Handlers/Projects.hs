@@ -14,19 +14,19 @@ module Flowbox.Batch.Server.Handlers.Projects (
     setActiveProject
 ) where
     
-import           Data.IORef
-import qualified Data.Vector    as Vector
-import           Data.Vector      (Vector)
+import           Data.IORef                                                  
+import qualified Data.Vector                                               as Vector
+import           Data.Vector                                                 (Vector)
 
 
-import           Flowbox.Batch.Server.Handlers.Common
+import           Flowbox.Batch.Server.Handlers.Common                        
 import qualified Projects_Types                                            as TProjects
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
 import qualified Flowbox.Batch.Project.Project                             as Project
 import           Flowbox.Batch.Project.Project                               (Project(..))
 import qualified Flowbox.Luna.Core                                         as Core
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects    ()
 
 

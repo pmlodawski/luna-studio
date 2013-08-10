@@ -7,11 +7,11 @@ For license and copyright information, see the file LICENSE
 -}
 
 module Strtest(tests) where
-import Test.HUnit
-import Data.String.Utils
-import Test.HUnit.Tools
-import Text.Regex
-import Data.Char
+import           Test.HUnit          
+import           Data.String.Utils   
+import           Test.HUnit.Tools    
+import           Text.Regex          
+import           Data.Char           
 
 test_lstrip =
     mapassertEqual "lstrip" lstrip

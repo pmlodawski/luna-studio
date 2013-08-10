@@ -1,11 +1,11 @@
 -- example code 3 for socketserver
-import MissingH.Network.SocketServer
-import MissingH.IO
-import MissingH.Logging.Logger
-import Data.Char
-import System.IO
-import MissingH.Str
-import System.Time
+import           MissingH.Network.SocketServer   
+import           MissingH.IO                     
+import           MissingH.Logging.Logger         
+import           Data.Char                       
+import           System.IO                       
+import           MissingH.Str                    
+import           System.Time                     
 
 realhandler h = 
     let loop = do e <- hIsEOF h

@@ -7,8 +7,8 @@ For license and copyright information, see the file LICENSE
 -}
 
 module CRC32POSIXtest(tests) where
-import Test.HUnit
-import Data.Hash.CRC32.Posix
+import           Test.HUnit              
+import           Data.Hash.CRC32.Posix   
 
 test_crc32 =
     let f msg inp exp = TestLabel msg $ TestCase $ assertEqual "" exp (crc32 inp) in

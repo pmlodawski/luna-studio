@@ -44,9 +44,9 @@ module Flowbox.Luna.Data.Graph (
     --newIds
 ) where
 
-import           Data.Functor                               ((<$>))
-import           Data.Maybe                                 (fromJust)
-import qualified Data.Graph.Inductive                     as DG
+import           Data.Functor           ((<$>))
+import           Data.Maybe             (fromJust)
+import qualified Data.Graph.Inductive as DG
 import           Data.Graph.Inductive                       hiding (Graph)
 
 

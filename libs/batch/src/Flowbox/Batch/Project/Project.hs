@@ -11,12 +11,12 @@ module Flowbox.Batch.Project.Project(
 	empty
 ) where
 
-import qualified Flowbox.Luna.Core                        as Core
-import           Flowbox.Luna.Core                          (Core(..))
-import qualified Flowbox.Luna.Network.Attributes          as Attributes
-import           Flowbox.Luna.Network.Attributes            (Attributes)
-import qualified Flowbox.System.UniPath                   as UniPath
-import           Flowbox.System.UniPath                     (UniPath)
+import qualified Flowbox.Luna.Core               as Core
+import           Flowbox.Luna.Core                 (Core(..))
+import qualified Flowbox.Luna.Network.Attributes as Attributes
+import           Flowbox.Luna.Network.Attributes   (Attributes)
+import qualified Flowbox.System.UniPath          as UniPath
+import           Flowbox.System.UniPath            (UniPath)
 
 
 

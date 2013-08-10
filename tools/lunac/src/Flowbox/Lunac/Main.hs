@@ -5,22 +5,22 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import qualified Flowbox.Luna.Samples.HelloWorld        as HelloWorld
-import qualified Flowbox.Luna.Codegen.Hs.FuncGenerator  as FG
-import qualified Flowbox.Luna.Codegen.Hs.DefGenerator   as DG
-import qualified Flowbox.Luna.Codegen.Hs.CodeGenerator  as CG
-import qualified Flowbox.Luna.Network.Def.DefManager    as DefManager
+import qualified Flowbox.Luna.Samples.HelloWorld       as HelloWorld
+import qualified Flowbox.Luna.Codegen.Hs.FuncGenerator as FG
+import qualified Flowbox.Luna.Codegen.Hs.DefGenerator  as DG
+import qualified Flowbox.Luna.Codegen.Hs.CodeGenerator as CG
+import qualified Flowbox.Luna.Network.Def.DefManager   as DefManager
 
-import qualified Flowbox.Luna.Codegen.Hs.AST.Function   as Function
-import qualified Flowbox.Luna.Codegen.Hs.AST.Module     as Module
+import qualified Flowbox.Luna.Codegen.Hs.AST.Function  as Function
+import qualified Flowbox.Luna.Codegen.Hs.AST.Module    as Module
 
-import           Flowbox.Luna.Codegen.Hs.Cabal.Config      (Config)
-import qualified Flowbox.Luna.Codegen.Hs.Cabal.Config    as Config
-import qualified Flowbox.Luna.Codegen.Hs.Cabal.Section   as Section
+import           Flowbox.Luna.Codegen.Hs.Cabal.Config    (Config)
+import qualified Flowbox.Luna.Codegen.Hs.Cabal.Config  as Config
+import qualified Flowbox.Luna.Codegen.Hs.Cabal.Section as Section
 
-import qualified Flowbox.Luna.Network.Graph.Graph              as Graph
+import qualified Flowbox.Luna.Network.Graph.Graph      as Graph
 
-import Flowbox.Luna.Data.Graph
+import           Flowbox.Luna.Data.Graph                 
 
 
 main :: IO ()

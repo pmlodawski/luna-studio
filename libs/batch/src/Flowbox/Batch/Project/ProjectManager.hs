@@ -16,13 +16,13 @@ module Flowbox.Batch.Project.ProjectManager (
 	storeProject
 ) where
 
-import System.Directory                                   as Dir
-import qualified Flowbox.System.UniPath                   as UniPath
-import           Flowbox.System.UniPath                     (UniPath)
-import qualified Flowbox.Batch.Project.Project            as Project
-import           Flowbox.Batch.Project.Project              (Project)
+import           System.Directory              as Dir
+import qualified Flowbox.System.UniPath        as UniPath
+import           Flowbox.System.UniPath          (UniPath)
+import qualified Flowbox.Batch.Project.Project as Project
+import           Flowbox.Batch.Project.Project   (Project)
 import           Flowbox.Luna.Data.Graph                  hiding(Graph, Edge, empty)
-import qualified Flowbox.Luna.Data.Graph                  as DG
+import qualified Flowbox.Luna.Data.Graph       as DG
 
 
 type ProjectManager = DG.Graph Project ()

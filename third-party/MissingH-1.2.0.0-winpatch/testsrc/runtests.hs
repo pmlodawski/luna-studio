@@ -9,8 +9,8 @@ For license and copyright information, see the file LICENSE
 
 module Main where 
 
-import Test.HUnit
-import Tests
+import           Test.HUnit   
+import           Tests        
 
 main = runTestTT tests
 

@@ -8,10 +8,10 @@ For license and copyright information, see the file LICENSE
 -}
 
 module Eithertest(tests) where
-import Test.HUnit
-import Data.Either.Utils
-import Test.HUnit.Tools
-import Control.Exception
+import           Test.HUnit          
+import           Data.Either.Utils   
+import           Test.HUnit.Tools    
+import           Control.Exception   
 
 instance Eq ErrorCall where
     (ErrorCall x) == (ErrorCall y) = x == y

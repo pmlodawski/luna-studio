@@ -24,12 +24,12 @@ in "System.Path.WildMatch".
 
 module System.Path.Glob (glob, vGlob)
     where
-import Data.List.Utils (hasAny)
-import System.IO.HVFS
-import System.FilePath (splitFileName)
-import Control.Exception (tryJust)
-import System.Path.WildMatch (wildCheckCase)
-import Data.List (isSuffixOf)
+import           Data.List.Utils         (hasAny)
+import           System.IO.HVFS          
+import           System.FilePath         (splitFileName)
+import           Control.Exception       (tryJust)
+import           System.Path.WildMatch   (wildCheckCase)
+import           Data.List               (isSuffixOf)
 
 hasWild :: String -> Bool
 hasWild = hasAny "*?["

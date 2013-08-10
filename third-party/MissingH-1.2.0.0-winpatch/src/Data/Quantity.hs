@@ -32,9 +32,9 @@ module Data.Quantity (
                      )
 
 where
-import Data.List
-import Text.Printf
-import Data.Char
+import           Data.List     
+import           Text.Printf   
+import           Data.Char     
 
 {- | The options for 'quantifyNum' and 'renderNum' -}
 data SizeOpts = SizeOpts { base :: Int, -- ^ The base from which calculations are made

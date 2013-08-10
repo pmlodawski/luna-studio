@@ -10,15 +10,15 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs where
 
-import qualified Data.HashMap.Strict as HashMap
-import           Data.HashMap.Strict   (HashMap)
-import           Data.Text.Lazy        (Text, pack, unpack)
+import qualified Data.HashMap.Strict                                       as HashMap
+import           Data.HashMap.Strict                                         (HashMap)
+import           Data.Text.Lazy                                              (Text, pack, unpack)
 
 import qualified Attrs_Types                                               as TAttrs
 import           Flowbox.Luna.Network.Flags                                  (Flags(..))
 import qualified Flowbox.Luna.Network.Attributes                           as Attributes
 import           Flowbox.Luna.Network.Attributes                             (Attributes)
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 
 
 instance Convert Flags TAttrs.Flags where

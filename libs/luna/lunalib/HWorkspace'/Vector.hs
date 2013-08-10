@@ -8,10 +8,10 @@ module Workspace'.Vector (
     len
 ) where
 
-import Common'.F_len
-import Common'.F_getx
-import Flowbox'.Core
-import qualified Workspace'.Vector.U'len
+import           Common'.F_len             
+import           Common'.F_getx            
+import           Flowbox'.Core             
+import qualified Workspace'.Vector.U'len   
 
 data Vector a = Vector{
     x'F :: a

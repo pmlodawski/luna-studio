@@ -1,9 +1,9 @@
 {-# LANGUAGE PatternGuards #-}
 module Main where
-import Data.List
-import System.Environment
+import           Data.List            
+import           System.Environment   
 
-import           Data.String.Utils                 (join)
+import           Data.String.Utils    (join)
 
 main :: IO ()
 main = do

@@ -3,11 +3,11 @@
 module Workspace'.Vector.U'incx where
 
 -- imports
-import Common'.C''add
-import Common'.C''select0
-import Common'.C''x'getter
-import Common'.C''x'setter
-import Flowbox'.Core
+import           Common'.C''add        
+import           Common'.C''select0    
+import           Common'.C''x'getter   
+import           Common'.C''x'setter   
+import           Flowbox'.Core         
 
 -- datatypes
 

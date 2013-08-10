@@ -52,18 +52,18 @@ module System.IO.HVFS(-- * Implementation Classes \/ Types
                     )
 where
 
-import qualified Control.Exception (catch, IOException)
-import System.IO.HVIO
-import System.Time.Utils
-import System.IO
-import System.IO.Error
-import System.IO.PlafCompat
-import System.Posix.Types
-import System.Time
-import System.Directory
+import qualified Control.Exception       (catch, IOException)
+import           System.IO.HVIO          
+import           System.Time.Utils       
+import           System.IO               
+import           System.IO.Error         
+import           System.IO.PlafCompat    
+import           System.Posix.Types      
+import           System.Time             
+import           System.Directory        
 
 #if MIN_VERSION_directory(1,2,0)
-import Data.Time.Clock.POSIX ( utcTimeToPOSIXSeconds )
+import           Data.Time.Clock.POSIX   ( utcTimeToPOSIXSeconds )
 #endif
 
 {- | Encapsulate a 'HVFSStat' result.  This is required due to Haskell

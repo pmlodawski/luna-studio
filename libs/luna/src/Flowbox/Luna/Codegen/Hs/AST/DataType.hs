@@ -13,12 +13,12 @@ module Flowbox.Luna.Codegen.Hs.AST.DataType (
     name
 )where
 
-import           Data.String.Utils                 (join)
+import           Data.String.Utils                      (join)
 
-import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
-import           Flowbox.Luna.Codegen.Hs.AST.Expr          (Expr)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Deriving    as Deriving
-import           Flowbox.Luna.Codegen.Hs.AST.Deriving      (Deriving)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Expr     as Expr
+import           Flowbox.Luna.Codegen.Hs.AST.Expr       (Expr)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Deriving as Deriving
+import           Flowbox.Luna.Codegen.Hs.AST.Deriving   (Deriving)
 
 
 data DataType = DataType { cls       :: Expr

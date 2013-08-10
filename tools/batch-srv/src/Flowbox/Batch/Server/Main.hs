@@ -9,8 +9,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 --import Data.List
-import Data.IORef
-import Network
+import           Data.IORef                               
+import           Network                                  
 --import System.Environment(getArgs)
 
 
@@ -19,22 +19,22 @@ import Network
 --import Thrift.Transport.Handle
 --import Thrift.Protocol
 --import Thrift.Protocol.Binary
-import Thrift.Server (runBasicServer)
+import           Thrift.Server                            (runBasicServer)
 
 -- Generated files
-import qualified Batch
-import           Batch_Iface
-import qualified Flowbox.Batch.Batch                        as Batch
-import           Flowbox.Batch.Batch                          (Batch(..))
-import qualified Flowbox.Batch.Server.Handlers.Defs         as HDefs
-import qualified Flowbox.Batch.Server.Handlers.Graph        as HGraph
-import qualified Flowbox.Batch.Server.Handlers.Libs         as HLibs
-import qualified Flowbox.Batch.Server.Handlers.Projects     as HProjects
-import qualified Flowbox.Batch.Server.Handlers.Types        as HTypes
+import qualified Batch                                    
+import           Batch_Iface                              
+import qualified Flowbox.Batch.Batch                    as Batch
+import           Flowbox.Batch.Batch                      (Batch(..))
+import qualified Flowbox.Batch.Server.Handlers.Defs     as HDefs
+import qualified Flowbox.Batch.Server.Handlers.Graph    as HGraph
+import qualified Flowbox.Batch.Server.Handlers.Libs     as HLibs
+import qualified Flowbox.Batch.Server.Handlers.Projects as HProjects
+import qualified Flowbox.Batch.Server.Handlers.Types    as HTypes
 
-import qualified Flowbox.Batch.Project.Project              as Project
-import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
-import qualified Flowbox.Luna.Samples.Packages              as Sample
+import qualified Flowbox.Batch.Project.Project          as Project
+import qualified Flowbox.Batch.Project.ProjectManager   as ProjectManager
+import qualified Flowbox.Luna.Samples.Packages          as Sample
 
 port :: PortNumber
 port = 30521

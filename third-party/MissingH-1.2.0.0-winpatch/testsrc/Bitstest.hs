@@ -8,9 +8,9 @@ For license and copyright information, see the file LICENSE
 
 
 module Bitstest(tests) where
-import Test.HUnit
-import Data.Bits.Utils
-import Data.Word
+import           Test.HUnit        
+import           Data.Bits.Utils   
+import           Data.Word         
 
 test_fromBytes =
     let f :: [Word32] -> Word32 -> Test

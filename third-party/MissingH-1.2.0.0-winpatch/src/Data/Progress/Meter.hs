@@ -39,14 +39,14 @@ module Data.Progress.Meter (-- * Types
                                killAutoDisplayMeter
                                ) where
 
-import Data.Progress.Tracker
-import Control.Concurrent
-import Control.Monad (when)
-import Data.String.Utils (join)
-import System.Time.Utils (renderSecs)
-import Data.Quantity (renderNums, binaryOpts)
-import System.IO
-import Control.Monad (filterM)
+import           Data.Progress.Tracker   
+import           Control.Concurrent      
+import           Control.Monad           (when)
+import           Data.String.Utils       (join)
+import           System.Time.Utils       (renderSecs)
+import           Data.Quantity           (renderNums, binaryOpts)
+import           System.IO               
+import           Control.Monad           (filterM)
 
 {- | The main data type for the progress meter. -}
 data ProgressMeterR =

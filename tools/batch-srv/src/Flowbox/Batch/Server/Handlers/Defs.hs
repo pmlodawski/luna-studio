@@ -20,13 +20,13 @@ module Flowbox.Batch.Server.Handlers.Defs (
 ) 
 where
 
-import           Data.IORef
-import qualified Data.Vector                                      as Vector
-import           Data.Vector                                        (Vector)
+import           Data.IORef                                                  
+import qualified Data.Vector                                               as Vector
+import           Data.Vector                                                 (Vector)
 
-import qualified Attrs_Types
+import qualified Attrs_Types                                                 
 import qualified Defs_Types                                                as TDefs
-import           Flowbox.Batch.Server.Handlers.Common
+import           Flowbox.Batch.Server.Handlers.Common                        
 import qualified Types_Types                                               as TTypes
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
@@ -34,7 +34,7 @@ import qualified Flowbox.Luna.Network.Def.Definition                       as De
 import           Flowbox.Luna.Network.Def.Definition                         (Definition)
 import qualified Flowbox.Luna.Network.Graph.Graph                          as Graph
 import           Flowbox.Luna.Network.Graph.Graph                            (Graph)
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 
  

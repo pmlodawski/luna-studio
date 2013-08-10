@@ -7,12 +7,12 @@ For license and copyright information, see the file LICENSE
 -}
 
 module Listtest(tests) where
-import Test.HUnit
-import Data.List.Utils
-import Data.List
-import Test.HUnit
-import Test.QuickCheck as QC
-import Test.HUnit.Tools
+import           Test.HUnit         
+import           Data.List.Utils    
+import           Data.List          
+import           Test.HUnit         
+import           Test.QuickCheck  as QC
+import           Test.HUnit.Tools   
 
 test_delFromAL = 
     let f :: [(String, Int)] -> [(String, Int)] -> Test

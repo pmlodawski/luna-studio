@@ -30,11 +30,11 @@ where
 module Network.Email.Sendmail(sendmail)
 where
 
-import System.Cmd.Utils
-import System.Directory
-import System.IO
-import System.IO.Error
-import qualified Control.Exception(try, IOException)
+import           System.Cmd.Utils         
+import           System.Directory         
+import           System.IO                
+import           System.IO.Error          
+import qualified Control.Exception(try,   IOException)
 
 sendmails :: [String]
 sendmails = ["/usr/sbin/sendmail",

@@ -9,9 +9,9 @@ module Flowbox.Luna.Network.Graph.DefaultValue(
 DefaultValue(..)
 ) where
 
-import qualified Data.Serialize       as Serialize
-import           Data.Serialize         (Serialize)
-import           Data.Word              (Word8)
+import qualified Data.Serialize as Serialize
+import           Data.Serialize   (Serialize)
+import           Data.Word        (Word8)
 
 data DefaultValue = DefaultInt Int
                   | DefaultString String 

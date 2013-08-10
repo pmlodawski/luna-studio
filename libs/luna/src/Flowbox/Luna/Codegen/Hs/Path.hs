@@ -24,8 +24,8 @@ module Flowbox.Luna.Codegen.Hs.Path (
     
 )where
 
-import           Flowbox.Luna.Network.Path.Path 
-import           Data.Char                      (isLower)
+import           Flowbox.Luna.Network.Path.Path   
+import           Data.Char                        (isLower)
 
 
 

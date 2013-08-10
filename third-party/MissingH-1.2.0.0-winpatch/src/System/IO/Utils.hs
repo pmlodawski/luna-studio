@@ -34,10 +34,10 @@ module System.IO.Utils(-- * Entire File Handle Utilities
                        optimizeForBatch, optimizeForInteraction
                         ) where
 
-import System.IO.Unsafe (unsafeInterleaveIO)
-import System.IO
-import Data.List (genericLength)
-import System.IO.HVIO
+import           System.IO.Unsafe   (unsafeInterleaveIO)
+import           System.IO          
+import           Data.List          (genericLength)
+import           System.IO.HVIO     
 
 {- | Given a list of strings, output a line containing each item, adding
 newlines as appropriate.  The list is not expected to have newlines already.

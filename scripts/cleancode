@@ -1,87 +1,25 @@
 #!/usr/bin/python
-import os.path
-import sys
-from subprocess import call, Popen, PIPE
 from utils.glob2 import glob
 import re
 
-input = r'''
-module Flowbox.Luna.Codegen.Hs.AST.Module (
-    Module(..),
-    empty,
-    base,
-    addExpr,
-    addExprs,
-    addAlias,
-    addExt,
-    genCode,
-    mkInst,
-    addDataType,
-    addFunction,
-    addClass,
-    addInstance,
-    addImport,
-    addImports
-)where
-
-import Debug.Trace
-
-import           Data.Set                          (Set)
-import qualified Data.Set                        as Set
-
-import qualified Flowbox.Luna.Codegen.Hs.Path            as Path
-import           Flowbox.Luna.Codegen.Hs.Path              (Path(..))
-import qualified Flowbox.Luna.Codegen.Hs.Import          as Import
-import           Flowbox.Luna.Codegen.Hs.Import            (Import)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Function    as Function
-import           Flowbox.Luna.Codegen.Hs.AST.Function      (Function)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Instance                 as Instance
-import           Flowbox.Luna.Codegen.Hs.AST.Instance      (Instance)
-import qualified Flowbox.Luna.Codegen.Hs.AST.DataType    as DataType
-import           Flowbox.Luna.Codegen.Hs.AST.DataType      (DataType)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Class       as Class
-import           Flowbox.Luna.Codegen.Hs.AST.Class         (Class)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
-import           Flowbox.Luna.Codegen.Hs.AST.Expr          (Expr)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Extension   as Extension
-import           Flowbox.Luna.Codegen.Hs.AST.Extension     (Extension, e2)
-import           Data.String.Utils                         (join)
-
-data Module = Module { path       :: Path
-                     , submodules :: [Module]
-                     , imports    :: Set Import
-                     , datatypes  :: [DataType]
-                     , functions  :: [Function]
-                     , classes    :: [Class]
-                     , instances  :: [Instance]
-                     , exprs      :: [Expr]
-                     , extensions :: [Extension]
-                     } deriving (Show)
-
-'''
-
 def main ():
-	paths = tcabals_paths = glob("**/*.hs")
+	paths = glob("**/*.hs")
+	bodys = []
 	for path in paths:
-		with open(path, 'rw') as file:
-			body = file.read()
-			body = clean_imports(body)
-			file.write(body)
-
-main()
-
-
-
-
-# match = re.compile ("^import\s*(qualified)?\s*[^\s]*\s*(as)?.*$")
-
+		with open(path, 'r') as file:
+			bodys.append(file.read())
+	newbodys = map(clean_imports, bodys)
+	for (path, body, nbody) in zip(paths, bodys, newbodys):
+		if body != nbody:
+			with open(path, 'w') as file:
+				file.write(body)
 
 def clean_imports(src):
 	match = re.compile (r'^import[\t ]*(?P<qualified>qualified)?[\t ]*(?P<path>[^\s]*)[\t ]*(?P<as>as)?[\t ]*(?P<target>[^\s]*|\(.*\))[\t ]*$', re.MULTILINE)
 	matches = [m for m in match.finditer(src)]
 	matches.reverse()
 	paths = [m.group('path') for m in matches]
-	pathmaxlen = max(map(len,paths))
+	pathmaxlen = max(map(len,paths)) if paths else 0
 	for m in matches:
 		qualified = 'qualified '
 		qualified = qualified if m.group('qualified') else ' '*len(qualified)
@@ -93,4 +31,6 @@ def clean_imports(src):
 		src = src[:m.start()] + imp + src[m.end():]
 	return src
 
-# clean_imports(input)
+
+main()
+# print clean_imports(input)

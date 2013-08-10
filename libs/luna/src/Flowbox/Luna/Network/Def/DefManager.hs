@@ -16,15 +16,15 @@ module Flowbox.Luna.Network.Def.DefManager(
     parent
 ) where
 
-import           Data.Maybe                                 (fromJust)
+import           Data.Maybe                            (fromJust)
 
-import qualified Flowbox.Luna.Type.Type                  as Type
-import qualified Flowbox.Luna.Network.Def.Definition     as Definition
-import           Flowbox.Luna.Network.Def.Definition       (Definition(..))
-import           Flowbox.Luna.Network.Def.Edge             (Edge(..))
+import qualified Flowbox.Luna.Type.Type              as Type
+import qualified Flowbox.Luna.Network.Def.Definition as Definition
+import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
+import           Flowbox.Luna.Network.Def.Edge         (Edge(..))
 
-import           Flowbox.Luna.Data.Graph                                   hiding(Edge)
-import           Flowbox.Luna.Data.List                    (foldri)
+import           Flowbox.Luna.Data.Graph               hiding(Edge)
+import           Flowbox.Luna.Data.List                (foldri)
 
 type DefManager = Graph Definition Edge
 

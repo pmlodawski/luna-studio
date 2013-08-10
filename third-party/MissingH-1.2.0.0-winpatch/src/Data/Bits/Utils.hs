@@ -23,8 +23,8 @@ Written by John Goerzen, jgoerzen\@complete.org
 module Data.Bits.Utils(getBytes, fromBytes,
                      c2w8, s2w8, w82c, w82s)
 where
-import Data.Bits
-import Data.Word
+import           Data.Bits   
+import           Data.Word   
 
 {- | Returns a list representing the bytes that comprise a data type.
 

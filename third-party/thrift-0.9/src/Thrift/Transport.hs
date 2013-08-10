@@ -24,13 +24,13 @@ module Thrift.Transport
   , TransportExnType(..)
   ) where
 
-import Control.Monad ( when )
-import Control.Exception ( Exception, throw )
+import           Control.Monad          ( when )
+import           Control.Exception      ( Exception, throw )
 
-import Data.Typeable ( Typeable )
+import           Data.Typeable          ( Typeable )
 
 import qualified Data.ByteString.Lazy as LBS
-import Data.Monoid
+import           Data.Monoid            
 
 class Transport a where
     tIsOpen :: a -> IO Bool

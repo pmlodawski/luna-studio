@@ -34,11 +34,11 @@ module System.IO.PlafCompat
      module System.Posix.Types)
 where
 
-import System.Posix.Types
+import           System.Posix.Types        
 #if (defined(mingw32_HOST_OS) || defined(mingw32_TARGET_OS) || defined(__MINGW32__))
-import System.IO.WindowsCompat
+import           System.IO.WindowsCompat   
 #else
-import System.Posix.Files
+import           System.Posix.Files        
 #endif
 
 {- | The name of the null device.  NUL: on Windows, \/dev\/null everywhere else.
