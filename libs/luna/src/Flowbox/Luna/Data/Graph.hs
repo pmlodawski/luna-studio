@@ -19,7 +19,6 @@ module Flowbox.Luna.Data.Graph (
     insEdge,
     insEdges,
     lab,
-    lab_deprecated,
     labEdges,
     labNodes,
     labs,
@@ -45,8 +44,10 @@ module Flowbox.Luna.Data.Graph (
     --newIds
 ) where
 
-import qualified Data.Graph.Inductive            as DG
-import           Data.Graph.Inductive            hiding (Graph)
+import           Data.Functor                               ((<$>))
+import           Data.Maybe                                 (fromJust)
+import qualified Data.Graph.Inductive                     as DG
+import           Data.Graph.Inductive                       hiding (Graph)
 
 
 type Graph a b = DG.Gr a b
@@ -54,20 +55,16 @@ type Vertex    = DG.Node
 type LVertex a = DG.LNode a
 
 
-lab_deprecated :: Graph a b -> Vertex -> a
-lab_deprecated g vtx = DG.lab' $ DG.context g vtx
+labs :: Graph a b -> [Vertex] -> Maybe [a]
+labs g vtxs = mapM (lab g) vtxs
 
 
-labs :: Graph a b -> [Vertex] -> [a]
-labs g vtxs = map (lab_deprecated g) vtxs
+labVtx :: Graph a b -> Vertex -> Maybe (LVertex a)
+labVtx g vtx = (,) vtx <$> lab g vtx
 
 
-labVtx :: Graph a b -> Vertex -> LVertex a
-labVtx g vtx = (vtx, lab_deprecated g vtx)
-
-
-labVtxs :: Graph a b -> [Vertex] -> [LVertex a]
-labVtxs g vtxs = map (labVtx g) vtxs
+labVtxs :: Graph a b -> [Vertex] -> Maybe [LVertex a]
+labVtxs g vtxs = mapM (labVtx g) vtxs
 
 
 out_ :: Graph a b -> Vertex -> [b]
@@ -83,19 +80,19 @@ innvtx g vtx = [pvtx | (pvtx,_,_) <- inn g vtx]
 
 
 suc_ :: Graph a b -> Vertex -> [a]
-suc_ g vtx = map (lab_deprecated g) $ suc g vtx
+suc_ g vtx = map (fromJust . (lab g)) $ suc g vtx
 
 
-sucl :: Graph a b -> Vertex -> [(Vertex, a)]
-sucl g vtx = map (\v -> (v, lab_deprecated g v)) $ suc g vtx
+sucl :: Graph a b -> Vertex -> [LVertex a]
+sucl g vtx = map (fromJust . (labVtx g)) $ suc g vtx
 
 
 pre_ :: Graph a b -> Vertex -> [a]
-pre_ g vtx = map (lab_deprecated g) $ pre g vtx
+pre_ g vtx = map (fromJust . (lab g)) $ pre g vtx
 
 
-prel :: Graph a b -> Vertex -> [(Vertex, a)]
-prel g vtx = map (\v -> (v, lab_deprecated g v)) $ pre g vtx
+prel :: Graph a b -> Vertex -> [LVertex a]
+prel g vtx = map (fromJust . (labVtx g)) $ pre g vtx
 
 
 path :: Graph a b -> Vertex -> [Vertex]

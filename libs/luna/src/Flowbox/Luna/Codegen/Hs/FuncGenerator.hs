@@ -9,6 +9,8 @@ module Flowbox.Luna.Codegen.Hs.FuncGenerator(
 generateFunction
 ) where
 
+import           Data.Maybe                                 (fromJust)
+
 
 import qualified Flowbox.Luna.Type.Type                  as Type
 import qualified Flowbox.Luna.Codegen.Hs.Import          as Import
@@ -36,7 +38,7 @@ generateFunction :: Definition -> Module -> (Function, Module)
 generateFunction def m = (func, nmod) where
     graph      = Definition.graph def
     vertices   = Graph.topsort graph
-    nodes      = Graph.labVtxs graph vertices
+    nodes      = fromJust $ Graph.labVtxs graph vertices
     fcls       = Definition.cls def
     fname      = Type.name fcls
     --finputs    = Type.inputs fcls

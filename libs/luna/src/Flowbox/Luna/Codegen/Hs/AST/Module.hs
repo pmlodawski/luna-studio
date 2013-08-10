@@ -23,6 +23,8 @@ module Flowbox.Luna.Codegen.Hs.AST.Module (
     addImports
 )where
 
+import Debug.Trace
+
 import           Data.Set                          (Set)
 import qualified Data.Set                        as Set
 
@@ -66,7 +68,7 @@ header = "-- This is Flowbox generated file.\n\n"
 
 
 genCode :: Module -> String
-genCode m =  header
+genCode m = header
             ++ exts
             ++ "module " ++ mypath ++ " where\n\n" 
             ++ genSection "imports"     Import.genCode   (Set.elems $ imports m)

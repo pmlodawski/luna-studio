@@ -9,49 +9,49 @@ module Flowbox.Luna.Tools.Serialize.Lib(
     --restoreLib
 ) where
 
-import System.Directory
-import System.IO
-import Text.Regex.Posix
+--import System.Directory
+--import System.IO
+--import Text.Regex.Posix
 
-import Thrift
-import Thrift.Transport.Handle
-import Thrift.Protocol
-import Thrift.Protocol.Binary
+--import Thrift
+--import Thrift.Transport.Handle
+--import Thrift.Protocol
+--import Thrift.Protocol.Binary
 
-import qualified Defs_Types                               as TDefs
-import qualified Graph_Types                              as TGraph
-import qualified Flowbox.System.UniPath                   as UniPath
-import           Flowbox.System.UniPath                     (UniPath)
-import qualified Flowbox.Luna.Core                        as Core
-import           Flowbox.Luna.Core                          (Core)
-import qualified Flowbox.Luna.Network.Def.DefManager      as DefManager
-import           Flowbox.Luna.Network.Def.DefManager        (DefManager)
-import qualified Flowbox.Luna.Network.Def.Definition      as Definition
-import           Flowbox.Luna.Network.Def.Definition        (Definition)
-import qualified Flowbox.Luna.Lib.Library                 as Library
-import           Flowbox.Luna.Lib.Library                   (Library)
-import qualified Flowbox.Luna.Type.Type                   as Type
-import           Flowbox.Luna.Type.Type                     (Type(..))
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
-import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
-import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
-import qualified Flowbox.System.IO.Serializer             as Serializer
-import           Flowbox.System.IO.Serializer               (Serializable(..))
-
-
-
-nodeFileExtension :: String
-nodeFileExtension = ".node"
+--import qualified Defs_Types                               as TDefs
+--import qualified Graph_Types                              as TGraph
+--import qualified Flowbox.System.UniPath                   as UniPath
+--import           Flowbox.System.UniPath                     (UniPath)
+--import qualified Flowbox.Luna.Core.Core                   as Core
+--import           Flowbox.Luna.Core.Core                     (Core)
+--import qualified Flowbox.Luna.Network.Def.DefManager      as DefManager
+--import           Flowbox.Luna.Network.Def.DefManager        (DefManager)
+--import qualified Flowbox.Luna.Network.Def.Definition      as Definition
+--import           Flowbox.Luna.Network.Def.Definition        (Definition)
+--import qualified Flowbox.Luna.Lib.Library                 as Library
+--import           Flowbox.Luna.Lib.Library                   (Library)
+--import qualified Flowbox.Luna.Type.Type                   as Type
+--import           Flowbox.Luna.Type.Type                     (Type(..))
+--import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
+--import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
+--import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
+--import qualified Flowbox.System.IO.Serializer             as Serializer
+--import           Flowbox.System.IO.Serializer               (Serializable(..))
 
 
-graphFileExtension :: String
-graphFileExtension = ".graph"
+
+--nodeFileExtension :: String
+--nodeFileExtension = ".node"
 
 
-save :: Handle -> (BinaryProtocol Handle -> object -> IO()) -> object -> IO()
-save h method object = do 
-    let protocol = BinaryProtocol h
-    method protocol object
+--graphFileExtension :: String
+--graphFileExtension = ".graph"
+
+
+--save :: Handle -> (BinaryProtocol Handle -> object -> IO()) -> object -> IO()
+--save h method object = do 
+--    let protocol = BinaryProtocol h
+--    method protocol object
 
 -- FIXME
 --generate :: DefManager -> UniPath -> Definition.ID -> Definition -> [Serializable]

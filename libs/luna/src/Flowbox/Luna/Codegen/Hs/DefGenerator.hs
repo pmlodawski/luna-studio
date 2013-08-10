@@ -14,6 +14,7 @@ import Debug.Trace
 
 
 import           Data.List                         (zip4)
+import           Data.Maybe                                 (fromJust)
 
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
 import           Flowbox.Luna.Network.Def.DefManager       (DefManager)
@@ -40,7 +41,8 @@ import           Flowbox.Luna.Data.List
 
 generateDefinition :: DefManager -> Graph.Vertex -> Module
 generateDefinition manager vtx = nmod where
-    def = Graph.lab_deprecated manager vtx
+    --d   = Graph.lab manager vtx
+    def = fromJust $ Graph.lab manager vtx
     cls = Definition.cls def
     nmod = case cls of
         Type.Module   {} -> m where

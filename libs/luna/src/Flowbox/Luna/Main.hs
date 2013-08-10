@@ -18,7 +18,7 @@ import           Flowbox.Luna.Codegen.Hs.Cabal.Config      (Config)
 import qualified Flowbox.Luna.Codegen.Hs.Cabal.Config    as Config
 import qualified Flowbox.Luna.Codegen.Hs.Cabal.Section   as Section
 
-import qualified Flowbox.Luna.Network.Graph.Graph              as Graph
+import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 
 import Flowbox.Luna.Data.Graph
 
@@ -27,8 +27,7 @@ main :: IO ()
 
 main = do 
     putStrLn "------------\n"
-
-    --putStrLn $ Module.genCode $ DG.generateDefinition HelloWorld.full_manager 1
+    putStrLn $ Module.genCode $ DG.generateDefinition HelloWorld.full_manager 1
     --putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
 
     --let

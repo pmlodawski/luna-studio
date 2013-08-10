@@ -16,6 +16,8 @@ module Flowbox.Luna.Network.Def.DefManager(
     parent
 ) where
 
+import           Data.Maybe                                 (fromJust)
+
 import qualified Flowbox.Luna.Type.Type                  as Type
 import qualified Flowbox.Luna.Network.Def.Definition     as Definition
 import           Flowbox.Luna.Network.Def.Definition       (Definition(..))
@@ -42,7 +44,7 @@ delete defID defManager = newDefManager where
 
 
 pathNames :: DefManager -> Definition.ID -> [String]
-pathNames g vtx = fmap (Type.name . Definition.cls . (lab_deprecated g)) $ path g vtx
+pathNames g vtx = fmap (Type.name . Definition.cls . fromJust . (lab g)) $ path g vtx
 
 
 children :: DefManager -> Definition.ID -> [(Definition.ID, Definition)]

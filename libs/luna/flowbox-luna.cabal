@@ -24,10 +24,10 @@ Library
     GHC-Options:  -csacc
   GHC-Options:    -Wall 
                   -- -F -pgmF ./util/preprocessors/imports.py
-  Extensions:     DoAndIfThenElse
+  Extensions:     DoAndIfThenElse,
+                  TemplateHaskell
   
   Exposed-modules: 
-        Flowbox.Luna.Core,
         Flowbox.Luna.Tools.TypeChecker,
         Flowbox.Luna.Tools.Graphviz,
         Flowbox.Luna.Tools.Serialize.Lib,
