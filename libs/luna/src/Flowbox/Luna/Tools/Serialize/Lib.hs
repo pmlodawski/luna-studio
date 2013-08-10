@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 module Flowbox.Luna.Tools.Serialize.Lib(
-    storeLib
+    --storeLib
     --restoreLib
 ) where
 
@@ -53,51 +53,51 @@ save h method object = do
     let protocol = BinaryProtocol h
     method protocol object
 
+-- FIXME
+--generate :: DefManager -> UniPath -> Definition.ID -> Definition -> [Serializable]
+--generate defManager upath defID def = sdef:sgraph:schildren where 
+--    children  = DefManager.suc defManager defID
+--    schildren = foldr (\child rest -> checkedGenerate defManager upath child ++ rest) [] children
 
-generate :: DefManager -> UniPath -> Definition.ID -> Definition -> [Serializable]
-generate defManager upath defID def = sdef:sgraph:schildren where 
-    children  = DefManager.suc defManager defID
-    schildren = foldr (\child rest -> checkedGenerate defManager upath child ++ rest) [] children
+--    (tdef, graph) = encode (defID, def)
+--    tgraph        = encode graph
 
-    (tdef, graph) = encode (defID, def)
-    tgraph        = encode graph
+--    defFilename   = UniPath.setExtension nodeFileExtension upath
+--    saveDef h     = save h TDefs.write_Definition tdef
 
-    defFilename   = UniPath.setExtension nodeFileExtension upath
-    saveDef h     = save h TDefs.write_Definition tdef
+--    sdef          = Serializable defFilename saveDef
 
-    sdef          = Serializable defFilename saveDef
+--    graphFilename = UniPath.setExtension graphFileExtension upath
+--    saveGraph h   = save h TGraph.write_Graph tgraph
 
-    graphFilename = UniPath.setExtension graphFileExtension upath
-    saveGraph h   = save h TGraph.write_Graph tgraph
-
-    sgraph        = Serializable graphFilename saveGraph
-
-
-
-checkedGenerate :: DefManager -> UniPath -> Definition.ID -> [Serializable]
-checkedGenerate defManager udirpath defID = s where
-    s = case DefManager.lab defManager defID of
-        Nothing -> error "Inconssistence in defManager: ID not found"
-        Just def -> case Definition.cls def of 
-                Module   aname     -> gen aname
-                Class    aname _ _ -> gen aname
-                Function aname _ _ -> gen aname
-                _                  -> error "Inconssistent in defManager: Wrong type of a definition"
-                where gen aname = generate defManager (UniPath.append aname udirpath) defID def
+--    sgraph        = Serializable graphFilename saveGraph
 
 
+-- FIXME
+--checkedGenerate :: DefManager -> UniPath -> Definition.ID -> [Serializable]
+--checkedGenerate defManager udirpath defID = s where
+--    s = case DefManager.lab defManager defID of
+--        Nothing -> error "Inconssistence in defManager: ID not found"
+--        Just def -> case Definition.cls def of 
+--                Module   aname     -> gen aname
+--                Class    aname _ _ -> gen aname
+--                Function aname _ _ -> gen aname
+--                _                  -> error "Inconssistent in defManager: Wrong type of a definition"
+--                where gen aname = generate defManager (UniPath.append aname udirpath) defID def
 
-storeLib :: Core -> Library -> IO ()
-storeLib project lib = do 
-    let defManager   = Core.defManager project
-        rootPath     = Library.path lib
-        libRootDefID = Library.rootDefID lib
 
-        defs = checkedGenerate defManager rootPath libRootDefID 
+--FIXME: changed Library signature
+--storeLib :: Core -> Library -> IO ()
+--storeLib project lib = do 
+--    let defManager   = Core.defManager project
+--        rootPath     = Library.path lib
+--        libRootDefID = Library.rootDefID lib
 
-    Serializer.serializeMany defs
+--        defs = checkedGenerate defManager rootPath libRootDefID 
 
-    return ()
+--    Serializer.serializeMany defs
+
+--    return ()
 
 
 

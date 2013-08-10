@@ -101,3 +101,31 @@ Library
                   thrift >= 0.9,
                   unordered-containers,
                   vector
+
+
+
+Executable lunac 
+  Main-Is:        Flowbox/Luna/Main.hs
+  Hs-Source-Dirs: src
+
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall 
+
+  Extensions:     DoAndIfThenElse
+                  MultiParamTypeClasses
+  Build-Depends:  base,
+                  cereal,
+                  containers,
+                  directory,
+                  fgl,
+                  flowbox-luna,
+                  flowbox-utils,
+                  MissingH,
+                  mtl,
+                  regex-posix,
+                  split,
+                  text,
+                  thrift,
+                  unordered-containers,
+                  vector

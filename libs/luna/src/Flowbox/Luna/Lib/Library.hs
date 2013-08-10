@@ -17,11 +17,10 @@ import           Flowbox.System.UniPath   (UniPath)
 data Library =  Library{
     name          :: String,
     --version :: Version,
-    path          :: UniPath,
-    rootDefID     :: Int
+    path          :: UniPath
 } deriving (Show)
 
 empty :: Library
-empty = Library "" UniPath.empty (-1)
+empty = Library "" UniPath.empty
 
 type ID  = Int

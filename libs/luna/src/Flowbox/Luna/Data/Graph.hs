@@ -40,6 +40,8 @@ module Flowbox.Luna.Data.Graph (
     prel,
     topsort,
     path,
+    newVtxs,
+    newVtx
     --newIds
 ) where
 
@@ -102,8 +104,17 @@ path g vtx = case pre g vtx of
     [parent] -> path g parent ++ [vtx]
     _        -> error "Node has multiple parents"
 
+
 updateNode :: LVertex a -> Graph a b -> Graph a b
 updateNode (vid, v) graph = newGraph where 
     (c_ins, c_id, _, c_outs) = context graph vid
     newContext = (c_ins, c_id, v, c_outs)
     newGraph = newContext & delNode vid graph
+
+
+newVtxs :: Graph a b -> [Vertex]
+newVtxs g = [n+1..] where (_,n) = nodeRange g
+
+
+newVtx :: Graph a b -> Vertex
+newVtx = head . newVtxs
