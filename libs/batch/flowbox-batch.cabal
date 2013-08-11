@@ -25,6 +25,8 @@ Library
                     Flowbox.Batch.Project.Project
                     Flowbox.Batch.Project.ProjectManager
                     Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects
+                    Flowbox.Batch.GraphView.EdgeView
+                    Flowbox.Batch.GraphView.GraphView
                     Projects_Consts
                     Projects_Types
 
