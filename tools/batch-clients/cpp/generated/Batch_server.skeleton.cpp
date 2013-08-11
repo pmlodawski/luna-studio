@@ -157,7 +157,7 @@ class BatchHandler : virtual public BatchIf {
     printf("newTypeTuple\n");
   }
 
-  void graph( ::flowbox::batch::graph::Graph& _return, const  ::flowbox::batch::defs::Definition& definition) {
+  void graph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition) {
     // Your implementation goes here
     printf("graph\n");
   }

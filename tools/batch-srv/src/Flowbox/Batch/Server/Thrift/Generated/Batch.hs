@@ -32,11 +32,12 @@ import qualified Data.Vector as Vector
 import Thrift
 import Thrift.Types ()
 
+import Graphview_Types
+import Projects_Types
 import Attrs_Types
 import Defs_Types
 import Graph_Types
 import Libs_Types
-import Projects_Types
 import Types_Types
 
 
@@ -1884,14 +1885,14 @@ read_Graph_args iprot = do
   record <- read_Graph_args_fields iprot (Graph_args{f_Graph_args_definition=Nothing})
   readStructEnd iprot
   return record
-data Graph_result = Graph_result{f_Graph_result_success :: Maybe Graph_Types.Graph,f_Graph_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
+data Graph_result = Graph_result{f_Graph_result_success :: Maybe Graphview_Types.GraphView,f_Graph_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
 instance Hashable Graph_result where
   hashWithSalt salt record = salt   `hashWithSalt` f_Graph_result_success record   `hashWithSalt` f_Graph_result_missingFields record  
 write_Graph_result oprot record = do
   writeStructBegin oprot "Graph_result"
   case f_Graph_result_success record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("success",T_STRUCT,0)
-    Graph_Types.write_Graph oprot _v
+    Graphview_Types.write_GraphView oprot _v
     writeFieldEnd oprot}
   case f_Graph_result_missingFields record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("missingFields",T_STRUCT,1)
@@ -1904,7 +1905,7 @@ read_Graph_result_fields iprot record = do
   if _t325 == T_STOP then return record else
     case _id326 of 
       0 -> if _t325 == T_STRUCT then do
-        s <- (read_Graph iprot)
+        s <- (read_GraphView iprot)
         read_Graph_result_fields iprot record{f_Graph_result_success=Just s}
         else do
           skip iprot _t325

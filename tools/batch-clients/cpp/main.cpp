@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
 
         /* Add some nodes */
 
-        Graph graph;
+        GraphView graph;
         batch.graph(graph, fun);
 
         Node inputs;

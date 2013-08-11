@@ -22,8 +22,10 @@ import           Flowbox.Batch.Server.Handlers.Common
 import           Flowbox.Batch.Server.Handlers.Defs                          (defOperation)
 import qualified Defs_Types                                                as TDefs
 import qualified Graph_Types                                               as TGraph
+import qualified Graphview_Types                                           as TGraphView
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
+import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView   ()
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
 import qualified Flowbox.Luna.Network.Graph.Node                           as Node
 import           Flowbox.Luna.Network.Graph.Node                             (Node(..))
@@ -32,7 +34,7 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
 
 
-graph :: IORef Batch -> Maybe TDefs.Definition -> IO TGraph.Graph
+graph :: IORef Batch -> Maybe TDefs.Definition -> IO TGraphView.GraphView
 graph = defOperation (\batchHandler defID _ -> do
     putStrLn "called graph"
     batch <- readIORef batchHandler
@@ -71,8 +73,8 @@ removeNode = nodeDefOperation (\batchHandler (nodeID, _) defID-> do
         Right newBatch -> do
             writeIORef batchHandler newBatch)
 
-connect :: IORef Batch -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
-                      -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+connect :: IORef Batch -> Maybe TGraph.Node -> Maybe TGraphView.PortDescriptor
+                      -> Maybe TGraph.Node -> Maybe TGraphView.PortDescriptor
         -> Maybe TDefs.Definition -> IO ()
 connect = nodesConnectOperation (\batchHandler (srcNodeID, _) srcPort 
                                                (dstNodeID, _) dstPort defID -> do 
@@ -84,8 +86,8 @@ connect = nodesConnectOperation (\batchHandler (srcNodeID, _) srcPort
             writeIORef batchHandler newBatch)
 
 
-disconnect :: IORef Batch -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
-                         -> Maybe TGraph.Node -> Maybe TGraph.PortDescriptor
+disconnect :: IORef Batch -> Maybe TGraph.Node -> Maybe TGraphView.PortDescriptor
+                         -> Maybe TGraph.Node -> Maybe TGraphView.PortDescriptor
            -> Maybe TDefs.Definition -> IO ()
 disconnect = nodesConnectOperation (\batchHandler (srcNodeID, _) srcPort
                                                   (dstNodeID, _) dstPort defID -> do 
@@ -102,8 +104,8 @@ disconnect = nodesConnectOperation (\batchHandler (srcNodeID, _) srcPort
 nodesConnectOperation :: (IORef Batch -> (Node.ID, Node) -> [Int]
                                      -> (Node.ID, Node) -> [Int]
                                      -> Definition.ID -> IO result)
-                      -> IORef Batch -> (Maybe TGraph.Node) -> (Maybe TGraph.PortDescriptor)
-                                    -> (Maybe TGraph.Node) -> (Maybe TGraph.PortDescriptor)
+                      -> IORef Batch -> (Maybe TGraph.Node) -> (Maybe TGraphView.PortDescriptor)
+                                    -> (Maybe TGraph.Node) -> (Maybe TGraphView.PortDescriptor)
                       -> Maybe TDefs.Definition -> IO result
 nodesConnectOperation operation batchHandler mtsrcNode mtsrcPort mtdstNode mtdstPort mtdefinition = do
     case mtsrcNode of

@@ -24,9 +24,12 @@ Library
                     Flowbox.Batch.Batch
                     Flowbox.Batch.Project.Project
                     Flowbox.Batch.Project.ProjectManager
+                    Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView
                     Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects
                     Flowbox.Batch.GraphView.EdgeView
                     Flowbox.Batch.GraphView.GraphView
+                    Graphview_Consts
+                    Graphview_Types
                     Projects_Consts
                     Projects_Types
 

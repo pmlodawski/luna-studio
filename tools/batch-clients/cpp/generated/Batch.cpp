@@ -7937,7 +7937,7 @@ void BatchClient::recv_newTypeTuple( ::flowbox::batch::types::Type& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "newTypeTuple failed: unknown result");
 }
 
-void BatchClient::graph( ::flowbox::batch::graph::Graph& _return, const  ::flowbox::batch::defs::Definition& definition)
+void BatchClient::graph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition)
 {
   send_graph(definition);
   recv_graph(_return);
@@ -7957,7 +7957,7 @@ void BatchClient::send_graph(const  ::flowbox::batch::defs::Definition& definiti
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_graph( ::flowbox::batch::graph::Graph& _return)
+void BatchClient::recv_graph( ::flowbox::batch::graph::GraphView& _return)
 {
 
   int32_t rseqid = 0;

@@ -8,11 +8,12 @@
 namespace cpp flowbox.batch
 namespace hs  flowbox.batch
 
+include "../../../../../../../libs/batch/src/Flowbox/Batch/Tools/Serialize/Thrift/graphview.thrift"
+include "../../../../../../../libs/batch/src/Flowbox/Batch/Tools/Serialize/Thrift/projects.thrift"
 include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/attrs.thrift"
 include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/defs.thrift"
 include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/graph.thrift"
 include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/libs.thrift"
-include "../../../../../../../libs/batch/src/Flowbox/Batch/Tools/Serialize/Thrift/projects.thrift"
 include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/types.thrift"
 
 /*
@@ -87,16 +88,16 @@ service Batch {
      * Graph
      */
     
-    graph.Graph     graph(1: defs.Definition definition) throws (1: ArgumentException missingFields)
+    graphview.GraphView graph(1: defs.Definition definition) throws (1: ArgumentException missingFields)
 
     graph.Node    addNode(1: graph.Node node, 2: defs.Definition definition) throws (1: ArgumentException missingFields)
     void       updateNode(1: graph.Node node, 2: defs.Definition definition) throws (1: ArgumentException missingFields)
     void       removeNode(1: graph.Node node, 2: defs.Definition definition) throws (1: ArgumentException missingFields)
 
-    void    connect(1: graph.Node srcNode, 2: graph.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: graph.PortDescriptor dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
-    void disconnect(1: graph.Node srcNode, 2: graph.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: graph.PortDescriptor dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
+    void    connect(1: graph.Node srcNode, 2: graphview.PortDescriptor srcPort,
+                    3: graph.Node dstNode, 4: graphview.PortDescriptor dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
+    void disconnect(1: graph.Node srcNode, 2: graphview.PortDescriptor srcPort,
+                    3: graph.Node dstNode, 4: graphview.PortDescriptor dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
 
     /*
      * Other

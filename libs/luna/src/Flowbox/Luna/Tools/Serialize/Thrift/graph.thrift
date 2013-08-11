@@ -44,8 +44,6 @@ struct Node {
     6: optional DefaultValue     defVal = {}
 }
 
-typedef list<i32> PortDescriptor
-
 struct Edge {
     2: optional i32 portDst
     3: optional NodeID nodeSrc

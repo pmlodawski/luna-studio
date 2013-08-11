@@ -38,6 +38,8 @@ module Flowbox.Batch.Batch (
 ) where
 
 import qualified Data.Map                                 as Map
+import qualified Flowbox.Batch.GraphView.GraphView        as GraphView
+import           Flowbox.Batch.GraphView.GraphView          (GraphView)
 import qualified Flowbox.Batch.Project.Project            as Project
 import           Flowbox.Batch.Project.Project              (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
@@ -60,7 +62,6 @@ import qualified Flowbox.Luna.Network.Graph.Graph         as Graph
 import           Flowbox.Luna.Network.Graph.Graph           (Graph)
 import qualified Flowbox.Luna.Network.Graph.Node          as Node
 import           Flowbox.Luna.Network.Graph.Node            (Node(..))
-
 
 
 data Batch = Batch { projectManager  :: ProjectManager
@@ -318,11 +319,11 @@ definitionParent defID = readonly . activeDefManagerOp (\_ defManager ->
 
 -------- Graphs ---------------------------------------------------------------
 
-nodesGraph :: Definition.ID -> Batch -> Either String Graph
+nodesGraph :: Definition.ID -> Batch -> Either String GraphView
 nodesGraph defID = readonly . activeDefManagerOp (\_ defManager -> 
     case DefManager.lab defManager defID of 
         Nothing  -> Left "Wrong `defID`"
-        Just def -> Right (defManager, Definition.graph def))
+        Just def -> Right (defManager, GraphView.fromGraph $ Definition.graph def))
 
 
 addNode :: Node -> Definition.ID -> Batch -> Either String (Batch, Node.ID)

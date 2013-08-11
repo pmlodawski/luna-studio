@@ -42,7 +42,7 @@ class BatchIf {
   virtual void newTypeVariable( ::flowbox::batch::types::Type& _return, const std::string& name) = 0;
   virtual void newTypeList( ::flowbox::batch::types::Type& _return, const  ::flowbox::batch::types::Type& type) = 0;
   virtual void newTypeTuple( ::flowbox::batch::types::Type& _return, const std::vector< ::flowbox::batch::types::Type> & types) = 0;
-  virtual void graph( ::flowbox::batch::graph::Graph& _return, const  ::flowbox::batch::defs::Definition& definition) = 0;
+  virtual void graph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition) = 0;
   virtual void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) = 0;
   virtual void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) = 0;
   virtual void removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) = 0;
@@ -159,7 +159,7 @@ class BatchNull : virtual public BatchIf {
   void newTypeTuple( ::flowbox::batch::types::Type& /* _return */, const std::vector< ::flowbox::batch::types::Type> & /* types */) {
     return;
   }
-  void graph( ::flowbox::batch::graph::Graph& /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void graph( ::flowbox::batch::graph::GraphView& /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */) {
     return;
   }
   void addNode( ::flowbox::batch::graph::Node& /* _return */, const  ::flowbox::batch::graph::Node& /* node */, const  ::flowbox::batch::defs::Definition& /* definition */) {
@@ -3328,12 +3328,12 @@ class Batch_graph_result {
 
   virtual ~Batch_graph_result() throw() {}
 
-   ::flowbox::batch::graph::Graph success;
+   ::flowbox::batch::graph::GraphView success;
   ArgumentException missingFields;
 
   _Batch_graph_result__isset __isset;
 
-  void __set_success(const  ::flowbox::batch::graph::Graph& val) {
+  void __set_success(const  ::flowbox::batch::graph::GraphView& val) {
     success = val;
   }
 
@@ -3372,7 +3372,7 @@ class Batch_graph_presult {
 
   virtual ~Batch_graph_presult() throw() {}
 
-   ::flowbox::batch::graph::Graph* success;
+   ::flowbox::batch::graph::GraphView* success;
   ArgumentException missingFields;
 
   _Batch_graph_presult__isset __isset;
@@ -4205,9 +4205,9 @@ class BatchClient : virtual public BatchIf {
   void newTypeTuple( ::flowbox::batch::types::Type& _return, const std::vector< ::flowbox::batch::types::Type> & types);
   void send_newTypeTuple(const std::vector< ::flowbox::batch::types::Type> & types);
   void recv_newTypeTuple( ::flowbox::batch::types::Type& _return);
-  void graph( ::flowbox::batch::graph::Graph& _return, const  ::flowbox::batch::defs::Definition& definition);
+  void graph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition);
   void send_graph(const  ::flowbox::batch::defs::Definition& definition);
-  void recv_graph( ::flowbox::batch::graph::Graph& _return);
+  void recv_graph( ::flowbox::batch::graph::GraphView& _return);
   void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
   void send_addNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
   void recv_addNode( ::flowbox::batch::graph::Node& _return);
@@ -4602,7 +4602,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void graph( ::flowbox::batch::graph::Graph& _return, const  ::flowbox::batch::defs::Definition& definition) {
+  void graph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {

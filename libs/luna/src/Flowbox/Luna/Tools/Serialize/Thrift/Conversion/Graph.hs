@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph where
@@ -35,6 +35,32 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs       ()
 
 
+encodeGraph agraph = (Just nodes, Just edges) where 
+    nodes = Map.fromList $
+        map (\(a, b) -> (itoi32 a, encode (a, b))) $ Graph.labNodes agraph
+    edges =  Vector.fromList $ map encode $ Graph.labEdges agraph
+     
+
+decodeGraph (mtnodes, mtedges) = case mtnodes of
+    Nothing    -> Left "`nodes` field is missing"
+    Just tnodes -> case mtedges of
+        Nothing    -> Left "Edges are not defined" 
+        Just tedges ->
+            let transformNode :: (Int32, TGraph.Node) -> Either String (Int, Node)
+                transformNode (i, lab) = case decode lab of
+                    Left msg         -> Left msg
+                    Right (_, node)  -> Right (i32toi i, node)
+                goodNodes = sequence $ map transformNode $
+                    Map.toList tnodes 
+
+                goodEdges =  sequence $ map decode $ Vector.toList tedges
+            in case goodNodes of
+                Left msg         -> Left msg
+                Right gnodes     -> case goodEdges of
+                    Left msg     -> Left msg
+                    Right gedges -> Right $ Graph.mkGraph gnodes gedges
+
+
 instance Convert (Int, Int, Edge) TGraph.Edge where
   encode (nsrc, ndst, a) =  let 
       dst = itoi32 $ Edge.dst a
@@ -51,42 +77,12 @@ instance Convert (Int, Int, Edge) TGraph.Edge where
           Nothing      ->  Left "No source node specified"
       Nothing  -> Left "No destination port specified"
 
-instance Convert Graph TGraph.Graph where
-  encode a = 
-    let
-      nodes :: Map.HashMap Int32 TGraph.Node
-      nodes = Map.fromList $
-        map (\(a, b) -> (itoi32 a, encode (a, b))) $ Graph.labNodes a
-      edges :: Vector TGraph.Edge
-      edges =  Vector.fromList $ map encode $ Graph.labEdges a
-    in
-      TGraph.Graph (Just nodes) (Just edges)
-  decode b =
-    case TGraph.f_Graph_nodes b of
-      Just nodes ->
-        case TGraph.f_Graph_edges b of
-          Just edges ->
-            let
-              transformNode :: (Int32, TGraph.Node) -> Either String (Int, Node)
-              transformNode (i, lab) =
-                case decode lab of
-                  Right (_, node) -> Right (i32toi i, node)
-                  Left msg         -> Left msg
-              goodNodes :: Either String [DG.LNode Node]
-              goodNodes = sequence $ map transformNode $
-                Map.toList nodes 
 
-              goodEdges :: Either String [DG.LEdge Edge]
-              goodEdges =  sequence $ map decode $ Vector.toList edges
-            in
-              case goodNodes of
-                Right gnodes ->
-                  case goodEdges of
-                    Right gedges -> Right $ Graph.mkGraph gnodes gedges
-                    Left msg     -> Left msg
-                Left msg     -> Left msg
-          Nothing    -> Left "Edges are not defined"
-      Nothing    -> Left "Nodes are not defined"
+instance Convert Graph TGraph.Graph where
+    encode agraph = TGraph.Graph n e where 
+        (n, e) = encodeGraph agraph
+    decode (TGraph.Graph mtnodes mtedges) = decodeGraph (mtnodes, mtedges)
+
 
 instance Convert DefaultValue TGraph.DefaultValue where
   encode a =
@@ -106,6 +102,7 @@ instance Convert DefaultValue TGraph.DefaultValue where
           Just ss -> Right $ DefaultString $ Text.unpack ss
           Nothing -> Left "No string default value specified"
       Nothing -> Left "No default value type specified"    
+
 
 instance Convert (Int, Node) TGraph.Node where
   encode (nid, a) =
