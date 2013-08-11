@@ -32,6 +32,7 @@ test manager did = out where
     mod = DG.generateDefinition manager did
     out = trace(show mod) mod
 
+
 main :: IO ()
 main = do 
     putStrLn "------------\n"
