@@ -12,6 +12,8 @@ module Flowbox.Luna.Data.Graph (
     Edge,
     empty,
     delNode,
+    delEdge,
+    delLEdge,
     gelem, -- Graph gr => Node -> gr a b -> BoolSource  -  True if the Node is present in the Graph.
     insNode,
     insNodes,

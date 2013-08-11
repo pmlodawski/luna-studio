@@ -32,11 +32,12 @@ import qualified Data.Vector as Vector
 import Thrift
 import Thrift.Types ()
 
+import qualified Graphview_Types
+import qualified Projects_Types
 import qualified Attrs_Types
 import qualified Defs_Types
 import qualified Graph_Types
 import qualified Libs_Types
-import qualified Projects_Types
 import qualified Types_Types
 
 
@@ -70,10 +71,10 @@ class Batch_Iface a where
   newTypeVariable :: a -> Maybe Text -> IO Types_Types.Type
   newTypeList :: a -> Maybe Types_Types.Type -> IO Types_Types.Type
   newTypeTuple :: a -> Maybe (Vector.Vector Types_Types.Type) -> IO Types_Types.Type
-  graph :: a -> Maybe Defs_Types.Definition -> IO Graph_Types.Graph
+  graph :: a -> Maybe Defs_Types.Definition -> IO Graphview_Types.GraphView
   addNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.Definition -> IO Graph_Types.Node
   updateNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.Definition -> IO ()
   removeNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.Definition -> IO ()
-  connect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Defs_Types.Definition -> IO ()
-  disconnect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Defs_Types.Definition -> IO ()
+  connect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Defs_Types.Definition -> IO ()
+  disconnect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Defs_Types.Definition -> IO ()
   ping :: a -> IO ()
