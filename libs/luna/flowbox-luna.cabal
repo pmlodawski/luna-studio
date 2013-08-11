@@ -59,6 +59,7 @@ Library
         Flowbox.Luna.Codegen.Hs.AST.Instance,
         Flowbox.Luna.Codegen.Hs.AST.Deriving,
         Flowbox.Luna.Codegen.Hs.AST.Extension,
+        Flowbox.Luna.Builder.Builder,
         Flowbox.Luna.Samples.Packages,
         Flowbox.Luna.Samples.HelloWorld,
         Flowbox.Luna.Network.Flags,

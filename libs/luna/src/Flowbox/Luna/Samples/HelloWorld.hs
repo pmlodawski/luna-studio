@@ -369,7 +369,7 @@ cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Typ
 --                                            (100, 1, myFun2)]
 
 
-base_workspacelib    = Library.make "Workspace" (UniPath.fromUnixString "/tmp/workspace/TestProject/libs/Workspace/src")
+base_workspacelib    = Library.make "Workspace" (UniPath.fromUnixString "samples/workspace/TestProject/libs")
 
 
 full_manager =  DefManager.addToParentMany [ (1, 100, func_main1),

@@ -10,8 +10,6 @@ module Flowbox.Luna.Lib.Library(
     ID,
     empty,
     make,
-    store,
-    storeDef
 ) where
 
 import qualified Flowbox.System.UniPath               as UniPath
@@ -48,21 +46,3 @@ make name' path' = empty { name = name'
     rootdef = Definition.mkModule name'
 
 
-store :: Library -> IO ()
-store lib = do 
-    let
-        nodes = DefManager.nodes $ defs lib
-    mapM (storeDef lib) nodes
-    return ()
-
-storeDef :: Library -> Definition.ID -> IO ()
-storeDef lib did = do
-    let mod  = DG.generateDefinition (defs lib) did
-        code = Module.genCode mod
-        modpath = Path.toFilePath $ Module.path mod
-        modupath = UniPath.fromList $ Path.segments modpath
-        path' = (path lib) ++ modupath
-
-    Dir.createDirectoryIfMissing True $ UniPath.dirOf path'
-    IO.writeFile path' code
-    return ()

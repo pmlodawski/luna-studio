@@ -25,6 +25,10 @@ import qualified Flowbox.Luna.Codegen.Hs.Cabal.Section as Section
 import qualified Flowbox.Luna.Data.Graph               as Graph
 import qualified Flowbox.Luna.Lib.Library              as Library
 
+import qualified Flowbox.Luna.Builder.Builder          as Builder
+import qualified Flowbox.System.UniPath               as UniPath
+import           Flowbox.System.UniPath                 (UniPath)
+
 
 test manager did = out where
     mod = DG.generateDefinition manager did
@@ -38,10 +42,10 @@ main = do
     --putStrLn
 
 
-    --let
-    --    manager = HelloWorld.full_manager
-    --    x = map (test manager)$ DefManager.nodes manager
+    let
+        builder = Builder.empty { Builder.path = UniPath.fromUnixString("samples/TestProject/build") }
 
+    Builder.buildLibrary builder (HelloWorld.workspacelib)
     --Library.store HelloWorld.workspacelib
     return ()
 
