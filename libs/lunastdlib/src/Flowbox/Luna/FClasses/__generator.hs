@@ -9,6 +9,7 @@ names = map (("select" ++) . show) [0..10] ++
         , "y'setter"
         , "z'setter"
         , "incx"
+        , "init"
         , "print"
         ]
 

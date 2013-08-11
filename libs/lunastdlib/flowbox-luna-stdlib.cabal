@@ -22,6 +22,7 @@ Library
                   Flowbox.Luna.Libs.Std.Base,
                   Flowbox.Luna.FClasses.U'add,
                   Flowbox.Luna.FClasses.U'incx,
+                  Flowbox.Luna.FClasses.U'init,
                   Flowbox.Luna.FClasses.U'print,
                   Flowbox.Luna.FClasses.U'select0,
                   Flowbox.Luna.FClasses.U'select1,

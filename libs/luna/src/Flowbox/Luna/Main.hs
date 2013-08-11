@@ -33,16 +33,16 @@ test manager did = out where
 main :: IO ()
 main = do 
     putStrLn "------------\n"
-    putStrLn $ Module.genCode $ DG.generateDefinition HelloWorld.full_manager 2
+    putStrLn $ Module.genCode $ DG.generateDefinition HelloWorld.full_manager 100
     --putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
     --putStrLn
 
 
-    let
-        manager = HelloWorld.full_manager
-        x = map (test manager)$ DefManager.nodes manager
+    --let
+    --    manager = HelloWorld.full_manager
+    --    x = map (test manager)$ DefManager.nodes manager
 
-    Library.store HelloWorld.workspacelib
+    --Library.store HelloWorld.workspacelib
     return ()
 
 --        let 
