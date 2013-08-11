@@ -73,11 +73,6 @@ empty :: Batch
 empty = Batch ProjectManager.empty (-1)
 
 
-attributeKey :: String
-attributeKey = "Batch-0.1"
-
-
-
 
 activeProject :: Batch -> Maybe Project
 activeProject (Batch pm apID) = do
@@ -164,6 +159,32 @@ activeDefManagerOp operation =
             Right (newDefManager, r) -> Right (newCore, r) where
                                             newCore = core { Core.defManager = newDefManager })
 
+
+definitionOp :: Definition.ID
+             -> (Batch -> Definition -> Either String (Definition, r))
+             -> Batch 
+             -> Either String (Batch, r)
+definitionOp defID operation = 
+    activeDefManagerOp (\batch defManager -> 
+    case DefManager.lab defManager defID of 
+        Nothing         -> Left "Wrong `defID`"
+        Just definition -> case operation batch definition of 
+            Left message        -> Left message
+            Right (newDefinition, r) -> Right (newDefManager, r) where
+                newDefManager = DefManager.updateNode (defID, newDefinition) defManager)
+
+
+graphOp :: Definition.ID
+        -> (Batch -> Graph -> Either String (Graph, r))
+        -> Batch 
+        -> Either String (Batch, r)
+graphOp defID operation = 
+    definitionOp defID (\batch definition -> let 
+        agraph = Definition.graph definition
+        in case operation batch agraph of 
+            Left message        -> Left message
+            Right (newGraph, r) -> Right (newDefinition, r) where
+                newDefinition = definition {Definition.graph =  newGraph})
 
 
 readonly :: Either String (a, r) -> Either String r
@@ -319,88 +340,39 @@ definitionParent defID = readonly . activeDefManagerOp (\_ defManager ->
 
 -------- Graphs ---------------------------------------------------------------
 
+
 nodesGraph :: Definition.ID -> Batch -> Either String GraphView
-nodesGraph defID = readonly . activeDefManagerOp (\_ defManager -> 
-    case DefManager.lab defManager defID of 
-        Nothing  -> Left "Wrong `defID`"
-        Just def -> Right (defManager, GraphView.fromGraph $ Definition.graph def))
+nodesGraph defID = readonly . graphOp defID (\_ agraph -> 
+    Right (agraph, GraphView.fromGraph agraph))
 
 
 addNode :: Node -> Definition.ID -> Batch -> Either String (Batch, Node.ID)
-addNode node defID = activeDefManagerOp (\_ defManager -> 
-    case DefManager.lab defManager defID of 
-        Nothing         -> Left "Wrong `defID`"
-        Just definition -> Right (newDefManager, nodeID) where
-            agraph        = Definition.graph definition
-            [nodeID]      = Graph.newNodes 1 agraph
-            newGraph      = Graph.insNode (nodeID, node) agraph
-            newDefinition = definition {Definition.graph =  newGraph}
-            newDefManager = DefManager.updateNode (defID, newDefinition) defManager)
+addNode node defID = graphOp defID (\_ agraph -> 
+    let 
+        [nodeID]      = Graph.newNodes 1 agraph
+        newGraph      = Graph.insNode (nodeID, node) agraph
+    in Right (newGraph, nodeID))
 
 
 updateNode :: (Node.ID, Node) -> Definition.ID -> Batch -> Either String Batch
-updateNode (nodeID, node) defID = noresult . activeDefManagerOp (\_ defManager -> 
-    case DefManager.lab defManager defID of 
-        Nothing         -> Left "Wrong `defID`"
-        Just definition -> let agraph = Definition.graph definition
-            in case Graph.gelem nodeID agraph of 
-                False -> Left "Wrong `nodeID`"
-                True  -> Right (newDefManager, ()) where
-                     newGraph      = Graph.updateNode (nodeID, node) agraph
-                     newDefinition = definition {Definition.graph =  newGraph}
-                     newDefManager = DefManager.updateNode (defID, newDefinition) defManager)
+updateNode (nodeID, node) defID = noresult . graphOp defID (\_ agraph -> 
+    case Graph.gelem nodeID agraph of 
+        False -> Left "Wrong `nodeID`"
+        True  -> Right (newGraph, ()) where
+             newGraph      = Graph.updateNode (nodeID, node) agraph)
 
 
 removeNode :: Node.ID -> Definition.ID -> Batch -> Either String Batch
-removeNode nodeID defID = noresult . activeDefManagerOp (\_ defManager -> 
-    case DefManager.lab defManager defID of 
-        Nothing         -> Left "Wrong `defID`"
-        Just definition -> let agraph = Definition.graph definition
-            in case Graph.gelem nodeID agraph of 
-                False -> Left "Wrong `nodeID`"
-                True  -> Right (newDefManager, ()) where
-                    newGraph      = Graph.delNode nodeID agraph
-                    newDefinition = definition {Definition.graph =  newGraph}
-                    newDefManager = DefManager.updateNode (defID, newDefinition) defManager)
+removeNode nodeID defID = noresult . graphOp defID (\_ agraph -> 
+    case Graph.gelem nodeID agraph of 
+        False -> Left "Wrong `nodeID`"
+        True  -> Right (newGraph, ()) where
+            newGraph      = Graph.delNode nodeID agraph)
 
 
-connect :: Node.ID -> [Int] -> Node.ID -> [Int] -> Definition.ID -> Batch -> Either String Batch
-connect srcNodeID srcPort dstNodeID dstPort defID = noresult . activeDefManagerOp (\_ defManager -> 
-    case DefManager.lab defManager defID of 
-        Nothing         -> Left "Wrong `defID`"
-        Just definition -> let 
-            agraph = Definition.graph definition 
-            in case connectG srcNodeID srcPort dstNodeID dstPort agraph of
-                Left message   -> Left message
-                Right newGraph -> Right (newDefManager, ()) where
-                    newDefinition = definition { Definition.graph = newGraph }
-                    newDefManager = DefManager.updateNode (defID, newDefinition) defManager)
+connect :: Node.ID -> [Int] -> Node.ID -> Int -> Definition.ID -> Batch -> Either String Batch
+connect srcNodeID srcPort dstNodeID dstPort defID = undefined
 
 
-
-disconnect :: Node.ID -> [Int] -> Node.ID -> [Int] -> Definition.ID -> Batch -> Either String Batch
+disconnect :: Node.ID -> [Int] -> Node.ID -> Int -> Definition.ID -> Batch -> Either String Batch
 disconnect srcNodeID srcPort dstNodeID dstPort defID batch = undefined
-
-
-generatedAttrs :: Attributes
-generatedAttrs = Attributes.fromList [(attributeKey, Map.fromList [("Generated", "True")])]
-
-
-connectG :: Node.ID -> [Int] -> Node.ID -> [Int] ->  Graph -> Either String Graph
-connectG srcNodeID srcPort dstNodeID dstPort graph = case srcPort of 
-    []      -> case dstPort of
-        [dstPortH] -> Right newGraph where
-                    tupleNode = NTuple Flags.empty generatedAttrs
-                    [tupleID] = Graph.newNodes 1 graph
-                    newGraph  = Graph.insEdge (srcNodeID, tupleID, Edge dstPortH)
-                              $ Graph.insEdge (tupleID, dstNodeID, Edge 0)
-                              $ Graph.insNode (tupleID, tupleNode) graph
-
-        _         -> Left "Folding target ports with more than 1 sub ports is not supported"
-    srcPorts -> connectG selectID srcPortsTail dstNodeID dstPort newGraph where
-        srcPortsHead = head srcPorts
-        srcPortsTail = tail srcPorts
-        selectNode = Call ("select" ++ show srcPortsHead) Flags.empty generatedAttrs
-        [selectID] = Graph.newNodes 1 graph
-        newGraph = Graph.insEdge (srcNodeID, selectID, Edge 0)
-                 $ Graph.insNode (selectID, selectNode) graph

@@ -95,9 +95,9 @@ service Batch {
     void       removeNode(1: graph.Node node, 2: defs.Definition definition) throws (1: ArgumentException missingFields)
 
     void    connect(1: graph.Node srcNode, 2: graphview.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: graphview.PortDescriptor dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
+                    3: graph.Node dstNode, 4: i32 dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
     void disconnect(1: graph.Node srcNode, 2: graphview.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: graphview.PortDescriptor dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
+                    3: graph.Node dstNode, 4: i32 dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
 
     /*
      * Other

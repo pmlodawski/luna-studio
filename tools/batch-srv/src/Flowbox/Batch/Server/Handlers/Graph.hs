@@ -15,6 +15,7 @@ module Flowbox.Batch.Server.Handlers.Graph (
 where
 
 import           Control.Monad
+import           Data.Int
 import           Data.IORef
 import qualified Data.Vector    as Vector
 
@@ -74,7 +75,7 @@ removeNode = nodeDefOperation (\batchHandler (nodeID, _) defID-> do
             writeIORef batchHandler newBatch)
 
 connect :: IORef Batch -> Maybe TGraph.Node -> Maybe TGraphView.PortDescriptor
-                      -> Maybe TGraph.Node -> Maybe TGraphView.PortDescriptor
+                      -> Maybe TGraph.Node -> Maybe Int32
         -> Maybe TDefs.Definition -> IO ()
 connect = nodesConnectOperation (\batchHandler (srcNodeID, _) srcPort 
                                                (dstNodeID, _) dstPort defID -> do 
@@ -87,7 +88,7 @@ connect = nodesConnectOperation (\batchHandler (srcNodeID, _) srcPort
 
 
 disconnect :: IORef Batch -> Maybe TGraph.Node -> Maybe TGraphView.PortDescriptor
-                         -> Maybe TGraph.Node -> Maybe TGraphView.PortDescriptor
+                         -> Maybe TGraph.Node -> Maybe Int32
            -> Maybe TDefs.Definition -> IO ()
 disconnect = nodesConnectOperation (\batchHandler (srcNodeID, _) srcPort
                                                   (dstNodeID, _) dstPort defID -> do 
@@ -102,10 +103,10 @@ disconnect = nodesConnectOperation (\batchHandler (srcNodeID, _) srcPort
 ------ public api helpers -----------------------------------------
 
 nodesConnectOperation :: (IORef Batch -> (Node.ID, Node) -> [Int]
-                                     -> (Node.ID, Node) -> [Int]
+                                     -> (Node.ID, Node) -> Int
                                      -> Definition.ID -> IO result)
                       -> IORef Batch -> (Maybe TGraph.Node) -> (Maybe TGraphView.PortDescriptor)
-                                    -> (Maybe TGraph.Node) -> (Maybe TGraphView.PortDescriptor)
+                                    -> (Maybe TGraph.Node) -> (Maybe Int32)
                       -> Maybe TDefs.Definition -> IO result
 nodesConnectOperation operation batchHandler mtsrcNode mtsrcPort mtdstNode mtdstPort mtdefinition = do
     case mtsrcNode of
@@ -128,7 +129,7 @@ nodesConnectOperation operation batchHandler mtsrcNode mtsrcPort mtdstNode mtdst
                                         Nothing    -> throw' "`defID` field is missing"
                                         Just defID -> let vectorToList = map i32toi . Vector.toList
                                                           srcPort = vectorToList tsrcPort
-                                                          dstPort = vectorToList tdstPort 
+                                                          dstPort = i32toi tdstPort 
                                                       in operation batchHandler (srcNodeID, srcNode) srcPort (dstNodeID, dstNode) dstPort defID
 
 
