@@ -82,7 +82,7 @@ connectG (srcNodeID, dstNodeID, EdgeView srcPort dstPort) graph = case srcPort o
     srcPorts -> connectG (selectID, dstNodeID, EdgeView srcPortsTail dstPort) newGraph where
         srcPortsHead = head srcPorts
         srcPortsTail = tail srcPorts
-        selectNode = Call ("select" ++ show srcPortsHead) Flags.empty generatedAttrs
+        selectNode = Call ("select" ++ show srcPortsHead) Flags.empty $ selectAttrs srcPortsHead
         [selectID] = Graph.newNodes 1 graph
         newGraph = Graph.insEdge (srcNodeID, selectID, Edge 0)
                  $ Graph.insNode (selectID, selectNode) graph

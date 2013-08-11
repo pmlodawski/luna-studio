@@ -38,6 +38,9 @@ module Flowbox.Batch.Batch (
 ) where
 
 import qualified Data.Map                                 as Map
+
+import qualified Flowbox.Batch.GraphView.EdgeView         as EdgeView
+import           Flowbox.Batch.GraphView.EdgeView           (EdgeView(..))
 import qualified Flowbox.Batch.GraphView.GraphView        as GraphView
 import           Flowbox.Batch.GraphView.GraphView          (GraphView)
 import qualified Flowbox.Batch.Project.Project            as Project
@@ -348,8 +351,7 @@ nodesGraph defID = readonly . graphOp defID (\_ agraph ->
 
 addNode :: Node -> Definition.ID -> Batch -> Either String (Batch, Node.ID)
 addNode node defID = graphOp defID (\_ agraph -> 
-    let 
-        [nodeID]      = Graph.newNodes 1 agraph
+    let [nodeID]      = Graph.newNodes 1 agraph
         newGraph      = Graph.insNode (nodeID, node) agraph
     in Right (newGraph, nodeID))
 
@@ -371,8 +373,25 @@ removeNode nodeID defID = noresult . graphOp defID (\_ agraph ->
 
 
 connect :: Node.ID -> [Int] -> Node.ID -> Int -> Definition.ID -> Batch -> Either String Batch
-connect srcNodeID srcPort dstNodeID dstPort defID = undefined
-
+connect srcNodeID srcPort dstNodeID dstPort defID = noresult . graphOp defID (\_ agraph -> 
+    case Graph.gelem srcNodeID agraph of 
+        False     -> Left "Wrong `srcNodeID`"
+        True      -> case Graph.gelem dstNodeID agraph of 
+            False -> Left "Wrong `dstNodeID`"
+            True  -> 
+                let newGraph = GraphView.toGraph 
+                             $ GraphView.insEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) 
+                             $ GraphView.fromGraph agraph
+                in Right (newGraph, ()))
 
 disconnect :: Node.ID -> [Int] -> Node.ID -> Int -> Definition.ID -> Batch -> Either String Batch
-disconnect srcNodeID srcPort dstNodeID dstPort defID batch = undefined
+disconnect srcNodeID srcPort dstNodeID dstPort defID= noresult . graphOp defID (\_ agraph -> 
+    case Graph.gelem srcNodeID agraph of 
+        False     -> Left "Wrong `srcNodeID`"
+        True      -> case Graph.gelem dstNodeID agraph of 
+            False -> Left "Wrong `dstNodeID`"
+            True  -> 
+                let newGraph = GraphView.toGraph 
+                             $ GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) 
+                             $ GraphView.fromGraph agraph
+                in Right (newGraph, ()))
