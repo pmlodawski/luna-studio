@@ -101,7 +101,7 @@ addDefinition = defParentOperation (\batchHandler definition parentID -> do
 
 updateDefinition :: IORef Batch -> Maybe TDefs.Definition -> IO ()
 updateDefinition = defOperation (\batchHandler defID definition -> do
-    putStrLn "call updateDefinition - NOT IMPLEMENTED, sorry."
+    putStrLn "call updateDefinition"
     batch <- readIORef batchHandler
     case Batch.updateDefinition (defID, definition) batch of
         Left message   -> throw' message

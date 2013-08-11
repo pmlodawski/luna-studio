@@ -311,9 +311,8 @@ addDefinition definition parentID = activeDefManagerOp (\_ defManager ->
 
 
 updateDefinition :: (Definition.ID, Definition) -> Batch -> Either String Batch
-updateDefinition (defID, def) = noresult .activeDefManagerOp (\batch defManager ->
-    -- putStrLn "call updateDefinition - NOT IMPLEMENTED, sorry."
-    Right (defManager, ()))
+updateDefinition (defID, def) = noresult . definitionOp defID (\_ _ ->
+    Right (def, def))
 
 
 removeDefinition :: Definition.ID -> Batch -> Either String Batch 
@@ -342,7 +341,6 @@ definitionParent defID = readonly . activeDefManagerOp (\_ defManager ->
 
 
 -------- Graphs ---------------------------------------------------------------
-
 
 nodesGraph :: Definition.ID -> Batch -> Either String GraphView
 nodesGraph defID = readonly . graphOp defID (\_ agraph -> 
