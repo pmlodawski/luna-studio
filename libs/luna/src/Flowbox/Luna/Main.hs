@@ -20,8 +20,6 @@ import           Flowbox.Luna.Codegen.Hs.Cabal.Config    (Config)
 import qualified Flowbox.Luna.Codegen.Hs.Cabal.Config  as Config
 import qualified Flowbox.Luna.Codegen.Hs.Cabal.Section as Section
 
---import qualified Flowbox.Luna.Network.Graph.Graph      as Graph
-
 import qualified Flowbox.Luna.Data.Graph               as Graph
 import qualified Flowbox.Luna.Lib.Library              as Library
 
@@ -39,43 +37,10 @@ main = do
     putStrLn "------------\n"
     putStrLn $ Module.genCode $ DG.generateDefinition HelloWorld.full_manager 100
     --putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
-    --putStrLn
 
 
     let
         builder = Builder.empty { Builder.path = UniPath.fromUnixString("samples/TestProject/build") }
-
     Builder.buildLibrary builder (HelloWorld.workspacelib)
-    --Library.store HelloWorld.workspacelib
     return ()
-
---        let 
---                (node, manager) = Samples.sample_helloWorld
---                nodeDef = Node.def node
---                graph = NodeDef.graph nodeDef
---        Graphviz.showGraph graph
---        print $ show $ TC.typeCheck graph manager
---        showCode node manager
---        putStrLn "=================================="
---        testSerialization
---        return ()
-
-
---testSerialization = do
---      let 
---            lib = Library.Library $ Path.fromUnixString "lunalib/std"
---        putStrLn "Hello programmer! I am Lunac, the Luna compiler"
---        pwd <- System.Directory.getCurrentDirectory
---        putStrLn $ "My PWD is " ++ pwd
---        print "Original manager:"
---        print $ snd Samples.sample_helloWorld
---        print "====================================="
---        print "load.save :"
---        DefManager.saveManager (Path.fromUnixString "lunalib") $ snd Samples.sample_helloWorld
---      manager <- DefManager.load lib DefManager.empty
---      print manager
-        
-
---showCode :: Node -> DefManager -> IO ()
---showCode node manager = putStrLn $ CG.generateCode node manager
 
