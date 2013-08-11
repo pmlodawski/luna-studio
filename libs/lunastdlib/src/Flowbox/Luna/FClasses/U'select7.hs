@@ -1,6 +1,6 @@
 {-# LANGUAGE FunctionalDependencies, FlexibleInstances #-}
 
-module Flowbox.Luna.FClasses.C''select7' where
+module Flowbox.Luna.FClasses.U'select7 where
 
 class C''select7' a b | a -> b where
     select7'    :: a -> b

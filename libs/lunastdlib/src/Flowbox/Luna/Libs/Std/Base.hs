@@ -1,8 +1,8 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 
-module Flowbox.Luna.Helpers.Common where
+module Flowbox.Luna.Libs.Std.Base where
 
-import Flowbox.Luna.FClasses.C''add'
+import Flowbox.Luna.FClasses.U'add
 
 instance C''add' (Int,(Int,())) (Int,()) where
 	add' (x, (y,_)) = (x+y,())

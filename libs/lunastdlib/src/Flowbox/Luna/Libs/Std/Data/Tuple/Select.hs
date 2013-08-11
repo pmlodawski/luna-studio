@@ -4,12 +4,12 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 
 module Flowbox.Luna.Libs.Std.Data.Tuple.Select where
-import Flowbox.Luna.FClasses.C''select0'
-import Flowbox.Luna.FClasses.C''select1'
-import Flowbox.Luna.FClasses.C''select2'
-import Flowbox.Luna.FClasses.C''select3'
-import Flowbox.Luna.FClasses.C''select4'
-import Flowbox.Luna.FClasses.C''select5'
+import Flowbox.Luna.FClasses.U'select0
+import Flowbox.Luna.FClasses.U'select1
+import Flowbox.Luna.FClasses.U'select2
+import Flowbox.Luna.FClasses.U'select3
+import Flowbox.Luna.FClasses.U'select4
+import Flowbox.Luna.FClasses.U'select5
 import Data.Tuple.OneTuple
 
 instance C''select0' (OneTuple a) a where select0' (OneTuple x) = x; select0'''M = return . select0'

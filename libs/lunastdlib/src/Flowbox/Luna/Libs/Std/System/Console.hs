@@ -2,7 +2,7 @@
 
 module Flowbox.Luna.Libs.Std.System.Console where
 
-import Flowbox.Luna.FClasses.C''print'
+import Flowbox.Luna.FClasses.U'print
 import Flowbox.Luna.Helpers.Core
 import qualified Prelude
 import Prelude(return, Show, show)

@@ -41,7 +41,7 @@ regular path' item' = Regular path' item'
 
 
 common :: String -> Import
-common name = simple $ Path ["Flowbox", "Luna", "FClasses", Path.mkCommonImportName name]
+common name = simple $ Path ["Flowbox", "Luna", "FClasses", name]
 
 
 genCode :: Import -> String

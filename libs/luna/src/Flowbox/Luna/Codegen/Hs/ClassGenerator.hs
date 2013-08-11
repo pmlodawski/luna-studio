@@ -47,8 +47,8 @@ generateClass def m = (datatype, nmod) where
                $ DataType.empty { DataType.cls    = dtcls
                                 , DataType.cons   = [cons]
                                 }
-    getters    = zipWith (Function.getter clsname) paramnames fieldnames
-    setters    = zipWith (Function.setter clsname) paramnames fieldnames
+    getters    = map (Function.getter clsname) paramnames
+    setters    = map (Function.setter clsname) paramnames
     getnames   = map Path.mkGetter paramnames
     setnames   = map Path.mkSetter paramnames
     commimps   = map Import.common (getnames ++ setnames)

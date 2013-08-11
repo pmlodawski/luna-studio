@@ -40,7 +40,7 @@ generateFunction def m = (func, nmod) where
     vertices   = Graph.topsort graph
     nodes      = fromJust $ Graph.labVtxs graph vertices
     fcls       = Definition.cls def
-    fname      = Type.name fcls
+    fname      = Path.mkFuncName $ Type.name fcls
     --finputs    = Type.inputs fcls
     basefunc   = Function.basic { Function.name = fname
                                 --, Function.signature = [Expr.At Path.inputs (Expr.Tuple (replicate 3 Expr.Any))]

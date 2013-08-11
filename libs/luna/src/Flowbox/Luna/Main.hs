@@ -33,7 +33,7 @@ test manager did = out where
 main :: IO ()
 main = do 
     putStrLn "------------\n"
-    --putStrLn $ Module.genCode $ DG.generateDefinition HelloWorld.full_manager 1
+    putStrLn $ Module.genCode $ DG.generateDefinition HelloWorld.full_manager 2
     --putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
     --putStrLn
 

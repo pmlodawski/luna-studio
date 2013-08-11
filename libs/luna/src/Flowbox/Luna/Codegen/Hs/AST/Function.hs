@@ -85,12 +85,16 @@ addAlias :: (String, String) -> Function -> Function
 addAlias alias func = setBody (Expr.addExpr (Expr.mkAlias alias) $ body func) func
 
 
-getter :: String -> String -> String -> Expr
-getter obj _ param = Expr.Call "getter''" [Expr.THTypeCtx obj, Expr.THExprCtx param] Expr.Pure
+getter :: String -> String -> Expr
+getter obj param = Expr.Call "mkGetter" [ Expr.StringLit param
+                                        , Expr.THTypeCtx obj
+                                        ] Expr.Pure
 
 
-setter :: String -> String -> String -> Expr
-setter obj _ param = Expr.Call "setter''" [Expr.THTypeCtx obj, Expr.THExprCtx param] Expr.Pure
+setter :: String -> String -> Expr
+setter obj param = Expr.Call "mkSetter" [ Expr.StringLit param
+                                        , Expr.THTypeCtx obj
+                                        ] Expr.Pure
 
 
 

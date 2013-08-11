@@ -29,7 +29,7 @@ generateSel :: Int -> IO ()
 generateSel n = do 
     putStrLn "{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}\n"
     putStrLn "module Flowbox.Luna.Libs.Std.Data.NTuple.Select where"
-    putStrLn $ join "\n" (map (("import Flowbox.Luna.FClasses.C''select" ++) . (++"'") . show) [0..n])
+    putStrLn $ join "\n" (map (("import Flowbox.Luna.FClasses.U'select" ++) . show) [0..n])
     mapM_ (generateSelN (n+1)) [0..n]
 
 generateSelN :: Int -> Int -> IO ()

@@ -71,15 +71,16 @@ generateDefinition manager vtx = nmod where
             subpaths  = map Module.path submods
             subimps   = map Import.qualified subpaths
             subnames  = map Path.last subpaths
+            subnamesf = map Path.mkFuncName subnames
             subnamesM = map Path.mkMonadName subnames
+
             commimps  = map Import.common subnames
 
-            csubnames   = map Path.mkClassName subnames
+            csubnames   = map Path.mkClassName subnamesf
             subnamesT   = map Path.mkTemplateName subnames
             subnamesTM  = map Path.mkMonadName subnamesT
             modsubpaths = map Path.toModulePath subpaths
-            impfuncs    = map Path.toString $ zipWith Path.append subnames  modsubpaths
-            impfuncsM   = map Path.toString $ zipWith Path.append subnamesM modsubpaths
+            impfuncs    = map Path.toString $ zipWith Path.append subnamesf  modsubpaths
 
             funcs    = zipWith (Function.mkSpec (DataType.name dt)) subnamesT impfuncs
         
@@ -95,7 +96,7 @@ generateDefinition manager vtx = nmod where
                      $ Module.addExt Extension.UndecidableInstances       --FIXME[wd]: Czy mozna sie tego pozbyc?
                      $ modproto
 
-            instargs = zip4 csubnames subnamesT subnamesTM subnames
+            instargs = zip4 csubnames subnamesT subnamesTM subnamesf
 
         _            -> error "Not known type conversion."
 

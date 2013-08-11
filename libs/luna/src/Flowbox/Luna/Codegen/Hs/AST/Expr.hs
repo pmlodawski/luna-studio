@@ -15,7 +15,9 @@ module Flowbox.Luna.Codegen.Hs.AST.Expr (
     addExpr,
     mkBlock,
     mkAssignment,
-    empty
+    empty,
+    mkExprCtx,
+    mkTypeCtx
 )where
 
 import           Debug.Trace                    
@@ -34,6 +36,7 @@ data Expr = Assignment { src   :: Expr    , dst  :: Expr   , ctx :: Context }
           | NTuple     { elems :: [Expr]                                    }
           | Type       { name  :: String  , params :: [String]              }
           | Call       { name  :: String  , args :: [Expr] , ctx :: Context }
+          | StringLit  { val   :: String                                    }
           | Default    { val   :: String                                    }
           | THExprCtx  { name  :: String                                    }
           | THTypeCtx  { name  :: String                                    }
@@ -46,6 +49,14 @@ data Expr = Assignment { src   :: Expr    , dst  :: Expr   , ctx :: Context }
           | FuncType   { elems :: [Expr]                                    }
           | NOP        {                                                    }
           deriving (Show)
+
+
+mkExprCtx :: String -> String
+mkExprCtx name' = "'"  ++ name'
+
+
+mkTypeCtx :: String -> String
+mkTypeCtx name' = "''"  ++ name'
 
 
 empty :: Expr
@@ -67,8 +78,9 @@ genCode expr = case expr of
                                        IO   -> "<-"
     Var        name'            -> name'
     Default    val'             -> val'
+    StringLit  val'             -> show val'
     VarRef     vid'             -> "v'" ++ show vid'
-    Call       name' args' ctx' -> fname' ++ " " ++ join " " (map (genCode) args') where
+    Call       name' args' ctx' -> fname' ++ " " ++ join " " (map (("("++) . (++")") . genCode) args') where
                                    fname' = case ctx' of
                                        Pure -> name'
                                        IO   -> name' ++ mpostfix

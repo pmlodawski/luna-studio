@@ -1,6 +1,6 @@
 {-# LANGUAGE FunctionalDependencies, FlexibleInstances #-}
 
-module Flowbox.Luna.FClasses.C''x'getter' where
+module Flowbox.Luna.FClasses.U'x'getter where
 
 class C''x'getter' a b | a -> b where
     x'getter'    :: a -> b
