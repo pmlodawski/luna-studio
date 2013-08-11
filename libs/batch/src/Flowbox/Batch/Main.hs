@@ -17,7 +17,7 @@ main = do
 	let
 		pm = ProjectManager.empty
 		p = Project.empty { Project.name = "TestProject"
-						  , Project.path = UniPath.fromUnixString "/tmp/workspace/TestProject"
+						  , Project.path = UniPath.fromUnixString "samples/TestProject"
 						  , Project.libs = HelloWorld.libman
 		                  }
 
