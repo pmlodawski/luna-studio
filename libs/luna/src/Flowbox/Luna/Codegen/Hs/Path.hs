@@ -22,7 +22,9 @@ module Flowbox.Luna.Codegen.Hs.Path (
     mkIndent,
     mkTHPointer,
     mkClassName,
-    toString
+    toString,
+    mkCommonImportName,
+    mkFuncName
 )where
 
 import qualified Prelude
@@ -71,6 +73,13 @@ mkFieldName name = name ++ "'F"
 
 mkClassName :: String -> String
 mkClassName name = "C''" ++ name
+
+
+mkCommonImportName :: String -> String
+mkCommonImportName = mkClassName . mkFuncName
+
+mkFuncName :: String -> String
+mkFuncName name = name ++ "'"
 
 --mkGSName :: String -> String
 --mkGSName name = name ++ "'GS"

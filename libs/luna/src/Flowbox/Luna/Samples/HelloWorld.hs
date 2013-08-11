@@ -10,7 +10,7 @@ module Flowbox.Luna.Samples.HelloWorld(
     libman,
     full_manager,
     myFun, myFun2, myFun3, myFun4, myFun5,
-    cls1
+    cls_vector
 ) where
 
 
@@ -237,7 +237,7 @@ myFun5 = Definition.empty{ Definition.cls   = (Type.Function "mymain" myFunInput
 
 
 
-cls1 = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
+cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
                     , Definition.graph = Graph.empty
                     }
 
@@ -269,12 +269,12 @@ cls1 = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Name
 --                                            (100, 1, myFun2)]
 
 
-base_workspacelib    = Library.make "Workspace" (UniPath.fromUnixString "/tmp/workspace/TestProject/src")
+base_workspacelib    = Library.make "Workspace" (UniPath.fromUnixString "/tmp/workspace/TestProject/libs/Workspace/src")
 
 
 full_manager =  DefManager.addToParentMany [ --(1, 2, myFun2),
-                                           (0, 1, myFun5)
-                                           --(0, 10, cls1)
+                                           (1, 2, myFun4)
+                                           ,(0, 1, cls_vector)
                                            ]
              $ Library.defs base_workspacelib
 

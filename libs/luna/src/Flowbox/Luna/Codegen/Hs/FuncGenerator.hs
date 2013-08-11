@@ -77,7 +77,7 @@ generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
                                        args = map Expr.VarRef vtxs
 
         Node.Call name flags _  -> (Expr.Call name' args cctx, cctx) where
-                                       name' = name ++ "'"
+                                       name' = Path.mkFuncName name
                                        vtxs  = Graph.innvtx graph nid
                                        args  = map Expr.VarRef vtxs
                                        cctx  = if Flags.io flags

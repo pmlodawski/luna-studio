@@ -61,7 +61,7 @@ empty :: Module
 empty = Module Path.empty [] Set.empty [] [] [] [] [] []
 
 base :: Module
-base = empty {imports = Set.singleton $ Import.simple (Path.fromList ["Flowbox'", "Core"])}
+base = empty {imports = Set.singleton $ Import.simple (Path.fromList ["Flowbox", "Luna", "Helpers", "Core"])}
 
 header :: String
 header = "-- This is Flowbox generated file.\n\n"
