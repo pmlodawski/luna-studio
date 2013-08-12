@@ -4,12 +4,12 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 
 module Flowbox'.Data.NTuple.Select where
-import Common'.C''select0
-import Common'.C''select1
-import Common'.C''select2
-import Common'.C''select3
-import Common'.C''select4
-import Common'.C''select5
+import           Common'.C''select0   
+import           Common'.C''select1   
+import           Common'.C''select2   
+import           Common'.C''select3   
+import           Common'.C''select4   
+import           Common'.C''select5   
 instance C''select0 (a0,()) a0 where select0 (x,_) = x; select0''M = return . select0
 instance C''select0 (a0,(a1,())) a0 where select0 (x,_) = x; select0''M = return . select0
 instance C''select0 (a0,(a1,(a2,()))) a0 where select0 (x,_) = x; select0''M = return . select0

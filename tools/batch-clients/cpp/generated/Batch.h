@@ -42,12 +42,12 @@ class BatchIf {
   virtual void newTypeVariable( ::flowbox::batch::types::Type& _return, const std::string& name) = 0;
   virtual void newTypeList( ::flowbox::batch::types::Type& _return, const  ::flowbox::batch::types::Type& type) = 0;
   virtual void newTypeTuple( ::flowbox::batch::types::Type& _return, const std::vector< ::flowbox::batch::types::Type> & types) = 0;
-  virtual void graph( ::flowbox::batch::graph::Graph& _return, const  ::flowbox::batch::defs::Definition& definition) = 0;
+  virtual void graph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition) = 0;
   virtual void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) = 0;
   virtual void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) = 0;
   virtual void removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) = 0;
-  virtual void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::Definition& definition) = 0;
-  virtual void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::Definition& definition) = 0;
+  virtual void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition) = 0;
+  virtual void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition) = 0;
   virtual void ping() = 0;
 };
 
@@ -159,7 +159,7 @@ class BatchNull : virtual public BatchIf {
   void newTypeTuple( ::flowbox::batch::types::Type& /* _return */, const std::vector< ::flowbox::batch::types::Type> & /* types */) {
     return;
   }
-  void graph( ::flowbox::batch::graph::Graph& /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void graph( ::flowbox::batch::graph::GraphView& /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */) {
     return;
   }
   void addNode( ::flowbox::batch::graph::Node& /* _return */, const  ::flowbox::batch::graph::Node& /* node */, const  ::flowbox::batch::defs::Definition& /* definition */) {
@@ -171,10 +171,10 @@ class BatchNull : virtual public BatchIf {
   void removeNode(const  ::flowbox::batch::graph::Node& /* node */, const  ::flowbox::batch::defs::Definition& /* definition */) {
     return;
   }
-  void connect(const  ::flowbox::batch::graph::Node& /* srcNode */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::Node& /* dstNode */, const  ::flowbox::batch::graph::PortDescriptor& /* dstPort */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void connect(const  ::flowbox::batch::graph::Node& /* srcNode */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::Node& /* dstNode */, const int32_t /* dstPort */, const  ::flowbox::batch::defs::Definition& /* definition */) {
     return;
   }
-  void disconnect(const  ::flowbox::batch::graph::Node& /* srcNode */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::Node& /* dstNode */, const  ::flowbox::batch::graph::PortDescriptor& /* dstPort */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void disconnect(const  ::flowbox::batch::graph::Node& /* srcNode */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::Node& /* dstNode */, const int32_t /* dstPort */, const  ::flowbox::batch::defs::Definition& /* definition */) {
     return;
   }
   void ping() {
@@ -3328,12 +3328,12 @@ class Batch_graph_result {
 
   virtual ~Batch_graph_result() throw() {}
 
-   ::flowbox::batch::graph::Graph success;
+   ::flowbox::batch::graph::GraphView success;
   ArgumentException missingFields;
 
   _Batch_graph_result__isset __isset;
 
-  void __set_success(const  ::flowbox::batch::graph::Graph& val) {
+  void __set_success(const  ::flowbox::batch::graph::GraphView& val) {
     success = val;
   }
 
@@ -3372,7 +3372,7 @@ class Batch_graph_presult {
 
   virtual ~Batch_graph_presult() throw() {}
 
-   ::flowbox::batch::graph::Graph* success;
+   ::flowbox::batch::graph::GraphView* success;
   ArgumentException missingFields;
 
   _Batch_graph_presult__isset __isset;
@@ -3754,7 +3754,7 @@ typedef struct _Batch_connect_args__isset {
 class Batch_connect_args {
  public:
 
-  Batch_connect_args() {
+  Batch_connect_args() : dstPort(0) {
   }
 
   virtual ~Batch_connect_args() throw() {}
@@ -3762,7 +3762,7 @@ class Batch_connect_args {
    ::flowbox::batch::graph::Node srcNode;
    ::flowbox::batch::graph::PortDescriptor srcPort;
    ::flowbox::batch::graph::Node dstNode;
-   ::flowbox::batch::graph::PortDescriptor dstPort;
+  int32_t dstPort;
    ::flowbox::batch::defs::Definition definition;
 
   _Batch_connect_args__isset __isset;
@@ -3779,7 +3779,7 @@ class Batch_connect_args {
     dstNode = val;
   }
 
-  void __set_dstPort(const  ::flowbox::batch::graph::PortDescriptor& val) {
+  void __set_dstPort(const int32_t val) {
     dstPort = val;
   }
 
@@ -3822,7 +3822,7 @@ class Batch_connect_pargs {
   const  ::flowbox::batch::graph::Node* srcNode;
   const  ::flowbox::batch::graph::PortDescriptor* srcPort;
   const  ::flowbox::batch::graph::Node* dstNode;
-  const  ::flowbox::batch::graph::PortDescriptor* dstPort;
+  const int32_t* dstPort;
   const  ::flowbox::batch::defs::Definition* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -3898,7 +3898,7 @@ typedef struct _Batch_disconnect_args__isset {
 class Batch_disconnect_args {
  public:
 
-  Batch_disconnect_args() {
+  Batch_disconnect_args() : dstPort(0) {
   }
 
   virtual ~Batch_disconnect_args() throw() {}
@@ -3906,7 +3906,7 @@ class Batch_disconnect_args {
    ::flowbox::batch::graph::Node srcNode;
    ::flowbox::batch::graph::PortDescriptor srcPort;
    ::flowbox::batch::graph::Node dstNode;
-   ::flowbox::batch::graph::PortDescriptor dstPort;
+  int32_t dstPort;
    ::flowbox::batch::defs::Definition definition;
 
   _Batch_disconnect_args__isset __isset;
@@ -3923,7 +3923,7 @@ class Batch_disconnect_args {
     dstNode = val;
   }
 
-  void __set_dstPort(const  ::flowbox::batch::graph::PortDescriptor& val) {
+  void __set_dstPort(const int32_t val) {
     dstPort = val;
   }
 
@@ -3966,7 +3966,7 @@ class Batch_disconnect_pargs {
   const  ::flowbox::batch::graph::Node* srcNode;
   const  ::flowbox::batch::graph::PortDescriptor* srcPort;
   const  ::flowbox::batch::graph::Node* dstNode;
-  const  ::flowbox::batch::graph::PortDescriptor* dstPort;
+  const int32_t* dstPort;
   const  ::flowbox::batch::defs::Definition* definition;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -4205,9 +4205,9 @@ class BatchClient : virtual public BatchIf {
   void newTypeTuple( ::flowbox::batch::types::Type& _return, const std::vector< ::flowbox::batch::types::Type> & types);
   void send_newTypeTuple(const std::vector< ::flowbox::batch::types::Type> & types);
   void recv_newTypeTuple( ::flowbox::batch::types::Type& _return);
-  void graph( ::flowbox::batch::graph::Graph& _return, const  ::flowbox::batch::defs::Definition& definition);
+  void graph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition);
   void send_graph(const  ::flowbox::batch::defs::Definition& definition);
-  void recv_graph( ::flowbox::batch::graph::Graph& _return);
+  void recv_graph( ::flowbox::batch::graph::GraphView& _return);
   void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
   void send_addNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
   void recv_addNode( ::flowbox::batch::graph::Node& _return);
@@ -4217,11 +4217,11 @@ class BatchClient : virtual public BatchIf {
   void removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
   void send_removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
   void recv_removeNode();
-  void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::Definition& definition);
-  void send_connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::Definition& definition);
+  void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition);
+  void send_connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition);
   void recv_connect();
-  void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::Definition& definition);
-  void send_disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::Definition& definition);
+  void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition);
+  void send_disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition);
   void recv_disconnect();
   void ping();
   void send_ping();
@@ -4602,7 +4602,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void graph( ::flowbox::batch::graph::Graph& _return, const  ::flowbox::batch::defs::Definition& definition) {
+  void graph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -4640,7 +4640,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->removeNode(node, definition);
   }
 
-  void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::Definition& definition) {
+  void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -4649,7 +4649,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->connect(srcNode, srcPort, dstNode, dstPort, definition);
   }
 
-  void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::Definition& definition) {
+  void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {

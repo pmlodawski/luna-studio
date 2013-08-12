@@ -1,9 +1,9 @@
 -- handwritten
-import Workspace
-import Workspace.Vector
-import Flowbox.Luna.FClasses.U'incx
-import Flowbox.Luna.FClasses.U'init
-import Data.Default
+import           Workspace                      
+import           Workspace.Vector               
+import           Flowbox.Luna.FClasses.U'incx   
+import           Flowbox.Luna.FClasses.U'init   
+import           Data.Default                   
 
 main = do
 	let 

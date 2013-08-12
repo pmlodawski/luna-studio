@@ -127,8 +127,8 @@ void swap(Import &a, Import &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* Definition::ascii_fingerprint = "DFA58221D08704BE864C77CAE04E43F5";
-const uint8_t Definition::binary_fingerprint[16] = {0xDF,0xA5,0x82,0x21,0xD0,0x87,0x04,0xBE,0x86,0x4C,0x77,0xCA,0xE0,0x4E,0x43,0xF5};
+const char* Definition::ascii_fingerprint = "37C5904B6456CFA1936B4DCB7E2E667D";
+const uint8_t Definition::binary_fingerprint[16] = {0x37,0xC5,0x90,0x4B,0x64,0x56,0xCF,0xA1,0x93,0x6B,0x4D,0xCB,0x7E,0x2E,0x66,0x7D};
 
 uint32_t Definition::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -196,14 +196,6 @@ uint32_t Definition::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 5:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->libID);
-          this->__isset.libID = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      case 6:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
           xfer += iprot->readI32(this->defID);
           this->__isset.defID = true;
         } else {
@@ -254,13 +246,8 @@ uint32_t Definition::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += this->attribs.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
-  if (this->__isset.libID) {
-    xfer += oprot->writeFieldBegin("libID", ::apache::thrift::protocol::T_I32, 5);
-    xfer += oprot->writeI32(this->libID);
-    xfer += oprot->writeFieldEnd();
-  }
   if (this->__isset.defID) {
-    xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 6);
+    xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 5);
     xfer += oprot->writeI32(this->defID);
     xfer += oprot->writeFieldEnd();
   }
@@ -275,7 +262,6 @@ void swap(Definition &a, Definition &b) {
   swap(a.imports, b.imports);
   swap(a.flags, b.flags);
   swap(a.attribs, b.attribs);
-  swap(a.libID, b.libID);
   swap(a.defID, b.defID);
   swap(a.__isset, b.__isset);
 }
@@ -357,8 +343,8 @@ void swap(Edge &a, Edge &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* DefsGraph::ascii_fingerprint = "E020BD94EDE625F37DE58CF12D7E61E4";
-const uint8_t DefsGraph::binary_fingerprint[16] = {0xE0,0x20,0xBD,0x94,0xED,0xE6,0x25,0xF3,0x7D,0xE5,0x8C,0xF1,0x2D,0x7E,0x61,0xE4};
+const char* DefsGraph::ascii_fingerprint = "635C3E7C30A40F02DDADB144E29783F6";
+const uint8_t DefsGraph::binary_fingerprint[16] = {0x63,0x5C,0x3E,0x7C,0x30,0xA4,0x0F,0x02,0xDD,0xAD,0xB1,0x44,0xE2,0x97,0x83,0xF6};
 
 uint32_t DefsGraph::read(::apache::thrift::protocol::TProtocol* iprot) {
 

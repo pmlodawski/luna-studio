@@ -12,7 +12,7 @@ module Flowbox.Batch.Project.Project(
 ) where
 
 import qualified Flowbox.Luna.Lib.LibManager     as LibManager
-import           Flowbox.Luna.Lib.LibManager       (LibManager(..))
+import           Flowbox.Luna.Lib.LibManager       (LibManager)
 import qualified Flowbox.Luna.Network.Attributes as Attributes
 import           Flowbox.Luna.Network.Attributes   (Attributes)
 import qualified Flowbox.System.UniPath          as UniPath

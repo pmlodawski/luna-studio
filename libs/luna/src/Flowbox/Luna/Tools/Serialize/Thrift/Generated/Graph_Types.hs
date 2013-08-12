@@ -71,8 +71,6 @@ instance Hashable NodeType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
 type NodeID = Int32
 
-type PortDescriptor = Vector.Vector Int32
-
 data DefaultValue = DefaultValue{f_DefaultValue_cls :: Maybe DefaultValueType,f_DefaultValue_i :: Maybe Int32,f_DefaultValue_s :: Maybe Text} deriving (Show,Eq,Typeable)
 instance Hashable DefaultValue where
   hashWithSalt salt record = salt   `hashWithSalt` f_DefaultValue_cls record   `hashWithSalt` f_DefaultValue_i record   `hashWithSalt` f_DefaultValue_s record  

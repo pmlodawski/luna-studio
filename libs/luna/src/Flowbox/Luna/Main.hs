@@ -24,8 +24,8 @@ import qualified Flowbox.Luna.Data.Graph               as Graph
 import qualified Flowbox.Luna.Lib.Library              as Library
 
 import qualified Flowbox.Luna.Builder.Builder          as Builder
-import qualified Flowbox.System.UniPath               as UniPath
-import           Flowbox.System.UniPath                 (UniPath)
+import qualified Flowbox.System.UniPath                as UniPath
+import           Flowbox.System.UniPath                  (UniPath)
 
 
 test manager did = out where

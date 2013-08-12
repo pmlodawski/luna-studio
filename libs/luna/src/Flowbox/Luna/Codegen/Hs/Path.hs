@@ -27,9 +27,9 @@ module Flowbox.Luna.Codegen.Hs.Path (
     mkFuncName
 )where
 
-import qualified Prelude
+import qualified Prelude                          
 import Prelude hiding (last, init, tail, last)
-import           Data.String.Utils   (join)
+import           Data.String.Utils                (join)
 
 import           Flowbox.Luna.Network.Path.Path   
 import           Data.Char                        (isLower)

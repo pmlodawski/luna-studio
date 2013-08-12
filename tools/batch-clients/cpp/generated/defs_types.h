@@ -81,22 +81,21 @@ class Import {
 void swap(Import &a, Import &b);
 
 typedef struct _Definition__isset {
-  _Definition__isset() : cls(false), imports(true), flags(true), attribs(true), libID(true), defID(true) {}
+  _Definition__isset() : cls(false), imports(true), flags(true), attribs(true), defID(true) {}
   bool cls;
   bool imports;
   bool flags;
   bool attribs;
-  bool libID;
   bool defID;
 } _Definition__isset;
 
 class Definition {
  public:
 
-  static const char* ascii_fingerprint; // = "DFA58221D08704BE864C77CAE04E43F5";
-  static const uint8_t binary_fingerprint[16]; // = {0xDF,0xA5,0x82,0x21,0xD0,0x87,0x04,0xBE,0x86,0x4C,0x77,0xCA,0xE0,0x4E,0x43,0xF5};
+  static const char* ascii_fingerprint; // = "37C5904B6456CFA1936B4DCB7E2E667D";
+  static const uint8_t binary_fingerprint[16]; // = {0x37,0xC5,0x90,0x4B,0x64,0x56,0xCF,0xA1,0x93,0x6B,0x4D,0xCB,0x7E,0x2E,0x66,0x7D};
 
-  Definition() : libID(-1), defID(-1) {
+  Definition() : defID(-1) {
 
 
 
@@ -108,7 +107,6 @@ class Definition {
   Imports imports;
    ::flowbox::batch::attrs::Flags flags;
    ::flowbox::batch::attrs::Attributes attribs;
-   ::flowbox::batch::libs::LibID libID;
   DefID defID;
 
   _Definition__isset __isset;
@@ -133,11 +131,6 @@ class Definition {
     __isset.attribs = true;
   }
 
-  void __set_libID(const  ::flowbox::batch::libs::LibID val) {
-    libID = val;
-    __isset.libID = true;
-  }
-
   void __set_defID(const DefID val) {
     defID = val;
     __isset.defID = true;
@@ -160,10 +153,6 @@ class Definition {
     if (__isset.attribs != rhs.__isset.attribs)
       return false;
     else if (__isset.attribs && !(attribs == rhs.attribs))
-      return false;
-    if (__isset.libID != rhs.__isset.libID)
-      return false;
-    else if (__isset.libID && !(libID == rhs.libID))
       return false;
     if (__isset.defID != rhs.__isset.defID)
       return false;
@@ -250,8 +239,8 @@ typedef struct _DefsGraph__isset {
 class DefsGraph {
  public:
 
-  static const char* ascii_fingerprint; // = "E020BD94EDE625F37DE58CF12D7E61E4";
-  static const uint8_t binary_fingerprint[16]; // = {0xE0,0x20,0xBD,0x94,0xED,0xE6,0x25,0xF3,0x7D,0xE5,0x8C,0xF1,0x2D,0x7E,0x61,0xE4};
+  static const char* ascii_fingerprint; // = "635C3E7C30A40F02DDADB144E29783F6";
+  static const uint8_t binary_fingerprint[16]; // = {0x63,0x5C,0x3E,0x7C,0x30,0xA4,0x0F,0x02,0xDD,0xAD,0xB1,0x44,0xE2,0x97,0x83,0xF6};
 
   DefsGraph() {
   }

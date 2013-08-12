@@ -25,7 +25,8 @@ import qualified Flowbox.Batch.Batch                                       as Ba
 import           Flowbox.Batch.Batch                                         (Batch(..))
 import qualified Flowbox.Batch.Project.Project                             as Project
 import           Flowbox.Batch.Project.Project                               (Project(..))
-import qualified Flowbox.Luna.Core                                         as Core
+import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
+import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects    ()
 
@@ -34,9 +35,9 @@ import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects    ()
 projectOperation :: (IORef Batch -> (Project.ID, Project) -> a)
                  ->  IORef Batch -> Maybe TProjects.Project -> a
 projectOperation operation batchHandler mtproject = case mtproject of 
-    Nothing       -> throw' "`project` argument is missing";
-    Just tproject -> case decode (tproject, Core.empty) of
-        Left  message      -> throw' message
+    Nothing                        -> throw' "`project` argument is missing";
+    Just tproject                  -> case decode (tproject, DefManager.empty) of
+        Left  message              -> throw' message
         Right (projectID, project) -> operation batchHandler (projectID, project)
 
 
@@ -46,8 +47,7 @@ projects :: IORef Batch -> IO (Vector TProjects.Project)
 projects batchHandler = do
     batch <- readIORef batchHandler
     let aprojects       = Batch.projects batch
-        tprojectsWCore  = map encode aprojects
-        tprojects       = map (\(p, _) -> p) tprojectsWCore
+        tprojects       = map (fst . encode) aprojects
         tprojectsVector = Vector.fromList tprojects
     return tprojectsVector
 
@@ -63,7 +63,7 @@ openProject = projectOperation (\ batchHandler (_, project) -> do
     batch <- readIORef batchHandler
     (newBatch, (projectID, aproject)) <- Batch.openProject project batch
     writeIORef batchHandler newBatch
-    let (tproject, _) = encode (projectID, aproject)
+    let tproject = fst $ encode (projectID, aproject)
     return tproject)
 
 

@@ -13,6 +13,8 @@ import qualified Flowbox.System.UniPath               as UniPath
 import           Flowbox.System.UniPath                 (UniPath)
 import qualified Flowbox.Luna.Samples.HelloWorld      as HelloWorld
 
+
+main :: IO()
 main = do
 	let
 		pm = ProjectManager.empty

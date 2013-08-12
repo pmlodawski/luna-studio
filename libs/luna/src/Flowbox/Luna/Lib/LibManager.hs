@@ -8,17 +8,35 @@
 module Flowbox.Luna.Lib.LibManager(
     module Flowbox.Luna.Data.Graph,
     LibManager,
-    empty
+    empty,
+
+    loadLibrary,
+    unloadLibrary
 ) where
 
-import           Flowbox.Luna.Lib.Library   (Library)
-import           Flowbox.Luna.Lib.Edge      (Edge)
-
+import qualified Flowbox.Luna.Tools.Serialize.Lib as LibSerialization
+import qualified Flowbox.Luna.Data.Graph          as DG
 import           Flowbox.Luna.Data.Graph         hiding(Graph, Edge, empty)
-import qualified Flowbox.Luna.Data.Graph  as DG
+import qualified Flowbox.Luna.Lib.Library         as Library
+import           Flowbox.Luna.Lib.Library           (Library)
+import           Flowbox.Luna.Lib.Edge              (Edge)
+import           Flowbox.System.UniPath             (UniPath)
 
 
 type LibManager = DG.Graph Library Edge
 
+
 empty :: LibManager
 empty = DG.empty
+
+
+-- mocked
+loadLibrary :: String -> UniPath -> LibManager -> IO (LibManager, (Library.ID, Library))
+loadLibrary name apath libManager = do
+    library <- LibSerialization.restoreLibrary name apath
+    let (newLibManager, libID) = insNewNode library libManager
+    return (newLibManager, (libID, library))
+
+
+unloadLibrary :: Library.ID -> LibManager -> LibManager
+unloadLibrary = delNode

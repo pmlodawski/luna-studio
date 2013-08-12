@@ -5,16 +5,16 @@
 module Workspace'.Vector where
 
 -- imports
-import Common'.C''incx
-import Common'.C''x'getter
-import Common'.C''x'setter
-import Common'.C''y'getter
-import Common'.C''y'setter
-import Common'.C''z'getter
-import Common'.C''z'setter
-import Common'.C''select0 --
-import Flowbox'.Core
-import qualified Workspace'.Vector.U'incx
+import           Common'.C''incx            
+import           Common'.C''x'getter        
+import           Common'.C''x'setter        
+import           Common'.C''y'getter        
+import           Common'.C''y'setter        
+import           Common'.C''z'getter        
+import           Common'.C''z'setter        
+import           Common'.C''select0         --
+import           Flowbox'.Core              
+import qualified Workspace'.Vector.U'incx   
 
 -- datatypes
 data Vector a = Vector {x'F :: a, y'F :: a, z'F :: a} deriving (Show)

@@ -10,6 +10,7 @@ module Flowbox.Luna.Network.Def.DefManager(
     DefManager,
     addToParent,
     addToParentMany,
+    addNewToParent,
     delete,
     pathNames,
     children,
@@ -35,6 +36,12 @@ addToParent (parentID, defID, def) manager = insEdge (parentID, defID, Edge) $
 
 addToParentMany :: [(Definition.ID, Definition.ID, Definition)] -> DefManager -> DefManager
 addToParentMany = foldri addToParent
+
+
+addNewToParent :: (Definition.ID, Definition) -> DefManager -> (DefManager, Definition.ID)
+addNewToParent (parentID, def) manager = (newDefManager, defID) where
+    (manager', defID) = insNewNode def manager
+    newDefManager = insEdge (parentID, defID, Edge) manager'
 
 
 delete :: Definition.ID -> DefManager ->  DefManager

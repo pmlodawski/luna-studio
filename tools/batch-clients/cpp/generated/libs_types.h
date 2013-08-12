@@ -32,7 +32,7 @@ class Library {
   static const char* ascii_fingerprint; // = "8647601436A6884E958535045FA2944B";
   static const uint8_t binary_fingerprint[16]; // = {0x86,0x47,0x60,0x14,0x36,0xA6,0x88,0x4E,0x95,0x85,0x35,0x04,0x5F,0xA2,0x94,0x4B};
 
-  Library() : libID(-1), name(), path(), rootDefID(-1) {
+  Library() : libID(-1), name(), path(), rootDefID(0) {
   }
 
   virtual ~Library() throw() {}

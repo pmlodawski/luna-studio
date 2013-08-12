@@ -25,21 +25,21 @@ import qualified Libs_Types                                                as TL
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
 import           Flowbox.Luna.Lib.Library                                    (Library(..))
+import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
+import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs         ()
-
 
 
 ------ public api helpers -----------------------------------------
 libOperation :: (IORef Batch -> (Int, Library) -> a)
              ->  IORef Batch -> Maybe TLibs.Library -> a
 libOperation operation batchHandler tlibrary = case tlibrary of 
-        (Just tlib) -> do 
-            case decode tlib :: Either String (Int, Library) of
-                Right library -> operation batchHandler library
+        Nothing               -> throw' "`library` argument is missing";
+        Just tlib             -> case decode (tlib, DefManager.empty) of
                 Left  message -> throw' message
-        Nothing     -> throw' "`library` argument is missing";
+                Right library -> operation batchHandler library
 
 
 ------ public api -------------------------------------------------
@@ -50,7 +50,7 @@ libraries batchHandler = do
     case Batch.libraries batch of
         Left message -> throw' message
         Right libs -> do 
-            let tlibs       = map encode libs
+            let tlibs       = map (fst . encode) libs
                 tlibsVector = Vector.fromList tlibs
             return tlibsVector
 
@@ -58,7 +58,7 @@ libraries batchHandler = do
 createLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
 createLibrary = libOperation (\ _ (_, library) -> do
     putStrLn "call createLibrary - NOT YET IMPLEMENTED"
-    return $ encode (-1, library))
+    return $ fst $ (encode (-1, library) :: (TLibs.Library, DefManager)))
 
 
 loadLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
@@ -69,7 +69,7 @@ loadLibrary = libOperation (\ batchHandler (_, library) -> do
     case r of
         Left message                             -> throw' message
         Right (newBatch, (newLibID, newLibrary)) -> do
-            let newTLibrary = encode (newLibID, newLibrary)
+            let newTLibrary = fst $ encode (newLibID, newLibrary)
             writeIORef batchHandler newBatch
             return newTLibrary)
 
@@ -94,10 +94,10 @@ storeLibrary = libOperation (\ batchHandler (libID, _) -> do
 
 
 libraryRootDef :: IORef Batch -> Maybe TLibs.Library -> IO TDefs.Definition
-libraryRootDef = libOperation (\ batchHandler (_, library) -> do
+libraryRootDef = libOperation (\ batchHandler (libID, _) -> do
     putStrLn "call libraryRootDef"
     batch <- readIORef batchHandler
-    case Batch.libraryRootDef library batch of 
+    case Batch.libraryRootDef libID batch of 
         Left message               -> throw' message
         Right (arootDefID, rootDef) -> do 
             let (trootDef, _) = encode (arootDefID, rootDef)

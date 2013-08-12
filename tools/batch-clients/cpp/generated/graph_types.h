@@ -43,8 +43,6 @@ extern const std::map<int, const char*> _NodeType_VALUES_TO_NAMES;
 
 typedef int32_t NodeID;
 
-typedef std::vector<int32_t>  PortDescriptor;
-
 typedef struct _DefaultValue__isset {
   _DefaultValue__isset() : i(false), s(false) {}
   bool i;

@@ -24,10 +24,12 @@ import           Data.IORef
 import qualified Data.Vector                                               as Vector
 import           Data.Vector                                                 (Vector)
 
-import qualified Attrs_Types                                                 
+import qualified Attrs_Types                                               as TAttrs
 import qualified Defs_Types                                                as TDefs
-import           Flowbox.Batch.Server.Handlers.Common                        
+import qualified Libs_Types                                                as TLibs
 import qualified Types_Types                                               as TTypes
+
+import           Flowbox.Batch.Server.Handlers.Common                        
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
@@ -42,6 +44,7 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 
 
 ------ public api helpers -----------------------------------------
+
 defOperation :: (IORef Batch -> Definition.ID -> Definition -> a) -> IORef Batch 
              -> Maybe TDefs.Definition -> a
 defOperation operation batchHandler tdefinition  = case tdefinition of 
@@ -49,8 +52,6 @@ defOperation operation batchHandler tdefinition  = case tdefinition of
     Just tdef                     -> case (decode (tdef, Graph.empty) :: Either String (Int, Definition) ) of 
         Left message              -> throw' ("Failed to decode `definition` 2: " ++ message)
         Right (defID, definition) -> do operation batchHandler defID definition
-            
-    
 
 
 defParentOperation :: (IORef Batch -> Definition -> Int -> a) -> IORef Batch
@@ -64,12 +65,11 @@ defParentOperation operation batchHandler mtdefinition mtparent = case mtdefinit
             Just tparent            -> case decode (tparent, Graph.empty) :: Either String (Definition.ID, Definition) of 
                 Left message        -> throw' $ "Failed to decode `parent`: " ++ message
                 Right (parentID, _) -> operation batchHandler definition parentID
-                
+
 
 ------ public api -------------------------------------------------
 
-
-defsGraph :: IORef Batch -> IO TDefs.DefsGraph
+defsGraph :: IORef Batch -> Maybe TLibs.Library -> IO TDefs.DefsGraph
 defsGraph batchHandler = do
     putStrLn "call defsGraph"
     batch <- readIORef batchHandler
@@ -79,7 +79,7 @@ defsGraph batchHandler = do
 
 
 newDefinition :: IORef Batch -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
-                            -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes
+                            -> Maybe TAttrs.Flags -> Maybe TAttrs.Attributes
                             -> IO TDefs.Definition
 newDefinition _ ttype timports tflags tattrs = do 
     putStrLn "Creating new definition...\t\tsuccess!"
@@ -101,7 +101,7 @@ addDefinition = defParentOperation (\batchHandler definition parentID -> do
 
 updateDefinition :: IORef Batch -> Maybe TDefs.Definition -> IO ()
 updateDefinition = defOperation (\batchHandler defID definition -> do
-    putStrLn "call updateDefinition - NOT IMPLEMENTED, sorry."
+    putStrLn "call updateDefinition"
     batch <- readIORef batchHandler
     case Batch.updateDefinition (defID, definition) batch of
         Left message   -> throw' message

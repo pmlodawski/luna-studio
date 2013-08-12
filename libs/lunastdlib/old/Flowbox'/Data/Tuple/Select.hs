@@ -4,18 +4,18 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 
 module Flowbox'.Data.Tuple.Select where
-import Common'.C''select0
-import Common'.C''select1
-import Common'.C''select2
-import Common'.C''select3
-import Common'.C''select4
-import Common'.C''select5
-import Common'.C''select6
-import Common'.C''select7
-import Common'.C''select8
-import Common'.C''select9
-import Common'.C''select10
-import Data.Tuple.OneTuple
+import           Common'.C''select0    
+import           Common'.C''select1    
+import           Common'.C''select2    
+import           Common'.C''select3    
+import           Common'.C''select4    
+import           Common'.C''select5    
+import           Common'.C''select6    
+import           Common'.C''select7    
+import           Common'.C''select8    
+import           Common'.C''select9    
+import           Common'.C''select10   
+import           Data.Tuple.OneTuple   
 
 instance C''select0 (OneTuple a) a where select0 (OneTuple x) = x; select0''M = return . select0
 

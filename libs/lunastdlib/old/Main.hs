@@ -25,11 +25,11 @@
 
 
 -- imports
-import Common'.C''print
-import Flowbox'.Core
-import Flowbox'.System.Console (Console(..))
+import           Common'.C''print          
+import           Flowbox'.Core             
+import           Flowbox'.System.Console   (Console(..))
 import qualified Flowbox'.System.Console as Console
-import Prelude(return)
+import           Prelude(return)           
 
 -- datatypes
 

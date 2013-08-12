@@ -4,12 +4,12 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 
 module Flowbox.Luna.Libs.Std.Data.NTuple.Select where
-import Flowbox.Luna.FClasses.U'select0
-import Flowbox.Luna.FClasses.U'select1
-import Flowbox.Luna.FClasses.U'select2
-import Flowbox.Luna.FClasses.U'select3
-import Flowbox.Luna.FClasses.U'select4
-import Flowbox.Luna.FClasses.U'select5
+import           Flowbox.Luna.FClasses.U'select0   
+import           Flowbox.Luna.FClasses.U'select1   
+import           Flowbox.Luna.FClasses.U'select2   
+import           Flowbox.Luna.FClasses.U'select3   
+import           Flowbox.Luna.FClasses.U'select4   
+import           Flowbox.Luna.FClasses.U'select5   
 instance C''select0' (a0,()) a0 where select0' (x,_) = x; select0'''M = return . select0'
 instance C''select0' (a0,(a1,())) a0 where select0' (x,_) = x; select0'''M = return . select0'
 instance C''select0' (a0,(a1,(a2,()))) a0 where select0' (x,_) = x; select0'''M = return . select0'

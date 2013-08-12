@@ -8,6 +8,8 @@ generated/defs_constants.cpp \
 generated/defs_types.cpp \
 generated/graph_constants.cpp \
 generated/graph_types.cpp \
+generated/graphview_constants.cpp \
+generated/graphview_types.cpp \
 generated/libs_constants.cpp \
 generated/libs_types.cpp \
 generated/projects_constants.cpp \

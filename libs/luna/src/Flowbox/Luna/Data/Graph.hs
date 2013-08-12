@@ -10,6 +10,7 @@ module Flowbox.Luna.Data.Graph (
     Graph,
     Vertex,
     LVertex,
+
     updateNode,
     labs,
     labVtx,
@@ -25,7 +26,7 @@ module Flowbox.Luna.Data.Graph (
     path,
     newVtxs,
     newVtx,
-
+    insNewNode,
     --newIds
 ) where
 
@@ -100,3 +101,9 @@ newVtxs g = [n+1..] where (_,n) = nodeRange g
 
 newVtx :: Graph a b -> Vertex
 newVtx = head . newVtxs
+
+
+insNewNode :: a -> Graph a b -> (Graph a b, Vertex)
+insNewNode node graph = (newGraph, nodeID) where
+    nodeID   = newVtx graph
+    newGraph = insNode (nodeID, node) graph

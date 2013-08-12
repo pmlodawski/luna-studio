@@ -8,8 +8,8 @@ module Flowbox'.TH.Inst (
 )
   where
 
-import Control.Monad
-import Language.Haskell.TH
+import           Control.Monad         
+import           Language.Haskell.TH   
 
 pprint_me :: Ppr a => Q a -> Q String
 pprint_me = liftM pprint

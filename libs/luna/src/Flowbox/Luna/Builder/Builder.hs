@@ -13,8 +13,8 @@ module Flowbox.Luna.Builder.Builder(
     refreshDef
 ) where
 
-import qualified Flowbox.Luna.Lib.Library              as Library
-import           Flowbox.Luna.Lib.Library                (Library)
+import qualified Flowbox.Luna.Lib.Library             as Library
+import           Flowbox.Luna.Lib.Library               (Library)
 import qualified Flowbox.Luna.Network.Def.DefManager  as DefManager
 import           Flowbox.Luna.Network.Def.DefManager    (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition  as Definition
