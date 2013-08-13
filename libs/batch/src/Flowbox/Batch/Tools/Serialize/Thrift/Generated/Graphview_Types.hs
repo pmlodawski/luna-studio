@@ -18,21 +18,21 @@ import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  return, length, IO, fromIntegral, fromEnum, toEnum,
                  (.), (&&), (||), (==), (++), ($), (-) )
 
-import Control.Exception
-import Data.ByteString.Lazy
-import Data.Hashable
-import Data.Int
-import Data.Text.Lazy ( Text )
-import qualified Data.Text.Lazy as TL
-import Data.Typeable ( Typeable )
-import qualified Data.HashMap.Strict as Map
-import qualified Data.HashSet as Set
-import qualified Data.Vector as Vector
+import           Control.Exception      
+import           Data.ByteString.Lazy   
+import           Data.Hashable          
+import           Data.Int               
+import           Data.Text.Lazy         ( Text )
+import qualified Data.Text.Lazy       as TL
+import           Data.Typeable          ( Typeable )
+import qualified Data.HashMap.Strict  as Map
+import qualified Data.HashSet         as Set
+import qualified Data.Vector          as Vector
 
-import Thrift
-import Thrift.Types ()
+import           Thrift                 
+import           Thrift.Types           ()
 
-import Graph_Types
+import           Graph_Types            
 
 
 type PortDescriptor = Vector.Vector Int32

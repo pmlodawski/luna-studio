@@ -66,7 +66,6 @@ openProject = projectOperation (\ batchHandler (_, project) -> do
     return tproject)
 
 
-
 closeProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
 closeProject = projectOperation (\ batchHandler (projectID, _) -> do
     batch <- readIORef batchHandler

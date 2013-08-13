@@ -26,6 +26,7 @@ import           Flowbox.Batch.Server.Handlers.Common
 import qualified Libs_Types                                                as TLibs
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
+import qualified Flowbox.Luna.Lib.Library                                  as Library
 import           Flowbox.Luna.Lib.Library                                    (Library(..))
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
@@ -58,9 +59,15 @@ libraries batchHandler = do
 
 
 createLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
-createLibrary _ = libOperation (\ (_, library) -> do
-    putStrLn "call createLibrary - NOT YET IMPLEMENTED"
-    return $ fst $ (encode (-1, library) :: (TLibs.Library, DefManager)))
+createLibrary batchHandler = libOperation (\ (_, library) -> do
+    putStrLn "call createLibrary"
+    batch <- readIORef batchHandler
+    let libName = Library.name library
+        libPath = Library.path library
+    case Batch.createLibrary libName libPath batch of
+        Left message -> throw' message
+        Right (newBatch, newLibrary) -> 
+            return $ fst $ (encode newLibrary :: (TLibs.Library, DefManager)))
 
 
 loadLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library

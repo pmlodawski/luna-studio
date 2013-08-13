@@ -17,6 +17,7 @@ module Flowbox.Batch.Batch (
     setActiveProject,
 
     libraries,
+    createLibrary,
     loadLibrary,
     unloadLibrary,
     storeLibrary,
@@ -36,7 +37,6 @@ module Flowbox.Batch.Batch (
     connect,
     disconnect
 ) where
-
 
 import           Flowbox.Batch.GraphView.EdgeView       (EdgeView(..))
 import qualified Flowbox.Batch.GraphView.GraphView    as GraphView
@@ -58,6 +58,8 @@ import           Flowbox.Luna.Network.Graph.Graph       (Graph)
 import qualified Flowbox.Luna.Network.Graph.Node      as Node
 import           Flowbox.Luna.Network.Graph.Node        (Node(..))
 import qualified Flowbox.Luna.Tools.Serialize.Lib     as LibSerialization
+import           Flowbox.System.UniPath                 (UniPath)
+
 
 
 data Batch = Batch { projectManager  :: ProjectManager
@@ -270,8 +272,12 @@ libraries = readonly . libManagerOp (\_ libManager ->
     let r = LibManager.labNodes libManager 
     in Right (libManager, r))
 
---createLibrary :: Batch -> Library -> Library ???
---createLibrary _ library = library
+
+createLibrary :: String -> UniPath -> Batch -> Either String (Batch, (Library.ID, Library))
+createLibrary libName libPath = libManagerOp (\_ libManager -> 
+    let library                = Library.make libName libPath
+        (newLibManager, libID) = LibManager.insNewNode library libManager
+    in Right (newLibManager, (libID, library)))
 
 
 loadLibrary :: Library -> Batch -> IO (Either String (Batch, (Library.ID, Library)))
