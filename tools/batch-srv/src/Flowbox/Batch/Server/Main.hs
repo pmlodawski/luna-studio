@@ -22,7 +22,7 @@ import           Network
 import           Thrift.Server                            (runBasicServer)
 
 -- Generated files
-import qualified Batch                                    
+import qualified Batch                                  as TBatch
 import           Batch_Iface                              
 import qualified Flowbox.Batch.Batch                    as Batch
 import           Flowbox.Batch.Batch                      (Batch(..))
@@ -43,62 +43,60 @@ port = 30521
 type BatchHandler = IORef Batch
 
 
+--newBatchHandler = newIORef Batch.empty
 newBatchHandler :: IO BatchHandler
-newBatchHandler = do
-    --ref <- newIORef Batch.empty
-    ref <- newIORef $ Batch { Batch.projectManager = ProjectManager.mkGraph [
+newBatchHandler = newIORef $ Batch.empty { Batch.projectManager = ProjectManager.mkGraph [
                                                                              (0, Sample.project) 
                                                                              --(0, Project.empty)
                                                                                                 ] []
-                            , Batch.activeProjectID = 0 }
-    return ref
+                                         , Batch.activeProjectID = 0 }
 
  
 instance Batch_Iface BatchHandler where
-    projects         = HProjects.projects
-    createProject    = HProjects.createProject
-    openProject      = HProjects.openProject
-    closeProject     = HProjects.closeProject
-    storeProject     = HProjects.storeProject
-    setActiveProject = HProjects.setActiveProject
+    projects            = HProjects.projects
+    createProject       = HProjects.createProject
+    openProject         = HProjects.openProject
+    closeProject        = HProjects.closeProject
+    storeProject        = HProjects.storeProject
+    setActiveProject    = HProjects.setActiveProject
 
-    libraries     = HLibs.libraries
-    createLibrary = HLibs.createLibrary
-    loadLibrary   = HLibs.loadLibrary
-    unloadLibrary = HLibs.unloadLibrary
-    storeLibrary  = HLibs.storeLibrary
-    libraryRootDef = HLibs.libraryRootDef
+    libraries           = HLibs.libraries
+    createLibrary       = HLibs.createLibrary
+    loadLibrary         = HLibs.loadLibrary
+    unloadLibrary       = HLibs.unloadLibrary
+    storeLibrary        = HLibs.storeLibrary
+    libraryRootDef      = HLibs.libraryRootDef
 
-    defsGraph          = HDefs.defsGraph
-    newDefinition      = HDefs.newDefinition
-    addDefinition      = HDefs.addDefinition
-    updateDefinition   = HDefs.updateDefinition
-    removeDefinition   = HDefs.removeDefinition
-    definitionChildren = HDefs.definitionChildren
-    definitionParent   = HDefs.definitionParent
+    defsGraph           = HDefs.defsGraph
+    newDefinition       = HDefs.newDefinition
+    addDefinition       = HDefs.addDefinition
+    updateDefinition    = HDefs.updateDefinition
+    removeDefinition    = HDefs.removeDefinition
+    definitionChildren  = HDefs.definitionChildren
+    definitionParent    = HDefs.definitionParent
 
-    newTypeModule   = HTypes.newTypeModule
-    newTypeClass    = HTypes.newTypeClass
-    newTypeFunction = HTypes.newTypeFunction
-    newTypeUdefined = HTypes.newTypeUdefined
-    newTypeNamed    = HTypes.newTypeNamed
-    newTypeVariable = HTypes.newTypeVariable
-    newTypeList     = HTypes.newTypeList
-    newTypeTuple    = HTypes.newTypeTuple
+    newTypeModule       = HTypes.newTypeModule
+    newTypeClass        = HTypes.newTypeClass
+    newTypeFunction     = HTypes.newTypeFunction
+    newTypeUdefined     = HTypes.newTypeUdefined
+    newTypeNamed        = HTypes.newTypeNamed
+    newTypeVariable     = HTypes.newTypeVariable
+    newTypeList         = HTypes.newTypeList
+    newTypeTuple        = HTypes.newTypeTuple
 
-    nodesGraph = HGraph.nodesGraph
-    addNode    = HGraph.addNode
-    updateNode = HGraph.updateNode
-    removeNode = HGraph.removeNode
-    connect    = HGraph.connect
-    disconnect = HGraph.disconnect
+    nodesGraph          = HGraph.nodesGraph
+    addNode             = HGraph.addNode
+    updateNode          = HGraph.updateNode
+    removeNode          = HGraph.removeNode
+    connect             = HGraph.connect
+    disconnect          = HGraph.disconnect
 
-    ping _     = putStrLn "ping"
+    ping _              = putStrLn "ping"
 
 
 main :: IO ()
 main = do
     handler <- newBatchHandler
     putStrLn "Starting the server..."
-    _ <- runBasicServer handler Batch.process port
+    _ <- runBasicServer handler TBatch.process port
     putStrLn "done."

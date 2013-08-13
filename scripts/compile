@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import os
 import os.path
 import sys
 from subprocess import call, Popen, PIPE
@@ -7,7 +8,7 @@ from subprocess import call, Popen, PIPE
 libs  = []
 execs = []
 
-options       = set(['all', 'utils', 'lunalib', 'batchlib', 'batchsrv', 'lunac', 'luna', 'batch'])
+options       = set(['all', 'utils', 'lunalib', 'batchlib', 'batchsrv', 'lunac', 'luna', 'batch', 'cppclient'])
 opts_all      = options
 opts_utils    = set(['all', 'utils'])
 opts_lunalib  = set(['all', 'lunalib'])
@@ -15,7 +16,8 @@ opts_batchlib = set(['all', 'batchlib'])
 opts_batchsrv = set(['all', 'batchsrv'])
 opts_lunac    = set(['all', 'lunac'])
 opts_luna     = set(['all', 'luna'])
-opts_batch    = set([']all', 'batch'])
+opts_batch    = set(['all', 'batch'])
+opts_cppclient= set(['all', 'cppclient'])
 
 
 # class Library:
@@ -77,6 +79,7 @@ def main():
     p_batch    = os.path.join(dir, 'libs',  'batch')
     p_batchsrv = os.path.join(dir, 'tools', 'batch-srv')
     p_lunac    = os.path.join(dir, 'tools', 'lunac')
+    p_cppclient= os.path.join(dir, 'tools', 'batch-clients', 'cpp')
 
 
     if cmds & (opts_utils | opts_luna | opts_batch):
@@ -98,6 +101,14 @@ def main():
     if cmds & (opts_lunac | opts_luna):
         info("Compiling lunac")
         if call(['cabal-dev', 'install', p_lunac, '--force-reinstalls']): error()
+
+    if cmds & (opts_cppclient):
+        info("Compiling CPP-Client")
+        cwd = os.getcwd()
+        os.chdir(p_cppclient)
+        if call(['make', 'clean']): error()
+        if call(['make']): error()
+        os.chdir(cwd)
 
 
 main()
