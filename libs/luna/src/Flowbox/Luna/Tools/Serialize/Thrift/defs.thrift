@@ -29,8 +29,7 @@ struct Definition {
     2: optional Imports          imports = []
     3: optional attrs.Flags      flags   = {}
     4: optional attrs.Attributes attribs = {}
-    5: optional libs.LibID       libID   = -1
-    6: optional DefID            defID   = -1
+    5: optional DefID            defID   = -1
 }
 
 

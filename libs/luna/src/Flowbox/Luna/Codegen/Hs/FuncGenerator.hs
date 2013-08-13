@@ -9,13 +9,15 @@ module Flowbox.Luna.Codegen.Hs.FuncGenerator(
 generateFunction
 ) where
 
+import           Data.Maybe                                (fromJust)
+
 
 import qualified Flowbox.Luna.Type.Type                  as Type
 import qualified Flowbox.Luna.Codegen.Hs.Import          as Import
 import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import           Flowbox.Luna.Network.Graph.Graph          (Graph)
-import qualified Flowbox.Luna.Network.Def.Definition        as Definition
-import           Flowbox.Luna.Network.Def.Definition          (Definition)
+import qualified Flowbox.Luna.Network.Def.Definition     as Definition
+import           Flowbox.Luna.Network.Def.Definition       (Definition)
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
@@ -29,16 +31,16 @@ import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
 import qualified Flowbox.Luna.Codegen.Hs.AST.Module      as Module
 import           Flowbox.Luna.Codegen.Hs.AST.Module        (Module)
 
-import           Flowbox.Luna.Data.List
+import           Flowbox.Luna.Data.List                    
 
 
 generateFunction :: Definition -> Module -> (Function, Module)
 generateFunction def m = (func, nmod) where
     graph      = Definition.graph def
     vertices   = Graph.topsort graph
-    nodes      = Graph.labVtxs graph vertices
+    nodes      = fromJust $ Graph.labVtxs graph vertices
     fcls       = Definition.cls def
-    fname      = Type.name fcls
+    fname      = Path.mkFuncName $ Type.name fcls
     --finputs    = Type.inputs fcls
     basefunc   = Function.basic { Function.name = fname
                                 --, Function.signature = [Expr.At Path.inputs (Expr.Tuple (replicate 3 Expr.Any))]
@@ -75,7 +77,7 @@ generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
                                        args = map Expr.VarRef vtxs
 
         Node.Call name flags _  -> (Expr.Call name' args cctx, cctx) where
-                                       name' = name ++ "'"
+                                       name' = Path.mkFuncName name
                                        vtxs  = Graph.innvtx graph nid
                                        args  = map Expr.VarRef vtxs
                                        cctx  = if Flags.io flags

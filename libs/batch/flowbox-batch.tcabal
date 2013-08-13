@@ -1,0 +1,62 @@
+Name:               flowbox-batch
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Simple
+
+Flag Debug
+  Description:      Enable debug support
+  Default:          False
+
+
+Library
+    Hs-Source-Dirs: src
+                    src/Flowbox/Batch/Tools/Serialize/Thrift/Generated
+
+    GHC-Options:    -Wall 
+
+    Extensions:     FlexibleInstances,
+                    TypeSynonymInstances
+ 
+    Exposed-modules: 
+                     `findmodules('src', '.*\.hs', exclude='(.*Flowbox/Batch/Tools/Serialize/Thrift/Generated/.*)|(.*Flowbox/Batch/Main\.hs)')`,
+                     `findmodules('src/Flowbox/Batch/Tools/Serialize/Thrift/Generated', '.*\.hs')`
+
+    Build-Depends:  base,
+                    bytestring,
+                    containers,
+                    directory,
+                    flowbox-luna,
+                    flowbox-utils,
+                    hashable,
+                    network,
+                    text,
+                    thrift,
+                    unordered-containers,
+                    vector
+
+
+
+Executable batch 
+  Main-Is:        Flowbox/Batch/Main.hs
+  Hs-Source-Dirs: src
+
+  GHC-Options:    -Wall 
+
+--  Extensions:     DoAndIfThenElse
+--                  MultiParamTypeClasses
+
+  Build-Depends:  base,
+                    bytestring,
+                    containers,
+                    directory,
+                    flowbox-luna,
+                    flowbox-utils,
+                    hashable,
+                    network,
+                    text,
+                    thrift,
+                    unordered-containers,
+                    vector

@@ -9,12 +9,12 @@ module Flowbox.Luna.Network.Def.Definition(
     Definition(..),
     ID,
     empty,
-    noImports
+    noImports,
+    mkModule
 ) where
 
 import qualified Flowbox.Luna.Type.Type           as Type
 import           Flowbox.Luna.Type.Type             (Type)
-import qualified Flowbox.Luna.Lib.Library         as Library
 import           Flowbox.Luna.Network.Graph.Graph   (Graph)
 import qualified Flowbox.Luna.Network.Graph.Graph as Graph
 import qualified Flowbox.Luna.Network.Flags       as Flags
@@ -25,22 +25,25 @@ import           Flowbox.Luna.Network.Path.Import   (Import)
 
 
 data Definition = NotLoaded
-             | Definition {
-                   cls        :: Type,
-                   graph      :: Graph,
-                   imports    :: [Import],
-                   flags      :: Flags, 
-                   attributes :: Attributes,
-                   libID      :: Library.ID
-               } deriving (Show)
+                | Definition { cls        :: Type
+                             , graph      :: Graph
+                             , imports    :: [Import]
+                             , flags      :: Flags
+                             , attributes :: Attributes
+                             } deriving (Show)
 
 type ID   = Int
 
 empty :: Definition
-empty = Definition Type.Undefined Graph.empty noImports Flags.empty Attributes.empty (-1)
+empty = Definition Type.Undefined Graph.empty noImports Flags.empty Attributes.empty
+
 
 noImports :: [Import]
 noImports = []
+
+
+mkModule :: String -> Definition
+mkModule name = empty { cls = Type.Module name }
 
 --make :: Type -> Library.ID -> Definition
 --make t lib = Definition t Graph.empty Flags.empty Attributes.empty lib

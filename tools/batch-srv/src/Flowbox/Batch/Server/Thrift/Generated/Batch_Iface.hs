@@ -56,13 +56,13 @@ class Batch_Iface a where
   unloadLibrary :: a -> Maybe Libs_Types.Library -> IO ()
   storeLibrary :: a -> Maybe Libs_Types.Library -> IO ()
   libraryRootDef :: a -> Maybe Libs_Types.Library -> IO Defs_Types.Definition
-  defsGraph :: a -> IO Defs_Types.DefsGraph
+  defsGraph :: a -> Maybe Libs_Types.Library -> IO Defs_Types.DefsGraph
   newDefinition :: a -> Maybe Types_Types.Type -> Maybe (Vector.Vector Defs_Types.Import) -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes -> IO Defs_Types.Definition
-  addDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Defs_Types.Definition -> IO Defs_Types.Definition
-  updateDefinition :: a -> Maybe Defs_Types.Definition -> IO ()
-  removeDefinition :: a -> Maybe Defs_Types.Definition -> IO ()
-  definitionChildren :: a -> Maybe Defs_Types.Definition -> IO (Vector.Vector Defs_Types.Definition)
-  definitionParent :: a -> Maybe Defs_Types.Definition -> IO Defs_Types.Definition
+  addDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Defs_Types.Definition -> Maybe Libs_Types.Library -> IO Defs_Types.Definition
+  updateDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Libs_Types.Library -> IO ()
+  removeDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Libs_Types.Library -> IO ()
+  definitionChildren :: a -> Maybe Defs_Types.Definition -> Maybe Libs_Types.Library -> IO (Vector.Vector Defs_Types.Definition)
+  definitionParent :: a -> Maybe Defs_Types.Definition -> Maybe Libs_Types.Library -> IO Defs_Types.Definition
   newTypeModule :: a -> Maybe Text -> IO Types_Types.Type
   newTypeClass :: a -> Maybe Text -> Maybe (Vector.Vector Text) -> Maybe (Vector.Vector Types_Types.Type) -> IO Types_Types.Type
   newTypeFunction :: a -> Maybe Text -> Maybe Types_Types.Type -> Maybe Types_Types.Type -> IO Types_Types.Type
@@ -71,10 +71,10 @@ class Batch_Iface a where
   newTypeVariable :: a -> Maybe Text -> IO Types_Types.Type
   newTypeList :: a -> Maybe Types_Types.Type -> IO Types_Types.Type
   newTypeTuple :: a -> Maybe (Vector.Vector Types_Types.Type) -> IO Types_Types.Type
-  graph :: a -> Maybe Defs_Types.Definition -> IO Graphview_Types.GraphView
-  addNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.Definition -> IO Graph_Types.Node
-  updateNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.Definition -> IO ()
-  removeNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.Definition -> IO ()
-  connect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Defs_Types.Definition -> IO ()
-  disconnect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Defs_Types.Definition -> IO ()
+  nodesGraph :: a -> Maybe Defs_Types.Definition -> Maybe Libs_Types.Library -> IO Graphview_Types.GraphView
+  addNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.Definition -> Maybe Libs_Types.Library -> IO Graph_Types.Node
+  updateNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.Definition -> Maybe Libs_Types.Library -> IO ()
+  removeNode :: a -> Maybe Graph_Types.Node -> Maybe Defs_Types.Definition -> Maybe Libs_Types.Library -> IO ()
+  connect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Defs_Types.Definition -> Maybe Libs_Types.Library -> IO ()
+  disconnect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Defs_Types.Definition -> Maybe Libs_Types.Library -> IO ()
   ping :: a -> IO ()

@@ -94,21 +94,21 @@ where
 
 -- FIXME - largely obsoleted by 6.4 - convert to wrappers.
 
-import System.Exit
-import System.Cmd
-import System.Log.Logger
+import           System.Exit                  
+import           System.Cmd                   
+import           System.Log.Logger            
 #if !(defined(mingw32_HOST_OS) || defined(mingw32_TARGET_OS) || defined(__MINGW32__))
-import System.Posix.IO
-import System.Posix.Process
-import System.Posix.Signals
-import qualified System.Posix.Signals
+import           System.Posix.IO              
+import           System.Posix.Process         
+import           System.Posix.Signals         
+import qualified System.Posix.Signals         
 #endif
-import System.Posix.Types
-import System.IO
-import System.IO.Error
-import Control.Concurrent(forkIO)
-import Control.Exception(finally)
-import qualified Control.Exception(try, IOException)
+import           System.Posix.Types           
+import           System.IO                    
+import           System.IO.Error              
+import           Control.Concurrent(forkIO)   
+import           Control.Exception(finally)   
+import qualified Control.Exception(try,       IOException)
 
 data PipeMode = ReadFromPipe | WriteToPipe
 

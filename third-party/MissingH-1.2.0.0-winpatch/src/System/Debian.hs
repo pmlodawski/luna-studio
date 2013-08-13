@@ -28,9 +28,9 @@ module System.Debian (-- * Control or Similar File Utilities
                        )
     where
 
-import System.Cmd
-import System.IO.Unsafe
-import System.Exit
+import           System.Cmd         
+import           System.IO.Unsafe   
+import           System.Exit        
 
 {- | The type representing the contents of a Debian control file,
 or any control-like file (such as the output from apt-cache show, etc.) -}

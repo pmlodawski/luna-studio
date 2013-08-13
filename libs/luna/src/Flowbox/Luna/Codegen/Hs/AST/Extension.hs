@@ -10,7 +10,7 @@ module Flowbox.Luna.Codegen.Hs.AST.Extension (
     genCode
 )where
 
-import           Data.String.Utils                 (join)
+import           Data.String.Utils   (join)
 
 data Extension = AlternativeLayoutRule                
                | AlternativeLayoutRuleTransitional    

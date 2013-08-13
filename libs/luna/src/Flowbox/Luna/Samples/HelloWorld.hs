@@ -6,13 +6,10 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Samples.HelloWorld(
-    workspaceImports,
-    workspace,
-    base_libman,
-    base_manager,
+    workspacelib,
+    libman,
     full_manager,
-    myFun, myFun2, myFun3, myFun4, myFun5,
-    cls1
+    cls_vector
 ) where
 
 
@@ -30,6 +27,7 @@ import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node)
 import qualified Flowbox.Luna.Network.Def.Definition     as Definition
 import           Flowbox.Luna.Network.Def.Definition       (Definition(..))
+import qualified Flowbox.Luna.Lib.Library                as Library
 import           Flowbox.Luna.Lib.Library                  (Library(..))
 import qualified Flowbox.Luna.Lib.LibManager             as LibManager
 import           Flowbox.Luna.Lib.LibManager               (LibManager(..))
@@ -39,50 +37,16 @@ import           Flowbox.Luna.Network.Path.Path            (Path(..))
 import           Flowbox.Luna.Network.Path.Import          (Import(..))
 
 
-stdLibKey = 0
-userLibKey = 1
 
-workspaceImports = [ Import (Path ["Std","IO","Console"]) ["Init", "Print"]
-                   , Import (Path ["Std","Types"])        ["Type", "New", "String"]
-                   ]
+--workspacedef = Definition.mkModule "Workspace"
 
-
-workspace = Definition.empty{ Definition.cls     = Type.Module "Workspace'" 
-                         , Definition.imports = workspaceImports
-                         , Definition.libID   = userLibKey
-                         }
-
-
-testmod  = Definition.empty{ Definition.cls     = Type.Module "Testmod" 
-                         , Definition.imports = workspaceImports
-                         , Definition.libID   = userLibKey
-                         }
-
-
-base_manager :: DefManager
-base_manager = manager where
-    manager = DefManager.insNode (100, workspace)
-            $ DefManager.empty 
-
-
-base_libman :: LibManager
-base_libman = libman where
-  -- TODO [PM] : insert proper root nodeDef' ids in lines below
-    libman = LibManager.insNode (userLibKey, Library "__workspace__" (UniPath.fromUnixString "lunalib/project") 100 ) 
-           $ LibManager.insNode (stdLibKey,  Library "std"           (UniPath.fromUnixString "lunalib/stdlib") 1)
-           $ LibManager.empty
+--core = Core.insertLibDef (0, 0, workspace, workspacedef)
+--     $ Core.empty
 
 
 
 
---sample :: LibManager
---sample = libman where
 
---    ---- user generated ------------------------------------------------------------------------------------------------------------
-
-
-
-    
 
     
 myFunGraph = Graph.insEdges [
@@ -122,12 +86,11 @@ myFunInputs = Type.Tuple [Type.TypeVariable "a",
                           Type.Named "in1" $ Type.TypeVariable "b"]
 
 myFun = Definition.empty{ Definition.cls   = (Type.Function "myFun" myFunInputs Type.noOutputs)
-                     , Definition.graph = myFunGraph
-                     , Definition.libID = userLibKey
-                     }
+                        , Definition.graph = myFunGraph
+                        }
 
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------
 
 
 
@@ -154,9 +117,8 @@ myFunInputs2 = Type.Tuple [ Type.Named "in1" $ Type.TypeVariable "a"
 
 
 myFun2 = Definition.empty{ Definition.cls   = (Type.Function "myFun2" myFunInputs2 Type.noOutputs)
-                      , Definition.graph = myFunGraph2
-                      , Definition.libID = userLibKey
-                      }
+                         , Definition.graph = myFunGraph2
+                         }
 
 myFunGraph3 = Graph.insEdges [
                               (0,  1,  Edge.standard),
@@ -198,14 +160,13 @@ myFunInputs3 = Type.Tuple [Type.TypeVariable "a",
 
 
 myFun3 = Definition.empty{ Definition.cls   = (Type.Function "myFun3" myFunInputs3 Type.noOutputs)
-                      , Definition.graph = myFunGraph3
-                      , Definition.libID = userLibKey
-                      }
+                         , Definition.graph = myFunGraph3
+                         }
 
 
 
 
-myFunGraph4 = Graph.insEdges [
+func_vec_incx_graph = Graph.insEdges [
                               (0, 1, Edge.standard),
                               (1, 2, Edge.standard),
                               (2, 3, Edge.standard),
@@ -235,13 +196,12 @@ myFunGraph4 = Graph.insEdges [
                             ]
            $ Graph.empty
 
-myFunInputs4 = Type.Tuple [Type.TypeVariable "a", 
+func_vec_incx_inputs = Type.Tuple [Type.TypeVariable "a", 
                           Type.Named "in1" $ Type.TypeVariable "b"]
 
 
-myFun4 = Definition.empty{ Definition.cls   = (Type.Function "incx" myFunInputs4 Type.noOutputs)
-                      , Definition.graph = myFunGraph4
-                      , Definition.libID = userLibKey
+func_vec_incx = Definition.empty{ Definition.cls   = (Type.Function "incx" func_vec_incx_inputs Type.noOutputs)
+                      , Definition.graph = func_vec_incx_graph
                       }
 
 
@@ -266,20 +226,119 @@ myFunGraph5 = Graph.insEdges [
                             ]
            $ Graph.empty
 
+
 myFunInputs5 = Type.Tuple []
 
 
 myFun5 = Definition.empty{ Definition.cls   = (Type.Function "mymain" myFunInputs5 Type.noOutputs)
                       , Definition.graph = myFunGraph5
-                      , Definition.libID = userLibKey
                       }
 
 
 
 
-cls1 = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
+
+func_vec_init_graph = Graph.insEdges [
+                              (0 , 1,  Edge.standard),
+                              (0 , 2,  Edge.standard),
+                              (0 , 3,  Edge.standard),
+                              (0 , 4,  Edge.standard),
+                              (1 , 5,  Edge.standard),
+                              (2 , 5,  Edge.standard),
+                              (5 , 6,  Edge.standard),
+                              (6 , 7,  Edge.standard),
+                              (7 , 8,  Edge.standard),
+                              (3 , 8,  Edge.standard),
+                              (8 , 9,  Edge.standard),
+                              (9 , 10, Edge.standard),
+                              (10, 11, Edge.standard),
+                              (4 , 11, Edge.standard),
+                              (11, 12, Edge.standard),
+                              (12, 13, Edge.standard)
+                             ]
+
+           $ Graph.insNodes [(0,  Node.mkInputs             ),
+                             (1,  Node.mkCall     "select0" ),
+                             (2,  Node.mkCall     "select1" ),
+                             (3,  Node.mkCall     "select2" ),
+                             (4,  Node.mkCall     "select3" ),
+                             (5,  Node.mkNTuple             ),
+                             (6,  Node.mkCall     "x'setter"),
+                             (7,  Node.mkCall     "select0" ),
+                             (8,  Node.mkNTuple             ),
+                             (9,  Node.mkCall     "y'setter"),
+                             (10, Node.mkCall     "select0" ),
+                             (11, Node.mkNTuple             ),
+                             (12, Node.mkCall     "z'setter"),
+                             (13, Node.mkOutputs            )
+                            ]
+           $ Graph.empty
+
+func_vec_init_inputs = Type.Tuple [Type.TypeVariable "a", 
+                          Type.Named "in1" $ Type.TypeVariable "b"]
+
+
+func_vec_init = Definition.empty{ Definition.cls   = (Type.Function "init" func_vec_init_inputs Type.noOutputs)
+                      , Definition.graph = func_vec_init_graph
+                      }
+
+
+
+
+func_main1_graph = Graph.insEdges [
+                              (2, 3, Edge.standard),
+                              (3, 5, Edge.standard),
+                              (4, 5, Edge.standard),
+                              (5, 6, Edge.standard)
+                             ]
+
+           $ Graph.insNodes [(0,  Node.mkInputs             ),
+                             (1,  Node.mkOutputs            ),
+                             (2,  Node.mkType     "Console" ),
+                             (3,  Node.mkNew                ),
+                             (4,  Node.Default $ DefaultValue.DefaultString "hello world!"),
+                             (5,  Node.mkNTuple             ),
+                             (6,  Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty)
+                            ]
+           $ Graph.empty
+
+
+func_main1_inputs = Type.Tuple []
+
+
+func_main1 = Definition.empty{ Definition.cls   = (Type.Function "testtypes" func_main1_inputs Type.noOutputs)
+                      , Definition.graph = func_main1_graph
+                      }
+
+
+--mainFunGraph = Graph.insEdges [
+--                              (2, 3, Edge.standard),
+--                              (3, 5, Edge.standard),
+--                              (4, 5, Edge.standard),
+--                              (5, 6, Edge.standard)
+--                             ]
+
+--           $ Graph.insNodes [(0,  Node.mkInputs             ),
+--                             (1,  Node.mkOutputs            ),
+--                             (2,  Node.mkType     "Console" ),
+--                             (3,  Node.mkNew                ),
+--                             (4,  Node.Default $ DefaultValue.DefaultString "hello world!"),
+--                             (5,  Node.mkNTuple             ),
+--                             (6,  Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty)
+--                            ]
+--           $ Graph.empty
+
+--mainFunInputs = Type.Tuple []
+
+
+--mainFun = Definition.empty{ Definition.cls   = (Type.Function "mymain" mainFunInputs Type.noOutputs)
+--                      , Definition.graph = mainFunGraph
+--                      }
+
+
+
+cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
                     , Definition.graph = Graph.empty
-                    , Definition.libID = userLibKey
                     }
 
 --iface1 = Definition.empty{  Definition.cls = Type.Interface "Ivector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
@@ -302,17 +361,33 @@ cls1 = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Name
 
 
 
-full_manager :: DefManager
-full_manager =  DefManager.addToParentMany [(2, 5, myFun),
-                                            (2, 4, myFun2),
-                                            (2, 3, myFun3),
-                                            (1, 2, myFun3),
-                                            (100, 1, myFun2)]
---full_manager =  DefManager.addToParentMany [ --(1, 2, myFun2),
---                                           (10, 1, myFun5),
---                                           (100, 10, cls1)
---                                           ]
-             $ base_manager
+--full_manager :: DefManager
+--full_manager =  DefManager.addToParentMany [(2, 5, myFun),
+--                                            (2, 4, myFun2),
+--                                            (2, 3, myFun3),
+--                                            (1, 2, myFun3),
+--                                            (100, 1, myFun2)]
+
+
+base_workspacelib    = Library.make "Workspace" (UniPath.fromUnixString "samples/workspace/TestProject/libs")
+
+
+full_manager =  DefManager.addToParentMany [ (1, 100, func_main1),
+                                             (1, 3, func_vec_incx)
+                                           , (1, 2, func_vec_init)
+                                           , (0, 1, cls_vector)
+                                           ]
+             $ Library.defs base_workspacelib
+
+
+
+workspacelib = base_workspacelib { defs = full_manager }
+
+libman :: LibManager
+libman = libman where
+    libman = LibManager.insNode (0, workspacelib) 
+           $ LibManager.empty
+
 
 --full_manager :: DefManager
 --full_manager =  DefManager.addToParentMany [ (100, 101, testmod)
@@ -335,5 +410,47 @@ full_manager =  DefManager.addToParentMany [(2, 5, myFun),
 
     
 
-     
+---------------------------------------
+
+
+--stdLibKey = 0
+--userLibKey = 1
+
+--workspaceImports = [ Import (Path ["Std","IO","Console"]) ["Init", "Print"]
+--                   , Import (Path ["Std","Types"])        ["Type", "New", "String"]
+--                   ]
+
+
+--workspace_old = Definition.empty{ Definition.cls     = Type.Module "Workspace'" 
+--                         , Definition.imports = workspaceImports
+--                         , Definition.libID   = userLibKey
+--                         }
+
+
+--testmod  = Definition.empty{ Definition.cls     = Type.Module "Testmod" 
+--                         , Definition.imports = workspaceImports
+--                         , Definition.libID   = userLibKey
+--                         }
+
+
+--base_manager :: DefManager
+--base_manager = manager where
+--    manager = DefManager.insNode (100, workspace_old)
+--            $ DefManager.empty 
+
+
+--base_libman :: LibManager
+--base_libman = libman where
+--  -- TODO [PM] : insert proper root nodeDef' ids in lines below
+--    libman = LibManager.insNode (userLibKey, Library "__workspace__" (UniPath.fromUnixString "lunalib/project")) 
+--           $ LibManager.insNode (stdLibKey,  Library "std"           (UniPath.fromUnixString "lunalib/stdlib"))
+--           $ LibManager.empty
+
+
+
+
+----sample :: LibManager
+----sample = libman where
+
+----    ---- user generated ------------------------------------------------------------------------------------------------------------
 

@@ -27,14 +27,14 @@ module Thrift.Protocol
     , ProtocolExnType(..)
     ) where
 
-import Control.Monad ( replicateM_, unless )
-import Control.Exception
-import Data.ByteString.Lazy
-import Data.Int
-import Data.Text.Lazy ( Text )
-import Data.Typeable ( Typeable )
+import           Control.Monad          ( replicateM_, unless )
+import           Control.Exception      
+import           Data.ByteString.Lazy   
+import           Data.Int               
+import           Data.Text.Lazy         ( Text )
+import           Data.Typeable          ( Typeable )
 
-import Thrift.Transport
+import           Thrift.Transport       
 
 
 data ThriftType

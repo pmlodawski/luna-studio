@@ -37,15 +37,15 @@ int main(int argc, char **argv) {
 
         vector<Library> registeredLibs;
 
-        Library stdlib;
-        stdlib.__set_name("lib1");
-        stdlib.__set_path("/opt/luna/lib");
+        Library lib1;
+        lib1.__set_name("lib1");
+        lib1.__set_path("/opt/luna/lib");
 
         Library userlib;
         userlib.__set_name("lib2");
         userlib.__set_path("~/luna-projects/myproj");
 
-        batch.loadLibrary(stdlib, stdlib);
+        batch.loadLibrary(lib1, lib1);
         batch.loadLibrary(userlib, userlib);
         batch.libraries(registeredLibs);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
@@ -83,11 +83,10 @@ int main(int argc, char **argv) {
         cout << myModule.defID << endl;
         Definition fun;
         fun.__set_cls(funType);
-        
-        batch.addDefinition(fun, fun, myModule);
-        batch.updateDefinition(fun);
-        batch.removeDefinition(fun);
-        batch.addDefinition(fun, fun, myModule);
+        batch.addDefinition(fun, fun, myModule, userlib);
+        batch.updateDefinition(fun, userlib);
+        batch.removeDefinition(fun, userlib);
+        batch.addDefinition(fun, fun, myModule, userlib);
 
         Type myclassType;
         batch.newTypeClass(myclassType, "myclass", {}, {});
@@ -95,46 +94,51 @@ int main(int argc, char **argv) {
         Definition myclass;
         myclass.__set_cls(myclassType);
 
-        batch.addDefinition(myclass, myclass, myModule);
+        batch.addDefinition(myclass, myclass, myModule, userlib);
 
         vector<Definition> children;
-        batch.definitionChildren(children, myModule);
+        batch.definitionChildren(children, myModule, userlib);
         cout << "`my` module has " << children.size() << " children." << endl;
 
         Definition parent;
-        batch.definitionParent(parent, fun);
+        batch.definitionParent(parent, fun, userlib);
 
 
         DefsGraph defsGraph;
-        batch.defsGraph(defsGraph);
-        cout << "DefsGraph has " 
+        batch.defsGraph(defsGraph, userlib);
+        cout << "userlib DefsGraph has " 
+             << defsGraph.defs.size() << " defs and " 
+             << defsGraph.edges.size() << " edges" << endl;
+
+        batch.defsGraph(defsGraph, registeredLibs[0]);
+        cout << "stdlib DefsGraph has " 
              << defsGraph.defs.size() << " defs and " 
              << defsGraph.edges.size() << " edges" << endl;
 
         /* Add some nodes */
 
         GraphView graph;
-        batch.graph(graph, fun);
+        batch.nodesGraph(graph, fun, userlib);
 
         Node inputs;
         inputs.__set_cls(NodeType::Inputs);
-        batch.addNode(inputs, inputs, fun);
+        batch.addNode(inputs, inputs, fun, userlib);
 
         Node outputs;
         outputs.__set_cls(NodeType::Outputs);
-        batch.addNode(outputs, outputs, fun);
-        batch.updateNode(outputs, fun);
+        batch.addNode(outputs, outputs, fun, userlib);
+        batch.updateNode(outputs, fun, userlib);
 
         Node dummy;
         dummy.__set_cls(NodeType::Call);
         dummy.__set_name("dummy");
-        batch.addNode(dummy, dummy, fun);
+        batch.addNode(dummy, dummy, fun, userlib);
         dummy.__set_name("fun");
-        batch.updateNode(dummy, fun);
-        batch.removeNode(dummy, fun);
-        batch.connect(inputs, {1, 2, 5}, outputs, {1}, fun);
-        batch.connect(inputs, {7, 8}, outputs, {5}, fun);
-        batch.disconnect(inputs, {1, 2, 5}, outputs, {1}, fun);
+        batch.updateNode(dummy, fun, userlib);
+        batch.removeNode(dummy, fun, userlib);
+        batch.connect(inputs, {1, 2, 5}, outputs, {1}, fun, userlib);
+        batch.connect(inputs, {7, 8}, outputs, {5}, fun, userlib);
+        batch.disconnect(inputs, {1, 2, 5}, outputs, {1}, fun, userlib);
 
     } catch (ArgumentException e) {
         cout << "Batch returned an error: "<< endl

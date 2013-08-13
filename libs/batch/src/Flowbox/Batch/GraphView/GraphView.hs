@@ -14,21 +14,21 @@ module Flowbox.Batch.GraphView.GraphView(
     toGraph
 ) where
 
-import           Data.Map                                   (Map)
-import qualified Data.Map                                 as Map
-import           Flowbox.Batch.GraphView.EdgeView           (EdgeView(..))
-import qualified Flowbox.Luna.Data.Graph                  as DG
-import           Flowbox.Luna.Data.Graph                  hiding(Graph, Edge, empty)
-import qualified Flowbox.Luna.Network.Graph.Graph         as Graph
-import           Flowbox.Luna.Network.Graph.Graph           (Graph)
+import           Data.Map                           (Map)
+import qualified Data.Map                         as Map
+import           Flowbox.Batch.GraphView.EdgeView   (EdgeView(..))
+import qualified Flowbox.Luna.Data.Graph          as DG
+import           Flowbox.Luna.Data.Graph                  hiding(Graph, Edge, empty, fromGraph)
+import qualified Flowbox.Luna.Network.Graph.Graph as Graph
+import           Flowbox.Luna.Network.Graph.Graph   (Graph)
 
-import qualified Flowbox.Luna.Network.Graph.Edge          as Edge
-import           Flowbox.Luna.Network.Graph.Edge            (Edge(..))
-import qualified Flowbox.Luna.Network.Graph.Node          as Node
-import           Flowbox.Luna.Network.Graph.Node            (Node(..))
-import qualified Flowbox.Luna.Network.Attributes          as Attributes
-import           Flowbox.Luna.Network.Attributes            (Attributes)
-import qualified Flowbox.Luna.Network.Flags               as Flags
+import qualified Flowbox.Luna.Network.Graph.Edge  as Edge
+import           Flowbox.Luna.Network.Graph.Edge    (Edge(..))
+import qualified Flowbox.Luna.Network.Graph.Node  as Node
+import           Flowbox.Luna.Network.Graph.Node    (Node(..))
+import qualified Flowbox.Luna.Network.Attributes  as Attributes
+import           Flowbox.Luna.Network.Attributes    (Attributes)
+import qualified Flowbox.Luna.Network.Flags       as Flags
 
 
 type GraphView = DG.Graph Node EdgeView

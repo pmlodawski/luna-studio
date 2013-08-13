@@ -40,9 +40,9 @@ Modified December, 2004 by John Goerzen:
 
 module Data.Hash.CRC32.Posix where
 
-import Data.Array
-import Data.Bits
-import Data.Word
+import           Data.Array   
+import           Data.Bits    
+import           Data.Word    
 
 iter_crc32       :: Word32 -> Char -> Word32
 iter_crc32 sumval ch = (sumval `shiftL` 8) `xor`

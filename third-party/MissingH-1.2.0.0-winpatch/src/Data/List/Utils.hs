@@ -50,8 +50,8 @@ module Data.List.Utils(-- * Merging
                     ) where
 import Data.List(intersperse, concat, isPrefixOf, isSuffixOf, elemIndices,
                 elemIndex, elemIndices, tails, find, findIndex, isInfixOf, nub)
-import Control.Monad.State(State, get, put)
-import Data.Maybe(isJust)
+import           Control.Monad.State   (State, get, put)
+import           Data.Maybe(isJust)    
 
 
 {- | Merge two sorted lists into a single, sorted whole.

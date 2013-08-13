@@ -38,14 +38,14 @@ module System.FileArchive.GZip (
                                  )
     where
 
-import Data.Compression.Inflate (inflate_string_remainder)
-import Data.Hash.CRC32.GZip (update_crc)
-import Data.Bits ((.&.))
+import           Data.Compression.Inflate   (inflate_string_remainder)
+import           Data.Hash.CRC32.GZip       (update_crc)
+import           Data.Bits                  ((.&.))
 import Control.Monad.Error -- (Error(), strMsg, throwError)
-import Data.Char (ord)
-import Data.Word (Word32())
-import Data.Bits.Utils (fromBytes)
-import System.IO (hGetContents, hPutStr, Handle())
+import           Data.Char                  (ord)
+import           Data.Word                  (Word32())
+import           Data.Bits.Utils            (fromBytes)
+import           System.IO                  (hGetContents, hPutStr, Handle())
 
 data GZipError = CRCError               -- ^ CRC-32 check failed
                | NotGZIPFile            -- ^ Couldn't find a GZip header

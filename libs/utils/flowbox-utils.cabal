@@ -1,3 +1,9 @@
+--------------------------------------------------
+-- This is a generated cabal configuration file --
+-- DO NOT EDIT!                                 --
+-- Use gencabal instead                         --
+--------------------------------------------------
+
 Name:           flowbox-utils
 Version:        0.1
 Cabal-Version:  >= 1.8
@@ -15,7 +21,9 @@ Library
   Extensions:     DoAndIfThenElse
 
   Exposed-modules: 
-        Flowbox.System.UniPath
+        Flowbox.System.UniPath,
+        Flowbox.System.IO,
+        Flowbox.System.Directory,
         Flowbox.System.IO.Serializer
 
   Build-Depends:  base,

@@ -8,8 +8,8 @@ For license and copyright information, see the file LICENSE
 -}
 
 module Pathtest(tests) where
-import Test.HUnit
-import System.Path
+import           Test.HUnit    
+import           System.Path   
 
 test_absNormPath =
     let f base p exp = TestLabel (show (base, p)) $ TestCase $ exp @=? absNormPath base p

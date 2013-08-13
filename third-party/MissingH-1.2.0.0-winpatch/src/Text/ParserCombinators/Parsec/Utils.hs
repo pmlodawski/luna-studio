@@ -29,7 +29,7 @@ module Text.ParserCombinators.Parsec.Utils(-- * Generalized Utilities
                        notMatching
                       ) where
 
-import Text.ParserCombinators.Parsec
+import           Text.ParserCombinators.Parsec   
 
 type GeneralizedToken a = (SourcePos, a)
 type GeneralizedTokenParser a st b = GenParser (GeneralizedToken a) st b

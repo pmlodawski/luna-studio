@@ -23,17 +23,17 @@ module Thrift.Server
     , runThreadedServer
     ) where
 
-import Control.Concurrent ( forkIO )
-import Control.Exception
-import Control.Monad ( forever, when )
+import           Control.Concurrent          ( forkIO )
+import           Control.Exception           
+import           Control.Monad               ( forever, when )
 
-import Network
+import           Network                     
 
-import System.IO
+import           System.IO                   
 
-import Thrift
-import Thrift.Transport.Handle()
-import Thrift.Protocol.Binary
+import           Thrift                      
+import           Thrift.Transport.Handle()   
+import           Thrift.Protocol.Binary      
 
 
 -- | A threaded sever that is capable of using any Transport or Protocol

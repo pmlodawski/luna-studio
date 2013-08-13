@@ -11,11 +11,11 @@ Utility for parsing dates.
 -}
 module System.Time.ParseDate (parseCalendarTime) where
 
-import Control.Monad (liftM)
-import Data.Char (isSpace)
-import System.Locale
-import System.Time
-import Text.ParserCombinators.Parsec
+import           Control.Monad                   (liftM)
+import           Data.Char                       (isSpace)
+import           System.Locale                   
+import           System.Time                     
+import           Text.ParserCombinators.Parsec   
 
 {- | Parse a date string as formatted by 'formatCalendarTime'.
 

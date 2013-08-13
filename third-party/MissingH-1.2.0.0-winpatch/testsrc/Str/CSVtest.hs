@@ -8,9 +8,9 @@ For license and copyright information, see the file LICENSE
 -}
 
 module Str.CSVtest(tests) where
-import Test.HUnit
-import Data.CSV
-import Text.ParserCombinators.Parsec
+import           Test.HUnit                      
+import           Data.CSV                        
+import           Text.ParserCombinators.Parsec   
 
 test_csv =
     let f inp exp = TestLabel inp $ TestCase $ 

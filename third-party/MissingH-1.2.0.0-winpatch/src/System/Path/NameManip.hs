@@ -14,8 +14,8 @@ Written by Volker Wysk
 
 module System.Path.NameManip where
 
-import Data.List (intersperse)
-import System.Directory (getCurrentDirectory)
+import           Data.List          (intersperse)
+import           System.Directory   (getCurrentDirectory)
 
 {- | Split a path in components. Repeated \"@\/@\" characters don\'t lead to empty
 components. \"@.@\" path components are removed. If the path is absolute, the first component

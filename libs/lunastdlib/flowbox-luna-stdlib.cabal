@@ -1,0 +1,50 @@
+Name:           flowbox-luna-stdlib
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+
+Library
+  Hs-Source-Dirs: src
+  GHC-Options:    -Wall 
+  Extensions:     DoAndIfThenElse
+                  ForeignFunctionInterface
+                  MultiParamTypeClasses
+  Exposed-modules:
+                  Flowbox.Luna.Helpers.Core,
+                  Flowbox.Luna.Helpers.TH.Inst,
+                  Flowbox.Luna.Libs.Std.Data.NTuple.Select,
+                  Flowbox.Luna.Libs.Std.Data.Tuple.Select,
+                  Flowbox.Luna.Libs.Std.System.Console,
+                  Flowbox.Luna.Libs.Std.Base,
+                  Flowbox.Luna.FClasses.U'add,
+                  Flowbox.Luna.FClasses.U'incx,
+                  Flowbox.Luna.FClasses.U'init,
+                  Flowbox.Luna.FClasses.U'print,
+                  Flowbox.Luna.FClasses.U'select0,
+                  Flowbox.Luna.FClasses.U'select1,
+                  Flowbox.Luna.FClasses.U'select2,
+                  Flowbox.Luna.FClasses.U'select3,
+                  Flowbox.Luna.FClasses.U'select4,
+                  Flowbox.Luna.FClasses.U'select5,
+                  Flowbox.Luna.FClasses.U'select6,
+                  Flowbox.Luna.FClasses.U'select7,
+                  Flowbox.Luna.FClasses.U'select8,
+                  Flowbox.Luna.FClasses.U'select9,
+                  Flowbox.Luna.FClasses.U'select10,
+                  Flowbox.Luna.FClasses.U'x'getter,
+                  Flowbox.Luna.FClasses.U'y'getter,
+                  Flowbox.Luna.FClasses.U'z'getter,
+                  Flowbox.Luna.FClasses.U'x'setter,
+                  Flowbox.Luna.FClasses.U'y'setter,
+                  Flowbox.Luna.FClasses.U'z'setter
+
+  
+  Build-Depends:  base, 
+                  template-haskell,
+                  OneTuple
+
+

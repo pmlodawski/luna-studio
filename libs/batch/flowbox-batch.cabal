@@ -1,3 +1,9 @@
+--------------------------------------------------
+-- This is a generated cabal configuration file --
+-- DO NOT EDIT!                                 --
+-- Use gencabal instead                         --
+--------------------------------------------------
+
 Name:               flowbox-batch
 Version:            0.1
 Cabal-Version:      >= 1.8
@@ -20,18 +26,21 @@ Library
     Extensions:     FlexibleInstances,
                     TypeSynonymInstances
  
-    Exposed-modules:
-                    Flowbox.Batch.Batch
-                    Flowbox.Batch.Project.Project
-                    Flowbox.Batch.Project.ProjectManager
-                    Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView
-                    Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects
-                    Flowbox.Batch.GraphView.EdgeView
-                    Flowbox.Batch.GraphView.GraphView
-                    Graphview_Consts
-                    Graphview_Types
-                    Projects_Consts
-                    Projects_Types
+    Exposed-modules: 
+                     
+        Flowbox.Batch.Batch,
+        Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects,
+        Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView,
+        Flowbox.Batch.GraphView.GraphView,
+        Flowbox.Batch.GraphView.EdgeView,
+        Flowbox.Batch.Project.Project,
+        Flowbox.Batch.Project.ProjectManager,
+        Flowbox.Batch.Samples.Modules,
+                     
+        Graphview_Consts,
+        Projects_Consts,
+        Graphview_Types,
+        Projects_Types
 
     Build-Depends:  base,
                     bytestring,

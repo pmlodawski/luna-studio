@@ -8,8 +8,8 @@ For license and copyright information, see the file LICENSE
 
 
 module CRC32GZIPtest(tests) where
-import Test.HUnit
-import Data.Hash.CRC32.GZip
+import           Test.HUnit             
+import           Data.Hash.CRC32.GZip   
 
 test_crcgzip =
     let f msg inp exp = TestLabel msg $ TestCase $ assertEqual "" exp (calc_crc32 inp) in

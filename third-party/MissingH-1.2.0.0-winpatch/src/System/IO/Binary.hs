@@ -70,16 +70,16 @@ module System.IO.Binary(
                        hFullBlockInteract, fullBlockInteract
                         ) where
 
-import Data.Word (Word8())
-import Foreign.C.String (peekCStringLen, withCString)
-import Foreign.C.Types (CChar())
-import Foreign.ForeignPtr
-import Foreign.Marshal.Array (peekArray, withArray)
-import Foreign.Ptr
-import System.IO
-import System.IO.HVFS
-import System.IO.HVIO
-import System.IO.Unsafe (unsafeInterleaveIO)
+import           Data.Word               (Word8())
+import           Foreign.C.String        (peekCStringLen, withCString)
+import           Foreign.C.Types         (CChar())
+import           Foreign.ForeignPtr      
+import           Foreign.Marshal.Array   (peekArray, withArray)
+import           Foreign.Ptr             
+import           System.IO               
+import           System.IO.HVFS          
+import           System.IO.HVIO          
+import           System.IO.Unsafe        (unsafeInterleaveIO)
 
 {- | Provides support for handling binary blocks with convenient
 types.

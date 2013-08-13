@@ -5,38 +5,36 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 module Flowbox.Luna.Tools.Serialize.Lib(
-    storeLib
-    --restoreLib
+    storeLibrary,
+    restoreLibrary,
 ) where
 
-import System.Directory
-import System.IO
-import Text.Regex.Posix
+import           System.Directory                                            
+import           System.IO                                                   
+import           Text.Regex.Posix                                            
 
-import Thrift
-import Thrift.Transport.Handle
-import Thrift.Protocol
-import Thrift.Protocol.Binary
+import           Thrift                                                      
+import           Thrift.Transport.Handle                                     
+import           Thrift.Protocol                                             
+import           Thrift.Protocol.Binary                                      
 
-import qualified Defs_Types                               as TDefs
-import qualified Graph_Types                              as TGraph
-import qualified Flowbox.System.UniPath                   as UniPath
-import           Flowbox.System.UniPath                     (UniPath)
-import qualified Flowbox.Luna.Core                        as Core
-import           Flowbox.Luna.Core                          (Core)
-import qualified Flowbox.Luna.Network.Def.DefManager      as DefManager
-import           Flowbox.Luna.Network.Def.DefManager        (DefManager)
-import qualified Flowbox.Luna.Network.Def.Definition      as Definition
-import           Flowbox.Luna.Network.Def.Definition        (Definition)
-import qualified Flowbox.Luna.Lib.Library                 as Library
-import           Flowbox.Luna.Lib.Library                   (Library)
-import qualified Flowbox.Luna.Type.Type                   as Type
-import           Flowbox.Luna.Type.Type                     (Type(..))
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
+import qualified Defs_Types                                                as TDefs
+import qualified Graph_Types                                               as TGraph
+import qualified Flowbox.System.UniPath                                    as UniPath
+import           Flowbox.System.UniPath                                      (UniPath)
+import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
+import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
+import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
+import           Flowbox.Luna.Network.Def.Definition                         (Definition)
+import qualified Flowbox.Luna.Lib.Library                                  as Library
+import           Flowbox.Luna.Lib.Library                                    (Library)
+import qualified Flowbox.Luna.Type.Type                                    as Type
+import           Flowbox.Luna.Type.Type                                      (Type(..))
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
-import qualified Flowbox.System.IO.Serializer             as Serializer
-import           Flowbox.System.IO.Serializer               (Serializable(..))
+import qualified Flowbox.System.IO.Serializer                              as Serializer
+import           Flowbox.System.IO.Serializer                                (Serializable(..))
 
 
 
@@ -73,7 +71,6 @@ generate defManager upath defID def = sdef:sgraph:schildren where
     sgraph        = Serializable graphFilename saveGraph
 
 
-
 checkedGenerate :: DefManager -> UniPath -> Definition.ID -> [Serializable]
 checkedGenerate defManager udirpath defID = s where
     s = case DefManager.lab defManager defID of
@@ -86,18 +83,19 @@ checkedGenerate defManager udirpath defID = s where
                 where gen aname = generate defManager (UniPath.append aname udirpath) defID def
 
 
-
-storeLib :: Core -> Library -> IO ()
-storeLib project lib = do 
-    let defManager   = Core.defManager project
+storeLibrary :: Library -> IO ()
+storeLibrary lib = do 
+    let defManager   = Library.defs lib
         rootPath     = Library.path lib
-        libRootDefID = Library.rootDefID lib
+        libRootDefID = Library.rootDefID
 
         defs = checkedGenerate defManager rootPath libRootDefID 
 
     Serializer.serializeMany defs
 
     return ()
+
+
 
 
 
@@ -116,15 +114,11 @@ storeLib project lib = do
 --          nodeDefFilePattern = "[.]node$"
 --          folderFilePattern  = "[A-Za-z0-9]+$"
 
-
---restoreLib :: Core -> Library -> IO Core
---restoreLib project lib = do 
---    let defManager = Core.defManager project
---        rootPath = Library.path lib
-
---    newDefManager <- restoreNode defManager rootPath
-
---    return $ project {Core.defManager = newDefManager}
+-- mocked
+restoreLibrary :: String -> UniPath -> IO Library
+restoreLibrary name path = do 
+    putStrLn "restoreLibrary - NOT IMPLEMENTED"
+    return $ Library.make name path
 
 
 

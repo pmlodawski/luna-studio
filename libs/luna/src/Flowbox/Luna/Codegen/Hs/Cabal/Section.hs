@@ -11,18 +11,18 @@ module Flowbox.Luna.Codegen.Hs.Cabal.Section (
     genCode,
 )where
 
-import Debug.Trace
+import           Debug.Trace                             
 
-import           Data.String.Utils                         (join)
+import           Data.String.Utils                       (join)
 
 
-import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
-import           Flowbox.Luna.Codegen.Hs.AST.Expr          (Expr)
-import qualified Flowbox.Luna.Codegen.Hs.Path            as Path
-import qualified Flowbox.Luna.Codegen.Hs.AST.Function    as Function
-import           Flowbox.Luna.Codegen.Hs.AST.Function      (Function)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Extension   as Extension
-import           Flowbox.Luna.Codegen.Hs.AST.Extension     (Extension)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Expr      as Expr
+import           Flowbox.Luna.Codegen.Hs.AST.Expr        (Expr)
+import qualified Flowbox.Luna.Codegen.Hs.Path          as Path
+import qualified Flowbox.Luna.Codegen.Hs.AST.Function  as Function
+import           Flowbox.Luna.Codegen.Hs.AST.Function    (Function)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Extension as Extension
+import           Flowbox.Luna.Codegen.Hs.AST.Extension   (Extension)
 
 
 data SectionType = Library | Executable deriving(Show)

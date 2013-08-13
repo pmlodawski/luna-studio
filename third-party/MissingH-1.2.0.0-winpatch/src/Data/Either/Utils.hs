@@ -26,7 +26,7 @@ module Data.Either.Utils
      eitherToMonadError,
      fromLeft, fromRight, fromEither
 ) where
-import Control.Monad.Error
+import           Control.Monad.Error   
 
 {- | Converts a Maybe value to an Either value, using the supplied parameter
 as the Left value if the Maybe is Nothing.

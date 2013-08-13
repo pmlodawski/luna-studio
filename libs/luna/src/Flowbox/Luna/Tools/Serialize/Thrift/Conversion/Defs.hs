@@ -10,7 +10,7 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs where
 
-import           Data.Int
+import           Data.Int                                                    
 import           Data.Text.Lazy                                              (pack, unpack)
 import qualified Data.HashMap.Strict                                       as HashMap
 import qualified Data.Vector                                               as Vector
@@ -24,7 +24,7 @@ import qualified Flowbox.Luna.Network.Def.DefManager                       as De
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager(..))
 import           Flowbox.Luna.Network.Path.Import                            (Import(..))
 import qualified Flowbox.Luna.Network.Path.Path                            as Path
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs        ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types        ()
 
@@ -78,37 +78,34 @@ instance Convert [Import] TDefs.Imports where
 
 
 instance Convert (Int, Definition) (TDefs.Definition, Graph) where
-  encode (defID, Definition acls agraph aimports aflags aattributes alibID) = (tdef, agraph) where
+  encode (defID, Definition acls agraph aimports aflags aattributes) = (tdef, agraph) where
      ttype       = Just $ encode acls
      timports    = Just $ encode aimports
      tflags      = Just $ encode aflags
      tattributes = Just $ encode aattributes
-     tlibID      = Just $ itoi32 alibID
      tdefID      = Just $ itoi32 defID
-     tdef = TDefs.Definition ttype timports tflags tattributes tlibID tdefID 
-  decode td = case td of 
-     (TDefs.Definition (Just tcls) (Just timports) (Just tflags) (Just tattributes) (Just tlibID) (Just tdefID), agraph)
-           -> d where
-                    d = case (decode tcls, decode timports, decode tflags, decode tattributes) of
-                        (Right acls, Right aimports, Right aflags, Right aattributes)
-                               -> Right (adefID, nodeDef) where
-                                  alibID = i32toi tlibID
-                                  nodeDef = Definition acls agraph aimports aflags aattributes alibID
-                                  adefID = i32toi tdefID
-                        (Right _   , Right _      , Right _     , Left message) 
-                               -> Left $ "Failed to deserialize `attributes` : " ++ message
-                        (Right _   , Right _      , Left message, _           ) 
-                               -> Left $ "Failed to deserialize `flags` : " ++ message
-                        (Right _   , Left message , _           , _           )
-                               -> Left $ "Failed to deserialize `imports` : " ++ message
-                        (Left message, _          , _           , _           )
-                               -> Left $ "Failed to deserialize `cls` : " ++ message
-     (TDefs.Definition (Just _) (Just _) (Just _) (Just _) (Just _) Nothing, _) -> Left "`defID` field is missing"
-     (TDefs.Definition (Just _) (Just _) (Just _) (Just _) Nothing  _      , _) -> Left "`libID` field is missing"
-     (TDefs.Definition (Just _) (Just _) (Just _) Nothing  _        _      , _) -> Left "`attributes` field is missing"
-     (TDefs.Definition (Just _) (Just _) Nothing  _        _        _      , _) -> Left "`flags` field is missing"
-     (TDefs.Definition (Just _) Nothing  _        _        _        _      , _) -> Left "`imports` field is missing"
-     (TDefs.Definition Nothing  _        _        _        _        _      , _) -> Left "`type` field is missing"
+     tdef = TDefs.Definition ttype timports tflags tattributes tdefID 
+  decode (TDefs.Definition mtcls mtimports mtflags mtattributes mtdefID, agraph) = case mtcls of 
+    Nothing                                           -> Left "`type` field is missing"
+    Just tcls                                         -> case mtimports of 
+        Nothing                                       -> Left "`imports` field is missing"
+        Just timports                                 -> case mtflags of 
+            Nothing                                   -> Left "`flags` field is missing"
+            Just tflags                               -> case mtattributes of 
+                Nothing                               -> Left "`attributes` field is missing"
+                Just tattributes                      -> case mtdefID of 
+                    Nothing                           -> Left "`defID` field is missing"
+                    Just tdefID                       -> case decode tcls of 
+                        Left message                  -> Left $ "Failed to deserialize `cls` : " ++ message
+                        Right acls                    -> case decode timports of 
+                            Left message              -> Left $ "Failed to deserialize `imports` : " ++ message
+                            Right aimports            -> case decode tflags of 
+                                Left message          -> Left $ "Failed to deserialize `flags` : " ++ message
+                                Right aflags          -> case decode tattributes of
+                                    Left message      -> Left $ "Failed to deserialize `attributes` : " ++ message
+                                    Right aattributes -> Right (adefID, nodeDef) where
+                                        nodeDef = Definition acls agraph aimports aflags aattributes
+                                        adefID = i32toi tdefID
 
 
 

@@ -8,20 +8,42 @@
 module Flowbox.Luna.Lib.Library(
     Library(..),
     ID,
-    empty
+    empty,
+    rootDefID,
+    make
 ) where
 
-import qualified Flowbox.System.UniPath as UniPath
-import           Flowbox.System.UniPath   (UniPath)
+import qualified Flowbox.System.UniPath              as UniPath
+import           Flowbox.System.UniPath                (UniPath)
+import qualified Flowbox.Luna.Network.Def.DefManager as DefManager
+import           Flowbox.Luna.Network.Def.DefManager   (DefManager)
+import qualified Flowbox.Luna.Network.Def.Definition as Definition
+import           Flowbox.Luna.Network.Def.Definition   (Definition)
 
-data Library =  Library{
-    name          :: String,
-    --version :: Version,
-    path          :: UniPath,
-    rootDefID     :: Int
-} deriving (Show)
 
-empty :: Library
-empty = Library "" UniPath.empty (-1)
+
+
+data Library =  Library{ name :: String
+                       , path :: UniPath
+                       , defs :: DefManager
+                       } deriving (Show)
 
 type ID  = Int
+
+
+empty :: Library
+empty = Library "" UniPath.empty DefManager.empty
+
+
+rootDefID :: ID
+rootDefID = 0
+
+
+make :: String -> UniPath -> Library
+make name' path' = empty { name = name'
+                         , path = path'
+                         , defs = DefManager.insNode (rootDefID, rootdef) DefManager.empty
+                         } where
+    rootdef = Definition.mkModule name'
+
+

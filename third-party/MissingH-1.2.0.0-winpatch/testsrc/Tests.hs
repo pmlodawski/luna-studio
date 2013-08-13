@@ -7,25 +7,25 @@ For license and copyright information, see the file LICENSE
 -}
 
 module Tests(tests) where
-import Test.HUnit
-import qualified MIMETypestest
-import qualified Listtest
-import qualified Maptest
-import qualified Pathtest
-import qualified Strtest
-import qualified IOtest
-import qualified Bitstest
-import qualified Eithertest
-import qualified CRC32POSIXtest
-import qualified CRC32GZIPtest
-import qualified GZiptest
-import qualified HVIOtest
-import qualified HVFStest
-import qualified Timetest
-import qualified Str.CSVtest
-import qualified WildMatchtest
-import qualified Globtest
-import qualified ProgressTrackertest
+import           Test.HUnit            
+import qualified MIMETypestest         
+import qualified Listtest              
+import qualified Maptest               
+import qualified Pathtest              
+import qualified Strtest               
+import qualified IOtest                
+import qualified Bitstest              
+import qualified Eithertest            
+import qualified CRC32POSIXtest        
+import qualified CRC32GZIPtest         
+import qualified GZiptest              
+import qualified HVIOtest              
+import qualified HVFStest              
+import qualified Timetest              
+import qualified Str.CSVtest           
+import qualified WildMatchtest         
+import qualified Globtest              
+import qualified ProgressTrackertest   
 
 test1 = TestCase ("x" @=? "x")
 

@@ -17,12 +17,13 @@ toPathItem,
 normalise,
 fileName,
 basePath,
-setExtension
+setExtension,
+dirOf
 ) where
 
-import Data.List.Split (splitOn)
-import Data.List (intercalate, intersperse)
-import Data.String.Utils (join)
+import           Data.List.Split     (splitOn)
+import           Data.List           (intercalate, intersperse)
+import           Data.String.Utils   (join)
 
 
 data PathItem = Node String | Root String | Up | Current| Empty deriving (Eq,Ord,Show)  
@@ -57,6 +58,10 @@ append snode path = path ++ [toPathItem snode]
 
 prepend :: String -> UniPath -> UniPath
 prepend snode path = (toPathItem snode):path 
+
+
+dirOf :: UniPath -> UniPath
+dirOf path = init path
 
 toPathItem :: String -> PathItem
 toPathItem snode = case snode of

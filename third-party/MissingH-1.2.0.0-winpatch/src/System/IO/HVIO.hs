@@ -119,14 +119,14 @@ module System.IO.HVIO(-- * Implementation Classes
                     )
 where
 
-import System.IO
-import System.IO.Error
-import qualified Control.Exception (catch, IOException)
-import Control.Concurrent.MVar
-import Data.IORef
-import Foreign.Ptr
-import Foreign.C
-import Foreign.Storable
+import           System.IO                 
+import           System.IO.Error           
+import qualified Control.Exception         (catch, IOException)
+import           Control.Concurrent.MVar   
+import           Data.IORef                
+import           Foreign.Ptr               
+import           Foreign.C                 
+import           Foreign.Storable          
 
 {- | This is the generic I\/O support class.  All objects that are to be used
 in the HVIO system must provide an instance of 'HVIO'.

@@ -10,19 +10,22 @@ module Flowbox.Luna.Network.Def.DefManager(
     DefManager,
     addToParent,
     addToParentMany,
+    addNewToParent,
     delete,
     pathNames,
     children,
     parent
 ) where
 
-import qualified Flowbox.Luna.Type.Type                  as Type
-import qualified Flowbox.Luna.Network.Def.Definition     as Definition
-import           Flowbox.Luna.Network.Def.Definition       (Definition(..))
-import           Flowbox.Luna.Network.Def.Edge             (Edge(..))
+import           Data.Maybe                            (fromJust)
 
-import           Flowbox.Luna.Data.Graph                                   hiding(Edge)
-import           Flowbox.Luna.Data.List                    (foldri)
+import qualified Flowbox.Luna.Type.Type              as Type
+import qualified Flowbox.Luna.Network.Def.Definition as Definition
+import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
+import           Flowbox.Luna.Network.Def.Edge         (Edge(..))
+
+import           Flowbox.Luna.Data.Graph               hiding(Edge)
+import           Flowbox.Luna.Data.List                (foldri)
 
 type DefManager = Graph Definition Edge
 
@@ -35,6 +38,12 @@ addToParentMany :: [(Definition.ID, Definition.ID, Definition)] -> DefManager ->
 addToParentMany = foldri addToParent
 
 
+addNewToParent :: (Definition.ID, Definition) -> DefManager -> (DefManager, Definition.ID)
+addNewToParent (parentID, def) manager = (newDefManager, defID) where
+    (manager', defID) = insNewNode def manager
+    newDefManager = insEdge (parentID, defID, Edge) manager'
+
+
 delete :: Definition.ID -> DefManager ->  DefManager
 delete defID defManager = newDefManager where
     defManager' = foldr (delete) defManager $ suc defManager defID 
@@ -42,7 +51,7 @@ delete defID defManager = newDefManager where
 
 
 pathNames :: DefManager -> Definition.ID -> [String]
-pathNames g vtx = fmap (Type.name . Definition.cls . (lab_deprecated g)) $ path g vtx
+pathNames g vtx = fmap (Type.name . Definition.cls . fromJust . (lab g)) $ path g vtx
 
 
 children :: DefManager -> Definition.ID -> [(Definition.ID, Definition)]

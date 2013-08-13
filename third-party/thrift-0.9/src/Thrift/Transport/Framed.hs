@@ -24,15 +24,15 @@ module Thrift.Transport.Framed
     , openFramedTransport
     ) where
 
-import Thrift.Transport
+import           Thrift.Transport          
 
-import Control.Monad (liftM)
-import Data.Int (Int32)
-import Data.Monoid (mappend, mempty)
-import Control.Concurrent.MVar
-import qualified Data.Binary as B
-import qualified Data.Binary.Builder as BB
-import qualified Data.ByteString.Lazy as LBS
+import           Control.Monad             (liftM)
+import           Data.Int                  (Int32)
+import           Data.Monoid               (mappend, mempty)
+import           Control.Concurrent.MVar   
+import qualified Data.Binary             as B
+import qualified Data.Binary.Builder     as BB
+import qualified Data.ByteString.Lazy    as LBS
 
 
 -- | FramedTransport wraps a given transport in framed mode.

@@ -24,12 +24,12 @@ module Network.Utils (niceSocketsDo, connectTCP, connectTCPAddr,
                         listenTCPAddr, showSockAddr)
     where
 
-import Network
-import Network.Socket
-import Network.BSD
-import System.IO
+import           Network                
+import           Network.Socket         
+import           Network.BSD            
+import           System.IO              
 #if !(defined(mingw32_HOST_OS) || defined(mingw32_TARGET_OS) || defined(__MINGW32__))
-import qualified System.Posix.Signals
+import qualified System.Posix.Signals   
 #endif
 
 {- | Sets up the system for networking.  Similar to the built-in

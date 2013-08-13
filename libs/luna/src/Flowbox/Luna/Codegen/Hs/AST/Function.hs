@@ -19,12 +19,12 @@ module Flowbox.Luna.Codegen.Hs.AST.Function (
     mkSpec
 )where
 
-import Debug.Trace
+import           Debug.Trace                        
 
-import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
-import           Flowbox.Luna.Codegen.Hs.AST.Expr          (Expr)
-import           Data.String.Utils                         (join)
-import qualified Flowbox.Luna.Codegen.Hs.Path            as Path
+import qualified Flowbox.Luna.Codegen.Hs.AST.Expr as Expr
+import           Flowbox.Luna.Codegen.Hs.AST.Expr   (Expr)
+import           Data.String.Utils                  (join)
+import qualified Flowbox.Luna.Codegen.Hs.Path     as Path
 
 
 data Function = Function { name       :: String,
@@ -85,12 +85,16 @@ addAlias :: (String, String) -> Function -> Function
 addAlias alias func = setBody (Expr.addExpr (Expr.mkAlias alias) $ body func) func
 
 
-getter :: String -> String -> String -> Expr
-getter obj _ param = Expr.Call "getter''" [Expr.THTypeCtx obj, Expr.THExprCtx param] Expr.Pure
+getter :: String -> String -> Expr
+getter obj param = Expr.Call "mkGetter" [ Expr.StringLit param
+                                        , Expr.THTypeCtx obj
+                                        ] Expr.Pure
 
 
-setter :: String -> String -> String -> Expr
-setter obj _ param = Expr.Call "setter''" [Expr.THTypeCtx obj, Expr.THExprCtx param] Expr.Pure
+setter :: String -> String -> Expr
+setter obj param = Expr.Call "mkSetter" [ Expr.StringLit param
+                                        , Expr.THTypeCtx obj
+                                        ] Expr.Pure
 
 
 

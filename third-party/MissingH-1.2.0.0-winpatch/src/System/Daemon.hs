@@ -41,11 +41,11 @@ module System.Daemon (
                        where
 #if !(defined(mingw32_HOST_OS) || defined(mingw32_TARGET_OS) || defined(__MINGW32__))
 
-import System.Posix.Process
-import System.Posix.IO
-import System.Directory
-import System.Log.Logger
-import System.Exit
+import           System.Posix.Process   
+import           System.Posix.IO        
+import           System.Directory       
+import           System.Log.Logger      
+import           System.Exit            
 
 
 trap :: IO a -> IO a

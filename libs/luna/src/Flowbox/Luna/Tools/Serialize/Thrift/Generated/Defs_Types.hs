@@ -81,9 +81,9 @@ read_Import iprot = do
   record <- read_Import_fields iprot (Import{f_Import_path=Nothing,f_Import_items=Nothing})
   readStructEnd iprot
   return record
-data Definition = Definition{f_Definition_cls :: Maybe Types_Types.Type,f_Definition_imports :: Maybe (Vector.Vector Import),f_Definition_flags :: Maybe Attrs_Types.Flags,f_Definition_attribs :: Maybe Attrs_Types.Attributes,f_Definition_libID :: Maybe Int32,f_Definition_defID :: Maybe Int32} deriving (Show,Eq,Typeable)
+data Definition = Definition{f_Definition_cls :: Maybe Types_Types.Type,f_Definition_imports :: Maybe (Vector.Vector Import),f_Definition_flags :: Maybe Attrs_Types.Flags,f_Definition_attribs :: Maybe Attrs_Types.Attributes,f_Definition_defID :: Maybe Int32} deriving (Show,Eq,Typeable)
 instance Hashable Definition where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Definition_cls record   `hashWithSalt` f_Definition_imports record   `hashWithSalt` f_Definition_flags record   `hashWithSalt` f_Definition_attribs record   `hashWithSalt` f_Definition_libID record   `hashWithSalt` f_Definition_defID record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_Definition_cls record   `hashWithSalt` f_Definition_imports record   `hashWithSalt` f_Definition_flags record   `hashWithSalt` f_Definition_attribs record   `hashWithSalt` f_Definition_defID record  
 write_Definition oprot record = do
   writeStructBegin oprot "Definition"
   case f_Definition_cls record of {Nothing -> return (); Just _v -> do
@@ -102,12 +102,8 @@ write_Definition oprot record = do
     writeFieldBegin oprot ("attribs",T_STRUCT,4)
     Attrs_Types.write_Attributes oprot _v
     writeFieldEnd oprot}
-  case f_Definition_libID record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("libID",T_I32,5)
-    writeI32 oprot _v
-    writeFieldEnd oprot}
   case f_Definition_defID record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("defID",T_I32,6)
+    writeFieldBegin oprot ("defID",T_I32,5)
     writeI32 oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
@@ -142,12 +138,6 @@ read_Definition_fields iprot record = do
           read_Definition_fields iprot record
       5 -> if _t21 == T_I32 then do
         s <- readI32 iprot
-        read_Definition_fields iprot record{f_Definition_libID=Just s}
-        else do
-          skip iprot _t21
-          read_Definition_fields iprot record
-      6 -> if _t21 == T_I32 then do
-        s <- readI32 iprot
         read_Definition_fields iprot record{f_Definition_defID=Just s}
         else do
           skip iprot _t21
@@ -158,7 +148,7 @@ read_Definition_fields iprot record = do
         read_Definition_fields iprot record
 read_Definition iprot = do
   _ <- readStructBegin iprot
-  record <- read_Definition_fields iprot (Definition{f_Definition_cls=Nothing,f_Definition_imports=Nothing,f_Definition_flags=Nothing,f_Definition_attribs=Nothing,f_Definition_libID=Nothing,f_Definition_defID=Nothing})
+  record <- read_Definition_fields iprot (Definition{f_Definition_cls=Nothing,f_Definition_imports=Nothing,f_Definition_flags=Nothing,f_Definition_attribs=Nothing,f_Definition_defID=Nothing})
   readStructEnd iprot
   return record
 data Edge = Edge{f_Edge_src :: Maybe Int32,f_Edge_dst :: Maybe Int32} deriving (Show,Eq,Typeable)

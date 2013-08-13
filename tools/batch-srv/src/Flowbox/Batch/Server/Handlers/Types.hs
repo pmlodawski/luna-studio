@@ -20,9 +20,9 @@ import           Data.Text.Lazy                                              (Te
 import qualified Data.Vector                                               as Vector
 import           Data.Vector                                                 (Vector)
 
-import           Flowbox.Batch.Server.Handlers.Common
+import           Flowbox.Batch.Server.Handlers.Common                        
 import qualified Types_Types                                               as TTypes
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Type.Type                                      (Type(..))
 

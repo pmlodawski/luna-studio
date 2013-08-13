@@ -44,12 +44,12 @@ module Network.SocketServer(-- * Generic Options and Types
                                      handleHandler
                                     )
 where
-import Network.Socket
-import Network.BSD
-import Network.Utils
-import Control.Concurrent
-import System.IO
-import qualified System.Log.Logger
+import           Network.Socket       
+import           Network.BSD          
+import           Network.Utils        
+import           Control.Concurrent   
+import           System.IO            
+import qualified System.Log.Logger    
 
 {- | Options for your server. -}
 data InetServerOptions  = InetServerOptions {listenQueueSize :: Int,

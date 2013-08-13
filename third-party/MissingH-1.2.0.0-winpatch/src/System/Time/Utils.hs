@@ -31,8 +31,8 @@ module System.Time.Utils(
                      renderSecs, renderTD
                     )
 where
-import System.Time
-import Data.Ratio
+import           System.Time   
+import           Data.Ratio    
 
 {- | January 1, 1970, midnight, UTC, represented as a CalendarTime. -}
 epoch :: CalendarTime

@@ -15,8 +15,8 @@ module Flowbox.Luna.Codegen.Hs.Import (
     genCode
 )where
 
-import qualified Flowbox.Luna.Codegen.Hs.Path            as Path
-import           Flowbox.Luna.Codegen.Hs.Path              (Path(..))
+import qualified Flowbox.Luna.Codegen.Hs.Path as Path
+import           Flowbox.Luna.Codegen.Hs.Path   (Path(..))
 
 
 data Import = Regular   {path :: Path, item :: String} 
@@ -41,7 +41,7 @@ regular path' item' = Regular path' item'
 
 
 common :: String -> Import
-common name = simple $ Path ["Common'", Path.mkClassName name]
+common name = simple $ Path ["Flowbox", "Luna", "FClasses", name]
 
 
 genCode :: Import -> String

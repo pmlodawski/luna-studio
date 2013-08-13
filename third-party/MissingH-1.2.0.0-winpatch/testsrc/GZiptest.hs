@@ -7,14 +7,14 @@ For license and copyright information, see the file LICENSE
 -}
 
 module GZiptest(tests) where
-import Test.HUnit
-import System.FileArchive.GZip
-import System.FilePath
-import Data.Compression.Inflate
-import System.IO.Binary
-import System.IO
-import Data.Either.Utils
-import Data.List
+import           Test.HUnit                 
+import           System.FileArchive.GZip    
+import           System.FilePath            
+import           Data.Compression.Inflate   
+import           System.IO.Binary           
+import           System.IO                  
+import           Data.Either.Utils          
+import           Data.List                  
 
 mf fn exp conf = TestLabel fn $ TestCase $
                      do c <- readBinaryFile $
@@ -22,9 +22,9 @@ mf fn exp conf = TestLabel fn $ TestCase $
                         assertEqual "" exp (conf c)
 
 {-
-import System.FileArchive.GZip
-import System.IO
-import Data.Either.Utils
+import           System.FileArchive.GZip    
+import           System.IO                  
+import           Data.Either.Utils          
 
 main = do
        c <- hGetContents stdin

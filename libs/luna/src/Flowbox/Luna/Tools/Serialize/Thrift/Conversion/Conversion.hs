@@ -9,7 +9,7 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion where
 
-import Data.Int
+import           Data.Int   
 
 
 class Convert a b | a -> b, b -> a where

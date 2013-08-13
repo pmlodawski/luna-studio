@@ -28,8 +28,8 @@ module Data.Map.Utils (-- * Basic Utilities
                           )
 where
 
-import qualified Data.Map
-import Data.List.Utils(flipAL, strToAL, strFromAL)
+import qualified Data.Map          
+import           Data.List.Utils   (flipAL, strToAL, strFromAL)
 
 {- | Converts a String, String Map into a string representation.
 See 'Data.List.Utils.strFromAL' for more on the similar function for

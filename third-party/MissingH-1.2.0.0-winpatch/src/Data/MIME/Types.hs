@@ -34,15 +34,15 @@ module Data.MIME.Types (-- * Creating Lookup Objects
                           )
 where
 
-import qualified Data.Map as Map
-import qualified Control.Exception (try, IOException)
-import Control.Monad
-import System.IO
-import System.IO.Error
-import System.IO.Utils
-import System.Path
-import Data.Map.Utils
-import Data.Char
+import qualified Data.Map          as Map
+import qualified Control.Exception   (try, IOException)
+import           Control.Monad       
+import           System.IO           
+import           System.IO.Error     
+import           System.IO.Utils     
+import           System.Path         
+import           Data.Map.Utils      
+import           Data.Char           
 
 ----------------------------------------------------------------------
 -- Basic type declarations

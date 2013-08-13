@@ -18,11 +18,11 @@
 
 module Thrift.Types where
 
-import Data.Foldable (foldl')
-import Data.Hashable ( Hashable, hashWithSalt )
+import           Data.Foldable         (foldl')
+import           Data.Hashable         ( Hashable, hashWithSalt )
 import qualified Data.HashMap.Strict as Map
-import qualified Data.HashSet as Set
-import qualified Data.Vector as Vector
+import qualified Data.HashSet        as Set
+import qualified Data.Vector         as Vector
 
 instance (Hashable k, Hashable v) => Hashable (Map.HashMap k v) where
   hashWithSalt salt = foldl' hashWithSalt salt . Map.toList

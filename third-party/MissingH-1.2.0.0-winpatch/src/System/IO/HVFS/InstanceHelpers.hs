@@ -33,14 +33,14 @@ module System.IO.HVFS.InstanceHelpers(-- * HVFSStat objects
                                         getFullSlice)
     where
 
-import Data.IORef (newIORef, readIORef, writeIORef, IORef())
-import Data.List (genericLength)
+import           Data.IORef              (newIORef, readIORef, writeIORef, IORef())
+import           Data.List               (genericLength)
 import System.IO -- (ReadMode)
-import System.IO.Error (doesNotExistErrorType, illegalOperationErrorType, permissionErrorType)
-import System.IO.HVFS
-import System.IO.HVIO (newStreamReader)
-import System.Path (absNormPath)
-import System.Path.NameManip (slice_path)
+import           System.IO.Error         (doesNotExistErrorType, illegalOperationErrorType, permissionErrorType)
+import           System.IO.HVFS          
+import           System.IO.HVIO          (newStreamReader)
+import           System.Path             (absNormPath)
+import           System.Path.NameManip   (slice_path)
 
 {- | A simple "System.IO.HVFS.HVFSStat"
 class that assumes that everything is either a file

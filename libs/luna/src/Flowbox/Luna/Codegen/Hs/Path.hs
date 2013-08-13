@@ -9,6 +9,7 @@ module Flowbox.Luna.Codegen.Hs.Path (
     module Flowbox.Luna.Network.Path.Path,
     toModulePath,
     toModuleName,
+    toFilePath,
     mkTemplateName,
     mkMonadName,
     mkLensName,
@@ -21,11 +22,17 @@ module Flowbox.Luna.Codegen.Hs.Path (
     mkIndent,
     mkTHPointer,
     mkClassName,
-    
+    toString,
+    mkCommonImportName,
+    mkFuncName
 )where
 
-import           Flowbox.Luna.Network.Path.Path 
-import           Data.Char                      (isLower)
+import qualified Prelude                          
+import Prelude hiding (last, init, tail, last)
+import           Data.String.Utils                (join)
+
+import           Flowbox.Luna.Network.Path.Path   
+import           Data.Char                        (isLower)
 
 
 
@@ -45,6 +52,11 @@ toModuleName name@(preffix:_) = if isLower preffix
         then "U'" ++ name
         else name
                                   
+
+toFilePath :: Path -> Path
+toFilePath path = append (last modpath ++ ".hs") (init modpath) where
+    modpath = toModulePath path
+
     
 mkTemplateName :: String -> String
 mkTemplateName name = name ++ "'T"
@@ -61,6 +73,13 @@ mkFieldName name = name ++ "'F"
 
 mkClassName :: String -> String
 mkClassName name = "C''" ++ name
+
+
+mkCommonImportName :: String -> String
+mkCommonImportName = mkClassName . mkFuncName
+
+mkFuncName :: String -> String
+mkFuncName name = name ++ "'"
 
 --mkGSName :: String -> String
 --mkGSName name = name ++ "'GS"
@@ -90,3 +109,7 @@ indent = replicate 4 ' '
 
 mkIndent :: Int -> String
 mkIndent i = concat $ replicate i indent
+
+
+toString :: Path -> String
+toString path = join "." $ segments path

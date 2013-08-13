@@ -25,21 +25,21 @@ module Thrift.Protocol.Binary
     , BinaryProtocol(..)
     ) where
 
-import Control.Exception ( throw )
-import Control.Monad ( liftM )
+import           Control.Exception         ( throw )
+import           Control.Monad             ( liftM )
 
-import qualified Data.Binary
-import Data.Bits
-import Data.Int
-import Data.Text.Lazy.Encoding ( decodeUtf8, encodeUtf8 )
+import qualified Data.Binary               
+import           Data.Bits                 
+import           Data.Int                  
+import           Data.Text.Lazy.Encoding   ( decodeUtf8, encodeUtf8 )
 
-import GHC.Exts
-import GHC.Word
+import           GHC.Exts                  
+import           GHC.Word                  
 
-import Thrift.Protocol
-import Thrift.Transport
+import           Thrift.Protocol           
+import           Thrift.Transport          
 
-import qualified Data.ByteString.Lazy as LBS
+import qualified Data.ByteString.Lazy    as LBS
 
 version_mask :: Int32
 version_mask = 0xffff0000

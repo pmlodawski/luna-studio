@@ -39,9 +39,9 @@ module MissingH.Network.Gopher (-- * Types
                                )
     where
 
-import MissingH.Printf
-import MissingH.Str
-import Data.FiniteMap
+import           MissingH.Printf   
+import           MissingH.Str      
+import           Data.FiniteMap    
 
 {- | Type representing an entry in a Gopher directory.
 

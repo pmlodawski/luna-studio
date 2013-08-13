@@ -33,13 +33,13 @@ module System.IO.HVFS.Utils (recurseDir,
                               )
 where
 
-import System.IO.HVFS
-import System.Time.Utils
-import System.IO.PlafCompat
-import Text.Printf
-import System.Time
-import System.Locale
-import System.IO.Unsafe
+import           System.IO.HVFS         
+import           System.Time.Utils      
+import           System.IO.PlafCompat   
+import           Text.Printf            
+import           System.Time            
+import           System.Locale          
+import           System.IO.Unsafe       
 
 {- | Obtain a recursive listing of all files\/directories beneath 
 the specified directory.  The traversal is depth-first

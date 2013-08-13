@@ -29,18 +29,18 @@ module Thrift.Transport.Handle
 
 import Prelude hiding ( catch )
 
-import Control.Exception ( catch, throw )
-import Control.Monad ()
+import           Control.Exception      ( catch, throw )
+import           Control.Monad          ()
 
-import Network
+import           Network                
 
-import System.IO
-import System.IO.Error ( isEOFError )
+import           System.IO              
+import           System.IO.Error        ( isEOFError )
 
-import Thrift.Transport
+import           Thrift.Transport       
 
 import qualified Data.ByteString.Lazy as LBS
-import Data.Monoid
+import           Data.Monoid            
 
 instance Transport Handle where
     tIsOpen = hIsOpen

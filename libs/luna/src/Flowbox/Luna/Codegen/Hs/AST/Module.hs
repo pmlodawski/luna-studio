@@ -23,26 +23,28 @@ module Flowbox.Luna.Codegen.Hs.AST.Module (
     addImports
 )where
 
-import           Data.Set                          (Set)
-import qualified Data.Set                        as Set
+import           Debug.Trace                             
 
-import qualified Flowbox.Luna.Codegen.Hs.Path            as Path
-import           Flowbox.Luna.Codegen.Hs.Path              (Path)
-import qualified Flowbox.Luna.Codegen.Hs.Import          as Import
-import           Flowbox.Luna.Codegen.Hs.Import            (Import)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Function    as Function
-import           Flowbox.Luna.Codegen.Hs.AST.Function      (Function)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Instance    as Instance
-import           Flowbox.Luna.Codegen.Hs.AST.Instance      (Instance)
-import qualified Flowbox.Luna.Codegen.Hs.AST.DataType    as DataType
-import           Flowbox.Luna.Codegen.Hs.AST.DataType      (DataType)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Class       as Class
-import           Flowbox.Luna.Codegen.Hs.AST.Class         (Class)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
-import           Flowbox.Luna.Codegen.Hs.AST.Expr          (Expr)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Extension   as Extension
-import           Flowbox.Luna.Codegen.Hs.AST.Extension     (Extension)
-import           Data.String.Utils                         (join)
+import           Data.Set                                (Set)
+import qualified Data.Set                              as Set
+
+import qualified Flowbox.Luna.Codegen.Hs.Path          as Path
+import           Flowbox.Luna.Codegen.Hs.Path            (Path)
+import qualified Flowbox.Luna.Codegen.Hs.Import        as Import
+import           Flowbox.Luna.Codegen.Hs.Import          (Import)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Function  as Function
+import           Flowbox.Luna.Codegen.Hs.AST.Function    (Function)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Instance  as Instance
+import           Flowbox.Luna.Codegen.Hs.AST.Instance    (Instance)
+import qualified Flowbox.Luna.Codegen.Hs.AST.DataType  as DataType
+import           Flowbox.Luna.Codegen.Hs.AST.DataType    (DataType)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Class     as Class
+import           Flowbox.Luna.Codegen.Hs.AST.Class       (Class)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Expr      as Expr
+import           Flowbox.Luna.Codegen.Hs.AST.Expr        (Expr)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Extension as Extension
+import           Flowbox.Luna.Codegen.Hs.AST.Extension   (Extension)
+import           Data.String.Utils                       (join)
 
 data Module = Module { path       :: Path
                      , submodules :: [Module]
@@ -59,14 +61,17 @@ empty :: Module
 empty = Module Path.empty [] Set.empty [] [] [] [] [] []
 
 base :: Module
-base = empty {imports = Set.singleton $ Import.simple (Path.fromList ["Flowbox'", "Core"])}
+base = addImports [ Import.simple (Path.fromList ["Flowbox", "Luna", "Helpers", "Core"])
+                  , Import.simple (Path.fromList ["Flowbox", "Luna", "FClasses", "select0"])
+                  ]
+     $ empty
 
 header :: String
 header = "-- This is Flowbox generated file.\n\n"
 
 
 genCode :: Module -> String
-genCode m =  header
+genCode m = header
             ++ exts
             ++ "module " ++ mypath ++ " where\n\n" 
             ++ genSection "imports"     Import.genCode   (Set.elems $ imports m)

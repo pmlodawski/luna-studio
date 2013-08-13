@@ -33,14 +33,14 @@ module Data.Compression.Inflate (inflate_string,
                                      inflate, Output, Bit,
                                     bits_to_word32) where
 
-import Data.Array
-import Data.List
-import Data.Maybe
-import qualified Data.Char
-import Control.Monad
+import           Data.Array      
+import           Data.List       
+import           Data.Maybe      
+import qualified Data.Char       
+import           Control.Monad   
 
-import Data.Bits
-import Data.Word
+import           Data.Bits       
+import           Data.Word       
 
 inflate_string :: String -> String
 inflate_string = fst . inflate_string_remainder

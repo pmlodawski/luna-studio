@@ -9,18 +9,18 @@ For license and copyright information, see the file LICENSE
 
 
 module Globtest(tests) where
-import Test.HUnit
-import System.Path.Glob
-import System.Path
-import Test.HUnit.Tools
-import System.IO.HVFS
-import System.Directory(createDirectory)
+import           Test.HUnit                          
+import           System.Path.Glob                    
+import           System.Path                         
+import           Test.HUnit.Tools                    
+import           System.IO.HVFS                      
+import           System.Directory(createDirectory)   
 #if !(defined(mingw32_HOST_OS) || defined(mingw32_TARGET_OS) || defined(__MINGW32__))
 import System.Posix.Directory hiding (createDirectory)
-import System.Posix.Files
+import           System.Posix.Files                  
 #endif
-import Control.Exception
-import Data.List
+import           Control.Exception                   
+import           Data.List                           
 
 bp = "testtmp"
 touch x = writeFile x ""

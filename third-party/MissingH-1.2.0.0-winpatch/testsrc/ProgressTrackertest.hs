@@ -7,9 +7,9 @@ For license and copyright information, see the file LICENSE
 -}
 
 module ProgressTrackertest(tests) where
-import Data.Progress.Tracker
-import Test.HUnit
-import Control.Concurrent.MVar
+import           Data.Progress.Tracker     
+import           Test.HUnit                
+import           Control.Concurrent.MVar   
 
 setup =
     do timem <- newMVar 0
