@@ -11,7 +11,9 @@ module Flowbox.Batch.Server.Handlers.Libs (
     loadLibrary,
     unloadLibrary,
     storeLibrary,
-    libraryRootDef
+    libraryRootDef,
+    ------------
+    libOperation,
 ) 
 where
     
@@ -33,13 +35,13 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs         ()
 
 
 ------ public api helpers -----------------------------------------
-libOperation :: (IORef Batch -> (Int, Library) -> a)
-             ->  IORef Batch -> Maybe TLibs.Library -> a
-libOperation operation batchHandler tlibrary = case tlibrary of 
+libOperation :: ((Int, Library) -> a)
+             -> Maybe TLibs.Library -> a
+libOperation operation mtlibrary = case mtlibrary of 
         Nothing               -> throw' "`library` argument is missing";
-        Just tlib             -> case decode (tlib, DefManager.empty) of
+        Just tlibrary         -> case decode (tlibrary, DefManager.empty) of
                 Left  message -> throw' message
-                Right library -> operation batchHandler library
+                Right library -> operation library
 
 
 ------ public api -------------------------------------------------
@@ -56,13 +58,13 @@ libraries batchHandler = do
 
 
 createLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
-createLibrary = libOperation (\ _ (_, library) -> do
+createLibrary _ = libOperation (\ (_, library) -> do
     putStrLn "call createLibrary - NOT YET IMPLEMENTED"
     return $ fst $ (encode (-1, library) :: (TLibs.Library, DefManager)))
 
 
 loadLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
-loadLibrary = libOperation (\ batchHandler (_, library) -> do
+loadLibrary batchHandler = libOperation (\ (_, library) -> do
     putStrLn "call loadLibrary"
     batch <- readIORef batchHandler
     r     <- Batch.loadLibrary library batch
@@ -75,7 +77,7 @@ loadLibrary = libOperation (\ batchHandler (_, library) -> do
 
 
 unloadLibrary :: IORef Batch -> Maybe TLibs.Library -> IO ()
-unloadLibrary = libOperation (\ batchHandler (libID, _) -> do
+unloadLibrary batchHandler = libOperation (\ (libID, _) -> do
     putStrLn "call unloadLibrary"
     batch <- readIORef batchHandler
     case Batch.unloadLibrary libID batch of 
@@ -85,7 +87,7 @@ unloadLibrary = libOperation (\ batchHandler (libID, _) -> do
 
 
 storeLibrary :: IORef Batch -> Maybe TLibs.Library -> IO ()
-storeLibrary = libOperation (\ batchHandler (libID, _) -> do
+storeLibrary batchHandler = libOperation (\ (libID, _) -> do
     batch <- readIORef batchHandler
     r     <- Batch.storeLibrary libID batch
     case r of 
@@ -94,7 +96,7 @@ storeLibrary = libOperation (\ batchHandler (libID, _) -> do
 
 
 libraryRootDef :: IORef Batch -> Maybe TLibs.Library -> IO TDefs.Definition
-libraryRootDef = libOperation (\ batchHandler (libID, _) -> do
+libraryRootDef batchHandler = libOperation (\ (libID, _) -> do
     putStrLn "call libraryRootDef"
     batch <- readIORef batchHandler
     case Batch.libraryRootDef libID batch of 

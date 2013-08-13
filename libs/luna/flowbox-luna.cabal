@@ -42,7 +42,6 @@ Library
         Flowbox.Luna.Lib.LibManager,
         Flowbox.Luna.Lib.Edge,
         Flowbox.Luna.Builder.Builder,
-        Flowbox.Luna.Samples.Packages,
         Flowbox.Luna.Samples.HelloWorld,
         Flowbox.Luna.Codegen.Hs.FuncGenerator,
         Flowbox.Luna.Codegen.Hs.ClassGenerator,

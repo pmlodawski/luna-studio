@@ -26,7 +26,6 @@ import           Flowbox.Batch.Batch                                         (Ba
 import qualified Flowbox.Batch.Project.Project                             as Project
 import           Flowbox.Batch.Project.Project                               (Project(..))
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
-import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects    ()
 

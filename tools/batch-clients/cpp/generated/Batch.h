@@ -27,13 +27,13 @@ class BatchIf {
   virtual void unloadLibrary(const  ::flowbox::batch::libs::Library& library) = 0;
   virtual void storeLibrary(const  ::flowbox::batch::libs::Library& library) = 0;
   virtual void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::Library& library) = 0;
-  virtual void defsGraph( ::flowbox::batch::defs::DefsGraph& _return) = 0;
+  virtual void defsGraph( ::flowbox::batch::defs::DefsGraph& _return, const  ::flowbox::batch::libs::Library& library) = 0;
   virtual void newDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::types::Type& type, const  ::flowbox::batch::defs::Imports& imports, const  ::flowbox::batch::attrs::Flags& flags, const  ::flowbox::batch::attrs::Attributes& attrs) = 0;
-  virtual void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::Definition& parent) = 0;
-  virtual void updateDefinition(const  ::flowbox::batch::defs::Definition& definition) = 0;
-  virtual void removeDefinition(const  ::flowbox::batch::defs::Definition& definition) = 0;
-  virtual void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return, const  ::flowbox::batch::defs::Definition& definition) = 0;
-  virtual void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition) = 0;
+  virtual void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::Definition& parent, const  ::flowbox::batch::libs::Library& library) = 0;
+  virtual void updateDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) = 0;
+  virtual void removeDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) = 0;
+  virtual void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) = 0;
+  virtual void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) = 0;
   virtual void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name) = 0;
   virtual void newTypeClass( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::types::Type> & params) = 0;
   virtual void newTypeFunction( ::flowbox::batch::types::Type& _return, const std::string& name, const  ::flowbox::batch::types::Type& inputs, const  ::flowbox::batch::types::Type& outputs) = 0;
@@ -42,12 +42,12 @@ class BatchIf {
   virtual void newTypeVariable( ::flowbox::batch::types::Type& _return, const std::string& name) = 0;
   virtual void newTypeList( ::flowbox::batch::types::Type& _return, const  ::flowbox::batch::types::Type& type) = 0;
   virtual void newTypeTuple( ::flowbox::batch::types::Type& _return, const std::vector< ::flowbox::batch::types::Type> & types) = 0;
-  virtual void graph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition) = 0;
-  virtual void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) = 0;
-  virtual void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) = 0;
-  virtual void removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) = 0;
-  virtual void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition) = 0;
-  virtual void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition) = 0;
+  virtual void nodesGraph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) = 0;
+  virtual void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) = 0;
+  virtual void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) = 0;
+  virtual void removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) = 0;
+  virtual void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) = 0;
+  virtual void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) = 0;
   virtual void ping() = 0;
 };
 
@@ -114,25 +114,25 @@ class BatchNull : virtual public BatchIf {
   void libraryRootDef( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
-  void defsGraph( ::flowbox::batch::defs::DefsGraph& /* _return */) {
+  void defsGraph( ::flowbox::batch::defs::DefsGraph& /* _return */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
   void newDefinition( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::types::Type& /* type */, const  ::flowbox::batch::defs::Imports& /* imports */, const  ::flowbox::batch::attrs::Flags& /* flags */, const  ::flowbox::batch::attrs::Attributes& /* attrs */) {
     return;
   }
-  void addDefinition( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::defs::Definition& /* parent */) {
+  void addDefinition( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::defs::Definition& /* parent */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
-  void updateDefinition(const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void updateDefinition(const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
-  void removeDefinition(const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void removeDefinition(const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
-  void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
-  void definitionParent( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void definitionParent( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
   void newTypeModule( ::flowbox::batch::types::Type& /* _return */, const std::string& /* name */) {
@@ -159,22 +159,22 @@ class BatchNull : virtual public BatchIf {
   void newTypeTuple( ::flowbox::batch::types::Type& /* _return */, const std::vector< ::flowbox::batch::types::Type> & /* types */) {
     return;
   }
-  void graph( ::flowbox::batch::graph::GraphView& /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void nodesGraph( ::flowbox::batch::graph::GraphView& /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
-  void addNode( ::flowbox::batch::graph::Node& /* _return */, const  ::flowbox::batch::graph::Node& /* node */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void addNode( ::flowbox::batch::graph::Node& /* _return */, const  ::flowbox::batch::graph::Node& /* node */, const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
-  void updateNode(const  ::flowbox::batch::graph::Node& /* node */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void updateNode(const  ::flowbox::batch::graph::Node& /* node */, const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
-  void removeNode(const  ::flowbox::batch::graph::Node& /* node */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void removeNode(const  ::flowbox::batch::graph::Node& /* node */, const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
-  void connect(const  ::flowbox::batch::graph::Node& /* srcNode */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::Node& /* dstNode */, const int32_t /* dstPort */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void connect(const  ::flowbox::batch::graph::Node& /* srcNode */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::Node& /* dstNode */, const int32_t /* dstPort */, const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
-  void disconnect(const  ::flowbox::batch::graph::Node& /* srcNode */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::Node& /* dstNode */, const int32_t /* dstPort */, const  ::flowbox::batch::defs::Definition& /* definition */) {
+  void disconnect(const  ::flowbox::batch::graph::Node& /* srcNode */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::Node& /* dstNode */, const int32_t /* dstPort */, const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
   void ping() {
@@ -1490,6 +1490,10 @@ class Batch_libraryRootDef_presult {
 
 };
 
+typedef struct _Batch_defsGraph_args__isset {
+  _Batch_defsGraph_args__isset() : library(false) {}
+  bool library;
+} _Batch_defsGraph_args__isset;
 
 class Batch_defsGraph_args {
  public:
@@ -1499,9 +1503,18 @@ class Batch_defsGraph_args {
 
   virtual ~Batch_defsGraph_args() throw() {}
 
+   ::flowbox::batch::libs::Library library;
 
-  bool operator == (const Batch_defsGraph_args & /* rhs */) const
+  _Batch_defsGraph_args__isset __isset;
+
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
+  bool operator == (const Batch_defsGraph_args & rhs) const
   {
+    if (!(library == rhs.library))
+      return false;
     return true;
   }
   bool operator != (const Batch_defsGraph_args &rhs) const {
@@ -1522,6 +1535,7 @@ class Batch_defsGraph_pargs {
 
   virtual ~Batch_defsGraph_pargs() throw() {}
 
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -1720,9 +1734,10 @@ class Batch_newDefinition_presult {
 };
 
 typedef struct _Batch_addDefinition_args__isset {
-  _Batch_addDefinition_args__isset() : definition(false), parent(false) {}
+  _Batch_addDefinition_args__isset() : definition(false), parent(false), library(false) {}
   bool definition;
   bool parent;
+  bool library;
 } _Batch_addDefinition_args__isset;
 
 class Batch_addDefinition_args {
@@ -1735,6 +1750,7 @@ class Batch_addDefinition_args {
 
    ::flowbox::batch::defs::Definition definition;
    ::flowbox::batch::defs::Definition parent;
+   ::flowbox::batch::libs::Library library;
 
   _Batch_addDefinition_args__isset __isset;
 
@@ -1746,11 +1762,17 @@ class Batch_addDefinition_args {
     parent = val;
   }
 
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
   bool operator == (const Batch_addDefinition_args & rhs) const
   {
     if (!(definition == rhs.definition))
       return false;
     if (!(parent == rhs.parent))
+      return false;
+    if (!(library == rhs.library))
       return false;
     return true;
   }
@@ -1774,6 +1796,7 @@ class Batch_addDefinition_pargs {
 
   const  ::flowbox::batch::defs::Definition* definition;
   const  ::flowbox::batch::defs::Definition* parent;
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -1847,8 +1870,9 @@ class Batch_addDefinition_presult {
 };
 
 typedef struct _Batch_updateDefinition_args__isset {
-  _Batch_updateDefinition_args__isset() : definition(false) {}
+  _Batch_updateDefinition_args__isset() : definition(false), library(false) {}
   bool definition;
+  bool library;
 } _Batch_updateDefinition_args__isset;
 
 class Batch_updateDefinition_args {
@@ -1860,6 +1884,7 @@ class Batch_updateDefinition_args {
   virtual ~Batch_updateDefinition_args() throw() {}
 
    ::flowbox::batch::defs::Definition definition;
+   ::flowbox::batch::libs::Library library;
 
   _Batch_updateDefinition_args__isset __isset;
 
@@ -1867,9 +1892,15 @@ class Batch_updateDefinition_args {
     definition = val;
   }
 
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
   bool operator == (const Batch_updateDefinition_args & rhs) const
   {
     if (!(definition == rhs.definition))
+      return false;
+    if (!(library == rhs.library))
       return false;
     return true;
   }
@@ -1892,6 +1923,7 @@ class Batch_updateDefinition_pargs {
   virtual ~Batch_updateDefinition_pargs() throw() {}
 
   const  ::flowbox::batch::defs::Definition* definition;
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -1955,8 +1987,9 @@ class Batch_updateDefinition_presult {
 };
 
 typedef struct _Batch_removeDefinition_args__isset {
-  _Batch_removeDefinition_args__isset() : definition(false) {}
+  _Batch_removeDefinition_args__isset() : definition(false), library(false) {}
   bool definition;
+  bool library;
 } _Batch_removeDefinition_args__isset;
 
 class Batch_removeDefinition_args {
@@ -1968,6 +2001,7 @@ class Batch_removeDefinition_args {
   virtual ~Batch_removeDefinition_args() throw() {}
 
    ::flowbox::batch::defs::Definition definition;
+   ::flowbox::batch::libs::Library library;
 
   _Batch_removeDefinition_args__isset __isset;
 
@@ -1975,9 +2009,15 @@ class Batch_removeDefinition_args {
     definition = val;
   }
 
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
   bool operator == (const Batch_removeDefinition_args & rhs) const
   {
     if (!(definition == rhs.definition))
+      return false;
+    if (!(library == rhs.library))
       return false;
     return true;
   }
@@ -2000,6 +2040,7 @@ class Batch_removeDefinition_pargs {
   virtual ~Batch_removeDefinition_pargs() throw() {}
 
   const  ::flowbox::batch::defs::Definition* definition;
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -2063,8 +2104,9 @@ class Batch_removeDefinition_presult {
 };
 
 typedef struct _Batch_definitionChildren_args__isset {
-  _Batch_definitionChildren_args__isset() : definition(false) {}
+  _Batch_definitionChildren_args__isset() : definition(false), library(false) {}
   bool definition;
+  bool library;
 } _Batch_definitionChildren_args__isset;
 
 class Batch_definitionChildren_args {
@@ -2076,6 +2118,7 @@ class Batch_definitionChildren_args {
   virtual ~Batch_definitionChildren_args() throw() {}
 
    ::flowbox::batch::defs::Definition definition;
+   ::flowbox::batch::libs::Library library;
 
   _Batch_definitionChildren_args__isset __isset;
 
@@ -2083,9 +2126,15 @@ class Batch_definitionChildren_args {
     definition = val;
   }
 
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
   bool operator == (const Batch_definitionChildren_args & rhs) const
   {
     if (!(definition == rhs.definition))
+      return false;
+    if (!(library == rhs.library))
       return false;
     return true;
   }
@@ -2108,6 +2157,7 @@ class Batch_definitionChildren_pargs {
   virtual ~Batch_definitionChildren_pargs() throw() {}
 
   const  ::flowbox::batch::defs::Definition* definition;
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -2181,8 +2231,9 @@ class Batch_definitionChildren_presult {
 };
 
 typedef struct _Batch_definitionParent_args__isset {
-  _Batch_definitionParent_args__isset() : definition(false) {}
+  _Batch_definitionParent_args__isset() : definition(false), library(false) {}
   bool definition;
+  bool library;
 } _Batch_definitionParent_args__isset;
 
 class Batch_definitionParent_args {
@@ -2194,6 +2245,7 @@ class Batch_definitionParent_args {
   virtual ~Batch_definitionParent_args() throw() {}
 
    ::flowbox::batch::defs::Definition definition;
+   ::flowbox::batch::libs::Library library;
 
   _Batch_definitionParent_args__isset __isset;
 
@@ -2201,9 +2253,15 @@ class Batch_definitionParent_args {
     definition = val;
   }
 
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
   bool operator == (const Batch_definitionParent_args & rhs) const
   {
     if (!(definition == rhs.definition))
+      return false;
+    if (!(library == rhs.library))
       return false;
     return true;
   }
@@ -2226,6 +2284,7 @@ class Batch_definitionParent_pargs {
   virtual ~Batch_definitionParent_pargs() throw() {}
 
   const  ::flowbox::batch::defs::Definition* definition;
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -3263,38 +3322,46 @@ class Batch_newTypeTuple_presult {
 
 };
 
-typedef struct _Batch_graph_args__isset {
-  _Batch_graph_args__isset() : definition(false) {}
+typedef struct _Batch_nodesGraph_args__isset {
+  _Batch_nodesGraph_args__isset() : definition(false), library(false) {}
   bool definition;
-} _Batch_graph_args__isset;
+  bool library;
+} _Batch_nodesGraph_args__isset;
 
-class Batch_graph_args {
+class Batch_nodesGraph_args {
  public:
 
-  Batch_graph_args() {
+  Batch_nodesGraph_args() {
   }
 
-  virtual ~Batch_graph_args() throw() {}
+  virtual ~Batch_nodesGraph_args() throw() {}
 
    ::flowbox::batch::defs::Definition definition;
+   ::flowbox::batch::libs::Library library;
 
-  _Batch_graph_args__isset __isset;
+  _Batch_nodesGraph_args__isset __isset;
 
   void __set_definition(const  ::flowbox::batch::defs::Definition& val) {
     definition = val;
   }
 
-  bool operator == (const Batch_graph_args & rhs) const
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
+  bool operator == (const Batch_nodesGraph_args & rhs) const
   {
     if (!(definition == rhs.definition))
       return false;
+    if (!(library == rhs.library))
+      return false;
     return true;
   }
-  bool operator != (const Batch_graph_args &rhs) const {
+  bool operator != (const Batch_nodesGraph_args &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_graph_args & ) const;
+  bool operator < (const Batch_nodesGraph_args & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -3302,36 +3369,37 @@ class Batch_graph_args {
 };
 
 
-class Batch_graph_pargs {
+class Batch_nodesGraph_pargs {
  public:
 
 
-  virtual ~Batch_graph_pargs() throw() {}
+  virtual ~Batch_nodesGraph_pargs() throw() {}
 
   const  ::flowbox::batch::defs::Definition* definition;
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
-typedef struct _Batch_graph_result__isset {
-  _Batch_graph_result__isset() : success(false), missingFields(false) {}
+typedef struct _Batch_nodesGraph_result__isset {
+  _Batch_nodesGraph_result__isset() : success(false), missingFields(false) {}
   bool success;
   bool missingFields;
-} _Batch_graph_result__isset;
+} _Batch_nodesGraph_result__isset;
 
-class Batch_graph_result {
+class Batch_nodesGraph_result {
  public:
 
-  Batch_graph_result() {
+  Batch_nodesGraph_result() {
   }
 
-  virtual ~Batch_graph_result() throw() {}
+  virtual ~Batch_nodesGraph_result() throw() {}
 
    ::flowbox::batch::graph::GraphView success;
   ArgumentException missingFields;
 
-  _Batch_graph_result__isset __isset;
+  _Batch_nodesGraph_result__isset __isset;
 
   void __set_success(const  ::flowbox::batch::graph::GraphView& val) {
     success = val;
@@ -3341,7 +3409,7 @@ class Batch_graph_result {
     missingFields = val;
   }
 
-  bool operator == (const Batch_graph_result & rhs) const
+  bool operator == (const Batch_nodesGraph_result & rhs) const
   {
     if (!(success == rhs.success))
       return false;
@@ -3349,42 +3417,43 @@ class Batch_graph_result {
       return false;
     return true;
   }
-  bool operator != (const Batch_graph_result &rhs) const {
+  bool operator != (const Batch_nodesGraph_result &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_graph_result & ) const;
+  bool operator < (const Batch_nodesGraph_result & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
-typedef struct _Batch_graph_presult__isset {
-  _Batch_graph_presult__isset() : success(false), missingFields(false) {}
+typedef struct _Batch_nodesGraph_presult__isset {
+  _Batch_nodesGraph_presult__isset() : success(false), missingFields(false) {}
   bool success;
   bool missingFields;
-} _Batch_graph_presult__isset;
+} _Batch_nodesGraph_presult__isset;
 
-class Batch_graph_presult {
+class Batch_nodesGraph_presult {
  public:
 
 
-  virtual ~Batch_graph_presult() throw() {}
+  virtual ~Batch_nodesGraph_presult() throw() {}
 
    ::flowbox::batch::graph::GraphView* success;
   ArgumentException missingFields;
 
-  _Batch_graph_presult__isset __isset;
+  _Batch_nodesGraph_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
 };
 
 typedef struct _Batch_addNode_args__isset {
-  _Batch_addNode_args__isset() : node(false), definition(false) {}
+  _Batch_addNode_args__isset() : node(false), definition(false), library(false) {}
   bool node;
   bool definition;
+  bool library;
 } _Batch_addNode_args__isset;
 
 class Batch_addNode_args {
@@ -3397,6 +3466,7 @@ class Batch_addNode_args {
 
    ::flowbox::batch::graph::Node node;
    ::flowbox::batch::defs::Definition definition;
+   ::flowbox::batch::libs::Library library;
 
   _Batch_addNode_args__isset __isset;
 
@@ -3408,11 +3478,17 @@ class Batch_addNode_args {
     definition = val;
   }
 
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
   bool operator == (const Batch_addNode_args & rhs) const
   {
     if (!(node == rhs.node))
       return false;
     if (!(definition == rhs.definition))
+      return false;
+    if (!(library == rhs.library))
       return false;
     return true;
   }
@@ -3436,6 +3512,7 @@ class Batch_addNode_pargs {
 
   const  ::flowbox::batch::graph::Node* node;
   const  ::flowbox::batch::defs::Definition* definition;
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -3509,9 +3586,10 @@ class Batch_addNode_presult {
 };
 
 typedef struct _Batch_updateNode_args__isset {
-  _Batch_updateNode_args__isset() : node(false), definition(false) {}
+  _Batch_updateNode_args__isset() : node(false), definition(false), library(false) {}
   bool node;
   bool definition;
+  bool library;
 } _Batch_updateNode_args__isset;
 
 class Batch_updateNode_args {
@@ -3524,6 +3602,7 @@ class Batch_updateNode_args {
 
    ::flowbox::batch::graph::Node node;
    ::flowbox::batch::defs::Definition definition;
+   ::flowbox::batch::libs::Library library;
 
   _Batch_updateNode_args__isset __isset;
 
@@ -3535,11 +3614,17 @@ class Batch_updateNode_args {
     definition = val;
   }
 
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
   bool operator == (const Batch_updateNode_args & rhs) const
   {
     if (!(node == rhs.node))
       return false;
     if (!(definition == rhs.definition))
+      return false;
+    if (!(library == rhs.library))
       return false;
     return true;
   }
@@ -3563,6 +3648,7 @@ class Batch_updateNode_pargs {
 
   const  ::flowbox::batch::graph::Node* node;
   const  ::flowbox::batch::defs::Definition* definition;
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -3626,9 +3712,10 @@ class Batch_updateNode_presult {
 };
 
 typedef struct _Batch_removeNode_args__isset {
-  _Batch_removeNode_args__isset() : node(false), definition(false) {}
+  _Batch_removeNode_args__isset() : node(false), definition(false), library(false) {}
   bool node;
   bool definition;
+  bool library;
 } _Batch_removeNode_args__isset;
 
 class Batch_removeNode_args {
@@ -3641,6 +3728,7 @@ class Batch_removeNode_args {
 
    ::flowbox::batch::graph::Node node;
    ::flowbox::batch::defs::Definition definition;
+   ::flowbox::batch::libs::Library library;
 
   _Batch_removeNode_args__isset __isset;
 
@@ -3652,11 +3740,17 @@ class Batch_removeNode_args {
     definition = val;
   }
 
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
   bool operator == (const Batch_removeNode_args & rhs) const
   {
     if (!(node == rhs.node))
       return false;
     if (!(definition == rhs.definition))
+      return false;
+    if (!(library == rhs.library))
       return false;
     return true;
   }
@@ -3680,6 +3774,7 @@ class Batch_removeNode_pargs {
 
   const  ::flowbox::batch::graph::Node* node;
   const  ::flowbox::batch::defs::Definition* definition;
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -3743,12 +3838,13 @@ class Batch_removeNode_presult {
 };
 
 typedef struct _Batch_connect_args__isset {
-  _Batch_connect_args__isset() : srcNode(false), srcPort(false), dstNode(false), dstPort(false), definition(false) {}
+  _Batch_connect_args__isset() : srcNode(false), srcPort(false), dstNode(false), dstPort(false), definition(false), library(false) {}
   bool srcNode;
   bool srcPort;
   bool dstNode;
   bool dstPort;
   bool definition;
+  bool library;
 } _Batch_connect_args__isset;
 
 class Batch_connect_args {
@@ -3764,6 +3860,7 @@ class Batch_connect_args {
    ::flowbox::batch::graph::Node dstNode;
   int32_t dstPort;
    ::flowbox::batch::defs::Definition definition;
+   ::flowbox::batch::libs::Library library;
 
   _Batch_connect_args__isset __isset;
 
@@ -3787,6 +3884,10 @@ class Batch_connect_args {
     definition = val;
   }
 
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
   bool operator == (const Batch_connect_args & rhs) const
   {
     if (!(srcNode == rhs.srcNode))
@@ -3798,6 +3899,8 @@ class Batch_connect_args {
     if (!(dstPort == rhs.dstPort))
       return false;
     if (!(definition == rhs.definition))
+      return false;
+    if (!(library == rhs.library))
       return false;
     return true;
   }
@@ -3824,6 +3927,7 @@ class Batch_connect_pargs {
   const  ::flowbox::batch::graph::Node* dstNode;
   const int32_t* dstPort;
   const  ::flowbox::batch::defs::Definition* definition;
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -3887,12 +3991,13 @@ class Batch_connect_presult {
 };
 
 typedef struct _Batch_disconnect_args__isset {
-  _Batch_disconnect_args__isset() : srcNode(false), srcPort(false), dstNode(false), dstPort(false), definition(false) {}
+  _Batch_disconnect_args__isset() : srcNode(false), srcPort(false), dstNode(false), dstPort(false), definition(false), library(false) {}
   bool srcNode;
   bool srcPort;
   bool dstNode;
   bool dstPort;
   bool definition;
+  bool library;
 } _Batch_disconnect_args__isset;
 
 class Batch_disconnect_args {
@@ -3908,6 +4013,7 @@ class Batch_disconnect_args {
    ::flowbox::batch::graph::Node dstNode;
   int32_t dstPort;
    ::flowbox::batch::defs::Definition definition;
+   ::flowbox::batch::libs::Library library;
 
   _Batch_disconnect_args__isset __isset;
 
@@ -3931,6 +4037,10 @@ class Batch_disconnect_args {
     definition = val;
   }
 
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
   bool operator == (const Batch_disconnect_args & rhs) const
   {
     if (!(srcNode == rhs.srcNode))
@@ -3942,6 +4052,8 @@ class Batch_disconnect_args {
     if (!(dstPort == rhs.dstPort))
       return false;
     if (!(definition == rhs.definition))
+      return false;
+    if (!(library == rhs.library))
       return false;
     return true;
   }
@@ -3968,6 +4080,7 @@ class Batch_disconnect_pargs {
   const  ::flowbox::batch::graph::Node* dstNode;
   const int32_t* dstPort;
   const  ::flowbox::batch::defs::Definition* definition;
+  const  ::flowbox::batch::libs::Library* library;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -4160,26 +4273,26 @@ class BatchClient : virtual public BatchIf {
   void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::Library& library);
   void send_libraryRootDef(const  ::flowbox::batch::libs::Library& library);
   void recv_libraryRootDef( ::flowbox::batch::defs::Definition& _return);
-  void defsGraph( ::flowbox::batch::defs::DefsGraph& _return);
-  void send_defsGraph();
+  void defsGraph( ::flowbox::batch::defs::DefsGraph& _return, const  ::flowbox::batch::libs::Library& library);
+  void send_defsGraph(const  ::flowbox::batch::libs::Library& library);
   void recv_defsGraph( ::flowbox::batch::defs::DefsGraph& _return);
   void newDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::types::Type& type, const  ::flowbox::batch::defs::Imports& imports, const  ::flowbox::batch::attrs::Flags& flags, const  ::flowbox::batch::attrs::Attributes& attrs);
   void send_newDefinition(const  ::flowbox::batch::types::Type& type, const  ::flowbox::batch::defs::Imports& imports, const  ::flowbox::batch::attrs::Flags& flags, const  ::flowbox::batch::attrs::Attributes& attrs);
   void recv_newDefinition( ::flowbox::batch::defs::Definition& _return);
-  void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::Definition& parent);
-  void send_addDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::Definition& parent);
+  void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::Definition& parent, const  ::flowbox::batch::libs::Library& library);
+  void send_addDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::Definition& parent, const  ::flowbox::batch::libs::Library& library);
   void recv_addDefinition( ::flowbox::batch::defs::Definition& _return);
-  void updateDefinition(const  ::flowbox::batch::defs::Definition& definition);
-  void send_updateDefinition(const  ::flowbox::batch::defs::Definition& definition);
+  void updateDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
+  void send_updateDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
   void recv_updateDefinition();
-  void removeDefinition(const  ::flowbox::batch::defs::Definition& definition);
-  void send_removeDefinition(const  ::flowbox::batch::defs::Definition& definition);
+  void removeDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
+  void send_removeDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
   void recv_removeDefinition();
-  void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return, const  ::flowbox::batch::defs::Definition& definition);
-  void send_definitionChildren(const  ::flowbox::batch::defs::Definition& definition);
+  void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
+  void send_definitionChildren(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
   void recv_definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return);
-  void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition);
-  void send_definitionParent(const  ::flowbox::batch::defs::Definition& definition);
+  void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
+  void send_definitionParent(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
   void recv_definitionParent( ::flowbox::batch::defs::Definition& _return);
   void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name);
   void send_newTypeModule(const std::string& name);
@@ -4205,23 +4318,23 @@ class BatchClient : virtual public BatchIf {
   void newTypeTuple( ::flowbox::batch::types::Type& _return, const std::vector< ::flowbox::batch::types::Type> & types);
   void send_newTypeTuple(const std::vector< ::flowbox::batch::types::Type> & types);
   void recv_newTypeTuple( ::flowbox::batch::types::Type& _return);
-  void graph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition);
-  void send_graph(const  ::flowbox::batch::defs::Definition& definition);
-  void recv_graph( ::flowbox::batch::graph::GraphView& _return);
-  void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
-  void send_addNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
+  void nodesGraph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
+  void send_nodesGraph(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
+  void recv_nodesGraph( ::flowbox::batch::graph::GraphView& _return);
+  void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
+  void send_addNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
   void recv_addNode( ::flowbox::batch::graph::Node& _return);
-  void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
-  void send_updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
+  void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
+  void send_updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
   void recv_updateNode();
-  void removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
-  void send_removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition);
+  void removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
+  void send_removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
   void recv_removeNode();
-  void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition);
-  void send_connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition);
+  void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
+  void send_connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
   void recv_connect();
-  void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition);
-  void send_disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition);
+  void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
+  void send_disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library);
   void recv_disconnect();
   void ping();
   void send_ping();
@@ -4268,7 +4381,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_newTypeVariable(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_newTypeList(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_newTypeTuple(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_graph(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_nodesGraph(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_addNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_updateNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_removeNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -4305,7 +4418,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["newTypeVariable"] = &BatchProcessor::process_newTypeVariable;
     processMap_["newTypeList"] = &BatchProcessor::process_newTypeList;
     processMap_["newTypeTuple"] = &BatchProcessor::process_newTypeTuple;
-    processMap_["graph"] = &BatchProcessor::process_graph;
+    processMap_["nodesGraph"] = &BatchProcessor::process_nodesGraph;
     processMap_["addNode"] = &BatchProcessor::process_addNode;
     processMap_["updateNode"] = &BatchProcessor::process_updateNode;
     processMap_["removeNode"] = &BatchProcessor::process_removeNode;
@@ -4454,13 +4567,13 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void defsGraph( ::flowbox::batch::defs::DefsGraph& _return) {
+  void defsGraph( ::flowbox::batch::defs::DefsGraph& _return, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->defsGraph(_return);
+      ifaces_[i]->defsGraph(_return, library);
     }
-    ifaces_[i]->defsGraph(_return);
+    ifaces_[i]->defsGraph(_return, library);
     return;
   }
 
@@ -4474,51 +4587,51 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::Definition& parent) {
+  void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::Definition& parent, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->addDefinition(_return, definition, parent);
+      ifaces_[i]->addDefinition(_return, definition, parent, library);
     }
-    ifaces_[i]->addDefinition(_return, definition, parent);
+    ifaces_[i]->addDefinition(_return, definition, parent, library);
     return;
   }
 
-  void updateDefinition(const  ::flowbox::batch::defs::Definition& definition) {
+  void updateDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->updateDefinition(definition);
+      ifaces_[i]->updateDefinition(definition, library);
     }
-    ifaces_[i]->updateDefinition(definition);
+    ifaces_[i]->updateDefinition(definition, library);
   }
 
-  void removeDefinition(const  ::flowbox::batch::defs::Definition& definition) {
+  void removeDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->removeDefinition(definition);
+      ifaces_[i]->removeDefinition(definition, library);
     }
-    ifaces_[i]->removeDefinition(definition);
+    ifaces_[i]->removeDefinition(definition, library);
   }
 
-  void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return, const  ::flowbox::batch::defs::Definition& definition) {
+  void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->definitionChildren(_return, definition);
+      ifaces_[i]->definitionChildren(_return, definition, library);
     }
-    ifaces_[i]->definitionChildren(_return, definition);
+    ifaces_[i]->definitionChildren(_return, definition, library);
     return;
   }
 
-  void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition) {
+  void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->definitionParent(_return, definition);
+      ifaces_[i]->definitionParent(_return, definition, library);
     }
-    ifaces_[i]->definitionParent(_return, definition);
+    ifaces_[i]->definitionParent(_return, definition, library);
     return;
   }
 
@@ -4602,60 +4715,60 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void graph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition) {
+  void nodesGraph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->graph(_return, definition);
+      ifaces_[i]->nodesGraph(_return, definition, library);
     }
-    ifaces_[i]->graph(_return, definition);
+    ifaces_[i]->nodesGraph(_return, definition, library);
     return;
   }
 
-  void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) {
+  void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->addNode(_return, node, definition);
+      ifaces_[i]->addNode(_return, node, definition, library);
     }
-    ifaces_[i]->addNode(_return, node, definition);
+    ifaces_[i]->addNode(_return, node, definition, library);
     return;
   }
 
-  void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) {
+  void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->updateNode(node, definition);
+      ifaces_[i]->updateNode(node, definition, library);
     }
-    ifaces_[i]->updateNode(node, definition);
+    ifaces_[i]->updateNode(node, definition, library);
   }
 
-  void removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition) {
+  void removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->removeNode(node, definition);
+      ifaces_[i]->removeNode(node, definition, library);
     }
-    ifaces_[i]->removeNode(node, definition);
+    ifaces_[i]->removeNode(node, definition, library);
   }
 
-  void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition) {
+  void connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->connect(srcNode, srcPort, dstNode, dstPort, definition);
+      ifaces_[i]->connect(srcNode, srcPort, dstNode, dstPort, definition, library);
     }
-    ifaces_[i]->connect(srcNode, srcPort, dstNode, dstPort, definition);
+    ifaces_[i]->connect(srcNode, srcPort, dstNode, dstPort, definition, library);
   }
 
-  void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition) {
+  void disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::Library& library) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->disconnect(srcNode, srcPort, dstNode, dstPort, definition);
+      ifaces_[i]->disconnect(srcNode, srcPort, dstNode, dstPort, definition, library);
     }
-    ifaces_[i]->disconnect(srcNode, srcPort, dstNode, dstPort, definition);
+    ifaces_[i]->disconnect(srcNode, srcPort, dstNode, dstPort, definition, library);
   }
 
   void ping() {

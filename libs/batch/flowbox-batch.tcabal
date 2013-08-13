@@ -1,9 +1,3 @@
---------------------------------------------------
--- This is a generated cabal configuration file --
--- DO NOT EDIT!                                 --
--- Use gencabal instead                         --
---------------------------------------------------
-
 Name:               flowbox-batch
 Version:            0.1
 Cabal-Version:      >= 1.8
@@ -27,20 +21,8 @@ Library
                     TypeSynonymInstances
  
     Exposed-modules: 
-                     
-        Flowbox.Batch.Batch,
-        Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects,
-        Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView,
-        Flowbox.Batch.GraphView.GraphView,
-        Flowbox.Batch.GraphView.EdgeView,
-        Flowbox.Batch.Project.Project,
-        Flowbox.Batch.Project.ProjectManager,
-        Flowbox.Batch.Samples.Modules,
-                     
-        Graphview_Consts,
-        Projects_Consts,
-        Graphview_Types,
-        Projects_Types
+                     `findmodules('src', '.*\.hs', exclude='(.*Flowbox/Batch/Tools/Serialize/Thrift/Generated/.*)|(.*Flowbox/Batch/Main\.hs)')`,
+                     `findmodules('src/Flowbox/Batch/Tools/Serialize/Thrift/Generated', '.*\.hs')`
 
     Build-Depends:  base,
                     bytestring,

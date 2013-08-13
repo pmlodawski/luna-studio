@@ -60,16 +60,17 @@ service Batch {
      * Definitions
      */
 
-    defs.DefsGraph defsGraph()
+    defs.DefsGraph defsGraph(1: libs.Library library)
 
     defs.Definition newDefinition(1: types.Type type, 2: defs.Imports imports, 
                                   3: attrs.Flags flags, 4: attrs.Attributes attrs)
-    defs.Definition addDefinition(1: defs.Definition definition, 2: defs.Definition parent) throws (1: ArgumentException missingFields)
-    void      updateDefinition(1: defs.Definition definition) throws (1: ArgumentException missingFields)
-    void      removeDefinition(1: defs.Definition definition) throws (1: ArgumentException missingFields)
+    defs.Definition addDefinition(1: defs.Definition definition, 2: defs.Definition parent, 
+                                  3: libs.Library library) throws (1: ArgumentException missingFields)
+    void      updateDefinition(1: defs.Definition definition, 2: libs.Library library) throws (1: ArgumentException missingFields)
+    void      removeDefinition(1: defs.Definition definition, 2: libs.Library library) throws (1: ArgumentException missingFields)
 
-    list<defs.Definition> definitionChildren(1: defs.Definition definition) throws (1: ArgumentException missingFields)
-         defs.Definition  definitionParent  (1: defs.Definition definition) throws (1: ArgumentException missingFields)
+    list<defs.Definition> definitionChildren(1: defs.Definition definition, 2: libs.Library library) throws (1: ArgumentException missingFields)
+         defs.Definition  definitionParent  (1: defs.Definition definition, 2: libs.Library library) throws (1: ArgumentException missingFields)
 
     /*
      * Types
@@ -88,16 +89,18 @@ service Batch {
      * Graph
      */
     
-    graphview.GraphView graph(1: defs.Definition definition) throws (1: ArgumentException missingFields)
+    graphview.GraphView nodesGraph(1: defs.Definition definition, 2: libs.Library library) throws (1: ArgumentException missingFields)
 
-    graph.Node    addNode(1: graph.Node node, 2: defs.Definition definition) throws (1: ArgumentException missingFields)
-    void       updateNode(1: graph.Node node, 2: defs.Definition definition) throws (1: ArgumentException missingFields)
-    void       removeNode(1: graph.Node node, 2: defs.Definition definition) throws (1: ArgumentException missingFields)
+    graph.Node    addNode(1: graph.Node node, 2: defs.Definition definition, 3: libs.Library library) throws (1: ArgumentException missingFields)
+    void       updateNode(1: graph.Node node, 2: defs.Definition definition, 3: libs.Library library) throws (1: ArgumentException missingFields)
+    void       removeNode(1: graph.Node node, 2: defs.Definition definition, 3: libs.Library library) throws (1: ArgumentException missingFields)
 
     void    connect(1: graph.Node srcNode, 2: graphview.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: i32 dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
+                    3: graph.Node dstNode, 4: i32 dstPort, 
+                    5: defs.Definition definition, 6: libs.Library library) throws (1: ArgumentException missingFields)
     void disconnect(1: graph.Node srcNode, 2: graphview.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: i32 dstPort, 5: defs.Definition definition) throws (1: ArgumentException missingFields)
+                    3: graph.Node dstNode, 4: i32 dstPort, 
+                    5: defs.Definition definition, 6: libs.Library library) throws (1: ArgumentException missingFields)
 
     /*
      * Other

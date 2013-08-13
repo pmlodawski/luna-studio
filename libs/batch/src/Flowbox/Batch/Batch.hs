@@ -138,7 +138,7 @@ libraryOp :: Library.ID
           -> Either String (Batch, r)
 libraryOp libID operation =
     libManagerOp (\batch libManager  -> case LibManager.lab libManager libID of
-            Nothing                  -> Left "Wrong `libID`"
+            Nothing                  -> Left $ "Wrong `libID` = " ++ show libID
             Just library             -> case operation batch library of 
                 Left message         -> Left message
                 Right (newLibary, r) -> Right (newLibManager, r) where
@@ -151,7 +151,7 @@ libraryOp' :: Library.ID
            -> IO (Either String (Batch, r))
 libraryOp' libID operation =
     libManagerOp' (\batch libManager  -> case LibManager.lab libManager libID of
-        Nothing                  -> return $ Left "Wrong `libID`"
+        Nothing                  -> return $ Left $ "Wrong `libID` = " ++ show libID
         Just library             -> do
             opr <- operation batch library 
             case opr of 
@@ -182,7 +182,7 @@ definitionOp :: Definition.ID
 definitionOp defID libID operation = 
     defManagerOp libID (\batch defManager -> 
     case DefManager.lab defManager defID of 
-        Nothing                      -> Left "Wrong `defID`"
+        Nothing                      -> Left $ "Wrong `defID` = " ++ show defID
         Just definition              -> case operation batch definition of 
             Left message             -> Left message
             Right (newDefinition, r) -> Right (newDefManager, r) where
@@ -295,7 +295,7 @@ storeLibrary libID = readonly' . libraryOp' libID (\_ library -> do
 
 
 libraryRootDef :: Library.ID -> Batch -> Either String (Definition.ID, Definition)
-libraryRootDef libID = readonly . definitionOp libID Library.rootDefID (\_ definition ->  
+libraryRootDef libID = readonly . definitionOp Library.rootDefID libID (\_ definition ->  
     Right (definition, (Library.rootDefID, definition)))
 
 
@@ -314,38 +314,38 @@ defsGraph libID = readonly . defManagerOp libID (\_ defManager ->
 --    return $ Definition ttype timports tflags tattrs (Just 0) (Just 0)
 
 
-addDefinition :: Library.ID -> Definition -> Definition.ID -> Batch 
+addDefinition :: Definition -> Definition.ID -> Library.ID -> Batch 
               -> Either String (Batch, Definition.ID)
-addDefinition libID definition parentID = defManagerOp libID (\_ defManager ->
+addDefinition definition parentID libID = defManagerOp libID (\_ defManager ->
     case DefManager.gelem parentID defManager of 
         False -> Left "Wrong `defID`"
         True  -> Right $ DefManager.addNewToParent (parentID, definition) defManager)
 
 
-updateDefinition :: Library.ID -> (Definition.ID, Definition) -> Batch -> Either String Batch
-updateDefinition libID (defID, def) = noresult . definitionOp libID defID (\_ _ ->
+updateDefinition :: (Definition.ID, Definition) -> Library.ID -> Batch -> Either String Batch
+updateDefinition (defID, def) libID = noresult . definitionOp defID libID (\_ _ ->
     Right (def, def))
 
 
-removeDefinition :: Library.ID -> Definition.ID -> Batch -> Either String Batch 
-removeDefinition libID defID = noresult . defManagerOp libID (\_ defManager -> 
+removeDefinition :: Definition.ID -> Library.ID -> Batch -> Either String Batch 
+removeDefinition defID libID = noresult . defManagerOp libID (\_ defManager -> 
     case DefManager.gelem defID defManager of 
         False -> Left "Wrong `defID`"
         True  -> Right (newDefManager, ()) where 
                         newDefManager = DefManager.delete defID defManager)
 
 
-definitionChildren :: Library.ID -> Definition.ID -> Batch 
+definitionChildren :: Definition.ID -> Library.ID -> Batch
                    -> Either String [(Definition.ID, Definition)]
-definitionChildren libID defID = readonly . defManagerOp libID (\_ defManager -> 
+definitionChildren defID libID = readonly . defManagerOp libID (\_ defManager -> 
     case DefManager.gelem defID defManager of 
         False -> Left "Wrong `defID`"
         True  -> Right (defManager, children) where
                        children = DefManager.children defManager defID)
 
 
-definitionParent :: Library.ID -> Definition.ID -> Batch -> Either String (Definition.ID, Definition)
-definitionParent libID defID = readonly . defManagerOp libID (\_ defManager -> 
+definitionParent :: Definition.ID -> Library.ID -> Batch -> Either String (Definition.ID, Definition)
+definitionParent defID libID = readonly . defManagerOp libID (\_ defManager -> 
     case DefManager.gelem defID defManager of 
         False           -> Left "Wrong `defID`"
         True            -> case DefManager.parent defManager defID of
@@ -355,34 +355,34 @@ definitionParent libID defID = readonly . defManagerOp libID (\_ defManager ->
 
 -------- Graphs ---------------------------------------------------------------
 
-nodesGraph :: Library.ID -> Definition.ID -> Batch -> Either String GraphView
-nodesGraph libID defID = readonly . graphOp libID defID (\_ agraph -> 
+nodesGraph :: Definition.ID -> Library.ID -> Batch -> Either String GraphView
+nodesGraph defID libID = readonly . graphOp defID libID (\_ agraph -> 
     Right (agraph, GraphView.fromGraph agraph))
 
 
-addNode :: Library.ID -> Definition.ID -> Node -> Batch -> Either String (Batch, Node.ID)
-addNode libID defID node = graphOp libID defID (\_ agraph -> 
+addNode :: Node -> Definition.ID -> Library.ID -> Batch -> Either String (Batch, Node.ID)
+addNode node defID libID = graphOp defID libID (\_ agraph -> 
     Right $ Graph.insNewNode node agraph)
 
 
-updateNode :: Library.ID -> Definition.ID -> (Node.ID, Node) ->  Batch -> Either String Batch
-updateNode libID defID (nodeID, node) = noresult . graphOp libID defID (\_ agraph -> 
+updateNode :: (Node.ID, Node) -> Definition.ID -> Library.ID -> Batch -> Either String Batch
+updateNode (nodeID, node) defID libID = noresult . graphOp defID libID (\_ agraph -> 
     case Graph.gelem nodeID agraph of 
         False -> Left "Wrong `nodeID`"
         True  -> Right (newGraph, ()) where
              newGraph      = Graph.updateNode (nodeID, node) agraph)
 
 
-removeNode :: Library.ID -> Definition.ID -> Node.ID -> Batch -> Either String Batch
-removeNode libID defID nodeID = noresult . graphOp libID defID (\_ agraph -> 
+removeNode :: Node.ID -> Definition.ID -> Library.ID ->  Batch -> Either String Batch
+removeNode nodeID defID libID = noresult . graphOp defID libID (\_ agraph -> 
     case Graph.gelem nodeID agraph of 
         False -> Left "Wrong `nodeID`"
         True  -> Right (newGraph, ()) where
             newGraph      = Graph.delNode nodeID agraph)
 
 
-connect :: Library.ID -> Definition.ID -> Node.ID -> [Int] -> Node.ID -> Int -> Batch -> Either String Batch
-connect libID defID srcNodeID srcPort dstNodeID dstPort = noresult . graphOp libID defID (\_ agraph -> 
+connect :: Node.ID -> [Int] -> Node.ID -> Int -> Definition.ID -> Library.ID -> Batch -> Either String Batch
+connect srcNodeID srcPort dstNodeID dstPort defID libID = noresult . graphOp defID libID (\_ agraph -> 
     case Graph.gelem srcNodeID agraph of 
         False     -> Left "Wrong `srcNodeID`"
         True      -> case Graph.gelem dstNodeID agraph of 
@@ -393,8 +393,8 @@ connect libID defID srcNodeID srcPort dstNodeID dstPort = noresult . graphOp lib
                              $ GraphView.fromGraph agraph
                 in Right (newGraph, ()))
 
-disconnect :: Library.ID -> Definition.ID -> Node.ID -> [Int] -> Node.ID -> Int -> Batch -> Either String Batch
-disconnect libID defID srcNodeID srcPort dstNodeID dstPort = noresult . graphOp libID defID (\_ agraph -> 
+disconnect :: Node.ID -> [Int] -> Node.ID -> Int -> Definition.ID -> Library.ID -> Batch -> Either String Batch
+disconnect srcNodeID srcPort dstNodeID dstPort defID libID = noresult . graphOp defID libID (\_ agraph -> 
     case Graph.gelem srcNodeID agraph of 
         False     -> Left "Wrong `srcNodeID`"
         True      -> case Graph.gelem dstNodeID agraph of 

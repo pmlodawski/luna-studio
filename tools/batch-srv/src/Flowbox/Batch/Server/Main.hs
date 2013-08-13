@@ -34,7 +34,7 @@ import qualified Flowbox.Batch.Server.Handlers.Types    as HTypes
 
 import qualified Flowbox.Batch.Project.Project          as Project
 import qualified Flowbox.Batch.Project.ProjectManager   as ProjectManager
-import qualified Flowbox.Luna.Samples.Packages          as Sample
+import qualified Flowbox.Batch.Samples.Modules          as Sample
 
 port :: PortNumber
 port = 30521
@@ -47,9 +47,9 @@ newBatchHandler :: IO BatchHandler
 newBatchHandler = do
     --ref <- newIORef Batch.empty
     ref <- newIORef $ Batch { Batch.projectManager = ProjectManager.mkGraph [
-                                                                (0, Project.empty { Project.name = "project"
-                                                                                  , Project.core = Sample.core 
-                                                                                  })] []
+                                                                             (0, Sample.project) 
+                                                                             --(0, Project.empty)
+                                                                                                ] []
                             , Batch.activeProjectID = 0 }
     return ref
 
@@ -86,7 +86,7 @@ instance Batch_Iface BatchHandler where
     newTypeList     = HTypes.newTypeList
     newTypeTuple    = HTypes.newTypeTuple
 
-    graph      = HGraph.graph
+    nodesGraph = HGraph.nodesGraph
     addNode    = HGraph.addNode
     updateNode = HGraph.updateNode
     removeNode = HGraph.removeNode
