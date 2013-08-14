@@ -31,9 +31,9 @@ empty = DG.empty
 
 
 -- mocked
-loadLibrary :: String -> UniPath -> LibManager -> IO (LibManager, (Library.ID, Library))
-loadLibrary name apath libManager = do
-    library <- LibSerialization.restoreLibrary name apath
+loadLibrary :: UniPath -> LibManager -> IO (LibManager, (Library.ID, Library))
+loadLibrary apath libManager = do
+    library <- LibSerialization.restoreLibrary apath
     let (newLibManager, libID) = insNewNode library libManager
     return (newLibManager, (libID, library))
 

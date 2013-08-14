@@ -115,10 +115,10 @@ storeLibrary lib = do
 --          folderFilePattern  = "[A-Za-z0-9]+$"
 
 -- mocked
-restoreLibrary :: String -> UniPath -> IO Library
-restoreLibrary name path = do 
+restoreLibrary :: UniPath -> IO Library
+restoreLibrary path = do 
     putStrLn "restoreLibrary - NOT IMPLEMENTED"
-    return $ Library.make name path
+    return $ Library.make "restored" path
 
 
 

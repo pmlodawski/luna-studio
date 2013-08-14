@@ -238,10 +238,10 @@ createProject :: Project -> Batch -> IO ()
 createProject project _ = ProjectManager.createProject project
 
 
-openProject :: Project -> Batch -> IO (Batch, (Project.ID, Project))
-openProject project batch = do
+openProject :: UniPath -> Batch -> IO (Batch, (Project.ID, Project))
+openProject path batch = do
     let aprojectManager = projectManager batch
-    (newProjectManager, newP) <- ProjectManager.openProject aprojectManager project
+    (newProjectManager, newP) <- ProjectManager.openProject aprojectManager path
     let newBatch = batch {projectManager = newProjectManager}
     return (newBatch, newP)
 
@@ -282,11 +282,9 @@ createLibrary libName libPath = libManagerOp (\_ libManager ->
     in Right (newLibManager, (libID, library)))
 
 
-loadLibrary :: Library -> Batch -> IO (Either String (Batch, (Library.ID, Library)))
-loadLibrary library = libManagerOp' (\_ libManager -> do
-    let lname = Library.name library
-        lpath = Library.path library
-    r <- LibManager.loadLibrary lname lpath libManager
+loadLibrary :: UniPath -> Batch -> IO (Either String (Batch, (Library.ID, Library)))
+loadLibrary lpath = libManagerOp' (\_ libManager -> do
+    r <- LibManager.loadLibrary lpath libManager
     return $ Right r)
 
 

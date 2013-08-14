@@ -76,14 +76,14 @@ instance Batch_Iface BatchHandler where
     definitionChildren  = HDefs.definitionChildren
     definitionParent    = HDefs.definitionParent
 
-    newTypeModule       = HTypes.newTypeModule
-    newTypeClass        = HTypes.newTypeClass
-    newTypeFunction     = HTypes.newTypeFunction
-    newTypeUdefined     = HTypes.newTypeUdefined
-    newTypeNamed        = HTypes.newTypeNamed
-    newTypeVariable     = HTypes.newTypeVariable
-    newTypeList         = HTypes.newTypeList
-    newTypeTuple        = HTypes.newTypeTuple
+    --newTypeModule       = HTypes.newTypeModule
+    --newTypeClass        = HTypes.newTypeClass
+    --newTypeFunction     = HTypes.newTypeFunction
+    --newTypeUdefined     = HTypes.newTypeUdefined
+    --newTypeNamed        = HTypes.newTypeNamed
+    --newTypeVariable     = HTypes.newTypeVariable
+    --newTypeList         = HTypes.newTypeList
+    --newTypeTuple        = HTypes.newTypeTuple
 
     nodesGraph          = HGraph.nodesGraph
     addNode             = HGraph.addNode

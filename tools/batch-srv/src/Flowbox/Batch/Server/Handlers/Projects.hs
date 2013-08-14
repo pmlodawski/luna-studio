@@ -13,11 +13,14 @@ module Flowbox.Batch.Server.Handlers.Projects (
     storeProject,
     setActiveProject
 ) where
-    
+
+
+import           Control.Error                                               
+import           Data.Int                                                    
 import           Data.IORef                                                  
 import qualified Data.Vector                                               as Vector
 import           Data.Vector                                                 (Vector)
-
+import           Data.Text.Lazy                                              (Text, unpack)
 
 import           Flowbox.Batch.Server.Handlers.Common                        
 import qualified Projects_Types                                            as TProjects
@@ -25,25 +28,18 @@ import qualified Flowbox.Batch.Batch                                       as Ba
 import           Flowbox.Batch.Batch                                         (Batch(..))
 import qualified Flowbox.Batch.Project.Project                             as Project
 import           Flowbox.Batch.Project.Project                               (Project(..))
+import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects    ()
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
-import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects    ()
-
-
------- public api helpers -----------------------------------------
-projectOperation :: (IORef Batch -> (Project.ID, Project) -> a)
-                 ->  IORef Batch -> Maybe TProjects.Project -> a
-projectOperation operation batchHandler mtproject = case mtproject of 
-    Nothing                        -> throw' "`project` argument is missing";
-    Just tproject                  -> case decode (tproject, DefManager.empty) of
-        Left  message              -> throw' message
-        Right (projectID, project) -> operation batchHandler (projectID, project)
+import qualified Flowbox.System.UniPath                                    as UniPath
 
 
 ------ public api -------------------------------------------------
 
 projects :: IORef Batch -> IO (Vector TProjects.Project)
 projects batchHandler = do
+    putStrLn "call projects"
+
     batch <- readIORef batchHandler
     let aprojects       = Batch.projects batch
         tprojects       = map (fst . encode) aprojects
@@ -52,35 +48,56 @@ projects batchHandler = do
 
 
 createProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
-createProject = projectOperation (\ batchHandler (_, project) -> do
-    batch <- readIORef batchHandler
-    Batch.createProject project batch)
+createProject batchHandler mtproject = tRunScript $ do
+    scriptIO $ putStrLn "call createProject"
+
+    tproject     <- mtproject <?> "`project` field is missing" 
+    (_, project) <- tryRight (decode (tproject, DefManager.empty) :: Either String (Project.ID, Project))
+
+    batch        <- tryReadIORef batchHandler
+    scriptIO $ Batch.createProject project batch
 
 
-openProject :: IORef Batch -> Maybe TProjects.Project -> IO TProjects.Project
-openProject = projectOperation (\ batchHandler (_, project) -> do
-    batch <- readIORef batchHandler
-    (newBatch, (projectID, aproject)) <- Batch.openProject project batch
-    writeIORef batchHandler newBatch
-    let tproject = fst $ encode (projectID, aproject)
-    return tproject)
+openProject :: IORef Batch -> Maybe Text -> IO TProjects.Project
+openProject batchHandler mtpath = tRunScript $ do
+    scriptIO $ putStrLn "call openProject"
+
+    path  <- tryGetUniPath mtpath "path"
+    
+    batch <- tryReadIORef batchHandler
+    (newBatch, (projectID, aproject)) <- scriptIO $ Batch.openProject path batch
+    tryWriteIORef batchHandler newBatch
+
+    return $ fst $ encode (projectID, aproject)
 
 
-closeProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
-closeProject = projectOperation (\ batchHandler (projectID, _) -> do
-    batch <- readIORef batchHandler
-    newBatch <- Batch.closeProject projectID batch
-    writeIORef batchHandler newBatch)
+closeProject :: IORef Batch -> Maybe Int32 -> IO ()
+closeProject batchHandler mtprojectID = tRunScript $ do
+    scriptIO $ putStrLn "call closeProject"
+
+    projectID <- tryGetID mtprojectID "projectID"
+
+    batch <- tryReadIORef batchHandler
+    newBatch <- scriptIO $ Batch.closeProject projectID batch
+    tryWriteIORef batchHandler newBatch
 
 
-storeProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
-storeProject = projectOperation (\ batchHandler (projectID, _) -> do
-    batch <- readIORef batchHandler
-    Batch.storeProject projectID batch)
+storeProject :: IORef Batch -> Maybe Int32 -> IO ()
+storeProject batchHandler mtprojectID = tRunScript $ do
+    scriptIO $ putStrLn "call storeProject"
+
+    projectID <- tryGetID mtprojectID "projectID"
+
+    batch <- tryReadIORef batchHandler
+    scriptIO $ Batch.storeProject projectID batch
 
 
-setActiveProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
-setActiveProject = projectOperation (\ batchHandler (projectID, _) -> do
-    batch <- readIORef batchHandler
+setActiveProject :: IORef Batch -> Maybe Int32 -> IO ()
+setActiveProject batchHandler mtprojectID = tRunScript $ do
+    scriptIO $ putStrLn "call setActiveProject"
+
+    projectID <- tryGetID mtprojectID "projectID"
+
+    batch <- tryReadIORef batchHandler
     let newBatch = Batch.setActiveProject projectID batch
-    writeIORef batchHandler newBatch)
+    tryWriteIORef batchHandler newBatch

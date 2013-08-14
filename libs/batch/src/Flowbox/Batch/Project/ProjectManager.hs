@@ -40,7 +40,7 @@ createProject p = Dir.createDirectoryIfMissing True path
 	where path = UniPath.toUnixString $ Project.path p
 
 
-openProject :: ProjectManager -> Project -> IO (ProjectManager, (Project.ID, Project))
+openProject :: ProjectManager -> UniPath -> IO (ProjectManager, (Project.ID, Project))
 openProject = error "Not implemented"
 
 
