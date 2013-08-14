@@ -20,24 +20,20 @@ where
 
 
 import           Control.Error                                               
-import           Data.Int
+import           Data.Int                                                    
 import           Data.IORef                                                  
 import qualified Data.Vector                                               as Vector
 import           Data.Vector                                                 (Vector)
 
 import qualified Attrs_Types                                               as TAttrs
 import qualified Defs_Types                                                as TDefs
-import qualified Libs_Types                                                as TLibs
 import qualified Types_Types                                               as TTypes
 
 import           Flowbox.Batch.Server.Handlers.Common                        
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
-import qualified Flowbox.Luna.Lib.Library                                  as Library
-import           Flowbox.Luna.Lib.Library                                    (Library)
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
 import           Flowbox.Luna.Network.Def.Definition                         (Definition)
-import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import qualified Flowbox.Luna.Network.Graph.Graph                          as Graph
 import           Flowbox.Luna.Network.Graph.Graph                            (Graph)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
@@ -48,7 +44,7 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 
 defsGraph :: IORef Batch -> Maybe Int32 -> IO TDefs.DefsGraph
 defsGraph batchHandler mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "call defsGraph"
+    scriptIO $ putStrLn "called defsGraph"
     libID       <- tryGetID mtlibID "libID"
     batch       <- tryReadIORef batchHandler
     adefManager <- tryRight $ Batch.defsGraph libID batch
@@ -60,14 +56,14 @@ newDefinition :: IORef Batch -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
                              -> Maybe TAttrs.Flags -> Maybe TAttrs.Attributes
                              -> IO TDefs.Definition
 newDefinition _ ttype timports tflags tattrs = do 
-    putStrLn "call newDefinition"
+    putStrLn "called newDefinition"
     return $ TDefs.Definition ttype timports tflags tattrs (Just 0)
 
 
 addDefinition :: IORef Batch 
               -> Maybe TDefs.Definition -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition
 addDefinition batchHandler mtdefinition mtparentID mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "call addDefinition"
+    scriptIO $ putStrLn "called addDefinition"
     tdefinition       <- mtdefinition <?> "`definition` argument is missing"
     (_, definition)   <- tryRight (decode (tdefinition, Graph.empty) :: Either String (Definition.ID, Definition))
     parentID          <- tryGetID mtparentID "parentID"    
@@ -80,7 +76,7 @@ addDefinition batchHandler mtdefinition mtparentID mtlibID = tRunScript $ do
 
 updateDefinition :: IORef Batch -> Maybe TDefs.Definition -> Maybe Int32 -> IO ()
 updateDefinition batchHandler mtdefinition mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "call updateDefinition"
+    scriptIO $ putStrLn "called updateDefinition"
     
     tdefinition <- mtdefinition <?> "`definition` field is missing" 
     definition  <- tryRight $ decode (tdefinition, Graph.empty) -- :: (Definition.ID, Definition)
@@ -93,18 +89,18 @@ updateDefinition batchHandler mtdefinition mtlibID = tRunScript $ do
 
 removeDefinition :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO ()
 removeDefinition batchHandler mtdefID mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "call removeDefinition"
+    scriptIO $ putStrLn "called removeDefinition"
     defID       <- tryGetID mtdefID "defID"
     libID       <- tryGetID mtlibID "libID"
     batch       <- tryReadIORef batchHandler
     newBatch    <- tryRight $ Batch.removeDefinition defID libID batch 
-    _           <- tryWriteIORef batchHandler newBatch
+    tryWriteIORef batchHandler newBatch
     return ()
  
 
 definitionChildren :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO (Vector TDefs.Definition)
 definitionChildren batchHandler mtdefID mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "call definitionChildren"
+    scriptIO $ putStrLn "called definitionChildren"
     defID       <- tryGetID mtdefID "defID"
     libID       <- tryGetID mtlibID "libID"
     batch       <- tryReadIORef batchHandler
@@ -116,7 +112,7 @@ definitionChildren batchHandler mtdefID mtlibID = tRunScript $ do
 
 definitionParent :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition
 definitionParent batchHandler mtdefID mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "call definitionParent"
+    scriptIO $ putStrLn "called definitionParent"
     defID       <- tryGetID mtdefID "defID"
     libID       <- tryGetID mtlibID "libID"
     batch       <- tryReadIORef batchHandler

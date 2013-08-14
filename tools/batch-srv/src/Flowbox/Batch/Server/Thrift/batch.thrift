@@ -95,16 +95,16 @@ service Batch {
     
     graphview.GraphView nodesGraph(1: defs.DefID defID, 2: libs.LibID libID) throws (1: ArgumentException missingFields)
 
-    graph.Node    addNode(1: graph.Node node, 2: defs.DefID defID, 3: libs.LibID libID) throws (1: ArgumentException missingFields)
-    void       updateNode(1: graph.Node node, 2: defs.DefID defID, 3: libs.LibID libID) throws (1: ArgumentException missingFields)
-    void       removeNode(1: graph.Node node, 2: defs.DefID defID, 3: libs.LibID libID) throws (1: ArgumentException missingFields)
+    graph.Node    addNode(1: graph.Node   node  , 2: defs.DefID defID, 3: libs.LibID libID) throws (1: ArgumentException missingFields)
+    void       updateNode(1: graph.Node   node  , 2: defs.DefID defID, 3: libs.LibID libID) throws (1: ArgumentException missingFields)
+    void       removeNode(1: graph.NodeID nodeID, 2: defs.DefID defID, 3: libs.LibID libID) throws (1: ArgumentException missingFields)
 
-    void    connect(1: graph.Node srcNode, 2: graphview.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: i32 dstPort, 
-                    5: defs.DefID defID, 6: libs.LibID libID)                   throws (1: ArgumentException missingFields)
-    void disconnect(1: graph.Node srcNode, 2: graphview.PortDescriptor srcPort,
-                    3: graph.Node dstNode, 4: i32 dstPort, 
-                    5: defs.DefID defID, 6: libs.LibID libID)                   throws (1: ArgumentException missingFields)
+    void    connect(1: graph.NodeID srcNodeID, 2: graphview.PortDescriptor srcPort,
+                    3: graph.NodeID dstNodeID, 4: i32                      dstPort, 
+                    5: defs.DefID   defID    , 6: libs.LibID               libID  ) throws (1: ArgumentException missingFields)
+    void disconnect(1: graph.NodeID srcNodeID, 2: graphview.PortDescriptor srcPort,
+                    3: graph.NodeID dstNodeID, 4: i32                      dstPort, 
+                    5: defs.DefID   defID    , 6: libs.LibID               libID ) throws (1: ArgumentException missingFields)
 
     /*
      * Other

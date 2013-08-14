@@ -18,31 +18,31 @@ import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  return, length, IO, fromIntegral, fromEnum, toEnum,
                  (.), (&&), (||), (==), (++), ($), (-) )
 
-import Control.Exception
-import Data.ByteString.Lazy
-import Data.Hashable
-import Data.Int
-import Data.Text.Lazy ( Text )
-import qualified Data.Text.Lazy as TL
-import Data.Typeable ( Typeable )
-import qualified Data.HashMap.Strict as Map
-import qualified Data.HashSet as Set
-import qualified Data.Vector as Vector
+import           Control.Exception      
+import           Data.ByteString.Lazy   
+import           Data.Hashable          
+import           Data.Int               
+import           Data.Text.Lazy         ( Text )
+import qualified Data.Text.Lazy       as TL
+import           Data.Typeable          ( Typeable )
+import qualified Data.HashMap.Strict  as Map
+import qualified Data.HashSet         as Set
+import qualified Data.Vector          as Vector
 
-import Thrift
-import Thrift.Types ()
+import           Thrift                 
+import           Thrift.Types           ()
 
-import Graphview_Types
-import Projects_Types
-import Attrs_Types
-import Defs_Types
-import Graph_Types
-import Libs_Types
-import Types_Types
+import           Graphview_Types        
+import           Projects_Types         
+import           Attrs_Types            
+import           Defs_Types             
+import           Graph_Types            
+import           Libs_Types             
+import           Types_Types            
 
 
-import Batch_Types
-import qualified Batch_Iface as Iface
+import           Batch_Types            
+import qualified Batch_Iface          as Iface
 -- HELPER FUNCTIONS AND STRUCTURES --
 
 data Projects_args = Projects_args deriving (Show,Eq,Typeable)
@@ -2225,14 +2225,14 @@ read_UpdateNode_result iprot = do
   record <- read_UpdateNode_result_fields iprot (UpdateNode_result{f_UpdateNode_result_missingFields=Nothing})
   readStructEnd iprot
   return record
-data RemoveNode_args = RemoveNode_args{f_RemoveNode_args_node :: Maybe Graph_Types.Node,f_RemoveNode_args_defID :: Maybe Int32,f_RemoveNode_args_libID :: Maybe Int32} deriving (Show,Eq,Typeable)
+data RemoveNode_args = RemoveNode_args{f_RemoveNode_args_nodeID :: Maybe Int32,f_RemoveNode_args_defID :: Maybe Int32,f_RemoveNode_args_libID :: Maybe Int32} deriving (Show,Eq,Typeable)
 instance Hashable RemoveNode_args where
-  hashWithSalt salt record = salt   `hashWithSalt` f_RemoveNode_args_node record   `hashWithSalt` f_RemoveNode_args_defID record   `hashWithSalt` f_RemoveNode_args_libID record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_RemoveNode_args_nodeID record   `hashWithSalt` f_RemoveNode_args_defID record   `hashWithSalt` f_RemoveNode_args_libID record  
 write_RemoveNode_args oprot record = do
   writeStructBegin oprot "RemoveNode_args"
-  case f_RemoveNode_args_node record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("node",T_STRUCT,1)
-    Graph_Types.write_Node oprot _v
+  case f_RemoveNode_args_nodeID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("nodeID",T_I32,1)
+    writeI32 oprot _v
     writeFieldEnd oprot}
   case f_RemoveNode_args_defID record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("defID",T_I32,2)
@@ -2248,9 +2248,9 @@ read_RemoveNode_args_fields iprot record = do
   (_,_t360,_id361) <- readFieldBegin iprot
   if _t360 == T_STOP then return record else
     case _id361 of 
-      1 -> if _t360 == T_STRUCT then do
-        s <- (read_Node iprot)
-        read_RemoveNode_args_fields iprot record{f_RemoveNode_args_node=Just s}
+      1 -> if _t360 == T_I32 then do
+        s <- readI32 iprot
+        read_RemoveNode_args_fields iprot record{f_RemoveNode_args_nodeID=Just s}
         else do
           skip iprot _t360
           read_RemoveNode_args_fields iprot record
@@ -2272,7 +2272,7 @@ read_RemoveNode_args_fields iprot record = do
         read_RemoveNode_args_fields iprot record
 read_RemoveNode_args iprot = do
   _ <- readStructBegin iprot
-  record <- read_RemoveNode_args_fields iprot (RemoveNode_args{f_RemoveNode_args_node=Nothing,f_RemoveNode_args_defID=Nothing,f_RemoveNode_args_libID=Nothing})
+  record <- read_RemoveNode_args_fields iprot (RemoveNode_args{f_RemoveNode_args_nodeID=Nothing,f_RemoveNode_args_defID=Nothing,f_RemoveNode_args_libID=Nothing})
   readStructEnd iprot
   return record
 data RemoveNode_result = RemoveNode_result{f_RemoveNode_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
@@ -2305,22 +2305,22 @@ read_RemoveNode_result iprot = do
   record <- read_RemoveNode_result_fields iprot (RemoveNode_result{f_RemoveNode_result_missingFields=Nothing})
   readStructEnd iprot
   return record
-data Connect_args = Connect_args{f_Connect_args_srcNode :: Maybe Graph_Types.Node,f_Connect_args_srcPort :: Maybe (Vector.Vector Int32),f_Connect_args_dstNode :: Maybe Graph_Types.Node,f_Connect_args_dstPort :: Maybe Int32,f_Connect_args_defID :: Maybe Int32,f_Connect_args_libID :: Maybe Int32} deriving (Show,Eq,Typeable)
+data Connect_args = Connect_args{f_Connect_args_srcNodeID :: Maybe Int32,f_Connect_args_srcPort :: Maybe (Vector.Vector Int32),f_Connect_args_dstNodeID :: Maybe Int32,f_Connect_args_dstPort :: Maybe Int32,f_Connect_args_defID :: Maybe Int32,f_Connect_args_libID :: Maybe Int32} deriving (Show,Eq,Typeable)
 instance Hashable Connect_args where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Connect_args_srcNode record   `hashWithSalt` f_Connect_args_srcPort record   `hashWithSalt` f_Connect_args_dstNode record   `hashWithSalt` f_Connect_args_dstPort record   `hashWithSalt` f_Connect_args_defID record   `hashWithSalt` f_Connect_args_libID record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_Connect_args_srcNodeID record   `hashWithSalt` f_Connect_args_srcPort record   `hashWithSalt` f_Connect_args_dstNodeID record   `hashWithSalt` f_Connect_args_dstPort record   `hashWithSalt` f_Connect_args_defID record   `hashWithSalt` f_Connect_args_libID record  
 write_Connect_args oprot record = do
   writeStructBegin oprot "Connect_args"
-  case f_Connect_args_srcNode record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("srcNode",T_STRUCT,1)
-    Graph_Types.write_Node oprot _v
+  case f_Connect_args_srcNodeID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("srcNodeID",T_I32,1)
+    writeI32 oprot _v
     writeFieldEnd oprot}
   case f_Connect_args_srcPort record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("srcPort",T_LIST,2)
     (let f = Vector.mapM_ (\_viter369 -> writeI32 oprot _viter369) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
-  case f_Connect_args_dstNode record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("dstNode",T_STRUCT,3)
-    Graph_Types.write_Node oprot _v
+  case f_Connect_args_dstNodeID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("dstNodeID",T_I32,3)
+    writeI32 oprot _v
     writeFieldEnd oprot}
   case f_Connect_args_dstPort record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("dstPort",T_I32,4)
@@ -2340,9 +2340,9 @@ read_Connect_args_fields iprot record = do
   (_,_t371,_id372) <- readFieldBegin iprot
   if _t371 == T_STOP then return record else
     case _id372 of 
-      1 -> if _t371 == T_STRUCT then do
-        s <- (read_Node iprot)
-        read_Connect_args_fields iprot record{f_Connect_args_srcNode=Just s}
+      1 -> if _t371 == T_I32 then do
+        s <- readI32 iprot
+        read_Connect_args_fields iprot record{f_Connect_args_srcNodeID=Just s}
         else do
           skip iprot _t371
           read_Connect_args_fields iprot record
@@ -2352,9 +2352,9 @@ read_Connect_args_fields iprot record = do
         else do
           skip iprot _t371
           read_Connect_args_fields iprot record
-      3 -> if _t371 == T_STRUCT then do
-        s <- (read_Node iprot)
-        read_Connect_args_fields iprot record{f_Connect_args_dstNode=Just s}
+      3 -> if _t371 == T_I32 then do
+        s <- readI32 iprot
+        read_Connect_args_fields iprot record{f_Connect_args_dstNodeID=Just s}
         else do
           skip iprot _t371
           read_Connect_args_fields iprot record
@@ -2382,7 +2382,7 @@ read_Connect_args_fields iprot record = do
         read_Connect_args_fields iprot record
 read_Connect_args iprot = do
   _ <- readStructBegin iprot
-  record <- read_Connect_args_fields iprot (Connect_args{f_Connect_args_srcNode=Nothing,f_Connect_args_srcPort=Nothing,f_Connect_args_dstNode=Nothing,f_Connect_args_dstPort=Nothing,f_Connect_args_defID=Nothing,f_Connect_args_libID=Nothing})
+  record <- read_Connect_args_fields iprot (Connect_args{f_Connect_args_srcNodeID=Nothing,f_Connect_args_srcPort=Nothing,f_Connect_args_dstNodeID=Nothing,f_Connect_args_dstPort=Nothing,f_Connect_args_defID=Nothing,f_Connect_args_libID=Nothing})
   readStructEnd iprot
   return record
 data Connect_result = Connect_result{f_Connect_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
@@ -2415,22 +2415,22 @@ read_Connect_result iprot = do
   record <- read_Connect_result_fields iprot (Connect_result{f_Connect_result_missingFields=Nothing})
   readStructEnd iprot
   return record
-data Disconnect_args = Disconnect_args{f_Disconnect_args_srcNode :: Maybe Graph_Types.Node,f_Disconnect_args_srcPort :: Maybe (Vector.Vector Int32),f_Disconnect_args_dstNode :: Maybe Graph_Types.Node,f_Disconnect_args_dstPort :: Maybe Int32,f_Disconnect_args_defID :: Maybe Int32,f_Disconnect_args_libID :: Maybe Int32} deriving (Show,Eq,Typeable)
+data Disconnect_args = Disconnect_args{f_Disconnect_args_srcNodeID :: Maybe Int32,f_Disconnect_args_srcPort :: Maybe (Vector.Vector Int32),f_Disconnect_args_dstNodeID :: Maybe Int32,f_Disconnect_args_dstPort :: Maybe Int32,f_Disconnect_args_defID :: Maybe Int32,f_Disconnect_args_libID :: Maybe Int32} deriving (Show,Eq,Typeable)
 instance Hashable Disconnect_args where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Disconnect_args_srcNode record   `hashWithSalt` f_Disconnect_args_srcPort record   `hashWithSalt` f_Disconnect_args_dstNode record   `hashWithSalt` f_Disconnect_args_dstPort record   `hashWithSalt` f_Disconnect_args_defID record   `hashWithSalt` f_Disconnect_args_libID record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_Disconnect_args_srcNodeID record   `hashWithSalt` f_Disconnect_args_srcPort record   `hashWithSalt` f_Disconnect_args_dstNodeID record   `hashWithSalt` f_Disconnect_args_dstPort record   `hashWithSalt` f_Disconnect_args_defID record   `hashWithSalt` f_Disconnect_args_libID record  
 write_Disconnect_args oprot record = do
   writeStructBegin oprot "Disconnect_args"
-  case f_Disconnect_args_srcNode record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("srcNode",T_STRUCT,1)
-    Graph_Types.write_Node oprot _v
+  case f_Disconnect_args_srcNodeID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("srcNodeID",T_I32,1)
+    writeI32 oprot _v
     writeFieldEnd oprot}
   case f_Disconnect_args_srcPort record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("srcPort",T_LIST,2)
     (let f = Vector.mapM_ (\_viter385 -> writeI32 oprot _viter385) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
-  case f_Disconnect_args_dstNode record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("dstNode",T_STRUCT,3)
-    Graph_Types.write_Node oprot _v
+  case f_Disconnect_args_dstNodeID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("dstNodeID",T_I32,3)
+    writeI32 oprot _v
     writeFieldEnd oprot}
   case f_Disconnect_args_dstPort record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("dstPort",T_I32,4)
@@ -2450,9 +2450,9 @@ read_Disconnect_args_fields iprot record = do
   (_,_t387,_id388) <- readFieldBegin iprot
   if _t387 == T_STOP then return record else
     case _id388 of 
-      1 -> if _t387 == T_STRUCT then do
-        s <- (read_Node iprot)
-        read_Disconnect_args_fields iprot record{f_Disconnect_args_srcNode=Just s}
+      1 -> if _t387 == T_I32 then do
+        s <- readI32 iprot
+        read_Disconnect_args_fields iprot record{f_Disconnect_args_srcNodeID=Just s}
         else do
           skip iprot _t387
           read_Disconnect_args_fields iprot record
@@ -2462,9 +2462,9 @@ read_Disconnect_args_fields iprot record = do
         else do
           skip iprot _t387
           read_Disconnect_args_fields iprot record
-      3 -> if _t387 == T_STRUCT then do
-        s <- (read_Node iprot)
-        read_Disconnect_args_fields iprot record{f_Disconnect_args_dstNode=Just s}
+      3 -> if _t387 == T_I32 then do
+        s <- readI32 iprot
+        read_Disconnect_args_fields iprot record{f_Disconnect_args_dstNodeID=Just s}
         else do
           skip iprot _t387
           read_Disconnect_args_fields iprot record
@@ -2492,7 +2492,7 @@ read_Disconnect_args_fields iprot record = do
         read_Disconnect_args_fields iprot record
 read_Disconnect_args iprot = do
   _ <- readStructBegin iprot
-  record <- read_Disconnect_args_fields iprot (Disconnect_args{f_Disconnect_args_srcNode=Nothing,f_Disconnect_args_srcPort=Nothing,f_Disconnect_args_dstNode=Nothing,f_Disconnect_args_dstPort=Nothing,f_Disconnect_args_defID=Nothing,f_Disconnect_args_libID=Nothing})
+  record <- read_Disconnect_args_fields iprot (Disconnect_args{f_Disconnect_args_srcNodeID=Nothing,f_Disconnect_args_srcPort=Nothing,f_Disconnect_args_dstNodeID=Nothing,f_Disconnect_args_dstPort=Nothing,f_Disconnect_args_defID=Nothing,f_Disconnect_args_libID=Nothing})
   readStructEnd iprot
   return record
 data Disconnect_result = Disconnect_result{f_Disconnect_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
@@ -2990,7 +2990,7 @@ process_removeNode (seqid, iprot, oprot, handler) = do
   rs <- return (RemoveNode_result Nothing)
   res <- (Control.Exception.catch
     (do
-      Iface.removeNode handler (f_RemoveNode_args_node args) (f_RemoveNode_args_defID args) (f_RemoveNode_args_libID args)
+      Iface.removeNode handler (f_RemoveNode_args_nodeID args) (f_RemoveNode_args_defID args) (f_RemoveNode_args_libID args)
       return rs)
     (\e  -> 
       return rs{f_RemoveNode_result_missingFields =Just e}))
@@ -3004,7 +3004,7 @@ process_connect (seqid, iprot, oprot, handler) = do
   rs <- return (Connect_result Nothing)
   res <- (Control.Exception.catch
     (do
-      Iface.connect handler (f_Connect_args_srcNode args) (f_Connect_args_srcPort args) (f_Connect_args_dstNode args) (f_Connect_args_dstPort args) (f_Connect_args_defID args) (f_Connect_args_libID args)
+      Iface.connect handler (f_Connect_args_srcNodeID args) (f_Connect_args_srcPort args) (f_Connect_args_dstNodeID args) (f_Connect_args_dstPort args) (f_Connect_args_defID args) (f_Connect_args_libID args)
       return rs)
     (\e  -> 
       return rs{f_Connect_result_missingFields =Just e}))
@@ -3018,7 +3018,7 @@ process_disconnect (seqid, iprot, oprot, handler) = do
   rs <- return (Disconnect_result Nothing)
   res <- (Control.Exception.catch
     (do
-      Iface.disconnect handler (f_Disconnect_args_srcNode args) (f_Disconnect_args_srcPort args) (f_Disconnect_args_dstNode args) (f_Disconnect_args_dstPort args) (f_Disconnect_args_defID args) (f_Disconnect_args_libID args)
+      Iface.disconnect handler (f_Disconnect_args_srcNodeID args) (f_Disconnect_args_srcPort args) (f_Disconnect_args_dstNodeID args) (f_Disconnect_args_dstPort args) (f_Disconnect_args_defID args) (f_Disconnect_args_libID args)
       return rs)
     (\e  -> 
       return rs{f_Disconnect_result_missingFields =Just e}))

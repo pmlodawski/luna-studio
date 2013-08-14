@@ -17,8 +17,8 @@ module Flowbox.Batch.Server.Handlers.Libs (
 where
 
 
-import           Control.Error  
-import           Data.Int       
+import           Control.Error                                               
+import           Data.Int                                                    
 import           Data.IORef                                                  
 import qualified Data.Vector                                               as Vector
 import           Data.Vector                                                 (Vector)
@@ -42,7 +42,7 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs         ()
 
 libraries :: IORef Batch -> IO (Vector TLibs.Library)
 libraries batchHandler = tRunScript $ do
-    scriptIO $ putStrLn "call libraries"
+    scriptIO $ putStrLn "called libraries"
     batch <- tryReadIORef batchHandler
     libs  <- tryRight $ Batch.libraries batch 
     let tlibs       = map (fst . encode) libs
@@ -52,7 +52,7 @@ libraries batchHandler = tRunScript $ do
 
 createLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
 createLibrary batchHandler mtlibrary = tRunScript $ do
-    scriptIO $ putStrLn "call createLibrary"
+    scriptIO $ putStrLn "called createLibrary"
     tlibrary     <- mtlibrary <?> "`library` argument is missing" 
     (_, library) <- tryRight (decode (tlibrary, DefManager.empty) :: Either String (Library.ID, Library))
     batch <- tryReadIORef batchHandler
@@ -65,7 +65,7 @@ createLibrary batchHandler mtlibrary = tRunScript $ do
 
 loadLibrary :: IORef Batch -> Maybe Text -> IO TLibs.Library
 loadLibrary batchHandler mtpath = tRunScript $ do
-    scriptIO $ putStrLn "call loadLibrary"
+    scriptIO $ putStrLn "called loadLibrary"
     upath  <- tryGetUniPath mtpath "path"
     batch <- tryReadIORef batchHandler
     r     <- scriptIO $ Batch.loadLibrary upath batch
@@ -76,7 +76,7 @@ loadLibrary batchHandler mtpath = tRunScript $ do
 
 unloadLibrary :: IORef Batch -> Maybe Int32 -> IO ()
 unloadLibrary batchHandler mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "call unloadLibrary"
+    scriptIO $ putStrLn "called unloadLibrary"
     libID    <- tryGetID mtlibID "libID"
     batch    <- tryReadIORef batchHandler
     newBatch <- tryRight $ Batch.unloadLibrary libID batch 
@@ -85,7 +85,7 @@ unloadLibrary batchHandler mtlibID = tRunScript $ do
 
 storeLibrary :: IORef Batch -> Maybe Int32 -> IO ()
 storeLibrary batchHandler mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "call storeLibrary"
+    scriptIO $ putStrLn "called storeLibrary"
     libID <- tryGetID mtlibID "libID"
     batch <- tryReadIORef batchHandler
     _ <- scriptIO $ Batch.storeLibrary libID batch
@@ -94,7 +94,7 @@ storeLibrary batchHandler mtlibID = tRunScript $ do
 
 buildLibrary :: IORef Batch -> Maybe Int32 -> IO ()
 buildLibrary batchHandler mtlibID  = tRunScript $ do
-    scriptIO $ putStrLn "call buildLibrary"
+    scriptIO $ putStrLn "called buildLibrary"
     libID <- tryGetID mtlibID "libID"
     batch <- tryReadIORef batchHandler
     _ <- scriptIO $ Batch.buildLibrary libID batch
@@ -103,7 +103,7 @@ buildLibrary batchHandler mtlibID  = tRunScript $ do
 
 libraryRootDef :: IORef Batch -> Maybe Int32 -> IO TDefs.Definition
 libraryRootDef batchHandler mtlibID  = tRunScript $ do
-    scriptIO $ putStrLn "call libraryRootDef"
+    scriptIO $ putStrLn "called libraryRootDef"
     libID <- tryGetID mtlibID "libID"
     batch <- tryReadIORef batchHandler
     (arootDefID, rootDef) <- tryRight $ Batch.libraryRootDef libID batch

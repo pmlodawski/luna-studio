@@ -5820,9 +5820,9 @@ uint32_t Batch_removeNode_args::read(::apache::thrift::protocol::TProtocol* ipro
     switch (fid)
     {
       case 1:
-        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
-          xfer += this->node.read(iprot);
-          this->__isset.node = true;
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->nodeID);
+          this->__isset.nodeID = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -5859,8 +5859,8 @@ uint32_t Batch_removeNode_args::write(::apache::thrift::protocol::TProtocol* opr
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("Batch_removeNode_args");
 
-  xfer += oprot->writeFieldBegin("node", ::apache::thrift::protocol::T_STRUCT, 1);
-  xfer += this->node.write(oprot);
+  xfer += oprot->writeFieldBegin("nodeID", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32(this->nodeID);
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 2);
@@ -5880,8 +5880,8 @@ uint32_t Batch_removeNode_pargs::write(::apache::thrift::protocol::TProtocol* op
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("Batch_removeNode_pargs");
 
-  xfer += oprot->writeFieldBegin("node", ::apache::thrift::protocol::T_STRUCT, 1);
-  xfer += (*(this->node)).write(oprot);
+  xfer += oprot->writeFieldBegin("nodeID", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32((*(this->nodeID)));
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 2);
@@ -6014,9 +6014,9 @@ uint32_t Batch_connect_args::read(::apache::thrift::protocol::TProtocol* iprot) 
     switch (fid)
     {
       case 1:
-        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
-          xfer += this->srcNode.read(iprot);
-          this->__isset.srcNode = true;
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->srcNodeID);
+          this->__isset.srcNodeID = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -6042,9 +6042,9 @@ uint32_t Batch_connect_args::read(::apache::thrift::protocol::TProtocol* iprot) 
         }
         break;
       case 3:
-        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
-          xfer += this->dstNode.read(iprot);
-          this->__isset.dstNode = true;
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->dstNodeID);
+          this->__isset.dstNodeID = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -6089,8 +6089,8 @@ uint32_t Batch_connect_args::write(::apache::thrift::protocol::TProtocol* oprot)
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("Batch_connect_args");
 
-  xfer += oprot->writeFieldBegin("srcNode", ::apache::thrift::protocol::T_STRUCT, 1);
-  xfer += this->srcNode.write(oprot);
+  xfer += oprot->writeFieldBegin("srcNodeID", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32(this->srcNodeID);
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("srcPort", ::apache::thrift::protocol::T_LIST, 2);
@@ -6105,8 +6105,8 @@ uint32_t Batch_connect_args::write(::apache::thrift::protocol::TProtocol* oprot)
   }
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("dstNode", ::apache::thrift::protocol::T_STRUCT, 3);
-  xfer += this->dstNode.write(oprot);
+  xfer += oprot->writeFieldBegin("dstNodeID", ::apache::thrift::protocol::T_I32, 3);
+  xfer += oprot->writeI32(this->dstNodeID);
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_I32, 4);
@@ -6130,8 +6130,8 @@ uint32_t Batch_connect_pargs::write(::apache::thrift::protocol::TProtocol* oprot
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("Batch_connect_pargs");
 
-  xfer += oprot->writeFieldBegin("srcNode", ::apache::thrift::protocol::T_STRUCT, 1);
-  xfer += (*(this->srcNode)).write(oprot);
+  xfer += oprot->writeFieldBegin("srcNodeID", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32((*(this->srcNodeID)));
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("srcPort", ::apache::thrift::protocol::T_LIST, 2);
@@ -6146,8 +6146,8 @@ uint32_t Batch_connect_pargs::write(::apache::thrift::protocol::TProtocol* oprot
   }
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("dstNode", ::apache::thrift::protocol::T_STRUCT, 3);
-  xfer += (*(this->dstNode)).write(oprot);
+  xfer += oprot->writeFieldBegin("dstNodeID", ::apache::thrift::protocol::T_I32, 3);
+  xfer += oprot->writeI32((*(this->dstNodeID)));
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_I32, 4);
@@ -6284,9 +6284,9 @@ uint32_t Batch_disconnect_args::read(::apache::thrift::protocol::TProtocol* ipro
     switch (fid)
     {
       case 1:
-        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
-          xfer += this->srcNode.read(iprot);
-          this->__isset.srcNode = true;
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->srcNodeID);
+          this->__isset.srcNodeID = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -6312,9 +6312,9 @@ uint32_t Batch_disconnect_args::read(::apache::thrift::protocol::TProtocol* ipro
         }
         break;
       case 3:
-        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
-          xfer += this->dstNode.read(iprot);
-          this->__isset.dstNode = true;
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->dstNodeID);
+          this->__isset.dstNodeID = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -6359,8 +6359,8 @@ uint32_t Batch_disconnect_args::write(::apache::thrift::protocol::TProtocol* opr
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("Batch_disconnect_args");
 
-  xfer += oprot->writeFieldBegin("srcNode", ::apache::thrift::protocol::T_STRUCT, 1);
-  xfer += this->srcNode.write(oprot);
+  xfer += oprot->writeFieldBegin("srcNodeID", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32(this->srcNodeID);
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("srcPort", ::apache::thrift::protocol::T_LIST, 2);
@@ -6375,8 +6375,8 @@ uint32_t Batch_disconnect_args::write(::apache::thrift::protocol::TProtocol* opr
   }
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("dstNode", ::apache::thrift::protocol::T_STRUCT, 3);
-  xfer += this->dstNode.write(oprot);
+  xfer += oprot->writeFieldBegin("dstNodeID", ::apache::thrift::protocol::T_I32, 3);
+  xfer += oprot->writeI32(this->dstNodeID);
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_I32, 4);
@@ -6400,8 +6400,8 @@ uint32_t Batch_disconnect_pargs::write(::apache::thrift::protocol::TProtocol* op
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("Batch_disconnect_pargs");
 
-  xfer += oprot->writeFieldBegin("srcNode", ::apache::thrift::protocol::T_STRUCT, 1);
-  xfer += (*(this->srcNode)).write(oprot);
+  xfer += oprot->writeFieldBegin("srcNodeID", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32((*(this->srcNodeID)));
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("srcPort", ::apache::thrift::protocol::T_LIST, 2);
@@ -6416,8 +6416,8 @@ uint32_t Batch_disconnect_pargs::write(::apache::thrift::protocol::TProtocol* op
   }
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("dstNode", ::apache::thrift::protocol::T_STRUCT, 3);
-  xfer += (*(this->dstNode)).write(oprot);
+  xfer += oprot->writeFieldBegin("dstNodeID", ::apache::thrift::protocol::T_I32, 3);
+  xfer += oprot->writeI32((*(this->dstNodeID)));
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_I32, 4);
@@ -8485,19 +8485,19 @@ void BatchClient::recv_updateNode()
   return;
 }
 
-void BatchClient::removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
+void BatchClient::removeNode(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
 {
-  send_removeNode(node, defID, libID);
+  send_removeNode(nodeID, defID, libID);
   recv_removeNode();
 }
 
-void BatchClient::send_removeNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
+void BatchClient::send_removeNode(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("removeNode", ::apache::thrift::protocol::T_CALL, cseqid);
 
   Batch_removeNode_pargs args;
-  args.node = &node;
+  args.nodeID = &nodeID;
   args.defID = &defID;
   args.libID = &libID;
   args.write(oprot_);
@@ -8543,21 +8543,21 @@ void BatchClient::recv_removeNode()
   return;
 }
 
-void BatchClient::connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
+void BatchClient::connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
 {
-  send_connect(srcNode, srcPort, dstNode, dstPort, defID, libID);
+  send_connect(srcNodeID, srcPort, dstNodeID, dstPort, defID, libID);
   recv_connect();
 }
 
-void BatchClient::send_connect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
+void BatchClient::send_connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("connect", ::apache::thrift::protocol::T_CALL, cseqid);
 
   Batch_connect_pargs args;
-  args.srcNode = &srcNode;
+  args.srcNodeID = &srcNodeID;
   args.srcPort = &srcPort;
-  args.dstNode = &dstNode;
+  args.dstNodeID = &dstNodeID;
   args.dstPort = &dstPort;
   args.defID = &defID;
   args.libID = &libID;
@@ -8604,21 +8604,21 @@ void BatchClient::recv_connect()
   return;
 }
 
-void BatchClient::disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
+void BatchClient::disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
 {
-  send_disconnect(srcNode, srcPort, dstNode, dstPort, defID, libID);
+  send_disconnect(srcNodeID, srcPort, dstNodeID, dstPort, defID, libID);
   recv_disconnect();
 }
 
-void BatchClient::send_disconnect(const  ::flowbox::batch::graph::Node& srcNode, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::Node& dstNode, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
+void BatchClient::send_disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("disconnect", ::apache::thrift::protocol::T_CALL, cseqid);
 
   Batch_disconnect_pargs args;
-  args.srcNode = &srcNode;
+  args.srcNodeID = &srcNodeID;
   args.srcPort = &srcPort;
-  args.dstNode = &dstNode;
+  args.dstNodeID = &dstNodeID;
   args.dstPort = &dstPort;
   args.defID = &defID;
   args.libID = &libID;
@@ -10501,7 +10501,7 @@ void BatchProcessor::process_removeNode(int32_t seqid, ::apache::thrift::protoco
 
   Batch_removeNode_result result;
   try {
-    iface_->removeNode(args.node, args.defID, args.libID);
+    iface_->removeNode(args.nodeID, args.defID, args.libID);
   } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
@@ -10557,7 +10557,7 @@ void BatchProcessor::process_connect(int32_t seqid, ::apache::thrift::protocol::
 
   Batch_connect_result result;
   try {
-    iface_->connect(args.srcNode, args.srcPort, args.dstNode, args.dstPort, args.defID, args.libID);
+    iface_->connect(args.srcNodeID, args.srcPort, args.dstNodeID, args.dstPort, args.defID, args.libID);
   } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;
@@ -10613,7 +10613,7 @@ void BatchProcessor::process_disconnect(int32_t seqid, ::apache::thrift::protoco
 
   Batch_disconnect_result result;
   try {
-    iface_->disconnect(args.srcNode, args.srcPort, args.dstNode, args.dstPort, args.defID, args.libID);
+    iface_->disconnect(args.srcNodeID, args.srcPort, args.dstNodeID, args.dstPort, args.defID, args.libID);
   } catch (ArgumentException &missingFields) {
     result.missingFields = missingFields;
     result.__isset.missingFields = true;

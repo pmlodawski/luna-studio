@@ -20,7 +20,7 @@ import           Data.Int
 import           Data.IORef                                                  
 import qualified Data.Vector                                               as Vector
 import           Data.Vector                                                 (Vector)
-import           Data.Text.Lazy                                              (Text, unpack)
+import           Data.Text.Lazy                                              (Text)
 
 import           Flowbox.Batch.Server.Handlers.Common                        
 import qualified Projects_Types                                            as TProjects
@@ -31,7 +31,6 @@ import           Flowbox.Batch.Project.Project                               (Pr
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects    ()
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
-import qualified Flowbox.System.UniPath                                    as UniPath
 
 
 ------ public api -------------------------------------------------
@@ -62,10 +61,10 @@ openProject :: IORef Batch -> Maybe Text -> IO TProjects.Project
 openProject batchHandler mtpath = tRunScript $ do
     scriptIO $ putStrLn "call openProject"
 
-    path  <- tryGetUniPath mtpath "path"
+    upath  <- tryGetUniPath mtpath "path"
     
     batch <- tryReadIORef batchHandler
-    (newBatch, (projectID, aproject)) <- scriptIO $ Batch.openProject path batch
+    (newBatch, (projectID, aproject)) <- scriptIO $ Batch.openProject upath batch
     tryWriteIORef batchHandler newBatch
 
     return $ fst $ encode (projectID, aproject)

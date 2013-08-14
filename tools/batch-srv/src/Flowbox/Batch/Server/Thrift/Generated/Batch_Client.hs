@@ -13,37 +13,37 @@
 -----------------------------------------------------------------
 
 module Batch_Client(projects,createProject,openProject,closeProject,storeProject,setActiveProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,newDefinition,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,ping) where
-import Data.IORef
+import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
                  return, length, IO, fromIntegral, fromEnum, toEnum,
                  (.), (&&), (||), (==), (++), ($), (-) )
 
-import Control.Exception
-import Data.ByteString.Lazy
-import Data.Hashable
-import Data.Int
-import Data.Text.Lazy ( Text )
-import qualified Data.Text.Lazy as TL
-import Data.Typeable ( Typeable )
-import qualified Data.HashMap.Strict as Map
-import qualified Data.HashSet as Set
-import qualified Data.Vector as Vector
+import           Control.Exception      
+import           Data.ByteString.Lazy   
+import           Data.Hashable          
+import           Data.Int               
+import           Data.Text.Lazy         ( Text )
+import qualified Data.Text.Lazy       as TL
+import           Data.Typeable          ( Typeable )
+import qualified Data.HashMap.Strict  as Map
+import qualified Data.HashSet         as Set
+import qualified Data.Vector          as Vector
 
-import Thrift
-import Thrift.Types ()
+import           Thrift                 
+import           Thrift.Types           ()
 
-import qualified Graphview_Types
-import qualified Projects_Types
-import qualified Attrs_Types
-import qualified Defs_Types
-import qualified Graph_Types
-import qualified Libs_Types
-import qualified Types_Types
+import qualified Graphview_Types        
+import qualified Projects_Types         
+import qualified Attrs_Types            
+import qualified Defs_Types             
+import qualified Graph_Types            
+import qualified Libs_Types             
+import qualified Types_Types            
 
 
-import Batch_Types
-import Batch
+import           Batch_Types            
+import           Batch                  
 seqid = newIORef 0
 projects (ip,op) = do
   send_projects op
@@ -806,14 +806,14 @@ recv_updateNode ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-removeNode (ip,op) arg_node arg_defID arg_libID = do
-  send_removeNode op arg_node arg_defID arg_libID
+removeNode (ip,op) arg_nodeID arg_defID arg_libID = do
+  send_removeNode op arg_nodeID arg_defID arg_libID
   recv_removeNode ip
-send_removeNode op arg_node arg_defID arg_libID = do
+send_removeNode op arg_nodeID arg_defID arg_libID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("removeNode", M_CALL, seqn)
-  write_RemoveNode_args op (RemoveNode_args{f_RemoveNode_args_node=Just arg_node,f_RemoveNode_args_defID=Just arg_defID,f_RemoveNode_args_libID=Just arg_libID})
+  write_RemoveNode_args op (RemoveNode_args{f_RemoveNode_args_nodeID=Just arg_nodeID,f_RemoveNode_args_defID=Just arg_defID,f_RemoveNode_args_libID=Just arg_libID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_removeNode ip = do
@@ -829,14 +829,14 @@ recv_removeNode ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-connect (ip,op) arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_defID arg_libID = do
-  send_connect op arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_defID arg_libID
+connect (ip,op) arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID = do
+  send_connect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID
   recv_connect ip
-send_connect op arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_defID arg_libID = do
+send_connect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("connect", M_CALL, seqn)
-  write_Connect_args op (Connect_args{f_Connect_args_srcNode=Just arg_srcNode,f_Connect_args_srcPort=Just arg_srcPort,f_Connect_args_dstNode=Just arg_dstNode,f_Connect_args_dstPort=Just arg_dstPort,f_Connect_args_defID=Just arg_defID,f_Connect_args_libID=Just arg_libID})
+  write_Connect_args op (Connect_args{f_Connect_args_srcNodeID=Just arg_srcNodeID,f_Connect_args_srcPort=Just arg_srcPort,f_Connect_args_dstNodeID=Just arg_dstNodeID,f_Connect_args_dstPort=Just arg_dstPort,f_Connect_args_defID=Just arg_defID,f_Connect_args_libID=Just arg_libID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_connect ip = do
@@ -852,14 +852,14 @@ recv_connect ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-disconnect (ip,op) arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_defID arg_libID = do
-  send_disconnect op arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_defID arg_libID
+disconnect (ip,op) arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID = do
+  send_disconnect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID
   recv_disconnect ip
-send_disconnect op arg_srcNode arg_srcPort arg_dstNode arg_dstPort arg_defID arg_libID = do
+send_disconnect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("disconnect", M_CALL, seqn)
-  write_Disconnect_args op (Disconnect_args{f_Disconnect_args_srcNode=Just arg_srcNode,f_Disconnect_args_srcPort=Just arg_srcPort,f_Disconnect_args_dstNode=Just arg_dstNode,f_Disconnect_args_dstPort=Just arg_dstPort,f_Disconnect_args_defID=Just arg_defID,f_Disconnect_args_libID=Just arg_libID})
+  write_Disconnect_args op (Disconnect_args{f_Disconnect_args_srcNodeID=Just arg_srcNodeID,f_Disconnect_args_srcPort=Just arg_srcPort,f_Disconnect_args_dstNodeID=Just arg_dstNodeID,f_Disconnect_args_dstPort=Just arg_dstPort,f_Disconnect_args_defID=Just arg_defID,f_Disconnect_args_libID=Just arg_libID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_disconnect ip = do

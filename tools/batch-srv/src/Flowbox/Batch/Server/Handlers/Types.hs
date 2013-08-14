@@ -16,6 +16,7 @@ module Flowbox.Batch.Server.Handlers.Types (
 ) 
 where
 
+import           Control.Error
 import           Data.Text.Lazy                                              (Text, unpack)
 import qualified Data.Vector                                               as Vector
 import           Data.Vector                                                 (Vector)
@@ -29,74 +30,61 @@ import           Flowbox.Luna.Type.Type                                      (Ty
 
 
 newTypeModule :: b -> Maybe Text -> IO TTypes.Type
-newTypeModule _ mtname = case mtname of 
-    Nothing    -> throw' "`name` field is missing"
-    Just tname -> return $ encode $ Module $ unpack tname
+newTypeModule _ mtname = tRunScript $ do 
+    tname <- mtname <?> "`name` argument is missing"
+    return $ encode $ Module $ unpack tname
 
 
 newTypeClass :: b -> Maybe Text -> Maybe (Vector Text) -> Maybe (Vector TTypes.Type) -> IO TTypes.Type
-newTypeClass _ mtname mttypeparams mtparams = case mtname of
-    Nothing    -> throw' "`name` field is missing"
-    Just tname -> case mttypeparams of
-        Nothing  -> throw' "`typeparams` field is missing"
-        Just ttypeparams -> case mtparams of 
-            Nothing      -> throw' "`params` field is missing"
-            Just tparams -> case decode $ Vector.toList tparams of 
-                Left  message -> throw' $ "Failed to decode `params` : " ++ message
-                Right aparams -> do
-                    let aname = unpack tname
-                        atypeparams = map (unpack) $ Vector.toList ttypeparams
-                    return $ encode $ Class aname atypeparams aparams
+newTypeClass _ mtname mttypeparams mtparams = tRunScript $ do 
+    tname       <- mtname       <?> "`name` argument is missing"
+    ttypeparams <- mttypeparams <?> "`typeparams` argument is missing"
+    tparams     <- mtparams     <?> "`params` argument is missing"
+    aparams     <- tryRight $ decode $ Vector.toList tparams 
+    let aname       = unpack tname
+        atypeparams = map (unpack) $ Vector.toList ttypeparams
+    return $ encode $ Class aname atypeparams aparams
 
 
 newTypeFunction :: b -> Maybe Text -> Maybe TTypes.Type -> Maybe TTypes.Type -> IO TTypes.Type
-newTypeFunction _ mtname mtinputs mtoutputs = case mtname of
-    Nothing    -> throw' "`name` field is missing"
-    Just tname -> case mtinputs of
-        Nothing      -> throw' "`inputs` field is missing"
-        Just tinputs -> case decode tinputs of
-            Left message  -> throw' ("Failed to decode `inputs` : " ++ message)
-            Right ainputs -> case mtoutputs of 
-                Nothing       -> throw' "`outputs` field is missing"
-                Just toutputs -> case decode toutputs of
-                    Left message   -> throw' ("Failed to decode `outputs` : " ++ message)
-                    Right aoutputs -> return $ encode $ Function (unpack tname) ainputs aoutputs
+newTypeFunction _ mtname mtinputs mtoutputs = tRunScript $ do 
+    tname    <- mtname    <?> "`name` argument is missing"
+    tinputs  <- mtinputs  <?> "`inputs` argument is missing"
+    ainputs  <- tryRight   $ decode tinputs
+    toutputs <- mtoutputs <?> "`outputs` argument is missing"
+    aoutputs <- tryRight   $ decode toutputs
+    return $ encode $ Function (unpack tname) ainputs aoutputs
 
 
 newTypeUdefined :: b -> IO TTypes.Type
-newTypeUdefined _ = do
-    return $ encode Undefined
+newTypeUdefined _ = return $ encode Undefined
 
 
 newTypeNamed :: b -> Maybe Text -> Maybe TTypes.Type -> IO TTypes.Type
-newTypeNamed _ mtname mttype = case mtname of 
-    Nothing    -> throw' "`name` field is missing"
-    Just tname -> case mttype of 
-        Nothing -> throw' "`type` field is missing"
-        Just ttype -> case decode ttype of
-            Left message -> throw' ("Failed to decode `type` : " ++ message)
-            Right atype  -> return $ encode $ Named (unpack tname) atype
+newTypeNamed _ mtname mttype = tRunScript $ do 
+    tname <- mtname  <?> "`name` argument is missing"
+    ttype <- mttype  <?> "`type` argument is missing"
+    atype <- tryRight $ decode ttype 
+    return $ encode $ Named (unpack tname) atype
 
 
 newTypeVariable :: b -> Maybe Text -> IO TTypes.Type
-newTypeVariable _ mtname = case mtname of 
-    Nothing    -> throw' "`name` field is missing"
-    Just tname -> return $ encode $ TypeVariable $ unpack tname
+newTypeVariable _ mtname = tRunScript $ do 
+    tname <- mtname  <?> "`name` argument is missing"
+    return $ encode $ TypeVariable $ unpack tname
 
 
 newTypeList :: b -> Maybe TTypes.Type -> IO TTypes.Type
-newTypeList _ mttype = case mttype of
-    Nothing     -> throw' "`type` fields is missing"
-    Just ttype -> case decode ttype of 
-        Left message -> throw' ("Failed to decode `type` : " ++ message)
-        Right atype -> return $ encode $ List atype
+newTypeList _ mttype = tRunScript $ do 
+    ttype <- mttype  <?> "`type` argument is missing"
+    atype <- tryRight $ decode ttype 
+    return $ encode $ List atype
 
 
 newTypeTuple :: b -> Maybe (Vector TTypes.Type) -> IO TTypes.Type
-newTypeTuple _ mttypes = case mttypes of 
-    Nothing     -> throw' "`types` field is missing"
-    Just ttypes -> case decode $ Vector.toList ttypes of 
-        Left message -> throw' ("Failed to decode `types` : " ++ message)
-        Right atypes -> return $ encode $ Tuple atypes
+newTypeTuple _ mttypes = tRunScript $ do
+    ttypes <- mttypes <?> "`types` argument is missing"
+    atypes <- tryRight $ decode $ Vector.toList ttypes
+    return $ encode $ Tuple atypes
     
  

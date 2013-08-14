@@ -7,14 +7,14 @@
 module Flowbox.Batch.Server.Handlers.Common where
 
 
-import           Control.Exception        
-import           Control.Error            
-import           Data.Int 
-import           Data.IORef               
-import           Data.Text.Lazy           (Text, pack, unpack)
-import qualified Control.Monad.IO.Class   
+import           Control.Exception                                           
+import           Control.Error                                               
+import           Data.Int                                                    
+import           Data.IORef                                                  
+import           Data.Text.Lazy                                              (Text, pack, unpack)
+import qualified Control.Monad.IO.Class                                      
 
-import           Batch_Types              (ArgumentException(..))
+import           Batch_Types                                                 (ArgumentException(..))
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import qualified Flowbox.System.UniPath                                    as UniPath
 
@@ -27,8 +27,8 @@ tRunScript :: Script a -> IO a
 tRunScript s = do
     e <- runEitherT s
     case e of
-        Left  e -> throw' e
-        Right a -> return a
+        Left  err -> throw' err
+        Right a   -> return a
 
 
 tryReadIORef :: IORef a -> EitherT String IO a

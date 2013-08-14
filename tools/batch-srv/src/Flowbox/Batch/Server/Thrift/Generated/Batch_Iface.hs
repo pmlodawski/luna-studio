@@ -18,30 +18,30 @@ import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  return, length, IO, fromIntegral, fromEnum, toEnum,
                  (.), (&&), (||), (==), (++), ($), (-) )
 
-import Control.Exception
-import Data.ByteString.Lazy
-import Data.Hashable
-import Data.Int
-import Data.Text.Lazy ( Text )
-import qualified Data.Text.Lazy as TL
-import Data.Typeable ( Typeable )
-import qualified Data.HashMap.Strict as Map
-import qualified Data.HashSet as Set
-import qualified Data.Vector as Vector
+import           Control.Exception      
+import           Data.ByteString.Lazy   
+import           Data.Hashable          
+import           Data.Int               
+import           Data.Text.Lazy         ( Text )
+import qualified Data.Text.Lazy       as TL
+import           Data.Typeable          ( Typeable )
+import qualified Data.HashMap.Strict  as Map
+import qualified Data.HashSet         as Set
+import qualified Data.Vector          as Vector
 
-import Thrift
-import Thrift.Types ()
+import           Thrift                 
+import           Thrift.Types           ()
 
-import qualified Graphview_Types
-import qualified Projects_Types
-import qualified Attrs_Types
-import qualified Defs_Types
-import qualified Graph_Types
-import qualified Libs_Types
-import qualified Types_Types
+import qualified Graphview_Types        
+import qualified Projects_Types         
+import qualified Attrs_Types            
+import qualified Defs_Types             
+import qualified Graph_Types            
+import qualified Libs_Types             
+import qualified Types_Types            
 
 
-import Batch_Types
+import           Batch_Types            
 
 class Batch_Iface a where
   projects :: a -> IO (Vector.Vector Projects_Types.Project)
@@ -75,7 +75,7 @@ class Batch_Iface a where
   nodesGraph :: a -> Maybe Int32 -> Maybe Int32 -> IO Graphview_Types.GraphView
   addNode :: a -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> IO Graph_Types.Node
   updateNode :: a -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> IO ()
-  removeNode :: a -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> IO ()
-  connect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
-  disconnect :: a -> Maybe Graph_Types.Node -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+  removeNode :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+  connect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+  disconnect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
   ping :: a -> IO ()
