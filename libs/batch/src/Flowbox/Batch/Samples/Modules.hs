@@ -74,6 +74,6 @@ alibManager = LibManager.insNode (1, userLibrary)
 
 project :: Project
 project = Project.empty { Project.name = "wladczy projekt"
-                        , Project.path = UniPath.fromUnixString "~/projects/wladcy" 
+                        , Project.path = UniPath.fromUnixString "sample-projects/wladcy" 
                         , Project.libs = alibManager 
                     	}

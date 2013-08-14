@@ -53,6 +53,8 @@ service Batch {
     libs.Library    loadLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
     void          unloadLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
     void           storeLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
+    
+    void           buildLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
 
     defs.Definition libraryRootDef(1: libs.Library library) throws (1: ArgumentException missingFields)
   

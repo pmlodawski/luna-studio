@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,createProject,openProject,closeProject,storeProject,setActiveProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,libraryRootDef,defsGraph,newDefinition,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,ping) where
+module Batch_Client(projects,createProject,openProject,closeProject,storeProject,setActiveProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,newDefinition,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,ping) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -304,6 +304,29 @@ recv_storeLibrary ip = do
   res <- read_StoreLibrary_result ip
   readMessageEnd ip
   case f_StoreLibrary_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
+  return ()
+buildLibrary (ip,op) arg_library = do
+  send_buildLibrary op arg_library
+  recv_buildLibrary ip
+send_buildLibrary op arg_library = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("buildLibrary", M_CALL, seqn)
+  write_BuildLibrary_args op (BuildLibrary_args{f_BuildLibrary_args_library=Just arg_library})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_buildLibrary ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_BuildLibrary_result ip
+  readMessageEnd ip
+  case f_BuildLibrary_result_missingFields res of
     Nothing -> return ()
     Just _v -> throw _v
   return ()

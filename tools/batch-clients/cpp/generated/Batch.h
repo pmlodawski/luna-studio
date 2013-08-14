@@ -26,6 +26,7 @@ class BatchIf {
   virtual void loadLibrary( ::flowbox::batch::libs::Library& _return, const  ::flowbox::batch::libs::Library& library) = 0;
   virtual void unloadLibrary(const  ::flowbox::batch::libs::Library& library) = 0;
   virtual void storeLibrary(const  ::flowbox::batch::libs::Library& library) = 0;
+  virtual void buildLibrary(const  ::flowbox::batch::libs::Library& library) = 0;
   virtual void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::Library& library) = 0;
   virtual void defsGraph( ::flowbox::batch::defs::DefsGraph& _return, const  ::flowbox::batch::libs::Library& library) = 0;
   virtual void newDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::types::Type& type, const  ::flowbox::batch::defs::Imports& imports, const  ::flowbox::batch::attrs::Flags& flags, const  ::flowbox::batch::attrs::Attributes& attrs) = 0;
@@ -109,6 +110,9 @@ class BatchNull : virtual public BatchIf {
     return;
   }
   void storeLibrary(const  ::flowbox::batch::libs::Library& /* library */) {
+    return;
+  }
+  void buildLibrary(const  ::flowbox::batch::libs::Library& /* library */) {
     return;
   }
   void libraryRootDef( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::libs::Library& /* library */) {
@@ -1367,6 +1371,114 @@ class Batch_storeLibrary_presult {
   ArgumentException missingFields;
 
   _Batch_storeLibrary_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_buildLibrary_args__isset {
+  _Batch_buildLibrary_args__isset() : library(false) {}
+  bool library;
+} _Batch_buildLibrary_args__isset;
+
+class Batch_buildLibrary_args {
+ public:
+
+  Batch_buildLibrary_args() {
+  }
+
+  virtual ~Batch_buildLibrary_args() throw() {}
+
+   ::flowbox::batch::libs::Library library;
+
+  _Batch_buildLibrary_args__isset __isset;
+
+  void __set_library(const  ::flowbox::batch::libs::Library& val) {
+    library = val;
+  }
+
+  bool operator == (const Batch_buildLibrary_args & rhs) const
+  {
+    if (!(library == rhs.library))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_buildLibrary_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_buildLibrary_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_buildLibrary_pargs {
+ public:
+
+
+  virtual ~Batch_buildLibrary_pargs() throw() {}
+
+  const  ::flowbox::batch::libs::Library* library;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_buildLibrary_result__isset {
+  _Batch_buildLibrary_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_buildLibrary_result__isset;
+
+class Batch_buildLibrary_result {
+ public:
+
+  Batch_buildLibrary_result() {
+  }
+
+  virtual ~Batch_buildLibrary_result() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_buildLibrary_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_buildLibrary_result & rhs) const
+  {
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_buildLibrary_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_buildLibrary_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_buildLibrary_presult__isset {
+  _Batch_buildLibrary_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_buildLibrary_presult__isset;
+
+class Batch_buildLibrary_presult {
+ public:
+
+
+  virtual ~Batch_buildLibrary_presult() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_buildLibrary_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -4270,6 +4382,9 @@ class BatchClient : virtual public BatchIf {
   void storeLibrary(const  ::flowbox::batch::libs::Library& library);
   void send_storeLibrary(const  ::flowbox::batch::libs::Library& library);
   void recv_storeLibrary();
+  void buildLibrary(const  ::flowbox::batch::libs::Library& library);
+  void send_buildLibrary(const  ::flowbox::batch::libs::Library& library);
+  void recv_buildLibrary();
   void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::Library& library);
   void send_libraryRootDef(const  ::flowbox::batch::libs::Library& library);
   void recv_libraryRootDef( ::flowbox::batch::defs::Definition& _return);
@@ -4365,6 +4480,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_loadLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_unloadLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_storeLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_buildLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_libraryRootDef(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_defsGraph(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_newDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -4402,6 +4518,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["loadLibrary"] = &BatchProcessor::process_loadLibrary;
     processMap_["unloadLibrary"] = &BatchProcessor::process_unloadLibrary;
     processMap_["storeLibrary"] = &BatchProcessor::process_storeLibrary;
+    processMap_["buildLibrary"] = &BatchProcessor::process_buildLibrary;
     processMap_["libraryRootDef"] = &BatchProcessor::process_libraryRootDef;
     processMap_["defsGraph"] = &BatchProcessor::process_defsGraph;
     processMap_["newDefinition"] = &BatchProcessor::process_newDefinition;
@@ -4555,6 +4672,15 @@ class BatchMultiface : virtual public BatchIf {
       ifaces_[i]->storeLibrary(library);
     }
     ifaces_[i]->storeLibrary(library);
+  }
+
+  void buildLibrary(const  ::flowbox::batch::libs::Library& library) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->buildLibrary(library);
+    }
+    ifaces_[i]->buildLibrary(library);
   }
 
   void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::Library& library) {

@@ -55,6 +55,7 @@ class Batch_Iface a where
   loadLibrary :: a -> Maybe Libs_Types.Library -> IO Libs_Types.Library
   unloadLibrary :: a -> Maybe Libs_Types.Library -> IO ()
   storeLibrary :: a -> Maybe Libs_Types.Library -> IO ()
+  buildLibrary :: a -> Maybe Libs_Types.Library -> IO ()
   libraryRootDef :: a -> Maybe Libs_Types.Library -> IO Defs_Types.Definition
   defsGraph :: a -> Maybe Libs_Types.Library -> IO Defs_Types.DefsGraph
   newDefinition :: a -> Maybe Types_Types.Type -> Maybe (Vector.Vector Defs_Types.Import) -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes -> IO Defs_Types.Definition

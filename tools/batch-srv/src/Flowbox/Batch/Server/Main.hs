@@ -65,6 +65,7 @@ instance Batch_Iface BatchHandler where
     loadLibrary         = HLibs.loadLibrary
     unloadLibrary       = HLibs.unloadLibrary
     storeLibrary        = HLibs.storeLibrary
+    buildLibrary        = HLibs.buildLibrary
     libraryRootDef      = HLibs.libraryRootDef
 
     defsGraph           = HDefs.defsGraph

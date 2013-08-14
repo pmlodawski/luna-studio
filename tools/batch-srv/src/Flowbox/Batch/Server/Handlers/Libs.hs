@@ -11,6 +11,7 @@ module Flowbox.Batch.Server.Handlers.Libs (
     loadLibrary,
     unloadLibrary,
     storeLibrary,
+    buildLibrary,
     libraryRootDef,
     ------------
     libOperation,
@@ -66,7 +67,8 @@ createLibrary batchHandler = libOperation (\ (_, library) -> do
         libPath = Library.path library
     case Batch.createLibrary libName libPath batch of
         Left message -> throw' message
-        Right (newBatch, newLibrary) -> 
+        Right (newBatch, newLibrary) -> do
+            writeIORef batchHandler newBatch
             return $ fst $ (encode newLibrary :: (TLibs.Library, DefManager)))
 
 
@@ -89,14 +91,24 @@ unloadLibrary batchHandler = libOperation (\ (libID, _) -> do
     batch <- readIORef batchHandler
     case Batch.unloadLibrary libID batch of 
         Left message   -> throw' message
-        Right newBatch -> do
-            writeIORef batchHandler newBatch)
+        Right newBatch -> writeIORef batchHandler newBatch)
 
 
 storeLibrary :: IORef Batch -> Maybe TLibs.Library -> IO ()
 storeLibrary batchHandler = libOperation (\ (libID, _) -> do
+    putStrLn "call storeLibrary"
     batch <- readIORef batchHandler
     r     <- Batch.storeLibrary libID batch
+    case r of 
+        Left message -> throw' message
+        Right ()     -> return ())
+
+
+buildLibrary :: IORef Batch -> Maybe TLibs.Library -> IO ()
+buildLibrary batchHandler = libOperation (\ (libID, _) -> do
+    putStrLn "call buildLibrary"
+    batch <- readIORef batchHandler
+    r     <- Batch.buildLibrary libID batch
     case r of 
         Left message -> throw' message
         Right ()     -> return ())

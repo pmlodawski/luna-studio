@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Builder.Builder(
+module Flowbox.Luna.Builder.Builder (
     Builder(..),
     empty,
     buildLibrary,
@@ -30,7 +30,7 @@ import           Flowbox.System.Directory             as Dir
 
 
 
-data Builder = Builder { path :: UniPath }
+data Builder = Builder { path :: UniPath } deriving (Show)
 
 
 empty :: Builder

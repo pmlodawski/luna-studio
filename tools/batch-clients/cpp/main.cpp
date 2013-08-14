@@ -140,6 +140,9 @@ int main(int argc, char **argv) {
         batch.connect(inputs, {7, 8}, outputs, {5}, fun, userlib);
         batch.disconnect(inputs, {1, 2, 5}, outputs, {1}, fun, userlib);
 
+        batch.buildLibrary(userlib);
+
+        batch.ping();
     } catch (ArgumentException e) {
         cout << "Batch returned an error: "<< endl
              << "\t" << e.message << endl;

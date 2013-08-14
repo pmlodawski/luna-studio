@@ -77,6 +77,11 @@ class BatchHandler : virtual public BatchIf {
     printf("storeLibrary\n");
   }
 
+  void buildLibrary(const  ::flowbox::batch::libs::Library& library) {
+    // Your implementation goes here
+    printf("buildLibrary\n");
+  }
+
   void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::Library& library) {
     // Your implementation goes here
     printf("libraryRootDef\n");

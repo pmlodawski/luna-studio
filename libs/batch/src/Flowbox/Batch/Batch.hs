@@ -21,6 +21,7 @@ module Flowbox.Batch.Batch (
     loadLibrary,
     unloadLibrary,
     storeLibrary,
+    buildLibrary,
     libraryRootDef,
 
     defsGraph ,
@@ -45,6 +46,8 @@ import qualified Flowbox.Batch.Project.Project        as Project
 import           Flowbox.Batch.Project.Project          (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
 import           Flowbox.Batch.Project.ProjectManager   (ProjectManager)
+import qualified Flowbox.Luna.Builder.Builder         as Builder
+import           Flowbox.Luna.Builder.Builder           (Builder(..))
 import qualified Flowbox.Luna.Lib.LibManager          as LibManager
 import           Flowbox.Luna.Lib.LibManager            (LibManager)
 import qualified Flowbox.Luna.Lib.Library             as Library
@@ -59,7 +62,6 @@ import qualified Flowbox.Luna.Network.Graph.Node      as Node
 import           Flowbox.Luna.Network.Graph.Node        (Node(..))
 import qualified Flowbox.Luna.Tools.Serialize.Lib     as LibSerialization
 import           Flowbox.System.UniPath                 (UniPath)
-
 
 
 data Batch = Batch { projectManager  :: ProjectManager
@@ -297,6 +299,15 @@ unloadLibrary libID = noresult . libManagerOp (\_ libManager ->
 storeLibrary :: Library.ID -> Batch -> IO (Either String ())
 storeLibrary libID = readonly' . libraryOp' libID (\_ library -> do
     LibSerialization.storeLibrary library
+    return $ Right (library, ()))
+
+
+buildLibrary :: Library.ID -> Batch -> IO (Either String ())
+buildLibrary libID = readonly' . libraryOp' libID (\batch library -> do
+    let Just proj = activeProject batch
+        path = Project.path proj
+        b = Builder path
+    Builder.buildLibrary b library
     return $ Right (library, ()))
 
 
