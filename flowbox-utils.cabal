@@ -21,12 +21,17 @@ Library
   Extensions:     DoAndIfThenElse
 
   Exposed-modules: 
-        Flowbox.System.UniPath,
-        Flowbox.System.IO,
+        Flowbox.Tools.Conversion,
+        Flowbox.Control.Error,
         Flowbox.System.Directory,
+        Flowbox.System.IO,
+        Flowbox.System.UniPath,
         Flowbox.System.IO.Serializer
 
   Build-Depends:  base,
                   directory,
+                  errors,
                   MissingH,
-                  split
+                  split,
+                  text,
+                  transformers
