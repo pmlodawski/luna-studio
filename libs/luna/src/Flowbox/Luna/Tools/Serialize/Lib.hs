@@ -20,6 +20,7 @@ import           Thrift.Protocol.Binary
 
 import qualified Defs_Types                                           as TDefs
 import qualified Graph_Types                                          as TGraph
+import qualified Libs_Types                                           as TLibs
 import qualified Flowbox.System.UniPath                               as UniPath
 import           Flowbox.System.UniPath                                 (UniPath)
 import qualified Flowbox.Luna.Network.Def.DefManager                  as DefManager
@@ -33,9 +34,9 @@ import           Flowbox.Luna.Type.Type                                 (Type(..
 import           Flowbox.Tools.Conversion                               
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs    ()
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph   ()
+import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs    ()
 import qualified Flowbox.System.IO.Serializer                         as Serializer
-import           Flowbox.System.IO.Serializer                           (Serializable(..))
-
+import           Flowbox.System.IO.Serializer                           (Serializable(..), Deserializable(..))
 
 
 nodeFileExtension :: String
@@ -46,10 +47,21 @@ graphFileExtension :: String
 graphFileExtension = ".graph"
 
 
-save :: Handle -> (BinaryProtocol Handle -> object -> IO()) -> object -> IO()
-save h method object = do 
+libConfigFile :: String
+libConfigFile = "lib.conf"
+
+
+thriftSave :: (BinaryProtocol Handle -> object -> IO()) -> object -> Handle -> IO()
+thriftSave write object h = do 
     let protocol = BinaryProtocol h
-    method protocol object
+    write protocol object
+
+
+thriftLoad :: (BinaryProtocol Handle -> IO tobject) -> (tobject -> Either String object) -> Handle -> IO (Either String object)
+thriftLoad read convert h = do
+    let protocol = BinaryProtocol h
+    tobject <- read protocol
+    return $ convert tobject
 
 
 generate :: DefManager -> UniPath -> Definition.ID -> Definition -> [Serializable]
@@ -61,12 +73,12 @@ generate defManager upath defID def = sdef:sgraph:schildren where
     tgraph        = encode graph
 
     defFilename   = UniPath.setExtension nodeFileExtension upath
-    saveDef h     = save h TDefs.write_Definition tdef
+    saveDef       = thriftSave TDefs.write_Definition tdef
 
     sdef          = Serializable defFilename saveDef
 
     graphFilename = UniPath.setExtension graphFileExtension upath
-    saveGraph h   = save h TGraph.write_Graph tgraph
+    saveGraph     = thriftSave TGraph.write_Graph tgraph
 
     sgraph        = Serializable graphFilename saveGraph
 
@@ -83,6 +95,16 @@ checkedGenerate defManager udirpath defID = s where
                 where gen aname = generate defManager (UniPath.append aname udirpath) defID def
 
 
+prepareLibrary :: Library -> Serializable
+prepareLibrary lib = slib where
+    lpath  = UniPath.append libConfigFile $ Library.path lib
+    tlib   = fst $ encode (-1::Library.ID, lib)
+
+    savelib = thriftSave TLibs.write_Library tlib
+
+    slib = Serializable lpath savelib
+
+
 storeLibrary :: Library -> IO ()
 storeLibrary lib = do 
     let defManager   = Library.defs lib
@@ -90,8 +112,11 @@ storeLibrary lib = do
         libRootDefID = Library.rootDefID
 
         defs = checkedGenerate defManager rootPath libRootDefID 
+        slib  = prepareLibrary lib
 
+    Serializer.serialize slib
     Serializer.serializeMany defs
+
 
     return ()
 
@@ -115,11 +140,37 @@ storeLibrary lib = do
 --          folderFilePattern  = "[A-Za-z0-9]+$"
 
 -- mocked
+--restoreLibrary :: UniPath -> IO Library
+--restoreLibrary path = do 
+
+--    putStrLn "restoreLibrary - NOT IMPLEMENTED"
+--    return $ Library.make "restored" path
+
+
+
+getLibrary :: UniPath -> IO (Either String Library)
+getLibrary upath = do 
+    let 
+        convert :: TLibs.Library -> Either String Library
+        convert t = case decode (t, DefManager.empty) :: Either String (Library.ID, Library) of
+            Left m       -> Left m
+            Right (_, a) -> Right a
+
+        dlib :: Deserializable Library
+        dlib = Deserializable upath $ thriftLoad TLibs.read_Library convert
+
+    Serializer.deserialize dlib
+
+
+
+
+
+-- mocked
 restoreLibrary :: UniPath -> IO Library
-restoreLibrary path = do 
-    putStrLn "restoreLibrary - NOT IMPLEMENTED"
-    return $ Library.make "restored" path
-
-
-
-
+restoreLibrary lpath = do
+    mlibrary <- getLibrary $ UniPath.append libConfigFile lpath
+    case mlibrary of
+        Left msg      -> error msg
+        Right library -> do 
+            let defs = DefManager.empty -- TODO [PM] IMPLEMENT 
+            return library{Library.defs = defs}

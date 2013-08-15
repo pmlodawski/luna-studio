@@ -38,26 +38,21 @@ int main(int argc, char **argv) {
         vector<Library> registeredLibs;
 
         Library lib1;
-        lib1.__set_name("lib1");
-        lib1.__set_path("/opt/luna/lib");
+        lib1.__set_name("userlib1");
+        lib1.__set_path("userlib1");
 
         Library userlib;
-        userlib.__set_name("lib2");
-        userlib.__set_path("~/luna-projects/myproj");
-
-        batch.loadLibrary(lib1, "lib1");
-        batch.loadLibrary(userlib,"userlib");
-        batch.libraries(registeredLibs);
-        cout << "Libraries loaded: " << registeredLibs.size() << endl;
-        batch.unloadLibrary(userlib.libID);
-        batch.libraries(registeredLibs);
-        cout << "Libraries loaded: " << registeredLibs.size() << endl;
-        batch.loadLibrary(userlib, "userlib");
+        userlib.__set_name("userlib2");
+        userlib.__set_path("userlib2");
 
         batch.libraries(registeredLibs);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
 
-
+        batch.createLibrary(lib1, lib1);
+        batch.createLibrary(userlib, userlib);
+        
+        batch.libraries(registeredLibs);
+        cout << "Libraries loaded: " << registeredLibs.size() << endl;
 
         /* Add new definition */
         
@@ -132,7 +127,17 @@ int main(int argc, char **argv) {
         batch.connect(inputs.nodeID, {7, 8}, outputs.nodeID, {5}, fun.defID, userlib.libID);
         batch.disconnect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID);
 
+        batch.storeLibrary(userlib.libID);
         batch.buildLibrary(userlib.libID);
+
+        batch.libraries(registeredLibs);
+        cout << "Libraries loaded: " << registeredLibs.size() << endl;
+        batch.unloadLibrary(userlib.libID);
+        batch.libraries(registeredLibs);
+        cout << "Libraries loaded: " << registeredLibs.size() << endl;
+        batch.loadLibrary(userlib,"userlib2");
+        batch.libraries(registeredLibs);
+        cout << "Libraries loaded: " << registeredLibs.size() << endl;
 
         batch.dump();
         batch.ping();
