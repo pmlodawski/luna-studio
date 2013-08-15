@@ -5,6 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
+
 import           Debug.Trace                             
 
 import qualified Flowbox.Luna.Samples.HelloWorld       as HelloWorld
@@ -28,6 +30,7 @@ import qualified Flowbox.System.UniPath                as UniPath
 import           Flowbox.System.UniPath                  (UniPath)
 
 
+test :: DefManager.DefManager -> Graph.Vertex -> Module.Module
 test manager did = out where
     mod = DG.generateDefinition manager did
     out = trace(show mod) mod

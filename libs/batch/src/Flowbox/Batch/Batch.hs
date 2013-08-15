@@ -238,10 +238,10 @@ createProject :: Project -> Batch -> IO ()
 createProject project _ = ProjectManager.createProject project
 
 
-openProject :: Project -> Batch -> IO (Batch, (Project.ID, Project))
-openProject project batch = do
+openProject :: UniPath -> Batch -> IO (Batch, (Project.ID, Project))
+openProject ppath batch = do
     let aprojectManager = projectManager batch
-    (newProjectManager, newP) <- ProjectManager.openProject aprojectManager project
+    (newProjectManager, newP) <- ProjectManager.openProject aprojectManager ppath
     let newBatch = batch {projectManager = newProjectManager}
     return (newBatch, newP)
 
@@ -282,11 +282,9 @@ createLibrary libName libPath = libManagerOp (\_ libManager ->
     in Right (newLibManager, (libID, library)))
 
 
-loadLibrary :: Library -> Batch -> IO (Either String (Batch, (Library.ID, Library)))
-loadLibrary library = libManagerOp' (\_ libManager -> do
-    let lname = Library.name library
-        lpath = Library.path library
-    r <- LibManager.loadLibrary lname lpath libManager
+loadLibrary :: UniPath -> Batch -> IO (Either String (Batch, (Library.ID, Library)))
+loadLibrary lpath = libManagerOp' (\_ libManager -> do
+    r <- LibManager.loadLibrary lpath libManager
     return $ Right r)
 
 
@@ -305,8 +303,8 @@ storeLibrary libID = readonly' . libraryOp' libID (\_ library -> do
 buildLibrary :: Library.ID -> Batch -> IO (Either String ())
 buildLibrary libID = readonly' . libraryOp' libID (\batch library -> do
     let Just proj = activeProject batch
-        path = Project.path proj
-        b = Builder path
+        ppath = Project.path proj
+        b = Builder ppath
     Builder.buildLibrary b library
     return $ Right (library, ()))
 
@@ -399,25 +397,25 @@ removeNode nodeID defID libID = noresult . graphOp defID libID (\_ agraph ->
 
 
 connect :: Node.ID -> [Int] -> Node.ID -> Int -> Definition.ID -> Library.ID -> Batch -> Either String Batch
-connect srcNodeID srcPort dstNodeID dstPort defID libID = noresult . graphOp defID libID (\_ agraph -> 
+connect srcNodeID asrcPort dstNodeID adstPort defID libID = noresult . graphOp defID libID (\_ agraph -> 
     case Graph.gelem srcNodeID agraph of 
         False     -> Left "Wrong `srcNodeID`"
         True      -> case Graph.gelem dstNodeID agraph of 
             False -> Left "Wrong `dstNodeID`"
             True  -> 
                 let newGraph = GraphView.toGraph 
-                             $ GraphView.insEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) 
+                             $ GraphView.insEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
                              $ GraphView.fromGraph agraph
                 in Right (newGraph, ()))
 
 disconnect :: Node.ID -> [Int] -> Node.ID -> Int -> Definition.ID -> Library.ID -> Batch -> Either String Batch
-disconnect srcNodeID srcPort dstNodeID dstPort defID libID = noresult . graphOp defID libID (\_ agraph -> 
+disconnect srcNodeID asrcPort dstNodeID adstPort defID libID = noresult . graphOp defID libID (\_ agraph -> 
     case Graph.gelem srcNodeID agraph of 
         False     -> Left "Wrong `srcNodeID`"
         True      -> case Graph.gelem dstNodeID agraph of 
             False -> Left "Wrong `dstNodeID`"
             True  -> 
                 let newGraph = GraphView.toGraph 
-                             $ GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) 
+                             $ GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
                              $ GraphView.fromGraph agraph
                 in Right (newGraph, ()))

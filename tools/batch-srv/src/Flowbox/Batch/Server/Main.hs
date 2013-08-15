@@ -35,6 +35,7 @@ import qualified Flowbox.Batch.Server.Handlers.Types    as HTypes
 import qualified Flowbox.Batch.Project.Project          as Project
 import qualified Flowbox.Batch.Project.ProjectManager   as ProjectManager
 import qualified Flowbox.Batch.Samples.Modules          as Sample
+import           Flowbox.Control.Error                    
 
 port :: PortNumber
 port = 30521
@@ -93,7 +94,9 @@ instance Batch_Iface BatchHandler where
     disconnect          = HGraph.disconnect
 
     ping _              = putStrLn "ping"
-
+    dump batchHandler   = runScript $ do
+        batch <- tryReadIORef batchHandler
+        scriptIO $ print batch
 
 main :: IO ()
 main = do

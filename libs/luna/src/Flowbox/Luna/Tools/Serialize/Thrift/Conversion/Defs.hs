@@ -10,23 +10,24 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs where
 
-import           Data.Int                                                    
-import           Data.Text.Lazy                                              (pack, unpack)
-import qualified Data.HashMap.Strict                                       as HashMap
-import qualified Data.Vector                                               as Vector
+import           Data.Int                                               
+import           Data.Text.Lazy                                         (pack, unpack)
+import qualified Data.HashMap.Strict                                  as HashMap
+import qualified Data.Vector                                          as Vector
 
-import qualified Defs_Types                                                as TDefs
-import           Flowbox.Luna.Network.Graph.Graph                            (Graph)
-import           Flowbox.Luna.Network.Def.Edge                               (Edge(..))
-import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
-import           Flowbox.Luna.Network.Def.Definition                         (Definition(..))
-import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
-import           Flowbox.Luna.Network.Def.DefManager                         (DefManager(..))
-import           Flowbox.Luna.Network.Path.Import                            (Import(..))
-import qualified Flowbox.Luna.Network.Path.Path                            as Path
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs        ()
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types        ()
+import qualified Defs_Types                                           as TDefs
+import           Flowbox.Control.Error                                  
+import           Flowbox.Luna.Network.Graph.Graph                       (Graph)
+import           Flowbox.Luna.Network.Def.Edge                          (Edge(..))
+import qualified Flowbox.Luna.Network.Def.Definition                  as Definition
+import           Flowbox.Luna.Network.Def.Definition                    (Definition(..))
+import qualified Flowbox.Luna.Network.Def.DefManager                  as DefManager
+import           Flowbox.Luna.Network.Def.DefManager                    (DefManager)
+import           Flowbox.Luna.Network.Path.Import                       (Import(..))
+import qualified Flowbox.Luna.Network.Path.Path                       as Path
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types   ()
+import           Flowbox.Tools.Conversion                               
 
 
 encodeLabNode :: (Definition.ID, Definition) -> (Int32, TDefs.Definition)
@@ -45,27 +46,28 @@ instance Convert (Int, Int, Edge) TDefs.Edge where
 
 instance Convert DefManager TDefs.DefsGraph where
     encode defManager = tdefGraph where
-        labNodesList = DefManager.labNodes defManager
-        tdefs        = HashMap.fromList $ map (encodeLabNode) labNodesList
+        labNodesList  = DefManager.labNodes defManager
+        tdefs         = HashMap.fromList $ map (encodeLabNode) labNodesList
 
-        labEdgesList = DefManager.labEdges defManager
-        tedges       = Vector.fromList $ map (encode) labEdgesList
-        tdefGraph    = TDefs.DefsGraph (Just tdefs) (Just tedges)
-    decode tdefGraph = defManager where
+        labEdgesList  = DefManager.labEdges defManager
+        tedges        = Vector.fromList $ map (encode) labEdgesList
+        tdefGraph     = TDefs.DefsGraph (Just tdefs) (Just tedges)
+    decode _ = defManager where
         defManager = error "Not implemented" --TODO [PM] not implemented
         
 
 instance Convert Import TDefs.Import where
     encode (Import apath aitems) = timport where
-        tpath   = Just $ Vector.fromList $ map (pack) $ Path.toList apath
-        titems  = Just $ Vector.fromList $ map (pack) aitems
-        timport = TDefs.Import tpath titems
-    decode timport = case timport of 
-        TDefs.Import (Just tpath) (Just titems) -> Right $ Import apath aitems where
-                                                        apath = Path.fromList $ map (unpack) $ Vector.toList tpath
-                                                        aitems = map (unpack) $ Vector.toList titems
-        TDefs.Import (Just _    ) Nothing       -> Left "`items` field is missing"
-        TDefs.Import Nothing      _             -> Left "`path` field is missing"
+        mtpath   = Just $ Vector.fromList $ map (pack) $ Path.toList apath
+        mtitems  = Just $ Vector.fromList $ map (pack) aitems
+        timport  = TDefs.Import mtpath mtitems
+    decode (TDefs.Import mtpath mtitems) = do
+        tpath  <- mtpath  <?> "Failed to decode Import: `path` field is missing"
+        titems <- mtitems <?> "Failed to decode Import: `items` field is missing"
+        let
+            apath  = Path.fromList $ map (unpack) $ Vector.toList tpath
+            aitems = map (unpack) $ Vector.toList titems
+        return $ Import apath aitems
 
 
 
@@ -78,34 +80,27 @@ instance Convert [Import] TDefs.Imports where
 
 
 instance Convert (Int, Definition) (TDefs.Definition, Graph) where
-  encode (defID, Definition acls agraph aimports aflags aattributes) = (tdef, agraph) where
-     ttype       = Just $ encode acls
-     timports    = Just $ encode aimports
-     tflags      = Just $ encode aflags
-     tattributes = Just $ encode aattributes
-     tdefID      = Just $ itoi32 defID
-     tdef = TDefs.Definition ttype timports tflags tattributes tdefID 
-  decode (TDefs.Definition mtcls mtimports mtflags mtattributes mtdefID, agraph) = case mtcls of 
-    Nothing                                           -> Left "`type` field is missing"
-    Just tcls                                         -> case mtimports of 
-        Nothing                                       -> Left "`imports` field is missing"
-        Just timports                                 -> case mtflags of 
-            Nothing                                   -> Left "`flags` field is missing"
-            Just tflags                               -> case mtattributes of 
-                Nothing                               -> Left "`attributes` field is missing"
-                Just tattributes                      -> case mtdefID of 
-                    Nothing                           -> Left "`defID` field is missing"
-                    Just tdefID                       -> case decode tcls of 
-                        Left message                  -> Left $ "Failed to deserialize `cls` : " ++ message
-                        Right acls                    -> case decode timports of 
-                            Left message              -> Left $ "Failed to deserialize `imports` : " ++ message
-                            Right aimports            -> case decode tflags of 
-                                Left message          -> Left $ "Failed to deserialize `flags` : " ++ message
-                                Right aflags          -> case decode tattributes of
-                                    Left message      -> Left $ "Failed to deserialize `attributes` : " ++ message
-                                    Right aattributes -> Right (adefID, nodeDef) where
-                                        nodeDef = Definition acls agraph aimports aflags aattributes
-                                        adefID = i32toi tdefID
+    encode (defID, Definition acls agraph aimports aflags aattributes) = (tdef, agraph) where
+        tcls        = Just $ encode acls
+        timports    = Just $ encode aimports
+        tflags      = Just $ encode aflags
+        tattributes = Just $ encode aattributes
+        tdefID      = Just $ itoi32 defID
+        tdef = TDefs.Definition tcls timports tflags tattributes tdefID 
+    decode (TDefs.Definition mtcls mtimports mtflags mtattributes mtdefID, agraph) = do 
+        tcls        <- mtcls        <?> "Failed to decode Definition: `type` field is missing"
+        timports    <- mtimports    <?> "Failed to decode Definition: `imports` field is missing"
+        tflags      <- mtflags      <?> "Failed to decode Definition: `flags` field is missing"
+        tattributes <- mtattributes <?> "Failed to decode Definition: `attributes` field is missing"
+        tdefID      <- mtdefID      <?> "Failed to decode Definition: `defID` field is missing"
+        acls        <- decode tcls
+        aimports    <- decode timports
+        aflags      <- decode tflags
+        aattributes <- decode tattributes 
+        let nodeDef = Definition acls agraph aimports aflags aattributes
+            adefID = i32toi tdefID
+        return (adefID, nodeDef)
+                                        
 
 
 

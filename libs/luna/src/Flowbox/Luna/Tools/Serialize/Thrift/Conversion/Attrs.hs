@@ -10,36 +10,36 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs where
 
-import qualified Data.HashMap.Strict                                       as HashMap
-import           Data.HashMap.Strict                                         (HashMap)
-import           Data.Text.Lazy                                              (Text, pack, unpack)
+import qualified Data.HashMap.Strict             as HashMap
+import           Data.HashMap.Strict               (HashMap)
+import           Data.Text.Lazy                    (Text, pack, unpack)
 
-import qualified Attrs_Types                                               as TAttrs
-import           Flowbox.Luna.Network.Flags                                  (Flags(..))
-import qualified Flowbox.Luna.Network.Attributes                           as Attributes
-import           Flowbox.Luna.Network.Attributes                             (Attributes)
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
+import qualified Attrs_Types                     as TAttrs
+import           Flowbox.Control.Error             
+import           Flowbox.Luna.Network.Flags        (Flags(..))
+import qualified Flowbox.Luna.Network.Attributes as Attributes
+import           Flowbox.Luna.Network.Attributes   (Attributes)
+import           Flowbox.Tools.Conversion          
 
 
 instance Convert Flags TAttrs.Flags where
-  encode (Flags aio aomit) = TAttrs.Flags (Just aio) (Just aomit)
-  decode (TAttrs.Flags (Just aio) (Just aomit)) = Right $ Flags aio aomit
-  decode (TAttrs.Flags (Just _  ) Nothing     ) = Left "`omit` field is missing"
-  decode (TAttrs.Flags {}                     ) = Left "`io` field is missing"
+    encode (Flags aio aomit) = TAttrs.Flags (Just aio) (Just aomit)
+    decode (TAttrs.Flags (Just aio) (Just aomit)) = Right $ Flags aio aomit
+    decode (TAttrs.Flags (Just _  ) Nothing     ) = Left "Failed to decode Flags: `omit` field is missing"
+    decode (TAttrs.Flags {}                     ) = Left "Failed to decode Flags: `io` field is missing"
 
 
 instance Convert Attributes TAttrs.Attributes where
-  encode m = TAttrs.Attributes $ Just h where
-                 mItems = Attributes.toList m
-                 mcItems = map convertItem mItems
-                 h = HashMap.fromList mcItems
+    encode m = TAttrs.Attributes $ Just h where
+        mItems  = Attributes.toList m
+        mcItems = map convertItem mItems
+        h       = HashMap.fromList mcItems
 
-  decode el = case el of
-    (TAttrs.Attributes (Just h)) -> Right m where
-                                            hItems = HashMap.toList h
-                                            hcItems = map convertItemBack hItems
-                                            m = Attributes.fromList hcItems
-    (TAttrs.Attributes Nothing)  ->  Left "`map` field is missing"
+    decode (TAttrs.Attributes mtspaces) = do
+        tspaces <- mtspaces <?> "Failed to decode Attributes: `spaces` field is missing"
+        let hItems  = HashMap.toList tspaces
+            hcItems = map convertItemBack hItems
+        return $ Attributes.fromList hcItems
 
 
 convertItem :: (String, Attributes.Map String String) -> (Text, HashMap Text Text)

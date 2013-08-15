@@ -7,7 +7,7 @@
 
 {-# LANGUAGE FunctionalDependencies, MultiParamTypeClasses #-}
 
-module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion where
+module Flowbox.Tools.Conversion where
 
 import           Data.Int   
 

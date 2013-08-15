@@ -15,136 +15,107 @@ module Flowbox.Batch.Server.Handlers.Defs (
 
     definitionChildren,
     definitionParent,
-
-    defOperation
 ) 
 where
 
-import           Data.IORef                                                  
-import qualified Data.Vector                                               as Vector
-import           Data.Vector                                                 (Vector)
 
-import qualified Attrs_Types                                               as TAttrs
-import qualified Defs_Types                                                as TDefs
-import qualified Libs_Types                                                as TLibs
-import qualified Types_Types                                               as TTypes
+import           Data.Int                                              
+import           Data.IORef                                            
+import qualified Data.Vector                                         as Vector
+import           Data.Vector                                           (Vector)
 
-import           Flowbox.Batch.Server.Handlers.Common                        
-import           Flowbox.Batch.Server.Handlers.Libs                          (libOperation)
-import qualified Flowbox.Batch.Batch                                       as Batch
-import           Flowbox.Batch.Batch                                         (Batch(..))
-import qualified Flowbox.Luna.Lib.Library                                  as Library
-import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
-import           Flowbox.Luna.Network.Def.Definition                         (Definition)
-import qualified Flowbox.Luna.Network.Graph.Graph                          as Graph
-import           Flowbox.Luna.Network.Graph.Graph                            (Graph)
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
+import qualified Attrs_Types                                         as TAttrs
+import qualified Defs_Types                                          as TDefs
+import qualified Types_Types                                         as TTypes
 
- 
------- public api helpers -----------------------------------------
-
-defOperation :: ((Definition.ID, Definition) -> Library.ID -> result)
-             -> Maybe TDefs.Definition -> Maybe TLibs.Library -> result
-defOperation operation mtdefinition = libOperation (\ (libID, _) -> 
-    case mtdefinition of 
-        Nothing                       -> throw' "`definition` field is missing"
-        Just tdefinition              -> case (decode (tdefinition, Graph.empty) :: Either String (Int, Definition) ) of 
-            Left message              -> throw' ("Failed to decode `definition` 2: " ++ message)
-            Right (defID, definition) -> operation (defID, definition) libID)
-
-
-defParentOperation :: (Definition -> Int -> Library.ID -> result)
-                   -> Maybe TDefs.Definition -> Maybe TDefs.Definition
-                   -> Maybe TLibs.Library -> result
-defParentOperation operation mtdefinition mtparent = libOperation (\ (libID, _) -> 
-    case mtdefinition of 
-        Nothing                         -> throw' "`definition` field is missing"
-        Just tdefinition                -> case decode (tdefinition, Graph.empty) :: Either String (Definition.ID, Definition) of
-            Left message                -> throw' $ "Failed to decode `definition` 1: " ++ message
-            Right (_, definition)       -> case mtparent of 
-                Nothing                 -> throw' "`parent` field is missing"
-                Just tparent            -> case decode (tparent, Graph.empty) :: Either String (Definition.ID, Definition) of 
-                    Left message        -> throw' $ "Failed to decode `parent`: " ++ message
-                    Right (parentID, _) -> operation definition parentID libID)
+import           Flowbox.Batch.Server.Handlers.Common                  
+import qualified Flowbox.Batch.Batch                                 as Batch
+import           Flowbox.Batch.Batch                                   (Batch(..))
+import           Flowbox.Control.Error                                 
+import qualified Flowbox.Luna.Network.Def.Definition                 as Definition
+import           Flowbox.Luna.Network.Def.Definition                   (Definition)
+import qualified Flowbox.Luna.Network.Graph.Graph                    as Graph
+import           Flowbox.Luna.Network.Graph.Graph                      (Graph)
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
+import           Flowbox.Tools.Conversion                              
 
 
 ------ public api -------------------------------------------------
 
-defsGraph :: IORef Batch -> Maybe TLibs.Library -> IO TDefs.DefsGraph
-defsGraph batchHandler = libOperation (\ (libID, _) -> do
-    putStrLn "call defsGraph"
-    batch <- readIORef batchHandler
-    case Batch.defsGraph libID batch of
-        Left message -> throw' message
-        Right adefManager -> return $ encode adefManager)
+defsGraph :: IORef Batch -> Maybe Int32 -> IO TDefs.DefsGraph
+defsGraph batchHandler mtlibID = tRunScript $ do
+    scriptIO $ putStrLn "called defsGraph"
+    libID       <- tryGetID mtlibID "libID"
+    batch       <- tryReadIORef batchHandler
+    adefManager <- tryRight $ Batch.defsGraph libID batch
+
+    return $ encode adefManager
 
 
 newDefinition :: IORef Batch -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
-                            -> Maybe TAttrs.Flags -> Maybe TAttrs.Attributes
-                            -> IO TDefs.Definition
+                             -> Maybe TAttrs.Flags -> Maybe TAttrs.Attributes
+                             -> IO TDefs.Definition
 newDefinition _ ttype timports tflags tattrs = do 
-    putStrLn "Creating new definition...\t\tsuccess!"
+    putStrLn "called newDefinition"
     return $ TDefs.Definition ttype timports tflags tattrs (Just 0)
 
 
 addDefinition :: IORef Batch 
-              -> Maybe TDefs.Definition -> Maybe TDefs.Definition 
-              -> Maybe TLibs.Library -> IO TDefs.Definition
-addDefinition batchHandler = defParentOperation (\definition parentID libID -> do
-    putStrLn "call addDefinition"
-    batch <- readIORef batchHandler
-    case Batch.addDefinition definition parentID libID batch of
-        Left message            -> throw' message
-        Right (newBatch, defID) ->  do 
-            let (newTDefinition, _) = encode (defID, definition)
-            writeIORef batchHandler newBatch
-            return $ newTDefinition)
+              -> Maybe TDefs.Definition -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition
+addDefinition batchHandler mtdefinition mtparentID mtlibID = tRunScript $ do
+    scriptIO $ putStrLn "called addDefinition"
+    tdefinition       <- mtdefinition <??> "`definition` argument is missing"
+    (_, definition)   <- tryRight (decode (tdefinition, Graph.empty) :: Either String (Definition.ID, Definition))
+    parentID          <- tryGetID mtparentID "parentID"    
+    libID             <- tryGetID mtlibID    "libID"
+    batch             <- tryReadIORef batchHandler
+    (newBatch, defID) <- tryRight $ Batch.addDefinition definition parentID libID batch
+    tryWriteIORef batchHandler newBatch
+    return $ fst $ encode (defID, definition)
 
 
-updateDefinition :: IORef Batch -> Maybe TDefs.Definition -> Maybe TLibs.Library -> IO ()
-updateDefinition batchHandler = defOperation (\(defID, definition) libID -> do
-    putStrLn "call updateDefinition"
-    batch <- readIORef batchHandler
-    case Batch.updateDefinition (defID, definition) libID batch of
-        Left message   -> throw' message
-        Right newBatch -> do 
-            writeIORef batchHandler newBatch
-            return ())
+updateDefinition :: IORef Batch -> Maybe TDefs.Definition -> Maybe Int32 -> IO ()
+updateDefinition batchHandler mtdefinition mtlibID = tRunScript $ do
+    scriptIO $ putStrLn "called updateDefinition"
+    
+    tdefinition <- mtdefinition <??> "`definition` field is missing" 
+    definition  <- tryRight $ decode (tdefinition, Graph.empty) -- :: (Definition.ID, Definition)
+    libID       <- tryGetID mtlibID "libID"
+    
+    batch       <- tryReadIORef batchHandler
+    newBatch    <- tryRight $ Batch.updateDefinition definition libID batch
+    tryWriteIORef batchHandler newBatch
 
 
-removeDefinition :: IORef Batch -> Maybe TDefs.Definition -> Maybe TLibs.Library -> IO ()
-removeDefinition batchHandler = defOperation (\(defID, _) libID -> do
-    putStrLn "call removeDefinition"
-    batch <- readIORef batchHandler
-    case Batch.removeDefinition defID libID batch of
-        Left message   -> throw' message
-        Right newBatch -> do 
-            writeIORef batchHandler newBatch
-            return ())
+removeDefinition :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO ()
+removeDefinition batchHandler mtdefID mtlibID = tRunScript $ do
+    scriptIO $ putStrLn "called removeDefinition"
+    defID       <- tryGetID mtdefID "defID"
+    libID       <- tryGetID mtlibID "libID"
+    batch       <- tryReadIORef batchHandler
+    newBatch    <- tryRight $ Batch.removeDefinition defID libID batch 
+    tryWriteIORef batchHandler newBatch
+    return ()
+ 
+
+definitionChildren :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO (Vector TDefs.Definition)
+definitionChildren batchHandler mtdefID mtlibID = tRunScript $ do
+    scriptIO $ putStrLn "called definitionChildren"
+    defID       <- tryGetID mtdefID "defID"
+    libID       <- tryGetID mtlibID "libID"
+    batch       <- tryReadIORef batchHandler
+    children    <- tryRight $ Batch.definitionChildren defID libID batch
+    let tchildrenWithGraph = map (encode) children
+        tchildren = map (\(def, _) -> def) tchildrenWithGraph
+    return $ Vector.fromList tchildren
 
 
-definitionChildren :: IORef Batch -> Maybe TDefs.Definition 
-                   -> Maybe TLibs.Library -> IO (Vector TDefs.Definition)
-definitionChildren batchHandler = defOperation (\(defID, _) libID -> do
-    putStrLn "call definitionChildren"  
-    batch <- readIORef batchHandler
-    case Batch.definitionChildren defID libID batch of
-        Left message   -> throw' message
-        Right children -> do 
-           let tchildrenWithGraph = map (encode) children
-               tchildren = map (\(def, _) -> def) tchildrenWithGraph
-           return $ Vector.fromList tchildren)
-
-
-definitionParent :: IORef Batch -> Maybe TDefs.Definition 
-                 -> Maybe TLibs.Library -> IO TDefs.Definition
-definitionParent batchHandler = defOperation (\(defID, _) libID -> do
-    putStrLn "call definitionParent"
-    batch <- readIORef batchHandler
-    case Batch.definitionParent defID libID batch of
-        Left message -> throw' message
-        Right parent -> do 
-            let (tparent, _) = encode parent :: (TDefs.Definition, Graph)
-            return tparent)
+definitionParent :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition
+definitionParent batchHandler mtdefID mtlibID = tRunScript $ do
+    scriptIO $ putStrLn "called definitionParent"
+    defID       <- tryGetID mtdefID "defID"
+    libID       <- tryGetID mtlibID "libID"
+    batch       <- tryReadIORef batchHandler
+    parent      <- tryRight $ Batch.definitionParent defID libID batch
+    return $ fst (encode parent :: (TDefs.Definition, Graph))
 

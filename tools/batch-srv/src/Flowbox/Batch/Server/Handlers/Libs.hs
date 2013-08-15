@@ -13,114 +13,98 @@ module Flowbox.Batch.Server.Handlers.Libs (
     storeLibrary,
     buildLibrary,
     libraryRootDef,
-    ------------
-    libOperation,
 ) 
 where
-    
-import           Data.IORef                                                  
-import qualified Data.Vector                                               as Vector
-import           Data.Vector                                                 (Vector)
-
-import qualified Defs_Types                                                as TDefs
-import           Flowbox.Batch.Server.Handlers.Common                        
-import qualified Libs_Types                                                as TLibs
-import qualified Flowbox.Batch.Batch                                       as Batch
-import           Flowbox.Batch.Batch                                         (Batch(..))
-import qualified Flowbox.Luna.Lib.Library                                  as Library
-import           Flowbox.Luna.Lib.Library                                    (Library(..))
-import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
-import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs         ()
 
 
------- public api helpers -----------------------------------------
-libOperation :: ((Int, Library) -> a)
-             -> Maybe TLibs.Library -> a
-libOperation operation mtlibrary = case mtlibrary of 
-        Nothing               -> throw' "`library` argument is missing";
-        Just tlibrary         -> case decode (tlibrary, DefManager.empty) of
-                Left  message -> throw' message
-                Right library -> operation library
+import           Data.Int                                              
+import           Data.IORef                                            
+import qualified Data.Vector                                         as Vector
+import           Data.Vector                                           (Vector)
+import           Data.Text.Lazy                                        (Text)
+
+import qualified Defs_Types                                          as TDefs
+import           Flowbox.Batch.Server.Handlers.Common                  
+import qualified Libs_Types                                          as TLibs
+import qualified Flowbox.Batch.Batch                                 as Batch
+import           Flowbox.Batch.Batch                                   (Batch(..))
+import           Flowbox.Control.Error                                 
+import qualified Flowbox.Luna.Lib.Library                            as Library
+import           Flowbox.Luna.Lib.Library                              (Library(..))
+import qualified Flowbox.Luna.Network.Def.DefManager                 as DefManager
+import           Flowbox.Luna.Network.Def.DefManager                   (DefManager)
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs   ()
+import           Flowbox.Tools.Conversion                              
 
 
 ------ public api -------------------------------------------------
+
 libraries :: IORef Batch -> IO (Vector TLibs.Library)
-libraries batchHandler = do 
-    putStrLn "call libraries"
-    batch <- readIORef batchHandler
-    case Batch.libraries batch of
-        Left message -> throw' message
-        Right libs -> do 
-            let tlibs       = map (fst . encode) libs
-                tlibsVector = Vector.fromList tlibs
-            return tlibsVector
+libraries batchHandler = tRunScript $ do
+    scriptIO $ putStrLn "called libraries"
+    batch <- tryReadIORef batchHandler
+    libs  <- tryRight $ Batch.libraries batch 
+    let tlibs       = map (fst . encode) libs
+        tlibsVector = Vector.fromList tlibs
+    return tlibsVector
 
 
 createLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
-createLibrary batchHandler = libOperation (\ (_, library) -> do
-    putStrLn "call createLibrary"
-    batch <- readIORef batchHandler
+createLibrary batchHandler mtlibrary = tRunScript $ do
+    scriptIO $ putStrLn "called createLibrary"
+    tlibrary     <- mtlibrary <??> "`library` argument is missing" 
+    (_, library) <- tryRight (decode (tlibrary, DefManager.empty) :: Either String (Library.ID, Library))
+    batch <- tryReadIORef batchHandler
     let libName = Library.name library
         libPath = Library.path library
-    case Batch.createLibrary libName libPath batch of
-        Left message -> throw' message
-        Right (newBatch, newLibrary) -> do
-            writeIORef batchHandler newBatch
-            return $ fst $ (encode newLibrary :: (TLibs.Library, DefManager)))
+    (newBatch, newLibrary) <-tryRight $  Batch.createLibrary libName libPath batch
+    tryWriteIORef batchHandler newBatch
+    return $ fst $ (encode newLibrary :: (TLibs.Library, DefManager))
 
 
-loadLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
-loadLibrary batchHandler = libOperation (\ (_, library) -> do
-    putStrLn "call loadLibrary"
-    batch <- readIORef batchHandler
-    r     <- Batch.loadLibrary library batch
-    case r of
-        Left message                             -> throw' message
-        Right (newBatch, (newLibID, newLibrary)) -> do
-            let newTLibrary = fst $ encode (newLibID, newLibrary)
-            writeIORef batchHandler newBatch
-            return newTLibrary)
+loadLibrary :: IORef Batch -> Maybe Text -> IO TLibs.Library
+loadLibrary batchHandler mtpath = tRunScript $ do
+    scriptIO $ putStrLn "called loadLibrary"
+    upath  <- tryGetUniPath mtpath "path"
+    batch <- tryReadIORef batchHandler
+    r     <- scriptIO $ Batch.loadLibrary upath batch
+    (newBatch, (newLibID, newLibrary)) <- tryRight r
+    tryWriteIORef batchHandler newBatch
+    return $ fst $ encode (newLibID, newLibrary)
 
 
-unloadLibrary :: IORef Batch -> Maybe TLibs.Library -> IO ()
-unloadLibrary batchHandler = libOperation (\ (libID, _) -> do
-    putStrLn "call unloadLibrary"
-    batch <- readIORef batchHandler
-    case Batch.unloadLibrary libID batch of 
-        Left message   -> throw' message
-        Right newBatch -> writeIORef batchHandler newBatch)
+unloadLibrary :: IORef Batch -> Maybe Int32 -> IO ()
+unloadLibrary batchHandler mtlibID = tRunScript $ do
+    scriptIO $ putStrLn "called unloadLibrary"
+    libID    <- tryGetID mtlibID "libID"
+    batch    <- tryReadIORef batchHandler
+    newBatch <- tryRight $ Batch.unloadLibrary libID batch 
+    tryWriteIORef batchHandler newBatch
 
 
-storeLibrary :: IORef Batch -> Maybe TLibs.Library -> IO ()
-storeLibrary batchHandler = libOperation (\ (libID, _) -> do
-    putStrLn "call storeLibrary"
-    batch <- readIORef batchHandler
-    r     <- Batch.storeLibrary libID batch
-    case r of 
-        Left message -> throw' message
-        Right ()     -> return ())
+storeLibrary :: IORef Batch -> Maybe Int32 -> IO ()
+storeLibrary batchHandler mtlibID = tRunScript $ do
+    scriptIO $ putStrLn "called storeLibrary"
+    libID <- tryGetID mtlibID "libID"
+    batch <- tryReadIORef batchHandler
+    _ <- scriptIO $ Batch.storeLibrary libID batch
+    return ()
 
 
-buildLibrary :: IORef Batch -> Maybe TLibs.Library -> IO ()
-buildLibrary batchHandler = libOperation (\ (libID, _) -> do
-    putStrLn "call buildLibrary"
-    batch <- readIORef batchHandler
-    r     <- Batch.buildLibrary libID batch
-    case r of 
-        Left message -> throw' message
-        Right ()     -> return ())
+buildLibrary :: IORef Batch -> Maybe Int32 -> IO ()
+buildLibrary batchHandler mtlibID  = tRunScript $ do
+    scriptIO $ putStrLn "called buildLibrary"
+    libID <- tryGetID mtlibID "libID"
+    batch <- tryReadIORef batchHandler
+    _ <- scriptIO $ Batch.buildLibrary libID batch
+    return ()
 
 
-libraryRootDef :: IORef Batch -> Maybe TLibs.Library -> IO TDefs.Definition
-libraryRootDef batchHandler = libOperation (\ (libID, _) -> do
-    putStrLn "call libraryRootDef"
-    batch <- readIORef batchHandler
-    case Batch.libraryRootDef libID batch of 
-        Left message               -> throw' message
-        Right (arootDefID, rootDef) -> do 
-            let (trootDef, _) = encode (arootDefID, rootDef)
-            return trootDef)
-         
+libraryRootDef :: IORef Batch -> Maybe Int32 -> IO TDefs.Definition
+libraryRootDef batchHandler mtlibID  = tRunScript $ do
+    scriptIO $ putStrLn "called libraryRootDef"
+    libID <- tryGetID mtlibID "libID"
+    batch <- tryReadIORef batchHandler
+    (arootDefID, rootDef) <- tryRight $ Batch.libraryRootDef libID batch
+    return $ fst $ encode (arootDefID, rootDef)

@@ -24,6 +24,7 @@ Executable batch-srv
     Build-Depends:  base,
                     bytestring,
                     containers,
+                    errors,
                     flowbox-batch,
                     flowbox-luna,
                     flowbox-utils,
@@ -31,5 +32,7 @@ Executable batch-srv
                     network,
                     text,
                     thrift >= 0.9,
+                    transformers,
                     unordered-containers,
                     vector
+

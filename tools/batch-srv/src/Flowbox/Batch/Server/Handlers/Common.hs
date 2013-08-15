@@ -6,11 +6,23 @@
 ---------------------------------------------------------------------------
 module Flowbox.Batch.Server.Handlers.Common where
 
-import           Control.Exception   
-import           Data.Text.Lazy      (pack)
 
-import           Batch_Types         (ArgumentException(..))
+import           Control.Exception       
+import           Data.Text.Lazy          (pack)
+                                    
+import           Batch_Types             (ArgumentException(..))
+import           Flowbox.Control.Error   
+
 
 
 throw' :: String -> c
 throw' = throw . ArgumentException . Just . pack
+
+
+tRunScript :: Script a -> IO a
+tRunScript s = do
+    e <- runEitherT s
+    case e of
+        Left  m -> throw' m
+        Right a -> return a
+

@@ -22,7 +22,6 @@ module Flowbox.Luna.Data.Graph (
     sucl,
     pre_,
     prel,
-    topsort,
     path,
     newVtxs,
     newVtx,
