@@ -33,6 +33,7 @@ import           Thrift
 import           Thrift.Types           ()
 
 import qualified Attrs_Types            
+import qualified Graph_Types            
 import qualified Libs_Types             
 import qualified Types_Types            
 

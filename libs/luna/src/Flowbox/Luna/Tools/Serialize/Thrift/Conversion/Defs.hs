@@ -27,6 +27,7 @@ import qualified Flowbox.Luna.Network.Graph.Graph                     as Graph
 import           Flowbox.Luna.Network.Path.Import                       (Import(..))
 import qualified Flowbox.Luna.Network.Path.Path                       as Path
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph   ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types   ()
 import           Flowbox.Tools.Conversion                               
 
@@ -43,32 +44,49 @@ decodeLabNode :: (Int32, TDefs.Definition) -> Either String (Definition.ID, Defi
 decodeLabNode (_, tdef) = decode (tdef, Graph.empty)
 
 
-instance Convert (Int, Int, Edge) TDefs.Edge where
+instance Convert (Int, Int, Edge) TDefs.DEdge where
     encode (asrc, adst, _) = tedge where
-        tedge = TDefs.Edge (Just $ itoi32 asrc) (Just $ itoi32 adst)
-    decode (TDefs.Edge mtsrc mtdst) = do 
+        tedge = TDefs.DEdge (Just $ itoi32 asrc) (Just $ itoi32 adst)
+    decode (TDefs.DEdge mtsrc mtdst) = do 
         tsrc <- mtsrc <?> "Failed to decode Edge: `src` field is missing"
         tdst <- mtdst <?> "Failed to decode Edge: `dst` field is missing"
         return (i32toi tsrc, i32toi tdst, Edge) 
 
 
-instance Convert DefManager TDefs.DefsGraph where
-    encode defManager = tdefGraph where
-        labNodesList  = DefManager.labNodes defManager
-        tdefs         = HashMap.fromList $ map (encodeLabNode) labNodesList
+toDefsGraph :: DefManager -> TDefs.DefsGraph
+toDefsGraph defManager = tdefGraph where
+    labNodesList  = DefManager.labNodes defManager
+    tdefs         = HashMap.fromList $ map (encodeLabNode) labNodesList
 
-        labEdgesList  = DefManager.labEdges defManager
-        tedges        = Vector.fromList $ map (encode) labEdgesList
-        tdefGraph     = TDefs.DefsGraph (Just tdefs) (Just tedges)
-    decode (TDefs.DefsGraph mtdefs mtedges) = do
-        tdefs  <- mtdefs  <?> "Failed to decode DefsGraph: `defs` field is missing"
-        tedges <- mtedges <?> "Failed to decode DefsGraph: `defs` field is missing"
-        let anodes = convert $ map (decodeLabNode) $ HashMap.toList tdefs
+    labEdgesList  = DefManager.labEdges defManager
+    tedges        = Vector.fromList $ map (encode) labEdgesList
+    tdefGraph     = TDefs.DefsGraph (Just tdefs) (Just tedges)
+     
+
+instance Convert DefManager TDefs.DefManager where
+    encode defManager   = tdefManager where
+        labNodesList    = DefManager.labNodes defManager
+        tdefGr          = map (encode) labNodesList
+        (tdefs, graphs) = unzip tdefGr
+        tdefsv          = Vector.fromList tdefs
+        tgraphsv        = Vector.fromList $ map (encode) graphs
+        aedges          = DefManager.labEdges defManager
+        tedges          = Vector.fromList $ map (encode) aedges
+        tdefManager     = TDefs.DefManager (Just tdefsv) (Just tgraphsv) (Just tedges)
+    decode (TDefs.DefManager mtdefs mtgraphs mtedges) = do
+        tdefsv   <- mtdefs   <?> "Failed to decode DefsGraph: `defs` field is missing"
+        tgraphsv <- mtgraphs <?> "Failed to decode DefsGraph: `graphs` field is missing"
+        tedges   <- mtedges  <?> "Failed to decode DefsGraph: `tedges` field is missing"
+        let agraphs = convert $ map (decode) $ Vector.toList tgraphsv
+        graphs <- agraphs
+        let tdefs   = Vector.toList tdefsv
+            tdefGr  = zip tdefs graphs
+            anodes = convert $ map (decode) tdefGr
             aedges = convert $ map (decode) $ Vector.toList tedges
         nodes <- anodes
         edges <- aedges
         return $ DefManager.mkGraph nodes edges
-        
+
 
 instance Convert Import TDefs.Import where
     encode (Import apath aitems) = timport where
@@ -114,7 +132,3 @@ instance Convert (Int, Definition) (TDefs.Definition, Graph) where
         let nodeDef = Definition acls agraph aimports aflags aattributes
             adefID = i32toi tdefID
         return (adefID, nodeDef)
-                                        
-
-
-

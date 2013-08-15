@@ -36,7 +36,7 @@ import qualified Flowbox.Luna.Network.Def.Definition                 as Definiti
 import           Flowbox.Luna.Network.Def.Definition                   (Definition)
 import qualified Flowbox.Luna.Network.Graph.Graph                    as Graph
 import           Flowbox.Luna.Network.Graph.Graph                      (Graph)
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
+import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs as CDefs
 import           Flowbox.Tools.Conversion                              
 
 
@@ -49,7 +49,7 @@ defsGraph batchHandler mtlibID = tRunScript $ do
     batch       <- tryReadIORef batchHandler
     adefManager <- tryRight $ Batch.defsGraph libID batch
 
-    return $ encode adefManager
+    return $ CDefs.toDefsGraph adefManager
 
 
 newDefinition :: IORef Batch -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)

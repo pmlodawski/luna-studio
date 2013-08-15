@@ -21,7 +21,7 @@ import           Thrift.Protocol.Binary
 import qualified Defs_Types                                           as TDefs
 import qualified Graph_Types                                          as TGraph
 import qualified Libs_Types                                           as TLibs
-import           Flowbox.Control.Error
+import           Flowbox.Control.Error                                  
 import qualified Flowbox.Luna.Network.Def.DefManager                  as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                    (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition                  as Definition
