@@ -21,22 +21,24 @@ import           Thrift.Protocol.Binary
 import qualified Defs_Types                                           as TDefs
 import qualified Graph_Types                                          as TGraph
 import qualified Libs_Types                                           as TLibs
-import qualified Flowbox.System.UniPath                               as UniPath
-import           Flowbox.System.UniPath                                 (UniPath)
+import           Flowbox.Control.Error
 import qualified Flowbox.Luna.Network.Def.DefManager                  as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                    (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition                  as Definition
 import           Flowbox.Luna.Network.Def.Definition                    (Definition)
+import qualified Flowbox.Luna.Network.Graph.Graph                     as Graph
 import qualified Flowbox.Luna.Lib.Library                             as Library
 import           Flowbox.Luna.Lib.Library                               (Library)
 import qualified Flowbox.Luna.Type.Type                               as Type
 import           Flowbox.Luna.Type.Type                                 (Type(..))
-import           Flowbox.Tools.Conversion                               
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs    ()
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph   ()
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs    ()
 import qualified Flowbox.System.IO.Serializer                         as Serializer
 import           Flowbox.System.IO.Serializer                           (Serializable(..), Deserializable(..))
+import qualified Flowbox.System.UniPath                               as UniPath
+import           Flowbox.System.UniPath                                 (UniPath)
+import           Flowbox.Tools.Conversion                               
 
 
 nodeFileExtension :: String
@@ -57,11 +59,13 @@ thriftSave write object h = do
     write protocol object
 
 
-thriftLoad :: (BinaryProtocol Handle -> IO tobject) -> (tobject -> Either String object) -> Handle -> IO (Either String object)
+thriftLoad :: (BinaryProtocol Handle -> IO tobject) -> (tobject -> Either String object) -> Handle -> IO object
 thriftLoad read convert h = do
     let protocol = BinaryProtocol h
     tobject <- read protocol
-    return $ convert tobject
+    case convert tobject of
+        Left msg -> error msg
+        Right ob -> return ob
 
 
 generate :: DefManager -> UniPath -> Definition.ID -> Definition -> [Serializable]
@@ -118,37 +122,54 @@ storeLibrary lib = do
     Serializer.serializeMany defs
 
 
-    return ()
+getDefinition :: UniPath -> IO Definition
+getDefinition upath = do 
+    let 
+        convert :: TDefs.Definition -> Either String Definition
+        convert tdef = do 
+            (_, def) <- decode (tdef, Graph.empty)
+            return def
+
+        ddef :: Deserializable Definition
+        ddef = Deserializable upath (thriftLoad TDefs.read_Definition convert) where
+
+    Serializer.deserialize ddef
 
 
+restoreDefs :: UniPath -> IO DefManager 
+restoreDefs upath =
+    restoreDefsContinue upath (DefManager.empty) Nothing
 
 
+-- TODO [PM] THIS METHOD DOES NOT WOR AT ALL
+restoreDefsContinue :: UniPath -> DefManager -> Maybe Definition.ID -> IO DefManager
+restoreDefsContinue upath defManager mparentID -- =
+    | apath =~ defFilePattern  = do 
+        putStrLn $ "file! " ++ apath
+        def <- getDefinition upath
+        case mparentID of 
+            Nothing       -> do let (newDefManager, defID) = DefManager.insNewNode def defManager
+                                return newDefManager
+            Just parentID -> do let (newDefManager, defID) = DefManager.addNewToParent (parentID, def) defManager
+                                return newDefManager
+    | apath =~ folderPattern   = do isDir <- doesDirectoryExist apath
+                                    case isDir of 
+                                        False -> handleOther
+                                        True -> do putStrLn $ "folder " ++ apath 
+                                                   contents <- getDirectoryContents apath
+                                                   _ <- sequence $ map (\c -> restoreDefs $ UniPath.append c upath) contents
+                                                   return defManager
+    | otherwise                     = handleOther
+    where defManager     = DefManager.empty
+          apath          = UniPath.toUnixString upath
+          defFilePattern = "[.]node$"
+          folderPattern  = "[A-Za-z0-9]+$"
 
----- mocked
---restoreNode :: DefManager -> UniPath -> IO DefManager 
---restoreNode defManager udirpath  -- =
---    | dirpath =~ nodeDefFilePattern = do putStrLn $ "file! " ++ dirpath
---                                         return defManager
---    | dirpath =~ folderFilePattern  = do putStrLn $ "folder " ++ dirpath 
---                                         contents <- getDirectoryContents dirpath
---                                         _ <- sequence $ map (\c -> restoreNode defManager $ UniPath.append c udirpath) contents
---                                         return defManager
---    | otherwise                     = do putStrLn $ "other " ++ dirpath 
---                                         return defManager
---    where dirpath = UniPath.toUnixString udirpath
---          nodeDefFilePattern = "[.]node$"
---          folderFilePattern  = "[A-Za-z0-9]+$"
-
--- mocked
---restoreLibrary :: UniPath -> IO Library
---restoreLibrary path = do 
-
---    putStrLn "restoreLibrary - NOT IMPLEMENTED"
---    return $ Library.make "restored" path
+          handleOther = do putStrLn "other"
+                           return defManager
 
 
-
-getLibrary :: UniPath -> IO (Either String Library)
+getLibrary :: UniPath -> IO Library
 getLibrary upath = do 
     let 
         convert :: TLibs.Library -> Either String Library
@@ -168,9 +189,6 @@ getLibrary upath = do
 -- mocked
 restoreLibrary :: UniPath -> IO Library
 restoreLibrary lpath = do
-    mlibrary <- getLibrary $ UniPath.append libConfigFile lpath
-    case mlibrary of
-        Left msg      -> error msg
-        Right library -> do 
-            let defs = DefManager.empty -- TODO [PM] IMPLEMENT 
-            return library{Library.defs = defs}
+    library <- getLibrary $ UniPath.append libConfigFile lpath
+    defs <- restoreDefs lpath
+    return library{Library.defs = defs}
