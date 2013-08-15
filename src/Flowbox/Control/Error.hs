@@ -7,6 +7,7 @@
 module Flowbox.Control.Error (
     module Control.Error,
     (<?>),
+    (<??>),
     tryReadIORef,
     tryWriteIORef,
     tryGetID,
@@ -31,17 +32,21 @@ tryWriteIORef :: Control.Monad.IO.Class.MonadIO m  => IORef a -> a -> EitherT St
 tryWriteIORef ref v = scriptIO $ writeIORef ref v
 
 
-(<?>) :: Monad m => Maybe a -> e -> EitherT e m a
-v <?> m = tryRight $ note m v
+(<??>) :: Monad m => Maybe a -> e -> EitherT e m a
+v <??> m = tryRight $ note m v
+
+
+(<?>) :: Maybe b -> a -> Either a b
+v <?> m = note m v
 
 
 tryGetID :: Monad m => Maybe Int32 -> String -> EitherT String m Int
 tryGetID mtID name = do
-    tID <- mtID <?> ("`" ++ name  ++ "` argument is missing")
+    tID <- mtID <??> ("`" ++ name  ++ "` argument is missing")
     return $ i32toi tID
 
 
 tryGetUniPath :: Monad m => Maybe Text -> String -> EitherT String m UniPath.UniPath
 tryGetUniPath mtpath name = do
-    tpath <- mtpath <?> ("`" ++ name  ++ "` argument is missing")
+    tpath <- mtpath <??> ("`" ++ name  ++ "` argument is missing")
     return $ UniPath.fromUnixString $ unpack tpath
