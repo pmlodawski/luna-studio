@@ -30,7 +30,7 @@ import qualified Flowbox.Luna.Lib.Library                                  as Li
 import           Flowbox.Luna.Lib.Library                                    (Library)
 import qualified Flowbox.Luna.Type.Type                                    as Type
 import           Flowbox.Luna.Type.Type                                      (Type(..))
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
+import           Flowbox.Tools.Conversion
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
 import qualified Flowbox.System.IO.Serializer                              as Serializer

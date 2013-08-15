@@ -16,7 +16,6 @@ module Flowbox.Batch.Server.Handlers.Graph (
 where
 
 
-import           Control.Error                                               
 import           Data.Int                                                    
 import           Data.IORef                                                  
 import qualified Data.Vector                                               as Vector
@@ -27,9 +26,10 @@ import qualified Graphview_Types                                           as TG
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView   ()
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
+import           Flowbox.Control.Error                                             
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
+import           Flowbox.Tools.Conversion  
 
             
 ------ public api -------------------------------------------------

@@ -19,7 +19,6 @@ module Flowbox.Batch.Server.Handlers.Defs (
 where
 
 
-import           Control.Error                                               
 import           Data.Int                                                    
 import           Data.IORef                                                  
 import qualified Data.Vector                                               as Vector
@@ -32,12 +31,13 @@ import qualified Types_Types                                               as TT
 import           Flowbox.Batch.Server.Handlers.Common                        
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
+import           Flowbox.Control.Error                                               
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
 import           Flowbox.Luna.Network.Def.Definition                         (Definition)
 import qualified Flowbox.Luna.Network.Graph.Graph                          as Graph
 import           Flowbox.Luna.Network.Graph.Graph                            (Graph)
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
+import           Flowbox.Tools.Conversion 
 
 
 ------ public api -------------------------------------------------

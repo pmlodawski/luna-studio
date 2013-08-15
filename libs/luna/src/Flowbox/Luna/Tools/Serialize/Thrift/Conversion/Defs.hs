@@ -24,9 +24,9 @@ import qualified Flowbox.Luna.Network.Def.DefManager                       as De
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager(..))
 import           Flowbox.Luna.Network.Path.Import                            (Import(..))
 import qualified Flowbox.Luna.Network.Path.Path                            as Path
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs        ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types        ()
+import           Flowbox.Tools.Conversion  
 
 
 encodeLabNode :: (Definition.ID, Definition) -> (Int32, TDefs.Definition)

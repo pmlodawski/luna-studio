@@ -15,9 +15,9 @@ import qualified Data.Vector                                               as Ve
 import qualified Graphview_Types                                           as TGraphView
 import           Flowbox.Batch.GraphView.EdgeView                            (EdgeView(..))
 import           Flowbox.Batch.GraphView.GraphView                           (GraphView)
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        
+import           Flowbox.Tools.Conversion
 
 
 instance Convert GraphView TGraphView.GraphView where

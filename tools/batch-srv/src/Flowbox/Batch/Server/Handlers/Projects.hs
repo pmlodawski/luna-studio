@@ -15,7 +15,6 @@ module Flowbox.Batch.Server.Handlers.Projects (
 ) where
 
 
-import           Control.Error                                               
 import           Data.Int                                                    
 import           Data.IORef                                                  
 import qualified Data.Vector                                               as Vector
@@ -24,13 +23,14 @@ import           Data.Text.Lazy                                              (Te
 
 import           Flowbox.Batch.Server.Handlers.Common                        
 import qualified Projects_Types                                            as TProjects
+import           Flowbox.Control.Error                                           
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
 import qualified Flowbox.Batch.Project.Project                             as Project
 import           Flowbox.Batch.Project.Project                               (Project(..))
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects    ()
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
+import           Flowbox.Tools.Conversion 
 
 
 ------ public api -------------------------------------------------

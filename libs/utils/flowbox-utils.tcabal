@@ -18,5 +18,8 @@ Library
 
   Build-Depends:  base,
                   directory,
+                  errors,
                   MissingH,
-                  split
+                  split,
+                  text,
+                  transformers

@@ -31,7 +31,7 @@ import qualified Flowbox.Luna.Network.Graph.Graph                          as Gr
 import           Flowbox.Luna.Network.Graph.Graph                            (Graph)
 import qualified Flowbox.Luna.Network.Graph.Node                           as Node
 import           Flowbox.Luna.Network.Graph.Node                             (Node)
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
+import           Flowbox.Tools.Conversion
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs        ()
 
 

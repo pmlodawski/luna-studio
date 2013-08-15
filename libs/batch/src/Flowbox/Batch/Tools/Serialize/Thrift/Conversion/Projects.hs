@@ -17,9 +17,9 @@ import qualified Projects_Types                                            as TP
 import qualified Flowbox.Batch.Project.Project                             as Project
 import           Flowbox.Batch.Project.Project                               (Project(..))
 import           Flowbox.Luna.Lib.LibManager                                 (LibManager)
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Conversion   
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import qualified Flowbox.System.UniPath                                    as UniPath
+import           Flowbox.Tools.Conversion
 
 
 instance Convert (Project.ID, Project) (TProjects.Project, LibManager) where
