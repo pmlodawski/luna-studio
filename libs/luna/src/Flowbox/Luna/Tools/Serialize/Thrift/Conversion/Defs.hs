@@ -23,6 +23,7 @@ import qualified Flowbox.Luna.Network.Def.Definition                  as Definit
 import           Flowbox.Luna.Network.Def.Definition                    (Definition(..))
 import qualified Flowbox.Luna.Network.Def.DefManager                  as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                    (DefManager)
+import qualified Flowbox.Luna.Network.Graph.Graph                     as Graph
 import           Flowbox.Luna.Network.Path.Import                       (Import(..))
 import qualified Flowbox.Luna.Network.Path.Path                       as Path
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
@@ -38,10 +39,17 @@ encodeLabNode node@(defID, _) = tnode where
         (td, _) = encode d
 
 
+decodeLabNode :: (Int32, TDefs.Definition) -> Either String (Definition.ID, Definition)
+decodeLabNode (_, tdef) = decode (tdef, Graph.empty)
+
+
 instance Convert (Int, Int, Edge) TDefs.Edge where
     encode (asrc, adst, _) = tedge where
         tedge = TDefs.Edge (Just $ itoi32 asrc) (Just $ itoi32 adst)
-    decode = error "Not implemented" --TODO [PM] not implemented
+    decode (TDefs.Edge mtsrc mtdst) = do 
+        tsrc <- mtsrc <?> "Failed to decode Edge: `src` field is missing"
+        tdst <- mtdst <?> "Failed to decode Edge: `dst` field is missing"
+        return (i32toi tsrc, i32toi tdst, Edge) 
 
 
 instance Convert DefManager TDefs.DefsGraph where
@@ -52,8 +60,14 @@ instance Convert DefManager TDefs.DefsGraph where
         labEdgesList  = DefManager.labEdges defManager
         tedges        = Vector.fromList $ map (encode) labEdgesList
         tdefGraph     = TDefs.DefsGraph (Just tdefs) (Just tedges)
-    decode _ = defManager where
-        defManager = error "Not implemented" --TODO [PM] not implemented
+    decode (TDefs.DefsGraph mtdefs mtedges) = do
+        tdefs  <- mtdefs  <?> "Failed to decode DefsGraph: `defs` field is missing"
+        tedges <- mtedges <?> "Failed to decode DefsGraph: `defs` field is missing"
+        let anodes = convert $ map (decodeLabNode) $ HashMap.toList tdefs
+            aedges = convert $ map (decode) $ Vector.toList tedges
+        nodes <- anodes
+        edges <- aedges
+        return $ DefManager.mkGraph nodes edges
         
 
 instance Convert Import TDefs.Import where
