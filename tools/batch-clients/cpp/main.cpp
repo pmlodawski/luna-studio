@@ -38,12 +38,12 @@ int main(int argc, char **argv) {
         vector<Library> registeredLibs;
 
         Library lib1;
-        lib1.__set_name("userlib1");
-        lib1.__set_path("userlib1");
+        lib1.__set_name("lib1");
+        lib1.__set_path("mylibs/lib1.lunalib");
 
         Library userlib;
-        userlib.__set_name("userlib2");
-        userlib.__set_path("userlib2");
+        userlib.__set_name("user");
+        userlib.__set_path("mylibs/user.lunalib");
 
         batch.libraries(registeredLibs);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
         batch.unloadLibrary(userlib.libID);
         batch.libraries(registeredLibs);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
-        batch.loadLibrary(userlib,"userlib2");
+        batch.loadLibrary(userlib,"mylibs/user.lunalib");
         batch.libraries(registeredLibs);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
 
