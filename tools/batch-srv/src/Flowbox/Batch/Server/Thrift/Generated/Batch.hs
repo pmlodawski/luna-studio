@@ -2565,6 +2565,46 @@ read_Ping_result iprot = do
   record <- read_Ping_result_fields iprot (Ping_result{})
   readStructEnd iprot
   return record
+data Dump_args = Dump_args deriving (Show,Eq,Typeable)
+instance Hashable Dump_args where
+  hashWithSalt salt record = salt  
+write_Dump_args oprot record = do
+  writeStructBegin oprot "Dump_args"
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_Dump_args_fields iprot record = do
+  (_,_t412,_id413) <- readFieldBegin iprot
+  if _t412 == T_STOP then return record else
+    case _id413 of 
+      _ -> do
+        skip iprot _t412
+        readFieldEnd iprot
+        read_Dump_args_fields iprot record
+read_Dump_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_Dump_args_fields iprot (Dump_args{})
+  readStructEnd iprot
+  return record
+data Dump_result = Dump_result deriving (Show,Eq,Typeable)
+instance Hashable Dump_result where
+  hashWithSalt salt record = salt  
+write_Dump_result oprot record = do
+  writeStructBegin oprot "Dump_result"
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_Dump_result_fields iprot record = do
+  (_,_t417,_id418) <- readFieldBegin iprot
+  if _t417 == T_STOP then return record else
+    case _id418 of 
+      _ -> do
+        skip iprot _t417
+        readFieldEnd iprot
+        read_Dump_result_fields iprot record
+read_Dump_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_Dump_result_fields iprot (Dump_result{})
+  readStructEnd iprot
+  return record
 process_projects (seqid, iprot, oprot, handler) = do
   args <- read_Projects_args iprot
   readMessageEnd iprot
@@ -3037,6 +3077,17 @@ process_ping (seqid, iprot, oprot, handler) = do
   write_Ping_result oprot res
   writeMessageEnd oprot
   tFlush (getTransport oprot)
+process_dump (seqid, iprot, oprot, handler) = do
+  args <- read_Dump_args iprot
+  readMessageEnd iprot
+  rs <- return (Dump_result)
+  res <- (do
+    Iface.dump handler
+    return rs)
+  writeMessageBegin oprot ("dump", M_REPLY, seqid);
+  write_Dump_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
 proc_ handler (iprot,oprot) (name,typ,seqid) = case name of
   "projects" -> process_projects (seqid,iprot,oprot,handler)
   "createProject" -> process_createProject (seqid,iprot,oprot,handler)
@@ -3073,6 +3124,7 @@ proc_ handler (iprot,oprot) (name,typ,seqid) = case name of
   "connect" -> process_connect (seqid,iprot,oprot,handler)
   "disconnect" -> process_disconnect (seqid,iprot,oprot,handler)
   "ping" -> process_ping (seqid,iprot,oprot,handler)
+  "dump" -> process_dump (seqid,iprot,oprot,handler)
   _ -> do
     skip iprot T_STRUCT
     readMessageEnd iprot

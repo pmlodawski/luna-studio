@@ -10,15 +10,15 @@
 
 module Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView where
 
-import qualified Data.Vector                                               as Vector
+import qualified Data.Vector                                          as Vector
 
-import qualified Graphview_Types                                           as TGraphView
-import           Flowbox.Batch.GraphView.EdgeView                            (EdgeView(..))
-import           Flowbox.Batch.GraphView.GraphView                           (GraphView)
-import           Flowbox.Control.Error
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        
-import           Flowbox.Tools.Conversion
+import qualified Graphview_Types                                      as TGraphView
+import           Flowbox.Batch.GraphView.EdgeView                       (EdgeView(..))
+import           Flowbox.Batch.GraphView.GraphView                      (GraphView)
+import           Flowbox.Control.Error                                  
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs    ()
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph   
+import           Flowbox.Tools.Conversion                               
 
 instance Convert GraphView TGraphView.GraphView where
     encode agraph = TGraphView.GraphView n e where 

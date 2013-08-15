@@ -16,16 +16,16 @@ module Flowbox.Batch.Server.Handlers.Types (
 ) 
 where
 
-import           Data.Text.Lazy                                              (Text, unpack)
-import qualified Data.Vector                                               as Vector
-import           Data.Vector                                                 (Vector)
+import           Data.Text.Lazy                                        (Text, unpack)
+import qualified Data.Vector                                         as Vector
+import           Data.Vector                                           (Vector)
 
-import           Flowbox.Batch.Server.Handlers.Common                        
-import qualified Types_Types                                               as TTypes
-import           Flowbox.Control.Error
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
-import           Flowbox.Luna.Type.Type                                      (Type(..))
-import           Flowbox.Tools.Conversion 
+import           Flowbox.Batch.Server.Handlers.Common                  
+import qualified Types_Types                                         as TTypes
+import           Flowbox.Control.Error                                 
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
+import           Flowbox.Luna.Type.Type                                (Type(..))
+import           Flowbox.Tools.Conversion                              
 
 
 

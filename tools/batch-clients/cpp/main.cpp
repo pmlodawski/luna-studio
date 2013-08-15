@@ -134,6 +134,7 @@ int main(int argc, char **argv) {
 
         batch.buildLibrary(userlib.libID);
 
+        batch.dump();
         batch.ping();
     } catch (ArgumentException e) {
         cout << "Batch returned an error: "<< endl

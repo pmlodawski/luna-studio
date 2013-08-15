@@ -79,3 +79,4 @@ class Batch_Iface a where
   connect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
   disconnect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
   ping :: a -> IO ()
+  dump :: a -> IO ()

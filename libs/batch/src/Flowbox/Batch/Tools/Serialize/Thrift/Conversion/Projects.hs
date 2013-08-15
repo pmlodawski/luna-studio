@@ -11,16 +11,16 @@
 module Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects where
 
 
-import           Data.Text.Lazy                                              (pack, unpack)
+import           Data.Text.Lazy                                        (pack, unpack)
 
-import qualified Projects_Types                                            as TProjects
-import qualified Flowbox.Batch.Project.Project                             as Project
-import           Flowbox.Batch.Project.Project                               (Project(..))
-import           Flowbox.Control.Error
-import           Flowbox.Luna.Lib.LibManager                                 (LibManager)
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
-import qualified Flowbox.System.UniPath                                    as UniPath
-import           Flowbox.Tools.Conversion
+import qualified Projects_Types                                      as TProjects
+import qualified Flowbox.Batch.Project.Project                       as Project
+import           Flowbox.Batch.Project.Project                         (Project(..))
+import           Flowbox.Control.Error                                 
+import           Flowbox.Luna.Lib.LibManager                           (LibManager)
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
+import qualified Flowbox.System.UniPath                              as UniPath
+import           Flowbox.Tools.Conversion                              
 
 
 

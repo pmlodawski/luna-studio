@@ -197,6 +197,11 @@ class BatchHandler : virtual public BatchIf {
     printf("ping\n");
   }
 
+  void dump() {
+    // Your implementation goes here
+    printf("dump\n");
+  }
+
 };
 
 int main(int argc, char **argv) {

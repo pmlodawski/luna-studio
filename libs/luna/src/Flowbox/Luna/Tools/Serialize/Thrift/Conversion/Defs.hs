@@ -10,24 +10,24 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs where
 
-import           Data.Int                                                    
-import           Data.Text.Lazy                                              (pack, unpack)
-import qualified Data.HashMap.Strict                                       as HashMap
-import qualified Data.Vector                                               as Vector
+import           Data.Int                                               
+import           Data.Text.Lazy                                         (pack, unpack)
+import qualified Data.HashMap.Strict                                  as HashMap
+import qualified Data.Vector                                          as Vector
 
-import qualified Defs_Types                                                as TDefs
-import           Flowbox.Control.Error
-import           Flowbox.Luna.Network.Graph.Graph                            (Graph)
-import           Flowbox.Luna.Network.Def.Edge                               (Edge(..))
-import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
-import           Flowbox.Luna.Network.Def.Definition                         (Definition(..))
-import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
-import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
-import           Flowbox.Luna.Network.Path.Import                            (Import(..))
-import qualified Flowbox.Luna.Network.Path.Path                            as Path
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs        ()
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types        ()
-import           Flowbox.Tools.Conversion  
+import qualified Defs_Types                                           as TDefs
+import           Flowbox.Control.Error                                  
+import           Flowbox.Luna.Network.Graph.Graph                       (Graph)
+import           Flowbox.Luna.Network.Def.Edge                          (Edge(..))
+import qualified Flowbox.Luna.Network.Def.Definition                  as Definition
+import           Flowbox.Luna.Network.Def.Definition                    (Definition(..))
+import qualified Flowbox.Luna.Network.Def.DefManager                  as DefManager
+import           Flowbox.Luna.Network.Def.DefManager                    (DefManager)
+import           Flowbox.Luna.Network.Path.Import                       (Import(..))
+import qualified Flowbox.Luna.Network.Path.Path                       as Path
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types   ()
+import           Flowbox.Tools.Conversion                               
 
 
 encodeLabNode :: (Definition.ID, Definition) -> (Int32, TDefs.Definition)

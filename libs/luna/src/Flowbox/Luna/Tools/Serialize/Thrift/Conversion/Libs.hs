@@ -10,15 +10,15 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs where
 
-import           Data.Text.Lazy                                              (pack, unpack)
+import           Data.Text.Lazy                        (pack, unpack)
 
-import qualified Libs_Types                                                as TLibs
-import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
-import           Flowbox.Luna.Network.Def.DefManager                         (DefManager(..))
-import           Flowbox.Luna.Lib.Library                                  as Library
-import qualified Flowbox.System.UniPath                                    as UniPath
-import           Flowbox.Tools.Conversion
+import qualified Libs_Types                          as TLibs
+import           Flowbox.Control.Error                 
+import qualified Flowbox.Luna.Network.Def.DefManager as DefManager
+import           Flowbox.Luna.Network.Def.DefManager   (DefManager(..))
+import           Flowbox.Luna.Lib.Library            as Library
+import qualified Flowbox.System.UniPath              as UniPath
+import           Flowbox.Tools.Conversion              
 
 
 

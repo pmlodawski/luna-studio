@@ -111,4 +111,5 @@ service Batch {
      */
 
     void ping()
+    void dump()
 }

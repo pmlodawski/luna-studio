@@ -13,24 +13,24 @@ module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph where
 --import Control.Monad
 --import qualified Data.MultiMap as MMap
 
-import qualified Data.HashMap.Strict                                       as Map
-import           Data.Int                                                    
-import qualified Data.Text.Lazy                                            as Text
-import qualified Data.Vector                                               as Vector
+import qualified Data.HashMap.Strict                                  as Map
+import           Data.Int                                               
+import qualified Data.Text.Lazy                                       as Text
+import qualified Data.Vector                                          as Vector
 
-import qualified Attrs_Types                                               as TAttrs
-import qualified Graph_Types                                               as TGraph
-import           Flowbox.Luna.Network.Attributes                             (Attributes)
-import           Flowbox.Luna.Network.Flags                                  (Flags(..))
-import           Flowbox.Luna.Network.Graph.DefaultValue                     (DefaultValue(..))
-import qualified Flowbox.Luna.Network.Graph.Edge                           as Edge
-import           Flowbox.Luna.Network.Graph.Edge                             (Edge(..))
-import qualified Flowbox.Luna.Network.Graph.Graph                          as Graph
-import           Flowbox.Luna.Network.Graph.Graph                            (Graph)
-import qualified Flowbox.Luna.Network.Graph.Node                           as Node
-import           Flowbox.Luna.Network.Graph.Node                             (Node)
-import           Flowbox.Tools.Conversion
-import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs        ()
+import qualified Attrs_Types                                          as TAttrs
+import qualified Graph_Types                                          as TGraph
+import           Flowbox.Luna.Network.Attributes                        (Attributes)
+import           Flowbox.Luna.Network.Flags                             (Flags(..))
+import           Flowbox.Luna.Network.Graph.DefaultValue                (DefaultValue(..))
+import qualified Flowbox.Luna.Network.Graph.Edge                      as Edge
+import           Flowbox.Luna.Network.Graph.Edge                        (Edge(..))
+import qualified Flowbox.Luna.Network.Graph.Graph                     as Graph
+import           Flowbox.Luna.Network.Graph.Graph                       (Graph)
+import qualified Flowbox.Luna.Network.Graph.Node                      as Node
+import           Flowbox.Luna.Network.Graph.Node                        (Node)
+import           Flowbox.Tools.Conversion                               
+import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
 
 
 encodeGraph agraph = (Just nodes, Just edges) where 

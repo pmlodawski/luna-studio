@@ -26,10 +26,10 @@ import qualified Graphview_Types                                           as TG
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView   ()
-import           Flowbox.Control.Error                                             
+import           Flowbox.Control.Error                                       
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
-import           Flowbox.Tools.Conversion  
+import           Flowbox.Tools.Conversion                                    
 
             
 ------ public api -------------------------------------------------

@@ -9,32 +9,32 @@ module Flowbox.Luna.Tools.Serialize.Lib(
     restoreLibrary,
 ) where
 
-import           System.Directory                                            
-import           System.IO                                                   
-import           Text.Regex.Posix                                            
+import           System.Directory                                       
+import           System.IO                                              
+import           Text.Regex.Posix                                       
 
-import           Thrift                                                      
-import           Thrift.Transport.Handle                                     
-import           Thrift.Protocol                                             
-import           Thrift.Protocol.Binary                                      
+import           Thrift                                                 
+import           Thrift.Transport.Handle                                
+import           Thrift.Protocol                                        
+import           Thrift.Protocol.Binary                                 
 
-import qualified Defs_Types                                                as TDefs
-import qualified Graph_Types                                               as TGraph
-import qualified Flowbox.System.UniPath                                    as UniPath
-import           Flowbox.System.UniPath                                      (UniPath)
-import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
-import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
-import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
-import           Flowbox.Luna.Network.Def.Definition                         (Definition)
-import qualified Flowbox.Luna.Lib.Library                                  as Library
-import           Flowbox.Luna.Lib.Library                                    (Library)
-import qualified Flowbox.Luna.Type.Type                                    as Type
-import           Flowbox.Luna.Type.Type                                      (Type(..))
-import           Flowbox.Tools.Conversion
-import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
-import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
-import qualified Flowbox.System.IO.Serializer                              as Serializer
-import           Flowbox.System.IO.Serializer                                (Serializable(..))
+import qualified Defs_Types                                           as TDefs
+import qualified Graph_Types                                          as TGraph
+import qualified Flowbox.System.UniPath                               as UniPath
+import           Flowbox.System.UniPath                                 (UniPath)
+import qualified Flowbox.Luna.Network.Def.DefManager                  as DefManager
+import           Flowbox.Luna.Network.Def.DefManager                    (DefManager)
+import qualified Flowbox.Luna.Network.Def.Definition                  as Definition
+import           Flowbox.Luna.Network.Def.Definition                    (Definition)
+import qualified Flowbox.Luna.Lib.Library                             as Library
+import           Flowbox.Luna.Lib.Library                               (Library)
+import qualified Flowbox.Luna.Type.Type                               as Type
+import           Flowbox.Luna.Type.Type                                 (Type(..))
+import           Flowbox.Tools.Conversion                               
+import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs    ()
+import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph   ()
+import qualified Flowbox.System.IO.Serializer                         as Serializer
+import           Flowbox.System.IO.Serializer                           (Serializable(..))
 
 
 

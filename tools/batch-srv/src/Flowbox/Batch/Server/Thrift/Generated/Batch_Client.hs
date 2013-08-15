@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,createProject,openProject,closeProject,storeProject,setActiveProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,newDefinition,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,ping) where
+module Batch_Client(projects,createProject,openProject,closeProject,storeProject,setActiveProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,newDefinition,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,ping,dump) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -893,5 +893,25 @@ recv_ping ip = do
     throw x
     else return ()
   res <- read_Ping_result ip
+  readMessageEnd ip
+  return ()
+dump (ip,op) = do
+  send_dump op
+  recv_dump ip
+send_dump op = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("dump", M_CALL, seqn)
+  write_Dump_args op (Dump_args{})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_dump ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_Dump_result ip
   readMessageEnd ip
   return ()

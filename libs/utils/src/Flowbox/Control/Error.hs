@@ -14,14 +14,14 @@ module Flowbox.Control.Error (
     tryGetUniPath,
 ) where
 
-import           Control.Error                                               
-import           Data.Int                                                    
-import           Data.IORef                                                  
-import           Data.Text.Lazy                                              (Text, unpack)
-import qualified Control.Monad.IO.Class  
+import           Control.Error              
+import           Data.Int                   
+import           Data.IORef                 
+import           Data.Text.Lazy             (Text, unpack)
+import qualified Control.Monad.IO.Class     
 
-import qualified Flowbox.System.UniPath                                    as UniPath
-import           Flowbox.Tools.Conversion
+import qualified Flowbox.System.UniPath   as UniPath
+import           Flowbox.Tools.Conversion   
 
 
 tryReadIORef :: IORef a -> EitherT String IO a
