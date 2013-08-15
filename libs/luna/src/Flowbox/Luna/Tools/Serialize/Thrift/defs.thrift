@@ -10,6 +10,7 @@ namespace hs  flowbox.batch.defs
 
 
 include "attrs.thrift"
+include "graph.thrift"
 include "libs.thrift"
 include "types.thrift"
 
@@ -33,7 +34,7 @@ struct Definition {
 }
 
 
-struct Edge {
+struct DEdge {
     1: optional DefID src
     2: optional DefID dst
 }
@@ -41,5 +42,12 @@ struct Edge {
 
 struct DefsGraph {
 	1: optional map<DefID, Definition> defs
-    2: optional list<Edge>             edges
+    2: optional list<DEdge>             edges
+}
+
+
+struct DefManager {
+    1: optional list<Definition>  defs
+    2: optional list<graph.Graph> graphs
+    3: optional list<DEdge>       edges
 }

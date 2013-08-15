@@ -5,6 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
+
 import qualified Flowbox.Luna.Samples.HelloWorld       as HelloWorld
 import qualified Flowbox.Luna.Codegen.Hs.FuncGenerator as FG
 import qualified Flowbox.Luna.Codegen.Hs.DefGenerator  as DG

@@ -22,7 +22,7 @@ import           Flowbox.System.UniPath   (UniPath)
 
 data Serializable = Serializable UniPath (IO.Handle -> IO())
 
-data Deserializable a = Deserializable UniPath (IO.Handle -> IO (Either String a))
+data Deserializable a = Deserializable UniPath (IO.Handle -> IO a)
 
 
 serializeMany :: [Serializable] -> IO()
@@ -39,7 +39,7 @@ serialize (Serializable upath save) = do
     IO.withFile filename IO.WriteMode save
 
 
-deserialize :: Deserializable a -> IO (Either String a)
+deserialize :: Deserializable a -> IO a
 deserialize (Deserializable upath load) = do
     let filename = UniPath.toUnixString upath
     IO.withFile filename IO.ReadMode load

@@ -13,6 +13,7 @@
 #include <thrift/transport/TTransport.h>
 
 #include "attrs_types.h"
+#include "graph_types.h"
 #include "libs_types.h"
 #include "types_types.h"
 
@@ -173,27 +174,27 @@ class Definition {
 
 void swap(Definition &a, Definition &b);
 
-typedef struct _Edge__isset {
-  _Edge__isset() : src(false), dst(false) {}
+typedef struct _DEdge__isset {
+  _DEdge__isset() : src(false), dst(false) {}
   bool src;
   bool dst;
-} _Edge__isset;
+} _DEdge__isset;
 
-class Edge {
+class DEdge {
  public:
 
   static const char* ascii_fingerprint; // = "C1241AF5AA92C586B664FD41DC97C576";
   static const uint8_t binary_fingerprint[16]; // = {0xC1,0x24,0x1A,0xF5,0xAA,0x92,0xC5,0x86,0xB6,0x64,0xFD,0x41,0xDC,0x97,0xC5,0x76};
 
-  Edge() : src(0), dst(0) {
+  DEdge() : src(0), dst(0) {
   }
 
-  virtual ~Edge() throw() {}
+  virtual ~DEdge() throw() {}
 
   DefID src;
   DefID dst;
 
-  _Edge__isset __isset;
+  _DEdge__isset __isset;
 
   void __set_src(const DefID val) {
     src = val;
@@ -205,7 +206,7 @@ class Edge {
     __isset.dst = true;
   }
 
-  bool operator == (const Edge & rhs) const
+  bool operator == (const DEdge & rhs) const
   {
     if (__isset.src != rhs.__isset.src)
       return false;
@@ -217,18 +218,18 @@ class Edge {
       return false;
     return true;
   }
-  bool operator != (const Edge &rhs) const {
+  bool operator != (const DEdge &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Edge & ) const;
+  bool operator < (const DEdge & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
-void swap(Edge &a, Edge &b);
+void swap(DEdge &a, DEdge &b);
 
 typedef struct _DefsGraph__isset {
   _DefsGraph__isset() : defs(false), edges(false) {}
@@ -248,7 +249,7 @@ class DefsGraph {
   virtual ~DefsGraph() throw() {}
 
   std::map<DefID, Definition>  defs;
-  std::vector<Edge>  edges;
+  std::vector<DEdge>  edges;
 
   _DefsGraph__isset __isset;
 
@@ -257,7 +258,7 @@ class DefsGraph {
     __isset.defs = true;
   }
 
-  void __set_edges(const std::vector<Edge> & val) {
+  void __set_edges(const std::vector<DEdge> & val) {
     edges = val;
     __isset.edges = true;
   }
@@ -286,6 +287,74 @@ class DefsGraph {
 };
 
 void swap(DefsGraph &a, DefsGraph &b);
+
+typedef struct _DefManager__isset {
+  _DefManager__isset() : defs(false), graphs(false), edges(false) {}
+  bool defs;
+  bool graphs;
+  bool edges;
+} _DefManager__isset;
+
+class DefManager {
+ public:
+
+  static const char* ascii_fingerprint; // = "E3B920C51004912C305A0DC08E2F0FBE";
+  static const uint8_t binary_fingerprint[16]; // = {0xE3,0xB9,0x20,0xC5,0x10,0x04,0x91,0x2C,0x30,0x5A,0x0D,0xC0,0x8E,0x2F,0x0F,0xBE};
+
+  DefManager() {
+  }
+
+  virtual ~DefManager() throw() {}
+
+  std::vector<Definition>  defs;
+  std::vector< ::flowbox::batch::graph::Graph>  graphs;
+  std::vector<DEdge>  edges;
+
+  _DefManager__isset __isset;
+
+  void __set_defs(const std::vector<Definition> & val) {
+    defs = val;
+    __isset.defs = true;
+  }
+
+  void __set_graphs(const std::vector< ::flowbox::batch::graph::Graph> & val) {
+    graphs = val;
+    __isset.graphs = true;
+  }
+
+  void __set_edges(const std::vector<DEdge> & val) {
+    edges = val;
+    __isset.edges = true;
+  }
+
+  bool operator == (const DefManager & rhs) const
+  {
+    if (__isset.defs != rhs.__isset.defs)
+      return false;
+    else if (__isset.defs && !(defs == rhs.defs))
+      return false;
+    if (__isset.graphs != rhs.__isset.graphs)
+      return false;
+    else if (__isset.graphs && !(graphs == rhs.graphs))
+      return false;
+    if (__isset.edges != rhs.__isset.edges)
+      return false;
+    else if (__isset.edges && !(edges == rhs.edges))
+      return false;
+    return true;
+  }
+  bool operator != (const DefManager &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DefManager & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(DefManager &a, DefManager &b);
 
 }}} // namespace
 
