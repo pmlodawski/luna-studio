@@ -36,8 +36,8 @@ projects = error "Not implemented"
 
 
 createProject :: Project -> IO () 
-createProject p = Dir.createDirectoryIfMissing True path
-	where path = UniPath.toUnixString $ Project.path p
+createProject p = Dir.createDirectoryIfMissing True ppath
+	where ppath = UniPath.toUnixString $ Project.path p
 
 
 openProject :: ProjectManager -> UniPath -> IO (ProjectManager, (Project.ID, Project))

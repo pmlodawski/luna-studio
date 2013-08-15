@@ -13,12 +13,10 @@ module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph where
 --import Control.Monad
 --import qualified Data.MultiMap as MMap
 
-import qualified Data.Graph.Inductive                                      as DG
 import qualified Data.HashMap.Strict                                       as Map
 import           Data.Int                                                    
 import qualified Data.Text.Lazy                                            as Text
 import qualified Data.Vector                                               as Vector
-import           Data.Vector                                                 (Vector)
 
 import qualified Attrs_Types                                               as TAttrs
 import qualified Graph_Types                                               as TGraph

@@ -47,7 +47,7 @@ nodesGraph batchHandler mtdefID mtlibID = tRunScript $ do
 addNode :: IORef Batch -> Maybe TGraph.Node -> Maybe Int32 -> Maybe Int32 -> IO TGraph.Node
 addNode batchHandler mtnode mtdefID mtlibID = tRunScript $ do
     scriptIO $ putStrLn "called addNode"
-    tnode     <- mtnode <?> "`node` argument is missing"
+    tnode     <- mtnode <??> "`node` argument is missing"
     (_, node) <- tryRight $ decode tnode
     defID     <- tryGetID mtdefID "defID"
     libID     <- tryGetID mtlibID "libID"
@@ -60,7 +60,7 @@ addNode batchHandler mtnode mtdefID mtlibID = tRunScript $ do
 updateNode :: IORef Batch -> Maybe TGraph.Node -> Maybe Int32 -> Maybe Int32 -> IO ()
 updateNode batchHandler mtnode mtdefID mtlibID = tRunScript $ do 
     scriptIO $ putStrLn "called updateNode"
-    tnode  <- mtnode <?> "`node` argument is missing"
+    tnode  <- mtnode <??> "`node` argument is missing"
     node   <- tryRight $ decode tnode
     defID  <- tryGetID mtdefID "defID"
     libID  <- tryGetID mtlibID "libID"
@@ -88,7 +88,7 @@ connect :: IORef Batch -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
 connect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID = tRunScript $ do     
     scriptIO $ putStrLn "called connect"
     srcNodeID   <- tryGetID mtsrcNodeID "srcNodeID"
-    tsrcPort    <- mtsrcPort <?> "`srcPort` field is missing"
+    tsrcPort    <- mtsrcPort <??> "`srcPort` field is missing"
     let vectorToList = map i32toi . Vector.toList
         srcPort = vectorToList tsrcPort
     dstNodeID   <- tryGetID mtdstNodeID "dstNodeID"
@@ -107,7 +107,7 @@ disconnect :: IORef Batch -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
 disconnect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID = tRunScript $ do     
     scriptIO $ putStrLn "called disconnect"
     srcNodeID   <- tryGetID mtsrcNodeID "srcNodeID"
-    tsrcPort    <- mtsrcPort <?> "`srcPort` field is missing"
+    tsrcPort    <- mtsrcPort <??> "`srcPort` field is missing"
     let vectorToList = map i32toi . Vector.toList
         srcPort = vectorToList tsrcPort
     dstNodeID   <- tryGetID mtdstNodeID "dstNodeID"
