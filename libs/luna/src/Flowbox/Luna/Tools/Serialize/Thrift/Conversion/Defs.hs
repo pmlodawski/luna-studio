@@ -52,6 +52,7 @@ instance Convert (Int, Int, Edge) TDefs.Edge where
         return (i32toi tsrc, i32toi tdst, Edge) 
 
 
+
 instance Convert DefManager TDefs.DefsGraph where
     encode defManager = tdefGraph where
         labNodesList  = DefManager.labNodes defManager
@@ -60,9 +61,11 @@ instance Convert DefManager TDefs.DefsGraph where
         labEdgesList  = DefManager.labEdges defManager
         tedges        = Vector.fromList $ map (encode) labEdgesList
         tdefGraph     = TDefs.DefsGraph (Just tdefs) (Just tedges)
+
+    -- WARNING !!! TDef.Definition does not store graph! Encoding and decoding DefManager will cause lose of data!
     decode (TDefs.DefsGraph mtdefs mtedges) = do
         tdefs  <- mtdefs  <?> "Failed to decode DefsGraph: `defs` field is missing"
-        tedges <- mtedges <?> "Failed to decode DefsGraph: `defs` field is missing"
+        tedges <- mtedges <?> "Failed to decode DefsGraph: `edges` field is missing"
         let anodes = convert $ map (decodeLabNode) $ HashMap.toList tdefs
             aedges = convert $ map (decode) $ Vector.toList tedges
         nodes <- anodes
