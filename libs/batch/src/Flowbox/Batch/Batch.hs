@@ -222,8 +222,11 @@ projects batch = ProjectManager.projects (projectManager batch)
 
 
 
-createProject :: Project -> Batch -> IO ()
-createProject project _ = ProjectManager.createProject project
+createProject :: Project -> Batch -> (Batch, (Project.ID, Project))
+createProject project batch = (newBatch, (projectID, project)) where
+    pm                 = projectManager batch
+    (newpm, projectID) = ProjectManager.insNewNode project pm
+    newBatch           = batch { projectManager = newpm }
 
 
 openProject :: UniPath -> Batch -> IO (Batch, (Project.ID, Project))

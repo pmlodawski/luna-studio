@@ -7,8 +7,6 @@
 module Flowbox.Batch.Server.Handlers.Defs (
     defsGraph,
 
-    newDefinition,
-
     addDefinition,
     updateDefinition,
     removeDefinition,
@@ -24,9 +22,7 @@ import           Data.IORef
 import qualified Data.Vector                                         as Vector
 import           Data.Vector                                           (Vector)
 
-import qualified Attrs_Types                                         as TAttrs
 import qualified Defs_Types                                          as TDefs
-import qualified Types_Types                                         as TTypes
 
 import           Flowbox.Batch.Server.Handlers.Common                  
 import qualified Flowbox.Batch.Batch                                 as Batch
@@ -50,14 +46,6 @@ defsGraph batchHandler mtlibID = tRunScript $ do
     adefManager <- tryRight $ Batch.defsGraph libID batch
 
     return $ CDefs.toDefsGraph adefManager
-
-
-newDefinition :: IORef Batch -> Maybe TTypes.Type -> Maybe (Vector TDefs.Import)
-                             -> Maybe TAttrs.Flags -> Maybe TAttrs.Attributes
-                             -> IO TDefs.Definition
-newDefinition _ ttype timports tflags tattrs = do 
-    putStrLn "called newDefinition"
-    return $ TDefs.Definition ttype timports tflags tattrs (Just 0)
 
 
 addDefinition :: IORef Batch 

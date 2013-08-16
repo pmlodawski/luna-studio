@@ -14,12 +14,10 @@ import           Data.Text.Lazy                        (pack, unpack)
 
 import qualified Libs_Types                          as TLibs
 import           Flowbox.Control.Error                 
-import qualified Flowbox.Luna.Network.Def.DefManager as DefManager
-import           Flowbox.Luna.Network.Def.DefManager   (DefManager(..))
 import           Flowbox.Luna.Lib.Library            as Library
+import           Flowbox.Luna.Network.Def.DefManager   (DefManager)
 import qualified Flowbox.System.UniPath              as UniPath
 import           Flowbox.Tools.Conversion              
-
 
 
 instance Convert (Int, Library) (TLibs.Library, DefManager) where

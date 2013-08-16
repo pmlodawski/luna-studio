@@ -10,7 +10,6 @@ module Flowbox.Batch.Project.ProjectManager (
     ProjectManager,
     empty,
 	projects,
-	createProject,
 	openProject,
 	closeProject,
 	storeProject
@@ -33,11 +32,6 @@ empty = DG.empty
 
 projects :: ProjectManager -> [(Project.ID, Project)]
 projects = error "Not implemented"
-
-
-createProject :: Project -> IO () 
-createProject p = Dir.createDirectoryIfMissing True ppath
-	where ppath = UniPath.toUnixString $ Project.path p
 
 
 openProject :: ProjectManager -> UniPath -> IO (ProjectManager, (Project.ID, Project))

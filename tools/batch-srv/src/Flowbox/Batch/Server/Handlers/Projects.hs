@@ -21,17 +21,16 @@ import qualified Data.Vector                                              as Vec
 import           Data.Vector                                                (Vector)
 import           Data.Text.Lazy                                             (Text)
 
-import           Flowbox.Batch.Server.Handlers.Common                       
 import qualified Projects_Types                                           as TProjects
 import           Flowbox.Control.Error                                      
 import qualified Flowbox.Batch.Batch                                      as Batch
 import           Flowbox.Batch.Batch                                        (Batch(..))
 import qualified Flowbox.Batch.Project.Project                            as Project
 import           Flowbox.Batch.Project.Project                              (Project(..))
+import           Flowbox.Batch.Server.Handlers.Common                       
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects   ()
-import qualified Flowbox.Luna.Network.Def.DefManager                      as DefManager
+import qualified Flowbox.Luna.Lib.LibManager                              as LibManager
 import           Flowbox.Tools.Conversion                                   
-
 
 ------ public api -------------------------------------------------
 
@@ -46,15 +45,18 @@ projects batchHandler = do
     return tprojectsVector
 
 
-createProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
+createProject :: IORef Batch -> Maybe TProjects.Project -> IO TProjects.Project
 createProject batchHandler mtproject = tRunScript $ do
     scriptIO $ putStrLn "call createProject"
 
     tproject     <- mtproject <??> "`project` field is missing" 
-    (_, project) <- tryRight (decode (tproject, DefManager.empty) :: Either String (Project.ID, Project))
-
+    (_, project) <- tryRight (decode (tproject, LibManager.empty) :: Either String (Project.ID, Project))
+    
     batch        <- tryReadIORef batchHandler
-    scriptIO $ Batch.createProject project batch
+    let (newBatch, newProject) = Batch.createProject project batch
+    tryWriteIORef batchHandler newBatch
+
+    return $ fst $ encode newProject
 
 
 openProject :: IORef Batch -> Maybe Text -> IO TProjects.Project

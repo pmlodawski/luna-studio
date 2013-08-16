@@ -27,7 +27,7 @@ class BatchHandler : virtual public BatchIf {
     printf("projects\n");
   }
 
-  void createProject(const  ::flowbox::batch::projects::Project& project) {
+  void createProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project) {
     // Your implementation goes here
     printf("createProject\n");
   }
@@ -90,11 +90,6 @@ class BatchHandler : virtual public BatchIf {
   void defsGraph( ::flowbox::batch::defs::DefsGraph& _return, const  ::flowbox::batch::libs::LibID libID) {
     // Your implementation goes here
     printf("defsGraph\n");
-  }
-
-  void newDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::types::Type& type, const  ::flowbox::batch::defs::Imports& imports, const  ::flowbox::batch::attrs::Flags& flags, const  ::flowbox::batch::attrs::Attributes& attrs) {
-    // Your implementation goes here
-    printf("newDefinition\n");
   }
 
   void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::DefID parentID, const  ::flowbox::batch::libs::LibID libID) {
