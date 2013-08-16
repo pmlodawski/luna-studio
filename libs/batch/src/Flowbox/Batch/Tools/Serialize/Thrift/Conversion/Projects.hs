@@ -10,7 +10,7 @@
 
 module Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects where
 
-
+import qualified Data.Vector                                         as Vector
 import           Data.Text.Lazy                                        (pack, unpack)
 
 import qualified Projects_Types                                      as TProjects
@@ -26,21 +26,24 @@ import           Flowbox.Tools.Conversion
 
 instance Convert (Project.ID, Project) (TProjects.Project, LibManager) where
     encode (projectID, project) = (tproject, alibs) where
-        Project aname apath alibs aattrs = project
+        Project aname apath alibPaths alibs aattrs = project
         tname      = pack aname
         tpath      = pack $ UniPath.toUnixString apath
+        tlibPaths  = Vector.fromList $ map (pack . UniPath.toUnixString)  alibPaths
         tattrs     = encode aattrs
         tprojectID = itoi32 projectID
-        tproject   = TProjects.Project (Just tname) (Just tpath) (Just tattrs) (Just tprojectID)
-    decode (TProjects.Project mtname mtpath mtattrs mtprojectID, alibs) = do
-        tname       <- mtname  <?> "Failed to decode Project: `name` field is missing"
-        tpath       <- mtpath  <?> "Failed to decode Project: `path` field is missing"
-        tattrs      <- mtattrs <?> "Failed to decode Project: `attrs` field is missing"
+        tproject   = TProjects.Project (Just tname) (Just tpath) (Just tlibPaths) (Just tattrs) (Just tprojectID)
+    decode (TProjects.Project mtname mtpath mtlibPaths mtattrs mtprojectID, alibs) = do
+        tname       <- mtname      <?> "Failed to decode Project: 'name' field is missing"
+        tpath       <- mtpath      <?> "Failed to decode Project: 'path' field is missing"
+        tlibPaths   <- mtlibPaths  <?> "Failed to decode Project: 'libPaths' field is missing"
+        tattrs      <- mtattrs     <?> "Failed to decode Project: 'attrs' field is missing"
+        tprojectID  <- mtprojectID <?> "Failed to decode Project: 'projectID' field is missing"
         aattrs      <- decode tattrs
-        tprojectID  <- mtprojectID <?> "Failed to decode Project: `projectID` field is missing"
         let aname     = unpack tname
             apath     = UniPath.fromUnixString $ unpack tpath
+            alibPaths = map (UniPath.fromUnixString . unpack) $ Vector.toList tlibPaths
             projectID = i32toi tprojectID
-            project   = Project aname apath alibs aattrs
+            project   = Project aname apath alibPaths alibs aattrs
         return (projectID, project)
 

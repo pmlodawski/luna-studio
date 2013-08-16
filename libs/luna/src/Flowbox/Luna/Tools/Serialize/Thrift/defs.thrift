@@ -46,6 +46,7 @@ struct DefsGraph {
 }
 
 
+// structure for serialization to a single file - to remove in the future
 struct DefManager {
     1: optional list<Definition>  defs
     2: optional list<graph.Graph> graphs

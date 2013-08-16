@@ -20,9 +20,10 @@ namespace flowbox { namespace batch { namespace projects {
 typedef int32_t ProjectID;
 
 typedef struct _Project__isset {
-  _Project__isset() : name(false), path(false), attribs(true), projectID(true) {}
+  _Project__isset() : name(false), path(false), libPaths(true), attribs(true), projectID(true) {}
   bool name;
   bool path;
+  bool libPaths;
   bool attribs;
   bool projectID;
 } _Project__isset;
@@ -30,10 +31,11 @@ typedef struct _Project__isset {
 class Project {
  public:
 
-  static const char* ascii_fingerprint; // = "DF949FB5BDEF3F5D19F49DCE2593B936";
-  static const uint8_t binary_fingerprint[16]; // = {0xDF,0x94,0x9F,0xB5,0xBD,0xEF,0x3F,0x5D,0x19,0xF4,0x9D,0xCE,0x25,0x93,0xB9,0x36};
+  static const char* ascii_fingerprint; // = "A6294DC93456FBC179B6C5A2CD050E74";
+  static const uint8_t binary_fingerprint[16]; // = {0xA6,0x29,0x4D,0xC9,0x34,0x56,0xFB,0xC1,0x79,0xB6,0xC5,0xA2,0xCD,0x05,0x0E,0x74};
 
   Project() : name(), path(), projectID(-1) {
+
 
   }
 
@@ -41,6 +43,7 @@ class Project {
 
   std::string name;
   std::string path;
+  std::vector<std::string>  libPaths;
    ::flowbox::batch::attrs::Attributes attribs;
   ProjectID projectID;
 
@@ -54,6 +57,11 @@ class Project {
   void __set_path(const std::string& val) {
     path = val;
     __isset.path = true;
+  }
+
+  void __set_libPaths(const std::vector<std::string> & val) {
+    libPaths = val;
+    __isset.libPaths = true;
   }
 
   void __set_attribs(const  ::flowbox::batch::attrs::Attributes& val) {
@@ -75,6 +83,10 @@ class Project {
     if (__isset.path != rhs.__isset.path)
       return false;
     else if (__isset.path && !(path == rhs.path))
+      return false;
+    if (__isset.libPaths != rhs.__isset.libPaths)
+      return false;
+    else if (__isset.libPaths && !(libPaths == rhs.libPaths))
       return false;
     if (__isset.attribs != rhs.__isset.attribs)
       return false;

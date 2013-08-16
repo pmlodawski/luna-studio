@@ -167,7 +167,7 @@ restoreLibrary lpath = do
 --    restoreDefsContinue upath (DefManager.empty) Nothing
 
 
----- TODO [PM] THIS METHOD DOES NOT WOR AT ALL
+---- TODO [PM] THIS METHOD DOES NOT WORK AT ALL
 --restoreDefsContinue :: UniPath -> DefManager -> Maybe Definition.ID -> IO DefManager
 --restoreDefsContinue upath defManager mparentID -- =
 --    | apath =~ defFilePattern  = do 

@@ -20,14 +20,15 @@ import           Flowbox.System.UniPath            (UniPath)
 
 
 
-data Project = Project { name  :: String
-                       , path  :: UniPath
-                       , libs  :: LibManager
-                       , attrs :: Attributes
+data Project = Project { name  	  :: String
+                       , path  	  :: UniPath
+                       , libPaths :: [UniPath]
+                       , libs  	  :: LibManager
+                       , attrs    :: Attributes
                        } deriving(Show)
 
 type ID = Int
 
 
 empty :: Project
-empty = Project "" UniPath.empty LibManager.empty Attributes.empty
+empty = Project "" UniPath.empty [] LibManager.empty Attributes.empty

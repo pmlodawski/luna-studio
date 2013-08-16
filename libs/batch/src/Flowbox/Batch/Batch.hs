@@ -250,7 +250,7 @@ storeProject :: Project.ID -> Batch -> IO ()
 storeProject projectID batch = do
     let aprojectManager = projectManager batch
     case ProjectManager.lab aprojectManager projectID of 
-        Nothing      -> error "Could not store project: Wrong project ID"
+        Nothing      -> error $ "Could not store project: Wrong project ID = " ++ show projectID
         Just project -> do ProjectSerialization.storeProject project
 
 

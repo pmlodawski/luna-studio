@@ -26,8 +26,10 @@ import           Flowbox.System.UniPath                                     (Uni
 import           Flowbox.Tools.Conversion                                   
 
 
+
 projectFile :: String
-projectFile = ".project"
+projectFile = "project.flowbox"
+
 
 saveProject :: Project -> Handle -> IO ()
 saveProject project h = do 
@@ -48,9 +50,8 @@ getProject h = do
 
 storeProject :: Project -> IO ()
 storeProject project = do 
-    let 
-        ppath    = UniPath.append projectFile $ Project.path project
-        sproject = Serializable ppath (saveProject project)
+    let filepath = UniPath.append projectFile $ Project.path project
+        sproject = Serializable filepath (saveProject project)
 
     Serializer.serialize sproject
 
@@ -58,8 +59,10 @@ storeProject project = do
 restoreProject :: UniPath -> IO Project
 restoreProject upath = do
 
-    let ppath = UniPath.append projectFile upath
-        dproject = Deserializable ppath getProject
+    let filepath = UniPath.append projectFile upath
+        dproject = Deserializable filepath getProject
 
-    Serializer.deserialize dproject
+    project <- Serializer.deserialize dproject
+
+    return $ project{Project.path = upath}
 

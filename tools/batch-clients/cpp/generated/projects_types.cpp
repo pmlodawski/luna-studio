@@ -10,8 +10,8 @@
 
 namespace flowbox { namespace batch { namespace projects {
 
-const char* Project::ascii_fingerprint = "DF949FB5BDEF3F5D19F49DCE2593B936";
-const uint8_t Project::binary_fingerprint[16] = {0xDF,0x94,0x9F,0xB5,0xBD,0xEF,0x3F,0x5D,0x19,0xF4,0x9D,0xCE,0x25,0x93,0xB9,0x36};
+const char* Project::ascii_fingerprint = "A6294DC93456FBC179B6C5A2CD050E74";
+const uint8_t Project::binary_fingerprint[16] = {0xA6,0x29,0x4D,0xC9,0x34,0x56,0xFB,0xC1,0x79,0xB6,0xC5,0xA2,0xCD,0x05,0x0E,0x74};
 
 uint32_t Project::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -50,6 +50,26 @@ uint32_t Project::read(::apache::thrift::protocol::TProtocol* iprot) {
         }
         break;
       case 3:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->libPaths.clear();
+            uint32_t _size0;
+            ::apache::thrift::protocol::TType _etype3;
+            xfer += iprot->readListBegin(_etype3, _size0);
+            this->libPaths.resize(_size0);
+            uint32_t _i4;
+            for (_i4 = 0; _i4 < _size0; ++_i4)
+            {
+              xfer += iprot->readString(this->libPaths[_i4]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.libPaths = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += this->attribs.read(iprot);
           this->__isset.attribs = true;
@@ -57,7 +77,7 @@ uint32_t Project::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 4:
+      case 5:
         if (ftype == ::apache::thrift::protocol::T_I32) {
           xfer += iprot->readI32(this->projectID);
           this->__isset.projectID = true;
@@ -91,13 +111,26 @@ uint32_t Project::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeString(this->path);
     xfer += oprot->writeFieldEnd();
   }
+  if (this->__isset.libPaths) {
+    xfer += oprot->writeFieldBegin("libPaths", ::apache::thrift::protocol::T_LIST, 3);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->libPaths.size()));
+      std::vector<std::string> ::const_iterator _iter5;
+      for (_iter5 = this->libPaths.begin(); _iter5 != this->libPaths.end(); ++_iter5)
+      {
+        xfer += oprot->writeString((*_iter5));
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
   if (this->__isset.attribs) {
-    xfer += oprot->writeFieldBegin("attribs", ::apache::thrift::protocol::T_STRUCT, 3);
+    xfer += oprot->writeFieldBegin("attribs", ::apache::thrift::protocol::T_STRUCT, 4);
     xfer += this->attribs.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.projectID) {
-    xfer += oprot->writeFieldBegin("projectID", ::apache::thrift::protocol::T_I32, 4);
+    xfer += oprot->writeFieldBegin("projectID", ::apache::thrift::protocol::T_I32, 5);
     xfer += oprot->writeI32(this->projectID);
     xfer += oprot->writeFieldEnd();
   }
@@ -110,6 +143,7 @@ void swap(Project &a, Project &b) {
   using ::std::swap;
   swap(a.name, b.name);
   swap(a.path, b.path);
+  swap(a.libPaths, b.libPaths);
   swap(a.attribs, b.attribs);
   swap(a.projectID, b.projectID);
   swap(a.__isset, b.__isset);

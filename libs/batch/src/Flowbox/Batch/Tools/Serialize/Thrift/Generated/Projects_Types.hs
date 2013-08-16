@@ -37,9 +37,9 @@ import           Attrs_Types
 
 type ProjectID = Int32
 
-data Project = Project{f_Project_name :: Maybe Text,f_Project_path :: Maybe Text,f_Project_attribs :: Maybe Attrs_Types.Attributes,f_Project_projectID :: Maybe Int32} deriving (Show,Eq,Typeable)
+data Project = Project{f_Project_name :: Maybe Text,f_Project_path :: Maybe Text,f_Project_libPaths :: Maybe (Vector.Vector Text),f_Project_attribs :: Maybe Attrs_Types.Attributes,f_Project_projectID :: Maybe Int32} deriving (Show,Eq,Typeable)
 instance Hashable Project where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Project_name record   `hashWithSalt` f_Project_path record   `hashWithSalt` f_Project_attribs record   `hashWithSalt` f_Project_projectID record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_Project_name record   `hashWithSalt` f_Project_path record   `hashWithSalt` f_Project_libPaths record   `hashWithSalt` f_Project_attribs record   `hashWithSalt` f_Project_projectID record  
 write_Project oprot record = do
   writeStructBegin oprot "Project"
   case f_Project_name record of {Nothing -> return (); Just _v -> do
@@ -50,50 +50,60 @@ write_Project oprot record = do
     writeFieldBegin oprot ("path",T_STRING,2)
     writeString oprot _v
     writeFieldEnd oprot}
+  case f_Project_libPaths record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("libPaths",T_LIST,3)
+    (let f = Vector.mapM_ (\_viter2 -> writeString oprot _viter2) in do {writeListBegin oprot (T_STRING,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    writeFieldEnd oprot}
   case f_Project_attribs record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("attribs",T_STRUCT,3)
+    writeFieldBegin oprot ("attribs",T_STRUCT,4)
     Attrs_Types.write_Attributes oprot _v
     writeFieldEnd oprot}
   case f_Project_projectID record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("projectID",T_I32,4)
+    writeFieldBegin oprot ("projectID",T_I32,5)
     writeI32 oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_Project_fields iprot record = do
-  (_,_t3,_id4) <- readFieldBegin iprot
-  if _t3 == T_STOP then return record else
-    case _id4 of 
-      1 -> if _t3 == T_STRING then do
+  (_,_t4,_id5) <- readFieldBegin iprot
+  if _t4 == T_STOP then return record else
+    case _id5 of 
+      1 -> if _t4 == T_STRING then do
         s <- readString iprot
         read_Project_fields iprot record{f_Project_name=Just s}
         else do
-          skip iprot _t3
+          skip iprot _t4
           read_Project_fields iprot record
-      2 -> if _t3 == T_STRING then do
+      2 -> if _t4 == T_STRING then do
         s <- readString iprot
         read_Project_fields iprot record{f_Project_path=Just s}
         else do
-          skip iprot _t3
+          skip iprot _t4
           read_Project_fields iprot record
-      3 -> if _t3 == T_STRUCT then do
+      3 -> if _t4 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readString iprot) in do {(_etype9,_size6) <- readListBegin iprot; f _size6})
+        read_Project_fields iprot record{f_Project_libPaths=Just s}
+        else do
+          skip iprot _t4
+          read_Project_fields iprot record
+      4 -> if _t4 == T_STRUCT then do
         s <- (read_Attributes iprot)
         read_Project_fields iprot record{f_Project_attribs=Just s}
         else do
-          skip iprot _t3
+          skip iprot _t4
           read_Project_fields iprot record
-      4 -> if _t3 == T_I32 then do
+      5 -> if _t4 == T_I32 then do
         s <- readI32 iprot
         read_Project_fields iprot record{f_Project_projectID=Just s}
         else do
-          skip iprot _t3
+          skip iprot _t4
           read_Project_fields iprot record
       _ -> do
-        skip iprot _t3
+        skip iprot _t4
         readFieldEnd iprot
         read_Project_fields iprot record
 read_Project iprot = do
   _ <- readStructBegin iprot
-  record <- read_Project_fields iprot (Project{f_Project_name=Nothing,f_Project_path=Nothing,f_Project_attribs=Nothing,f_Project_projectID=Nothing})
+  record <- read_Project_fields iprot (Project{f_Project_name=Nothing,f_Project_path=Nothing,f_Project_libPaths=Nothing,f_Project_attribs=Nothing,f_Project_projectID=Nothing})
   readStructEnd iprot
   return record

@@ -16,6 +16,7 @@ typedef i32 ProjectID
 struct Project {
     1: optional string           name
     2: optional string           path
-	3: optional attrs.Attributes attribs   = {}
-    4: optional ProjectID        projectID = -1
+    3: optional list<string>     libPaths  = []
+	4: optional attrs.Attributes attribs   = {}
+    5: optional ProjectID        projectID = -1
 }
