@@ -61,7 +61,7 @@ Executable lunac
                   fgl,
                   flowbox-luna,
                   flowbox-utils,
-                  MissingH,
+                  MissingH == 1.2.0.0,
                   mtl,
                   regex-posix,
                   split,

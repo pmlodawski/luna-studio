@@ -29,19 +29,19 @@ Library
     Exposed-modules: 
                      
         Flowbox.Batch.Batch,
-        Flowbox.Batch.Tools.Serialize.Project,
-        Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects,
-        Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView,
         Flowbox.Batch.GraphView.GraphView,
         Flowbox.Batch.GraphView.EdgeView,
-        Flowbox.Batch.Project.Project,
         Flowbox.Batch.Project.ProjectManager,
+        Flowbox.Batch.Project.Project,
         Flowbox.Batch.Samples.Modules,
+        Flowbox.Batch.Tools.Serialize.Project,
+        Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView,
+        Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects,
                      
-        Graphview_Consts,
-        Projects_Consts,
+        Projects_Types,
         Graphview_Types,
-        Projects_Types
+        Graphview_Consts,
+        Projects_Consts
 
     Build-Depends:  base,
                     bytestring,
