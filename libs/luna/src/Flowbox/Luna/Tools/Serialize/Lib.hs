@@ -27,7 +27,6 @@ import           Flowbox.System.UniPath                                 (UniPath
 import           Flowbox.Tools.Conversion                               
 
 
-
 saveLib :: Library -> Handle -> IO ()
 saveLib library h = do 
     let (tlibrary, defManager) = encode (-1, library)

@@ -55,11 +55,11 @@ addSomeDefs adefs = DefManager.addToParentMany (listToDefs atrybuty 2000 20)
                  $ adefs
 
 emptyStdLibrary :: Library
-emptyStdLibrary = Library.make "std"           $ UniPath.fromUnixString "lunalib/stdlib"
+emptyStdLibrary = Library.make "std"           $ UniPath.fromUnixString "dummylibs/stdlib.lunalib"
     
      
 userLibrary :: Library
-userLibrary = Library.make "__workspace__" $ UniPath.fromUnixString "lunalib/workspace"
+userLibrary = Library.make "__workspace__" $ UniPath.fromUnixString "dummylibs/workspace.lunalib"
 
 stdLibrary :: Library
 stdLibrary  = emptyStdLibrary{Library.defs = addSomeDefs $ Library.defs emptyStdLibrary}        

@@ -60,6 +60,7 @@ instance Batch_Iface BatchHandler where
     closeProject        = HProjects.closeProject
     storeProject        = HProjects.storeProject
     setActiveProject    = HProjects.setActiveProject
+    activeProject       = HProjects.activeProject
 
     libraries           = HLibs.libraries
     createLibrary       = HLibs.createLibrary
@@ -70,7 +71,6 @@ instance Batch_Iface BatchHandler where
     libraryRootDef      = HLibs.libraryRootDef
 
     defsGraph           = HDefs.defsGraph
-    newDefinition       = HDefs.newDefinition
     addDefinition       = HDefs.addDefinition
     updateDefinition    = HDefs.updateDefinition
     removeDefinition    = HDefs.removeDefinition

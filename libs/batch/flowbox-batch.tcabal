@@ -12,7 +12,7 @@ Flag Debug
 
 
 Library
-    Hs-Source-Dirs: src
+    Hs-Source-Dirs: src,
                     src/Flowbox/Batch/Tools/Serialize/Thrift/Generated
 
     GHC-Options:    -Wall 
@@ -48,10 +48,11 @@ Executable batch
 --  Extensions:     DoAndIfThenElse
 --                  MultiParamTypeClasses
 
-  Build-Depends:  base,
+  Build-Depends:    base,
                     bytestring,
                     containers,
                     directory,
+                    flowbox-batch,
                     flowbox-luna,
                     flowbox-utils,
                     hashable,

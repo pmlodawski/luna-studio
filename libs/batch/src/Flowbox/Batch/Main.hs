@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 import qualified Flowbox.Batch.Project.Project        as Project
 import           Flowbox.Batch.Project.Project          (Project)
@@ -16,14 +17,4 @@ import qualified Flowbox.Luna.Samples.HelloWorld      as HelloWorld
 
 main :: IO()
 main = do
-	let
-		pm = ProjectManager.empty
-		p = Project.empty { Project.name = "TestProject"
-						  , Project.path = UniPath.fromUnixString "samples/TestProject"
-						  , Project.libs = HelloWorld.libman
-		                  }
-
-	ProjectManager.createProject p
-
-	print p
-	return ()
+	print "helpme world"

@@ -39,11 +39,11 @@ int main(int argc, char **argv) {
 
         Library lib1;
         lib1.__set_name("lib1");
-        lib1.__set_path("mylibs/lib1.lunalib");
+        lib1.__set_path("dummylibs/my/lib1.lunalib");
 
         Library userlib;
         userlib.__set_name("user");
-        userlib.__set_path("mylibs/user.lunalib");
+        userlib.__set_path("dummylibs/my/user.lunalib");
 
         batch.libraries(registeredLibs);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
@@ -135,12 +135,33 @@ int main(int argc, char **argv) {
         batch.unloadLibrary(userlib.libID);
         batch.libraries(registeredLibs);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
-        batch.loadLibrary(userlib,"mylibs/user.lunalib");
+        batch.loadLibrary(userlib, userlib.path);
         batch.libraries(registeredLibs);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
 
         batch.dump();
         batch.ping();
+
+        for(auto lib : registeredLibs)
+            batch.storeLibrary(lib.libID);
+
+        Project proj;
+        batch.activeProject(proj);
+        batch.storeProject(proj.projectID);
+        batch.closeProject(proj.projectID);
+
+        Project reopened;
+        batch.openProject(reopened, proj.path);
+        batch.setActiveProject(reopened.projectID);
+        batch.dump();
+
+        for(auto lib : registeredLibs)
+            batch.loadLibrary(lib, lib.path);
+        
+        batch.dump();        
+
+        batch.ping();
+
     } catch (ArgumentException e) {
         cout << "Batch returned an error: "<< endl
              << "\t" << e.message << endl;

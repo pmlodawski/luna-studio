@@ -11,7 +11,8 @@ module Flowbox.Batch.Server.Handlers.Projects (
     openProject, 
     closeProject,
     storeProject,
-    setActiveProject
+    setActiveProject,
+    activeProject
 ) where
 
 
@@ -21,17 +22,16 @@ import qualified Data.Vector                                              as Vec
 import           Data.Vector                                                (Vector)
 import           Data.Text.Lazy                                             (Text)
 
-import           Flowbox.Batch.Server.Handlers.Common                       
 import qualified Projects_Types                                           as TProjects
 import           Flowbox.Control.Error                                      
 import qualified Flowbox.Batch.Batch                                      as Batch
 import           Flowbox.Batch.Batch                                        (Batch(..))
 import qualified Flowbox.Batch.Project.Project                            as Project
 import           Flowbox.Batch.Project.Project                              (Project(..))
+import           Flowbox.Batch.Server.Handlers.Common                       
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects   ()
-import qualified Flowbox.Luna.Network.Def.DefManager                      as DefManager
+import qualified Flowbox.Luna.Lib.LibManager                              as LibManager
 import           Flowbox.Tools.Conversion                                   
-
 
 ------ public api -------------------------------------------------
 
@@ -46,15 +46,18 @@ projects batchHandler = do
     return tprojectsVector
 
 
-createProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
+createProject :: IORef Batch -> Maybe TProjects.Project -> IO TProjects.Project
 createProject batchHandler mtproject = tRunScript $ do
     scriptIO $ putStrLn "call createProject"
 
     tproject     <- mtproject <??> "`project` field is missing" 
-    (_, project) <- tryRight (decode (tproject, DefManager.empty) :: Either String (Project.ID, Project))
-
+    (_, project) <- tryRight (decode (tproject, LibManager.empty) :: Either String (Project.ID, Project))
+    
     batch        <- tryReadIORef batchHandler
-    scriptIO $ Batch.createProject project batch
+    let (newBatch, newProject) = Batch.createProject project batch
+    tryWriteIORef batchHandler newBatch
+
+    return $ fst $ encode newProject
 
 
 openProject :: IORef Batch -> Maybe Text -> IO TProjects.Project
@@ -75,9 +78,9 @@ closeProject batchHandler mtprojectID = tRunScript $ do
     scriptIO $ putStrLn "call closeProject"
 
     projectID <- tryGetID mtprojectID "projectID"
+    batch     <- tryReadIORef batchHandler
 
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ Batch.closeProject projectID batch
+    let newBatch = Batch.closeProject projectID batch
     tryWriteIORef batchHandler newBatch
 
 
@@ -100,3 +103,13 @@ setActiveProject batchHandler mtprojectID = tRunScript $ do
     batch <- tryReadIORef batchHandler
     let newBatch = Batch.setActiveProject projectID batch
     tryWriteIORef batchHandler newBatch
+
+
+activeProject :: IORef Batch -> IO TProjects.Project
+activeProject batchHandler = tRunScript $ do
+    scriptIO $ putStrLn "call activeProject"
+
+    batch <- tryReadIORef batchHandler
+    project <- (Batch.activeProject batch) <??> "No active project set"
+    let projectID = Batch.activeProjectID batch
+    return $ fst $ encode (projectID, project)

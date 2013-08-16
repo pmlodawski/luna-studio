@@ -45,11 +45,12 @@ import           Batch_Types
 
 class Batch_Iface a where
   projects :: a -> IO (Vector.Vector Projects_Types.Project)
-  createProject :: a -> Maybe Projects_Types.Project -> IO ()
+  createProject :: a -> Maybe Projects_Types.Project -> IO Projects_Types.Project
   openProject :: a -> Maybe Text -> IO Projects_Types.Project
   closeProject :: a -> Maybe Int32 -> IO ()
   storeProject :: a -> Maybe Int32 -> IO ()
   setActiveProject :: a -> Maybe Int32 -> IO ()
+  activeProject :: a -> IO Projects_Types.Project
   libraries :: a -> IO (Vector.Vector Libs_Types.Library)
   createLibrary :: a -> Maybe Libs_Types.Library -> IO Libs_Types.Library
   loadLibrary :: a -> Maybe Text -> IO Libs_Types.Library
@@ -58,7 +59,6 @@ class Batch_Iface a where
   buildLibrary :: a -> Maybe Int32 -> IO ()
   libraryRootDef :: a -> Maybe Int32 -> IO Defs_Types.Definition
   defsGraph :: a -> Maybe Int32 -> IO Defs_Types.DefsGraph
-  newDefinition :: a -> Maybe Types_Types.Type -> Maybe (Vector.Vector Defs_Types.Import) -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes -> IO Defs_Types.Definition
   addDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition
   updateDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Int32 -> IO ()
   removeDefinition :: a -> Maybe Int32 -> Maybe Int32 -> IO ()

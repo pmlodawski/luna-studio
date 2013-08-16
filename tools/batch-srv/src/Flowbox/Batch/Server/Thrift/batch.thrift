@@ -36,18 +36,19 @@ service Batch {
 
     list<projects.Project> projects()
 
-    void             createProject   (1: projects.Project   project  ) throws (1: ArgumentException missingFields)
+    projects.Project createProject   (1: projects.Project   project  ) throws (1: ArgumentException missingFields)
     projects.Project openProject     (1: string             path     ) throws (1: ArgumentException missingFields)
     void             closeProject    (1: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
     void             storeProject    (1: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
 
     void             setActiveProject(1: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
+    projects.Project activeProject   ()                                throws (1: ArgumentException missingFields)
 
     /*
      * Libraries
      */
 
-    list<libs.Library> libraries()
+    list<libs.Library> libraries()                          throws (1: ArgumentException missingFields)
 
     libs.Library     createLibrary(1: libs.Library library) throws (1: ArgumentException missingFields)
     libs.Library       loadLibrary(1: string       path   ) throws (1: ArgumentException missingFields)
@@ -62,10 +63,8 @@ service Batch {
      * Definitions
      */
 
-    defs.DefsGraph      defsGraph(1: libs.LibID libID)
+    defs.DefsGraph      defsGraph(1: libs.LibID libID) throws (1: ArgumentException missingFields)
 
-    defs.Definition newDefinition(1: types.Type      type      , 2: defs.Imports     imports , 
-                                  3: attrs.Flags     flags     , 4: attrs.Attributes attrs   )
     defs.Definition addDefinition(1: defs.Definition definition, 2: defs.DefID       parentID, 
                                   3: libs.LibID      libID)                            throws (1: ArgumentException missingFields)
     void         updateDefinition(1: defs.Definition definition,  2: libs.LibID libID) throws (1: ArgumentException missingFields)

@@ -15,7 +15,8 @@ module Flowbox.Batch.Batch (
     closeProject,
     storeProject,
     setActiveProject,
-
+    activeProject,
+    
     libraries,
     createLibrary,
     loadLibrary,
@@ -39,30 +40,30 @@ module Flowbox.Batch.Batch (
     disconnect
 ) where
 
-import           Flowbox.Batch.GraphView.EdgeView       (EdgeView(..))
-import qualified Flowbox.Batch.GraphView.GraphView    as GraphView
-import           Flowbox.Batch.GraphView.GraphView      (GraphView)
-import qualified Flowbox.Batch.Project.Project        as Project
-import           Flowbox.Batch.Project.Project          (Project(..))
-import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
-import           Flowbox.Batch.Project.ProjectManager   (ProjectManager)
-import qualified Flowbox.Luna.Builder.Builder         as Builder
-import           Flowbox.Luna.Builder.Builder           (Builder(..))
-import qualified Flowbox.Luna.Lib.LibManager          as LibManager
-import           Flowbox.Luna.Lib.LibManager            (LibManager)
-import qualified Flowbox.Luna.Lib.Library             as Library
-import           Flowbox.Luna.Lib.Library               (Library(..))
-import qualified Flowbox.Luna.Network.Def.DefManager  as DefManager
-import           Flowbox.Luna.Network.Def.DefManager    (DefManager)
-import qualified Flowbox.Luna.Network.Def.Definition  as Definition
-import           Flowbox.Luna.Network.Def.Definition    (Definition(..))
-import qualified Flowbox.Luna.Network.Graph.Graph     as Graph
-import           Flowbox.Luna.Network.Graph.Graph       (Graph)
-import qualified Flowbox.Luna.Network.Graph.Node      as Node
-import           Flowbox.Luna.Network.Graph.Node        (Node(..))
-import qualified Flowbox.Luna.Tools.Serialize.Lib     as LibSerialization
-import           Flowbox.System.UniPath                 (UniPath)
-
+import           Flowbox.Batch.GraphView.EdgeView        (EdgeView(..))
+import qualified Flowbox.Batch.GraphView.GraphView     as GraphView
+import           Flowbox.Batch.GraphView.GraphView       (GraphView)
+import qualified Flowbox.Batch.Project.Project         as Project
+import           Flowbox.Batch.Project.Project           (Project(..))
+import qualified Flowbox.Batch.Project.ProjectManager  as ProjectManager
+import           Flowbox.Batch.Project.ProjectManager    (ProjectManager)
+import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
+import qualified Flowbox.Luna.Builder.Builder          as Builder
+import           Flowbox.Luna.Builder.Builder            (Builder(..))
+import qualified Flowbox.Luna.Lib.LibManager           as LibManager
+import           Flowbox.Luna.Lib.LibManager             (LibManager)
+import qualified Flowbox.Luna.Lib.Library              as Library
+import           Flowbox.Luna.Lib.Library                (Library(..))
+import qualified Flowbox.Luna.Network.Def.DefManager   as DefManager
+import           Flowbox.Luna.Network.Def.DefManager     (DefManager)
+import qualified Flowbox.Luna.Network.Def.Definition   as Definition
+import           Flowbox.Luna.Network.Def.Definition     (Definition(..))
+import qualified Flowbox.Luna.Network.Graph.Graph      as Graph
+import           Flowbox.Luna.Network.Graph.Graph        (Graph)
+import qualified Flowbox.Luna.Network.Graph.Node       as Node
+import           Flowbox.Luna.Network.Graph.Node         (Node(..))
+import qualified Flowbox.Luna.Tools.Serialize.Lib      as LibSerialization
+import           Flowbox.System.UniPath                  (UniPath)
 
 data Batch = Batch { projectManager  :: ProjectManager
                    , activeProjectID :: Project.ID
@@ -83,57 +84,50 @@ activeProject (Batch pm apID) = do
 activeProjectOp :: (Batch -> (Project.ID, Project) -> Either String (Project, r)) 
                          -> Batch
                          -> Either String (Batch, r)
-activeProjectOp operation batch = 
-    case activeProject batch of 
-        Nothing                   -> Left "No active project set."
-        Just project              -> let projectID = activeProjectID batch
-                                     in case operation batch (projectID, project) of
-            Left message          -> Left message
-            Right (newProject, r) -> Right (newBatch, r) where
-                                         aprojectManager   = projectManager batch
-                                         newProjectManager = ProjectManager.updateNode (projectID, newProject) aprojectManager
-                                         newBatch          = batch { projectManager = newProjectManager }
+activeProjectOp operation batch = case activeProject batch of 
+    Nothing                   -> Left "No active project set."
+    Just project              -> let projectID = activeProjectID batch
+                                 in case operation batch (projectID, project) of
+        Left message          -> Left message
+        Right (newProject, r) -> Right (newBatch, r) where
+                                     aprojectManager   = projectManager batch
+                                     newProjectManager = ProjectManager.updateNode (projectID, newProject) aprojectManager
+                                     newBatch          = batch { projectManager = newProjectManager }
 
-activeProjectOp' :: (Batch -> (Project.ID, Project) -> IO (Either String (Project, r)))
+activeProjectOp' :: (Batch -> (Project.ID, Project) -> IO (Project, r))
                  -> Batch
-                 -> IO (Either String (Batch, r))
-activeProjectOp' operation batch = 
-    case activeProject batch of 
-        Nothing                   -> return $ Left "No active project set."
-        Just project              -> do 
-            let projectID = activeProjectID batch
-            opr <- operation batch (projectID, project)
-            case opr of
-                Left message          -> return $ Left message
-                Right (newProject, r) -> do let aprojectManager   = projectManager batch
-                                                newProjectManager = ProjectManager.updateNode (projectID, newProject) aprojectManager
-                                                newBatch          = batch { projectManager = newProjectManager }
-                                            return $ Right (newBatch, r)
+                 -> IO (Batch, r)
+activeProjectOp' operation batch = case activeProject batch of 
+    Nothing                   -> error "No active project set."
+    Just project              -> do 
+        let projectID = activeProjectID batch
+        (newProject, r) <- operation batch (projectID, project)
+
+        let aprojectManager   = projectManager batch
+            newProjectManager = ProjectManager.updateNode (projectID, newProject) aprojectManager
+            newBatch          = batch { projectManager = newProjectManager }
+        return (newBatch, r)
 
 
 libManagerOp :: (Batch -> LibManager -> Either String (LibManager, r))
              -> Batch 
              -> Either String (Batch, r)
-libManagerOp operation = 
-    activeProjectOp (\batch (_, project) -> let
-        libManager = Project.libs project
-        in case operation batch libManager of 
-            Left message             -> Left message
-            Right (newLibManager, r) -> Right (newProject, r) where
+libManagerOp operation = activeProjectOp (\batch (_, project) -> let
+    libManager = Project.libs project
+    in case operation batch libManager of 
+        Left message             -> Left message
+        Right (newLibManager, r) -> Right (newProject, r) where
                                             newProject = project { Project.libs = newLibManager })
 
 
-libManagerOp' :: (Batch -> LibManager -> IO (Either String (LibManager, r)))
+libManagerOp' :: (Batch -> LibManager -> IO (LibManager, r))
               -> Batch 
-              -> IO (Either String (Batch, r))
-libManagerOp' operation = 
-    activeProjectOp' (\batch (_, project) -> do 
-        let libManager = Project.libs project
-        opr <- operation batch libManager
-        case opr of 
-            Left message             -> return $ Left message
-            Right (newLibManager, r) -> do let newProject = project { Project.libs = newLibManager }
-                                           return $ Right (newProject, r))
+              -> IO (Batch, r)
+libManagerOp' operation = activeProjectOp' (\batch (_, project) -> do 
+    let libManager = Project.libs project
+    (newLibManager, r) <- operation batch libManager
+    let newProject = project { Project.libs = newLibManager }
+    return (newProject, r))
 
 
 libraryOp :: Library.ID
@@ -142,27 +136,24 @@ libraryOp :: Library.ID
           -> Either String (Batch, r)
 libraryOp libID operation =
     libManagerOp (\batch libManager  -> case LibManager.lab libManager libID of
-            Nothing                  -> Left $ "Wrong `libID` = " ++ show libID
-            Just library             -> case operation batch library of 
-                Left message         -> Left message
-                Right (newLibary, r) -> Right (newLibManager, r) where
-                    newLibManager = LibManager.updateNode (libID, newLibary) libManager)
+        Nothing                      -> Left $ "Wrong `libID` = " ++ show libID
+        Just library                 -> case operation batch library of 
+            Left message             -> Left message
+            Right (newLibary, r)     -> Right (newLibManager, r) where
+                newLibManager = LibManager.updateNode (libID, newLibary) libManager)
 
 
 libraryOp' :: Library.ID
-           -> (Batch -> Library -> IO (Either String (Library, r)))
+           -> (Batch -> Library -> IO (Library, r))
            -> Batch
-           -> IO (Either String (Batch, r))
+           -> IO (Batch, r)
 libraryOp' libID operation =
     libManagerOp' (\batch libManager  -> case LibManager.lab libManager libID of
-        Nothing                  -> return $ Left $ "Wrong `libID` = " ++ show libID
+        Nothing                  -> error $ "Wrong `libID` = " ++ show libID
         Just library             -> do
-            opr <- operation batch library 
-            case opr of 
-                Left message         -> return $ Left message
-                Right (newLibary, r) -> do 
-                    let newLibManager = LibManager.updateNode (libID, newLibary) libManager
-                    return $ Right (newLibManager, r))
+            (newLibary, r) <- operation batch library 
+            let newLibManager = LibManager.updateNode (libID, newLibary) libManager
+            return (newLibManager, r))
 
 
 defManagerOp :: Library.ID
@@ -213,12 +204,10 @@ readonly op = case op of
     Right (_, r) -> Right r
 
 
-readonly' :: IO (Either String (a, r)) -> IO (Either String r)
+readonly' :: IO (a, r) -> IO r
 readonly' op = do
-    o <- op
-    case o of 
-        Left message -> return $ Left message
-        Right (_, r) -> return $ Right r
+    (_, r) <- op
+    return r
 
 
 noresult :: Either String (a, r) -> Either String a
@@ -230,12 +219,14 @@ noresult op = case op of
 -------- Projects -------------------------------------------------------------
 
 projects :: Batch -> [(Project.ID, Project)]
-projects batch = ProjectManager.projects (projectManager batch)
+projects batch = ProjectManager.labNodes (projectManager batch)
 
 
-
-createProject :: Project -> Batch -> IO ()
-createProject project _ = ProjectManager.createProject project
+createProject :: Project -> Batch -> (Batch, (Project.ID, Project))
+createProject project batch = (newBatch, (projectID, project)) where
+    pm                 = projectManager batch
+    (newpm, projectID) = ProjectManager.insNewNode project pm
+    newBatch           = batch { projectManager = newpm }
 
 
 openProject :: UniPath -> Batch -> IO (Batch, (Project.ID, Project))
@@ -247,19 +238,19 @@ openProject ppath batch = do
 
 
 
-closeProject :: Project.ID -> Batch -> IO Batch
-closeProject projectID batch = do
-    let aprojectManager = projectManager batch
-    newProjectManager <- ProjectManager.closeProject aprojectManager projectID
-    let newBatch = batch {projectManager = newProjectManager}
-    return newBatch
+closeProject :: Project.ID -> Batch -> Batch
+closeProject projectID batch = newBatch where 
+    aprojectManager   = projectManager batch
+    newProjectManager = ProjectManager.delNode projectID aprojectManager
+    newBatch          = batch {projectManager = newProjectManager}
 
 
 storeProject :: Project.ID -> Batch -> IO ()
 storeProject projectID batch = do
     let aprojectManager = projectManager batch
-    _ <- ProjectManager.storeProject aprojectManager projectID
-    return ()
+    case ProjectManager.lab aprojectManager projectID of 
+        Nothing      -> error "Could not store project: Wrong project ID"
+        Just project -> do ProjectSerialization.storeProject project
 
 
 setActiveProject :: Project.ID -> Batch -> Batch
@@ -282,31 +273,31 @@ createLibrary libName libPath = libManagerOp (\_ libManager ->
     in Right (newLibManager, (libID, library)))
 
 
-loadLibrary :: UniPath -> Batch -> IO (Either String (Batch, (Library.ID, Library)))
+loadLibrary :: UniPath -> Batch -> IO (Batch, (Library.ID, Library))
 loadLibrary lpath = libManagerOp' (\_ libManager -> do
     r <- LibManager.loadLibrary lpath libManager
-    return $ Right r)
+    return r)
 
 
 unloadLibrary :: Library.ID -> Batch -> Either String Batch
 unloadLibrary libID = noresult . libManagerOp (\_ libManager -> 
-    let newLibManager = LibManager.unloadLibrary libID libManager
+    let newLibManager = LibManager.delNode libID libManager
     in Right (newLibManager, ()))
 
 
-storeLibrary :: Library.ID -> Batch -> IO (Either String ())
+storeLibrary :: Library.ID -> Batch -> IO ()
 storeLibrary libID = readonly' . libraryOp' libID (\_ library -> do
     LibSerialization.storeLibrary library
-    return $ Right (library, ()))
+    return (library, ()))
 
 
-buildLibrary :: Library.ID -> Batch -> IO (Either String ())
+buildLibrary :: Library.ID -> Batch -> IO ()
 buildLibrary libID = readonly' . libraryOp' libID (\batch library -> do
     let Just proj = activeProject batch
         ppath = Project.path proj
         b = Builder ppath
     Builder.buildLibrary b library
-    return $ Right (library, ()))
+    return (library, ()))
 
 
 libraryRootDef :: Library.ID -> Batch -> Either String (Definition.ID, Definition)
