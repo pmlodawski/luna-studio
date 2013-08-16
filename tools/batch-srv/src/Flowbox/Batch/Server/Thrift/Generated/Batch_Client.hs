@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,createProject,openProject,closeProject,storeProject,setActiveProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,ping,dump) where
+module Batch_Client(projects,createProject,openProject,closeProject,storeProject,setActiveProject,activeProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,ping,dump) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -189,6 +189,32 @@ recv_setActiveProject ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
+activeProject (ip,op) = do
+  send_activeProject op
+  recv_activeProject ip
+send_activeProject op = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("activeProject", M_CALL, seqn)
+  write_ActiveProject_args op (ActiveProject_args{})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_activeProject ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_ActiveProject_result ip
+  readMessageEnd ip
+  case f_ActiveProject_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_ActiveProject_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "activeProject failed: unknown result")
 libraries (ip,op) = do
   send_libraries op
   recv_libraries ip
@@ -211,6 +237,9 @@ recv_libraries ip = do
   case f_Libraries_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_Libraries_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "libraries failed: unknown result")
 createLibrary (ip,op) arg_library = do
   send_createLibrary op arg_library
@@ -381,6 +410,9 @@ recv_defsGraph ip = do
   case f_DefsGraph_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_DefsGraph_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "defsGraph failed: unknown result")
 addDefinition (ip,op) arg_definition arg_parentID arg_libID = do
   send_addDefinition op arg_definition arg_parentID arg_libID

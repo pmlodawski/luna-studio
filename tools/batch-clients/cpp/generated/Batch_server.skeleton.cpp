@@ -52,6 +52,11 @@ class BatchHandler : virtual public BatchIf {
     printf("setActiveProject\n");
   }
 
+  void activeProject( ::flowbox::batch::projects::Project& _return) {
+    // Your implementation goes here
+    printf("activeProject\n");
+  }
+
   void libraries(std::vector< ::flowbox::batch::libs::Library> & _return) {
     // Your implementation goes here
     printf("libraries\n");

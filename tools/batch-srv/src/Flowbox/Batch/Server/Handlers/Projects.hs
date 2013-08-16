@@ -11,7 +11,8 @@ module Flowbox.Batch.Server.Handlers.Projects (
     openProject, 
     closeProject,
     storeProject,
-    setActiveProject
+    setActiveProject,
+    activeProject
 ) where
 
 
@@ -78,7 +79,7 @@ closeProject batchHandler mtprojectID = tRunScript $ do
 
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    
+
     let newBatch = Batch.closeProject projectID batch
     tryWriteIORef batchHandler newBatch
 
@@ -102,3 +103,13 @@ setActiveProject batchHandler mtprojectID = tRunScript $ do
     batch <- tryReadIORef batchHandler
     let newBatch = Batch.setActiveProject projectID batch
     tryWriteIORef batchHandler newBatch
+
+
+activeProject :: IORef Batch -> IO TProjects.Project
+activeProject batchHandler = tRunScript $ do
+    scriptIO $ putStrLn "call activeProject"
+
+    batch <- tryReadIORef batchHandler
+    project <- (Batch.activeProject batch) <??> "No active project set"
+    let projectID = Batch.activeProjectID batch
+    return $ fst $ encode (projectID, project)

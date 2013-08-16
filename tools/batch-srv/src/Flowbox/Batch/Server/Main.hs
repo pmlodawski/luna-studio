@@ -60,6 +60,7 @@ instance Batch_Iface BatchHandler where
     closeProject        = HProjects.closeProject
     storeProject        = HProjects.storeProject
     setActiveProject    = HProjects.setActiveProject
+    activeProject       = HProjects.activeProject
 
     libraries           = HLibs.libraries
     createLibrary       = HLibs.createLibrary

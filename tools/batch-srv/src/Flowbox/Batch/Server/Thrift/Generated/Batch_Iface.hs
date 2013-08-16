@@ -50,6 +50,7 @@ class Batch_Iface a where
   closeProject :: a -> Maybe Int32 -> IO ()
   storeProject :: a -> Maybe Int32 -> IO ()
   setActiveProject :: a -> Maybe Int32 -> IO ()
+  activeProject :: a -> IO Projects_Types.Project
   libraries :: a -> IO (Vector.Vector Libs_Types.Library)
   createLibrary :: a -> Maybe Libs_Types.Library -> IO Libs_Types.Library
   loadLibrary :: a -> Maybe Text -> IO Libs_Types.Library

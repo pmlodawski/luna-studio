@@ -21,9 +21,13 @@ import qualified Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects   ()
 import qualified Flowbox.Luna.Lib.LibManager                              as LibManager
 import qualified Flowbox.System.IO.Serializer                             as Serializer
 import           Flowbox.System.IO.Serializer                               (Serializable(..), Deserializable(..))
+import qualified Flowbox.System.UniPath                                   as UniPath
 import           Flowbox.System.UniPath                                     (UniPath)
 import           Flowbox.Tools.Conversion                                   
 
+
+projectFile :: String
+projectFile = ".project"
 
 saveProject :: Project -> Handle -> IO ()
 saveProject project h = do 
@@ -45,15 +49,17 @@ getProject h = do
 storeProject :: Project -> IO ()
 storeProject project = do 
     let 
-        ppath    = Project.path project
+        ppath    = UniPath.append projectFile $ Project.path project
         sproject = Serializable ppath (saveProject project)
 
     Serializer.serialize sproject
 
 
 restoreProject :: UniPath -> IO Project
-restoreProject ppath = do
-    let dproject = Deserializable ppath getProject
+restoreProject upath = do
+
+    let ppath = UniPath.append projectFile upath
+        dproject = Deserializable ppath getProject
 
     Serializer.deserialize dproject
 

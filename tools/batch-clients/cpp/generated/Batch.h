@@ -21,6 +21,7 @@ class BatchIf {
   virtual void closeProject(const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void storeProject(const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void setActiveProject(const  ::flowbox::batch::projects::ProjectID projectID) = 0;
+  virtual void activeProject( ::flowbox::batch::projects::Project& _return) = 0;
   virtual void libraries(std::vector< ::flowbox::batch::libs::Library> & _return) = 0;
   virtual void createLibrary( ::flowbox::batch::libs::Library& _return, const  ::flowbox::batch::libs::Library& library) = 0;
   virtual void loadLibrary( ::flowbox::batch::libs::Library& _return, const std::string& path) = 0;
@@ -95,6 +96,9 @@ class BatchNull : virtual public BatchIf {
     return;
   }
   void setActiveProject(const  ::flowbox::batch::projects::ProjectID /* projectID */) {
+    return;
+  }
+  void activeProject( ::flowbox::batch::projects::Project& /* _return */) {
     return;
   }
   void libraries(std::vector< ::flowbox::batch::libs::Library> & /* _return */) {
@@ -841,6 +845,110 @@ class Batch_setActiveProject_presult {
 };
 
 
+class Batch_activeProject_args {
+ public:
+
+  Batch_activeProject_args() {
+  }
+
+  virtual ~Batch_activeProject_args() throw() {}
+
+
+  bool operator == (const Batch_activeProject_args & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_activeProject_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_activeProject_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_activeProject_pargs {
+ public:
+
+
+  virtual ~Batch_activeProject_pargs() throw() {}
+
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_activeProject_result__isset {
+  _Batch_activeProject_result__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_activeProject_result__isset;
+
+class Batch_activeProject_result {
+ public:
+
+  Batch_activeProject_result() {
+  }
+
+  virtual ~Batch_activeProject_result() throw() {}
+
+   ::flowbox::batch::projects::Project success;
+  ArgumentException missingFields;
+
+  _Batch_activeProject_result__isset __isset;
+
+  void __set_success(const  ::flowbox::batch::projects::Project& val) {
+    success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_activeProject_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_activeProject_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_activeProject_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_activeProject_presult__isset {
+  _Batch_activeProject_presult__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_activeProject_presult__isset;
+
+class Batch_activeProject_presult {
+ public:
+
+
+  virtual ~Batch_activeProject_presult() throw() {}
+
+   ::flowbox::batch::projects::Project* success;
+  ArgumentException missingFields;
+
+  _Batch_activeProject_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+
 class Batch_libraries_args {
  public:
 
@@ -878,8 +986,9 @@ class Batch_libraries_pargs {
 };
 
 typedef struct _Batch_libraries_result__isset {
-  _Batch_libraries_result__isset() : success(false) {}
+  _Batch_libraries_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_libraries_result__isset;
 
 class Batch_libraries_result {
@@ -891,6 +1000,7 @@ class Batch_libraries_result {
   virtual ~Batch_libraries_result() throw() {}
 
   std::vector< ::flowbox::batch::libs::Library>  success;
+  ArgumentException missingFields;
 
   _Batch_libraries_result__isset __isset;
 
@@ -898,9 +1008,15 @@ class Batch_libraries_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_libraries_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -916,8 +1032,9 @@ class Batch_libraries_result {
 };
 
 typedef struct _Batch_libraries_presult__isset {
-  _Batch_libraries_presult__isset() : success(false) {}
+  _Batch_libraries_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_libraries_presult__isset;
 
 class Batch_libraries_presult {
@@ -927,6 +1044,7 @@ class Batch_libraries_presult {
   virtual ~Batch_libraries_presult() throw() {}
 
   std::vector< ::flowbox::batch::libs::Library> * success;
+  ArgumentException missingFields;
 
   _Batch_libraries_presult__isset __isset;
 
@@ -1664,8 +1782,9 @@ class Batch_defsGraph_pargs {
 };
 
 typedef struct _Batch_defsGraph_result__isset {
-  _Batch_defsGraph_result__isset() : success(false) {}
+  _Batch_defsGraph_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_defsGraph_result__isset;
 
 class Batch_defsGraph_result {
@@ -1677,6 +1796,7 @@ class Batch_defsGraph_result {
   virtual ~Batch_defsGraph_result() throw() {}
 
    ::flowbox::batch::defs::DefsGraph success;
+  ArgumentException missingFields;
 
   _Batch_defsGraph_result__isset __isset;
 
@@ -1684,9 +1804,15 @@ class Batch_defsGraph_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_defsGraph_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -1702,8 +1828,9 @@ class Batch_defsGraph_result {
 };
 
 typedef struct _Batch_defsGraph_presult__isset {
-  _Batch_defsGraph_presult__isset() : success(false) {}
+  _Batch_defsGraph_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_defsGraph_presult__isset;
 
 class Batch_defsGraph_presult {
@@ -1713,6 +1840,7 @@ class Batch_defsGraph_presult {
   virtual ~Batch_defsGraph_presult() throw() {}
 
    ::flowbox::batch::defs::DefsGraph* success;
+  ArgumentException missingFields;
 
   _Batch_defsGraph_presult__isset __isset;
 
@@ -4316,6 +4444,9 @@ class BatchClient : virtual public BatchIf {
   void setActiveProject(const  ::flowbox::batch::projects::ProjectID projectID);
   void send_setActiveProject(const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_setActiveProject();
+  void activeProject( ::flowbox::batch::projects::Project& _return);
+  void send_activeProject();
+  void recv_activeProject( ::flowbox::batch::projects::Project& _return);
   void libraries(std::vector< ::flowbox::batch::libs::Library> & _return);
   void send_libraries();
   void recv_libraries(std::vector< ::flowbox::batch::libs::Library> & _return);
@@ -4424,6 +4555,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_closeProject(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_storeProject(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_setActiveProject(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_activeProject(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_libraries(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_createLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_loadLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -4462,6 +4594,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["closeProject"] = &BatchProcessor::process_closeProject;
     processMap_["storeProject"] = &BatchProcessor::process_storeProject;
     processMap_["setActiveProject"] = &BatchProcessor::process_setActiveProject;
+    processMap_["activeProject"] = &BatchProcessor::process_activeProject;
     processMap_["libraries"] = &BatchProcessor::process_libraries;
     processMap_["createLibrary"] = &BatchProcessor::process_createLibrary;
     processMap_["loadLibrary"] = &BatchProcessor::process_loadLibrary;
@@ -4574,6 +4707,16 @@ class BatchMultiface : virtual public BatchIf {
       ifaces_[i]->setActiveProject(projectID);
     }
     ifaces_[i]->setActiveProject(projectID);
+  }
+
+  void activeProject( ::flowbox::batch::projects::Project& _return) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->activeProject(_return);
+    }
+    ifaces_[i]->activeProject(_return);
+    return;
   }
 
   void libraries(std::vector< ::flowbox::batch::libs::Library> & _return) {

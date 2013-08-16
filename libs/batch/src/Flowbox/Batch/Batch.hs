@@ -15,7 +15,8 @@ module Flowbox.Batch.Batch (
     closeProject,
     storeProject,
     setActiveProject,
-
+    activeProject,
+    
     libraries,
     createLibrary,
     loadLibrary,
@@ -39,30 +40,30 @@ module Flowbox.Batch.Batch (
     disconnect
 ) where
 
-import           Flowbox.Batch.GraphView.EdgeView       (EdgeView(..))
-import qualified Flowbox.Batch.GraphView.GraphView    as GraphView
-import           Flowbox.Batch.GraphView.GraphView      (GraphView)
-import qualified Flowbox.Batch.Project.Project        as Project
-import           Flowbox.Batch.Project.Project          (Project(..))
-import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
-import           Flowbox.Batch.Project.ProjectManager   (ProjectManager)
+import           Flowbox.Batch.GraphView.EdgeView        (EdgeView(..))
+import qualified Flowbox.Batch.GraphView.GraphView     as GraphView
+import           Flowbox.Batch.GraphView.GraphView       (GraphView)
+import qualified Flowbox.Batch.Project.Project         as Project
+import           Flowbox.Batch.Project.Project           (Project(..))
+import qualified Flowbox.Batch.Project.ProjectManager  as ProjectManager
+import           Flowbox.Batch.Project.ProjectManager    (ProjectManager)
 import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
-import qualified Flowbox.Luna.Builder.Builder         as Builder
-import           Flowbox.Luna.Builder.Builder           (Builder(..))
-import qualified Flowbox.Luna.Lib.LibManager          as LibManager
-import           Flowbox.Luna.Lib.LibManager            (LibManager)
-import qualified Flowbox.Luna.Lib.Library             as Library
-import           Flowbox.Luna.Lib.Library               (Library(..))
-import qualified Flowbox.Luna.Network.Def.DefManager  as DefManager
-import           Flowbox.Luna.Network.Def.DefManager    (DefManager)
-import qualified Flowbox.Luna.Network.Def.Definition  as Definition
-import           Flowbox.Luna.Network.Def.Definition    (Definition(..))
-import qualified Flowbox.Luna.Network.Graph.Graph     as Graph
-import           Flowbox.Luna.Network.Graph.Graph       (Graph)
-import qualified Flowbox.Luna.Network.Graph.Node      as Node
-import           Flowbox.Luna.Network.Graph.Node        (Node(..))
-import qualified Flowbox.Luna.Tools.Serialize.Lib     as LibSerialization
-import           Flowbox.System.UniPath                 (UniPath)
+import qualified Flowbox.Luna.Builder.Builder          as Builder
+import           Flowbox.Luna.Builder.Builder            (Builder(..))
+import qualified Flowbox.Luna.Lib.LibManager           as LibManager
+import           Flowbox.Luna.Lib.LibManager             (LibManager)
+import qualified Flowbox.Luna.Lib.Library              as Library
+import           Flowbox.Luna.Lib.Library                (Library(..))
+import qualified Flowbox.Luna.Network.Def.DefManager   as DefManager
+import           Flowbox.Luna.Network.Def.DefManager     (DefManager)
+import qualified Flowbox.Luna.Network.Def.Definition   as Definition
+import           Flowbox.Luna.Network.Def.Definition     (Definition(..))
+import qualified Flowbox.Luna.Network.Graph.Graph      as Graph
+import           Flowbox.Luna.Network.Graph.Graph        (Graph)
+import qualified Flowbox.Luna.Network.Graph.Node       as Node
+import           Flowbox.Luna.Network.Graph.Node         (Node(..))
+import qualified Flowbox.Luna.Tools.Serialize.Lib      as LibSerialization
+import           Flowbox.System.UniPath                  (UniPath)
 
 data Batch = Batch { projectManager  :: ProjectManager
                    , activeProjectID :: Project.ID
