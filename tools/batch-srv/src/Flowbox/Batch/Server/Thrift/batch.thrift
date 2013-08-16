@@ -42,7 +42,8 @@ service Batch {
     void             storeProject    (1: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
 
     void             setActiveProject(1: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
-
+    projects.Project activeProject   () 
+    
     /*
      * Libraries
      */

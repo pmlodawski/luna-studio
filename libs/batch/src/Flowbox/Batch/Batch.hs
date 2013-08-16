@@ -46,6 +46,7 @@ import qualified Flowbox.Batch.Project.Project        as Project
 import           Flowbox.Batch.Project.Project          (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
 import           Flowbox.Batch.Project.ProjectManager   (ProjectManager)
+import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
 import qualified Flowbox.Luna.Builder.Builder         as Builder
 import           Flowbox.Luna.Builder.Builder           (Builder(..))
 import qualified Flowbox.Luna.Lib.LibManager          as LibManager
@@ -62,7 +63,6 @@ import qualified Flowbox.Luna.Network.Graph.Node      as Node
 import           Flowbox.Luna.Network.Graph.Node        (Node(..))
 import qualified Flowbox.Luna.Tools.Serialize.Lib     as LibSerialization
 import           Flowbox.System.UniPath                 (UniPath)
-
 
 data Batch = Batch { projectManager  :: ProjectManager
                    , activeProjectID :: Project.ID
@@ -218,8 +218,7 @@ noresult op = case op of
 -------- Projects -------------------------------------------------------------
 
 projects :: Batch -> [(Project.ID, Project)]
-projects batch = ProjectManager.projects (projectManager batch)
-
+projects batch = ProjectManager.labNodes (projectManager batch)
 
 
 createProject :: Project -> Batch -> (Batch, (Project.ID, Project))
@@ -238,19 +237,19 @@ openProject ppath batch = do
 
 
 
-closeProject :: Project.ID -> Batch -> IO Batch
-closeProject projectID batch = do
-    let aprojectManager = projectManager batch
-    newProjectManager <- ProjectManager.closeProject aprojectManager projectID
-    let newBatch = batch {projectManager = newProjectManager}
-    return newBatch
+closeProject :: Project.ID -> Batch -> Batch
+closeProject projectID batch = newBatch where 
+    aprojectManager   = projectManager batch
+    newProjectManager = ProjectManager.delNode projectID aprojectManager
+    newBatch          = batch {projectManager = newProjectManager}
 
 
 storeProject :: Project.ID -> Batch -> IO ()
 storeProject projectID batch = do
     let aprojectManager = projectManager batch
-    _ <- ProjectManager.storeProject aprojectManager projectID
-    return ()
+    case ProjectManager.lab aprojectManager projectID of 
+        Nothing      -> error "Could not store project: Wrong project ID"
+        Just project -> do ProjectSerialization.storeProject project
 
 
 setActiveProject :: Project.ID -> Batch -> Batch
@@ -281,7 +280,7 @@ loadLibrary lpath = libManagerOp' (\_ libManager -> do
 
 unloadLibrary :: Library.ID -> Batch -> Either String Batch
 unloadLibrary libID = noresult . libManagerOp (\_ libManager -> 
-    let newLibManager = LibManager.unloadLibrary libID libManager
+    let newLibManager = LibManager.delNode libID libManager
     in Right (newLibManager, ()))
 
 

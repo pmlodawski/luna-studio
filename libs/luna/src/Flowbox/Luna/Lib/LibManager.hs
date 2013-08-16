@@ -11,7 +11,6 @@ module Flowbox.Luna.Lib.LibManager(
     empty,
 
     loadLibrary,
-    unloadLibrary
 ) where
 
 import qualified Flowbox.Luna.Tools.Serialize.Lib as LibSerialization
@@ -30,13 +29,9 @@ empty :: LibManager
 empty = DG.empty
 
 
--- mocked
 loadLibrary :: UniPath -> LibManager -> IO (LibManager, (Library.ID, Library))
 loadLibrary apath libManager = do
     library <- LibSerialization.restoreLibrary apath
     let (newLibManager, libID) = insNewNode library libManager
     return (newLibManager, (libID, library))
 
-
-unloadLibrary :: Library.ID -> LibManager -> LibManager
-unloadLibrary = delNode

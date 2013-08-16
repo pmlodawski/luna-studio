@@ -141,6 +141,7 @@ int main(int argc, char **argv) {
 
         batch.dump();
         batch.ping();
+
     } catch (ArgumentException e) {
         cout << "Batch returned an error: "<< endl
              << "\t" << e.message << endl;

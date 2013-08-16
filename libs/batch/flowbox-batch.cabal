@@ -18,7 +18,7 @@ Flag Debug
 
 
 Library
-    Hs-Source-Dirs: src
+    Hs-Source-Dirs: src,
                     src/Flowbox/Batch/Tools/Serialize/Thrift/Generated
 
     GHC-Options:    -Wall 
@@ -29,18 +29,19 @@ Library
     Exposed-modules: 
                      
         Flowbox.Batch.Batch,
+        Flowbox.Batch.Tools.Serialize.Project,
         Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects,
         Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView,
-        Flowbox.Batch.GraphView.EdgeView,
         Flowbox.Batch.GraphView.GraphView,
+        Flowbox.Batch.GraphView.EdgeView,
         Flowbox.Batch.Project.Project,
         Flowbox.Batch.Project.ProjectManager,
         Flowbox.Batch.Samples.Modules,
                      
-        Projects_Consts,
-        Projects_Types,
         Graphview_Consts,
-        Graphview_Types
+        Projects_Consts,
+        Graphview_Types,
+        Projects_Types
 
     Build-Depends:  base,
                     bytestring,
@@ -66,10 +67,11 @@ Executable batch
 --  Extensions:     DoAndIfThenElse
 --                  MultiParamTypeClasses
 
-  Build-Depends:  base,
+  Build-Depends:    base,
                     bytestring,
                     containers,
                     directory,
+                    flowbox-batch,
                     flowbox-luna,
                     flowbox-utils,
                     hashable,

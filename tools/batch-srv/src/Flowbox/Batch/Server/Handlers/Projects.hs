@@ -77,9 +77,9 @@ closeProject batchHandler mtprojectID = tRunScript $ do
     scriptIO $ putStrLn "call closeProject"
 
     projectID <- tryGetID mtprojectID "projectID"
-
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ Batch.closeProject projectID batch
+    batch     <- tryReadIORef batchHandler
+    
+    let newBatch = Batch.closeProject projectID batch
     tryWriteIORef batchHandler newBatch
 
 

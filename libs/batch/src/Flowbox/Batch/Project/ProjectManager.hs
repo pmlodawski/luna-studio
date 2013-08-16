@@ -9,14 +9,10 @@ module Flowbox.Batch.Project.ProjectManager (
     module Flowbox.Luna.Data.Graph,
     ProjectManager,
     empty,
-	projects,
-	openProject,
-	closeProject,
-	storeProject
+    openProject,
 ) where
 
-import           System.Directory              as Dir
-import qualified Flowbox.System.UniPath        as UniPath
+import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
 import           Flowbox.System.UniPath          (UniPath)
 import qualified Flowbox.Batch.Project.Project as Project
 import           Flowbox.Batch.Project.Project   (Project)
@@ -30,17 +26,10 @@ empty :: ProjectManager
 empty = DG.empty
 
 
-projects :: ProjectManager -> [(Project.ID, Project)]
-projects = error "Not implemented"
-
-
 openProject :: ProjectManager -> UniPath -> IO (ProjectManager, (Project.ID, Project))
-openProject = error "Not implemented"
+openProject projectManager ppath = do
+    project <- ProjectSerialization.restoreProject ppath
+    let (newProjectManager, projectID) = insNewNode project projectManager
+    return (newProjectManager, (projectID, project))
 
 
-closeProject :: ProjectManager -> Project.ID -> IO ProjectManager
-closeProject = error "Not implemented"
-
-
-storeProject :: ProjectManager -> Project.ID -> IO ()
-storeProject = error "Not implemented"
