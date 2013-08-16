@@ -26,12 +26,12 @@ if call(['cabal-dev', 'update']):
 
 
 print "Registering thrift library"
-if call(['cabal-dev', 'add-source', p_thrift]):
+if call(['cabal-dev', 'install', p_thrift]):
     print "ERROR"
     sys.exit()
 	
 
 print "Registering MissingH library (to work on windows)"
-if call(['cabal-dev', 'add-source', p_missingh]):
+if call(['cabal-dev', 'install', p_missingh]):
     print "ERROR"
     sys.exit()
