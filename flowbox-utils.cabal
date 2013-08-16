@@ -21,8 +21,8 @@ Library
   Extensions:     DoAndIfThenElse
 
   Exposed-modules: 
-        Flowbox.Tools.Conversion,
         Flowbox.Control.Error,
+        Flowbox.Tools.Conversion,
         Flowbox.System.UniPath,
         Flowbox.System.IO,
         Flowbox.System.Directory,
@@ -31,7 +31,7 @@ Library
   Build-Depends:  base,
                   directory,
                   errors,
-                  MissingH,
+                  MissingH == 1.2.0.0,
                   split,
                   text,
                   transformers

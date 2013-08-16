@@ -19,7 +19,7 @@ Library
   Build-Depends:  base,
                   directory,
                   errors,
-                  MissingH,
+                  MissingH == 1.2.0.0,
                   split,
                   text,
                   transformers
