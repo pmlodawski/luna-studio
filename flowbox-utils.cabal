@@ -23,9 +23,9 @@ Library
   Exposed-modules: 
         Flowbox.Tools.Conversion,
         Flowbox.Control.Error,
-        Flowbox.System.Directory,
-        Flowbox.System.IO,
         Flowbox.System.UniPath,
+        Flowbox.System.IO,
+        Flowbox.System.Directory,
         Flowbox.System.IO.Serializer
 
   Build-Depends:  base,
