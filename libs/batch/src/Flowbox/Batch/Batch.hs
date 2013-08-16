@@ -65,6 +65,8 @@ import           Flowbox.Luna.Network.Graph.Node         (Node(..))
 import qualified Flowbox.Luna.Tools.Serialize.Lib      as LibSerialization
 import           Flowbox.System.UniPath                  (UniPath)
 
+
+
 data Batch = Batch { projectManager  :: ProjectManager
                    , activeProjectID :: Project.ID
                    } deriving (Show)
@@ -72,7 +74,6 @@ data Batch = Batch { projectManager  :: ProjectManager
 
 empty :: Batch
 empty = Batch ProjectManager.empty (-1)
-
 
 
 activeProject :: Batch -> Maybe Project
@@ -93,6 +94,7 @@ activeProjectOp operation batch = case activeProject batch of
                                      aprojectManager   = projectManager batch
                                      newProjectManager = ProjectManager.updateNode (projectID, newProject) aprojectManager
                                      newBatch          = batch { projectManager = newProjectManager }
+
 
 activeProjectOp' :: (Batch -> (Project.ID, Project) -> IO (Project, r))
                  -> Batch
@@ -237,7 +239,6 @@ openProject ppath batch = do
     return (newBatch, newP)
 
 
-
 closeProject :: Project.ID -> Batch -> Batch
 closeProject projectID batch = newBatch where 
     aprojectManager   = projectManager batch
@@ -310,14 +311,6 @@ libraryRootDef libID = readonly . definitionOp Library.rootDefID libID (\_ defin
 defsGraph :: Library.ID -> Batch -> Either String DefManager
 defsGraph libID = readonly . defManagerOp libID (\_ defManager -> 
     Right (defManager, defManager))
-
-
---newDefinition :: IORef Project -> Maybe TTypes.Type -> Maybe (Vector Import)
---                            -> Maybe Attrs_Types.Flags -> Maybe Attrs_Types.Attributes
---                            -> IO Definition
---newDefinition _ ttype timports tflags tattrs = do 
---    putStrLn "Creating new definition...\t\tsuccess!"
---    return $ Definition ttype timports tflags tattrs (Just 0) (Just 0)
 
 
 addDefinition :: Definition -> Definition.ID -> Library.ID -> Batch 
@@ -398,6 +391,7 @@ connect srcNodeID asrcPort dstNodeID adstPort defID libID = noresult . graphOp d
                              $ GraphView.insEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
                              $ GraphView.fromGraph agraph
                 in Right (newGraph, ()))
+
 
 disconnect :: Node.ID -> [Int] -> Node.ID -> Int -> Definition.ID -> Library.ID -> Batch -> Either String Batch
 disconnect srcNodeID asrcPort dstNodeID adstPort defID libID = noresult . graphOp defID libID (\_ agraph -> 

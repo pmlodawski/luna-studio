@@ -153,7 +153,6 @@ int main(int argc, char **argv) {
         Project reopened;
         batch.openProject(reopened, proj.path);
         batch.setActiveProject(reopened.projectID);
-        batch.dump();
 
         for(auto lib : registeredLibs)
             batch.loadLibrary(lib, lib.path);

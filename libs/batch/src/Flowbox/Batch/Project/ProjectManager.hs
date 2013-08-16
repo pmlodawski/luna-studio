@@ -20,7 +20,9 @@ import           Flowbox.Luna.Data.Graph                  hiding(Graph, Edge, em
 import qualified Flowbox.Luna.Data.Graph               as DG
 
 
+
 type ProjectManager = DG.Graph Project ()
+
 
 empty :: ProjectManager
 empty = DG.empty
