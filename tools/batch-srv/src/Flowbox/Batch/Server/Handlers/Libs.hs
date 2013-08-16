@@ -68,8 +68,7 @@ loadLibrary batchHandler mtpath = tRunScript $ do
     scriptIO $ putStrLn "called loadLibrary"
     upath  <- tryGetUniPath mtpath "path"
     batch <- tryReadIORef batchHandler
-    r     <- scriptIO $ Batch.loadLibrary upath batch
-    (newBatch, (newLibID, newLibrary)) <- tryRight r
+    (newBatch, (newLibID, newLibrary)) <- scriptIO $ Batch.loadLibrary upath batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ encode (newLibID, newLibrary)
 
