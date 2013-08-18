@@ -13,8 +13,12 @@ import           Flowbox.Batch.Project.ProjectManager   (ProjectManager)
 import qualified Flowbox.System.UniPath               as UniPath
 import           Flowbox.System.UniPath                 (UniPath)
 import qualified Flowbox.Luna.Samples.HelloWorld      as HelloWorld
+import qualified Flowbox.Batch.Samples.Modules        as Sample
 
 
 main :: IO()
 main = do
+	let
+		pm = ProjectManager.insNode (0, Sample.project)
+		   $ ProjectManager.empty  --mkGraph [(0, Sample.project)]
 	print "helpme world"

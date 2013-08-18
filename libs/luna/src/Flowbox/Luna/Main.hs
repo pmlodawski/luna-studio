@@ -43,8 +43,8 @@ main = do
     --putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
 
 
-    let
-        builder = Builder.empty { Builder.path = UniPath.fromUnixString("samples/TestProject/build") }
-    Builder.buildLibrary builder (HelloWorld.workspacelib)
-    return ()
+    --let
+    --    builder = Builder.empty { Builder.path = UniPath.fromUnixString("samples/TestProject/build") }
+    --Builder.buildLibrary builder (HelloWorld.workspacelib)
+    --return ()
 

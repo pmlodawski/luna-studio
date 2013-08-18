@@ -20,19 +20,19 @@ import           Flowbox.Luna.Lib.LibManager           (LibManager)
 import qualified Flowbox.Luna.Lib.Library            as Library
 import           Flowbox.Luna.Lib.Library              (Library(..))
 import           Flowbox.Luna.Type.Type                (Type(..))
-
+import qualified Flowbox.Luna.Type.Type              as Type
 
 mkDefinition :: Type -> Definition
-mkDefinition acls = Definition.empty{ Definition.cls = acls
+mkDefinition cls = Definition.empty{ Definition.cls = cls
                                     , Definition.graph = Graph.empty
                         	        }
 
 mkModule :: String -> Definition
-mkModule aname = mkDefinition (Module aname) 
+mkModule name = mkDefinition (Module name) 
 
 
 mkClass :: String -> Definition
-mkClass aname  = mkDefinition (Class aname [] [])
+mkClass name  = mkDefinition (Class name [] [])
 
 
 listToDefs :: [String] -> Definition.ID -> Definition.ID -> [(Definition.ID, Definition.ID, Definition)]
@@ -46,13 +46,19 @@ wladcyPolski = ["Bronislaw Komorowski", "Donald Tusk", "Lech Kaczynski", "Jarosl
 atrybuty :: [String]
 atrybuty = ["Berlo", "Konstytucja 3 maja", "iPad", "jablko", "korona", "front jednosci narodu", "lista wyborcza", "cenzura", "wstazka", "dwie wstazki", "order pracy ze wstazka", "order pracy bez wstazki", "partia", "narod", "komitet wyborczy", "wyborcy", "lud", "elity", "reputacja", "media", "stronnicze media", "obiektywne media", "praworzadnosc", "promienny usmiech", "usmiech do zlej gry", "kabel", "BOR", "garnitur", "mundur"]
 
+cls_console = Definition.empty { Definition.cls   = Type.Class "Console" [] []
+                               , Definition.graph = Graph.empty
+                               }
 
 addSomeDefs :: DefManager -> DefManager
-addSomeDefs adefs = DefManager.addToParentMany (listToDefs atrybuty 2000 20)
+addSomeDefs defs = DefManager.addToParentMany (listToDefs atrybuty 2000 20)
                  $ DefManager.addToParent (0, 20, mkModule "atrybuty")
                  $ DefManager.addToParentMany (listToDefs wladcyPolski 1000 10)
                  $ DefManager.addToParent (0, 10, mkModule "wladcyPolski")
-                 $ adefs
+                 $ DefManager.addToParent (2, 3 , cls_console)
+                 $ DefManager.addToParent (1, 2 , mkModule "IO")
+                 $ DefManager.addToParent (0, 1 , mkModule "Std")
+                 $ defs
 
 emptyStdLibrary :: Library
 emptyStdLibrary = Library.make "std"           $ UniPath.fromUnixString "dummylibs/stdlib.lunalib"
@@ -65,14 +71,13 @@ stdLibrary :: Library
 stdLibrary  = emptyStdLibrary{Library.defs = addSomeDefs $ Library.defs emptyStdLibrary}        
 
 
-alibManager :: LibManager
-alibManager = LibManager.insNode (1, userLibrary)
+libManager :: LibManager
+libManager = LibManager.insNode (1, userLibrary)
             $ LibManager.insNode (0, stdLibrary)
             $ LibManager.empty
-
 
 project :: Project
 project = Project.empty { Project.name = "wladczy projekt"
                         , Project.path = UniPath.fromUnixString "sample-projects/wladcy" 
-                        , Project.libs = alibManager 
+                        , Project.libs = libManager 
                     	}

@@ -3,11 +3,11 @@
 module Workspace.Vector.U'incx where
 
 -- imports
-import           Flowbox.Luna.FClasses.U'add        
-import           Flowbox.Luna.FClasses.U'select0    
-import           Flowbox.Luna.FClasses.U'x'getter   
-import           Flowbox.Luna.FClasses.U'x'setter   
-import           Flowbox.Luna.Helpers.Core          
+import Flowbox.Luna.FClasses.U'add
+import Flowbox.Luna.FClasses.U'select0
+import Flowbox.Luna.FClasses.U'x'getter
+import Flowbox.Luna.FClasses.U'x'setter
+import Flowbox.Luna.Helpers.Core
 
 -- functions
 incx' inputs'' = 
