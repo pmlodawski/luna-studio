@@ -28,6 +28,12 @@ Library
                   TemplateHaskell
   
   Exposed-modules: 
+        Flowbox.Luna.Parser.Tokens,
+        Flowbox.Luna.Parser.Utils,
+        Flowbox.Luna.Parser.Lexer,
+        Flowbox.Luna.Parser.Tmp,
+        Flowbox.Luna.Parser.Keywords,
+        Flowbox.Luna.Parser.Parser,
         Flowbox.Luna.Samples.HelloWorld,
         Flowbox.Luna.Network.Flags,
         Flowbox.Luna.Network.Attributes,
@@ -70,6 +76,8 @@ Library
         Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs,
         Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs,
         Flowbox.Luna.Builder.Builder,
+        Flowbox.Luna.AST.AST,
+        Flowbox.Luna.AST.Constant,
         Flowbox.Luna.Type.Type,
                    
         Graph_Types,
@@ -99,7 +107,9 @@ Library
                   text,
                   thrift >= 0.9,
                   unordered-containers,
-                  vector
+                  vector,
+                  uu-parsinglib,
+                  pretty-show
 
 
 
@@ -127,4 +137,6 @@ Executable lunac
                   text,
                   thrift,
                   unordered-containers,
-                  vector
+                  vector,
+                  uu-parsinglib,
+                  pretty-show

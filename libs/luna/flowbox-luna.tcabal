@@ -40,7 +40,9 @@ Library
                   text,
                   thrift >= 0.9,
                   unordered-containers,
-                  vector
+                  vector,
+                  uu-parsinglib,
+                  pretty-show
 
 
 
@@ -68,4 +70,6 @@ Executable lunac
                   text,
                   thrift,
                   unordered-containers,
-                  vector
+                  vector,
+                  uu-parsinglib,
+                  pretty-show
