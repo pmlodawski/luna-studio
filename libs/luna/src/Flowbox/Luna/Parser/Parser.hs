@@ -152,9 +152,8 @@ pFactor2 i = pChoice [ pEnt
                     --, pLambda i
                     ] 
 
-pExpr i       = pChoice [ 
-                        --pImport i
-                        pFunc i
+pExpr i       = pChoice [ pImport i
+                        , pFunc i
                         , pClass i
                         , pOpExpr i
                         ]
@@ -266,9 +265,19 @@ tests = [("Empty input",    ""                  , [])
                             \\n    print 1        \
                             \\n    print e.message"
                                                 , [Call {src = Accessor {src = Identifier "a", dst = Identifier "catch"}, args = [Lambda {signature = [Identifier "e"], body = [Call {src = Identifier "print", args = [Constant (Integer "1")]},Call {src = Identifier "print", args = [Accessor {src = Identifier "e", dst = Identifier "message"}]}]}]}]) 
-        , ("Simple Char literals", "'a'", [])
-        , ("Simple string literals", "\"ala\"", [])
-
+        , ("Simple Char literals", "'a'"        , [Constant (Char 'a')])
+        , ("Simple string literals", "\"ala\""  , [Constant (String "ala")])
+        , ("Simple import", "import Std.Math.Vector as Vector", [Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}}]}])
+        , ("Simple from import", "from Std.Math import Vector", [ImportQualified {path = Path {segments = ["Std","Math"]}, imports = Import {paths = [Path {segments = ["Vector"]}]}}])
+        , ("Complex import", 
+           "import Std.Math.Vector as Vector\
+         \\n       Std.Math.Scalar as Scalar"
+                                                ,[Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}},Named {name = "Scalar", item = Path {segments = ["Std","Math","Scalar"]}}]}])
+        , ("Complex from import", 
+           "from Std.Math import Vector\
+         \\n                     Scalar"        
+                                                ,[ImportQualified {path = Path {segments = ["Std","Math"]}, imports = Import {paths = [Path {segments = ["Vector"]},Path {segments = ["Scalar"]}]}}]
+          )
         ]
 
 ---------- Program ----------
@@ -301,26 +310,29 @@ main = do
     print "START"
     mapM_ (\(desc, p, exp) -> do
               putStr ("=== " ++ desc ++ " ===" ++ replicate (30 - length desc) ' ')
-              run pProgram p exp
+              run pProgram p exp False
           ) tests
     return ()
 
-run :: Parser [Expr] -> String -> [Expr] -> IO ()
-run p inp exp = do  let (a, errors) =  parse p inp
-                    --print a
-                    --putStrLn ("--  Result: \n" ++ PP.ppShow a)
-                    if a == exp
-                        then do putStrLn "ok."
-                               
-                        else do putStrLn $ "\n--  Wrong Result: \n" ++ show a ++ "\n"
-                                putStrLn $ "=== \n\n" ++ PP.ppShow a ++ "\n"
-                                if null errors then  return ()
-                                               else  do putStr ("--  Correcting steps: \n")
-                                                        show_errors errors
-                    
-                    
-                 where show_errors :: (Show a) => [a] -> IO ()
-                       show_errors = sequence_ . (map (putStrLn . show))
+run :: Parser [Expr] -> String -> [Expr] -> Bool -> IO ()
+run p inp exp force = 
+    do 
+        let (a, errors) =  parse p inp
+        if a == exp
+            then do putStrLn "ok."
+            else putStrLn $ "\n--  Wrong Result:"
+
+        if (a /= exp) || force  
+            then do putStrLn $ "\n" ++ show a ++ "\n"
+                    putStrLn $ "=== \n\n" ++ PP.ppShow a ++ "\n"
+                    if null errors then  return ()
+                                   else  do putStr ("--  Correcting steps: \n")
+                                            show_errors errors
+            else return ()
+                            
+                            
+        where show_errors :: (Show a) => [a] -> IO ()
+              show_errors = sequence_ . (map (putStrLn . show))
 
 
 
