@@ -36,7 +36,7 @@ data Expr = NOP
           | Accessor        { src :: Expr, dst :: Expr }
           | Operator        { name :: String, srd :: Expr, dst :: Expr }
           
-          deriving (Show)
+          deriving (Show, Eq)
 
 
 --callConstructor src' arg' = Call src' [arg']

@@ -109,7 +109,8 @@ Library
                   unordered-containers,
                   vector,
                   uu-parsinglib,
-                  pretty-show
+                  pretty-show,
+                  ListLike
 
 
 
@@ -139,4 +140,5 @@ Executable lunac
                   unordered-containers,
                   vector,
                   uu-parsinglib,
-                  pretty-show
+                  pretty-show,
+                  ListLike

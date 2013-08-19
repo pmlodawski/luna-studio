@@ -8,7 +8,7 @@
 module Flowbox.Luna.AST.Constant where
 
 import qualified Prelude
-import Prelude (Show)
+import Prelude (Show, Eq)
 
 data Constant = Integer Prelude.String
-              deriving (Show)
+              deriving (Show, Eq)

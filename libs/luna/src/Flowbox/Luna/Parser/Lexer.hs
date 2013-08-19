@@ -60,6 +60,7 @@ pParenL'       = pSym '('
 pParenR'       = pSym ')'
 pParens'       = pParenL' <* pParenR'
 pIdent'        = pVarIdent' <|> pTypeIdent'
+pInteger'      = pIntegerStr <?> "Integer"
 pVarIdent      = lexeme $ pVarIdent' 
 pTypeClsIdent  = lexeme $ pTypeClsIdent'
 pTypeVarIdent  = lexeme $ pTypeVarIdent'
@@ -68,7 +69,7 @@ pIdent         = lexeme $ pIdent'
 pAssign        = lexeme $ pSym '='
 pTerminator    = lexeme $ pSym ';'
 pBlockBegin    = lexeme $ pSym ':'
-pInteger       = lexeme $ pIntegerStr <?> "Integer"
+pInteger       = lexeme $ pInteger'
 pParenL        = lexeme $ pParenL'
 pParenR        = lexeme $ pParenR'
 pTypeDecl      = pSpaced $ pSyms "::"
