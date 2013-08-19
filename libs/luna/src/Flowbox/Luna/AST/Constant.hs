@@ -11,4 +11,6 @@ import qualified Prelude
 import Prelude (Show, Eq)
 
 data Constant = Integer Prelude.String
+              | String  Prelude.String
+              | Char    Prelude.Char
               deriving (Show, Eq)

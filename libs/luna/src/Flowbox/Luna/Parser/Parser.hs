@@ -79,7 +79,12 @@ import Flowbox.Luna.AST.Constant -- only for tests
 pIdent'      = Identifier       <$> L.pVarIdent'
 pTypeIdent   = TypeIdentifier   <$> L.pTypeIdent
 pInteger'    = Constant.Integer <$> L.pInteger'
-pConstant    = Constant         <$> pChoice [ pInteger' ]
+pChar'       = Constant.Char    <$> L.pChar'
+pString'     = Constant.String  <$> L.pString'
+pConstant    = Constant         <$> pChoice [ pInteger'
+                                            , pChar'
+                                            , pString'
+                                            ]
 pTupleSep    = pSpaced $ pSym ','
 pTupleBody p = pSepBy pTupleSep p <*? pTupleSep
 pTuplePure p = L.pParensed $ pTupleBody p
@@ -88,8 +93,8 @@ pTuple i     = Tuple            <$> (L.pParens' *> pure []                      
                                 <|>  L.pParensed (pSepBy2 pTupleSep (pOpExpr i) <*? pTupleSep) --multi-element
                                     )
 pEnt         = pChoice [ pIdent'
-                     , pConstant
-                     ]
+                       , pConstant
+                       ]
 
 pTyped p   = flip Typed       <$> p <* L.pTypeDecl <*> L.pTypeIdent
 
@@ -260,7 +265,9 @@ tests = [("Empty input",    ""                  , [])
         , ("Exception catch", "a.catch e:         \
                             \\n    print 1        \
                             \\n    print e.message"
-          , []) 
+                                                , [Call {src = Accessor {src = Identifier "a", dst = Identifier "catch"}, args = [Lambda {signature = [Identifier "e"], body = [Call {src = Identifier "print", args = [Constant (Integer "1")]},Call {src = Identifier "print", args = [Accessor {src = Identifier "e", dst = Identifier "message"}]}]}]}]) 
+        , ("Simple Char literals", "'a'", [])
+        , ("Simple string literals", "\"ala\"", [])
 
         ]
 
@@ -304,10 +311,12 @@ run p inp exp = do  let (a, errors) =  parse p inp
                     --putStrLn ("--  Result: \n" ++ PP.ppShow a)
                     if a == exp
                         then do putStrLn "ok."
+                               
+                        else do putStrLn $ "\n--  Wrong Result: \n" ++ show a ++ "\n"
+                                putStrLn $ "=== \n\n" ++ PP.ppShow a ++ "\n"
                                 if null errors then  return ()
                                                else  do putStr ("--  Correcting steps: \n")
                                                         show_errors errors
-                        else do putStrLn $ "\n--  Wrong Result: \n" ++ show a ++ "\n"
                     
                     
                  where show_errors :: (Show a) => [a] -> IO ()
