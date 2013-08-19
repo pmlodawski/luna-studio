@@ -63,6 +63,7 @@ pIdent'        = pVarIdent' <|> pTypeIdent'
 pInteger'      = pIntegerStr <?> "Integer"
 pChar'         = pPacked (pSym '\'') (pSym '\'') (pNoneOf "'")
 pString'       = pPacked (pSym '"') (pSym '"') (pMany $ pNoneOf "\"")
+pComment       = pSym '#' *> (pMany $ pNoneOf "\n")
 pVarIdent      = lexeme $ pVarIdent' 
 pTypeClsIdent  = lexeme $ pTypeClsIdent'
 pTypeVarIdent  = lexeme $ pTypeVarIdent'

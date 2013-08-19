@@ -38,13 +38,17 @@ pNoneOf sysm = pSatisfy (`notElem` sysm) (Insertion (show t) t 5) where t = '_'
 infixl 4  <??>
 p <??> q = p <**> (q <|> pure id)
 
+pl  <?* pr = (pl <* pr)  <|> (pure empty <* pr)
+pl <<?* pr = (pl <* pr) <<|> (pure empty <* pr)
+
 pl <*? pr = pl <??> (id <$ pr)
 
 pl ?*> pr = (pl *> pr) <<|> pr
 
-pl *?> pr = (pl *> (pr <<|> empty))
+pl *?> pr = (pl *> (pr <<|> pure empty))
 
-pl <?*> pr = (pl <*> pr) <<|> pr
+pl  <?*> pr = (pl <*> pr)  <|> pr
+pl <<?*> pr = (pl <*> pr) <<|> pr
 
 --pSpaces :: Parser String
 pSpaces = pMunch (`elem` " \t") <?> "Whitespace"

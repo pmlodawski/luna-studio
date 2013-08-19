@@ -37,42 +37,7 @@ import qualified Text.Show.Pretty as PP
 
 import Flowbox.Luna.AST.Constant -- only for tests
 
---s1 = "def a(x,y,z):\
---   \\n  a\
---   \\n  b=a\
---   \\n"
-
---s1 = "class Ala:\
---   \\n    a::Int   \
---   \\n    def f(x):\
---   \\n        x\n"
-
-
-
---def f(x,y,z):
---  a = x
---      + y
---        + z
-
-
---s1 = "def f(x):\
---   \\n  x\
---   \\n y"
-
---s1 = "from Std.Math import m.Vector as V\
---   \\n                     Scalar\
---   \\nimport A.B"
-
---s1 = "import Std.Math.Vector as Vector\
---   \\n       Std.String as S"
-
-
---import Std.Math.Vector as V
---       Std.Math.Scalar as S
---from Std.Math import Vector as V
---                     Scalar as S
-
---Imports { path :: [String], elems :: [String] }
+import Data.Monoid
 
 ---------- Entities ----------
 
@@ -105,8 +70,8 @@ pNOP          = NOP        <$  L.pTerminator
 
 pImportPath _ = Path <$> L.pPath <??> (Named <$ Keywords.pAs <*> L.pIdent)
 
-pImport i     =    (ImportQualified <$ Keywords.pFrom <*> pImportPath i) 
-              <?*> (Import <$  Keywords.pImport  <*> ((:) <$> pImportPath i) <?*> pBlock pImportPath (i+1))
+pImport i     =     (ImportQualified <$ Keywords.pFrom <*> pImportPath i) 
+              <<?*> (Import <$  Keywords.pImport  <*> ((:) <$> pImportPath i) <<?*> pBlock pImportPath (i+1))
 
 --pAssignment   = Assignment <$> pEnt <* L.pAssign <*> (pExpr 0 <|> pEnt)
 
@@ -127,6 +92,8 @@ pClass i      = Class      <$ Keywords.pClass
 pInterface i  = Interface  <$ Keywords.pInterface
                            <*> L.pTypeIdent
                            <*> pExprBlock i
+
+pComment      = Comment    <$> L.pComment
 
 --pCall i       = Call       <$> pTrace L.pIdent' <*> ( (items <$> pTuple i) <<|> pSpaces *> (pMany $ pTupleItem i) )   -- <* pSpaces <*> pMany (pValue i)
 
@@ -149,15 +116,16 @@ pFactor2 i = pChoice [ pEnt
                     , L.pParensed (pOpExpr i)
                     , pTuple i
                     , pTyped pEnt
+                    
                     --, pLambda i
                     ] 
 
-pExpr i       = pChoice [ pImport i
-                        , pFunc i
-                        , pClass i
-                        , pOpExpr i
-                        ]
-              -- <|> pNOP
+pExpr i       =   pChoice [ pImport i
+                          , pFunc i
+                          , pClass i
+                          , pOpExpr i
+                          ]
+              <|> pNOP
 
 
 
@@ -188,15 +156,15 @@ pPrecOps = map pChoice pOps
 pIndentAtLast i = length <$> pAtLeast i (pSym ' ')
 pIndentExact i  = pExact i (pSym ' ')
 
-pBlock p i          = (pEOL *> pSegmentsBegin p i) <|> pure [] -- ->>> pSegmentsBegin->pSegments
+pBlock p i          = (pEOL *> pSegmentsBegin p i) <|> pure [] 
 
-pSegmentEmpty       = pMany L.pWSpace <* pEOL 
+pSegmentEmpty       = pSpaces <* (pComment <|> pure NOP) <* pEOL 
 
-pSegmentEnd p i     = (pSpaces *> (pEOL *> pSegments p i <|> pure []))
+pSegmentEnd p i     = pSpaces *> ((:) <$> pComment) <<?*> (pEOL *> pSegments p i <|> pure [])
 
 pSegments p i       = pSegment p i <|> ( pSegmentEmpty *> pSegments p i )
 
-pSegment p i        = (:) <$ pIndentExact i <*> p i <*> pSegmentEnd p i
+pSegment p i        = ((:) <$ pIndentExact i <*> p i <*> pSegmentEnd p i) 
 
 pSegmentsBegin p i  = pSegmentBegin p i <|> ( pSegmentEmpty *> pSegmentsBegin p i )
 
@@ -205,85 +173,96 @@ pSegmentBegin p i   = addLength 2 $ do
     (:) <$> p j <*> pSegmentEnd p j
 
 
-tests = [("Empty input",    ""                  , [])  
-        , ("Empty function", "def f():"         , [Function {name = "f", signature = [], body = []}]) 
-        , ("Simple function","def f(x=0):x"     , [Function {name = "f", signature = [Assignment (Identifier "x") (Constant (Integer "0"))], body = [Identifier "x"]}]) 
-        , ("Multiline function",
-              "def f(x):\
-            \\n    x()\
-            \\n    y()\
-            \\n"
-                                                , [Function {name = "f", signature = [Identifier "x"], body = [Call {src = Identifier "x", args = []},Call {src = Identifier "y", args = []}]}]) 
-        , ("Multiple simple functions",
-              "def f(x):x\
-            \\ndef g(y):y"
-                                                , [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]},Function {name = "g", signature = [Identifier "y"], body = [Identifier "y"]}]) 
-        , ("Empty class", "class A:"            , [Class {name = "A", params = [], body = []}]) 
-        , ("Simple class",
-              "class A:\
-            \\n    i::Int"
-                                                , [Class {name = "A", params = [], body = [Typed "Int" (Identifier "i")]}]) 
-        , ("Class with a function",
-              "class A:\
-            \\n    def f(x):\
-            \\n        x"
-                                                , [Class {name = "A", params = [], body = [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]}]}]) 
-        , ("Testing emptylines 1",
-              "class A:\
-            \\n \
-            \\n\
-            \\n    def f(x):\
-            \\n \
-            \\n\
-            \\n        x\n"
-                                                , [Class {name = "A", params = [], body = [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]}]}]) 
-        , ("Simple function call", "f(x,y,z)"   , [Call {src = Identifier "f", args = [Identifier "x",Identifier "y",Identifier "z"]}]) 
-        , ("Simple operators", "a+b"            , [Operator {name = "+", srd = Identifier "a", dst = Identifier "b"}]) 
-        , ("test", "f"                          , [Identifier "f"]) 
-        , ("test", "g h"                        , [Call {src = Identifier "g", args = [Identifier "h"]}]) 
-        , ("test", "g h()"                      , [Call {src = Identifier "g", args = [Call {src = Identifier "h", args = []}]}]) 
-        , ("test", "g h ()"                     , [Call {src = Identifier "g", args = [Identifier "h",Tuple {items = []}]}]) 
-        , ("test", "g(h,i)"                     , [Call {src = Identifier "g", args = [Identifier "h",Identifier "i"]}]) 
-        , ("test", "g h i"                      , [Call {src = Identifier "g", args = [Identifier "h",Identifier "i"]}]) 
-        , ("test", "g + 1"                      , [Operator {name = "+", srd = Identifier "g", dst = Constant (Integer "1")}]) 
-        , ("test", "g(x) h"                     , [Call {src = Call {src = Identifier "g", args = [Identifier "x"]}, args = [Identifier "h"]}]) 
-        , ("test", "g x h"                      , [Call {src = Identifier "g", args = [Identifier "x",Identifier "h"]}]) 
+tests = [
+        --  ("Empty input",    ""                  , [])  
+        --, ("Empty function", "def f():"         , [Function {name = "f", signature = [], body = []}]) 
+        --, ("Simple function","def f(x=0):x"     , [Function {name = "f", signature = [Assignment (Identifier "x") (Constant (Integer "0"))], body = [Identifier "x"]}]) 
+        --, ("Multiline function",
+        --      "def f(x):\
+        --    \\n    x()\
+        --    \\n    y()\
+        --    \\n"
+        --                                        , [Function {name = "f", signature = [Identifier "x"], body = [Call {src = Identifier "x", args = []},Call {src = Identifier "y", args = []}]}]) 
+        --, ("Multiple simple functions",
+        --      "def f(x):x\
+        --    \\ndef g(y):y"
+        --                                        , [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]},Function {name = "g", signature = [Identifier "y"], body = [Identifier "y"]}]) 
+        --, ("Empty class", "class A:"            , [Class {name = "A", params = [], body = []}]) 
+        --, ("Simple class",
+        --      "class A:\
+        --    \\n    i::Int"
+        --                                        , [Class {name = "A", params = [], body = [Typed "Int" (Identifier "i")]}]) 
+        --, ("Class with a function",
+        --      "class A:\
+        --    \\n    def f(x):\
+        --    \\n        x"
+        --                                        , [Class {name = "A", params = [], body = [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]}]}]) 
+        --, ("Testing emptylines 1",
+        --      "class A:\
+        --    \\n \
+        --    \\n\
+        --    \\n    def f(x):\
+        --    \\n \
+        --    \\n\
+        --    \\n        x\n"
+        --                                        , [Class {name = "A", params = [], body = [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]}]}]) 
+        --, ("Simple function call", "f(x,y,z)"   , [Call {src = Identifier "f", args = [Identifier "x",Identifier "y",Identifier "z"]}]) 
+        --, ("Simple operators", "a+b"            , [Operator {name = "+", srd = Identifier "a", dst = Identifier "b"}]) 
+        --, ("test", "f"                          , [Identifier "f"]) 
+        --, ("test", "g h"                        , [Call {src = Identifier "g", args = [Identifier "h"]}]) 
+        --, ("test", "g h()"                      , [Call {src = Identifier "g", args = [Call {src = Identifier "h", args = []}]}]) 
+        --, ("test", "g h ()"                     , [Call {src = Identifier "g", args = [Identifier "h",Tuple {items = []}]}]) 
+        --, ("test", "g(h,i)"                     , [Call {src = Identifier "g", args = [Identifier "h",Identifier "i"]}]) 
+        --, ("test", "g h i"                      , [Call {src = Identifier "g", args = [Identifier "h",Identifier "i"]}]) 
+        --, ("test", "g + 1"                      , [Operator {name = "+", srd = Identifier "g", dst = Constant (Integer "1")}]) 
+        --, ("test", "g(x) h"                     , [Call {src = Call {src = Identifier "g", args = [Identifier "x"]}, args = [Identifier "h"]}]) 
+        --, ("test", "g x h"                      , [Call {src = Identifier "g", args = [Identifier "x",Identifier "h"]}]) 
 
-        , ("Class with a function",
-              "class Vector a:\
-            \\n    x :: a     \
-            \\n    y :: a     \
-            \\n    z :: a     \
-            \\n    def length(self):  \
-            \\n        self.x^2 + self.y^2 + self.z^2\n"
-                                                , [Class {name = "Vector", params = ["a"], body = [Typed "a" (Identifier "x"),Typed "a" (Identifier "y"),Typed "a" (Identifier "z"),Function {name = "length", signature = [Identifier "self"], body = [Operator {name = "+", srd = Operator {name = "+", srd = Operator {name = "^", srd = Accessor {src = Identifier "self", dst = Identifier "x"}, dst = Constant (Integer "2")}, dst = Operator {name = "^", srd = Accessor {src = Identifier "self", dst = Identifier "y"}, dst = Constant (Integer "2")}}, dst = Operator {name = "^", srd = Accessor {src = Identifier "self", dst = Identifier "z"}, dst = Constant (Integer "2")}}]}]}]) 
+        --, ("Class with a function",
+        --      "class Vector a:\
+        --    \\n    x :: a     \
+        --    \\n    y :: a     \
+        --    \\n    z :: a     \
+        --    \\n    def length(self):  \
+        --    \\n        self.x^2 + self.y^2 + self.z^2\n"
+        --                                        , [Class {name = "Vector", params = ["a"], body = [Typed "a" (Identifier "x"),Typed "a" (Identifier "y"),Typed "a" (Identifier "z"),Function {name = "length", signature = [Identifier "self"], body = [Operator {name = "+", srd = Operator {name = "+", srd = Operator {name = "^", srd = Accessor {src = Identifier "self", dst = Identifier "x"}, dst = Constant (Integer "2")}, dst = Operator {name = "^", srd = Accessor {src = Identifier "self", dst = Identifier "y"}, dst = Constant (Integer "2")}}, dst = Operator {name = "^", srd = Accessor {src = Identifier "self", dst = Identifier "z"}, dst = Constant (Integer "2")}}]}]}]) 
 
-        --, ("Simple lambda", "x:x+1")
-        --, ("Double lambda", "x: y:x+y")
+        ----, ("Simple lambda", "x:x+1")
+        ----, ("Double lambda", "x: y:x+y")
 
-        , ("Exception catch", "a.catch e:         \
-                            \\n    print 1        \
-                            \\n    print e.message"
-                                                , [Call {src = Accessor {src = Identifier "a", dst = Identifier "catch"}, args = [Lambda {signature = [Identifier "e"], body = [Call {src = Identifier "print", args = [Constant (Integer "1")]},Call {src = Identifier "print", args = [Accessor {src = Identifier "e", dst = Identifier "message"}]}]}]}]) 
-        , ("Simple Char literals", "'a'"        , [Constant (Char 'a')])
-        , ("Simple string literals", "\"ala\""  , [Constant (String "ala")])
-        , ("Simple import", "import Std.Math.Vector as Vector", [Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}}]}])
-        , ("Simple from import", "from Std.Math import Vector", [ImportQualified {path = Path {segments = ["Std","Math"]}, imports = Import {paths = [Path {segments = ["Vector"]}]}}])
-        , ("Complex import", 
-           "import Std.Math.Vector as Vector\
-         \\n       Std.Math.Scalar as Scalar"
-                                                ,[Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}},Named {name = "Scalar", item = Path {segments = ["Std","Math","Scalar"]}}]}])
-        , ("Complex from import", 
-           "from Std.Math import Vector\
-         \\n                     Scalar"        
-                                                ,[ImportQualified {path = Path {segments = ["Std","Math"]}, imports = Import {paths = [Path {segments = ["Vector"]},Path {segments = ["Scalar"]}]}}]
-          )
+        --, ("Exception catch", "a.catch e:         \
+        --                    \\n    print 1        \
+        --                    \\n    print e.message"
+        --                                        , [Call {src = Accessor {src = Identifier "a", dst = Identifier "catch"}, args = [Lambda {signature = [Identifier "e"], body = [Call {src = Identifier "print", args = [Constant (Integer "1")]},Call {src = Identifier "print", args = [Accessor {src = Identifier "e", dst = Identifier "message"}]}]}]}]) 
+        --, ("Simple Char literals", "'a'"        , [Constant (Char 'a')])
+        --, ("Simple string literals", "\"ala\""  , [Constant (String "ala")])
+        --, ("Simple import", "import Std.Math.Vector as Vector", [Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}}]}])
+        --, ("Simple from import", "from Std.Math import Vector", [ImportQualified {path = Path {segments = ["Std","Math"]}, imports = Import {paths = [Path {segments = ["Vector"]}]}}])
+        --, ("Complex import", 
+        --   "import Std.Math.Vector as Vector\
+        -- \\n       Std.Math.Scalar as Scalar"
+        --                                        ,[Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}},Named {name = "Scalar", item = Path {segments = ["Std","Math","Scalar"]}}]}])
+        --, ("Complex from import", 
+        --   "from Std.Math import Vector\
+        -- \\n                     Scalar"        
+        --                                        ,[ImportQualified {path = Path {segments = ["Std","Math"]}, imports = Import {paths = [Path {segments = ["Vector"]},Path {segments = ["Scalar"]}]}}]
+        --  )
+        ----, ("test", "a=b;b=c", []) -- currently unimplemented
+        ("Simple comment", "\n", [])
+
         ]
+
+
+-- komentarze
 
 ---------- Program ----------
 
 
-pProgram = pSegments pExpr 0 <* pMany pSegmentEmpty `opt` []
+pProgram = pSegments pExpr 0 <?* pMany pSegmentEmpty
+
+--pProgram = pMany (pure NOP <* pSegmentEmpty)
+
+
 
 --pProgram = pOpExpr 0
 
@@ -310,7 +289,7 @@ main = do
     print "START"
     mapM_ (\(desc, p, exp) -> do
               putStr ("=== " ++ desc ++ " ===" ++ replicate (30 - length desc) ' ')
-              run pProgram p exp False
+              run pProgram p exp True
           ) tests
     return ()
 
@@ -318,11 +297,11 @@ run :: Parser [Expr] -> String -> [Expr] -> Bool -> IO ()
 run p inp exp force = 
     do 
         let (a, errors) =  parse p inp
-        if a == exp
+        if (a == exp) && (null errors)
             then do putStrLn "ok."
             else putStrLn $ "\n--  Wrong Result:"
 
-        if (a /= exp) || force  
+        if (a /= exp) || force || (not $ null errors)
             then do putStrLn $ "\n" ++ show a ++ "\n"
                     putStrLn $ "=== \n\n" ++ PP.ppShow a ++ "\n"
                     if null errors then  return ()

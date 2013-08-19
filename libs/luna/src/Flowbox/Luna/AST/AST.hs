@@ -35,7 +35,8 @@ data Expr = NOP
           | CallConstructor { src :: Expr, args :: [Expr] }
           | Accessor        { src :: Expr, dst :: Expr }
           | Operator        { name :: String, srd :: Expr, dst :: Expr }
-          
+          | Comment         String
+
           deriving (Show, Eq)
 
 
