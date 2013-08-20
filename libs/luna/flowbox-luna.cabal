@@ -110,7 +110,8 @@ Library
                   vector,
                   uu-parsinglib,
                   pretty-show,
-                  ListLike
+                  ListLike,
+                  timeit
 
 
 
@@ -141,4 +142,5 @@ Executable lunac
                   vector,
                   uu-parsinglib,
                   pretty-show,
-                  ListLike
+                  ListLike,
+                  timeit

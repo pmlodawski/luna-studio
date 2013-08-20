@@ -11,6 +11,7 @@
 module Flowbox.Luna.Parser.Parser where
 
 import Debug.Trace
+import System.TimeIt
 
 import Prelude hiding(lex)
 import Data.Char hiding (Space)
@@ -248,7 +249,12 @@ tests = [
         --                                        ,[ImportQualified {path = Path {segments = ["Std","Math"]}, imports = Import {paths = [Path {segments = ["Vector"]},Path {segments = ["Scalar"]}]}}]
         --  )
         ----, ("test", "a=b;b=c", []) -- currently unimplemented
-        ("Simple comment", "\n", [])
+        --("Simple comment", "a=b #[c         \
+        --                 \\ndalej komentarz \
+        --                 \\n#[nested comment\
+        --                 \\n#]xx            \
+        --                 \\n#]", [])
+        ("Simple comment2", "###################", [])
 
         ]
 
@@ -258,7 +264,9 @@ tests = [
 ---------- Program ----------
 
 
-pProgram = pSegments pExpr 0 <?* pMany pSegmentEmpty
+pProgram = pSegments pExpr 0 <?* pMany pSegmentEmpty <* pMany pComment
+
+--pProgram = pSegments pExpr 0 <?* pMany pSegmentEmpty <* pMany pComment
 
 --pProgram = pMany (pure NOP <* pSegmentEmpty)
 
@@ -281,15 +289,22 @@ pProgram = pSegments pExpr 0 <?* pMany pSegmentEmpty
 type Parser a = P (Str Char String LineColPos) a
 
 
-parse p s = UU.parse ( (,) <$> p <*> pEnd) (createStr (LineColPos 0 0 0) s)
+parse p s = UU.parse ( (,) <$> p <*> pEnd) (createStr (LineColPos 0 0 0) (s ++ "\n"))
 
 
 main :: IO ()
-main = do 
+main = do
+    timeIt maininner
+    return ()
+
+maininner = do 
+    --s     <- readFile "lunalib/Std/Math/Vector.luna"
+    --run pProgram s [] False
+
     print "START"
-    mapM_ (\(desc, p, exp) -> do
+    mapM_ (\(desc, inp, exp) -> do
               putStr ("=== " ++ desc ++ " ===" ++ replicate (30 - length desc) ' ')
-              run pProgram p exp True
+              run pProgram inp exp False
           ) tests
     return ()
 

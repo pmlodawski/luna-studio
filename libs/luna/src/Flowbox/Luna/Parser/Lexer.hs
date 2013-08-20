@@ -63,7 +63,12 @@ pIdent'        = pVarIdent' <|> pTypeIdent'
 pInteger'      = pIntegerStr <?> "Integer"
 pChar'         = pPacked (pSym '\'') (pSym '\'') (pNoneOf "'")
 pString'       = pPacked (pSym '"') (pSym '"') (pMany $ pNoneOf "\"")
-pComment       = pSym '#' *> (pMany $ pNoneOf "\n")
+pCommentSingle = pSym '#' *> (pMany $ pNoneOf "\n")
+pCommentMulti  = concat <$ pSyms "#[" <*> pMany (liftList (pNoneOf "#") 
+                                             <|> ((\x y->[x,y]) <$> pSym '#' <*> pNoneOf "][")
+                                             <|> pCommentMulti
+                                          ) <* pSyms "#]"
+pComment       = pCommentSingle -- pCommentMulti <|>
 pVarIdent      = lexeme $ pVarIdent' 
 pTypeClsIdent  = lexeme $ pTypeClsIdent'
 pTypeVarIdent  = lexeme $ pTypeVarIdent'
