@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances #-}
 
-module Flowbox.Luna.AST.AST where
+module Flowbox.Luna.Parser.AST.AST where
 
-import qualified Flowbox.Luna.AST.Constant as Constant
+import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 
 import Debug.Trace
 

@@ -5,12 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.AST.Constant where
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
-import qualified Prelude
-import Prelude (Show, Eq)
+import           Debug.Trace                             
 
-data Constant = Integer Prelude.String
-              | String  Prelude.String
-              | Char    Prelude.Char
-              deriving (Show, Eq)
+import qualified Flowbox.Luna.Parser.Parser as Parser
+import qualified Flowbox.Luna.Parser.Lexer as Lexer
+
+
+main :: IO ()
+main = do 
+    Parser.main

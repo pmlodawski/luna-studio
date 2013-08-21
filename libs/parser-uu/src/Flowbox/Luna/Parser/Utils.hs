@@ -12,7 +12,7 @@ module Flowbox.Luna.Parser.Utils where
 
 import Prelude hiding(lex)
 import Data.Char hiding (Space)
-import           Text.ParserCombinators.UU hiding(parse, pMany, (<??>))
+import           Text.ParserCombinators.UU hiding(parse, (<??>))
 import qualified Text.ParserCombinators.UU.Utils as Utils
 import Text.ParserCombinators.UU.BasicInstances hiding (Parser)
 --import qualified Data.ListLike as LL
@@ -72,12 +72,12 @@ pTrace p   = (\x->trace("pTrace: " ++ show x)x) <$> p
 pSpaces1 = (:) <$> pSymOf " \r\n\t" <*> pSpaces
 
 
-pMany p  = pList_ng p
+pMany' p  = pList_ng p
 pMany1 p = (:) <$> p <*> pMany p
 
 
-pChainL op p = applyAll <$> p <*> pMany (flip <$> op  <*> p)
-pChainProcL proc op p = proc <$> (applyAll <$> p <*> pMany (flip <$> op <*> (proc <$> p)))
+pChainl' op p = applyAll <$> p <*> pMany' (flip <$> op  <*> p)
+--pChainProcL proc op p = proc <$> (applyAll <$> p <*> pMany (flip <$> op <*> (proc <$> p)))
 
 applyAll x (f:fs) = applyAll (f x) fs
 applyAll x []     = x

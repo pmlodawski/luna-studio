@@ -12,7 +12,7 @@ module Flowbox.Luna.Parser.Lexer where
 
 import Prelude hiding(lex)
 import Data.Char hiding (Space)
-import           Text.ParserCombinators.UU hiding(parse, pMany)
+import           Text.ParserCombinators.UU hiding(parse)
 import qualified Text.ParserCombinators.UU.Utils as Utils
 import Text.ParserCombinators.UU.BasicInstances hiding (Parser)
 --import qualified Data.ListLike as LL
