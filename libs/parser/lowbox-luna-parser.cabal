@@ -4,7 +4,7 @@
 -- Use gencabal instead                         --
 --------------------------------------------------
 
-Name:           flowbox-luna-parser-uu
+Name:           flowbox-luna-parser
 Version:        0.1
 Cabal-Version:  >= 1.8
 --License-file:   LICENSE
@@ -20,7 +20,7 @@ Flag Debug
 
 Executable parser 
   Main-Is:        Flowbox/Luna/Main.hs
-  Hs-Source-Dirs: src
+  Hs-Source-Dirs: src/parsec
 
   if flag(debug)
     GHC-Options:  -csacc
@@ -32,4 +32,8 @@ Executable parser
                   uu-parsinglib,
                   pretty-show,
                   ListLike,
-                  timeit
+                  timeit,
+                  parsec,
+                  mtl,
+                  indents,
+                  MissingH
