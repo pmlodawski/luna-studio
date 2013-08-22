@@ -22,9 +22,9 @@ data Expr = NOP
           | Identifier      String 
           | TypeIdentifier  String
           | Constant        Constant.Constant
-          | Assignment      Expr Expr
+          | Assignment      { src :: Expr, dst :: Expr }
           | Tuple           { items :: [Expr] }
-          | Function        { name :: String } --, signature :: [Expr], body :: [Expr]}
+          | Function        { name :: String, body :: [Expr]} --, signature :: [Expr], body :: [Expr]}
           | Lambda          { signature :: [Expr], body :: [Expr] }
           | Class           { name :: String, params :: [String], body :: [Expr]}
           | Interface       { name :: String, body :: [Expr]}
@@ -34,7 +34,7 @@ data Expr = NOP
           | Call            { src :: Expr, args :: [Expr] }
           | CallConstructor { src :: Expr, args :: [Expr] }
           | Accessor        { src :: Expr, dst :: Expr }
-          | Operator        { name :: String, srd :: Expr, dst :: Expr }
+          | Operator        { name :: String, src :: Expr, dst :: Expr }
           | Comment         String
 
           deriving (Show, Eq)
@@ -50,8 +50,8 @@ callConstructor src' arg' = case src' of
 --callConstructor src' arg' = Call src' [arg']
 
 
---mkFunction :: String -> Expr -> Expr
---mkFunction name' signature' = Function name' signature' []
+mkFunction :: String -> Expr
+mkFunction name'  = Function name' []
 
 mkClass :: String -> Expr
 mkClass name' = Class name' [] []

@@ -23,6 +23,7 @@ import Data.Char ( isAlpha, toLower, toUpper, isSpace, digitToInt )
 import Flowbox.Luna.Parser.Utils
 
 
+
 identLetter  = alphaNum
 identStart   = letter
 commentLine  = "#"
@@ -33,7 +34,7 @@ commentEnd   = "#]"
 
 kDef = reserved "def"
 
-opStart      = oneOf ":!#$%&*+./<=>?@\\^|-~"
+opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart
 reservedOpNames = ["="]
 
@@ -217,11 +218,15 @@ isReservedName name = isReserved (sort reservedNames) name
 -- White space & symbols
 -----------------------------------------------------------
 lexeme p    = p <* whiteSpace
+--lexeme' p    = p <* whiteSpace'
 
 symbol name = lexeme (string name)
 
 whiteSpace  = skipMany (simpleSpace <|> oneLineComment <|> multiLineComment <?> "")
-simpleSpace = many1 (satisfy isSpace)
+simpleSpace = many1 (satisfy (`elem` "\t\f\v ")) -- many1 (satisfy isSpace)
+
+--whiteSpace'  = skipMany (simpleSpace' <|> oneLineComment <|> multiLineComment <?> "")
+--simpleSpace' = many1 (satisfy isSpace')
 
 oneLineComment = try (string commentLine) *> many (satisfy (/= '\n'))
 
@@ -234,3 +239,18 @@ inComment =   try (string commentEnd)            *> return ""
           <?> "end of comment"
           where
           	startEnd   = nub (commentEnd ++ commentStart)
+
+
+eol = (char '\n' <|> (char '\r' >> option '\n' (char '\n'))) >> return ()
+
+
+--isSpace' c  =  c == ' '     ||
+--               c == '\t'    ||
+--               --c == '\n'    ||
+--               --c == '\r'    ||
+--               c == '\f'    ||
+--               c == '\v'    ||
+--               c == '\xa0' 
+
+
+pBlockBegin  = lexeme (char ':')
