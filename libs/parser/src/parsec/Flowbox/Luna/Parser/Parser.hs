@@ -169,27 +169,20 @@ isReservedName name = isReserved (sort reservedNames) name
 lexeme p    = p <* whiteSpace
 
 whiteSpace  = skipMany (simpleSpace <|> oneLineComment <|> multiLineComment <?> "")
-simpleSpace = skipMany1 (satisfy isSpace)
+simpleSpace = many1 (satisfy isSpace)
 
-oneLineComment =
-        do{ try (string commentLine)
-          ; skipMany (satisfy (/= '\n'))
-          ; return ()
-          }
+oneLineComment = try (string commentLine) *> many (satisfy (/= '\n'))
 
-multiLineComment =
-        do { try (string commentStart)
-           ; inComment
-           }
+multiLineComment = try (string commentStart) *> inComment
 
-inComment
-        =   do{ try (string commentEnd) ; return () }
-        <|> do{ multiLineComment                     ; inComment }
-        <|> do{ skipMany1 (noneOf startEnd)          ; inComment }
-        <|> do{ oneOf startEnd                       ; inComment }
-        <?> "end of comment"
-        where
-          startEnd   = nub (commentEnd ++ commentStart)
+inComment =   try (string commentEnd)            *> return ""
+          <|> ((++) <$> multiLineComment        <*> inComment)
+          <|> ((++) <$> many1 (noneOf startEnd) <*> inComment)
+          <|> oneOf startEnd                     *> inComment
+          <?> "end of comment"
+          where
+          	startEnd   = nub (commentEnd ++ commentStart)
+
 
 -----------------------------------------------------------
 -- Utils
@@ -205,7 +198,7 @@ checkIf f msg p = do
 
 
 example = unlines [
-    "def+="
+    "#[komentarz#]"
   ]
 
 
@@ -219,6 +212,6 @@ test = try(pSyms "aa") <|> pSyms "ab"
 main = do
     --args <- getArgs
     --input <- if null args then return example else readFile $ head args
-    print $ parse ((\x y -> [x,y]) <$> kDef <*> operator) "(unknown)" example
+    print $ parse (multiLineComment) "(unknown)" example
     return ()
     --putStrLn $ serializeIndentedTree $ forceEither $ parseIndentedTree input
