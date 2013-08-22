@@ -134,14 +134,82 @@ reservedOpNames = ["="]
 
 --------------------
 
-example = unlines [ "12"
+example = unlines [ "\"ala ma kota\""
 				  ]
 
-test = int
+test = stringLiteral
 
 pl <*$> pr = do 
 	n <- pr
 	pl n
+
+
+-----------------------------------------------------------
+-- Chars & Strings
+-----------------------------------------------------------
+charLiteral     = lexeme (between (char '\'')
+                                  (char '\'' <?> "end of character")
+                                  characterChar )
+                <?> "character"
+
+characterChar   = charLetter <|> charEscape <?> "literal character"
+
+charEscape      = char '\\' *> escapeCode
+
+charLetter      = satisfy (\c -> (c /= '\'') && (c /= '\\') && (c > '\026'))
+
+stringLiteral  = lexeme ( foldr (maybe id (:)) "" <$> between (char '"')
+                                                      (char '"' <?> "end of string")
+                                                      (many stringChar)
+                                                  <?> "literal string" )
+
+stringChar      =   Just <$> stringLetter
+                <|> stringEscape
+                <?> "string character"
+
+stringLetter    = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
+
+stringEscape    = char '\\' *> (    Nothing <$  escapeGap
+	                            <|> Nothing <$  escapeEmpty
+	                            <|> Just    <$> escapeCode
+	                           )
+
+escapeEmpty     = char '&'
+escapeGap       = many1 space *> (char '\\' <?> "end of string gap")
+
+-- escape codes
+escapeCode      = charEsc <|> charNum <|> charAscii <|> charControl <?> "escape code"
+
+charControl     = (\code -> toEnum (fromEnum code - fromEnum 'A')) <$ char '^' <*> upper
+
+charNum         = (toEnum.fromInteger) <$> (    decimal
+	                                        <|> char 'o' *> number 8 octDigit
+	                                        <|> char 'x' *> number 16 hexDigit
+	                                       )
+
+
+charEsc         = choice (map parseEsc escMap) where
+                      parseEsc (c,code) = char c *> return code
+
+charAscii       = choice (map parseAscii asciiMap) where
+                      parseAscii (asc,code) = try (string asc *> return code)
+
+
+-- escape code tables
+escMap          = zip ("abfnrtv\\\"\'") ("\a\b\f\n\r\t\v\\\"\'")
+asciiMap        = zip (ascii3codes ++ ascii2codes) (ascii3 ++ ascii2)
+
+ascii2codes     = ["BS","HT","LF","VT","FF","CR","SO","SI","EM",
+                   "FS","GS","RS","US","SP"]
+ascii3codes     = ["NUL","SOH","STX","ETX","EOT","ENQ","ACK","BEL",
+                   "DLE","DC1","DC2","DC3","DC4","NAK","SYN","ETB",
+                   "CAN","SUB","ESC","DEL"]
+
+ascii2          = ['\BS','\HT','\LF','\VT','\FF','\CR','\SO','\SI',
+                   '\EM','\FS','\GS','\RS','\US','\SP']
+ascii3          = ['\NUL','\SOH','\STX','\ETX','\EOT','\ENQ','\ACK',
+                   '\BEL','\DLE','\DC1','\DC2','\DC3','\DC4','\NAK',
+                   '\SYN','\ETB','\CAN','\SUB','\ESC','\DEL']
 
 -----------------------------------------------------------
 -- Numbers
