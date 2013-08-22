@@ -93,6 +93,7 @@ import System.Environment (getArgs)
 import Text.Parsec hiding (many, optional, (<|>))
 import Text.Parsec.Indent
 import Data.List ( nub, sort )
+import Data.Char ( isAlpha, toLower, toUpper, isSpace, digitToInt )
 
 data Tree = Node [Tree] | Leaf String deriving(Show)
 
@@ -130,6 +131,77 @@ kDef = reserved "def"
 opStart      = oneOf ":!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart
 reservedOpNames = ["="]
+
+--------------------
+
+example = unlines [ "12"
+				  ]
+
+test = int
+
+pl <*$> pr = do 
+	n <- pr
+	pl n
+
+-----------------------------------------------------------
+-- Numbers
+-----------------------------------------------------------
+naturalOrFloat  = lexeme (natFloat) <?> "number"
+
+float           = lexeme floating   <?> "float"
+integer         = lexeme int        <?> "integer"
+natural         = lexeme nat        <?> "natural"
+
+
+-- floats
+floating        = fractExponent <*$> decimal
+
+natFloat        =   char '0' *> zeroNumFloat
+                <|> decimalFloat
+
+
+zeroNumFloat    =   (\n -> return $ Left n) <*$> (hexadecimal <|> octal)
+                <|> decimalFloat
+                <|> fractFloat 0
+                <|> return (Left 0)
+
+decimalFloat    = (\n -> option (Left n) (fractFloat n)) <*$> decimal
+
+fractFloat n    = Right <$> fractExponent n
+
+fractExponent n =   (\fract expo -> (fromInteger n + fract)*expo) <$> fraction <*> option 1.0 exponent'
+                <|> (\      expo -> (fromInteger n)*expo)         <$> exponent'
+
+
+fraction        = (foldr op 0.0) <$ char '.' <*> (many1 digit <?> "fraction") <?> "fraction" where
+	op d f      = (f + fromIntegral (digitToInt d))/10.0
+
+
+exponent'       = (\f e -> power (f e)) <$ oneOf "eE" <*> sign <*> (decimal <?> "exponent") <?> "exponent" where
+	power e  | e < 0      = 1.0/power(-e)
+             | otherwise  = fromInteger (10^e)
+
+
+-- integers and naturals
+int             = ($) <$> lexeme sign <*> nat
+
+sign            =   negate <$ char '-'
+                <|> id     <$ char '+'
+                <|> return id
+
+nat             = zeroNumber <|> decimal
+
+zeroNumber      = char '0' *> (hexadecimal <|> octal <|> decimal <|> return 0) <?> ""
+
+decimal         = number 10 digit
+hexadecimal     = oneOf "xX" *> number 16 hexDigit
+octal           = oneOf "oO" *> number 8 octDigit
+
+number base baseDigit = do
+        digits <- many1 baseDigit
+        let n = foldl (\x d -> base*x + toInteger (digitToInt d)) 0 digits
+        seq n (return n)
+        
 
 -----------------------------------------------------------
 -- Operators & reserved ops
@@ -197,21 +269,12 @@ checkIf f msg p = do
 -----------------------------------------------------------
 
 
-example = unlines [
-    "#[komentarz#]"
-  ]
 
-
-pSym s         = char s
-pSyms []       = return []
-pSyms (x : xs) = (:) <$> pSym x <*> pSyms xs
-
-test = try(pSyms "aa") <|> pSyms "ab"
 
 
 main = do
     --args <- getArgs
     --input <- if null args then return example else readFile $ head args
-    print $ parse (multiLineComment) "(unknown)" example
+    print $ parse (test) "(unknown)" example
     return ()
     --putStrLn $ serializeIndentedTree $ forceEither $ parseIndentedTree input
