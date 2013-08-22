@@ -127,6 +127,42 @@ reservedNames = ["def", "class", "interface"]
 
 kDef = reserved "def"
 
+opStart      = oneOf ":!#$%&*+./<=>?@\\^|-~"
+opLetter     = opStart
+reservedOpNames = ["="]
+
+-----------------------------------------------------------
+-- Operators & reserved ops
+-----------------------------------------------------------
+reservedOp name = lexeme $ try $ string name <* (notFollowedBy opLetter <?> ("end of " ++ show name))
+
+operator = lexeme $ try $ checkIf isReservedOp "reserved operator " oper
+
+oper = (:) <$> opStart <*> many opLetter <?> "operator"
+
+isReservedOp name = isReserved (sort reservedOpNames) name
+
+-----------------------------------------------------------
+-- Identifiers & Reserved words
+-----------------------------------------------------------
+reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
+
+identifier = lexeme $ try $ checkIf isReservedName "reserved word " ident
+
+ident = (:) <$> identStart <*> many identLetter <?> "identifier"
+
+isReserved names name
+    = scan names
+    where
+      scan []       = False
+      scan (r:rs)   = case (compare r name) of
+                        LT  -> scan rs
+                        EQ  -> True
+                        GT  -> False
+
+isReservedName name = isReserved (sort reservedNames) name
+
+
 -----------------------------------------------------------
 -- White space & symbols
 -----------------------------------------------------------
@@ -156,11 +192,8 @@ inComment
           startEnd   = nub (commentEnd ++ commentStart)
 
 -----------------------------------------------------------
--- Identifiers & Reserved words
+-- Utils
 -----------------------------------------------------------
-reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
-
-identifier = lexeme $ try $ checkIf isReservedName "reserved word " ident
 
 checkIf f msg p = do
 	obj <- p
@@ -168,24 +201,11 @@ checkIf f msg p = do
 		then unexpected (msg ++ show obj)
 		else return obj
 
-ident = (:) <$> identStart <*> many identLetter <?> "identifier"
-
-isReservedName name = isReserved theReservedNames name
-
-isReserved names name
-    = scan names
-    where
-      scan []       = False
-      scan (r:rs)   = case (compare r name) of
-                        LT  -> scan rs
-                        EQ  -> True
-                        GT  -> False
-
-theReservedNames = sort reservedNames
+-----------------------------------------------------------
 
 
 example = unlines [
-    "def"
+    "def+="
   ]
 
 
@@ -199,6 +219,6 @@ test = try(pSyms "aa") <|> pSyms "ab"
 main = do
     --args <- getArgs
     --input <- if null args then return example else readFile $ head args
-    print $ parse (kDef) "(unknown)" example
+    print $ parse ((\x y -> [x,y]) <$> kDef <*> operator) "(unknown)" example
     return ()
     --putStrLn $ serializeIndentedTree $ forceEither $ parseIndentedTree input
