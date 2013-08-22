@@ -79,33 +79,45 @@ pFunc         = AST.mkFunction <$  L.pDef
 
 --pFuncExpr     = withBlock (flip AST.setBody) pFunc (expr <* L.eol <* L.simpleSpace)
 
-pFuncExpr = withPos (flip AST.setBody <$> pFunc <*> option [] (try $ iblock expr))
-
---pFuncExpr = withPos $ do
---    r1 <- pFunc
---    r2 <- option [] (try $ iblock expr)
---    --r2 <- option [] (indented >> iblock expr)
---    --r2 <- option [] (indented >> (block (expr <* L.eol <* L.simpleSpace)))
---    return (AST.setBody r2 r1)
+pFuncExpr = withPos $ do
+    r1 <- pFunc
+    r2 <- option [] $ iblock2 (expr)
+    --r2 <- option [] (indented >> iblock expr)
+    --r2 <- option [] (indented >> (block (expr <* L.eol <* L.simpleSpace)))
+    return (AST.setBody r2 r1)
 
 
-indentLine = L.eol <* L.simpleSpace
+iblock2 p = do
+    L.eol <* L.simpleSpace
+    indented
+    withPos $ do
+        o1 <- p
+        o2 <- myblock2 p
+        return $ o1:o2
 
-iblock p = (:) <$ indentLine <* indented <*> p <*> many(try(myblock indentLine p))
+myblock2 p = do
+    --L.eol <* L.simpleSpace
+    r <- many (try(myblock_inner p))
+    return r
+
+myblock_inner p = do
+    L.eol <* L.simpleSpace
+    checkIndent
+    p
 
 --iblock p = do
---    L.eol *> L.simpleSpace
+--    L.eol <* L.simpleSpace
 --    indented
 --    out1 <- p
 --    out2 <- many(try(myblock (L.eol *> L.simpleSpace) p))
 --    return $ out1:out2
 
 
-myblock i p = do
-    _ <- i
-    withPos $ do
-    r <- checkIndent >> p
-    return r 
+--myblock i p = do
+--    i
+--    withPos $ do
+--    r <- checkIndent >> p
+--    return r 
 
 
 --exprs = concat <$> many (expr <* L.eol)
@@ -113,7 +125,8 @@ myblock i p = do
 example = unlines [ "def f:"
                   , "    a"
                   , "    b"
-                  , "    c"
+                  , "    def g:"
+                  , "        c"
                   , "    d"
 				  ]
 
