@@ -29,13 +29,29 @@ commentLine  = "#"
 commentStart = "#["
 commentEnd   = "#]"
 
-reservedNames = ["def", "class", "interface"]
+
 
 kDef = reserved "def"
 
 opStart      = oneOf ":!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart
 reservedOpNames = ["="]
+
+
+-----------------------------------------------------------
+-- Keywords
+-----------------------------------------------------------
+reservedNames = ["def", "class", "interface"]
+
+-- entities
+pDef        = reserved "def"
+pClass      = reserved "class"
+pInterface  = reserved "interface"
+
+-- imports
+pFrom       = reserved "from"
+pImport     = reserved "import"
+pAs         = reserved "as"
 
 
 -----------------------------------------------------------

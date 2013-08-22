@@ -24,7 +24,7 @@ data Expr = NOP
           | Constant        Constant.Constant
           | Assignment      Expr Expr
           | Tuple           { items :: [Expr] }
-          | Function        { name :: String, signature :: [Expr], body :: [Expr]}
+          | Function        { name :: String } --, signature :: [Expr], body :: [Expr]}
           | Lambda          { signature :: [Expr], body :: [Expr] }
           | Class           { name :: String, params :: [String], body :: [Expr]}
           | Interface       { name :: String, body :: [Expr]}

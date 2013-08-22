@@ -20,15 +20,22 @@ import Text.Parsec.Indent
 import Data.List ( nub, sort )
 import Data.Char ( isAlpha, toLower, toUpper, isSpace, digitToInt )
 
-import qualified Flowbox.Luna.Parser.Lexer as L
+import qualified Flowbox.Luna.Parser.Lexer   as L
+import qualified Flowbox.Luna.Parser.AST.AST as AST
 
 
 --------------------
 
-example = unlines [ "\"ala ma kota\""
+pFunc         = AST.Function <$  L.pDef 
+                             <*> L.identifier 
+                             -- <*> (pTuplePure (pOpExpr2 i) <<|> pTupleBody (pOpExpr2 i))
+                             -- <*> pExprBlock i
+
+
+example = unlines [ "def f"
 				  ]
 
-test = L.stringLiteral
+test = pFunc
 
 
 main = do
