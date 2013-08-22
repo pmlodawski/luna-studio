@@ -218,6 +218,8 @@ isReservedName name = isReserved (sort reservedNames) name
 -----------------------------------------------------------
 lexeme p    = p <* whiteSpace
 
+symbol name = lexeme (string name)
+
 whiteSpace  = skipMany (simpleSpace <|> oneLineComment <|> multiLineComment <?> "")
 simpleSpace = many1 (satisfy isSpace)
 
