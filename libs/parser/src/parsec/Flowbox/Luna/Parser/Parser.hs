@@ -22,6 +22,7 @@ import Data.Char ( isAlpha, toLower, toUpper, isSpace, digitToInt )
 import qualified Text.Parsec.Expr as Expr
 import Text.Parsec.Indent
 
+import           Flowbox.Luna.Parser.Utils
 import qualified Flowbox.Luna.Parser.Lexer   as L
 import qualified Flowbox.Luna.Parser.AST.AST as AST
 
@@ -29,23 +30,31 @@ import qualified Text.Show.Pretty as PP
 import System.TimeIt
 import Debug.Trace
 import Flowbox.Luna.Parser.AST.AST -- for tests
+import Flowbox.Luna.Parser.AST.Constant -- for tests
 
 
-parens p        = between (L.symbol "(") (L.symbol ")") p
+
 
 ---------- Entities ----------
 
 pIdent      = AST.Identifier   <$> L.identifier
 
+pTuple i    = Tuple <$> (     try(L.parensed (return () *> optional L.separator) *> pure [])
+                          <|> try(L.parensed (liftList (expr i) <* L.separator))
+                          <|>     L.parensed (sepBy2' (expr i) L.separator)
+
+                        )
+
 
 ----------------------
 
-expr    = Expr.buildExpressionParser table term
+expr i  = Expr.buildExpressionParser table (term i)
       <?> "expression"
 
-term    =  parens expr 
+term i   =  try(L.parensed (expr i))
+       <|> pTuple i
        <|> pIdent
-       <|> pFunc
+       <|> pFunc i
        -- <|> L.natural
       <?> "simple expression"
 
@@ -63,20 +72,26 @@ binary  name fun assoc = Expr.Infix   (L.reservedOp name *> return fun) assoc
 prefix  name fun       = Expr.Prefix  (L.reservedOp name *> return fun)
 postfix name fun       = Expr.Postfix (L.reservedOp name *> return fun)
 
+---------- Expressions ----------
 
-pFunc         = AST.Function <$  L.pDef 
+pFunc i        = AST.Function <$  L.pDef 
                                <*> L.identifier 
-                               <*  L.pBlockBegin
-                               <*  L.eol
-                               <*>  pSegmentBegin expr 1
+                               <*> pExprBlock i
+
+                               -- <*  L.pBlockBegin
                                -- <*  L.eol
-                               -- <*  L.eol  <* L.simpleSpace
-                               -- <*  L.eol
-                             -- <*> (pTuplePure (pOpExpr2 i) <<|> pTupleBody (pOpExpr2 i))
-                             -- <*> pExprBlock i
+                               -- <*>  pSegmentBegin expr 1
+                               
+
+pExprBlock i  = L.pBlockBegin *> pBlock expr (i+1)
+
+pBlock p i          = try (L.eol *> pSegmentBegin p i) <|> pure [] 
+
+---------- Nested Segments ----------
 
 pEmptyLines         = many1 pEmptyLine
-pEmptyLine          = try(L.eol *> L.spaces *> L.eol) <|> L.eol
+
+pEmptyLine          = try(L.eol *> L.pSpaces1 *> L.eol) <|> L.eol
 
 pCountAtLast    i p = (++) <$> count i p <*> many p
 
@@ -87,20 +102,22 @@ pSegments       p i = many $ try $ (pEmptyLines *> pSegment p i)
 
 pSegmentBegin   p i = do
     j <- many pEmptyLines *> pIdentAtLast i
-    (:) <$> p <*> pSegments p j
+    (:) <$> p i <*> pSegments p j
 
-pSegment        p i = try (id <$ pIndentExact i <*> p)
+pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
 
 example = unlines [ ""
-                  --, "def f:\n\n\n\n"
-                  --, "  a b"
-                  --, "  c"
-                  --, "def d:"
-                  --, "    d"
+                  , "def f:"
+                  , "  a b"
+                  , "  c"
+                  , "def d:"
+                  , "    d"
 				  ]
 
-pProgram = option [] $ pSegmentBegin expr 0 
+--pProgram = (try(pSegmentBegin expr 0) <|> return []) <* many(L.eol *> L.pSpaces)
+pProgram = try([] <$ many(L.eol <* L.pSpaces) <* eof) <|> pSegmentBegin expr 0
+    --
 
 
 --parse input = runIndent "Luna Parser" $ runParserT pProgram () "" input
@@ -110,9 +127,10 @@ parse input = Parsec.parse pProgram "Luna Parser" input
 
 
 tests = [
-          ("Empty input",    [""]                  , [])  
-        , ("Empty function", ["def f:"]         , []) 
-        --, ("Simple function","def f(x=0):x"     , [Function {name = "f", signature = [Assignment (Identifier "x") (Constant (Integer "0"))], body = [Identifier "x"]}]) 
+          ("Empty input",    [""]                 , [])
+        , ("Simple tuple",   ["(a,b,)"]           , [Tuple {items = [Identifier "a",Identifier "b"]}])
+        --, ("Empty function", ["def f():"]         , [Function {name = "f", body = []}]) 
+        --, ("Simple function",["def f(x=0):x"]   , [Function {name = "f", signature = [Assignment (Identifier "x") (Constant (Integer "0"))], body = [Identifier "x"]}]) 
         --, ("Multiline function",
         --      "def f(x):\
         --    \\n    x()\
@@ -205,7 +223,8 @@ main = do
 main_inner = do
     --args <- getArgs
     --input <- if null args then return example else readFile $ head args
-    --putStrLn $ PP.ppShow $ parse example
+    putStrLn $ PP.ppShow $ parse example
+    putStrLn "\n--- tests ---\n"
     mapM_ (run True) tests
     return ()
     --putStrLn $ serializeIndentedTree $ forceEither $ parseIndentedTree input

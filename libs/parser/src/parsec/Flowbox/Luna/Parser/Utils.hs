@@ -7,7 +7,8 @@
 
 module Flowbox.Luna.Parser.Utils where
 
-import Text.Parsec
+import Control.Applicative
+import Text.Parsec hiding (parse, many, optional, (<|>))
 
 checkIf f msg p = do
 	obj <- p
@@ -22,3 +23,11 @@ pl <*$> pr = do
 pl <$*> pr = do 
     n <- pl
     pr n
+
+sepBy2  p sep = (:) <$> p <*> try(sep *> sepBy1 p sep)
+
+sepBy'  p sep = sepBy1 p sep <|> return []
+sepBy1' p sep = (:) <$> p <*> many (try(sep *> p)) <* optional sep
+sepBy2' p sep = (:) <$> p <*> try(sep *> sepBy1' p sep)
+
+liftList p = (:[]) <$> p

@@ -34,6 +34,11 @@ commentEnd   = "#]"
 
 kDef = reserved "def"
 
+pBlockBegin  = symbol ':'
+separator    = symbol ','
+parenL       = symbol '('
+parenR       = symbol ')'
+
 opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart
 reservedOpNames = ["="]
@@ -53,6 +58,13 @@ pInterface  = reserved "interface"
 pFrom       = reserved "from"
 pImport     = reserved "import"
 pAs         = reserved "as"
+
+
+-----------------------------------------------------------
+    -- Bracketing
+-----------------------------------------------------------
+
+parensed p        = between (parenL) (parenR) p
 
 
 -----------------------------------------------------------
@@ -220,11 +232,14 @@ isReservedName name = isReserved (sort reservedNames) name
 lexeme p    = p <* whiteSpace
 --lexeme' p    = p <* whiteSpace'
 
-symbol name = lexeme (string name)
+symbols name = lexeme (string name)
+symbol  name = lexeme (char name)
 
 whiteSpace  = skipMany (simpleSpace <|> oneLineComment <|> multiLineComment <?> "")
 simpleSpace = many1 (satisfy (`elem` "\t\f\v ")) -- many1 (satisfy isSpace)
-spaces      = simpleSpace
+pSpace      = satisfy (`elem` "\t\f\v ")
+pSpaces     = many pSpace
+pSpaces1    = many1 pSpace
 
 --whiteSpace'  = skipMany (simpleSpace' <|> oneLineComment <|> multiLineComment <?> "")
 --simpleSpace' = many1 (satisfy isSpace')
@@ -254,4 +269,6 @@ eol = (char '\n' <|> (char '\r' >> option '\n' (char '\n'))) >> return ()
 --               c == '\xa0' 
 
 
-pBlockBegin  = lexeme (char ':')
+
+
+
