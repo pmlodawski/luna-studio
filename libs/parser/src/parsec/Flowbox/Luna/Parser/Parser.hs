@@ -39,6 +39,9 @@ import Flowbox.Luna.Parser.AST.Constant -- for tests
 
 pIdent      = AST.Identifier   <$> L.identifier
 
+pTupleBody p = sepBy' p L.separator
+pTuplePure p = L.parensed $ pTupleBody p
+
 pTuple i    = Tuple <$> (     try(L.parensed (return () *> optional L.separator) *> pure [])
                           <|> try(L.parensed (liftList (expr i) <* L.separator))
                           <|>     L.parensed (sepBy2' (expr i) L.separator)
@@ -76,6 +79,7 @@ postfix name fun       = Expr.Postfix (L.reservedOp name *> return fun)
 
 pFunc i        = AST.Function <$  L.pDef 
                                <*> L.identifier 
+                               <*> pTuplePure (expr i)
                                <*> pExprBlock i
 
                                -- <*  L.pBlockBegin
@@ -128,8 +132,9 @@ parse input = Parsec.parse pProgram "Luna Parser" input
 
 tests = [
           ("Empty input",    [""]                 , [])
+        , ("Single ident",   ["ala"]              , [Identifier "ala"])
         , ("Simple tuple",   ["(a,b,)"]           , [Tuple {items = [Identifier "a",Identifier "b"]}])
-        --, ("Empty function", ["def f():"]         , [Function {name = "f", body = []}]) 
+        , ("Empty function", ["def f():"]         , [Function {name = "f", signature = [], body = []}]) 
         --, ("Simple function",["def f(x=0):x"]   , [Function {name = "f", signature = [Assignment (Identifier "x") (Constant (Integer "0"))], body = [Identifier "x"]}]) 
         --, ("Multiline function",
         --      "def f(x):\

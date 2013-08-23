@@ -24,7 +24,7 @@ data Expr = NOP
           | Constant        Constant.Constant
           | Assignment      { src :: Expr, dst :: Expr }
           | Tuple           { items :: [Expr] }
-          | Function        { name :: String, body :: [Expr]} --, signature :: [Expr], body :: [Expr]}
+          | Function        { name :: String, signature :: [Expr], body :: [Expr]}
           | Lambda          { signature :: [Expr], body :: [Expr] }
           | Class           { name :: String, params :: [String], body :: [Expr]}
           | Interface       { name :: String, body :: [Expr]}
@@ -50,8 +50,8 @@ callConstructor src' arg' = case src' of
 --callConstructor src' arg' = Call src' [arg']
 
 
-mkFunction :: String -> Expr -> Expr
-mkFunction name' arg  = Function name' [arg]
+--mkFunction :: String -> Expr -> Expr
+--mkFunction name' arg  = Function name' [arg]
 
 mkClass :: String -> Expr
 mkClass name' = Class name' [] []
