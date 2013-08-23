@@ -50,8 +50,8 @@ callConstructor src' arg' = case src' of
 --callConstructor src' arg' = Call src' [arg']
 
 
-mkFunction :: String -> Expr
-mkFunction name'  = Function name' []
+mkFunction :: String -> Expr -> Expr
+mkFunction name' arg  = Function name' [arg]
 
 mkClass :: String -> Expr
 mkClass name' = Class name' [] []

@@ -224,6 +224,7 @@ symbol name = lexeme (string name)
 
 whiteSpace  = skipMany (simpleSpace <|> oneLineComment <|> multiLineComment <?> "")
 simpleSpace = many1 (satisfy (`elem` "\t\f\v ")) -- many1 (satisfy isSpace)
+spaces      = simpleSpace
 
 --whiteSpace'  = skipMany (simpleSpace' <|> oneLineComment <|> multiLineComment <?> "")
 --simpleSpace' = many1 (satisfy isSpace')

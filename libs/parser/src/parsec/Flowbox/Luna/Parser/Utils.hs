@@ -16,5 +16,9 @@ checkIf f msg p = do
 		else return obj
 
 pl <*$> pr = do 
-	n <- pr
-	pl n
+    n <- pr
+    pl n
+
+pl <$*> pr = do 
+    n <- pl
+    pr n
