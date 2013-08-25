@@ -16,7 +16,7 @@ import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
 import           Flowbox.System.UniPath                  (UniPath)
 import qualified Flowbox.Batch.Project.Project         as Project
 import           Flowbox.Batch.Project.Project           (Project)
-import           Flowbox.Luna.Data.Graph                  hiding(Graph, Edge, empty)
+import           Flowbox.Luna.Data.Graph               hiding (Graph, Edge, empty)
 import qualified Flowbox.Luna.Data.Graph               as DG
 
 

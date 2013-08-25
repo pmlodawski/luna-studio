@@ -7,20 +7,20 @@
 
 module Flowbox.Batch.Samples.Modules where
 
-import qualified Flowbox.System.UniPath              as UniPath
-import qualified Flowbox.Batch.Project.Project       as Project
-import           Flowbox.Batch.Project.Project         (Project)
-import qualified Flowbox.Luna.Network.Def.DefManager as DefManager
-import           Flowbox.Luna.Network.Def.DefManager   (DefManager)
-import qualified Flowbox.Luna.Network.Def.Definition as Definition
-import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
-import qualified Flowbox.Luna.Network.Graph.Graph    as Graph
-import qualified Flowbox.Luna.Lib.LibManager         as LibManager
-import           Flowbox.Luna.Lib.LibManager           (LibManager)
-import qualified Flowbox.Luna.Lib.Library            as Library
-import           Flowbox.Luna.Lib.Library              (Library(..))
-import           Flowbox.Luna.Type.Type                (Type(..))
-import qualified Flowbox.Luna.Type.Type              as Type
+import qualified Flowbox.System.UniPath                  as UniPath
+import qualified Flowbox.Batch.Project.Project           as Project
+import           Flowbox.Batch.Project.Project             (Project)
+import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
+import           Flowbox.Luna.Network.Def.DefManager       (DefManager)
+import qualified Flowbox.Luna.Network.Def.Definition     as Definition
+import           Flowbox.Luna.Network.Def.Definition       (Definition(..))
+import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
+import qualified Flowbox.Luna.Lib.LibManager             as LibManager
+import           Flowbox.Luna.Lib.LibManager               (LibManager)
+import qualified Flowbox.Luna.Lib.Library                as Library
+import           Flowbox.Luna.Lib.Library                  (Library(..))
+import           Flowbox.Luna.Type.Type                    (Type(..))
+import qualified Flowbox.Luna.Type.Type                  as Type
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue

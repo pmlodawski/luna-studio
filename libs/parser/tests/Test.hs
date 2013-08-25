@@ -7,7 +7,7 @@
 
 module MathSpec where
 
-import Test.Hspec
+import           Test.Hspec   
 
 absolute x = x
 

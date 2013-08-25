@@ -28,8 +28,8 @@ import qualified Flowbox.Luna.Lib.Library              as Library
 import qualified Flowbox.Luna.Builder.Builder          as Builder
 import qualified Flowbox.System.UniPath                as UniPath
 import           Flowbox.System.UniPath                  (UniPath)
-import qualified Flowbox.Luna.Parser.Parser as Parser
-import qualified Flowbox.Luna.Parser.Lexer as Lexer
+import qualified Flowbox.Luna.Parser.Parser            as Parser
+import qualified Flowbox.Luna.Parser.Lexer             as Lexer
 
 
 test :: DefManager.DefManager -> Graph.Vertex -> Module.Module

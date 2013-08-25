@@ -10,9 +10,9 @@ module Flowbox.Luna.Parser.AST.AST where
 
 import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 
-import Debug.Trace
+import           Debug.Trace                        
 
-import Control.Exception
+import           Control.Exception                  
 instance Exception [Char]
 
 

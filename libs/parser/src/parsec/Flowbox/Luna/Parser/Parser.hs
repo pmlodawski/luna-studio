@@ -10,18 +10,15 @@
 
 module Flowbox.Luna.Parser.Parser where
 
-import Control.Applicative
-import Text.Parsec hiding (parse, many, optional, (<|>))
-import qualified Text.Parsec as Parsec
-import qualified Text.Parsec.Expr as Expr
+import           Control.Applicative                
+import           Text.Parsec                      hiding (parse, many, optional, (<|>))
+import qualified Text.Parsec                      as Parsec
+import qualified Text.Parsec.Expr                 as Expr
 
-import           Flowbox.Luna.Parser.Utils
+import           Flowbox.Luna.Parser.Utils          
 import qualified Flowbox.Luna.Parser.Lexer        as L
 import qualified Flowbox.Luna.Parser.AST.AST      as AST
 import qualified Flowbox.Luna.Parser.AST.Constant as Constant
-
-import qualified Text.Show.Pretty as PP
-import System.TimeIt
 
 
 -----------------------------------------------------------
@@ -133,8 +130,8 @@ pIdentAtLast      i = length <$> pCountAtLast i (char ' ')
 pSegments       p i = many $ try $ (pEmptyLines *> pSegment p i)
 
 pSegmentBegin   p i = do
-    j <- many pEmptyLines *> pIdentAtLast i
-    (:) <$> p i <*> pSegments p j
+                        j <- many pEmptyLines *> pIdentAtLast i
+                        (:) <$> p i <*> pSegments p j
 
 pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
@@ -148,15 +145,6 @@ pProgram = try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) <|> (pSegment
 parse input = Parsec.parse pProgram "Luna Parser" input
 
 
-example = unlines [ "#ala"
-                  ]
 
-main = do
-    timeIt main_inner
-
-main_inner = do
-    let out = parse example
-    print out
-    putStrLn $ PP.ppShow $ out
                             
                             

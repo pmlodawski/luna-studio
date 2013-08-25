@@ -10,35 +10,35 @@
 
 module Flowbox.Luna.Parser.Parser where
 
-import Debug.Trace
-import System.TimeIt
+import           Debug.Trace                                
+import           System.TimeIt                              
 
-import Prelude hiding(lex)
-import Data.Char hiding (Space)
-import qualified Text.ParserCombinators.UU as UU
-import           Text.ParserCombinators.UU hiding(parse, (<??>))
-import qualified Text.ParserCombinators.UU.Utils as Utils
+import           Prelude                                  hiding (lex)
+import           Data.Char                                hiding (Space)
+import qualified Text.ParserCombinators.UU                as UU
+import           Text.ParserCombinators.UU                hiding (parse, (<??>))
+import qualified Text.ParserCombinators.UU.Utils          as Utils
 import           Text.ParserCombinators.UU.BasicInstances hiding (Parser)
 --import qualified Data.ListLike as LL
 --import Text.ParserCombinators.UU.Idioms
 --import Text.ParserCombinators.UU.Interleaved
 
 
-import qualified Flowbox.Luna.Parser.Keywords as Keywords
-import qualified Flowbox.Luna.Parser.Lexer as L
-import           Flowbox.Luna.Parser.AST.AST
-import qualified Flowbox.Luna.Parser.AST.Constant as Constant
-import           Flowbox.Luna.Parser.Utils
-import qualified Data.ListLike as LL
+import qualified Flowbox.Luna.Parser.Keywords             as Keywords
+import qualified Flowbox.Luna.Parser.Lexer                as L
+import           Flowbox.Luna.Parser.AST.AST                
+import qualified Flowbox.Luna.Parser.AST.Constant         as Constant
+import           Flowbox.Luna.Parser.Utils                  
+import qualified Data.ListLike                            as LL
 
 
-import Control.Exception
+import           Control.Exception                          
 
-import qualified Text.Show.Pretty as PP
+import qualified Text.Show.Pretty                         as PP
 
 import Flowbox.Luna.Parser.AST.Constant -- only for tests
 
-import Data.Monoid
+import           Data.Monoid                                
 
 ---------- Entities ----------
 

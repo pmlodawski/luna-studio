@@ -7,12 +7,24 @@
 
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
-import           Debug.Trace                             
+import           Debug.Trace                  
 
 import qualified Flowbox.Luna.Parser.Parser as Parser
-import qualified Flowbox.Luna.Parser.Lexer as Lexer
+import qualified Flowbox.Luna.Parser.Lexer  as Lexer
+import qualified Text.Show.Pretty           as PP
+import           System.TimeIt                
 
+
+example :: String
+example = unlines [ "#ala"
+                  ]
 
 main :: IO ()
-main = do 
-    Parser.main
+main = do
+    timeIt main_inner
+
+main_inner :: IO ()
+main_inner = do
+    let out = Parser.parse example
+    print out
+    putStrLn $ PP.ppShow $ out

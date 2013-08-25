@@ -8,8 +8,8 @@
 
 module Flowbox.Luna.Parser.Utils where
 
-import Control.Applicative
-import Text.Parsec hiding (parse, many, optional, (<|>))
+import           Control.Applicative   
+import           Text.Parsec         hiding (parse, many, optional, (<|>))
 
 checkIf f msg p = do
 	obj <- p
@@ -26,8 +26,6 @@ pl <*$> pr = do
     pr n
 
 
-
---p <**> q = (\f g -> g f) <$> p <*> q
 p <??> q = p <**> (q <|> return id)
 p <?*> q = (p <*> q) <|> q
 

@@ -10,17 +10,17 @@
 
 module Flowbox.Luna.Parser.Keywords where
 
-import Prelude hiding(lex)
-import Data.Char hiding (Space)
-import Text.ParserCombinators.UU
-import qualified Text.ParserCombinators.UU.Utils as Utils
-import Text.ParserCombinators.UU.BasicInstances hiding (Parser)
+import           Prelude                                  hiding (lex)
+import           Data.Char                                hiding (Space)
+import           Text.ParserCombinators.UU                  
+import qualified Text.ParserCombinators.UU.Utils          as Utils
+import           Text.ParserCombinators.UU.BasicInstances hiding (Parser)
 --import qualified Data.ListLike as LL
 --import Text.ParserCombinators.UU.Idioms
 --import Text.ParserCombinators.UU.Interleaved
 
 
-import Flowbox.Luna.Parser.Utils
+import           Flowbox.Luna.Parser.Utils                  
 
 pKey keyw   = pToken keyw `micro` 1
 

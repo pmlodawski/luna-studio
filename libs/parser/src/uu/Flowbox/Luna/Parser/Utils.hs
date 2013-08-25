@@ -10,16 +10,16 @@
 
 module Flowbox.Luna.Parser.Utils where
 
-import Prelude hiding(lex)
-import Data.Char hiding (Space)
-import           Text.ParserCombinators.UU hiding(parse, (<??>))
-import qualified Text.ParserCombinators.UU.Utils as Utils
-import Text.ParserCombinators.UU.BasicInstances hiding (Parser)
+import           Prelude                                  hiding (lex)
+import           Data.Char                                hiding (Space)
+import           Text.ParserCombinators.UU                hiding (parse, (<??>))
+import qualified Text.ParserCombinators.UU.Utils          as Utils
+import           Text.ParserCombinators.UU.BasicInstances hiding (Parser)
 --import qualified Data.ListLike as LL
 --import Text.ParserCombinators.UU.Idioms
 --import Text.ParserCombinators.UU.Interleaved
 
-import Debug.Trace
+import           Debug.Trace                                
 
 pSyms []       = pReturn []
 pSyms (x : xs) = (:) <$> pSym x <*> pSyms xs

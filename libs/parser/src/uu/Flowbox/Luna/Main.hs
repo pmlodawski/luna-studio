@@ -7,10 +7,10 @@
 
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
-import           Debug.Trace                             
+import           Debug.Trace                  
 
 import qualified Flowbox.Luna.Parser.Parser as Parser
-import qualified Flowbox.Luna.Parser.Lexer as Lexer
+import qualified Flowbox.Luna.Parser.Lexer  as Lexer
 
 
 main :: IO ()

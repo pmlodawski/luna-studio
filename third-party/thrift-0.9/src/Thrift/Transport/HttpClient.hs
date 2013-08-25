@@ -26,7 +26,7 @@ module Thrift.Transport.HttpClient
 
 import           Thrift.Transport          
 import           Network.URI               
-import Network.HTTP hiding (port, host)
+import           Network.HTTP            hiding (port, host)
 
 import           Control.Monad             (liftM)
 import           Data.Maybe                (fromJust)
