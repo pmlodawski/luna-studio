@@ -41,6 +41,16 @@ spec = do
 
   -------- EXPRESSIONS --------
   describe "expressions" $ do
+    describe "imports" $ do
+      it "single import"                      $ parse ["import Std.Math.Vector"]           `shouldBe` [Import {paths = [Path {segments = ["Std","Math","Vector"]}]}]
+      it "single named import"                $ parse ["import Std.Math.Vector as Vector"] `shouldBe` [Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}}]}]
+      it "multi import"                       $ parse ["import Std.Math.Vector as Vector"
+                                                      ,"       Std.Math.Scalar as Scalar"
+                                                      ]                                    `shouldBe` [Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}},Named {name = "Scalar", item = Path {segments = ["Std","Math","Scalar"]}}]}]
+      it "qualified import"                   $ parse ["from Std.Math import Vector as V"
+                                                      ,"                     Scalar as S"
+                                                      ]                                    `shouldBe` [ImportQualified {path = Path {segments = ["Std","Math"]}, imports = Import {paths = [Named {name = "V", item = Path {segments = ["Vector"]}},Named {name = "S", item = Path {segments = ["Scalar"]}}]}}]
+
     describe "basic" $ do
       it "assignment"                         $ parse ["a=b"]              `shouldBe` [Assignment {src = Identifier "a", dst = Identifier "b"}]
       it "function call"                      $ parse ["a b c"]            `shouldBe` [Call {src = Identifier "a", args = [Identifier "b",Identifier "c"]}]

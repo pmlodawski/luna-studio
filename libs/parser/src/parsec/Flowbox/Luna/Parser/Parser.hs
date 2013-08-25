@@ -58,10 +58,19 @@ pEnt i       = choice [ pIdent
                       , pConstant
                       , pTuple i
                       ]
-             -- <$$> (AST.Typed <$ L.pTypeDecl <*> L.pIdentType)
 
 
 ---------- ExprEnt ----------
+
+pImportPath _     = (AST.Path <$> L.pPath) <??> (AST.Named <$ L.pAs <*> L.pIdent)
+
+pImport i         = (AST.ImportQualified <$ L.pFrom <*> pImportPath i) 
+               <?*> (AST.Import   <$ L.pImport  <*> ((:) <$> pImportPath i) <?*> pImportBlock i)
+
+pImportBlock i    = try(pBlock pImportPath (i+1)) <|> return []
+
+--((:) <$> pImportPath i) <<?*> pBlock pImportPath (i+1))
+-- (liftList (pImportPath i)) -- <<?*> pBlock pImportPath (i+1)
 
 pFunc i        = AST.Function <$  L.pDef 
                               <*> L.pIdentVar 
@@ -76,16 +85,17 @@ pClass i       = AST.Class    <$  L.pClass
                               <*> many L.pIdentTypeVar
                               <*> (try (pExprBlock i) <|> return [])
 
-pExprEnt i     = choice [ pFunc i
-                        , pClass i
+pExprEnt i     = choice [ pImport i
+                        , pFunc   i
+                        , pClass  i
                         , pLambda i
                         ]
 
                                
 
-pExprBlock i        = L.pBlockBegin *> pBlock expr (i+1)
+pExprBlock i        = L.pBlockBegin *> ( pBlock expr (i+1) <|> (liftList $ expr i) )
 
-pBlock p i          = L.eol *> pSegmentBegin p i <|> (liftList $ expr i)
+pBlock p i          = L.eol *> pSegmentBegin p i
 
 
 ---------- Expressions ----------
@@ -141,7 +151,7 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
 
 example = unlines [ ""
-                  , "\"\""
+                  , "import Std.Math.Vector"
 				  ]
 
 pProgram = try([] <$ many(L.eol <* L.pSpaces) <* eof) <|> (pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
@@ -154,8 +164,6 @@ parse input = Parsec.parse pProgram "Luna Parser" input
 
 
 tests = [
-        --, ("Simple Char literals", "'a'"        , [Constant (Char 'a')])
-        --, ("Simple string literals", "\"ala\""  , [Constant (String "ala")])
         --, ("Simple import", "import Std.Math.Vector as Vector", [Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}}]}])
         --, ("Simple from import", "from Std.Math import Vector", [ImportQualified {path = Path {segments = ["Std","Math"]}, imports = Import {paths = [Path {segments = ["Vector"]}]}}])
         --, ("Complex import", 

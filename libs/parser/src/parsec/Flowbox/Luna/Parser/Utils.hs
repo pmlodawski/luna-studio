@@ -24,11 +24,11 @@ pl <*$> pr = do
     n <- pl
     pr n
 
-pl <$$> pr = do 
-    l <- pl
-    r <- pr
-    return $ r l
 
+
+--p <**> q = (\f g -> g f) <$> p <*> q
+p <??> q = p <**> (q <|> return id)
+p <?*> q = (p <*> q) <|> q
 
 
 sepBy2  p sep = (:) <$> p <*> try(sep *> sepBy1 p sep)

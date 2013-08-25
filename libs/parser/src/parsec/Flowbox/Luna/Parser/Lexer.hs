@@ -45,10 +45,13 @@ opLetter     = opStart
 reservedOpNames = ["="]
 
 
+pPath        = sepBy1 pIdent (symbol '.')
+
+
 -----------------------------------------------------------
 -- Keywords
 -----------------------------------------------------------
-reservedNames = ["def", "class", "interface"]
+reservedNames = ["def", "class", "interface", "from", "import", "as"]
 
 -- entities
 pDef        = reserved "def"
