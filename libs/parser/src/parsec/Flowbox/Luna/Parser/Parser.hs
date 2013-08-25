@@ -5,22 +5,15 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE NoMonomorphismRestriction, FlexibleInstances, ScopedTypeVariables, TupleSections #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Flowbox.Luna.Parser.Parser where
 
 import Control.Applicative
-import Data.Char (isSpace)
-import Data.Either.Utils (forceEither)
-import Data.Monoid
-import System.Environment (getArgs)
 import Text.Parsec hiding (parse, many, optional, (<|>))
 import qualified Text.Parsec as Parsec
-import Data.List ( nub, sort )
-import Data.Char ( isAlpha, toLower, toUpper, isSpace, digitToInt )
 import qualified Text.Parsec.Expr as Expr
-import Text.Parsec.Indent
 
 import           Flowbox.Luna.Parser.Utils
 import qualified Flowbox.Luna.Parser.Lexer        as L
@@ -29,10 +22,11 @@ import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 
 import qualified Text.Show.Pretty as PP
 import System.TimeIt
-import Debug.Trace
 
 
----------- Entities ----------
+-----------------------------------------------------------
+-- Entities
+-----------------------------------------------------------
 
 pIdent       = AST.Identifier   <$> L.pIdent
 pIdentVar    = AST.Identifier   <$> L.pIdentVar
@@ -58,7 +52,9 @@ pEnt i       = choice [ pIdent
                       ]
 
 
----------- ExprEnt ----------
+-----------------------------------------------------------
+-- Expression Entities
+-----------------------------------------------------------
 
 pImportPath _     = (AST.Path <$> L.pPath) <??> (AST.Named <$ L.pAs <*> L.pIdent)
 
@@ -67,36 +63,35 @@ pImport i         = (AST.ImportQualified <$ L.pFrom <*> pImportPath i)
 
 pImportBlock i    = try(pBlock pImportPath (i+1)) <|> return []
 
---((:) <$> pImportPath i) <<?*> pBlock pImportPath (i+1))
--- (liftList (pImportPath i)) -- <<?*> pBlock pImportPath (i+1)
 
-pFunc i        = AST.Function <$  L.pDef 
-                              <*> L.pIdentVar 
-                              <*> pTuplePure (expr i)
-                              <*> (try (pExprBlock i) <|> return [])
+pFunc i           = AST.Function <$  L.pDef 
+                                 <*> L.pIdentVar 
+                                 <*> pTuplePure (expr i)
+                                 <*> (try (pExprBlock i) <|> return [])
 
-pLambda i     = AST.Lambda    <$> (pTuplePure (expr i) <|> liftList pIdent)
-                              <*> pExprBlock i
+pLambda i         = AST.Lambda   <$> (pTuplePure (expr i) <|> liftList pIdent)
+                                 <*> pExprBlock i
 
-pClass i       = AST.Class    <$  L.pClass
-                              <*> L.pIdentType 
-                              <*> many L.pIdentTypeVar
-                              <*> (try (pExprBlock i) <|> return [])
+pClass i          = AST.Class    <$  L.pClass
+                                 <*> L.pIdentType 
+                                 <*> many L.pIdentTypeVar
+                                 <*> (try (pExprBlock i) <|> return [])
 
-pExprEnt i     = choice [ pImport i
-                        , pFunc   i
-                        , pClass  i
-                        , pLambda i
-                        ]
-
+pExprEnt i        = choice [ pImport i
+                           , pFunc   i
+                           , pClass  i
+                           , pLambda i
+                           ]
                                
 
-pExprBlock i        = L.pBlockBegin *> ( pBlock expr (i+1) <|> (liftList $ expr i) )
+pExprBlock i      = L.pBlockBegin *> ( pBlock expr (i+1) <|> (liftList $ expr i) )
 
-pBlock p i          = L.eol *> pSegmentBegin p i
+pBlock p i        = L.eol *> pSegmentBegin p i
 
 
----------- Expressions ----------
+-----------------------------------------------------------
+-- Expressions
+-----------------------------------------------------------
 
 expr i   = AST.aftermatch <$> Expr.buildExpressionParser table (term i)
        <?> "expression"
@@ -105,15 +100,9 @@ term i   = choice[ try $ pExprEnt i
                  , try $ L.parensed (expr i)
                  , pEnt i
                  ]
-       
-       -- <|> L.natural
        <?> "simple expression"
 
 table   = [ 
-            --[prefix "-" negate, prefix "+" id ]
-          --, [postfix "++" (+1)]
-          --, [binary "*" (*) Expr.AssocLeft, binary "/" (div) Expr.AssocLeft ]
-          --, [binary "+" (+) Expr.AssocLeft, binary "-" (-)   Expr.AssocLeft ]
             [binary   "."   AST.Accessor            Expr.AssocLeft]
           , [postfixf "::" (AST.Typed <$> L.pIdent)               ]
           , [binary   "*"  (AST.Operator "*")       Expr.AssocLeft]
@@ -128,7 +117,9 @@ postfix  name fun       = Expr.Postfix (L.reservedOp name *> return fun)
 postfixf name fun       = Expr.Postfix (L.reservedOp name *> fun)
 
 
----------- Nested Segments ----------
+-----------------------------------------------------------
+-- Nested Segments
+-----------------------------------------------------------
 
 pEmptyLines         = many1 pEmptyLine
 
@@ -147,7 +138,10 @@ pSegmentBegin   p i = do
 
 pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
----------- Program ----------
+
+-----------------------------------------------------------
+-- Program
+-----------------------------------------------------------
 
 pProgram = try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) <|> (pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
 

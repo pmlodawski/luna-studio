@@ -13,11 +13,11 @@ import qualified Flowbox.Luna.Parser.Parser as Parser
 import Flowbox.Luna.Parser.AST.AST -- for tests
 import Flowbox.Luna.Parser.AST.Constant -- for tests
 
-absolute x = x
 
 main :: IO ()
 main = hspec spec
 
+parse :: [String] -> [Expr]
 parse s = forceEither $ Parser.parse $ unlines s
 
 spec :: Spec

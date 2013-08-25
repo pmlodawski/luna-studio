@@ -10,12 +10,6 @@ module Flowbox.Luna.Parser.AST.AST where
 
 import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 
-import Debug.Trace
-
-import Control.Exception
-instance Exception [Char]
-
-
 data Expr = NOP
           | Import           { paths :: [Expr] }
           | ImportQualified  { path :: Expr, imports :: Expr  }
@@ -40,38 +34,17 @@ data Expr = NOP
           deriving (Show, Eq)
 
 
---callConstructor src' arg' = Call src' [arg']
-
+callConstructor :: Expr -> Expr -> Expr
 callConstructor src' arg' = case src' of
     call @ CallConstructor{} -> call { args = args call ++ [arg'] }
     _             -> CallConstructor src' [arg']
 
 
---callConstructor src' arg' = Call src' [arg']
-
-
---mkFunction :: String -> Expr -> Expr
---mkFunction name' arg  = Function name' [arg]
-
 mkClass :: String -> Expr
 mkClass name' = Class name' [] []
 
---mkImports a = Imports
---mkImports a = trace(show a)Imports 
 
---addSubExprs sub expr = 
---  case expr of
---      f@Function{} -> f {body = sub:body f}
-
-setBody :: [Expr] -> Expr -> Expr
-setBody exprs el = case trace(show exprs)el of
-    Function{} -> el { body = exprs }
-    Class   {} -> el { body = exprs }
-    Import  {} -> el
-    _          -> throw $ "Cannot define body of '" ++ (show el) ++ "'"
-
-
+aftermatch :: Expr -> Expr
 aftermatch x = case x of
-    CallConstructor src args -> Call src args
-    --id@Identifier{} -> Call id []
+    CallConstructor src' args' -> Call src' args'
     _               -> x

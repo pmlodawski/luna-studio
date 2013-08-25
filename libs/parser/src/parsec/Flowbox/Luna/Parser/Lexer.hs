@@ -11,14 +11,9 @@
 module Flowbox.Luna.Parser.Lexer where
 
 import Control.Applicative
-import Data.Char (isSpace)
-import Data.Either.Utils (forceEither)
-import Data.Monoid
-import System.Environment (getArgs)
 import Text.Parsec hiding (many, optional, (<|>))
-import Text.Parsec.Indent
 import Data.List ( nub, sort )
-import Data.Char ( isAlpha, toLower, toUpper, isSpace, digitToInt )
+import Data.Char ( digitToInt )
 
 import Flowbox.Luna.Parser.Utils
 
@@ -31,7 +26,6 @@ commentStart = "#["
 commentEnd   = "#]"
 
 
-
 kDef = reserved "def"
 
 pBlockBegin  = symbol  ':'
@@ -42,7 +36,7 @@ pTypeDecl    = symbols "::"
 
 opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart
-reservedOpNames = ["="]
+reservedOpNames = ["=", "::", ":"]
 
 
 pPath        = sepBy1 pIdent (symbol '.')
@@ -138,6 +132,7 @@ ascii3          = ['\NUL','\SOH','\STX','\ETX','\EOT','\ENQ','\ACK',
                    '\BEL','\DLE','\DC1','\DC2','\DC3','\DC4','\NAK',
                    '\SYN','\ETB','\CAN','\SUB','\ESC','\DEL']
 
+
 -----------------------------------------------------------
 -- Numbers
 -----------------------------------------------------------
@@ -227,6 +222,7 @@ oper = (:) <$> opStart <*> many opLetter <?> "operator"
 
 isReservedOp name = isReserved (sort reservedOpNames) name
 
+
 -----------------------------------------------------------
 -- Identifiers & Reserved words
 -----------------------------------------------------------
@@ -284,17 +280,5 @@ inComment =   try (string commentEnd)            *> return ""
 
 
 eol = (char '\n' <|> (char '\r' >> option '\n' (char '\n'))) >> return ()
-
-
---isSpace' c  =  c == ' '     ||
---               c == '\t'    ||
---               --c == '\n'    ||
---               --c == '\r'    ||
---               c == '\f'    ||
---               c == '\v'    ||
---               c == '\xa0' 
-
-
-
 
 
