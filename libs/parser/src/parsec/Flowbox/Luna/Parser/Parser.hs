@@ -23,8 +23,9 @@ import qualified Text.Parsec.Expr as Expr
 import Text.Parsec.Indent
 
 import           Flowbox.Luna.Parser.Utils
-import qualified Flowbox.Luna.Parser.Lexer   as L
-import qualified Flowbox.Luna.Parser.AST.AST as AST
+import qualified Flowbox.Luna.Parser.Lexer        as L
+import qualified Flowbox.Luna.Parser.AST.AST      as AST
+import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 
 import qualified Text.Show.Pretty as PP
 import System.TimeIt
@@ -37,36 +38,42 @@ import Flowbox.Luna.Parser.AST.Constant -- for tests
 
 ---------- Entities ----------
 
-pIdent      = AST.Identifier   <$> L.identifier
+pIdent       = AST.Identifier   <$> L.identifier
+pInteger     = Constant.Integer <$> L.integerStr
+pConstant    = AST.Constant     <$> choice [ pInteger
+                                           ]
 
 pTupleBody p = sepBy' p L.separator
 pTuplePure p = L.parensed $ pTupleBody p
 
-pTuple i    = Tuple <$> (     try(L.parensed (return () *> optional L.separator) *> pure [])
-                          <|> try(L.parensed (liftList (expr i) <* L.separator))
-                          <|>     L.parensed (sepBy2' (expr i) L.separator)
+pTuple i     = Tuple <$> (     try(L.parensed (return () *> optional L.separator) *> pure [])
+                           <|> try(L.parensed (liftList (expr i) <* L.separator))
+                           <|>     L.parensed (sepBy2' (expr i) L.separator)
+                         )
 
-                        )
-
+pEnt i       = choice [ pIdent
+                      , pConstant
+                      , pTuple i
+                      ]
 
 ----------------------
 
-expr i  = Expr.buildExpressionParser table (term i)
+expr i  = AST.aftermatch <$> Expr.buildExpressionParser table (term i)
       <?> "expression"
 
 term i   =  try(L.parensed (expr i))
-       <|> pTuple i
-       <|> pIdent
+       <|> pEnt i
        <|> pFunc i
        -- <|> L.natural
-      <?> "simple expression"
+       <?> "simple expression"
 
 table   = [ 
             --[prefix "-" negate, prefix "+" id ]
           --, [postfix "++" (+1)]
           --, [binary "*" (*) Expr.AssocLeft, binary "/" (div) Expr.AssocLeft ]
           --, [binary "+" (+) Expr.AssocLeft, binary "-" (-)   Expr.AssocLeft ]
-            [binary "+"  (AST.Operator "+")  Expr.AssocLeft]
+            [binary "*"  (AST.Operator "*")  Expr.AssocLeft]
+          , [binary "+"  (AST.Operator "+")  Expr.AssocLeft]
           , [binary ""   AST.callConstructor Expr.AssocLeft]
           , [binary "="  AST.Assignment      Expr.AssocLeft]
           ]
@@ -87,9 +94,9 @@ pFunc i        = AST.Function <$  L.pDef
                                -- <*>  pSegmentBegin expr 1
                                
 
-pExprBlock i  = L.pBlockBegin *> pBlock expr (i+1)
+pExprBlock i        = L.pBlockBegin *> pBlock expr (i+1)
 
-pBlock p i          = try (L.eol *> pSegmentBegin p i) <|> pure [] 
+pBlock p i          = try (L.eol *> pSegmentBegin p i <|> (liftList $ expr i)) <|> pure [] 
 
 ---------- Nested Segments ----------
 
@@ -112,15 +119,11 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
 
 example = unlines [ ""
-                  , "def f:"
-                  , "  a b"
-                  , "  c"
-                  , "def d:"
-                  , "    d"
+                  , "(a b) c"
 				  ]
 
 --pProgram = (try(pSegmentBegin expr 0) <|> return []) <* many(L.eol *> L.pSpaces)
-pProgram = try([] <$ many(L.eol <* L.pSpaces) <* eof) <|> pSegmentBegin expr 0
+pProgram = try([] <$ many(L.eol <* L.pSpaces) <* eof) <|> (pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
     --
 
 
@@ -228,10 +231,12 @@ main = do
 main_inner = do
     --args <- getArgs
     --input <- if null args then return example else readFile $ head args
-    putStrLn $ PP.ppShow $ parse example
-    putStrLn "\n--- tests ---\n"
-    mapM_ (run True) tests
-    return ()
+    let out = parse example
+    print out
+    putStrLn $ PP.ppShow $ out
+    --putStrLn "\n--- tests ---\n"
+    --mapM_ (run True) tests
+    --return ()
     --putStrLn $ serializeIndentedTree $ forceEither $ parseIndentedTree input
 
 

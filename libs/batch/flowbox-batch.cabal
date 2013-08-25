@@ -31,16 +31,16 @@ Library
         Flowbox.Batch.Batch,
         Flowbox.Batch.GraphView.GraphView,
         Flowbox.Batch.GraphView.EdgeView,
-        Flowbox.Batch.Project.ProjectManager,
-        Flowbox.Batch.Project.Project,
-        Flowbox.Batch.Samples.Modules,
         Flowbox.Batch.Tools.Serialize.Project,
         Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView,
         Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects,
+        Flowbox.Batch.Project.ProjectManager,
+        Flowbox.Batch.Project.Project,
+        Flowbox.Batch.Samples.Modules,
                      
-        Projects_Types,
-        Graphview_Types,
         Graphview_Consts,
+        Graphview_Types,
+        Projects_Types,
         Projects_Consts
 
     Build-Depends:  base,

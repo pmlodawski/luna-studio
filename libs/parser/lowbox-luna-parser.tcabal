@@ -1,9 +1,3 @@
---------------------------------------------------
--- This is a generated cabal configuration file --
--- DO NOT EDIT!                                 --
--- Use gencabal instead                         --
---------------------------------------------------
-
 ---------------------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
@@ -30,12 +24,7 @@ Library
   Extensions:     DoAndIfThenElse,
                   MultiParamTypeClasses
   
-  Exposed-modules: 
-        Flowbox.Luna.Parser.Lexer,
-        Flowbox.Luna.Parser.Utils,
-        Flowbox.Luna.Parser.Parser,
-        Flowbox.Luna.Parser.AST.AST,
-        Flowbox.Luna.Parser.AST.Constant
+  Exposed-modules: `findmodules('src/parsec', '.*\.hs')`
 
   
   Build-Depends:  base,

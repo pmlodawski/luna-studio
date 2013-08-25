@@ -143,6 +143,7 @@ float           = lexeme floating   <?> "float"
 integer         = lexeme int        <?> "integer"
 natural         = lexeme nat        <?> "natural"
 
+integerStr      = lexeme intStr     <?> "integer"
 
 -- floats
 floating        = fractExponent <*$> decimal
@@ -174,6 +175,23 @@ exponent'       = (\f e -> power (f e)) <$ oneOf "eE" <*> sign <*> (decimal <?> 
 
 
 -- integers and naturals
+intStr          = ((:) <$> lexeme signStr <*> natStr) <|> natStr
+
+signStr         =   char '-'
+                <|> char '+'
+
+natStr          = zeroNumberStr <|> decimalStr
+
+zeroNumberStr   = char '0' *> (hexadecimalStr <|> octalStr <|> decimalStr <|> return "") <?> ""
+
+decimalStr      = numberStr digit
+hexadecimalStr  = oneOf "xX" *> numberStr hexDigit
+octalStr        = oneOf "oO" *> numberStr octDigit
+
+numberStr baseDigit = many1 baseDigit
+
+---
+
 int             = ($) <$> lexeme sign <*> nat
 
 sign            =   negate <$ char '-'
@@ -189,7 +207,7 @@ hexadecimal     = oneOf "xX" *> number 16 hexDigit
 octal           = oneOf "oO" *> number 8 octDigit
 
 number base baseDigit = do
-        digits <- many1 baseDigit
+        digits <- numberStr baseDigit
         let n = foldl (\x d -> base*x + toInteger (digitToInt d)) 0 digits
         seq n (return n)
         
