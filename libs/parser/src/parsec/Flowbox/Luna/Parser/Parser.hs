@@ -38,8 +38,12 @@ import Debug.Trace
 
 pIdent       = AST.Identifier   <$> L.pIdent
 pIdentVar    = AST.Identifier   <$> L.pIdentVar
-pInteger     = Constant.Integer <$> L.integerStr
-pConstant    = AST.Constant     <$> choice [ pInteger
+pInt         = Constant.Integer <$> L.integerStr
+pCharLit     = Constant.Char    <$> L.charLiteral
+pStringLit   = Constant.String  <$> L.stringLiteral
+pConstant    = AST.Constant     <$> choice [ pInt
+                                           , pCharLit
+                                           , pStringLit
                                            ]
 
 pTuple i     = AST.Tuple        <$> (     try(L.parensed (return () *> optional L.separator) *> pure [])
@@ -55,6 +59,33 @@ pEnt i       = choice [ pIdent
                       , pTuple i
                       ]
              -- <$$> (AST.Typed <$ L.pTypeDecl <*> L.pIdentType)
+
+
+---------- ExprEnt ----------
+
+pFunc i        = AST.Function <$  L.pDef 
+                              <*> L.pIdentVar 
+                              <*> pTuplePure (expr i)
+                              <*> (try (pExprBlock i) <|> return [])
+
+pLambda i     = AST.Lambda    <$> (pTuplePure (expr i) <|> liftList pIdent)
+                              <*> pExprBlock i
+
+pClass i       = AST.Class    <$  L.pClass
+                              <*> L.pIdentType 
+                              <*> many L.pIdentTypeVar
+                              <*> (try (pExprBlock i) <|> return [])
+
+pExprEnt i     = choice [ pFunc i
+                        , pClass i
+                        , pLambda i
+                        ]
+
+                               
+
+pExprBlock i        = L.pBlockBegin *> pBlock expr (i+1)
+
+pBlock p i          = L.eol *> pSegmentBegin p i <|> (liftList $ expr i)
 
 
 ---------- Expressions ----------
@@ -88,31 +119,6 @@ prefix   name fun       = Expr.Prefix  (L.reservedOp name *> return fun)
 postfix  name fun       = Expr.Postfix (L.reservedOp name *> return fun)
 postfixf name fun       = Expr.Postfix (L.reservedOp name *> fun)
 
----------- ExprEnt ----------
-
-pFunc i        = AST.Function <$  L.pDef 
-                              <*> L.pIdentVar 
-                              <*> pTuplePure (expr i)
-                              <*> (try (pExprBlock i) <|> return [])
-
-pLambda i     = AST.Lambda    <$> (pTuplePure (expr i) <|> liftList pIdent)
-                              <*> pExprBlock i
-
-pClass i       = AST.Class    <$  L.pClass
-                              <*> L.pIdentType 
-                              <*> many L.pIdentTypeVar
-                              <*> (try (pExprBlock i) <|> return [])
-
-pExprEnt i     = choice [ pFunc i
-                        , pClass i
-                        , pLambda i
-                        ]
-
-                               
-
-pExprBlock i        = L.pBlockBegin *> pBlock expr (i+1)
-
-pBlock p i          = L.eol *> pSegmentBegin p i <|> (liftList $ expr i)
 
 ---------- Nested Segments ----------
 
@@ -135,16 +141,13 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
 
 example = unlines [ ""
-                  , "a.catch IOError e:"
-                  , "    print e.message"
+                  , "\"\""
 				  ]
 
---pProgram = (try(pSegmentBegin expr 0) <|> return []) <* many(L.eol *> L.pSpaces)
 pProgram = try([] <$ many(L.eol <* L.pSpaces) <* eof) <|> (pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
     --
 
 
---parse input = runIndent "Luna Parser" $ runParserT pProgram () "" input
 parse input = Parsec.parse pProgram "Luna Parser" input
 
 

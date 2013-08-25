@@ -22,21 +22,24 @@ parse s = forceEither $ Parser.parse $ unlines s
 
 spec :: Spec
 spec = do
-  --------
+  -------- BASIC --------
   describe "basic inputs" $ do
     it "empty file"                           $ parse [""]                 `shouldBe` []
 
-  --------
+  -------- ENTITIES --------
   describe "entities" $ do
     describe "basic" $ do
       it "ident"                              $ parse ["ala"]              `shouldBe` [Identifier "ala"]
+      it "character literal"                  $ parse ["'a'"]              `shouldBe` [Constant (Char 'a')]
+      it "empty string literal"               $ parse ["\"\""]             `shouldBe` [Constant (String "")]
+      it "string literal"                     $ parse ["\"test\""]         `shouldBe` [Constant (String "test")]
     
     describe "tuples" $ do
       it "empty"                              $ parse ["()"]               `shouldBe` [Tuple {items = []}]
       it "single"                             $ parse ["(a,)"]             `shouldBe` [Tuple {items = [Identifier "a"]}]
       it "double"                             $ parse ["(a,b,)"]           `shouldBe` [Tuple {items = [Identifier "a",Identifier "b"]}]
 
-  --------
+  -------- EXPRESSIONS --------
   describe "expressions" $ do
     describe "basic" $ do
       it "assignment"                         $ parse ["a=b"]              `shouldBe` [Assignment {src = Identifier "a", dst = Identifier "b"}]
@@ -69,6 +72,7 @@ spec = do
                                                       ,"    x+1"
                                                       ]                    `shouldBe` [Lambda {signature = [Identifier "x"], body = [Operator {name = "+", src = Identifier "x", dst = Constant (Integer "1")}]}]
 
+  -------- OTHER --------
   describe "other" $ do
     describe "lexing" $ do
       it "whitespaces test"                   $ parse ["class A:\n"
@@ -77,6 +81,7 @@ spec = do
                                                       ,"    def g(y):\n"
                                                       ,"        y"]        `shouldBe` [Class {name = "A", params = [], body = [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]},Function {name = "g", signature = [Identifier "y"], body = [Identifier "y"]}]}]
 
+  -------- EXAMPLES --------
   describe "examples" $ do
     it "exception catch"                      $ parse [""
                                                       ,"a.catch IOError e:"
