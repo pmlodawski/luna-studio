@@ -14,8 +14,9 @@ def main ():
 			with open(path, 'w') as file:
 				file.write(nbody)
 
+
 def clean_imports(src):
-	match = re.compile (r'^import[\t ]*(?P<qualified>qualified)?[\t ]*(?P<path>[^\s]*)[\t ]*(?P<as>as)?[\t ]*(?P<target>[^\s]*|\(.*\))[\t ]*$', re.MULTILINE)
+	match = re.compile (r'^import[\t ]*(?P<qualified>qualified)?[\t ]*(?P<path>[^\s]*)[\t ]*(?P<bind>as|hiding)?[\t ]*(?P<target>[^\s]*|\(.*\))[\t ]*$', re.MULTILINE)
 	matches = [m for m in match.finditer(src)]
 	matches.reverse()
 	paths = [m.group('path') for m in matches]
@@ -25,7 +26,7 @@ def clean_imports(src):
 		qualified = qualified if m.group('qualified') else ' '*len(qualified)
 		path      = m.group('path')
 		path      = path + ' '*(pathmaxlen - len(path)+1)
-		ask       = 'as ' if m.group('as') else '  '
+		ask       = m.group('bind').strip().lstrip()+' ' if m.group('bind') else '  '
 		target    = m.group('target')
 		imp = "import " + qualified + path + ask + target
 		src = src[:m.start()] + imp + src[m.end():]

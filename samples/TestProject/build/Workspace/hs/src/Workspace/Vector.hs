@@ -5,18 +5,18 @@
 module Workspace.Vector where
 
 -- imports
-import Flowbox.Luna.FClasses.U'incx
-import Flowbox.Luna.FClasses.U'init
-import Flowbox.Luna.FClasses.U'select0
-import Flowbox.Luna.FClasses.U'x'getter
-import Flowbox.Luna.FClasses.U'x'setter
-import Flowbox.Luna.FClasses.U'y'getter
-import Flowbox.Luna.FClasses.U'y'setter
-import Flowbox.Luna.FClasses.U'z'getter
-import Flowbox.Luna.FClasses.U'z'setter
-import Flowbox.Luna.Helpers.Core
-import qualified Workspace.Vector.U'incx
-import qualified Workspace.Vector.U'init
+import           Flowbox.Luna.FClasses.U'incx       
+import           Flowbox.Luna.FClasses.U'init       
+import           Flowbox.Luna.FClasses.U'select0    
+import           Flowbox.Luna.FClasses.U'x'getter   
+import           Flowbox.Luna.FClasses.U'x'setter   
+import           Flowbox.Luna.FClasses.U'y'getter   
+import           Flowbox.Luna.FClasses.U'y'setter   
+import           Flowbox.Luna.FClasses.U'z'getter   
+import           Flowbox.Luna.FClasses.U'z'setter   
+import           Flowbox.Luna.Helpers.Core          
+import qualified Workspace.Vector.U'incx            
+import qualified Workspace.Vector.U'init            
 
 -- datatypes
 data Vector a = Vector {x'F :: a, y'F :: a, z'F :: a} deriving (Show)

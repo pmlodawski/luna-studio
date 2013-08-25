@@ -5,10 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.AST.Constant where
+module Flowbox.Luna.Parser.AST.Constant where
 
-import qualified Prelude
-import Prelude (Show)
+import qualified Prelude   
+import           Prelude   (Show, Eq)
 
 data Constant = Integer Prelude.String
-              deriving (Show)
+              | String  Prelude.String
+              | Char    Prelude.Char
+              deriving (Show, Eq)

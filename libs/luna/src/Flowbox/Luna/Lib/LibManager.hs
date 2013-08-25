@@ -15,7 +15,7 @@ module Flowbox.Luna.Lib.LibManager(
 
 import qualified Flowbox.Luna.Tools.Serialize.Lib as LibSerialization
 import qualified Flowbox.Luna.Data.Graph          as DG
-import           Flowbox.Luna.Data.Graph         hiding(Graph, Edge, empty)
+import           Flowbox.Luna.Data.Graph          hiding (Graph, Edge, empty)
 import qualified Flowbox.Luna.Lib.Library         as Library
 import           Flowbox.Luna.Lib.Library           (Library)
 import           Flowbox.Luna.Lib.Edge              (Edge)

@@ -16,7 +16,7 @@ import           Test.HUnit.Tools
 import           System.IO.HVFS                      
 import           System.Directory(createDirectory)   
 #if !(defined(mingw32_HOST_OS) || defined(mingw32_TARGET_OS) || defined(__MINGW32__))
-import System.Posix.Directory hiding (createDirectory)
+import           System.Posix.Directory            hiding (createDirectory)
 import           System.Posix.Files                  
 #endif
 import           Control.Exception                   

@@ -3,14 +3,14 @@
 module Workspace.Vector.U'init where
 
 -- imports
-import Flowbox.Luna.FClasses.U'select0
-import Flowbox.Luna.FClasses.U'select1
-import Flowbox.Luna.FClasses.U'select2
-import Flowbox.Luna.FClasses.U'select3
-import Flowbox.Luna.FClasses.U'x'setter
-import Flowbox.Luna.FClasses.U'y'setter
-import Flowbox.Luna.FClasses.U'z'setter
-import Flowbox.Luna.Helpers.Core
+import           Flowbox.Luna.FClasses.U'select0    
+import           Flowbox.Luna.FClasses.U'select1    
+import           Flowbox.Luna.FClasses.U'select2    
+import           Flowbox.Luna.FClasses.U'select3    
+import           Flowbox.Luna.FClasses.U'x'setter   
+import           Flowbox.Luna.FClasses.U'y'setter   
+import           Flowbox.Luna.FClasses.U'z'setter   
+import           Flowbox.Luna.Helpers.Core          
 
 -- functions
 init' inputs'' = 

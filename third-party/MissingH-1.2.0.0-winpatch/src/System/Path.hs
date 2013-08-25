@@ -37,7 +37,7 @@ import           Data.List.Utils
 import           System.Posix.Files       
 import           System.Posix.Directory   (createDirectory)
 import           System.Posix.Temp        
-import System.Directory hiding (createDirectory)
+import           System.Directory       hiding (createDirectory)
 #else
 import           System.Directory         
 #endif

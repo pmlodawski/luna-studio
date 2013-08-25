@@ -10,20 +10,20 @@
 
 module Flowbox.Luna.Parser.Lexer where
 
-import Prelude hiding(lex)
-import Data.Char hiding (Space)
-import           Text.ParserCombinators.UU hiding(parse, pMany)
-import qualified Text.ParserCombinators.UU.Utils as Utils
-import Text.ParserCombinators.UU.BasicInstances hiding (Parser)
+import           Prelude                                  hiding (lex)
+import           Data.Char                                hiding (Space)
+import           Text.ParserCombinators.UU                hiding (parse)
+import qualified Text.ParserCombinators.UU.Utils          as Utils
+import           Text.ParserCombinators.UU.BasicInstances hiding (Parser)
 --import qualified Data.ListLike as LL
 --import Text.ParserCombinators.UU.Idioms
 --import Text.ParserCombinators.UU.Interleaved
 
 
-import qualified Flowbox.Luna.Parser.Keywords as Keywords
+import qualified Flowbox.Luna.Parser.Keywords             as Keywords
 
 
-import Flowbox.Luna.Parser.Utils
+import           Flowbox.Luna.Parser.Utils                  
 -------------------
 
 
@@ -60,6 +60,15 @@ pParenL'       = pSym '('
 pParenR'       = pSym ')'
 pParens'       = pParenL' <* pParenR'
 pIdent'        = pVarIdent' <|> pTypeIdent'
+pInteger'      = pIntegerStr <?> "Integer"
+pChar'         = pPacked (pSym '\'') (pSym '\'') (pNoneOf "'")
+pString'       = pPacked (pSym '"') (pSym '"') (pMany $ pNoneOf "\"")
+pCommentSingle = pSym '#' *> (pMany $ pNoneOf "\n")
+pCommentMulti  = concat <$ pSyms "#[" <*> pMany (liftList (pNoneOf "#") 
+                                             <|> ((\x y->[x,y]) <$> pSym '#' <*> pNoneOf "][")
+                                             <|> pCommentMulti
+                                          ) <* pSyms "#]"
+pComment       = pCommentSingle -- pCommentMulti <|>
 pVarIdent      = lexeme $ pVarIdent' 
 pTypeClsIdent  = lexeme $ pTypeClsIdent'
 pTypeVarIdent  = lexeme $ pTypeVarIdent'
@@ -68,7 +77,7 @@ pIdent         = lexeme $ pIdent'
 pAssign        = lexeme $ pSym '='
 pTerminator    = lexeme $ pSym ';'
 pBlockBegin    = lexeme $ pSym ':'
-pInteger       = lexeme $ pIntegerStr <?> "Integer"
+pInteger       = lexeme $ pInteger'
 pParenL        = lexeme $ pParenL'
 pParenR        = lexeme $ pParenR'
 pTypeDecl      = pSpaced $ pSyms "::"

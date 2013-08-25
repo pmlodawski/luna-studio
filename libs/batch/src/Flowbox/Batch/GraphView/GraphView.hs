@@ -18,7 +18,7 @@ import           Data.Map                           (Map)
 import qualified Data.Map                         as Map
 import           Flowbox.Batch.GraphView.EdgeView   (EdgeView(..))
 import qualified Flowbox.Luna.Data.Graph          as DG
-import           Flowbox.Luna.Data.Graph                  hiding(Graph, Edge, empty, fromGraph)
+import           Flowbox.Luna.Data.Graph          hiding (Graph, Edge, empty, fromGraph)
 import qualified Flowbox.Luna.Network.Graph.Graph as Graph
 import           Flowbox.Luna.Network.Graph.Graph   (Graph)
 

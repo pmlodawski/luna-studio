@@ -10,16 +10,16 @@
 
 module Flowbox.Luna.Parser.Utils where
 
-import Prelude hiding(lex)
-import Data.Char hiding (Space)
-import           Text.ParserCombinators.UU hiding(parse, pMany, (<??>))
-import qualified Text.ParserCombinators.UU.Utils as Utils
-import Text.ParserCombinators.UU.BasicInstances hiding (Parser)
+import           Prelude                                  hiding (lex)
+import           Data.Char                                hiding (Space)
+import           Text.ParserCombinators.UU                hiding (parse, (<??>))
+import qualified Text.ParserCombinators.UU.Utils          as Utils
+import           Text.ParserCombinators.UU.BasicInstances hiding (Parser)
 --import qualified Data.ListLike as LL
 --import Text.ParserCombinators.UU.Idioms
 --import Text.ParserCombinators.UU.Interleaved
 
-import Debug.Trace
+import           Debug.Trace                                
 
 pSyms []       = pReturn []
 pSyms (x : xs) = (:) <$> pSym x <*> pSyms xs
@@ -38,13 +38,17 @@ pNoneOf sysm = pSatisfy (`notElem` sysm) (Insertion (show t) t 5) where t = '_'
 infixl 4  <??>
 p <??> q = p <**> (q <|> pure id)
 
+pl  <?* pr = (pl <* pr)  <|> (pure empty <* pr)
+pl <<?* pr = (pl <* pr) <<|> (pure empty <* pr)
+
 pl <*? pr = pl <??> (id <$ pr)
 
 pl ?*> pr = (pl *> pr) <<|> pr
 
-pl *?> pr = (pl *> (pr <<|> empty))
+pl *?> pr = (pl *> (pr <<|> pure empty))
 
-pl <?*> pr = (pl <*> pr) <<|> pr
+pl  <?*> pr = (pl <*> pr)  <|> pr
+pl <<?*> pr = (pl <*> pr) <<|> pr
 
 --pSpaces :: Parser String
 pSpaces = pMunch (`elem` " \t") <?> "Whitespace"
@@ -68,12 +72,12 @@ pTrace p   = (\x->trace("pTrace: " ++ show x)x) <$> p
 pSpaces1 = (:) <$> pSymOf " \r\n\t" <*> pSpaces
 
 
-pMany p  = pList_ng p
+pMany' p  = pList_ng p
 pMany1 p = (:) <$> p <*> pMany p
 
 
-pChainL op p = applyAll <$> p <*> pMany (flip <$> op  <*> p)
-pChainProcL proc op p = proc <$> (applyAll <$> p <*> pMany (flip <$> op <*> (proc <$> p)))
+pChainl' op p = applyAll <$> p <*> pMany' (flip <$> op  <*> p)
+--pChainProcL proc op p = proc <$> (applyAll <$> p <*> pMany (flip <$> op <*> (proc <$> p)))
 
 applyAll x (f:fs) = applyAll (f x) fs
 applyAll x []     = x

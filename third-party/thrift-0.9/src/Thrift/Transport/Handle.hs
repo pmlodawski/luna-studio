@@ -27,7 +27,7 @@ module Thrift.Transport.Handle
     , HandleSource(..)
     ) where
 
-import Prelude hiding ( catch )
+import           Prelude              hiding ( catch )
 
 import           Control.Exception      ( catch, throw )
 import           Control.Monad          ()

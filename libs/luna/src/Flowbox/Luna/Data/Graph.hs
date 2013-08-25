@@ -32,7 +32,7 @@ module Flowbox.Luna.Data.Graph (
 import           Data.Functor           ((<$>))
 import           Data.Maybe             (fromJust)
 import qualified Data.Graph.Inductive as DG
-import           Data.Graph.Inductive                       hiding (Node, Graph)
+import           Data.Graph.Inductive hiding (Node, Graph)
 
 
 type Graph a b = DG.Gr a b

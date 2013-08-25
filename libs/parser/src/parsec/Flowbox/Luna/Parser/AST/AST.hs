@@ -6,15 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances #-}
 
-module Flowbox.Luna.AST.AST where
+module Flowbox.Luna.Parser.AST.AST where
 
-import qualified Flowbox.Luna.AST.Constant as Constant
-
-import Debug.Trace
-
-import Control.Exception
-instance Exception [Char]
-
+import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 
 data Expr = NOP
           | Import           { paths :: [Expr] }
@@ -22,7 +16,7 @@ data Expr = NOP
           | Identifier      String 
           | TypeIdentifier  String
           | Constant        Constant.Constant
-          | Assignment      Expr Expr
+          | Assignment      { src :: Expr, dst :: Expr }
           | Tuple           { items :: [Expr] }
           | Function        { name :: String, signature :: [Expr], body :: [Expr]}
           | Lambda          { signature :: [Expr], body :: [Expr] }
@@ -34,43 +28,23 @@ data Expr = NOP
           | Call            { src :: Expr, args :: [Expr] }
           | CallConstructor { src :: Expr, args :: [Expr] }
           | Accessor        { src :: Expr, dst :: Expr }
-          | Operator        { name :: String, srd :: Expr, dst :: Expr }
-          
-          deriving (Show)
+          | Operator        { name :: String, src :: Expr, dst :: Expr }
+          | Comment         String
+
+          deriving (Show, Eq)
 
 
---callConstructor src' arg' = Call src' [arg']
-
+callConstructor :: Expr -> Expr -> Expr
 callConstructor src' arg' = case src' of
     call @ CallConstructor{} -> call { args = args call ++ [arg'] }
     _             -> CallConstructor src' [arg']
 
 
---callConstructor src' arg' = Call src' [arg']
-
-
---mkFunction :: String -> Expr -> Expr
---mkFunction name' signature' = Function name' signature' []
-
 mkClass :: String -> Expr
 mkClass name' = Class name' [] []
 
---mkImports a = Imports
---mkImports a = trace(show a)Imports 
 
---addSubExprs sub expr = 
---  case expr of
---      f@Function{} -> f {body = sub:body f}
-
-setBody :: [Expr] -> Expr -> Expr
-setBody exprs el = case trace(show exprs)el of
-    Function{} -> el { body = exprs }
-    Class   {} -> el { body = exprs }
-    Import  {} -> el
-    _          -> throw $ "Cannot define body of '" ++ (show el) ++ "'"
-
-
+aftermatch :: Expr -> Expr
 aftermatch x = case x of
-    CallConstructor src args -> Call src args
-    --id@Identifier{} -> Call id []
+    CallConstructor src' args' -> Call src' args'
     _               -> x
