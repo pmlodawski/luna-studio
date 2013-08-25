@@ -259,22 +259,18 @@ isReservedName name = isReserved (sort reservedNames) name
 -----------------------------------------------------------
 -- White space & symbols
 -----------------------------------------------------------
-lexeme p    = p <* whiteSpace
---lexeme' p    = p <* whiteSpace'
+lexeme p    = p <* skipMany pSpaces1
 
 symbols name = try $ lexeme (string name)
 symbol  name = lexeme (char name)
 
-whiteSpace  = skipMany (simpleSpace <|> oneLineComment <|> multiLineComment <?> "")
-simpleSpace = many1 (satisfy (`elem` "\t\f\v ")) -- many1 (satisfy isSpace)
-pSpace      = satisfy (`elem` "\t\f\v ")
-pSpaces     = many pSpace
-pSpaces1    = many1 pSpace
+pSpace      = satisfy (`elem` "\t\f\v ") 
+pSpacesBase = many1 pSpace <|> try(multiLineComment) <|> oneLineComment <?> ""
+pSpaces1    = many1 pSpacesBase
+pSpaces     = many  pSpacesBase
 
---whiteSpace'  = skipMany (simpleSpace' <|> oneLineComment <|> multiLineComment <?> "")
---simpleSpace' = many1 (satisfy isSpace')
 
-oneLineComment = try (string commentLine) *> many (satisfy (/= '\n'))
+oneLineComment   = try (string commentLine) *> many (satisfy (/= '\n'))
 
 multiLineComment = try (string commentStart) *> inComment
 

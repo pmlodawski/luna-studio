@@ -32,8 +32,6 @@ import System.TimeIt
 import Debug.Trace
 
 
-
-
 ---------- Entities ----------
 
 pIdent       = AST.Identifier   <$> L.pIdent
@@ -149,86 +147,22 @@ pSegmentBegin   p i = do
 
 pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
+---------- Program ----------
 
-example = unlines [ ""
-                  , "import Std.Math.Vector"
-				  ]
-
-pProgram = try([] <$ many(L.eol <* L.pSpaces) <* eof) <|> (pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
-    --
-
+pProgram = try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) <|> (pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
 
 parse input = Parsec.parse pProgram "Luna Parser" input
 
 
-
-
-tests = [
-        --, ("Simple import", "import Std.Math.Vector as Vector", [Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}}]}])
-        --, ("Simple from import", "from Std.Math import Vector", [ImportQualified {path = Path {segments = ["Std","Math"]}, imports = Import {paths = [Path {segments = ["Vector"]}]}}])
-        --, ("Complex import", 
-        --   "import Std.Math.Vector as Vector\
-        -- \\n       Std.Math.Scalar as Scalar"
-        --                                        ,[Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}},Named {name = "Scalar", item = Path {segments = ["Std","Math","Scalar"]}}]}])
-        --, ("Complex from import", 
-        --   "from Std.Math import Vector\
-        -- \\n                     Scalar"        
-        --                                        ,[ImportQualified {path = Path {segments = ["Std","Math"]}, imports = Import {paths = [Path {segments = ["Vector"]},Path {segments = ["Scalar"]}]}}]
-        --  )
-        --, ("Exception catch", "e:         \
-        --                    \\n    a\n", [])
-        ----, ("test", "a=b;b=c", []) -- currently unimplemented
-        --("Simple comment", "a=b #[c         \
-        --                 \\ndalej komentarz \
-        --                 \\n#[nested comment\
-        --                 \\n#]xx            \
-        --                 \\n#]", [])
-        --("Simple comment2", "###################", [])
-
-        --("Empty input",    "x: y: x+y"                  , [])  
-        --,("Empty input",    "a b"                  , [])  
-        --,("Empty input",    "a+b"                  , [])  
-        ]
-
+example = unlines [ "#ala"
+                  ]
 
 main = do
     timeIt main_inner
 
 main_inner = do
-    --args <- getArgs
-    --input <- if null args then return example else readFile $ head args
     let out = parse example
     print out
     putStrLn $ PP.ppShow $ out
-    --putStrLn "\n--- tests ---\n"
-    --mapM_ (run True) tests
-    --return ()
-    --putStrLn $ serializeIndentedTree $ forceEither $ parseIndentedTree input
-
-
-
-run force (title, inp, exp) = 
-    do 
-        putStr ("=== " ++ title ++ " ===" ++ replicate (30 - length title) ' ')
-        let a =  parse $ unlines inp
-        case a of
-            Right expr -> do 
-                if (expr == exp)
-                    then putStrLn "ok."
-                    else putStrLn $ "FAIL (wrong result)"
-                
-                if (expr /= exp) || force
-                    then do
-                        print_err a
-                        putStrLn $ PP.ppShow a
-                    else return ()
-            Left  e   -> do
-                putStrLn $ "FAIL (parse fail)"
-                print_err a
-
-    where
-        print_err a = do
-            print a
-            putStrLn ""
                             
                             

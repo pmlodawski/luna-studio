@@ -25,6 +25,15 @@ spec = do
   -------- BASIC --------
   describe "basic inputs" $ do
     it "empty file"                           $ parse [""]                 `shouldBe` []
+    it "single comment"                       $ parse ["#comment"]         `shouldBe` []
+    it "one line comment"                     $ parse ["a=1 #comment"]     `shouldBe` [Assignment {src = Identifier "a", dst = Constant (Integer "1")}]
+    it "multiline comment"                    $ parse ["a#[comment\n#]\nb"]`shouldBe` [Identifier "a",Identifier "b"]
+    it "nested comments"                      $ parse ["a #["
+                                                      ,"commented line"
+                                                      ,"#[ nested start"
+                                                      ,"#] nested end"
+                                                      ,"#]"
+                                                      ,"b"]                `shouldBe` [Identifier "a",Identifier "b"]
 
   -------- ENTITIES --------
   describe "entities" $ do
