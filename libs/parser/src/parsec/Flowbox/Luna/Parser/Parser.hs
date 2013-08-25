@@ -36,7 +36,7 @@ import Debug.Trace
 
 ---------- Entities ----------
 
---pIdent       = AST.Identifier   <$> L.identifier
+pIdent       = AST.Identifier   <$> L.pIdent
 pIdentVar    = AST.Identifier   <$> L.pIdentVar
 pInteger     = Constant.Integer <$> L.integerStr
 pConstant    = AST.Constant     <$> choice [ pInteger
@@ -59,12 +59,14 @@ pEnt i       = choice [ pIdentVar
 
 ---------- Expressions ----------
 
-expr i  = AST.aftermatch <$> Expr.buildExpressionParser table (term i)
-      <?> "expression"
+expr i   = AST.aftermatch <$> Expr.buildExpressionParser table (term i)
+       <?> "expression"
 
-term i   =  try(L.parensed (expr i))
-       <|> pEnt i
-       <|> pExprEnt i
+term i   = choice[ try $ pExprEnt i
+                 , try $ L.parensed (expr i)
+                 , pEnt i
+                 ]
+       
        -- <|> L.natural
        <?> "simple expression"
 
@@ -90,22 +92,26 @@ postfixf name fun       = Expr.Postfix (L.reservedOp name *> fun)
 pFunc i        = AST.Function <$  L.pDef 
                               <*> L.pIdentVar 
                               <*> pTuplePure (expr i)
+                              <*> (try (pExprBlock i) <|> return [])
+
+pLambda i     = AST.Lambda    <$> (pTuplePure (expr i) <|> liftList pIdent)
                               <*> pExprBlock i
 
 pClass i       = AST.Class    <$  L.pClass
                               <*> L.pIdentType 
                               <*> many L.pIdentTypeVar
-                              <*> pExprBlock i
+                              <*> (try (pExprBlock i) <|> return [])
 
 pExprEnt i     = choice [ pFunc i
                         , pClass i
+                        , pLambda i
                         ]
 
                                
 
 pExprBlock i        = L.pBlockBegin *> pBlock expr (i+1)
 
-pBlock p i          = try (L.eol *> pSegmentBegin p i <|> (liftList $ expr i)) <|> pure [] 
+pBlock p i          = L.eol *> pSegmentBegin p i <|> (liftList $ expr i)
 
 ---------- Nested Segments ----------
 
@@ -128,11 +134,7 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
 
 example = unlines [ ""
-                  , "class A:"
-                  , "    def f(x):"
-                  , "        x"
-                  , "    def g(y):"
-                  , "        y"
+                  , "x: y: x+y"
 				  ]
 
 --pProgram = (try(pSegmentBegin expr 0) <|> return []) <* many(L.eol *> L.pSpaces)
@@ -147,41 +149,6 @@ parse input = Parsec.parse pProgram "Luna Parser" input
 
 
 tests = [
-        --, ("Class with a function",
-        --      "class A:\
-        --    \\n    def f(x):\
-        --    \\n        x"
-        --                                        , [Class {name = "A", params = [], body = [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]}]}]) 
-        --, ("Testing emptylines 1",
-        --      "class A:\
-        --    \\n \
-        --    \\n\
-        --    \\n    def f(x):\
-        --    \\n \
-        --    \\n\
-        --    \\n        x\n"
-        --                                        , [Class {name = "A", params = [], body = [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]}]}]) 
-        --, ("Simple function call", "f(x,y,z)"   , [Call {src = Identifier "f", args = [Identifier "x",Identifier "y",Identifier "z"]}]) 
-        --, ("Simple operators", "a+b"            , [Operator {name = "+", srd = Identifier "a", dst = Identifier "b"}]) 
-        --, ("test", "f"                          , [Identifier "f"]) 
-        --, ("test", "g h"                        , [Call {src = Identifier "g", args = [Identifier "h"]}]) 
-        --, ("test", "g h()"                      , [Call {src = Identifier "g", args = [Call {src = Identifier "h", args = []}]}]) 
-        --, ("test", "g h ()"                     , [Call {src = Identifier "g", args = [Identifier "h",Tuple {items = []}]}]) 
-        --, ("test", "g(h,i)"                     , [Call {src = Identifier "g", args = [Identifier "h",Identifier "i"]}]) 
-        --, ("test", "g h i"                      , [Call {src = Identifier "g", args = [Identifier "h",Identifier "i"]}]) 
-        --, ("test", "g + 1"                      , [Operator {name = "+", srd = Identifier "g", dst = Constant (Integer "1")}]) 
-        --, ("test", "g(x) h"                     , [Call {src = Call {src = Identifier "g", args = [Identifier "x"]}, args = [Identifier "h"]}]) 
-        --, ("test", "g x h"                      , [Call {src = Identifier "g", args = [Identifier "x",Identifier "h"]}]) 
-
-        --, ("Class with a function",
-        --      "class Vector a:\
-        --    \\n    x :: a     \
-        --    \\n    y :: a     \
-        --    \\n    z :: a     \
-        --    \\n    def length(self):  \
-        --    \\n        self.x^2 + self.y^2 + self.z^2\n"
-        --                                        , [Class {name = "Vector", params = ["a"], body = [Typed "a" (Identifier "x"),Typed "a" (Identifier "y"),Typed "a" (Identifier "z"),Function {name = "length", signature = [Identifier "self"], body = [Operator {name = "+", srd = Operator {name = "+", srd = Operator {name = "^", srd = Accessor {src = Identifier "self", dst = Identifier "x"}, dst = Constant (Integer "2")}, dst = Operator {name = "^", srd = Accessor {src = Identifier "self", dst = Identifier "y"}, dst = Constant (Integer "2")}}, dst = Operator {name = "^", srd = Accessor {src = Identifier "self", dst = Identifier "z"}, dst = Constant (Integer "2")}}]}]}]) 
-
         ----, ("Simple lambda", "x:x+1")
         ----, ("Double lambda", "x: y:x+y")
 

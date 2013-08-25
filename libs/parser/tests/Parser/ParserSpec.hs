@@ -43,15 +43,15 @@ spec = do
       it "function call"                      $ parse ["a b c"]            `shouldBe` [Call {src = Identifier "a", args = [Identifier "b",Identifier "c"]}]
 
     describe "functions" $ do
-      it "empty"                              $ parse ["def f():"]         `shouldBe` [Function {name = "f", signature = [], body = []}]
-      it "empty with signature"               $ parse ["def f(x,y,z):"]    `shouldBe` [Function {name = "f", signature = [Identifier "x",Identifier "y",Identifier "z"], body = []}]
+      it "empty"                              $ parse ["def f()"]          `shouldBe` [Function {name = "f", signature = [], body = []}]
+      it "empty with signature"               $ parse ["def f(x,y,z)"]     `shouldBe` [Function {name = "f", signature = [Identifier "x",Identifier "y",Identifier "z"], body = []}]
       it "simple"                             $ parse ["def f(x):x"]       `shouldBe` [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]}]
       it "multiline"                          $ parse ["def f(x):"
                                                       ,"    x+1"
                                                       ]                    `shouldBe` [Function {name = "f", signature = [Identifier "x"], body = [Operator {name = "+", src = Identifier "x", dst = Constant (Integer "1")}]}]
     describe "classes" $ do
-      it "empty"                              $ parse ["class C:"]         `shouldBe` [Class {name = "C", params = [], body = []}]
-      it "empty with type variables"          $ parse ["class C a b c:"]   `shouldBe` [Class {name = "C", params = ["a","b","c"], body = []}]
+      it "empty"                              $ parse ["class C"]          `shouldBe` [Class {name = "C", params = [], body = []}]
+      it "empty with type variables"          $ parse ["class C a b c"]    `shouldBe` [Class {name = "C", params = ["a","b","c"], body = []}]
       it "simple"                             $ parse ["class C:"
                                                       ,"    i::Int"]       `shouldBe` [Class {name = "C", params = [], body = [Typed "Int" (Identifier "i")]}]
       it "double function"                    $ parse ["class A:"
@@ -60,6 +60,13 @@ spec = do
                                                       ,"    def g(y):"
                                                       ,"        y"]        `shouldBe` [Class {name = "A", params = [], body = [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]},Function {name = "g", signature = [Identifier "y"], body = [Identifier "y"]}]}]
 
+    describe "lambdas" $ do
+      it "empty"                              $ parse ["():()"]            `shouldBe` [Lambda {signature = [], body = [Tuple {items = []}]}]
+      it "simple"                             $ parse ["x:x"]              `shouldBe` [Lambda {signature = [Identifier "x"], body = [Identifier "x"]}]
+      it "nested"                             $ parse ["x: y: x+y"]        `shouldBe` [Lambda {signature = [Identifier "x"], body = [Lambda {signature = [Identifier "y"], body = [Operator {name = "+", src = Identifier "x", dst = Identifier "y"}]}]}]
+      it "multiline"                          $ parse ["x:"
+                                                      ,"    x+1"
+                                                      ]                    `shouldBe` [Lambda {signature = [Identifier "x"], body = [Operator {name = "+", src = Identifier "x", dst = Constant (Integer "1")}]}]
 
   describe "other" $ do
     describe "lexing" $ do
