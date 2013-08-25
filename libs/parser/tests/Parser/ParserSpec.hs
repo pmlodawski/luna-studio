@@ -41,6 +41,7 @@ spec = do
     describe "basic" $ do
       it "assignment"                         $ parse ["a=b"]              `shouldBe` [Assignment {src = Identifier "a", dst = Identifier "b"}]
       it "function call"                      $ parse ["a b c"]            `shouldBe` [Call {src = Identifier "a", args = [Identifier "b",Identifier "c"]}]
+      it "accessors"                          $ parse ["a.b.c"]            `shouldBe` [Accessor {src = Accessor {src = Identifier "a", dst = Identifier "b"}, dst = Identifier "c"}]
 
     describe "functions" $ do
       it "empty"                              $ parse ["def f()"]          `shouldBe` [Function {name = "f", signature = [], body = []}]
@@ -76,5 +77,9 @@ spec = do
                                                       ,"    def g(y):\n"
                                                       ,"        y"]        `shouldBe` [Class {name = "A", params = [], body = [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]},Function {name = "g", signature = [Identifier "y"], body = [Identifier "y"]}]}]
 
-
+  describe "examples" $ do
+    it "exception catch"                      $ parse [""
+                                                      ,"a.catch IOError e:"
+                                                      ,"    print e.message"
+                                                      ]                    `shouldBe` [Call {src = Accessor {src = Identifier "a", dst = Identifier "catch"}, args = [Identifier "IOError",Lambda {signature = [Identifier "e"], body = [Call {src = Identifier "print", args = [Accessor {src = Identifier "e", dst = Identifier "message"}]}]}]}]
 

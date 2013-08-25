@@ -50,7 +50,7 @@ pTuple i     = AST.Tuple        <$> (     try(L.parensed (return () *> optional 
 pTupleBody p = sepBy' p L.separator
 pTuplePure p = L.parensed $ pTupleBody p
 
-pEnt i       = choice [ pIdentVar
+pEnt i       = choice [ pIdent
                       , pConstant
                       , pTuple i
                       ]
@@ -75,11 +75,12 @@ table   = [
           --, [postfix "++" (+1)]
           --, [binary "*" (*) Expr.AssocLeft, binary "/" (div) Expr.AssocLeft ]
           --, [binary "+" (+) Expr.AssocLeft, binary "-" (-)   Expr.AssocLeft ]
-            [postfixf "::" (AST.Typed <$> L.pIdent)]
-          , [binary   "*"  (AST.Operator "*")  Expr.AssocLeft]
-          , [binary   "+"  (AST.Operator "+")  Expr.AssocLeft]
-          , [binary   ""   AST.callConstructor Expr.AssocLeft]
-          , [binary   "="  AST.Assignment      Expr.AssocLeft]
+            [binary   "."   AST.Accessor            Expr.AssocLeft]
+          , [postfixf "::" (AST.Typed <$> L.pIdent)               ]
+          , [binary   "*"  (AST.Operator "*")       Expr.AssocLeft]
+          , [binary   "+"  (AST.Operator "+")       Expr.AssocLeft]
+          , [binary   ""    AST.callConstructor     Expr.AssocLeft]
+          , [binary   "="   AST.Assignment          Expr.AssocLeft]
           ]
       
 binary   name fun assoc = Expr.Infix   (L.reservedOp name *> return fun) assoc
@@ -134,7 +135,8 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
 
 example = unlines [ ""
-                  , "x: y: x+y"
+                  , "a.catch IOError e:"
+                  , "    print e.message"
 				  ]
 
 --pProgram = (try(pSegmentBegin expr 0) <|> return []) <* many(L.eol *> L.pSpaces)
@@ -149,13 +151,6 @@ parse input = Parsec.parse pProgram "Luna Parser" input
 
 
 tests = [
-        ----, ("Simple lambda", "x:x+1")
-        ----, ("Double lambda", "x: y:x+y")
-
-        --, ("Exception catch", "a.catch e:         \
-        --                    \\n    print 1        \
-        --                    \\n    print e.message"
-        --                                        , [Call {src = Accessor {src = Identifier "a", dst = Identifier "catch"}, args = [Lambda {signature = [Identifier "e"], body = [Call {src = Identifier "print", args = [Constant (Integer "1")]},Call {src = Identifier "print", args = [Accessor {src = Identifier "e", dst = Identifier "message"}]}]}]}]) 
         --, ("Simple Char literals", "'a'"        , [Constant (Char 'a')])
         --, ("Simple string literals", "\"ala\""  , [Constant (String "ala")])
         --, ("Simple import", "import Std.Math.Vector as Vector", [Import {paths = [Named {name = "Vector", item = Path {segments = ["Std","Math","Vector"]}}]}])
