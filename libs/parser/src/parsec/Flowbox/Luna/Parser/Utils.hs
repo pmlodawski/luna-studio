@@ -16,13 +16,20 @@ checkIf f msg p = do
 		then unexpected (msg ++ show obj)
 		else return obj
 
-pl <*$> pr = do 
+pl <$*> pr = do 
     n <- pr
     pl n
 
-pl <$*> pr = do 
+pl <*$> pr = do 
     n <- pl
     pr n
+
+pl <$$> pr = do 
+    l <- pl
+    r <- pr
+    return $ r l
+
+
 
 sepBy2  p sep = (:) <$> p <*> try(sep *> sepBy1 p sep)
 

@@ -30,40 +30,41 @@ import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 import qualified Text.Show.Pretty as PP
 import System.TimeIt
 import Debug.Trace
-import Flowbox.Luna.Parser.AST.AST -- for tests
-import Flowbox.Luna.Parser.AST.Constant -- for tests
 
 
 
 
 ---------- Entities ----------
 
-pIdent       = AST.Identifier   <$> L.identifier
+--pIdent       = AST.Identifier   <$> L.identifier
+pIdentVar    = AST.Identifier   <$> L.pIdentVar
 pInteger     = Constant.Integer <$> L.integerStr
 pConstant    = AST.Constant     <$> choice [ pInteger
                                            ]
 
+pTuple i     = AST.Tuple        <$> (     try(L.parensed (return () *> optional L.separator) *> pure [])
+                                      <|> try(L.parensed (liftList (expr i) <* L.separator))
+                                      <|>     L.parensed (sepBy2' (expr i) L.separator)
+                                    )
+
 pTupleBody p = sepBy' p L.separator
 pTuplePure p = L.parensed $ pTupleBody p
 
-pTuple i     = Tuple <$> (     try(L.parensed (return () *> optional L.separator) *> pure [])
-                           <|> try(L.parensed (liftList (expr i) <* L.separator))
-                           <|>     L.parensed (sepBy2' (expr i) L.separator)
-                         )
-
-pEnt i       = choice [ pIdent
+pEnt i       = choice [ pIdentVar
                       , pConstant
                       , pTuple i
                       ]
+             -- <$$> (AST.Typed <$ L.pTypeDecl <*> L.pIdentType)
 
-----------------------
+
+---------- Expressions ----------
 
 expr i  = AST.aftermatch <$> Expr.buildExpressionParser table (term i)
       <?> "expression"
 
 term i   =  try(L.parensed (expr i))
        <|> pEnt i
-       <|> pFunc i
+       <|> pExprEnt i
        -- <|> L.natural
        <?> "simple expression"
 
@@ -72,26 +73,34 @@ table   = [
           --, [postfix "++" (+1)]
           --, [binary "*" (*) Expr.AssocLeft, binary "/" (div) Expr.AssocLeft ]
           --, [binary "+" (+) Expr.AssocLeft, binary "-" (-)   Expr.AssocLeft ]
-            [binary "*"  (AST.Operator "*")  Expr.AssocLeft]
-          , [binary "+"  (AST.Operator "+")  Expr.AssocLeft]
-          , [binary ""   AST.callConstructor Expr.AssocLeft]
-          , [binary "="  AST.Assignment      Expr.AssocLeft]
+            [postfixf "::" (AST.Typed <$> L.pIdent)]
+          , [binary   "*"  (AST.Operator "*")  Expr.AssocLeft]
+          , [binary   "+"  (AST.Operator "+")  Expr.AssocLeft]
+          , [binary   ""   AST.callConstructor Expr.AssocLeft]
+          , [binary   "="  AST.Assignment      Expr.AssocLeft]
           ]
       
-binary  name fun assoc = Expr.Infix   (L.reservedOp name *> return fun) assoc
-prefix  name fun       = Expr.Prefix  (L.reservedOp name *> return fun)
-postfix name fun       = Expr.Postfix (L.reservedOp name *> return fun)
+binary   name fun assoc = Expr.Infix   (L.reservedOp name *> return fun) assoc
+prefix   name fun       = Expr.Prefix  (L.reservedOp name *> return fun)
+postfix  name fun       = Expr.Postfix (L.reservedOp name *> return fun)
+postfixf name fun       = Expr.Postfix (L.reservedOp name *> fun)
 
----------- Expressions ----------
+---------- ExprEnt ----------
 
 pFunc i        = AST.Function <$  L.pDef 
-                               <*> L.identifier 
-                               <*> pTuplePure (expr i)
-                               <*> pExprBlock i
+                              <*> L.pIdentVar 
+                              <*> pTuplePure (expr i)
+                              <*> pExprBlock i
 
-                               -- <*  L.pBlockBegin
-                               -- <*  L.eol
-                               -- <*>  pSegmentBegin expr 1
+pClass i       = AST.Class    <$  L.pClass
+                              <*> L.pIdentType 
+                              <*> many L.pIdentTypeVar
+                              <*> pExprBlock i
+
+pExprEnt i     = choice [ pFunc i
+                        , pClass i
+                        ]
+
                                
 
 pExprBlock i        = L.pBlockBegin *> pBlock expr (i+1)
@@ -119,7 +128,11 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
 
 example = unlines [ ""
-                  , "(a b) c"
+                  , "class A:"
+                  , "    def f(x):"
+                  , "        x"
+                  , "    def g(y):"
+                  , "        y"
 				  ]
 
 --pProgram = (try(pSegmentBegin expr 0) <|> return []) <* many(L.eol *> L.pSpaces)
@@ -134,26 +147,6 @@ parse input = Parsec.parse pProgram "Luna Parser" input
 
 
 tests = [
-          ("Empty input",    [""]                 , [])
-        , ("Single ident",   ["ala"]              , [Identifier "ala"])
-        , ("Simple tuple",   ["(a,b,)"]           , [Tuple {items = [Identifier "a",Identifier "b"]}])
-        , ("Empty function", ["def f():"]         , [Function {name = "f", signature = [], body = []}]) 
-        --, ("Simple function",["def f(x=0):x"]   , [Function {name = "f", signature = [Assignment (Identifier "x") (Constant (Integer "0"))], body = [Identifier "x"]}]) 
-        --, ("Multiline function",
-        --      "def f(x):\
-        --    \\n    x()\
-        --    \\n    y()\
-        --    \\n"
-        --                                        , [Function {name = "f", signature = [Identifier "x"], body = [Call {src = Identifier "x", args = []},Call {src = Identifier "y", args = []}]}]) 
-        --, ("Multiple simple functions",
-        --      "def f(x):x\
-        --    \\ndef g(y):y"
-        --                                        , [Function {name = "f", signature = [Identifier "x"], body = [Identifier "x"]},Function {name = "g", signature = [Identifier "y"], body = [Identifier "y"]}]) 
-        --, ("Empty class", "class A:"            , [Class {name = "A", params = [], body = []}]) 
-        --, ("Simple class",
-        --      "class A:\
-        --    \\n    i::Int"
-        --                                        , [Class {name = "A", params = [], body = [Typed "Int" (Identifier "i")]}]) 
         --, ("Class with a function",
         --      "class A:\
         --    \\n    def f(x):\

@@ -34,10 +34,11 @@ commentEnd   = "#]"
 
 kDef = reserved "def"
 
-pBlockBegin  = symbol ':'
-separator    = symbol ','
-parenL       = symbol '('
-parenR       = symbol ')'
+pBlockBegin  = symbol  ':'
+separator    = symbol  ','
+parenL       = symbol  '('
+parenR       = symbol  ')'
+pTypeDecl    = symbols "::"
 
 opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart
@@ -146,18 +147,18 @@ natural         = lexeme nat        <?> "natural"
 integerStr      = lexeme intStr     <?> "integer"
 
 -- floats
-floating        = fractExponent <*$> decimal
+floating        = fractExponent <$*> decimal
 
 natFloat        =   char '0' *> zeroNumFloat
                 <|> decimalFloat
 
 
-zeroNumFloat    =   (\n -> return $ Left n) <*$> (hexadecimal <|> octal)
+zeroNumFloat    =   (\n -> return $ Left n) <$*> (hexadecimal <|> octal)
                 <|> decimalFloat
                 <|> fractFloat 0
                 <|> return (Left 0)
 
-decimalFloat    = (\n -> option (Left n) (fractFloat n)) <*$> decimal
+decimalFloat    = (\n -> option (Left n) (fractFloat n)) <$*> decimal
 
 fractFloat n    = Right <$> fractExponent n
 
@@ -228,9 +229,17 @@ isReservedOp name = isReserved (sort reservedOpNames) name
 -----------------------------------------------------------
 reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
 
-identifier = lexeme $ try $ checkIf isReservedName "reserved word " ident
+pIdentVar     = pIdentLower
+pIdentType    = pIdentUpper
+pIdentTypeVar = pIdentLower
 
-ident = (:) <$> identStart <*> many identLetter <?> "identifier"
+pIdent        = pIdentLower <|> pIdentUpper <?> "identifier"
+
+pIdentUpper   = mkIdent ((:) <$> upper <*> many identLetter) <?> "uppercase identifier"
+
+pIdentLower   = mkIdent ((:) <$> lower <*> many identLetter) <?> "lowercase identifier"
+
+mkIdent p     = lexeme $ try $ checkIf isReservedName "reserved word " p
 
 isReserved names name
     = scan names
@@ -250,7 +259,7 @@ isReservedName name = isReserved (sort reservedNames) name
 lexeme p    = p <* whiteSpace
 --lexeme' p    = p <* whiteSpace'
 
-symbols name = lexeme (string name)
+symbols name = try $ lexeme (string name)
 symbol  name = lexeme (char name)
 
 whiteSpace  = skipMany (simpleSpace <|> oneLineComment <|> multiLineComment <?> "")
