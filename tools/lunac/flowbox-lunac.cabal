@@ -34,4 +34,6 @@ Executable lunac
                   text,
                   thrift,
                   unordered-containers,
-                  vector
+                  vector,
+                  optparse-applicative,
+                  hslogger
