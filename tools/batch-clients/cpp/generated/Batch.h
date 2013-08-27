@@ -49,6 +49,13 @@ class BatchIf {
   virtual void removeNode(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) = 0;
   virtual void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) = 0;
   virtual void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) = 0;
+  virtual void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path) = 0;
+  virtual void FS_stat( ::flowbox::batch::fs::FSItem& _return, const std::string& path) = 0;
+  virtual void FS_mkdir(const std::string& path) = 0;
+  virtual void FS_touch(const std::string& path) = 0;
+  virtual void FS_rm(const std::string& path) = 0;
+  virtual void FS_cp(const std::string& src, const std::string& dst) = 0;
+  virtual void FS_mv(const std::string& src, const std::string& dst) = 0;
   virtual void ping() = 0;
   virtual void dump() = 0;
 };
@@ -180,6 +187,27 @@ class BatchNull : virtual public BatchIf {
     return;
   }
   void disconnect(const  ::flowbox::batch::graph::NodeID /* srcNodeID */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::NodeID /* dstNodeID */, const int32_t /* dstPort */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */) {
+    return;
+  }
+  void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & /* _return */, const std::string& /* path */) {
+    return;
+  }
+  void FS_stat( ::flowbox::batch::fs::FSItem& /* _return */, const std::string& /* path */) {
+    return;
+  }
+  void FS_mkdir(const std::string& /* path */) {
+    return;
+  }
+  void FS_touch(const std::string& /* path */) {
+    return;
+  }
+  void FS_rm(const std::string& /* path */) {
+    return;
+  }
+  void FS_cp(const std::string& /* src */, const std::string& /* dst */) {
+    return;
+  }
+  void FS_mv(const std::string& /* src */, const std::string& /* dst */) {
     return;
   }
   void ping() {
@@ -4258,6 +4286,800 @@ class Batch_disconnect_presult {
 
 };
 
+typedef struct _Batch_FS_ls_args__isset {
+  _Batch_FS_ls_args__isset() : path(false) {}
+  bool path;
+} _Batch_FS_ls_args__isset;
+
+class Batch_FS_ls_args {
+ public:
+
+  Batch_FS_ls_args() : path() {
+  }
+
+  virtual ~Batch_FS_ls_args() throw() {}
+
+  std::string path;
+
+  _Batch_FS_ls_args__isset __isset;
+
+  void __set_path(const std::string& val) {
+    path = val;
+  }
+
+  bool operator == (const Batch_FS_ls_args & rhs) const
+  {
+    if (!(path == rhs.path))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_ls_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_ls_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_FS_ls_pargs {
+ public:
+
+
+  virtual ~Batch_FS_ls_pargs() throw() {}
+
+  const std::string* path;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_ls_result__isset {
+  _Batch_FS_ls_result__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_FS_ls_result__isset;
+
+class Batch_FS_ls_result {
+ public:
+
+  Batch_FS_ls_result() {
+  }
+
+  virtual ~Batch_FS_ls_result() throw() {}
+
+  std::vector< ::flowbox::batch::fs::FSItem>  success;
+  ArgumentException missingFields;
+
+  _Batch_FS_ls_result__isset __isset;
+
+  void __set_success(const std::vector< ::flowbox::batch::fs::FSItem> & val) {
+    success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_ls_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_ls_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_ls_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_ls_presult__isset {
+  _Batch_FS_ls_presult__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_FS_ls_presult__isset;
+
+class Batch_FS_ls_presult {
+ public:
+
+
+  virtual ~Batch_FS_ls_presult() throw() {}
+
+  std::vector< ::flowbox::batch::fs::FSItem> * success;
+  ArgumentException missingFields;
+
+  _Batch_FS_ls_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_FS_stat_args__isset {
+  _Batch_FS_stat_args__isset() : path(false) {}
+  bool path;
+} _Batch_FS_stat_args__isset;
+
+class Batch_FS_stat_args {
+ public:
+
+  Batch_FS_stat_args() : path() {
+  }
+
+  virtual ~Batch_FS_stat_args() throw() {}
+
+  std::string path;
+
+  _Batch_FS_stat_args__isset __isset;
+
+  void __set_path(const std::string& val) {
+    path = val;
+  }
+
+  bool operator == (const Batch_FS_stat_args & rhs) const
+  {
+    if (!(path == rhs.path))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_stat_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_stat_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_FS_stat_pargs {
+ public:
+
+
+  virtual ~Batch_FS_stat_pargs() throw() {}
+
+  const std::string* path;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_stat_result__isset {
+  _Batch_FS_stat_result__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_FS_stat_result__isset;
+
+class Batch_FS_stat_result {
+ public:
+
+  Batch_FS_stat_result() {
+  }
+
+  virtual ~Batch_FS_stat_result() throw() {}
+
+   ::flowbox::batch::fs::FSItem success;
+  ArgumentException missingFields;
+
+  _Batch_FS_stat_result__isset __isset;
+
+  void __set_success(const  ::flowbox::batch::fs::FSItem& val) {
+    success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_stat_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_stat_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_stat_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_stat_presult__isset {
+  _Batch_FS_stat_presult__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_FS_stat_presult__isset;
+
+class Batch_FS_stat_presult {
+ public:
+
+
+  virtual ~Batch_FS_stat_presult() throw() {}
+
+   ::flowbox::batch::fs::FSItem* success;
+  ArgumentException missingFields;
+
+  _Batch_FS_stat_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_FS_mkdir_args__isset {
+  _Batch_FS_mkdir_args__isset() : path(false) {}
+  bool path;
+} _Batch_FS_mkdir_args__isset;
+
+class Batch_FS_mkdir_args {
+ public:
+
+  Batch_FS_mkdir_args() : path() {
+  }
+
+  virtual ~Batch_FS_mkdir_args() throw() {}
+
+  std::string path;
+
+  _Batch_FS_mkdir_args__isset __isset;
+
+  void __set_path(const std::string& val) {
+    path = val;
+  }
+
+  bool operator == (const Batch_FS_mkdir_args & rhs) const
+  {
+    if (!(path == rhs.path))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_mkdir_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_mkdir_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_FS_mkdir_pargs {
+ public:
+
+
+  virtual ~Batch_FS_mkdir_pargs() throw() {}
+
+  const std::string* path;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_mkdir_result__isset {
+  _Batch_FS_mkdir_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_mkdir_result__isset;
+
+class Batch_FS_mkdir_result {
+ public:
+
+  Batch_FS_mkdir_result() {
+  }
+
+  virtual ~Batch_FS_mkdir_result() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_FS_mkdir_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_mkdir_result & rhs) const
+  {
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_mkdir_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_mkdir_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_mkdir_presult__isset {
+  _Batch_FS_mkdir_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_mkdir_presult__isset;
+
+class Batch_FS_mkdir_presult {
+ public:
+
+
+  virtual ~Batch_FS_mkdir_presult() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_FS_mkdir_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_FS_touch_args__isset {
+  _Batch_FS_touch_args__isset() : path(false) {}
+  bool path;
+} _Batch_FS_touch_args__isset;
+
+class Batch_FS_touch_args {
+ public:
+
+  Batch_FS_touch_args() : path() {
+  }
+
+  virtual ~Batch_FS_touch_args() throw() {}
+
+  std::string path;
+
+  _Batch_FS_touch_args__isset __isset;
+
+  void __set_path(const std::string& val) {
+    path = val;
+  }
+
+  bool operator == (const Batch_FS_touch_args & rhs) const
+  {
+    if (!(path == rhs.path))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_touch_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_touch_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_FS_touch_pargs {
+ public:
+
+
+  virtual ~Batch_FS_touch_pargs() throw() {}
+
+  const std::string* path;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_touch_result__isset {
+  _Batch_FS_touch_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_touch_result__isset;
+
+class Batch_FS_touch_result {
+ public:
+
+  Batch_FS_touch_result() {
+  }
+
+  virtual ~Batch_FS_touch_result() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_FS_touch_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_touch_result & rhs) const
+  {
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_touch_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_touch_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_touch_presult__isset {
+  _Batch_FS_touch_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_touch_presult__isset;
+
+class Batch_FS_touch_presult {
+ public:
+
+
+  virtual ~Batch_FS_touch_presult() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_FS_touch_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_FS_rm_args__isset {
+  _Batch_FS_rm_args__isset() : path(false) {}
+  bool path;
+} _Batch_FS_rm_args__isset;
+
+class Batch_FS_rm_args {
+ public:
+
+  Batch_FS_rm_args() : path() {
+  }
+
+  virtual ~Batch_FS_rm_args() throw() {}
+
+  std::string path;
+
+  _Batch_FS_rm_args__isset __isset;
+
+  void __set_path(const std::string& val) {
+    path = val;
+  }
+
+  bool operator == (const Batch_FS_rm_args & rhs) const
+  {
+    if (!(path == rhs.path))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_rm_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_rm_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_FS_rm_pargs {
+ public:
+
+
+  virtual ~Batch_FS_rm_pargs() throw() {}
+
+  const std::string* path;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_rm_result__isset {
+  _Batch_FS_rm_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_rm_result__isset;
+
+class Batch_FS_rm_result {
+ public:
+
+  Batch_FS_rm_result() {
+  }
+
+  virtual ~Batch_FS_rm_result() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_FS_rm_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_rm_result & rhs) const
+  {
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_rm_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_rm_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_rm_presult__isset {
+  _Batch_FS_rm_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_rm_presult__isset;
+
+class Batch_FS_rm_presult {
+ public:
+
+
+  virtual ~Batch_FS_rm_presult() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_FS_rm_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_FS_cp_args__isset {
+  _Batch_FS_cp_args__isset() : src(false), dst(false) {}
+  bool src;
+  bool dst;
+} _Batch_FS_cp_args__isset;
+
+class Batch_FS_cp_args {
+ public:
+
+  Batch_FS_cp_args() : src(), dst() {
+  }
+
+  virtual ~Batch_FS_cp_args() throw() {}
+
+  std::string src;
+  std::string dst;
+
+  _Batch_FS_cp_args__isset __isset;
+
+  void __set_src(const std::string& val) {
+    src = val;
+  }
+
+  void __set_dst(const std::string& val) {
+    dst = val;
+  }
+
+  bool operator == (const Batch_FS_cp_args & rhs) const
+  {
+    if (!(src == rhs.src))
+      return false;
+    if (!(dst == rhs.dst))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_cp_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_cp_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_FS_cp_pargs {
+ public:
+
+
+  virtual ~Batch_FS_cp_pargs() throw() {}
+
+  const std::string* src;
+  const std::string* dst;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_cp_result__isset {
+  _Batch_FS_cp_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_cp_result__isset;
+
+class Batch_FS_cp_result {
+ public:
+
+  Batch_FS_cp_result() {
+  }
+
+  virtual ~Batch_FS_cp_result() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_FS_cp_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_cp_result & rhs) const
+  {
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_cp_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_cp_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_cp_presult__isset {
+  _Batch_FS_cp_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_cp_presult__isset;
+
+class Batch_FS_cp_presult {
+ public:
+
+
+  virtual ~Batch_FS_cp_presult() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_FS_cp_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_FS_mv_args__isset {
+  _Batch_FS_mv_args__isset() : src(false), dst(false) {}
+  bool src;
+  bool dst;
+} _Batch_FS_mv_args__isset;
+
+class Batch_FS_mv_args {
+ public:
+
+  Batch_FS_mv_args() : src(), dst() {
+  }
+
+  virtual ~Batch_FS_mv_args() throw() {}
+
+  std::string src;
+  std::string dst;
+
+  _Batch_FS_mv_args__isset __isset;
+
+  void __set_src(const std::string& val) {
+    src = val;
+  }
+
+  void __set_dst(const std::string& val) {
+    dst = val;
+  }
+
+  bool operator == (const Batch_FS_mv_args & rhs) const
+  {
+    if (!(src == rhs.src))
+      return false;
+    if (!(dst == rhs.dst))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_mv_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_mv_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_FS_mv_pargs {
+ public:
+
+
+  virtual ~Batch_FS_mv_pargs() throw() {}
+
+  const std::string* src;
+  const std::string* dst;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_mv_result__isset {
+  _Batch_FS_mv_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_mv_result__isset;
+
+class Batch_FS_mv_result {
+ public:
+
+  Batch_FS_mv_result() {
+  }
+
+  virtual ~Batch_FS_mv_result() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_FS_mv_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_mv_result & rhs) const
+  {
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_FS_mv_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_FS_mv_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_FS_mv_presult__isset {
+  _Batch_FS_mv_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_mv_presult__isset;
+
+class Batch_FS_mv_presult {
+ public:
+
+
+  virtual ~Batch_FS_mv_presult() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_FS_mv_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 
 class Batch_ping_args {
  public:
@@ -4528,6 +5350,27 @@ class BatchClient : virtual public BatchIf {
   void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
   void send_disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
   void recv_disconnect();
+  void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path);
+  void send_FS_ls(const std::string& path);
+  void recv_FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return);
+  void FS_stat( ::flowbox::batch::fs::FSItem& _return, const std::string& path);
+  void send_FS_stat(const std::string& path);
+  void recv_FS_stat( ::flowbox::batch::fs::FSItem& _return);
+  void FS_mkdir(const std::string& path);
+  void send_FS_mkdir(const std::string& path);
+  void recv_FS_mkdir();
+  void FS_touch(const std::string& path);
+  void send_FS_touch(const std::string& path);
+  void recv_FS_touch();
+  void FS_rm(const std::string& path);
+  void send_FS_rm(const std::string& path);
+  void recv_FS_rm();
+  void FS_cp(const std::string& src, const std::string& dst);
+  void send_FS_cp(const std::string& src, const std::string& dst);
+  void recv_FS_cp();
+  void FS_mv(const std::string& src, const std::string& dst);
+  void send_FS_mv(const std::string& src, const std::string& dst);
+  void recv_FS_mv();
   void ping();
   void send_ping();
   void recv_ping();
@@ -4583,6 +5426,13 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_removeNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_connect(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_disconnect(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_FS_ls(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_FS_stat(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_FS_mkdir(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_FS_touch(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_FS_rm(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_FS_cp(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_FS_mv(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_ping(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_dump(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
@@ -4622,6 +5472,13 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["removeNode"] = &BatchProcessor::process_removeNode;
     processMap_["connect"] = &BatchProcessor::process_connect;
     processMap_["disconnect"] = &BatchProcessor::process_disconnect;
+    processMap_["FS_ls"] = &BatchProcessor::process_FS_ls;
+    processMap_["FS_stat"] = &BatchProcessor::process_FS_stat;
+    processMap_["FS_mkdir"] = &BatchProcessor::process_FS_mkdir;
+    processMap_["FS_touch"] = &BatchProcessor::process_FS_touch;
+    processMap_["FS_rm"] = &BatchProcessor::process_FS_rm;
+    processMap_["FS_cp"] = &BatchProcessor::process_FS_cp;
+    processMap_["FS_mv"] = &BatchProcessor::process_FS_mv;
     processMap_["ping"] = &BatchProcessor::process_ping;
     processMap_["dump"] = &BatchProcessor::process_dump;
   }
@@ -4978,6 +5835,71 @@ class BatchMultiface : virtual public BatchIf {
       ifaces_[i]->disconnect(srcNodeID, srcPort, dstNodeID, dstPort, defID, libID);
     }
     ifaces_[i]->disconnect(srcNodeID, srcPort, dstNodeID, dstPort, defID, libID);
+  }
+
+  void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->FS_ls(_return, path);
+    }
+    ifaces_[i]->FS_ls(_return, path);
+    return;
+  }
+
+  void FS_stat( ::flowbox::batch::fs::FSItem& _return, const std::string& path) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->FS_stat(_return, path);
+    }
+    ifaces_[i]->FS_stat(_return, path);
+    return;
+  }
+
+  void FS_mkdir(const std::string& path) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->FS_mkdir(path);
+    }
+    ifaces_[i]->FS_mkdir(path);
+  }
+
+  void FS_touch(const std::string& path) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->FS_touch(path);
+    }
+    ifaces_[i]->FS_touch(path);
+  }
+
+  void FS_rm(const std::string& path) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->FS_rm(path);
+    }
+    ifaces_[i]->FS_rm(path);
+  }
+
+  void FS_cp(const std::string& src, const std::string& dst) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->FS_cp(src, dst);
+    }
+    ifaces_[i]->FS_cp(src, dst);
+  }
+
+  void FS_mv(const std::string& src, const std::string& dst) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->FS_mv(src, dst);
+    }
+    ifaces_[i]->FS_mv(src, dst);
   }
 
   void ping() {

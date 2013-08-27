@@ -32,6 +32,7 @@ import qualified Data.Vector          as Vector
 import           Thrift                 
 import           Thrift.Types           ()
 
+import qualified Fs_Types               
 import qualified Graphview_Types        
 import qualified Projects_Types         
 import qualified Attrs_Types            
@@ -78,5 +79,12 @@ class Batch_Iface a where
   removeNode :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
   connect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
   disconnect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+  fS_ls :: a -> Maybe Text -> IO (Vector.Vector Fs_Types.FSItem)
+  fS_stat :: a -> Maybe Text -> IO Fs_Types.FSItem
+  fS_mkdir :: a -> Maybe Text -> IO ()
+  fS_touch :: a -> Maybe Text -> IO ()
+  fS_rm :: a -> Maybe Text -> IO ()
+  fS_cp :: a -> Maybe Text -> Maybe Text -> IO ()
+  fS_mv :: a -> Maybe Text -> Maybe Text -> IO ()
   ping :: a -> IO ()
   dump :: a -> IO ()

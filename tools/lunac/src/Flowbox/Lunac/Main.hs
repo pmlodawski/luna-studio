@@ -60,8 +60,10 @@
 
 --------------------------------
 
+
 import           Prelude                   hiding (error)
 import           Flowbox.System.Log.Logger   
+
 
 logger = getLogger "MyApp.BuggyComponent"
 

@@ -48,7 +48,7 @@ projects batchHandler = do
 createProject :: IORef Batch -> Maybe TProjects.Project -> IO TProjects.Project
 createProject batchHandler mtproject = tRunScript $ do
     scriptIO $ putStrLn "call createProject"
-    tproject     <- mtproject <??> "`project` field is missing" 
+    tproject     <- mtproject <??> "'project' field is missing" 
     (_, project) <- tryRight (decode (tproject, LibManager.empty) :: Either String (Project.ID, Project))
     batch        <- tryReadIORef batchHandler
     let (newBatch, newProject) = Batch.createProject project batch

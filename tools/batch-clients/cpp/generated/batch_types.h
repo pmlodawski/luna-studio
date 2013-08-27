@@ -12,6 +12,7 @@
 #include <thrift/protocol/TProtocol.h>
 #include <thrift/transport/TTransport.h>
 
+#include "fs_types.h"
 #include "graphview_types.h"
 #include "projects_types.h"
 #include "attrs_types.h"

@@ -8,6 +8,7 @@
 namespace cpp flowbox.batch
 namespace hs  flowbox.batch
 
+include "../../../../../../../libs/batch/src/Flowbox/Batch/Tools/Serialize/Thrift/fs.thrift"
 include "../../../../../../../libs/batch/src/Flowbox/Batch/Tools/Serialize/Thrift/graphview.thrift"
 include "../../../../../../../libs/batch/src/Flowbox/Batch/Tools/Serialize/Thrift/projects.thrift"
 include "../../../../../../../libs/luna/src/Flowbox/Luna/Tools/Serialize/Thrift/attrs.thrift"
@@ -104,6 +105,18 @@ service Batch {
     void disconnect(1: graph.NodeID srcNodeID, 2: graphview.PortDescriptor srcPort,
                     3: graph.NodeID dstNodeID, 4: i32                      dstPort, 
                     5: defs.DefID   defID    , 6: libs.LibID               libID ) throws (1: ArgumentException missingFields)
+
+    /*
+     * File System
+     */ 
+
+    list<fs.FSItem> FS_ls   (1: string path)               throws (1: ArgumentException missingFields)
+    fs.FSItem       FS_stat (1: string path)               throws (1: ArgumentException missingFields)
+    void            FS_mkdir(1: string path)               throws (1: ArgumentException missingFields)
+    void            FS_touch(1: string path)               throws (1: ArgumentException missingFields)
+    void            FS_rm   (1: string path)               throws (1: ArgumentException missingFields)
+    void            FS_cp   (1: string src, 2: string dst) throws (1: ArgumentException missingFields)
+    void            FS_mv   (1: string src, 2: string dst) throws (1: ArgumentException missingFields)
 
     /*
      * Other

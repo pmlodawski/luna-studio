@@ -6,6 +6,8 @@ generated/Batch.cpp \
 generated/batch_types.cpp \
 generated/defs_constants.cpp \
 generated/defs_types.cpp \
+generated/fs_constants.cpp \
+generated/fs_types.cpp \
 generated/graph_constants.cpp \
 generated/graph_types.cpp \
 generated/graphview_constants.cpp \
