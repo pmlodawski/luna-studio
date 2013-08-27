@@ -26,6 +26,7 @@ Executable lunac
                   containers,
                   directory,
                   fgl,
+                  flowbox-utils,
                   flowbox-luna,
                   MissingH,
                   mtl,
@@ -35,5 +36,4 @@ Executable lunac
                   thrift,
                   unordered-containers,
                   vector,
-                  optparse-applicative,
-                  hslogger
+                  optparse-applicative

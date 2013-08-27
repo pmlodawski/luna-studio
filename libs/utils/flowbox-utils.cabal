@@ -24,9 +24,10 @@ Library
         Flowbox.Tools.Conversion,
         Flowbox.Control.Error,
         Flowbox.System.UniPath,
-        Flowbox.System.IO,
         Flowbox.System.Directory,
-        Flowbox.System.IO.Serializer
+        Flowbox.System.IO.IO,
+        Flowbox.System.IO.Serializer,
+        Flowbox.System.Log.Logger
 
   Build-Depends:  base,
                   directory,
@@ -34,4 +35,20 @@ Library
                   MissingH == 1.2.0.0,
                   split,
                   text,
-                  transformers
+                  transformers,
+                  ansi-terminal,
+                  hslogger
+
+
+Executable utils 
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: tests
+
+  GHC-Options:    -Wall 
+
+  Extensions:     DoAndIfThenElse
+                  MultiParamTypeClasses
+  Build-Depends:  base,
+                  ansi-terminal,
+                  hslogger,
+                  flowbox-utils
