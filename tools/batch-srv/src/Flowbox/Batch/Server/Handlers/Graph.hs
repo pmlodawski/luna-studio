@@ -23,8 +23,8 @@ import qualified Data.Vector                                               as Ve
 import           Flowbox.Batch.Server.Handlers.Common                        
 import qualified Graph_Types                                               as TGraph
 import qualified Graphview_Types                                           as TGraphView
-import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Batch                                         (Batch(..))
+import qualified Flowbox.Batch.Handlers.Graph                              as BatchG
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView   ()
 import           Flowbox.Control.Error                                       
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
@@ -40,7 +40,7 @@ nodesGraph batchHandler mtdefID mtlibID = tRunScript $ do
     defID  <- tryGetID mtdefID "defID"
     libID  <- tryGetID mtlibID "libID"
     batch  <- tryReadIORef batchHandler
-    agraph <- tryRight $ Batch.nodesGraph defID libID batch
+    agraph <- tryRight $ BatchG.nodesGraph defID libID batch
     return $ encode agraph
 
 
@@ -52,7 +52,7 @@ addNode batchHandler mtnode mtdefID mtlibID = tRunScript $ do
     defID     <- tryGetID mtdefID "defID"
     libID     <- tryGetID mtlibID "libID"
     batch     <- tryReadIORef batchHandler
-    (newBatch, nodeID) <- tryRight $ Batch.addNode node defID libID batch
+    (newBatch, nodeID) <- tryRight $ BatchG.addNode node defID libID batch
     tryWriteIORef batchHandler newBatch
     return $ encode (nodeID, node)
 
@@ -65,7 +65,7 @@ updateNode batchHandler mtnode mtdefID mtlibID = tRunScript $ do
     defID  <- tryGetID mtdefID "defID"
     libID  <- tryGetID mtlibID "libID"
     batch  <- tryReadIORef batchHandler
-    newBatch <- tryRight $ Batch.updateNode node defID libID batch
+    newBatch <- tryRight $ BatchG.updateNode node defID libID batch
     tryWriteIORef batchHandler newBatch
     return ()
 
@@ -77,7 +77,7 @@ removeNode batchHandler mtnodeID mtdefID mtlibID = tRunScript $ do
     defID    <- tryGetID mtdefID  "defID"
     libID    <- tryGetID mtlibID  "libID"
     batch    <- tryReadIORef batchHandler
-    newBatch <- tryRight $ Batch.removeNode nodeID defID libID batch
+    newBatch <- tryRight $ BatchG.removeNode nodeID defID libID batch
     tryWriteIORef batchHandler newBatch
     return ()
 
@@ -96,7 +96,7 @@ connect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID
     defID       <- tryGetID mtdefID     "defID"
     libID       <- tryGetID mtlibID     "libID"
     batch       <- tryReadIORef batchHandler
-    newBatch    <- tryRight $ Batch.connect srcNodeID srcPort dstNodeID dstPort defID libID batch
+    newBatch    <- tryRight $ BatchG.connect srcNodeID srcPort dstNodeID dstPort defID libID batch
     tryWriteIORef batchHandler newBatch
     return ()
 
@@ -115,7 +115,7 @@ disconnect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtli
     defID       <- tryGetID mtdefID     "defID"
     libID       <- tryGetID mtlibID     "libID"
     batch       <- tryReadIORef batchHandler
-    newBatch    <- tryRight $ Batch.disconnect srcNodeID srcPort dstNodeID dstPort defID libID batch
+    newBatch    <- tryRight $ BatchG.disconnect srcNodeID srcPort dstNodeID dstPort defID libID batch
     tryWriteIORef batchHandler newBatch
 
 

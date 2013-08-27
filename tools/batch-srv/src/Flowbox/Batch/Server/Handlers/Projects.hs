@@ -26,6 +26,7 @@ import qualified Projects_Types                                           as TPr
 import           Flowbox.Control.Error                                      
 import qualified Flowbox.Batch.Batch                                      as Batch
 import           Flowbox.Batch.Batch                                        (Batch(..))
+import qualified Flowbox.Batch.Handlers.Projects                          as BatchP
 import qualified Flowbox.Batch.Project.Project                            as Project
 import           Flowbox.Batch.Project.Project                              (Project(..))
 import           Flowbox.Batch.Server.Handlers.Common                       
@@ -39,7 +40,7 @@ projects :: IORef Batch -> IO (Vector TProjects.Project)
 projects batchHandler = do
     putStrLn "call projects"
     batch <- readIORef batchHandler
-    let aprojects       = Batch.projects batch
+    let aprojects       = BatchP.projects batch
         tprojects       = map (fst . encode) aprojects
         tprojectsVector = Vector.fromList tprojects
     return tprojectsVector
@@ -51,7 +52,7 @@ createProject batchHandler mtproject = tRunScript $ do
     tproject     <- mtproject <??> "'project' field is missing" 
     (_, project) <- tryRight (decode (tproject, LibManager.empty) :: Either String (Project.ID, Project))
     batch        <- tryReadIORef batchHandler
-    let (newBatch, newProject) = Batch.createProject project batch
+    let (newBatch, newProject) = BatchP.createProject project batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ encode newProject
 
@@ -61,7 +62,7 @@ openProject batchHandler mtpath = tRunScript $ do
     scriptIO $ putStrLn "call openProject"
     upath <- tryGetUniPath mtpath "path"
     batch <- tryReadIORef batchHandler
-    (newBatch, (projectID, aproject)) <- scriptIO $ Batch.openProject upath batch
+    (newBatch, (projectID, aproject)) <- scriptIO $ BatchP.openProject upath batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ encode (projectID, aproject)
 
@@ -71,7 +72,7 @@ closeProject batchHandler mtprojectID = tRunScript $ do
     scriptIO $ putStrLn "call closeProject"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    let newBatch = Batch.closeProject projectID batch
+    let newBatch = BatchP.closeProject projectID batch
     tryWriteIORef batchHandler newBatch
 
 
@@ -80,7 +81,7 @@ storeProject batchHandler mtprojectID = tRunScript $ do
     scriptIO $ putStrLn "call storeProject"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    scriptIO $ Batch.storeProject projectID batch
+    scriptIO $ BatchP.storeProject projectID batch
 
 
 setActiveProject :: IORef Batch -> Maybe Int32 -> IO ()
@@ -88,7 +89,7 @@ setActiveProject batchHandler mtprojectID = tRunScript $ do
     scriptIO $ putStrLn "call setActiveProject"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    let newBatch = Batch.setActiveProject projectID batch
+    let newBatch = BatchP.setActiveProject projectID batch
     tryWriteIORef batchHandler newBatch
 
 
@@ -96,6 +97,6 @@ activeProject :: IORef Batch -> IO TProjects.Project
 activeProject batchHandler = tRunScript $ do
     scriptIO $ putStrLn "call activeProject"
     batch   <- tryReadIORef batchHandler
-    project <- (Batch.activeProject batch) <??> "No active project set"
+    project <- (BatchP.activeProject batch) <??> "No active project set"
     let projectID = Batch.activeProjectID batch
     return $ fst $ encode (projectID, project)
