@@ -24,7 +24,7 @@ import           Flowbox.System.UniPath                 (UniPath)
 import qualified Flowbox.Luna.Codegen.Hs.DefGenerator as DG
 import qualified Flowbox.Luna.Codegen.Hs.AST.Module   as Module
 import qualified Flowbox.Luna.Codegen.Hs.Path         as Path
-import qualified Flowbox.System.IO                    as IO
+import qualified Flowbox.System.IO.IO                 as IO
 import           Flowbox.System.Directory             as Dir
 
 
