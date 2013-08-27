@@ -4,7 +4,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.System.IO(
+module Flowbox.System.IO.IO(
 	writeFile
 ) where
 

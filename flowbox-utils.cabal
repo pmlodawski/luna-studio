@@ -24,8 +24,8 @@ Library
         Flowbox.Control.Error,
         Flowbox.Tools.Conversion,
         Flowbox.System.UniPath,
-        Flowbox.System.IO,
         Flowbox.System.Directory,
+        Flowbox.System.IO.IO,
         Flowbox.System.IO.Serializer,
         Flowbox.System.Log.Logger
 
