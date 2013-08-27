@@ -19,7 +19,8 @@ namespace flowbox { namespace batch { namespace fs {
 struct FSItemType {
   enum type {
     Directory = 0,
-    File = 1
+    File = 1,
+    Other = 2
   };
 };
 

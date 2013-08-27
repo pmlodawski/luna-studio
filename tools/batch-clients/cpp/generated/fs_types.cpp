@@ -12,13 +12,15 @@ namespace flowbox { namespace batch { namespace fs {
 
 int _kFSItemTypeValues[] = {
   FSItemType::Directory,
-  FSItemType::File
+  FSItemType::File,
+  FSItemType::Other
 };
 const char* _kFSItemTypeNames[] = {
   "Directory",
-  "File"
+  "File",
+  "Other"
 };
-const std::map<int, const char*> _FSItemType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(2, _kFSItemTypeValues, _kFSItemTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+const std::map<int, const char*> _FSItemType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(3, _kFSItemTypeValues, _kFSItemTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
 const char* FSItem::ascii_fingerprint = "6A93F5F459652B86154E951A24D52A7B";
 const uint8_t FSItem::binary_fingerprint[16] = {0x6A,0x93,0xF5,0xF4,0x59,0x65,0x2B,0x86,0x15,0x4E,0x95,0x1A,0x24,0xD5,0x2A,0x7B};

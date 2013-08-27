@@ -11,7 +11,8 @@ namespace hs  flowbox.batch.fs
 
 enum FSItemType {
     Directory,
-    File
+    File,
+    Other
 }
 
 

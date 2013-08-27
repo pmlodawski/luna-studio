@@ -27,6 +27,7 @@ instance Convert Item TFS.FSItem where
         titemType = case item of
             Directory {} -> TFS.Directory
             File      {} -> TFS.File
+            Other     {} -> TFS.Other
         tpath = pack $ UniPath.toUnixString $ Item.path item
         tsize = itoi32 $ Item.size item
     decode (TFS.FSItem mtitemType mtpath mtsize) = do 
@@ -38,3 +39,4 @@ instance Convert Item TFS.FSItem where
         case titemType of 
             TFS.Directory -> return $ Directory apath asize
             TFS.File      -> return $ File      apath asize
+            TFS.Other     -> return $ Other     apath asize

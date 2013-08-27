@@ -4338,8 +4338,9 @@ class Batch_FS_ls_pargs {
 };
 
 typedef struct _Batch_FS_ls_result__isset {
-  _Batch_FS_ls_result__isset() : success(false) {}
+  _Batch_FS_ls_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_FS_ls_result__isset;
 
 class Batch_FS_ls_result {
@@ -4351,6 +4352,7 @@ class Batch_FS_ls_result {
   virtual ~Batch_FS_ls_result() throw() {}
 
   std::vector< ::flowbox::batch::fs::FSItem>  success;
+  ArgumentException missingFields;
 
   _Batch_FS_ls_result__isset __isset;
 
@@ -4358,9 +4360,15 @@ class Batch_FS_ls_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_FS_ls_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -4376,8 +4384,9 @@ class Batch_FS_ls_result {
 };
 
 typedef struct _Batch_FS_ls_presult__isset {
-  _Batch_FS_ls_presult__isset() : success(false) {}
+  _Batch_FS_ls_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_FS_ls_presult__isset;
 
 class Batch_FS_ls_presult {
@@ -4387,6 +4396,7 @@ class Batch_FS_ls_presult {
   virtual ~Batch_FS_ls_presult() throw() {}
 
   std::vector< ::flowbox::batch::fs::FSItem> * success;
+  ArgumentException missingFields;
 
   _Batch_FS_ls_presult__isset __isset;
 
@@ -4446,8 +4456,9 @@ class Batch_FS_stat_pargs {
 };
 
 typedef struct _Batch_FS_stat_result__isset {
-  _Batch_FS_stat_result__isset() : success(false) {}
+  _Batch_FS_stat_result__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_FS_stat_result__isset;
 
 class Batch_FS_stat_result {
@@ -4459,6 +4470,7 @@ class Batch_FS_stat_result {
   virtual ~Batch_FS_stat_result() throw() {}
 
    ::flowbox::batch::fs::FSItem success;
+  ArgumentException missingFields;
 
   _Batch_FS_stat_result__isset __isset;
 
@@ -4466,9 +4478,15 @@ class Batch_FS_stat_result {
     success = val;
   }
 
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
   bool operator == (const Batch_FS_stat_result & rhs) const
   {
     if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
       return false;
     return true;
   }
@@ -4484,8 +4502,9 @@ class Batch_FS_stat_result {
 };
 
 typedef struct _Batch_FS_stat_presult__isset {
-  _Batch_FS_stat_presult__isset() : success(false) {}
+  _Batch_FS_stat_presult__isset() : success(false), missingFields(false) {}
   bool success;
+  bool missingFields;
 } _Batch_FS_stat_presult__isset;
 
 class Batch_FS_stat_presult {
@@ -4495,6 +4514,7 @@ class Batch_FS_stat_presult {
   virtual ~Batch_FS_stat_presult() throw() {}
 
    ::flowbox::batch::fs::FSItem* success;
+  ArgumentException missingFields;
 
   _Batch_FS_stat_presult__isset __isset;
 
@@ -4553,6 +4573,10 @@ class Batch_FS_mkdir_pargs {
 
 };
 
+typedef struct _Batch_FS_mkdir_result__isset {
+  _Batch_FS_mkdir_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_mkdir_result__isset;
 
 class Batch_FS_mkdir_result {
  public:
@@ -4562,9 +4586,18 @@ class Batch_FS_mkdir_result {
 
   virtual ~Batch_FS_mkdir_result() throw() {}
 
+  ArgumentException missingFields;
 
-  bool operator == (const Batch_FS_mkdir_result & /* rhs */) const
+  _Batch_FS_mkdir_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_mkdir_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_FS_mkdir_result &rhs) const {
@@ -4578,6 +4611,10 @@ class Batch_FS_mkdir_result {
 
 };
 
+typedef struct _Batch_FS_mkdir_presult__isset {
+  _Batch_FS_mkdir_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_mkdir_presult__isset;
 
 class Batch_FS_mkdir_presult {
  public:
@@ -4585,6 +4622,9 @@ class Batch_FS_mkdir_presult {
 
   virtual ~Batch_FS_mkdir_presult() throw() {}
 
+  ArgumentException missingFields;
+
+  _Batch_FS_mkdir_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -4641,6 +4681,10 @@ class Batch_FS_touch_pargs {
 
 };
 
+typedef struct _Batch_FS_touch_result__isset {
+  _Batch_FS_touch_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_touch_result__isset;
 
 class Batch_FS_touch_result {
  public:
@@ -4650,9 +4694,18 @@ class Batch_FS_touch_result {
 
   virtual ~Batch_FS_touch_result() throw() {}
 
+  ArgumentException missingFields;
 
-  bool operator == (const Batch_FS_touch_result & /* rhs */) const
+  _Batch_FS_touch_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_touch_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_FS_touch_result &rhs) const {
@@ -4666,6 +4719,10 @@ class Batch_FS_touch_result {
 
 };
 
+typedef struct _Batch_FS_touch_presult__isset {
+  _Batch_FS_touch_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_touch_presult__isset;
 
 class Batch_FS_touch_presult {
  public:
@@ -4673,6 +4730,9 @@ class Batch_FS_touch_presult {
 
   virtual ~Batch_FS_touch_presult() throw() {}
 
+  ArgumentException missingFields;
+
+  _Batch_FS_touch_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -4729,6 +4789,10 @@ class Batch_FS_rm_pargs {
 
 };
 
+typedef struct _Batch_FS_rm_result__isset {
+  _Batch_FS_rm_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_rm_result__isset;
 
 class Batch_FS_rm_result {
  public:
@@ -4738,9 +4802,18 @@ class Batch_FS_rm_result {
 
   virtual ~Batch_FS_rm_result() throw() {}
 
+  ArgumentException missingFields;
 
-  bool operator == (const Batch_FS_rm_result & /* rhs */) const
+  _Batch_FS_rm_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_rm_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_FS_rm_result &rhs) const {
@@ -4754,6 +4827,10 @@ class Batch_FS_rm_result {
 
 };
 
+typedef struct _Batch_FS_rm_presult__isset {
+  _Batch_FS_rm_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_rm_presult__isset;
 
 class Batch_FS_rm_presult {
  public:
@@ -4761,6 +4838,9 @@ class Batch_FS_rm_presult {
 
   virtual ~Batch_FS_rm_presult() throw() {}
 
+  ArgumentException missingFields;
+
+  _Batch_FS_rm_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -4826,6 +4906,10 @@ class Batch_FS_cp_pargs {
 
 };
 
+typedef struct _Batch_FS_cp_result__isset {
+  _Batch_FS_cp_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_cp_result__isset;
 
 class Batch_FS_cp_result {
  public:
@@ -4835,9 +4919,18 @@ class Batch_FS_cp_result {
 
   virtual ~Batch_FS_cp_result() throw() {}
 
+  ArgumentException missingFields;
 
-  bool operator == (const Batch_FS_cp_result & /* rhs */) const
+  _Batch_FS_cp_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_cp_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_FS_cp_result &rhs) const {
@@ -4851,6 +4944,10 @@ class Batch_FS_cp_result {
 
 };
 
+typedef struct _Batch_FS_cp_presult__isset {
+  _Batch_FS_cp_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_cp_presult__isset;
 
 class Batch_FS_cp_presult {
  public:
@@ -4858,6 +4955,9 @@ class Batch_FS_cp_presult {
 
   virtual ~Batch_FS_cp_presult() throw() {}
 
+  ArgumentException missingFields;
+
+  _Batch_FS_cp_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -4923,6 +5023,10 @@ class Batch_FS_mv_pargs {
 
 };
 
+typedef struct _Batch_FS_mv_result__isset {
+  _Batch_FS_mv_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_mv_result__isset;
 
 class Batch_FS_mv_result {
  public:
@@ -4932,9 +5036,18 @@ class Batch_FS_mv_result {
 
   virtual ~Batch_FS_mv_result() throw() {}
 
+  ArgumentException missingFields;
 
-  bool operator == (const Batch_FS_mv_result & /* rhs */) const
+  _Batch_FS_mv_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_FS_mv_result & rhs) const
   {
+    if (!(missingFields == rhs.missingFields))
+      return false;
     return true;
   }
   bool operator != (const Batch_FS_mv_result &rhs) const {
@@ -4948,6 +5061,10 @@ class Batch_FS_mv_result {
 
 };
 
+typedef struct _Batch_FS_mv_presult__isset {
+  _Batch_FS_mv_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_FS_mv_presult__isset;
 
 class Batch_FS_mv_presult {
  public:
@@ -4955,6 +5072,9 @@ class Batch_FS_mv_presult {
 
   virtual ~Batch_FS_mv_presult() throw() {}
 
+  ArgumentException missingFields;
+
+  _Batch_FS_mv_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 

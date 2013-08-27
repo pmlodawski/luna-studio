@@ -910,6 +910,9 @@ recv_FS_ls ip = do
   case f_FS_ls_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_FS_ls_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "FS_ls failed: unknown result")
 fS_stat (ip,op) arg_path = do
   send_FS_stat op arg_path
@@ -933,6 +936,9 @@ recv_FS_stat ip = do
   case f_FS_stat_result_success res of
     Just v -> return v
     Nothing -> do
+      case f_FS_stat_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "FS_stat failed: unknown result")
 fS_mkdir (ip,op) arg_path = do
   send_FS_mkdir op arg_path
@@ -953,6 +959,9 @@ recv_FS_mkdir ip = do
     else return ()
   res <- read_FS_mkdir_result ip
   readMessageEnd ip
+  case f_FS_mkdir_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 fS_touch (ip,op) arg_path = do
   send_FS_touch op arg_path
@@ -973,6 +982,9 @@ recv_FS_touch ip = do
     else return ()
   res <- read_FS_touch_result ip
   readMessageEnd ip
+  case f_FS_touch_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 fS_rm (ip,op) arg_path = do
   send_FS_rm op arg_path
@@ -993,6 +1005,9 @@ recv_FS_rm ip = do
     else return ()
   res <- read_FS_rm_result ip
   readMessageEnd ip
+  case f_FS_rm_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 fS_cp (ip,op) arg_src arg_dst = do
   send_FS_cp op arg_src arg_dst
@@ -1013,6 +1028,9 @@ recv_FS_cp ip = do
     else return ()
   res <- read_FS_cp_result ip
   readMessageEnd ip
+  case f_FS_cp_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 fS_mv (ip,op) arg_src arg_dst = do
   send_FS_mv op arg_src arg_dst
@@ -1033,6 +1051,9 @@ recv_FS_mv ip = do
     else return ()
   res <- read_FS_mv_result ip
   readMessageEnd ip
+  case f_FS_mv_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
   return ()
 ping (ip,op) = do
   send_ping op

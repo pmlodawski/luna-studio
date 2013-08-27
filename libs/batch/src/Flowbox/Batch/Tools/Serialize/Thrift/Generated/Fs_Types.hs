@@ -33,14 +33,16 @@ import           Thrift
 import           Thrift.Types           ()
 
 
-data FSItemType = Directory|File  deriving (Show,Eq, Typeable, Ord)
+data FSItemType = Directory|File|Other  deriving (Show,Eq, Typeable, Ord)
 instance Enum FSItemType where
   fromEnum t = case t of
     Directory -> 0
     File -> 1
+    Other -> 2
   toEnum t = case t of
     0 -> Directory
     1 -> File
+    2 -> Other
     _ -> throw ThriftException
 instance Hashable FSItemType where
   hashWithSalt salt = hashWithSalt salt . fromEnum

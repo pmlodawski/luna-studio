@@ -12,6 +12,7 @@ using namespace apache::thrift::transport;
 
 using namespace flowbox::batch;
 using namespace flowbox::batch::defs;
+using namespace flowbox::batch::fs;
 using namespace flowbox::batch::graph;
 using namespace flowbox::batch::libs;
 using namespace flowbox::batch::projects;
@@ -157,6 +158,20 @@ int main(int argc, char **argv) {
         for(auto lib : registeredLibs)
             batch.loadLibrary(lib, lib.path);
         
+        vector<FSItem> items;
+        batch.FS_ls(items, proj.path);
+        cout << "Folder has " << items.size() << " items." << endl;
+        batch.FS_touch("test.file");
+        batch.FS_mkdir("testfolder");
+        batch.FS_cp("test.file", "test2.file");
+        batch.FS_mv("test.file", "testfolder/test.file");
+        batch.FS_mv("testfolder", "testfolder2");
+
+        batch.FS_touch("test3.file");
+        batch.FS_rm("test3.file");
+
+        batch.FS_mkdir("test3folder");
+        batch.FS_rm("test3folder");
         batch.dump();        
 
         batch.ping();

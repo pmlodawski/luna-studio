@@ -5,58 +5,110 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 module Flowbox.Batch.Handlers.FileSystem (
-	ls,
-	stat,
+    ls,
+    stat,
 
-	mkdir,
-	touch,
-	rm,
-	cp,
-	mv,
+    mkdir,
+    touch,
+    rm,
+    cp,
+    mv,
 ) 
 where
 
 import qualified System.Directory              as Directory
+import qualified System.IO                     as IO
 
-import qualified Flowbox.Batch.FileSystem.Item as Item
 import           Flowbox.Batch.FileSystem.Item   (Item(..))
 import qualified Flowbox.System.UniPath        as UniPath
 import           Flowbox.System.UniPath          (UniPath)
 
 
------- public api -------------------------------------------------
+handleFSObject :: UniPath -> (FilePath -> IO a) -> (FilePath -> IO a) -> IO a
+handleFSObject upath dirOperation fileOperation = do 
+    let apath = UniPath.toUnixString upath
+
+    isDir  <- Directory.doesDirectoryExist apath
+    if isDir 
+        then dirOperation apath
+        else do
+            isFile <- Directory.doesFileExist apath
+            if isFile 
+                then fileOperation apath
+                else error "Unsupported file system object type."
 
 ls :: UniPath -> IO [Item]
-ls path = do
-	putStrLn "Not Implemented. Sorry."
-	return []
+ls upath = do
+    paths <- Directory.getDirectoryContents (UniPath.toUnixString upath)
+    let upaths = map UniPath.fromUnixString paths
+    items <- mapM stat upaths
+    return items
 
 
 stat :: UniPath -> IO Item
-stat path = do
-	putStrLn "Not Implemented. Sorry."
-	return $ File path 0
+stat upath = do
+    let apath = UniPath.toUnixString upath
+
+    isDir  <- Directory.doesDirectoryExist apath
+    if isDir 
+        then return $ Directory upath 0
+        else do
+            isFile <- Directory.doesFileExist apath
+            if isFile 
+                then do
+                    asize <- IO.withFile apath IO.ReadMode IO.hFileSize
+                    return $ File upath $ fromInteger asize
+                else return $ Other upath (-1)
 
 
 mkdir :: UniPath -> IO ()
-mkdir path = do
-	putStrLn "Not Implemented. Sorry."
+mkdir upath = Directory.createDirectory (UniPath.toUnixString upath)
 
 
 touch :: UniPath -> IO ()
-touch path = do
-	putStrLn "Not Implemented. Sorry."
+touch upath = IO.writeFile (UniPath.toUnixString upath) ""
 
 
 rm :: UniPath -> IO ()
-rm path = do
-	putStrLn "Not Implemented. Sorry."
+rm upath = do
+    let apath = UniPath.toUnixString upath
+
+    isDir  <- Directory.doesDirectoryExist apath
+    if isDir 
+        then Directory.removeDirectoryRecursive apath
+        else do
+            isFile <- Directory.doesFileExist apath
+            if isFile 
+                then Directory.removeFile apath
+                else error "Could not remove object: Unsupported type."
 
 
 cp :: UniPath -> UniPath -> IO ()
-cp src dst = Directory.copyFile (UniPath.toUnixString src) (UniPath.toUnixString dst)
+cp usrc udst = do
+    let asrc = UniPath.toUnixString usrc
+        adst = UniPath.toUnixString udst
 
+    isDir  <- Directory.doesDirectoryExist asrc
+    if isDir 
+        -- TODO [PM] : Implement copying of folders
+        then putStrLn "Could not copy folder: Not Implemented. Sorry."
+        else do
+            isFile <- Directory.doesFileExist asrc
+            if isFile 
+                then Directory.copyFile asrc adst
+                else error "Could not copy object: Unsupported type."
+    
 
 mv :: UniPath -> UniPath -> IO ()
-mv src dst = do
-	putStrLn "Not Implemented. Sorry."
+mv usrc udst = do
+    let asrc = UniPath.toUnixString usrc
+        adst = UniPath.toUnixString udst
+
+    isDir  <- Directory.doesDirectoryExist asrc
+    if isDir 
+        then Directory.renameDirectory asrc adst
+        else do
+            isFile <- Directory.doesFileExist asrc
+            if isFile 
+                then Directory.renameFile asrc adst
+                else error "Could not move object: Unsupported type."

@@ -110,13 +110,13 @@ service Batch {
      * File System
      */ 
 
-    list<fs.FSItem> FS_ls   (1: string path)
-    fs.FSItem       FS_stat (1: string path)
-    void            FS_mkdir(1: string path)
-    void            FS_touch(1: string path)
-    void            FS_rm   (1: string path)
-    void            FS_cp   (1: string src, 2: string dst)
-    void            FS_mv   (1: string src, 2: string dst)
+    list<fs.FSItem> FS_ls   (1: string path)               throws (1: ArgumentException missingFields)
+    fs.FSItem       FS_stat (1: string path)               throws (1: ArgumentException missingFields)
+    void            FS_mkdir(1: string path)               throws (1: ArgumentException missingFields)
+    void            FS_touch(1: string path)               throws (1: ArgumentException missingFields)
+    void            FS_rm   (1: string path)               throws (1: ArgumentException missingFields)
+    void            FS_cp   (1: string src, 2: string dst) throws (1: ArgumentException missingFields)
+    void            FS_mv   (1: string src, 2: string dst) throws (1: ArgumentException missingFields)
 
     /*
      * Other

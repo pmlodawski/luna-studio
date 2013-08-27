@@ -14,3 +14,4 @@ import           Flowbox.System.UniPath   (UniPath)
 
 data Item = File      { path :: UniPath, size :: Int }
           | Directory { path :: UniPath, size :: Int }
+          | Other     { path :: UniPath, size :: Int }

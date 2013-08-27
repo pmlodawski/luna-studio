@@ -2556,14 +2556,18 @@ read_FS_ls_args iprot = do
   record <- read_FS_ls_args_fields iprot (FS_ls_args{f_FS_ls_args_path=Nothing})
   readStructEnd iprot
   return record
-data FS_ls_result = FS_ls_result{f_FS_ls_result_success :: Maybe (Vector.Vector Fs_Types.FSItem)} deriving (Show,Eq,Typeable)
+data FS_ls_result = FS_ls_result{f_FS_ls_result_success :: Maybe (Vector.Vector Fs_Types.FSItem),f_FS_ls_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
 instance Hashable FS_ls_result where
-  hashWithSalt salt record = salt   `hashWithSalt` f_FS_ls_result_success record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_ls_result_success record   `hashWithSalt` f_FS_ls_result_missingFields record  
 write_FS_ls_result oprot record = do
   writeStructBegin oprot "FS_ls_result"
   case f_FS_ls_result_success record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("success",T_LIST,0)
     (let f = Vector.mapM_ (\_viter400 -> Fs_Types.write_FSItem oprot _viter400) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    writeFieldEnd oprot}
+  case f_FS_ls_result_missingFields record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("missingFields",T_STRUCT,1)
+    write_ArgumentException oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
@@ -2577,13 +2581,19 @@ read_FS_ls_result_fields iprot record = do
         else do
           skip iprot _t402
           read_FS_ls_result_fields iprot record
+      1 -> if _t402 == T_STRUCT then do
+        s <- (read_ArgumentException iprot)
+        read_FS_ls_result_fields iprot record{f_FS_ls_result_missingFields=Just s}
+        else do
+          skip iprot _t402
+          read_FS_ls_result_fields iprot record
       _ -> do
         skip iprot _t402
         readFieldEnd iprot
         read_FS_ls_result_fields iprot record
 read_FS_ls_result iprot = do
   _ <- readStructBegin iprot
-  record <- read_FS_ls_result_fields iprot (FS_ls_result{f_FS_ls_result_success=Nothing})
+  record <- read_FS_ls_result_fields iprot (FS_ls_result{f_FS_ls_result_success=Nothing,f_FS_ls_result_missingFields=Nothing})
   readStructEnd iprot
   return record
 data FS_stat_args = FS_stat_args{f_FS_stat_args_path :: Maybe Text} deriving (Show,Eq,Typeable)
@@ -2616,14 +2626,18 @@ read_FS_stat_args iprot = do
   record <- read_FS_stat_args_fields iprot (FS_stat_args{f_FS_stat_args_path=Nothing})
   readStructEnd iprot
   return record
-data FS_stat_result = FS_stat_result{f_FS_stat_result_success :: Maybe Fs_Types.FSItem} deriving (Show,Eq,Typeable)
+data FS_stat_result = FS_stat_result{f_FS_stat_result_success :: Maybe Fs_Types.FSItem,f_FS_stat_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
 instance Hashable FS_stat_result where
-  hashWithSalt salt record = salt   `hashWithSalt` f_FS_stat_result_success record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_stat_result_success record   `hashWithSalt` f_FS_stat_result_missingFields record  
 write_FS_stat_result oprot record = do
   writeStructBegin oprot "FS_stat_result"
   case f_FS_stat_result_success record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("success",T_STRUCT,0)
     Fs_Types.write_FSItem oprot _v
+    writeFieldEnd oprot}
+  case f_FS_stat_result_missingFields record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("missingFields",T_STRUCT,1)
+    write_ArgumentException oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
@@ -2637,13 +2651,19 @@ read_FS_stat_result_fields iprot record = do
         else do
           skip iprot _t417
           read_FS_stat_result_fields iprot record
+      1 -> if _t417 == T_STRUCT then do
+        s <- (read_ArgumentException iprot)
+        read_FS_stat_result_fields iprot record{f_FS_stat_result_missingFields=Just s}
+        else do
+          skip iprot _t417
+          read_FS_stat_result_fields iprot record
       _ -> do
         skip iprot _t417
         readFieldEnd iprot
         read_FS_stat_result_fields iprot record
 read_FS_stat_result iprot = do
   _ <- readStructBegin iprot
-  record <- read_FS_stat_result_fields iprot (FS_stat_result{f_FS_stat_result_success=Nothing})
+  record <- read_FS_stat_result_fields iprot (FS_stat_result{f_FS_stat_result_success=Nothing,f_FS_stat_result_missingFields=Nothing})
   readStructEnd iprot
   return record
 data FS_mkdir_args = FS_mkdir_args{f_FS_mkdir_args_path :: Maybe Text} deriving (Show,Eq,Typeable)
@@ -2676,24 +2696,34 @@ read_FS_mkdir_args iprot = do
   record <- read_FS_mkdir_args_fields iprot (FS_mkdir_args{f_FS_mkdir_args_path=Nothing})
   readStructEnd iprot
   return record
-data FS_mkdir_result = FS_mkdir_result deriving (Show,Eq,Typeable)
+data FS_mkdir_result = FS_mkdir_result{f_FS_mkdir_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
 instance Hashable FS_mkdir_result where
-  hashWithSalt salt record = salt  
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_mkdir_result_missingFields record  
 write_FS_mkdir_result oprot record = do
   writeStructBegin oprot "FS_mkdir_result"
+  case f_FS_mkdir_result_missingFields record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("missingFields",T_STRUCT,1)
+    write_ArgumentException oprot _v
+    writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_mkdir_result_fields iprot record = do
   (_,_t427,_id428) <- readFieldBegin iprot
   if _t427 == T_STOP then return record else
     case _id428 of 
+      1 -> if _t427 == T_STRUCT then do
+        s <- (read_ArgumentException iprot)
+        read_FS_mkdir_result_fields iprot record{f_FS_mkdir_result_missingFields=Just s}
+        else do
+          skip iprot _t427
+          read_FS_mkdir_result_fields iprot record
       _ -> do
         skip iprot _t427
         readFieldEnd iprot
         read_FS_mkdir_result_fields iprot record
 read_FS_mkdir_result iprot = do
   _ <- readStructBegin iprot
-  record <- read_FS_mkdir_result_fields iprot (FS_mkdir_result{})
+  record <- read_FS_mkdir_result_fields iprot (FS_mkdir_result{f_FS_mkdir_result_missingFields=Nothing})
   readStructEnd iprot
   return record
 data FS_touch_args = FS_touch_args{f_FS_touch_args_path :: Maybe Text} deriving (Show,Eq,Typeable)
@@ -2726,24 +2756,34 @@ read_FS_touch_args iprot = do
   record <- read_FS_touch_args_fields iprot (FS_touch_args{f_FS_touch_args_path=Nothing})
   readStructEnd iprot
   return record
-data FS_touch_result = FS_touch_result deriving (Show,Eq,Typeable)
+data FS_touch_result = FS_touch_result{f_FS_touch_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
 instance Hashable FS_touch_result where
-  hashWithSalt salt record = salt  
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_touch_result_missingFields record  
 write_FS_touch_result oprot record = do
   writeStructBegin oprot "FS_touch_result"
+  case f_FS_touch_result_missingFields record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("missingFields",T_STRUCT,1)
+    write_ArgumentException oprot _v
+    writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_touch_result_fields iprot record = do
   (_,_t437,_id438) <- readFieldBegin iprot
   if _t437 == T_STOP then return record else
     case _id438 of 
+      1 -> if _t437 == T_STRUCT then do
+        s <- (read_ArgumentException iprot)
+        read_FS_touch_result_fields iprot record{f_FS_touch_result_missingFields=Just s}
+        else do
+          skip iprot _t437
+          read_FS_touch_result_fields iprot record
       _ -> do
         skip iprot _t437
         readFieldEnd iprot
         read_FS_touch_result_fields iprot record
 read_FS_touch_result iprot = do
   _ <- readStructBegin iprot
-  record <- read_FS_touch_result_fields iprot (FS_touch_result{})
+  record <- read_FS_touch_result_fields iprot (FS_touch_result{f_FS_touch_result_missingFields=Nothing})
   readStructEnd iprot
   return record
 data FS_rm_args = FS_rm_args{f_FS_rm_args_path :: Maybe Text} deriving (Show,Eq,Typeable)
@@ -2776,24 +2816,34 @@ read_FS_rm_args iprot = do
   record <- read_FS_rm_args_fields iprot (FS_rm_args{f_FS_rm_args_path=Nothing})
   readStructEnd iprot
   return record
-data FS_rm_result = FS_rm_result deriving (Show,Eq,Typeable)
+data FS_rm_result = FS_rm_result{f_FS_rm_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
 instance Hashable FS_rm_result where
-  hashWithSalt salt record = salt  
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_rm_result_missingFields record  
 write_FS_rm_result oprot record = do
   writeStructBegin oprot "FS_rm_result"
+  case f_FS_rm_result_missingFields record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("missingFields",T_STRUCT,1)
+    write_ArgumentException oprot _v
+    writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_rm_result_fields iprot record = do
   (_,_t447,_id448) <- readFieldBegin iprot
   if _t447 == T_STOP then return record else
     case _id448 of 
+      1 -> if _t447 == T_STRUCT then do
+        s <- (read_ArgumentException iprot)
+        read_FS_rm_result_fields iprot record{f_FS_rm_result_missingFields=Just s}
+        else do
+          skip iprot _t447
+          read_FS_rm_result_fields iprot record
       _ -> do
         skip iprot _t447
         readFieldEnd iprot
         read_FS_rm_result_fields iprot record
 read_FS_rm_result iprot = do
   _ <- readStructBegin iprot
-  record <- read_FS_rm_result_fields iprot (FS_rm_result{})
+  record <- read_FS_rm_result_fields iprot (FS_rm_result{f_FS_rm_result_missingFields=Nothing})
   readStructEnd iprot
   return record
 data FS_cp_args = FS_cp_args{f_FS_cp_args_src :: Maybe Text,f_FS_cp_args_dst :: Maybe Text} deriving (Show,Eq,Typeable)
@@ -2836,24 +2886,34 @@ read_FS_cp_args iprot = do
   record <- read_FS_cp_args_fields iprot (FS_cp_args{f_FS_cp_args_src=Nothing,f_FS_cp_args_dst=Nothing})
   readStructEnd iprot
   return record
-data FS_cp_result = FS_cp_result deriving (Show,Eq,Typeable)
+data FS_cp_result = FS_cp_result{f_FS_cp_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
 instance Hashable FS_cp_result where
-  hashWithSalt salt record = salt  
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_cp_result_missingFields record  
 write_FS_cp_result oprot record = do
   writeStructBegin oprot "FS_cp_result"
+  case f_FS_cp_result_missingFields record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("missingFields",T_STRUCT,1)
+    write_ArgumentException oprot _v
+    writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_cp_result_fields iprot record = do
   (_,_t457,_id458) <- readFieldBegin iprot
   if _t457 == T_STOP then return record else
     case _id458 of 
+      1 -> if _t457 == T_STRUCT then do
+        s <- (read_ArgumentException iprot)
+        read_FS_cp_result_fields iprot record{f_FS_cp_result_missingFields=Just s}
+        else do
+          skip iprot _t457
+          read_FS_cp_result_fields iprot record
       _ -> do
         skip iprot _t457
         readFieldEnd iprot
         read_FS_cp_result_fields iprot record
 read_FS_cp_result iprot = do
   _ <- readStructBegin iprot
-  record <- read_FS_cp_result_fields iprot (FS_cp_result{})
+  record <- read_FS_cp_result_fields iprot (FS_cp_result{f_FS_cp_result_missingFields=Nothing})
   readStructEnd iprot
   return record
 data FS_mv_args = FS_mv_args{f_FS_mv_args_src :: Maybe Text,f_FS_mv_args_dst :: Maybe Text} deriving (Show,Eq,Typeable)
@@ -2896,24 +2956,34 @@ read_FS_mv_args iprot = do
   record <- read_FS_mv_args_fields iprot (FS_mv_args{f_FS_mv_args_src=Nothing,f_FS_mv_args_dst=Nothing})
   readStructEnd iprot
   return record
-data FS_mv_result = FS_mv_result deriving (Show,Eq,Typeable)
+data FS_mv_result = FS_mv_result{f_FS_mv_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
 instance Hashable FS_mv_result where
-  hashWithSalt salt record = salt  
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_mv_result_missingFields record  
 write_FS_mv_result oprot record = do
   writeStructBegin oprot "FS_mv_result"
+  case f_FS_mv_result_missingFields record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("missingFields",T_STRUCT,1)
+    write_ArgumentException oprot _v
+    writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_mv_result_fields iprot record = do
   (_,_t467,_id468) <- readFieldBegin iprot
   if _t467 == T_STOP then return record else
     case _id468 of 
+      1 -> if _t467 == T_STRUCT then do
+        s <- (read_ArgumentException iprot)
+        read_FS_mv_result_fields iprot record{f_FS_mv_result_missingFields=Just s}
+        else do
+          skip iprot _t467
+          read_FS_mv_result_fields iprot record
       _ -> do
         skip iprot _t467
         readFieldEnd iprot
         read_FS_mv_result_fields iprot record
 read_FS_mv_result iprot = do
   _ <- readStructBegin iprot
-  record <- read_FS_mv_result_fields iprot (FS_mv_result{})
+  record <- read_FS_mv_result_fields iprot (FS_mv_result{f_FS_mv_result_missingFields=Nothing})
   readStructEnd iprot
   return record
 data Ping_args = Ping_args deriving (Show,Eq,Typeable)
@@ -3469,10 +3539,13 @@ process_disconnect (seqid, iprot, oprot, handler) = do
 process_fS_ls (seqid, iprot, oprot, handler) = do
   args <- read_FS_ls_args iprot
   readMessageEnd iprot
-  rs <- return (FS_ls_result Nothing)
-  res <- (do
-    res <- Iface.fS_ls handler (f_FS_ls_args_path args)
-    return rs{f_FS_ls_result_success= Just res})
+  rs <- return (FS_ls_result Nothing Nothing)
+  res <- (Control.Exception.catch
+    (do
+      res <- Iface.fS_ls handler (f_FS_ls_args_path args)
+      return rs{f_FS_ls_result_success= Just res})
+    (\e  -> 
+      return rs{f_FS_ls_result_missingFields =Just e}))
   writeMessageBegin oprot ("FS_ls", M_REPLY, seqid);
   write_FS_ls_result oprot res
   writeMessageEnd oprot
@@ -3480,10 +3553,13 @@ process_fS_ls (seqid, iprot, oprot, handler) = do
 process_fS_stat (seqid, iprot, oprot, handler) = do
   args <- read_FS_stat_args iprot
   readMessageEnd iprot
-  rs <- return (FS_stat_result Nothing)
-  res <- (do
-    res <- Iface.fS_stat handler (f_FS_stat_args_path args)
-    return rs{f_FS_stat_result_success= Just res})
+  rs <- return (FS_stat_result Nothing Nothing)
+  res <- (Control.Exception.catch
+    (do
+      res <- Iface.fS_stat handler (f_FS_stat_args_path args)
+      return rs{f_FS_stat_result_success= Just res})
+    (\e  -> 
+      return rs{f_FS_stat_result_missingFields =Just e}))
   writeMessageBegin oprot ("FS_stat", M_REPLY, seqid);
   write_FS_stat_result oprot res
   writeMessageEnd oprot
@@ -3491,10 +3567,13 @@ process_fS_stat (seqid, iprot, oprot, handler) = do
 process_fS_mkdir (seqid, iprot, oprot, handler) = do
   args <- read_FS_mkdir_args iprot
   readMessageEnd iprot
-  rs <- return (FS_mkdir_result)
-  res <- (do
-    Iface.fS_mkdir handler (f_FS_mkdir_args_path args)
-    return rs)
+  rs <- return (FS_mkdir_result Nothing)
+  res <- (Control.Exception.catch
+    (do
+      Iface.fS_mkdir handler (f_FS_mkdir_args_path args)
+      return rs)
+    (\e  -> 
+      return rs{f_FS_mkdir_result_missingFields =Just e}))
   writeMessageBegin oprot ("FS_mkdir", M_REPLY, seqid);
   write_FS_mkdir_result oprot res
   writeMessageEnd oprot
@@ -3502,10 +3581,13 @@ process_fS_mkdir (seqid, iprot, oprot, handler) = do
 process_fS_touch (seqid, iprot, oprot, handler) = do
   args <- read_FS_touch_args iprot
   readMessageEnd iprot
-  rs <- return (FS_touch_result)
-  res <- (do
-    Iface.fS_touch handler (f_FS_touch_args_path args)
-    return rs)
+  rs <- return (FS_touch_result Nothing)
+  res <- (Control.Exception.catch
+    (do
+      Iface.fS_touch handler (f_FS_touch_args_path args)
+      return rs)
+    (\e  -> 
+      return rs{f_FS_touch_result_missingFields =Just e}))
   writeMessageBegin oprot ("FS_touch", M_REPLY, seqid);
   write_FS_touch_result oprot res
   writeMessageEnd oprot
@@ -3513,10 +3595,13 @@ process_fS_touch (seqid, iprot, oprot, handler) = do
 process_fS_rm (seqid, iprot, oprot, handler) = do
   args <- read_FS_rm_args iprot
   readMessageEnd iprot
-  rs <- return (FS_rm_result)
-  res <- (do
-    Iface.fS_rm handler (f_FS_rm_args_path args)
-    return rs)
+  rs <- return (FS_rm_result Nothing)
+  res <- (Control.Exception.catch
+    (do
+      Iface.fS_rm handler (f_FS_rm_args_path args)
+      return rs)
+    (\e  -> 
+      return rs{f_FS_rm_result_missingFields =Just e}))
   writeMessageBegin oprot ("FS_rm", M_REPLY, seqid);
   write_FS_rm_result oprot res
   writeMessageEnd oprot
@@ -3524,10 +3609,13 @@ process_fS_rm (seqid, iprot, oprot, handler) = do
 process_fS_cp (seqid, iprot, oprot, handler) = do
   args <- read_FS_cp_args iprot
   readMessageEnd iprot
-  rs <- return (FS_cp_result)
-  res <- (do
-    Iface.fS_cp handler (f_FS_cp_args_src args) (f_FS_cp_args_dst args)
-    return rs)
+  rs <- return (FS_cp_result Nothing)
+  res <- (Control.Exception.catch
+    (do
+      Iface.fS_cp handler (f_FS_cp_args_src args) (f_FS_cp_args_dst args)
+      return rs)
+    (\e  -> 
+      return rs{f_FS_cp_result_missingFields =Just e}))
   writeMessageBegin oprot ("FS_cp", M_REPLY, seqid);
   write_FS_cp_result oprot res
   writeMessageEnd oprot
@@ -3535,10 +3623,13 @@ process_fS_cp (seqid, iprot, oprot, handler) = do
 process_fS_mv (seqid, iprot, oprot, handler) = do
   args <- read_FS_mv_args iprot
   readMessageEnd iprot
-  rs <- return (FS_mv_result)
-  res <- (do
-    Iface.fS_mv handler (f_FS_mv_args_src args) (f_FS_mv_args_dst args)
-    return rs)
+  rs <- return (FS_mv_result Nothing)
+  res <- (Control.Exception.catch
+    (do
+      Iface.fS_mv handler (f_FS_mv_args_src args) (f_FS_mv_args_dst args)
+      return rs)
+    (\e  -> 
+      return rs{f_FS_mv_result_missingFields =Just e}))
   writeMessageBegin oprot ("FS_mv", M_REPLY, seqid);
   write_FS_mv_result oprot res
   writeMessageEnd oprot
