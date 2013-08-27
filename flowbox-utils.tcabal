@@ -22,4 +22,20 @@ Library
                   MissingH == 1.2.0.0,
                   split,
                   text,
-                  transformers
+                  transformers,
+                  ansi-terminal,
+                  hslogger
+
+
+Executable utils 
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: tests
+
+  GHC-Options:    -Wall 
+
+  Extensions:     DoAndIfThenElse
+                  MultiParamTypeClasses
+  Build-Depends:  base,
+                  ansi-terminal,
+                  hslogger,
+                  flowbox-utils
