@@ -18,7 +18,4 @@ import qualified Flowbox.Batch.Samples.Modules        as Sample
 
 main :: IO()
 main = do
-	let
-		pm = ProjectManager.insNode (0, Sample.project)
-		   $ ProjectManager.empty  --mkGraph [(0, Sample.project)]
 	print "helpme world"

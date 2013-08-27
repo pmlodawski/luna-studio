@@ -13,12 +13,11 @@ module Flowbox.Luna.Samples.HelloWorld(
 ) where
 
 
-import qualified Data.Map                                as Map
 import qualified Flowbox.System.UniPath                  as UniPath
 import qualified Flowbox.Luna.Network.Flags              as Flags
 import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
-import           Flowbox.Luna.Network.Def.DefManager       (DefManager(..))
+import           Flowbox.Luna.Network.Def.DefManager       (DefManager)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Flowbox.Luna.Network.Graph.Edge         as Edge
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
@@ -30,11 +29,9 @@ import           Flowbox.Luna.Network.Def.Definition       (Definition(..))
 import qualified Flowbox.Luna.Lib.Library                as Library
 import           Flowbox.Luna.Lib.Library                  (Library(..))
 import qualified Flowbox.Luna.Lib.LibManager             as LibManager
-import           Flowbox.Luna.Lib.LibManager               (LibManager(..))
+import           Flowbox.Luna.Lib.LibManager               (LibManager)
 import qualified Flowbox.Luna.Type.Type                  as Type
 import           Flowbox.Luna.Type.Type                    (Type(..))
-import           Flowbox.Luna.Network.Path.Path            (Path(..))
-import           Flowbox.Luna.Network.Path.Import          (Import(..))
 
 
 
@@ -44,11 +41,7 @@ import           Flowbox.Luna.Network.Path.Import          (Import(..))
 --     $ Core.empty
 
 
-
-
-
-
-    
+myFunGraph :: LibManager.Gr Node Edge
 myFunGraph = Graph.insEdges [
                                 (0, 1, Edge.standard),
                                 (1, 2, Edge.standard),
@@ -82,9 +75,13 @@ myFunGraph = Graph.insEdges [
                             ]
            $ Graph.empty
 
+
+myFunInputs :: Type
 myFunInputs = Type.Tuple [Type.TypeVariable "a", 
                           Type.Named "in1" $ Type.TypeVariable "b"]
 
+
+myFun :: Definition
 myFun = Definition.empty{ Definition.cls   = (Type.Function "myFun" myFunInputs Type.noOutputs)
                         , Definition.graph = myFunGraph
                         }
@@ -93,7 +90,7 @@ myFun = Definition.empty{ Definition.cls   = (Type.Function "myFun" myFunInputs 
 -------------------------------------------------------------------------
 
 
-
+myFunGraph2 :: LibManager.Gr Node Edge
 myFunGraph2 = Graph.insEdges [(0, 1, Edge.standard),
                               (0, 2, Edge.standard),
                               (1, 3, Edge.standard),
@@ -111,15 +108,20 @@ myFunGraph2 = Graph.insEdges [(0, 1, Edge.standard),
                             ]
            $ Graph.empty
 
+
+myFunInputs2 :: Type
 myFunInputs2 = Type.Tuple [ Type.Named "in1" $ Type.TypeVariable "a"
                           , Type.Named "in2" $ Type.TypeVariable "b"
                           ]
 
 
+myFun2 :: Definition
 myFun2 = Definition.empty{ Definition.cls   = (Type.Function "myFun2" myFunInputs2 Type.noOutputs)
                          , Definition.graph = myFunGraph2
                          }
 
+
+myFunGraph3 :: LibManager.Gr Node Edge
 myFunGraph3 = Graph.insEdges [
                               (0,  1,  Edge.standard),
                               (1,  2,  Edge.standard),
@@ -155,17 +157,19 @@ myFunGraph3 = Graph.insEdges [
                             ]
            $ Graph.empty
 
+
+myFunInputs3 :: Type
 myFunInputs3 = Type.Tuple [Type.TypeVariable "a", 
                           Type.Named "in1" $ Type.TypeVariable "b"]
 
 
+myFun3 :: Definition
 myFun3 = Definition.empty{ Definition.cls   = (Type.Function "myFun3" myFunInputs3 Type.noOutputs)
                          , Definition.graph = myFunGraph3
                          }
 
 
-
-
+func_vec_incx_graph :: LibManager.Gr Node Edge
 func_vec_incx_graph = Graph.insEdges [
                               (0, 1, Edge.standard),
                               (1, 2, Edge.standard),
@@ -196,19 +200,19 @@ func_vec_incx_graph = Graph.insEdges [
                             ]
            $ Graph.empty
 
+
+func_vec_incx_inputs :: Type
 func_vec_incx_inputs = Type.Tuple [Type.TypeVariable "a", 
                           Type.Named "in1" $ Type.TypeVariable "b"]
 
 
+func_vec_incx :: Definition
 func_vec_incx = Definition.empty{ Definition.cls   = (Type.Function "incx" func_vec_incx_inputs Type.noOutputs)
                       , Definition.graph = func_vec_incx_graph
                       }
 
 
-
-
-
-
+myFunGraph5 :: LibManager.Gr Node Edge
 myFunGraph5 = Graph.insEdges [
                               (2, 3, Edge.standard),
                               (3, 5, Edge.standard),
@@ -227,17 +231,17 @@ myFunGraph5 = Graph.insEdges [
            $ Graph.empty
 
 
+myFunInputs5 :: Type
 myFunInputs5 = Type.Tuple []
 
 
+myFun5 :: Definition
 myFun5 = Definition.empty{ Definition.cls   = (Type.Function "mymain" myFunInputs5 Type.noOutputs)
                       , Definition.graph = myFunGraph5
                       }
 
 
-
-
-
+func_vec_init_graph :: LibManager.Gr Node Edge
 func_vec_init_graph = Graph.insEdges [
                               (0 , 1,  Edge.standard),
                               (0 , 2,  Edge.standard),
@@ -274,17 +278,20 @@ func_vec_init_graph = Graph.insEdges [
                             ]
            $ Graph.empty
 
+
+func_vec_init_inputs :: Type
 func_vec_init_inputs = Type.Tuple [Type.TypeVariable "a", 
                           Type.Named "in1" $ Type.TypeVariable "b"]
 
 
+func_vec_init :: Definition
 func_vec_init = Definition.empty{ Definition.cls   = (Type.Function "init" func_vec_init_inputs Type.noOutputs)
                       , Definition.graph = func_vec_init_graph
                       }
 
 
 
-
+func_main1_graph :: LibManager.Gr Node Edge
 func_main1_graph = Graph.insEdges [
                               (2, 3, Edge.standard),
                               (3, 5, Edge.standard),
@@ -303,9 +310,11 @@ func_main1_graph = Graph.insEdges [
            $ Graph.empty
 
 
+func_main1_inputs :: Type
 func_main1_inputs = Type.Tuple []
 
 
+func_main1 :: Definition
 func_main1 = Definition.empty{ Definition.cls   = (Type.Function "testtypes" func_main1_inputs Type.noOutputs)
                       , Definition.graph = func_main1_graph
                       }
@@ -336,7 +345,7 @@ func_main1 = Definition.empty{ Definition.cls   = (Type.Function "testtypes" fun
 --                      }
 
 
-
+cls_vector :: Definition
 cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
                     , Definition.graph = Graph.empty
                     }
@@ -368,10 +377,11 @@ cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Typ
 --                                            (1, 2, myFun3),
 --                                            (100, 1, myFun2)]
 
-
+base_workspacelib :: Library
 base_workspacelib    = Library.make "Workspace" (UniPath.fromUnixString "samples/workspace/TestProject/libs")
 
 
+full_manager :: DefManager
 full_manager =  DefManager.addToParentMany [ (1, 100, func_main1),
                                              (1, 3, func_vec_incx)
                                            , (1, 2, func_vec_init)
@@ -380,7 +390,7 @@ full_manager =  DefManager.addToParentMany [ (1, 100, func_main1),
              $ Library.defs base_workspacelib
 
 
-
+workspacelib :: Library
 workspacelib = base_workspacelib { defs = full_manager }
 
 libman :: LibManager

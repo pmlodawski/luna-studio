@@ -65,8 +65,10 @@ import           Prelude                   hiding (error)
 import           Flowbox.System.Log.Logger   
 
 
+logger :: (String -> IO ()) -> IO ()
 logger = getLogger "MyApp.BuggyComponent"
 
+main :: IO ()
 main = do
         logger.setLevel  $ DEBUG
         logger.debug     $ "debug"

@@ -27,17 +27,19 @@ import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Flowbox.Luna.Network.Graph.Edge         as Edge
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
 
+
+
 mkDefinition :: Type -> Definition
-mkDefinition cls = Definition.empty{ Definition.cls = cls
+mkDefinition acls = Definition.empty{ Definition.cls = acls
                                     , Definition.graph = Graph.empty
                         	        }
 
 mkModule :: String -> Definition
-mkModule name = mkDefinition (Module name) 
+mkModule aname = mkDefinition (Module aname) 
 
 
 mkClass :: String -> Definition
-mkClass name  = mkDefinition (Class name [] [])
+mkClass aname  = mkDefinition (Class aname [] [])
 
 
 listToDefs :: [String] -> Definition.ID -> Definition.ID -> [(Definition.ID, Definition.ID, Definition)]
@@ -51,26 +53,31 @@ wladcyPolski = ["Bronislaw Komorowski", "Donald Tusk", "Lech Kaczynski", "Jarosl
 atrybuty :: [String]
 atrybuty = ["Berlo", "Konstytucja 3 maja", "iPad", "jablko", "korona", "front jednosci narodu", "lista wyborcza", "cenzura", "wstazka", "dwie wstazki", "order pracy ze wstazka", "order pracy bez wstazki", "partia", "narod", "komitet wyborczy", "wyborcy", "lud", "elity", "reputacja", "media", "stronnicze media", "obiektywne media", "praworzadnosc", "promienny usmiech", "usmiech do zlej gry", "kabel", "BOR", "garnitur", "mundur"]
 
+
+cls_console :: Definition
 cls_console = Definition.empty { Definition.cls   = Type.Class "Console" [] []
                                , Definition.graph = Graph.empty
                                }
 
+cls_vector :: Definition
 cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
                     , Definition.graph = Graph.empty
                     }
 
 addSomeDefs :: DefManager -> DefManager
-addSomeDefs defs = DefManager.addToParentMany (listToDefs atrybuty 2000 20)
-                 $ DefManager.addToParent (0, 20, mkModule "atrybuty")
-                 $ DefManager.addToParentMany (listToDefs wladcyPolski 1000 10)
-                 $ DefManager.addToParent (0, 10, mkModule "wladcyPolski")
-                 $ DefManager.addToParent (4, 5 , func_vec_incx)
-                 $ DefManager.addToParent (3, 4 , cls_vector)
-                 $ DefManager.addToParent (1, 3 , mkModule "Math")
-                 $ DefManager.addToParent (1, 2 , mkModule "IO")
-                 $ DefManager.addToParent (0, 1 , mkModule "Std")
-                 $ defs
+addSomeDefs adefs = DefManager.addToParentMany (listToDefs atrybuty 2000 20)
+                  $ DefManager.addToParent (0, 20, mkModule "atrybuty")
+                  $ DefManager.addToParentMany (listToDefs wladcyPolski 1000 10)
+                  $ DefManager.addToParent (0, 10, mkModule "wladcyPolski")
+                  $ DefManager.addToParent (4, 5 , func_vec_incx)
+                  $ DefManager.addToParent (3, 4 , cls_vector)
+                  $ DefManager.addToParent (1, 3 , mkModule "Math")
+                  $ DefManager.addToParent (1, 2 , mkModule "IO")
+                  $ DefManager.addToParent (0, 1 , mkModule "Std")
+                  $ adefs
 
+
+func_vec_incx_graph :: LibManager.Gr Node Edge
 func_vec_incx_graph = Graph.insEdges [
                               (0, 1, Edge.standard),
                               (1, 2, Edge.standard),
@@ -101,10 +108,12 @@ func_vec_incx_graph = Graph.insEdges [
                             ]
            $ Graph.empty
 
+func_vec_incx_inputs :: Type
 func_vec_incx_inputs = Type.Tuple [Type.Named "self" $ Type.TypeVariable "a", 
                                    Type.Named "in2" $ Type.TypeVariable "a"]
 
 
+func_vec_incx :: Definition
 func_vec_incx = Definition.empty{ Definition.cls   = (Type.Function "incx" func_vec_incx_inputs Type.noOutputs)
                       , Definition.graph = func_vec_incx_graph
                       }

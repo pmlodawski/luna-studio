@@ -24,18 +24,6 @@ import qualified Flowbox.System.UniPath        as UniPath
 import           Flowbox.System.UniPath          (UniPath)
 
 
-handleFSObject :: UniPath -> (FilePath -> IO a) -> (FilePath -> IO a) -> IO a
-handleFSObject upath dirOperation fileOperation = do 
-    let apath = UniPath.toUnixString upath
-
-    isDir  <- Directory.doesDirectoryExist apath
-    if isDir 
-        then dirOperation apath
-        else do
-            isFile <- Directory.doesFileExist apath
-            if isFile 
-                then fileOperation apath
-                else error "Unsupported file system object type."
 
 ls :: UniPath -> IO [Item]
 ls upath = do
