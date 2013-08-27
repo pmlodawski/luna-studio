@@ -53,7 +53,7 @@ removeNode nodeID defID libID = noresult . graphOp defID libID (\_ agraph ->
             newGraph      = Graph.delNode nodeID agraph)
 
 
-connect :: Node.ID -> [Int] -> Node.ID -> Int -> Definition.ID -> Library.ID -> Batch -> Either String Batch
+connect :: Node.ID -> [Int] -> Node.ID -> [Int] -> Definition.ID -> Library.ID -> Batch -> Either String Batch
 connect srcNodeID asrcPort dstNodeID adstPort defID libID = noresult . graphOp defID libID (\_ agraph -> 
     case Graph.gelem srcNodeID agraph of 
         False     -> Left "Wrong `srcNodeID`"
@@ -66,7 +66,7 @@ connect srcNodeID asrcPort dstNodeID adstPort defID libID = noresult . graphOp d
                 in Right (newGraph, ()))
 
 
-disconnect :: Node.ID -> [Int] -> Node.ID -> Int -> Definition.ID -> Library.ID -> Batch -> Either String Batch
+disconnect :: Node.ID -> [Int] -> Node.ID -> [Int] -> Definition.ID -> Library.ID -> Batch -> Either String Batch
 disconnect srcNodeID asrcPort dstNodeID adstPort defID libID = noresult . graphOp defID libID (\_ agraph -> 
     case Graph.gelem srcNodeID agraph of 
         False     -> Left "Wrong `srcNodeID`"

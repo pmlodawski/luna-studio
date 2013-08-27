@@ -12,7 +12,7 @@ module Flowbox.Batch.GraphView.EdgeView(
 
 
 data EdgeView = EdgeView { srcPort :: [Int]
-                         , dstPort :: Int
+                         , dstPort :: [Int]
                          } deriving (Show, Read, Ord, Eq)
 
 empty :: [EdgeView]

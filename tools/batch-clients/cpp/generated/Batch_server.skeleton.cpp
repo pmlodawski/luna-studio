@@ -182,12 +182,12 @@ class BatchHandler : virtual public BatchIf {
     printf("removeNode\n");
   }
 
-  void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
     // Your implementation goes here
     printf("connect\n");
   }
 
-  void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
     // Your implementation goes here
     printf("disconnect\n");
   }

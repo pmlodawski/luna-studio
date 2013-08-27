@@ -6033,8 +6033,20 @@ uint32_t Batch_connect_args::read(::apache::thrift::protocol::TProtocol* iprot) 
         }
         break;
       case 4:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->dstPort);
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->dstPort.clear();
+            uint32_t _size59;
+            ::apache::thrift::protocol::TType _etype62;
+            xfer += iprot->readListBegin(_etype62, _size59);
+            this->dstPort.resize(_size59);
+            uint32_t _i63;
+            for (_i63 = 0; _i63 < _size59; ++_i63)
+            {
+              xfer += iprot->readI32(this->dstPort[_i63]);
+            }
+            xfer += iprot->readListEnd();
+          }
           this->__isset.dstPort = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -6079,10 +6091,10 @@ uint32_t Batch_connect_args::write(::apache::thrift::protocol::TProtocol* oprot)
   xfer += oprot->writeFieldBegin("srcPort", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->srcPort.size()));
-    std::vector<int32_t> ::const_iterator _iter59;
-    for (_iter59 = this->srcPort.begin(); _iter59 != this->srcPort.end(); ++_iter59)
+    std::vector<int32_t> ::const_iterator _iter64;
+    for (_iter64 = this->srcPort.begin(); _iter64 != this->srcPort.end(); ++_iter64)
     {
-      xfer += oprot->writeI32((*_iter59));
+      xfer += oprot->writeI32((*_iter64));
     }
     xfer += oprot->writeListEnd();
   }
@@ -6092,8 +6104,16 @@ uint32_t Batch_connect_args::write(::apache::thrift::protocol::TProtocol* oprot)
   xfer += oprot->writeI32(this->dstNodeID);
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_I32, 4);
-  xfer += oprot->writeI32(this->dstPort);
+  xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_LIST, 4);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->dstPort.size()));
+    std::vector<int32_t> ::const_iterator _iter65;
+    for (_iter65 = this->dstPort.begin(); _iter65 != this->dstPort.end(); ++_iter65)
+    {
+      xfer += oprot->writeI32((*_iter65));
+    }
+    xfer += oprot->writeListEnd();
+  }
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 5);
@@ -6120,10 +6140,10 @@ uint32_t Batch_connect_pargs::write(::apache::thrift::protocol::TProtocol* oprot
   xfer += oprot->writeFieldBegin("srcPort", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>((*(this->srcPort)).size()));
-    std::vector<int32_t> ::const_iterator _iter60;
-    for (_iter60 = (*(this->srcPort)).begin(); _iter60 != (*(this->srcPort)).end(); ++_iter60)
+    std::vector<int32_t> ::const_iterator _iter66;
+    for (_iter66 = (*(this->srcPort)).begin(); _iter66 != (*(this->srcPort)).end(); ++_iter66)
     {
-      xfer += oprot->writeI32((*_iter60));
+      xfer += oprot->writeI32((*_iter66));
     }
     xfer += oprot->writeListEnd();
   }
@@ -6133,8 +6153,16 @@ uint32_t Batch_connect_pargs::write(::apache::thrift::protocol::TProtocol* oprot
   xfer += oprot->writeI32((*(this->dstNodeID)));
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_I32, 4);
-  xfer += oprot->writeI32((*(this->dstPort)));
+  xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_LIST, 4);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>((*(this->dstPort)).size()));
+    std::vector<int32_t> ::const_iterator _iter67;
+    for (_iter67 = (*(this->dstPort)).begin(); _iter67 != (*(this->dstPort)).end(); ++_iter67)
+    {
+      xfer += oprot->writeI32((*_iter67));
+    }
+    xfer += oprot->writeListEnd();
+  }
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 5);
@@ -6278,14 +6306,14 @@ uint32_t Batch_disconnect_args::read(::apache::thrift::protocol::TProtocol* ipro
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->srcPort.clear();
-            uint32_t _size61;
-            ::apache::thrift::protocol::TType _etype64;
-            xfer += iprot->readListBegin(_etype64, _size61);
-            this->srcPort.resize(_size61);
-            uint32_t _i65;
-            for (_i65 = 0; _i65 < _size61; ++_i65)
+            uint32_t _size68;
+            ::apache::thrift::protocol::TType _etype71;
+            xfer += iprot->readListBegin(_etype71, _size68);
+            this->srcPort.resize(_size68);
+            uint32_t _i72;
+            for (_i72 = 0; _i72 < _size68; ++_i72)
             {
-              xfer += iprot->readI32(this->srcPort[_i65]);
+              xfer += iprot->readI32(this->srcPort[_i72]);
             }
             xfer += iprot->readListEnd();
           }
@@ -6303,8 +6331,20 @@ uint32_t Batch_disconnect_args::read(::apache::thrift::protocol::TProtocol* ipro
         }
         break;
       case 4:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->dstPort);
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->dstPort.clear();
+            uint32_t _size73;
+            ::apache::thrift::protocol::TType _etype76;
+            xfer += iprot->readListBegin(_etype76, _size73);
+            this->dstPort.resize(_size73);
+            uint32_t _i77;
+            for (_i77 = 0; _i77 < _size73; ++_i77)
+            {
+              xfer += iprot->readI32(this->dstPort[_i77]);
+            }
+            xfer += iprot->readListEnd();
+          }
           this->__isset.dstPort = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -6349,10 +6389,10 @@ uint32_t Batch_disconnect_args::write(::apache::thrift::protocol::TProtocol* opr
   xfer += oprot->writeFieldBegin("srcPort", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->srcPort.size()));
-    std::vector<int32_t> ::const_iterator _iter66;
-    for (_iter66 = this->srcPort.begin(); _iter66 != this->srcPort.end(); ++_iter66)
+    std::vector<int32_t> ::const_iterator _iter78;
+    for (_iter78 = this->srcPort.begin(); _iter78 != this->srcPort.end(); ++_iter78)
     {
-      xfer += oprot->writeI32((*_iter66));
+      xfer += oprot->writeI32((*_iter78));
     }
     xfer += oprot->writeListEnd();
   }
@@ -6362,8 +6402,16 @@ uint32_t Batch_disconnect_args::write(::apache::thrift::protocol::TProtocol* opr
   xfer += oprot->writeI32(this->dstNodeID);
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_I32, 4);
-  xfer += oprot->writeI32(this->dstPort);
+  xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_LIST, 4);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->dstPort.size()));
+    std::vector<int32_t> ::const_iterator _iter79;
+    for (_iter79 = this->dstPort.begin(); _iter79 != this->dstPort.end(); ++_iter79)
+    {
+      xfer += oprot->writeI32((*_iter79));
+    }
+    xfer += oprot->writeListEnd();
+  }
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 5);
@@ -6390,10 +6438,10 @@ uint32_t Batch_disconnect_pargs::write(::apache::thrift::protocol::TProtocol* op
   xfer += oprot->writeFieldBegin("srcPort", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>((*(this->srcPort)).size()));
-    std::vector<int32_t> ::const_iterator _iter67;
-    for (_iter67 = (*(this->srcPort)).begin(); _iter67 != (*(this->srcPort)).end(); ++_iter67)
+    std::vector<int32_t> ::const_iterator _iter80;
+    for (_iter80 = (*(this->srcPort)).begin(); _iter80 != (*(this->srcPort)).end(); ++_iter80)
     {
-      xfer += oprot->writeI32((*_iter67));
+      xfer += oprot->writeI32((*_iter80));
     }
     xfer += oprot->writeListEnd();
   }
@@ -6403,8 +6451,16 @@ uint32_t Batch_disconnect_pargs::write(::apache::thrift::protocol::TProtocol* op
   xfer += oprot->writeI32((*(this->dstNodeID)));
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_I32, 4);
-  xfer += oprot->writeI32((*(this->dstPort)));
+  xfer += oprot->writeFieldBegin("dstPort", ::apache::thrift::protocol::T_LIST, 4);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>((*(this->dstPort)).size()));
+    std::vector<int32_t> ::const_iterator _iter81;
+    for (_iter81 = (*(this->dstPort)).begin(); _iter81 != (*(this->dstPort)).end(); ++_iter81)
+    {
+      xfer += oprot->writeI32((*_iter81));
+    }
+    xfer += oprot->writeListEnd();
+  }
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 5);
@@ -6606,14 +6662,14 @@ uint32_t Batch_FS_ls_result::read(::apache::thrift::protocol::TProtocol* iprot) 
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->success.clear();
-            uint32_t _size68;
-            ::apache::thrift::protocol::TType _etype71;
-            xfer += iprot->readListBegin(_etype71, _size68);
-            this->success.resize(_size68);
-            uint32_t _i72;
-            for (_i72 = 0; _i72 < _size68; ++_i72)
+            uint32_t _size82;
+            ::apache::thrift::protocol::TType _etype85;
+            xfer += iprot->readListBegin(_etype85, _size82);
+            this->success.resize(_size82);
+            uint32_t _i86;
+            for (_i86 = 0; _i86 < _size82; ++_i86)
             {
-              xfer += this->success[_i72].read(iprot);
+              xfer += this->success[_i86].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -6652,10 +6708,10 @@ uint32_t Batch_FS_ls_result::write(::apache::thrift::protocol::TProtocol* oprot)
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_LIST, 0);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->success.size()));
-      std::vector< ::flowbox::batch::fs::FSItem> ::const_iterator _iter73;
-      for (_iter73 = this->success.begin(); _iter73 != this->success.end(); ++_iter73)
+      std::vector< ::flowbox::batch::fs::FSItem> ::const_iterator _iter87;
+      for (_iter87 = this->success.begin(); _iter87 != this->success.end(); ++_iter87)
       {
-        xfer += (*_iter73).write(oprot);
+        xfer += (*_iter87).write(oprot);
       }
       xfer += oprot->writeListEnd();
     }
@@ -6694,14 +6750,14 @@ uint32_t Batch_FS_ls_presult::read(::apache::thrift::protocol::TProtocol* iprot)
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             (*(this->success)).clear();
-            uint32_t _size74;
-            ::apache::thrift::protocol::TType _etype77;
-            xfer += iprot->readListBegin(_etype77, _size74);
-            (*(this->success)).resize(_size74);
-            uint32_t _i78;
-            for (_i78 = 0; _i78 < _size74; ++_i78)
+            uint32_t _size88;
+            ::apache::thrift::protocol::TType _etype91;
+            xfer += iprot->readListBegin(_etype91, _size88);
+            (*(this->success)).resize(_size88);
+            uint32_t _i92;
+            for (_i92 = 0; _i92 < _size88; ++_i92)
             {
-              xfer += (*(this->success))[_i78].read(iprot);
+              xfer += (*(this->success))[_i92].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -9884,13 +9940,13 @@ void BatchClient::recv_removeNode()
   return;
 }
 
-void BatchClient::connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
+void BatchClient::connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
 {
   send_connect(srcNodeID, srcPort, dstNodeID, dstPort, defID, libID);
   recv_connect();
 }
 
-void BatchClient::send_connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
+void BatchClient::send_connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("connect", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -9945,13 +10001,13 @@ void BatchClient::recv_connect()
   return;
 }
 
-void BatchClient::disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
+void BatchClient::disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
 {
   send_disconnect(srcNodeID, srcPort, dstNodeID, dstPort, defID, libID);
   recv_disconnect();
 }
 
-void BatchClient::send_disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
+void BatchClient::send_disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("disconnect", ::apache::thrift::protocol::T_CALL, cseqid);

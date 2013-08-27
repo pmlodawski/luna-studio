@@ -77,8 +77,8 @@ class Batch_Iface a where
   addNode :: a -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> IO Graph_Types.Node
   updateNode :: a -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> IO ()
   removeNode :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
-  connect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
-  disconnect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+  connect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> IO ()
+  disconnect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> IO ()
   fS_ls :: a -> Maybe Text -> IO (Vector.Vector Fs_Types.FSItem)
   fS_stat :: a -> Maybe Text -> IO Fs_Types.FSItem
   fS_mkdir :: a -> Maybe Text -> IO ()

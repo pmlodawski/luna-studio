@@ -83,7 +83,7 @@ removeNode batchHandler mtnodeID mtdefID mtlibID = tRunScript $ do
 
 
 connect :: IORef Batch -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
-                       -> Maybe Int32 -> Maybe Int32
+                       -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
                        -> Maybe Int32 -> Maybe Int32 -> IO ()
 connect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID = tRunScript $ do     
     scriptIO $ putStrLn "called connect"
@@ -92,7 +92,8 @@ connect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID
     let vectorToList = map i32toi . Vector.toList
         srcPort = vectorToList tsrcPort
     dstNodeID   <- tryGetID mtdstNodeID "dstNodeID"
-    dstPort     <- tryGetID mtdstPort   "dstPort"
+    tdstPort    <- mtsrcPort <??> "'dstPort' field is missing"
+    let dstPort = vectorToList tdstPort
     defID       <- tryGetID mtdefID     "defID"
     libID       <- tryGetID mtlibID     "libID"
     batch       <- tryReadIORef batchHandler
@@ -102,7 +103,7 @@ connect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID
 
 
 disconnect :: IORef Batch -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
-                          -> Maybe Int32 -> Maybe Int32
+                          -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
                           -> Maybe Int32 -> Maybe Int32 -> IO ()
 disconnect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID = tRunScript $ do     
     scriptIO $ putStrLn "called disconnect"
@@ -111,7 +112,8 @@ disconnect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtli
     let vectorToList = map i32toi . Vector.toList
         srcPort = vectorToList tsrcPort
     dstNodeID   <- tryGetID mtdstNodeID "dstNodeID"
-    dstPort     <- tryGetID mtdstPort   "dstPort"
+    tdstPort    <- mtsrcPort <??> "'dstPort' field is missing"
+    let dstPort = vectorToList tdstPort
     defID       <- tryGetID mtdefID     "defID"
     libID       <- tryGetID mtlibID     "libID"
     batch       <- tryReadIORef batchHandler
