@@ -21,8 +21,8 @@ Library
   Extensions:     DoAndIfThenElse
 
   Exposed-modules: 
-        Flowbox.Control.Error,
         Flowbox.Tools.Conversion,
+        Flowbox.Control.Error,
         Flowbox.System.UniPath,
         Flowbox.System.IO,
         Flowbox.System.Directory,
