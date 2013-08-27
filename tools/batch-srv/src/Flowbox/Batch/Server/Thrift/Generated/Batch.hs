@@ -32,6 +32,7 @@ import qualified Data.Vector          as Vector
 import           Thrift                 
 import           Thrift.Types           ()
 
+import           Fs_Types               
 import           Graphview_Types        
 import           Projects_Types         
 import           Attrs_Types            
@@ -2525,6 +2526,396 @@ read_Disconnect_result iprot = do
   record <- read_Disconnect_result_fields iprot (Disconnect_result{f_Disconnect_result_missingFields=Nothing})
   readStructEnd iprot
   return record
+data FS_ls_args = FS_ls_args{f_FS_ls_args_path :: Maybe Text} deriving (Show,Eq,Typeable)
+instance Hashable FS_ls_args where
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_ls_args_path record  
+write_FS_ls_args oprot record = do
+  writeStructBegin oprot "FS_ls_args"
+  case f_FS_ls_args_path record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("path",T_STRING,1)
+    writeString oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_ls_args_fields iprot record = do
+  (_,_t396,_id397) <- readFieldBegin iprot
+  if _t396 == T_STOP then return record else
+    case _id397 of 
+      1 -> if _t396 == T_STRING then do
+        s <- readString iprot
+        read_FS_ls_args_fields iprot record{f_FS_ls_args_path=Just s}
+        else do
+          skip iprot _t396
+          read_FS_ls_args_fields iprot record
+      _ -> do
+        skip iprot _t396
+        readFieldEnd iprot
+        read_FS_ls_args_fields iprot record
+read_FS_ls_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_ls_args_fields iprot (FS_ls_args{f_FS_ls_args_path=Nothing})
+  readStructEnd iprot
+  return record
+data FS_ls_result = FS_ls_result{f_FS_ls_result_success :: Maybe (Vector.Vector Fs_Types.FSItem)} deriving (Show,Eq,Typeable)
+instance Hashable FS_ls_result where
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_ls_result_success record  
+write_FS_ls_result oprot record = do
+  writeStructBegin oprot "FS_ls_result"
+  case f_FS_ls_result_success record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("success",T_LIST,0)
+    (let f = Vector.mapM_ (\_viter400 -> Fs_Types.write_FSItem oprot _viter400) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_ls_result_fields iprot record = do
+  (_,_t402,_id403) <- readFieldBegin iprot
+  if _t402 == T_STOP then return record else
+    case _id403 of 
+      0 -> if _t402 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_FSItem iprot)) in do {(_etype407,_size404) <- readListBegin iprot; f _size404})
+        read_FS_ls_result_fields iprot record{f_FS_ls_result_success=Just s}
+        else do
+          skip iprot _t402
+          read_FS_ls_result_fields iprot record
+      _ -> do
+        skip iprot _t402
+        readFieldEnd iprot
+        read_FS_ls_result_fields iprot record
+read_FS_ls_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_ls_result_fields iprot (FS_ls_result{f_FS_ls_result_success=Nothing})
+  readStructEnd iprot
+  return record
+data FS_stat_args = FS_stat_args{f_FS_stat_args_path :: Maybe Text} deriving (Show,Eq,Typeable)
+instance Hashable FS_stat_args where
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_stat_args_path record  
+write_FS_stat_args oprot record = do
+  writeStructBegin oprot "FS_stat_args"
+  case f_FS_stat_args_path record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("path",T_STRING,1)
+    writeString oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_stat_args_fields iprot record = do
+  (_,_t412,_id413) <- readFieldBegin iprot
+  if _t412 == T_STOP then return record else
+    case _id413 of 
+      1 -> if _t412 == T_STRING then do
+        s <- readString iprot
+        read_FS_stat_args_fields iprot record{f_FS_stat_args_path=Just s}
+        else do
+          skip iprot _t412
+          read_FS_stat_args_fields iprot record
+      _ -> do
+        skip iprot _t412
+        readFieldEnd iprot
+        read_FS_stat_args_fields iprot record
+read_FS_stat_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_stat_args_fields iprot (FS_stat_args{f_FS_stat_args_path=Nothing})
+  readStructEnd iprot
+  return record
+data FS_stat_result = FS_stat_result{f_FS_stat_result_success :: Maybe Fs_Types.FSItem} deriving (Show,Eq,Typeable)
+instance Hashable FS_stat_result where
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_stat_result_success record  
+write_FS_stat_result oprot record = do
+  writeStructBegin oprot "FS_stat_result"
+  case f_FS_stat_result_success record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("success",T_STRUCT,0)
+    Fs_Types.write_FSItem oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_stat_result_fields iprot record = do
+  (_,_t417,_id418) <- readFieldBegin iprot
+  if _t417 == T_STOP then return record else
+    case _id418 of 
+      0 -> if _t417 == T_STRUCT then do
+        s <- (read_FSItem iprot)
+        read_FS_stat_result_fields iprot record{f_FS_stat_result_success=Just s}
+        else do
+          skip iprot _t417
+          read_FS_stat_result_fields iprot record
+      _ -> do
+        skip iprot _t417
+        readFieldEnd iprot
+        read_FS_stat_result_fields iprot record
+read_FS_stat_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_stat_result_fields iprot (FS_stat_result{f_FS_stat_result_success=Nothing})
+  readStructEnd iprot
+  return record
+data FS_mkdir_args = FS_mkdir_args{f_FS_mkdir_args_path :: Maybe Text} deriving (Show,Eq,Typeable)
+instance Hashable FS_mkdir_args where
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_mkdir_args_path record  
+write_FS_mkdir_args oprot record = do
+  writeStructBegin oprot "FS_mkdir_args"
+  case f_FS_mkdir_args_path record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("path",T_STRING,1)
+    writeString oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_mkdir_args_fields iprot record = do
+  (_,_t422,_id423) <- readFieldBegin iprot
+  if _t422 == T_STOP then return record else
+    case _id423 of 
+      1 -> if _t422 == T_STRING then do
+        s <- readString iprot
+        read_FS_mkdir_args_fields iprot record{f_FS_mkdir_args_path=Just s}
+        else do
+          skip iprot _t422
+          read_FS_mkdir_args_fields iprot record
+      _ -> do
+        skip iprot _t422
+        readFieldEnd iprot
+        read_FS_mkdir_args_fields iprot record
+read_FS_mkdir_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_mkdir_args_fields iprot (FS_mkdir_args{f_FS_mkdir_args_path=Nothing})
+  readStructEnd iprot
+  return record
+data FS_mkdir_result = FS_mkdir_result deriving (Show,Eq,Typeable)
+instance Hashable FS_mkdir_result where
+  hashWithSalt salt record = salt  
+write_FS_mkdir_result oprot record = do
+  writeStructBegin oprot "FS_mkdir_result"
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_mkdir_result_fields iprot record = do
+  (_,_t427,_id428) <- readFieldBegin iprot
+  if _t427 == T_STOP then return record else
+    case _id428 of 
+      _ -> do
+        skip iprot _t427
+        readFieldEnd iprot
+        read_FS_mkdir_result_fields iprot record
+read_FS_mkdir_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_mkdir_result_fields iprot (FS_mkdir_result{})
+  readStructEnd iprot
+  return record
+data FS_touch_args = FS_touch_args{f_FS_touch_args_path :: Maybe Text} deriving (Show,Eq,Typeable)
+instance Hashable FS_touch_args where
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_touch_args_path record  
+write_FS_touch_args oprot record = do
+  writeStructBegin oprot "FS_touch_args"
+  case f_FS_touch_args_path record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("path",T_STRING,1)
+    writeString oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_touch_args_fields iprot record = do
+  (_,_t432,_id433) <- readFieldBegin iprot
+  if _t432 == T_STOP then return record else
+    case _id433 of 
+      1 -> if _t432 == T_STRING then do
+        s <- readString iprot
+        read_FS_touch_args_fields iprot record{f_FS_touch_args_path=Just s}
+        else do
+          skip iprot _t432
+          read_FS_touch_args_fields iprot record
+      _ -> do
+        skip iprot _t432
+        readFieldEnd iprot
+        read_FS_touch_args_fields iprot record
+read_FS_touch_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_touch_args_fields iprot (FS_touch_args{f_FS_touch_args_path=Nothing})
+  readStructEnd iprot
+  return record
+data FS_touch_result = FS_touch_result deriving (Show,Eq,Typeable)
+instance Hashable FS_touch_result where
+  hashWithSalt salt record = salt  
+write_FS_touch_result oprot record = do
+  writeStructBegin oprot "FS_touch_result"
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_touch_result_fields iprot record = do
+  (_,_t437,_id438) <- readFieldBegin iprot
+  if _t437 == T_STOP then return record else
+    case _id438 of 
+      _ -> do
+        skip iprot _t437
+        readFieldEnd iprot
+        read_FS_touch_result_fields iprot record
+read_FS_touch_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_touch_result_fields iprot (FS_touch_result{})
+  readStructEnd iprot
+  return record
+data FS_rm_args = FS_rm_args{f_FS_rm_args_path :: Maybe Text} deriving (Show,Eq,Typeable)
+instance Hashable FS_rm_args where
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_rm_args_path record  
+write_FS_rm_args oprot record = do
+  writeStructBegin oprot "FS_rm_args"
+  case f_FS_rm_args_path record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("path",T_STRING,1)
+    writeString oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_rm_args_fields iprot record = do
+  (_,_t442,_id443) <- readFieldBegin iprot
+  if _t442 == T_STOP then return record else
+    case _id443 of 
+      1 -> if _t442 == T_STRING then do
+        s <- readString iprot
+        read_FS_rm_args_fields iprot record{f_FS_rm_args_path=Just s}
+        else do
+          skip iprot _t442
+          read_FS_rm_args_fields iprot record
+      _ -> do
+        skip iprot _t442
+        readFieldEnd iprot
+        read_FS_rm_args_fields iprot record
+read_FS_rm_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_rm_args_fields iprot (FS_rm_args{f_FS_rm_args_path=Nothing})
+  readStructEnd iprot
+  return record
+data FS_rm_result = FS_rm_result deriving (Show,Eq,Typeable)
+instance Hashable FS_rm_result where
+  hashWithSalt salt record = salt  
+write_FS_rm_result oprot record = do
+  writeStructBegin oprot "FS_rm_result"
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_rm_result_fields iprot record = do
+  (_,_t447,_id448) <- readFieldBegin iprot
+  if _t447 == T_STOP then return record else
+    case _id448 of 
+      _ -> do
+        skip iprot _t447
+        readFieldEnd iprot
+        read_FS_rm_result_fields iprot record
+read_FS_rm_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_rm_result_fields iprot (FS_rm_result{})
+  readStructEnd iprot
+  return record
+data FS_cp_args = FS_cp_args{f_FS_cp_args_src :: Maybe Text,f_FS_cp_args_dst :: Maybe Text} deriving (Show,Eq,Typeable)
+instance Hashable FS_cp_args where
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_cp_args_src record   `hashWithSalt` f_FS_cp_args_dst record  
+write_FS_cp_args oprot record = do
+  writeStructBegin oprot "FS_cp_args"
+  case f_FS_cp_args_src record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("src",T_STRING,1)
+    writeString oprot _v
+    writeFieldEnd oprot}
+  case f_FS_cp_args_dst record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("dst",T_STRING,2)
+    writeString oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_cp_args_fields iprot record = do
+  (_,_t452,_id453) <- readFieldBegin iprot
+  if _t452 == T_STOP then return record else
+    case _id453 of 
+      1 -> if _t452 == T_STRING then do
+        s <- readString iprot
+        read_FS_cp_args_fields iprot record{f_FS_cp_args_src=Just s}
+        else do
+          skip iprot _t452
+          read_FS_cp_args_fields iprot record
+      2 -> if _t452 == T_STRING then do
+        s <- readString iprot
+        read_FS_cp_args_fields iprot record{f_FS_cp_args_dst=Just s}
+        else do
+          skip iprot _t452
+          read_FS_cp_args_fields iprot record
+      _ -> do
+        skip iprot _t452
+        readFieldEnd iprot
+        read_FS_cp_args_fields iprot record
+read_FS_cp_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_cp_args_fields iprot (FS_cp_args{f_FS_cp_args_src=Nothing,f_FS_cp_args_dst=Nothing})
+  readStructEnd iprot
+  return record
+data FS_cp_result = FS_cp_result deriving (Show,Eq,Typeable)
+instance Hashable FS_cp_result where
+  hashWithSalt salt record = salt  
+write_FS_cp_result oprot record = do
+  writeStructBegin oprot "FS_cp_result"
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_cp_result_fields iprot record = do
+  (_,_t457,_id458) <- readFieldBegin iprot
+  if _t457 == T_STOP then return record else
+    case _id458 of 
+      _ -> do
+        skip iprot _t457
+        readFieldEnd iprot
+        read_FS_cp_result_fields iprot record
+read_FS_cp_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_cp_result_fields iprot (FS_cp_result{})
+  readStructEnd iprot
+  return record
+data FS_mv_args = FS_mv_args{f_FS_mv_args_src :: Maybe Text,f_FS_mv_args_dst :: Maybe Text} deriving (Show,Eq,Typeable)
+instance Hashable FS_mv_args where
+  hashWithSalt salt record = salt   `hashWithSalt` f_FS_mv_args_src record   `hashWithSalt` f_FS_mv_args_dst record  
+write_FS_mv_args oprot record = do
+  writeStructBegin oprot "FS_mv_args"
+  case f_FS_mv_args_src record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("src",T_STRING,1)
+    writeString oprot _v
+    writeFieldEnd oprot}
+  case f_FS_mv_args_dst record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("dst",T_STRING,2)
+    writeString oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_mv_args_fields iprot record = do
+  (_,_t462,_id463) <- readFieldBegin iprot
+  if _t462 == T_STOP then return record else
+    case _id463 of 
+      1 -> if _t462 == T_STRING then do
+        s <- readString iprot
+        read_FS_mv_args_fields iprot record{f_FS_mv_args_src=Just s}
+        else do
+          skip iprot _t462
+          read_FS_mv_args_fields iprot record
+      2 -> if _t462 == T_STRING then do
+        s <- readString iprot
+        read_FS_mv_args_fields iprot record{f_FS_mv_args_dst=Just s}
+        else do
+          skip iprot _t462
+          read_FS_mv_args_fields iprot record
+      _ -> do
+        skip iprot _t462
+        readFieldEnd iprot
+        read_FS_mv_args_fields iprot record
+read_FS_mv_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_mv_args_fields iprot (FS_mv_args{f_FS_mv_args_src=Nothing,f_FS_mv_args_dst=Nothing})
+  readStructEnd iprot
+  return record
+data FS_mv_result = FS_mv_result deriving (Show,Eq,Typeable)
+instance Hashable FS_mv_result where
+  hashWithSalt salt record = salt  
+write_FS_mv_result oprot record = do
+  writeStructBegin oprot "FS_mv_result"
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_FS_mv_result_fields iprot record = do
+  (_,_t467,_id468) <- readFieldBegin iprot
+  if _t467 == T_STOP then return record else
+    case _id468 of 
+      _ -> do
+        skip iprot _t467
+        readFieldEnd iprot
+        read_FS_mv_result_fields iprot record
+read_FS_mv_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_FS_mv_result_fields iprot (FS_mv_result{})
+  readStructEnd iprot
+  return record
 data Ping_args = Ping_args deriving (Show,Eq,Typeable)
 instance Hashable Ping_args where
   hashWithSalt salt record = salt  
@@ -2533,11 +2924,11 @@ write_Ping_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Ping_args_fields iprot record = do
-  (_,_t396,_id397) <- readFieldBegin iprot
-  if _t396 == T_STOP then return record else
-    case _id397 of 
+  (_,_t472,_id473) <- readFieldBegin iprot
+  if _t472 == T_STOP then return record else
+    case _id473 of 
       _ -> do
-        skip iprot _t396
+        skip iprot _t472
         readFieldEnd iprot
         read_Ping_args_fields iprot record
 read_Ping_args iprot = do
@@ -2553,11 +2944,11 @@ write_Ping_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Ping_result_fields iprot record = do
-  (_,_t401,_id402) <- readFieldBegin iprot
-  if _t401 == T_STOP then return record else
-    case _id402 of 
+  (_,_t477,_id478) <- readFieldBegin iprot
+  if _t477 == T_STOP then return record else
+    case _id478 of 
       _ -> do
-        skip iprot _t401
+        skip iprot _t477
         readFieldEnd iprot
         read_Ping_result_fields iprot record
 read_Ping_result iprot = do
@@ -2573,11 +2964,11 @@ write_Dump_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Dump_args_fields iprot record = do
-  (_,_t406,_id407) <- readFieldBegin iprot
-  if _t406 == T_STOP then return record else
-    case _id407 of 
+  (_,_t482,_id483) <- readFieldBegin iprot
+  if _t482 == T_STOP then return record else
+    case _id483 of 
       _ -> do
-        skip iprot _t406
+        skip iprot _t482
         readFieldEnd iprot
         read_Dump_args_fields iprot record
 read_Dump_args iprot = do
@@ -2593,11 +2984,11 @@ write_Dump_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Dump_result_fields iprot record = do
-  (_,_t411,_id412) <- readFieldBegin iprot
-  if _t411 == T_STOP then return record else
-    case _id412 of 
+  (_,_t487,_id488) <- readFieldBegin iprot
+  if _t487 == T_STOP then return record else
+    case _id488 of 
       _ -> do
-        skip iprot _t411
+        skip iprot _t487
         readFieldEnd iprot
         read_Dump_result_fields iprot record
 read_Dump_result iprot = do
@@ -3075,6 +3466,83 @@ process_disconnect (seqid, iprot, oprot, handler) = do
   write_Disconnect_result oprot res
   writeMessageEnd oprot
   tFlush (getTransport oprot)
+process_fS_ls (seqid, iprot, oprot, handler) = do
+  args <- read_FS_ls_args iprot
+  readMessageEnd iprot
+  rs <- return (FS_ls_result Nothing)
+  res <- (do
+    res <- Iface.fS_ls handler (f_FS_ls_args_path args)
+    return rs{f_FS_ls_result_success= Just res})
+  writeMessageBegin oprot ("FS_ls", M_REPLY, seqid);
+  write_FS_ls_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
+process_fS_stat (seqid, iprot, oprot, handler) = do
+  args <- read_FS_stat_args iprot
+  readMessageEnd iprot
+  rs <- return (FS_stat_result Nothing)
+  res <- (do
+    res <- Iface.fS_stat handler (f_FS_stat_args_path args)
+    return rs{f_FS_stat_result_success= Just res})
+  writeMessageBegin oprot ("FS_stat", M_REPLY, seqid);
+  write_FS_stat_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
+process_fS_mkdir (seqid, iprot, oprot, handler) = do
+  args <- read_FS_mkdir_args iprot
+  readMessageEnd iprot
+  rs <- return (FS_mkdir_result)
+  res <- (do
+    Iface.fS_mkdir handler (f_FS_mkdir_args_path args)
+    return rs)
+  writeMessageBegin oprot ("FS_mkdir", M_REPLY, seqid);
+  write_FS_mkdir_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
+process_fS_touch (seqid, iprot, oprot, handler) = do
+  args <- read_FS_touch_args iprot
+  readMessageEnd iprot
+  rs <- return (FS_touch_result)
+  res <- (do
+    Iface.fS_touch handler (f_FS_touch_args_path args)
+    return rs)
+  writeMessageBegin oprot ("FS_touch", M_REPLY, seqid);
+  write_FS_touch_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
+process_fS_rm (seqid, iprot, oprot, handler) = do
+  args <- read_FS_rm_args iprot
+  readMessageEnd iprot
+  rs <- return (FS_rm_result)
+  res <- (do
+    Iface.fS_rm handler (f_FS_rm_args_path args)
+    return rs)
+  writeMessageBegin oprot ("FS_rm", M_REPLY, seqid);
+  write_FS_rm_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
+process_fS_cp (seqid, iprot, oprot, handler) = do
+  args <- read_FS_cp_args iprot
+  readMessageEnd iprot
+  rs <- return (FS_cp_result)
+  res <- (do
+    Iface.fS_cp handler (f_FS_cp_args_src args) (f_FS_cp_args_dst args)
+    return rs)
+  writeMessageBegin oprot ("FS_cp", M_REPLY, seqid);
+  write_FS_cp_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
+process_fS_mv (seqid, iprot, oprot, handler) = do
+  args <- read_FS_mv_args iprot
+  readMessageEnd iprot
+  rs <- return (FS_mv_result)
+  res <- (do
+    Iface.fS_mv handler (f_FS_mv_args_src args) (f_FS_mv_args_dst args)
+    return rs)
+  writeMessageBegin oprot ("FS_mv", M_REPLY, seqid);
+  write_FS_mv_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
 process_ping (seqid, iprot, oprot, handler) = do
   args <- read_Ping_args iprot
   readMessageEnd iprot
@@ -3132,6 +3600,13 @@ proc_ handler (iprot,oprot) (name,typ,seqid) = case name of
   "removeNode" -> process_removeNode (seqid,iprot,oprot,handler)
   "connect" -> process_connect (seqid,iprot,oprot,handler)
   "disconnect" -> process_disconnect (seqid,iprot,oprot,handler)
+  "FS_ls" -> process_fS_ls (seqid,iprot,oprot,handler)
+  "FS_stat" -> process_fS_stat (seqid,iprot,oprot,handler)
+  "FS_mkdir" -> process_fS_mkdir (seqid,iprot,oprot,handler)
+  "FS_touch" -> process_fS_touch (seqid,iprot,oprot,handler)
+  "FS_rm" -> process_fS_rm (seqid,iprot,oprot,handler)
+  "FS_cp" -> process_fS_cp (seqid,iprot,oprot,handler)
+  "FS_mv" -> process_fS_mv (seqid,iprot,oprot,handler)
   "ping" -> process_ping (seqid,iprot,oprot,handler)
   "dump" -> process_dump (seqid,iprot,oprot,handler)
   _ -> do

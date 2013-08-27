@@ -32,6 +32,7 @@ import qualified Data.Vector          as Vector
 import           Thrift                 
 import           Thrift.Types           ()
 
+import qualified Fs_Types               
 import qualified Graphview_Types        
 import qualified Projects_Types         
 import qualified Attrs_Types            

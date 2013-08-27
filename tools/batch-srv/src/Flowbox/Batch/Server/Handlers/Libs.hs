@@ -53,7 +53,7 @@ libraries batchHandler = tRunScript $ do
 createLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
 createLibrary batchHandler mtlibrary = tRunScript $ do
     scriptIO $ putStrLn "called createLibrary"
-    tlibrary     <- mtlibrary <??> "`library` argument is missing" 
+    tlibrary     <- mtlibrary <??> "'library' argument is missing" 
     (_, library) <- tryRight (decode (tlibrary, DefManager.empty) :: Either String (Library.ID, Library))
     batch <- tryReadIORef batchHandler
     let libName = Library.name library

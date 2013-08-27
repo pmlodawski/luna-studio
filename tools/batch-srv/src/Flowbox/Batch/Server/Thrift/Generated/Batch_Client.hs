@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,createProject,openProject,closeProject,storeProject,setActiveProject,activeProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,ping,dump) where
+module Batch_Client(projects,createProject,openProject,closeProject,storeProject,setActiveProject,activeProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -33,6 +33,7 @@ import qualified Data.Vector          as Vector
 import           Thrift                 
 import           Thrift.Types           ()
 
+import qualified Fs_Types               
 import qualified Graphview_Types        
 import qualified Projects_Types         
 import qualified Attrs_Types            
@@ -886,6 +887,152 @@ recv_disconnect ip = do
   case f_Disconnect_result_missingFields res of
     Nothing -> return ()
     Just _v -> throw _v
+  return ()
+fS_ls (ip,op) arg_path = do
+  send_FS_ls op arg_path
+  recv_FS_ls ip
+send_FS_ls op arg_path = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("FS_ls", M_CALL, seqn)
+  write_FS_ls_args op (FS_ls_args{f_FS_ls_args_path=Just arg_path})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_FS_ls ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_FS_ls_result ip
+  readMessageEnd ip
+  case f_FS_ls_result_success res of
+    Just v -> return v
+    Nothing -> do
+      throw (AppExn AE_MISSING_RESULT "FS_ls failed: unknown result")
+fS_stat (ip,op) arg_path = do
+  send_FS_stat op arg_path
+  recv_FS_stat ip
+send_FS_stat op arg_path = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("FS_stat", M_CALL, seqn)
+  write_FS_stat_args op (FS_stat_args{f_FS_stat_args_path=Just arg_path})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_FS_stat ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_FS_stat_result ip
+  readMessageEnd ip
+  case f_FS_stat_result_success res of
+    Just v -> return v
+    Nothing -> do
+      throw (AppExn AE_MISSING_RESULT "FS_stat failed: unknown result")
+fS_mkdir (ip,op) arg_path = do
+  send_FS_mkdir op arg_path
+  recv_FS_mkdir ip
+send_FS_mkdir op arg_path = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("FS_mkdir", M_CALL, seqn)
+  write_FS_mkdir_args op (FS_mkdir_args{f_FS_mkdir_args_path=Just arg_path})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_FS_mkdir ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_FS_mkdir_result ip
+  readMessageEnd ip
+  return ()
+fS_touch (ip,op) arg_path = do
+  send_FS_touch op arg_path
+  recv_FS_touch ip
+send_FS_touch op arg_path = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("FS_touch", M_CALL, seqn)
+  write_FS_touch_args op (FS_touch_args{f_FS_touch_args_path=Just arg_path})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_FS_touch ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_FS_touch_result ip
+  readMessageEnd ip
+  return ()
+fS_rm (ip,op) arg_path = do
+  send_FS_rm op arg_path
+  recv_FS_rm ip
+send_FS_rm op arg_path = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("FS_rm", M_CALL, seqn)
+  write_FS_rm_args op (FS_rm_args{f_FS_rm_args_path=Just arg_path})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_FS_rm ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_FS_rm_result ip
+  readMessageEnd ip
+  return ()
+fS_cp (ip,op) arg_src arg_dst = do
+  send_FS_cp op arg_src arg_dst
+  recv_FS_cp ip
+send_FS_cp op arg_src arg_dst = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("FS_cp", M_CALL, seqn)
+  write_FS_cp_args op (FS_cp_args{f_FS_cp_args_src=Just arg_src,f_FS_cp_args_dst=Just arg_dst})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_FS_cp ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_FS_cp_result ip
+  readMessageEnd ip
+  return ()
+fS_mv (ip,op) arg_src arg_dst = do
+  send_FS_mv op arg_src arg_dst
+  recv_FS_mv ip
+send_FS_mv op arg_src arg_dst = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("FS_mv", M_CALL, seqn)
+  write_FS_mv_args op (FS_mv_args{f_FS_mv_args_src=Just arg_src,f_FS_mv_args_dst=Just arg_dst})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_FS_mv ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_FS_mv_result ip
+  readMessageEnd ip
   return ()
 ping (ip,op) = do
   send_ping op

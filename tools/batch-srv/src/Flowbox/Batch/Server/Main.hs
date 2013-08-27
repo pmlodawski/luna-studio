@@ -9,8 +9,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 --import Data.List
-import           Data.IORef                               
-import           Network                                  
+import           Data.IORef                                 
+import           Network                                    
 --import System.Environment(getArgs)
 
 
@@ -19,23 +19,25 @@ import           Network
 --import Thrift.Transport.Handle
 --import Thrift.Protocol
 --import Thrift.Protocol.Binary
-import           Thrift.Server                            (runBasicServer)
+import           Thrift.Server                              (runBasicServer)
 
 -- Generated files
-import qualified Batch                                  as TBatch
-import           Batch_Iface                              
-import qualified Flowbox.Batch.Batch                    as Batch
-import           Flowbox.Batch.Batch                      (Batch(..))
-import qualified Flowbox.Batch.Server.Handlers.Defs     as HDefs
-import qualified Flowbox.Batch.Server.Handlers.Graph    as HGraph
-import qualified Flowbox.Batch.Server.Handlers.Libs     as HLibs
-import qualified Flowbox.Batch.Server.Handlers.Projects as HProjects
-import qualified Flowbox.Batch.Server.Handlers.Types    as HTypes
+import qualified Batch                                    as TBatch
+import           Batch_Iface                                
+import qualified Flowbox.Batch.Batch                      as Batch
+import           Flowbox.Batch.Batch                        (Batch(..))
+import qualified Flowbox.Batch.Server.Handlers.Defs       as HDefs
+import qualified Flowbox.Batch.Server.Handlers.Graph      as HGraph
+import qualified Flowbox.Batch.Server.Handlers.Libs       as HLibs
+import qualified Flowbox.Batch.Server.Handlers.Projects   as HProjects
+import qualified Flowbox.Batch.Server.Handlers.Types      as HTypes
+import qualified Flowbox.Batch.Server.Handlers.FileSystem as HFileSystem
 
-import qualified Flowbox.Batch.Project.Project          as Project
-import qualified Flowbox.Batch.Project.ProjectManager   as ProjectManager
-import qualified Flowbox.Batch.Samples.Modules          as Sample
-import           Flowbox.Control.Error                    
+
+import qualified Flowbox.Batch.Project.Project            as Project
+import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
+import qualified Flowbox.Batch.Samples.Modules            as Sample
+import           Flowbox.Control.Error                      
 
 port :: PortNumber
 port = 30521
@@ -92,6 +94,14 @@ instance Batch_Iface BatchHandler where
     removeNode          = HGraph.removeNode
     connect             = HGraph.connect
     disconnect          = HGraph.disconnect
+
+    fS_ls               = HFileSystem.ls
+    fS_stat             = HFileSystem.stat
+    fS_mkdir            = HFileSystem.mkdir
+    fS_touch            = HFileSystem.touch
+    fS_rm               = HFileSystem.rm
+    fS_cp               = HFileSystem.cp
+    fS_mv               = HFileSystem.mv
 
     ping _              = putStrLn "ping"
     dump batchHandler   = runScript $ do

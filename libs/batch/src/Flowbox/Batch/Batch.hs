@@ -37,7 +37,7 @@ module Flowbox.Batch.Batch (
     updateNode,
     removeNode,
     connect,
-    disconnect
+    disconnect,
 ) where
 
 import           Flowbox.Batch.GraphView.EdgeView        (EdgeView(..))
@@ -404,3 +404,4 @@ disconnect srcNodeID asrcPort dstNodeID adstPort defID libID = noresult . graphO
                              $ GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
                              $ GraphView.fromGraph agraph
                 in Right (newGraph, ()))
+

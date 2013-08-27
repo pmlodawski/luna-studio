@@ -34,8 +34,8 @@ Library
         Flowbox.Luna.Parser.Lexer,
         Flowbox.Luna.Parser.Utils,
         Flowbox.Luna.Parser.Parser,
-        Flowbox.Luna.Parser.AST.AST,
-        Flowbox.Luna.Parser.AST.Constant
+        Flowbox.Luna.Parser.AST.Constant,
+        Flowbox.Luna.Parser.AST.AST
 
   
   Build-Depends:  base,

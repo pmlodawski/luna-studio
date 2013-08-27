@@ -192,6 +192,41 @@ class BatchHandler : virtual public BatchIf {
     printf("disconnect\n");
   }
 
+  void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path) {
+    // Your implementation goes here
+    printf("FS_ls\n");
+  }
+
+  void FS_stat( ::flowbox::batch::fs::FSItem& _return, const std::string& path) {
+    // Your implementation goes here
+    printf("FS_stat\n");
+  }
+
+  void FS_mkdir(const std::string& path) {
+    // Your implementation goes here
+    printf("FS_mkdir\n");
+  }
+
+  void FS_touch(const std::string& path) {
+    // Your implementation goes here
+    printf("FS_touch\n");
+  }
+
+  void FS_rm(const std::string& path) {
+    // Your implementation goes here
+    printf("FS_rm\n");
+  }
+
+  void FS_cp(const std::string& src, const std::string& dst) {
+    // Your implementation goes here
+    printf("FS_cp\n");
+  }
+
+  void FS_mv(const std::string& src, const std::string& dst) {
+    // Your implementation goes here
+    printf("FS_mv\n");
+  }
+
   void ping() {
     // Your implementation goes here
     printf("ping\n");

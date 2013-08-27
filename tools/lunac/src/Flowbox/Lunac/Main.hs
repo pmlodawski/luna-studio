@@ -60,11 +60,11 @@
 
 --------------------------------
 
-import System.Log.Logger
-import System.Log.Handler.Syslog
-import System.Log.Handler.Simple
-import System.Log.Handler (setFormatter)
-import System.Log.Formatter
+import           System.Log.Logger           
+import           System.Log.Handler.Syslog   
+import           System.Log.Handler.Simple   
+import           System.Log.Handler          (setFormatter)
+import           System.Log.Formatter        
  
 -- By default, all messages of level WARNING and above are sent to stderr.
 -- Everything else is ignored.

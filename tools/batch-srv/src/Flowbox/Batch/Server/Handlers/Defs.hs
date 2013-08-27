@@ -52,7 +52,7 @@ addDefinition :: IORef Batch
               -> Maybe TDefs.Definition -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition
 addDefinition batchHandler mtdefinition mtparentID mtlibID = tRunScript $ do
     scriptIO $ putStrLn "called addDefinition"
-    tdefinition       <- mtdefinition <??> "`definition` argument is missing"
+    tdefinition       <- mtdefinition <??> "'definition' argument is missing"
     (_, definition)   <- tryRight (decode (tdefinition, Graph.empty) :: Either String (Definition.ID, Definition))
     parentID          <- tryGetID mtparentID "parentID"    
     libID             <- tryGetID mtlibID    "libID"
@@ -66,7 +66,7 @@ updateDefinition :: IORef Batch -> Maybe TDefs.Definition -> Maybe Int32 -> IO (
 updateDefinition batchHandler mtdefinition mtlibID = tRunScript $ do
     scriptIO $ putStrLn "called updateDefinition"
     
-    tdefinition <- mtdefinition <??> "`definition` field is missing" 
+    tdefinition <- mtdefinition <??> "'definition' field is missing" 
     definition  <- tryRight $ decode (tdefinition, Graph.empty) -- :: (Definition.ID, Definition)
     libID       <- tryGetID mtlibID "libID"
     
