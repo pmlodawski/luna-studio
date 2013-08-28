@@ -31,6 +31,7 @@ Library
                   containers,
                   directory,
                   fgl,
+                  flowbox-luna-parser,
                   flowbox-utils,
                   graphviz,
                   hashable,
@@ -58,5 +59,8 @@ Executable luna
                   MultiParamTypeClasses
   Build-Depends:  base,
                   flowbox-luna,
-                  flowbox-parser,
-                  flowbox-utils
+                  flowbox-luna-parser,
+                  flowbox-utils,
+                  MissingH,
+                  pretty-show,
+                  timeit

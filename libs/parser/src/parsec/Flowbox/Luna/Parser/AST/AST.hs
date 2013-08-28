@@ -30,6 +30,7 @@ data Expr = NOP
           | Accessor        { src :: Expr, dst :: Expr }
           | Operator        { name :: String, src :: Expr, dst :: Expr }
           | Comment         String
+          | Program         { body :: [Expr] }
 
           deriving (Show, Eq)
 

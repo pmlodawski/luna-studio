@@ -16,7 +16,7 @@ import           System.TimeIt
 
 
 example :: String
-example = unlines [ "#ala"
+example = unlines [ "a\nb\nc"
                   ]
 
 main :: IO ()

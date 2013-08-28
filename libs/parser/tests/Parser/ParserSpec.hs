@@ -18,7 +18,7 @@ main :: IO ()
 main = hspec spec
 
 parse :: [String] -> [Expr]
-parse s = forceEither $ Parser.parse $ unlines s
+parse s = body $ forceEither $ Parser.parse $ unlines s
 
 spec :: Spec
 spec = do

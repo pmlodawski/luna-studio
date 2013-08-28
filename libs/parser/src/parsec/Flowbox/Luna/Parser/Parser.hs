@@ -140,7 +140,8 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 -- Program
 -----------------------------------------------------------
 
-pProgram = try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) <|> (pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
+pProgram = AST.Program <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
+                       <|> pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
 
 parse input = Parsec.parse pProgram "Luna Parser" input
 
