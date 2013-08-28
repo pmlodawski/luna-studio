@@ -149,6 +149,30 @@ int main(int argc, char **argv) {
         batch.dump();
         batch.nodesGraph(graph, fun.defID, userlib.libID, proj.projectID);
         
+        /* Default values */
+
+        DefaultValue dv;
+        dv.__set_cls(DefaultValueType::StringV);
+        dv.__set_s("ala");
+
+
+        DefaultValue dv2;
+        dv2.__set_cls(DefaultValueType::IntV);
+        dv2.__set_i(4);
+
+        map<PortDescriptor, DefaultValue> defaults;
+        batch.nodeDefaults(defaults, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
+        cout << "Node has " << defaults.size() << " defaults" << endl;
+        batch.setNodeDefault({1}, dv, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
+        batch.setNodeDefault({2}, dv2, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
+        batch.nodeDefaults(defaults, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
+        cout << "Node has " << defaults.size() << " defaults" << endl;
+        batch.removeNodeDefault({1}, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
+        batch.nodeDefaults(defaults, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
+        cout << "Node has " << defaults.size() << " defaults" << endl;
+
+        /* Loading and unloading */
+
         batch.storeLibrary(userlib.libID, proj.projectID);
         batch.buildLibrary(userlib.libID, proj.projectID);
 
@@ -205,3 +229,4 @@ int main(int argc, char **argv) {
 
     return 0;
 }
+

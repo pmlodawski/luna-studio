@@ -11,7 +11,6 @@ module Flowbox.Batch.Server.Handlers.Defaults (
 ) 
 where
 
-import           Prelude                                                   hiding (error)
 import           Data.Int                                                    (Int32)
 import           Data.IORef                                                  
 import qualified Data.Map                                                  as Map
@@ -38,7 +37,7 @@ nodeDefaults :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Mayb
              -> IO (HashMap (Vector Int32) TGraph.DefaultValue)
 nodeDefaults batchHandler mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
     scriptIO $ logger.info $ "called nodeDefaults"
-    scriptIO $ logger.error $ "not implemented"
+    scriptIO $ logger.warning $ "not fully implemented"
     nodeID    <- tryGetID mtnodeID    "nodeID"
     defID     <- tryGetID mtdefID     "defID"
     libID     <- tryGetID mtlibID     "libID"
@@ -54,7 +53,7 @@ setNodeDefault :: IORef Batch -> Maybe (Vector Int32) -> Maybe TGraph.DefaultVal
                -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
 setNodeDefault batchHandler mtdstPort mtvalue mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
     scriptIO $ logger.info $ "called setNodeDefault"
-    scriptIO $ logger.error $ "not implemented"
+    scriptIO $ logger.warning $ "not fully implemented"
     tdstPort  <- mtdstPort <??> "'dstPort' argument is missing"
     let dstPort = vector2List tdstPort
     tvalue    <- mtvalue   <??> "'value' argument is missing"
@@ -72,7 +71,7 @@ removeNodeDefault :: IORef Batch -> Maybe (Vector Int32)
                   -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
 removeNodeDefault batchHandler mtdstPort mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
     scriptIO $ logger.info $ "called removeNodeDefault"
-    scriptIO $ logger.error $ "not implemented"
+    scriptIO $ logger.warning $ "not fully implemented"
     tdstPort  <- mtdstPort <??> "'dstPort' argument is missing"
     let dstPort = vector2List tdstPort
     nodeID    <- tryGetID mtnodeID    "nodeID"
