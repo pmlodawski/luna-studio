@@ -8,6 +8,7 @@ module Flowbox.Control.Error (
     module Control.Error,
     (<?>),
     (<??>),
+    ifnot,
     tryReadIORef,
     tryWriteIORef,
     tryGetID,
@@ -38,6 +39,12 @@ v <??> m = tryRight $ note m v
 
 (<?>) :: Maybe b -> a -> Either a b
 v <?> m = note m v
+
+
+ifnot :: Bool -> String -> Either String ()
+ifnot bool msg = if bool 
+    then Right ()
+    else Left msg
 
 
 tryGetID :: Monad m => Maybe Int32 -> String -> EitherT String m Int

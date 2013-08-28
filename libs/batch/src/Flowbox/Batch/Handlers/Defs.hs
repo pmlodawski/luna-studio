@@ -19,6 +19,7 @@ module Flowbox.Batch.Handlers.Defs (
 
 import           Flowbox.Batch.Batch                   (Batch(..))
 import           Flowbox.Batch.Handlers.Common         (noresult, readonly, defManagerOp, definitionOp)
+import           Flowbox.Control.Error                 ((<?>), ifnot)
 import qualified Flowbox.Luna.Lib.Library            as Library
 import qualified Flowbox.Luna.Network.Def.DefManager as DefManager
 import           Flowbox.Luna.Network.Def.DefManager   (DefManager)
@@ -28,44 +29,39 @@ import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
 
 
 defsGraph :: Library.ID -> Batch -> Either String DefManager
-defsGraph libID = readonly . defManagerOp libID (\_ defManager -> 
-    Right (defManager, defManager))
+defsGraph libID = readonly . defManagerOp libID (\_ defManager -> do
+    return (defManager, defManager))
 
 
 addDefinition :: Definition -> Definition.ID -> Library.ID -> Batch 
               -> Either String (Batch, Definition.ID)
-addDefinition definition parentID libID = defManagerOp libID (\_ defManager ->
-    case DefManager.gelem parentID defManager of 
-        False -> Left "Wrong `defID`"
-        True  -> Right $ DefManager.addNewToParent (parentID, definition) defManager)
+addDefinition definition parentID libID = defManagerOp libID (\_ defManager -> do
+    DefManager.gelem parentID defManager `ifnot` "Wrong `defID`"
+    return $ DefManager.addNewToParent (parentID, definition) defManager)
 
 
 updateDefinition :: (Definition.ID, Definition) -> Library.ID -> Batch -> Either String Batch
-updateDefinition (defID, def) libID = noresult . definitionOp defID libID (\_ _ ->
-    Right (def, def))
+updateDefinition (defID, def) libID = noresult . definitionOp defID libID (\_ _ -> do
+    return (def, def))
 
 
 removeDefinition :: Definition.ID -> Library.ID -> Batch -> Either String Batch 
-removeDefinition defID libID = noresult . defManagerOp libID (\_ defManager -> 
-    case DefManager.gelem defID defManager of 
-        False -> Left "Wrong `defID`"
-        True  -> Right (newDefManager, ()) where 
-                        newDefManager = DefManager.delete defID defManager)
+removeDefinition defID libID = noresult . defManagerOp libID (\_ defManager -> do
+    DefManager.gelem defID defManager `ifnot` "Wrong `defID`"
+    let newDefManager = DefManager.delete defID defManager
+    return (newDefManager, ()))
 
 
 definitionChildren :: Definition.ID -> Library.ID -> Batch
                    -> Either String [(Definition.ID, Definition)]
-definitionChildren defID libID = readonly . defManagerOp libID (\_ defManager -> 
-    case DefManager.gelem defID defManager of 
-        False -> Left "Wrong `defID`"
-        True  -> Right (defManager, children) where
-                       children = DefManager.children defManager defID)
+definitionChildren defID libID = readonly . defManagerOp libID (\_ defManager -> do
+    DefManager.gelem defID defManager `ifnot` "Wrong `defID`"
+    let children = DefManager.children defManager defID
+    return (defManager, children))
 
 
 definitionParent :: Definition.ID -> Library.ID -> Batch -> Either String (Definition.ID, Definition)
-definitionParent defID libID = readonly . defManagerOp libID (\_ defManager -> 
-    case DefManager.gelem defID defManager of 
-        False           -> Left "Wrong `defID`"
-        True            -> case DefManager.parent defManager defID of
-            Nothing     -> Left "Definition has no parent"
-            Just parent -> Right (defManager, parent))
+definitionParent defID libID = readonly . defManagerOp libID (\_ defManager -> do
+    DefManager.gelem defID defManager `ifnot` "Wrong `defID`"
+    parent <- DefManager.parent defManager defID <?> "Definition has no parent"
+    return (defManager, parent))
