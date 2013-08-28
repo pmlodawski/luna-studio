@@ -18,9 +18,21 @@ main :: IO ()
 main = do
         logger.setLevel  $ DEBUG
         logger.debug     $ "debug"
-        Logger.pushGroup logger
+        Logger.pushLogGroup logger
         logger.info      $ "info"
-        Logger.popGroup logger
+        Logger.popLogGroup logger
+        logger.notice    $ "notice"
+        logger.warning   $ "warning"
+        logger.error     $ "error"
+        logger.critical  $ "critical"
+        logger.alert     $ "alert"
+        logger.emergency $ "emergency"
+
+        Logger.enableColorOutput False logger
+        logger.debug     $ "debug"
+        Logger.pushLogGroup logger
+        logger.info      $ "info"
+        Logger.popLogGroup logger
         logger.notice    $ "notice"
         logger.warning   $ "warning"
         logger.error     $ "error"
