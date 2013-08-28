@@ -130,10 +130,17 @@ int main(int argc, char **argv) {
         dummy2.__set_name("dummy2");
         batch.addNode(dummy2, dummy2, fun.defID, userlib.libID);
         
-        batch.connect(inputs.nodeID, {4, 9, 2}, dummy2.nodeID, {}, fun.defID, userlib.libID);
+        try {
+            batch.connect(inputs.nodeID, {4, 9, 2}, dummy2.nodeID, {4,5,9}, fun.defID, userlib.libID);
+        } catch (ArgumentException e) {
+            cout << "Unable to connect: "<< "\t" << e.message << endl;
+        }
+        
         batch.connect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID);
         batch.connect(inputs.nodeID, {7, 8}, outputs.nodeID, {5}, fun.defID, userlib.libID);
         batch.disconnect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID);
+        batch.dump();
+        batch.nodesGraph(graph, fun.defID, userlib.libID);
         
         batch.storeLibrary(userlib.libID);
         batch.buildLibrary(userlib.libID);

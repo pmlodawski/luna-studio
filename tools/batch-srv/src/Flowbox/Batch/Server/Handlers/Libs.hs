@@ -24,7 +24,7 @@ import           Data.Vector                                           (Vector)
 import           Data.Text.Lazy                                        (Text)
 
 import qualified Defs_Types                                          as TDefs
-import           Flowbox.Batch.Server.Handlers.Common                  
+import           Flowbox.Batch.Server.Handlers.Common                  (logger, tRunScript)
 import qualified Libs_Types                                          as TLibs
 import           Flowbox.Batch.Batch                                   (Batch(..))
 import qualified Flowbox.Batch.Handlers.Libs                         as BatchL
@@ -35,6 +35,7 @@ import qualified Flowbox.Luna.Network.Def.DefManager                 as DefManag
 import           Flowbox.Luna.Network.Def.DefManager                   (DefManager)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs   ()
+import           Flowbox.System.Log.Logger                             
 import           Flowbox.Tools.Conversion                              
 
 
@@ -42,7 +43,7 @@ import           Flowbox.Tools.Conversion
 
 libraries :: IORef Batch -> IO (Vector TLibs.Library)
 libraries batchHandler = tRunScript $ do
-    scriptIO $ putStrLn "called libraries"
+    scriptIO $ logger.info $ "called libraries"
     batch <- tryReadIORef batchHandler
     libs  <- tryRight $ BatchL.libraries batch 
     let tlibs       = map (fst . encode) libs
@@ -52,7 +53,7 @@ libraries batchHandler = tRunScript $ do
 
 createLibrary :: IORef Batch -> Maybe TLibs.Library -> IO TLibs.Library
 createLibrary batchHandler mtlibrary = tRunScript $ do
-    scriptIO $ putStrLn "called createLibrary"
+    scriptIO $ logger.info $ "called createLibrary"
     tlibrary     <- mtlibrary <??> "'library' argument is missing" 
     (_, library) <- tryRight (decode (tlibrary, DefManager.empty) :: Either String (Library.ID, Library))
     batch <- tryReadIORef batchHandler
@@ -65,7 +66,7 @@ createLibrary batchHandler mtlibrary = tRunScript $ do
 
 loadLibrary :: IORef Batch -> Maybe Text -> IO TLibs.Library
 loadLibrary batchHandler mtpath = tRunScript $ do
-    scriptIO $ putStrLn "called loadLibrary"
+    scriptIO $ logger.info $ "called loadLibrary"
     upath  <- tryGetUniPath mtpath "path"
     batch <- tryReadIORef batchHandler
     (newBatch, (newLibID, newLibrary)) <- scriptIO $ BatchL.loadLibrary upath batch
@@ -75,7 +76,7 @@ loadLibrary batchHandler mtpath = tRunScript $ do
 
 unloadLibrary :: IORef Batch -> Maybe Int32 -> IO ()
 unloadLibrary batchHandler mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "called unloadLibrary"
+    scriptIO $ logger.info $ "called unloadLibrary"
     libID    <- tryGetID mtlibID "libID"
     batch    <- tryReadIORef batchHandler
     newBatch <- tryRight $ BatchL.unloadLibrary libID batch 
@@ -84,7 +85,7 @@ unloadLibrary batchHandler mtlibID = tRunScript $ do
 
 storeLibrary :: IORef Batch -> Maybe Int32 -> IO ()
 storeLibrary batchHandler mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "called storeLibrary"
+    scriptIO $ logger.info $ "called storeLibrary"
     libID <- tryGetID mtlibID "libID"
     batch <- tryReadIORef batchHandler
     _ <- scriptIO $ BatchL.storeLibrary libID batch
@@ -93,7 +94,7 @@ storeLibrary batchHandler mtlibID = tRunScript $ do
 
 buildLibrary :: IORef Batch -> Maybe Int32 -> IO ()
 buildLibrary batchHandler mtlibID  = tRunScript $ do
-    scriptIO $ putStrLn "called buildLibrary"
+    scriptIO $ logger.info $ "called buildLibrary"
     libID <- tryGetID mtlibID "libID"
     batch <- tryReadIORef batchHandler
     _ <- scriptIO $ BatchL.buildLibrary libID batch
@@ -102,7 +103,7 @@ buildLibrary batchHandler mtlibID  = tRunScript $ do
 
 libraryRootDef :: IORef Batch -> Maybe Int32 -> IO TDefs.Definition
 libraryRootDef batchHandler mtlibID  = tRunScript $ do
-    scriptIO $ putStrLn "called libraryRootDef"
+    scriptIO $ logger.info $ "called libraryRootDef"
     libID <- tryGetID mtlibID "libID"
     batch <- tryReadIORef batchHandler
     (arootDefID, rootDef) <- tryRight $ BatchL.libraryRootDef libID batch

@@ -20,7 +20,7 @@ import           Data.Int
 import           Data.IORef                                                  
 import qualified Data.Vector                                               as Vector
 
-import           Flowbox.Batch.Server.Handlers.Common                        
+import           Flowbox.Batch.Server.Handlers.Common                        (logger, tRunScript)
 import qualified Graph_Types                                               as TGraph
 import qualified Graphview_Types                                           as TGraphView
 import           Flowbox.Batch.Batch                                         (Batch(..))
@@ -29,14 +29,15 @@ import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView   ()
 import           Flowbox.Control.Error                                       
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
+import           Flowbox.System.Log.Logger                                   
 import           Flowbox.Tools.Conversion                                    
+                                 
 
-            
 ------ public api -------------------------------------------------
 
 nodesGraph :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO TGraphView.GraphView
 nodesGraph batchHandler mtdefID mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "called nodesGraph"
+    scriptIO $ logger.info $ "called nodesGraph"
     defID  <- tryGetID mtdefID "defID"
     libID  <- tryGetID mtlibID "libID"
     batch  <- tryReadIORef batchHandler
@@ -46,7 +47,7 @@ nodesGraph batchHandler mtdefID mtlibID = tRunScript $ do
 
 addNode :: IORef Batch -> Maybe TGraph.Node -> Maybe Int32 -> Maybe Int32 -> IO TGraph.Node
 addNode batchHandler mtnode mtdefID mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "called addNode"
+    scriptIO $ logger.info $ "called addNode"
     tnode     <- mtnode <??> "'node' argument is missing"
     (_, node) <- tryRight $ decode tnode
     defID     <- tryGetID mtdefID "defID"
@@ -59,7 +60,7 @@ addNode batchHandler mtnode mtdefID mtlibID = tRunScript $ do
 
 updateNode :: IORef Batch -> Maybe TGraph.Node -> Maybe Int32 -> Maybe Int32 -> IO ()
 updateNode batchHandler mtnode mtdefID mtlibID = tRunScript $ do 
-    scriptIO $ putStrLn "called updateNode"
+    scriptIO $ logger.info $ "called updateNode"
     tnode  <- mtnode <??> "'node' argument is missing"
     node   <- tryRight $ decode tnode
     defID  <- tryGetID mtdefID "defID"
@@ -72,7 +73,7 @@ updateNode batchHandler mtnode mtdefID mtlibID = tRunScript $ do
 
 removeNode :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
 removeNode batchHandler mtnodeID mtdefID mtlibID = tRunScript $ do
-    scriptIO $ putStrLn "called removeNode"
+    scriptIO $ logger.info $ "called removeNode"
     nodeID   <- tryGetID mtnodeID "nodeID"
     defID    <- tryGetID mtdefID  "defID"
     libID    <- tryGetID mtlibID  "libID"
@@ -86,7 +87,7 @@ connect :: IORef Batch -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
                        -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
                        -> Maybe Int32 -> Maybe Int32 -> IO ()
 connect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID = tRunScript $ do     
-    scriptIO $ putStrLn "called connect"
+    scriptIO $ logger.info $ "called connect"
     srcNodeID   <- tryGetID mtsrcNodeID "srcNodeID"
     tsrcPort    <- mtsrcPort <??> "'srcPort' field is missing"
     let vectorToList = map i32toi . Vector.toList
@@ -106,7 +107,7 @@ disconnect :: IORef Batch -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
                           -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
                           -> Maybe Int32 -> Maybe Int32 -> IO ()
 disconnect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID = tRunScript $ do     
-    scriptIO $ putStrLn "called disconnect"
+    scriptIO $ logger.info $ "called disconnect"
     srcNodeID   <- tryGetID mtsrcNodeID "srcNodeID"
     tsrcPort    <- mtsrcPort <??> "'srcPort' field is missing"
     let vectorToList = map i32toi . Vector.toList

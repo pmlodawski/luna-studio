@@ -20,17 +20,18 @@ import           Data.Text.Lazy                                        (Text, un
 import qualified Data.Vector                                         as Vector
 import           Data.Vector                                           (Vector)
 
-import           Flowbox.Batch.Server.Handlers.Common                  
+import           Flowbox.Batch.Server.Handlers.Common                  (logger, tRunScript)
 import qualified Types_Types                                         as TTypes
 import           Flowbox.Control.Error                                 
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
 import           Flowbox.Luna.Type.Type                                (Type(..))
+import           Flowbox.System.Log.Logger                             
 import           Flowbox.Tools.Conversion                              
-
 
 
 newTypeModule :: b -> Maybe Text -> IO TTypes.Type
 newTypeModule _ mtname = tRunScript $ do 
+    scriptIO $ logger.info $ "called defsGraph"
     tname <- mtname <??> "'name' argument is missing"
     return $ encode $ Module $ unpack tname
 

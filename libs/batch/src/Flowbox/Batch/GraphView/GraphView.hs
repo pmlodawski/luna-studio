@@ -16,7 +16,6 @@ module Flowbox.Batch.GraphView.GraphView(
 
 import           Data.Map                           (Map)
 import qualified Data.Map                         as Map
-import           Debug.Trace
 import           Flowbox.Batch.GraphView.EdgeView   (EdgeView(..))
 import qualified Flowbox.Luna.Data.Graph          as DG
 import           Flowbox.Luna.Data.Graph          hiding (Graph, Edge, empty, fromGraph)
@@ -64,7 +63,7 @@ removeEdges graph = mkGraph (labNodes graph) []
 connectG :: (Node.ID, Node.ID, EdgeView) -> Graph -> Graph
 connectG (srcNodeID, dstNodeID, EdgeView srcPorts dstPorts) graph = case srcPorts of 
     [] -> case dstPorts of 
-        []         -> Graph.insEdge (srcNodeID, dstNodeID, Edge 0      ) graph
+        []         -> Graph.insEdge (srcNodeID, dstNodeID, Edge 0       ) graph
         [adstPort] -> Graph.insEdge (srcNodeID, tupleID  , Edge adstPort) graphT where
             (tupleID, graphT) = case prel graph dstNodeID of 
                 []                             -> (newTupleID, newGraphT) where
@@ -104,8 +103,8 @@ graph2graphView graph = graphv where
 
 
 fromGraph :: Graph -> GraphView
-fromGraph graph = traceShow graphv $ graphv where
-    graphC = graph2graphView $ traceShow graph $graph
+fromGraph graph = graphv where
+    graphC = graph2graphView graph
     graphv = foldr (delGenerated) graphC $ labNodes graphC
 
 

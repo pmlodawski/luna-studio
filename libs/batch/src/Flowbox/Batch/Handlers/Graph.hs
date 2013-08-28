@@ -39,41 +39,41 @@ addNode node defID libID = graphOp defID libID (\_ agraph ->
 
 updateNode :: (Node.ID, Node) -> Definition.ID -> Library.ID -> Batch -> Either String Batch
 updateNode (nodeID, node) defID libID = noresult . graphOp defID libID (\_ agraph -> 
-    case Graph.gelem nodeID agraph of 
-        False -> Left "Wrong `nodeID`"
-        True  -> Right (newGraph, ()) where
-             newGraph      = Graph.updateNode (nodeID, node) agraph)
+    if Graph.gelem nodeID agraph 
+        then let newGraph = Graph.updateNode (nodeID, node) agraph
+             in Right (newGraph, ())
+        else Left "Wrong `nodeID`")
 
 
 removeNode :: Node.ID -> Definition.ID -> Library.ID ->  Batch -> Either String Batch
 removeNode nodeID defID libID = noresult . graphOp defID libID (\_ agraph -> 
-    case Graph.gelem nodeID agraph of 
-        False -> Left "Wrong `nodeID`"
-        True  -> Right (newGraph, ()) where
-            newGraph      = Graph.delNode nodeID agraph)
+    if Graph.gelem nodeID agraph
+        then let newGraph = Graph.delNode nodeID agraph
+             in Right (newGraph, ())
+        else Left "Wrong `nodeID`")
 
 
 connect :: Node.ID -> [Int] -> Node.ID -> [Int] -> Definition.ID -> Library.ID -> Batch -> Either String Batch
 connect srcNodeID asrcPort dstNodeID adstPort defID libID = noresult . graphOp defID libID (\_ agraph -> 
-    case Graph.gelem srcNodeID agraph of 
-        False     -> Left "Wrong `srcNodeID`"
-        True      -> case Graph.gelem dstNodeID agraph of 
-            False -> Left "Wrong `dstNodeID`"
-            True  -> 
-                let newGraph = GraphView.toGraph 
-                             $ GraphView.insEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
-                             $ GraphView.fromGraph agraph
-                in Right (newGraph, ()))
+    if Graph.gelem srcNodeID agraph 
+        then if Graph.gelem dstNodeID agraph 
+            then if (length adstPort <= 1)
+                then let newGraph = GraphView.toGraph 
+                                  $ GraphView.insEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
+                                  $ GraphView.fromGraph agraph
+                     in Right (newGraph, ())
+                else Left "dstPort cannot have more than 1 item."
+            else Left "Wrong `dstNodeID`"
+        else Left "Wrong `srcNodeID`")
 
 
 disconnect :: Node.ID -> [Int] -> Node.ID -> [Int] -> Definition.ID -> Library.ID -> Batch -> Either String Batch
 disconnect srcNodeID asrcPort dstNodeID adstPort defID libID = noresult . graphOp defID libID (\_ agraph -> 
-    case Graph.gelem srcNodeID agraph of 
-        False     -> Left "Wrong `srcNodeID`"
-        True      -> case Graph.gelem dstNodeID agraph of 
-            False -> Left "Wrong `dstNodeID`"
-            True  -> 
-                let newGraph = GraphView.toGraph 
-                             $ GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
-                             $ GraphView.fromGraph agraph
-                in Right (newGraph, ()))
+    if Graph.gelem srcNodeID agraph
+        then if Graph.gelem dstNodeID agraph
+            then let newGraph = GraphView.toGraph 
+                              $ GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
+                              $ GraphView.fromGraph agraph
+                 in Right (newGraph, ())
+            else Left "Wrong `dstNodeID`"
+        else Left "Wrong `srcNodeID`")

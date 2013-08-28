@@ -26,6 +26,7 @@ import qualified Batch                                    as TBatch
 import           Batch_Iface                                
 import qualified Flowbox.Batch.Batch                      as Batch
 import           Flowbox.Batch.Batch                        (Batch(..))
+import           Flowbox.Batch.Server.Handlers.Common       (logger)
 import qualified Flowbox.Batch.Server.Handlers.Defs       as HDefs
 import qualified Flowbox.Batch.Server.Handlers.Graph      as HGraph
 import qualified Flowbox.Batch.Server.Handlers.Libs       as HLibs
@@ -38,6 +39,9 @@ import qualified Flowbox.Batch.Project.Project            as Project
 import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
 import qualified Flowbox.Batch.Samples.Modules            as Sample
 import           Flowbox.Control.Error                      
+import           Flowbox.System.Log.Logger                  
+
+
 
 port :: PortNumber
 port = 30521
@@ -103,14 +107,16 @@ instance Batch_Iface BatchHandler where
     fS_cp               = HFileSystem.cp
     fS_mv               = HFileSystem.mv
 
-    ping _              = putStrLn "ping"
+    ping _              = logger.info $ "ping"
     dump batchHandler   = runScript $ do
         batch <- tryReadIORef batchHandler
         scriptIO $ print batch
 
+
 main :: IO ()
 main = do
+    logger.setLevel $ DEBUG
     handler <- newBatchHandler
-    putStrLn "Starting the server..."
+    logger.info $ "Starting the server"
     _ <- runBasicServer handler TBatch.process port
-    putStrLn "done."
+    logger.info $ "done"
