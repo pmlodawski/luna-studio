@@ -120,9 +120,10 @@ service Batch {
      * Graph
      */
     
-    graphview.GraphView nodesGraph(1: defs.DefID         defID, 
-                                   2: libs.LibID         libID,
-                                   3: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
+    graphview.GraphView 
+               nodesGraph(1: defs.DefID         defID, 
+                          2: libs.LibID         libID,
+                          3: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
 
     graph.Node   nodeByID(1: graph.NodeID       nodeID,
                           2: defs.DefID         defID, 
@@ -144,21 +145,41 @@ service Batch {
                           3: libs.LibID         libID,
                           4: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
 
-    void    connect(1: graph.NodeID             srcNodeID, 
-                    2: graphview.PortDescriptor srcPort,
-                    3: graph.NodeID             dstNodeID, 
-                    4: graphview.PortDescriptor dstPort, 
-                    5: defs.DefID               defID, 
-                    6: libs.LibID               libID,
-                    7: projects.ProjectID       projectID) throws (1: ArgumentException missingFields)
+    void          connect(1: graph.NodeID             srcNodeID, 
+                          2: graphview.PortDescriptor srcPort,
+                          3: graph.NodeID             dstNodeID, 
+                          4: graphview.PortDescriptor dstPort, 
+                          5: defs.DefID               defID, 
+                          6: libs.LibID               libID,
+                          7: projects.ProjectID       projectID) throws (1: ArgumentException missingFields)
 
-    void disconnect(1: graph.NodeID             srcNodeID, 
-                    2: graphview.PortDescriptor srcPort,
-                    3: graph.NodeID             dstNodeID, 
-                    4: graphview.PortDescriptor dstPort, 
-                    5: defs.DefID               defID, 
-                    6: libs.LibID               libID,
-                    7: projects.ProjectID       projectID) throws (1: ArgumentException missingFields)
+    void       disconnect(1: graph.NodeID             srcNodeID, 
+                          2: graphview.PortDescriptor srcPort,
+                          3: graph.NodeID             dstNodeID, 
+                          4: graphview.PortDescriptor dstPort, 
+                          5: defs.DefID               defID, 
+                          6: libs.LibID               libID,
+                          7: projects.ProjectID       projectID) throws (1: ArgumentException missingFields)
+
+    map<graphview.PortDescriptor, graph.DefaultValue> 
+              nodeDefaults(1: graph.NodeID       nodeID,
+                           2: defs.DefID         defID, 
+                           3: libs.LibID         libID,
+                           4: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
+
+    void    setNodeDefault(1: graphview.PortDescriptor dst, 
+                           2: graph.DefaultValue       value, 
+                           3: graph.NodeID             nodeID,
+                           4: defs.DefID               defID, 
+                           5: libs.LibID               libID,
+                           6: projects.ProjectID       projectID) throws (1: ArgumentException missingFields)
+
+    void removeNodeDefault(1: graphview.PortDescriptor dst, 
+                           2: graph.NodeID             nodeID,
+                           3: defs.DefID               defID, 
+                           4: libs.LibID               libID,
+                           5: projects.ProjectID       projectID) throws (1: ArgumentException missingFields)
+
 
     /*
      * File System

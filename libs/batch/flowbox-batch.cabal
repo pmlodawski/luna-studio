@@ -36,6 +36,7 @@ Library
         Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView,
         Flowbox.Batch.Handlers.FileSystem,
         Flowbox.Batch.Handlers.Common,
+        Flowbox.Batch.Handlers.Defaults,
         Flowbox.Batch.Handlers.Graph,
         Flowbox.Batch.Handlers.Projects,
         Flowbox.Batch.Handlers.Defs,

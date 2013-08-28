@@ -13,7 +13,9 @@ module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph where
 --import Control.Monad
 
 import qualified Data.Graph.Inductive.Graph                             
-import qualified Data.HashMap.Strict                                  as Map
+import qualified Data.HashMap.Strict                                  as HashMap
+import           Data.HashMap.Strict                                    (HashMap)
+
 import           Data.Int                                               
 import qualified Data.Text.Lazy                                       as Text
 import qualified Data.Vector                                          as Vector
@@ -35,15 +37,15 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
 
 encodeGraph :: (Convert (Int, t) v, Convert (Graph.LEdge b) a,
                 Data.Graph.Inductive.Graph.Graph gr) 
-            => gr t b -> (Maybe (Map.HashMap Int32 v), Maybe (Vector.Vector a))
+            => gr t b -> (Maybe (HashMap Int32 v), Maybe (Vector.Vector a))
 encodeGraph agraph = (Just nodes, Just edges) where 
-    nodes = Map.fromList $
+    nodes = HashMap.fromList $
         map (\(a, b) -> (itoi32 a, encode (a, b))) $ Graph.labNodes agraph
     edges =  Vector.fromList $ map encode $ Graph.labEdges agraph
      
 
 decodeGraph :: (Data.Graph.Inductive.Graph.Graph gr, Convert (Graph.LEdge b) a)
-            => (Maybe (Map.HashMap Int32 TGraph.Node), Maybe (Vector.Vector a))
+            => (Maybe (HashMap Int32 TGraph.Node), Maybe (Vector.Vector a))
             -> Either [Char] (gr Node b)
 decodeGraph (mtnodes, mtedges) = case mtnodes of
     Nothing    -> Left "`nodes` field is missing"
@@ -55,7 +57,7 @@ decodeGraph (mtnodes, mtedges) = case mtnodes of
                     Left msg         -> Left msg
                     Right (_, node)  -> Right (i32toi i, node)
                 goodNodes = sequence $ map transformNode $
-                    Map.toList tnodes 
+                    HashMap.toList tnodes 
 
                 goodEdges =  sequence $ map decode $ Vector.toList tedges
             in case goodNodes of

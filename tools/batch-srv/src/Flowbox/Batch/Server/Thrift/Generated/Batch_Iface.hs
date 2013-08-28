@@ -79,6 +79,9 @@ class Batch_Iface a where
   removeNode :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
   connect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
   disconnect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+  nodeDefaults :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO (Map.HashMap (Vector.Vector Int32) Graph_Types.DefaultValue)
+  setNodeDefault :: a -> Maybe (Vector.Vector Int32) -> Maybe Graph_Types.DefaultValue -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+  removeNodeDefault :: a -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
   fS_ls :: a -> Maybe Text -> IO (Vector.Vector Fs_Types.FSItem)
   fS_stat :: a -> Maybe Text -> IO Fs_Types.FSItem
   fS_mkdir :: a -> Maybe Text -> IO ()

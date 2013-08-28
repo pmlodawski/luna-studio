@@ -12,16 +12,15 @@ module Flowbox.Batch.Server.Handlers.Graph (
     updateNode,
     removeNode,
     connect,
-    disconnect
+    disconnect,
 ) 
 where
 
-
-import           Data.Int                                                    
+import           Prelude                                                   hiding (error)
+import           Data.Int                                                    (Int32)
 import           Data.IORef                                                  
-import qualified Data.Vector                                               as Vector
 
-import           Flowbox.Batch.Server.Handlers.Common                        (logger, tRunScript)
+import           Flowbox.Batch.Server.Handlers.Common                        (logger, tRunScript, vector2List)
 import qualified Graph_Types                                               as TGraph
 import qualified Graphview_Types                                           as TGraphView
 import           Flowbox.Batch.Batch                                         (Batch(..))
@@ -32,7 +31,6 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
 import           Flowbox.System.Log.Logger                                   
 import           Flowbox.Tools.Conversion                                    
-                                 
 
 ------ public api -------------------------------------------------
 
@@ -106,12 +104,11 @@ connect :: IORef Batch -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
 connect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID mtprojectID = tRunScript $ do     
     scriptIO $ logger.info $ "called connect"
     srcNodeID <- tryGetID mtsrcNodeID "srcNodeID"
-    tsrcPort  <- mtsrcPort <??> "'srcPort' field is missing"
-    let vectorToList = map i32toi . Vector.toList
-        srcPort = vectorToList tsrcPort
+    tsrcPort  <- mtsrcPort <??> "'srcPort' argument is missing"
+    let srcPort = vector2List tsrcPort
     dstNodeID <- tryGetID mtdstNodeID "dstNodeID"
-    tdstPort  <- mtdstPort <??> "'dstPort' field is missing"
-    let dstPort = vectorToList tdstPort
+    tdstPort  <- mtdstPort <??> "'dstPort' argument is missing"
+    let dstPort = vector2List tdstPort
     defID     <- tryGetID mtdefID     "defID"
     libID     <- tryGetID mtlibID     "libID"
     projectID <- tryGetID mtprojectID "projectID"
@@ -127,17 +124,15 @@ disconnect :: IORef Batch -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
 disconnect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID mtprojectID = tRunScript $ do     
     scriptIO $ logger.info $ "called disconnect"
     srcNodeID   <- tryGetID mtsrcNodeID "srcNodeID"
-    tsrcPort    <- mtsrcPort <??> "'srcPort' field is missing"
-    let vectorToList = map i32toi . Vector.toList
-        srcPort = vectorToList tsrcPort
+    tsrcPort    <- mtsrcPort <??> "'srcPort' argument is missing"
+    let srcPort = vector2List tsrcPort
     dstNodeID   <- tryGetID mtdstNodeID "dstNodeID"
-    tdstPort    <- mtdstPort <??> "'dstPort' field is missing"
-    let dstPort = vectorToList tdstPort
+    tdstPort    <- mtdstPort <??> "'dstPort' argument is missing"
+    let dstPort = vector2List tdstPort
     defID       <- tryGetID mtdefID     "defID"
     libID       <- tryGetID mtlibID     "libID"
     projectID   <- tryGetID mtprojectID "projectID"
     batch       <- tryReadIORef batchHandler
     newBatch    <- tryRight $ BatchG.disconnect srcNodeID srcPort dstNodeID dstPort defID libID projectID batch
     tryWriteIORef batchHandler newBatch
-
 

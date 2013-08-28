@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,createProject,openProject,closeProject,storeProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
+module Batch_Client(projects,createProject,openProject,closeProject,storeProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -888,6 +888,78 @@ recv_disconnect ip = do
   res <- read_Disconnect_result ip
   readMessageEnd ip
   case f_Disconnect_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
+  return ()
+nodeDefaults (ip,op) arg_nodeID arg_defID arg_libID arg_projectID = do
+  send_nodeDefaults op arg_nodeID arg_defID arg_libID arg_projectID
+  recv_nodeDefaults ip
+send_nodeDefaults op arg_nodeID arg_defID arg_libID arg_projectID = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("nodeDefaults", M_CALL, seqn)
+  write_NodeDefaults_args op (NodeDefaults_args{f_NodeDefaults_args_nodeID=Just arg_nodeID,f_NodeDefaults_args_defID=Just arg_defID,f_NodeDefaults_args_libID=Just arg_libID,f_NodeDefaults_args_projectID=Just arg_projectID})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_nodeDefaults ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_NodeDefaults_result ip
+  readMessageEnd ip
+  case f_NodeDefaults_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_NodeDefaults_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "nodeDefaults failed: unknown result")
+setNodeDefault (ip,op) arg_dst arg_value arg_nodeID arg_defID arg_libID arg_projectID = do
+  send_setNodeDefault op arg_dst arg_value arg_nodeID arg_defID arg_libID arg_projectID
+  recv_setNodeDefault ip
+send_setNodeDefault op arg_dst arg_value arg_nodeID arg_defID arg_libID arg_projectID = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("setNodeDefault", M_CALL, seqn)
+  write_SetNodeDefault_args op (SetNodeDefault_args{f_SetNodeDefault_args_dst=Just arg_dst,f_SetNodeDefault_args_value=Just arg_value,f_SetNodeDefault_args_nodeID=Just arg_nodeID,f_SetNodeDefault_args_defID=Just arg_defID,f_SetNodeDefault_args_libID=Just arg_libID,f_SetNodeDefault_args_projectID=Just arg_projectID})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_setNodeDefault ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_SetNodeDefault_result ip
+  readMessageEnd ip
+  case f_SetNodeDefault_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
+  return ()
+removeNodeDefault (ip,op) arg_dst arg_nodeID arg_defID arg_libID arg_projectID = do
+  send_removeNodeDefault op arg_dst arg_nodeID arg_defID arg_libID arg_projectID
+  recv_removeNodeDefault ip
+send_removeNodeDefault op arg_dst arg_nodeID arg_defID arg_libID arg_projectID = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("removeNodeDefault", M_CALL, seqn)
+  write_RemoveNodeDefault_args op (RemoveNodeDefault_args{f_RemoveNodeDefault_args_dst=Just arg_dst,f_RemoveNodeDefault_args_nodeID=Just arg_nodeID,f_RemoveNodeDefault_args_defID=Just arg_defID,f_RemoveNodeDefault_args_libID=Just arg_libID,f_RemoveNodeDefault_args_projectID=Just arg_projectID})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_removeNodeDefault ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_RemoveNodeDefault_result ip
+  readMessageEnd ip
+  case f_RemoveNodeDefault_result_missingFields res of
     Nothing -> return ()
     Just _v -> throw _v
   return ()
