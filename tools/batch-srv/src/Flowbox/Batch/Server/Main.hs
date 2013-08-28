@@ -56,7 +56,7 @@ newBatchHandler = newIORef $ Batch.empty { Batch.projectManager = ProjectManager
                                                                              (0, Sample.project) 
                                                                              --(0, Project.empty)
                                                                                                 ] []
-                                         , Batch.activeProjectID = 0 }
+                                         }
 
  
 instance Batch_Iface BatchHandler where
@@ -65,8 +65,6 @@ instance Batch_Iface BatchHandler where
     openProject         = HProjects.openProject
     closeProject        = HProjects.closeProject
     storeProject        = HProjects.storeProject
-    setActiveProject    = HProjects.setActiveProject
-    activeProject       = HProjects.activeProject
 
     libraries           = HLibs.libraries
     createLibrary       = HLibs.createLibrary

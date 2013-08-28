@@ -11,13 +11,10 @@ module Flowbox.Batch.Handlers.Projects (
     openProject,
     closeProject,
     storeProject,
-    setActiveProject,
-    activeProject,
 ) where
 
 
 import           Flowbox.Batch.Batch                     (Batch(..))
-import           Flowbox.Batch.Handlers.Common           (activeProject)
 import qualified Flowbox.Batch.Project.Project         as Project
 import           Flowbox.Batch.Project.Project           (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager  as ProjectManager
@@ -58,7 +55,3 @@ storeProject projectID batch = do
         Nothing      -> error $ "Could not store project: Wrong project ID = " ++ show projectID
         Just project -> do ProjectSerialization.storeProject project
 
-
-setActiveProject :: Project.ID -> Batch -> Batch
-setActiveProject projectID batch = newBatch where
-    newBatch = batch { activeProjectID = projectID }

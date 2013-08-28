@@ -11,8 +11,6 @@ module Flowbox.Batch.Server.Handlers.Projects (
     openProject, 
     closeProject,
     storeProject,
-    setActiveProject,
-    activeProject
 ) where
 
 
@@ -24,7 +22,6 @@ import           Data.Text.Lazy                                             (Tex
 
 import qualified Projects_Types                                           as TProjects
 import           Flowbox.Control.Error                                      
-import qualified Flowbox.Batch.Batch                                      as Batch
 import           Flowbox.Batch.Batch                                        (Batch(..))
 import qualified Flowbox.Batch.Handlers.Projects                          as BatchP
 import qualified Flowbox.Batch.Project.Project                            as Project
@@ -86,19 +83,3 @@ storeProject batchHandler mtprojectID = tRunScript $ do
     scriptIO $ BatchP.storeProject projectID batch
 
 
-setActiveProject :: IORef Batch -> Maybe Int32 -> IO ()
-setActiveProject batchHandler mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "call setActiveProject"
-    projectID <- tryGetID mtprojectID "projectID"
-    batch     <- tryReadIORef batchHandler
-    let newBatch = BatchP.setActiveProject projectID batch
-    tryWriteIORef batchHandler newBatch
-
-
-activeProject :: IORef Batch -> IO TProjects.Project
-activeProject batchHandler = tRunScript $ do
-    scriptIO $ logger.info $ "call activeProject"
-    batch   <- tryReadIORef batchHandler
-    project <- (BatchP.activeProject batch) <??> "No active project set"
-    let projectID = Batch.activeProjectID batch
-    return $ fst $ encode (projectID, project)

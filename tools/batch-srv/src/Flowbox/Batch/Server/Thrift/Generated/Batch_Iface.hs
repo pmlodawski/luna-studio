@@ -50,21 +50,19 @@ class Batch_Iface a where
   openProject :: a -> Maybe Text -> IO Projects_Types.Project
   closeProject :: a -> Maybe Int32 -> IO ()
   storeProject :: a -> Maybe Int32 -> IO ()
-  setActiveProject :: a -> Maybe Int32 -> IO ()
-  activeProject :: a -> IO Projects_Types.Project
-  libraries :: a -> IO (Vector.Vector Libs_Types.Library)
-  createLibrary :: a -> Maybe Libs_Types.Library -> IO Libs_Types.Library
-  loadLibrary :: a -> Maybe Text -> IO Libs_Types.Library
-  unloadLibrary :: a -> Maybe Int32 -> IO ()
-  storeLibrary :: a -> Maybe Int32 -> IO ()
-  buildLibrary :: a -> Maybe Int32 -> IO ()
-  libraryRootDef :: a -> Maybe Int32 -> IO Defs_Types.Definition
-  defsGraph :: a -> Maybe Int32 -> IO Defs_Types.DefsGraph
-  addDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition
-  updateDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Int32 -> IO ()
-  removeDefinition :: a -> Maybe Int32 -> Maybe Int32 -> IO ()
-  definitionChildren :: a -> Maybe Int32 -> Maybe Int32 -> IO (Vector.Vector Defs_Types.Definition)
-  definitionParent :: a -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition
+  libraries :: a -> Maybe Int32 -> IO (Vector.Vector Libs_Types.Library)
+  createLibrary :: a -> Maybe Libs_Types.Library -> Maybe Int32 -> IO Libs_Types.Library
+  loadLibrary :: a -> Maybe Text -> Maybe Int32 -> IO Libs_Types.Library
+  unloadLibrary :: a -> Maybe Int32 -> Maybe Int32 -> IO ()
+  storeLibrary :: a -> Maybe Int32 -> Maybe Int32 -> IO ()
+  buildLibrary :: a -> Maybe Int32 -> Maybe Int32 -> IO ()
+  libraryRootDef :: a -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition
+  defsGraph :: a -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.DefsGraph
+  addDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition
+  updateDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Int32 -> Maybe Int32 -> IO ()
+  removeDefinition :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+  definitionChildren :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO (Vector.Vector Defs_Types.Definition)
+  definitionParent :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition
   newTypeModule :: a -> Maybe Text -> IO Types_Types.Type
   newTypeClass :: a -> Maybe Text -> Maybe (Vector.Vector Text) -> Maybe (Vector.Vector Types_Types.Type) -> IO Types_Types.Type
   newTypeFunction :: a -> Maybe Text -> Maybe Types_Types.Type -> Maybe Types_Types.Type -> IO Types_Types.Type
@@ -73,12 +71,12 @@ class Batch_Iface a where
   newTypeVariable :: a -> Maybe Text -> IO Types_Types.Type
   newTypeList :: a -> Maybe Types_Types.Type -> IO Types_Types.Type
   newTypeTuple :: a -> Maybe (Vector.Vector Types_Types.Type) -> IO Types_Types.Type
-  nodesGraph :: a -> Maybe Int32 -> Maybe Int32 -> IO Graphview_Types.GraphView
-  addNode :: a -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> IO Graph_Types.Node
-  updateNode :: a -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> IO ()
-  removeNode :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
-  connect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> IO ()
-  disconnect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> IO ()
+  nodesGraph :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Graphview_Types.GraphView
+  addNode :: a -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Graph_Types.Node
+  updateNode :: a -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+  removeNode :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+  connect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+  disconnect :: a -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe (Vector.Vector Int32) -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
   fS_ls :: a -> Maybe Text -> IO (Vector.Vector Fs_Types.FSItem)
   fS_stat :: a -> Maybe Text -> IO Fs_Types.FSItem
   fS_mkdir :: a -> Maybe Text -> IO ()

@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,createProject,openProject,closeProject,storeProject,setActiveProject,activeProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
+module Batch_Client(projects,createProject,openProject,closeProject,storeProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -167,63 +167,14 @@ recv_storeProject ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-setActiveProject (ip,op) arg_projectID = do
-  send_setActiveProject op arg_projectID
-  recv_setActiveProject ip
-send_setActiveProject op arg_projectID = do
-  seq <- seqid
-  seqn <- readIORef seq
-  writeMessageBegin op ("setActiveProject", M_CALL, seqn)
-  write_SetActiveProject_args op (SetActiveProject_args{f_SetActiveProject_args_projectID=Just arg_projectID})
-  writeMessageEnd op
-  tFlush (getTransport op)
-recv_setActiveProject ip = do
-  (fname, mtype, rseqid) <- readMessageBegin ip
-  if mtype == M_EXCEPTION then do
-    x <- readAppExn ip
-    readMessageEnd ip
-    throw x
-    else return ()
-  res <- read_SetActiveProject_result ip
-  readMessageEnd ip
-  case f_SetActiveProject_result_missingFields res of
-    Nothing -> return ()
-    Just _v -> throw _v
-  return ()
-activeProject (ip,op) = do
-  send_activeProject op
-  recv_activeProject ip
-send_activeProject op = do
-  seq <- seqid
-  seqn <- readIORef seq
-  writeMessageBegin op ("activeProject", M_CALL, seqn)
-  write_ActiveProject_args op (ActiveProject_args{})
-  writeMessageEnd op
-  tFlush (getTransport op)
-recv_activeProject ip = do
-  (fname, mtype, rseqid) <- readMessageBegin ip
-  if mtype == M_EXCEPTION then do
-    x <- readAppExn ip
-    readMessageEnd ip
-    throw x
-    else return ()
-  res <- read_ActiveProject_result ip
-  readMessageEnd ip
-  case f_ActiveProject_result_success res of
-    Just v -> return v
-    Nothing -> do
-      case f_ActiveProject_result_missingFields res of
-        Nothing -> return ()
-        Just _v -> throw _v
-      throw (AppExn AE_MISSING_RESULT "activeProject failed: unknown result")
-libraries (ip,op) = do
-  send_libraries op
+libraries (ip,op) arg_projectID = do
+  send_libraries op arg_projectID
   recv_libraries ip
-send_libraries op = do
+send_libraries op arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("libraries", M_CALL, seqn)
-  write_Libraries_args op (Libraries_args{})
+  write_Libraries_args op (Libraries_args{f_Libraries_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_libraries ip = do
@@ -242,14 +193,14 @@ recv_libraries ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "libraries failed: unknown result")
-createLibrary (ip,op) arg_library = do
-  send_createLibrary op arg_library
+createLibrary (ip,op) arg_library arg_projectID = do
+  send_createLibrary op arg_library arg_projectID
   recv_createLibrary ip
-send_createLibrary op arg_library = do
+send_createLibrary op arg_library arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("createLibrary", M_CALL, seqn)
-  write_CreateLibrary_args op (CreateLibrary_args{f_CreateLibrary_args_library=Just arg_library})
+  write_CreateLibrary_args op (CreateLibrary_args{f_CreateLibrary_args_library=Just arg_library,f_CreateLibrary_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_createLibrary ip = do
@@ -268,14 +219,14 @@ recv_createLibrary ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "createLibrary failed: unknown result")
-loadLibrary (ip,op) arg_path = do
-  send_loadLibrary op arg_path
+loadLibrary (ip,op) arg_path arg_projectID = do
+  send_loadLibrary op arg_path arg_projectID
   recv_loadLibrary ip
-send_loadLibrary op arg_path = do
+send_loadLibrary op arg_path arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("loadLibrary", M_CALL, seqn)
-  write_LoadLibrary_args op (LoadLibrary_args{f_LoadLibrary_args_path=Just arg_path})
+  write_LoadLibrary_args op (LoadLibrary_args{f_LoadLibrary_args_path=Just arg_path,f_LoadLibrary_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_loadLibrary ip = do
@@ -294,14 +245,14 @@ recv_loadLibrary ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "loadLibrary failed: unknown result")
-unloadLibrary (ip,op) arg_libID = do
-  send_unloadLibrary op arg_libID
+unloadLibrary (ip,op) arg_libID arg_projectID = do
+  send_unloadLibrary op arg_libID arg_projectID
   recv_unloadLibrary ip
-send_unloadLibrary op arg_libID = do
+send_unloadLibrary op arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("unloadLibrary", M_CALL, seqn)
-  write_UnloadLibrary_args op (UnloadLibrary_args{f_UnloadLibrary_args_libID=Just arg_libID})
+  write_UnloadLibrary_args op (UnloadLibrary_args{f_UnloadLibrary_args_libID=Just arg_libID,f_UnloadLibrary_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_unloadLibrary ip = do
@@ -317,14 +268,14 @@ recv_unloadLibrary ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-storeLibrary (ip,op) arg_libID = do
-  send_storeLibrary op arg_libID
+storeLibrary (ip,op) arg_libID arg_projectID = do
+  send_storeLibrary op arg_libID arg_projectID
   recv_storeLibrary ip
-send_storeLibrary op arg_libID = do
+send_storeLibrary op arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("storeLibrary", M_CALL, seqn)
-  write_StoreLibrary_args op (StoreLibrary_args{f_StoreLibrary_args_libID=Just arg_libID})
+  write_StoreLibrary_args op (StoreLibrary_args{f_StoreLibrary_args_libID=Just arg_libID,f_StoreLibrary_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_storeLibrary ip = do
@@ -340,14 +291,14 @@ recv_storeLibrary ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-buildLibrary (ip,op) arg_libID = do
-  send_buildLibrary op arg_libID
+buildLibrary (ip,op) arg_libID arg_projectID = do
+  send_buildLibrary op arg_libID arg_projectID
   recv_buildLibrary ip
-send_buildLibrary op arg_libID = do
+send_buildLibrary op arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("buildLibrary", M_CALL, seqn)
-  write_BuildLibrary_args op (BuildLibrary_args{f_BuildLibrary_args_libID=Just arg_libID})
+  write_BuildLibrary_args op (BuildLibrary_args{f_BuildLibrary_args_libID=Just arg_libID,f_BuildLibrary_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_buildLibrary ip = do
@@ -363,14 +314,14 @@ recv_buildLibrary ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-libraryRootDef (ip,op) arg_libID = do
-  send_libraryRootDef op arg_libID
+libraryRootDef (ip,op) arg_libID arg_projectID = do
+  send_libraryRootDef op arg_libID arg_projectID
   recv_libraryRootDef ip
-send_libraryRootDef op arg_libID = do
+send_libraryRootDef op arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("libraryRootDef", M_CALL, seqn)
-  write_LibraryRootDef_args op (LibraryRootDef_args{f_LibraryRootDef_args_libID=Just arg_libID})
+  write_LibraryRootDef_args op (LibraryRootDef_args{f_LibraryRootDef_args_libID=Just arg_libID,f_LibraryRootDef_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_libraryRootDef ip = do
@@ -389,14 +340,14 @@ recv_libraryRootDef ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "libraryRootDef failed: unknown result")
-defsGraph (ip,op) arg_libID = do
-  send_defsGraph op arg_libID
+defsGraph (ip,op) arg_libID arg_projectID = do
+  send_defsGraph op arg_libID arg_projectID
   recv_defsGraph ip
-send_defsGraph op arg_libID = do
+send_defsGraph op arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("defsGraph", M_CALL, seqn)
-  write_DefsGraph_args op (DefsGraph_args{f_DefsGraph_args_libID=Just arg_libID})
+  write_DefsGraph_args op (DefsGraph_args{f_DefsGraph_args_libID=Just arg_libID,f_DefsGraph_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_defsGraph ip = do
@@ -415,14 +366,14 @@ recv_defsGraph ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "defsGraph failed: unknown result")
-addDefinition (ip,op) arg_definition arg_parentID arg_libID = do
-  send_addDefinition op arg_definition arg_parentID arg_libID
+addDefinition (ip,op) arg_definition arg_parentID arg_libID arg_projectID = do
+  send_addDefinition op arg_definition arg_parentID arg_libID arg_projectID
   recv_addDefinition ip
-send_addDefinition op arg_definition arg_parentID arg_libID = do
+send_addDefinition op arg_definition arg_parentID arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("addDefinition", M_CALL, seqn)
-  write_AddDefinition_args op (AddDefinition_args{f_AddDefinition_args_definition=Just arg_definition,f_AddDefinition_args_parentID=Just arg_parentID,f_AddDefinition_args_libID=Just arg_libID})
+  write_AddDefinition_args op (AddDefinition_args{f_AddDefinition_args_definition=Just arg_definition,f_AddDefinition_args_parentID=Just arg_parentID,f_AddDefinition_args_libID=Just arg_libID,f_AddDefinition_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_addDefinition ip = do
@@ -441,14 +392,14 @@ recv_addDefinition ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "addDefinition failed: unknown result")
-updateDefinition (ip,op) arg_definition arg_libID = do
-  send_updateDefinition op arg_definition arg_libID
+updateDefinition (ip,op) arg_definition arg_libID arg_projectID = do
+  send_updateDefinition op arg_definition arg_libID arg_projectID
   recv_updateDefinition ip
-send_updateDefinition op arg_definition arg_libID = do
+send_updateDefinition op arg_definition arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("updateDefinition", M_CALL, seqn)
-  write_UpdateDefinition_args op (UpdateDefinition_args{f_UpdateDefinition_args_definition=Just arg_definition,f_UpdateDefinition_args_libID=Just arg_libID})
+  write_UpdateDefinition_args op (UpdateDefinition_args{f_UpdateDefinition_args_definition=Just arg_definition,f_UpdateDefinition_args_libID=Just arg_libID,f_UpdateDefinition_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_updateDefinition ip = do
@@ -464,14 +415,14 @@ recv_updateDefinition ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-removeDefinition (ip,op) arg_defID arg_libID = do
-  send_removeDefinition op arg_defID arg_libID
+removeDefinition (ip,op) arg_defID arg_libID arg_projectID = do
+  send_removeDefinition op arg_defID arg_libID arg_projectID
   recv_removeDefinition ip
-send_removeDefinition op arg_defID arg_libID = do
+send_removeDefinition op arg_defID arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("removeDefinition", M_CALL, seqn)
-  write_RemoveDefinition_args op (RemoveDefinition_args{f_RemoveDefinition_args_defID=Just arg_defID,f_RemoveDefinition_args_libID=Just arg_libID})
+  write_RemoveDefinition_args op (RemoveDefinition_args{f_RemoveDefinition_args_defID=Just arg_defID,f_RemoveDefinition_args_libID=Just arg_libID,f_RemoveDefinition_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_removeDefinition ip = do
@@ -487,14 +438,14 @@ recv_removeDefinition ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-definitionChildren (ip,op) arg_defID arg_libID = do
-  send_definitionChildren op arg_defID arg_libID
+definitionChildren (ip,op) arg_defID arg_libID arg_projectID = do
+  send_definitionChildren op arg_defID arg_libID arg_projectID
   recv_definitionChildren ip
-send_definitionChildren op arg_defID arg_libID = do
+send_definitionChildren op arg_defID arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("definitionChildren", M_CALL, seqn)
-  write_DefinitionChildren_args op (DefinitionChildren_args{f_DefinitionChildren_args_defID=Just arg_defID,f_DefinitionChildren_args_libID=Just arg_libID})
+  write_DefinitionChildren_args op (DefinitionChildren_args{f_DefinitionChildren_args_defID=Just arg_defID,f_DefinitionChildren_args_libID=Just arg_libID,f_DefinitionChildren_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_definitionChildren ip = do
@@ -513,14 +464,14 @@ recv_definitionChildren ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "definitionChildren failed: unknown result")
-definitionParent (ip,op) arg_defID arg_libID = do
-  send_definitionParent op arg_defID arg_libID
+definitionParent (ip,op) arg_defID arg_libID arg_projectID = do
+  send_definitionParent op arg_defID arg_libID arg_projectID
   recv_definitionParent ip
-send_definitionParent op arg_defID arg_libID = do
+send_definitionParent op arg_defID arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("definitionParent", M_CALL, seqn)
-  write_DefinitionParent_args op (DefinitionParent_args{f_DefinitionParent_args_defID=Just arg_defID,f_DefinitionParent_args_libID=Just arg_libID})
+  write_DefinitionParent_args op (DefinitionParent_args{f_DefinitionParent_args_defID=Just arg_defID,f_DefinitionParent_args_libID=Just arg_libID,f_DefinitionParent_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_definitionParent ip = do
@@ -744,14 +695,14 @@ recv_newTypeTuple ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "newTypeTuple failed: unknown result")
-nodesGraph (ip,op) arg_defID arg_libID = do
-  send_nodesGraph op arg_defID arg_libID
+nodesGraph (ip,op) arg_defID arg_libID arg_projectID = do
+  send_nodesGraph op arg_defID arg_libID arg_projectID
   recv_nodesGraph ip
-send_nodesGraph op arg_defID arg_libID = do
+send_nodesGraph op arg_defID arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("nodesGraph", M_CALL, seqn)
-  write_NodesGraph_args op (NodesGraph_args{f_NodesGraph_args_defID=Just arg_defID,f_NodesGraph_args_libID=Just arg_libID})
+  write_NodesGraph_args op (NodesGraph_args{f_NodesGraph_args_defID=Just arg_defID,f_NodesGraph_args_libID=Just arg_libID,f_NodesGraph_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_nodesGraph ip = do
@@ -770,14 +721,14 @@ recv_nodesGraph ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "nodesGraph failed: unknown result")
-addNode (ip,op) arg_node arg_defID arg_libID = do
-  send_addNode op arg_node arg_defID arg_libID
+addNode (ip,op) arg_node arg_defID arg_libID arg_projectID = do
+  send_addNode op arg_node arg_defID arg_libID arg_projectID
   recv_addNode ip
-send_addNode op arg_node arg_defID arg_libID = do
+send_addNode op arg_node arg_defID arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("addNode", M_CALL, seqn)
-  write_AddNode_args op (AddNode_args{f_AddNode_args_node=Just arg_node,f_AddNode_args_defID=Just arg_defID,f_AddNode_args_libID=Just arg_libID})
+  write_AddNode_args op (AddNode_args{f_AddNode_args_node=Just arg_node,f_AddNode_args_defID=Just arg_defID,f_AddNode_args_libID=Just arg_libID,f_AddNode_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_addNode ip = do
@@ -796,14 +747,14 @@ recv_addNode ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "addNode failed: unknown result")
-updateNode (ip,op) arg_node arg_defID arg_libID = do
-  send_updateNode op arg_node arg_defID arg_libID
+updateNode (ip,op) arg_node arg_defID arg_libID arg_projectID = do
+  send_updateNode op arg_node arg_defID arg_libID arg_projectID
   recv_updateNode ip
-send_updateNode op arg_node arg_defID arg_libID = do
+send_updateNode op arg_node arg_defID arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("updateNode", M_CALL, seqn)
-  write_UpdateNode_args op (UpdateNode_args{f_UpdateNode_args_node=Just arg_node,f_UpdateNode_args_defID=Just arg_defID,f_UpdateNode_args_libID=Just arg_libID})
+  write_UpdateNode_args op (UpdateNode_args{f_UpdateNode_args_node=Just arg_node,f_UpdateNode_args_defID=Just arg_defID,f_UpdateNode_args_libID=Just arg_libID,f_UpdateNode_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_updateNode ip = do
@@ -819,14 +770,14 @@ recv_updateNode ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-removeNode (ip,op) arg_nodeID arg_defID arg_libID = do
-  send_removeNode op arg_nodeID arg_defID arg_libID
+removeNode (ip,op) arg_nodeID arg_defID arg_libID arg_projectID = do
+  send_removeNode op arg_nodeID arg_defID arg_libID arg_projectID
   recv_removeNode ip
-send_removeNode op arg_nodeID arg_defID arg_libID = do
+send_removeNode op arg_nodeID arg_defID arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("removeNode", M_CALL, seqn)
-  write_RemoveNode_args op (RemoveNode_args{f_RemoveNode_args_nodeID=Just arg_nodeID,f_RemoveNode_args_defID=Just arg_defID,f_RemoveNode_args_libID=Just arg_libID})
+  write_RemoveNode_args op (RemoveNode_args{f_RemoveNode_args_nodeID=Just arg_nodeID,f_RemoveNode_args_defID=Just arg_defID,f_RemoveNode_args_libID=Just arg_libID,f_RemoveNode_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_removeNode ip = do
@@ -842,14 +793,14 @@ recv_removeNode ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-connect (ip,op) arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID = do
-  send_connect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID
+connect (ip,op) arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID arg_projectID = do
+  send_connect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID arg_projectID
   recv_connect ip
-send_connect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID = do
+send_connect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("connect", M_CALL, seqn)
-  write_Connect_args op (Connect_args{f_Connect_args_srcNodeID=Just arg_srcNodeID,f_Connect_args_srcPort=Just arg_srcPort,f_Connect_args_dstNodeID=Just arg_dstNodeID,f_Connect_args_dstPort=Just arg_dstPort,f_Connect_args_defID=Just arg_defID,f_Connect_args_libID=Just arg_libID})
+  write_Connect_args op (Connect_args{f_Connect_args_srcNodeID=Just arg_srcNodeID,f_Connect_args_srcPort=Just arg_srcPort,f_Connect_args_dstNodeID=Just arg_dstNodeID,f_Connect_args_dstPort=Just arg_dstPort,f_Connect_args_defID=Just arg_defID,f_Connect_args_libID=Just arg_libID,f_Connect_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_connect ip = do
@@ -865,14 +816,14 @@ recv_connect ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
-disconnect (ip,op) arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID = do
-  send_disconnect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID
+disconnect (ip,op) arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID arg_projectID = do
+  send_disconnect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID arg_projectID
   recv_disconnect ip
-send_disconnect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID = do
+send_disconnect op arg_srcNodeID arg_srcPort arg_dstNodeID arg_dstPort arg_defID arg_libID arg_projectID = do
   seq <- seqid
   seqn <- readIORef seq
   writeMessageBegin op ("disconnect", M_CALL, seqn)
-  write_Disconnect_args op (Disconnect_args{f_Disconnect_args_srcNodeID=Just arg_srcNodeID,f_Disconnect_args_srcPort=Just arg_srcPort,f_Disconnect_args_dstNodeID=Just arg_dstNodeID,f_Disconnect_args_dstPort=Just arg_dstPort,f_Disconnect_args_defID=Just arg_defID,f_Disconnect_args_libID=Just arg_libID})
+  write_Disconnect_args op (Disconnect_args{f_Disconnect_args_srcNodeID=Just arg_srcNodeID,f_Disconnect_args_srcPort=Just arg_srcPort,f_Disconnect_args_dstNodeID=Just arg_dstNodeID,f_Disconnect_args_dstPort=Just arg_dstPort,f_Disconnect_args_defID=Just arg_defID,f_Disconnect_args_libID=Just arg_libID,f_Disconnect_args_projectID=Just arg_projectID})
   writeMessageEnd op
   tFlush (getTransport op)
 recv_disconnect ip = do
