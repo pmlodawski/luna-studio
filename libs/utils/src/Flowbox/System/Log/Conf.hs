@@ -12,14 +12,15 @@ import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.Map as Map
 
 
-data Conf = Conf { indent :: Int
+data Conf = Conf { indent  :: Int
+                 , colored :: Bool
                  } deriving (Show)
 
 
 type LogConf = Map.Map String Conf
 
 empty :: Conf
-empty = Conf 0
+empty = Conf 0 True
 
 lempty :: LogConf
 lempty = Map.empty

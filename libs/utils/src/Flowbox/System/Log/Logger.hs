@@ -39,9 +39,9 @@ log pri msg name = do
                    ALERT       -> [SetColor Foreground Vivid Red    ]
                    EMERGENCY   -> [SetColor Foreground Vivid Red    ]
         prefix = mkIndent $ Conf.indent conf 
-    hSetSGR stderr sgr
+    if Conf.colored conf then hSetSGR stderr sgr else return ()
     logM name pri (prefix ++ msg)
-    hSetSGR stderr []
+    if Conf.colored conf then hSetSGR stderr []  else return ()
 
 debug :: String -> String -> IO ()
 debug     = log DEBUG
@@ -70,12 +70,17 @@ emergency = log EMERGENCY
 setLevel :: Priority -> String -> IO ()
 setLevel lvl name = updateGlobalLogger name (HSLogger.setLevel lvl)
 
-pushGroup :: Logger -> IO()
-pushGroup l = l $ \name -> do
+pushLogGroup :: Logger -> IO()
+pushLogGroup l = l $ \name -> do
     conf <- Conf.read name
     Conf.store name conf{Conf.indent = 1 + Conf.indent conf}
 
-popGroup :: Logger -> IO()
-popGroup l = l $ \name -> do
+popLogGroup :: Logger -> IO()
+popLogGroup l = l $ \name -> do
     conf <- Conf.read name
     Conf.store name conf{Conf.indent = max 0 $ 1 - Conf.indent conf}
+
+enableColorOutput :: Bool -> Logger -> IO()
+enableColorOutput state l = l $ \name -> do
+    conf <- Conf.read name
+    Conf.store name conf{Conf.colored = state}
