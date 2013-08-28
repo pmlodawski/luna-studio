@@ -14,27 +14,20 @@ module Flowbox.Batch.Handlers.Graph (
     removeNode,
     connect,
     disconnect,
-
-    nodeDefaults,
-    setNodeDefault,
-    removeNodeDefault,
 ) where
 
-import           Data.Map                                  (Map)
-
-import           Flowbox.Batch.Batch                       (Batch(..))
-import           Flowbox.Batch.Handlers.Common             (noresult, readonly, graphOp)
-import           Flowbox.Batch.GraphView.EdgeView          (EdgeView(..))
-import qualified Flowbox.Batch.GraphView.GraphView       as GraphView
-import           Flowbox.Batch.GraphView.GraphView         (GraphView)
-import qualified Flowbox.Batch.Project.Project           as Project
-import           Flowbox.Control.Error                     ((<?>), ifnot)
-import qualified Flowbox.Luna.Lib.Library                as Library
-import qualified Flowbox.Luna.Network.Def.Definition     as Definition
-import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue)
-import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
-import qualified Flowbox.Luna.Network.Graph.Node         as Node
-import           Flowbox.Luna.Network.Graph.Node           (Node(..))
+import           Flowbox.Batch.Batch                   (Batch(..))
+import           Flowbox.Batch.Handlers.Common         (noresult, readonly, graphOp, nodeOp)
+import           Flowbox.Batch.GraphView.EdgeView      (EdgeView(..))
+import qualified Flowbox.Batch.GraphView.GraphView   as GraphView
+import           Flowbox.Batch.GraphView.GraphView     (GraphView)
+import qualified Flowbox.Batch.Project.Project       as Project
+import           Flowbox.Control.Error                 (ifnot)
+import qualified Flowbox.Luna.Lib.Library            as Library
+import qualified Flowbox.Luna.Network.Def.Definition as Definition
+import qualified Flowbox.Luna.Network.Graph.Graph    as Graph
+import qualified Flowbox.Luna.Network.Graph.Node     as Node
+import           Flowbox.Luna.Network.Graph.Node       (Node(..))
 
 
 nodesGraph :: Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String GraphView
@@ -43,9 +36,8 @@ nodesGraph defID libID projectID = readonly . graphOp defID libID projectID (\_ 
 
 
 nodeByID :: Node.ID -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Node
-nodeByID nodeID defID libID projectID = readonly . graphOp defID libID projectID (\_ agraph -> do
-    node <- Graph.lab agraph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
-    return (agraph, node))
+nodeByID nodeID defID libID projectID = readonly . nodeOp nodeID defID libID projectID (\_ node -> do
+    return (node, node))
 
 
 addNode :: Node 
@@ -92,17 +84,3 @@ disconnect srcNodeID asrcPort dstNodeID adstPort defID libID projectID = noresul
                  $ GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
                  $ GraphView.fromGraph agraph
     return (newGraph, ()))
-
-
-nodeDefaults :: Node.ID -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String (Map [Int] DefaultValue)
-nodeDefaults nodeID defID libID projectID batch = undefined
-
-
-setNodeDefault :: [Int] -> DefaultValue
-               -> Node.ID -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
-setNodeDefault dstPort value nodeID defID libID projectID batch = undefined
-
-
-removeNodeDefault :: [Int]
-                  -> Node.ID -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
-removeNodeDefault dstPort nodeID defID libID projectID batch= undefined

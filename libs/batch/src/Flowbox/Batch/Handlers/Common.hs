@@ -10,15 +10,17 @@ module Flowbox.Batch.Handlers.Common (
     readonly',
     noresult,
 
-    projectOp,
     projectOp',
-    libManagerOp ,
     libManagerOp',
-    libraryOp,
     libraryOp',
+    
+    projectOp,
+    libManagerOp,
+    libraryOp,
     defManagerOp,
     definitionOp,
     graphOp,
+    nodeOp
 ) where
 
 import qualified Flowbox.Batch.Batch                  as Batch
@@ -36,7 +38,10 @@ import qualified Flowbox.Luna.Network.Def.DefManager  as DefManager
 import           Flowbox.Luna.Network.Def.DefManager    (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition  as Definition
 import           Flowbox.Luna.Network.Def.Definition    (Definition(..))
+import qualified Flowbox.Luna.Network.Graph.Graph     as Graph
 import           Flowbox.Luna.Network.Graph.Graph       (Graph)
+import qualified Flowbox.Luna.Network.Graph.Node      as Node
+import           Flowbox.Luna.Network.Graph.Node        (Node)
 
 
 
@@ -183,3 +188,15 @@ graphOp defID libID projectID operation = definitionOp defID libID projectID (\b
     let newDefinition = definition {Definition.graph =  newGraph}
     return (newDefinition, r))
 
+nodeOp :: Node.ID
+       -> Definition.ID
+       -> Library.ID 
+       -> Project.ID
+       -> (Batch -> Node -> Either String (Node, r))
+       -> Batch 
+       -> Either String (Batch, r)
+nodeOp nodeID defID libID projectID operation = graphOp defID libID projectID (\batch agraph -> do 
+    node <- Graph.lab agraph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
+    (newNode, r) <- operation batch node
+    let newGraph = Graph.updateNode (nodeID, newNode) agraph
+    return (newGraph, r))

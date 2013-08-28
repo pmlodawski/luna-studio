@@ -16,6 +16,7 @@ module Flowbox.Batch.GraphView.GraphView(
 
 import           Data.Map                           (Map)
 import qualified Data.Map                         as Map
+import qualified Flowbox.Batch.Batch              as Batch
 import           Flowbox.Batch.GraphView.EdgeView   (EdgeView(..))
 import qualified Flowbox.Luna.Data.Graph          as DG
 import           Flowbox.Luna.Data.Graph          hiding (Graph, Edge, empty, fromGraph)
@@ -37,23 +38,24 @@ empty :: GraphView
 empty = DG.empty
 
 
-attributeKey :: String
-attributeKey = "Batch-0.1"
-
 isGeneratedKey :: String
 isGeneratedKey = "GraphView-generated"
+
 
 selectKey :: String
 selectKey = "GraphView-select"
 
+
 trueVal :: String
 trueVal = "True"
 
+
 generatedAttrs :: Attributes
-generatedAttrs = Attributes.fromList [(attributeKey, Map.fromList [(isGeneratedKey, trueVal)])]
+generatedAttrs = Attributes.fromList [(Batch.attributeKey, Map.fromList [(isGeneratedKey, trueVal)])]
+
 
 selectAttrs :: Int -> Attributes
-selectAttrs num = Attributes.fromList [(attributeKey, Map.fromList [(isGeneratedKey, trueVal)
+selectAttrs num = Attributes.fromList [(Batch.attributeKey, Map.fromList [(isGeneratedKey, trueVal)
                                                                    ,(selectKey, show num)])]
 
 removeEdges :: DG.Graph a b -> DG.Graph a c
@@ -111,7 +113,7 @@ fromGraph graph = graphv where
 getBatchAttrs :: Node -> Maybe (Map String String)
 getBatchAttrs node = case node of
     Default {} -> Nothing
-    _          -> Map.lookup attributeKey attrs where
+    _          -> Map.lookup Batch.attributeKey attrs where
                   attrs = Node.attributes node
                   
 

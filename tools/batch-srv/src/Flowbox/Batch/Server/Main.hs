@@ -28,6 +28,7 @@ import qualified Flowbox.Batch.Batch                      as Batch
 import           Flowbox.Batch.Batch                        (Batch(..))
 import           Flowbox.Batch.Server.Handlers.Common       (logger)
 import qualified Flowbox.Batch.Server.Handlers.Defs       as HDefs
+import qualified Flowbox.Batch.Server.Handlers.Defaults   as HDefaults
 import qualified Flowbox.Batch.Server.Handlers.Graph      as HGraph
 import qualified Flowbox.Batch.Server.Handlers.Libs       as HLibs
 import qualified Flowbox.Batch.Server.Handlers.Projects   as HProjects
@@ -98,9 +99,10 @@ instance Batch_Iface BatchHandler where
     removeNode          = HGraph.removeNode
     connect             = HGraph.connect
     disconnect          = HGraph.disconnect
-    nodeDefaults        = HGraph.nodeDefaults
-    setNodeDefault      = HGraph.setNodeDefault
-    removeNodeDefault   = HGraph.removeNodeDefault
+
+    nodeDefaults        = HDefaults.nodeDefaults
+    setNodeDefault      = HDefaults.setNodeDefault
+    removeNodeDefault   = HDefaults.removeNodeDefault
 
     fS_ls               = HFileSystem.ls
     fS_stat             = HFileSystem.stat
