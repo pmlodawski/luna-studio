@@ -69,6 +69,7 @@ connect srcNodeID asrcPort dstNodeID adstPort defID libID projectID = noresult .
     Graph.gelem srcNodeID agraph `ifnot` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
     Graph.gelem dstNodeID agraph `ifnot` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
     (length adstPort <= 1)       `ifnot` "dstPort cannot have more than 1 item."
+    -- TODO [PM] : check if port is already connected!
     let newGraph = GraphView.toGraph 
                  $ GraphView.insEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
                  $ GraphView.fromGraph agraph
