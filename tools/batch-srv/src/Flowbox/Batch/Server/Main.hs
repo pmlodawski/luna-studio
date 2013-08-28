@@ -75,6 +75,7 @@ instance Batch_Iface BatchHandler where
     libraryRootDef      = HLibs.libraryRootDef
 
     defsGraph           = HDefs.defsGraph
+    defByID             = HDefs.defByID
     addDefinition       = HDefs.addDefinition
     updateDefinition    = HDefs.updateDefinition
     removeDefinition    = HDefs.removeDefinition
@@ -91,6 +92,7 @@ instance Batch_Iface BatchHandler where
     newTypeTuple        = HTypes.newTypeTuple
 
     nodesGraph          = HGraph.nodesGraph
+    nodeByID            = HGraph.nodeByID
     addNode             = HGraph.addNode
     updateNode          = HGraph.updateNode
     removeNode          = HGraph.removeNode

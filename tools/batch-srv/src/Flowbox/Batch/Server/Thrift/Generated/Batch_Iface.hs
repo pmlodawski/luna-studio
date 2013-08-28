@@ -58,6 +58,7 @@ class Batch_Iface a where
   buildLibrary :: a -> Maybe Int32 -> Maybe Int32 -> IO ()
   libraryRootDef :: a -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition
   defsGraph :: a -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.DefsGraph
+  defByID :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition
   addDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition
   updateDefinition :: a -> Maybe Defs_Types.Definition -> Maybe Int32 -> Maybe Int32 -> IO ()
   removeDefinition :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
@@ -72,6 +73,7 @@ class Batch_Iface a where
   newTypeList :: a -> Maybe Types_Types.Type -> IO Types_Types.Type
   newTypeTuple :: a -> Maybe (Vector.Vector Types_Types.Type) -> IO Types_Types.Type
   nodesGraph :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Graphview_Types.GraphView
+  nodeByID :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Graph_Types.Node
   addNode :: a -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Graph_Types.Node
   updateNode :: a -> Maybe Graph_Types.Node -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
   removeNode :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()

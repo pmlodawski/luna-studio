@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,createProject,openProject,closeProject,storeProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,addNode,updateNode,removeNode,connect,disconnect,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
+module Batch_Client(projects,createProject,openProject,closeProject,storeProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -366,6 +366,32 @@ recv_defsGraph ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "defsGraph failed: unknown result")
+defByID (ip,op) arg_defID arg_libID arg_projectID = do
+  send_defByID op arg_defID arg_libID arg_projectID
+  recv_defByID ip
+send_defByID op arg_defID arg_libID arg_projectID = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("defByID", M_CALL, seqn)
+  write_DefByID_args op (DefByID_args{f_DefByID_args_defID=Just arg_defID,f_DefByID_args_libID=Just arg_libID,f_DefByID_args_projectID=Just arg_projectID})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_defByID ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_DefByID_result ip
+  readMessageEnd ip
+  case f_DefByID_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_DefByID_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "defByID failed: unknown result")
 addDefinition (ip,op) arg_definition arg_parentID arg_libID arg_projectID = do
   send_addDefinition op arg_definition arg_parentID arg_libID arg_projectID
   recv_addDefinition ip
@@ -721,6 +747,32 @@ recv_nodesGraph ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "nodesGraph failed: unknown result")
+nodeByID (ip,op) arg_nodeID arg_defID arg_libID arg_projectID = do
+  send_nodeByID op arg_nodeID arg_defID arg_libID arg_projectID
+  recv_nodeByID ip
+send_nodeByID op arg_nodeID arg_defID arg_libID arg_projectID = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("nodeByID", M_CALL, seqn)
+  write_NodeByID_args op (NodeByID_args{f_NodeByID_args_nodeID=Just arg_nodeID,f_NodeByID_args_defID=Just arg_defID,f_NodeByID_args_libID=Just arg_libID,f_NodeByID_args_projectID=Just arg_projectID})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_nodeByID ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_NodeByID_result ip
+  readMessageEnd ip
+  case f_NodeByID_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_NodeByID_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "nodeByID failed: unknown result")
 addNode (ip,op) arg_node arg_defID arg_libID arg_projectID = do
   send_addNode op arg_node arg_defID arg_libID arg_projectID
   recv_addNode ip

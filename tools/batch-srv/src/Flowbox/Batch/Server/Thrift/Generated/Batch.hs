@@ -956,6 +956,96 @@ read_DefsGraph_result iprot = do
   record <- read_DefsGraph_result_fields iprot (DefsGraph_result{f_DefsGraph_result_success=Nothing,f_DefsGraph_result_missingFields=Nothing})
   readStructEnd iprot
   return record
+data DefByID_args = DefByID_args{f_DefByID_args_defID :: Maybe Int32,f_DefByID_args_libID :: Maybe Int32,f_DefByID_args_projectID :: Maybe Int32} deriving (Show,Eq,Typeable)
+instance Hashable DefByID_args where
+  hashWithSalt salt record = salt   `hashWithSalt` f_DefByID_args_defID record   `hashWithSalt` f_DefByID_args_libID record   `hashWithSalt` f_DefByID_args_projectID record  
+write_DefByID_args oprot record = do
+  writeStructBegin oprot "DefByID_args"
+  case f_DefByID_args_defID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("defID",T_I32,1)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  case f_DefByID_args_libID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("libID",T_I32,2)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  case f_DefByID_args_projectID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("projectID",T_I32,3)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_DefByID_args_fields iprot record = do
+  (_,_t150,_id151) <- readFieldBegin iprot
+  if _t150 == T_STOP then return record else
+    case _id151 of 
+      1 -> if _t150 == T_I32 then do
+        s <- readI32 iprot
+        read_DefByID_args_fields iprot record{f_DefByID_args_defID=Just s}
+        else do
+          skip iprot _t150
+          read_DefByID_args_fields iprot record
+      2 -> if _t150 == T_I32 then do
+        s <- readI32 iprot
+        read_DefByID_args_fields iprot record{f_DefByID_args_libID=Just s}
+        else do
+          skip iprot _t150
+          read_DefByID_args_fields iprot record
+      3 -> if _t150 == T_I32 then do
+        s <- readI32 iprot
+        read_DefByID_args_fields iprot record{f_DefByID_args_projectID=Just s}
+        else do
+          skip iprot _t150
+          read_DefByID_args_fields iprot record
+      _ -> do
+        skip iprot _t150
+        readFieldEnd iprot
+        read_DefByID_args_fields iprot record
+read_DefByID_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_DefByID_args_fields iprot (DefByID_args{f_DefByID_args_defID=Nothing,f_DefByID_args_libID=Nothing,f_DefByID_args_projectID=Nothing})
+  readStructEnd iprot
+  return record
+data DefByID_result = DefByID_result{f_DefByID_result_success :: Maybe Defs_Types.Definition,f_DefByID_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
+instance Hashable DefByID_result where
+  hashWithSalt salt record = salt   `hashWithSalt` f_DefByID_result_success record   `hashWithSalt` f_DefByID_result_missingFields record  
+write_DefByID_result oprot record = do
+  writeStructBegin oprot "DefByID_result"
+  case f_DefByID_result_success record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("success",T_STRUCT,0)
+    Defs_Types.write_Definition oprot _v
+    writeFieldEnd oprot}
+  case f_DefByID_result_missingFields record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("missingFields",T_STRUCT,1)
+    write_ArgumentException oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_DefByID_result_fields iprot record = do
+  (_,_t155,_id156) <- readFieldBegin iprot
+  if _t155 == T_STOP then return record else
+    case _id156 of 
+      0 -> if _t155 == T_STRUCT then do
+        s <- (read_Definition iprot)
+        read_DefByID_result_fields iprot record{f_DefByID_result_success=Just s}
+        else do
+          skip iprot _t155
+          read_DefByID_result_fields iprot record
+      1 -> if _t155 == T_STRUCT then do
+        s <- (read_ArgumentException iprot)
+        read_DefByID_result_fields iprot record{f_DefByID_result_missingFields=Just s}
+        else do
+          skip iprot _t155
+          read_DefByID_result_fields iprot record
+      _ -> do
+        skip iprot _t155
+        readFieldEnd iprot
+        read_DefByID_result_fields iprot record
+read_DefByID_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_DefByID_result_fields iprot (DefByID_result{f_DefByID_result_success=Nothing,f_DefByID_result_missingFields=Nothing})
+  readStructEnd iprot
+  return record
 data AddDefinition_args = AddDefinition_args{f_AddDefinition_args_definition :: Maybe Defs_Types.Definition,f_AddDefinition_args_parentID :: Maybe Int32,f_AddDefinition_args_libID :: Maybe Int32,f_AddDefinition_args_projectID :: Maybe Int32} deriving (Show,Eq,Typeable)
 instance Hashable AddDefinition_args where
   hashWithSalt salt record = salt   `hashWithSalt` f_AddDefinition_args_definition record   `hashWithSalt` f_AddDefinition_args_parentID record   `hashWithSalt` f_AddDefinition_args_libID record   `hashWithSalt` f_AddDefinition_args_projectID record  
@@ -980,35 +1070,35 @@ write_AddDefinition_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_AddDefinition_args_fields iprot record = do
-  (_,_t150,_id151) <- readFieldBegin iprot
-  if _t150 == T_STOP then return record else
-    case _id151 of 
-      1 -> if _t150 == T_STRUCT then do
+  (_,_t160,_id161) <- readFieldBegin iprot
+  if _t160 == T_STOP then return record else
+    case _id161 of 
+      1 -> if _t160 == T_STRUCT then do
         s <- (read_Definition iprot)
         read_AddDefinition_args_fields iprot record{f_AddDefinition_args_definition=Just s}
         else do
-          skip iprot _t150
+          skip iprot _t160
           read_AddDefinition_args_fields iprot record
-      2 -> if _t150 == T_I32 then do
+      2 -> if _t160 == T_I32 then do
         s <- readI32 iprot
         read_AddDefinition_args_fields iprot record{f_AddDefinition_args_parentID=Just s}
         else do
-          skip iprot _t150
+          skip iprot _t160
           read_AddDefinition_args_fields iprot record
-      3 -> if _t150 == T_I32 then do
+      3 -> if _t160 == T_I32 then do
         s <- readI32 iprot
         read_AddDefinition_args_fields iprot record{f_AddDefinition_args_libID=Just s}
         else do
-          skip iprot _t150
+          skip iprot _t160
           read_AddDefinition_args_fields iprot record
-      4 -> if _t150 == T_I32 then do
+      4 -> if _t160 == T_I32 then do
         s <- readI32 iprot
         read_AddDefinition_args_fields iprot record{f_AddDefinition_args_projectID=Just s}
         else do
-          skip iprot _t150
+          skip iprot _t160
           read_AddDefinition_args_fields iprot record
       _ -> do
-        skip iprot _t150
+        skip iprot _t160
         readFieldEnd iprot
         read_AddDefinition_args_fields iprot record
 read_AddDefinition_args iprot = do
@@ -1032,23 +1122,23 @@ write_AddDefinition_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_AddDefinition_result_fields iprot record = do
-  (_,_t155,_id156) <- readFieldBegin iprot
-  if _t155 == T_STOP then return record else
-    case _id156 of 
-      0 -> if _t155 == T_STRUCT then do
+  (_,_t165,_id166) <- readFieldBegin iprot
+  if _t165 == T_STOP then return record else
+    case _id166 of 
+      0 -> if _t165 == T_STRUCT then do
         s <- (read_Definition iprot)
         read_AddDefinition_result_fields iprot record{f_AddDefinition_result_success=Just s}
         else do
-          skip iprot _t155
+          skip iprot _t165
           read_AddDefinition_result_fields iprot record
-      1 -> if _t155 == T_STRUCT then do
+      1 -> if _t165 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_AddDefinition_result_fields iprot record{f_AddDefinition_result_missingFields=Just s}
         else do
-          skip iprot _t155
+          skip iprot _t165
           read_AddDefinition_result_fields iprot record
       _ -> do
-        skip iprot _t155
+        skip iprot _t165
         readFieldEnd iprot
         read_AddDefinition_result_fields iprot record
 read_AddDefinition_result iprot = do
@@ -1076,29 +1166,29 @@ write_UpdateDefinition_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_UpdateDefinition_args_fields iprot record = do
-  (_,_t160,_id161) <- readFieldBegin iprot
-  if _t160 == T_STOP then return record else
-    case _id161 of 
-      1 -> if _t160 == T_STRUCT then do
+  (_,_t170,_id171) <- readFieldBegin iprot
+  if _t170 == T_STOP then return record else
+    case _id171 of 
+      1 -> if _t170 == T_STRUCT then do
         s <- (read_Definition iprot)
         read_UpdateDefinition_args_fields iprot record{f_UpdateDefinition_args_definition=Just s}
         else do
-          skip iprot _t160
+          skip iprot _t170
           read_UpdateDefinition_args_fields iprot record
-      2 -> if _t160 == T_I32 then do
+      2 -> if _t170 == T_I32 then do
         s <- readI32 iprot
         read_UpdateDefinition_args_fields iprot record{f_UpdateDefinition_args_libID=Just s}
         else do
-          skip iprot _t160
+          skip iprot _t170
           read_UpdateDefinition_args_fields iprot record
-      3 -> if _t160 == T_I32 then do
+      3 -> if _t170 == T_I32 then do
         s <- readI32 iprot
         read_UpdateDefinition_args_fields iprot record{f_UpdateDefinition_args_projectID=Just s}
         else do
-          skip iprot _t160
+          skip iprot _t170
           read_UpdateDefinition_args_fields iprot record
       _ -> do
-        skip iprot _t160
+        skip iprot _t170
         readFieldEnd iprot
         read_UpdateDefinition_args_fields iprot record
 read_UpdateDefinition_args iprot = do
@@ -1118,17 +1208,17 @@ write_UpdateDefinition_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_UpdateDefinition_result_fields iprot record = do
-  (_,_t165,_id166) <- readFieldBegin iprot
-  if _t165 == T_STOP then return record else
-    case _id166 of 
-      1 -> if _t165 == T_STRUCT then do
+  (_,_t175,_id176) <- readFieldBegin iprot
+  if _t175 == T_STOP then return record else
+    case _id176 of 
+      1 -> if _t175 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_UpdateDefinition_result_fields iprot record{f_UpdateDefinition_result_missingFields=Just s}
         else do
-          skip iprot _t165
+          skip iprot _t175
           read_UpdateDefinition_result_fields iprot record
       _ -> do
-        skip iprot _t165
+        skip iprot _t175
         readFieldEnd iprot
         read_UpdateDefinition_result_fields iprot record
 read_UpdateDefinition_result iprot = do
@@ -1156,29 +1246,29 @@ write_RemoveDefinition_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_RemoveDefinition_args_fields iprot record = do
-  (_,_t170,_id171) <- readFieldBegin iprot
-  if _t170 == T_STOP then return record else
-    case _id171 of 
-      1 -> if _t170 == T_I32 then do
+  (_,_t180,_id181) <- readFieldBegin iprot
+  if _t180 == T_STOP then return record else
+    case _id181 of 
+      1 -> if _t180 == T_I32 then do
         s <- readI32 iprot
         read_RemoveDefinition_args_fields iprot record{f_RemoveDefinition_args_defID=Just s}
         else do
-          skip iprot _t170
+          skip iprot _t180
           read_RemoveDefinition_args_fields iprot record
-      2 -> if _t170 == T_I32 then do
+      2 -> if _t180 == T_I32 then do
         s <- readI32 iprot
         read_RemoveDefinition_args_fields iprot record{f_RemoveDefinition_args_libID=Just s}
         else do
-          skip iprot _t170
+          skip iprot _t180
           read_RemoveDefinition_args_fields iprot record
-      3 -> if _t170 == T_I32 then do
+      3 -> if _t180 == T_I32 then do
         s <- readI32 iprot
         read_RemoveDefinition_args_fields iprot record{f_RemoveDefinition_args_projectID=Just s}
         else do
-          skip iprot _t170
+          skip iprot _t180
           read_RemoveDefinition_args_fields iprot record
       _ -> do
-        skip iprot _t170
+        skip iprot _t180
         readFieldEnd iprot
         read_RemoveDefinition_args_fields iprot record
 read_RemoveDefinition_args iprot = do
@@ -1198,17 +1288,17 @@ write_RemoveDefinition_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_RemoveDefinition_result_fields iprot record = do
-  (_,_t175,_id176) <- readFieldBegin iprot
-  if _t175 == T_STOP then return record else
-    case _id176 of 
-      1 -> if _t175 == T_STRUCT then do
+  (_,_t185,_id186) <- readFieldBegin iprot
+  if _t185 == T_STOP then return record else
+    case _id186 of 
+      1 -> if _t185 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_RemoveDefinition_result_fields iprot record{f_RemoveDefinition_result_missingFields=Just s}
         else do
-          skip iprot _t175
+          skip iprot _t185
           read_RemoveDefinition_result_fields iprot record
       _ -> do
-        skip iprot _t175
+        skip iprot _t185
         readFieldEnd iprot
         read_RemoveDefinition_result_fields iprot record
 read_RemoveDefinition_result iprot = do
@@ -1236,29 +1326,29 @@ write_DefinitionChildren_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_DefinitionChildren_args_fields iprot record = do
-  (_,_t180,_id181) <- readFieldBegin iprot
-  if _t180 == T_STOP then return record else
-    case _id181 of 
-      1 -> if _t180 == T_I32 then do
+  (_,_t190,_id191) <- readFieldBegin iprot
+  if _t190 == T_STOP then return record else
+    case _id191 of 
+      1 -> if _t190 == T_I32 then do
         s <- readI32 iprot
         read_DefinitionChildren_args_fields iprot record{f_DefinitionChildren_args_defID=Just s}
         else do
-          skip iprot _t180
+          skip iprot _t190
           read_DefinitionChildren_args_fields iprot record
-      2 -> if _t180 == T_I32 then do
+      2 -> if _t190 == T_I32 then do
         s <- readI32 iprot
         read_DefinitionChildren_args_fields iprot record{f_DefinitionChildren_args_libID=Just s}
         else do
-          skip iprot _t180
+          skip iprot _t190
           read_DefinitionChildren_args_fields iprot record
-      3 -> if _t180 == T_I32 then do
+      3 -> if _t190 == T_I32 then do
         s <- readI32 iprot
         read_DefinitionChildren_args_fields iprot record{f_DefinitionChildren_args_projectID=Just s}
         else do
-          skip iprot _t180
+          skip iprot _t190
           read_DefinitionChildren_args_fields iprot record
       _ -> do
-        skip iprot _t180
+        skip iprot _t190
         readFieldEnd iprot
         read_DefinitionChildren_args_fields iprot record
 read_DefinitionChildren_args iprot = do
@@ -1273,7 +1363,7 @@ write_DefinitionChildren_result oprot record = do
   writeStructBegin oprot "DefinitionChildren_result"
   case f_DefinitionChildren_result_success record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("success",T_LIST,0)
-    (let f = Vector.mapM_ (\_viter184 -> Defs_Types.write_Definition oprot _viter184) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter194 -> Defs_Types.write_Definition oprot _viter194) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_DefinitionChildren_result_missingFields record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("missingFields",T_STRUCT,1)
@@ -1282,23 +1372,23 @@ write_DefinitionChildren_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_DefinitionChildren_result_fields iprot record = do
-  (_,_t186,_id187) <- readFieldBegin iprot
-  if _t186 == T_STOP then return record else
-    case _id187 of 
-      0 -> if _t186 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Definition iprot)) in do {(_etype191,_size188) <- readListBegin iprot; f _size188})
+  (_,_t196,_id197) <- readFieldBegin iprot
+  if _t196 == T_STOP then return record else
+    case _id197 of 
+      0 -> if _t196 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Definition iprot)) in do {(_etype201,_size198) <- readListBegin iprot; f _size198})
         read_DefinitionChildren_result_fields iprot record{f_DefinitionChildren_result_success=Just s}
         else do
-          skip iprot _t186
+          skip iprot _t196
           read_DefinitionChildren_result_fields iprot record
-      1 -> if _t186 == T_STRUCT then do
+      1 -> if _t196 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_DefinitionChildren_result_fields iprot record{f_DefinitionChildren_result_missingFields=Just s}
         else do
-          skip iprot _t186
+          skip iprot _t196
           read_DefinitionChildren_result_fields iprot record
       _ -> do
-        skip iprot _t186
+        skip iprot _t196
         readFieldEnd iprot
         read_DefinitionChildren_result_fields iprot record
 read_DefinitionChildren_result iprot = do
@@ -1326,29 +1416,29 @@ write_DefinitionParent_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_DefinitionParent_args_fields iprot record = do
-  (_,_t196,_id197) <- readFieldBegin iprot
-  if _t196 == T_STOP then return record else
-    case _id197 of 
-      1 -> if _t196 == T_I32 then do
+  (_,_t206,_id207) <- readFieldBegin iprot
+  if _t206 == T_STOP then return record else
+    case _id207 of 
+      1 -> if _t206 == T_I32 then do
         s <- readI32 iprot
         read_DefinitionParent_args_fields iprot record{f_DefinitionParent_args_defID=Just s}
         else do
-          skip iprot _t196
+          skip iprot _t206
           read_DefinitionParent_args_fields iprot record
-      2 -> if _t196 == T_I32 then do
+      2 -> if _t206 == T_I32 then do
         s <- readI32 iprot
         read_DefinitionParent_args_fields iprot record{f_DefinitionParent_args_libID=Just s}
         else do
-          skip iprot _t196
+          skip iprot _t206
           read_DefinitionParent_args_fields iprot record
-      3 -> if _t196 == T_I32 then do
+      3 -> if _t206 == T_I32 then do
         s <- readI32 iprot
         read_DefinitionParent_args_fields iprot record{f_DefinitionParent_args_projectID=Just s}
         else do
-          skip iprot _t196
+          skip iprot _t206
           read_DefinitionParent_args_fields iprot record
       _ -> do
-        skip iprot _t196
+        skip iprot _t206
         readFieldEnd iprot
         read_DefinitionParent_args_fields iprot record
 read_DefinitionParent_args iprot = do
@@ -1372,23 +1462,23 @@ write_DefinitionParent_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_DefinitionParent_result_fields iprot record = do
-  (_,_t201,_id202) <- readFieldBegin iprot
-  if _t201 == T_STOP then return record else
-    case _id202 of 
-      0 -> if _t201 == T_STRUCT then do
+  (_,_t211,_id212) <- readFieldBegin iprot
+  if _t211 == T_STOP then return record else
+    case _id212 of 
+      0 -> if _t211 == T_STRUCT then do
         s <- (read_Definition iprot)
         read_DefinitionParent_result_fields iprot record{f_DefinitionParent_result_success=Just s}
         else do
-          skip iprot _t201
+          skip iprot _t211
           read_DefinitionParent_result_fields iprot record
-      1 -> if _t201 == T_STRUCT then do
+      1 -> if _t211 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_DefinitionParent_result_fields iprot record{f_DefinitionParent_result_missingFields=Just s}
         else do
-          skip iprot _t201
+          skip iprot _t211
           read_DefinitionParent_result_fields iprot record
       _ -> do
-        skip iprot _t201
+        skip iprot _t211
         readFieldEnd iprot
         read_DefinitionParent_result_fields iprot record
 read_DefinitionParent_result iprot = do
@@ -1408,17 +1498,17 @@ write_NewTypeModule_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeModule_args_fields iprot record = do
-  (_,_t206,_id207) <- readFieldBegin iprot
-  if _t206 == T_STOP then return record else
-    case _id207 of 
-      1 -> if _t206 == T_STRING then do
+  (_,_t216,_id217) <- readFieldBegin iprot
+  if _t216 == T_STOP then return record else
+    case _id217 of 
+      1 -> if _t216 == T_STRING then do
         s <- readString iprot
         read_NewTypeModule_args_fields iprot record{f_NewTypeModule_args_name=Just s}
         else do
-          skip iprot _t206
+          skip iprot _t216
           read_NewTypeModule_args_fields iprot record
       _ -> do
-        skip iprot _t206
+        skip iprot _t216
         readFieldEnd iprot
         read_NewTypeModule_args_fields iprot record
 read_NewTypeModule_args iprot = do
@@ -1442,23 +1532,23 @@ write_NewTypeModule_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeModule_result_fields iprot record = do
-  (_,_t211,_id212) <- readFieldBegin iprot
-  if _t211 == T_STOP then return record else
-    case _id212 of 
-      0 -> if _t211 == T_STRUCT then do
+  (_,_t221,_id222) <- readFieldBegin iprot
+  if _t221 == T_STOP then return record else
+    case _id222 of 
+      0 -> if _t221 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeModule_result_fields iprot record{f_NewTypeModule_result_success=Just s}
         else do
-          skip iprot _t211
+          skip iprot _t221
           read_NewTypeModule_result_fields iprot record
-      1 -> if _t211 == T_STRUCT then do
+      1 -> if _t221 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_NewTypeModule_result_fields iprot record{f_NewTypeModule_result_missingFields=Just s}
         else do
-          skip iprot _t211
+          skip iprot _t221
           read_NewTypeModule_result_fields iprot record
       _ -> do
-        skip iprot _t211
+        skip iprot _t221
         readFieldEnd iprot
         read_NewTypeModule_result_fields iprot record
 read_NewTypeModule_result iprot = do
@@ -1477,38 +1567,38 @@ write_NewTypeClass_args oprot record = do
     writeFieldEnd oprot}
   case f_NewTypeClass_args_typeparams record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("typeparams",T_LIST,2)
-    (let f = Vector.mapM_ (\_viter215 -> writeString oprot _viter215) in do {writeListBegin oprot (T_STRING,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter225 -> writeString oprot _viter225) in do {writeListBegin oprot (T_STRING,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_NewTypeClass_args_params record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("params",T_LIST,3)
-    (let f = Vector.mapM_ (\_viter216 -> Types_Types.write_Type oprot _viter216) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter226 -> Types_Types.write_Type oprot _viter226) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeClass_args_fields iprot record = do
-  (_,_t218,_id219) <- readFieldBegin iprot
-  if _t218 == T_STOP then return record else
-    case _id219 of 
-      1 -> if _t218 == T_STRING then do
+  (_,_t228,_id229) <- readFieldBegin iprot
+  if _t228 == T_STOP then return record else
+    case _id229 of 
+      1 -> if _t228 == T_STRING then do
         s <- readString iprot
         read_NewTypeClass_args_fields iprot record{f_NewTypeClass_args_name=Just s}
         else do
-          skip iprot _t218
+          skip iprot _t228
           read_NewTypeClass_args_fields iprot record
-      2 -> if _t218 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) (readString iprot) in do {(_etype223,_size220) <- readListBegin iprot; f _size220})
+      2 -> if _t228 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readString iprot) in do {(_etype233,_size230) <- readListBegin iprot; f _size230})
         read_NewTypeClass_args_fields iprot record{f_NewTypeClass_args_typeparams=Just s}
         else do
-          skip iprot _t218
+          skip iprot _t228
           read_NewTypeClass_args_fields iprot record
-      3 -> if _t218 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Type iprot)) in do {(_etype228,_size225) <- readListBegin iprot; f _size225})
+      3 -> if _t228 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Type iprot)) in do {(_etype238,_size235) <- readListBegin iprot; f _size235})
         read_NewTypeClass_args_fields iprot record{f_NewTypeClass_args_params=Just s}
         else do
-          skip iprot _t218
+          skip iprot _t228
           read_NewTypeClass_args_fields iprot record
       _ -> do
-        skip iprot _t218
+        skip iprot _t228
         readFieldEnd iprot
         read_NewTypeClass_args_fields iprot record
 read_NewTypeClass_args iprot = do
@@ -1532,23 +1622,23 @@ write_NewTypeClass_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeClass_result_fields iprot record = do
-  (_,_t233,_id234) <- readFieldBegin iprot
-  if _t233 == T_STOP then return record else
-    case _id234 of 
-      0 -> if _t233 == T_STRUCT then do
+  (_,_t243,_id244) <- readFieldBegin iprot
+  if _t243 == T_STOP then return record else
+    case _id244 of 
+      0 -> if _t243 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeClass_result_fields iprot record{f_NewTypeClass_result_success=Just s}
         else do
-          skip iprot _t233
+          skip iprot _t243
           read_NewTypeClass_result_fields iprot record
-      1 -> if _t233 == T_STRUCT then do
+      1 -> if _t243 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_NewTypeClass_result_fields iprot record{f_NewTypeClass_result_missingFields=Just s}
         else do
-          skip iprot _t233
+          skip iprot _t243
           read_NewTypeClass_result_fields iprot record
       _ -> do
-        skip iprot _t233
+        skip iprot _t243
         readFieldEnd iprot
         read_NewTypeClass_result_fields iprot record
 read_NewTypeClass_result iprot = do
@@ -1576,29 +1666,29 @@ write_NewTypeFunction_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeFunction_args_fields iprot record = do
-  (_,_t238,_id239) <- readFieldBegin iprot
-  if _t238 == T_STOP then return record else
-    case _id239 of 
-      1 -> if _t238 == T_STRING then do
+  (_,_t248,_id249) <- readFieldBegin iprot
+  if _t248 == T_STOP then return record else
+    case _id249 of 
+      1 -> if _t248 == T_STRING then do
         s <- readString iprot
         read_NewTypeFunction_args_fields iprot record{f_NewTypeFunction_args_name=Just s}
         else do
-          skip iprot _t238
+          skip iprot _t248
           read_NewTypeFunction_args_fields iprot record
-      2 -> if _t238 == T_STRUCT then do
+      2 -> if _t248 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeFunction_args_fields iprot record{f_NewTypeFunction_args_inputs=Just s}
         else do
-          skip iprot _t238
+          skip iprot _t248
           read_NewTypeFunction_args_fields iprot record
-      3 -> if _t238 == T_STRUCT then do
+      3 -> if _t248 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeFunction_args_fields iprot record{f_NewTypeFunction_args_outputs=Just s}
         else do
-          skip iprot _t238
+          skip iprot _t248
           read_NewTypeFunction_args_fields iprot record
       _ -> do
-        skip iprot _t238
+        skip iprot _t248
         readFieldEnd iprot
         read_NewTypeFunction_args_fields iprot record
 read_NewTypeFunction_args iprot = do
@@ -1622,23 +1712,23 @@ write_NewTypeFunction_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeFunction_result_fields iprot record = do
-  (_,_t243,_id244) <- readFieldBegin iprot
-  if _t243 == T_STOP then return record else
-    case _id244 of 
-      0 -> if _t243 == T_STRUCT then do
+  (_,_t253,_id254) <- readFieldBegin iprot
+  if _t253 == T_STOP then return record else
+    case _id254 of 
+      0 -> if _t253 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeFunction_result_fields iprot record{f_NewTypeFunction_result_success=Just s}
         else do
-          skip iprot _t243
+          skip iprot _t253
           read_NewTypeFunction_result_fields iprot record
-      1 -> if _t243 == T_STRUCT then do
+      1 -> if _t253 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_NewTypeFunction_result_fields iprot record{f_NewTypeFunction_result_missingFields=Just s}
         else do
-          skip iprot _t243
+          skip iprot _t253
           read_NewTypeFunction_result_fields iprot record
       _ -> do
-        skip iprot _t243
+        skip iprot _t253
         readFieldEnd iprot
         read_NewTypeFunction_result_fields iprot record
 read_NewTypeFunction_result iprot = do
@@ -1654,11 +1744,11 @@ write_NewTypeUdefined_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeUdefined_args_fields iprot record = do
-  (_,_t248,_id249) <- readFieldBegin iprot
-  if _t248 == T_STOP then return record else
-    case _id249 of 
+  (_,_t258,_id259) <- readFieldBegin iprot
+  if _t258 == T_STOP then return record else
+    case _id259 of 
       _ -> do
-        skip iprot _t248
+        skip iprot _t258
         readFieldEnd iprot
         read_NewTypeUdefined_args_fields iprot record
 read_NewTypeUdefined_args iprot = do
@@ -1678,17 +1768,17 @@ write_NewTypeUdefined_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeUdefined_result_fields iprot record = do
-  (_,_t253,_id254) <- readFieldBegin iprot
-  if _t253 == T_STOP then return record else
-    case _id254 of 
-      0 -> if _t253 == T_STRUCT then do
+  (_,_t263,_id264) <- readFieldBegin iprot
+  if _t263 == T_STOP then return record else
+    case _id264 of 
+      0 -> if _t263 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeUdefined_result_fields iprot record{f_NewTypeUdefined_result_success=Just s}
         else do
-          skip iprot _t253
+          skip iprot _t263
           read_NewTypeUdefined_result_fields iprot record
       _ -> do
-        skip iprot _t253
+        skip iprot _t263
         readFieldEnd iprot
         read_NewTypeUdefined_result_fields iprot record
 read_NewTypeUdefined_result iprot = do
@@ -1712,23 +1802,23 @@ write_NewTypeNamed_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeNamed_args_fields iprot record = do
-  (_,_t258,_id259) <- readFieldBegin iprot
-  if _t258 == T_STOP then return record else
-    case _id259 of 
-      1 -> if _t258 == T_STRING then do
+  (_,_t268,_id269) <- readFieldBegin iprot
+  if _t268 == T_STOP then return record else
+    case _id269 of 
+      1 -> if _t268 == T_STRING then do
         s <- readString iprot
         read_NewTypeNamed_args_fields iprot record{f_NewTypeNamed_args_name=Just s}
         else do
-          skip iprot _t258
+          skip iprot _t268
           read_NewTypeNamed_args_fields iprot record
-      2 -> if _t258 == T_STRUCT then do
+      2 -> if _t268 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeNamed_args_fields iprot record{f_NewTypeNamed_args_type=Just s}
         else do
-          skip iprot _t258
+          skip iprot _t268
           read_NewTypeNamed_args_fields iprot record
       _ -> do
-        skip iprot _t258
+        skip iprot _t268
         readFieldEnd iprot
         read_NewTypeNamed_args_fields iprot record
 read_NewTypeNamed_args iprot = do
@@ -1752,23 +1842,23 @@ write_NewTypeNamed_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeNamed_result_fields iprot record = do
-  (_,_t263,_id264) <- readFieldBegin iprot
-  if _t263 == T_STOP then return record else
-    case _id264 of 
-      0 -> if _t263 == T_STRUCT then do
+  (_,_t273,_id274) <- readFieldBegin iprot
+  if _t273 == T_STOP then return record else
+    case _id274 of 
+      0 -> if _t273 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeNamed_result_fields iprot record{f_NewTypeNamed_result_success=Just s}
         else do
-          skip iprot _t263
+          skip iprot _t273
           read_NewTypeNamed_result_fields iprot record
-      1 -> if _t263 == T_STRUCT then do
+      1 -> if _t273 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_NewTypeNamed_result_fields iprot record{f_NewTypeNamed_result_missingFields=Just s}
         else do
-          skip iprot _t263
+          skip iprot _t273
           read_NewTypeNamed_result_fields iprot record
       _ -> do
-        skip iprot _t263
+        skip iprot _t273
         readFieldEnd iprot
         read_NewTypeNamed_result_fields iprot record
 read_NewTypeNamed_result iprot = do
@@ -1788,17 +1878,17 @@ write_NewTypeVariable_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeVariable_args_fields iprot record = do
-  (_,_t268,_id269) <- readFieldBegin iprot
-  if _t268 == T_STOP then return record else
-    case _id269 of 
-      1 -> if _t268 == T_STRING then do
+  (_,_t278,_id279) <- readFieldBegin iprot
+  if _t278 == T_STOP then return record else
+    case _id279 of 
+      1 -> if _t278 == T_STRING then do
         s <- readString iprot
         read_NewTypeVariable_args_fields iprot record{f_NewTypeVariable_args_name=Just s}
         else do
-          skip iprot _t268
+          skip iprot _t278
           read_NewTypeVariable_args_fields iprot record
       _ -> do
-        skip iprot _t268
+        skip iprot _t278
         readFieldEnd iprot
         read_NewTypeVariable_args_fields iprot record
 read_NewTypeVariable_args iprot = do
@@ -1822,23 +1912,23 @@ write_NewTypeVariable_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeVariable_result_fields iprot record = do
-  (_,_t273,_id274) <- readFieldBegin iprot
-  if _t273 == T_STOP then return record else
-    case _id274 of 
-      0 -> if _t273 == T_STRUCT then do
+  (_,_t283,_id284) <- readFieldBegin iprot
+  if _t283 == T_STOP then return record else
+    case _id284 of 
+      0 -> if _t283 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeVariable_result_fields iprot record{f_NewTypeVariable_result_success=Just s}
         else do
-          skip iprot _t273
+          skip iprot _t283
           read_NewTypeVariable_result_fields iprot record
-      1 -> if _t273 == T_STRUCT then do
+      1 -> if _t283 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_NewTypeVariable_result_fields iprot record{f_NewTypeVariable_result_missingFields=Just s}
         else do
-          skip iprot _t273
+          skip iprot _t283
           read_NewTypeVariable_result_fields iprot record
       _ -> do
-        skip iprot _t273
+        skip iprot _t283
         readFieldEnd iprot
         read_NewTypeVariable_result_fields iprot record
 read_NewTypeVariable_result iprot = do
@@ -1858,17 +1948,17 @@ write_NewTypeList_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeList_args_fields iprot record = do
-  (_,_t278,_id279) <- readFieldBegin iprot
-  if _t278 == T_STOP then return record else
-    case _id279 of 
-      1 -> if _t278 == T_STRUCT then do
+  (_,_t288,_id289) <- readFieldBegin iprot
+  if _t288 == T_STOP then return record else
+    case _id289 of 
+      1 -> if _t288 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeList_args_fields iprot record{f_NewTypeList_args_type=Just s}
         else do
-          skip iprot _t278
+          skip iprot _t288
           read_NewTypeList_args_fields iprot record
       _ -> do
-        skip iprot _t278
+        skip iprot _t288
         readFieldEnd iprot
         read_NewTypeList_args_fields iprot record
 read_NewTypeList_args iprot = do
@@ -1892,23 +1982,23 @@ write_NewTypeList_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeList_result_fields iprot record = do
-  (_,_t283,_id284) <- readFieldBegin iprot
-  if _t283 == T_STOP then return record else
-    case _id284 of 
-      0 -> if _t283 == T_STRUCT then do
+  (_,_t293,_id294) <- readFieldBegin iprot
+  if _t293 == T_STOP then return record else
+    case _id294 of 
+      0 -> if _t293 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeList_result_fields iprot record{f_NewTypeList_result_success=Just s}
         else do
-          skip iprot _t283
+          skip iprot _t293
           read_NewTypeList_result_fields iprot record
-      1 -> if _t283 == T_STRUCT then do
+      1 -> if _t293 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_NewTypeList_result_fields iprot record{f_NewTypeList_result_missingFields=Just s}
         else do
-          skip iprot _t283
+          skip iprot _t293
           read_NewTypeList_result_fields iprot record
       _ -> do
-        skip iprot _t283
+        skip iprot _t293
         readFieldEnd iprot
         read_NewTypeList_result_fields iprot record
 read_NewTypeList_result iprot = do
@@ -1923,22 +2013,22 @@ write_NewTypeTuple_args oprot record = do
   writeStructBegin oprot "NewTypeTuple_args"
   case f_NewTypeTuple_args_types record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("types",T_LIST,1)
-    (let f = Vector.mapM_ (\_viter287 -> Types_Types.write_Type oprot _viter287) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter297 -> Types_Types.write_Type oprot _viter297) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeTuple_args_fields iprot record = do
-  (_,_t289,_id290) <- readFieldBegin iprot
-  if _t289 == T_STOP then return record else
-    case _id290 of 
-      1 -> if _t289 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Type iprot)) in do {(_etype294,_size291) <- readListBegin iprot; f _size291})
+  (_,_t299,_id300) <- readFieldBegin iprot
+  if _t299 == T_STOP then return record else
+    case _id300 of 
+      1 -> if _t299 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Type iprot)) in do {(_etype304,_size301) <- readListBegin iprot; f _size301})
         read_NewTypeTuple_args_fields iprot record{f_NewTypeTuple_args_types=Just s}
         else do
-          skip iprot _t289
+          skip iprot _t299
           read_NewTypeTuple_args_fields iprot record
       _ -> do
-        skip iprot _t289
+        skip iprot _t299
         readFieldEnd iprot
         read_NewTypeTuple_args_fields iprot record
 read_NewTypeTuple_args iprot = do
@@ -1962,23 +2052,23 @@ write_NewTypeTuple_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NewTypeTuple_result_fields iprot record = do
-  (_,_t299,_id300) <- readFieldBegin iprot
-  if _t299 == T_STOP then return record else
-    case _id300 of 
-      0 -> if _t299 == T_STRUCT then do
+  (_,_t309,_id310) <- readFieldBegin iprot
+  if _t309 == T_STOP then return record else
+    case _id310 of 
+      0 -> if _t309 == T_STRUCT then do
         s <- (read_Type iprot)
         read_NewTypeTuple_result_fields iprot record{f_NewTypeTuple_result_success=Just s}
         else do
-          skip iprot _t299
+          skip iprot _t309
           read_NewTypeTuple_result_fields iprot record
-      1 -> if _t299 == T_STRUCT then do
+      1 -> if _t309 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_NewTypeTuple_result_fields iprot record{f_NewTypeTuple_result_missingFields=Just s}
         else do
-          skip iprot _t299
+          skip iprot _t309
           read_NewTypeTuple_result_fields iprot record
       _ -> do
-        skip iprot _t299
+        skip iprot _t309
         readFieldEnd iprot
         read_NewTypeTuple_result_fields iprot record
 read_NewTypeTuple_result iprot = do
@@ -2006,29 +2096,29 @@ write_NodesGraph_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NodesGraph_args_fields iprot record = do
-  (_,_t304,_id305) <- readFieldBegin iprot
-  if _t304 == T_STOP then return record else
-    case _id305 of 
-      1 -> if _t304 == T_I32 then do
+  (_,_t314,_id315) <- readFieldBegin iprot
+  if _t314 == T_STOP then return record else
+    case _id315 of 
+      1 -> if _t314 == T_I32 then do
         s <- readI32 iprot
         read_NodesGraph_args_fields iprot record{f_NodesGraph_args_defID=Just s}
         else do
-          skip iprot _t304
+          skip iprot _t314
           read_NodesGraph_args_fields iprot record
-      2 -> if _t304 == T_I32 then do
+      2 -> if _t314 == T_I32 then do
         s <- readI32 iprot
         read_NodesGraph_args_fields iprot record{f_NodesGraph_args_libID=Just s}
         else do
-          skip iprot _t304
+          skip iprot _t314
           read_NodesGraph_args_fields iprot record
-      3 -> if _t304 == T_I32 then do
+      3 -> if _t314 == T_I32 then do
         s <- readI32 iprot
         read_NodesGraph_args_fields iprot record{f_NodesGraph_args_projectID=Just s}
         else do
-          skip iprot _t304
+          skip iprot _t314
           read_NodesGraph_args_fields iprot record
       _ -> do
-        skip iprot _t304
+        skip iprot _t314
         readFieldEnd iprot
         read_NodesGraph_args_fields iprot record
 read_NodesGraph_args iprot = do
@@ -2052,28 +2142,128 @@ write_NodesGraph_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_NodesGraph_result_fields iprot record = do
-  (_,_t309,_id310) <- readFieldBegin iprot
-  if _t309 == T_STOP then return record else
-    case _id310 of 
-      0 -> if _t309 == T_STRUCT then do
+  (_,_t319,_id320) <- readFieldBegin iprot
+  if _t319 == T_STOP then return record else
+    case _id320 of 
+      0 -> if _t319 == T_STRUCT then do
         s <- (read_GraphView iprot)
         read_NodesGraph_result_fields iprot record{f_NodesGraph_result_success=Just s}
         else do
-          skip iprot _t309
+          skip iprot _t319
           read_NodesGraph_result_fields iprot record
-      1 -> if _t309 == T_STRUCT then do
+      1 -> if _t319 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_NodesGraph_result_fields iprot record{f_NodesGraph_result_missingFields=Just s}
         else do
-          skip iprot _t309
+          skip iprot _t319
           read_NodesGraph_result_fields iprot record
       _ -> do
-        skip iprot _t309
+        skip iprot _t319
         readFieldEnd iprot
         read_NodesGraph_result_fields iprot record
 read_NodesGraph_result iprot = do
   _ <- readStructBegin iprot
   record <- read_NodesGraph_result_fields iprot (NodesGraph_result{f_NodesGraph_result_success=Nothing,f_NodesGraph_result_missingFields=Nothing})
+  readStructEnd iprot
+  return record
+data NodeByID_args = NodeByID_args{f_NodeByID_args_nodeID :: Maybe Int32,f_NodeByID_args_defID :: Maybe Int32,f_NodeByID_args_libID :: Maybe Int32,f_NodeByID_args_projectID :: Maybe Int32} deriving (Show,Eq,Typeable)
+instance Hashable NodeByID_args where
+  hashWithSalt salt record = salt   `hashWithSalt` f_NodeByID_args_nodeID record   `hashWithSalt` f_NodeByID_args_defID record   `hashWithSalt` f_NodeByID_args_libID record   `hashWithSalt` f_NodeByID_args_projectID record  
+write_NodeByID_args oprot record = do
+  writeStructBegin oprot "NodeByID_args"
+  case f_NodeByID_args_nodeID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("nodeID",T_I32,1)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  case f_NodeByID_args_defID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("defID",T_I32,2)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  case f_NodeByID_args_libID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("libID",T_I32,3)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  case f_NodeByID_args_projectID record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("projectID",T_I32,4)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_NodeByID_args_fields iprot record = do
+  (_,_t324,_id325) <- readFieldBegin iprot
+  if _t324 == T_STOP then return record else
+    case _id325 of 
+      1 -> if _t324 == T_I32 then do
+        s <- readI32 iprot
+        read_NodeByID_args_fields iprot record{f_NodeByID_args_nodeID=Just s}
+        else do
+          skip iprot _t324
+          read_NodeByID_args_fields iprot record
+      2 -> if _t324 == T_I32 then do
+        s <- readI32 iprot
+        read_NodeByID_args_fields iprot record{f_NodeByID_args_defID=Just s}
+        else do
+          skip iprot _t324
+          read_NodeByID_args_fields iprot record
+      3 -> if _t324 == T_I32 then do
+        s <- readI32 iprot
+        read_NodeByID_args_fields iprot record{f_NodeByID_args_libID=Just s}
+        else do
+          skip iprot _t324
+          read_NodeByID_args_fields iprot record
+      4 -> if _t324 == T_I32 then do
+        s <- readI32 iprot
+        read_NodeByID_args_fields iprot record{f_NodeByID_args_projectID=Just s}
+        else do
+          skip iprot _t324
+          read_NodeByID_args_fields iprot record
+      _ -> do
+        skip iprot _t324
+        readFieldEnd iprot
+        read_NodeByID_args_fields iprot record
+read_NodeByID_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_NodeByID_args_fields iprot (NodeByID_args{f_NodeByID_args_nodeID=Nothing,f_NodeByID_args_defID=Nothing,f_NodeByID_args_libID=Nothing,f_NodeByID_args_projectID=Nothing})
+  readStructEnd iprot
+  return record
+data NodeByID_result = NodeByID_result{f_NodeByID_result_success :: Maybe Graph_Types.Node,f_NodeByID_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
+instance Hashable NodeByID_result where
+  hashWithSalt salt record = salt   `hashWithSalt` f_NodeByID_result_success record   `hashWithSalt` f_NodeByID_result_missingFields record  
+write_NodeByID_result oprot record = do
+  writeStructBegin oprot "NodeByID_result"
+  case f_NodeByID_result_success record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("success",T_STRUCT,0)
+    Graph_Types.write_Node oprot _v
+    writeFieldEnd oprot}
+  case f_NodeByID_result_missingFields record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("missingFields",T_STRUCT,1)
+    write_ArgumentException oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_NodeByID_result_fields iprot record = do
+  (_,_t329,_id330) <- readFieldBegin iprot
+  if _t329 == T_STOP then return record else
+    case _id330 of 
+      0 -> if _t329 == T_STRUCT then do
+        s <- (read_Node iprot)
+        read_NodeByID_result_fields iprot record{f_NodeByID_result_success=Just s}
+        else do
+          skip iprot _t329
+          read_NodeByID_result_fields iprot record
+      1 -> if _t329 == T_STRUCT then do
+        s <- (read_ArgumentException iprot)
+        read_NodeByID_result_fields iprot record{f_NodeByID_result_missingFields=Just s}
+        else do
+          skip iprot _t329
+          read_NodeByID_result_fields iprot record
+      _ -> do
+        skip iprot _t329
+        readFieldEnd iprot
+        read_NodeByID_result_fields iprot record
+read_NodeByID_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_NodeByID_result_fields iprot (NodeByID_result{f_NodeByID_result_success=Nothing,f_NodeByID_result_missingFields=Nothing})
   readStructEnd iprot
   return record
 data AddNode_args = AddNode_args{f_AddNode_args_node :: Maybe Graph_Types.Node,f_AddNode_args_defID :: Maybe Int32,f_AddNode_args_libID :: Maybe Int32,f_AddNode_args_projectID :: Maybe Int32} deriving (Show,Eq,Typeable)
@@ -2100,35 +2290,35 @@ write_AddNode_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_AddNode_args_fields iprot record = do
-  (_,_t314,_id315) <- readFieldBegin iprot
-  if _t314 == T_STOP then return record else
-    case _id315 of 
-      1 -> if _t314 == T_STRUCT then do
+  (_,_t334,_id335) <- readFieldBegin iprot
+  if _t334 == T_STOP then return record else
+    case _id335 of 
+      1 -> if _t334 == T_STRUCT then do
         s <- (read_Node iprot)
         read_AddNode_args_fields iprot record{f_AddNode_args_node=Just s}
         else do
-          skip iprot _t314
+          skip iprot _t334
           read_AddNode_args_fields iprot record
-      2 -> if _t314 == T_I32 then do
+      2 -> if _t334 == T_I32 then do
         s <- readI32 iprot
         read_AddNode_args_fields iprot record{f_AddNode_args_defID=Just s}
         else do
-          skip iprot _t314
+          skip iprot _t334
           read_AddNode_args_fields iprot record
-      3 -> if _t314 == T_I32 then do
+      3 -> if _t334 == T_I32 then do
         s <- readI32 iprot
         read_AddNode_args_fields iprot record{f_AddNode_args_libID=Just s}
         else do
-          skip iprot _t314
+          skip iprot _t334
           read_AddNode_args_fields iprot record
-      4 -> if _t314 == T_I32 then do
+      4 -> if _t334 == T_I32 then do
         s <- readI32 iprot
         read_AddNode_args_fields iprot record{f_AddNode_args_projectID=Just s}
         else do
-          skip iprot _t314
+          skip iprot _t334
           read_AddNode_args_fields iprot record
       _ -> do
-        skip iprot _t314
+        skip iprot _t334
         readFieldEnd iprot
         read_AddNode_args_fields iprot record
 read_AddNode_args iprot = do
@@ -2152,23 +2342,23 @@ write_AddNode_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_AddNode_result_fields iprot record = do
-  (_,_t319,_id320) <- readFieldBegin iprot
-  if _t319 == T_STOP then return record else
-    case _id320 of 
-      0 -> if _t319 == T_STRUCT then do
+  (_,_t339,_id340) <- readFieldBegin iprot
+  if _t339 == T_STOP then return record else
+    case _id340 of 
+      0 -> if _t339 == T_STRUCT then do
         s <- (read_Node iprot)
         read_AddNode_result_fields iprot record{f_AddNode_result_success=Just s}
         else do
-          skip iprot _t319
+          skip iprot _t339
           read_AddNode_result_fields iprot record
-      1 -> if _t319 == T_STRUCT then do
+      1 -> if _t339 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_AddNode_result_fields iprot record{f_AddNode_result_missingFields=Just s}
         else do
-          skip iprot _t319
+          skip iprot _t339
           read_AddNode_result_fields iprot record
       _ -> do
-        skip iprot _t319
+        skip iprot _t339
         readFieldEnd iprot
         read_AddNode_result_fields iprot record
 read_AddNode_result iprot = do
@@ -2200,35 +2390,35 @@ write_UpdateNode_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_UpdateNode_args_fields iprot record = do
-  (_,_t324,_id325) <- readFieldBegin iprot
-  if _t324 == T_STOP then return record else
-    case _id325 of 
-      1 -> if _t324 == T_STRUCT then do
+  (_,_t344,_id345) <- readFieldBegin iprot
+  if _t344 == T_STOP then return record else
+    case _id345 of 
+      1 -> if _t344 == T_STRUCT then do
         s <- (read_Node iprot)
         read_UpdateNode_args_fields iprot record{f_UpdateNode_args_node=Just s}
         else do
-          skip iprot _t324
+          skip iprot _t344
           read_UpdateNode_args_fields iprot record
-      2 -> if _t324 == T_I32 then do
+      2 -> if _t344 == T_I32 then do
         s <- readI32 iprot
         read_UpdateNode_args_fields iprot record{f_UpdateNode_args_defID=Just s}
         else do
-          skip iprot _t324
+          skip iprot _t344
           read_UpdateNode_args_fields iprot record
-      3 -> if _t324 == T_I32 then do
+      3 -> if _t344 == T_I32 then do
         s <- readI32 iprot
         read_UpdateNode_args_fields iprot record{f_UpdateNode_args_libID=Just s}
         else do
-          skip iprot _t324
+          skip iprot _t344
           read_UpdateNode_args_fields iprot record
-      4 -> if _t324 == T_I32 then do
+      4 -> if _t344 == T_I32 then do
         s <- readI32 iprot
         read_UpdateNode_args_fields iprot record{f_UpdateNode_args_projectID=Just s}
         else do
-          skip iprot _t324
+          skip iprot _t344
           read_UpdateNode_args_fields iprot record
       _ -> do
-        skip iprot _t324
+        skip iprot _t344
         readFieldEnd iprot
         read_UpdateNode_args_fields iprot record
 read_UpdateNode_args iprot = do
@@ -2248,17 +2438,17 @@ write_UpdateNode_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_UpdateNode_result_fields iprot record = do
-  (_,_t329,_id330) <- readFieldBegin iprot
-  if _t329 == T_STOP then return record else
-    case _id330 of 
-      1 -> if _t329 == T_STRUCT then do
+  (_,_t349,_id350) <- readFieldBegin iprot
+  if _t349 == T_STOP then return record else
+    case _id350 of 
+      1 -> if _t349 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_UpdateNode_result_fields iprot record{f_UpdateNode_result_missingFields=Just s}
         else do
-          skip iprot _t329
+          skip iprot _t349
           read_UpdateNode_result_fields iprot record
       _ -> do
-        skip iprot _t329
+        skip iprot _t349
         readFieldEnd iprot
         read_UpdateNode_result_fields iprot record
 read_UpdateNode_result iprot = do
@@ -2290,35 +2480,35 @@ write_RemoveNode_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_RemoveNode_args_fields iprot record = do
-  (_,_t334,_id335) <- readFieldBegin iprot
-  if _t334 == T_STOP then return record else
-    case _id335 of 
-      1 -> if _t334 == T_I32 then do
+  (_,_t354,_id355) <- readFieldBegin iprot
+  if _t354 == T_STOP then return record else
+    case _id355 of 
+      1 -> if _t354 == T_I32 then do
         s <- readI32 iprot
         read_RemoveNode_args_fields iprot record{f_RemoveNode_args_nodeID=Just s}
         else do
-          skip iprot _t334
+          skip iprot _t354
           read_RemoveNode_args_fields iprot record
-      2 -> if _t334 == T_I32 then do
+      2 -> if _t354 == T_I32 then do
         s <- readI32 iprot
         read_RemoveNode_args_fields iprot record{f_RemoveNode_args_defID=Just s}
         else do
-          skip iprot _t334
+          skip iprot _t354
           read_RemoveNode_args_fields iprot record
-      3 -> if _t334 == T_I32 then do
+      3 -> if _t354 == T_I32 then do
         s <- readI32 iprot
         read_RemoveNode_args_fields iprot record{f_RemoveNode_args_libID=Just s}
         else do
-          skip iprot _t334
+          skip iprot _t354
           read_RemoveNode_args_fields iprot record
-      4 -> if _t334 == T_I32 then do
+      4 -> if _t354 == T_I32 then do
         s <- readI32 iprot
         read_RemoveNode_args_fields iprot record{f_RemoveNode_args_projectID=Just s}
         else do
-          skip iprot _t334
+          skip iprot _t354
           read_RemoveNode_args_fields iprot record
       _ -> do
-        skip iprot _t334
+        skip iprot _t354
         readFieldEnd iprot
         read_RemoveNode_args_fields iprot record
 read_RemoveNode_args iprot = do
@@ -2338,17 +2528,17 @@ write_RemoveNode_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_RemoveNode_result_fields iprot record = do
-  (_,_t339,_id340) <- readFieldBegin iprot
-  if _t339 == T_STOP then return record else
-    case _id340 of 
-      1 -> if _t339 == T_STRUCT then do
+  (_,_t359,_id360) <- readFieldBegin iprot
+  if _t359 == T_STOP then return record else
+    case _id360 of 
+      1 -> if _t359 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_RemoveNode_result_fields iprot record{f_RemoveNode_result_missingFields=Just s}
         else do
-          skip iprot _t339
+          skip iprot _t359
           read_RemoveNode_result_fields iprot record
       _ -> do
-        skip iprot _t339
+        skip iprot _t359
         readFieldEnd iprot
         read_RemoveNode_result_fields iprot record
 read_RemoveNode_result iprot = do
@@ -2367,7 +2557,7 @@ write_Connect_args oprot record = do
     writeFieldEnd oprot}
   case f_Connect_args_srcPort record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("srcPort",T_LIST,2)
-    (let f = Vector.mapM_ (\_viter343 -> writeI32 oprot _viter343) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter363 -> writeI32 oprot _viter363) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_Connect_args_dstNodeID record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("dstNodeID",T_I32,3)
@@ -2375,7 +2565,7 @@ write_Connect_args oprot record = do
     writeFieldEnd oprot}
   case f_Connect_args_dstPort record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("dstPort",T_LIST,4)
-    (let f = Vector.mapM_ (\_viter344 -> writeI32 oprot _viter344) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter364 -> writeI32 oprot _viter364) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_Connect_args_defID record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("defID",T_I32,5)
@@ -2392,53 +2582,53 @@ write_Connect_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Connect_args_fields iprot record = do
-  (_,_t346,_id347) <- readFieldBegin iprot
-  if _t346 == T_STOP then return record else
-    case _id347 of 
-      1 -> if _t346 == T_I32 then do
+  (_,_t366,_id367) <- readFieldBegin iprot
+  if _t366 == T_STOP then return record else
+    case _id367 of 
+      1 -> if _t366 == T_I32 then do
         s <- readI32 iprot
         read_Connect_args_fields iprot record{f_Connect_args_srcNodeID=Just s}
         else do
-          skip iprot _t346
+          skip iprot _t366
           read_Connect_args_fields iprot record
-      2 -> if _t346 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype351,_size348) <- readListBegin iprot; f _size348})
+      2 -> if _t366 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype371,_size368) <- readListBegin iprot; f _size368})
         read_Connect_args_fields iprot record{f_Connect_args_srcPort=Just s}
         else do
-          skip iprot _t346
+          skip iprot _t366
           read_Connect_args_fields iprot record
-      3 -> if _t346 == T_I32 then do
+      3 -> if _t366 == T_I32 then do
         s <- readI32 iprot
         read_Connect_args_fields iprot record{f_Connect_args_dstNodeID=Just s}
         else do
-          skip iprot _t346
+          skip iprot _t366
           read_Connect_args_fields iprot record
-      4 -> if _t346 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype356,_size353) <- readListBegin iprot; f _size353})
+      4 -> if _t366 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype376,_size373) <- readListBegin iprot; f _size373})
         read_Connect_args_fields iprot record{f_Connect_args_dstPort=Just s}
         else do
-          skip iprot _t346
+          skip iprot _t366
           read_Connect_args_fields iprot record
-      5 -> if _t346 == T_I32 then do
+      5 -> if _t366 == T_I32 then do
         s <- readI32 iprot
         read_Connect_args_fields iprot record{f_Connect_args_defID=Just s}
         else do
-          skip iprot _t346
+          skip iprot _t366
           read_Connect_args_fields iprot record
-      6 -> if _t346 == T_I32 then do
+      6 -> if _t366 == T_I32 then do
         s <- readI32 iprot
         read_Connect_args_fields iprot record{f_Connect_args_libID=Just s}
         else do
-          skip iprot _t346
+          skip iprot _t366
           read_Connect_args_fields iprot record
-      7 -> if _t346 == T_I32 then do
+      7 -> if _t366 == T_I32 then do
         s <- readI32 iprot
         read_Connect_args_fields iprot record{f_Connect_args_projectID=Just s}
         else do
-          skip iprot _t346
+          skip iprot _t366
           read_Connect_args_fields iprot record
       _ -> do
-        skip iprot _t346
+        skip iprot _t366
         readFieldEnd iprot
         read_Connect_args_fields iprot record
 read_Connect_args iprot = do
@@ -2458,17 +2648,17 @@ write_Connect_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Connect_result_fields iprot record = do
-  (_,_t361,_id362) <- readFieldBegin iprot
-  if _t361 == T_STOP then return record else
-    case _id362 of 
-      1 -> if _t361 == T_STRUCT then do
+  (_,_t381,_id382) <- readFieldBegin iprot
+  if _t381 == T_STOP then return record else
+    case _id382 of 
+      1 -> if _t381 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_Connect_result_fields iprot record{f_Connect_result_missingFields=Just s}
         else do
-          skip iprot _t361
+          skip iprot _t381
           read_Connect_result_fields iprot record
       _ -> do
-        skip iprot _t361
+        skip iprot _t381
         readFieldEnd iprot
         read_Connect_result_fields iprot record
 read_Connect_result iprot = do
@@ -2487,7 +2677,7 @@ write_Disconnect_args oprot record = do
     writeFieldEnd oprot}
   case f_Disconnect_args_srcPort record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("srcPort",T_LIST,2)
-    (let f = Vector.mapM_ (\_viter365 -> writeI32 oprot _viter365) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter385 -> writeI32 oprot _viter385) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_Disconnect_args_dstNodeID record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("dstNodeID",T_I32,3)
@@ -2495,7 +2685,7 @@ write_Disconnect_args oprot record = do
     writeFieldEnd oprot}
   case f_Disconnect_args_dstPort record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("dstPort",T_LIST,4)
-    (let f = Vector.mapM_ (\_viter366 -> writeI32 oprot _viter366) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter386 -> writeI32 oprot _viter386) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_Disconnect_args_defID record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("defID",T_I32,5)
@@ -2512,53 +2702,53 @@ write_Disconnect_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Disconnect_args_fields iprot record = do
-  (_,_t368,_id369) <- readFieldBegin iprot
-  if _t368 == T_STOP then return record else
-    case _id369 of 
-      1 -> if _t368 == T_I32 then do
+  (_,_t388,_id389) <- readFieldBegin iprot
+  if _t388 == T_STOP then return record else
+    case _id389 of 
+      1 -> if _t388 == T_I32 then do
         s <- readI32 iprot
         read_Disconnect_args_fields iprot record{f_Disconnect_args_srcNodeID=Just s}
         else do
-          skip iprot _t368
+          skip iprot _t388
           read_Disconnect_args_fields iprot record
-      2 -> if _t368 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype373,_size370) <- readListBegin iprot; f _size370})
+      2 -> if _t388 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype393,_size390) <- readListBegin iprot; f _size390})
         read_Disconnect_args_fields iprot record{f_Disconnect_args_srcPort=Just s}
         else do
-          skip iprot _t368
+          skip iprot _t388
           read_Disconnect_args_fields iprot record
-      3 -> if _t368 == T_I32 then do
+      3 -> if _t388 == T_I32 then do
         s <- readI32 iprot
         read_Disconnect_args_fields iprot record{f_Disconnect_args_dstNodeID=Just s}
         else do
-          skip iprot _t368
+          skip iprot _t388
           read_Disconnect_args_fields iprot record
-      4 -> if _t368 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype378,_size375) <- readListBegin iprot; f _size375})
+      4 -> if _t388 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype398,_size395) <- readListBegin iprot; f _size395})
         read_Disconnect_args_fields iprot record{f_Disconnect_args_dstPort=Just s}
         else do
-          skip iprot _t368
+          skip iprot _t388
           read_Disconnect_args_fields iprot record
-      5 -> if _t368 == T_I32 then do
+      5 -> if _t388 == T_I32 then do
         s <- readI32 iprot
         read_Disconnect_args_fields iprot record{f_Disconnect_args_defID=Just s}
         else do
-          skip iprot _t368
+          skip iprot _t388
           read_Disconnect_args_fields iprot record
-      6 -> if _t368 == T_I32 then do
+      6 -> if _t388 == T_I32 then do
         s <- readI32 iprot
         read_Disconnect_args_fields iprot record{f_Disconnect_args_libID=Just s}
         else do
-          skip iprot _t368
+          skip iprot _t388
           read_Disconnect_args_fields iprot record
-      7 -> if _t368 == T_I32 then do
+      7 -> if _t388 == T_I32 then do
         s <- readI32 iprot
         read_Disconnect_args_fields iprot record{f_Disconnect_args_projectID=Just s}
         else do
-          skip iprot _t368
+          skip iprot _t388
           read_Disconnect_args_fields iprot record
       _ -> do
-        skip iprot _t368
+        skip iprot _t388
         readFieldEnd iprot
         read_Disconnect_args_fields iprot record
 read_Disconnect_args iprot = do
@@ -2578,17 +2768,17 @@ write_Disconnect_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Disconnect_result_fields iprot record = do
-  (_,_t383,_id384) <- readFieldBegin iprot
-  if _t383 == T_STOP then return record else
-    case _id384 of 
-      1 -> if _t383 == T_STRUCT then do
+  (_,_t403,_id404) <- readFieldBegin iprot
+  if _t403 == T_STOP then return record else
+    case _id404 of 
+      1 -> if _t403 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_Disconnect_result_fields iprot record{f_Disconnect_result_missingFields=Just s}
         else do
-          skip iprot _t383
+          skip iprot _t403
           read_Disconnect_result_fields iprot record
       _ -> do
-        skip iprot _t383
+        skip iprot _t403
         readFieldEnd iprot
         read_Disconnect_result_fields iprot record
 read_Disconnect_result iprot = do
@@ -2608,17 +2798,17 @@ write_FS_ls_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_ls_args_fields iprot record = do
-  (_,_t388,_id389) <- readFieldBegin iprot
-  if _t388 == T_STOP then return record else
-    case _id389 of 
-      1 -> if _t388 == T_STRING then do
+  (_,_t408,_id409) <- readFieldBegin iprot
+  if _t408 == T_STOP then return record else
+    case _id409 of 
+      1 -> if _t408 == T_STRING then do
         s <- readString iprot
         read_FS_ls_args_fields iprot record{f_FS_ls_args_path=Just s}
         else do
-          skip iprot _t388
+          skip iprot _t408
           read_FS_ls_args_fields iprot record
       _ -> do
-        skip iprot _t388
+        skip iprot _t408
         readFieldEnd iprot
         read_FS_ls_args_fields iprot record
 read_FS_ls_args iprot = do
@@ -2633,7 +2823,7 @@ write_FS_ls_result oprot record = do
   writeStructBegin oprot "FS_ls_result"
   case f_FS_ls_result_success record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("success",T_LIST,0)
-    (let f = Vector.mapM_ (\_viter392 -> Fs_Types.write_FSItem oprot _viter392) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter412 -> Fs_Types.write_FSItem oprot _viter412) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_FS_ls_result_missingFields record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("missingFields",T_STRUCT,1)
@@ -2642,23 +2832,23 @@ write_FS_ls_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_ls_result_fields iprot record = do
-  (_,_t394,_id395) <- readFieldBegin iprot
-  if _t394 == T_STOP then return record else
-    case _id395 of 
-      0 -> if _t394 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_FSItem iprot)) in do {(_etype399,_size396) <- readListBegin iprot; f _size396})
+  (_,_t414,_id415) <- readFieldBegin iprot
+  if _t414 == T_STOP then return record else
+    case _id415 of 
+      0 -> if _t414 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_FSItem iprot)) in do {(_etype419,_size416) <- readListBegin iprot; f _size416})
         read_FS_ls_result_fields iprot record{f_FS_ls_result_success=Just s}
         else do
-          skip iprot _t394
+          skip iprot _t414
           read_FS_ls_result_fields iprot record
-      1 -> if _t394 == T_STRUCT then do
+      1 -> if _t414 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_FS_ls_result_fields iprot record{f_FS_ls_result_missingFields=Just s}
         else do
-          skip iprot _t394
+          skip iprot _t414
           read_FS_ls_result_fields iprot record
       _ -> do
-        skip iprot _t394
+        skip iprot _t414
         readFieldEnd iprot
         read_FS_ls_result_fields iprot record
 read_FS_ls_result iprot = do
@@ -2678,17 +2868,17 @@ write_FS_stat_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_stat_args_fields iprot record = do
-  (_,_t404,_id405) <- readFieldBegin iprot
-  if _t404 == T_STOP then return record else
-    case _id405 of 
-      1 -> if _t404 == T_STRING then do
+  (_,_t424,_id425) <- readFieldBegin iprot
+  if _t424 == T_STOP then return record else
+    case _id425 of 
+      1 -> if _t424 == T_STRING then do
         s <- readString iprot
         read_FS_stat_args_fields iprot record{f_FS_stat_args_path=Just s}
         else do
-          skip iprot _t404
+          skip iprot _t424
           read_FS_stat_args_fields iprot record
       _ -> do
-        skip iprot _t404
+        skip iprot _t424
         readFieldEnd iprot
         read_FS_stat_args_fields iprot record
 read_FS_stat_args iprot = do
@@ -2712,23 +2902,23 @@ write_FS_stat_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_stat_result_fields iprot record = do
-  (_,_t409,_id410) <- readFieldBegin iprot
-  if _t409 == T_STOP then return record else
-    case _id410 of 
-      0 -> if _t409 == T_STRUCT then do
+  (_,_t429,_id430) <- readFieldBegin iprot
+  if _t429 == T_STOP then return record else
+    case _id430 of 
+      0 -> if _t429 == T_STRUCT then do
         s <- (read_FSItem iprot)
         read_FS_stat_result_fields iprot record{f_FS_stat_result_success=Just s}
         else do
-          skip iprot _t409
+          skip iprot _t429
           read_FS_stat_result_fields iprot record
-      1 -> if _t409 == T_STRUCT then do
+      1 -> if _t429 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_FS_stat_result_fields iprot record{f_FS_stat_result_missingFields=Just s}
         else do
-          skip iprot _t409
+          skip iprot _t429
           read_FS_stat_result_fields iprot record
       _ -> do
-        skip iprot _t409
+        skip iprot _t429
         readFieldEnd iprot
         read_FS_stat_result_fields iprot record
 read_FS_stat_result iprot = do
@@ -2748,17 +2938,17 @@ write_FS_mkdir_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_mkdir_args_fields iprot record = do
-  (_,_t414,_id415) <- readFieldBegin iprot
-  if _t414 == T_STOP then return record else
-    case _id415 of 
-      1 -> if _t414 == T_STRING then do
+  (_,_t434,_id435) <- readFieldBegin iprot
+  if _t434 == T_STOP then return record else
+    case _id435 of 
+      1 -> if _t434 == T_STRING then do
         s <- readString iprot
         read_FS_mkdir_args_fields iprot record{f_FS_mkdir_args_path=Just s}
         else do
-          skip iprot _t414
+          skip iprot _t434
           read_FS_mkdir_args_fields iprot record
       _ -> do
-        skip iprot _t414
+        skip iprot _t434
         readFieldEnd iprot
         read_FS_mkdir_args_fields iprot record
 read_FS_mkdir_args iprot = do
@@ -2778,17 +2968,17 @@ write_FS_mkdir_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_mkdir_result_fields iprot record = do
-  (_,_t419,_id420) <- readFieldBegin iprot
-  if _t419 == T_STOP then return record else
-    case _id420 of 
-      1 -> if _t419 == T_STRUCT then do
+  (_,_t439,_id440) <- readFieldBegin iprot
+  if _t439 == T_STOP then return record else
+    case _id440 of 
+      1 -> if _t439 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_FS_mkdir_result_fields iprot record{f_FS_mkdir_result_missingFields=Just s}
         else do
-          skip iprot _t419
+          skip iprot _t439
           read_FS_mkdir_result_fields iprot record
       _ -> do
-        skip iprot _t419
+        skip iprot _t439
         readFieldEnd iprot
         read_FS_mkdir_result_fields iprot record
 read_FS_mkdir_result iprot = do
@@ -2808,17 +2998,17 @@ write_FS_touch_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_touch_args_fields iprot record = do
-  (_,_t424,_id425) <- readFieldBegin iprot
-  if _t424 == T_STOP then return record else
-    case _id425 of 
-      1 -> if _t424 == T_STRING then do
+  (_,_t444,_id445) <- readFieldBegin iprot
+  if _t444 == T_STOP then return record else
+    case _id445 of 
+      1 -> if _t444 == T_STRING then do
         s <- readString iprot
         read_FS_touch_args_fields iprot record{f_FS_touch_args_path=Just s}
         else do
-          skip iprot _t424
+          skip iprot _t444
           read_FS_touch_args_fields iprot record
       _ -> do
-        skip iprot _t424
+        skip iprot _t444
         readFieldEnd iprot
         read_FS_touch_args_fields iprot record
 read_FS_touch_args iprot = do
@@ -2838,17 +3028,17 @@ write_FS_touch_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_touch_result_fields iprot record = do
-  (_,_t429,_id430) <- readFieldBegin iprot
-  if _t429 == T_STOP then return record else
-    case _id430 of 
-      1 -> if _t429 == T_STRUCT then do
+  (_,_t449,_id450) <- readFieldBegin iprot
+  if _t449 == T_STOP then return record else
+    case _id450 of 
+      1 -> if _t449 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_FS_touch_result_fields iprot record{f_FS_touch_result_missingFields=Just s}
         else do
-          skip iprot _t429
+          skip iprot _t449
           read_FS_touch_result_fields iprot record
       _ -> do
-        skip iprot _t429
+        skip iprot _t449
         readFieldEnd iprot
         read_FS_touch_result_fields iprot record
 read_FS_touch_result iprot = do
@@ -2868,17 +3058,17 @@ write_FS_rm_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_rm_args_fields iprot record = do
-  (_,_t434,_id435) <- readFieldBegin iprot
-  if _t434 == T_STOP then return record else
-    case _id435 of 
-      1 -> if _t434 == T_STRING then do
+  (_,_t454,_id455) <- readFieldBegin iprot
+  if _t454 == T_STOP then return record else
+    case _id455 of 
+      1 -> if _t454 == T_STRING then do
         s <- readString iprot
         read_FS_rm_args_fields iprot record{f_FS_rm_args_path=Just s}
         else do
-          skip iprot _t434
+          skip iprot _t454
           read_FS_rm_args_fields iprot record
       _ -> do
-        skip iprot _t434
+        skip iprot _t454
         readFieldEnd iprot
         read_FS_rm_args_fields iprot record
 read_FS_rm_args iprot = do
@@ -2898,17 +3088,17 @@ write_FS_rm_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_rm_result_fields iprot record = do
-  (_,_t439,_id440) <- readFieldBegin iprot
-  if _t439 == T_STOP then return record else
-    case _id440 of 
-      1 -> if _t439 == T_STRUCT then do
+  (_,_t459,_id460) <- readFieldBegin iprot
+  if _t459 == T_STOP then return record else
+    case _id460 of 
+      1 -> if _t459 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_FS_rm_result_fields iprot record{f_FS_rm_result_missingFields=Just s}
         else do
-          skip iprot _t439
+          skip iprot _t459
           read_FS_rm_result_fields iprot record
       _ -> do
-        skip iprot _t439
+        skip iprot _t459
         readFieldEnd iprot
         read_FS_rm_result_fields iprot record
 read_FS_rm_result iprot = do
@@ -2932,23 +3122,23 @@ write_FS_cp_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_cp_args_fields iprot record = do
-  (_,_t444,_id445) <- readFieldBegin iprot
-  if _t444 == T_STOP then return record else
-    case _id445 of 
-      1 -> if _t444 == T_STRING then do
+  (_,_t464,_id465) <- readFieldBegin iprot
+  if _t464 == T_STOP then return record else
+    case _id465 of 
+      1 -> if _t464 == T_STRING then do
         s <- readString iprot
         read_FS_cp_args_fields iprot record{f_FS_cp_args_src=Just s}
         else do
-          skip iprot _t444
+          skip iprot _t464
           read_FS_cp_args_fields iprot record
-      2 -> if _t444 == T_STRING then do
+      2 -> if _t464 == T_STRING then do
         s <- readString iprot
         read_FS_cp_args_fields iprot record{f_FS_cp_args_dst=Just s}
         else do
-          skip iprot _t444
+          skip iprot _t464
           read_FS_cp_args_fields iprot record
       _ -> do
-        skip iprot _t444
+        skip iprot _t464
         readFieldEnd iprot
         read_FS_cp_args_fields iprot record
 read_FS_cp_args iprot = do
@@ -2968,17 +3158,17 @@ write_FS_cp_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_cp_result_fields iprot record = do
-  (_,_t449,_id450) <- readFieldBegin iprot
-  if _t449 == T_STOP then return record else
-    case _id450 of 
-      1 -> if _t449 == T_STRUCT then do
+  (_,_t469,_id470) <- readFieldBegin iprot
+  if _t469 == T_STOP then return record else
+    case _id470 of 
+      1 -> if _t469 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_FS_cp_result_fields iprot record{f_FS_cp_result_missingFields=Just s}
         else do
-          skip iprot _t449
+          skip iprot _t469
           read_FS_cp_result_fields iprot record
       _ -> do
-        skip iprot _t449
+        skip iprot _t469
         readFieldEnd iprot
         read_FS_cp_result_fields iprot record
 read_FS_cp_result iprot = do
@@ -3002,23 +3192,23 @@ write_FS_mv_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_mv_args_fields iprot record = do
-  (_,_t454,_id455) <- readFieldBegin iprot
-  if _t454 == T_STOP then return record else
-    case _id455 of 
-      1 -> if _t454 == T_STRING then do
+  (_,_t474,_id475) <- readFieldBegin iprot
+  if _t474 == T_STOP then return record else
+    case _id475 of 
+      1 -> if _t474 == T_STRING then do
         s <- readString iprot
         read_FS_mv_args_fields iprot record{f_FS_mv_args_src=Just s}
         else do
-          skip iprot _t454
+          skip iprot _t474
           read_FS_mv_args_fields iprot record
-      2 -> if _t454 == T_STRING then do
+      2 -> if _t474 == T_STRING then do
         s <- readString iprot
         read_FS_mv_args_fields iprot record{f_FS_mv_args_dst=Just s}
         else do
-          skip iprot _t454
+          skip iprot _t474
           read_FS_mv_args_fields iprot record
       _ -> do
-        skip iprot _t454
+        skip iprot _t474
         readFieldEnd iprot
         read_FS_mv_args_fields iprot record
 read_FS_mv_args iprot = do
@@ -3038,17 +3228,17 @@ write_FS_mv_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_FS_mv_result_fields iprot record = do
-  (_,_t459,_id460) <- readFieldBegin iprot
-  if _t459 == T_STOP then return record else
-    case _id460 of 
-      1 -> if _t459 == T_STRUCT then do
+  (_,_t479,_id480) <- readFieldBegin iprot
+  if _t479 == T_STOP then return record else
+    case _id480 of 
+      1 -> if _t479 == T_STRUCT then do
         s <- (read_ArgumentException iprot)
         read_FS_mv_result_fields iprot record{f_FS_mv_result_missingFields=Just s}
         else do
-          skip iprot _t459
+          skip iprot _t479
           read_FS_mv_result_fields iprot record
       _ -> do
-        skip iprot _t459
+        skip iprot _t479
         readFieldEnd iprot
         read_FS_mv_result_fields iprot record
 read_FS_mv_result iprot = do
@@ -3064,11 +3254,11 @@ write_Ping_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Ping_args_fields iprot record = do
-  (_,_t464,_id465) <- readFieldBegin iprot
-  if _t464 == T_STOP then return record else
-    case _id465 of 
+  (_,_t484,_id485) <- readFieldBegin iprot
+  if _t484 == T_STOP then return record else
+    case _id485 of 
       _ -> do
-        skip iprot _t464
+        skip iprot _t484
         readFieldEnd iprot
         read_Ping_args_fields iprot record
 read_Ping_args iprot = do
@@ -3084,11 +3274,11 @@ write_Ping_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Ping_result_fields iprot record = do
-  (_,_t469,_id470) <- readFieldBegin iprot
-  if _t469 == T_STOP then return record else
-    case _id470 of 
+  (_,_t489,_id490) <- readFieldBegin iprot
+  if _t489 == T_STOP then return record else
+    case _id490 of 
       _ -> do
-        skip iprot _t469
+        skip iprot _t489
         readFieldEnd iprot
         read_Ping_result_fields iprot record
 read_Ping_result iprot = do
@@ -3104,11 +3294,11 @@ write_Dump_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Dump_args_fields iprot record = do
-  (_,_t474,_id475) <- readFieldBegin iprot
-  if _t474 == T_STOP then return record else
-    case _id475 of 
+  (_,_t494,_id495) <- readFieldBegin iprot
+  if _t494 == T_STOP then return record else
+    case _id495 of 
       _ -> do
-        skip iprot _t474
+        skip iprot _t494
         readFieldEnd iprot
         read_Dump_args_fields iprot record
 read_Dump_args iprot = do
@@ -3124,11 +3314,11 @@ write_Dump_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Dump_result_fields iprot record = do
-  (_,_t479,_id480) <- readFieldBegin iprot
-  if _t479 == T_STOP then return record else
-    case _id480 of 
+  (_,_t499,_id500) <- readFieldBegin iprot
+  if _t499 == T_STOP then return record else
+    case _id500 of 
       _ -> do
-        skip iprot _t479
+        skip iprot _t499
         readFieldEnd iprot
         read_Dump_result_fields iprot record
 read_Dump_result iprot = do
@@ -3313,6 +3503,20 @@ process_defsGraph (seqid, iprot, oprot, handler) = do
       return rs{f_DefsGraph_result_missingFields =Just e}))
   writeMessageBegin oprot ("defsGraph", M_REPLY, seqid);
   write_DefsGraph_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
+process_defByID (seqid, iprot, oprot, handler) = do
+  args <- read_DefByID_args iprot
+  readMessageEnd iprot
+  rs <- return (DefByID_result Nothing Nothing)
+  res <- (Control.Exception.catch
+    (do
+      res <- Iface.defByID handler (f_DefByID_args_defID args) (f_DefByID_args_libID args) (f_DefByID_args_projectID args)
+      return rs{f_DefByID_result_success= Just res})
+    (\e  -> 
+      return rs{f_DefByID_result_missingFields =Just e}))
+  writeMessageBegin oprot ("defByID", M_REPLY, seqid);
+  write_DefByID_result oprot res
   writeMessageEnd oprot
   tFlush (getTransport oprot)
 process_addDefinition (seqid, iprot, oprot, handler) = do
@@ -3506,6 +3710,20 @@ process_nodesGraph (seqid, iprot, oprot, handler) = do
       return rs{f_NodesGraph_result_missingFields =Just e}))
   writeMessageBegin oprot ("nodesGraph", M_REPLY, seqid);
   write_NodesGraph_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
+process_nodeByID (seqid, iprot, oprot, handler) = do
+  args <- read_NodeByID_args iprot
+  readMessageEnd iprot
+  rs <- return (NodeByID_result Nothing Nothing)
+  res <- (Control.Exception.catch
+    (do
+      res <- Iface.nodeByID handler (f_NodeByID_args_nodeID args) (f_NodeByID_args_defID args) (f_NodeByID_args_libID args) (f_NodeByID_args_projectID args)
+      return rs{f_NodeByID_result_success= Just res})
+    (\e  -> 
+      return rs{f_NodeByID_result_missingFields =Just e}))
+  writeMessageBegin oprot ("nodeByID", M_REPLY, seqid);
+  write_NodeByID_result oprot res
   writeMessageEnd oprot
   tFlush (getTransport oprot)
 process_addNode (seqid, iprot, oprot, handler) = do
@@ -3712,6 +3930,7 @@ proc_ handler (iprot,oprot) (name,typ,seqid) = case name of
   "buildLibrary" -> process_buildLibrary (seqid,iprot,oprot,handler)
   "libraryRootDef" -> process_libraryRootDef (seqid,iprot,oprot,handler)
   "defsGraph" -> process_defsGraph (seqid,iprot,oprot,handler)
+  "defByID" -> process_defByID (seqid,iprot,oprot,handler)
   "addDefinition" -> process_addDefinition (seqid,iprot,oprot,handler)
   "updateDefinition" -> process_updateDefinition (seqid,iprot,oprot,handler)
   "removeDefinition" -> process_removeDefinition (seqid,iprot,oprot,handler)
@@ -3726,6 +3945,7 @@ proc_ handler (iprot,oprot) (name,typ,seqid) = case name of
   "newTypeList" -> process_newTypeList (seqid,iprot,oprot,handler)
   "newTypeTuple" -> process_newTypeTuple (seqid,iprot,oprot,handler)
   "nodesGraph" -> process_nodesGraph (seqid,iprot,oprot,handler)
+  "nodeByID" -> process_nodeByID (seqid,iprot,oprot,handler)
   "addNode" -> process_addNode (seqid,iprot,oprot,handler)
   "updateNode" -> process_updateNode (seqid,iprot,oprot,handler)
   "removeNode" -> process_removeNode (seqid,iprot,oprot,handler)

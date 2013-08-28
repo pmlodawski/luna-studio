@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Batch.Server.Handlers.Graph (
     nodesGraph,
+    nodeByID,
     
     addNode,
     updateNode,
@@ -44,6 +45,18 @@ nodesGraph batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
     batch     <- tryReadIORef batchHandler
     agraph    <- tryRight $ BatchG.nodesGraph defID libID projectID batch
     return $ encode agraph
+
+
+nodeByID :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO TGraph.Node
+nodeByID batchHandler mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
+    scriptIO $ logger.info $ "called nodeByID"
+    nodeID    <- tryGetID mtnodeID    "nodeID"
+    defID     <- tryGetID mtdefID     "defID"
+    libID     <- tryGetID mtlibID     "libID"
+    projectID <- tryGetID mtprojectID "projectID"
+    batch     <- tryReadIORef batchHandler
+    node <- tryRight $ BatchG.nodeByID nodeID defID libID projectID batch
+    return $ encode (nodeID, node)
 
 
 addNode :: IORef Batch -> Maybe TGraph.Node -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO TGraph.Node

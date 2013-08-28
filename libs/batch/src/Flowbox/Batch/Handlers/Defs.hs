@@ -7,6 +7,8 @@
 
 module Flowbox.Batch.Handlers.Defs (
     defsGraph,
+    defByID,
+    
     addDefinition,
     updateDefinition ,
     removeDefinition,
@@ -34,10 +36,15 @@ defsGraph libID projectID = readonly . defManagerOp libID projectID (\_ defManag
     return (defManager, defManager))
 
 
+defByID :: Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Definition
+defByID defID libID projectID = readonly . definitionOp defID libID projectID (\_ def -> do
+    return (def, def))
+
+
 addDefinition :: Definition -> Definition.ID 
               -> Library.ID -> Project.ID -> Batch -> Either String (Batch, Definition.ID)
 addDefinition definition parentID libID projectID = defManagerOp libID projectID (\_ defManager -> do
-    DefManager.gelem parentID defManager `ifnot` "Wrong `defID`"
+    DefManager.gelem parentID defManager `ifnot` ("Wrong 'parentID' = " ++ show parentID)
     return $ DefManager.addNewToParent (parentID, definition) defManager)
 
 
@@ -50,7 +57,7 @@ updateDefinition (defID, def) libID projectID = noresult . definitionOp defID li
 removeDefinition :: Definition.ID 
                  -> Library.ID -> Project.ID -> Batch -> Either String Batch 
 removeDefinition defID libID projectID = noresult . defManagerOp libID projectID (\_ defManager -> do
-    DefManager.gelem defID defManager `ifnot` "Wrong `defID`"
+    DefManager.gelem defID defManager `ifnot` ("Wrong 'defID' = " ++ show defID)
     let newDefManager = DefManager.delete defID defManager
     return (newDefManager, ()))
 
@@ -58,7 +65,7 @@ removeDefinition defID libID projectID = noresult . defManagerOp libID projectID
 definitionChildren :: Definition.ID 
                    -> Library.ID -> Project.ID -> Batch -> Either String [(Definition.ID, Definition)]
 definitionChildren defID libID projectID = readonly . defManagerOp libID projectID (\_ defManager -> do
-    DefManager.gelem defID defManager `ifnot` "Wrong `defID`"
+    DefManager.gelem defID defManager `ifnot` ("Wrong 'defID' = " ++ show defID)
     let children = DefManager.children defManager defID
     return (defManager, children))
 
@@ -66,6 +73,6 @@ definitionChildren defID libID projectID = readonly . defManagerOp libID project
 definitionParent :: Definition.ID 
                  -> Library.ID -> Project.ID -> Batch -> Either String (Definition.ID, Definition)
 definitionParent defID libID projectID = readonly . defManagerOp libID projectID (\_ defManager -> do
-    DefManager.gelem defID defManager `ifnot` "Wrong `defID`"
+    DefManager.gelem defID defManager `ifnot` ("Wrong 'defID' = " ++ show defID)
     parent <- DefManager.parent defManager defID <?> "Definition has no parent"
     return (defManager, parent))

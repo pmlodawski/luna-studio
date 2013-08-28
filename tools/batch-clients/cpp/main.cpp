@@ -142,6 +142,7 @@ int main(int argc, char **argv) {
             cout << "Unable to connect: "<< "\t" << e.message << endl;
         }
         
+        batch.connect(inputs.nodeID, {6, 9}, dummy2.nodeID, {}, fun.defID, userlib.libID, proj.projectID);
         batch.connect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID, proj.projectID);
         batch.connect(inputs.nodeID, {7, 8}, outputs.nodeID, {5}, fun.defID, userlib.libID, proj.projectID);
         batch.disconnect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID, proj.projectID);

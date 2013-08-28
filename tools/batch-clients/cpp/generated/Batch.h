@@ -28,6 +28,7 @@ class BatchIf {
   virtual void buildLibrary(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void defsGraph( ::flowbox::batch::defs::DefsGraph& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
+  virtual void defByID( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::DefID parentID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void updateDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void removeDefinition(const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
@@ -42,6 +43,7 @@ class BatchIf {
   virtual void newTypeList( ::flowbox::batch::types::Type& _return, const  ::flowbox::batch::types::Type& type) = 0;
   virtual void newTypeTuple( ::flowbox::batch::types::Type& _return, const std::vector< ::flowbox::batch::types::Type> & types) = 0;
   virtual void nodesGraph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
+  virtual void nodeByID( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void removeNode(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
@@ -124,6 +126,9 @@ class BatchNull : virtual public BatchIf {
   void defsGraph( ::flowbox::batch::defs::DefsGraph& /* _return */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
     return;
   }
+  void defByID( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
+    return;
+  }
   void addDefinition( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::defs::Definition& /* definition */, const  ::flowbox::batch::defs::DefID /* parentID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
     return;
   }
@@ -164,6 +169,9 @@ class BatchNull : virtual public BatchIf {
     return;
   }
   void nodesGraph( ::flowbox::batch::graph::GraphView& /* _return */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
+    return;
+  }
+  void nodeByID( ::flowbox::batch::graph::Node& /* _return */, const  ::flowbox::batch::graph::NodeID /* nodeID */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
     return;
   }
   void addNode( ::flowbox::batch::graph::Node& /* _return */, const  ::flowbox::batch::graph::Node& /* node */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
@@ -1728,6 +1736,142 @@ class Batch_defsGraph_presult {
   ArgumentException missingFields;
 
   _Batch_defsGraph_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_defByID_args__isset {
+  _Batch_defByID_args__isset() : defID(false), libID(false), projectID(false) {}
+  bool defID;
+  bool libID;
+  bool projectID;
+} _Batch_defByID_args__isset;
+
+class Batch_defByID_args {
+ public:
+
+  Batch_defByID_args() : defID(0), libID(0), projectID(0) {
+  }
+
+  virtual ~Batch_defByID_args() throw() {}
+
+   ::flowbox::batch::defs::DefID defID;
+   ::flowbox::batch::libs::LibID libID;
+   ::flowbox::batch::projects::ProjectID projectID;
+
+  _Batch_defByID_args__isset __isset;
+
+  void __set_defID(const  ::flowbox::batch::defs::DefID val) {
+    defID = val;
+  }
+
+  void __set_libID(const  ::flowbox::batch::libs::LibID val) {
+    libID = val;
+  }
+
+  void __set_projectID(const  ::flowbox::batch::projects::ProjectID val) {
+    projectID = val;
+  }
+
+  bool operator == (const Batch_defByID_args & rhs) const
+  {
+    if (!(defID == rhs.defID))
+      return false;
+    if (!(libID == rhs.libID))
+      return false;
+    if (!(projectID == rhs.projectID))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_defByID_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_defByID_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_defByID_pargs {
+ public:
+
+
+  virtual ~Batch_defByID_pargs() throw() {}
+
+  const  ::flowbox::batch::defs::DefID* defID;
+  const  ::flowbox::batch::libs::LibID* libID;
+  const  ::flowbox::batch::projects::ProjectID* projectID;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_defByID_result__isset {
+  _Batch_defByID_result__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_defByID_result__isset;
+
+class Batch_defByID_result {
+ public:
+
+  Batch_defByID_result() {
+  }
+
+  virtual ~Batch_defByID_result() throw() {}
+
+   ::flowbox::batch::defs::Definition success;
+  ArgumentException missingFields;
+
+  _Batch_defByID_result__isset __isset;
+
+  void __set_success(const  ::flowbox::batch::defs::Definition& val) {
+    success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_defByID_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_defByID_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_defByID_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_defByID_presult__isset {
+  _Batch_defByID_presult__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_defByID_presult__isset;
+
+class Batch_defByID_presult {
+ public:
+
+
+  virtual ~Batch_defByID_presult() throw() {}
+
+   ::flowbox::batch::defs::Definition* success;
+  ArgumentException missingFields;
+
+  _Batch_defByID_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -3503,6 +3647,151 @@ class Batch_nodesGraph_presult {
 
 };
 
+typedef struct _Batch_nodeByID_args__isset {
+  _Batch_nodeByID_args__isset() : nodeID(false), defID(false), libID(false), projectID(false) {}
+  bool nodeID;
+  bool defID;
+  bool libID;
+  bool projectID;
+} _Batch_nodeByID_args__isset;
+
+class Batch_nodeByID_args {
+ public:
+
+  Batch_nodeByID_args() : nodeID(0), defID(0), libID(0), projectID(0) {
+  }
+
+  virtual ~Batch_nodeByID_args() throw() {}
+
+   ::flowbox::batch::graph::NodeID nodeID;
+   ::flowbox::batch::defs::DefID defID;
+   ::flowbox::batch::libs::LibID libID;
+   ::flowbox::batch::projects::ProjectID projectID;
+
+  _Batch_nodeByID_args__isset __isset;
+
+  void __set_nodeID(const  ::flowbox::batch::graph::NodeID val) {
+    nodeID = val;
+  }
+
+  void __set_defID(const  ::flowbox::batch::defs::DefID val) {
+    defID = val;
+  }
+
+  void __set_libID(const  ::flowbox::batch::libs::LibID val) {
+    libID = val;
+  }
+
+  void __set_projectID(const  ::flowbox::batch::projects::ProjectID val) {
+    projectID = val;
+  }
+
+  bool operator == (const Batch_nodeByID_args & rhs) const
+  {
+    if (!(nodeID == rhs.nodeID))
+      return false;
+    if (!(defID == rhs.defID))
+      return false;
+    if (!(libID == rhs.libID))
+      return false;
+    if (!(projectID == rhs.projectID))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_nodeByID_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_nodeByID_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_nodeByID_pargs {
+ public:
+
+
+  virtual ~Batch_nodeByID_pargs() throw() {}
+
+  const  ::flowbox::batch::graph::NodeID* nodeID;
+  const  ::flowbox::batch::defs::DefID* defID;
+  const  ::flowbox::batch::libs::LibID* libID;
+  const  ::flowbox::batch::projects::ProjectID* projectID;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_nodeByID_result__isset {
+  _Batch_nodeByID_result__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_nodeByID_result__isset;
+
+class Batch_nodeByID_result {
+ public:
+
+  Batch_nodeByID_result() {
+  }
+
+  virtual ~Batch_nodeByID_result() throw() {}
+
+   ::flowbox::batch::graph::Node success;
+  ArgumentException missingFields;
+
+  _Batch_nodeByID_result__isset __isset;
+
+  void __set_success(const  ::flowbox::batch::graph::Node& val) {
+    success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_nodeByID_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_nodeByID_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_nodeByID_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_nodeByID_presult__isset {
+  _Batch_nodeByID_presult__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_nodeByID_presult__isset;
+
+class Batch_nodeByID_presult {
+ public:
+
+
+  virtual ~Batch_nodeByID_presult() throw() {}
+
+   ::flowbox::batch::graph::Node* success;
+  ArgumentException missingFields;
+
+  _Batch_nodeByID_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 typedef struct _Batch_addNode_args__isset {
   _Batch_addNode_args__isset() : node(false), defID(false), libID(false), projectID(false) {}
   bool node;
@@ -5243,6 +5532,9 @@ class BatchClient : virtual public BatchIf {
   void defsGraph( ::flowbox::batch::defs::DefsGraph& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_defsGraph(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_defsGraph( ::flowbox::batch::defs::DefsGraph& _return);
+  void defByID( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void send_defByID(const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void recv_defByID( ::flowbox::batch::defs::Definition& _return);
   void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::DefID parentID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_addDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::DefID parentID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_addDefinition( ::flowbox::batch::defs::Definition& _return);
@@ -5285,6 +5577,9 @@ class BatchClient : virtual public BatchIf {
   void nodesGraph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_nodesGraph(const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_nodesGraph( ::flowbox::batch::graph::GraphView& _return);
+  void nodeByID( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void send_nodeByID(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void recv_nodeByID( ::flowbox::batch::graph::Node& _return);
   void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_addNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_addNode( ::flowbox::batch::graph::Node& _return);
@@ -5355,6 +5650,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_buildLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_libraryRootDef(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_defsGraph(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_defByID(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_addDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_updateDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_removeDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -5369,6 +5665,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_newTypeList(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_newTypeTuple(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_nodesGraph(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_nodeByID(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_addNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_updateNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_removeNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -5399,6 +5696,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["buildLibrary"] = &BatchProcessor::process_buildLibrary;
     processMap_["libraryRootDef"] = &BatchProcessor::process_libraryRootDef;
     processMap_["defsGraph"] = &BatchProcessor::process_defsGraph;
+    processMap_["defByID"] = &BatchProcessor::process_defByID;
     processMap_["addDefinition"] = &BatchProcessor::process_addDefinition;
     processMap_["updateDefinition"] = &BatchProcessor::process_updateDefinition;
     processMap_["removeDefinition"] = &BatchProcessor::process_removeDefinition;
@@ -5413,6 +5711,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["newTypeList"] = &BatchProcessor::process_newTypeList;
     processMap_["newTypeTuple"] = &BatchProcessor::process_newTypeTuple;
     processMap_["nodesGraph"] = &BatchProcessor::process_nodesGraph;
+    processMap_["nodeByID"] = &BatchProcessor::process_nodeByID;
     processMap_["addNode"] = &BatchProcessor::process_addNode;
     processMap_["updateNode"] = &BatchProcessor::process_updateNode;
     processMap_["removeNode"] = &BatchProcessor::process_removeNode;
@@ -5580,6 +5879,16 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
+  void defByID( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->defByID(_return, defID, libID, projectID);
+    }
+    ifaces_[i]->defByID(_return, defID, libID, projectID);
+    return;
+  }
+
   void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::DefID parentID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     size_t sz = ifaces_.size();
     size_t i = 0;
@@ -5715,6 +6024,16 @@ class BatchMultiface : virtual public BatchIf {
       ifaces_[i]->nodesGraph(_return, defID, libID, projectID);
     }
     ifaces_[i]->nodesGraph(_return, defID, libID, projectID);
+    return;
+  }
+
+  void nodeByID( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->nodeByID(_return, nodeID, defID, libID, projectID);
+    }
+    ifaces_[i]->nodeByID(_return, nodeID, defID, libID, projectID);
     return;
   }
 

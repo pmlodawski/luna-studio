@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Batch.Server.Handlers.Defs (
     defsGraph,
+    defByID, 
 
     addDefinition,
     updateDefinition,
@@ -49,6 +50,16 @@ defsGraph batchHandler mtlibID mtprojectID = tRunScript $ do
 
     return $ CDefs.toDefsGraph adefManager
 
+
+defByID :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition
+defByID batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
+    scriptIO $ logger.info $ "called defByID"
+    defID      <- tryGetID mtdefID     "defID"    
+    libID      <- tryGetID mtlibID     "libID"
+    projectID  <- tryGetID mtprojectID "projectID"
+    batch      <- tryReadIORef batchHandler
+    definition <- tryRight $ BatchD.defByID defID libID projectID batch
+    return $ fst $ encode (defID, definition)
 
 addDefinition :: IORef Batch 
               -> Maybe TDefs.Definition -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition

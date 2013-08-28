@@ -7,6 +7,8 @@
 
 module Flowbox.Batch.Handlers.Graph (
     nodesGraph,
+    nodeByID,
+
     addNode,
     updateNode,
     removeNode,
@@ -20,7 +22,7 @@ import           Flowbox.Batch.GraphView.EdgeView      (EdgeView(..))
 import qualified Flowbox.Batch.GraphView.GraphView   as GraphView
 import           Flowbox.Batch.GraphView.GraphView     (GraphView)
 import qualified Flowbox.Batch.Project.Project       as Project
-import           Flowbox.Control.Error                 (ifnot)
+import           Flowbox.Control.Error                 ((<?>), ifnot)
 import qualified Flowbox.Luna.Lib.Library            as Library
 import qualified Flowbox.Luna.Network.Def.Definition as Definition
 import qualified Flowbox.Luna.Network.Graph.Graph    as Graph
@@ -33,6 +35,12 @@ nodesGraph defID libID projectID = readonly . graphOp defID libID projectID (\_ 
     Right (agraph, GraphView.fromGraph agraph))
 
 
+nodeByID :: Node.ID -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Node
+nodeByID nodeID defID libID projectID = readonly . graphOp defID libID projectID (\_ agraph -> do
+    node <- Graph.lab agraph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
+    return (agraph, node))
+
+
 addNode :: Node 
         -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String (Batch, Node.ID)
 addNode node defID libID projectID = graphOp defID libID projectID (\_ agraph -> 
@@ -42,7 +50,7 @@ addNode node defID libID projectID = graphOp defID libID projectID (\_ agraph ->
 updateNode :: (Node.ID, Node) 
            -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
 updateNode (nodeID, node) defID libID projectID = noresult . graphOp defID libID projectID (\_ agraph -> do
-    Graph.gelem nodeID agraph `ifnot` "Wrong `nodeID`"
+    Graph.gelem nodeID agraph `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
     let newGraph = Graph.updateNode (nodeID, node) agraph
     return (newGraph, ()))
 
@@ -50,7 +58,7 @@ updateNode (nodeID, node) defID libID projectID = noresult . graphOp defID libID
 removeNode :: Node.ID 
            -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
 removeNode nodeID defID libID projectID = noresult . graphOp defID libID projectID (\_ agraph -> do
-    Graph.gelem nodeID agraph `ifnot` "Wrong `nodeID`"
+    Graph.gelem nodeID agraph `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
     let newGraph = Graph.delNode nodeID agraph
     return (newGraph, ()))
 
@@ -58,8 +66,8 @@ removeNode nodeID defID libID projectID = noresult . graphOp defID libID project
 connect :: Node.ID -> [Int] -> Node.ID -> [Int] 
         -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
 connect srcNodeID asrcPort dstNodeID adstPort defID libID projectID = noresult . graphOp defID libID projectID (\_ agraph -> do 
-    Graph.gelem srcNodeID agraph `ifnot` "Wrong `srcNodeID`"
-    Graph.gelem dstNodeID agraph `ifnot` "Wrong `dstNodeID`"
+    Graph.gelem srcNodeID agraph `ifnot` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
+    Graph.gelem dstNodeID agraph `ifnot` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
     (length adstPort <= 1)       `ifnot` "dstPort cannot have more than 1 item."
     let newGraph = GraphView.toGraph 
                  $ GraphView.insEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
@@ -70,8 +78,8 @@ connect srcNodeID asrcPort dstNodeID adstPort defID libID projectID = noresult .
 disconnect :: Node.ID -> [Int] -> Node.ID -> [Int] 
            -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
 disconnect srcNodeID asrcPort dstNodeID adstPort defID libID projectID = noresult . graphOp defID libID projectID (\_ agraph -> do
-    Graph.gelem srcNodeID agraph `ifnot` "Wrong `srcNodeID`"
-    Graph.gelem dstNodeID agraph `ifnot` "Wrong `dstNodeID`"
+    Graph.gelem srcNodeID agraph `ifnot` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
+    Graph.gelem dstNodeID agraph `ifnot` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
     let newGraph = GraphView.toGraph 
                  $ GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
                  $ GraphView.fromGraph agraph

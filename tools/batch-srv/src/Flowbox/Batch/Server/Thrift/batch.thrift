@@ -73,6 +73,10 @@ service Batch {
     defs.DefsGraph      defsGraph(1: libs.LibID         libID, 
                                   2: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
 
+    defs.Definition       defByID(1: defs.DefID         defID,
+                                  2: libs.LibID         libID,
+                                  3: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
+
     defs.Definition addDefinition(1: defs.Definition    definition, 
                                   2: defs.DefID         parentID,
                                   3: libs.LibID         libID,
@@ -119,6 +123,11 @@ service Batch {
     graphview.GraphView nodesGraph(1: defs.DefID         defID, 
                                    2: libs.LibID         libID,
                                    3: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
+
+    graph.Node   nodeByID(1: graph.NodeID       nodeID,
+                          2: defs.DefID         defID, 
+                          3: libs.LibID         libID,
+                          4: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
 
     graph.Node    addNode(1: graph.Node         node, 
                           2: defs.DefID         defID, 
