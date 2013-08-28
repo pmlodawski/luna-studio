@@ -28,7 +28,7 @@ import           Flowbox.System.UniPath          (UniPath)
 ls :: UniPath -> IO [Item]
 ls upath = do
     paths <- Directory.getDirectoryContents (UniPath.toUnixString upath)
-    let upaths = map UniPath.fromUnixString paths
+    let upaths = map (\u -> UniPath.append u upath) paths
     items <- mapM stat upaths
     return items
 
