@@ -47,8 +47,8 @@ class BatchIf {
   virtual void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) = 0;
   virtual void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) = 0;
   virtual void removeNode(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) = 0;
-  virtual void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) = 0;
-  virtual void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) = 0;
+  virtual void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) = 0;
+  virtual void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) = 0;
   virtual void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path) = 0;
   virtual void FS_stat( ::flowbox::batch::fs::FSItem& _return, const std::string& path) = 0;
   virtual void FS_mkdir(const std::string& path) = 0;
@@ -183,10 +183,10 @@ class BatchNull : virtual public BatchIf {
   void removeNode(const  ::flowbox::batch::graph::NodeID /* nodeID */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */) {
     return;
   }
-  void connect(const  ::flowbox::batch::graph::NodeID /* srcNodeID */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::NodeID /* dstNodeID */, const int32_t /* dstPort */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */) {
+  void connect(const  ::flowbox::batch::graph::NodeID /* srcNodeID */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::NodeID /* dstNodeID */, const  ::flowbox::batch::graph::PortDescriptor& /* dstPort */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */) {
     return;
   }
-  void disconnect(const  ::flowbox::batch::graph::NodeID /* srcNodeID */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::NodeID /* dstNodeID */, const int32_t /* dstPort */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */) {
+  void disconnect(const  ::flowbox::batch::graph::NodeID /* srcNodeID */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::NodeID /* dstNodeID */, const  ::flowbox::batch::graph::PortDescriptor& /* dstPort */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */) {
     return;
   }
   void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & /* _return */, const std::string& /* path */) {
@@ -3993,7 +3993,7 @@ typedef struct _Batch_connect_args__isset {
 class Batch_connect_args {
  public:
 
-  Batch_connect_args() : srcNodeID(0), dstNodeID(0), dstPort(0), defID(0), libID(0) {
+  Batch_connect_args() : srcNodeID(0), dstNodeID(0), defID(0), libID(0) {
   }
 
   virtual ~Batch_connect_args() throw() {}
@@ -4001,7 +4001,7 @@ class Batch_connect_args {
    ::flowbox::batch::graph::NodeID srcNodeID;
    ::flowbox::batch::graph::PortDescriptor srcPort;
    ::flowbox::batch::graph::NodeID dstNodeID;
-  int32_t dstPort;
+   ::flowbox::batch::graph::PortDescriptor dstPort;
    ::flowbox::batch::defs::DefID defID;
    ::flowbox::batch::libs::LibID libID;
 
@@ -4019,7 +4019,7 @@ class Batch_connect_args {
     dstNodeID = val;
   }
 
-  void __set_dstPort(const int32_t val) {
+  void __set_dstPort(const  ::flowbox::batch::graph::PortDescriptor& val) {
     dstPort = val;
   }
 
@@ -4068,7 +4068,7 @@ class Batch_connect_pargs {
   const  ::flowbox::batch::graph::NodeID* srcNodeID;
   const  ::flowbox::batch::graph::PortDescriptor* srcPort;
   const  ::flowbox::batch::graph::NodeID* dstNodeID;
-  const int32_t* dstPort;
+  const  ::flowbox::batch::graph::PortDescriptor* dstPort;
   const  ::flowbox::batch::defs::DefID* defID;
   const  ::flowbox::batch::libs::LibID* libID;
 
@@ -4146,7 +4146,7 @@ typedef struct _Batch_disconnect_args__isset {
 class Batch_disconnect_args {
  public:
 
-  Batch_disconnect_args() : srcNodeID(0), dstNodeID(0), dstPort(0), defID(0), libID(0) {
+  Batch_disconnect_args() : srcNodeID(0), dstNodeID(0), defID(0), libID(0) {
   }
 
   virtual ~Batch_disconnect_args() throw() {}
@@ -4154,7 +4154,7 @@ class Batch_disconnect_args {
    ::flowbox::batch::graph::NodeID srcNodeID;
    ::flowbox::batch::graph::PortDescriptor srcPort;
    ::flowbox::batch::graph::NodeID dstNodeID;
-  int32_t dstPort;
+   ::flowbox::batch::graph::PortDescriptor dstPort;
    ::flowbox::batch::defs::DefID defID;
    ::flowbox::batch::libs::LibID libID;
 
@@ -4172,7 +4172,7 @@ class Batch_disconnect_args {
     dstNodeID = val;
   }
 
-  void __set_dstPort(const int32_t val) {
+  void __set_dstPort(const  ::flowbox::batch::graph::PortDescriptor& val) {
     dstPort = val;
   }
 
@@ -4221,7 +4221,7 @@ class Batch_disconnect_pargs {
   const  ::flowbox::batch::graph::NodeID* srcNodeID;
   const  ::flowbox::batch::graph::PortDescriptor* srcPort;
   const  ::flowbox::batch::graph::NodeID* dstNodeID;
-  const int32_t* dstPort;
+  const  ::flowbox::batch::graph::PortDescriptor* dstPort;
   const  ::flowbox::batch::defs::DefID* defID;
   const  ::flowbox::batch::libs::LibID* libID;
 
@@ -5344,11 +5344,11 @@ class BatchClient : virtual public BatchIf {
   void removeNode(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
   void send_removeNode(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
   void recv_removeNode();
-  void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
-  void send_connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
+  void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
+  void send_connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
   void recv_connect();
-  void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
-  void send_disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
+  void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
+  void send_disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID);
   void recv_disconnect();
   void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path);
   void send_FS_ls(const std::string& path);
@@ -5819,7 +5819,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->removeNode(nodeID, defID, libID);
   }
 
-  void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -5828,7 +5828,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->connect(srcNodeID, srcPort, dstNodeID, dstPort, defID, libID);
   }
 
-  void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const int32_t dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {

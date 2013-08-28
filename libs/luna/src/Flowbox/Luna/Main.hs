@@ -32,8 +32,8 @@ import           Flowbox.System.UniPath                  (UniPath)
 
 test :: DefManager.DefManager -> Graph.Vertex -> Module.Module
 test manager did = out where
-    mod = DG.generateDefinition manager did
-    out = trace(show mod) mod
+    m   = DG.generateDefinition manager did
+    out = trace(show m) m
 
 
 main :: IO ()

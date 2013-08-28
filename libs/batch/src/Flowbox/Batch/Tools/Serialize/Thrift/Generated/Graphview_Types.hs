@@ -37,7 +37,7 @@ import           Graph_Types
 
 type PortDescriptor = Vector.Vector Int32
 
-data EdgeView = EdgeView{f_EdgeView_srcNode :: Maybe Int32,f_EdgeView_dstNode :: Maybe Int32,f_EdgeView_srcPort :: Maybe (Vector.Vector Int32),f_EdgeView_dstPort :: Maybe Int32} deriving (Show,Eq,Typeable)
+data EdgeView = EdgeView{f_EdgeView_srcNode :: Maybe Int32,f_EdgeView_dstNode :: Maybe Int32,f_EdgeView_srcPort :: Maybe (Vector.Vector Int32),f_EdgeView_dstPort :: Maybe (Vector.Vector Int32)} deriving (Show,Eq,Typeable)
 instance Hashable EdgeView where
   hashWithSalt salt record = salt   `hashWithSalt` f_EdgeView_srcNode record   `hashWithSalt` f_EdgeView_dstNode record   `hashWithSalt` f_EdgeView_srcPort record   `hashWithSalt` f_EdgeView_dstPort record  
 write_EdgeView oprot record = do
@@ -55,41 +55,41 @@ write_EdgeView oprot record = do
     (let f = Vector.mapM_ (\_viter2 -> writeI32 oprot _viter2) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_EdgeView_dstPort record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("dstPort",T_I32,4)
-    writeI32 oprot _v
+    writeFieldBegin oprot ("dstPort",T_LIST,4)
+    (let f = Vector.mapM_ (\_viter3 -> writeI32 oprot _viter3) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_EdgeView_fields iprot record = do
-  (_,_t4,_id5) <- readFieldBegin iprot
-  if _t4 == T_STOP then return record else
-    case _id5 of 
-      1 -> if _t4 == T_I32 then do
+  (_,_t5,_id6) <- readFieldBegin iprot
+  if _t5 == T_STOP then return record else
+    case _id6 of 
+      1 -> if _t5 == T_I32 then do
         s <- readI32 iprot
         read_EdgeView_fields iprot record{f_EdgeView_srcNode=Just s}
         else do
-          skip iprot _t4
+          skip iprot _t5
           read_EdgeView_fields iprot record
-      2 -> if _t4 == T_I32 then do
+      2 -> if _t5 == T_I32 then do
         s <- readI32 iprot
         read_EdgeView_fields iprot record{f_EdgeView_dstNode=Just s}
         else do
-          skip iprot _t4
+          skip iprot _t5
           read_EdgeView_fields iprot record
-      3 -> if _t4 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype9,_size6) <- readListBegin iprot; f _size6})
+      3 -> if _t5 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype10,_size7) <- readListBegin iprot; f _size7})
         read_EdgeView_fields iprot record{f_EdgeView_srcPort=Just s}
         else do
-          skip iprot _t4
+          skip iprot _t5
           read_EdgeView_fields iprot record
-      4 -> if _t4 == T_I32 then do
-        s <- readI32 iprot
+      4 -> if _t5 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype15,_size12) <- readListBegin iprot; f _size12})
         read_EdgeView_fields iprot record{f_EdgeView_dstPort=Just s}
         else do
-          skip iprot _t4
+          skip iprot _t5
           read_EdgeView_fields iprot record
       _ -> do
-        skip iprot _t4
+        skip iprot _t5
         readFieldEnd iprot
         read_EdgeView_fields iprot record
 read_EdgeView iprot = do
@@ -104,32 +104,32 @@ write_GraphView oprot record = do
   writeStructBegin oprot "GraphView"
   case f_GraphView_nodes record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("nodes",T_MAP,1)
-    (let {f [] = return (); f ((_kiter13,_viter14):t) = do {do {writeI32 oprot _kiter13;Graph_Types.write_Node oprot _viter14};f t}} in do {writeMapBegin oprot (T_I32,T_STRUCT,fromIntegral $ Map.size _v); f (Map.toList _v);writeMapEnd oprot})
+    (let {f [] = return (); f ((_kiter19,_viter20):t) = do {do {writeI32 oprot _kiter19;Graph_Types.write_Node oprot _viter20};f t}} in do {writeMapBegin oprot (T_I32,T_STRUCT,fromIntegral $ Map.size _v); f (Map.toList _v);writeMapEnd oprot})
     writeFieldEnd oprot}
   case f_GraphView_edges record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("edges",T_LIST,2)
-    (let f = Vector.mapM_ (\_viter15 -> write_EdgeView oprot _viter15) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter21 -> write_EdgeView oprot _viter21) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_GraphView_fields iprot record = do
-  (_,_t17,_id18) <- readFieldBegin iprot
-  if _t17 == T_STOP then return record else
-    case _id18 of 
-      1 -> if _t17 == T_MAP then do
-        s <- (let {f 0 = return []; f n = do {k <- readI32 iprot; v <- (read_Node iprot);r <- f (n-1); return $ (k,v):r}} in do {(_ktype20,_vtype21,_size19) <- readMapBegin iprot; l <- f _size19; return $ Map.fromList l})
+  (_,_t23,_id24) <- readFieldBegin iprot
+  if _t23 == T_STOP then return record else
+    case _id24 of 
+      1 -> if _t23 == T_MAP then do
+        s <- (let {f 0 = return []; f n = do {k <- readI32 iprot; v <- (read_Node iprot);r <- f (n-1); return $ (k,v):r}} in do {(_ktype26,_vtype27,_size25) <- readMapBegin iprot; l <- f _size25; return $ Map.fromList l})
         read_GraphView_fields iprot record{f_GraphView_nodes=Just s}
         else do
-          skip iprot _t17
+          skip iprot _t23
           read_GraphView_fields iprot record
-      2 -> if _t17 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_EdgeView iprot)) in do {(_etype27,_size24) <- readListBegin iprot; f _size24})
+      2 -> if _t23 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_EdgeView iprot)) in do {(_etype33,_size30) <- readListBegin iprot; f _size30})
         read_GraphView_fields iprot record{f_GraphView_edges=Just s}
         else do
-          skip iprot _t17
+          skip iprot _t23
           read_GraphView_fields iprot record
       _ -> do
-        skip iprot _t17
+        skip iprot _t23
         readFieldEnd iprot
         read_GraphView_fields iprot record
 read_GraphView iprot = do

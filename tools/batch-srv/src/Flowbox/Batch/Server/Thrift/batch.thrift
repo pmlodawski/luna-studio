@@ -100,10 +100,10 @@ service Batch {
     void       removeNode(1: graph.NodeID nodeID, 2: defs.DefID defID, 3: libs.LibID libID) throws (1: ArgumentException missingFields)
 
     void    connect(1: graph.NodeID srcNodeID, 2: graphview.PortDescriptor srcPort,
-                    3: graph.NodeID dstNodeID, 4: i32                      dstPort, 
+                    3: graph.NodeID dstNodeID, 4: graphview.PortDescriptor dstPort, 
                     5: defs.DefID   defID    , 6: libs.LibID               libID  ) throws (1: ArgumentException missingFields)
     void disconnect(1: graph.NodeID srcNodeID, 2: graphview.PortDescriptor srcPort,
-                    3: graph.NodeID dstNodeID, 4: i32                      dstPort, 
+                    3: graph.NodeID dstNodeID, 4: graphview.PortDescriptor dstPort, 
                     5: defs.DefID   defID    , 6: libs.LibID               libID ) throws (1: ArgumentException missingFields)
 
     /*

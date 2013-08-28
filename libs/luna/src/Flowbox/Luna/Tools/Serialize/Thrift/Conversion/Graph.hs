@@ -11,8 +11,8 @@
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph where
 
 --import Control.Monad
---import qualified Data.MultiMap as MMap
 
+import qualified Data.Graph.Inductive.Graph                             
 import qualified Data.HashMap.Strict                                  as Map
 import           Data.Int                                               
 import qualified Data.Text.Lazy                                       as Text
@@ -33,12 +33,18 @@ import           Flowbox.Tools.Conversion
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
 
 
+encodeGraph :: (Convert (Int, t) v, Convert (Graph.LEdge b) a,
+                Data.Graph.Inductive.Graph.Graph gr) 
+            => gr t b -> (Maybe (Map.HashMap Int32 v), Maybe (Vector.Vector a))
 encodeGraph agraph = (Just nodes, Just edges) where 
     nodes = Map.fromList $
         map (\(a, b) -> (itoi32 a, encode (a, b))) $ Graph.labNodes agraph
     edges =  Vector.fromList $ map encode $ Graph.labEdges agraph
      
 
+decodeGraph :: (Data.Graph.Inductive.Graph.Graph gr, Convert (Graph.LEdge b) a)
+            => (Maybe (Map.HashMap Int32 TGraph.Node), Maybe (Vector.Vector a))
+            -> Either [Char] (gr Node b)
 decodeGraph (mtnodes, mtedges) = case mtnodes of
     Nothing    -> Left "`nodes` field is missing"
     Just tnodes -> case mtedges of
@@ -61,16 +67,16 @@ decodeGraph (mtnodes, mtedges) = case mtnodes of
 
 instance Convert (Int, Int, Edge) TGraph.Edge where
   encode (nsrc, ndst, a) =  let 
-      dst = itoi32 $ Edge.dst a
-    in TGraph.Edge (Just dst) (Just $ itoi32 nsrc) (Just $ itoi32 ndst)
+      adst = itoi32 $ Edge.dst a
+    in TGraph.Edge (Just adst) (Just $ itoi32 nsrc) (Just $ itoi32 ndst)
   decode b =
     case TGraph.f_Edge_portDst b of
-      Just dst ->
+      Just adst ->
         case TGraph.f_Edge_nodeSrc b of
           Just nodeSrc ->
             case TGraph.f_Edge_nodeDst b of
               Just nodeDst ->
-                Right $ (i32toi nodeSrc, i32toi nodeDst, Edge (i32toi dst))
+                Right $ (i32toi nodeSrc, i32toi nodeDst, Edge (i32toi adst))
               Nothing      -> Left "No destination node specified"
           Nothing      ->  Left "No source node specified"
       Nothing  -> Left "No destination port specified"
