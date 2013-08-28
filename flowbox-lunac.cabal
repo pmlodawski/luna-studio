@@ -25,6 +25,7 @@ Executable lunac
                   cereal,
                   containers,
                   directory,
+                  errors,
                   fgl,
                   flowbox-utils,
                   flowbox-luna,
