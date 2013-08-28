@@ -21,7 +21,7 @@ Library
   Extensions:     DoAndIfThenElse,
                   TemplateHaskell
   
-  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*Flowbox/Luna/Tools/Serialize/Thrift/Generated/.*)|(.*Flowbox/Luna/Main\.hs)')`,
+  Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*Flowbox/Luna/Tools/Serialize/Thrift/Generated/.*')`,
                    `findmodules('src/Flowbox/Luna/Tools/Serialize/Thrift/Generated', '.*\.hs')`
 
   
@@ -46,9 +46,9 @@ Library
 
 
 
-Executable lunac 
-  Main-Is:        Flowbox/Luna/Main.hs
-  Hs-Source-Dirs: src
+Executable luna
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: tests
 
   if flag(debug)
     GHC-Options:  -csacc
@@ -57,19 +57,6 @@ Executable lunac
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
   Build-Depends:  base,
-                  cereal,
-                  containers,
-                  directory,
-                  fgl,
                   flowbox-luna,
-                  flowbox-utils,
-                  MissingH == 1.2.0.0,
-                  mtl,
-                  regex-posix,
-                  split,
-                  text,
-                  thrift,
-                  unordered-containers,
-                  vector,
-                  uu-parsinglib,
-                  pretty-show
+                  flowbox-parser,
+                  flowbox-utils
