@@ -98,6 +98,9 @@ instance Batch_Iface BatchHandler where
     removeNode          = HGraph.removeNode
     connect             = HGraph.connect
     disconnect          = HGraph.disconnect
+    nodeDefaults        = HGraph.nodeDefaults
+    setNodeDefault      = HGraph.setNodeDefault
+    removeNodeDefault   = HGraph.removeNodeDefault
 
     fS_ls               = HFileSystem.ls
     fS_stat             = HFileSystem.stat

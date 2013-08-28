@@ -12,16 +12,25 @@ module Flowbox.Batch.Server.Handlers.Graph (
     updateNode,
     removeNode,
     connect,
-    disconnect
+    disconnect,
+
+    nodeDefaults,
+    setNodeDefault,
+    removeNodeDefault,
 ) 
 where
 
-
-import           Data.Int                                                    
+import           Prelude                                                   hiding (error)
+import           Data.Int                                                    (Int32)
 import           Data.IORef                                                  
-import qualified Data.Vector                                               as Vector
+import qualified Data.Map                                                  as Map
 
-import           Flowbox.Batch.Server.Handlers.Common                        (logger, tRunScript)
+import qualified Data.HashMap.Strict                                       as HashMap
+import           Data.HashMap.Strict                                         (HashMap)
+import qualified Data.Vector                                               as Vector
+import           Data.Vector                                                 (Vector)
+
+import           Flowbox.Batch.Server.Handlers.Common                        (logger, tRunScript, vector2List)
 import qualified Graph_Types                                               as TGraph
 import qualified Graphview_Types                                           as TGraphView
 import           Flowbox.Batch.Batch                                         (Batch(..))
@@ -32,7 +41,6 @@ import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
 import           Flowbox.System.Log.Logger                                   
 import           Flowbox.Tools.Conversion                                    
-                                 
 
 ------ public api -------------------------------------------------
 
@@ -106,12 +114,11 @@ connect :: IORef Batch -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
 connect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID mtprojectID = tRunScript $ do     
     scriptIO $ logger.info $ "called connect"
     srcNodeID <- tryGetID mtsrcNodeID "srcNodeID"
-    tsrcPort  <- mtsrcPort <??> "'srcPort' field is missing"
-    let vectorToList = map i32toi . Vector.toList
-        srcPort = vectorToList tsrcPort
+    tsrcPort  <- mtsrcPort <??> "'srcPort' argument is missing"
+    let srcPort = vector2List tsrcPort
     dstNodeID <- tryGetID mtdstNodeID "dstNodeID"
-    tdstPort  <- mtdstPort <??> "'dstPort' field is missing"
-    let dstPort = vectorToList tdstPort
+    tdstPort  <- mtdstPort <??> "'dstPort' argument is missing"
+    let dstPort = vector2List tdstPort
     defID     <- tryGetID mtdefID     "defID"
     libID     <- tryGetID mtlibID     "libID"
     projectID <- tryGetID mtprojectID "projectID"
@@ -127,12 +134,11 @@ disconnect :: IORef Batch -> Maybe Int32 -> Maybe TGraphView.PortDescriptor
 disconnect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID mtprojectID = tRunScript $ do     
     scriptIO $ logger.info $ "called disconnect"
     srcNodeID   <- tryGetID mtsrcNodeID "srcNodeID"
-    tsrcPort    <- mtsrcPort <??> "'srcPort' field is missing"
-    let vectorToList = map i32toi . Vector.toList
-        srcPort = vectorToList tsrcPort
+    tsrcPort    <- mtsrcPort <??> "'srcPort' argument is missing"
+    let srcPort = vector2List tsrcPort
     dstNodeID   <- tryGetID mtdstNodeID "dstNodeID"
-    tdstPort    <- mtdstPort <??> "'dstPort' field is missing"
-    let dstPort = vectorToList tdstPort
+    tdstPort    <- mtdstPort <??> "'dstPort' argument is missing"
+    let dstPort = vector2List tdstPort
     defID       <- tryGetID mtdefID     "defID"
     libID       <- tryGetID mtlibID     "libID"
     projectID   <- tryGetID mtprojectID "projectID"
@@ -141,3 +147,52 @@ disconnect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtli
     tryWriteIORef batchHandler newBatch
 
 
+nodeDefaults :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32
+             -> IO (HashMap (Vector Int32) TGraph.DefaultValue)
+nodeDefaults batchHandler mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
+    scriptIO $ logger.info $ "called nodeDefaults"
+    scriptIO $ logger.error $ "not implemented"
+    nodeID    <- tryGetID mtnodeID    "nodeID"
+    defID     <- tryGetID mtdefID     "defID"
+    libID     <- tryGetID mtlibID     "libID"
+    projectID <- tryGetID mtprojectID "projectID"
+    batch     <- tryReadIORef batchHandler
+    defaults  <- tryRight $ BatchG.nodeDefaults nodeID defID libID projectID batch
+    let encodeMapItem (k, v) = (Vector.fromList $ map itoi32 k, encode v)
+        tdefaults = HashMap.fromList $ map encodeMapItem $ Map.toList defaults
+    return tdefaults
+
+
+setNodeDefault :: IORef Batch -> Maybe (Vector Int32) -> Maybe TGraph.DefaultValue
+               -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+setNodeDefault batchHandler mtdstPort mtvalue mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
+    scriptIO $ logger.info $ "called setNodeDefault"
+    scriptIO $ logger.error $ "not implemented"
+    tdstPort  <- mtdstPort <??> "'dstPort' argument is missing"
+    let dstPort = vector2List tdstPort
+    tvalue    <- mtvalue   <??> "'value' argument is missing"
+    value     <- tryRight $ decode tvalue
+    nodeID    <- tryGetID mtnodeID    "nodeID"
+    defID     <- tryGetID mtdefID     "defID"
+    libID     <- tryGetID mtlibID     "libID"
+    projectID <- tryGetID mtprojectID "projectID"
+    batch     <- tryReadIORef batchHandler
+    newBatch  <- tryRight $ BatchG.setNodeDefault dstPort value nodeID defID libID projectID batch
+    tryWriteIORef batchHandler newBatch
+
+
+removeNodeDefault :: IORef Batch -> Maybe (Vector Int32)
+                  -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
+removeNodeDefault batchHandler mtdstPort mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
+    scriptIO $ logger.info $ "called removeNodeDefault"
+    scriptIO $ logger.error $ "not implemented"
+    tdstPort  <- mtdstPort <??> "'dstPort' argument is missing"
+    let dstPort = vector2List tdstPort
+    nodeID    <- tryGetID mtnodeID    "nodeID"
+    defID     <- tryGetID mtdefID     "defID"
+    libID     <- tryGetID mtlibID     "libID"
+    projectID <- tryGetID mtprojectID "projectID"   
+    batch     <- tryReadIORef batchHandler
+    newBatch  <- tryRight $ BatchG.removeNodeDefault dstPort nodeID defID libID projectID batch
+    tryWriteIORef batchHandler newBatch
+    

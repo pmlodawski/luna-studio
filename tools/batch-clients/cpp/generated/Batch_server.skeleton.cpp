@@ -192,6 +192,21 @@ class BatchHandler : virtual public BatchIf {
     printf("disconnect\n");
   }
 
+  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("nodeDefaults\n");
+  }
+
+  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("setNodeDefault\n");
+  }
+
+  void removeNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("removeNodeDefault\n");
+  }
+
   void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path) {
     // Your implementation goes here
     printf("FS_ls\n");

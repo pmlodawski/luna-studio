@@ -49,6 +49,9 @@ class BatchIf {
   virtual void removeNode(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
+  virtual void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
+  virtual void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
+  virtual void removeNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path) = 0;
   virtual void FS_stat( ::flowbox::batch::fs::FSItem& _return, const std::string& path) = 0;
   virtual void FS_mkdir(const std::string& path) = 0;
@@ -187,6 +190,15 @@ class BatchNull : virtual public BatchIf {
     return;
   }
   void disconnect(const  ::flowbox::batch::graph::NodeID /* srcNodeID */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::NodeID /* dstNodeID */, const  ::flowbox::batch::graph::PortDescriptor& /* dstPort */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
+    return;
+  }
+  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & /* _return */, const  ::flowbox::batch::graph::NodeID /* nodeID */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
+    return;
+  }
+  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& /* dst */, const  ::flowbox::batch::graph::DefaultValue& /* value */, const  ::flowbox::batch::graph::NodeID /* nodeID */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
+    return;
+  }
+  void removeNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& /* dst */, const  ::flowbox::batch::graph::NodeID /* nodeID */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
     return;
   }
   void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & /* _return */, const std::string& /* path */) {
@@ -4531,6 +4543,448 @@ class Batch_disconnect_presult {
 
 };
 
+typedef struct _Batch_nodeDefaults_args__isset {
+  _Batch_nodeDefaults_args__isset() : nodeID(false), defID(false), libID(false), projectID(false) {}
+  bool nodeID;
+  bool defID;
+  bool libID;
+  bool projectID;
+} _Batch_nodeDefaults_args__isset;
+
+class Batch_nodeDefaults_args {
+ public:
+
+  Batch_nodeDefaults_args() : nodeID(0), defID(0), libID(0), projectID(0) {
+  }
+
+  virtual ~Batch_nodeDefaults_args() throw() {}
+
+   ::flowbox::batch::graph::NodeID nodeID;
+   ::flowbox::batch::defs::DefID defID;
+   ::flowbox::batch::libs::LibID libID;
+   ::flowbox::batch::projects::ProjectID projectID;
+
+  _Batch_nodeDefaults_args__isset __isset;
+
+  void __set_nodeID(const  ::flowbox::batch::graph::NodeID val) {
+    nodeID = val;
+  }
+
+  void __set_defID(const  ::flowbox::batch::defs::DefID val) {
+    defID = val;
+  }
+
+  void __set_libID(const  ::flowbox::batch::libs::LibID val) {
+    libID = val;
+  }
+
+  void __set_projectID(const  ::flowbox::batch::projects::ProjectID val) {
+    projectID = val;
+  }
+
+  bool operator == (const Batch_nodeDefaults_args & rhs) const
+  {
+    if (!(nodeID == rhs.nodeID))
+      return false;
+    if (!(defID == rhs.defID))
+      return false;
+    if (!(libID == rhs.libID))
+      return false;
+    if (!(projectID == rhs.projectID))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_nodeDefaults_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_nodeDefaults_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_nodeDefaults_pargs {
+ public:
+
+
+  virtual ~Batch_nodeDefaults_pargs() throw() {}
+
+  const  ::flowbox::batch::graph::NodeID* nodeID;
+  const  ::flowbox::batch::defs::DefID* defID;
+  const  ::flowbox::batch::libs::LibID* libID;
+  const  ::flowbox::batch::projects::ProjectID* projectID;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_nodeDefaults_result__isset {
+  _Batch_nodeDefaults_result__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_nodeDefaults_result__isset;
+
+class Batch_nodeDefaults_result {
+ public:
+
+  Batch_nodeDefaults_result() {
+  }
+
+  virtual ~Batch_nodeDefaults_result() throw() {}
+
+  std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue>  success;
+  ArgumentException missingFields;
+
+  _Batch_nodeDefaults_result__isset __isset;
+
+  void __set_success(const std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & val) {
+    success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_nodeDefaults_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_nodeDefaults_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_nodeDefaults_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_nodeDefaults_presult__isset {
+  _Batch_nodeDefaults_presult__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_nodeDefaults_presult__isset;
+
+class Batch_nodeDefaults_presult {
+ public:
+
+
+  virtual ~Batch_nodeDefaults_presult() throw() {}
+
+  std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> * success;
+  ArgumentException missingFields;
+
+  _Batch_nodeDefaults_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_setNodeDefault_args__isset {
+  _Batch_setNodeDefault_args__isset() : dst(false), value(false), nodeID(false), defID(false), libID(false), projectID(false) {}
+  bool dst;
+  bool value;
+  bool nodeID;
+  bool defID;
+  bool libID;
+  bool projectID;
+} _Batch_setNodeDefault_args__isset;
+
+class Batch_setNodeDefault_args {
+ public:
+
+  Batch_setNodeDefault_args() : nodeID(0), defID(0), libID(0), projectID(0) {
+  }
+
+  virtual ~Batch_setNodeDefault_args() throw() {}
+
+   ::flowbox::batch::graph::PortDescriptor dst;
+   ::flowbox::batch::graph::DefaultValue value;
+   ::flowbox::batch::graph::NodeID nodeID;
+   ::flowbox::batch::defs::DefID defID;
+   ::flowbox::batch::libs::LibID libID;
+   ::flowbox::batch::projects::ProjectID projectID;
+
+  _Batch_setNodeDefault_args__isset __isset;
+
+  void __set_dst(const  ::flowbox::batch::graph::PortDescriptor& val) {
+    dst = val;
+  }
+
+  void __set_value(const  ::flowbox::batch::graph::DefaultValue& val) {
+    value = val;
+  }
+
+  void __set_nodeID(const  ::flowbox::batch::graph::NodeID val) {
+    nodeID = val;
+  }
+
+  void __set_defID(const  ::flowbox::batch::defs::DefID val) {
+    defID = val;
+  }
+
+  void __set_libID(const  ::flowbox::batch::libs::LibID val) {
+    libID = val;
+  }
+
+  void __set_projectID(const  ::flowbox::batch::projects::ProjectID val) {
+    projectID = val;
+  }
+
+  bool operator == (const Batch_setNodeDefault_args & rhs) const
+  {
+    if (!(dst == rhs.dst))
+      return false;
+    if (!(value == rhs.value))
+      return false;
+    if (!(nodeID == rhs.nodeID))
+      return false;
+    if (!(defID == rhs.defID))
+      return false;
+    if (!(libID == rhs.libID))
+      return false;
+    if (!(projectID == rhs.projectID))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_setNodeDefault_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_setNodeDefault_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_setNodeDefault_pargs {
+ public:
+
+
+  virtual ~Batch_setNodeDefault_pargs() throw() {}
+
+  const  ::flowbox::batch::graph::PortDescriptor* dst;
+  const  ::flowbox::batch::graph::DefaultValue* value;
+  const  ::flowbox::batch::graph::NodeID* nodeID;
+  const  ::flowbox::batch::defs::DefID* defID;
+  const  ::flowbox::batch::libs::LibID* libID;
+  const  ::flowbox::batch::projects::ProjectID* projectID;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_setNodeDefault_result__isset {
+  _Batch_setNodeDefault_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_setNodeDefault_result__isset;
+
+class Batch_setNodeDefault_result {
+ public:
+
+  Batch_setNodeDefault_result() {
+  }
+
+  virtual ~Batch_setNodeDefault_result() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_setNodeDefault_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_setNodeDefault_result & rhs) const
+  {
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_setNodeDefault_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_setNodeDefault_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_setNodeDefault_presult__isset {
+  _Batch_setNodeDefault_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_setNodeDefault_presult__isset;
+
+class Batch_setNodeDefault_presult {
+ public:
+
+
+  virtual ~Batch_setNodeDefault_presult() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_setNodeDefault_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_removeNodeDefault_args__isset {
+  _Batch_removeNodeDefault_args__isset() : dst(false), nodeID(false), defID(false), libID(false), projectID(false) {}
+  bool dst;
+  bool nodeID;
+  bool defID;
+  bool libID;
+  bool projectID;
+} _Batch_removeNodeDefault_args__isset;
+
+class Batch_removeNodeDefault_args {
+ public:
+
+  Batch_removeNodeDefault_args() : nodeID(0), defID(0), libID(0), projectID(0) {
+  }
+
+  virtual ~Batch_removeNodeDefault_args() throw() {}
+
+   ::flowbox::batch::graph::PortDescriptor dst;
+   ::flowbox::batch::graph::NodeID nodeID;
+   ::flowbox::batch::defs::DefID defID;
+   ::flowbox::batch::libs::LibID libID;
+   ::flowbox::batch::projects::ProjectID projectID;
+
+  _Batch_removeNodeDefault_args__isset __isset;
+
+  void __set_dst(const  ::flowbox::batch::graph::PortDescriptor& val) {
+    dst = val;
+  }
+
+  void __set_nodeID(const  ::flowbox::batch::graph::NodeID val) {
+    nodeID = val;
+  }
+
+  void __set_defID(const  ::flowbox::batch::defs::DefID val) {
+    defID = val;
+  }
+
+  void __set_libID(const  ::flowbox::batch::libs::LibID val) {
+    libID = val;
+  }
+
+  void __set_projectID(const  ::flowbox::batch::projects::ProjectID val) {
+    projectID = val;
+  }
+
+  bool operator == (const Batch_removeNodeDefault_args & rhs) const
+  {
+    if (!(dst == rhs.dst))
+      return false;
+    if (!(nodeID == rhs.nodeID))
+      return false;
+    if (!(defID == rhs.defID))
+      return false;
+    if (!(libID == rhs.libID))
+      return false;
+    if (!(projectID == rhs.projectID))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_removeNodeDefault_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_removeNodeDefault_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_removeNodeDefault_pargs {
+ public:
+
+
+  virtual ~Batch_removeNodeDefault_pargs() throw() {}
+
+  const  ::flowbox::batch::graph::PortDescriptor* dst;
+  const  ::flowbox::batch::graph::NodeID* nodeID;
+  const  ::flowbox::batch::defs::DefID* defID;
+  const  ::flowbox::batch::libs::LibID* libID;
+  const  ::flowbox::batch::projects::ProjectID* projectID;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_removeNodeDefault_result__isset {
+  _Batch_removeNodeDefault_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_removeNodeDefault_result__isset;
+
+class Batch_removeNodeDefault_result {
+ public:
+
+  Batch_removeNodeDefault_result() {
+  }
+
+  virtual ~Batch_removeNodeDefault_result() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_removeNodeDefault_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_removeNodeDefault_result & rhs) const
+  {
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_removeNodeDefault_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_removeNodeDefault_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_removeNodeDefault_presult__isset {
+  _Batch_removeNodeDefault_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_removeNodeDefault_presult__isset;
+
+class Batch_removeNodeDefault_presult {
+ public:
+
+
+  virtual ~Batch_removeNodeDefault_presult() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_removeNodeDefault_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 typedef struct _Batch_FS_ls_args__isset {
   _Batch_FS_ls_args__isset() : path(false) {}
   bool path;
@@ -5595,6 +6049,15 @@ class BatchClient : virtual public BatchIf {
   void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_disconnect();
+  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void send_nodeDefaults(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void recv_nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return);
+  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void send_setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void recv_setNodeDefault();
+  void removeNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void send_removeNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void recv_removeNodeDefault();
   void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path);
   void send_FS_ls(const std::string& path);
   void recv_FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return);
@@ -5671,6 +6134,9 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_removeNode(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_connect(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_disconnect(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_nodeDefaults(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_setNodeDefault(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_removeNodeDefault(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_FS_ls(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_FS_stat(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_FS_mkdir(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -5717,6 +6183,9 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["removeNode"] = &BatchProcessor::process_removeNode;
     processMap_["connect"] = &BatchProcessor::process_connect;
     processMap_["disconnect"] = &BatchProcessor::process_disconnect;
+    processMap_["nodeDefaults"] = &BatchProcessor::process_nodeDefaults;
+    processMap_["setNodeDefault"] = &BatchProcessor::process_setNodeDefault;
+    processMap_["removeNodeDefault"] = &BatchProcessor::process_removeNodeDefault;
     processMap_["FS_ls"] = &BatchProcessor::process_FS_ls;
     processMap_["FS_stat"] = &BatchProcessor::process_FS_stat;
     processMap_["FS_mkdir"] = &BatchProcessor::process_FS_mkdir;
@@ -6081,6 +6550,34 @@ class BatchMultiface : virtual public BatchIf {
       ifaces_[i]->disconnect(srcNodeID, srcPort, dstNodeID, dstPort, defID, libID, projectID);
     }
     ifaces_[i]->disconnect(srcNodeID, srcPort, dstNodeID, dstPort, defID, libID, projectID);
+  }
+
+  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->nodeDefaults(_return, nodeID, defID, libID, projectID);
+    }
+    ifaces_[i]->nodeDefaults(_return, nodeID, defID, libID, projectID);
+    return;
+  }
+
+  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->setNodeDefault(dst, value, nodeID, defID, libID, projectID);
+    }
+    ifaces_[i]->setNodeDefault(dst, value, nodeID, defID, libID, projectID);
+  }
+
+  void removeNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->removeNodeDefault(dst, nodeID, defID, libID, projectID);
+    }
+    ifaces_[i]->removeNodeDefault(dst, nodeID, defID, libID, projectID);
   }
 
   void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path) {
