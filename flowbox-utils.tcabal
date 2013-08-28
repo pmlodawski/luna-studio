@@ -17,6 +17,7 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  containers,
                   directory,
                   errors,
                   MissingH == 1.2.0.0,

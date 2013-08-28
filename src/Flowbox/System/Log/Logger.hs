@@ -10,18 +10,25 @@ module Flowbox.System.Log.Logger (
     Priority(..)
 )where
 
-import qualified System.Log.Logger   as HSLogger
-import           System.Log.Logger   hiding (getLogger, setLevel)
-import           System.IO             (stderr)
-import           Prelude             hiding (log, error)
-import           System.Console.ANSI as ANSI
+import qualified System.Log.Logger       as HSLogger
+import           System.Log.Logger       hiding (getLogger, setLevel, Logger)
+import           System.IO                 (stderr)
+import           Prelude                 hiding (log, error)
+import           System.Console.ANSI     as ANSI
+import qualified Flowbox.System.Log.Conf as Conf
+
+type Logger = (String -> IO ()) -> IO()
 
 
 getLogger :: String -> (String -> IO ()) -> IO()
 getLogger name = \f -> f name
 
+mkIndent :: Int -> String
+mkIndent i = replicate (4*i) ' '
+
 log :: Priority -> String -> String -> IO ()
 log pri msg name = do
+    conf <- Conf.read name
     let sgr = case pri of
                    DEBUG       -> [SetColor Foreground Vivid Magenta]
                    INFO        -> [SetColor Foreground Vivid Green  ]
@@ -31,8 +38,9 @@ log pri msg name = do
                    CRITICAL    -> [SetColor Foreground Vivid Red    ]
                    ALERT       -> [SetColor Foreground Vivid Red    ]
                    EMERGENCY   -> [SetColor Foreground Vivid Red    ]
+        prefix = mkIndent $ Conf.indent conf 
     hSetSGR stderr sgr
-    logM name pri msg
+    logM name pri (prefix ++ msg)
     hSetSGR stderr []
 
 debug :: String -> String -> IO ()
@@ -61,3 +69,13 @@ emergency = log EMERGENCY
 
 setLevel :: Priority -> String -> IO ()
 setLevel lvl name = updateGlobalLogger name (HSLogger.setLevel lvl)
+
+pushGroup :: Logger -> IO()
+pushGroup l = l $ \name -> do
+    conf <- Conf.read name
+    Conf.store name conf{Conf.indent = 1 + Conf.indent conf}
+
+popGroup :: Logger -> IO()
+popGroup l = l $ \name -> do
+    conf <- Conf.read name
+    Conf.store name conf{Conf.indent = max 0 $ 1 - Conf.indent conf}
