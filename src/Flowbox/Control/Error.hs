@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Control.Error (
     module Control.Error,
+    eRunScript,
     (<?>),
     (<??>),
     ifnot,
@@ -23,6 +24,14 @@ import qualified Control.Monad.IO.Class
 
 import qualified Flowbox.System.UniPath   as UniPath
 import           Flowbox.Tools.Conversion   
+
+
+eRunScript :: Script a -> IO a
+eRunScript s = do
+    e <- runEitherT s
+    case e of
+        Left  m -> error m
+        Right a -> return a
 
 
 tryReadIORef :: IORef a -> EitherT String IO a
@@ -57,3 +66,5 @@ tryGetUniPath :: Monad m => Maybe Text -> String -> EitherT String m UniPath.Uni
 tryGetUniPath mtpath name = do
     tpath <- mtpath <??> ("`" ++ name  ++ "` argument is missing")
     return $ UniPath.fromUnixString $ unpack tpath
+
+
