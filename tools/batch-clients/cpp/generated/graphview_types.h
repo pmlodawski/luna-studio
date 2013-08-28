@@ -30,10 +30,10 @@ typedef struct _EdgeView__isset {
 class EdgeView {
  public:
 
-  static const char* ascii_fingerprint; // = "A8C2A7C113E82F9E83C944457CEF1050";
-  static const uint8_t binary_fingerprint[16]; // = {0xA8,0xC2,0xA7,0xC1,0x13,0xE8,0x2F,0x9E,0x83,0xC9,0x44,0x45,0x7C,0xEF,0x10,0x50};
+  static const char* ascii_fingerprint; // = "780EB3755E1EE5645CAC472013381820";
+  static const uint8_t binary_fingerprint[16]; // = {0x78,0x0E,0xB3,0x75,0x5E,0x1E,0xE5,0x64,0x5C,0xAC,0x47,0x20,0x13,0x38,0x18,0x20};
 
-  EdgeView() : srcNode(0), dstNode(0), dstPort(0) {
+  EdgeView() : srcNode(0), dstNode(0) {
   }
 
   virtual ~EdgeView() throw() {}
@@ -41,7 +41,7 @@ class EdgeView {
    ::flowbox::batch::graph::NodeID srcNode;
    ::flowbox::batch::graph::NodeID dstNode;
   PortDescriptor srcPort;
-  int32_t dstPort;
+  PortDescriptor dstPort;
 
   _EdgeView__isset __isset;
 
@@ -60,7 +60,7 @@ class EdgeView {
     __isset.srcPort = true;
   }
 
-  void __set_dstPort(const int32_t val) {
+  void __set_dstPort(const PortDescriptor& val) {
     dstPort = val;
     __isset.dstPort = true;
   }
@@ -107,8 +107,8 @@ typedef struct _GraphView__isset {
 class GraphView {
  public:
 
-  static const char* ascii_fingerprint; // = "858C6E7D8E0007C97144342852E2D151";
-  static const uint8_t binary_fingerprint[16]; // = {0x85,0x8C,0x6E,0x7D,0x8E,0x00,0x07,0xC9,0x71,0x44,0x34,0x28,0x52,0xE2,0xD1,0x51};
+  static const char* ascii_fingerprint; // = "8E7714C8B50878C14D099C4FA1E0E081";
+  static const uint8_t binary_fingerprint[16]; // = {0x8E,0x77,0x14,0xC8,0xB5,0x08,0x78,0xC1,0x4D,0x09,0x9C,0x4F,0xA1,0xE0,0xE0,0x81};
 
   GraphView() {
   }

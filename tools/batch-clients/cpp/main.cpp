@@ -124,10 +124,17 @@ int main(int argc, char **argv) {
         dummy.__set_name("fun");
         batch.updateNode(dummy, fun.defID, userlib.libID);
         batch.removeNode(dummy.nodeID, fun.defID, userlib.libID);
+
+        Node dummy2;
+        dummy2.__set_cls(NodeType::Call);
+        dummy2.__set_name("dummy2");
+        batch.addNode(dummy2, dummy2, fun.defID, userlib.libID);
+        
+        batch.connect(inputs.nodeID, {4, 9, 2}, dummy2.nodeID, {}, fun.defID, userlib.libID);
         batch.connect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID);
         batch.connect(inputs.nodeID, {7, 8}, outputs.nodeID, {5}, fun.defID, userlib.libID);
         batch.disconnect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID);
-
+        
         batch.storeLibrary(userlib.libID);
         batch.buildLibrary(userlib.libID);
 
@@ -172,8 +179,8 @@ int main(int argc, char **argv) {
 
         batch.FS_mkdir("test3folder");
         batch.FS_rm("test3folder");
+        
         batch.dump();        
-
         batch.ping();
 
     } catch (ArgumentException e) {

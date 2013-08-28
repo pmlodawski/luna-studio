@@ -19,7 +19,7 @@ struct EdgeView {
     1: optional graph.NodeID   srcNode
     2: optional graph.NodeID   dstNode
     3: optional PortDescriptor srcPort
-    4: optional i32            dstPort
+    4: optional PortDescriptor dstPort
 }
 
 struct GraphView {

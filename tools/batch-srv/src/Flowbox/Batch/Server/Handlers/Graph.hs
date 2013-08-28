@@ -92,7 +92,7 @@ connect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID
     let vectorToList = map i32toi . Vector.toList
         srcPort = vectorToList tsrcPort
     dstNodeID   <- tryGetID mtdstNodeID "dstNodeID"
-    tdstPort    <- mtsrcPort <??> "'dstPort' field is missing"
+    tdstPort    <- mtdstPort <??> "'dstPort' field is missing"
     let dstPort = vectorToList tdstPort
     defID       <- tryGetID mtdefID     "defID"
     libID       <- tryGetID mtlibID     "libID"
@@ -112,7 +112,7 @@ disconnect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtli
     let vectorToList = map i32toi . Vector.toList
         srcPort = vectorToList tsrcPort
     dstNodeID   <- tryGetID mtdstNodeID "dstNodeID"
-    tdstPort    <- mtsrcPort <??> "'dstPort' field is missing"
+    tdstPort    <- mtdstPort <??> "'dstPort' field is missing"
     let dstPort = vectorToList tdstPort
     defID       <- tryGetID mtdefID     "defID"
     libID       <- tryGetID mtlibID     "libID"

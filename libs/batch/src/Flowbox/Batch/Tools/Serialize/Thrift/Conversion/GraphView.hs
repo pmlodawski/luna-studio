@@ -31,7 +31,7 @@ instance Convert (Int, Int, EdgeView) TGraphView.EdgeView where
         tsrcNode = itoi32 asrcNode
         tdstNode = itoi32 adstNode
         tsrcPort = Vector.fromList $ map (itoi32) asrcPort
-        tdstPort = itoi32 adstPort
+        tdstPort = Vector.fromList $ map (itoi32) adstPort
         in TGraphView.EdgeView (Just tsrcNode) (Just tdstNode) (Just tsrcPort) (Just tdstPort)
     decode (TGraphView.EdgeView mtsrcNode mtdstNode mtsrcPort mtdstPort) = do 
         tsrcNode <- mtsrcNode <?> "Failed to decode EdgeView: `srcNode` field is missing"
@@ -41,6 +41,6 @@ instance Convert (Int, Int, EdgeView) TGraphView.EdgeView where
         let asrcNode = i32toi tsrcNode
             adstNode = i32toi tdstNode
             asrcPort = map (i32toi) $ Vector.toList tsrcPort
-            adstPort = i32toi tdstPort
+            adstPort = map (i32toi) $ Vector.toList tdstPort
         return (asrcNode, adstNode, EdgeView asrcPort adstPort) 
                     

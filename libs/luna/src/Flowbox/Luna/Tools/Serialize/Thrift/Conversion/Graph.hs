@@ -12,7 +12,7 @@ module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph where
 
 --import Control.Monad
 
-import qualified Data.Graph.Inductive.Graph
+import qualified Data.Graph.Inductive.Graph                             
 import qualified Data.HashMap.Strict                                  as Map
 import           Data.Int                                               
 import qualified Data.Text.Lazy                                       as Text
