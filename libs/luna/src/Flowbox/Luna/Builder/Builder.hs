@@ -5,13 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Builder.Builder (
-    Builder(..),
-    empty,
-    buildLibrary,
-    refreshLibrary,
-    refreshDef
-) where
+module Flowbox.Luna.Builder.Builder where
 
 import qualified Flowbox.Luna.Lib.Library             as Library
 import           Flowbox.Luna.Lib.Library               (Library)
@@ -37,34 +31,34 @@ empty :: Builder
 empty = Builder UniPath.empty
 
 
-buildLibrary :: Builder -> Library -> IO()
-buildLibrary bld lib = do
-    refreshLibrary bld lib
-    --TODO[wd]: wywolanie cabala
+--buildLibrary :: Builder -> Library -> IO()
+--buildLibrary bld lib = do
+--    refreshLibrary bld lib
+--    --TODO[wd]: wywolanie cabala
 
 
-refreshLibrary :: Builder -> Library -> IO()
-refreshLibrary bld lib = do
-    let nodes = DefManager.nodes $ Library.defs lib
-    mapM (refreshDef bld lib) nodes
-    return ()
+--refreshLibrary :: Builder -> Library -> IO()
+--refreshLibrary bld lib = do
+--    let nodes = DefManager.nodes $ Library.defs lib
+--    mapM (refreshDef bld lib) nodes
+--    return ()
 
 
-refreshDef :: Builder -> Library -> Definition.ID -> IO()
-refreshDef bld lib did = do
-    let
-        hssrcs   = UniPath.append "src"
-                 $ UniPath.append "hs"
-                 $ UniPath.append (Library.name lib)
-                 $ path bld
-        mod      = DG.generateDefinition (Library.defs lib) did
-        code     = Module.genCode mod
-        modpath  = Path.toFilePath $ Module.path mod
-        relpath  = UniPath.fromList $ Path.segments modpath
-        filepath = hssrcs ++ relpath
+--refreshDef :: Builder -> Library -> Definition.ID -> IO()
+--refreshDef bld lib did = do
+--    let
+--        hssrcs   = UniPath.append "src"
+--                 $ UniPath.append "hs"
+--                 $ UniPath.append (Library.name lib)
+--                 $ path bld
+--        mod      = DG.generateDefinition (Library.defs lib) did
+--        code     = Module.genCode mod
+--        modpath  = Path.toFilePath $ Module.path mod
+--        relpath  = UniPath.fromList $ Path.segments modpath
+--        filepath = hssrcs ++ relpath
 
-    Dir.createDirectoryIfMissing True $ UniPath.dirOf filepath
-    IO.writeFile filepath code
+--    Dir.createDirectoryIfMissing True $ UniPath.dirOf filepath
+--    IO.writeFile filepath code
 
 
 --executeShellCommand cmd   = putStrLn ("EXEC: " ++ cmd) >> system cmd >>= check where

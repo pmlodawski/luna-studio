@@ -30,6 +30,7 @@
 --import           Flowbox.System.UniPath                  (UniPath)
 
 import qualified Flowbox.Luna.Codegen.Hs.Generator     as Gen
+import qualified Flowbox.Luna.Codegen.Hs.AST.Module    as Module
 
 import qualified Flowbox.Luna.Parser                   as Parser
 
@@ -40,7 +41,7 @@ import           System.TimeIt
 
 
 example :: String
-example = unlines [ "def f(x,y,z):\n x+y+z"
+example = unlines [ "2+2"
                   ]
 
 
@@ -53,12 +54,15 @@ main_inner = do
     let 
         parsed = Parser.parse example
         ast = forceEither parsed
-        out = Gen.convert ast
+        out = Gen.genModule ast
 
     --print out
+    putStrLn ""
     putStrLn $ PP.ppShow $ parsed
-    putStrLn "-----------------"
-    print ast
+    putStrLn "\n-----------------"
+    putStrLn $ PP.ppShow $ out
+    -- putStrLn $ Module.genCode out
+
 
 
 --main :: IO ()

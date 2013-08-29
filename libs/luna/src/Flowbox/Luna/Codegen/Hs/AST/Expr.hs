@@ -5,20 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.AST.Expr (
-    Expr(..),
-    Context(..),
-    genCode,
-    mkAlias,
-    mkCall,
-    mkPure,
-    addExpr,
-    mkBlock,
-    mkAssignment,
-    empty,
-    mkExprCtx,
-    mkTypeCtx
-)where
+module Flowbox.Luna.Codegen.Hs.AST.Expr where
 
 import           Debug.Trace                    
 
@@ -26,10 +13,11 @@ import           Data.String.Utils              (join)
 import qualified Flowbox.Luna.Codegen.Hs.Path as Path
 --import qualified Flowbox.Luna.Codegen.Hs.GenState         as GenState
 --import           Flowbox.Luna.Codegen.Hs.GenState           (GenState)
+import qualified Flowbox.Luna.Codegen.Hs.AST.Constant as Constant
 
 data Context = Pure | IO deriving (Show, Eq)
 
-data Expr = Assignment { src   :: Expr    , dst  :: Expr   , ctx :: Context }
+data Expr = Assignment { src   :: Expr    , dst :: Expr    , ctx :: Context }
           | Var        { name  :: String                                    }
           | VarRef     { vid   :: Int                                       } 
           | Tuple      { elems :: [Expr]                                    }
@@ -48,6 +36,8 @@ data Expr = Assignment { src   :: Expr    , dst  :: Expr   , ctx :: Context }
           | BlockRet   { name  :: String  , ctx :: Context                  }
           | FuncType   { elems :: [Expr]                                    }
           | NOP        {                                                    }
+          | Operator   { name  :: String  , src :: Expr    , dst :: Expr    }
+          | Constant   { cval  :: Constant.Constant                         }
           deriving (Show)
 
 

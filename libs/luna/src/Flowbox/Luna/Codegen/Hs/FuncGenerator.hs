@@ -5,104 +5,105 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.FuncGenerator(
-generateFunction
-) where
+module Flowbox.Luna.Codegen.Hs.FuncGenerator where
 
-import           Data.Maybe                                (fromJust)
+--import           Data.Maybe                                (fromJust)
 
 
-import qualified Flowbox.Luna.Type.Type                  as Type
-import qualified Flowbox.Luna.Codegen.Hs.Import          as Import
-import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
-import           Flowbox.Luna.Network.Graph.Graph          (Graph)
-import qualified Flowbox.Luna.Network.Def.Definition     as Definition
-import           Flowbox.Luna.Network.Def.Definition       (Definition)
-import qualified Flowbox.Luna.Network.Graph.Node         as Node
-import           Flowbox.Luna.Network.Graph.Node           (Node)
-import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
-import qualified Flowbox.Luna.Network.Flags              as Flags
-import qualified Flowbox.Luna.Codegen.Hs.Path            as Path
+--import qualified Flowbox.Luna.Type.Type                  as Type
+--import qualified Flowbox.Luna.Codegen.Hs.Import          as Import
+--import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
+--import           Flowbox.Luna.Network.Graph.Graph          (Graph)
+--import qualified Flowbox.Luna.Network.Def.Definition     as Definition
+--import           Flowbox.Luna.Network.Def.Definition       (Definition)
+--import qualified Flowbox.Luna.Network.Graph.Node         as Node
+--import           Flowbox.Luna.Network.Graph.Node           (Node)
+--import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
+--import qualified Flowbox.Luna.Network.Flags              as Flags
+--import qualified Flowbox.Luna.Codegen.Hs.Path            as Path
 
 
-import qualified Flowbox.Luna.Codegen.Hs.AST.Function    as Function
-import           Flowbox.Luna.Codegen.Hs.AST.Function      (Function)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
-import qualified Flowbox.Luna.Codegen.Hs.AST.Module      as Module
-import           Flowbox.Luna.Codegen.Hs.AST.Module        (Module)
+--import qualified Flowbox.Luna.Codegen.Hs.AST.Function    as Function
+--import           Flowbox.Luna.Codegen.Hs.AST.Function      (Function)
+--import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
+--import qualified Flowbox.Luna.Codegen.Hs.AST.Module      as Module
+--import           Flowbox.Luna.Codegen.Hs.AST.Module        (Module)
 
-import           Flowbox.Luna.Data.List                    
-
-
-generateFunction :: Definition -> Module -> (Function, Module)
-generateFunction def m = (func, nmod) where
-    graph      = Definition.graph def
-    vertices   = Graph.topsort graph
-    nodes      = fromJust $ Graph.labVtxs graph vertices
-    fcls       = Definition.cls def
-    fname      = Path.mkFuncName $ Type.name fcls
-    --finputs    = Type.inputs fcls
-    basefunc   = Function.basic { Function.name = fname
-                                --, Function.signature = [Expr.At Path.inputs (Expr.Tuple (replicate 3 Expr.Any))]
-                                }
-    (func, nmod) = foldri (generateNodeExpr graph) nodes (basefunc, m)
+--import           Flowbox.Luna.Data.List                    
 
 
-generateNodeExpr :: Graph -> Graph.LVertex Node -> (Function, Module) -> (Function, Module)
-generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
-    block  = Function.body func
-    nblock = Expr.addExpr expr block
-    nfunc  = Function.setBody nblock func
+--generateFunction :: Definition -> Module -> (Function, Module)
+--generateFunction def m = (func, nmod) where
+--    graph      = Definition.graph def
+--    vertices   = Graph.topsort graph
+--    nodes      = fromJust $ Graph.labVtxs graph vertices
+--    fcls       = Definition.cls def
+--    fname      = Path.mkFuncName $ Type.name fcls
+--    --finputs    = Type.inputs fcls
+--    basefunc   = Function.basic { Function.name = fname
+--                                --, Function.signature = [Expr.At Path.inputs (Expr.Tuple (replicate 3 Expr.Any))]
+--                                }
+--    (func, nmod) = foldri (generateNodeExpr graph) nodes (basefunc, m)
+
+
+--generateNodeExpr :: Graph -> Graph.LVertex Node -> (Function, Module) -> (Function, Module)
+--generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
+--    block  = Function.body func
+--    nblock = Expr.addExpr expr block
+--    nfunc  = Function.setBody nblock func
 
           
-    (nid, node) = lnode
-    expr  = Expr.Assignment src value ctx 
-    src   = case node of
-        Node.Outputs {}         -> Expr.Var Path.outputs
-        _                       -> Expr.VarRef nid
+--    (nid, node) = lnode
+--    expr  = Expr.Assignment src value ctx 
+--    src   = case node of
+--        Node.Outputs {}         -> Expr.Var Path.outputs
+--        _                       -> Expr.VarRef nid
 
-    (value, ctx) = case node of
-        Node.New _ _            -> (Expr.VarRef cvtx, Expr.Pure) where
-                                       cvtx:_ = Graph.innvtx graph nid
-                                       -- TODO[wd] exception when too many inputs
+--    (value, ctx) = case node of
+--        Node.New _ _            -> (Expr.VarRef cvtx, Expr.Pure) where
+--                                       cvtx:_ = Graph.innvtx graph nid
+--                                       -- TODO[wd] exception when too many inputs
 
-        Node.Type name _ _      -> (Expr.Var name, Expr.Pure)
+--        Node.Type name _ _      -> (Expr.Var name, Expr.Pure)
 
-        Node.Tuple _ _          -> (Expr.Tuple args, Expr.Pure) where
-                                       vtxs = Graph.innvtx graph nid
-                                       args = map Expr.VarRef vtxs
+--        Node.Tuple _ _          -> (Expr.Tuple args, Expr.Pure) where
+--                                       vtxs = Graph.innvtx graph nid
+--                                       args = map Expr.VarRef vtxs
 
-        Node.NTuple _ _         -> (Expr.NTuple args, Expr.Pure) where
-                                       vtxs = Graph.innvtx graph nid
-                                       args = map Expr.VarRef vtxs
+--        Node.NTuple _ _         -> (Expr.NTuple args, Expr.Pure) where
+--                                       vtxs = Graph.innvtx graph nid
+--                                       args = map Expr.VarRef vtxs
 
-        Node.Call name flags _  -> (Expr.Call name' args cctx, cctx) where
-                                       name' = Path.mkFuncName name
-                                       vtxs  = Graph.innvtx graph nid
-                                       args  = map Expr.VarRef vtxs
-                                       cctx  = if Flags.io flags
-                                           then Expr.IO
-                                           else Expr.Pure
+--        Node.Call name flags _  -> (Expr.Call name' args cctx, cctx) where
+--                                       name' = Path.mkFuncName name
+--                                       vtxs  = Graph.innvtx graph nid
+--                                       args  = map Expr.VarRef vtxs
+--                                       cctx  = if Flags.io flags
+--                                           then Expr.IO
+--                                           else Expr.Pure
 
-        Node.Inputs  _ _        -> (Expr.Var Path.inputs, Expr.Pure)
-        Node.Outputs _ _        -> (expr, Expr.Pure) where
-                                       expr = case Graph.innvtx graph nid of
-                                           []     -> Expr.Tuple []
-                                           cvtx:_ -> Expr.VarRef cvtx
-                                           _      -> error "Too many inputs to node 'Outputs'"
+--        Node.Inputs  _ _        -> (Expr.Var Path.inputs, Expr.Pure)
+--        Node.Outputs _ _        -> (expr, Expr.Pure) where
+--                                       expr = case Graph.innvtx graph nid of
+--                                           []     -> Expr.Tuple []
+--                                           cvtx:_ -> Expr.VarRef cvtx
+--                                           _      -> error "Too many inputs to node 'Outputs'"
 
-        Node.Default d          -> (Expr.Default val, Expr.Pure) where 
-                                       val = case d of
-                                           DefaultValue.DefaultString v -> show v
-                                           DefaultValue.DefaultInt    v -> show v ++ " :: Int"
+--        Node.Default d          -> (Expr.Default val, Expr.Pure) where 
+--                                       val = case d of
+--                                           DefaultValue.DefaultString v -> show v
+--                                           DefaultValue.DefaultInt    v -> show v ++ " :: Int"
 
-    nmod = case node of 
-        Node.Call name _ _  -> Module.addImport (Import.common name)
-                             $ m
-        _                   -> m
+--    nmod = case node of 
+--        Node.Call name _ _  -> Module.addImport (Import.common name)
+--                             $ m
+--        _                   -> m
 
 
 
+------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
 
 --indent :: Int -> String
 --indent num = replicate (num*4) ' '

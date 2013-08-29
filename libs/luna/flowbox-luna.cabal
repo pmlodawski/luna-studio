@@ -56,6 +56,7 @@ Library
         Flowbox.Luna.Codegen.Hs.AST.Module,
         Flowbox.Luna.Codegen.Hs.AST.Expr,
         Flowbox.Luna.Codegen.Hs.AST.Function,
+        Flowbox.Luna.Codegen.Hs.AST.Constant,
         Flowbox.Luna.Codegen.Hs.AST.Instance,
         Flowbox.Luna.Codegen.Hs.AST.Deriving,
         Flowbox.Luna.Codegen.Hs.AST.Extension,
