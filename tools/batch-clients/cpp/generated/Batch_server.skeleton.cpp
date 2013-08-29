@@ -27,6 +27,11 @@ class BatchHandler : virtual public BatchIf {
     printf("projects\n");
   }
 
+  void projectByID( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("projectByID\n");
+  }
+
   void createProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project) {
     // Your implementation goes here
     printf("createProject\n");
@@ -50,6 +55,11 @@ class BatchHandler : virtual public BatchIf {
   void libraries(std::vector< ::flowbox::batch::libs::Library> & _return, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("libraries\n");
+  }
+
+  void libraryByID( ::flowbox::batch::libs::Library& _return, const  ::flowbox::batch::libs::LibID libraryID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("libraryByID\n");
   }
 
   void createLibrary( ::flowbox::batch::libs::Library& _return, const  ::flowbox::batch::libs::Library& library, const  ::flowbox::batch::projects::ProjectID projectID) {

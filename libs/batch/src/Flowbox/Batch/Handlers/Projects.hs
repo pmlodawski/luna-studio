@@ -7,6 +7,8 @@
 
 module Flowbox.Batch.Handlers.Projects (
     projects,
+
+    projectByID,
     createProject,
     openProject,
     closeProject,
@@ -15,6 +17,7 @@ module Flowbox.Batch.Handlers.Projects (
 
 
 import           Flowbox.Batch.Batch                     (Batch(..))
+import           Flowbox.Batch.Handlers.Common          (readonly, projectOp)
 import qualified Flowbox.Batch.Project.Project         as Project
 import           Flowbox.Batch.Project.Project           (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager  as ProjectManager
@@ -22,8 +25,14 @@ import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
 import           Flowbox.System.UniPath                  (UniPath)
 
 
+
 projects :: Batch -> [(Project.ID, Project)]
 projects batch = ProjectManager.labNodes (projectManager batch)
+
+
+projectByID :: Project.ID -> Batch -> Either String Project
+projectByID projectID = readonly . projectOp projectID (\_ project -> do
+    return (project, project))
 
 
 createProject :: Project -> Batch -> (Batch, (Project.ID, Project))

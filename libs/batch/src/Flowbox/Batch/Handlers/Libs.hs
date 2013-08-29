@@ -7,6 +7,8 @@
 
 module Flowbox.Batch.Handlers.Libs (
     libraries,
+
+    libraryByID,
     createLibrary,
     loadLibrary,
     unloadLibrary,
@@ -41,6 +43,11 @@ libraries :: Project.ID -> Batch -> Either String [(Library.ID, Library)]
 libraries projectID = readonly . libManagerOp projectID (\_ libManager -> 
     let r = LibManager.labNodes libManager 
     in Right (libManager, r))
+
+
+libraryByID :: Library.ID -> Project.ID -> Batch -> Either String Library
+libraryByID libID projectID = readonly . libraryOp libID projectID (\_ library -> do
+    return (library, library))
 
 
 createLibrary :: String -> UniPath -> Project.ID -> Batch -> Either String (Batch, (Library.ID, Library))

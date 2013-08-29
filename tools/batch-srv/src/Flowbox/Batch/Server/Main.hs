@@ -62,12 +62,14 @@ newBatchHandler = newIORef $ Batch.empty { Batch.projectManager = ProjectManager
  
 instance Batch_Iface BatchHandler where
     projects            = HProjects.projects
+    projectByID         = HProjects.projectByID
     createProject       = HProjects.createProject
     openProject         = HProjects.openProject
     closeProject        = HProjects.closeProject
     storeProject        = HProjects.storeProject
 
     libraries           = HLibs.libraries
+    libraryByID         = HLibs.libraryByID
     createLibrary       = HLibs.createLibrary
     loadLibrary         = HLibs.loadLibrary
     unloadLibrary       = HLibs.unloadLibrary

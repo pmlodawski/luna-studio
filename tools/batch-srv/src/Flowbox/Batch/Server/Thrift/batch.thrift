@@ -37,6 +37,7 @@ service Batch {
 
     list<projects.Project> projects()
 
+    projects.Project    projectByID(1: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
     projects.Project  createProject(1: projects.Project   project  ) throws (1: ArgumentException missingFields)
     projects.Project    openProject(1: string             path     ) throws (1: ArgumentException missingFields)
     void               closeProject(1: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
@@ -47,6 +48,9 @@ service Batch {
      */
 
     list<libs.Library>   libraries(1: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
+
+    libs.Library       libraryByID(1: libs.LibID        libraryID, 
+                                   2: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
 
     libs.Library     createLibrary(1: libs.Library       library, 
                                    2: projects.ProjectID projectID) throws (1: ArgumentException missingFields)

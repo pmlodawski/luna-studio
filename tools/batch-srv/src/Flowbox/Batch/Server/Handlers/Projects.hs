@@ -7,6 +7,7 @@
 module Flowbox.Batch.Server.Handlers.Projects (
     projects,
 
+    projectByID,
     createProject,
     openProject, 
     closeProject,
@@ -43,6 +44,15 @@ projects batchHandler = do
         tprojects       = map (fst . encode) aprojects
         tprojectsVector = Vector.fromList tprojects
     return tprojectsVector
+
+
+projectByID :: IORef Batch -> Maybe Int32 -> IO TProjects.Project
+projectByID batchHandler mtprojectID = tRunScript $ do
+    scriptIO $ logger.info $ "call projectByID"
+    projectID <- tryGetID mtprojectID "projectID"
+    batch     <- tryReadIORef batchHandler
+    project   <- tryRight $ BatchP.projectByID projectID batch
+    return $ fst $ encode (projectID, project)
 
 
 createProject :: IORef Batch -> Maybe TProjects.Project -> IO TProjects.Project

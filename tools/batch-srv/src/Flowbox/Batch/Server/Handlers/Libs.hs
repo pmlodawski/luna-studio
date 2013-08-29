@@ -7,6 +7,7 @@
 module Flowbox.Batch.Server.Handlers.Libs (
     libraries,
 
+    libraryByID,
     createLibrary,
     loadLibrary,
     unloadLibrary,
@@ -50,6 +51,16 @@ libraries batchHandler mtprojectID = tRunScript $ do
     let tlibs       = map (fst . encode) libs
         tlibsVector = Vector.fromList tlibs
     return tlibsVector
+
+
+libraryByID :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO TLibs.Library
+libraryByID batchHandler mtlibID mtprojectID = tRunScript $ do
+    scriptIO $ logger.info $ "called libraryByID"
+    libID     <- tryGetID mtlibID "libID"
+    projectID <- tryGetID mtprojectID "projectID"
+    batch     <- tryReadIORef batchHandler
+    library   <- tryRight $ BatchL.libraryByID libID projectID batch
+    return $ fst $ encode (libID, library)
 
 
 createLibrary :: IORef Batch -> Maybe TLibs.Library -> Maybe Int32 -> IO TLibs.Library

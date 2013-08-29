@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,createProject,openProject,closeProject,storeProject,libraries,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
+module Batch_Client(projects,projectByID,createProject,openProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -69,6 +69,32 @@ recv_projects ip = do
     Just v -> return v
     Nothing -> do
       throw (AppExn AE_MISSING_RESULT "projects failed: unknown result")
+projectByID (ip,op) arg_projectID = do
+  send_projectByID op arg_projectID
+  recv_projectByID ip
+send_projectByID op arg_projectID = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("projectByID", M_CALL, seqn)
+  write_ProjectByID_args op (ProjectByID_args{f_ProjectByID_args_projectID=Just arg_projectID})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_projectByID ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_ProjectByID_result ip
+  readMessageEnd ip
+  case f_ProjectByID_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_ProjectByID_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "projectByID failed: unknown result")
 createProject (ip,op) arg_project = do
   send_createProject op arg_project
   recv_createProject ip
@@ -193,6 +219,32 @@ recv_libraries ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "libraries failed: unknown result")
+libraryByID (ip,op) arg_libraryID arg_projectID = do
+  send_libraryByID op arg_libraryID arg_projectID
+  recv_libraryByID ip
+send_libraryByID op arg_libraryID arg_projectID = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("libraryByID", M_CALL, seqn)
+  write_LibraryByID_args op (LibraryByID_args{f_LibraryByID_args_libraryID=Just arg_libraryID,f_LibraryByID_args_projectID=Just arg_projectID})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_libraryByID ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_LibraryByID_result ip
+  readMessageEnd ip
+  case f_LibraryByID_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_LibraryByID_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "libraryByID failed: unknown result")
 createLibrary (ip,op) arg_library arg_projectID = do
   send_createLibrary op arg_library arg_projectID
   recv_createLibrary ip

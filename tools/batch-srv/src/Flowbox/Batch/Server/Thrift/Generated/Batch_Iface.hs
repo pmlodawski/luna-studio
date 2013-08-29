@@ -46,11 +46,13 @@ import           Batch_Types
 
 class Batch_Iface a where
   projects :: a -> IO (Vector.Vector Projects_Types.Project)
+  projectByID :: a -> Maybe Int32 -> IO Projects_Types.Project
   createProject :: a -> Maybe Projects_Types.Project -> IO Projects_Types.Project
   openProject :: a -> Maybe Text -> IO Projects_Types.Project
   closeProject :: a -> Maybe Int32 -> IO ()
   storeProject :: a -> Maybe Int32 -> IO ()
   libraries :: a -> Maybe Int32 -> IO (Vector.Vector Libs_Types.Library)
+  libraryByID :: a -> Maybe Int32 -> Maybe Int32 -> IO Libs_Types.Library
   createLibrary :: a -> Maybe Libs_Types.Library -> Maybe Int32 -> IO Libs_Types.Library
   loadLibrary :: a -> Maybe Text -> Maybe Int32 -> IO Libs_Types.Library
   unloadLibrary :: a -> Maybe Int32 -> Maybe Int32 -> IO ()
