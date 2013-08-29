@@ -16,27 +16,29 @@ module Flowbox.Batch.GraphView.GraphView(
     toGraph
 ) where
 
-import qualified Data.List                              as List
-import           Data.Map                                 (Map)
-import qualified Data.Map                               as Map
-import           Data.Foldable                            (foldrM)
+import qualified Data.List                               as List
+import           Data.Map                                  (Map)
+import qualified Data.Map                                as Map
+import           Data.Foldable                             (foldrM)
 
-import qualified Flowbox.Batch.Batch                    as Batch
-import qualified Flowbox.Batch.GraphView.Defaults       as Defaults
-import qualified Flowbox.Batch.GraphView.EdgeView       as EdgeView
-import           Flowbox.Batch.GraphView.EdgeView         (EdgeView(..))
-import           Flowbox.Batch.GraphView.PortDescriptor   (PortDescriptor)
-import qualified Flowbox.Luna.Data.Graph                as DG
-import           Flowbox.Luna.Data.Graph                hiding (Graph, Edge, empty, fromGraph)
-import qualified Flowbox.Luna.Network.Graph.Graph       as Graph
-import           Flowbox.Luna.Network.Graph.Graph         (Graph)
-import           Flowbox.Luna.Network.Graph.Edge          (Edge(..))
-import qualified Flowbox.Luna.Network.Graph.Node        as Node
-import           Flowbox.Luna.Network.Graph.Node          (Node(..))
-import qualified Flowbox.Luna.Network.Attributes        as Attributes
-import           Flowbox.Luna.Network.Attributes          (Attributes)
-import qualified Flowbox.Luna.Network.Flags             as Flags
-import           Flowbox.Control.Error                    ()
+import qualified Flowbox.Batch.Batch                     as Batch
+import qualified Flowbox.Batch.GraphView.Defaults        as Defaults
+import qualified Flowbox.Batch.GraphView.EdgeView        as EdgeView
+import           Flowbox.Batch.GraphView.EdgeView          (EdgeView(..))
+import           Flowbox.Batch.GraphView.PortDescriptor    (PortDescriptor)
+import qualified Flowbox.Luna.Data.Graph                 as DG
+import           Flowbox.Luna.Data.Graph                 hiding (Graph, Edge, empty, fromGraph)
+import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue)
+import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
+import           Flowbox.Luna.Network.Graph.Graph          (Graph)
+import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
+import qualified Flowbox.Luna.Network.Graph.Node         as Node
+import           Flowbox.Luna.Network.Graph.Node           (Node(..))
+import qualified Flowbox.Luna.Network.Attributes         as Attributes
+import           Flowbox.Luna.Network.Attributes           (Attributes)
+import qualified Flowbox.Luna.Network.Flags              as Flags
+import           Flowbox.Control.Error                     ()
+
 
 
 type GraphView = DG.Graph Node EdgeView
@@ -108,26 +110,32 @@ connectG (srcNodeID, dstNodeID, EdgeView srcPorts dstPorts) graph = case srcPort
                  $ Graph.insNode (selectID, selectNode) graph
 
 
-addNodeDefaults :: (Node.ID, Node) -> Graph -> Graph
-addNodeDefaults (nodeID, node) graph = newGraph where
-    defaultsMap = Defaults.getDefaults node
-    newGraph = foldr (\(adstPort, defaultValue) g -> let 
-                                   (newG1, defaultNodeID) = Graph.insNewNode (Default defaultValue generatedAttrs) g
-                                   -- TODO check if already connected
-                                   Right newG = connectG (defaultNodeID, nodeID, EdgeView [] adstPort) newG1
-                                   in newG) graph $ Map.toList defaultsMap
+
+addNodeDefaults :: GraphView -> (Node.ID, Node) -> Graph -> Either String Graph
+addNodeDefaults graphview (nodeID, node) graph = do
+
+    let 
+        addNodeDefault :: (PortDescriptor, DefaultValue) -> Graph -> Either String Graph
+        addNodeDefault (adstPort, defaultValue) g = do
+            if isNotAlreadyConnected graphview nodeID adstPort
+                then do let (newG1, defaultNodeID) = Graph.insNewNode (Default defaultValue generatedAttrs) g
+                        connectG (defaultNodeID, nodeID, EdgeView [] adstPort) newG1
+                else Right g
+
+    let defaultsMap = Defaults.getDefaults node
+    foldrM addNodeDefault graph $ Map.toList defaultsMap
 
 
-addNodesDefaults :: Graph -> Graph
-addNodesDefaults graphWithoutDefaults = graph where
-    graph = foldr addNodeDefaults graphWithoutDefaults (labNodes graphWithoutDefaults)
+addNodesDefaults :: GraphView -> Graph -> Either String Graph
+addNodesDefaults graphview graphWithoutDefaults = 
+    foldrM (addNodeDefaults graphview) graphWithoutDefaults (labNodes graphWithoutDefaults)
 
 
 toGraph :: GraphView -> Either String Graph
 toGraph graphview = do
     let graphWithoutEdges = removeEdges graphview
     graphWithoutDefaults <- foldrM (connectG) graphWithoutEdges $ labEdges graphview
-    let graph             = addNodesDefaults graphWithoutDefaults
+    graph                <- addNodesDefaults graphview graphWithoutDefaults 
     return graph
 
 
