@@ -10,6 +10,7 @@ module Flowbox.Batch.Server.Handlers.Projects (
     projectByID,
     createProject,
     openProject, 
+    updateProject,
     closeProject,
     storeProject,
 ) where
@@ -74,6 +75,16 @@ openProject batchHandler mtpath = tRunScript $ do
     (newBatch, (projectID, aproject)) <- scriptIO $ BatchP.openProject upath batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ encode (projectID, aproject)
+
+
+updateProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
+updateProject batchHandler mtproject = tRunScript $ do
+    scriptIO $ logger.info $ "call updateProject"
+    tproject <- mtproject <??> "'project' field is missing" 
+    project <- tryRight (decode (tproject, LibManager.empty) :: Either String (Project.ID, Project))
+    batch    <- tryReadIORef batchHandler
+    newBatch <- tryRight $  BatchP.updateProject project batch
+    tryWriteIORef batchHandler newBatch
 
 
 closeProject :: IORef Batch -> Maybe Int32 -> IO ()

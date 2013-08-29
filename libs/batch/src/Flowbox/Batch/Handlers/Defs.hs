@@ -50,8 +50,10 @@ addDefinition definition parentID libID projectID = defManagerOp libID projectID
 
 updateDefinition :: (Definition.ID, Definition) 
                  -> Library.ID -> Project.ID -> Batch -> Either String Batch
-updateDefinition (defID, def) libID projectID = noresult . definitionOp defID libID projectID (\_ _ -> do
-    return (def, def))
+updateDefinition (defID, def) libID projectID = noresult . definitionOp defID libID projectID (\_ oldDef -> do
+    let agraph = Definition.graph oldDef
+        newDef = def{Definition.graph = agraph}
+    return (newDef, ()))
 
 
 removeDefinition :: Definition.ID 

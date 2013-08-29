@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,projectByID,createProject,openProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
+module Batch_Client(projects,projectByID,createProject,openProject,updateProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -147,6 +147,29 @@ recv_openProject ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "openProject failed: unknown result")
+updateProject (ip,op) arg_project = do
+  send_updateProject op arg_project
+  recv_updateProject ip
+send_updateProject op arg_project = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("updateProject", M_CALL, seqn)
+  write_UpdateProject_args op (UpdateProject_args{f_UpdateProject_args_project=Just arg_project})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_updateProject ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_UpdateProject_result ip
+  readMessageEnd ip
+  case f_UpdateProject_result_missingFields res of
+    Nothing -> return ()
+    Just _v -> throw _v
+  return ()
 closeProject (ip,op) arg_projectID = do
   send_closeProject op arg_projectID
   recv_closeProject ip

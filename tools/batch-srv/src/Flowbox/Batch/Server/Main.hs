@@ -65,6 +65,7 @@ instance Batch_Iface BatchHandler where
     projectByID         = HProjects.projectByID
     createProject       = HProjects.createProject
     openProject         = HProjects.openProject
+    updateProject       = HProjects.updateProject
     closeProject        = HProjects.closeProject
     storeProject        = HProjects.storeProject
 

@@ -11,13 +11,14 @@ module Flowbox.Batch.Handlers.Projects (
     projectByID,
     createProject,
     openProject,
+    updateProject,
     closeProject,
     storeProject,
 ) where
 
 
 import           Flowbox.Batch.Batch                     (Batch(..))
-import           Flowbox.Batch.Handlers.Common          (readonly, projectOp)
+import           Flowbox.Batch.Handlers.Common           (noresult, readonly, projectOp)
 import qualified Flowbox.Batch.Project.Project         as Project
 import           Flowbox.Batch.Project.Project           (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager  as ProjectManager
@@ -48,6 +49,13 @@ openProject ppath batch = do
     (newProjectManager, newP) <- ProjectManager.openProject aprojectManager ppath
     let newBatch = batch {projectManager = newProjectManager}
     return (newBatch, newP)
+
+
+updateProject :: (Project.ID, Project) -> Batch -> Either String Batch
+updateProject (projectID, project) = noresult . projectOp projectID (\_ oldProject -> do
+    let plibs = Project.libs oldProject
+        newProject = project { Project.libs = plibs }
+    return (newProject, ()))
 
 
 closeProject :: Project.ID -> Batch -> Batch

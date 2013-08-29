@@ -19,6 +19,7 @@ class BatchIf {
   virtual void projectByID( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void createProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project) = 0;
   virtual void openProject( ::flowbox::batch::projects::Project& _return, const std::string& path) = 0;
+  virtual void updateProject(const  ::flowbox::batch::projects::Project& project) = 0;
   virtual void closeProject(const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void storeProject(const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void libraries(std::vector< ::flowbox::batch::libs::Library> & _return, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
@@ -102,6 +103,9 @@ class BatchNull : virtual public BatchIf {
     return;
   }
   void openProject( ::flowbox::batch::projects::Project& /* _return */, const std::string& /* path */) {
+    return;
+  }
+  void updateProject(const  ::flowbox::batch::projects::Project& /* project */) {
     return;
   }
   void closeProject(const  ::flowbox::batch::projects::ProjectID /* projectID */) {
@@ -681,6 +685,114 @@ class Batch_openProject_presult {
   ArgumentException missingFields;
 
   _Batch_openProject_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_updateProject_args__isset {
+  _Batch_updateProject_args__isset() : project(false) {}
+  bool project;
+} _Batch_updateProject_args__isset;
+
+class Batch_updateProject_args {
+ public:
+
+  Batch_updateProject_args() {
+  }
+
+  virtual ~Batch_updateProject_args() throw() {}
+
+   ::flowbox::batch::projects::Project project;
+
+  _Batch_updateProject_args__isset __isset;
+
+  void __set_project(const  ::flowbox::batch::projects::Project& val) {
+    project = val;
+  }
+
+  bool operator == (const Batch_updateProject_args & rhs) const
+  {
+    if (!(project == rhs.project))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_updateProject_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_updateProject_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_updateProject_pargs {
+ public:
+
+
+  virtual ~Batch_updateProject_pargs() throw() {}
+
+  const  ::flowbox::batch::projects::Project* project;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_updateProject_result__isset {
+  _Batch_updateProject_result__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_updateProject_result__isset;
+
+class Batch_updateProject_result {
+ public:
+
+  Batch_updateProject_result() {
+  }
+
+  virtual ~Batch_updateProject_result() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_updateProject_result__isset __isset;
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_updateProject_result & rhs) const
+  {
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_updateProject_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_updateProject_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_updateProject_presult__isset {
+  _Batch_updateProject_presult__isset() : missingFields(false) {}
+  bool missingFields;
+} _Batch_updateProject_presult__isset;
+
+class Batch_updateProject_presult {
+ public:
+
+
+  virtual ~Batch_updateProject_presult() throw() {}
+
+  ArgumentException missingFields;
+
+  _Batch_updateProject_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -6212,6 +6324,9 @@ class BatchClient : virtual public BatchIf {
   void openProject( ::flowbox::batch::projects::Project& _return, const std::string& path);
   void send_openProject(const std::string& path);
   void recv_openProject( ::flowbox::batch::projects::Project& _return);
+  void updateProject(const  ::flowbox::batch::projects::Project& project);
+  void send_updateProject(const  ::flowbox::batch::projects::Project& project);
+  void recv_updateProject();
   void closeProject(const  ::flowbox::batch::projects::ProjectID projectID);
   void send_closeProject(const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_closeProject();
@@ -6363,6 +6478,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_projectByID(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_createProject(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_openProject(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_updateProject(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_closeProject(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_storeProject(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_libraries(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -6414,6 +6530,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["projectByID"] = &BatchProcessor::process_projectByID;
     processMap_["createProject"] = &BatchProcessor::process_createProject;
     processMap_["openProject"] = &BatchProcessor::process_openProject;
+    processMap_["updateProject"] = &BatchProcessor::process_updateProject;
     processMap_["closeProject"] = &BatchProcessor::process_closeProject;
     processMap_["storeProject"] = &BatchProcessor::process_storeProject;
     processMap_["libraries"] = &BatchProcessor::process_libraries;
@@ -6524,6 +6641,15 @@ class BatchMultiface : virtual public BatchIf {
     }
     ifaces_[i]->openProject(_return, path);
     return;
+  }
+
+  void updateProject(const  ::flowbox::batch::projects::Project& project) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->updateProject(project);
+    }
+    ifaces_[i]->updateProject(project);
   }
 
   void closeProject(const  ::flowbox::batch::projects::ProjectID projectID) {
