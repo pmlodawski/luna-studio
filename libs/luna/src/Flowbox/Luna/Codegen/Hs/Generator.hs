@@ -32,7 +32,7 @@ genModule ast = case ast of
     LAST.Program  body                ->   Module.addFunction mainfunc
                                          $ Module.empty
                                          where
-                                             (mainfunc, _) = runState (genFunction $ LAST.Function "main" [] body) GenState.empty
+                                             mainfunc <- genFunction $ LAST.Function "main" [] body) GenState.empty
     _                                 -> error "Unknown LUNA.AST expression"
 
 
@@ -47,8 +47,13 @@ genExpr ast = case ast of
                                         LConstant.Integer val -> Expr.Constant $ Constant.Integer val
                                         _                     -> error "Unknown LUNA.AST expression"
     LAST.Operator   name src dst -> Expr.Operator name <$> genExpr src <*> genExpr dst
-    LAST.Identifier name         -> do
-                                        vname <- GenState.genVarName
-                                        return $ Expr.Var vname
+    --LAST.Identifier name         -> do
+                                        --vname <- GenState.genVarName
+                                        --return $ Expr.Var vname
+    --LAST.Assignment src dst      -> do
+                                        --dst' <- genExpr dst
+                                        --src' <- GenState.genVarName
+                                        --GenState.registerVar src' src
+                                        --return $ Expr.Assignment (Expr.Var src') dst' Expr.Pure
     _ -> return Expr.NOP
 

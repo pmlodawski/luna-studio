@@ -19,8 +19,10 @@ Library
   Build-Depends:  base,
                   containers,
                   directory,
+                  either,
                   errors,
                   MissingH == 1.2.0.0,
+                  mtl,
                   split,
                   text,
                   transformers,
@@ -38,5 +40,7 @@ Executable utils
                   MultiParamTypeClasses
   Build-Depends:  base,
                   ansi-terminal,
+                  either,
                   hslogger,
+                  mtl,
                   flowbox-utils

@@ -10,15 +10,15 @@ execs = []
 
 options        = set(['@all', 'libs/utils', 'libs/parser', 'libs/luna', 'libs/batch', 'tools/batch-srv', 'tools/lunac', '@luna', '@batch', '@cppclient'])
 opts_all       = options
-opts_utils     = set(['all', 'libs/utils'])
-opts_parserlib = set(['all', 'libs/parser'])
-opts_lunalib   = set(['all', 'libs/luna'])
-opts_batchlib  = set(['all', 'libs/batch'])
-opts_batchsrv  = set(['all', 'tools/batch-srv'])
-opts_lunac     = set(['all', 'tools/lunac'])
-opts_luna      = set(['all', '@luna'])
-opts_batch     = set(['all', '@batch'])
-opts_cppclient = set(['all', '@cppclient'])
+opts_utils     = set(['@all', 'libs/utils'])
+opts_parserlib = set(['@all', 'libs/parser'])
+opts_lunalib   = set(['@all', 'libs/luna'])
+opts_batchlib  = set(['@all', 'libs/batch'])
+opts_batchsrv  = set(['@all', 'tools/batch-srv'])
+opts_lunac     = set(['@all', 'tools/lunac'])
+opts_luna      = set(['@all', '@luna'])
+opts_batch     = set(['@all', '@batch'])
+opts_cppclient = set(['@all', '@cppclient'])
 
 
 # class Library:
