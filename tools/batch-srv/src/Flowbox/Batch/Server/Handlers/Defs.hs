@@ -66,7 +66,7 @@ addDefinition :: IORef Batch
 addDefinition batchHandler mtdefinition mtparentID mtlibID mtprojectID = tRunScript $ do
     scriptIO $ logger.info $ "called addDefinition"
     tdefinition       <- mtdefinition <??> "'definition' argument is missing"
-    (_, definition)   <- tryRight (decode (tdefinition, Graph.empty) :: Either String (Definition.ID, Definition))
+    (_, definition)   <- tryRight (decode (tdefinition, Graph.make) :: Either String (Definition.ID, Definition))
     parentID          <- tryGetID mtparentID "parentID"    
     libID             <- tryGetID mtlibID    "libID"
     projectID         <- tryGetID mtprojectID "projectID"
