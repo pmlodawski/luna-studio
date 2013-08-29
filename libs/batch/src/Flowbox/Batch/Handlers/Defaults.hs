@@ -16,7 +16,7 @@ import qualified Data.Map                                as Map
 import           Flowbox.Batch.Batch                       (Batch(..))
 import qualified Flowbox.Batch.GraphView.Defaults        as Defaults
 import           Flowbox.Batch.GraphView.Defaults          (DefaultsMap)
-import qualified Flowbox.Batch.GraphView.GraphView      as GraphView
+import qualified Flowbox.Batch.GraphView.GraphView       as GraphView
 import           Flowbox.Batch.GraphView.PortDescriptor    (PortDescriptor)
 import           Flowbox.Batch.Handlers.Common             (noresult, readonly, graphOp, nodeOp)
 import qualified Flowbox.Batch.Project.Project           as Project
@@ -37,24 +37,24 @@ nodeDefaults nodeID defID libID projectID  = readonly . nodeOp nodeID defID libI
 setNodeDefault :: PortDescriptor -> DefaultValue
                -> Node.ID -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
 setNodeDefault dstPort value nodeID defID libID projectID = noresult . graphOp defID libID projectID (\_ agraph -> do
-    let graphview = GraphView.fromGraph agraph
+    graphview <- GraphView.fromGraph agraph
     node <- GraphView.lab graphview nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
     let newDefaults  = Map.insert dstPort value
                      $ Defaults.getDefaults node
         newNode      = Defaults.setDefaults node newDefaults
         newGraphView = GraphView.updateNode (nodeID, newNode) graphview
-        newGraph     = GraphView.toGraph newGraphView
+    newGraph <- GraphView.toGraph newGraphView
     return (newGraph, ()))
 
 
 removeNodeDefault :: PortDescriptor
                   -> Node.ID -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
 removeNodeDefault dstPort nodeID defID libID projectID = noresult . graphOp defID libID projectID (\_ agraph -> do
-    let graphview = GraphView.fromGraph agraph
+    graphview <- GraphView.fromGraph agraph
     node <- GraphView.lab graphview nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
     let newDefaults  = Map.delete dstPort
                      $ Defaults.getDefaults node
         newNode      = Defaults.setDefaults node newDefaults
         newGraphView = GraphView.updateNode (nodeID, newNode) graphview
-        newGraph     = GraphView.toGraph newGraphView
+    newGraph <- GraphView.toGraph newGraphView
     return (newGraph, ()))

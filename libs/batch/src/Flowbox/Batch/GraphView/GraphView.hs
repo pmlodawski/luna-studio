@@ -19,6 +19,7 @@ module Flowbox.Batch.GraphView.GraphView(
 import qualified Data.List                              as List
 import           Data.Map                                 (Map)
 import qualified Data.Map                               as Map
+import           Data.Foldable                            (foldrM)
 
 import qualified Flowbox.Batch.Batch                    as Batch
 import qualified Flowbox.Batch.GraphView.Defaults       as Defaults
@@ -35,6 +36,7 @@ import           Flowbox.Luna.Network.Graph.Node          (Node(..))
 import qualified Flowbox.Luna.Network.Attributes        as Attributes
 import           Flowbox.Luna.Network.Attributes          (Attributes)
 import qualified Flowbox.Luna.Network.Flags             as Flags
+import           Flowbox.Control.Error                    ()
 
 
 type GraphView = DG.Graph Node EdgeView
@@ -81,20 +83,22 @@ removeEdges :: DG.Graph a b -> DG.Graph a c
 removeEdges graph = mkGraph (labNodes graph) []
 
 
-connectG :: (Node.ID, Node.ID, EdgeView) -> Graph -> Graph
+connectG :: (Node.ID, Node.ID, EdgeView) -> Graph -> Either String Graph
 connectG (srcNodeID, dstNodeID, EdgeView srcPorts dstPorts) graph = case srcPorts of 
     [] -> case dstPorts of 
-        []         -> Graph.insEdge (srcNodeID, dstNodeID, Edge 0       ) graph
-        [adstPort] -> Graph.insEdge (srcNodeID, tupleID  , Edge adstPort) graphT where
-            (tupleID, graphT) = case prel graph dstNodeID of 
-                []                             -> (newTupleID, newGraphT) where
-                    [newTupleID] = Graph.newNodes 1 graph
-                    newTupleNode = NTuple Flags.empty generatedAttrs
-                    newGraphT    = Graph.insEdge (tupleID, dstNodeID, Edge 0)
-                                 $ Graph.insNode (tupleID, newTupleNode) graph
-                [(existingTupleID, NTuple {})] -> (existingTupleID, graph)
-                _                      -> error "Connect nodes failed"
-        _         -> error "dst port descriptors cannot have lenght greater than 1."
+        []         -> Right $ Graph.insEdge (srcNodeID, dstNodeID, Edge 0) graph
+        [adstPort] -> do 
+            (tupleID, graphT) <- case prel graph dstNodeID of 
+                []                             -> do
+                            let [newTupleID] = Graph.newNodes 1 graph
+                                newTupleNode = NTuple Flags.empty generatedAttrs
+                                newGraphT    = Graph.insEdge (newTupleID, dstNodeID, Edge 0)
+                                             $ Graph.insNode (newTupleID, newTupleNode) graph
+                            return (newTupleID, newGraphT)
+                [(existingTupleID, NTuple {})] -> Right (existingTupleID, graph)
+                _                              -> Left "Connect nodes failed"
+            return $ Graph.insEdge (srcNodeID, tupleID  , Edge adstPort) graphT
+        _         -> Left "dst port descriptors cannot have lenght greater than 1."
     _ -> connectG (selectID, dstNodeID, EdgeView srcPortsTail dstPorts) newGraph where
         srcPortsHead = head srcPorts
         srcPortsTail = tail srcPorts
@@ -110,7 +114,7 @@ addNodeDefaults (nodeID, node) graph = newGraph where
     newGraph = foldr (\(adstPort, defaultValue) g -> let 
                                    (newG1, defaultNodeID) = Graph.insNewNode (Default defaultValue generatedAttrs) g
                                    -- TODO check if already connected
-                                   newG = connectG (defaultNodeID, nodeID, EdgeView [] adstPort) newG1
+                                   Right newG = connectG (defaultNodeID, nodeID, EdgeView [] adstPort) newG1
                                    in newG) graph $ Map.toList defaultsMap
 
 
@@ -119,11 +123,12 @@ addNodesDefaults graphWithoutDefaults = graph where
     graph = foldr addNodeDefaults graphWithoutDefaults (labNodes graphWithoutDefaults)
 
 
-toGraph :: GraphView -> Graph
-toGraph graphview = graph where
-    graphWithoutEdges    = removeEdges graphview
-    graphWithoutDefaults = foldr (connectG) graphWithoutEdges $ labEdges graphview
-    graph                = addNodesDefaults graphWithoutDefaults
+toGraph :: GraphView -> Either String Graph
+toGraph graphview = do
+    let graphWithoutEdges = removeEdges graphview
+    graphWithoutDefaults <- foldrM (connectG) graphWithoutEdges $ labEdges graphview
+    let graph             = addNodesDefaults graphWithoutDefaults
+    return graph
 
 
 graph2graphView :: Graph -> GraphView
@@ -139,10 +144,10 @@ graph2graphView graph = graphv where
     graphv = mkGraph anodes aedges
 
 
-fromGraph :: Graph -> GraphView
-fromGraph graph = graphv where
-    graphC = graph2graphView graph
-    graphv = foldr (delGenerated) graphC $ labNodes graphC
+fromGraph :: Graph -> Either String GraphView
+fromGraph graph = do
+    let graphC = graph2graphView graph
+    foldrM (delGenerated) graphC $ labNodes graphC
 
 
 getBatchAttrs :: Node -> Maybe (Map String String)
@@ -165,21 +170,21 @@ selectNo node = do
     return $ read num
 
 
-delGenerated :: (Node.ID, Node) -> GraphView -> GraphView
+delGenerated :: (Node.ID, Node) -> GraphView -> Either String GraphView
 delGenerated (nodeID, node) graph = case isGenerated node of 
-    False -> graph
+    False -> Right graph
     True  -> case node of 
         NTuple {}  -> case (inn graph nodeID, suc graph nodeID) of
-            (inEdges, [adst]) -> delNode nodeID
+            (inEdges, [adst]) -> Right $ delNode nodeID
                                $ insEdges newEdges graph where 
                                     newEdges = map (\(asrc, _, ev) -> (asrc, adst, ev)) inEdges
-            _ -> error "Batch attributes mismatch - incorrectly connected NTuple"
-        Default {} -> delNode nodeID graph
+            _ -> Left "Batch attributes mismatch - incorrectly connected NTuple"
+        Default {} -> Right $ delNode nodeID graph
         _          -> case (selectNo node, inn graph nodeID, out graph nodeID) of 
             (Just num, [(asrc, _, EdgeView isrcPort _)], [(_, adst, EdgeView osrcPort odstPort)])
-                -> delNode nodeID 
+                -> Right $ delNode nodeID 
                  $ insEdge (asrc, adst, EdgeView (isrcPort ++ [num] ++ osrcPort) odstPort) graph
-            _   -> error "Batch attributes mismatch - incorrectly connected Select"
+            _   -> Left "Batch attributes mismatch - incorrectly connected Select"
 
 
 
