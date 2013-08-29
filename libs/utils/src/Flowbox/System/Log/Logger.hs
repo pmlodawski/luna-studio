@@ -12,15 +12,16 @@ module Flowbox.System.Log.Logger (
     Priority(..)
 )where
 
-import qualified System.Log.Logger       as HSLogger
-import           System.IO                 (stderr)
-import           System.Console.ANSI     as ANSI
+import qualified System.Log.Logger           as HSLogger
+import           System.IO                     (stderr)
+import           System.Console.ANSI         as ANSI
 
 
-import           Control.Monad.State
-import           Control.Monad.Writer
-import           System.Log.Logger       hiding (getLogger, setLevel, Logger)
-import           Prelude                 hiding(log)
+import           Control.Monad.State           
+import           Control.Monad.Writer          
+import           System.Log.Logger           hiding (getLogger, setLevel, Logger)
+import           Prelude                     hiding (log, fail)
+import Control.Applicative
 
 import qualified Flowbox.System.Log.LogEntry as LogEntry
 
@@ -74,14 +75,17 @@ warning = log WARNING
 error :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
 error = log ERROR
 
-critical :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
-critical = log CRITICAL
+--critical :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
+critical msg name = do
+    log CRITICAL msg name
+    fail msg
+    
 
 alert :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
 alert = log ALERT
 
 emergency :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
-emergency = log EMERGENCY
+emergency = log EMERGENCY 
 
 setLevel :: Priority -> String -> IO ()
 setLevel lvl name = updateGlobalLogger name (HSLogger.setLevel lvl)

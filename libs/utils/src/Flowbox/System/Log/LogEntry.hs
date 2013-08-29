@@ -7,7 +7,7 @@
 
 module Flowbox.System.Log.LogEntry where
 
-import           System.Log.Logger       (Priority)
+import           System.Log.Logger   (Priority)
 
 data LogEntry = LogEntry { name     :: String
                          , priority :: Priority

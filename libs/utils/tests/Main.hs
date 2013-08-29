@@ -7,28 +7,28 @@
 
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction #-}
 
-import           Prelude                   hiding (error)
-import           Flowbox.System.Log.Logger   
-import qualified Flowbox.System.Log.Logger as Logger
-import qualified Flowbox.Data.Version      as Version
+import           Prelude                    hiding (error)
+import           Flowbox.System.Log.Logger    
+import qualified Flowbox.System.Log.Logger  as Logger
+import qualified Flowbox.Data.Version       as Version
 
 
-import           Control.Monad.State
-import           Control.Monad.Writer
-import           Control.Monad.RWS 
-import           Control.Monad.Trans.Either
+import           Control.Monad.State          
+import           Control.Monad.Writer         
+import           Control.Monad.RWS            
+import           Control.Monad.Trans.Either   
 
 logger = getLogger "MyApp.BuggyComponent"
 
 test_logger = runLogger $ do
-        logger.debug     $ "debug"
-        logger.info      $ "info"
-        logger.notice    $ "notice"
-        logger.warning   $ "warning"
-        logger.error     $ "error"
-        logger.critical  $ "critical"
-        logger.alert     $ "alert"
-        logger.emergency $ "emergency"
+    logger.debug     $ "debug"
+    logger.info      $ "info"
+    logger.notice    $ "notice"
+    logger.warning   $ "warning"
+    logger.error     $ "error"
+    logger.critical  $ "critical"
+    logger.alert     $ "alert"
+    logger.emergency $ "emergency"
 
 
 

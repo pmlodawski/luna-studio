@@ -29,25 +29,14 @@
 --import qualified Flowbox.System.UniPath                as UniPath
 --import           Flowbox.System.UniPath                  (UniPath)
 ----------------------
---import qualified Flowbox.Luna.Codegen.Hs.Generator  as Gen
---import qualified Flowbox.Luna.Codegen.Hs.AST.Module as Module
 
---import qualified Flowbox.Luna.Parser                as Parser
-
---import           Debug.Trace                          
---import           Data.Either.Utils                    (forceEither)
---import qualified Text.Show.Pretty                   as PP
---import           System.TimeIt                        
+              
 
 
---example :: String
---example = unlines [ "a=1"
---                  ]
 
 
---main :: IO ()
---main = do
---    timeIt main_inner
+
+
 
 
 --main_inner :: IO ()
@@ -68,126 +57,58 @@
 ------------------------------------
 
 
+import           Control.Monad.State                  
+import           Control.Monad.Writer                 
+import           Control.Monad.RWS                    
+import           Control.Monad.Maybe                  
+import           Control.Monad.Trans.Either           
+import           Flowbox.System.Log.Logger            
+import qualified Flowbox.System.Log.Logger          as Logger
+import qualified Flowbox.System.Log.LogEntry        as LogEntry
+import qualified Flowbox.Luna.Codegen.Hs.Generator  as Gen
+import qualified Flowbox.Luna.Codegen.Hs.AST.Module as Module
+import qualified Flowbox.Luna.Parser                as Parser
+import           Debug.Trace                          
+import           Data.Either.Utils                    (forceEither)
+import qualified Text.Show.Pretty                   as PP
 
-import           Control.Monad.State
-import           Control.Monad.Writer
-import           Control.Monad.RWS 
-import           Control.Monad.Trans.Either
-import           System.Log.Logger       hiding (getLogger, setLevel, Logger, log)
-import           Prelude                 hiding(log)
-
---nxt :: String -> State Int String
---nxt a = do
---    b <- get
---    put $ b+1
---    return a
- 
---test :: State Int String
---test = do
---    b <- nxt "ala"
---    return b
-
---test :: StateT Int (Writer [String]) ()
---test = do
---    n <- get
---    tell ["o nie"]
---    tell ["o nie2"]
---    put $ succ n
---    return ()
-
-data LogEntry = LogEntry { name     :: String
-                         , priority :: Priority
-                         , msg      :: String
-                         } deriving (Show)
-
-
-getLogger :: MonadWriter [LogEntry] m => String -> (String -> m()) -> m()
-getLogger name = \f -> f name
-
-
-log :: MonadWriter [LogEntry] m => Priority -> String -> String -> m()
-log pri msg name = tell [LogEntry name pri msg]
-
-debug :: MonadWriter [LogEntry] m => String -> String -> m()
-debug = log DEBUG
+import           Prelude                            hiding (log)
+import           System.TimeIt                        
 
 
 logger = getLogger "Flowbox"
 
---test :: RWS Int [LogEntry] Int ()
-test :: (Enum a, MonadState a m, MonadWriter [LogEntry] m) => EitherT String m ()
-test = do
-    n <- get
-    logger.debug $ "o nie"
-    left "err"
-    put $ succ n
-    return ()
+
+example :: String
+example = unlines [ "1"
+                  ]
+
+--test :: (Enum a, MonadState a m, MonadWriter [LogEntry.LogEntry] m) => MaybeT m ()
+--test = do
+--    n <- get
+--    logger.debug $ "o nie"
+--    --left "err"
+--    fail "oh no"
+--    put $ succ n
+--    return ()
  
 
 main :: IO ()
 main = do
-    let y = runRWS (runEitherT test) 0 0
-    print $ y
+    timeIt main_inner
+
+main_inner :: IO ()
+main_inner = do
+    let 
+        parsed = Parser.parse example
+        ast = forceEither parsed
+        out = runRWS (runMaybeT (Gen.genModule ast)) 0 0
+    --let y = runRWS (runMaybeT test) 0 0
+    putStrLn $ PP.ppShow $ ast
+    putStrLn "\n-----------------"
+    putStrLn $ PP.ppShow $ out
     return ()
 
 
 
-
-
---import           Control.Monad.State                  
-
-
-
---data GenState = GenState { varcount :: Int
---                         } deriving (Show)
-
---empty :: GenState
---empty = GenState 0
-
-
---nxt :: String -> State GenState String
---nxt a = do
---    b <- get
---    --put $ b+1
---    return a
- 
---test :: State GenState String
---test = do
---    b <- genVarName
---    c <- genVarName
---    d <- genVarName
---    return d
-
-
-
---genVarName :: State GenState String
---genVarName = do
---    state <- get
---    let vname = "v''" ++ show (varcount state)
---    put $ state{varcount = 1 + varcount state}
---    return vname
-
-
- 
---main :: IO ()
---main = do
---    print $ runState test empty
---    return ()
-
-
-
-
-
---main :: IO ()
---main = do 
---    --Parser.main
---    putStrLn "------------\n"
---    --putStrLn $ Module.genCode $ DG.generateDefinition HelloWorld.full_manager 100
---    --putStrLn $ Module.genCode $ CG.generateCommonCls "select0"
-
-
---    --let
---    --    builder = Builder.empty { Builder.path = UniPath.fromUnixString("samples/TestProject/build") }
---    --Builder.buildLibrary builder (HelloWorld.workspacelib)
---    return ()
 
