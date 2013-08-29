@@ -36,6 +36,7 @@ Library
         Flowbox.Batch.GraphView.PortDescriptor,
         Flowbox.Batch.GraphView.GraphView,
         Flowbox.Batch.GraphView.EdgeView,
+        Flowbox.Batch.GraphView.Defaults,
         Flowbox.Batch.FileSystem.Item,
         Flowbox.Batch.Project.Project,
         Flowbox.Batch.Project.ProjectManager,
