@@ -8,7 +8,7 @@
 import           Prelude                   hiding (error)
 import           Flowbox.System.Log.Logger   
 import qualified Flowbox.System.Log.Logger as Logger
-import qualified Flowbox.Data.Version      as Version 
+import qualified Flowbox.Data.Version      as Version
 
 
 logger :: Logger
