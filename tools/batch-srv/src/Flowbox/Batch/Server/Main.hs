@@ -9,10 +9,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 --import Data.List
+import           Control.Monad                              ( when )
 import           Data.IORef                                 
+import           Data.Text.Lazy                             (pack)
 import qualified Network                                  as Network
 import           Network                                    (PortNumber)
-import qualified System.IO as IO
+import qualified System.IO                                as IO
+import           System.Exit                                
 --import System.Environment(getArgs)
 
 
@@ -20,7 +23,7 @@ import qualified System.IO as IO
 --import Thrift
 --import Thrift.Transport.Handle 
 --import Thrift.Protocol
-import           Thrift.Protocol.Binary                     (BinaryProtocol(..))
+import           Thrift.Protocol.Binary                     (BinaryProtocol(..), readMessageBegin)
 import qualified Thrift.Server                            as Server
 
 -- Generated files
@@ -61,7 +64,7 @@ newBatchHandler = newIORef $ Batch.empty { Batch.projectManager = ProjectManager
                                                                                                 ] []
                                          }
 
- 
+
 instance Batch_Iface BatchHandler where
     projects            = HProjects.projects
     projectByID         = HProjects.projectByID
@@ -123,17 +126,28 @@ instance Batch_Iface BatchHandler where
         scriptIO $ print batch
 
 
+process2 cont handler (iprot, oprot) = do
+  (name, typ, seqid) <- readMessageBegin iprot
+  TBatch.proc_ handler (iprot,oprot) (name,typ,seqid)
+  if name /= pack "ping"
+    then return True
+    else do writeIORef cont False
+            return False
+
 main :: IO ()
 main = do
     logger.setLevel $ DEBUG
     handler <- newBatchHandler
+    cont    <- newIORef True
     logger.info $ "Starting the server"
-    _ <- Server.runThreadedServer accepter handler TBatch.process (Network.PortNumber port)
+    _ <- Server.runThreadedServer (accepter cont) handler (process2 cont) (Network.PortNumber port)
     logger.info $ "done"
 
 
-accepter :: Network.Socket -> IO (BinaryProtocol IO.Handle, BinaryProtocol IO.Handle)
-accepter s = do
+--accepter :: Network.Socket -> IO (BinaryProtocol IO.Handle, BinaryProtocol IO.Handle)
+accepter cont s = do
+    c <- readIORef cont
+    when (not c) exitSuccess
     (h, addr, p) <- Network.accept s
     logger.info $ "Accepted connection from " ++ addr ++ " : " ++ (show p)
     return (BinaryProtocol h, BinaryProtocol h)
