@@ -91,7 +91,7 @@ generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
                                            cvtx:_ -> Expr.VarRef cvtx
                                            _      -> error "Too many inputs to node 'Outputs'"
 
-        Node.Default d          -> (Expr.Default val, Expr.Pure) where 
+        Node.Default d _        -> (Expr.Default val, Expr.Pure) where 
                                        val = case d of
                                            DefaultValue.DefaultString v -> show v
                                            DefaultValue.DefaultInt    v -> show v ++ " :: Int"

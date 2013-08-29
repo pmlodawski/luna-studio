@@ -21,6 +21,7 @@ import qualified Flowbox.Luna.Lib.Library                as Library
 import           Flowbox.Luna.Lib.Library                  (Library(..))
 import           Flowbox.Luna.Type.Type                    (Type(..))
 import qualified Flowbox.Luna.Type.Type                  as Type
+import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
@@ -98,7 +99,7 @@ func_vec_incx_graph = Graph.insEdges [
                              (2,  Node.mkNTuple             ),
                              (3,  Node.mkCall     "x'getter"),
                              (4,  Node.mkCall     "select0" ),
-                             (5,  Node.Default $ DefaultValue.DefaultInt 1),
+                             (5,  Node.Default (DefaultValue.DefaultInt 1) Attributes.empty),
                              (6,  Node.mkNTuple             ),
                              (7,  Node.mkCall     "add"     ),
                              (8,  Node.mkCall     "select0" ),

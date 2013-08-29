@@ -137,16 +137,29 @@ int main(int argc, char **argv) {
         batch.addNode(dummy2, dummy2, fun.defID, userlib.libID, proj.projectID);
         
         try {
-            batch.connect(inputs.nodeID, {4, 9, 2}, dummy2.nodeID, {4,5,9}, fun.defID, userlib.libID, proj.projectID);
+            batch.connect(inputs.nodeID, {0, 0, 0}, dummy2.nodeID, {4,5,9}, fun.defID, userlib.libID, proj.projectID);
         } catch (ArgumentException e) {
             cout << "Unable to connect: "<< "\t" << e.message << endl;
         }
         
         batch.connect(inputs.nodeID, {6, 9}, dummy2.nodeID, {}, fun.defID, userlib.libID, proj.projectID);
+    
+        try {
+            batch.connect(inputs.nodeID, {0, 0, 0}, dummy2.nodeID, {1}, fun.defID, userlib.libID, proj.projectID);
+        } catch (ArgumentException e) {
+            cout << "Unable to connect: "<< "\t" << e.message << endl;
+        }
+
         batch.connect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID, proj.projectID);
         batch.connect(inputs.nodeID, {7, 8}, outputs.nodeID, {5}, fun.defID, userlib.libID, proj.projectID);
-        batch.disconnect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID, proj.projectID);
-        batch.dump();
+
+        try {
+            batch.connect(inputs.nodeID, {0, 0, 0}, outputs.nodeID, {}, fun.defID, userlib.libID, proj.projectID);
+        } catch (ArgumentException e) {
+            cout << "Unable to connect: "<< "\t" << e.message << endl;
+        }
+
+        batch.disconnect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {5}, fun.defID, userlib.libID, proj.projectID);
         batch.nodesGraph(graph, fun.defID, userlib.libID, proj.projectID);
         
         /* Default values */
@@ -161,15 +174,18 @@ int main(int argc, char **argv) {
         dv2.__set_i(4);
 
         map<PortDescriptor, DefaultValue> defaults;
-        batch.nodeDefaults(defaults, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
+        batch.nodeDefaults(defaults, outputs.nodeID, fun.defID, userlib.libID, proj.projectID);
         cout << "Node has " << defaults.size() << " defaults" << endl;
-        batch.setNodeDefault({1}, dv, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
-        batch.setNodeDefault({2}, dv2, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
-        batch.nodeDefaults(defaults, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
+        batch.setNodeDefault({1}, dv, outputs.nodeID, fun.defID, userlib.libID, proj.projectID);
+        batch.setNodeDefault({2}, dv2, outputs.nodeID, fun.defID, userlib.libID, proj.projectID);
+        batch.setNodeDefault({3}, dv2, outputs.nodeID, fun.defID, userlib.libID, proj.projectID);
+        batch.nodeDefaults(defaults, outputs.nodeID, fun.defID, userlib.libID, proj.projectID);
         cout << "Node has " << defaults.size() << " defaults" << endl;
-        batch.removeNodeDefault({1}, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
-        batch.nodeDefaults(defaults, dummy2.nodeID, fun.defID, userlib.libID, proj.projectID);
+        batch.removeNodeDefault({2}, outputs.nodeID, fun.defID, userlib.libID, proj.projectID);
+        batch.nodeDefaults(defaults, outputs.nodeID, fun.defID, userlib.libID, proj.projectID);
         cout << "Node has " << defaults.size() << " defaults" << endl;
+        
+        batch.dump();
 
         /* Loading and unloading */
 
@@ -185,7 +201,6 @@ int main(int argc, char **argv) {
         batch.libraries(registeredLibs, proj.projectID);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
 
-        batch.dump();
         batch.ping();
 
         for(auto lib : registeredLibs)

@@ -64,7 +64,7 @@ myFunGraph = Graph.insEdges [
                              (4,  Node.mkCall     "select0" ),
                              (5,  Node.mkType     "String"  ),
                              (6,  Node.mkNew                ),
-                             (7,  Node.Default $ DefaultValue.DefaultString "hello world!"),
+                             (7,  Node.Default (DefaultValue.DefaultString "hello world!") Attributes.empty),
                              (8,  Node.mkNTuple             ),
                              (9,  Node.mkCall     "init"    ),
                              (10, Node.mkCall     "select0" ),
@@ -190,7 +190,7 @@ func_vec_incx_graph = Graph.insEdges [
                              (2,  Node.mkNTuple             ),
                              (3,  Node.mkCall     "x'getter"),
                              (4,  Node.mkCall     "select0" ),
-                             (5,  Node.Default $ DefaultValue.DefaultInt 1),
+                             (5,  Node.Default (DefaultValue.DefaultInt 1) Attributes.empty),
                              (6,  Node.mkNTuple             ),
                              (7,  Node.mkCall     "add"     ),
                              (8,  Node.mkCall     "select0" ),
@@ -224,7 +224,7 @@ myFunGraph5 = Graph.insEdges [
                              (1,  Node.mkOutputs            ),
                              (2,  Node.mkType     "Console" ),
                              (3,  Node.mkNew                ),
-                             (4,  Node.Default $ DefaultValue.DefaultString "hello world!"),
+                             (4,  Node.Default (DefaultValue.DefaultString "hello world!") Attributes.empty),
                              (5,  Node.mkNTuple             ),
                              (6,  Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty)
                             ]
@@ -303,7 +303,7 @@ func_main1_graph = Graph.insEdges [
                              (1,  Node.mkOutputs            ),
                              (2,  Node.mkType     "Console" ),
                              (3,  Node.mkNew                ),
-                             (4,  Node.Default $ DefaultValue.DefaultString "hello world!"),
+                             (4,  Node.Default (DefaultValue.DefaultString "hello world!") Attributes.empty),
                              (5,  Node.mkNTuple             ),
                              (6,  Node.Call       "print"   Flags.empty{Flags.io=True} Attributes.empty)
                             ]

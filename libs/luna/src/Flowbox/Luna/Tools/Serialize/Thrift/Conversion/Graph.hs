@@ -30,7 +30,7 @@ import           Flowbox.Luna.Network.Graph.Edge                        (Edge(..
 import qualified Flowbox.Luna.Network.Graph.Graph                     as Graph
 import           Flowbox.Luna.Network.Graph.Graph                       (Graph)
 import qualified Flowbox.Luna.Network.Graph.Node                      as Node
-import           Flowbox.Luna.Network.Graph.Node                        (Node)
+import           Flowbox.Luna.Network.Graph.Node                        (Node(..))
 import           Flowbox.Tools.Conversion                               
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
 
@@ -123,6 +123,7 @@ instance Convert (Int, Node) TGraph.Node where
                    Node.Tuple {}   -> TGraph.Tuple
                    Node.NTuple {}  -> TGraph.NTuple
                    Node.New {}     -> TGraph.New
+
       nodeName :: Maybe Text.Text
       nodeName = fmap Text.pack $ case a of
                    Node.Type tname _ _ -> Just tname
@@ -130,33 +131,27 @@ instance Convert (Int, Node) TGraph.Node where
                    _                   -> Nothing
       nodeID :: Int32
       nodeID = itoi32 nid
+
       nodeFlags :: Maybe TAttrs.Flags
       nodeFlags = fmap encode $ case a of
-                   Node.Type  _ flags _ -> Just flags
-                   Node.Call  _ flags _ -> Just flags
-                   Node.Inputs  flags _ -> Just flags
-                   Node.Outputs flags _ -> Just flags
-                   Node.Tuple   flags _ -> Just flags
-                   Node.NTuple   flags _ -> Just flags
-                   Node.New     flags _ -> Just flags
+                   Node.Type  _ aflags _ -> Just aflags
+                   Node.Call  _ aflags _ -> Just aflags
+                   Node.Inputs  aflags _ -> Just aflags
+                   Node.Outputs aflags _ -> Just aflags
+                   Node.Tuple   aflags _ -> Just aflags
+                   Node.NTuple  aflags _ -> Just aflags
+                   Node.New     aflags _ -> Just aflags
                    _                    -> Nothing
-      nodeAttrs :: Maybe TAttrs.Attributes
-      nodeAttrs = fmap encode $ case a of
-                   Node.Type  _ _ attrs -> Just attrs
-                   Node.Call  _ _ attrs -> Just attrs
-                   Node.Inputs  _ attrs -> Just attrs
-                   Node.Outputs _ attrs -> Just attrs
-                   Node.Tuple   _ attrs -> Just attrs
-                   Node.NTuple   _ attrs -> Just attrs
-                   Node.New     _ attrs -> Just attrs
-                   _                    -> Nothing
+
+      nodeAttrs :: TAttrs.Attributes
+      nodeAttrs = encode $ Node.attributes a
 
       defValue :: Maybe TGraph.DefaultValue
       defValue = fmap encode $ case a of
-                   Node.Default val -> Just val
-                   _                -> Nothing
+                   Node.Default val _ -> Just val
+                   _                  -> Nothing
     in
-      TGraph.Node (Just nodeType) nodeName (Just nodeID) nodeFlags nodeAttrs defValue
+      TGraph.Node (Just nodeType) nodeName (Just nodeID) nodeFlags (Just nodeAttrs) defValue
   decode b =
     let
       gname = case TGraph.f_Node_name b of
@@ -187,18 +182,19 @@ instance Convert (Int, Node) TGraph.Node where
             Just ntype ->
               case ntype of
                 TGraph.Type -> do
-                  ggname <- gname
+                  ggname  <- gname
                   ggflags <- gflags
                   ggattrs <- gattrs
                   Right $ Node.Type ggname ggflags ggattrs
                 TGraph.Call -> do
-                  ggname <- gname
+                  ggname  <- gname
                   ggflags <- gflags
                   ggattrs <- gattrs
                   Right $ Node.Call ggname ggflags ggattrs
                 TGraph.Default -> do
                   ggdefval <- gdefval
-                  Right $ Node.Default ggdefval
+                  ggattrs  <- gattrs
+                  Right $ Node.Default ggdefval ggattrs
                 TGraph.New -> do
                   ggflags <- gflags
                   ggattrs <- gattrs

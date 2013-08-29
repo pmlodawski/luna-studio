@@ -27,12 +27,12 @@ import           Flowbox.Luna.Network.Attributes           (Attributes)
 
 data Node = Type     { typename :: String, flags :: Flags, attributes :: Attributes }
           | Call     { callname :: String, flags :: Flags, attributes :: Attributes }
-          | Default  { value :: DefaultValue }
-          | Inputs   {flags :: Flags, attributes :: Attributes}
-          | Outputs  {flags :: Flags, attributes :: Attributes}
-          | Tuple    {flags :: Flags, attributes :: Attributes}
-          | NTuple   {flags :: Flags, attributes :: Attributes}
-          | New      {flags :: Flags, attributes :: Attributes}
+          | Default  { value :: DefaultValue, attributes :: Attributes}
+          | Inputs   { flags :: Flags, attributes :: Attributes }
+          | Outputs  { flags :: Flags, attributes :: Attributes }
+          | Tuple    { flags :: Flags, attributes :: Attributes }
+          | NTuple   { flags :: Flags, attributes :: Attributes }
+          | New      { flags :: Flags, attributes :: Attributes }
           
           deriving (Show)
 

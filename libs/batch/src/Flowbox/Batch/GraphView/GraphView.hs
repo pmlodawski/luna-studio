@@ -9,26 +9,36 @@ module Flowbox.Batch.GraphView.GraphView(
     module Flowbox.Luna.Data.Graph,
     GraphView,
     empty,
+    
+    isNotAlreadyConnected,
 
     fromGraph,
     toGraph
 ) where
 
-import           Data.Map                           (Map)
-import qualified Data.Map                         as Map
-import qualified Flowbox.Batch.Batch              as Batch
-import           Flowbox.Batch.GraphView.EdgeView   (EdgeView(..))
-import qualified Flowbox.Luna.Data.Graph          as DG
-import           Flowbox.Luna.Data.Graph          hiding (Graph, Edge, empty, fromGraph)
-import qualified Flowbox.Luna.Network.Graph.Graph as Graph
-import           Flowbox.Luna.Network.Graph.Graph   (Graph)
+import qualified Data.List                               as List
+import           Data.Map                                  (Map)
+import qualified Data.Map                                as Map
+import           Data.Foldable                             (foldrM)
 
-import           Flowbox.Luna.Network.Graph.Edge    (Edge(..))
-import qualified Flowbox.Luna.Network.Graph.Node  as Node
-import           Flowbox.Luna.Network.Graph.Node    (Node(..))
-import qualified Flowbox.Luna.Network.Attributes  as Attributes
-import           Flowbox.Luna.Network.Attributes    (Attributes)
-import qualified Flowbox.Luna.Network.Flags       as Flags
+import qualified Flowbox.Batch.Batch                     as Batch
+import qualified Flowbox.Batch.GraphView.Defaults        as Defaults
+import qualified Flowbox.Batch.GraphView.EdgeView        as EdgeView
+import           Flowbox.Batch.GraphView.EdgeView          (EdgeView(..))
+import           Flowbox.Batch.GraphView.PortDescriptor    (PortDescriptor)
+import qualified Flowbox.Luna.Data.Graph                 as DG
+import           Flowbox.Luna.Data.Graph                 hiding (Graph, Edge, empty, fromGraph)
+import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue)
+import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
+import           Flowbox.Luna.Network.Graph.Graph          (Graph)
+import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
+import qualified Flowbox.Luna.Network.Graph.Node         as Node
+import           Flowbox.Luna.Network.Graph.Node           (Node(..))
+import qualified Flowbox.Luna.Network.Attributes         as Attributes
+import           Flowbox.Luna.Network.Attributes           (Attributes)
+import qualified Flowbox.Luna.Network.Flags              as Flags
+import           Flowbox.Control.Error                     ()
+
 
 
 type GraphView = DG.Graph Node EdgeView
@@ -37,6 +47,19 @@ type GraphView = DG.Graph Node EdgeView
 empty :: GraphView
 empty = DG.empty
 
+
+portMatches :: PortDescriptor -> LEdge EdgeView -> Bool
+portMatches adstPort (_, _, connectedPort) = matches where
+    connectedDstPort = EdgeView.dstPort connectedPort
+    matches = List.isPrefixOf connectedDstPort adstPort
+           || List.isPrefixOf adstPort connectedDstPort
+
+isNotAlreadyConnected :: GraphView -> Node.ID -> PortDescriptor -> Bool
+isNotAlreadyConnected graphview nodeID adstPort = not connected where
+    connected = any (portMatches adstPort) (inn graphview nodeID)
+
+
+------ Conversion to/from Graph --------------------------------------------------------
 
 isGeneratedKey :: String
 isGeneratedKey = "GraphView-generated"
@@ -62,20 +85,22 @@ removeEdges :: DG.Graph a b -> DG.Graph a c
 removeEdges graph = mkGraph (labNodes graph) []
 
 
-connectG :: (Node.ID, Node.ID, EdgeView) -> Graph -> Graph
+connectG :: (Node.ID, Node.ID, EdgeView) -> Graph -> Either String Graph
 connectG (srcNodeID, dstNodeID, EdgeView srcPorts dstPorts) graph = case srcPorts of 
     [] -> case dstPorts of 
-        []         -> Graph.insEdge (srcNodeID, dstNodeID, Edge 0       ) graph
-        [adstPort] -> Graph.insEdge (srcNodeID, tupleID  , Edge adstPort) graphT where
-            (tupleID, graphT) = case prel graph dstNodeID of 
-                []                             -> (newTupleID, newGraphT) where
-                    [newTupleID] = Graph.newNodes 1 graph
-                    newTupleNode = NTuple Flags.empty generatedAttrs
-                    newGraphT    = Graph.insEdge (tupleID, dstNodeID, Edge 0)
-                                 $ Graph.insNode (tupleID, newTupleNode) graph
-                [(existingTupleID, NTuple {})] -> (existingTupleID, graph)
-                _                      -> error "Connect nodes failed"
-        _         -> error "dst port descriptors cannot have lenght greater than 1."
+        []         -> Right $ Graph.insEdge (srcNodeID, dstNodeID, Edge 0) graph
+        [adstPort] -> do 
+            (tupleID, graphT) <- case prel graph dstNodeID of 
+                []                             -> do
+                            let [newTupleID] = Graph.newNodes 1 graph
+                                newTupleNode = NTuple Flags.empty generatedAttrs
+                                newGraphT    = Graph.insEdge (newTupleID, dstNodeID, Edge 0)
+                                             $ Graph.insNode (newTupleID, newTupleNode) graph
+                            return (newTupleID, newGraphT)
+                [(existingTupleID, NTuple {})] -> Right (existingTupleID, graph)
+                _                              -> Left "Connect nodes failed"
+            return $ Graph.insEdge (srcNodeID, tupleID  , Edge adstPort) graphT
+        _         -> Left "dst port descriptors cannot have lenght greater than 1."
     _ -> connectG (selectID, dstNodeID, EdgeView srcPortsTail dstPorts) newGraph where
         srcPortsHead = head srcPorts
         srcPortsTail = tail srcPorts
@@ -85,10 +110,33 @@ connectG (srcNodeID, dstNodeID, EdgeView srcPorts dstPorts) graph = case srcPort
                  $ Graph.insNode (selectID, selectNode) graph
 
 
-toGraph :: GraphView -> Graph
-toGraph graphv = graph where
-    graphN = removeEdges graphv
-    graph = foldr (connectG) graphN $ labEdges graphv
+
+addNodeDefaults :: GraphView -> (Node.ID, Node) -> Graph -> Either String Graph
+addNodeDefaults graphview (nodeID, node) graph = do
+
+    let 
+        addNodeDefault :: (PortDescriptor, DefaultValue) -> Graph -> Either String Graph
+        addNodeDefault (adstPort, defaultValue) g = do
+            if isNotAlreadyConnected graphview nodeID adstPort
+                then do let (newG1, defaultNodeID) = Graph.insNewNode (Default defaultValue generatedAttrs) g
+                        connectG (defaultNodeID, nodeID, EdgeView [] adstPort) newG1
+                else Right g
+
+    let defaultsMap = Defaults.getDefaults node
+    foldrM addNodeDefault graph $ Map.toList defaultsMap
+
+
+addNodesDefaults :: GraphView -> Graph -> Either String Graph
+addNodesDefaults graphview graphWithoutDefaults = 
+    foldrM (addNodeDefaults graphview) graphWithoutDefaults (labNodes graphWithoutDefaults)
+
+
+toGraph :: GraphView -> Either String Graph
+toGraph graphview = do
+    let graphWithoutEdges = removeEdges graphview
+    graphWithoutDefaults <- foldrM (connectG) graphWithoutEdges $ labEdges graphview
+    graph                <- addNodesDefaults graphview graphWithoutDefaults 
+    return graph
 
 
 graph2graphView :: Graph -> GraphView
@@ -104,17 +152,15 @@ graph2graphView graph = graphv where
     graphv = mkGraph anodes aedges
 
 
-fromGraph :: Graph -> GraphView
-fromGraph graph = graphv where
-    graphC = graph2graphView graph
-    graphv = foldr (delGenerated) graphC $ labNodes graphC
+fromGraph :: Graph -> Either String GraphView
+fromGraph graph = do
+    let graphC = graph2graphView graph
+    foldrM (delGenerated) graphC $ labNodes graphC
 
 
 getBatchAttrs :: Node -> Maybe (Map String String)
-getBatchAttrs node = case node of
-    Default {} -> Nothing
-    _          -> Map.lookup Batch.attributeKey attrs where
-                  attrs = Node.attributes node
+getBatchAttrs node = Map.lookup Batch.attributeKey attrs where
+    attrs = Node.attributes node
                   
 
 isGenerated :: Node -> Bool
@@ -132,21 +178,21 @@ selectNo node = do
     return $ read num
 
 
-delGenerated :: (Node.ID, Node) -> GraphView -> GraphView
+delGenerated :: (Node.ID, Node) -> GraphView -> Either String GraphView
 delGenerated (nodeID, node) graph = case isGenerated node of 
-    False -> graph
+    False -> Right graph
     True  -> case node of 
-        NTuple {} -> case (inn graph nodeID, suc graph nodeID) of
-            (inEdges, [adst])
-                -> delNode nodeID 
-                $ insEdges newEdges graph where 
-                    newEdges = map (\(asrc, _, ev) -> (asrc, adst, ev)) inEdges
-            _ -> error "Batch attributes mismatch - incorrectly connected NTuple"
-        _         -> case (selectNo node, inn graph nodeID, out graph nodeID) of 
+        NTuple {}  -> case (inn graph nodeID, suc graph nodeID) of
+            (inEdges, [adst]) -> Right $ delNode nodeID
+                               $ insEdges newEdges graph where 
+                                    newEdges = map (\(asrc, _, ev) -> (asrc, adst, ev)) inEdges
+            _ -> Left "Batch attributes mismatch - incorrectly connected NTuple"
+        Default {} -> Right $ delNode nodeID graph
+        _          -> case (selectNo node, inn graph nodeID, out graph nodeID) of 
             (Just num, [(asrc, _, EdgeView isrcPort _)], [(_, adst, EdgeView osrcPort odstPort)])
-                -> delNode nodeID 
+                -> Right $ delNode nodeID 
                  $ insEdge (asrc, adst, EdgeView (isrcPort ++ [num] ++ osrcPort) odstPort) graph
-            _   -> error "Batch attributes mismatch - incorrectly connected Select"
+            _   -> Left "Batch attributes mismatch - incorrectly connected Select"
 
 
 
