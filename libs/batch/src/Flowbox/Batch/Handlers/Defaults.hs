@@ -16,6 +16,7 @@ import qualified Data.Map                                as Map
 
 import qualified Flowbox.Batch.Batch                     as Batch
 import           Flowbox.Batch.Batch                       (Batch(..))
+import           Flowbox.Batch.GraphView.PortDescriptor    (PortDescriptor)
 import           Flowbox.Batch.Handlers.Common             (noresult, readonly, nodeOp)
 import qualified Flowbox.Batch.Project.Project           as Project
 import qualified Flowbox.Luna.Lib.Library                as Library
@@ -26,10 +27,11 @@ import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node)
 
 
+
 defaultsMapKey :: String
 defaultsMapKey = "Defaults-map"
 
-type DefaultsMap = Map [Int] DefaultValue
+type DefaultsMap = Map PortDescriptor DefaultValue
 
 
 getDefaults :: Node -> DefaultsMap
@@ -58,7 +60,7 @@ nodeDefaults nodeID defID libID projectID  = readonly . nodeOp nodeID defID libI
     in Right (node, defaults))
 
 
-setNodeDefault :: [Int] -> DefaultValue
+setNodeDefault :: PortDescriptor -> DefaultValue
                -> Node.ID -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
 setNodeDefault dstPort value nodeID defID libID projectID = 
     noresult . nodeOp nodeID defID libID projectID (\_ node -> let 
@@ -68,7 +70,7 @@ setNodeDefault dstPort value nodeID defID libID projectID =
         in Right (newNode, ()))
 
 
-removeNodeDefault :: [Int]
+removeNodeDefault :: PortDescriptor
                   -> Node.ID -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
 removeNodeDefault dstPort nodeID defID libID projectID = 
     noresult . nodeOp nodeID defID libID projectID (\_ node -> let 

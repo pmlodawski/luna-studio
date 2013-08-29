@@ -23,10 +23,10 @@ Library
   Exposed-modules: 
         Flowbox.Tools.Conversion,
         Flowbox.Control.Error,
-        Flowbox.System.Directory,
         Flowbox.System.UniPath,
-        Flowbox.System.IO.Serializer,
+        Flowbox.System.Directory,
         Flowbox.System.IO.IO,
+        Flowbox.System.IO.Serializer,
         Flowbox.System.Log.Logger
 
   Build-Depends:  base,
