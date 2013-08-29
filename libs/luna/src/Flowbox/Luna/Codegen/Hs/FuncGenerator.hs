@@ -49,57 +49,58 @@ generateFunction def m = (func, nmod) where
 
 
 generateNodeExpr :: Graph -> Graph.LVertex Node -> (Function, Module) -> (Function, Module)
-generateNodeExpr graph lnode (func, m) = (nfunc, nmod) where
-    block  = Function.body func
-    nblock = Expr.addExpr expr block
-    nfunc  = Function.setBody nblock func
+generateNodeExpr graph lnode (func, m) = undefined -- TODO [PM] Compatibility after removal of Call, Type and New
+--(nfunc, nmod) where
+--    block  = Function.body func
+--    nblock = Expr.addExpr expr block
+--    nfunc  = Function.setBody nblock func
 
           
-    (nid, node) = lnode
-    expr  = Expr.Assignment src value ctx 
-    src   = case node of
-        Node.Outputs {}         -> Expr.Var Path.outputs
-        _                       -> Expr.VarRef nid
+--    (nid, node) = lnode
+--    expr  = Expr.Assignment src value ctx 
+--    src   = case node of
+--        Node.Outputs {}         -> Expr.Var Path.outputs
+--        _                       -> Expr.VarRef nid
 
-    (value, ctx) = case node of
-        Node.New _ _            -> (Expr.VarRef cvtx, Expr.Pure) where
-                                       cvtx:_ = Graph.innvtx graph nid
-                                       -- TODO[wd] exception when too many inputs
+--    (value, ctx) = case node of
+--        Node.New _ _            -> (Expr.VarRef cvtx, Expr.Pure) where
+--                                       cvtx:_ = Graph.innvtx graph nid
+--                                       -- TODO[wd] exception when too many inputs
 
-        Node.Type name _ _      -> (Expr.Var name, Expr.Pure)
+--        Node.Type name _ _      -> (Expr.Var name, Expr.Pure)
 
-        Node.Tuple _ _          -> (Expr.Tuple args, Expr.Pure) where
-                                       vtxs = Graph.innvtx graph nid
-                                       args = map Expr.VarRef vtxs
+--        Node.Tuple _ _          -> (Expr.Tuple args, Expr.Pure) where
+--                                       vtxs = Graph.innvtx graph nid
+--                                       args = map Expr.VarRef vtxs
 
-        Node.NTuple _ _         -> (Expr.NTuple args, Expr.Pure) where
-                                       vtxs = Graph.innvtx graph nid
-                                       args = map Expr.VarRef vtxs
+--        Node.NTuple _ _         -> (Expr.NTuple args, Expr.Pure) where
+--                                       vtxs = Graph.innvtx graph nid
+--                                       args = map Expr.VarRef vtxs
 
-        Node.Call name flags _  -> (Expr.Call name' args cctx, cctx) where
-                                       name' = Path.mkFuncName name
-                                       vtxs  = Graph.innvtx graph nid
-                                       args  = map Expr.VarRef vtxs
-                                       cctx  = if Flags.io flags
-                                           then Expr.IO
-                                           else Expr.Pure
+--        Node.Call name flags _  -> (Expr.Call name' args cctx, cctx) where
+--                                       name' = Path.mkFuncName name
+--                                       vtxs  = Graph.innvtx graph nid
+--                                       args  = map Expr.VarRef vtxs
+--                                       cctx  = if Flags.io flags
+--                                           then Expr.IO
+--                                           else Expr.Pure
 
-        Node.Inputs  _ _        -> (Expr.Var Path.inputs, Expr.Pure)
-        Node.Outputs _ _        -> (expr, Expr.Pure) where
-                                       expr = case Graph.innvtx graph nid of
-                                           []     -> Expr.Tuple []
-                                           cvtx:_ -> Expr.VarRef cvtx
-                                           _      -> error "Too many inputs to node 'Outputs'"
+--        Node.Inputs  _ _        -> (Expr.Var Path.inputs, Expr.Pure)
+--        Node.Outputs _ _        -> (expr, Expr.Pure) where
+--                                       expr = case Graph.innvtx graph nid of
+--                                           []     -> Expr.Tuple []
+--                                           cvtx:_ -> Expr.VarRef cvtx
+--                                           _      -> error "Too many inputs to node 'Outputs'"
 
-        Node.Default d _        -> (Expr.Default val, Expr.Pure) where 
-                                       val = case d of
-                                           DefaultValue.DefaultString v -> show v
-                                           DefaultValue.DefaultInt    v -> show v ++ " :: Int"
+--        Node.Default d _        -> (Expr.Default val, Expr.Pure) where 
+--                                       val = case d of
+--                                           DefaultValue.DefaultString v -> show v
+--                                           DefaultValue.DefaultInt    v -> show v ++ " :: Int"
 
-    nmod = case node of 
-        Node.Call name _ _  -> Module.addImport (Import.common name)
-                             $ m
-        _                   -> m
+--    nmod = case node of 
+--        Node.Call name _ _  -> Module.addImport (Import.common name)
+--                             $ m
+--        _                   -> m
 
 
 

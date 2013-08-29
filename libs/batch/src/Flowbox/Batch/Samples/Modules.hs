@@ -95,16 +95,16 @@ func_vec_incx_graph = Graph.insEdges [
                              ]
 
            $ Graph.insNodes [(0,  Node.mkInputs             ),
-                             (1,  Node.mkCall     "select0" ),
+                             (1,  Node.mkExpr     "select0" ),
                              (2,  Node.mkNTuple             ),
-                             (3,  Node.mkCall     "x'getter"),
-                             (4,  Node.mkCall     "select0" ),
+                             (3,  Node.mkExpr     "x'getter"),
+                             (4,  Node.mkExpr     "select0" ),
                              (5,  Node.Default (DefaultValue.DefaultInt 1) Attributes.empty),
                              (6,  Node.mkNTuple             ),
-                             (7,  Node.mkCall     "add"     ),
-                             (8,  Node.mkCall     "select0" ),
+                             (7,  Node.mkExpr     "add"     ),
+                             (8,  Node.mkExpr     "select0" ),
                              (9,  Node.mkNTuple             ),
-                             (10, Node.mkCall     "x'setter"),
+                             (10, Node.mkExpr     "x'setter"),
                              (11, Node.mkOutputs            )
                             ]
            $ Graph.empty
@@ -120,7 +120,7 @@ func_vec_incx = Definition.empty{ Definition.cls   = (Type.Function "incx" func_
                       }
 
 emptyStdLibrary :: Library
-emptyStdLibrary = Library.make "std"           $ UniPath.fromUnixString "dummylibs/stdlib.lunalib"
+emptyStdLibrary = Library.make "std" $ UniPath.fromUnixString "dummylibs/stdlib.lunalib"
     
      
 userLibrary :: Library

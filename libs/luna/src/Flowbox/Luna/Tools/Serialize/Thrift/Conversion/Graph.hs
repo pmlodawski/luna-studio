@@ -115,33 +115,29 @@ instance Convert (Int, Node) TGraph.Node where
     let
       nodeType :: TGraph.NodeType
       nodeType = case a of
-                   Node.Type {}    -> TGraph.Type
-                   Node.Call {}    -> TGraph.Call
+                   Node.Expr    {} -> TGraph.Expr
                    Node.Default {} -> TGraph.Default
-                   Node.Inputs {}  -> TGraph.Inputs
+                   Node.Inputs  {} -> TGraph.Inputs
                    Node.Outputs {} -> TGraph.Outputs
-                   Node.Tuple {}   -> TGraph.Tuple
-                   Node.NTuple {}  -> TGraph.NTuple
-                   Node.New {}     -> TGraph.New
+                   Node.Tuple   {} -> TGraph.Tuple
+                   Node.NTuple  {} -> TGraph.NTuple
 
-      nodeName :: Maybe Text.Text
-      nodeName = fmap Text.pack $ case a of
-                   Node.Type tname _ _ -> Just tname
-                   Node.Call cname _ _ -> Just cname
-                   _                   -> Nothing
+      nodeExpression :: Maybe Text.Text
+      nodeExpression = fmap Text.pack $ case a of
+                   Node.Expr texpression _ _ -> Just texpression
+                   _                         -> Nothing
+
       nodeID :: Int32
       nodeID = itoi32 nid
 
       nodeFlags :: Maybe TAttrs.Flags
       nodeFlags = fmap encode $ case a of
-                   Node.Type  _ aflags _ -> Just aflags
-                   Node.Call  _ aflags _ -> Just aflags
+                   Node.Expr  _ aflags _ -> Just aflags
                    Node.Inputs  aflags _ -> Just aflags
                    Node.Outputs aflags _ -> Just aflags
                    Node.Tuple   aflags _ -> Just aflags
                    Node.NTuple  aflags _ -> Just aflags
-                   Node.New     aflags _ -> Just aflags
-                   _                    -> Nothing
+                   _                     -> Nothing
 
       nodeAttrs :: TAttrs.Attributes
       nodeAttrs = encode $ Node.attributes a
@@ -151,11 +147,11 @@ instance Convert (Int, Node) TGraph.Node where
                    Node.Default val _ -> Just val
                    _                  -> Nothing
     in
-      TGraph.Node (Just nodeType) nodeName (Just nodeID) nodeFlags (Just nodeAttrs) defValue
+      TGraph.Node (Just nodeType) nodeExpression (Just nodeID) nodeFlags (Just nodeAttrs) defValue
   decode b =
     let
-      gname = case TGraph.f_Node_name b of
-                  Just nname -> Right $ Text.unpack nname
+      gnexpression = case TGraph.f_Node_expression b of
+                  Just nexpression -> Right $ Text.unpack nexpression
                   Nothing    -> Left "Node name not defined"
 
       gID = case TGraph.f_Node_nodeID b of
@@ -181,24 +177,15 @@ instance Convert (Int, Node) TGraph.Node where
       gnode =  case TGraph.f_Node_cls b of
             Just ntype ->
               case ntype of
-                TGraph.Type -> do
-                  ggname  <- gname
+                TGraph.Expr -> do
+                  ggexpression  <- gnexpression
                   ggflags <- gflags
                   ggattrs <- gattrs
-                  Right $ Node.Type ggname ggflags ggattrs
-                TGraph.Call -> do
-                  ggname  <- gname
-                  ggflags <- gflags
-                  ggattrs <- gattrs
-                  Right $ Node.Call ggname ggflags ggattrs
+                  Right $ Node.Expr ggexpression ggflags ggattrs
                 TGraph.Default -> do
                   ggdefval <- gdefval
                   ggattrs  <- gattrs
                   Right $ Node.Default ggdefval ggattrs
-                TGraph.New -> do
-                  ggflags <- gflags
-                  ggattrs <- gattrs
-                  Right $ Node.New ggflags ggattrs
                 TGraph.Inputs -> do
                   ggflags <- gflags
                   ggattrs <- gattrs

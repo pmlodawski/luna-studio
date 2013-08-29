@@ -28,14 +28,12 @@ extern const std::map<int, const char*> _DefaultValueType_VALUES_TO_NAMES;
 
 struct NodeType {
   enum type {
-    Type = 0,
-    Call = 1,
-    Default = 2,
-    New = 3,
-    Inputs = 4,
-    Outputs = 5,
-    Tuple = 6,
-    NTuple = 7
+    Expr = 0,
+    Default = 1,
+    Inputs = 2,
+    Outputs = 3,
+    Tuple = 4,
+    NTuple = 5
   };
 };
 
@@ -108,9 +106,9 @@ class DefaultValue {
 void swap(DefaultValue &a, DefaultValue &b);
 
 typedef struct _Node__isset {
-  _Node__isset() : cls(false), name(true), nodeID(true), flags(true), attrs(true), defVal(true) {}
+  _Node__isset() : cls(false), expression(true), nodeID(true), flags(true), attrs(true), defVal(true) {}
   bool cls;
-  bool name;
+  bool expression;
   bool nodeID;
   bool flags;
   bool attrs;
@@ -123,7 +121,7 @@ class Node {
   static const char* ascii_fingerprint; // = "43F200EE3F1FC1EF3015F9446E707ADF";
   static const uint8_t binary_fingerprint[16]; // = {0x43,0xF2,0x00,0xEE,0x3F,0x1F,0xC1,0xEF,0x30,0x15,0xF9,0x44,0x6E,0x70,0x7A,0xDF};
 
-  Node() : cls((NodeType::type)0), name(""), nodeID(-1) {
+  Node() : cls((NodeType::type)0), expression(""), nodeID(-1) {
 
 
 
@@ -132,7 +130,7 @@ class Node {
   virtual ~Node() throw() {}
 
   NodeType::type cls;
-  std::string name;
+  std::string expression;
   NodeID nodeID;
    ::flowbox::batch::attrs::Flags flags;
    ::flowbox::batch::attrs::Attributes attrs;
@@ -145,9 +143,9 @@ class Node {
     __isset.cls = true;
   }
 
-  void __set_name(const std::string& val) {
-    name = val;
-    __isset.name = true;
+  void __set_expression(const std::string& val) {
+    expression = val;
+    __isset.expression = true;
   }
 
   void __set_nodeID(const NodeID val) {
@@ -176,9 +174,9 @@ class Node {
       return false;
     else if (__isset.cls && !(cls == rhs.cls))
       return false;
-    if (__isset.name != rhs.__isset.name)
+    if (__isset.expression != rhs.__isset.expression)
       return false;
-    else if (__isset.name && !(name == rhs.name))
+    else if (__isset.expression && !(expression == rhs.expression))
       return false;
     if (__isset.nodeID != rhs.__isset.nodeID)
       return false;

@@ -124,16 +124,16 @@ int main(int argc, char **argv) {
         batch.updateNode(outputs, fun.defID, userlib.libID, proj.projectID);
 
         Node dummy;
-        dummy.__set_cls(NodeType::Call);
-        dummy.__set_name("dummy");
+        dummy.__set_cls(NodeType::Expr);
+        dummy.__set_expression("dummy");
         batch.addNode(dummy, dummy, fun.defID, userlib.libID, proj.projectID);
-        dummy.__set_name("fun");
+        dummy.__set_expression("fun");
         batch.updateNode(dummy, fun.defID, userlib.libID, proj.projectID);
         batch.removeNode(dummy.nodeID, fun.defID, userlib.libID, proj.projectID);
 
         Node dummy2;
-        dummy2.__set_cls(NodeType::Call);
-        dummy2.__set_name("dummy2");
+        dummy2.__set_cls(NodeType::Expr);
+        dummy2.__set_expression("dummy2");
         batch.addNode(dummy2, dummy2, fun.defID, userlib.libID, proj.projectID);
         
         try {
@@ -190,7 +190,9 @@ int main(int argc, char **argv) {
         /* Loading and unloading */
 
         batch.storeLibrary(userlib.libID, proj.projectID);
-        batch.buildLibrary(userlib.libID, proj.projectID);
+        
+        // TODO [PM] Compatibility after removal of Call, Type and New
+        // batch.buildLibrary(userlib.libID, proj.projectID);
 
         batch.libraries(registeredLibs, proj.projectID);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
