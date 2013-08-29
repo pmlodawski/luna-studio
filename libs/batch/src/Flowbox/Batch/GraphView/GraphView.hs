@@ -9,26 +9,32 @@ module Flowbox.Batch.GraphView.GraphView(
     module Flowbox.Luna.Data.Graph,
     GraphView,
     empty,
+    
+    isNotAlreadyConnected,
 
     fromGraph,
     toGraph
 ) where
 
-import           Data.Map                           (Map)
-import qualified Data.Map                         as Map
-import qualified Flowbox.Batch.Batch              as Batch
-import           Flowbox.Batch.GraphView.EdgeView   (EdgeView(..))
-import qualified Flowbox.Luna.Data.Graph          as DG
-import           Flowbox.Luna.Data.Graph          hiding (Graph, Edge, empty, fromGraph)
-import qualified Flowbox.Luna.Network.Graph.Graph as Graph
-import           Flowbox.Luna.Network.Graph.Graph   (Graph)
+import qualified Data.List                              as List
+import           Data.Map                                 (Map)
+import qualified Data.Map                               as Map
+import qualified Flowbox.Batch.Batch                    as Batch
+import qualified Flowbox.Batch.GraphView.EdgeView       as EdgeView
+import           Flowbox.Batch.GraphView.EdgeView         (EdgeView(..))
+import           Flowbox.Batch.GraphView.PortDescriptor   (PortDescriptor)
+import qualified Flowbox.Luna.Data.Graph                as DG
+import           Flowbox.Luna.Data.Graph                hiding (Graph, Edge, empty, fromGraph)
+import qualified Flowbox.Luna.Network.Graph.Graph       as Graph
+import           Flowbox.Luna.Network.Graph.Graph         (Graph)
 
-import           Flowbox.Luna.Network.Graph.Edge    (Edge(..))
-import qualified Flowbox.Luna.Network.Graph.Node  as Node
-import           Flowbox.Luna.Network.Graph.Node    (Node(..))
-import qualified Flowbox.Luna.Network.Attributes  as Attributes
-import           Flowbox.Luna.Network.Attributes    (Attributes)
-import qualified Flowbox.Luna.Network.Flags       as Flags
+import           Flowbox.Luna.Network.Graph.Edge          (Edge(..))
+import qualified Flowbox.Luna.Network.Graph.Node        as Node
+import           Flowbox.Luna.Network.Graph.Node          (Node(..))
+import qualified Flowbox.Luna.Network.Attributes        as Attributes
+import           Flowbox.Luna.Network.Attributes          (Attributes)
+import qualified Flowbox.Luna.Network.Flags             as Flags
+
 
 
 type GraphView = DG.Graph Node EdgeView
@@ -37,6 +43,19 @@ type GraphView = DG.Graph Node EdgeView
 empty :: GraphView
 empty = DG.empty
 
+
+portMatches :: PortDescriptor -> LEdge EdgeView -> Bool
+portMatches adstPort (_, _, connectedPort) = matches where
+    connectedDstPort = EdgeView.dstPort connectedPort
+    matches = List.isPrefixOf connectedDstPort adstPort
+            || List.isPrefixOf adstPort connectedDstPort
+
+isNotAlreadyConnected :: GraphView -> Node.ID -> PortDescriptor -> Bool
+isNotAlreadyConnected graphview nodeID adstPort = not connected where
+    connected = any (portMatches adstPort) (inn graphview nodeID)
+
+
+------ Conversion to/from Graph --------------------------------------------------------
 
 isGeneratedKey :: String
 isGeneratedKey = "GraphView-generated"
@@ -85,10 +104,16 @@ connectG (srcNodeID, dstNodeID, EdgeView srcPorts dstPorts) graph = case srcPort
                  $ Graph.insNode (selectID, selectNode) graph
 
 
+addDefaults :: Graph -> Graph
+addDefaults graphWithoutDefaults = graph where
+    graph = graphWithoutDefaults-- TODO [PM] : implement me 
+
+
 toGraph :: GraphView -> Graph
-toGraph graphv = graph where
-    graphN = removeEdges graphv
-    graph = foldr (connectG) graphN $ labEdges graphv
+toGraph graphview = graph where
+    graphWithoutEdges    = removeEdges graphview
+    graphWithoutDefaults = foldr (connectG) graphWithoutEdges $ labEdges graphview
+    graph                = addDefaults graphWithoutDefaults
 
 
 graph2graphView :: Graph -> GraphView

@@ -67,13 +67,13 @@ removeNode nodeID defID libID projectID = noresult . graphOp defID libID project
 connect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor 
         -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
 connect srcNodeID asrcPort dstNodeID adstPort defID libID projectID = noresult . graphOp defID libID projectID (\_ agraph -> do 
-    Graph.gelem srcNodeID agraph `ifnot` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
-    Graph.gelem dstNodeID agraph `ifnot` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
-    (length adstPort <= 1)       `ifnot` "dstPort cannot have more than 1 item."
-    -- TODO [PM] : check if port is already connected!
+    let graphview = GraphView.fromGraph agraph;
+    GraphView.gelem srcNodeID graphview `ifnot` ("Unable to connect: Wrong 'srcNodeID' = " ++ show srcNodeID)
+    GraphView.gelem dstNodeID graphview `ifnot` ("Unable to connect: Wrong 'dstNodeID' = " ++ show dstNodeID)
+    (length adstPort <= 1)              `ifnot` "Unable to connect: dstPort cannot have more than 1 item."
+    GraphView.isNotAlreadyConnected graphview dstNodeID adstPort `ifnot` "Unable to connect: Port is already connected"
     let newGraph = GraphView.toGraph 
-                 $ GraphView.insEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) 
-                 $ GraphView.fromGraph agraph
+                 $ GraphView.insEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) graphview
     return (newGraph, ()))
 
 

@@ -137,14 +137,28 @@ int main(int argc, char **argv) {
         batch.addNode(dummy2, dummy2, fun.defID, userlib.libID, proj.projectID);
         
         try {
-            batch.connect(inputs.nodeID, {4, 9, 2}, dummy2.nodeID, {4,5,9}, fun.defID, userlib.libID, proj.projectID);
+            batch.connect(inputs.nodeID, {0, 0, 0}, dummy2.nodeID, {4,5,9}, fun.defID, userlib.libID, proj.projectID);
         } catch (ArgumentException e) {
             cout << "Unable to connect: "<< "\t" << e.message << endl;
         }
         
         batch.connect(inputs.nodeID, {6, 9}, dummy2.nodeID, {}, fun.defID, userlib.libID, proj.projectID);
+    
+        try {
+            batch.connect(inputs.nodeID, {0, 0, 0}, dummy2.nodeID, {1}, fun.defID, userlib.libID, proj.projectID);
+        } catch (ArgumentException e) {
+            cout << "Unable to connect: "<< "\t" << e.message << endl;
+        }
+
         batch.connect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID, proj.projectID);
         batch.connect(inputs.nodeID, {7, 8}, outputs.nodeID, {5}, fun.defID, userlib.libID, proj.projectID);
+
+        try {
+            batch.connect(inputs.nodeID, {0, 0, 0}, outputs.nodeID, {}, fun.defID, userlib.libID, proj.projectID);
+        } catch (ArgumentException e) {
+            cout << "Unable to connect: "<< "\t" << e.message << endl;
+        }
+
         batch.disconnect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID, proj.projectID);
         batch.dump();
         batch.nodesGraph(graph, fun.defID, userlib.libID, proj.projectID);
@@ -185,7 +199,6 @@ int main(int argc, char **argv) {
         batch.libraries(registeredLibs, proj.projectID);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
 
-        batch.dump();
         batch.ping();
 
         for(auto lib : registeredLibs)
