@@ -60,7 +60,7 @@
 import           Control.Monad.State                  
 import           Control.Monad.Writer                 
 import           Control.Monad.RWS                    
-import           Control.Monad.Maybe                  
+import           Control.Monad.Trans.Maybe                
 import           Control.Monad.Trans.Either           
 import           Flowbox.System.Log.Logger            
 import qualified Flowbox.System.Log.Logger          as Logger
@@ -80,7 +80,7 @@ logger = getLogger "Flowbox"
 
 
 example :: String
-example = unlines [ "1"
+example = unlines [ "def main():\n 1"
                   ]
 
 --test :: (Enum a, MonadState a m, MonadWriter [LogEntry.LogEntry] m) => MaybeT m ()

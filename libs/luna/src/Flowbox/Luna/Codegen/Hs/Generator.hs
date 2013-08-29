@@ -28,7 +28,7 @@ import           Debug.Trace
 import           Control.Monad.State                  
 import           Control.Monad.Writer                 
 import           Control.Monad.RWS                    
-import           Control.Monad.Maybe                  
+import           Control.Monad.Trans.Maybe              
 import           Control.Monad.Trans.Either       
 
 import           Flowbox.System.Log.Logger            
@@ -49,13 +49,15 @@ main = do
 testme :: Generator a m => MaybeT m ()
 testme = do return ()
 
-genModule :: Generator a m => LAST.Expr -> MaybeT m Module
+--genModule :: Generator a m => LAST.Expr -> MaybeT m Module
 genModule ast = case ast of
     LAST.Program body -> do
-                         logger.debug $ "debug"
-                         mainfunc <- genFunction $ (LAST.Function "main" [] body)
-                         return $ Module.addFunction mainfunc
-                                $ Module.empty
+                         x <- mapM genExpr body
+                         return x
+                         --logger.debug $ "debug"
+                         --mainfunc <- genFunction $ (LAST.Function "main" [] body)
+                         --return $ Module.addFunction mainfunc
+                         --       $ Module.empty
                             
     --_                 -> logger.critical $ "Unknown LUNA.AST expression"
 
@@ -75,16 +77,17 @@ genModule ast = case ast of
     --_                                 -> error "Unknown LUNA.AST expression"
 
 
-genFunction :: Generator a m => LAST.Expr -> MaybeT m Function
-genFunction ast = case ast of
-    LAST.Function name signature body -> Function.Function name [] <$> mapM genExpr body
+--genFunction :: Generator a m => LAST.Expr -> MaybeT m Function
+--genFunction ast = case ast of
+--    LAST.Function name signature body -> Function.Function name [] <$> mapM genExpr body
 
 
 genExpr :: Generator a m => LAST.Expr -> MaybeT m Expr
 genExpr ast = case ast of
-    LAST.Constant   cst          -> case cst of
-                                        LConstant.Integer val -> return $ Expr.Constant $ Constant.Integer val
-                                        _                     -> logger.critical $ "Unknown LUNA.AST expression"
+    LAST.Constant   cst               -> case cst of
+                                             LConstant.Integer val -> return $ Expr.Constant $ Constant.Integer val
+                                             _                     -> logger.critical $ "Unknown LUNA.AST expression"
+    LAST.Function name signature body -> Expr.Function name <$> return [] <*> mapM genExpr body
     --LAST.Operator   name src dst -> Expr.Operator name <$> genExpr src <*> genExpr dst
     ----LAST.Identifier name         -> do
     --                                    --vname <- GenState.genVarName
