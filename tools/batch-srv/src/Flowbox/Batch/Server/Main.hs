@@ -10,16 +10,18 @@
 
 --import Data.List
 import           Data.IORef                                 
-import           Network                                    
+import qualified Network                                  as Network
+import           Network                                    (PortNumber)
+import qualified System.IO as IO
 --import System.Environment(getArgs)
 
 
 -- Thrift libraries
 --import Thrift
---import Thrift.Transport.Handle
+--import Thrift.Transport.Handle 
 --import Thrift.Protocol
---import Thrift.Protocol.Binary
-import           Thrift.Server                              (runBasicServer)
+import           Thrift.Protocol.Binary                     (BinaryProtocol(..))
+import qualified Thrift.Server                            as Server
 
 -- Generated files
 import qualified Batch                                    as TBatch
@@ -126,5 +128,12 @@ main = do
     logger.setLevel $ DEBUG
     handler <- newBatchHandler
     logger.info $ "Starting the server"
-    _ <- runBasicServer handler TBatch.process port
+    _ <- Server.runThreadedServer accepter handler TBatch.process (Network.PortNumber port)
     logger.info $ "done"
+
+
+accepter :: Network.Socket -> IO (BinaryProtocol IO.Handle, BinaryProtocol IO.Handle)
+accepter s = do
+    (h, addr, p) <- Network.accept s
+    logger.info $ "Accepted connection from " ++ addr ++ " : " ++ (show p)
+    return (BinaryProtocol h, BinaryProtocol h)
