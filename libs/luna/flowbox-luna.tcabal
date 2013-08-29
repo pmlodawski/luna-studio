@@ -36,6 +36,7 @@ Library
                   graphviz,
                   hashable,
                   MissingH == 1.2.0.0,
+                  mtl,
                   regex-posix,
                   split,
                   text,
@@ -63,4 +64,5 @@ Executable luna
                   flowbox-utils,
                   MissingH,
                   pretty-show,
-                  timeit
+                  timeit,
+                  mtl

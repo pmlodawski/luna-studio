@@ -7,9 +7,9 @@
 
 module Flowbox.System.Log.Conf where
 
-import Control.Concurrent.MVar
-import System.IO.Unsafe (unsafePerformIO)
-import qualified Data.Map as Map
+import           Control.Concurrent.MVar   
+import           System.IO.Unsafe          (unsafePerformIO)
+import qualified Data.Map                as Map
 
 
 data Conf = Conf { indent  :: Int

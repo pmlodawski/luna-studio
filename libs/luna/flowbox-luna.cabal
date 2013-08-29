@@ -46,6 +46,7 @@ Library
         Flowbox.Luna.Codegen.Hs.Import,
         Flowbox.Luna.Codegen.Hs.FuncGenerator,
         Flowbox.Luna.Codegen.Hs.DefGenerator,
+        Flowbox.Luna.Codegen.Hs.GenState,
         Flowbox.Luna.Codegen.Hs.CodeGenerator,
         Flowbox.Luna.Codegen.Hs.Path,
         Flowbox.Luna.Codegen.Hs.Generator,
@@ -97,6 +98,7 @@ Library
                   graphviz,
                   hashable,
                   MissingH == 1.2.0.0,
+                  mtl,
                   regex-posix,
                   split,
                   text,
@@ -124,4 +126,5 @@ Executable luna
                   flowbox-utils,
                   MissingH,
                   pretty-show,
-                  timeit
+                  timeit,
+                  mtl

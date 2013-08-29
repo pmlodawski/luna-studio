@@ -11,10 +11,10 @@ import           Options.Applicative         hiding (info)
 import qualified Options.Applicative         as Opt
 import           Data.List                     
 import           Prelude                     hiding (error)
-import qualified Flowbox.Data.Version        as Version 
+import qualified Flowbox.Data.Version        as Version
 import           Flowbox.Control.Applicative   
 import qualified System.Environment          as Env
-import           Flowbox.Control.Exception
+import           Flowbox.Control.Exception     
 import           Flowbox.System.Log.Logger     
 import qualified Flowbox.System.Log.Logger   as Logger
 

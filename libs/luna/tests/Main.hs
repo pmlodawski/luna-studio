@@ -29,19 +29,19 @@
 --import qualified Flowbox.System.UniPath                as UniPath
 --import           Flowbox.System.UniPath                  (UniPath)
 
-import qualified Flowbox.Luna.Codegen.Hs.Generator     as Gen
-import qualified Flowbox.Luna.Codegen.Hs.AST.Module    as Module
+import qualified Flowbox.Luna.Codegen.Hs.Generator  as Gen
+import qualified Flowbox.Luna.Codegen.Hs.AST.Module as Module
 
-import qualified Flowbox.Luna.Parser                   as Parser
+import qualified Flowbox.Luna.Parser                as Parser
 
-import           Debug.Trace     
-import           Data.Either.Utils                     (forceEither)
-import qualified Text.Show.Pretty                      as PP
-import           System.TimeIt   
+import           Debug.Trace                          
+import           Data.Either.Utils                    (forceEither)
+import qualified Text.Show.Pretty                   as PP
+import           System.TimeIt                        
 
 
 example :: String
-example = unlines [ "2+2"
+example = unlines [ "a+b"
                   ]
 
 
@@ -49,19 +49,74 @@ main :: IO ()
 main = do
     timeIt main_inner
 
+
 main_inner :: IO ()
 main_inner = do
     let 
         parsed = Parser.parse example
         ast = forceEither parsed
         out = Gen.genModule ast
+        a = f b
+        b = g a
 
     --print out
+    print a
     putStrLn ""
     putStrLn $ PP.ppShow $ parsed
     putStrLn "\n-----------------"
     putStrLn $ PP.ppShow $ out
     -- putStrLn $ Module.genCode out
+
+
+f a = let 
+    out = 0:a
+    in out
+
+g a = let
+    out = 1:a
+    in out 
+
+--import           Control.Monad.State                  
+
+
+
+--data GenState = GenState { varcount :: Int
+--                         } deriving (Show)
+
+--empty :: GenState
+--empty = GenState 0
+
+
+--nxt :: String -> State GenState String
+--nxt a = do
+--    b <- get
+--    --put $ b+1
+--    return a
+ 
+--test :: State GenState String
+--test = do
+--    b <- genVarName
+--    c <- genVarName
+--    d <- genVarName
+--    return d
+
+
+
+--genVarName :: State GenState String
+--genVarName = do
+--    state <- get
+--    let vname = "v''" ++ show (varcount state)
+--    put $ state{varcount = 1 + varcount state}
+--    return vname
+
+
+ 
+--main :: IO ()
+--main = do
+--    print $ runState test empty
+--    return ()
+
+
 
 
 
