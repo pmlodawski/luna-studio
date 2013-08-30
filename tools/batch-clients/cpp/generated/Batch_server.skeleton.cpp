@@ -267,6 +267,11 @@ class BatchHandler : virtual public BatchIf {
     printf("dump\n");
   }
 
+  void shutdown() {
+    // Your implementation goes here
+    printf("shutdown\n");
+  }
+
 };
 
 int main(int argc, char **argv) {

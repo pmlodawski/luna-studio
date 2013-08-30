@@ -3846,6 +3846,46 @@ read_Dump_result iprot = do
   record <- read_Dump_result_fields iprot (Dump_result{})
   readStructEnd iprot
   return record
+data Shutdown_args = Shutdown_args deriving (Show,Eq,Typeable)
+instance Hashable Shutdown_args where
+  hashWithSalt salt record = salt  
+write_Shutdown_args oprot record = do
+  writeStructBegin oprot "Shutdown_args"
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_Shutdown_args_fields iprot record = do
+  (_,_t589,_id590) <- readFieldBegin iprot
+  if _t589 == T_STOP then return record else
+    case _id590 of 
+      _ -> do
+        skip iprot _t589
+        readFieldEnd iprot
+        read_Shutdown_args_fields iprot record
+read_Shutdown_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_Shutdown_args_fields iprot (Shutdown_args{})
+  readStructEnd iprot
+  return record
+data Shutdown_result = Shutdown_result deriving (Show,Eq,Typeable)
+instance Hashable Shutdown_result where
+  hashWithSalt salt record = salt  
+write_Shutdown_result oprot record = do
+  writeStructBegin oprot "Shutdown_result"
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_Shutdown_result_fields iprot record = do
+  (_,_t594,_id595) <- readFieldBegin iprot
+  if _t594 == T_STOP then return record else
+    case _id595 of 
+      _ -> do
+        skip iprot _t594
+        readFieldEnd iprot
+        read_Shutdown_result_fields iprot record
+read_Shutdown_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_Shutdown_result_fields iprot (Shutdown_result{})
+  readStructEnd iprot
+  return record
 process_projects (seqid, iprot, oprot, handler) = do
   args <- read_Projects_args iprot
   readMessageEnd iprot
@@ -4520,6 +4560,17 @@ process_dump (seqid, iprot, oprot, handler) = do
   write_Dump_result oprot res
   writeMessageEnd oprot
   tFlush (getTransport oprot)
+process_shutdown (seqid, iprot, oprot, handler) = do
+  args <- read_Shutdown_args iprot
+  readMessageEnd iprot
+  rs <- return (Shutdown_result)
+  res <- (do
+    Iface.shutdown handler
+    return rs)
+  writeMessageBegin oprot ("shutdown", M_REPLY, seqid);
+  write_Shutdown_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
 proc_ handler (iprot,oprot) (name,typ,seqid) = case name of
   "projects" -> process_projects (seqid,iprot,oprot,handler)
   "projectByID" -> process_projectByID (seqid,iprot,oprot,handler)
@@ -4570,6 +4621,7 @@ proc_ handler (iprot,oprot) (name,typ,seqid) = case name of
   "FS_mv" -> process_fS_mv (seqid,iprot,oprot,handler)
   "ping" -> process_ping (seqid,iprot,oprot,handler)
   "dump" -> process_dump (seqid,iprot,oprot,handler)
+  "shutdown" -> process_shutdown (seqid,iprot,oprot,handler)
   _ -> do
     skip iprot T_STRUCT
     readMessageEnd iprot

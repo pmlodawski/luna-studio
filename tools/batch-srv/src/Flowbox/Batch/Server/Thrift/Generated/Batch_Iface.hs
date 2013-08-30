@@ -94,3 +94,4 @@ class Batch_Iface a where
   fS_mv :: a -> Maybe Text -> Maybe Text -> IO ()
   ping :: a -> IO ()
   dump :: a -> IO ()
+  shutdown :: a -> IO ()
