@@ -18,13 +18,13 @@ module Flowbox.Batch.Server.Handlers.Defs (
 where
 
 
-import           Data.Int                                              
+import           Data.Int                                              (Int32)
 import           Data.IORef                                            
 import qualified Data.Vector                                         as Vector
 import           Data.Vector                                           (Vector)
 
 import qualified Defs_Types                                          as TDefs
-import           Flowbox.Batch.Server.Handlers.Common                  (logger, tRunScript)
+import           Flowbox.Batch.Server.Handlers.Common                  (tRunScript)
 import           Flowbox.Batch.Batch                                   (Batch(..))
 import qualified Flowbox.Batch.Handlers.Defs                         as BatchD
 import           Flowbox.Control.Error                                 
@@ -33,10 +33,13 @@ import           Flowbox.Luna.Network.Def.Definition                   (Definiti
 import qualified Flowbox.Luna.Network.Graph.Graph                    as Graph
 import           Flowbox.Luna.Network.Graph.Graph                      (Graph)
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs as CDefs
-import           Flowbox.System.Log.Logger                             
+import           Flowbox.System.Log.Logger                             (getLogger, info)
 import           Flowbox.Tools.Conversion                              
 
 
+
+logger :: (String -> IO ()) -> IO ()
+logger = getLogger "Flowbox.Batch.Server.Handlers.Defs"
 
 ------ public api -------------------------------------------------
 

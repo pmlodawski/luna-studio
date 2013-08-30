@@ -16,7 +16,7 @@ module Flowbox.Batch.Server.Handlers.Projects (
 ) where
 
 
-import           Data.Int                                                   
+import           Data.Int                                                   (Int32)
 import           Data.IORef                                                 
 import qualified Data.Vector                                              as Vector
 import           Data.Vector                                                (Vector)
@@ -28,12 +28,16 @@ import           Flowbox.Batch.Batch                                        (Bat
 import qualified Flowbox.Batch.Handlers.Projects                          as BatchP
 import qualified Flowbox.Batch.Project.Project                            as Project
 import           Flowbox.Batch.Project.Project                              (Project(..))
-import           Flowbox.Batch.Server.Handlers.Common                       (logger, tRunScript)
+import           Flowbox.Batch.Server.Handlers.Common                       (tRunScript)
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects   ()
 import qualified Flowbox.Luna.Lib.LibManager                              as LibManager
-import           Flowbox.System.Log.Logger                                  
+import           Flowbox.System.Log.Logger                                  (getLogger, info)
 import           Flowbox.Tools.Conversion                                   
 
+
+
+logger :: (String -> IO ()) -> IO ()
+logger = getLogger "Flowbox.Batch.Server.Handlers.Projects"
 
 ------ public api -------------------------------------------------
 

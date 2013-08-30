@@ -20,7 +20,7 @@ import           Prelude                                                   hidin
 import           Data.Int                                                    (Int32)
 import           Data.IORef                                                  
 
-import           Flowbox.Batch.Server.Handlers.Common                        (logger, tRunScript, vector2List)
+import           Flowbox.Batch.Server.Handlers.Common                        (tRunScript, vector2List)
 import qualified Graph_Types                                               as TGraph
 import qualified Graphview_Types                                           as TGraphView
 import           Flowbox.Batch.Batch                                         (Batch(..))
@@ -29,8 +29,13 @@ import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView   ()
 import           Flowbox.Control.Error                                       
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
-import           Flowbox.System.Log.Logger                                   
+import           Flowbox.System.Log.Logger                                   (getLogger, info)
 import           Flowbox.Tools.Conversion                                    
+
+
+
+logger :: (String -> IO ()) -> IO ()
+logger = getLogger "Flowbox.Batch.Server.Handlers.Graph"
 
 ------ public api -------------------------------------------------
 

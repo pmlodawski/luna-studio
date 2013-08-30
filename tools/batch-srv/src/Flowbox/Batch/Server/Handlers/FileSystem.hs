@@ -22,15 +22,19 @@ import           Data.Text.Lazy                                         (Text)
 import qualified Data.Vector                                          as Vector
 import           Data.Vector                                            (Vector)
 
-import           Flowbox.Batch.Server.Handlers.Common                   (logger, tRunScript)
+import           Flowbox.Batch.Server.Handlers.Common                   (tRunScript)
 import qualified Fs_Types                                             as TFS
 import qualified Flowbox.Batch.Handlers.FileSystem                    as BatchFS
 import           Flowbox.Batch.Batch                                    (Batch(..))
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Item   ()
 import           Flowbox.Control.Error                                  
-import           Flowbox.System.Log.Logger                              
+import           Flowbox.System.Log.Logger                              (getLogger, info)
 import           Flowbox.Tools.Conversion                               
 
+
+
+logger :: (String -> IO ()) -> IO ()
+logger = getLogger "Flowbox.Batch.Server.Handlers.FileSystem"
 
 ------ public api -------------------------------------------------
 

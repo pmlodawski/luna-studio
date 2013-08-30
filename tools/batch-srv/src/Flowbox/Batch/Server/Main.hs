@@ -32,7 +32,6 @@ import qualified Batch                                    as TBatch
 import           Batch_Iface                                
 import qualified Flowbox.Batch.Batch                      as Batch
 import           Flowbox.Batch.Batch                        (Batch(..))
-import           Flowbox.Batch.Server.Handlers.Common       (logger)
 import qualified Flowbox.Batch.Server.Handlers.Defs       as HDefs
 import qualified Flowbox.Batch.Server.Handlers.Defaults   as HDefaults
 import qualified Flowbox.Batch.Server.Handlers.Graph      as HGraph
@@ -48,6 +47,9 @@ import qualified Flowbox.Batch.Samples.Modules            as Sample
 import           Flowbox.Control.Error                      
 import           Flowbox.System.Log.Logger                  
 
+
+logger :: (String -> IO ()) -> IO ()
+logger = getLogger "Flowbox.Batch.Server"
 
 
 port :: Network.PortNumber

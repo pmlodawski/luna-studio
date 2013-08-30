@@ -18,14 +18,14 @@ module Flowbox.Batch.Server.Handlers.Libs (
 where
 
 
-import           Data.Int                                              
+import           Data.Int                                              (Int32)
 import           Data.IORef                                            
 import qualified Data.Vector                                         as Vector
 import           Data.Vector                                           (Vector)
 import           Data.Text.Lazy                                        (Text)
 
 import qualified Defs_Types                                          as TDefs
-import           Flowbox.Batch.Server.Handlers.Common                  (logger, tRunScript)
+import           Flowbox.Batch.Server.Handlers.Common                  (tRunScript)
 import qualified Libs_Types                                          as TLibs
 import           Flowbox.Batch.Batch                                   (Batch(..))
 import qualified Flowbox.Batch.Handlers.Libs                         as BatchL
@@ -36,9 +36,13 @@ import qualified Flowbox.Luna.Network.Def.DefManager                 as DefManag
 import           Flowbox.Luna.Network.Def.DefManager                   (DefManager)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs   ()
-import           Flowbox.System.Log.Logger                             
+import           Flowbox.System.Log.Logger                             (getLogger, info)
 import           Flowbox.Tools.Conversion                              
 
+
+
+logger :: (String -> IO ()) -> IO ()
+logger = getLogger "Flowbox.Batch.Server.Handlers.Libs"
 
 ------ public api -------------------------------------------------
 
