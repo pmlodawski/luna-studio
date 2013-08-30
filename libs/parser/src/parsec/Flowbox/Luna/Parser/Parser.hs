@@ -18,8 +18,13 @@ import qualified Text.Parsec.Expr                 as Expr
 import           Flowbox.Luna.Parser.Utils          
 import qualified Flowbox.Luna.Parser.Lexer        as L
 import qualified Flowbox.Luna.Parser.AST.AST      as AST
+import qualified Flowbox.Luna.Parser.AST.Class    as Class
+import qualified Flowbox.Luna.Parser.AST.Field    as Field
+import qualified Flowbox.Luna.Parser.AST.Type     as Type
 import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 
+
+import Debug.Trace 
 
 -----------------------------------------------------------
 -- Entities
@@ -65,14 +70,28 @@ pFunc i           = AST.Function <$  L.pDef
                                  <*> L.pIdentVar 
                                  <*> pTuplePure (expr i)
                                  <*> (try (pExprBlock i) <|> return [])
+                                 <?> "function definition"
 
 pLambda i         = AST.Lambda   <$> (pTuplePure (expr i) <|> liftList pIdent)
                                  <*> pExprBlock i
+                                 <?> "lambda definition"
 
-pClass i          = AST.Class    <$  L.pClass
+pClass i          = Class.mk     <$  L.pClass
                                  <*> L.pIdentType 
                                  <*> many L.pIdentTypeVar
-                                 <*> (try (pExprBlock i) <|> return [])
+                                 <??$> pBlockBegin pClassBody i 
+                                 -- <*> (try (pBlockBegin pClassBody i) <|> return [])
+                                 <?> "class definition"
+
+
+
+pClassBody i      = choice [ Class.addMethod <$> pFunc i
+                           , Class.addField  <$> pField i
+                           , pClass i *> error "Nested classes are not yet supported."
+                           ]
+
+
+pField i          = Field.mk <$> L.pIdent <* L.pTypeDecl <*> L.pIdent
 
 pExprEnt i        = choice [ pImport i
                            , pFunc   i
@@ -81,9 +100,13 @@ pExprEnt i        = choice [ pImport i
                            ]
                                
 
-pExprBlock i      = L.pBlockBegin *> ( pBlock expr (i+1) <|> (liftList $ expr i) )
+pExprBlock      i = pBlockBegin expr i --L.pBlockBegin *> ( pBlock expr (i+1) <|> (liftList $ expr i) )
 
-pBlock p i        = L.eol *> pSegmentBegin p i
+--pBlockOpt     p i = (try (pBlockBegin p i) <|> return [])
+
+pBlockBegin   p i = L.pBlockBegin *> ( pBlock p (i+1))
+
+pBlock        p i = L.eol *> pSegmentBegin p i
 
 
 -----------------------------------------------------------
@@ -118,7 +141,7 @@ postfixf name fun       = Expr.Postfix (L.reservedOp name *> fun)
 -- Nested Segments
 -----------------------------------------------------------
 
-pEmptyLines         = many1 pEmptyLine
+pEmptyLines         = do many1 pEmptyLine
 
 pEmptyLine          = try(L.eol *> L.pSpaces1 *> L.eol) <|> L.eol
 
@@ -130,8 +153,8 @@ pIdentAtLast      i = length <$> pCountAtLast i (char ' ')
 pSegments       p i = many $ try $ (pEmptyLines *> pSegment p i)
 
 pSegmentBegin   p i = do
-                        j <- many pEmptyLines *> pIdentAtLast i
-                        (:) <$> p i <*> pSegments p j
+                      j <- many pEmptyLines *> pIdentAtLast i
+                      (:) <$> p i <*> pSegments p j
 
 pSegment        p i = try (id <$ pIndentExact i <*> p i)
 

@@ -36,10 +36,13 @@ data Expr = Assignment { src   :: Expr    , dst :: Expr    , ctx :: Context     
           | BlockRet   { name  :: String  , ctx :: Context                       }
           | FuncType   { elems :: [Expr]                                         }
           | NOP        {                                                         }
-          
+
           | Operator   { name  :: String  , src :: Expr    , dst :: Expr         }
           | Constant   { cval  :: Constant.Constant                              }
           | Function   { name  :: String  , signature :: [Expr] , body :: [Expr] }
+          -- | Class      { name  :: String  , params :: [String]  , body :: [Expr] }
+          | DataType   { name  :: String  , params :: [String], constructors :: [Expr] }
+          | Module     { datatypes :: [Expr] }
           deriving (Show)
 
 
@@ -51,8 +54,8 @@ mkTypeCtx :: String -> String
 mkTypeCtx name' = "''"  ++ name'
 
 
-empty :: Expr
-empty = NOP
+--empty :: Expr
+--empty = NOP
 
 mpostfix :: String
 mpostfix = "''M"

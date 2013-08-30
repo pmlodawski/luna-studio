@@ -6,42 +6,44 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Codegen.Hs.AST.DataType (
-    DataType(..),
-    empty,
-    genCode,
-    addDeriving,
-    name
+	module Flowbox.Luna.Codegen.Hs.AST.DataType,
+	module Flowbox.Luna.Codegen.Hs.AST.Expr
 )where
 
-import           Data.String.Utils                      (join)
+import Flowbox.Luna.Codegen.Hs.AST.Expr
 
-import qualified Flowbox.Luna.Codegen.Hs.AST.Expr     as Expr
-import           Flowbox.Luna.Codegen.Hs.AST.Expr       (Expr)
-import qualified Flowbox.Luna.Codegen.Hs.AST.Deriving as Deriving
-import           Flowbox.Luna.Codegen.Hs.AST.Deriving   (Deriving)
+empty :: Expr
+empty = DataType "" [] []
 
+--import           Data.String.Utils                      (join)
 
-data DataType = DataType { cls       :: Expr
-                         , cons      :: [Expr]
-                         , derivings :: [Deriving]
-                         } deriving (Show)
-
-
-empty :: DataType
-empty = DataType Expr.empty [] []
+--import qualified Flowbox.Luna.Codegen.Hs.AST.Expr     as Expr
+--import           Flowbox.Luna.Codegen.Hs.AST.Expr       (Expr)
+--import qualified Flowbox.Luna.Codegen.Hs.AST.Deriving as Deriving
+--import           Flowbox.Luna.Codegen.Hs.AST.Deriving   (Deriving)
 
 
-genCode :: DataType -> String
-genCode dt =  "data " ++ Expr.genCode (cls dt) ++ " = " 
-           ++ join " | "  (map Expr.genCode (cons dt))
-           ++ Deriving.genCode (derivings dt)
+--data DataType = DataType { cls       :: Expr
+--                         , cons      :: [Expr]
+--                         , derivings :: [Deriving]
+--                         } deriving (Show)
 
 
-name :: DataType -> String
-name dt = Expr.name $ cls dt
+--empty :: DataType
+--empty = DataType Expr.empty [] []
 
 
-addDeriving :: Deriving -> DataType -> DataType
-addDeriving d dt = dt { derivings = d : (derivings dt)}
+--genCode :: DataType -> String
+--genCode dt =  "data " ++ Expr.genCode (cls dt) ++ " = " 
+--           ++ join " | "  (map Expr.genCode (cons dt))
+--           ++ Deriving.genCode (derivings dt)
+
+
+--name :: DataType -> String
+--name dt = Expr.name $ cls dt
+
+
+--addDeriving :: Deriving -> DataType -> DataType
+--addDeriving d dt = dt { derivings = d : (derivings dt)}
 
 

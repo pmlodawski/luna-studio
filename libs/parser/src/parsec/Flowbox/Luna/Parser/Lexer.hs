@@ -260,10 +260,10 @@ lexeme p    = p <* skipMany pSpaces1
 symbols name = try $ lexeme (string name)
 symbol  name = lexeme (char name)
 
-pSpace      = satisfy (`elem` "\t\f\v ") 
+pSpace      = satisfy (`elem` "\t\f\v ") <?> ""
 pSpacesBase = many1 pSpace <|> try(multiLineComment) <|> oneLineComment <?> ""
-pSpaces1    = many1 pSpacesBase
-pSpaces     = many  pSpacesBase
+pSpaces1    = many1 pSpacesBase <?> ""
+pSpaces     = many  pSpacesBase <?> ""
 
 
 oneLineComment   = try (string commentLine) *> many (satisfy (/= '\n'))

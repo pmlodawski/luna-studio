@@ -52,6 +52,7 @@ Library
         Flowbox.Luna.Codegen.Hs.Generator,
         Flowbox.Luna.Codegen.Hs.Cabal.Config,
         Flowbox.Luna.Codegen.Hs.Cabal.Section,
+        Flowbox.Luna.Codegen.Hs.AST.Cons,
         Flowbox.Luna.Codegen.Hs.AST.DataType,
         Flowbox.Luna.Codegen.Hs.AST.Class,
         Flowbox.Luna.Codegen.Hs.AST.Module,

@@ -25,9 +25,15 @@ pl <*$> pr = do
     n <- pl
     pr n
 
-
-p <??> q = p <**> (q <|> return id)
+infixl 5 <?*>
+infixl 4 <??>
+infixl 4 <**$>
+infixl 4 <??$>
 p <?*> q = (p <*> q) <|> q
+-- p <**> q = (\f g -> g f) <$> p <*> q
+p <??> q = p <**> (q <|> return id)
+p <**$> q = p <**> (flip (foldr ($)) <$> q)
+p <??$> q = p <**> ((flip (foldr ($)) <$> q) <|> return id)
 
 
 sepBy2  p sep = (:) <$> p <*> try(sep *> sepBy1 p sep)

@@ -9,13 +9,15 @@
 module Flowbox.Luna.Codegen.Hs.Generator where
 
 import qualified Flowbox.Luna.Parser.AST.AST          as LAST
+import qualified Flowbox.Luna.Parser.AST.Type         as Type
 import qualified Flowbox.Luna.Parser.AST.Constant     as LConstant
 import qualified Flowbox.Luna.Codegen.Hs.AST.Expr     as Expr
 import           Flowbox.Luna.Codegen.Hs.AST.Expr       (Expr)
 import qualified Flowbox.Luna.Codegen.Hs.AST.Constant as Constant
 import qualified Flowbox.Luna.Codegen.Hs.AST.Module   as Module
-import           Flowbox.Luna.Codegen.Hs.AST.Module     (Module)
+import qualified Flowbox.Luna.Codegen.Hs.AST.DataType as DataType
 import qualified Flowbox.Luna.Codegen.Hs.AST.Function as Function
+import qualified Flowbox.Luna.Codegen.Hs.AST.Cons     as Cons
 import           Flowbox.Luna.Codegen.Hs.AST.Function   (Function)
 import qualified Flowbox.Luna.Codegen.Hs.GenState     as GenState
 import           Flowbox.Luna.Codegen.Hs.GenState       (GenState)
@@ -82,12 +84,31 @@ genModule ast = case ast of
 --    LAST.Function name signature body -> Function.Function name [] <$> mapM genExpr body
 
 
+--genDataType :: Generator a m => LAST.Expr -> MaybeT m Expr
+--genDataType expr = case expr of
+--    LAST.Typed t (LAST.Identifier ident) -> 
+
+
 genExpr :: Generator a m => LAST.Expr -> MaybeT m Expr
 genExpr ast = case ast of
     LAST.Constant   cst               -> case cst of
                                              LConstant.Integer val -> return $ Expr.Constant $ Constant.Integer val
                                              _                     -> logger.critical $ "Unknown LUNA.AST expression"
     LAST.Function name signature body -> Expr.Function name <$> return [] <*> mapM genExpr body
+    LAST.Class    cls fields methods  -> return $ DataType.empty { Expr.name         = name
+                                                                 , Expr.params       = Type.params cls
+                                                                 , Expr.constructors = [cons]
+                                                                 }  
+                                         where
+                                            name = Type.name cls
+                                            cons = Cons.empty { Expr.name   = name 
+                                                              , Expr.fields = []
+                                                              }
+
+
+
+
+    -- Class name params []
     --LAST.Operator   name src dst -> Expr.Operator name <$> genExpr src <*> genExpr dst
     ----LAST.Identifier name         -> do
     --                                    --vname <- GenState.genVarName
@@ -99,3 +120,7 @@ genExpr ast = case ast of
     --                                    --return $ Expr.Assignment (Expr.Var src') dst' Expr.Pure
     _ -> return Expr.NOP
 
+
+
+
+--data X a b c = X{a::a,b::b,c::c} | Y

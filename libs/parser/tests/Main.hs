@@ -16,7 +16,9 @@ import           System.TimeIt
 
 
 example :: String
-example = unlines [ "a\nb\nc"
+example = unlines [ "class Vector a:"
+                  , "    x :: Int"
+                  , "    def f()"
                   ]
 
 main :: IO ()

@@ -80,7 +80,8 @@ logger = getLogger "Flowbox"
 
 
 example :: String
-example = unlines [ "def main():\n 1"
+example = unlines [ "class Vector a:"
+                  , "    x :: Int"
                   ]
 
 --test :: (Enum a, MonadState a m, MonadWriter [LogEntry.LogEntry] m) => MaybeT m ()
@@ -108,7 +109,5 @@ main_inner = do
     putStrLn "\n-----------------"
     putStrLn $ PP.ppShow $ out
     return ()
-
-
 
 
