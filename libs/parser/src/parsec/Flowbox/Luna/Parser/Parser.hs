@@ -55,6 +55,13 @@ pEnt i       = choice [ pIdent
 
 
 -----------------------------------------------------------
+-- Types
+-----------------------------------------------------------
+
+pType     = Type.Type <$> L.pIdentVar 
+pTLambda  = Type.Lambda <$> (Type.Tuple <$> pTuplePure (pType)) <*> return Type.Unknown
+
+-----------------------------------------------------------
 -- Expression Entities
 -----------------------------------------------------------
 
@@ -68,13 +75,15 @@ pImportBlock i    = try(pBlock pImportPath (i+1)) <|> return []
 
 pFunc i           = AST.Function <$  L.pDef 
                                  <*> L.pIdentVar 
-                                 <*> pTuplePure (expr i)
+                                 <*> pTLambda
                                  <*> (try (pExprBlock i) <|> return [])
                                  <?> "function definition"
 
-pLambda i         = AST.Lambda   <$> (pTuplePure (expr i) <|> liftList pIdent)
-                                 <*> pExprBlock i
-                                 <?> "lambda definition"
+
+
+--pLambda i         = AST.Lambda   <$> (pTuplePure (expr i) <|> liftList pIdent)
+--                                 <*> pExprBlock i
+--                                 <?> "lambda definition"
 
 pClass i          = Class.mk     <$  L.pClass
                                  <*> L.pIdentType 
@@ -96,7 +105,7 @@ pField i          = Field.mk <$> L.pIdent <* L.pTypeDecl <*> L.pIdent
 pExprEnt i        = choice [ pImport i
                            , pFunc   i
                            , pClass  i
-                           , pLambda i
+                           --, pLambda i
                            ]
                                
 

@@ -20,9 +20,7 @@ data Expr  = NOP
            | Constant        Constant.Constant
            | Assignment      { src :: Expr, dst :: Expr }
            | Tuple           { items :: [Expr] }
-           | Function        { name :: String, signature :: [Expr], body :: [Expr]}
-           | Lambda          { signature :: [Expr], body :: [Expr] }
-           | Class           { cls :: Type , fields :: [Expr], methods :: [Expr]}
+           | Lambda          { signature :: Type, body :: [Expr] }
            | Interface       { name :: String, body :: [Expr]}
            | Typed           String Expr
            | Path            { segments :: [String] } -- , name::String}
@@ -34,6 +32,9 @@ data Expr  = NOP
            | Comment         String
            | Program         { body :: [Expr] }
            | Field           { name :: String, cls :: Type}
+           
+           | Function        { name :: String , signature :: Type   , body    :: [Expr] }
+           | Class           { cls  :: Type   , fields    :: [Expr] , methods :: [Expr] }
            deriving (Show, Eq)
 
 callConstructor :: Expr -> Expr -> Expr

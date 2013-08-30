@@ -39,6 +39,7 @@ Library
         Flowbox.Luna.Parser.AST.Class,
         Flowbox.Luna.Parser.AST.Type,
         Flowbox.Luna.Parser.AST.AST,
+        Flowbox.Luna.Parser.AST.Function,
         Flowbox.Luna.Parser.AST.Constant
 
   

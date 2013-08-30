@@ -20,8 +20,8 @@ data Context = Pure | IO deriving (Show, Eq)
 data Expr = Assignment { src   :: Expr    , dst :: Expr    , ctx :: Context      }
           
           | VarRef     { vid   :: Int                                            } 
-          | Tuple      { elems :: [Expr]                                         }
-          | NTuple     { elems :: [Expr]                                         }
+          | Tuple      { items :: [Expr]                                         }
+          | NTuple     { items :: [Expr]                                         }
           | Type       { name  :: String  , params :: [String]                   }
           | Call       { name  :: String  , args :: [Expr] , ctx :: Context      }
           | StringLit  { val   :: String                                         }
@@ -33,7 +33,7 @@ data Expr = Assignment { src   :: Expr    , dst :: Expr    , ctx :: Context     
           | Any        {                                                         }
           | Block      { body  :: [Expr]  , ctx :: Context                       }
           | BlockRet   { name  :: String  , ctx :: Context                       }
-          | FuncType   { elems :: [Expr]                                         }
+          | FuncType   { items :: [Expr]                                         }
           | NOP        {                                                         }
 
           | Var        { name  :: String                                         }
@@ -69,11 +69,12 @@ data Expr = Assignment { src   :: Expr    , dst :: Expr    , ctx :: Context     
 
 genCode :: Expr -> String
 genCode expr = case expr of
-    DataType name' params' constructors' -> "data " ++ name' ++ params'' ++ " = " ++ join " | " (map genCode constructors') where
-                                            params'' = if not $ null params' then " " ++ join " " params' else ""
-    Cons     name' fields'               -> name' ++ " { " ++ join ", " (map genCode fields') ++ " }"
     Var      name'                       -> name'
     Typed    name' expr'                 -> genCode expr' ++ " :: " ++ name'
+    Cons     name' fields'               -> name' ++ " { " ++ join ", " (map genCode fields') ++ " }"
+    DataType name' params' constructors' -> "data " ++ name' ++ params'' ++ " = " ++ join " | " (map genCode constructors') where
+                                            params'' = if not $ null params' then " " ++ join " " params' else ""
+    Function name' signature' body'      -> name' ++ " " ++ join " " (map genCode signature') ++ " = " ++ "{}"
 --    Assignment src' dst' ctx'   -> genCode src' ++ " " ++ operator ++ " " ++ genCode dst' where
 --                                   operator = case ctx' of
 --                                       Pure -> "="

@@ -5,11 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Parser.AST.Type where
+module Flowbox.Luna.Parser.AST.Function where
 
-data Type = Unknown
-	      | Type   { name   :: String                       }
-	      | Tuple  { items  :: [Type]                       }
-	      | Class  { name   :: String , params  :: [String] }
-	      | Lambda { inputs :: Type   , outputs :: Type     }
-          deriving (Show, Eq)
+import           Flowbox.Luna.Parser.AST.AST 
+import qualified Flowbox.Luna.Parser.AST.Type     as Type
+import           Flowbox.Luna.Parser.AST.Type       (Type)
+
+
+--mk :: String -> String -> Expr
+--mk name' param' = Function name' (Type.Type param')

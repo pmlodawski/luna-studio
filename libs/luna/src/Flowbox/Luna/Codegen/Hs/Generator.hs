@@ -10,6 +10,7 @@ module Flowbox.Luna.Codegen.Hs.Generator where
 
 import qualified Flowbox.Luna.Parser.AST.AST          as LAST
 import qualified Flowbox.Luna.Parser.AST.Type         as Type
+import           Flowbox.Luna.Parser.AST.Type           (Type)
 import qualified Flowbox.Luna.Parser.AST.Constant     as LConstant
 import qualified Flowbox.Luna.Codegen.Hs.AST.Expr     as Expr
 import           Flowbox.Luna.Codegen.Hs.AST.Expr       (Expr)
@@ -94,7 +95,13 @@ genExpr ast = case ast of
     LAST.Constant   cst               -> case cst of
                                              LConstant.Integer val -> return $ Expr.Constant $ Constant.Integer val
                                              _                     -> logger.critical $ "Unknown LUNA.AST expression"
-    LAST.Function name signature body -> Expr.Function name <$> return [] <*> mapM genExpr body
+    LAST.Function name signature body -> do
+                                         lambda <- genType signature
+                                         body'  <- mapM genExpr body
+                                         return $ lambda { Expr.name = name
+                                                         , Expr.body = body'
+                                                         }
+                                          --Expr.Function name <$> return [] <*> mapM genExpr body
     LAST.Class    cls fields methods  -> do
                                          efields <- mapM genField fields
                                          let name = Type.name cls
@@ -106,6 +113,11 @@ genExpr ast = case ast of
                                                                  , Expr.constructors = [cons]
                                                                  }  
                                             
+genType :: Generator a m => Type -> MaybeT m Expr
+genType t = case t of
+    Type.Type   name'            -> return $ Expr.Var name'
+    Type.Tuple  items'           -> Expr.Tuple <$> mapM genType items'
+    Type.Lambda inputs' outputs' -> Expr.Function "" <$> (Expr.items <$> genType inputs') <*> return []
 
 genField :: Generator a m => LAST.Expr -> MaybeT m Expr
 genField (LAST.Field name t) = return $ Expr.Typed (Type.name t) (Expr.Var name)

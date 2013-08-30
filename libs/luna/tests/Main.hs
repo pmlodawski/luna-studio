@@ -81,10 +81,8 @@ logger = getLogger "Flowbox"
 
 
 example :: String
-example = unlines [ "class Vector a:"
-                  , "    x :: a"
-                  , "    y :: a"
-                  , "    z :: a"
+example = unlines [ "def f(x):"
+                  , "   x"
                   ]
 
 --test :: (Enum a, MonadState a m, MonadWriter [LogEntry.LogEntry] m) => MaybeT m ()
@@ -115,7 +113,7 @@ main_inner = do
     putStrLn "\n-----------------"
 
     case hast of
-        Just hast' -> putStrLn $ Expr.genCode (hast'!!0)
+        Just hast' -> putStrLn $ PP.ppShow $ map Expr.genCode hast'
         _          -> return ()
     return ()
 
