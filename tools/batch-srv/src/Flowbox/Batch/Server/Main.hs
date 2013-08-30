@@ -5,26 +5,27 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE ScopedTypeVariables #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
---import Data.List
-import           Control.Monad                              ( when )
-import           Data.IORef                                 
+import           Control.Monad                              (when)
+import qualified Control.Concurrent                       as Concurrent
+import qualified Control.Concurrent.MVar                  as MVar
+import           Control.Concurrent.MVar                    (MVar)
+import qualified Data.IORef                               as IORef
+import           Data.IORef                                 (IORef)
 import           Data.Text.Lazy                             (pack)
 import qualified Network                                  as Network
-import           Network                                    (PortNumber)
 import qualified System.IO                                as IO
-import           System.Exit                                
---import System.Environment(getArgs)
+import qualified System.Exit                              as Exit
 
 
--- Thrift libraries
---import Thrift
---import Thrift.Transport.Handle 
---import Thrift.Protocol
-import           Thrift.Protocol.Binary                     (BinaryProtocol(..), readMessageBegin)
+import           Thrift.Transport.Handle                    ()
+import qualified Thrift.Protocol.Binary                   as Protocol
+import           Thrift.Protocol.Binary                     (Protocol)
 import qualified Thrift.Server                            as Server
+import           Thrift.Transport                           (Transport)
 
 -- Generated files
 import qualified Batch                                    as TBatch
@@ -49,7 +50,7 @@ import           Flowbox.System.Log.Logger
 
 
 
-port :: PortNumber
+port :: Network.PortNumber
 port = 30521
 
 
@@ -58,7 +59,7 @@ type BatchHandler = IORef Batch
 
 --newBatchHandler = newIORef Batch.empty
 newBatchHandler :: IO BatchHandler
-newBatchHandler = newIORef $ Batch.empty { Batch.projectManager = ProjectManager.mkGraph [
+newBatchHandler = IORef.newIORef $ Batch.empty { Batch.projectManager = ProjectManager.mkGraph [
                                                                              (0, Sample.project) 
                                                                              --(0, Project.empty)
                                                                                                 ] []
@@ -121,33 +122,53 @@ instance Batch_Iface BatchHandler where
     fS_mv               = HFileSystem.mv
 
     ping _              = logger.info $ "ping"
-    dump batchHandler   = runScript $ do
-        batch <- tryReadIORef batchHandler
-        scriptIO $ print batch
+    dump batchHandler   = runScript $ do batch <- tryReadIORef batchHandler
+                                         scriptIO $ print batch
+    shutdown _          = logger.info $ "shutdown"
 
 
-process2 cont handler (iprot, oprot) = do
-  (name, typ, seqid) <- readMessageBegin iprot
-  TBatch.proc_ handler (iprot,oprot) (name,typ,seqid)
-  if name /= pack "ping"
-    then return True
-    else do writeIORef cont False
-            return False
+processCommand :: (Protocol iprot, Protocol oprot, Transport itransp, Transport otransp, Batch_Iface batch)
+         => MVar Bool -> batch -> (iprot itransp, oprot otransp) -> IO Bool
+processCommand quitmutex handler (iprot, oprot) = do
+    (name, typ, seqid) <- Protocol.readMessageBegin iprot
+    TBatch.proc_ handler (iprot,oprot) (name,typ,seqid)
+    when (name == pack "shutdown") (MVar.putMVar quitmutex True)
+    return True
+
+
+accepter :: Network.Socket -> IO (Protocol.BinaryProtocol IO.Handle,
+                                    Protocol.BinaryProtocol IO.Handle)
+accepter s = do
+    (h, addr, p) <- Network.accept s
+    logger.info $ "Accepted connection from " ++ addr ++ " : " ++ (show p)
+    return (Protocol.BinaryProtocol h, Protocol.BinaryProtocol h)
+
+
+server :: MVar Bool -> IO ()
+server quitmutex = do
+    handler   <- newBatchHandler
+    logger.info $ "Starting the server"
+    _ <- Server.runThreadedServer accepter handler (processCommand quitmutex) (Network.PortNumber port)
+    return ()
+
+
+waitForQuit :: MVar t -> IO b
+waitForQuit quitmutex = do
+    _ <- MVar.takeMVar quitmutex
+    logger.warning $ "shutting down in 3 seconds"
+    Concurrent.threadDelay 1000000
+    logger.warning $ "shutting down in 2 seconds"
+    Concurrent.threadDelay 1000000
+    logger.warning $ "shutting down in 1 second"
+    Concurrent.threadDelay 1000000
+    logger.warning $ "shutting down..."
+    Exit.exitSuccess
+
 
 main :: IO ()
 main = do
     logger.setLevel $ DEBUG
-    handler <- newBatchHandler
-    cont    <- newIORef True
-    logger.info $ "Starting the server"
-    _ <- Server.runThreadedServer (accepter cont) handler (process2 cont) (Network.PortNumber port)
-    logger.info $ "done"
+    quitmutex <- MVar.newEmptyMVar
+    _ <- Concurrent.forkIO (server quitmutex)
+    waitForQuit quitmutex
 
-
---accepter :: Network.Socket -> IO (BinaryProtocol IO.Handle, BinaryProtocol IO.Handle)
-accepter cont s = do
-    c <- readIORef cont
-    when (not c) exitSuccess
-    (h, addr, p) <- Network.accept s
-    logger.info $ "Accepted connection from " ++ addr ++ " : " ++ (show p)
-    return (BinaryProtocol h, BinaryProtocol h)

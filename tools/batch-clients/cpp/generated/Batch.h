@@ -64,6 +64,7 @@ class BatchIf {
   virtual void FS_mv(const std::string& src, const std::string& dst) = 0;
   virtual void ping() = 0;
   virtual void dump() = 0;
+  virtual void shutdown() = 0;
 };
 
 class BatchIfFactory {
@@ -238,6 +239,9 @@ class BatchNull : virtual public BatchIf {
     return;
   }
   void dump() {
+    return;
+  }
+  void shutdown() {
     return;
   }
 };
@@ -6292,6 +6296,80 @@ class Batch_dump_presult {
 
 };
 
+
+class Batch_shutdown_args {
+ public:
+
+  Batch_shutdown_args() {
+  }
+
+  virtual ~Batch_shutdown_args() throw() {}
+
+
+  bool operator == (const Batch_shutdown_args & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_shutdown_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_shutdown_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_shutdown_pargs {
+ public:
+
+
+  virtual ~Batch_shutdown_pargs() throw() {}
+
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_shutdown_result {
+ public:
+
+  Batch_shutdown_result() {
+  }
+
+  virtual ~Batch_shutdown_result() throw() {}
+
+
+  bool operator == (const Batch_shutdown_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_shutdown_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_shutdown_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_shutdown_presult {
+ public:
+
+
+  virtual ~Batch_shutdown_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 class BatchClient : virtual public BatchIf {
  public:
   BatchClient(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) :
@@ -6459,6 +6537,9 @@ class BatchClient : virtual public BatchIf {
   void dump();
   void send_dump();
   void recv_dump();
+  void shutdown();
+  void send_shutdown();
+  void recv_shutdown();
  protected:
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
@@ -6523,6 +6604,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_FS_mv(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_ping(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_dump(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_shutdown(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   BatchProcessor(boost::shared_ptr<BatchIf> iface) :
     iface_(iface) {
@@ -6575,6 +6657,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["FS_mv"] = &BatchProcessor::process_FS_mv;
     processMap_["ping"] = &BatchProcessor::process_ping;
     processMap_["dump"] = &BatchProcessor::process_dump;
+    processMap_["shutdown"] = &BatchProcessor::process_shutdown;
   }
 
   virtual ~BatchProcessor() {}
@@ -7070,6 +7153,15 @@ class BatchMultiface : virtual public BatchIf {
       ifaces_[i]->dump();
     }
     ifaces_[i]->dump();
+  }
+
+  void shutdown() {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->shutdown();
+    }
+    ifaces_[i]->shutdown();
   }
 
 };

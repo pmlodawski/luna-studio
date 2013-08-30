@@ -204,4 +204,5 @@ service Batch {
 
     void ping()
     void dump()
+    void shutdown()
 }

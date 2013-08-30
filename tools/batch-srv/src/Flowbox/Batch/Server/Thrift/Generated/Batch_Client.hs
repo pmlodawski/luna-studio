@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,projectByID,createProject,openProject,updateProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump) where
+module Batch_Client(projects,projectByID,createProject,openProject,updateProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump,shutdown) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -1243,5 +1243,25 @@ recv_dump ip = do
     throw x
     else return ()
   res <- read_Dump_result ip
+  readMessageEnd ip
+  return ()
+shutdown (ip,op) = do
+  send_shutdown op
+  recv_shutdown ip
+send_shutdown op = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("shutdown", M_CALL, seqn)
+  write_Shutdown_args op (Shutdown_args{})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_shutdown ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_Shutdown_result ip
   readMessageEnd ip
   return ()
