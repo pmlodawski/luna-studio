@@ -10,7 +10,7 @@ module Flowbox.Luna.Codegen.Hs.AST.DataType (
 	module Flowbox.Luna.Codegen.Hs.AST.Expr
 )where
 
-import Flowbox.Luna.Codegen.Hs.AST.Expr
+import           Flowbox.Luna.Codegen.Hs.AST.Expr   
 
 empty :: Expr
 empty = DataType "" [] []

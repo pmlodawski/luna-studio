@@ -24,7 +24,7 @@ import qualified Flowbox.Luna.Parser.AST.Type     as Type
 import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 
 
-import Debug.Trace 
+import           Debug.Trace                        
 
 -----------------------------------------------------------
 -- Entities

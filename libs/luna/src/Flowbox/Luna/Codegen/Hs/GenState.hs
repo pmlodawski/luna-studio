@@ -4,23 +4,37 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
 module Flowbox.Luna.Codegen.Hs.GenState where
 
-import           Control.Monad.State   
-import qualified Data.Map            as Map
-import           Data.Map              (Map)
+import           Control.Monad.State           
+import qualified Data.Map                    as Map
+import           Data.Map                      (Map)
+import           Control.Monad.State           
+import           Control.Monad.Writer          
+import           Control.Monad.RWS             
+import           Control.Monad.Trans.Maybe     
+import           Control.Monad.Trans.Either    
 
+import           Flowbox.System.Log.Logger     
+import qualified Flowbox.System.Log.LogEntry as LogEntry
+
+logger = getLogger "Flowbox.Luna.Codegen.Hs.Generator"
 
 data GenState = GenState { varcount :: Int
                          , varmap   :: Map String String
                          } deriving (Show)
 
+
+type Generator m = (Functor m, MonadState GenState m, MonadWriter [LogEntry.LogEntry] m)
+
+
 empty :: GenState
 empty = GenState 0 Map.empty
 
 
-genVarName :: State GenState String
+genVarName :: Generator m => MaybeT m String
 genVarName = do
     state <- get
     let vname = "v''" ++ show (varcount state)
@@ -28,8 +42,16 @@ genVarName = do
     return vname
 
 
-registerVar :: String -> String -> State GenState ()
-registerVar alias vname = do
+registerVar :: Generator m => (String, String) -> MaybeT m ()
+registerVar (alias, vname) = do
     state <- get
     put $ state { varmap = Map.insert alias vname $ varmap state }
     return ()
+
+lookupVar :: Generator m => String -> MaybeT m (Maybe String)
+lookupVar vname = do
+	state <- get
+	return $ Map.lookup vname (varmap state)
+
+registerVars :: Generator m => [(String, String)] -> MaybeT m ()
+registerVars vars = mapM_ registerVar vars

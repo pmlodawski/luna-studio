@@ -10,7 +10,7 @@ module Flowbox.Luna.Codegen.Hs.AST.Cons (
 	module Flowbox.Luna.Codegen.Hs.AST.Expr
 )where
 
-import Flowbox.Luna.Codegen.Hs.AST.Expr
+import           Flowbox.Luna.Codegen.Hs.AST.Expr   
 
 empty :: Expr
 empty = Cons "" []

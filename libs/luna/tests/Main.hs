@@ -60,7 +60,7 @@
 import           Control.Monad.State                  
 import           Control.Monad.Writer                 
 import           Control.Monad.RWS                    
-import           Control.Monad.Trans.Maybe                
+import           Control.Monad.Trans.Maybe            
 import           Control.Monad.Trans.Either           
 import           Flowbox.System.Log.Logger            
 import qualified Flowbox.System.Log.Logger          as Logger
@@ -69,6 +69,8 @@ import qualified Flowbox.Luna.Codegen.Hs.Generator  as Gen
 import qualified Flowbox.Luna.Codegen.Hs.AST.Module as Module
 import qualified Flowbox.Luna.Parser                as Parser
 import qualified Flowbox.Luna.Codegen.Hs.AST.Expr   as Expr
+import qualified Flowbox.Luna.Codegen.Hs.GenState   as GenState
+import           Flowbox.Luna.Codegen.Hs.GenState     (GenState)
 import           Debug.Trace                          
 import           Data.Either.Utils                    (forceEither)
 import qualified Text.Show.Pretty                   as PP
@@ -81,8 +83,8 @@ logger = getLogger "Flowbox"
 
 
 example :: String
-example = unlines [ "def f(x):"
-                  , "   x"
+example = unlines [ "def f(x, y, z):"
+                  , "   w"
                   ]
 
 --test :: (Enum a, MonadState a m, MonadWriter [LogEntry.LogEntry] m) => MaybeT m ()
@@ -104,7 +106,7 @@ main_inner = do
     let 
         parsed = Parser.parse example
         ast = forceEither parsed
-        out = runRWS (runMaybeT (Gen.genModule ast)) 0 0
+        out = runRWS (runMaybeT (Gen.genModule ast)) 0 GenState.empty
         (hast,_,_) = out
     --let y = runRWS (runMaybeT test) 0 0
     putStrLn $ PP.ppShow $ ast

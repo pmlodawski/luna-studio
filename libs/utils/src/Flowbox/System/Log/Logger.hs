@@ -21,7 +21,7 @@ import           Control.Monad.State
 import           Control.Monad.Writer          
 import           System.Log.Logger           hiding (getLogger, setLevel, Logger)
 import           Prelude                     hiding (log, fail)
-import Control.Applicative
+import           Control.Applicative           
 
 import qualified Flowbox.System.Log.LogEntry as LogEntry
 

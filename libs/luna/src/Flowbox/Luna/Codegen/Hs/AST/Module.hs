@@ -7,7 +7,7 @@
 
 module Flowbox.Luna.Codegen.Hs.AST.Module where
 
-import Flowbox.Luna.Codegen.Hs.AST.Expr as Expr
+import           Flowbox.Luna.Codegen.Hs.AST.Expr as Expr
 
 
 empty :: Expr 

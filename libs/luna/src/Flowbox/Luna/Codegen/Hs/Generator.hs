@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, TupleSections #-}
 
 module Flowbox.Luna.Codegen.Hs.Generator where
 
@@ -28,28 +28,24 @@ import           Control.Applicative
 
 import           Debug.Trace                            
 
-import           Control.Monad.State                  
-import           Control.Monad.Writer                 
-import           Control.Monad.RWS                    
+import           Control.Monad.State                    
+import           Control.Monad.Writer                   
+import           Control.Monad.RWS                      
 import           Control.Monad.Trans.Maybe              
-import           Control.Monad.Trans.Either       
+import           Control.Monad.Trans.Either             
 
-import           Flowbox.System.Log.Logger            
-import qualified Flowbox.System.Log.LogEntry        as LogEntry
+import           Flowbox.System.Log.Logger              
+import qualified Flowbox.System.Log.LogEntry          as LogEntry
 
 logger = getLogger "Flowbox.Luna.Codegen.Hs.Generator"
 
 --type Generator a m r = (Functor m, MonadWriter [LogEntry.LogEntry] m) => LAST.Expr -> MaybeT m r
 
-type Generator a m = (Functor m, Enum a, MonadState a m, MonadWriter [LogEntry.LogEntry] m)
+type Generator m = (Functor m, MonadState GenState m, MonadWriter [LogEntry.LogEntry] m)
 
-main :: IO ()
-main = do
-    let 
-        out = runRWS (runMaybeT testme) 0 0
-    return ()
 
-testme :: Generator a m => MaybeT m ()
+
+testme :: Generator m => MaybeT m ()
 testme = do return ()
 
 --genModule :: Generator a m => LAST.Expr -> MaybeT m Module
@@ -90,36 +86,48 @@ genModule ast = case ast of
 --    LAST.Typed t (LAST.Identifier ident) -> 
 
 
-genExpr :: Generator a m => LAST.Expr -> MaybeT m Expr
+genExpr :: Generator m => LAST.Expr -> MaybeT m Expr
 genExpr ast = case ast of
-    LAST.Constant   cst               -> case cst of
-                                             LConstant.Integer val -> return $ Expr.Constant $ Constant.Integer val
-                                             _                     -> logger.critical $ "Unknown LUNA.AST expression"
-    LAST.Function name signature body -> do
-                                         lambda <- genType signature
-                                         body'  <- mapM genExpr body
-                                         return $ lambda { Expr.name = name
-                                                         , Expr.body = body'
-                                                         }
-                                          --Expr.Function name <$> return [] <*> mapM genExpr body
-    LAST.Class    cls fields methods  -> do
-                                         efields <- mapM genField fields
-                                         let name = Type.name cls
-                                             cons = Cons.empty { Expr.name   = name 
-                                                               , Expr.fields = efields
-                                                               }
-                                         return $ DataType.empty { Expr.name         = name
-                                                                 , Expr.params       = Type.params cls
-                                                                 , Expr.constructors = [cons]
-                                                                 }  
-                                            
-genType :: Generator a m => Type -> MaybeT m Expr
-genType t = case t of
-    Type.Type   name'            -> return $ Expr.Var name'
-    Type.Tuple  items'           -> Expr.Tuple <$> mapM genType items'
-    Type.Lambda inputs' outputs' -> Expr.Function "" <$> (Expr.items <$> genType inputs') <*> return []
+    LAST.Constant   cst                 -> case cst of
+                                               LConstant.Integer val -> return $ Expr.Constant $ Constant.Integer val
+                                               _                     -> logger.critical $ "Unknown LUNA.AST expression"
+    LAST.Identifier name                -> do
+                                           mvname <- GenState.lookupVar name
+                                           vname  <- case mvname of
+                                               Just n  -> return n
+                                               Nothing -> logger.critical $ "Not in scope: '" ++ name ++ "'"
+                                           return $ trace(show mvname)Expr.NOP
 
-genField :: Generator a m => LAST.Expr -> MaybeT m Expr
+    LAST.Function   name signature body -> do
+                                           lambda <- genType signature
+                                           body'  <- mapM genExpr body
+                                           return $ lambda { Expr.name = name
+                                                           , Expr.body = body'
+                                                           }
+                                            --Expr.Function name <$> return [] <*> mapM genExpr body
+    LAST.Class      cls fields methods  -> do
+                                           efields <- mapM genField fields
+                                           let name = Type.name cls
+                                               cons = Cons.empty { Expr.name   = name 
+                                                                 , Expr.fields = efields
+                                                                 }
+                                           return $ DataType.empty { Expr.name         = name
+                                                                   , Expr.params       = Type.params cls
+                                                                   , Expr.constructors = [cons]
+                                                                   }  
+                                            
+genType :: Generator m => Type -> MaybeT m Expr
+genType t = case t of
+    Type.Type   name             -> return $ Expr.Var name
+    Type.Tuple  items            -> Expr.Tuple <$> mapM genType items
+    Type.Lambda inputs outputs   -> do
+                                    inputs'        <- Expr.items <$> genType inputs
+                                    let inputnames =  map Expr.name inputs'
+                                    inputvars      <- mapM (\a -> (a,) <$> GenState.genVarName) inputnames
+                                    GenState.registerVars inputvars
+                                    return $ trace(show inputvars) $ Expr.Function "" inputs' []
+
+genField :: Generator m => LAST.Expr -> MaybeT m Expr
 genField (LAST.Field name t) = return $ Expr.Typed (Type.name t) (Expr.Var name)
 
 
@@ -140,3 +148,4 @@ genField (LAST.Field name t) = return $ Expr.Typed (Type.name t) (Expr.Var name)
 
 
 --data X a b c = X{a::a,b::b,c::c} | Y
+
