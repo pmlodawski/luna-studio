@@ -5,39 +5,35 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.AST.Class (
-    Class(..),
-    empty,
-    genCode,
-)where
+module Flowbox.Luna.Codegen.Hs.AST.Class where
 
-import           Debug.Trace                            
+--import           Debug.Trace                            
 
-import           Data.String.Utils                      (join)
+--import           Data.String.Utils                      (join)
 
-import qualified Flowbox.Luna.Codegen.Hs.AST.Expr     as Expr
-import           Flowbox.Luna.Codegen.Hs.AST.Expr       (Expr)
-import qualified Flowbox.Luna.Codegen.Hs.Path         as Path
-import qualified Flowbox.Luna.Codegen.Hs.AST.Function as Function
-import           Flowbox.Luna.Codegen.Hs.AST.Function   (Function)
+--import qualified Flowbox.Luna.Codegen.Hs.AST.Expr     as Expr
+--import           Flowbox.Luna.Codegen.Hs.AST.Expr       (Expr)
+--import qualified Flowbox.Luna.Codegen.Hs.Path         as Path
+--import qualified Flowbox.Luna.Codegen.Hs.AST.Function as Function
+--import           Flowbox.Luna.Codegen.Hs.AST.Function   (Function)
 
 
-data Class = Class { name   :: String,
-                     params :: [Expr],
-                     fields :: [Expr],
-                     deps   :: [Expr]
-                   } deriving (Show)
+--data Class = Class { name   :: String,
+--                     params :: [Expr],
+--                     fields :: [Expr],
+--                     deps   :: [Expr]
+--                   } deriving (Show)
 
 
-empty :: Class
-empty = Class "" [] [] []
+--empty :: Class
+--empty = Class "" [] [] []
 
 
-genCode :: Class -> String
-genCode cls = header ++ signature ++ dep ++ " where\n" ++ body where
-    header    = "class " ++ (name cls) ++ " "
-    signature = join " " $ map Expr.genCode (params cls)
-    deps'     = deps cls
-    dep       = if null deps' then "" else " | " ++ join ", " (map Expr.genCode (deps cls))
-    body      = Path.indent ++ (join ("\n"++Path.indent) $ map Expr.genCode (fields cls))
+--genCode :: Class -> String
+--genCode cls = header ++ signature ++ dep ++ " where\n" ++ body where
+--    header    = "class " ++ (name cls) ++ " "
+--    signature = join " " $ map Expr.genCode (params cls)
+--    deps'     = deps cls
+--    dep       = if null deps' then "" else " | " ++ join ", " (map Expr.genCode (deps cls))
+--    body      = Path.indent ++ (join ("\n"++Path.indent) $ map Expr.genCode (fields cls))
 

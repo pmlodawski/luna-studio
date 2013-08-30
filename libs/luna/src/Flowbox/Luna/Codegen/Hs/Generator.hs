@@ -95,16 +95,20 @@ genExpr ast = case ast of
                                              LConstant.Integer val -> return $ Expr.Constant $ Constant.Integer val
                                              _                     -> logger.critical $ "Unknown LUNA.AST expression"
     LAST.Function name signature body -> Expr.Function name <$> return [] <*> mapM genExpr body
-    LAST.Class    cls fields methods  -> return $ DataType.empty { Expr.name         = name
+    LAST.Class    cls fields methods  -> do
+                                         efields <- mapM genField fields
+                                         let name = Type.name cls
+                                             cons = Cons.empty { Expr.name   = name 
+                                                               , Expr.fields = efields
+                                                               }
+                                         return $ DataType.empty { Expr.name         = name
                                                                  , Expr.params       = Type.params cls
                                                                  , Expr.constructors = [cons]
                                                                  }  
-                                         where
-                                            name = Type.name cls
-                                            cons = Cons.empty { Expr.name   = name 
-                                                              , Expr.fields = []
-                                                              }
+                                            
 
+genField :: Generator a m => LAST.Expr -> MaybeT m Expr
+genField (LAST.Field name t) = return $ Expr.Typed (Type.name t) (Expr.Var name)
 
 
 
@@ -118,7 +122,7 @@ genExpr ast = case ast of
     --                                    --src' <- GenState.genVarName
     --                                    --GenState.registerVar src' src
     --                                    --return $ Expr.Assignment (Expr.Var src') dst' Expr.Pure
-    _ -> return Expr.NOP
+    --_ -> return Expr.NOP
 
 
 

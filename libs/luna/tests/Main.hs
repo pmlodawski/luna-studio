@@ -68,6 +68,7 @@ import qualified Flowbox.System.Log.LogEntry        as LogEntry
 import qualified Flowbox.Luna.Codegen.Hs.Generator  as Gen
 import qualified Flowbox.Luna.Codegen.Hs.AST.Module as Module
 import qualified Flowbox.Luna.Parser                as Parser
+import qualified Flowbox.Luna.Codegen.Hs.AST.Expr   as Expr
 import           Debug.Trace                          
 import           Data.Either.Utils                    (forceEither)
 import qualified Text.Show.Pretty                   as PP
@@ -81,7 +82,9 @@ logger = getLogger "Flowbox"
 
 example :: String
 example = unlines [ "class Vector a:"
-                  , "    x :: Int"
+                  , "    x :: a"
+                  , "    y :: a"
+                  , "    z :: a"
                   ]
 
 --test :: (Enum a, MonadState a m, MonadWriter [LogEntry.LogEntry] m) => MaybeT m ()
@@ -104,10 +107,16 @@ main_inner = do
         parsed = Parser.parse example
         ast = forceEither parsed
         out = runRWS (runMaybeT (Gen.genModule ast)) 0 0
+        (hast,_,_) = out
     --let y = runRWS (runMaybeT test) 0 0
     putStrLn $ PP.ppShow $ ast
     putStrLn "\n-----------------"
     putStrLn $ PP.ppShow $ out
+    putStrLn "\n-----------------"
+
+    case hast of
+        Just hast' -> putStrLn $ Expr.genCode (hast'!!0)
+        _          -> return ()
     return ()
 
 
