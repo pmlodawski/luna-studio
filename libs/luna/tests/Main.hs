@@ -95,10 +95,15 @@ example = unlines [ "def f(x, y, z):"
 --    fail "oh no"
 --    put $ succ n
 --    return ()
- 
+
+test x = 
+    trace (show x) x
+
+testIO x = return $ test x
 
 main :: IO ()
 main = do
+    a <- testIO 3
     timeIt main_inner
 
 main_inner :: IO ()

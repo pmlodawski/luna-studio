@@ -91,12 +91,7 @@ genExpr ast = case ast of
     LAST.Constant   cst                 -> case cst of
                                                LConstant.Integer val -> return $ Expr.Constant $ Constant.Integer val
                                                _                     -> logger.critical $ "Unknown LUNA.AST expression"
-    LAST.Identifier name                -> do
-                                           mvname <- GenState.lookupVar name
-                                           vname  <- case mvname of
-                                               Just n  -> return n
-                                               Nothing -> logger.critical $ "Not in scope: '" ++ name ++ "'"
-                                           return $ trace(show mvname)Expr.NOP
+    LAST.Identifier name                -> return $ Expr.Var ("v''" ++ name)
 
     LAST.Function   name signature body -> do
                                            lambda <- genType signature
@@ -118,14 +113,11 @@ genExpr ast = case ast of
                                             
 genType :: Generator m => Type -> MaybeT m Expr
 genType t = case t of
-    Type.Type   name             -> return $ Expr.Var name
+    Type.Type   name             -> return $ Expr.Var ("v''" ++ name)
     Type.Tuple  items            -> Expr.Tuple <$> mapM genType items
     Type.Lambda inputs outputs   -> do
                                     inputs'        <- Expr.items <$> genType inputs
-                                    let inputnames =  map Expr.name inputs'
-                                    inputvars      <- mapM (\a -> (a,) <$> GenState.genVarName) inputnames
-                                    GenState.registerVars inputvars
-                                    return $ trace(show inputvars) $ Expr.Function "" inputs' []
+                                    return $ Expr.Function "" inputs' []
 
 genField :: Generator m => LAST.Expr -> MaybeT m Expr
 genField (LAST.Field name t) = return $ Expr.Typed (Type.name t) (Expr.Var name)

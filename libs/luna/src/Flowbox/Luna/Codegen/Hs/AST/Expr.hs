@@ -74,7 +74,7 @@ genCode expr = case expr of
     Cons     name' fields'               -> name' ++ " { " ++ join ", " (map genCode fields') ++ " }"
     DataType name' params' constructors' -> "data " ++ name' ++ params'' ++ " = " ++ join " | " (map genCode constructors') where
                                             params'' = if not $ null params' then " " ++ join " " params' else ""
-    Function name' signature' body'      -> name' ++ " " ++ join " " (map genCode signature') ++ " = " ++ "{}"
+    Function name' signature' body'      -> name' ++ " " ++ join " " (map genCode signature') ++ " = " ++ "{ " ++ join "; " (map genCode body') ++ " }"
 --    Assignment src' dst' ctx'   -> genCode src' ++ " " ++ operator ++ " " ++ genCode dst' where
 --                                   operator = case ctx' of
 --                                       Pure -> "="
