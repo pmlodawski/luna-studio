@@ -17,21 +17,21 @@ import qualified Data.IORef                               as IORef
 import           Data.IORef                                 (IORef)
 import           Data.Text.Lazy                             (pack)
 import qualified Network                                  as Network
-import qualified System.IO                                as IO
 import qualified System.Exit                              as Exit
 
 
-import           Thrift.Transport.Handle                    ()
-import qualified Thrift.Protocol.Binary                   as Protocol
-import           Thrift.Protocol.Binary                     (Protocol)
-import qualified Thrift.Server                            as Server
-import           Thrift.Transport                           (Transport)
-
--- Generated files
 import qualified Batch                                    as TBatch
 import           Batch_Iface                                
+import           Thrift.Transport.Handle                    ()
+import qualified Thrift.Protocol.Binary                   as TProtocol
+import           Thrift.Protocol.Binary                     (Protocol)
+import           Thrift.Transport                           (Transport)
+
+import           Flowbox.Control.Error                      
 import qualified Flowbox.Batch.Batch                      as Batch
 import           Flowbox.Batch.Batch                        (Batch(..))
+import qualified Flowbox.Batch.Samples.Modules            as Sample
+import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
 import qualified Flowbox.Batch.Server.Handlers.Defs       as HDefs
 import qualified Flowbox.Batch.Server.Handlers.Defaults   as HDefaults
 import qualified Flowbox.Batch.Server.Handlers.Graph      as HGraph
@@ -39,21 +39,13 @@ import qualified Flowbox.Batch.Server.Handlers.Libs       as HLibs
 import qualified Flowbox.Batch.Server.Handlers.Projects   as HProjects
 import qualified Flowbox.Batch.Server.Handlers.Types      as HTypes
 import qualified Flowbox.Batch.Server.Handlers.FileSystem as HFileSystem
-
-
-import qualified Flowbox.Batch.Project.Project            as Project
-import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
-import qualified Flowbox.Batch.Samples.Modules            as Sample
-import           Flowbox.Control.Error                      
+import qualified Flowbox.Batch.Server.Server              as Server
 import           Flowbox.System.Log.Logger                  
+
 
 
 logger :: (String -> IO ()) -> IO ()
 logger = getLogger "Flowbox.Batch.Server"
-
-
-port :: Network.PortNumber
-port = 30521
 
 
 type BatchHandler = IORef Batch
@@ -132,25 +124,17 @@ instance Batch_Iface BatchHandler where
 processCommand :: (Protocol iprot, Protocol oprot, Transport itransp, Transport otransp, Batch_Iface batch)
          => MVar Bool -> batch -> (iprot itransp, oprot otransp) -> IO Bool
 processCommand quitmutex handler (iprot, oprot) = do
-    (name, typ, seqid) <- Protocol.readMessageBegin iprot
+    (name, typ, seqid) <- TProtocol.readMessageBegin iprot
     TBatch.proc_ handler (iprot,oprot) (name,typ,seqid)
     when (name == pack "shutdown") (MVar.putMVar quitmutex True)
     return True
 
 
-accepter :: Network.Socket -> IO (Protocol.BinaryProtocol IO.Handle,
-                                    Protocol.BinaryProtocol IO.Handle)
-accepter s = do
-    (h, addr, p) <- Network.accept s
-    logger.info $ "Accepted connection from " ++ addr ++ " : " ++ (show p)
-    return (Protocol.BinaryProtocol h, Protocol.BinaryProtocol h)
-
-
-server :: MVar Bool -> IO ()
-server quitmutex = do
+serve :: MVar Bool -> IO ()
+serve quitmutex = do
     handler   <- newBatchHandler
     logger.info $ "Starting the server"
-    _ <- Server.runThreadedServer accepter handler (processCommand quitmutex) (Network.PortNumber port)
+    _ <- Server.runSingleConnectionServer Server.accepter handler (processCommand quitmutex) (Network.PortNumber Server.port)
     return ()
 
 
@@ -171,6 +155,6 @@ main :: IO ()
 main = do
     logger.setLevel $ DEBUG
     quitmutex <- MVar.newEmptyMVar
-    _ <- Concurrent.forkIO (server quitmutex)
+    _ <- Concurrent.forkIO (serve quitmutex)
     waitForQuit quitmutex
 
