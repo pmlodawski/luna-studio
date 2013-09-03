@@ -130,14 +130,15 @@ int main(int argc, char **argv) {
         dummy2.__set_expression("dummy2");
         batch.addNode(dummy2, dummy2, fun.defID, userlib.libID, proj.projectID);
         
-        try {
-            batch.connect(inputsID, {0, 0, 0}, dummy2.nodeID, {4,5,9}, fun.defID, userlib.libID, proj.projectID);
-        } catch (ArgumentException e) {
-            cout << "Unable to connect: "<< "\t" << e.message << endl;
-        }
-        
+
+        Node dummy3;
+        dummy3.__set_cls(NodeType::Expr);
+        dummy3.__set_expression("dummy3");
+        batch.addNode(dummy3, dummy3, fun.defID, userlib.libID, proj.projectID);
+
+        batch.connect(inputsID, {1, 2, 3}, dummy3.nodeID, {4,5,9}, fun.defID, userlib.libID, proj.projectID);
         batch.connect(inputsID, {6, 9}, dummy2.nodeID, {}, fun.defID, userlib.libID, proj.projectID);
-    
+
         try {
             batch.connect(inputsID, {0, 0, 0}, dummy2.nodeID, {1}, fun.defID, userlib.libID, proj.projectID);
         } catch (ArgumentException e) {

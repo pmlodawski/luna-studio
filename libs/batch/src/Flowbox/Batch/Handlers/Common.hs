@@ -45,6 +45,7 @@ import qualified Flowbox.Luna.Network.Graph.Graph     as Graph
 import           Flowbox.Luna.Network.Graph.Graph       (Graph)
 import qualified Flowbox.Luna.Network.Graph.Node      as Node
 import           Flowbox.Luna.Network.Graph.Node        (Node)
+import Debug.Trace
 
 
 
@@ -203,8 +204,9 @@ graphViewOp defID libID projectID operation = definitionOp defID libID projectID
     graphView <- GraphView.fromGraph agraph
     (newGraphView, r) <- operation batch graphView
     newGraph <- GraphView.toGraph newGraphView
+    t <- GraphView.fromGraph newGraph
     let newDefinition = definition {Definition.graph =  newGraph}
-    return (newDefinition, r))
+    return (traceShow newGraphView $ traceShow newGraph $ traceShow t newDefinition, r))
 
 
 nodeOp :: Node.ID

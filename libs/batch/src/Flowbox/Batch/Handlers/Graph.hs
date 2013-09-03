@@ -31,7 +31,6 @@ import qualified Flowbox.Luna.Network.Graph.Node        as Node
 import           Flowbox.Luna.Network.Graph.Node          (Node(..))
 
 
-
 nodesGraph :: Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String GraphView
 nodesGraph defID libID projectID = readonly . graphViewOp defID libID projectID (\_ graphView -> do 
     return (graphView, graphView))
@@ -69,10 +68,11 @@ connect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor
 connect srcNodeID asrcPort dstNodeID adstPort defID libID projectID = noresult . graphViewOp defID libID projectID (\_ graphView -> do 
     GraphView.gelem srcNodeID graphView `ifnot` ("Unable to connect: Wrong 'srcNodeID' = " ++ show srcNodeID)
     GraphView.gelem dstNodeID graphView `ifnot` ("Unable to connect: Wrong 'dstNodeID' = " ++ show dstNodeID)
-    (length adstPort <= 1)              `ifnot` "Unable to connect: dstPort cannot have more than 1 item."
+    --(length adstPort <= 1)              `ifnot` "Unable to connect: dstPort cannot have more than 1 item."
     GraphView.isNotAlreadyConnected graphView dstNodeID adstPort `ifnot` "Unable to connect: Port is already connected"
     let newGraphView = GraphView.insEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) graphView
     return (newGraphView, ()))
+
 
 
 disconnect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor
