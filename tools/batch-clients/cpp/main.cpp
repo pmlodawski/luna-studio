@@ -180,8 +180,6 @@ int main(int argc, char **argv) {
         batch.nodeDefaults(defaults, outputsID, fun.defID, userlib.libID, proj.projectID);
         cout << "Node has " << defaults.size() << " defaults" << endl;
         
-        batch.dump();
-
         /* Loading and unloading */
 
         batch.storeLibrary(userlib.libID, proj.projectID);

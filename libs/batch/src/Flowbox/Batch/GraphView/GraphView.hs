@@ -85,10 +85,11 @@ removeEdges :: DG.Graph a b -> DG.Graph a c
 removeEdges graph = mkGraph (labNodes graph) []
 
 
+findMatchingTuple :: Node.ID -> Int -> Graph -> Maybe (Node.ID, Node.ID, Edge)
 findMatchingTuple nodeID p graph = mt where
     mt = List.find matching (inn graph nodeID)
-
     matching (_, _, Edge existingTuplePort) = existingTuplePort == p
+
 
 getOrCreateTuple :: Node.ID -> Graph -> Int -> Either String (Node.ID, Graph)
 getOrCreateTuple nodeID graph p = case findMatchingTuple nodeID p graph of 
@@ -115,7 +116,6 @@ connectGTuples (srcNodeID, dstNodeID, dstPorts) p graph =  case dstPorts of
             let dstPortsInit = init dstPorts
             let dstPortsLast = last dstPorts
             (tupleID, graphT) <- getOrCreateTuple dstNodeID graph p
-            --let newGraph = Graph.insEdge (srcNodeID, tupleID, Edge dstPortsLast) graphT
             connectGTuples (srcNodeID, tupleID, dstPortsInit) dstPortsLast graphT
 
 connectG :: (Node.ID, Node.ID, EdgeView) -> Graph -> Either String Graph
