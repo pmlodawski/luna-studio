@@ -47,6 +47,6 @@ setDefaults node defaults = newNode where
     attrs = Node.attributes node
     defaultsMapString = show defaults
     newAttrs = case Attributes.lookup Batch.attributeKey attrs of 
-        Nothing -> Attributes.fromList [(Batch.attributeKey, Map.fromList [(defaultsMapKey, defaultsMapString)])]
-        Just batchAttrs -> Attributes.insert Batch.attributeKey (Map.insert defaultsMapKey defaultsMapString batchAttrs) attrs
+        Nothing         -> Attributes.insert Batch.attributeKey (Map.fromList [(defaultsMapKey, defaultsMapString)])          attrs
+        Just batchAttrs -> Attributes.insert Batch.attributeKey (Map.insert     defaultsMapKey  defaultsMapString batchAttrs) attrs
     newNode = node { Node.attributes = newAttrs }
