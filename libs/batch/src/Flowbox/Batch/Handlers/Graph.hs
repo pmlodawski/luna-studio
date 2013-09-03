@@ -17,7 +17,7 @@ module Flowbox.Batch.Handlers.Graph (
 ) where
 
 import           Flowbox.Batch.Batch                      (Batch(..))
-import           Flowbox.Batch.Handlers.Common            (noresult, readonly, graphOp, nodeOp)
+import           Flowbox.Batch.Handlers.Common            (noresult, readonly, graphViewOp, nodeOp)
 import           Flowbox.Batch.GraphView.EdgeView         (EdgeView(..))
 import qualified Flowbox.Batch.GraphView.GraphView      as GraphView
 import           Flowbox.Batch.GraphView.GraphView        (GraphView)
@@ -33,9 +33,8 @@ import           Flowbox.Luna.Network.Graph.Node          (Node(..))
 
 
 nodesGraph :: Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String GraphView
-nodesGraph defID libID projectID = readonly . graphOp defID libID projectID (\_ agraph -> do 
-    graphview <- GraphView.fromGraph agraph
-    return (agraph, graphview))
+nodesGraph defID libID projectID = readonly . graphViewOp defID libID projectID (\_ graphView -> do 
+    return (graphView, graphView))
 
 
 nodeByID :: Node.ID -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Node
@@ -45,45 +44,41 @@ nodeByID nodeID defID libID projectID = readonly . nodeOp nodeID defID libID pro
 
 addNode :: Node 
         -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String (Batch, Node.ID)
-addNode node defID libID projectID = graphOp defID libID projectID (\_ agraph -> 
-    Right $ Graph.insNewNode node agraph)
+addNode node defID libID projectID = graphViewOp defID libID projectID (\_ graphView -> 
+    Right $ Graph.insNewNode node graphView)
 
 
 updateNode :: (Node.ID, Node) 
            -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
-updateNode (nodeID, node) defID libID projectID = noresult . graphOp defID libID projectID (\_ agraph -> do
-    Graph.gelem nodeID agraph `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
-    let newGraph = Graph.updateNode (nodeID, node) agraph
-    return (newGraph, ()))
+updateNode (nodeID, node) defID libID projectID = noresult . graphViewOp defID libID projectID (\_ graphView -> do
+    Graph.gelem nodeID graphView `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
+    let newGraphView = Graph.updateNode (nodeID, node) graphView
+    return (newGraphView, ()))
 
 
 removeNode :: Node.ID 
            -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
-removeNode nodeID defID libID projectID = noresult . graphOp defID libID projectID (\_ agraph -> do
-    Graph.gelem nodeID agraph `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
-    let newGraph = Graph.delNode nodeID agraph
-    return (newGraph, ()))
+removeNode nodeID defID libID projectID = noresult . graphViewOp defID libID projectID (\_ graphView -> do
+    Graph.gelem nodeID graphView `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
+    let newGraphView = Graph.delNode nodeID graphView
+    return (newGraphView, ()))
 
 
 connect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor 
         -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
-connect srcNodeID asrcPort dstNodeID adstPort defID libID projectID = noresult . graphOp defID libID projectID (\_ agraph -> do 
-    graphview <- GraphView.fromGraph agraph;
-    GraphView.gelem srcNodeID graphview `ifnot` ("Unable to connect: Wrong 'srcNodeID' = " ++ show srcNodeID)
-    GraphView.gelem dstNodeID graphview `ifnot` ("Unable to connect: Wrong 'dstNodeID' = " ++ show dstNodeID)
+connect srcNodeID asrcPort dstNodeID adstPort defID libID projectID = noresult . graphViewOp defID libID projectID (\_ graphView -> do 
+    GraphView.gelem srcNodeID graphView `ifnot` ("Unable to connect: Wrong 'srcNodeID' = " ++ show srcNodeID)
+    GraphView.gelem dstNodeID graphView `ifnot` ("Unable to connect: Wrong 'dstNodeID' = " ++ show dstNodeID)
     (length adstPort <= 1)              `ifnot` "Unable to connect: dstPort cannot have more than 1 item."
-    GraphView.isNotAlreadyConnected graphview dstNodeID adstPort `ifnot` "Unable to connect: Port is already connected"
-    let newGraphView = GraphView.insEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) graphview
-    newGraph <- GraphView.toGraph newGraphView
-    return (newGraph, ()))
+    GraphView.isNotAlreadyConnected graphView dstNodeID adstPort `ifnot` "Unable to connect: Port is already connected"
+    let newGraphView = GraphView.insEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) graphView
+    return (newGraphView, ()))
 
 
 disconnect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor
            -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Batch
-disconnect srcNodeID asrcPort dstNodeID adstPort defID libID projectID = noresult . graphOp defID libID projectID (\_ agraph -> do
-    Graph.gelem srcNodeID agraph `ifnot` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
-    Graph.gelem dstNodeID agraph `ifnot` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
-    graphview <- GraphView.fromGraph agraph
-    let newGraphView = GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) graphview
-    newGraph <- GraphView.toGraph newGraphView
-    return (newGraph, ()))
+disconnect srcNodeID asrcPort dstNodeID adstPort defID libID projectID = noresult . graphViewOp defID libID projectID (\_ graphView -> do
+    Graph.gelem srcNodeID graphView `ifnot` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
+    Graph.gelem dstNodeID graphView `ifnot` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
+    let newGraphView = GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView asrcPort adstPort) graphView
+    return (newGraphView, ()))

@@ -20,11 +20,14 @@ module Flowbox.Batch.Handlers.Common (
     defManagerOp,
     definitionOp,
     graphOp,
-    nodeOp
+    graphViewOp,
+    nodeOp,
 ) where
 
 import qualified Flowbox.Batch.Batch                  as Batch
 import           Flowbox.Batch.Batch                    (Batch(..))
+import qualified Flowbox.Batch.GraphView.GraphView    as GraphView
+import           Flowbox.Batch.GraphView.GraphView      (GraphView)
 import qualified Flowbox.Batch.Project.Project        as Project
 import           Flowbox.Batch.Project.Project          (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
@@ -187,6 +190,22 @@ graphOp defID libID projectID operation = definitionOp defID libID projectID (\b
     (newGraph, r) <- operation batch agraph
     let newDefinition = definition {Definition.graph =  newGraph}
     return (newDefinition, r))
+
+
+graphViewOp :: Definition.ID
+        -> Library.ID 
+        -> Project.ID
+        -> (Batch -> GraphView -> Either String (GraphView, r))
+        -> Batch 
+        -> Either String (Batch, r)
+graphViewOp defID libID projectID operation = definitionOp defID libID projectID (\batch definition -> do
+    let agraph = Definition.graph definition
+    graphView <- GraphView.fromGraph agraph
+    (newGraphView, r) <- operation batch graphView
+    newGraph <- GraphView.toGraph newGraphView
+    let newDefinition = definition {Definition.graph =  newGraph}
+    return (newDefinition, r))
+
 
 nodeOp :: Node.ID
        -> Definition.ID

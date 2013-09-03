@@ -13,17 +13,16 @@ module Flowbox.Batch.Server.Server (
     runSingleConnectionServer,
 ) where
 
-import           Control.Monad                              (forever, when)
-import qualified Control.Concurrent                       as Concurrent
-import qualified Control.Exception                        as Exception
-import qualified Network                                  as Network
-import qualified System.IO                                as IO
+import           Control.Monad               (forever, when)
+import qualified Control.Exception         as Exception
+import qualified Network                   as Network
+import qualified System.IO                 as IO
 
-import           Thrift.Transport.Handle                    ()
-import qualified Thrift.Protocol.Binary                   as TProtocol
-import           Thrift.Protocol.Binary                     (Protocol)
-import           Thrift.Transport                           (Transport)
-import           Flowbox.System.Log.Logger                  
+import           Thrift.Transport.Handle     ()
+import qualified Thrift.Protocol.Binary    as TProtocol
+import           Thrift.Protocol.Binary      (Protocol)
+import           Thrift.Transport            (Transport)
+import           Flowbox.System.Log.Logger   
 
 
 
