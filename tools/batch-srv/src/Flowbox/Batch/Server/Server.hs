@@ -57,5 +57,6 @@ runSingleConnectionServer accepter_ hand proc_ port_ = do
 singleAcceptLoop :: IO t -> (t -> IO Bool) -> IO a
 singleAcceptLoop accepter_ proc_ = forever $
     do ps <- accepter_
-       Exception.handle (\(_ :: Exception.SomeException) -> return ()) (loop $ proc_ ps)
+       Exception.handle (\(e :: Exception.SomeException) -> logger.critical $ "Connection to client lost: " ++ show e)
+                        (loop $ proc_ ps)
   where loop m = do { continue <- m; when continue (loop m) }

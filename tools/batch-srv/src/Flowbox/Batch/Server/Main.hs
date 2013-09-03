@@ -9,6 +9,7 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+import           Prelude                                  hiding (error)
 import           Control.Monad                              (when)
 import qualified Control.Concurrent                       as Concurrent
 import qualified Control.Concurrent.MVar                  as MVar
@@ -157,7 +158,7 @@ main = do
     logger.setLevel $ DEBUG
     quitmutex <- MVar.newEmptyMVar
     _ <- Concurrent.forkIO 
-        $ Exception.handle (\(e :: Exception.SomeException) -> do logger.critical $ show e
+        $ Exception.handle (\(e :: Exception.SomeException) -> do logger.error $ "Server run failure: " ++ show e
                                                                   MVar.putMVar quitmutex True) 
         (serve quitmutex)
     waitForQuit quitmutex
