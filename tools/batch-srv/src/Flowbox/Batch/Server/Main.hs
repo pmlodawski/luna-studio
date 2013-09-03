@@ -13,6 +13,7 @@ import           Control.Monad                              (when)
 import qualified Control.Concurrent                       as Concurrent
 import qualified Control.Concurrent.MVar                  as MVar
 import           Control.Concurrent.MVar                    (MVar)
+import qualified Control.Exception                        as Exception
 import qualified Data.IORef                               as IORef
 import           Data.IORef                                 (IORef)
 import           Data.Text.Lazy                             (pack)
@@ -155,6 +156,9 @@ main :: IO ()
 main = do
     logger.setLevel $ DEBUG
     quitmutex <- MVar.newEmptyMVar
-    _ <- Concurrent.forkIO (serve quitmutex)
+    _ <- Concurrent.forkIO 
+        $ Exception.handle (\(e :: Exception.SomeException) -> do logger.critical $ show e
+                                                                  MVar.putMVar quitmutex True) 
+        (serve quitmutex)
     waitForQuit quitmutex
 
