@@ -43,8 +43,31 @@ mkClass :: String -> Definition
 mkClass aname  = mkDefinition (Class aname [] [])
 
 
-listToDefs :: [String] -> Definition.ID -> Definition.ID -> [(Definition.ID, Definition.ID, Definition)]
-listToDefs l start parentID = map (\(i, n)-> (parentID, i, mkClass n)) $ zip [start..] l
+mkFunction :: String -> Definition
+mkFunction aname = mkDefinition (Function aname ( Tuple [ Tuple [ Class "a" [] [Class "g" [] []]
+                                                                , Class "b" [] []
+                                                                , List $ Named "n" $ Class "f" [] []
+                                                                ]
+                                                        , Class "c" [] []
+                                                        , Function "d" ( Tuple [ Class "e" [] []
+                                                                               ]
+                                                                       ) 
+                                                                       ( Tuple []
+                                                                       )
+                                                        ]
+                                                 ) 
+                                                 ( Tuple [ Class "o1" [] []
+                                                         , Class "o2" [] []
+                                                         , Class "o3" [] []
+                                                         ]
+                                                 )
+                                 )
+
+
+listToDefs :: [String] -> Definition.ID -> Definition.ID -> (String -> Definition)
+           -> [(Definition.ID, Definition.ID, Definition)]
+listToDefs l start parentID mk = map (\(i, n)-> (parentID, i, mk n)) $ zip [start..] l
+
 
 
 wladcyPolski :: [String]
@@ -66,9 +89,9 @@ cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Typ
                     }
 
 addSomeDefs :: DefManager -> DefManager
-addSomeDefs adefs = DefManager.addToParentMany (listToDefs atrybuty 2000 20)
+addSomeDefs adefs = DefManager.addToParentMany (listToDefs atrybuty     2000 20 mkClass)
                   $ DefManager.addToParent (0, 20, mkModule "atrybuty")
-                  $ DefManager.addToParentMany (listToDefs wladcyPolski 1000 10)
+                  $ DefManager.addToParentMany (listToDefs wladcyPolski 1000 10 mkFunction)
                   $ DefManager.addToParent (0, 10, mkModule "wladcyPolski")
                   $ DefManager.addToParent (4, 5 , func_vec_incx)
                   $ DefManager.addToParent (3, 4 , cls_vector)
