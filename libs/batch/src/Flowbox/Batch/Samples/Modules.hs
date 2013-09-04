@@ -7,7 +7,6 @@
 
 module Flowbox.Batch.Samples.Modules where
 
-import qualified Flowbox.System.UniPath                  as UniPath
 import qualified Flowbox.Batch.Project.Project           as Project
 import           Flowbox.Batch.Project.Project             (Project)
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
@@ -27,13 +26,15 @@ import           Flowbox.Luna.Network.Graph.Node           (Node)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Flowbox.Luna.Network.Graph.Edge         as Edge
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
+import qualified Flowbox.System.UniPath                  as UniPath
+import           Flowbox.System.UniPath                    (UniPath)
 
 
 
 mkDefinition :: Type -> Definition
 mkDefinition acls = Definition.empty{ Definition.cls = acls
                                     , Definition.graph = Graph.empty
-                        	        }
+                                  }
 
 mkModule :: String -> Definition
 mkModule aname = mkDefinition (Module aname) 
@@ -83,10 +84,12 @@ cls_console = Definition.empty { Definition.cls   = Type.Class "Console" [] []
                                , Definition.graph = Graph.empty
                                }
 
+
 cls_vector :: Definition
 cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
                     , Definition.graph = Graph.empty
                     }
+
 
 addSomeDefs :: DefManager -> DefManager
 addSomeDefs adefs = DefManager.addToParentMany (listToDefs atrybuty     2000 20 mkClass)
@@ -132,6 +135,7 @@ func_vec_incx_graph = Graph.insEdges [
                             ]
            $ Graph.empty
 
+
 func_vec_incx_inputs :: Type
 func_vec_incx_inputs = Type.Tuple [Type.Named "self" $ Type.TypeVariable "a", 
                                    Type.Named "in2" $ Type.TypeVariable "a"]
@@ -142,24 +146,34 @@ func_vec_incx = Definition.empty{ Definition.cls   = (Type.Function "incx" func_
                       , Definition.graph = func_vec_incx_graph
                       }
 
-emptyStdLibrary :: Library
-emptyStdLibrary = Library.make "std" $ UniPath.fromUnixString "dummylibs/stdlib.lunalib"
+
+emptyStdLibrary :: UniPath -> Library
+emptyStdLibrary rootpath = Library.make "std" $ UniPath.append "stdlib.lunalib" rootpath
     
      
-userLibrary :: Library
-userLibrary = Library.make "__workspace__" $ UniPath.fromUnixString "dummylibs/workspace.lunalib"
-
-stdLibrary :: Library
-stdLibrary  = emptyStdLibrary{Library.defs = addSomeDefs $ Library.defs emptyStdLibrary}        
+userLibrary :: UniPath -> Library
+userLibrary rootpath = Library.make "__workspace__" $ UniPath.append "workspace.lunalib" rootpath
 
 
-libManager :: LibManager
-libManager = LibManager.insNode (1, userLibrary)
-            $ LibManager.insNode (0, stdLibrary)
-            $ LibManager.empty
+stdLibrary :: UniPath -> Library
+stdLibrary rootpath = lib{Library.defs = addSomeDefs $ Library.defs lib} where
+    lib = emptyStdLibrary rootpath
+
+
+libManager :: UniPath -> LibManager
+libManager rootpath = LibManager.insNode (1, userLibrary rootpath)
+                    $ LibManager.insNode (0, stdLibrary  rootpath)
+                    $ LibManager.empty
+
 
 project :: Project
-project = Project.empty { Project.name = "wladczy projekt"
-                        , Project.path = UniPath.fromUnixString "sample-projects/wladcy" 
-                        , Project.libs = libManager 
-                    	}
+project = addDefaultLibraries 
+        $ Project.empty { Project.name = "wladczy projekt"
+                        , Project.path = UniPath.fromUnixString "sample-projects/wladcy"
+                        , Project.libs = LibManager.empty
+                        } where
+
+
+addDefaultLibraries :: Project -> Project
+addDefaultLibraries proj = proj {Project.libs = libManager rootpath} where
+    rootpath = Project.path proj

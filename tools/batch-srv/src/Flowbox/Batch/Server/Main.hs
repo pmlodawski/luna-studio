@@ -53,13 +53,13 @@ logger = getLogger "Flowbox.Batch.Server"
 type BatchHandler = IORef Batch
 
 
---newBatchHandler = newIORef Batch.empty
 newBatchHandler :: IO BatchHandler
-newBatchHandler = IORef.newIORef $ Batch.empty { Batch.projectManager = ProjectManager.mkGraph [
-                                                                             (0, Sample.project) 
-                                                                             --(0, Project.empty)
-                                                                                                ] []
-                                         }
+newBatchHandler = IORef.newIORef Batch.empty
+--newBatchHandler = IORef.newIORef $ Batch.empty { Batch.projectManager = ProjectManager.mkGraph [
+--                                                                             (0, Sample.project) 
+--                                                                             --(0, Project.empty)
+--                                                                                                ] []
+--                                         }
 
 
 instance Batch_Iface BatchHandler where

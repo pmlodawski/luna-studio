@@ -18,12 +18,13 @@ module Flowbox.Batch.Handlers.Projects (
 
 
 import           Flowbox.Batch.Batch                     (Batch(..))
-import           Flowbox.Batch.Handlers.Common           (noresult, readonly, projectOp)
+import           Flowbox.Batch.Handlers.Common           (noresult, readonly, readonly', projectOp, projectOp')
 import qualified Flowbox.Batch.Project.Project         as Project
 import           Flowbox.Batch.Project.Project           (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager  as ProjectManager
 import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
 import           Flowbox.System.UniPath                  (UniPath)
+import qualified Flowbox.Batch.Samples.Modules         as Samples
 
 
 
@@ -39,7 +40,8 @@ projectByID projectID = readonly . projectOp projectID (\_ project -> do
 createProject :: Project -> Batch -> (Batch, (Project.ID, Project))
 createProject project batch = (newBatch, (projectID, project)) where
     pm                 = projectManager batch
-    (newpm, projectID) = ProjectManager.insNewNode project pm
+    projectWithLibs    = Samples.addDefaultLibraries project
+    (newpm, projectID) = ProjectManager.insNewNode projectWithLibs pm
     newBatch           = batch { projectManager = newpm }
 
 
@@ -66,9 +68,7 @@ closeProject projectID batch = newBatch where
 
 
 storeProject :: Project.ID -> Batch -> IO ()
-storeProject projectID batch = do
-    let aprojectManager = projectManager batch
-    case ProjectManager.lab aprojectManager projectID of 
-        Nothing      -> error $ "Could not store project: Wrong project ID = " ++ show projectID
-        Just project -> do ProjectSerialization.storeProject project
+storeProject projectID = readonly' . projectOp' projectID (\_ project -> do
+    ProjectSerialization.storeProject project
+    return (project, ()))
 

@@ -34,10 +34,13 @@ int main(int argc, char **argv) {
     batch.ping();
 
     try {
+        Project proj;
+        proj.__set_name("CPP Client test project");
+        proj.__set_path("test/CPP Client test project");
+        batch.createProject(proj, proj);
         vector<Project> projects;
         batch.projects(projects);
-
-        Project proj = projects[0];
+        cout << "Opened projects: " << projects.size() << endl;
 
 
         /* Libraries */
@@ -46,11 +49,11 @@ int main(int argc, char **argv) {
 
         Library lib1;
         lib1.__set_name("lib1");
-        lib1.__set_path("dummylibs/my/lib1.lunalib");
+        lib1.__set_path("test/dummylibs/lib1.lunalib");
 
         Library userlib;
         userlib.__set_name("user");
-        userlib.__set_path("dummylibs/my/user.lunalib");
+        userlib.__set_path("test/dummylibs/user.lunalib");
 
         batch.libraries(registeredLibs, proj.projectID);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
@@ -210,6 +213,11 @@ int main(int argc, char **argv) {
         for(auto lib : registeredLibs)
             batch.loadLibrary(lib, lib.path, reopened.projectID);
         
+        batch.dump();        
+        batch.closeProject(reopened.projectID);
+        batch.dump();        
+
+
         vector<FSItem> items;
         batch.FS_ls(items, proj.path);
         cout << "Folder has " << items.size() << " items." << endl;
@@ -225,7 +233,6 @@ int main(int argc, char **argv) {
         batch.FS_mkdir("test3folder");
         batch.FS_rm("test3folder");
         
-        batch.dump();        
         batch.ping();
 
         
