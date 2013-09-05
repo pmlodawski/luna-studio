@@ -26,11 +26,13 @@ import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 
 import           Debug.Trace                        
 
+
 -----------------------------------------------------------
 -- Entities
 -----------------------------------------------------------
 
 pIdent       = AST.Identifier   <$> L.pIdent
+pIdentType   = AST.Identifier   <$> L.pIdentType
 pIdentVar    = AST.Identifier   <$> L.pIdentVar
 pInt         = Constant.Integer <$> L.integerStr
 pCharLit     = Constant.Char    <$> L.charLiteral
@@ -40,9 +42,9 @@ pConstant    = AST.Constant     <$> choice [ pInt
                                            , pStringLit
                                            ]
 
-pTuple i     = AST.Tuple        <$> (     try(L.parensed (return () *> optional L.separator) *> pure [])
-                                      <|> try(L.parensed (liftList (expr i) <* L.separator))
-                                      <|>     L.parensed (sepBy2' (expr i) L.separator)
+pTuple p     = AST.Tuple        <$> (     try(L.parensed (return () *> optional L.separator) *> pure [])
+                                      <|> try(L.parensed (liftList p <* L.separator))
+                                      <|>     L.parensed (sepBy2' p L.separator)
                                     )
 
 pTupleBody p = sepBy' p L.separator
@@ -50,7 +52,7 @@ pTuplePure p = L.parensed $ pTupleBody p
 
 pEnt i       = choice [ pIdent
                       , pConstant
-                      , pTuple i
+                      , pTuple (expr i)
                       ]
 
 
@@ -119,32 +121,64 @@ pBlock        p i = L.eol *> pSegmentBegin p i
 
 
 -----------------------------------------------------------
+-- Operator Utils
+-----------------------------------------------------------
+
+binary   name fun assoc = Expr.Infix   (L.reservedOp name *> return fun) assoc
+prefix   name fun       = Expr.Prefix  (L.reservedOp name *> return fun)
+prefixM  name fun       = Expr.Prefix  (L.reservedOp name *> fun)
+prefixfM      fun       = Expr.Prefix  (fun)
+postfix  name fun       = Expr.Postfix (L.reservedOp name *> return fun)
+postfixM name fun       = Expr.Postfix (L.reservedOp name *> fun)
+
+-----------------------------------------------------------
 -- Expressions
 -----------------------------------------------------------
 
-expr i   = AST.aftermatch <$> Expr.buildExpressionParser table (term i)
+expr i   = AST.aftermatch <$> Expr.buildExpressionParser (exprtable i) (exprterm i)
        <?> "expression"
 
-term i   = choice[ try $ pExprEnt i
-                 , try $ L.parensed (expr i)
-                 , pEnt i
-                 ]
-       <?> "simple expression"
+exprterm i  = choice[ try $ pExprEnt i
+                    , try $ L.parensed (expr i)
+                    , pEnt i
+                    ]
+          <?> "simple expression"
 
-table   = [ 
-            [binary   "."   AST.Accessor            Expr.AssocLeft]
-          , [postfixf "::" (AST.Typed <$> L.pIdent)               ]
-          , [binary   "*"  (AST.Operator "*")       Expr.AssocLeft]
-          , [binary   "+"  (AST.Operator "+")       Expr.AssocLeft]
-          , [binary   ""    AST.callConstructor     Expr.AssocLeft]
-          , [binary   "="   AST.Assignment          Expr.AssocLeft]
-          ]
+exprtable i = [ 
+              [binary   "."  (AST.Accessor)           Expr.AssocLeft]
+            , [postfixM "::" (AST.Typed <$> L.pIdent)               ]
+            , [binary   "*"  (AST.Operator "*")       Expr.AssocLeft]
+            , [binary   "+"  (AST.Operator "+")       Expr.AssocLeft]
+            , [binary   ""   (AST.callConstructor)    Expr.AssocLeft]
+            --, [binary   "="   AST.Assignment          Expr.AssocLeft]
+            , [prefixfM      (try(AST.Assignment <$> (pPattern i) <* (L.reservedOp "=" <?> "pattern match")))]
+            ]
       
-binary   name fun assoc = Expr.Infix   (L.reservedOp name *> return fun) assoc
-prefix   name fun       = Expr.Prefix  (L.reservedOp name *> return fun)
-postfix  name fun       = Expr.Postfix (L.reservedOp name *> return fun)
-postfixf name fun       = Expr.Postfix (L.reservedOp name *> fun)
 
+-----------------------------------------------------------
+-- Patterns
+-----------------------------------------------------------
+
+pWildcard     = AST.Wildcard     <$  L.pWildcard
+
+pPatEnt     i = choice [ pIdent
+                       , pConstant
+                       , pTuple (patTerm i)
+                       ]
+
+pPattern    i = AST.Pattern <$> patTerm i
+
+pPatCons    i = AST.consConstructor <$> pIdentType <*> Expr.buildExpressionParser patConsTable (patTerm i) <?> "data constructor"
+
+patTerm     i = choice[ try $ L.parensed (patTerm i)
+                      , try $ pPatCons i
+                      , pPatEnt  i
+                      , pWildcard
+                      ]
+             <?> "pattern term"
+
+patConsTable  = [ [binary   ""   (AST.callConstructor)    Expr.AssocLeft]
+                ]
 
 -----------------------------------------------------------
 -- Nested Segments
@@ -174,6 +208,8 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
 pProgram = AST.Program <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
                        <|> pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
+
+--pProgram = many $ pPattern 0
 
 parse input = Parsec.parse pProgram "Luna Parser" input
 

@@ -26,23 +26,30 @@ data Expr  = NOP
            | Path            { segments :: [String] } -- , name::String}
            | Named           { name :: String, item :: Expr }
            | Call            { src :: Expr, args :: [Expr] }
-           | CallConstructor { src :: Expr, args :: [Expr] }
+           | CallConstructor { args :: [Expr] }
            | Accessor        { src :: Expr, dst :: Expr }
            | Operator        { name :: String, src :: Expr, dst :: Expr }
            | Comment         String
            | Program         { body :: [Expr] }
            | Field           { name :: String, cls :: Type}
            
+           | Cons            { src :: Expr, args :: [Expr] }
+           | Wildcard
            | Function        { name :: String , signature :: Type   , body    :: [Expr] }
            | Class           { cls  :: Type   , fields    :: [Expr] , methods :: [Expr] }
+           | Pattern         Expr
            deriving (Show, Eq)
 
 callConstructor :: Expr -> Expr -> Expr
 callConstructor src' arg' = case src' of
     call @ CallConstructor{} -> call { args = args call ++ [arg'] }
-    _             -> CallConstructor src' [arg']
+    _                        -> CallConstructor $ src':[arg']
 
 
+consConstructor :: Expr -> Expr -> Expr
+consConstructor src' dst' = case dst' of
+    CallConstructor args' -> Cons src' args'
+    _                     -> Cons src' [dst']
 
 --mkClass :: String -> Expr
 --mkClass name' = Class name' [] []
@@ -50,5 +57,5 @@ callConstructor src' arg' = case src' of
 
 aftermatch :: Expr -> Expr
 aftermatch x = case x of
-    CallConstructor src' args' -> Call src' args'
-    _               -> x
+    CallConstructor (a:as) -> Call a as
+    _                      -> x

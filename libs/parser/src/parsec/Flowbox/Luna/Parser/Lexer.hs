@@ -28,6 +28,7 @@ commentEnd   = "#]"
 
 kDef = reserved "def"
 
+pWildcard    = symbol  '_' <?> "wildcard"
 pBlockBegin  = symbol  ':'
 separator    = symbol  ','
 parenL       = symbol  '('
@@ -228,9 +229,9 @@ isReservedOp name = isReserved (sort reservedOpNames) name
 -----------------------------------------------------------
 reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
 
-pIdentVar     = pIdentLower
-pIdentType    = pIdentUpper
-pIdentTypeVar = pIdentLower
+pIdentVar     = pIdentLower <?> "variable identifier"
+pIdentType    = pIdentUpper <?> "type identifier"
+pIdentTypeVar = pIdentLower <?> "identifier"
 
 pIdent        = pIdentLower <|> pIdentUpper <?> "identifier"
 
