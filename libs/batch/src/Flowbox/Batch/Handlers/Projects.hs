@@ -24,7 +24,6 @@ import           Flowbox.Batch.Project.Project           (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager  as ProjectManager
 import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
 import           Flowbox.System.UniPath                  (UniPath)
-import qualified Flowbox.Batch.Samples.Modules         as Samples
 
 
 
@@ -40,8 +39,7 @@ projectByID projectID = readonly . projectOp projectID (\_ project -> do
 createProject :: Project -> Batch -> (Batch, (Project.ID, Project))
 createProject project batch = (newBatch, (projectID, project)) where
     pm                 = projectManager batch
-    projectWithLibs    = Samples.addDefaultLibraries project
-    (newpm, projectID) = ProjectManager.insNewNode projectWithLibs pm
+    (newpm, projectID) = ProjectManager.insNewNode project pm
     newBatch           = batch { projectManager = newpm }
 
 

@@ -152,7 +152,7 @@ emptyStdLibrary rootpath = Library.make "std" $ UniPath.append "stdlib.lunalib" 
     
      
 userLibrary :: UniPath -> Library
-userLibrary rootpath = Library.make "__workspace__" $ UniPath.append "workspace.lunalib" rootpath
+userLibrary rootpath = Library.make "workspace" $ UniPath.append "workspace.lunalib" rootpath
 
 
 stdLibrary :: UniPath -> Library
