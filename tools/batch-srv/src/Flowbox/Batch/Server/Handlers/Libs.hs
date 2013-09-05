@@ -36,7 +36,7 @@ import qualified Flowbox.Luna.Network.Def.DefManager                 as DefManag
 import           Flowbox.Luna.Network.Def.DefManager                   (DefManager)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs   ()
-import           Flowbox.System.Log.Logger                             (getLogger, info)
+import           Flowbox.System.Log.Logger                             (debug, getLogger, info)
 import           Flowbox.Tools.Conversion                              
 
 
@@ -51,6 +51,7 @@ libraries batchHandler mtprojectID = tRunScript $ do
     scriptIO $ logger.info $ "called libraries"
     batch     <- tryReadIORef batchHandler
     projectID <- tryGetID mtprojectID "projectID"
+    scriptIO $ logger.debug $ "projectID: " ++ (show projectID)
     libs      <- tryRight $ BatchL.libraries projectID batch 
     let tlibs       = map (fst . encode) libs
         tlibsVector = Vector.fromList tlibs
@@ -63,6 +64,7 @@ libraryByID batchHandler mtlibID mtprojectID = tRunScript $ do
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     library   <- tryRight $ BatchL.libraryByID libID projectID batch
     return $ fst $ encode (libID, library)
 
@@ -76,6 +78,7 @@ createLibrary batchHandler mtlibrary mtprojectID = tRunScript $ do
     batch        <- tryReadIORef batchHandler
     let libName = Library.name library
         libPath = Library.path library
+    scriptIO $ logger.debug $ "library: " ++ (show library) ++ " projectID: " ++ (show projectID)
     (newBatch, newLibrary) <-tryRight $  BatchL.createLibrary libName libPath projectID batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ (encode newLibrary :: (TLibs.Library, DefManager))
@@ -87,6 +90,7 @@ loadLibrary batchHandler mtpath mtprojectID= tRunScript $ do
     upath     <- tryGetUniPath mtpath "path"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "path: " ++ (show upath) ++ " projectID: " ++ (show projectID)
     (newBatch, (newLibID, newLibrary)) <- scriptIO $ BatchL.loadLibrary upath projectID batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ encode (newLibID, newLibrary)
@@ -98,6 +102,7 @@ unloadLibrary batchHandler mtlibID mtprojectID = tRunScript $ do
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch  <- tryRight $ BatchL.unloadLibrary libID projectID batch 
     tryWriteIORef batchHandler newBatch
 
@@ -108,6 +113,7 @@ storeLibrary batchHandler mtlibID mtprojectID = tRunScript $ do
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     scriptIO $ BatchL.storeLibrary libID projectID batch
     return ()
 
@@ -118,6 +124,7 @@ buildLibrary batchHandler mtlibID mtprojectID = tRunScript $ do
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     scriptIO $ BatchL.buildLibrary libID projectID batch
     return ()
 
@@ -128,5 +135,6 @@ libraryRootDef batchHandler mtlibID mtprojectID = tRunScript $ do
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     (arootDefID, rootDef) <- tryRight $ BatchL.libraryRootDef libID projectID batch
     return $ fst $ encode (arootDefID, rootDef)

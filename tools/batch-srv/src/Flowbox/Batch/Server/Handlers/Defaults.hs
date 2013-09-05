@@ -27,7 +27,7 @@ import qualified Flowbox.Batch.Handlers.Defaults                           as Ba
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView   ()
 import           Flowbox.Control.Error                                       
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
-import           Flowbox.System.Log.Logger                                   (getLogger, info)
+import           Flowbox.System.Log.Logger                                   (debug, getLogger, info)
 import           Flowbox.Tools.Conversion                                    
 
 
@@ -46,6 +46,7 @@ nodeDefaults batchHandler mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
     libID     <- tryGetID mtlibID     "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "nodeID: " ++ (show nodeID) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     defaults  <- tryRight $ BatchD.nodeDefaults nodeID defID libID projectID batch
     let encodeMapItem (k, v) = (Vector.fromList $ map itoi32 k, encode v)
         tdefaults = HashMap.fromList $ map encodeMapItem $ Map.toList defaults
@@ -65,6 +66,7 @@ setNodeDefault batchHandler mtdstPort mtvalue mtnodeID mtdefID mtlibID mtproject
     libID     <- tryGetID mtlibID     "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "dstPort: " ++ (show dstPort) ++ " value: " ++ (show value) ++ " nodeID: " ++ (show nodeID) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch  <- tryRight $ BatchD.setNodeDefault dstPort value nodeID defID libID projectID batch
     tryWriteIORef batchHandler newBatch
 
@@ -80,6 +82,7 @@ removeNodeDefault batchHandler mtdstPort mtnodeID mtdefID mtlibID mtprojectID = 
     libID     <- tryGetID mtlibID     "libID"
     projectID <- tryGetID mtprojectID "projectID"   
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "dstPort: " ++ (show dstPort) ++ " nodeID: " ++ (show nodeID) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch  <- tryRight $ BatchD.removeNodeDefault dstPort nodeID defID libID projectID batch
     tryWriteIORef batchHandler newBatch
     

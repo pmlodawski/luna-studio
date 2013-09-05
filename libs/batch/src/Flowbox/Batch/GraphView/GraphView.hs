@@ -88,7 +88,9 @@ removeEdges graph = mkGraph (labNodes graph) []
 findMatchingTuple :: Node.ID -> Int -> Graph -> Maybe (Node.ID, Node.ID, Edge)
 findMatchingTuple nodeID p graph = mt where
     mt = List.find matching (inn graph nodeID)
-    matching (_, _, Edge existingTuplePort) = existingTuplePort == p
+    matching (t, _, Edge existingTuplePort) = case lab graph t of 
+                                                    Just (NTuple {}) -> existingTuplePort == p
+                                                    _                -> False
 
 
 getOrCreateTuple :: Node.ID -> Graph -> Int -> Either String (Node.ID, Graph)

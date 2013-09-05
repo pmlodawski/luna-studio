@@ -33,7 +33,7 @@ import           Flowbox.Luna.Network.Def.Definition                   (Definiti
 import qualified Flowbox.Luna.Network.Graph.Graph                    as Graph
 import           Flowbox.Luna.Network.Graph.Graph                      (Graph)
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs as CDefs
-import           Flowbox.System.Log.Logger                             (getLogger, info)
+import           Flowbox.System.Log.Logger                             (debug, getLogger, info)
 import           Flowbox.Tools.Conversion                              
 
 
@@ -49,8 +49,8 @@ defsGraph batchHandler mtlibID mtprojectID = tRunScript $ do
     libID       <- tryGetID mtlibID "libID"
     projectID   <- tryGetID mtprojectID "projectID"
     batch       <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     adefManager <- tryRight $ BatchD.defsGraph libID projectID batch
-
     return $ CDefs.toDefsGraph adefManager
 
 
@@ -61,6 +61,7 @@ defByID batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
     libID      <- tryGetID mtlibID     "libID"
     projectID  <- tryGetID mtprojectID "projectID"
     batch      <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     definition <- tryRight $ BatchD.defByID defID libID projectID batch
     return $ fst $ encode (defID, definition)
 
@@ -74,6 +75,7 @@ addDefinition batchHandler mtdefinition mtparentID mtlibID mtprojectID = tRunScr
     libID             <- tryGetID mtlibID    "libID"
     projectID         <- tryGetID mtprojectID "projectID"
     batch             <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "definition: " ++ (show definition) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     (newBatch, defID) <- tryRight $ BatchD.addDefinition definition parentID libID projectID batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ encode (defID, definition)
@@ -87,6 +89,7 @@ updateDefinition batchHandler mtdefinition mtlibID mtprojectID = tRunScript $ do
     libID       <- tryGetID mtlibID "libID"
     projectID   <- tryGetID mtprojectID "projectID"
     batch       <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "definition: " ++ (show definition) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch    <- tryRight $ BatchD.updateDefinition definition libID projectID batch
     tryWriteIORef batchHandler newBatch
 
@@ -98,6 +101,7 @@ removeDefinition batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
     libID       <- tryGetID mtlibID "libID"
     projectID   <- tryGetID mtprojectID "projectID"
     batch       <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch    <- tryRight $ BatchD.removeDefinition defID libID projectID batch 
     tryWriteIORef batchHandler newBatch
     return ()
@@ -110,6 +114,7 @@ definitionChildren batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
     libID       <- tryGetID mtlibID "libID"
     projectID   <- tryGetID mtprojectID "projectID"
     batch       <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     children    <- tryRight $ BatchD.definitionChildren defID libID projectID batch
     let tchildrenWithGraph = map (encode) children
         tchildren = map (\(def, _) -> def) tchildrenWithGraph

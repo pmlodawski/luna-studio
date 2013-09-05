@@ -29,7 +29,7 @@ import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView   ()
 import           Flowbox.Control.Error                                       
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs         ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
-import           Flowbox.System.Log.Logger                                   (getLogger, info)
+import           Flowbox.System.Log.Logger                                   (debug, getLogger, info)
 import           Flowbox.Tools.Conversion                                    
 
 
@@ -46,6 +46,7 @@ nodesGraph batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     agraph    <- tryRight $ BatchG.nodesGraph defID libID projectID batch
     return $ encode agraph
 
@@ -58,6 +59,7 @@ nodeByID batchHandler mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
     libID     <- tryGetID mtlibID     "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "nodeID: " ++ (show nodeID) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     node <- tryRight $ BatchG.nodeByID nodeID defID libID projectID batch
     return $ encode (nodeID, node)
 
@@ -71,6 +73,7 @@ addNode batchHandler mtnode mtdefID mtlibID mtprojectID = tRunScript $ do
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "node: " ++ (show node) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     (newBatch, nodeID) <- tryRight $ BatchG.addNode node defID libID projectID batch
     tryWriteIORef batchHandler newBatch
     return $ encode (nodeID, node)
@@ -85,6 +88,7 @@ updateNode batchHandler mtnode mtdefID mtlibID mtprojectID = tRunScript $ do
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "node: " ++ (show node) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch  <- tryRight $ BatchG.updateNode node defID libID projectID batch
     tryWriteIORef batchHandler newBatch
     return ()
@@ -98,6 +102,7 @@ removeNode batchHandler mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
     libID     <- tryGetID mtlibID  "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "nodeID: " ++ (show nodeID) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch  <- tryRight $ BatchG.removeNode nodeID defID libID projectID batch
     tryWriteIORef batchHandler newBatch
     return ()
@@ -118,6 +123,7 @@ connect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID
     libID     <- tryGetID mtlibID     "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "srcNodeID: " ++ (show srcPort) ++ " srcPort: " ++ (show dstNodeID) ++ " dstNodeID: " ++ (show srcNodeID) ++ " dstPort: " ++ (show dstPort) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch  <- tryRight $ BatchG.connect srcNodeID srcPort dstNodeID dstPort defID libID projectID batch
     tryWriteIORef batchHandler newBatch
     return ()
@@ -138,6 +144,7 @@ disconnect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtli
     libID       <- tryGetID mtlibID     "libID"
     projectID   <- tryGetID mtprojectID "projectID"
     batch       <- tryReadIORef batchHandler
+    scriptIO $ logger.debug $ "srcNodeID: " ++ (show srcPort) ++ " srcPort: " ++ (show dstNodeID) ++ " dstNodeID: " ++ (show srcNodeID) ++ " dstPort: " ++ (show dstPort) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch    <- tryRight $ BatchG.disconnect srcNodeID srcPort dstNodeID dstPort defID libID projectID batch
     tryWriteIORef batchHandler newBatch
 

@@ -28,7 +28,7 @@ import qualified Flowbox.Batch.Handlers.FileSystem                    as BatchFS
 import           Flowbox.Batch.Batch                                    (Batch(..))
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Item   ()
 import           Flowbox.Control.Error                                  
-import           Flowbox.System.Log.Logger                              (getLogger, info)
+import           Flowbox.System.Log.Logger                              (debug, getLogger, info)
 import           Flowbox.Tools.Conversion                               
 
 
@@ -42,6 +42,7 @@ ls :: IORef Batch -> Maybe Text -> IO (Vector TFS.FSItem)
 ls _ mtpath = tRunScript $ do
     scriptIO $ logger.info $ "called ls"
     upath <- tryGetUniPath mtpath "path"
+    scriptIO $ logger.debug $ "path: " ++ (show upath)
     items <- scriptIO $ BatchFS.ls upath
     let titems = map encode items
     return $ Vector.fromList titems
@@ -51,6 +52,7 @@ stat :: IORef Batch -> Maybe Text -> IO TFS.FSItem
 stat _ mtpath = tRunScript $ do
     scriptIO $ logger.info $ "called stat"
     upath <- tryGetUniPath mtpath "path"
+    scriptIO $ logger.debug $ "path: " ++ (show upath)
     item  <- scriptIO $ BatchFS.stat upath
     return $ encode item
 
@@ -59,6 +61,7 @@ mkdir :: IORef Batch -> Maybe Text -> IO ()
 mkdir _ mtpath = tRunScript $ do
     scriptIO $ logger.info $ "called mkdir"
     upath <- tryGetUniPath mtpath "path"
+    scriptIO $ logger.debug $ "path: " ++ (show upath)
     scriptIO $ BatchFS.mkdir upath
 
 
@@ -66,6 +69,7 @@ touch :: IORef Batch -> Maybe Text -> IO ()
 touch _ mtpath = tRunScript $ do
     scriptIO $ logger.info $ "called touch"
     upath <- tryGetUniPath mtpath "path"
+    scriptIO $ logger.debug $ "path: " ++ (show upath)
     scriptIO $ BatchFS.touch upath
 
 
@@ -73,6 +77,7 @@ rm :: IORef Batch -> Maybe Text -> IO ()
 rm _ mtpath = tRunScript $ do
     scriptIO $ logger.info $ "called rm"
     upath <- tryGetUniPath mtpath "path"
+    scriptIO $ logger.debug $ "path: " ++ (show upath)
     scriptIO $ BatchFS.rm upath
 
 
@@ -81,6 +86,7 @@ cp _ mtsrc mtdst = tRunScript $ do
     scriptIO $ logger.info $ "called cp"
     usrc <- tryGetUniPath mtsrc "src"
     udst <- tryGetUniPath mtdst "dst"
+    scriptIO $ logger.debug $ "src: " ++ (show usrc) ++ " dst: " ++ (show udst)
     scriptIO $ BatchFS.cp usrc udst
 
 
@@ -89,4 +95,5 @@ mv _ mtsrc mtdst = tRunScript $ do
     scriptIO $ logger.info $ "called mv"
     usrc <- tryGetUniPath mtsrc "src"
     udst <- tryGetUniPath mtdst "dst"
+    scriptIO $ logger.debug $ "src: " ++ (show usrc) ++ " dst: " ++ (show udst)
     scriptIO $ BatchFS.mv usrc udst
