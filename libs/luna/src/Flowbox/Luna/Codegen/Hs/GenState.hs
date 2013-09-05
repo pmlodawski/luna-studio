@@ -37,7 +37,7 @@ empty = GenState 0 Map.empty
 genVarName :: Generator m => MaybeT m String
 genVarName = do
     state <- get
-    let vname = "v''" ++ show (varcount state)
+    let vname = "v'" ++ show (varcount state)
     put $ state{ varcount = 1 + varcount state }
     return vname
 
@@ -50,8 +50,22 @@ registerVar (alias, vname) = do
 
 lookupVar :: Generator m => String -> MaybeT m (Maybe String)
 lookupVar vname = do
-	state <- get
-	return $ Map.lookup vname (varmap state)
+    state <- get
+    return $ Map.lookup vname (varmap state)
+
+
+uniqueVar :: Generator m => String -> MaybeT m String
+uniqueVar vname = do
+    v <- lookupVar vname
+    case v of
+        Nothing      -> return vname
+        Just oldname -> genVarName
+
+handleVar :: Generator m => String -> MaybeT m String
+handleVar vname = do
+    newname <- uniqueVar vname
+    registerVar (vname, newname)
+    return newname
 
 registerVars :: Generator m => [(String, String)] -> MaybeT m ()
 registerVars vars = mapM_ registerVar vars

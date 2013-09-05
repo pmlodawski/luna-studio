@@ -83,8 +83,9 @@ logger = getLogger "Flowbox"
 
 
 example :: String
-example = unlines [ "def f(x, y, z):"
-                  , "   w"
+example = unlines [ "def f(x):"
+                  , "   x=x+1"
+                  , "   x=x+1"
                   ]
 
 --test :: (Enum a, MonadState a m, MonadWriter [LogEntry.LogEntry] m) => MaybeT m ()
@@ -111,7 +112,7 @@ main_inner = do
     let 
         parsed = Parser.parse example
         ast = forceEither parsed
-        out = runRWS (runMaybeT (Gen.genModule ast)) 0 GenState.empty
+        out = runRWS (runMaybeT (Gen.ssa Gen.Read ast)) 0 GenState.empty
         (hast,_,_) = out
     --let y = runRWS (runMaybeT test) 0 0
     putStrLn $ PP.ppShow $ ast
@@ -119,9 +120,9 @@ main_inner = do
     putStrLn $ PP.ppShow $ out
     putStrLn "\n-----------------"
 
-    case hast of
-        Just hast' -> putStrLn $ PP.ppShow $ map Expr.genCode hast'
-        _          -> return ()
+    --case hast of
+    --    Just hast' -> putStrLn $ PP.ppShow $ map Expr.genCode hast'
+    --    _          -> return ()
     return ()
 
 

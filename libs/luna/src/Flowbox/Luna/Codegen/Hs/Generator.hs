@@ -44,6 +44,39 @@ logger = getLogger "Flowbox.Luna.Codegen.Hs.Generator"
 type Generator m = (Functor m, MonadState GenState m, MonadWriter [LogEntry.LogEntry] m)
 
 
+data Mode = Write | Read
+
+runGen f state = runRWS (runMaybeT f) 0 state
+
+ssa :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
+ssa mode ast = case ast of
+    LAST.Program    body                  -> LAST.Program <$> mapM (ssa mode) body
+    LAST.Function   name signature body   -> ssaFunction mode ast
+    LAST.Assignment src dst               -> flip LAST.Assignment <$> ssa mode dst <*> ssa Write src
+    LAST.Pattern    pat                   -> LAST.Pattern         <$> ssa mode pat
+    LAST.Identifier name                  -> case mode of
+                                                 Write -> LAST.Identifier <$> GenState.handleVar name
+                                                 Read  -> do
+                                                     v <- GenState.lookupVar name
+                                                     case v of
+                                                        Nothing      -> Prelude.error "o nie!"
+                                                        Just newname -> return $ LAST.Identifier newname
+    LAST.Operator   name src dst          -> LAST.Operator name <$> ssa mode src <*> ssa mode dst
+    _                                     -> return ast
+
+ssaFunction :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
+ssaFunction mode ast@(LAST.Function name signature body) = do
+    GenState.registerVar (name, name)
+    ssaType signature
+    LAST.Function name signature <$> mapM (ssa mode) body
+    --let Type.Lambda inputs outputs = signature
+    --return ast
+
+
+ssaType ast = case ast of
+    Type.Lambda inputs outputs -> ssaType inputs
+    Type.Tuple  items          -> mapM ssaType items *> return ()
+    Type.Type   name           -> GenState.registerVar (name, name)
 
 testme :: Generator m => MaybeT m ()
 testme = do return ()
