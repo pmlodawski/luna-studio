@@ -22,11 +22,11 @@ import           Control.Monad.Writer
 import           System.Log.Logger           hiding (getLogger, setLevel, Logger)
 import           Prelude                     hiding (log, fail)
 import qualified Data.DList                  as DList
-import           Data.DList                  (DList)
+import           Data.DList                    (DList)
 
 import qualified Flowbox.System.Log.LogEntry as LogEntry
 
-import Debug.Trace
+import           Debug.Trace                   
 
 type LogList     = DList LogEntry.LogEntry
 type LogWriter m = MonadWriter LogList m

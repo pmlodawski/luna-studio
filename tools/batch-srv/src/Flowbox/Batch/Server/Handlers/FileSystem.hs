@@ -28,7 +28,7 @@ import qualified Flowbox.Batch.Handlers.FileSystem                    as BatchFS
 import           Flowbox.Batch.Batch                                    (Batch(..))
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Item   ()
 import           Flowbox.Control.Error                                  
-import           Flowbox.System.Log.Logger 
+import           Flowbox.System.Log.Logger                              
 import           Flowbox.Tools.Conversion                               
 
 

@@ -74,7 +74,7 @@ import           Flowbox.Luna.Codegen.Hs.GenState     (GenState)
 import           Debug.Trace                          
 import           Data.Either.Utils                    (forceEither)
 import qualified Text.Show.Pretty                   as PP
-import qualified Data.DList                  as DList
+import qualified Data.DList                         as DList
 
 import           Prelude                            hiding (log)
 import           System.TimeIt                        

@@ -32,15 +32,15 @@ import           Control.Monad.State
 import           Control.Monad.Writer                   
 import           Control.Monad.RWS                      
 import           Control.Monad.Trans.Maybe              
-import           Control.Monad.Trans.Either 
-import           Data.Maybe                           (fromJust)            
+import           Control.Monad.Trans.Either             
+import           Data.Maybe                             (fromJust)
 
 import qualified Flowbox.System.Log.Logger            as Logger
-import           Flowbox.System.Log.Logger   
+import           Flowbox.System.Log.Logger              
 import qualified Flowbox.System.Log.LogEntry          as LogEntry
 
 import qualified Prelude                              as Prelude
-import           Prelude                              hiding(error)
+import           Prelude                              hiding (error)
 
 logger = getLogger "Flowbox.Luna.Codegen.Hs.Generator"
 

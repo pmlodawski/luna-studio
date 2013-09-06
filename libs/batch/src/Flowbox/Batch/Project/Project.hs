@@ -8,7 +8,8 @@
 module Flowbox.Batch.Project.Project(
     Project(..),
 	ID,
-	empty
+	empty,
+	make,
 ) where
 
 import qualified Flowbox.Luna.Lib.LibManager     as LibManager
@@ -32,3 +33,7 @@ type ID = Int
 
 empty :: Project
 empty = Project "" UniPath.empty [] LibManager.empty Attributes.empty
+
+
+make :: String -> UniPath -> Project
+make aname upath = empty { name = aname, path = upath }
