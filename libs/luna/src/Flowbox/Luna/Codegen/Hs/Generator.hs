@@ -53,15 +53,18 @@ data Mode = Write | Read
 
 runGen f state = runRWS (runMaybeT f) 0 state
 
---ssa :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
+runStateSSA f = do
+    let (nast, _, logs) = runGen f GenState.empty
+    Logger.append logs
+    return $ fromJust nast
+
+ssa :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
 ssa mode ast = case ast of
     LAST.Program    body                  -> LAST.Program <$> mapM (ssa mode) body
-    LAST.Function   name signature body   -> do
-                                                let (nast, _, logs) = runGen (ssaFunction mode ast) GenState.empty
-                                                Logger.append logs
-                                                --runStateT (ssaFunction mode ast) GenState.empty
-                                                --runStateT test GenState.empty
-                                                return $ fromJust nast
+    LAST.Function   name signature body   -> runStateSSA $ do
+                                                    GenState.registerVar (name, name)
+                                                    ssaType signature
+                                                    LAST.Function name signature <$> mapM (ssa mode) body
     LAST.Assignment src dst               -> flip LAST.Assignment <$> ssa mode dst <*> ssa Write src
     LAST.Pattern    pat                   -> LAST.Pattern         <$> ssa mode pat
     LAST.Identifier name                  -> case mode of
@@ -81,8 +84,6 @@ test = do
 
 --ssaFunction :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
 ssaFunction mode ast@(LAST.Function name signature body) = do
-    logger error "o nie"
-    return ()
     GenState.registerVar (name, name)
     ssaType signature
     LAST.Function name signature <$> mapM (ssa mode) body
