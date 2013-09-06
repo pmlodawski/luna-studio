@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction #-}
 
 import           Prelude                    hiding (error)
-import           Flowbox.System.Log.Logger    
+import           Flowbox.System.Log.Logger  as Logger
 import qualified Flowbox.Data.Version       as Version
 
 
@@ -17,27 +17,29 @@ import qualified Flowbox.Data.Version       as Version
 --import           Control.Monad.RWS            
 --import           Control.Monad.Trans.Either   
 
-logger :: (String -> t) -> t
+--logger :: (String -> t) -> t
+logger :: Logger
 logger   = getLogger "MyApp.BuggyComponent"
 
+loggerIO :: LoggerIO
 loggerIO = getLoggerIO "MyApp.BuggyComponent"
 
 test_logger :: IO ()
 test_logger = runLogger $ do
-    logger.debug     $ "debug"
-    logger.info      $ "info"
-    logger.notice    $ "notice"
-    logger.warning   $ "warning"
-    logger.error     $ "error"
-    logger.critical  $ "critical"
-    logger.alert     $ "alert"
-    logger.emergency $ "emergency"
+    logger debug      "debug"
+    logger info       "info"
+    logger notice     "notice"
+    logger warning    "warning"
+    logger error      "error"
+    logger critical   "critical"
+    logger alert      "alert"
+    logger emergency  "emergency"
 
 
 
 main :: IO ()
 main = do
-    logger.setLevel  $ DEBUG
+    logger setLevel DEBUG
     test_logger
     let
         v1 = Version.Version 0 1 0 Version.Alpha
@@ -46,4 +48,4 @@ main = do
                         }
     print v1
     print $ Version.str v1
-    loggerIO.error $ "IO error"
+    loggerIO error "IO error"

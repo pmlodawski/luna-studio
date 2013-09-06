@@ -69,7 +69,7 @@ ssa mode ast = case ast of
                                                  Read  -> do
                                                      v <- GenState.lookupVar name
                                                      case v of
-                                                        Nothing      -> (logger.error $ "Not in scope: '" ++ name ++ "'") >> Prelude.fail "a"
+                                                        Nothing      -> (logger error $ "Not in scope: '" ++ name ++ "'") >> Prelude.fail "a"
                                                         Just newname -> return $ LAST.Identifier newname
     LAST.Operator   name src dst          -> LAST.Operator name <$> ssa mode src <*> ssa mode dst
     _                                     -> return ast
@@ -81,7 +81,7 @@ test = do
 
 --ssaFunction :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
 ssaFunction mode ast@(LAST.Function name signature body) = do
-    logger.error $ "o nie"
+    logger error "o nie"
     return ()
     GenState.registerVar (name, name)
     ssaType signature
@@ -138,7 +138,7 @@ genExpr :: Generator m => LAST.Expr -> MaybeT m Expr
 genExpr ast = case ast of
     LAST.Constant   cst                 -> case cst of
                                                LConstant.Integer val -> return $ Expr.Constant $ Constant.Integer val
-                                               _                     -> logger.criticalFail $ "Unknown LUNA.AST expression"
+                                               _                     -> logger criticalFail "Unknown LUNA.AST expression"
     LAST.Identifier name                -> return $ Expr.Var ("v''" ++ name)
 
     LAST.Function   name signature body -> do
