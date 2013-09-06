@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Flowbox.Batch.Handlers.FileSystem (
     ls,
     stat,
@@ -16,6 +18,7 @@ module Flowbox.Batch.Handlers.FileSystem (
 ) 
 where
 
+import qualified Control.Exception             as Exception
 import qualified System.Directory              as Directory
 import qualified System.IO                     as IO
 
@@ -43,9 +46,9 @@ stat upath = do
         else do
             isFile <- Directory.doesFileExist apath
             if isFile 
-                then do
-                    asize <- IO.withFile apath IO.ReadMode IO.hFileSize
-                    return $ File upath $ fromInteger asize
+                then Exception.handle (\(_ :: Exception.SomeException) -> return $ File upath (-1))
+                     (do asize <- IO.withFile apath IO.ReadMode IO.hFileSize
+                         return $ File upath $ fromInteger asize)
                 else return $ Other upath (-1)
 
 
