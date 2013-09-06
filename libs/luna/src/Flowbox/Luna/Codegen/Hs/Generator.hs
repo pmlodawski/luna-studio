@@ -35,7 +35,8 @@ import           Control.Monad.Trans.Maybe
 import           Control.Monad.Trans.Either 
 import           Data.Maybe                           (fromJust)            
 
-import           Flowbox.System.Log.Logger              
+import qualified Flowbox.System.Log.Logger            as Logger
+import           Flowbox.System.Log.Logger   
 import qualified Flowbox.System.Log.LogEntry          as LogEntry
 
 import qualified Prelude                              as Prelude
@@ -45,7 +46,7 @@ logger = getLogger "Flowbox.Luna.Codegen.Hs.Generator"
 
 --type Generator a m r = (Functor m, MonadWriter [LogEntry.LogEntry] m) => LAST.Expr -> MaybeT m r
 
-type Generator m = (Functor m, MonadState GenState m, MonadWriter [LogEntry.LogEntry] m)
+type Generator m = (Functor m, MonadState GenState m, LogWriter m)
 
 
 data Mode = Write | Read
@@ -57,6 +58,7 @@ ssa mode ast = case ast of
     LAST.Program    body                  -> LAST.Program <$> mapM (ssa mode) body
     LAST.Function   name signature body   -> do
                                                 let (nast, _, logs) = runGen (ssaFunction mode ast) GenState.empty
+                                                Logger.append logs
                                                 --runStateT (ssaFunction mode ast) GenState.empty
                                                 --runStateT test GenState.empty
                                                 return $ fromJust nast
@@ -79,6 +81,7 @@ test = do
 
 --ssaFunction :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
 ssaFunction mode ast@(LAST.Function name signature body) = do
+    logger.error $ "o nie"
     return ()
     GenState.registerVar (name, name)
     ssaType signature

@@ -21,22 +21,23 @@ Library
   Extensions:     DoAndIfThenElse
 
   Exposed-modules: 
-        Flowbox.Tools.Conversion,
-        Flowbox.Control.Exception,
         Flowbox.Control.Error,
+        Flowbox.Control.Exception,
         Flowbox.Control.Applicative,
+        Flowbox.Data.Version,
+        Flowbox.Tools.Conversion,
         Flowbox.System.UniPath,
         Flowbox.System.Directory,
         Flowbox.System.IO.IO,
         Flowbox.System.IO.Serializer,
-        Flowbox.System.Log.LogEntry,
         Flowbox.System.Log.Conf,
         Flowbox.System.Log.Logger,
-        Flowbox.Data.Version
+        Flowbox.System.Log.LogEntry
 
   Build-Depends:  base,
                   containers,
                   directory,
+                  dlist,
                   either,
                   errors,
                   MissingH == 1.2.0.0,
@@ -57,6 +58,7 @@ Executable utils
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
   Build-Depends:  base,
+                  dlist,
                   ansi-terminal,
                   either,
                   hslogger,

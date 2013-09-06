@@ -74,6 +74,7 @@ import           Flowbox.Luna.Codegen.Hs.GenState     (GenState)
 import           Debug.Trace                          
 import           Data.Either.Utils                    (forceEither)
 import qualified Text.Show.Pretty                   as PP
+import qualified Data.DList                  as DList
 
 import           Prelude                            hiding (log)
 import           System.TimeIt                        
@@ -112,12 +113,13 @@ main_inner = do
     let 
         parsed = Parser.parse example
         ast = forceEither parsed
-        out = runRWS (runMaybeT (Gen.ssa Gen.Read ast)) 0 GenState.empty
-        (hast,_,_) = out
+        (nast, nstate, nlog) = runRWS (runMaybeT (Gen.ssa Gen.Read ast)) 0 GenState.empty
     --let y = runRWS (runMaybeT test) 0 0
     putStrLn $ PP.ppShow $ ast
     putStrLn "\n-----------------"
-    putStrLn $ PP.ppShow $ out
+    putStrLn $ PP.ppShow $ nast
+    putStrLn $ PP.ppShow $ nstate
+    putStrLn $ PP.ppShow $ DList.toList nlog
     putStrLn "\n-----------------"
 
     --case hast of
