@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Codegen.Hs.GenState where
+module Flowbox.Luna.Codegen.Hs.SSAState where
 
 import           Control.Monad.State           
 import qualified Data.Map                    as Map
@@ -22,16 +22,18 @@ import qualified Flowbox.System.Log.LogEntry as LogEntry
 
 logger = getLogger "Flowbox.Luna.Codegen.Hs.Generator"
 
-data GenState = GenState { varcount :: Int
+data SSAState = SSAState { varcount :: Int
                          , varmap   :: Map String String
                          } deriving (Show)
 
 
-empty :: GenState
-empty = GenState 0 Map.empty
+type SSAStateM m = MonadState SSAState m
+
+empty :: SSAState
+empty = SSAState 0 Map.empty
 
 
-genVarName :: MonadState GenState m => m String
+genVarName :: SSAStateM m => m String
 genVarName = do
     state <- get
     let vname = "v'" ++ show (varcount state)
@@ -39,30 +41,30 @@ genVarName = do
     return vname
 
 
-registerVar :: MonadState GenState m => (String, String) -> m ()
+registerVar :: SSAStateM m => (String, String) -> m ()
 registerVar (alias, vname) = do
     state <- get
     put $ state { varmap = Map.insert alias vname $ varmap state }
     return ()
 
-lookupVar :: MonadState GenState m => String -> m (Maybe String)
+lookupVar :: SSAStateM m => String -> m (Maybe String)
 lookupVar vname = do
     state <- get
     return $ Map.lookup vname (varmap state)
 
 
-uniqueVar :: MonadState GenState m => String -> m String
+uniqueVar :: SSAStateM m => String -> m String
 uniqueVar vname = do
     v <- lookupVar vname
     case v of
         Nothing      -> return vname
         Just oldname -> genVarName
 
-handleVar :: MonadState GenState m => String -> m String
+handleVar :: SSAStateM m => String -> m String
 handleVar vname = do
     newname <- uniqueVar vname
     registerVar (vname, newname)
     return newname
 
-registerVars :: MonadState GenState m => [(String, String)] -> m ()
+registerVars :: SSAStateM m => [(String, String)] -> m ()
 registerVars vars = mapM_ registerVar vars

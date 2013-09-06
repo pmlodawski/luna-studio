@@ -20,8 +20,8 @@ import qualified Flowbox.Luna.Codegen.Hs.AST.DataType as DataType
 import qualified Flowbox.Luna.Codegen.Hs.AST.Function as Function
 import qualified Flowbox.Luna.Codegen.Hs.AST.Cons     as Cons
 import           Flowbox.Luna.Codegen.Hs.AST.Function   (Function)
-import qualified Flowbox.Luna.Codegen.Hs.GenState     as GenState
-import           Flowbox.Luna.Codegen.Hs.GenState       (GenState)
+import qualified Flowbox.Luna.Codegen.Hs.SSAState     as SSAState
+import           Flowbox.Luna.Codegen.Hs.SSAState       (SSAState)
 
 import           Control.Monad.State                    
 import           Control.Applicative                    
@@ -44,58 +44,48 @@ import           Prelude                              hiding(error)
 
 logger = getLogger "Flowbox.Luna.Codegen.Hs.Generator"
 
---type Generator a m r = (Functor m, MonadWriter [LogEntry.LogEntry] m) => LAST.Expr -> MaybeT m r
-
-type Generator m = (Functor m, MonadState GenState m, LogWriter m)
-
+type Generator m = (Functor m, MonadState SSAState m, LogWriter m)
 
 data Mode = Write | Read
 
 runGen f state = runRWS (runMaybeT f) 0 state
 
 runStateSSA f = do
-    let (nast, _, logs) = runGen f GenState.empty
+    let (nast, _, logs) = runEmptySSA f
     Logger.append logs
     return $ fromJust nast
 
-ssa :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
-ssa mode ast = case ast of
-    LAST.Program    body                  -> LAST.Program <$> mapM (ssa mode) body
+runEmptySSA f = runGen f SSAState.empty
+
+ssa = runEmptySSA . (ssaAST Read)
+
+ssaAST :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
+ssaAST mode ast = case ast of
+    LAST.Program    body                  -> LAST.Program <$> mapM (ssaAST mode) body
     LAST.Function   name signature body   -> runStateSSA $ do
-                                                    GenState.registerVar (name, name)
+                                                    SSAState.registerVar (name, name)
                                                     ssaType signature
-                                                    LAST.Function name signature <$> mapM (ssa mode) body
-    LAST.Assignment src dst               -> flip LAST.Assignment <$> ssa mode dst <*> ssa Write src
-    LAST.Pattern    pat                   -> LAST.Pattern         <$> ssa mode pat
+                                                    LAST.Function name signature <$> mapM (ssaAST mode) body
+    LAST.Assignment src dst               -> flip LAST.Assignment <$> ssaAST mode dst <*> ssaAST Write src
+    LAST.Pattern    pat                   -> LAST.Pattern         <$> ssaAST mode pat
     LAST.Identifier name                  -> case mode of
-                                                 Write -> LAST.Identifier <$> GenState.handleVar name
+                                                 Write -> LAST.Identifier <$> SSAState.handleVar name
                                                  Read  -> do
-                                                     v <- GenState.lookupVar name
+                                                     v <- SSAState.lookupVar name
                                                      case v of
                                                         Nothing      -> (logger error $ "Not in scope: '" ++ name ++ "'") >> Prelude.fail "a"
                                                         Just newname -> return $ LAST.Identifier newname
-    LAST.Operator   name src dst          -> LAST.Operator name <$> ssa mode src <*> ssa mode dst
-    _                                     -> return ast
+    LAST.Operator   name src dst          -> LAST.Operator name <$> ssaAST mode src <*> ssaAST mode dst
+    LAST.Call       src args              -> LAST.Call <$> ssaAST mode src <*> mapM (ssaAST mode) args
+    LAST.Constant {}                      -> return ast
 
-
-test = do
-    --GenState.registerVar ("x", "x")
-    return ()
-
---ssaFunction :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
-ssaFunction mode ast@(LAST.Function name signature body) = do
-    GenState.registerVar (name, name)
-    ssaType signature
-    LAST.Function name signature <$> mapM (ssa mode) body
-
-
+ssaType :: Generator m => Type -> MaybeT m ()
 ssaType ast = case ast of
     Type.Lambda inputs outputs -> ssaType inputs
     Type.Tuple  items          -> mapM ssaType items *> return ()
-    Type.Type   name           -> GenState.registerVar (name, name)
+    Type.Type   name           -> SSAState.registerVar (name, name)
 
-testme :: Generator m => MaybeT m ()
-testme = do return ()
+
 
 --genModule :: Generator a m => LAST.Expr -> MaybeT m Module
 genModule ast = case ast of
@@ -121,7 +111,7 @@ genModule ast = case ast of
     --LAST.Program  body                ->   Module.addFunction mainfunc
     --                                     $ Module.empty
     --                                     where
-    --                                         mainfunc <- genFunction $ LAST.Function "main" [] body) GenState.empty
+    --                                         mainfunc <- genFunction $ LAST.Function "main" [] body) SSAState.empty
     --_                                 -> error "Unknown LUNA.AST expression"
 
 
@@ -176,12 +166,12 @@ genField (LAST.Field name t) = return $ Expr.Typed (Type.name t) (Expr.Var name)
     -- Class name params []
     --LAST.Operator   name src dst -> Expr.Operator name <$> genExpr src <*> genExpr dst
     ----LAST.Identifier name         -> do
-    --                                    --vname <- GenState.genVarName
+    --                                    --vname <- SSAState.genVarName
     --                                    --return $ Expr.Var vname
     ----LAST.Assignment src dst      -> do
     --                                    --dst' <- genExpr dst
-    --                                    --src' <- GenState.genVarName
-    --                                    --GenState.registerVar src' src
+    --                                    --src' <- SSAState.genVarName
+    --                                    --SSAState.registerVar src' src
     --                                    --return $ Expr.Assignment (Expr.Var src') dst' Expr.Pure
     --_ -> return Expr.NOP
 

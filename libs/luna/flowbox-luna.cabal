@@ -41,7 +41,7 @@ Library
         Flowbox.Luna.Network.Def.Edge,
         Flowbox.Luna.Network.Def.DefManager,
         Flowbox.Luna.Codegen.Hs.CodeGenerator,
-        Flowbox.Luna.Codegen.Hs.GenState,
+        Flowbox.Luna.Codegen.Hs.SSAState,
         Flowbox.Luna.Codegen.Hs.DefGenerator,
         Flowbox.Luna.Codegen.Hs.Path,
         Flowbox.Luna.Codegen.Hs.Generator,
