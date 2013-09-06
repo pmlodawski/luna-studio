@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 module Flowbox.Batch.Samples.Nodes2Ast where
 
@@ -60,9 +61,9 @@ main = eRunScript $ do
 
     scriptIO $ do 
                   --print fun1_df
-                  putStrLn $ ppShow $ Definition2AST.toAST fun1_df
+                  putStrLn $ ppShow $ Definition2AST.toAST' fun1_df
                   
                   putStrLn "--------------------------------------------"
 
                   --print cls1_df
-                  putStrLn $ ppShow $ Definition2AST.toAST cls1_df
+                  putStrLn $ ppShow $ Definition2AST.toAST' cls1_df

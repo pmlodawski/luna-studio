@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 module Flowbox.Batch.Tools.Definition2AST where
 -- TODO [PM] move to Luna project!
@@ -32,17 +33,36 @@ import           Flowbox.Luna.Network.Graph.Node           (Node)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Flowbox.Luna.Network.Graph.Edge         as Edge
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
-import qualified Flowbox.Luna.Type.Type                  as Type
-import           Flowbox.Luna.Type.Type                    (Type(..))
 import qualified Flowbox.System.UniPath                  as UniPath
 import           Flowbox.System.UniPath                    (UniPath)
 
+
+
+notImplementedList :: [a]
 notImplementedList = []
 
-toAST :: Definition -> AST.Expr
-toAST (Definition acls agraph aimports (Flags aio aomit) _) = case acls of 
-	Class aname atypeparams aparams -> AST.Class astClass astFields astMethods where
-										astClass   = (ASTType.Class aname atypeparams)
-										astFields  = notImplementedList
-										astMethods = notImplementedList
-	_ -> AST.NOP
+
+toASTType :: Type -> ASTType.Type
+toASTType t = case t of 
+    Type.Undefined                           -> ASTType.Unknown
+    Type.TypeVariable name                   -> ASTType.Unknown
+    Type.Class        name typeparams params -> ASTType.Class name typeparams
+    Type.Function     name inputs outputs    -> ASTType.Lambda (toASTType inputs) (toASTType outputs)
+    Type.Tuple        items                  -> ASTType.Tuple (map toASTType items)
+    Type.List         item                   -> ASTType.Unknown
+    Type.Interface    fields methods         -> ASTType.Unknown
+    Type.Module       name                   -> ASTType.Unknown
+    Type.Named        name cls               -> ASTType.Unknown
+
+
+toAST' :: Definition -> AST.Expr
+toAST' (Definition acls agraph aimports (Flags _ aomit) _) = case acls of 
+    Type.Class aname atypeparams aparams -> AST.Class astClass astFields astMethods where
+                                        astClass   = (ASTType.Class aname atypeparams)
+                                        astFields  = notImplementedList
+                                        astMethods = notImplementedList
+    _ -> AST.NOP
+
+
+toAST :: DefManager -> Definition.ID -> AST.Expr
+toAST defManager defID =  undefined
