@@ -153,7 +153,7 @@ exprtable i = [
             , [binary   "*"  (binaryMatch $ AST.Operator "*")       Expr.AssocLeft]
             , [binary   "+"  (binaryMatch $ AST.Operator "+")       Expr.AssocLeft]
             --, [binary   "="   AST.Assignment          Expr.AssocLeft]
-            , [prefixfM      (try(AST.Assignment <$> (pPattern i) <* (L.reservedOp "=" <?> "pattern match")))]
+            , [prefixfM      (try(binaryMatch AST.Assignment <$> (pPattern i) <* (L.reservedOp "=" <?> "pattern match")))]
             ]
       
 
