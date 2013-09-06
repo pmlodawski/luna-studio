@@ -55,14 +55,16 @@ type SSA m = Pass SSAState m
 
 data Mode = Write | Read
 
-runNested f = Pass.runNested f SSAState.empty
+runNested = Pass.runNested SSAState.empty
 
-runEmptySSA f = Pass.run f SSAState.empty
+runEmptySSA = Pass.run SSAState.empty
 
-run :: LAST.Expr -> Pass.Result LAST.Expr SSAState
-run = runEmptySSA . (ssaAST Read)
+--run :: LAST.Expr -> Pass.Result LAST.Expr SSAState
+run = (Pass.run SSAState.empty) . (ssaAST Read)
 
-ssaAST :: SSA m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
+apply = Pass.apply SSAState.empty (ssaAST Read)
+
+ssaAST :: SSA m => Mode -> LAST.Expr -> EitherT String m LAST.Expr
 ssaAST mode ast = case ast of
     LAST.Program    body                  -> LAST.Program <$> mapM (ssaAST mode) body
     LAST.Function   name signature body   -> runNested $ do
@@ -76,15 +78,15 @@ ssaAST mode ast = case ast of
                                                  Read  -> do
                                                      v <- SSAState.lookupVar name
                                                      case v of
-                                                        Nothing      -> (logger error $ "Not in scope: '" ++ name ++ "'") *> empty
+                                                        Nothing      -> (logger error $ "Not in scope: '" ++ name ++ "'") *> Pass.fail
                                                         Just newname -> return $ LAST.Identifier newname
     LAST.Operator   name src dst          -> LAST.Operator name <$> ssaAST mode src <*> ssaAST mode dst
     LAST.Call       src args              -> LAST.Call <$> ssaAST mode src <*> mapM (ssaAST mode) args
     LAST.Constant {}                      -> return ast
-    _                                     -> logger error "SSA Pass error: Unknown expression." *> empty
+    _                                     -> logger error "SSA Pass error: Unknown expression." *> Pass.fail
 
 
-ssaType :: SSA m => Type -> MaybeT m ()
+ssaType :: SSA m => Type -> EitherT String m ()
 ssaType ast = case ast of
     Type.Lambda inputs outputs -> ssaType inputs
     Type.Tuple  items          -> mapM ssaType items *> return ()

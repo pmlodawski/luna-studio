@@ -86,7 +86,7 @@ logger = getLogger "Flowbox"
 
 example :: String
 example = unlines [ "def f(x):"
-                  , "   x=x+1"
+                  , "   x=y+1"
                   , "   x=x x"
                   ]
 

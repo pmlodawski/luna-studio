@@ -18,13 +18,23 @@ import           Control.Error
 import           Flowbox.System.Log.Logger    
 import qualified Flowbox.System.Log.Logger  as Logger
 
+import           Prelude                    hiding(fail)
+import qualified Prelude                    as Prelude
 
-type Pass   state m     = (Functor m, MonadState state m, LogWriter m)
-type Result input state = (Maybe input, state, LogList)
 
-run f state = runRWS (runMaybeT f) 0 state
+type Pass   state m      = (Functor m, MonadState state m, LogWriter m)
+type Result output state = (Either String output, state, LogList)
 
-runNested f state = do
-    let (nast, _, logs) = run f state
+run state f = runRWS (runEitherT f) 0 state
+
+apply state f inputs = case inputs of
+                           Left  e -> Prelude.fail e
+                           Right v -> return $ run state (f v)
+
+runNested state f = do
+    let (nast, _, logs) = run state f
     Logger.append logs
-    hoistMaybe nast
+    hoistEither nast
+
+fail :: Monad m => EitherT String m a
+fail = left "Pass failed"
