@@ -75,11 +75,13 @@ ssaAST mode ast = case ast of
                                                  Read  -> do
                                                      v <- SSAState.lookupVar name
                                                      case v of
-                                                        Nothing      -> (logger error $ "Not in scope: '" ++ name ++ "'") >> Prelude.fail "a"
+                                                        Nothing      -> (logger error $ "Not in scope: '" ++ name ++ "'") *> empty
                                                         Just newname -> return $ LAST.Identifier newname
     LAST.Operator   name src dst          -> LAST.Operator name <$> ssaAST mode src <*> ssaAST mode dst
     LAST.Call       src args              -> LAST.Call <$> ssaAST mode src <*> mapM (ssaAST mode) args
     LAST.Constant {}                      -> return ast
+    _                                     -> logger error "SSA Pass error: Unknown expression." *> empty
+
 
 ssaType :: Generator m => Type -> MaybeT m ()
 ssaType ast = case ast of
