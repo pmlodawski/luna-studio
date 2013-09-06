@@ -4,20 +4,27 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Batch.Server.Handlers.Common where
+module Flowbox.Batch.Server.Handlers.Common (
+	throw',
+	tRunScript,
+	vector2List,
+) where
 
 
+import           Data.Int                    (Int32)
 import           Prelude                   hiding (error)
-import           Control.Exception           
+import           Control.Exception           (throw)
 import           Data.Text.Lazy              (pack)
+import qualified Data.Vector               as Vector
+import           Data.Vector                 (Vector)
                                     
 import           Batch_Types                 (ArgumentException(..))
 import           Flowbox.Control.Error       
-import           Flowbox.System.Log.Logger   (getLogger, error)
+import           Flowbox.Tools.Conversion    
+import           Flowbox.System.Log.Logger
 
 
-logger :: (String -> IO ()) -> IO ()
-logger = getLogger "Flowbox.Batch.Server"
+logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Common"
 
 
 throw' :: String -> c
@@ -33,3 +40,5 @@ tRunScript s = do
         	throw' m
         Right a -> return a
 
+vector2List :: Vector Int32 -> [Int]
+vector2List = map i32toi . Vector.toList

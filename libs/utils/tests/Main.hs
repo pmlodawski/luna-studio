@@ -9,17 +9,20 @@
 
 import           Prelude                    hiding (error)
 import           Flowbox.System.Log.Logger    
-import qualified Flowbox.System.Log.Logger  as Logger
 import qualified Flowbox.Data.Version       as Version
 
 
-import           Control.Monad.State          
-import           Control.Monad.Writer         
-import           Control.Monad.RWS            
-import           Control.Monad.Trans.Either   
+--import           Control.Monad.State          
+--import           Control.Monad.Writer         
+--import           Control.Monad.RWS            
+--import           Control.Monad.Trans.Either   
 
-logger = getLogger "MyApp.BuggyComponent"
+logger :: (String -> t) -> t
+logger   = getLogger "MyApp.BuggyComponent"
 
+loggerIO = getLoggerIO "MyApp.BuggyComponent"
+
+test_logger :: IO ()
 test_logger = runLogger $ do
     logger.debug     $ "debug"
     logger.info      $ "info"
@@ -43,3 +46,4 @@ main = do
                         }
     print v1
     print $ Version.str v1
+    loggerIO.error $ "IO error"

@@ -9,18 +9,20 @@ module Flowbox.Batch.Batch (
     Batch(..),
     empty,
 
+	attributeKey,
 ) where
 
-import qualified Flowbox.Batch.Project.Project        as Project
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
 import           Flowbox.Batch.Project.ProjectManager   (ProjectManager)
 
 
 
-data Batch = Batch { projectManager  :: ProjectManager
-                   , activeProjectID :: Project.ID
-                   } deriving (Show)
+data Batch = Batch { projectManager :: ProjectManager } deriving (Show)
 
 
 empty :: Batch
-empty = Batch ProjectManager.empty (-1)
+empty = Batch ProjectManager.empty
+
+
+attributeKey :: String
+attributeKey = "Batch-0.1"

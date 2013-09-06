@@ -135,7 +135,7 @@ genExpr :: Generator m => LAST.Expr -> MaybeT m Expr
 genExpr ast = case ast of
     LAST.Constant   cst                 -> case cst of
                                                LConstant.Integer val -> return $ Expr.Constant $ Constant.Integer val
-                                               _                     -> logger.critical $ "Unknown LUNA.AST expression"
+                                               _                     -> logger.criticalFail $ "Unknown LUNA.AST expression"
     LAST.Identifier name                -> return $ Expr.Var ("v''" ++ name)
 
     LAST.Function   name signature body -> do

@@ -21,26 +21,22 @@ const char* _kDefaultValueTypeNames[] = {
 const std::map<int, const char*> _DefaultValueType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(2, _kDefaultValueTypeValues, _kDefaultValueTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
 int _kNodeTypeValues[] = {
-  NodeType::Type,
-  NodeType::Call,
+  NodeType::Expr,
   NodeType::Default,
-  NodeType::New,
   NodeType::Inputs,
   NodeType::Outputs,
   NodeType::Tuple,
   NodeType::NTuple
 };
 const char* _kNodeTypeNames[] = {
-  "Type",
-  "Call",
+  "Expr",
   "Default",
-  "New",
   "Inputs",
   "Outputs",
   "Tuple",
   "NTuple"
 };
-const std::map<int, const char*> _NodeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(8, _kNodeTypeValues, _kNodeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+const std::map<int, const char*> _NodeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(6, _kNodeTypeValues, _kNodeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
 const char* DefaultValue::ascii_fingerprint = "69ED04DC035A4CF78CE4B470902F18B3";
 const uint8_t DefaultValue::binary_fingerprint[16] = {0x69,0xED,0x04,0xDC,0x03,0x5A,0x4C,0xF7,0x8C,0xE4,0xB4,0x70,0x90,0x2F,0x18,0xB3};
@@ -172,8 +168,8 @@ uint32_t Node::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 2:
         if (ftype == ::apache::thrift::protocol::T_STRING) {
-          xfer += iprot->readString(this->name);
-          this->__isset.name = true;
+          xfer += iprot->readString(this->expression);
+          this->__isset.expression = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -231,9 +227,9 @@ uint32_t Node::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeI32((int32_t)this->cls);
     xfer += oprot->writeFieldEnd();
   }
-  if (this->__isset.name) {
-    xfer += oprot->writeFieldBegin("name", ::apache::thrift::protocol::T_STRING, 2);
-    xfer += oprot->writeString(this->name);
+  if (this->__isset.expression) {
+    xfer += oprot->writeFieldBegin("expression", ::apache::thrift::protocol::T_STRING, 2);
+    xfer += oprot->writeString(this->expression);
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.nodeID) {
@@ -264,7 +260,7 @@ uint32_t Node::write(::apache::thrift::protocol::TProtocol* oprot) const {
 void swap(Node &a, Node &b) {
   using ::std::swap;
   swap(a.cls, b.cls);
-  swap(a.name, b.name);
+  swap(a.expression, b.expression);
   swap(a.nodeID, b.nodeID);
   swap(a.flags, b.flags);
   swap(a.attrs, b.attrs);

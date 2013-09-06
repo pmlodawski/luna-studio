@@ -11,6 +11,7 @@ using namespace apache::thrift::protocol;
 using namespace apache::thrift::transport;
 
 using namespace flowbox::batch;
+using namespace flowbox::batch::attrs;
 using namespace flowbox::batch::defs;
 using namespace flowbox::batch::fs;
 using namespace flowbox::batch::graph;
@@ -34,25 +35,39 @@ int main(int argc, char **argv) {
     batch.ping();
 
     try {
+        Project proj;
+        proj.__set_name("CPP Client test project");
+        proj.__set_path("test/CPP Client test project");
+        batch.createProject(proj, proj);
+        vector<Project> projects;
+        batch.projects(projects);
+        cout << "Opened projects: " << projects.size() << endl;
+
+
         /* Libraries */
 
         vector<Library> registeredLibs;
 
         Library lib1;
         lib1.__set_name("lib1");
-        lib1.__set_path("dummylibs/my/lib1.lunalib");
+        lib1.__set_path("test/dummylibs/lib1.lunalib");
 
-        Library userlib;
-        userlib.__set_name("user");
-        userlib.__set_path("dummylibs/my/user.lunalib");
+        Library workspacelib;
+        workspacelib.__set_name("workspace");
+        workspacelib.__set_path("test/dummylibs/workspace.lunalib");
 
-        batch.libraries(registeredLibs);
+        Attributes projectAttrs;
+        projectAttrs.__set_spaces({{ "libraries", {{lib1.name, lib1.path}, {workspacelib.name, workspacelib.path}} }});
+        proj.__set_attribs(projectAttrs);
+        batch.updateProject(proj);
+
+        batch.libraries(registeredLibs, proj.projectID);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
 
-        batch.createLibrary(lib1, lib1);
-        batch.createLibrary(userlib, userlib);
+        batch.createLibrary(lib1, lib1, proj.projectID);
+        batch.createLibrary(workspacelib, workspacelib, proj.projectID);
         
-        batch.libraries(registeredLibs);
+        batch.libraries(registeredLibs, proj.projectID);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
 
         /* Add new definition */
@@ -66,15 +81,15 @@ int main(int argc, char **argv) {
         batch.newTypeFunction(funType, "fun", funInputsType, funOutputsType);
 
         Definition myModule;
-        batch.libraryRootDef(myModule, userlib.libID);
+        batch.libraryRootDef(myModule, workspacelib.libID, proj.projectID);
 
         cout << myModule.defID << endl;
         Definition fun;
         fun.__set_cls(funType);
-        batch.addDefinition(fun, fun, myModule.defID, userlib.libID);
-        batch.updateDefinition(fun, userlib.libID);
-        batch.removeDefinition(fun.defID, userlib.libID);
-        batch.addDefinition(fun, fun, myModule.defID, userlib.libID);
+        batch.addDefinition(fun, fun, myModule.defID, workspacelib.libID, proj.projectID);
+        batch.updateDefinition(fun, workspacelib.libID, proj.projectID);
+        batch.removeDefinition(fun.defID, workspacelib.libID, proj.projectID);
+        batch.addDefinition(fun, fun, myModule.defID, workspacelib.libID, proj.projectID);
 
         Type myclassType;
         batch.newTypeClass(myclassType, "myclass", {}, {});
@@ -82,23 +97,23 @@ int main(int argc, char **argv) {
         Definition myclass;
         myclass.__set_cls(myclassType);
 
-        batch.addDefinition(myclass, myclass, myModule.defID, userlib.libID);
+        batch.addDefinition(myclass, myclass, myModule.defID, workspacelib.libID, proj.projectID);
 
         vector<Definition> children;
-        batch.definitionChildren(children, myModule.defID, userlib.libID);
+        batch.definitionChildren(children, myModule.defID, workspacelib.libID, proj.projectID);
         cout << "`my` module has " << children.size() << " children." << endl;
 
         Definition parent;
-        batch.definitionParent(parent, fun.defID, userlib.libID);
+        batch.definitionParent(parent, fun.defID, workspacelib.libID, proj.projectID);
 
 
         DefsGraph defsGraph;
-        batch.defsGraph(defsGraph, userlib.libID);
-        cout << "userlib DefsGraph has " 
+        batch.defsGraph(defsGraph, workspacelib.libID, proj.projectID);
+        cout << "workspacelib DefsGraph has " 
              << defsGraph.defs.size() << " defs and " 
              << defsGraph.edges.size() << " edges" << endl;
 
-        batch.defsGraph(defsGraph, registeredLibs[0].libID);
+        batch.defsGraph(defsGraph, registeredLibs[0].libID, proj.projectID);
         cout << "stdlib DefsGraph has " 
              << defsGraph.defs.size() << " defs and " 
              << defsGraph.edges.size() << " edges" << endl;
@@ -106,72 +121,109 @@ int main(int argc, char **argv) {
         /* Add some nodes */
 
         GraphView graph;
-        batch.nodesGraph(graph, fun.defID, userlib.libID);
+        batch.nodesGraph(graph, fun.defID, workspacelib.libID, proj.projectID);
 
-        Node inputs;
-        inputs.__set_cls(NodeType::Inputs);
-        batch.addNode(inputs, inputs, fun.defID, userlib.libID);
-
-        Node outputs;
-        outputs.__set_cls(NodeType::Outputs);
-        batch.addNode(outputs, outputs, fun.defID, userlib.libID);
-        batch.updateNode(outputs, fun.defID, userlib.libID);
+        int inputsID = 0;
+        int outputsID = 1;
 
         Node dummy;
-        dummy.__set_cls(NodeType::Call);
-        dummy.__set_name("dummy");
-        batch.addNode(dummy, dummy, fun.defID, userlib.libID);
-        dummy.__set_name("fun");
-        batch.updateNode(dummy, fun.defID, userlib.libID);
-        batch.removeNode(dummy.nodeID, fun.defID, userlib.libID);
+        dummy.__set_cls(NodeType::Expr);
+        dummy.__set_expression("dummy");
+        batch.addNode(dummy, dummy, fun.defID, workspacelib.libID, proj.projectID);
+        dummy.__set_expression("fun");
+        batch.updateNode(dummy, fun.defID, workspacelib.libID, proj.projectID);
+        batch.removeNode(dummy.nodeID, fun.defID, workspacelib.libID, proj.projectID);
 
         Node dummy2;
-        dummy2.__set_cls(NodeType::Call);
-        dummy2.__set_name("dummy2");
-        batch.addNode(dummy2, dummy2, fun.defID, userlib.libID);
+        dummy2.__set_cls(NodeType::Expr);
+        dummy2.__set_expression("dummy2");
+        batch.addNode(dummy2, dummy2, fun.defID, workspacelib.libID, proj.projectID);
         
+
+        Node dummy3;
+        dummy3.__set_cls(NodeType::Expr);
+        dummy3.__set_expression("dummy3");
+        batch.addNode(dummy3, dummy3, fun.defID, workspacelib.libID, proj.projectID);
+
+        batch.connect(inputsID, {1, 2, 3}, dummy3.nodeID, {4,5,9}, fun.defID, workspacelib.libID, proj.projectID);
+        batch.connect(inputsID, {6, 9}, dummy2.nodeID, {}, fun.defID, workspacelib.libID, proj.projectID);
+
         try {
-            batch.connect(inputs.nodeID, {4, 9, 2}, dummy2.nodeID, {4,5,9}, fun.defID, userlib.libID);
+            batch.connect(inputsID, {0, 0, 0}, dummy2.nodeID, {1}, fun.defID, workspacelib.libID, proj.projectID);
         } catch (ArgumentException e) {
             cout << "Unable to connect: "<< "\t" << e.message << endl;
         }
-        
-        batch.connect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID);
-        batch.connect(inputs.nodeID, {7, 8}, outputs.nodeID, {5}, fun.defID, userlib.libID);
-        batch.disconnect(inputs.nodeID, {1, 2, 5}, outputs.nodeID, {1}, fun.defID, userlib.libID);
-        batch.dump();
-        batch.nodesGraph(graph, fun.defID, userlib.libID);
-        
-        batch.storeLibrary(userlib.libID);
-        batch.buildLibrary(userlib.libID);
 
-        batch.libraries(registeredLibs);
+        batch.connect(inputsID, {1, 2, 5}, outputsID, {1}, fun.defID, workspacelib.libID, proj.projectID);
+        batch.connect(inputsID, {7, 8}, outputsID, {5}, fun.defID, workspacelib.libID, proj.projectID);
+
+        try {
+            batch.connect(inputsID, {0, 0, 0}, outputsID, {}, fun.defID, workspacelib.libID, proj.projectID);
+        } catch (ArgumentException e) {
+            cout << "Unable to connect: "<< "\t" << e.message << endl;
+        }
+
+        batch.disconnect(inputsID, {1, 2, 5}, outputsID, {5}, fun.defID, workspacelib.libID, proj.projectID);
+        batch.nodesGraph(graph, fun.defID, workspacelib.libID, proj.projectID);
+        
+        /* Default values */
+
+        DefaultValue dv;
+        dv.__set_cls(DefaultValueType::StringV);
+        dv.__set_s("ala");
+
+
+        DefaultValue dv2;
+        dv2.__set_cls(DefaultValueType::IntV);
+        dv2.__set_i(4);
+
+        map<PortDescriptor, DefaultValue> defaults;
+        batch.nodeDefaults(defaults, outputsID, fun.defID, workspacelib.libID, proj.projectID);
+        cout << "Node has " << defaults.size() << " defaults" << endl;
+        batch.setNodeDefault({1}, dv, outputsID, fun.defID, workspacelib.libID, proj.projectID);
+        batch.setNodeDefault({2}, dv2, outputsID, fun.defID, workspacelib.libID, proj.projectID);
+        batch.setNodeDefault({3}, dv2, outputsID, fun.defID, workspacelib.libID, proj.projectID);
+        batch.nodeDefaults(defaults, outputsID, fun.defID, workspacelib.libID, proj.projectID);
+        cout << "Node has " << defaults.size() << " defaults" << endl;
+        batch.removeNodeDefault({2}, outputsID, fun.defID, workspacelib.libID, proj.projectID);
+        batch.nodeDefaults(defaults, outputsID, fun.defID, workspacelib.libID, proj.projectID);
+        cout << "Node has " << defaults.size() << " defaults" << endl;
+        
+        /* Loading and unloading */
+
+        batch.storeLibrary(workspacelib.libID, proj.projectID);
+        
+        // TODO [PM] Compatibility after removal of Call, Type and New
+        // batch.buildLibrary(workspacelib.libID, proj.projectID);
+
+        batch.libraries(registeredLibs, proj.projectID);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
-        batch.unloadLibrary(userlib.libID);
-        batch.libraries(registeredLibs);
+        batch.unloadLibrary(workspacelib.libID, proj.projectID);
+        batch.libraries(registeredLibs, proj.projectID);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
-        batch.loadLibrary(userlib, userlib.path);
-        batch.libraries(registeredLibs);
+        batch.loadLibrary(workspacelib, workspacelib.path, proj.projectID);
+        batch.libraries(registeredLibs, proj.projectID);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
 
-        batch.dump();
         batch.ping();
 
         for(auto lib : registeredLibs)
-            batch.storeLibrary(lib.libID);
+            batch.storeLibrary(lib.libID, proj.projectID);
 
-        Project proj;
-        batch.activeProject(proj);
         batch.storeProject(proj.projectID);
         batch.closeProject(proj.projectID);
 
         Project reopened;
         batch.openProject(reopened, proj.path);
-        batch.setActiveProject(reopened.projectID);
 
         for(auto lib : registeredLibs)
-            batch.loadLibrary(lib, lib.path);
+            batch.loadLibrary(lib, lib.path, reopened.projectID);
         
+        batch.dump();        
+        batch.closeProject(reopened.projectID);
+        batch.dump();        
+
+
         vector<FSItem> items;
         batch.FS_ls(items, proj.path);
         cout << "Folder has " << items.size() << " items." << endl;
@@ -187,17 +239,18 @@ int main(int argc, char **argv) {
         batch.FS_mkdir("test3folder");
         batch.FS_rm("test3folder");
         
-        batch.dump();        
         batch.ping();
 
+        
     } catch (ArgumentException e) {
         cout << "Batch returned an error: "<< endl
              << "\t" << e.message << endl;
     }
-
+    batch.shutdown();
     /* Finalize */
 
     transport->close();
 
     return 0;
 }
+

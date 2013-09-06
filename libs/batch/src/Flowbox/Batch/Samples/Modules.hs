@@ -7,7 +7,6 @@
 
 module Flowbox.Batch.Samples.Modules where
 
-import qualified Flowbox.System.UniPath                  as UniPath
 import qualified Flowbox.Batch.Project.Project           as Project
 import           Flowbox.Batch.Project.Project             (Project)
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
@@ -21,18 +20,21 @@ import qualified Flowbox.Luna.Lib.Library                as Library
 import           Flowbox.Luna.Lib.Library                  (Library(..))
 import           Flowbox.Luna.Type.Type                    (Type(..))
 import qualified Flowbox.Luna.Type.Type                  as Type
+import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Flowbox.Luna.Network.Graph.Edge         as Edge
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
+import qualified Flowbox.System.UniPath                  as UniPath
+import           Flowbox.System.UniPath                    (UniPath)
 
 
 
 mkDefinition :: Type -> Definition
 mkDefinition acls = Definition.empty{ Definition.cls = acls
                                     , Definition.graph = Graph.empty
-                        	        }
+                                  }
 
 mkModule :: String -> Definition
 mkModule aname = mkDefinition (Module aname) 
@@ -42,8 +44,31 @@ mkClass :: String -> Definition
 mkClass aname  = mkDefinition (Class aname [] [])
 
 
-listToDefs :: [String] -> Definition.ID -> Definition.ID -> [(Definition.ID, Definition.ID, Definition)]
-listToDefs l start parentID = map (\(i, n)-> (parentID, i, mkClass n)) $ zip [start..] l
+mkFunction :: String -> Definition
+mkFunction aname = mkDefinition (Function aname ( Tuple [ Tuple [ Class "a" [] [Class "g" [] []]
+                                                                , Class "b" [] []
+                                                                , List $ Named "n" $ Class "f" [] []
+                                                                ]
+                                                        , Class "c" [] []
+                                                        , Function "d" ( Tuple [ Class "e" [] []
+                                                                               ]
+                                                                       ) 
+                                                                       ( Tuple []
+                                                                       )
+                                                        ]
+                                                 ) 
+                                                 ( Tuple [ Class "o1" [] []
+                                                         , Class "o2" [] []
+                                                         , Class "o3" [] []
+                                                         ]
+                                                 )
+                                 )
+
+
+listToDefs :: [String] -> Definition.ID -> Definition.ID -> (String -> Definition)
+           -> [(Definition.ID, Definition.ID, Definition)]
+listToDefs l start parentID mk = map (\(i, n)-> (parentID, i, mk n)) $ zip [start..] l
+
 
 
 wladcyPolski :: [String]
@@ -59,15 +84,17 @@ cls_console = Definition.empty { Definition.cls   = Type.Class "Console" [] []
                                , Definition.graph = Graph.empty
                                }
 
+
 cls_vector :: Definition
 cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
                     , Definition.graph = Graph.empty
                     }
 
+
 addSomeDefs :: DefManager -> DefManager
-addSomeDefs adefs = DefManager.addToParentMany (listToDefs atrybuty 2000 20)
+addSomeDefs adefs = DefManager.addToParentMany (listToDefs atrybuty     2000 20 mkClass)
                   $ DefManager.addToParent (0, 20, mkModule "atrybuty")
-                  $ DefManager.addToParentMany (listToDefs wladcyPolski 1000 10)
+                  $ DefManager.addToParentMany (listToDefs wladcyPolski 1000 10 mkFunction)
                   $ DefManager.addToParent (0, 10, mkModule "wladcyPolski")
                   $ DefManager.addToParent (4, 5 , func_vec_incx)
                   $ DefManager.addToParent (3, 4 , cls_vector)
@@ -94,19 +121,20 @@ func_vec_incx_graph = Graph.insEdges [
                              ]
 
            $ Graph.insNodes [(0,  Node.mkInputs             ),
-                             (1,  Node.mkCall     "select0" ),
+                             (1,  Node.mkExpr     "select0" ),
                              (2,  Node.mkNTuple             ),
-                             (3,  Node.mkCall     "x'getter"),
-                             (4,  Node.mkCall     "select0" ),
-                             (5,  Node.Default $ DefaultValue.DefaultInt 1),
+                             (3,  Node.mkExpr     "x'getter"),
+                             (4,  Node.mkExpr     "select0" ),
+                             (5,  Node.Default (DefaultValue.DefaultInt 1) Attributes.empty),
                              (6,  Node.mkNTuple             ),
-                             (7,  Node.mkCall     "add"     ),
-                             (8,  Node.mkCall     "select0" ),
+                             (7,  Node.mkExpr     "add"     ),
+                             (8,  Node.mkExpr     "select0" ),
                              (9,  Node.mkNTuple             ),
-                             (10, Node.mkCall     "x'setter"),
+                             (10, Node.mkExpr     "x'setter"),
                              (11, Node.mkOutputs            )
                             ]
            $ Graph.empty
+
 
 func_vec_incx_inputs :: Type
 func_vec_incx_inputs = Type.Tuple [Type.Named "self" $ Type.TypeVariable "a", 
@@ -118,24 +146,34 @@ func_vec_incx = Definition.empty{ Definition.cls   = (Type.Function "incx" func_
                       , Definition.graph = func_vec_incx_graph
                       }
 
-emptyStdLibrary :: Library
-emptyStdLibrary = Library.make "std"           $ UniPath.fromUnixString "dummylibs/stdlib.lunalib"
+
+emptyStdLibrary :: UniPath -> Library
+emptyStdLibrary rootpath = Library.make "std" $ UniPath.append "stdlib.lunalib" rootpath
     
      
-userLibrary :: Library
-userLibrary = Library.make "__workspace__" $ UniPath.fromUnixString "dummylibs/workspace.lunalib"
-
-stdLibrary :: Library
-stdLibrary  = emptyStdLibrary{Library.defs = addSomeDefs $ Library.defs emptyStdLibrary}        
+userLibrary :: UniPath -> Library
+userLibrary rootpath = Library.make "workspace" $ UniPath.append "workspace.lunalib" rootpath
 
 
-libManager :: LibManager
-libManager = LibManager.insNode (1, userLibrary)
-            $ LibManager.insNode (0, stdLibrary)
-            $ LibManager.empty
+stdLibrary :: UniPath -> Library
+stdLibrary rootpath = lib{Library.defs = addSomeDefs $ Library.defs lib} where
+    lib = emptyStdLibrary rootpath
+
+
+libManager :: UniPath -> LibManager
+libManager rootpath = LibManager.insNode (1, userLibrary rootpath)
+                    $ LibManager.insNode (0, stdLibrary  rootpath)
+                    $ LibManager.empty
+
 
 project :: Project
-project = Project.empty { Project.name = "wladczy projekt"
-                        , Project.path = UniPath.fromUnixString "sample-projects/wladcy" 
-                        , Project.libs = libManager 
-                    	}
+project = addDefaultLibraries 
+        $ Project.empty { Project.name = "wladczy projekt"
+                        , Project.path = UniPath.fromUnixString "sample-projects/wladcy"
+                        , Project.libs = LibManager.empty
+                        } where
+
+
+addDefaultLibraries :: Project -> Project
+addDefaultLibraries proj = proj {Project.libs = libManager rootpath} where
+    rootpath = Project.path proj
