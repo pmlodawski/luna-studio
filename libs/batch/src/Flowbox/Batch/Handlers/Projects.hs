@@ -7,17 +7,18 @@
 
 module Flowbox.Batch.Handlers.Projects (
     projects,
+
+    projectByID,
     createProject,
     openProject,
+    updateProject,
     closeProject,
     storeProject,
-    setActiveProject,
-    activeProject,
 ) where
 
 
 import           Flowbox.Batch.Batch                     (Batch(..))
-import           Flowbox.Batch.Handlers.Common           (activeProject)
+import           Flowbox.Batch.Handlers.Common           (noresult, readonly, readonly', projectOp, projectOp')
 import qualified Flowbox.Batch.Project.Project         as Project
 import           Flowbox.Batch.Project.Project           (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager  as ProjectManager
@@ -25,8 +26,14 @@ import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
 import           Flowbox.System.UniPath                  (UniPath)
 
 
+
 projects :: Batch -> [(Project.ID, Project)]
 projects batch = ProjectManager.labNodes (projectManager batch)
+
+
+projectByID :: Project.ID -> Batch -> Either String Project
+projectByID projectID = readonly . projectOp projectID (\_ project -> do
+    return (project, project))
 
 
 createProject :: Project -> Batch -> (Batch, (Project.ID, Project))
@@ -44,6 +51,13 @@ openProject ppath batch = do
     return (newBatch, newP)
 
 
+updateProject :: (Project.ID, Project) -> Batch -> Either String Batch
+updateProject (projectID, project) = noresult . projectOp projectID (\_ oldProject -> do
+    let plibs = Project.libs oldProject
+        newProject = project { Project.libs = plibs }
+    return (newProject, ()))
+
+
 closeProject :: Project.ID -> Batch -> Batch
 closeProject projectID batch = newBatch where 
     aprojectManager   = projectManager batch
@@ -52,13 +66,7 @@ closeProject projectID batch = newBatch where
 
 
 storeProject :: Project.ID -> Batch -> IO ()
-storeProject projectID batch = do
-    let aprojectManager = projectManager batch
-    case ProjectManager.lab aprojectManager projectID of 
-        Nothing      -> error $ "Could not store project: Wrong project ID = " ++ show projectID
-        Just project -> do ProjectSerialization.storeProject project
+storeProject projectID = readonly' . projectOp' projectID (\_ project -> do
+    ProjectSerialization.storeProject project
+    return (project, ()))
 
-
-setActiveProject :: Project.ID -> Batch -> Batch
-setActiveProject projectID batch = newBatch where
-    newBatch = batch { activeProjectID = projectID }

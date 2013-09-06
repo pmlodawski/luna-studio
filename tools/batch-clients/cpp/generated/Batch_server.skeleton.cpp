@@ -27,6 +27,11 @@ class BatchHandler : virtual public BatchIf {
     printf("projects\n");
   }
 
+  void projectByID( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("projectByID\n");
+  }
+
   void createProject( ::flowbox::batch::projects::Project& _return, const  ::flowbox::batch::projects::Project& project) {
     // Your implementation goes here
     printf("createProject\n");
@@ -35,6 +40,11 @@ class BatchHandler : virtual public BatchIf {
   void openProject( ::flowbox::batch::projects::Project& _return, const std::string& path) {
     // Your implementation goes here
     printf("openProject\n");
+  }
+
+  void updateProject(const  ::flowbox::batch::projects::Project& project) {
+    // Your implementation goes here
+    printf("updateProject\n");
   }
 
   void closeProject(const  ::flowbox::batch::projects::ProjectID projectID) {
@@ -47,77 +57,77 @@ class BatchHandler : virtual public BatchIf {
     printf("storeProject\n");
   }
 
-  void setActiveProject(const  ::flowbox::batch::projects::ProjectID projectID) {
-    // Your implementation goes here
-    printf("setActiveProject\n");
-  }
-
-  void activeProject( ::flowbox::batch::projects::Project& _return) {
-    // Your implementation goes here
-    printf("activeProject\n");
-  }
-
-  void libraries(std::vector< ::flowbox::batch::libs::Library> & _return) {
+  void libraries(std::vector< ::flowbox::batch::libs::Library> & _return, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("libraries\n");
   }
 
-  void createLibrary( ::flowbox::batch::libs::Library& _return, const  ::flowbox::batch::libs::Library& library) {
+  void libraryByID( ::flowbox::batch::libs::Library& _return, const  ::flowbox::batch::libs::LibID libraryID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("libraryByID\n");
+  }
+
+  void createLibrary( ::flowbox::batch::libs::Library& _return, const  ::flowbox::batch::libs::Library& library, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("createLibrary\n");
   }
 
-  void loadLibrary( ::flowbox::batch::libs::Library& _return, const std::string& path) {
+  void loadLibrary( ::flowbox::batch::libs::Library& _return, const std::string& path, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("loadLibrary\n");
   }
 
-  void unloadLibrary(const  ::flowbox::batch::libs::LibID libID) {
+  void unloadLibrary(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("unloadLibrary\n");
   }
 
-  void storeLibrary(const  ::flowbox::batch::libs::LibID libID) {
+  void storeLibrary(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("storeLibrary\n");
   }
 
-  void buildLibrary(const  ::flowbox::batch::libs::LibID libID) {
+  void buildLibrary(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("buildLibrary\n");
   }
 
-  void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::LibID libID) {
+  void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("libraryRootDef\n");
   }
 
-  void defsGraph( ::flowbox::batch::defs::DefsGraph& _return, const  ::flowbox::batch::libs::LibID libID) {
+  void defsGraph( ::flowbox::batch::defs::DefsGraph& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("defsGraph\n");
   }
 
-  void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::DefID parentID, const  ::flowbox::batch::libs::LibID libID) {
+  void defByID( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("defByID\n");
+  }
+
+  void addDefinition( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::defs::DefID parentID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("addDefinition\n");
   }
 
-  void updateDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::LibID libID) {
+  void updateDefinition(const  ::flowbox::batch::defs::Definition& definition, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("updateDefinition\n");
   }
 
-  void removeDefinition(const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void removeDefinition(const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("removeDefinition\n");
   }
 
-  void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("definitionChildren\n");
   }
 
-  void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("definitionParent\n");
   }
@@ -162,34 +172,54 @@ class BatchHandler : virtual public BatchIf {
     printf("newTypeTuple\n");
   }
 
-  void nodesGraph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void nodesGraph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("nodesGraph\n");
   }
 
-  void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void nodeByID( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("nodeByID\n");
+  }
+
+  void addNode( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("addNode\n");
   }
 
-  void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void updateNode(const  ::flowbox::batch::graph::Node& node, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("updateNode\n");
   }
 
-  void removeNode(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void removeNode(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("removeNode\n");
   }
 
-  void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("connect\n");
   }
 
-  void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID) {
+  void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("disconnect\n");
+  }
+
+  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("nodeDefaults\n");
+  }
+
+  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("setNodeDefault\n");
+  }
+
+  void removeNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("removeNodeDefault\n");
   }
 
   void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path) {
@@ -235,6 +265,11 @@ class BatchHandler : virtual public BatchIf {
   void dump() {
     // Your implementation goes here
     printf("dump\n");
+  }
+
+  void shutdown() {
+    // Your implementation goes here
+    printf("shutdown\n");
   }
 
 };

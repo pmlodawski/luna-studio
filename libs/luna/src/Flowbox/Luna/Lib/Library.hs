@@ -18,7 +18,6 @@ import           Flowbox.System.UniPath                (UniPath)
 import qualified Flowbox.Luna.Network.Def.DefManager as DefManager
 import           Flowbox.Luna.Network.Def.DefManager   (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition as Definition
-import           Flowbox.Luna.Network.Def.Definition   (Definition)
 
 
 

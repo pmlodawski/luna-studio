@@ -46,26 +46,22 @@ instance Enum DefaultValueType where
     _ -> throw ThriftException
 instance Hashable DefaultValueType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
-data NodeType = Type|Call|Default|New|Inputs|Outputs|Tuple|NTuple  deriving (Show,Eq, Typeable, Ord)
+data NodeType = Expr|Default|Inputs|Outputs|Tuple|NTuple  deriving (Show,Eq, Typeable, Ord)
 instance Enum NodeType where
   fromEnum t = case t of
-    Type -> 0
-    Call -> 1
-    Default -> 2
-    New -> 3
-    Inputs -> 4
-    Outputs -> 5
-    Tuple -> 6
-    NTuple -> 7
+    Expr -> 0
+    Default -> 1
+    Inputs -> 2
+    Outputs -> 3
+    Tuple -> 4
+    NTuple -> 5
   toEnum t = case t of
-    0 -> Type
-    1 -> Call
-    2 -> Default
-    3 -> New
-    4 -> Inputs
-    5 -> Outputs
-    6 -> Tuple
-    7 -> NTuple
+    0 -> Expr
+    1 -> Default
+    2 -> Inputs
+    3 -> Outputs
+    4 -> Tuple
+    5 -> NTuple
     _ -> throw ThriftException
 instance Hashable NodeType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
@@ -121,17 +117,17 @@ read_DefaultValue iprot = do
   record <- read_DefaultValue_fields iprot (DefaultValue{f_DefaultValue_cls=Nothing,f_DefaultValue_i=Nothing,f_DefaultValue_s=Nothing})
   readStructEnd iprot
   return record
-data Node = Node{f_Node_cls :: Maybe NodeType,f_Node_name :: Maybe Text,f_Node_nodeID :: Maybe Int32,f_Node_flags :: Maybe Attrs_Types.Flags,f_Node_attrs :: Maybe Attrs_Types.Attributes,f_Node_defVal :: Maybe DefaultValue} deriving (Show,Eq,Typeable)
+data Node = Node{f_Node_cls :: Maybe NodeType,f_Node_expression :: Maybe Text,f_Node_nodeID :: Maybe Int32,f_Node_flags :: Maybe Attrs_Types.Flags,f_Node_attrs :: Maybe Attrs_Types.Attributes,f_Node_defVal :: Maybe DefaultValue} deriving (Show,Eq,Typeable)
 instance Hashable Node where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Node_cls record   `hashWithSalt` f_Node_name record   `hashWithSalt` f_Node_nodeID record   `hashWithSalt` f_Node_flags record   `hashWithSalt` f_Node_attrs record   `hashWithSalt` f_Node_defVal record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_Node_cls record   `hashWithSalt` f_Node_expression record   `hashWithSalt` f_Node_nodeID record   `hashWithSalt` f_Node_flags record   `hashWithSalt` f_Node_attrs record   `hashWithSalt` f_Node_defVal record  
 write_Node oprot record = do
   writeStructBegin oprot "Node"
   case f_Node_cls record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("cls",T_I32,1)
     writeI32 oprot (fromIntegral $ fromEnum _v)
     writeFieldEnd oprot}
-  case f_Node_name record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("name",T_STRING,2)
+  case f_Node_expression record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("expression",T_STRING,2)
     writeString oprot _v
     writeFieldEnd oprot}
   case f_Node_nodeID record of {Nothing -> return (); Just _v -> do
@@ -164,7 +160,7 @@ read_Node_fields iprot record = do
           read_Node_fields iprot record
       2 -> if _t8 == T_STRING then do
         s <- readString iprot
-        read_Node_fields iprot record{f_Node_name=Just s}
+        read_Node_fields iprot record{f_Node_expression=Just s}
         else do
           skip iprot _t8
           read_Node_fields iprot record
@@ -198,7 +194,7 @@ read_Node_fields iprot record = do
         read_Node_fields iprot record
 read_Node iprot = do
   _ <- readStructBegin iprot
-  record <- read_Node_fields iprot (Node{f_Node_cls=Nothing,f_Node_name=Nothing,f_Node_nodeID=Nothing,f_Node_flags=Nothing,f_Node_attrs=Nothing,f_Node_defVal=Nothing})
+  record <- read_Node_fields iprot (Node{f_Node_cls=Nothing,f_Node_expression=Nothing,f_Node_nodeID=Nothing,f_Node_flags=Nothing,f_Node_attrs=Nothing,f_Node_defVal=Nothing})
   readStructEnd iprot
   return record
 data Edge = Edge{f_Edge_portDst :: Maybe Int32,f_Edge_nodeSrc :: Maybe Int32,f_Edge_nodeDst :: Maybe Int32} deriving (Show,Eq,Typeable)

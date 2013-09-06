@@ -13,7 +13,9 @@ module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph where
 --import Control.Monad
 
 import qualified Data.Graph.Inductive.Graph                             
-import qualified Data.HashMap.Strict                                  as Map
+import qualified Data.HashMap.Strict                                  as HashMap
+import           Data.HashMap.Strict                                    (HashMap)
+
 import           Data.Int                                               
 import qualified Data.Text.Lazy                                       as Text
 import qualified Data.Vector                                          as Vector
@@ -28,22 +30,22 @@ import           Flowbox.Luna.Network.Graph.Edge                        (Edge(..
 import qualified Flowbox.Luna.Network.Graph.Graph                     as Graph
 import           Flowbox.Luna.Network.Graph.Graph                       (Graph)
 import qualified Flowbox.Luna.Network.Graph.Node                      as Node
-import           Flowbox.Luna.Network.Graph.Node                        (Node)
+import           Flowbox.Luna.Network.Graph.Node                        (Node(..))
 import           Flowbox.Tools.Conversion                               
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
 
 
 encodeGraph :: (Convert (Int, t) v, Convert (Graph.LEdge b) a,
                 Data.Graph.Inductive.Graph.Graph gr) 
-            => gr t b -> (Maybe (Map.HashMap Int32 v), Maybe (Vector.Vector a))
+            => gr t b -> (Maybe (HashMap Int32 v), Maybe (Vector.Vector a))
 encodeGraph agraph = (Just nodes, Just edges) where 
-    nodes = Map.fromList $
+    nodes = HashMap.fromList $
         map (\(a, b) -> (itoi32 a, encode (a, b))) $ Graph.labNodes agraph
     edges =  Vector.fromList $ map encode $ Graph.labEdges agraph
      
 
 decodeGraph :: (Data.Graph.Inductive.Graph.Graph gr, Convert (Graph.LEdge b) a)
-            => (Maybe (Map.HashMap Int32 TGraph.Node), Maybe (Vector.Vector a))
+            => (Maybe (HashMap Int32 TGraph.Node), Maybe (Vector.Vector a))
             -> Either [Char] (gr Node b)
 decodeGraph (mtnodes, mtedges) = case mtnodes of
     Nothing    -> Left "`nodes` field is missing"
@@ -55,7 +57,7 @@ decodeGraph (mtnodes, mtedges) = case mtnodes of
                     Left msg         -> Left msg
                     Right (_, node)  -> Right (i32toi i, node)
                 goodNodes = sequence $ map transformNode $
-                    Map.toList tnodes 
+                    HashMap.toList tnodes 
 
                 goodEdges =  sequence $ map decode $ Vector.toList tedges
             in case goodNodes of
@@ -113,52 +115,43 @@ instance Convert (Int, Node) TGraph.Node where
     let
       nodeType :: TGraph.NodeType
       nodeType = case a of
-                   Node.Type {}    -> TGraph.Type
-                   Node.Call {}    -> TGraph.Call
+                   Node.Expr    {} -> TGraph.Expr
                    Node.Default {} -> TGraph.Default
-                   Node.Inputs {}  -> TGraph.Inputs
+                   Node.Inputs  {} -> TGraph.Inputs
                    Node.Outputs {} -> TGraph.Outputs
-                   Node.Tuple {}   -> TGraph.Tuple
-                   Node.NTuple {}  -> TGraph.NTuple
-                   Node.New {}     -> TGraph.New
-      nodeName :: Maybe Text.Text
-      nodeName = fmap Text.pack $ case a of
-                   Node.Type tname _ _ -> Just tname
-                   Node.Call cname _ _ -> Just cname
-                   _                   -> Nothing
+                   Node.Tuple   {} -> TGraph.Tuple
+                   Node.NTuple  {} -> TGraph.NTuple
+
+      nodeExpression :: Maybe Text.Text
+      nodeExpression = fmap Text.pack $ case a of
+                   Node.Expr texpression _ _ -> Just texpression
+                   _                         -> Nothing
+
       nodeID :: Int32
       nodeID = itoi32 nid
+
       nodeFlags :: Maybe TAttrs.Flags
       nodeFlags = fmap encode $ case a of
-                   Node.Type  _ flags _ -> Just flags
-                   Node.Call  _ flags _ -> Just flags
-                   Node.Inputs  flags _ -> Just flags
-                   Node.Outputs flags _ -> Just flags
-                   Node.Tuple   flags _ -> Just flags
-                   Node.NTuple   flags _ -> Just flags
-                   Node.New     flags _ -> Just flags
-                   _                    -> Nothing
-      nodeAttrs :: Maybe TAttrs.Attributes
-      nodeAttrs = fmap encode $ case a of
-                   Node.Type  _ _ attrs -> Just attrs
-                   Node.Call  _ _ attrs -> Just attrs
-                   Node.Inputs  _ attrs -> Just attrs
-                   Node.Outputs _ attrs -> Just attrs
-                   Node.Tuple   _ attrs -> Just attrs
-                   Node.NTuple   _ attrs -> Just attrs
-                   Node.New     _ attrs -> Just attrs
-                   _                    -> Nothing
+                   Node.Expr  _ aflags _ -> Just aflags
+                   Node.Inputs  aflags _ -> Just aflags
+                   Node.Outputs aflags _ -> Just aflags
+                   Node.Tuple   aflags _ -> Just aflags
+                   Node.NTuple  aflags _ -> Just aflags
+                   _                     -> Nothing
+
+      nodeAttrs :: TAttrs.Attributes
+      nodeAttrs = encode $ Node.attributes a
 
       defValue :: Maybe TGraph.DefaultValue
       defValue = fmap encode $ case a of
-                   Node.Default val -> Just val
-                   _                -> Nothing
+                   Node.Default val _ -> Just val
+                   _                  -> Nothing
     in
-      TGraph.Node (Just nodeType) nodeName (Just nodeID) nodeFlags nodeAttrs defValue
+      TGraph.Node (Just nodeType) nodeExpression (Just nodeID) nodeFlags (Just nodeAttrs) defValue
   decode b =
     let
-      gname = case TGraph.f_Node_name b of
-                  Just nname -> Right $ Text.unpack nname
+      gnexpression = case TGraph.f_Node_expression b of
+                  Just nexpression -> Right $ Text.unpack nexpression
                   Nothing    -> Left "Node name not defined"
 
       gID = case TGraph.f_Node_nodeID b of
@@ -184,23 +177,15 @@ instance Convert (Int, Node) TGraph.Node where
       gnode =  case TGraph.f_Node_cls b of
             Just ntype ->
               case ntype of
-                TGraph.Type -> do
-                  ggname <- gname
+                TGraph.Expr -> do
+                  ggexpression  <- gnexpression
                   ggflags <- gflags
                   ggattrs <- gattrs
-                  Right $ Node.Type ggname ggflags ggattrs
-                TGraph.Call -> do
-                  ggname <- gname
-                  ggflags <- gflags
-                  ggattrs <- gattrs
-                  Right $ Node.Call ggname ggflags ggattrs
+                  Right $ Node.Expr ggexpression ggflags ggattrs
                 TGraph.Default -> do
                   ggdefval <- gdefval
-                  Right $ Node.Default ggdefval
-                TGraph.New -> do
-                  ggflags <- gflags
-                  ggattrs <- gattrs
-                  Right $ Node.New ggflags ggattrs
+                  ggattrs  <- gattrs
+                  Right $ Node.Default ggdefval ggattrs
                 TGraph.Inputs -> do
                   ggflags <- gflags
                   ggattrs <- gattrs

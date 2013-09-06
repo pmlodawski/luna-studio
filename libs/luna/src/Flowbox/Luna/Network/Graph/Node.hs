@@ -8,13 +8,11 @@
 module Flowbox.Luna.Network.Graph.Node(
     Node(..),
     ID,
-    mkType,
-    mkCall,
+    mkExpr,
     mkInputs,
     mkOutputs,
     mkTuple,
     mkNTuple,
-    mkNew
 ) where
 
 import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue)
@@ -25,24 +23,19 @@ import           Flowbox.Luna.Network.Attributes           (Attributes)
 
 --type NodeDefID = Int
 
-data Node = Type     { typename :: String, flags :: Flags, attributes :: Attributes }
-          | Call     { callname :: String, flags :: Flags, attributes :: Attributes }
-          | Default  { value :: DefaultValue }
-          | Inputs   {flags :: Flags, attributes :: Attributes}
-          | Outputs  {flags :: Flags, attributes :: Attributes}
-          | Tuple    {flags :: Flags, attributes :: Attributes}
-          | NTuple   {flags :: Flags, attributes :: Attributes}
-          | New      {flags :: Flags, attributes :: Attributes}
+data Node = Expr     { expression :: String, flags :: Flags, attributes :: Attributes }
+          | Default  { value :: DefaultValue, attributes :: Attributes}
+          | Inputs   { flags :: Flags, attributes :: Attributes }
+          | Outputs  { flags :: Flags, attributes :: Attributes }
+          | Tuple    { flags :: Flags, attributes :: Attributes }
+          | NTuple   { flags :: Flags, attributes :: Attributes }
           
           deriving (Show)
 
 type ID     = Int
 
-mkType :: String -> Node
-mkType name = Type name Flags.empty Attributes.empty
-
-mkCall :: String -> Node
-mkCall name = Call name Flags.empty Attributes.empty
+mkExpr :: String -> Node
+mkExpr name = Expr name Flags.empty Attributes.empty
 
 mkInputs :: Node
 mkInputs = Inputs Flags.empty Attributes.empty
@@ -56,8 +49,6 @@ mkTuple = Tuple Flags.empty Attributes.empty
 mkNTuple :: Node
 mkNTuple = NTuple Flags.empty Attributes.empty
 
-mkNew :: Node
-mkNew = New Flags.empty Attributes.empty
  
 ------------------------- INSTANCES -------------------------
 

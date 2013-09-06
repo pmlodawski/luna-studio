@@ -5,18 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.GraphView.EdgeView(
-	EdgeView(..),
+module Flowbox.Batch.GraphView.PortDescriptor(
+	PortDescriptor,
+	empty,
 ) where
 
-import           Flowbox.Batch.GraphView.PortDescriptor   (PortDescriptor)
 
+type PortDescriptor = [Int]
 
-
-data EdgeView = EdgeView { srcPort :: PortDescriptor
-                         , dstPort :: PortDescriptor
-                         } deriving (Show, Read, Ord, Eq)
-
-
-
-
+empty :: PortDescriptor
+empty = []
