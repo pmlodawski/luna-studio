@@ -18,7 +18,6 @@ import           Flowbox.Control.Exception
 import           Flowbox.System.Log.Logger     
 import qualified Flowbox.System.Log.Logger   as Logger
 
-logger :: Logger
 logger = getLogger "Flowbox.Lunac"
 
 libPathEnv :: String
@@ -72,19 +71,22 @@ run conf = case conf of
             True  -> logger.setLevel $ DEBUG
             False -> logger.setLevel $ INFO
 
-        case noColor conf of
-            True   -> Logger.enableColorOutput False logger
-            False  -> Logger.enableColorOutput True  logger
+        -- TODO [PM] : This code does not compile
 
-        logger.debug $ "Searching for environment variable '" ++ libPathEnv ++ "'"
-        pushLogGroup logger
-        lunapath <- try $ Env.getEnv libPathEnv
-        case lunapath of
-            Left _    -> logger.debug $ "Not defined"
-            Right var -> logger.debug $ "Found: '" ++ var ++ "'"
-        popLogGroup logger
+        --case noColor conf of
+        --    True   -> Logger.enableColorOutput False logger
+        --    False  -> Logger.enableColorOutput True  logger
 
-        let inputs' = inputs conf
-        logger.debug $ "Reading input files: " ++ show inputs'
+        --logger.debug $ "Searching for environment variable '" ++ libPathEnv ++ "'"
+
+        --pushLogGroup logger 
+        --lunapath <- try $ Env.getEnv libPathEnv
+        --case lunapath of
+        --    Left _    -> logger.debug $ "Not defined"
+        --    Right var -> logger.debug $ "Found: '" ++ var ++ "'"
+        --popLogGroup logger 
+
+        --let inputs' = inputs conf
+        --logger.debug $ "Reading input files: " ++ show inputs'
 
         return ()
