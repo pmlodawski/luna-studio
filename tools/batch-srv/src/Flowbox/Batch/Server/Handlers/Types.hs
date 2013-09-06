@@ -25,7 +25,7 @@ import qualified Types_Types                                         as TTypes
 import           Flowbox.Control.Error                                 
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
 import           Flowbox.Luna.Type.Type                                (Type(..))
-import           Flowbox.System.Log.Logger 
+import           Flowbox.System.Log.Logger                             
 import           Flowbox.Tools.Conversion                              
 
 

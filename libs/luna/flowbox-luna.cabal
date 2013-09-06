@@ -29,6 +29,7 @@ Library
   
   Exposed-modules: 
         Flowbox.Luna.Passes.SSA,
+        Flowbox.Luna.Passes.Pass,
         Flowbox.Luna.Samples.HelloWorld,
         Flowbox.Luna.Network.Flags,
         Flowbox.Luna.Network.Attributes,

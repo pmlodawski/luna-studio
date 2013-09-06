@@ -75,7 +75,7 @@ import           Flowbox.Luna.Codegen.Hs.SSAState     (SSAState)
 import           Debug.Trace                          
 import           Data.Either.Utils                    (forceEither)
 import qualified Text.Show.Pretty                   as PP
-import qualified Data.DList                  as DList
+import qualified Data.DList                         as DList
 
 import           Prelude                            hiding (log)
 import           System.TimeIt                        
@@ -88,8 +88,6 @@ example :: String
 example = unlines [ "def f(x):"
                   , "   x=x+1"
                   , "   x=x x"
-                  , "def f(x):"
-                  , "   x = x+1"
                   ]
 
 --test :: (Enum a, MonadState a m, MonadWriter [LogEntry.LogEntry] m) => MaybeT m ()
@@ -117,6 +115,7 @@ main_inner = do
         parsed = Parser.parse example
         ast = forceEither parsed
         (nast, nstate, nlog) = SSA.run ast
+        --(hast, hstate, hlog) = Gen.run nast
     --let y = runRWS (runMaybeT test) 0 0
     putStrLn $ PP.ppShow $ ast
     putStrLn "\n-----------------"
@@ -125,8 +124,8 @@ main_inner = do
     putStrLn $ PP.ppShow $ DList.toList nlog
     putStrLn "\n-----------------"
 
-    --case hast of
-    --    Just hast' -> putStrLn $ PP.ppShow $ map Expr.genCode hast'
+    --case nast of
+    --    Just nast' -> putStrLn $ PP.ppShow $ map Expr.genCode nast'
     --    _          -> return ()
     return ()
 

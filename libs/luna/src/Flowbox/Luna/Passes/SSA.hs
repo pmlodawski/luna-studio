@@ -22,6 +22,8 @@ import qualified Flowbox.Luna.Codegen.Hs.AST.Cons     as Cons
 import           Flowbox.Luna.Codegen.Hs.AST.Function   (Function)
 import qualified Flowbox.Luna.Codegen.Hs.SSAState     as SSAState
 import           Flowbox.Luna.Codegen.Hs.SSAState       (SSAState)
+import qualified Flowbox.Luna.Passes.Pass             as Pass
+import           Flowbox.Luna.Passes.Pass               (Pass)
 
 import           Control.Monad.State                    
 import           Control.Applicative                    
@@ -32,39 +34,38 @@ import           Control.Monad.State
 import           Control.Monad.Writer                   
 import           Control.Monad.RWS                      
 import           Control.Monad.Trans.Maybe              
-import           Control.Monad.Trans.Either 
-import           Data.Maybe                           (fromJust)            
+import           Control.Monad.Trans.Either             
+import           Data.Maybe                             (fromJust)
 
 import qualified Flowbox.System.Log.Logger            as Logger
-import           Flowbox.System.Log.Logger   
+import           Flowbox.System.Log.Logger              
 import qualified Flowbox.System.Log.LogEntry          as LogEntry
 
 import qualified Prelude                              as Prelude
-import           Prelude                              hiding(error)
+import           Prelude                              hiding (error)
 
-import Control.Error
+import           Control.Error                          
 
+logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.SSA"
 
-type Generator m = (Functor m, MonadState SSAState m, LogWriter m)
+--type SSA m = (Functor m, MonadState SSAState m, LogWriter m)
+
+type SSA m = Pass SSAState m
 
 data Mode = Write | Read
 
-runGen f state = runRWS (runMaybeT f) 0 state
+runNested f = Pass.runNested f SSAState.empty
 
-runStateSSA f = do
-    let (nast, _, logs) = runEmptySSA f
-    Logger.append logs
-    hoistMaybe nast
+runEmptySSA f = Pass.run f SSAState.empty
 
-runEmptySSA f = runGen f SSAState.empty
-
+run :: LAST.Expr -> Pass.Result LAST.Expr SSAState
 run = runEmptySSA . (ssaAST Read)
 
-ssaAST :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
+ssaAST :: SSA m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
 ssaAST mode ast = case ast of
     LAST.Program    body                  -> LAST.Program <$> mapM (ssaAST mode) body
-    LAST.Function   name signature body   -> runStateSSA $ do
+    LAST.Function   name signature body   -> runNested $ do
                                                     SSAState.registerVar (name, name)
                                                     ssaType signature
                                                     LAST.Function name signature <$> mapM (ssaAST mode) body
@@ -83,7 +84,7 @@ ssaAST mode ast = case ast of
     _                                     -> logger error "SSA Pass error: Unknown expression." *> empty
 
 
-ssaType :: Generator m => Type -> MaybeT m ()
+ssaType :: SSA m => Type -> MaybeT m ()
 ssaType ast = case ast of
     Type.Lambda inputs outputs -> ssaType inputs
     Type.Tuple  items          -> mapM ssaType items *> return ()

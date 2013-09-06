@@ -36,7 +36,7 @@ import qualified Flowbox.Luna.Network.Def.DefManager                 as DefManag
 import           Flowbox.Luna.Network.Def.DefManager                   (DefManager)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs   ()
-import           Flowbox.System.Log.Logger               
+import           Flowbox.System.Log.Logger                             
 import           Flowbox.Tools.Conversion                              
 
 

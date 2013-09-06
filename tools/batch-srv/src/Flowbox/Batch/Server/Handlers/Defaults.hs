@@ -27,7 +27,7 @@ import qualified Flowbox.Batch.Handlers.Defaults                           as Ba
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView   ()
 import           Flowbox.Control.Error                                       
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph        ()
-import           Flowbox.System.Log.Logger
+import           Flowbox.System.Log.Logger                                   
 import           Flowbox.Tools.Conversion                                    
 
 

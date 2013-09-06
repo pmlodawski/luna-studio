@@ -7,9 +7,9 @@
 
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction #-}
 
-import           Prelude                    hiding (error)
-import           Flowbox.System.Log.Logger  as Logger
-import qualified Flowbox.Data.Version       as Version
+import           Prelude                   hiding (error)
+import           Flowbox.System.Log.Logger as Logger
+import qualified Flowbox.Data.Version      as Version
 
 
 --import           Control.Monad.State          

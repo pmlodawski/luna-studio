@@ -21,7 +21,7 @@ import           Data.Vector                 (Vector)
 import           Batch_Types                 (ArgumentException(..))
 import           Flowbox.Control.Error       
 import           Flowbox.Tools.Conversion    
-import           Flowbox.System.Log.Logger
+import           Flowbox.System.Log.Logger   
 
 
 logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Common"
