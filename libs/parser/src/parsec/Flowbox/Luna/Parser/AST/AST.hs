@@ -20,7 +20,6 @@ data Expr  = NOP
            | Constant        Constant.Constant
            | Assignment      { src :: Expr, dst :: Expr }
            | Tuple           { items :: [Expr] }
-           | Lambda          { signature :: Type, body :: [Expr] }
            | Interface       { name :: String, body :: [Expr]}
            | Typed           String Expr
            | Path            { segments :: [String] } -- , name::String}
@@ -29,10 +28,11 @@ data Expr  = NOP
            | CallConstructor { args :: [Expr] }
            | Accessor        { src :: Expr, dst :: Expr }
            | Operator        { name :: String, src :: Expr, dst :: Expr }
+           
            | Comment         String
            | Program         { body :: [Expr] }
            | Field           { name :: String, cls :: Type}
-           
+           | Lambda          { signature :: Type, body :: [Expr] }
            | Cons            { src :: Expr, args :: [Expr] }
            | Wildcard
            | Function        { name :: String , signature :: Type   , body    :: [Expr] }
