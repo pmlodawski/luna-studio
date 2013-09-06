@@ -27,14 +27,11 @@ data GenState = GenState { varcount :: Int
                          } deriving (Show)
 
 
-type Generator m = (Functor m, MonadState GenState m, MonadWriter [LogEntry.LogEntry] m)
-
-
 empty :: GenState
 empty = GenState 0 Map.empty
 
 
-genVarName :: Generator m => MaybeT m String
+genVarName :: MonadState GenState m => m String
 genVarName = do
     state <- get
     let vname = "v'" ++ show (varcount state)
@@ -42,30 +39,30 @@ genVarName = do
     return vname
 
 
-registerVar :: Generator m => (String, String) -> MaybeT m ()
+registerVar :: MonadState GenState m => (String, String) -> m ()
 registerVar (alias, vname) = do
     state <- get
     put $ state { varmap = Map.insert alias vname $ varmap state }
     return ()
 
-lookupVar :: Generator m => String -> MaybeT m (Maybe String)
+lookupVar :: MonadState GenState m => String -> m (Maybe String)
 lookupVar vname = do
     state <- get
     return $ Map.lookup vname (varmap state)
 
 
-uniqueVar :: Generator m => String -> MaybeT m String
+uniqueVar :: MonadState GenState m => String -> m String
 uniqueVar vname = do
     v <- lookupVar vname
     case v of
         Nothing      -> return vname
         Just oldname -> genVarName
 
-handleVar :: Generator m => String -> MaybeT m String
+handleVar :: MonadState GenState m => String -> m String
 handleVar vname = do
     newname <- uniqueVar vname
     registerVar (vname, newname)
     return newname
 
-registerVars :: Generator m => [(String, String)] -> MaybeT m ()
+registerVars :: MonadState GenState m => [(String, String)] -> m ()
 registerVars vars = mapM_ registerVar vars

@@ -32,10 +32,14 @@ import           Control.Monad.State
 import           Control.Monad.Writer                   
 import           Control.Monad.RWS                      
 import           Control.Monad.Trans.Maybe              
-import           Control.Monad.Trans.Either             
+import           Control.Monad.Trans.Either 
+import           Data.Maybe                           (fromJust)            
 
 import           Flowbox.System.Log.Logger              
 import qualified Flowbox.System.Log.LogEntry          as LogEntry
+
+import qualified Prelude                              as Prelude
+import           Prelude                              hiding(error)
 
 logger = getLogger "Flowbox.Luna.Codegen.Hs.Generator"
 
@@ -48,10 +52,14 @@ data Mode = Write | Read
 
 runGen f state = runRWS (runMaybeT f) 0 state
 
-ssa :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
+--ssa :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
 ssa mode ast = case ast of
     LAST.Program    body                  -> LAST.Program <$> mapM (ssa mode) body
-    LAST.Function   name signature body   -> ssaFunction mode ast
+    LAST.Function   name signature body   -> do
+                                                let (nast, _, logs) = runGen (ssaFunction mode ast) GenState.empty
+                                                --runStateT (ssaFunction mode ast) GenState.empty
+                                                --runStateT test GenState.empty
+                                                return $ fromJust nast
     LAST.Assignment src dst               -> flip LAST.Assignment <$> ssa mode dst <*> ssa Write src
     LAST.Pattern    pat                   -> LAST.Pattern         <$> ssa mode pat
     LAST.Identifier name                  -> case mode of
@@ -59,18 +67,22 @@ ssa mode ast = case ast of
                                                  Read  -> do
                                                      v <- GenState.lookupVar name
                                                      case v of
-                                                        Nothing      -> Prelude.error "o nie!"
+                                                        Nothing      -> (logger.error $ "Not in scope: '" ++ name ++ "'") >> Prelude.fail "a"
                                                         Just newname -> return $ LAST.Identifier newname
     LAST.Operator   name src dst          -> LAST.Operator name <$> ssa mode src <*> ssa mode dst
     _                                     -> return ast
 
-ssaFunction :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
+
+test = do
+    --GenState.registerVar ("x", "x")
+    return ()
+
+--ssaFunction :: Generator m => Mode -> LAST.Expr -> MaybeT m LAST.Expr
 ssaFunction mode ast@(LAST.Function name signature body) = do
+    return ()
     GenState.registerVar (name, name)
     ssaType signature
     LAST.Function name signature <$> mapM (ssa mode) body
-    --let Type.Lambda inputs outputs = signature
-    --return ast
 
 
 ssaType ast = case ast of
