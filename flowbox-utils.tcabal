@@ -19,6 +19,7 @@ Library
   Build-Depends:  base,
                   containers,
                   directory,
+                  dlist,
                   either,
                   errors,
                   MissingH == 1.2.0.0,
@@ -39,6 +40,7 @@ Executable utils
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
   Build-Depends:  base,
+                  dlist,
                   ansi-terminal,
                   either,
                   hslogger,
