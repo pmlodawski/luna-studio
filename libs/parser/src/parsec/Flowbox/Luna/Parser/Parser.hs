@@ -125,15 +125,17 @@ pBlock        p i = L.eol *> pSegmentBegin p i
 -----------------------------------------------------------
 
 binary   name fun assoc = Expr.Infix   (L.reservedOp name *> return fun) assoc
+binaryM  name fun assoc = Expr.Infix   (L.reservedOp name *>        fun) assoc
 prefix   name fun       = Expr.Prefix  (L.reservedOp name *> return fun)
-prefixM  name fun       = Expr.Prefix  (L.reservedOp name *> fun)
+prefixM  name fun       = Expr.Prefix  (L.reservedOp name *>        fun)
 prefixfM      fun       = Expr.Prefix  (fun)
 postfix  name fun       = Expr.Postfix (L.reservedOp name *> return fun)
-postfixM name fun       = Expr.Postfix (L.reservedOp name *> fun)
+postfixM name fun       = Expr.Postfix (L.reservedOp name *>        fun)
 
 -----------------------------------------------------------
 -- Expressions
 -----------------------------------------------------------
+binaryMatch f = \p q -> f (AST.aftermatch p) (AST.aftermatch q)
 
 expr i   = AST.aftermatch <$> Expr.buildExpressionParser (exprtable i) (exprterm i)
        <?> "expression"
@@ -147,11 +149,11 @@ exprterm i  = choice[ try $ pExprEnt i
 exprtable i = [ 
               [binary   "."  (AST.Accessor)           Expr.AssocLeft]
             , [postfixM "::" (AST.Typed <$> L.pIdent)               ]
-            , [binary   "*"  (AST.Operator "*")       Expr.AssocLeft]
-            , [binary   "+"  (AST.Operator "+")       Expr.AssocLeft]
             , [binary   ""   (AST.callConstructor)    Expr.AssocLeft]
+            , [binary   "*"  (binaryMatch $ AST.Operator "*")       Expr.AssocLeft]
+            , [binary   "+"  (binaryMatch $ AST.Operator "+")       Expr.AssocLeft]
             --, [binary   "="   AST.Assignment          Expr.AssocLeft]
-            , [prefixfM      (try(AST.Assignment <$> (pPattern i) <* (L.reservedOp "=" <?> "pattern match")))]
+            , [prefixfM      (try(binaryMatch AST.Assignment <$> (pPattern i) <* (L.reservedOp "=" <?> "pattern match")))]
             ]
       
 

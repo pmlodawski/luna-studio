@@ -43,8 +43,12 @@ import qualified Flowbox.Batch.Server.Server              as Server
 import           Flowbox.System.Log.Logger                  
 
 
-logger = getLoggerIO "Flowbox.Batch.Server"
-loggerPure = getLogger "Flowbox.Batch.Server"
+
+logger :: Logger
+logger = getLogger "Flowbox.Batch.Server"
+
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.Batch.Server"
 
 
 type BatchHandler = IORef Batch
@@ -114,10 +118,10 @@ instance Batch_Iface BatchHandler where
     fS_cp               = HFileSystem.cp
     fS_mv               = HFileSystem.mv
 
-    ping _              = logger.info $ "ping"
+    ping _              = loggerIO info"ping"
     dump batchHandler   = runScript $ do batch <- tryReadIORef batchHandler
                                          scriptIO $ print batch
-    shutdown _          = logger.info $ "shutdown"
+    shutdown _          = loggerIO info "shutdown"
 
 
 processCommand :: (Protocol iprot, Protocol oprot, Transport itransp, Transport otransp, Batch_Iface batch)
@@ -132,7 +136,7 @@ processCommand quitmutex handler (iprot, oprot) = do
 serve :: MVar Bool -> IO ()
 serve quitmutex = do
     handler   <- newBatchHandler
-    logger.info $ "Starting the server"
+    loggerIO info "Starting the server"
     _ <- Server.runSingleConnectionServer Server.accepter handler (processCommand quitmutex) (Network.PortNumber Server.port)
     return ()
 
@@ -140,22 +144,22 @@ serve quitmutex = do
 waitForQuit :: MVar t -> IO b
 waitForQuit quitmutex = do
     _ <- MVar.takeMVar quitmutex
-    logger.warning $ "shutting down in 3 seconds"
+    loggerIO warning "shutting down in 3 seconds"
     Concurrent.threadDelay 1000000
-    logger.warning $ "shutting down in 2 seconds"
+    loggerIO warning "shutting down in 2 seconds"
     Concurrent.threadDelay 1000000
-    logger.warning $ "shutting down in 1 second"
+    loggerIO warning "shutting down in 1 second"
     Concurrent.threadDelay 1000000
-    logger.warning $ "shutting down..."
+    loggerIO warning "shutting down..."
     Exit.exitSuccess
 
 
 main :: IO ()
 main = do
-    loggerPure.setLevel $ DEBUG
+    logger setLevel DEBUG
     quitmutex <- MVar.newEmptyMVar
     _ <- Concurrent.forkIO 
-        $ Exception.handle (\(e :: Exception.SomeException) -> do logger.error $ "Server run failure: " ++ show e
+        $ Exception.handle (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
                                                                   MVar.putMVar quitmutex True) 
         (serve quitmutex)
     waitForQuit quitmutex

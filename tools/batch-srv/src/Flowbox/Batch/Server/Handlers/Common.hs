@@ -24,7 +24,8 @@ import           Flowbox.Tools.Conversion
 import           Flowbox.System.Log.Logger   
 
 
-logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Common"
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Common"
 
 
 throw' :: String -> c
@@ -36,7 +37,7 @@ tRunScript s = do
     e <- runEitherT s
     case e of
         Left  m -> do 
-        	logger.error $ m
+        	loggerIO error m
         	throw' m
         Right a -> return a
 

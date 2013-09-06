@@ -30,21 +30,22 @@ import           Flowbox.Tools.Conversion
 
 
 
-logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Types"
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Types"
 
 
 ------ public api -------------------------------------------------
 
 newTypeModule :: b -> Maybe Text -> IO TTypes.Type
 newTypeModule _ mtname = tRunScript $ do 
-    scriptIO $ logger.info $ "called newTypeModule"
+    scriptIO $ loggerIO info "called newTypeModule"
     tname <- mtname <??> "'name' argument is missing"
     return $ encode $ Module $ unpack tname
 
 
 newTypeClass :: b -> Maybe Text -> Maybe (Vector Text) -> Maybe (Vector TTypes.Type) -> IO TTypes.Type
 newTypeClass _ mtname mttypeparams mtparams = tRunScript $ do 
-    scriptIO $ logger.info $ "called newTypeClass"
+    scriptIO $ loggerIO info "called newTypeClass"
     tname       <- mtname       <??> "'name' argument is missing"
     ttypeparams <- mttypeparams <??> "'typeparams' argument is missing"
     tparams     <- mtparams     <??> "'params' argument is missing"
@@ -56,7 +57,7 @@ newTypeClass _ mtname mttypeparams mtparams = tRunScript $ do
 
 newTypeFunction :: b -> Maybe Text -> Maybe TTypes.Type -> Maybe TTypes.Type -> IO TTypes.Type
 newTypeFunction _ mtname mtinputs mtoutputs = tRunScript $ do 
-    scriptIO $ logger.info $ "called newTypeFunction"
+    scriptIO $ loggerIO info "called newTypeFunction"
     tname    <- mtname    <??> "'name' argument is missing"
     tinputs  <- mtinputs  <??> "'inputs' argument is missing"
     ainputs  <- tryRight   $ decode tinputs
@@ -67,13 +68,13 @@ newTypeFunction _ mtname mtinputs mtoutputs = tRunScript $ do
 
 newTypeUdefined :: b -> IO TTypes.Type
 newTypeUdefined _ = do
-    logger.info $ "called newTypeUdefined"
+    loggerIO info "called newTypeUdefined"
     return $ encode Undefined
 
 
 newTypeNamed :: b -> Maybe Text -> Maybe TTypes.Type -> IO TTypes.Type
 newTypeNamed _ mtname mttype = tRunScript $ do 
-    scriptIO $ logger.info $ "called newTypeNamed"
+    scriptIO $ loggerIO info "called newTypeNamed"
     tname <- mtname  <??> "'name' argument is missing"
     ttype <- mttype  <??> "'type' argument is missing"
     atype <- tryRight $ decode ttype 
@@ -82,14 +83,14 @@ newTypeNamed _ mtname mttype = tRunScript $ do
 
 newTypeVariable :: b -> Maybe Text -> IO TTypes.Type
 newTypeVariable _ mtname = tRunScript $ do 
-    scriptIO $ logger.info $ "called newTypeVariable"
+    scriptIO $ loggerIO info "called newTypeVariable"
     tname <- mtname  <??> "'name' argument is missing"
     return $ encode $ TypeVariable $ unpack tname
 
 
 newTypeList :: b -> Maybe TTypes.Type -> IO TTypes.Type
 newTypeList _ mttype = tRunScript $ do 
-    scriptIO $ logger.info $ "called newTypeList"
+    scriptIO $ loggerIO info "called newTypeList"
     ttype <- mttype  <??> "'type' argument is missing"
     atype <- tryRight $ decode ttype 
     return $ encode $ List atype
@@ -97,7 +98,7 @@ newTypeList _ mttype = tRunScript $ do
 
 newTypeTuple :: b -> Maybe (Vector TTypes.Type) -> IO TTypes.Type
 newTypeTuple _ mttypes = tRunScript $ do
-    scriptIO $ logger.info $ "called newTypeTuple"
+    scriptIO $ loggerIO info "called newTypeTuple"
     ttypes <- mttypes <??> "'types' argument is missing"
     atypes <- tryRight $ decode $ Vector.toList ttypes
     return $ encode $ Tuple atypes

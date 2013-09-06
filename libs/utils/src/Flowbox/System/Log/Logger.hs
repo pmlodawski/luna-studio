@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, Rank2Types #-}
 
 module Flowbox.System.Log.Logger (
     module Flowbox.System.Log.Logger,
@@ -31,11 +31,15 @@ import           Debug.Trace
 type LogList     = DList LogEntry.LogEntry
 type LogWriter m = MonadWriter LogList m
 
---getLogger :: LogWriter m => String -> (String -> m()) -> m()
-getLogger name = \f -> f name
+type LogAction b = LogWriter m => String -> String -> m b
+type Logger      = forall t t1. (t1 -> String -> t) -> t1 -> t
+type LoggerIO    = forall t. (t -> String -> Writer LogList ()) -> t -> IO ()
 
---getLoggerIO :: String -> (String -> IO()) -> IO()
-getLoggerIO name = \f -> runLogger $ f name
+getLogger :: String -> Logger
+getLogger name = \action msg -> action msg name
+
+getLoggerIO :: String -> LoggerIO
+getLoggerIO name = \action msg -> runLogger $ action msg name
 
 runLogger :: Writer LogList a -> IO a
 runLogger m = do
@@ -46,6 +50,7 @@ runLogger m = do
 log :: LogWriter m => Priority -> String -> String -> m()
 log pri msg name = tell $ DList.singleton (LogEntry.LogEntry name pri msg)
 
+append :: MonadWriter w m => w -> m ()
 append = tell
 
 logIO :: LogEntry.LogEntry -> IO ()
@@ -70,31 +75,31 @@ logIO entry = do
     hSetSGR stderr []
     --if Conf.colored conf then hSetSGR stderr []  else return ()
 
-debug :: LogWriter m => String -> String -> m()
+debug :: LogAction ()
 debug = log DEBUG
 
-info :: LogWriter m => String -> String -> m()
+info :: LogAction ()
 info = log INFO
 
-notice :: LogWriter m => String -> String -> m()
+notice :: LogAction ()
 notice = log NOTICE
 
-warning :: LogWriter m => String -> String -> m()
+warning :: LogAction ()
 warning = log WARNING
 
-error :: LogWriter m => String -> String -> m()
+error :: LogAction ()
 error = log ERROR
 
-critical :: LogWriter m => String -> String -> m()
+critical :: LogAction ()
 critical = log CRITICAL
 
-alert :: LogWriter m => String -> String -> m()
+alert :: LogAction ()
 alert = log ALERT
 
-emergency :: LogWriter m => String -> String -> m()
+emergency :: LogAction ()
 emergency = log EMERGENCY 
 
-criticalFail :: LogWriter m => String -> String -> m b
+criticalFail :: LogAction b
 criticalFail msg name = do
     log CRITICAL msg name
     fail msg

@@ -17,7 +17,6 @@ module Flowbox.Batch.Server.Handlers.Libs (
 ) 
 where
 
-
 import           Data.Int                                              (Int32)
 import           Data.IORef                                            
 import qualified Data.Vector                                         as Vector
@@ -41,16 +40,17 @@ import           Flowbox.Tools.Conversion
 
 
 
-logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Libs"
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Libs"
 
 ------ public api -------------------------------------------------
 
 libraries :: IORef Batch -> Maybe Int32 -> IO (Vector TLibs.Library)
 libraries batchHandler mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called libraries"
+    scriptIO $ loggerIO info "called libraries"
     batch     <- tryReadIORef batchHandler
     projectID <- tryGetID mtprojectID "projectID"
-    scriptIO $ logger.debug $ "projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "projectID: " ++ (show projectID)
     libs      <- tryRight $ BatchL.libraries projectID batch 
     let tlibs       = map (fst . encode) libs
         tlibsVector = Vector.fromList tlibs
@@ -59,25 +59,25 @@ libraries batchHandler mtprojectID = tRunScript $ do
 
 libraryByID :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO TLibs.Library
 libraryByID batchHandler mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called libraryByID"
+    scriptIO $ loggerIO info "called libraryByID"
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     library   <- tryRight $ BatchL.libraryByID libID projectID batch
     return $ fst $ encode (libID, library)
 
 
 createLibrary :: IORef Batch -> Maybe TLibs.Library -> Maybe Int32 -> IO TLibs.Library
 createLibrary batchHandler mtlibrary mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called createLibrary"
+    scriptIO $ loggerIO info "called createLibrary"
     tlibrary     <- mtlibrary <??> "'library' argument is missing" 
     (_, library) <- tryRight (decode (tlibrary, DefManager.empty) :: Either String (Library.ID, Library))
     projectID    <- tryGetID mtprojectID "projectID"
     batch        <- tryReadIORef batchHandler
     let libName = Library.name library
         libPath = Library.path library
-    scriptIO $ logger.debug $ "library: " ++ (show library) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "library: " ++ (show library) ++ " projectID: " ++ (show projectID)
     (newBatch, newLibrary) <-tryRight $  BatchL.createLibrary libName libPath projectID batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ (encode newLibrary :: (TLibs.Library, DefManager))
@@ -85,11 +85,11 @@ createLibrary batchHandler mtlibrary mtprojectID = tRunScript $ do
 
 loadLibrary :: IORef Batch -> Maybe Text -> Maybe Int32 -> IO TLibs.Library
 loadLibrary batchHandler mtpath mtprojectID= tRunScript $ do
-    scriptIO $ logger.info $ "called loadLibrary"
+    scriptIO $ loggerIO info "called loadLibrary"
     upath     <- tryGetUniPath mtpath "path"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "path: " ++ (show upath) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "path: " ++ (show upath) ++ " projectID: " ++ (show projectID)
     (newBatch, (newLibID, newLibrary)) <- scriptIO $ BatchL.loadLibrary upath projectID batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ encode (newLibID, newLibrary)
@@ -97,43 +97,43 @@ loadLibrary batchHandler mtpath mtprojectID= tRunScript $ do
 
 unloadLibrary :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO ()
 unloadLibrary batchHandler mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called unloadLibrary"
+    scriptIO $ loggerIO info "called unloadLibrary"
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch  <- tryRight $ BatchL.unloadLibrary libID projectID batch 
     tryWriteIORef batchHandler newBatch
 
 
 storeLibrary :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO ()
 storeLibrary batchHandler mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called storeLibrary"
+    scriptIO $ loggerIO info "called storeLibrary"
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     scriptIO $ BatchL.storeLibrary libID projectID batch
     return ()
 
 
 buildLibrary :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO ()
 buildLibrary batchHandler mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called buildLibrary"
+    scriptIO $ loggerIO info "called buildLibrary"
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     scriptIO $ BatchL.buildLibrary libID projectID batch
     return ()
 
 
 libraryRootDef :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition
 libraryRootDef batchHandler mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called libraryRootDef"
+    scriptIO $ loggerIO info "called libraryRootDef"
     libID     <- tryGetID mtlibID "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     (arootDefID, rootDef) <- tryRight $ BatchL.libraryRootDef libID projectID batch
     return $ fst $ encode (arootDefID, rootDef)

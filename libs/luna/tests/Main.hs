@@ -66,11 +66,12 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Log.Logger          as Logger
 import qualified Flowbox.System.Log.LogEntry        as LogEntry
 import qualified Flowbox.Luna.Codegen.Hs.Generator  as Gen
+import qualified Flowbox.Luna.Passes.SSA            as SSA
 import qualified Flowbox.Luna.Codegen.Hs.AST.Module as Module
 import qualified Flowbox.Luna.Parser                as Parser
 import qualified Flowbox.Luna.Codegen.Hs.AST.Expr   as Expr
-import qualified Flowbox.Luna.Codegen.Hs.GenState   as GenState
-import           Flowbox.Luna.Codegen.Hs.GenState     (GenState)
+import qualified Flowbox.Luna.Codegen.Hs.SSAState   as SSAState
+import           Flowbox.Luna.Codegen.Hs.SSAState     (SSAState)
 import           Debug.Trace                          
 import           Data.Either.Utils                    (forceEither)
 import qualified Text.Show.Pretty                   as PP
@@ -85,8 +86,8 @@ logger = getLogger "Flowbox"
 
 example :: String
 example = unlines [ "def f(x):"
-                  , "   x=x+1"
-                  , "   x=x+1"
+                  , "   x=y+1"
+                  , "   x=x x"
                   ]
 
 --test :: (Enum a, MonadState a m, MonadWriter [LogEntry.LogEntry] m) => MaybeT m ()
@@ -113,7 +114,8 @@ main_inner = do
     let 
         parsed = Parser.parse example
         ast = forceEither parsed
-        (nast, nstate, nlog) = runRWS (runMaybeT (Gen.ssa Gen.Read ast)) 0 GenState.empty
+        (nast, nstate, nlog) = SSA.run ast
+        --(hast, hstate, hlog) = Gen.run nast
     --let y = runRWS (runMaybeT test) 0 0
     putStrLn $ PP.ppShow $ ast
     putStrLn "\n-----------------"
@@ -122,8 +124,8 @@ main_inner = do
     putStrLn $ PP.ppShow $ DList.toList nlog
     putStrLn "\n-----------------"
 
-    --case hast of
-    --    Just hast' -> putStrLn $ PP.ppShow $ map Expr.genCode hast'
+    --case nast of
+    --    Just nast' -> putStrLn $ PP.ppShow $ map Expr.genCode nast'
     --    _          -> return ()
     return ()
 

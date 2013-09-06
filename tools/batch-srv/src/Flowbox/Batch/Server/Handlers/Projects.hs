@@ -36,13 +36,14 @@ import           Flowbox.Tools.Conversion
 
 
 
-logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Projects"
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Projects"
 
 ------ public api -------------------------------------------------
 
 projects :: IORef Batch -> IO (Vector TProjects.Project)
 projects batchHandler = do
-    logger.info $ "called projects"
+    loggerIO info "called projects"
     batch <- readIORef batchHandler
     let aprojects       = BatchP.projects batch
         tprojects       = map (fst . encode) aprojects
@@ -52,9 +53,9 @@ projects batchHandler = do
 
 projectByID :: IORef Batch -> Maybe Int32 -> IO TProjects.Project
 projectByID batchHandler mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called projectByID"
+    scriptIO $ loggerIO info "called projectByID"
     projectID <- tryGetID mtprojectID "projectID"
-    scriptIO $ logger.debug $ "projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "projectID: " ++ (show projectID)
     batch     <- tryReadIORef batchHandler
     project   <- tryRight $ BatchP.projectByID projectID batch
     return $ fst $ encode (projectID, project)
@@ -62,11 +63,11 @@ projectByID batchHandler mtprojectID = tRunScript $ do
 
 createProject :: IORef Batch -> Maybe TProjects.Project -> IO TProjects.Project
 createProject batchHandler mtproject = tRunScript $ do
-    scriptIO $ logger.info $ "called createProject"
+    scriptIO $ loggerIO info "called createProject"
     tproject     <- mtproject <??> "'project' field is missing" 
     (_, project) <- tryRight (decode (tproject, LibManager.empty) :: Either String (Project.ID, Project))
     batch        <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "project: " ++ (show project)
+    scriptIO $ loggerIO debug $ "project: " ++ (show project)
     let (newBatch, newProject) = BatchP.createProject project batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ encode newProject
@@ -74,10 +75,10 @@ createProject batchHandler mtproject = tRunScript $ do
 
 openProject :: IORef Batch -> Maybe Text -> IO TProjects.Project
 openProject batchHandler mtpath = tRunScript $ do
-    scriptIO $ logger.info $ "called openProject"
+    scriptIO $ loggerIO info "called openProject"
     upath <- tryGetUniPath mtpath "path"
     batch <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "path: " ++ (show upath)
+    scriptIO $ loggerIO debug $ "path: " ++ (show upath)
     (newBatch, (projectID, aproject)) <- scriptIO $ BatchP.openProject upath batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ encode (projectID, aproject)
@@ -85,31 +86,31 @@ openProject batchHandler mtpath = tRunScript $ do
 
 updateProject :: IORef Batch -> Maybe TProjects.Project -> IO ()
 updateProject batchHandler mtproject = tRunScript $ do
-    scriptIO $ logger.info $ "called updateProject"
+    scriptIO $ loggerIO info "called updateProject"
     tproject <- mtproject <??> "'project' field is missing" 
     project <- tryRight (decode (tproject, LibManager.empty) :: Either String (Project.ID, Project))
     batch    <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "project: " ++ (show project)
+    scriptIO $ loggerIO debug $ "project: " ++ (show project)
     newBatch <- tryRight $  BatchP.updateProject project batch
     tryWriteIORef batchHandler newBatch
 
 
 closeProject :: IORef Batch -> Maybe Int32 -> IO ()
 closeProject batchHandler mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called closeProject"
+    scriptIO $ loggerIO info "called closeProject"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "projectID: " ++ (show projectID)
     let newBatch = BatchP.closeProject projectID batch
     tryWriteIORef batchHandler newBatch
 
 
 storeProject :: IORef Batch -> Maybe Int32 -> IO ()
 storeProject batchHandler mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called storeProject"
+    scriptIO $ loggerIO info "called storeProject"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "projectID: " ++ (show projectID)
     scriptIO $ BatchP.storeProject projectID batch
 
 

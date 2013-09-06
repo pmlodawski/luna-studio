@@ -38,43 +38,44 @@ import           Flowbox.Tools.Conversion
 
 
 
-logger = getLoggerIO "Flowbox.Batch.Server.Handlers.Defs"
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Defs"
 
 ------ public api -------------------------------------------------
 
 defsGraph :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO TDefs.DefsGraph
 defsGraph batchHandler mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called defsGraph"
+    scriptIO $ loggerIO info "called defsGraph"
     libID       <- tryGetID mtlibID "libID"
     projectID   <- tryGetID mtprojectID "projectID"
     batch       <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     adefManager <- tryRight $ BatchD.defsGraph libID projectID batch
     return $ CDefs.toDefsGraph adefManager
 
 
 defByID :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition
 defByID batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called defByID"
+    scriptIO $ loggerIO info "called defByID"
     defID      <- tryGetID mtdefID     "defID"    
     libID      <- tryGetID mtlibID     "libID"
     projectID  <- tryGetID mtprojectID "projectID"
     batch      <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     definition <- tryRight $ BatchD.defByID defID libID projectID batch
     return $ fst $ encode (defID, definition)
 
 addDefinition :: IORef Batch 
               -> Maybe TDefs.Definition -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition
 addDefinition batchHandler mtdefinition mtparentID mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called addDefinition"
+    scriptIO $ loggerIO info "called addDefinition"
     tdefinition       <- mtdefinition <??> "'definition' argument is missing"
     (_, definition)   <- tryRight (decode (tdefinition, Graph.make) :: Either String (Definition.ID, Definition))
     parentID          <- tryGetID mtparentID "parentID"    
     libID             <- tryGetID mtlibID    "libID"
     projectID         <- tryGetID mtprojectID "projectID"
     batch             <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "definition: " ++ (show definition) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "definition: " ++ (show definition) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     (newBatch, defID) <- tryRight $ BatchD.addDefinition definition parentID libID projectID batch
     tryWriteIORef batchHandler newBatch
     return $ fst $ encode (defID, definition)
@@ -82,25 +83,25 @@ addDefinition batchHandler mtdefinition mtparentID mtlibID mtprojectID = tRunScr
 
 updateDefinition :: IORef Batch -> Maybe TDefs.Definition -> Maybe Int32 -> Maybe Int32 -> IO ()
 updateDefinition batchHandler mtdefinition mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called updateDefinition"
+    scriptIO $ loggerIO info "called updateDefinition"
     tdefinition <- mtdefinition <??> "'definition' field is missing" 
     definition  <- tryRight $ decode (tdefinition, Graph.empty) -- :: (Definition.ID, Definition)
     libID       <- tryGetID mtlibID "libID"
     projectID   <- tryGetID mtprojectID "projectID"
     batch       <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "definition: " ++ (show definition) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "definition: " ++ (show definition) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch    <- tryRight $ BatchD.updateDefinition definition libID projectID batch
     tryWriteIORef batchHandler newBatch
 
 
 removeDefinition :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
 removeDefinition batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called removeDefinition"
+    scriptIO $ loggerIO info "called removeDefinition"
     defID       <- tryGetID mtdefID "defID"
     libID       <- tryGetID mtlibID "libID"
     projectID   <- tryGetID mtprojectID "projectID"
     batch       <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch    <- tryRight $ BatchD.removeDefinition defID libID projectID batch 
     tryWriteIORef batchHandler newBatch
     return ()
@@ -108,12 +109,12 @@ removeDefinition batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
 
 definitionChildren :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO (Vector TDefs.Definition)
 definitionChildren batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called definitionChildren"
+    scriptIO $ loggerIO info "called definitionChildren"
     defID       <- tryGetID mtdefID "defID"
     libID       <- tryGetID mtlibID "libID"
     projectID   <- tryGetID mtprojectID "projectID"
     batch       <- tryReadIORef batchHandler
-    scriptIO $ logger.debug $ "defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     children    <- tryRight $ BatchD.definitionChildren defID libID projectID batch
     let tchildrenWithGraph = map (encode) children
         tchildren = map (\(def, _) -> def) tchildrenWithGraph
@@ -122,7 +123,7 @@ definitionChildren batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
 
 definitionParent :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition
 definitionParent batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
-    scriptIO $ logger.info $ "called definitionParent"
+    scriptIO $ loggerIO info "called definitionParent"
     defID       <- tryGetID mtdefID "defID"
     libID       <- tryGetID mtlibID "libID"
     projectID   <- tryGetID mtprojectID "projectID"

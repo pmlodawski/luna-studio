@@ -26,7 +26,8 @@ import           Flowbox.System.Log.Logger
 
 
 
-logger = getLoggerIO "Flowbox.Batch.Server"
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.Batch.Server"
 
 
 port :: Network.PortNumber
@@ -37,7 +38,7 @@ accepter :: Network.Socket -> IO (TProtocol.BinaryProtocol IO.Handle,
                                     TProtocol.BinaryProtocol IO.Handle)
 accepter s = do
     (h, addr, p) <- Network.accept s
-    logger.info $ "Accepted connection from " ++ addr ++ " : " ++ (show p)
+    loggerIO info $ "Accepted connection from " ++ addr ++ " : " ++ (show p)
     return (TProtocol.BinaryProtocol h, TProtocol.BinaryProtocol h)
 
 
@@ -56,6 +57,6 @@ runSingleConnectionServer accepter_ hand proc_ port_ = do
 singleAcceptLoop :: IO t -> (t -> IO Bool) -> IO a
 singleAcceptLoop accepter_ proc_ = forever $
     do ps <- accepter_
-       Exception.handle (\(e :: Exception.SomeException) -> logger.critical $ "Connection to client lost: " ++ show e)
+       Exception.handle (\(e :: Exception.SomeException) -> loggerIO critical $ "Connection to client lost: " ++ show e)
                         (loop $ proc_ ps)
   where loop m = do { continue <- m; when continue (loop m) }

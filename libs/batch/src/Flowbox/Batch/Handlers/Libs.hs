@@ -35,8 +35,8 @@ import           Flowbox.System.UniPath                (UniPath)
 import           Flowbox.System.Log.Logger             
 
 
-
-logger = getLoggerIO "Flowbox.Batch"
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.Batch"
 
 
 libraries :: Project.ID -> Batch -> Either String [(Library.ID, Library)]
@@ -82,7 +82,7 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
     --    ppath = Project.path proj
     --    b = Builder ppath
     --Builder.buildLibrary b library
-    logger.warning $ "Build library not implemented"
+    loggerIO warning "Build library not implemented"
     return (library, ()))
 
 
