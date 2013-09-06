@@ -42,17 +42,17 @@ notImplementedList :: [a]
 notImplementedList = []
 
 
-toASTType :: Type -> ASTType.Type
+toASTType :: Type -> (String, ASTType.Type)
 toASTType t = case t of 
-    Type.Undefined                           -> ASTType.Unknown
-    Type.TypeVariable name                   -> ASTType.Unknown
-    Type.Class        name typeparams params -> ASTType.Class name typeparams
-    Type.Function     name inputs outputs    -> ASTType.Lambda (toASTType inputs) (toASTType outputs)
-    Type.Tuple        items                  -> ASTType.Tuple (map toASTType items)
-    Type.List         item                   -> ASTType.Unknown
-    Type.Interface    fields methods         -> ASTType.Unknown
-    Type.Module       name                   -> ASTType.Unknown
-    Type.Named        name cls               -> ASTType.Unknown
+    Type.Undefined                           -> (""  , ASTType.Unknown)
+    Type.TypeVariable name                   -> (name, ASTType.Unknown)
+    Type.Class        name typeparams params -> (name, ASTType.Class name typeparams)
+    Type.Function     name inputs outputs    -> (name, ASTType.Lambda (snd $ toASTType inputs) (snd $ toASTType outputs))
+    Type.Tuple        items                  -> (""  , ASTType.Tuple (map (snd.toASTType) items))
+    Type.List         item                   -> (""  , ASTType.Unknown)
+    Type.Interface    fields methods         -> (""  , ASTType.Unknown)
+    Type.Module       name                   -> (name, ASTType.Unknown)
+    Type.Named        name cls               -> (name, snd $ toASTType cls)
 
 
 toAST' :: Definition -> AST.Expr
@@ -64,5 +64,19 @@ toAST' (Definition acls agraph aimports (Flags _ aomit) _) = case acls of
     _ -> AST.NOP
 
 
-toAST :: DefManager -> Definition.ID -> AST.Expr
-toAST defManager defID =  undefined
+type2Field :: Type -> AST.Expr
+type2Field t = AST.Field name cls where
+    (name, cls) = toASTType t
+
+
+toAST :: DefManager -> (Definition.ID, Definition) -> AST.Expr
+toAST defManager (defID, def) = expr where
+    (Definition acls agraph aimports (Flags _ aomit) _) = def
+    expr =  case acls of
+        Type.Class _ _ params -> AST.Class astClass astFields astMethods where
+                                        ("", astClass) = toASTType acls
+                                        astFields  = map type2Field params
+                                        nextDefs   = DefManager.sucl defManager defID
+                                        astMethods = map (toAST defManager) nextDefs
+        _                     -> AST.NOP
+
