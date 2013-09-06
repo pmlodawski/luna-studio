@@ -16,8 +16,13 @@ import           Flowbox.Control.Applicative
 import qualified System.Environment          as Env
 import           Flowbox.Control.Exception     
 import           Flowbox.System.Log.Logger     
-import qualified Flowbox.System.Log.Logger   as Logger
 
+
+
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.Lunac"
+
+logger :: Logger
 logger = getLogger "Flowbox.Lunac"
 
 libPathEnv :: String
@@ -68,8 +73,8 @@ run conf = case conf of
     Version     {} -> putStrLn show_version
     Compilation {} -> do
         case verbose conf of
-            True  -> logger.setLevel $ DEBUG
-            False -> logger.setLevel $ INFO
+            True  -> logger setLevel DEBUG
+            False -> logger setLevel INFO
 
         -- TODO [PM] : This code does not compile
 
