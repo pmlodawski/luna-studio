@@ -66,6 +66,7 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Log.Logger          as Logger
 import qualified Flowbox.System.Log.LogEntry        as LogEntry
 import qualified Flowbox.Luna.Codegen.Hs.Generator  as Gen
+import qualified Flowbox.Luna.Passes.SSA            as SSA
 import qualified Flowbox.Luna.Codegen.Hs.AST.Module as Module
 import qualified Flowbox.Luna.Parser                as Parser
 import qualified Flowbox.Luna.Codegen.Hs.AST.Expr   as Expr
@@ -86,7 +87,7 @@ logger = getLogger "Flowbox"
 example :: String
 example = unlines [ "def f(x):"
                   , "   x=x+1"
-                  , "   x=x x"
+                  , "   x=y x"
                   , "def f(x):"
                   , "   x = x+1"
                   ]
@@ -115,7 +116,7 @@ main_inner = do
     let 
         parsed = Parser.parse example
         ast = forceEither parsed
-        (nast, nstate, nlog) = Gen.ssa ast
+        (nast, nstate, nlog) = SSA.run ast
     --let y = runRWS (runMaybeT test) 0 0
     putStrLn $ PP.ppShow $ ast
     putStrLn "\n-----------------"

@@ -28,6 +28,7 @@ Library
                   TemplateHaskell
   
   Exposed-modules: 
+        Flowbox.Luna.Passes.SSA,
         Flowbox.Luna.Samples.HelloWorld,
         Flowbox.Luna.Network.Flags,
         Flowbox.Luna.Network.Attributes,
@@ -94,6 +95,7 @@ Library
                   containers,
                   directory,
                   either,
+                  errors,
                   fgl,
                   flowbox-luna-parser,
                   flowbox-utils,
@@ -126,6 +128,7 @@ Executable luna
   Build-Depends:  base,
                   dlist,
                   either,
+                  errors,
                   flowbox-luna,
                   flowbox-luna-parser,
                   flowbox-utils,
