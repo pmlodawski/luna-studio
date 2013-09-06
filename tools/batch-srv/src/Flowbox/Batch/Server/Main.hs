@@ -42,6 +42,8 @@ import           Flowbox.Control.Error
 import           Flowbox.System.Log.Logger                  
 
 
+loggerP = getLogger "Flowbox.Batch.Server"
+
 
 port :: PortNumber
 port = 30521
@@ -115,7 +117,7 @@ instance Batch_Iface BatchHandler where
 
 main :: IO ()
 main = do
-    logger.setLevel $ DEBUG
+    loggerP.setLevel $ DEBUG
     handler <- newBatchHandler
     logger.info $ "Starting the server"
     _ <- runBasicServer handler TBatch.process port

@@ -13,11 +13,10 @@ import           Data.Text.Lazy              (pack)
                                     
 import           Batch_Types                 (ArgumentException(..))
 import           Flowbox.Control.Error       
-import           Flowbox.System.Log.Logger   (getLogger, error)
+import           Flowbox.System.Log.Logger   (getLoggerIO, error)
 
 
-logger :: (String -> IO ()) -> IO ()
-logger = getLogger "Flowbox.Batch.Server"
+logger = getLoggerIO "Flowbox.Batch.Server"
 
 
 throw' :: String -> c

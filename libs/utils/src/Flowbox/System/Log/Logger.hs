@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
 module Flowbox.System.Log.Logger (
     module Flowbox.System.Log.Logger,
@@ -21,20 +21,24 @@ import           Control.Monad.State
 import           Control.Monad.Writer          
 import           System.Log.Logger           hiding (getLogger, setLevel, Logger)
 import           Prelude                     hiding (log, fail)
-import           Control.Applicative           
 
 import qualified Flowbox.System.Log.LogEntry as LogEntry
 
--- ponizsza sygnatura nie dziala przez funkcje IO takie jak setLevel
---getLogger :: MonadWriter [LogEntry.LogEntry] m => String -> (String -> m()) -> m()
+type LogWriter m = MonadWriter [LogEntry.LogEntry] m
+
+--getLogger :: LogWriter m => String -> (String -> m()) -> m()
 getLogger name = \f -> f name
 
+--getLoggerIO :: String -> (String -> IO()) -> IO()
+getLoggerIO name = \f -> runLogger $ f name
+
+runLogger :: Writer [LogEntry.LogEntry] a -> IO a
 runLogger m = do
     let (out, entries) = runWriter m
     mapM_ logIO entries
     return out
 
-log :: MonadWriter [LogEntry.LogEntry] m => Priority -> String -> String -> m()
+log :: LogWriter m => Priority -> String -> String -> m()
 log pri msg name = tell [LogEntry.LogEntry name pri msg]
 
 
@@ -60,32 +64,34 @@ logIO entry = do
     hSetSGR stderr []
     --if Conf.colored conf then hSetSGR stderr []  else return ()
 
-debug :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
+debug :: LogWriter m => String -> String -> m()
 debug = log DEBUG
 
-info :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
+info :: LogWriter m => String -> String -> m()
 info = log INFO
 
-notice :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
+notice :: LogWriter m => String -> String -> m()
 notice = log NOTICE
 
-warning :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
+warning :: LogWriter m => String -> String -> m()
 warning = log WARNING
 
-error :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
+error :: LogWriter m => String -> String -> m()
 error = log ERROR
 
---critical :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
-critical msg name = do
-    log CRITICAL msg name
-    fail msg
-    
+critical :: LogWriter m => String -> String -> m()
+critical = log CRITICAL
 
-alert :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
+alert :: LogWriter m => String -> String -> m()
 alert = log ALERT
 
-emergency :: MonadWriter [LogEntry.LogEntry] m => String -> String -> m()
+emergency :: LogWriter m => String -> String -> m()
 emergency = log EMERGENCY 
+
+criticalFail :: LogWriter m => String -> String -> m b
+criticalFail msg name = do
+    log CRITICAL msg name
+    fail msg
 
 setLevel :: Priority -> String -> IO ()
 setLevel lvl name = updateGlobalLogger name (HSLogger.setLevel lvl)

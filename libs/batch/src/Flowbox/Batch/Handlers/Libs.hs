@@ -32,8 +32,10 @@ import qualified Flowbox.Luna.Network.Def.Definition as Definition
 import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
 import qualified Flowbox.Luna.Tools.Serialize.Lib    as LibSerialization
 import           Flowbox.System.UniPath                (UniPath)
+import           Flowbox.System.Log.Logger                  
 
 
+logger = getLoggerIO "Flowbox.Batch"
 
 
 libraries :: Batch -> Either String [(Library.ID, Library)]
@@ -69,10 +71,7 @@ storeLibrary libID = readonly' . libraryOp' libID (\_ library -> do
 
 buildLibrary :: Library.ID -> Batch -> IO ()
 buildLibrary libID = readonly' . libraryOp' libID (\batch library -> do
-    let Just proj = activeProject batch
-        ppath = Project.path proj
-        b = Builder ppath
-    Builder.buildLibrary b library
+    logger.warning $ "Build library not implemented"
     return (library, ()))
 
 
