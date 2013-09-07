@@ -21,18 +21,18 @@ Library
   Extensions:     DoAndIfThenElse
 
   Exposed-modules: 
-        Flowbox.Data.Version,
-        Flowbox.System.Directory,
+        Flowbox.Tools.Conversion,
+        Flowbox.Control.Exception,
+        Flowbox.Control.Error,
+        Flowbox.Control.Applicative,
         Flowbox.System.UniPath,
-        Flowbox.System.Log.Conf,
-        Flowbox.System.Log.LogEntry,
-        Flowbox.System.Log.Logger,
+        Flowbox.System.Directory,
         Flowbox.System.IO.IO,
         Flowbox.System.IO.Serializer,
-        Flowbox.Tools.Conversion,
-        Flowbox.Control.Applicative,
-        Flowbox.Control.Error,
-        Flowbox.Control.Exception
+        Flowbox.System.Log.LogEntry,
+        Flowbox.System.Log.Conf,
+        Flowbox.System.Log.Logger,
+        Flowbox.Data.Version
 
   Build-Depends:  base,
                   containers,

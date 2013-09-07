@@ -53,6 +53,9 @@ log pri msg name = tell $ DList.singleton (LogEntry.LogEntry name pri msg)
 append :: MonadWriter w m => w -> m ()
 append = tell
 
+logsIO :: LogList -> IO ()
+logsIO entries = mapM_ logIO $ DList.toList entries
+
 logIO :: LogEntry.LogEntry -> IO ()
 logIO entry = do
     --conf <- Conf.read name
