@@ -11,7 +11,7 @@ module Flowbox.Batch.Tools.Definition2AST where
 
 import           Control.Applicative                       
 import           Data.Foldable                             (foldrM)
-import           Text.Parsec.Error                        
+import           Text.Parsec.Error                         
 
 import           Flowbox.Control.Error                     
 import qualified Flowbox.Luna.Network.Attributes         as Attributes
@@ -24,6 +24,7 @@ import           Flowbox.Luna.Network.Flags                (Flags(..))
 import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import           Flowbox.Luna.Network.Graph.Graph          (Graph)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
+import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue(..))
 import qualified Flowbox.Luna.Network.Graph.Edge         as Edge
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
@@ -34,6 +35,8 @@ import qualified Flowbox.Luna.Type.Type                  as Type
 import           Flowbox.Luna.Type.Type                    (Type)
 import qualified Flowbox.System.UniPath                  as UniPath
 import           Flowbox.System.UniPath                    (UniPath)
+import qualified Flowbox.Luna.Parser.AST.Constant        as ASTConstant
+
 
 
 notImplementedList :: [a]
@@ -52,6 +55,13 @@ toASTType t = case t of
     Type.Interface    fields methods         -> (""  , ASTType.Unknown)
     Type.Module       name                   -> (name, ASTType.Unknown)
     Type.Named        name acls              -> (name, snd $ toASTType acls)
+
+
+toASTConstant :: DefaultValue -> ASTConstant.Constant
+toASTConstant value = case value of 
+    DefaultChar   v -> ASTConstant.Char  v
+    DefaultInt    v -> ASTConstant.Integer v
+    DefaultString v -> ASTConstant.String  v
 
 
 type2Field :: Type -> AST.Expr

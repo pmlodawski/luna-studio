@@ -13,7 +13,8 @@ DefaultValue(..)
 --import           Data.Serialize   (Serialize)
 --import           Data.Word        (Word8)
 
-data DefaultValue = DefaultInt Int
+data DefaultValue = DefaultChar   Char 
+				  | DefaultInt    String
                   | DefaultString String 
                   deriving (Show, Read, Ord, Eq)
 

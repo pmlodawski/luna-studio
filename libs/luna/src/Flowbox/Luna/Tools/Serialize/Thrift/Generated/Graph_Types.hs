@@ -35,14 +35,16 @@ import           Thrift.Types           ()
 import           Attrs_Types            
 
 
-data DefaultValueType = StringV|IntV  deriving (Show,Eq, Typeable, Ord)
+data DefaultValueType = CharV|IntV|StringV  deriving (Show,Eq, Typeable, Ord)
 instance Enum DefaultValueType where
   fromEnum t = case t of
-    StringV -> 0
+    CharV -> 0
     IntV -> 1
+    StringV -> 2
   toEnum t = case t of
-    0 -> StringV
+    0 -> CharV
     1 -> IntV
+    2 -> StringV
     _ -> throw ThriftException
 instance Hashable DefaultValueType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
@@ -67,18 +69,14 @@ instance Hashable NodeType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
 type NodeID = Int32
 
-data DefaultValue = DefaultValue{f_DefaultValue_cls :: Maybe DefaultValueType,f_DefaultValue_i :: Maybe Int32,f_DefaultValue_s :: Maybe Text} deriving (Show,Eq,Typeable)
+data DefaultValue = DefaultValue{f_DefaultValue_cls :: Maybe DefaultValueType,f_DefaultValue_s :: Maybe Text} deriving (Show,Eq,Typeable)
 instance Hashable DefaultValue where
-  hashWithSalt salt record = salt   `hashWithSalt` f_DefaultValue_cls record   `hashWithSalt` f_DefaultValue_i record   `hashWithSalt` f_DefaultValue_s record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_DefaultValue_cls record   `hashWithSalt` f_DefaultValue_s record  
 write_DefaultValue oprot record = do
   writeStructBegin oprot "DefaultValue"
   case f_DefaultValue_cls record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("cls",T_I32,1)
     writeI32 oprot (fromIntegral $ fromEnum _v)
-    writeFieldEnd oprot}
-  case f_DefaultValue_i record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("i",T_I32,2)
-    writeI32 oprot _v
     writeFieldEnd oprot}
   case f_DefaultValue_s record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("s",T_STRING,3)
@@ -96,12 +94,6 @@ read_DefaultValue_fields iprot record = do
         else do
           skip iprot _t3
           read_DefaultValue_fields iprot record
-      2 -> if _t3 == T_I32 then do
-        s <- readI32 iprot
-        read_DefaultValue_fields iprot record{f_DefaultValue_i=Just s}
-        else do
-          skip iprot _t3
-          read_DefaultValue_fields iprot record
       3 -> if _t3 == T_STRING then do
         s <- readString iprot
         read_DefaultValue_fields iprot record{f_DefaultValue_s=Just s}
@@ -114,7 +106,7 @@ read_DefaultValue_fields iprot record = do
         read_DefaultValue_fields iprot record
 read_DefaultValue iprot = do
   _ <- readStructBegin iprot
-  record <- read_DefaultValue_fields iprot (DefaultValue{f_DefaultValue_cls=Nothing,f_DefaultValue_i=Nothing,f_DefaultValue_s=Nothing})
+  record <- read_DefaultValue_fields iprot (DefaultValue{f_DefaultValue_cls=Nothing,f_DefaultValue_s=Nothing})
   readStructEnd iprot
   return record
 data Node = Node{f_Node_cls :: Maybe NodeType,f_Node_expression :: Maybe Text,f_Node_nodeID :: Maybe Int32,f_Node_flags :: Maybe Attrs_Types.Flags,f_Node_attrs :: Maybe Attrs_Types.Attributes,f_Node_defVal :: Maybe DefaultValue} deriving (Show,Eq,Typeable)

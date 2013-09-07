@@ -19,8 +19,9 @@ namespace flowbox { namespace batch { namespace graph {
 
 struct DefaultValueType {
   enum type {
-    StringV = 0,
-    IntV = 1
+    CharV = 0,
+    IntV = 1,
+    StringV = 2
   };
 };
 
@@ -42,35 +43,28 @@ extern const std::map<int, const char*> _NodeType_VALUES_TO_NAMES;
 typedef int32_t NodeID;
 
 typedef struct _DefaultValue__isset {
-  _DefaultValue__isset() : i(false), s(false) {}
-  bool i;
+  _DefaultValue__isset() : s(false) {}
   bool s;
 } _DefaultValue__isset;
 
 class DefaultValue {
  public:
 
-  static const char* ascii_fingerprint; // = "69ED04DC035A4CF78CE4B470902F18B3";
-  static const uint8_t binary_fingerprint[16]; // = {0x69,0xED,0x04,0xDC,0x03,0x5A,0x4C,0xF7,0x8C,0xE4,0xB4,0x70,0x90,0x2F,0x18,0xB3};
+  static const char* ascii_fingerprint; // = "543465A32DEDFDAFF94B9327A9320F0A";
+  static const uint8_t binary_fingerprint[16]; // = {0x54,0x34,0x65,0xA3,0x2D,0xED,0xFD,0xAF,0xF9,0x4B,0x93,0x27,0xA9,0x32,0x0F,0x0A};
 
-  DefaultValue() : cls((DefaultValueType::type)0), i(0), s() {
+  DefaultValue() : cls((DefaultValueType::type)0), s() {
   }
 
   virtual ~DefaultValue() throw() {}
 
   DefaultValueType::type cls;
-  int32_t i;
   std::string s;
 
   _DefaultValue__isset __isset;
 
   void __set_cls(const DefaultValueType::type val) {
     cls = val;
-  }
-
-  void __set_i(const int32_t val) {
-    i = val;
-    __isset.i = true;
   }
 
   void __set_s(const std::string& val) {
@@ -81,10 +75,6 @@ class DefaultValue {
   bool operator == (const DefaultValue & rhs) const
   {
     if (!(cls == rhs.cls))
-      return false;
-    if (__isset.i != rhs.__isset.i)
-      return false;
-    else if (__isset.i && !(i == rhs.i))
       return false;
     if (__isset.s != rhs.__isset.s)
       return false;
@@ -118,8 +108,8 @@ typedef struct _Node__isset {
 class Node {
  public:
 
-  static const char* ascii_fingerprint; // = "43F200EE3F1FC1EF3015F9446E707ADF";
-  static const uint8_t binary_fingerprint[16]; // = {0x43,0xF2,0x00,0xEE,0x3F,0x1F,0xC1,0xEF,0x30,0x15,0xF9,0x44,0x6E,0x70,0x7A,0xDF};
+  static const char* ascii_fingerprint; // = "479D4EF4F82216B5B2BD05A20FE3ADCB";
+  static const uint8_t binary_fingerprint[16]; // = {0x47,0x9D,0x4E,0xF4,0xF8,0x22,0x16,0xB5,0xB2,0xBD,0x05,0xA2,0x0F,0xE3,0xAD,0xCB};
 
   Node() : cls((NodeType::type)0), expression(""), nodeID(-1) {
 
@@ -286,8 +276,8 @@ typedef struct _Graph__isset {
 class Graph {
  public:
 
-  static const char* ascii_fingerprint; // = "23F28B7CCC26BC5D5B26C2B977C89209";
-  static const uint8_t binary_fingerprint[16]; // = {0x23,0xF2,0x8B,0x7C,0xCC,0x26,0xBC,0x5D,0x5B,0x26,0xC2,0xB9,0x77,0xC8,0x92,0x09};
+  static const char* ascii_fingerprint; // = "D19D2DE502228DB63935731D4453CC2B";
+  static const uint8_t binary_fingerprint[16]; // = {0xD1,0x9D,0x2D,0xE5,0x02,0x22,0x8D,0xB6,0x39,0x35,0x73,0x1D,0x44,0x53,0xCC,0x2B};
 
   Graph() {
   }

@@ -93,20 +93,21 @@ instance Convert Graph TGraph.Graph where
 instance Convert DefaultValue TGraph.DefaultValue where
   encode a =
     case a of
-      DefaultInt ii ->
-        TGraph.DefaultValue (Just TGraph.IntV) (Just $ itoi32 ii) Nothing
-      DefaultString ss ->
-        TGraph.DefaultValue (Just TGraph.StringV) Nothing (Just $ Text.pack ss)
+      DefaultChar   ss -> TGraph.DefaultValue (Just TGraph.StringV) (Just $ Text.pack [ss])
+      DefaultInt    ss -> TGraph.DefaultValue (Just TGraph.IntV   ) (Just $ Text.pack ss)
+      DefaultString ss -> TGraph.DefaultValue (Just TGraph.StringV) (Just $ Text.pack ss)
+
   decode b =
     case TGraph.f_DefaultValue_cls b of
-      Just TGraph.IntV ->
-        case TGraph.f_DefaultValue_i b of
-          Just ii -> Right $ DefaultInt $ i32toi ii
-          Nothing -> Left "No integral default value specified"
-      Just TGraph.StringV ->
-        case TGraph.f_DefaultValue_s b of
-          Just ss -> Right $ DefaultString $ Text.unpack ss
-          Nothing -> Left "No string default value specified"
+      Just TGraph.CharV -> case TGraph.f_DefaultValue_s b of
+                              Just ss -> Right $ DefaultChar $ head $ Text.unpack ss
+                              Nothing -> Left "No char default value specified"
+      Just TGraph.IntV    -> case TGraph.f_DefaultValue_s b of
+                              Just ii -> Right $ DefaultInt $ Text.unpack ii
+                              Nothing -> Left "No integral default value specified"
+      Just TGraph.StringV -> case TGraph.f_DefaultValue_s b of
+                              Just ss -> Right $ DefaultString $ Text.unpack ss
+                              Nothing -> Left "No string default value specified"
       Nothing -> Left "No default value type specified"    
 
 

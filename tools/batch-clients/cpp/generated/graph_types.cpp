@@ -11,14 +11,16 @@
 namespace flowbox { namespace batch { namespace graph {
 
 int _kDefaultValueTypeValues[] = {
-  DefaultValueType::StringV,
-  DefaultValueType::IntV
+  DefaultValueType::CharV,
+  DefaultValueType::IntV,
+  DefaultValueType::StringV
 };
 const char* _kDefaultValueTypeNames[] = {
-  "StringV",
-  "IntV"
+  "CharV",
+  "IntV",
+  "StringV"
 };
-const std::map<int, const char*> _DefaultValueType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(2, _kDefaultValueTypeValues, _kDefaultValueTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+const std::map<int, const char*> _DefaultValueType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(3, _kDefaultValueTypeValues, _kDefaultValueTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
 int _kNodeTypeValues[] = {
   NodeType::Expr,
@@ -38,8 +40,8 @@ const char* _kNodeTypeNames[] = {
 };
 const std::map<int, const char*> _NodeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(6, _kNodeTypeValues, _kNodeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
-const char* DefaultValue::ascii_fingerprint = "69ED04DC035A4CF78CE4B470902F18B3";
-const uint8_t DefaultValue::binary_fingerprint[16] = {0x69,0xED,0x04,0xDC,0x03,0x5A,0x4C,0xF7,0x8C,0xE4,0xB4,0x70,0x90,0x2F,0x18,0xB3};
+const char* DefaultValue::ascii_fingerprint = "543465A32DEDFDAFF94B9327A9320F0A";
+const uint8_t DefaultValue::binary_fingerprint[16] = {0x54,0x34,0x65,0xA3,0x2D,0xED,0xFD,0xAF,0xF9,0x4B,0x93,0x27,0xA9,0x32,0x0F,0x0A};
 
 uint32_t DefaultValue::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -68,14 +70,6 @@ uint32_t DefaultValue::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->readI32(ecast0);
           this->cls = (DefaultValueType::type)ecast0;
           isset_cls = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      case 2:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->i);
-          this->__isset.i = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -110,11 +104,6 @@ uint32_t DefaultValue::write(::apache::thrift::protocol::TProtocol* oprot) const
   xfer += oprot->writeI32((int32_t)this->cls);
   xfer += oprot->writeFieldEnd();
 
-  if (this->__isset.i) {
-    xfer += oprot->writeFieldBegin("i", ::apache::thrift::protocol::T_I32, 2);
-    xfer += oprot->writeI32(this->i);
-    xfer += oprot->writeFieldEnd();
-  }
   if (this->__isset.s) {
     xfer += oprot->writeFieldBegin("s", ::apache::thrift::protocol::T_STRING, 3);
     xfer += oprot->writeString(this->s);
@@ -128,13 +117,12 @@ uint32_t DefaultValue::write(::apache::thrift::protocol::TProtocol* oprot) const
 void swap(DefaultValue &a, DefaultValue &b) {
   using ::std::swap;
   swap(a.cls, b.cls);
-  swap(a.i, b.i);
   swap(a.s, b.s);
   swap(a.__isset, b.__isset);
 }
 
-const char* Node::ascii_fingerprint = "43F200EE3F1FC1EF3015F9446E707ADF";
-const uint8_t Node::binary_fingerprint[16] = {0x43,0xF2,0x00,0xEE,0x3F,0x1F,0xC1,0xEF,0x30,0x15,0xF9,0x44,0x6E,0x70,0x7A,0xDF};
+const char* Node::ascii_fingerprint = "479D4EF4F82216B5B2BD05A20FE3ADCB";
+const uint8_t Node::binary_fingerprint[16] = {0x47,0x9D,0x4E,0xF4,0xF8,0x22,0x16,0xB5,0xB2,0xBD,0x05,0xA2,0x0F,0xE3,0xAD,0xCB};
 
 uint32_t Node::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -359,8 +347,8 @@ void swap(Edge &a, Edge &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* Graph::ascii_fingerprint = "23F28B7CCC26BC5D5B26C2B977C89209";
-const uint8_t Graph::binary_fingerprint[16] = {0x23,0xF2,0x8B,0x7C,0xCC,0x26,0xBC,0x5D,0x5B,0x26,0xC2,0xB9,0x77,0xC8,0x92,0x09};
+const char* Graph::ascii_fingerprint = "D19D2DE502228DB63935731D4453CC2B";
+const uint8_t Graph::binary_fingerprint[16] = {0xD1,0x9D,0x2D,0xE5,0x02,0x22,0x8D,0xB6,0x39,0x35,0x73,0x1D,0x44,0x53,0xCC,0x2B};
 
 uint32_t Graph::read(::apache::thrift::protocol::TProtocol* iprot) {
 

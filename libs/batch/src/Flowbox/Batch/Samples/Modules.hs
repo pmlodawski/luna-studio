@@ -125,7 +125,7 @@ func_vec_incx_graph = Graph.insEdges [
                              (2,  Node.mkNTuple             ),
                              (3,  Node.mkExpr     "x'getter"),
                              (4,  Node.mkExpr     "select0" ),
-                             (5,  Node.Default (DefaultValue.DefaultInt 1) Attributes.empty),
+                             (5,  Node.Default (DefaultValue.DefaultInt "1") Attributes.empty),
                              (6,  Node.mkNTuple             ),
                              (7,  Node.mkExpr     "add"     ),
                              (8,  Node.mkExpr     "select0" ),
