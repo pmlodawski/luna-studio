@@ -44,26 +44,31 @@ import qualified Flowbox.Batch.Tools.Definition2AST      as Definition2AST
 
 main :: IO ()
 main = eRunScript $ do
-
     let fun1_gv = GraphView.insEdges [(0, 2, EdgeView [0]    [0])
                                      ,(2, 1, EdgeView [0, 1] [0])]
                 $ GraphView.insNodes [(0, Node.mkInputs)
                                      ,(1, Node.mkOutputs)
                                      ,(2, Node.mkExpr "alamakota" )] 
-                                     GraphView.empty 
+                                     GraphView.empty                                     
     fun1_graph <- tryRight $ GraphView.toGraph fun1_gv
+
     let fun1_df = Definition.empty { Definition.cls = Function "fun1" (Type.Tuple []) (Type.Tuple [])
                                    , Definition.graph = fun1_graph
                                    }
 
-    let cls1_df = Definition.empty { Definition.cls = Class "Ala" [] []
+        cls1_df = Definition.empty { Definition.cls = Class "Ala" ["a"] [Named "x" $ Type "X", Named "y" $ Type "Y", Named "z" $Type "Int"]
                                    }
+
+        defManager = DefManager.insNodes [(0, fun1_df)
+                                         ,(1, cls1_df)] 
+                                         DefManager.empty
+                                   
 
     scriptIO $ do 
                   --print fun1_df
-                  putStrLn $ ppShow $ Definition2AST.toAST' fun1_df
+                  putStrLn $ ppShow $ Definition2AST.def2AST defManager (0, fun1_df)
                   
                   putStrLn "--------------------------------------------"
 
                   --print cls1_df
-                  putStrLn $ ppShow $ Definition2AST.toAST' cls1_df
+                  putStrLn $ ppShow $ Definition2AST.def2AST defManager (1, cls1_df)

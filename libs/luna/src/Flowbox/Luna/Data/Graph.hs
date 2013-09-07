@@ -26,7 +26,7 @@ module Flowbox.Luna.Data.Graph (
     newVtxs,
     newVtx,
     insNewNode,
-    --newIds
+    topsortl,
 ) where
 
 import           Data.Functor           ((<$>))
@@ -106,3 +106,7 @@ insNewNode :: a -> Graph a b -> (Graph a b, Vertex)
 insNewNode node graph = (newGraph, nodeID) where
     nodeID   = newVtx graph
     newGraph = insNode (nodeID, node) graph
+
+
+topsortl :: Graph a b -> [LVertex a]
+topsortl graph = map (fromJust . labVtx graph) $ topsort graph

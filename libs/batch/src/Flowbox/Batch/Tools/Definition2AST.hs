@@ -9,33 +9,31 @@
 module Flowbox.Batch.Tools.Definition2AST where
 -- TODO [PM] move to Luna project!
 
+import           Control.Applicative                       
+import           Data.Foldable                             (foldrM)
+import           Text.Parsec.Error                        
+
 import           Flowbox.Control.Error                     
+import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
 import           Flowbox.Luna.Network.Def.DefManager       (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition     as Definition
 import           Flowbox.Luna.Network.Def.Definition       (Definition(..))
-import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
-import qualified Flowbox.Luna.Network.Graph.Node         as Node
-import           Flowbox.Luna.Network.Graph.Node           (Node(..))
-import qualified Flowbox.Luna.Lib.LibManager             as LibManager
-import           Flowbox.Luna.Lib.LibManager               (LibManager)
-import qualified Flowbox.Luna.Lib.Library                as Library
-import           Flowbox.Luna.Lib.Library                  (Library(..))
-import qualified Flowbox.Luna.Parser.AST.AST             as AST
-import qualified Flowbox.Luna.Parser.AST.Type            as ASTType
-import           Flowbox.Luna.Type.Type                    (Type)
-import qualified Flowbox.Luna.Type.Type                  as Type
-import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Flags              as Flags
 import           Flowbox.Luna.Network.Flags                (Flags(..))
-import qualified Flowbox.Luna.Network.Graph.Node         as Node
-import           Flowbox.Luna.Network.Graph.Node           (Node)
+import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
+import           Flowbox.Luna.Network.Graph.Graph          (Graph)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
 import qualified Flowbox.Luna.Network.Graph.Edge         as Edge
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
+import qualified Flowbox.Luna.Network.Graph.Node         as Node
+import qualified Flowbox.Luna.Parser.AST.AST             as AST
+import qualified Flowbox.Luna.Parser.AST.Type            as ASTType
+import qualified Flowbox.Luna.Parser.Parser              as Parser
+import qualified Flowbox.Luna.Type.Type                  as Type
+import           Flowbox.Luna.Type.Type                    (Type)
 import qualified Flowbox.System.UniPath                  as UniPath
 import           Flowbox.System.UniPath                    (UniPath)
-
 
 
 notImplementedList :: [a]
@@ -45,23 +43,15 @@ notImplementedList = []
 toASTType :: Type -> (String, ASTType.Type)
 toASTType t = case t of 
     Type.Undefined                           -> (""  , ASTType.Unknown)
+    Type.Type         name                   -> (name, ASTType.Type name)
     Type.TypeVariable name                   -> (name, ASTType.Unknown)
-    Type.Class        name typeparams params -> (name, ASTType.Class name typeparams)
+    Type.Class        name typeparams params -> (""  , ASTType.Class name typeparams)
     Type.Function     name inputs outputs    -> (name, ASTType.Lambda (snd $ toASTType inputs) (snd $ toASTType outputs))
     Type.Tuple        items                  -> (""  , ASTType.Tuple (map (snd.toASTType) items))
     Type.List         item                   -> (""  , ASTType.Unknown)
     Type.Interface    fields methods         -> (""  , ASTType.Unknown)
     Type.Module       name                   -> (name, ASTType.Unknown)
-    Type.Named        name cls               -> (name, snd $ toASTType cls)
-
-
-toAST' :: Definition -> AST.Expr
-toAST' (Definition acls agraph aimports (Flags _ aomit) _) = case acls of 
-    Type.Class aname atypeparams aparams -> AST.Class astClass astFields astMethods where
-                                        astClass   = (ASTType.Class aname atypeparams)
-                                        astFields  = notImplementedList
-                                        astMethods = notImplementedList
-    _ -> AST.NOP
+    Type.Named        name acls              -> (name, snd $ toASTType acls)
 
 
 type2Field :: Type -> AST.Expr
@@ -69,14 +59,38 @@ type2Field t = AST.Field name cls where
     (name, cls) = toASTType t
 
 
-toAST :: DefManager -> (Definition.ID, Definition) -> AST.Expr
-toAST defManager (defID, def) = expr where
-    (Definition acls agraph aimports (Flags _ aomit) _) = def
-    expr =  case acls of
-        Type.Class _ _ params -> AST.Class astClass astFields astMethods where
-                                        ("", astClass) = toASTType acls
-                                        astFields  = map type2Field params
-                                        nextDefs   = DefManager.sucl defManager defID
-                                        astMethods = map (toAST defManager) nextDefs
-        _                     -> AST.NOP
+def2AST :: DefManager -> (Definition.ID, Definition) -> Either String AST.Expr
+def2AST defManager (defID, def) = do 
+    let (Definition acls agraph aimports (Flags _ aomit) _) = def
+    case acls of
+        Type.Class _ _ params             -> do let astCls    = (snd . toASTType) acls
+                                                    astFields = map type2Field params
+                                                astMethods <- mapM (def2AST defManager) $ DefManager.sucl defManager defID
+                                                return $ AST.Class astCls astFields astMethods
+        Type.Function name inputs outputs -> AST.Function <$> pure name 
+                                                          <*> pure ASTType.Unknown 
+                                                          <*> graph2AST agraph
+        _                          -> return AST.NOP
 
+
+
+graph2AST :: Graph -> Either String [AST.Expr]
+graph2AST agraph = foldrM (node2AST agraph) [] $ Graph.topsortl agraph
+
+
+node2AST :: Graph -> (Node.ID, Node.Node) -> [AST.Expr] -> Either String [AST.Expr] 
+node2AST agraph (nodeID, node) list = do
+
+    call <- case node of 
+        Node.Expr expression flags _ -> case Parser.parse expression of 
+                                            Left  err  -> Left $ show err
+                                            Right expr -> Right expr
+        Node.Default value _ -> return AST.NOP
+        Node.Inputs  flags _ -> return AST.NOP
+        Node.Outputs flags _ -> return AST.NOP
+        Node.Tuple   flags _ -> return AST.NOP
+        Node.NTuple  flags _ -> return AST.NOP
+
+    let assignments = [AST.NOP]
+
+    return $ list ++ assignments ++ [call]

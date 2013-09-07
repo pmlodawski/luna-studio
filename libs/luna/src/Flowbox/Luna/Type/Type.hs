@@ -16,6 +16,7 @@ mkModule
 ) where
 
 data Type = Undefined
+		  | Type         {name   :: String}
           | TypeVariable {name   :: String}
           | Class        {name   :: String, typeparams :: [String], params :: [Type]}
           | Function     {name   :: String, inputs ::  Type, outputs :: Type}

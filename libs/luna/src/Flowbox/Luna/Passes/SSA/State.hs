@@ -8,11 +8,11 @@
 
 module Flowbox.Luna.Passes.SSA.State where
 
-import           Control.Monad.State           
-import qualified Data.Map                    as Map
-import           Data.Map                      (Map)
+import           Control.Monad.State         
+import qualified Data.Map                  as Map
+import           Data.Map                    (Map)
 
-import           Flowbox.System.Log.Logger     
+import           Flowbox.System.Log.Logger   
 
 
 logger :: Logger
