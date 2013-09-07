@@ -20,7 +20,8 @@ import           Flowbox.Prelude                    hiding (error)
 
 
 
---run :: EitherT a (RWS [Int] LogList Pass.NoState) b -> IO (Either a b)
+
+run :: Pass.TransformerT Pass.NoState a IO b
 run f = do
 	(result, _, logs) <- Pass.runT Pass.NoState f
 	Logger.logsIO logs

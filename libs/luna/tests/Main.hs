@@ -46,7 +46,7 @@ example :: Source
 example = Source.Source ["Workspace"] 
         $ unlines [ "def f(x):"
                   , "   def g(y):"
-                  , "       a = x + y"
+                  , "       f = x + y"
                   ]
 
 main :: IO ()
