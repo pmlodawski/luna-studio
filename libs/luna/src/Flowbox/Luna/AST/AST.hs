@@ -6,10 +6,10 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances #-}
 
-module Flowbox.Luna.Parser.AST.AST where
+module Flowbox.Luna.AST.AST where
 
-import           Flowbox.Luna.Parser.AST.Type       (Type)
-import qualified Flowbox.Luna.Parser.AST.Constant as Constant
+import           Flowbox.Luna.AST.Type       (Type)
+import qualified Flowbox.Luna.AST.Constant as Constant
 
 data Expr  = NOP
            | Import          { paths :: [Expr] }

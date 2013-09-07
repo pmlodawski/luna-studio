@@ -8,9 +8,9 @@
 
 module Flowbox.Luna.Passes.SSA.SSA where
 
-import qualified Flowbox.Luna.Parser.AST.AST   as LAST
-import qualified Flowbox.Luna.Parser.AST.Type  as Type
-import           Flowbox.Luna.Parser.AST.Type    (Type)
+import qualified Flowbox.Luna.AST.AST          as LAST
+import qualified Flowbox.Luna.AST.Type         as Type
+import           Flowbox.Luna.AST.Type           (Type)
 import qualified Flowbox.Luna.Passes.SSA.State as SSAState
 import           Flowbox.Luna.Passes.SSA.State   (SSAState)
 import qualified Flowbox.Luna.Passes.Pass      as Pass
@@ -46,7 +46,7 @@ runNested f = do
 
 ssaAST :: SSAMonad m => Mode -> LAST.Expr -> Pass.Result m LAST.Expr
 ssaAST mode ast = case ast of
-    LAST.Program    body                  -> LAST.Program <$> mapM (ssaAST mode) body
+    LAST.Module     path body             -> LAST.Module path <$> mapM (ssaAST mode) body
     LAST.Function   name signature body   -> runNested $ do
                                                     SSAState.registerVar (name, name)
                                                     ssaType signature

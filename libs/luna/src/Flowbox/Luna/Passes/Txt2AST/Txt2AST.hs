@@ -6,20 +6,20 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Passes.Parser.Parser where
+module Flowbox.Luna.Passes.Txt2AST.Txt2AST where
 
-import qualified Flowbox.Luna.Parser.AST.AST as LAST
-import qualified Flowbox.Luna.Passes.Pass    as Pass
-import           Flowbox.Luna.Passes.Pass      (PassMonad)
-import qualified Flowbox.Luna.Data.Source    as Source
-import           Flowbox.Luna.Data.Source      (Source)
+import qualified Flowbox.Luna.AST.AST               as LAST
+import qualified Flowbox.Luna.Passes.Pass           as Pass
+import           Flowbox.Luna.Passes.Pass             (PassMonad)
+import qualified Flowbox.Luna.Data.Source           as Source
+import           Flowbox.Luna.Data.Source             (Source)
 
-import           Flowbox.System.Log.Logger     
-import qualified Flowbox.Luna.Parser.Parser  as Parser
-import           Control.Monad.State           
+import           Flowbox.System.Log.Logger            
+import qualified Flowbox.Luna.Passes.Txt2AST.Parser as Parser
+import           Control.Monad.State                  
 
-import qualified Prelude                     as Prelude
-import           Prelude                     hiding (error)
+import qualified Prelude                            as Prelude
+import           Prelude                            hiding (error)
 
 
 logger :: Logger

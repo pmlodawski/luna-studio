@@ -5,12 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Parser.AST.Constant where
+module Flowbox.Luna.AST.Function where
 
-import qualified Prelude   
-import           Prelude   (Show, Eq)
+--import           Flowbox.Luna.Parser.AST.AST    
+--import qualified Flowbox.Luna.Parser.AST.Type as Type
+--import           Flowbox.Luna.Parser.AST.Type   (Type)
 
-data Constant = Integer Prelude.String
-              | String  Prelude.String
-              | Char    Prelude.Char
-              deriving (Show, Eq)
+
+--mk :: String -> String -> Expr
+--mk name' param' = Function name' (Type.Type param')

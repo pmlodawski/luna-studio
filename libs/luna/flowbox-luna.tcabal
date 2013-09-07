@@ -33,9 +33,7 @@ Library
                   either,
                   errors,
                   fgl,
-                  flowbox-luna-parser,
                   flowbox-utils,
-                  graphviz,
                   hashable,
                   MissingH == 1.2.0.0,
                   mtl,
@@ -67,7 +65,6 @@ Executable luna
                   either,
                   errors,
                   flowbox-luna,
-                  flowbox-luna-parser,
                   flowbox-utils,
                   MissingH,
                   pretty-show,
@@ -75,3 +72,35 @@ Executable luna
                   transformers,
                   mtl,
                   parsec
+
+
+--Executable parser 
+--  Main-Is:        MainP.hs
+--  Hs-Source-Dirs: tests
+
+--  if flag(debug)
+--    GHC-Options:  -csacc
+--  GHC-Options:    -Wall 
+
+--  Extensions:     DoAndIfThenElse
+--                  MultiParamTypeClasses
+--  Build-Depends:  base,
+--                  flowbox-luna-parser,
+--                  uu-parsinglib,
+--                  pretty-show,
+--                  ListLike,
+--                  timeit,
+--                  parsec,
+--                  mtl,
+--                  indents,
+--                  MissingH
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: tests
+  GHC-Options:    -Wall -threaded
+  Build-Depends:  base, 
+                  flowbox-luna,
+                  hspec,
+                  MissingH

@@ -5,8 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Parser (
-	parse
-) where
+module Flowbox.Luna.AST.Module where
 
-import           Flowbox.Luna.Parser.Parser   
+import           Flowbox.Luna.AST.AST    
+import qualified Flowbox.Luna.AST.Type as Type
+
+
+mk :: [Expr] -> Expr
+mk body = Module NOP body

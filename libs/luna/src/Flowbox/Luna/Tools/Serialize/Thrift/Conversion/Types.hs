@@ -16,7 +16,7 @@ import qualified Data.Vector              as Vector
 
 import qualified Types_Types              as TTypes
 import           Flowbox.Control.Error      
-import           Flowbox.Luna.Type.Type     (Type(..))
+import           Flowbox.Luna.XOLD.Type.Type     (Type(..))
 import           Flowbox.Tools.Conversion   
 
 

@@ -8,21 +8,21 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Flowbox.Luna.Parser.Parser where
+module Flowbox.Luna.Passes.Txt2AST.Parser where
 
-import           Control.Applicative                
-import           Text.Parsec                      hiding (parse, many, optional, (<|>))
-import qualified Text.Parsec                      as Parsec
-import qualified Text.Parsec.Expr                 as Expr
+import           Control.Applicative                 
+import           Text.Parsec                       hiding (parse, many, optional, (<|>))
+import qualified Text.Parsec                       as Parsec
+import qualified Text.Parsec.Expr                  as Expr
 
-import           Flowbox.Luna.Parser.Utils          
-import qualified Flowbox.Luna.Parser.Lexer        as L
-import qualified Flowbox.Luna.Parser.AST.AST      as AST
-import qualified Flowbox.Luna.Parser.AST.Class    as Class
-import qualified Flowbox.Luna.Parser.AST.Field    as Field
-import qualified Flowbox.Luna.Parser.AST.Module   as Module
-import qualified Flowbox.Luna.Parser.AST.Type     as Type
-import qualified Flowbox.Luna.Parser.AST.Constant as Constant
+import           Flowbox.Luna.Passes.Txt2AST.Utils   
+import qualified Flowbox.Luna.Passes.Txt2AST.Lexer as L
+import qualified Flowbox.Luna.AST.AST              as AST
+import qualified Flowbox.Luna.AST.Class            as Class
+import qualified Flowbox.Luna.AST.Field            as Field
+import qualified Flowbox.Luna.AST.Module           as Module
+import qualified Flowbox.Luna.AST.Type             as Type
+import qualified Flowbox.Luna.AST.Constant         as Constant
 
 
 -----------------------------------------------------------

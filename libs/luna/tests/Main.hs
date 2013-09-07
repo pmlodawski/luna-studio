@@ -23,7 +23,7 @@ import qualified Flowbox.Luna.Passes.HSGen.AST.Expr   as Expr
 import qualified Flowbox.Luna.Passes.SSA.State        as SSAState
 import           Flowbox.Luna.Passes.SSA.State          (SSAState)
 import qualified Flowbox.Luna.Passes.Luna.Luna        as Luna
-import qualified Flowbox.Luna.Passes.Parser.Parser    as Parser
+import qualified Flowbox.Luna.Passes.Txt2AST.Txt2AST  as Txt2AST
 import qualified Flowbox.Luna.Data.Source             as Source
 import           Flowbox.Luna.Data.Source               (Source)
 
@@ -52,8 +52,8 @@ main = timeIt main_inner
 main_inner :: IO ()
 main_inner = do
     out <- Luna.run $ do
-        ast <- Parser.run example
-        ssa <- SSA.run    ast
+        ast <- Txt2AST.run example
+        ssa <- SSA.run     ast
         return ssa
 
     putStrLn $ PP.ppShow out

@@ -5,12 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Parser.AST.Constant where
+module Flowbox.Luna.AST.Field where
 
-import qualified Prelude   
-import           Prelude   (Show, Eq)
+import           Flowbox.Luna.AST.AST    
+import qualified Flowbox.Luna.AST.Type as Type
 
-data Constant = Integer Prelude.String
-              | String  Prelude.String
-              | Char    Prelude.Char
-              deriving (Show, Eq)
+
+mk :: String -> String -> Expr
+mk name' param' = Field name' (Type.Type param')

@@ -37,6 +37,10 @@ Library
         Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph,
         Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types,
         Flowbox.Luna.Passes.Pass,
+        Flowbox.Luna.Passes.Txt2AST.Lexer,
+        Flowbox.Luna.Passes.Txt2AST.Utils,
+        Flowbox.Luna.Passes.Txt2AST.Txt2AST,
+        Flowbox.Luna.Passes.Txt2AST.Parser,
         Flowbox.Luna.Passes.HSGen.ClassGenerator,
         Flowbox.Luna.Passes.HSGen.Import,
         Flowbox.Luna.Passes.HSGen.FuncGenerator,
@@ -59,15 +63,12 @@ Library
         Flowbox.Luna.Passes.SSA.SSA,
         Flowbox.Luna.Passes.SSA.State,
         Flowbox.Luna.Passes.Luna.Luna,
-        Flowbox.Luna.Passes.Parser.Parser,
         Flowbox.Luna.Data.List,
         Flowbox.Luna.Data.Source,
         Flowbox.Luna.Data.Graph,
-        Flowbox.Luna.Type.Type,
         Flowbox.Luna.Lib.Library,
         Flowbox.Luna.Lib.Edge,
         Flowbox.Luna.Lib.LibManager,
-        Flowbox.Luna.Builder.Builder,
         Flowbox.Luna.Samples.HelloWorld,
         Flowbox.Luna.Network.Flags,
         Flowbox.Luna.Network.Attributes,
@@ -80,6 +81,14 @@ Library
         Flowbox.Luna.Network.Def.Edge,
         Flowbox.Luna.Network.Def.DefManager,
         Flowbox.Luna.Network.Def.Definition,
+        Flowbox.Luna.XOLD.Type.Type,
+        Flowbox.Luna.AST.Field,
+        Flowbox.Luna.AST.Class,
+        Flowbox.Luna.AST.Type,
+        Flowbox.Luna.AST.Module,
+        Flowbox.Luna.AST.AST,
+        Flowbox.Luna.AST.Function,
+        Flowbox.Luna.AST.Constant,
                    
         Attrs_Types,
         Types_Consts,
@@ -101,9 +110,7 @@ Library
                   either,
                   errors,
                   fgl,
-                  flowbox-luna-parser,
                   flowbox-utils,
-                  graphviz,
                   hashable,
                   MissingH == 1.2.0.0,
                   mtl,
@@ -135,7 +142,6 @@ Executable luna
                   either,
                   errors,
                   flowbox-luna,
-                  flowbox-luna-parser,
                   flowbox-utils,
                   MissingH,
                   pretty-show,
@@ -143,3 +149,35 @@ Executable luna
                   transformers,
                   mtl,
                   parsec
+
+
+--Executable parser 
+--  Main-Is:        MainP.hs
+--  Hs-Source-Dirs: tests
+
+--  if flag(debug)
+--    GHC-Options:  -csacc
+--  GHC-Options:    -Wall 
+
+--  Extensions:     DoAndIfThenElse
+--                  MultiParamTypeClasses
+--  Build-Depends:  base,
+--                  flowbox-luna-parser,
+--                  uu-parsinglib,
+--                  pretty-show,
+--                  ListLike,
+--                  timeit,
+--                  parsec,
+--                  mtl,
+--                  indents,
+--                  MissingH
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: tests
+  GHC-Options:    -Wall -threaded
+  Build-Depends:  base, 
+                  flowbox-luna,
+                  hspec,
+                  MissingH

@@ -8,10 +8,10 @@
 
 module Flowbox.Luna.Passes.HSGen.Generator where
 
-import qualified Flowbox.Luna.Parser.AST.AST            as LAST
-import qualified Flowbox.Luna.Parser.AST.Type           as Type
-import           Flowbox.Luna.Parser.AST.Type             (Type)
-import qualified Flowbox.Luna.Parser.AST.Constant       as LConstant
+import qualified Flowbox.Luna.AST.AST                   as LAST
+import qualified Flowbox.Luna.AST.Type                  as Type
+import           Flowbox.Luna.AST.Type                    (Type)
+import qualified Flowbox.Luna.AST.Constant              as LConstant
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr     as Expr
 import           Flowbox.Luna.Passes.HSGen.AST.Expr       (Expr)
 import qualified Flowbox.Luna.Passes.HSGen.AST.Constant as Constant

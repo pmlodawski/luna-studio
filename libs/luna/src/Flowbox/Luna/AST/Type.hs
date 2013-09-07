@@ -5,11 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Parser.AST.Module where
+module Flowbox.Luna.AST.Type where
 
-import           Flowbox.Luna.Parser.AST.AST    
-import qualified Flowbox.Luna.Parser.AST.Type as Type
-
-
-mk :: [Expr] -> Expr
-mk body = Module NOP body
+data Type = Unknown
+	      | Type   { name   :: String                       }
+	      | Tuple  { items  :: [Type]                       }
+	      | Class  { name   :: String , params  :: [String] }
+	      | Lambda { inputs :: Type   , outputs :: Type     }
+          deriving (Show, Eq)

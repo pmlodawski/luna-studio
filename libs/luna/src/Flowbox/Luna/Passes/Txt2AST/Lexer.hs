@@ -8,14 +8,14 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Flowbox.Luna.Parser.Lexer where
+module Flowbox.Luna.Passes.Txt2AST.Lexer where
 
-import           Control.Applicative         
-import           Text.Parsec               hiding (many, optional, (<|>))
-import           Data.List                   ( nub, sort )
-import           Data.Char                   ( digitToInt )
+import           Control.Applicative                 
+import           Text.Parsec                       hiding (many, optional, (<|>))
+import           Data.List                           ( nub, sort )
+import           Data.Char                           ( digitToInt )
 
-import           Flowbox.Luna.Parser.Utils   
+import           Flowbox.Luna.Passes.Txt2AST.Utils   
 
 
 

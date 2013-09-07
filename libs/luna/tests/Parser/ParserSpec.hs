@@ -9,9 +9,9 @@ module Parser.ParserSpec where
 
 import           Test.Hspec                   
 import           Data.Either.Utils            (forceEither)
-import qualified Flowbox.Luna.Parser.Parser as Parser
-import Flowbox.Luna.Parser.AST.AST -- for tests
-import Flowbox.Luna.Parser.AST.Constant -- for tests
+import qualified Flowbox.Luna.Passes.Txt2AST.Parser as Parser
+import Flowbox.Luna.AST.AST -- for tests
+import Flowbox.Luna.AST.Constant -- for tests
 --import Flowbox.Luna.Parser.AST.Type -- for tests
 
 
