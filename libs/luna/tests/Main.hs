@@ -34,7 +34,7 @@ import qualified Data.DList                           as DList
 import           Prelude                              hiding (log)
 import           System.TimeIt                          
 
-
+logger :: Logger
 logger = getLogger "Flowbox"
 
 
@@ -52,10 +52,8 @@ main_inner :: IO ()
 main_inner = do
     out <- Luna.run $ do
         ast <- Parser.run example
-        --let x :: Int
-            --x = ast
-        ssa <- SSA.run ast
-        return ast
+        ssa <- SSA.run    ast
+        return ssa
 
     --let 
     --    parsed = Parser.parse example
@@ -74,6 +72,6 @@ main_inner = do
     ----case nast of
     ----    Just nast' -> putStrLn $ PP.ppShow $ map Expr.genCode nast'
     ----    _          -> return ()
-    print out
+    putStrLn $ PP.ppShow out
     return ()
 

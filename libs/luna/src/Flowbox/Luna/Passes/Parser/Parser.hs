@@ -31,11 +31,11 @@ logger = getLogger "Flowbox.Luna.Passes.Parser.Parser"
 type ParserMonad m = PassMonad Pass.NoState m
 
 
-run :: ParserMonad m => String -> EitherT String m LAST.Expr
+run :: PassMonad s m => String -> Pass.Result m LAST.Expr
 run = (Pass.runM Pass.NoState) . parse
 
 
-parse :: ParserMonad m => String -> EitherT String m LAST.Expr
+parse :: ParserMonad m => String -> Pass.Result m LAST.Expr
 parse input = case Parser.parse input of
     Left e -> Pass.fail
     Right v -> return v

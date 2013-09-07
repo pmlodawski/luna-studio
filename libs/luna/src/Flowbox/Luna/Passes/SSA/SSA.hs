@@ -49,23 +49,21 @@ import           Control.Error
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.SSA"
 
---type SSA m = (Functor m, MonadState SSAState m, LogWriter m)
-
-type SSA m = PassMonad SSAState m
 
 data Mode = Write | Read
 
-runNested = Pass.runM SSAState.empty
+type SSAMonad m = PassMonad SSAState m
 
---runEmptySSA = Pass.run SSAState.empty
 
---run :: LAST.Expr -> Pass.Result LAST.Expr SSAState
-run :: SSA m => LAST.Expr -> EitherT String m LAST.Expr
+run :: PassMonad s m => LAST.Expr -> Pass.Result m LAST.Expr
 run = (Pass.runM SSAState.empty) . (ssaAST Read)
 
---apply = Pass.apply SSAState.empty (ssaAST Read)
 
-ssaAST :: SSA m => Mode -> LAST.Expr -> EitherT String m LAST.Expr
+runNested :: SSAMonad m => Pass.Transformer SSAState a m b 
+runNested = Pass.runM SSAState.empty
+
+
+ssaAST :: SSAMonad m => Mode -> LAST.Expr -> Pass.Result m LAST.Expr
 ssaAST mode ast = case ast of
     LAST.Program    body                  -> LAST.Program <$> mapM (ssaAST mode) body
     LAST.Function   name signature body   -> runNested $ do
@@ -87,7 +85,7 @@ ssaAST mode ast = case ast of
     _                                     -> logger error "SSA Pass error: Unknown expression." *> Pass.fail
 
 
-ssaType :: SSA m => Type -> EitherT String m ()
+ssaType :: SSAMonad m => Type -> Pass.Result m ()
 ssaType ast = case ast of
     Type.Lambda inputs outputs -> ssaType inputs
     Type.Tuple  items          -> mapM ssaType items *> return ()

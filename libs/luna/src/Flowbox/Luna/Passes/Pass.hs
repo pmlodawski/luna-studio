@@ -22,26 +22,23 @@ import           Prelude                    hiding (fail)
 import qualified Prelude                    as Prelude
 
 
-type PassMonad state m      = (Functor m, MonadState state m, LogWriter m)
-type Result    output state = (Either String output, state, LogList)
+type PassMonad   s m      = (Functor m, MonadState s m, LogWriter m)
+type Transformer s a m b  = EitherT a (RWS [Int] LogList s) b -> EitherT a m b
+type Result      m output = EitherT String m output
 
 data NoState = NoState deriving (Show)
 
---run :: Pass state m => state -> (g->h)
-run state f = runRWS (runEitherT f) 0 state
 
---apply state f inputs = case inputs of
---                           Left  e -> Prelude.fail e
---                           Right v -> return $ run state (f v)
+run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
+run state f = runRWS (runEitherT f) [] state
 
+
+runM :: PassMonad s m => state -> Transformer state a m b
 runM state f = do
     let (nast, _, logs) = run state f
     Logger.append logs
     hoistEither nast
 
-apply state f inputs = do
-    v <- hoistEither inputs
-    runM state (f v)
 
 fail :: Monad m => EitherT String m a
 fail = left "Pass failed"
