@@ -47,7 +47,7 @@ import           Prelude                                hiding (error)
 import           Control.Error                            
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.SSA"
+logger = getLogger "Flowbox.Luna.Passes.SSA.SSA"
 
 
 data Mode = Write | Read
