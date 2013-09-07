@@ -9,6 +9,7 @@
 module Flowbox.Luna.Passes.Pass where
 
 import           Control.Monad.State          
+
 import           Control.Monad.RWS            
 import           Control.Monad.Trans.Either   
 
@@ -26,11 +27,11 @@ type Result      m output = EitherT String m output
 data NoState = NoState deriving (Show)
 
 
-run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
+--run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
 run s f = runRWS (runEitherT f) [] s
 
 
-runM :: PassMonad s m => state -> Transformer state a m b
+--runM :: PassMonad s m => state -> Transformer state a m b
 runM s f = do
     let (nast, _, logs) = run s f
     Logger.append logs

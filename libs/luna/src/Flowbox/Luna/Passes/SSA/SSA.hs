@@ -39,7 +39,9 @@ run = (Pass.runM SSAState.empty) . (ssaAST Read)
 
 
 runNested :: SSAMonad m => Pass.Transformer SSAState a m b 
-runNested = Pass.runM SSAState.empty
+runNested f = do
+    s <- get
+    Pass.runM s f
 
 
 ssaAST :: SSAMonad m => Mode -> LAST.Expr -> Pass.Result m LAST.Expr
@@ -69,4 +71,4 @@ ssaType ast = case ast of
     Type.Lambda inputs _       -> ssaType inputs
     Type.Tuple  items          -> mapM ssaType items *> return ()
     Type.Type   name           -> SSAState.registerVar (name, name)
-    _                          -> fail "TODO"
+    _                          -> logger error "SSA Pass error: Unknown type." *> Pass.fail
