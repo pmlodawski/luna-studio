@@ -5,12 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.AST.Cons (
-	module Flowbox.Luna.Codegen.Hs.AST.Cons,
-	module Flowbox.Luna.Codegen.Hs.AST.Expr
+module Flowbox.Luna.Passes.HSGen.AST.Cons (
+	module Flowbox.Luna.Passes.HSGen.AST.Cons,
+	module Flowbox.Luna.Passes.HSGen.AST.Expr
 )where
 
-import           Flowbox.Luna.Codegen.Hs.AST.Expr   
+import           Flowbox.Luna.Passes.HSGen.AST.Expr   
 
 empty :: Expr
 empty = Cons "" []

@@ -7,9 +7,9 @@
 
 module Flowbox.Luna.Parser.AST.Function where
 
-import           Flowbox.Luna.Parser.AST.AST    
-import qualified Flowbox.Luna.Parser.AST.Type as Type
-import           Flowbox.Luna.Parser.AST.Type   (Type)
+--import           Flowbox.Luna.Parser.AST.AST    
+--import qualified Flowbox.Luna.Parser.AST.Type as Type
+--import           Flowbox.Luna.Parser.AST.Type   (Type)
 
 
 --mk :: String -> String -> Expr

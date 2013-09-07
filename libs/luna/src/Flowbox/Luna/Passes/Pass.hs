@@ -9,32 +9,34 @@
 module Flowbox.Luna.Passes.Pass where
 
 import           Control.Monad.State          
-import           Control.Monad.Writer         
+
 import           Control.Monad.RWS            
-import           Control.Monad.Trans.Maybe    
 import           Control.Monad.Trans.Either   
-import           Control.Error                
 
 import           Flowbox.System.Log.Logger    
 import qualified Flowbox.System.Log.Logger  as Logger
 
-import           Prelude                    hiding(fail)
+import           Prelude                    hiding (fail)
 import qualified Prelude                    as Prelude
 
 
-type Pass   state m      = (Functor m, MonadState state m, LogWriter m)
-type Result output state = (Either String output, state, LogList)
+type PassMonad   s m      = (Functor m, MonadState s m, LogWriter m)
+type Transformer s a m b  = EitherT a (RWS [Int] LogList s) b -> EitherT a m b
+type Result      m output = EitherT String m output
 
-run state f = runRWS (runEitherT f) 0 state
+data NoState = NoState deriving (Show)
 
-apply state f inputs = case inputs of
-                           Left  e -> Prelude.fail e
-                           Right v -> return $ run state (f v)
 
-runNested state f = do
-    let (nast, _, logs) = run state f
+--run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
+run s f = runRWS (runEitherT f) [] s
+
+
+--runM :: PassMonad s m => state -> Transformer state a m b
+runM s f = do
+    let (nast, _, logs) = run s f
     Logger.append logs
     hoistEither nast
+
 
 fail :: Monad m => EitherT String m a
 fail = left "Pass failed"

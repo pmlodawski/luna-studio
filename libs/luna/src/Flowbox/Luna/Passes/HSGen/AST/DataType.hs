@@ -5,22 +5,22 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.AST.DataType (
-	module Flowbox.Luna.Codegen.Hs.AST.DataType,
-	module Flowbox.Luna.Codegen.Hs.AST.Expr
+module Flowbox.Luna.Passes.HSGen.AST.DataType (
+	module Flowbox.Luna.Passes.HSGen.AST.DataType,
+	module Flowbox.Luna.Passes.HSGen.AST.Expr
 )where
 
-import           Flowbox.Luna.Codegen.Hs.AST.Expr   
+import           Flowbox.Luna.Passes.HSGen.AST.Expr   
 
 empty :: Expr
 empty = DataType "" [] []
 
 --import           Data.String.Utils                      (join)
 
---import qualified Flowbox.Luna.Codegen.Hs.AST.Expr     as Expr
---import           Flowbox.Luna.Codegen.Hs.AST.Expr       (Expr)
---import qualified Flowbox.Luna.Codegen.Hs.AST.Deriving as Deriving
---import           Flowbox.Luna.Codegen.Hs.AST.Deriving   (Deriving)
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Expr     as Expr
+--import           Flowbox.Luna.Passes.HSGen.AST.Expr       (Expr)
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Deriving as Deriving
+--import           Flowbox.Luna.Passes.HSGen.AST.Deriving   (Deriving)
 
 
 --data DataType = DataType { cls       :: Expr

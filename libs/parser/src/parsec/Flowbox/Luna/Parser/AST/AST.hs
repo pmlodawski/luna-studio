@@ -8,7 +8,6 @@
 
 module Flowbox.Luna.Parser.AST.AST where
 
-import qualified Flowbox.Luna.Parser.AST.Type     as Type
 import           Flowbox.Luna.Parser.AST.Type       (Type)
 import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 

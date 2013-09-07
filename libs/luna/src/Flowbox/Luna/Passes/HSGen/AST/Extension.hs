@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.AST.Extension (
+module Flowbox.Luna.Passes.HSGen.AST.Extension (
     Extension(..),
     genCode
 )where

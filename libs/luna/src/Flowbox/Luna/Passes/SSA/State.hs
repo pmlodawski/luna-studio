@@ -6,21 +6,18 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Codegen.Hs.SSAState where
+module Flowbox.Luna.Passes.SSA.State where
 
 import           Control.Monad.State           
 import qualified Data.Map                    as Map
 import           Data.Map                      (Map)
-import           Control.Monad.State           
-import           Control.Monad.Writer          
-import           Control.Monad.RWS             
-import           Control.Monad.Trans.Maybe     
-import           Control.Monad.Trans.Either    
 
 import           Flowbox.System.Log.Logger     
-import qualified Flowbox.System.Log.LogEntry as LogEntry
 
-logger = getLogger "Flowbox.Luna.Codegen.Hs.Generator"
+
+logger :: Logger
+logger = getLogger "Flowbox.Luna.Passes.SSA.State"
+
 
 data SSAState = SSAState { varcount :: Int
                          , varmap   :: Map String String
@@ -29,28 +26,29 @@ data SSAState = SSAState { varcount :: Int
 
 type SSAStateM m = MonadState SSAState m
 
+
 empty :: SSAState
 empty = SSAState 0 Map.empty
 
 
 genVarName :: SSAStateM m => m String
 genVarName = do
-    state <- get
-    let vname = "v'" ++ show (varcount state)
-    put $ state{ varcount = 1 + varcount state }
+    s <- get
+    let vname = "v'" ++ show (varcount s)
+    put $ s{ varcount = 1 + varcount s }
     return vname
 
 
 registerVar :: SSAStateM m => (String, String) -> m ()
 registerVar (alias, vname) = do
-    state <- get
-    put $ state { varmap = Map.insert alias vname $ varmap state }
+    s <- get
+    put $ s { varmap = Map.insert alias vname $ varmap s }
     return ()
 
 lookupVar :: SSAStateM m => String -> m (Maybe String)
 lookupVar vname = do
-    state <- get
-    return $ Map.lookup vname (varmap state)
+    s <- get
+    return $ Map.lookup vname (varmap s)
 
 
 uniqueVar :: SSAStateM m => String -> m String

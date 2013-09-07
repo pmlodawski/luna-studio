@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.Path (
+module Flowbox.Luna.Passes.HSGen.Path (
     module Flowbox.Luna.Network.Path.Path,
     toModulePath,
     toModuleName,
