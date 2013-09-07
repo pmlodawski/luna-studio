@@ -61,6 +61,7 @@ Library
         Flowbox.Luna.Passes.Luna.Luna,
         Flowbox.Luna.Passes.Parser.Parser,
         Flowbox.Luna.Data.List,
+        Flowbox.Luna.Data.Source,
         Flowbox.Luna.Data.Graph,
         Flowbox.Luna.Type.Type,
         Flowbox.Luna.Lib.Library,

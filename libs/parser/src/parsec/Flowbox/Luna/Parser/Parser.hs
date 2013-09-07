@@ -20,6 +20,7 @@ import qualified Flowbox.Luna.Parser.Lexer        as L
 import qualified Flowbox.Luna.Parser.AST.AST      as AST
 import qualified Flowbox.Luna.Parser.AST.Class    as Class
 import qualified Flowbox.Luna.Parser.AST.Field    as Field
+import qualified Flowbox.Luna.Parser.AST.Module   as Module
 import qualified Flowbox.Luna.Parser.AST.Type     as Type
 import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 
@@ -205,8 +206,8 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 -- Program
 -----------------------------------------------------------
 
-pProgram = AST.Program <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
-                       <|> pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
+pProgram = Module.mk <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
+                     <|> pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
 
 --pProgram = many $ pPattern 0
 

@@ -8,15 +8,15 @@
 
 module Flowbox.Luna.Passes.Luna.Luna where
 
-import qualified Flowbox.Luna.Passes.Pass    as Pass
-import           Flowbox.System.Log.Logger     
-import qualified Flowbox.System.Log.Logger   as Logger
+import qualified Flowbox.Luna.Passes.Pass   as Pass
+import           Flowbox.System.Log.Logger    
+import qualified Flowbox.System.Log.Logger  as Logger
 
 import           Control.Monad.RWS            
 import           Control.Monad.Trans.Either   
 
-import qualified Prelude                     as Prelude
-import           Prelude                     hiding (error)
+import qualified Prelude                    as Prelude
+import           Prelude                    hiding (error)
 
 
 

@@ -24,6 +24,8 @@ import qualified Flowbox.Luna.Passes.SSA.State        as SSAState
 import           Flowbox.Luna.Passes.SSA.State          (SSAState)
 import qualified Flowbox.Luna.Passes.Luna.Luna        as Luna
 import qualified Flowbox.Luna.Passes.Parser.Parser    as Parser
+import qualified Flowbox.Luna.Data.Source             as Source
+import           Flowbox.Luna.Data.Source               (Source)
 
 import           Debug.Trace                            
 import           Data.Either.Utils                      (forceEither)
@@ -37,8 +39,9 @@ logger :: Logger
 logger = getLogger "Flowbox"
 
 
-example :: String
-example = unlines [ "def f(x):"
+example :: Source
+example = Source.Source ["Workspace"] 
+        $ unlines [ "def f(x):"
                   , "   def g(y):"
                   , "       a = x + y"
                   ]

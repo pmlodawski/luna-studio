@@ -17,7 +17,7 @@ import           System.TimeIt
 
 example :: String
 example = unlines [ "class A:"
-                  , "    class B"
+                  , "    def f()"
                   ]
 
 main :: IO ()
