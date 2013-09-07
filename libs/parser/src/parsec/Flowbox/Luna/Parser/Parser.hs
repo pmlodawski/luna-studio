@@ -24,9 +24,6 @@ import qualified Flowbox.Luna.Parser.AST.Type     as Type
 import qualified Flowbox.Luna.Parser.AST.Constant as Constant
 
 
-import           Debug.Trace                        
-
-
 -----------------------------------------------------------
 -- Entities
 -----------------------------------------------------------
@@ -97,12 +94,12 @@ pClass i          = Class.mk     <$  L.pClass
 
 
 pClassBody i      = choice [ Class.addMethod <$> pFunc i
-                           , Class.addField  <$> pField i
+                           , Class.addField  <$> pField
                            , pClass i *> unexpected "class declaration. Nested classes are not supported yet."
                            ]
 
 
-pField i          = Field.mk <$> L.pIdent <* L.pTypeDecl <*> L.pIdent
+pField            = Field.mk <$> L.pIdent <* L.pTypeDecl <*> L.pIdent
 
 pExprEnt i        = choice [ pImport i
                            , pFunc   i

@@ -19,7 +19,6 @@ import qualified Flowbox.System.Log.LogEntry          as LogEntry
 import qualified Flowbox.Luna.Passes.HSGen.Generator  as Gen
 import qualified Flowbox.Luna.Passes.SSA.SSA          as SSA
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module as Module
---import qualified Flowbox.Luna.Parser                  as Parser
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr   as Expr
 import qualified Flowbox.Luna.Passes.SSA.State        as SSAState
 import           Flowbox.Luna.Passes.SSA.State          (SSAState)
@@ -44,7 +43,6 @@ example = unlines [ "def f(x):"
                   , "   x=x x"
                   ]
 
-
 main :: IO ()
 main = timeIt main_inner
 
@@ -55,23 +53,6 @@ main_inner = do
         ssa <- SSA.run    ast
         return ssa
 
-    --let 
-    --    parsed = Parser.parse example
-    --    ast = forceEither parsed
-    --    (nast, nstate, nlog) = SSA.run ast
-    --    aaaa = test
-    --    --(hast, hstate, hlog) = Gen.run nast
-    ----let y = runRWS (runMaybeT test) 0 0
-    --putStrLn $ PP.ppShow $ ast
-    --putStrLn "\n-----------------"
-    --putStrLn $ PP.ppShow $ nast
-    --putStrLn $ PP.ppShow $ nstate
-    --putStrLn $ PP.ppShow $ DList.toList nlog
-    --putStrLn "\n-----------------"
-
-    ----case nast of
-    ----    Just nast' -> putStrLn $ PP.ppShow $ map Expr.genCode nast'
-    ----    _          -> return ()
     putStrLn $ PP.ppShow out
     return ()
 
