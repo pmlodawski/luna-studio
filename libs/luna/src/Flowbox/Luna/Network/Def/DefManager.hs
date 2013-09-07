@@ -19,7 +19,7 @@ module Flowbox.Luna.Network.Def.DefManager(
 
 import           Data.Maybe                            (fromJust)
 
-import qualified Flowbox.Luna.XOLD.Type.Type              as Type
+import qualified Flowbox.Luna.XOLD.Type.Type         as Type
 import qualified Flowbox.Luna.Network.Def.Definition as Definition
 import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
 import           Flowbox.Luna.Network.Def.Edge         (Edge(..))
