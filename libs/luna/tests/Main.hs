@@ -52,7 +52,9 @@ main_inner :: IO ()
 main_inner = do
     out <- Luna.run $ do
         ast <- Parser.run example
-        --ssa <- SSA.run ast
+        --let x :: Int
+            --x = ast
+        ssa <- SSA.run ast
         return ast
 
     --let 

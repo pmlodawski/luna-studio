@@ -23,7 +23,7 @@ import           Flowbox.Luna.Passes.HSGen.AST.Function   (Function)
 import qualified Flowbox.Luna.Passes.SSA.State          as SSAState
 import           Flowbox.Luna.Passes.SSA.State            (SSAState)
 import qualified Flowbox.Luna.Passes.Pass               as Pass
-import           Flowbox.Luna.Passes.Pass                 (Pass)
+--import           Flowbox.Luna.Passes.Pass                 (Pass)
 
 import           Control.Monad.State                      
 import           Control.Applicative                      

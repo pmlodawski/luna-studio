@@ -22,8 +22,8 @@ import           Prelude                    hiding (fail)
 import qualified Prelude                    as Prelude
 
 
-type Pass   state m      = (Functor m, MonadState state m, LogWriter m)
-type Result output state = (Either String output, state, LogList)
+type PassMonad state m      = (Functor m, MonadState state m, LogWriter m)
+type Result    output state = (Either String output, state, LogList)
 
 data NoState = NoState deriving (Show)
 
@@ -38,6 +38,10 @@ runM state f = do
     let (nast, _, logs) = run state f
     Logger.append logs
     hoistEither nast
+
+apply state f inputs = do
+    v <- hoistEither inputs
+    runM state (f v)
 
 fail :: Monad m => EitherT String m a
 fail = left "Pass failed"
