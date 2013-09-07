@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.AST.Constant where
+module Flowbox.Luna.Passes.HSGen.AST.Constant where
 
 import qualified Prelude   
 import           Prelude hiding (String, Char, Integer)

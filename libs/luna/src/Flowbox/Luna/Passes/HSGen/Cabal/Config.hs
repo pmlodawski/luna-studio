@@ -5,24 +5,24 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.Cabal.Config (
+module Flowbox.Luna.Passes.HSGen.Cabal.Config (
     Config(..),
     empty,
     genCode,
     addSection
 )where
 
-import           Debug.Trace                             
+import           Debug.Trace                               
 
-import           Data.String.Utils                       (join)
+import           Data.String.Utils                         (join)
 
-import qualified Flowbox.Luna.Codegen.Hs.AST.Expr      as Expr
-import           Flowbox.Luna.Codegen.Hs.AST.Expr        (Expr)
-import qualified Flowbox.Luna.Codegen.Hs.Path          as Path
-import qualified Flowbox.Luna.Codegen.Hs.AST.Function  as Function
-import           Flowbox.Luna.Codegen.Hs.AST.Function    (Function)
-import qualified Flowbox.Luna.Codegen.Hs.Cabal.Section as Section
-import           Flowbox.Luna.Codegen.Hs.Cabal.Section   (Section)
+import qualified Flowbox.Luna.Passes.HSGen.AST.Expr      as Expr
+import           Flowbox.Luna.Passes.HSGen.AST.Expr        (Expr)
+import qualified Flowbox.Luna.Passes.HSGen.Path          as Path
+import qualified Flowbox.Luna.Passes.HSGen.AST.Function  as Function
+import           Flowbox.Luna.Passes.HSGen.AST.Function    (Function)
+import qualified Flowbox.Luna.Passes.HSGen.Cabal.Section as Section
+import           Flowbox.Luna.Passes.HSGen.Cabal.Section   (Section)
 
 
 data Config = Config { name         :: String,

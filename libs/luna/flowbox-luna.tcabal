@@ -47,7 +47,8 @@ Library
                   unordered-containers,
                   vector,
                   uu-parsinglib,
-                  pretty-show
+                  pretty-show,
+                  parsec
 
 
 
@@ -72,4 +73,5 @@ Executable luna
                   pretty-show,
                   timeit,
                   transformers,
-                  mtl
+                  mtl,
+                  parsec

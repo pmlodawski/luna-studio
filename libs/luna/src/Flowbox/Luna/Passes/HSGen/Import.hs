@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.Import (
+module Flowbox.Luna.Passes.HSGen.Import (
     Import(..),
     noItems,
     qualified,
@@ -15,8 +15,8 @@ module Flowbox.Luna.Codegen.Hs.Import (
     genCode
 )where
 
-import qualified Flowbox.Luna.Codegen.Hs.Path as Path
-import           Flowbox.Luna.Codegen.Hs.Path   (Path(..))
+import qualified Flowbox.Luna.Passes.HSGen.Path as Path
+import           Flowbox.Luna.Passes.HSGen.Path   (Path(..))
 
 
 data Import = Regular   {path :: Path, item :: String} 

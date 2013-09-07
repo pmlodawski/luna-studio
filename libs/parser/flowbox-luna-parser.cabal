@@ -32,15 +32,15 @@ Library
   
   Exposed-modules: 
         Flowbox.Luna.Parser,
-        Flowbox.Luna.Parser.Utils,
         Flowbox.Luna.Parser.Lexer,
+        Flowbox.Luna.Parser.Utils,
         Flowbox.Luna.Parser.Parser,
-        Flowbox.Luna.Parser.AST.AST,
-        Flowbox.Luna.Parser.AST.Class,
-        Flowbox.Luna.Parser.AST.Constant,
         Flowbox.Luna.Parser.AST.Field,
+        Flowbox.Luna.Parser.AST.Class,
         Flowbox.Luna.Parser.AST.Type,
-        Flowbox.Luna.Parser.AST.Function
+        Flowbox.Luna.Parser.AST.AST,
+        Flowbox.Luna.Parser.AST.Function,
+        Flowbox.Luna.Parser.AST.Constant
 
   
   Build-Depends:  base,

@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Codegen.Hs.SSAState where
+module Flowbox.Luna.Passes.SSA.State where
 
 import           Control.Monad.State           
 import qualified Data.Map                    as Map
@@ -20,7 +20,7 @@ import           Control.Monad.Trans.Either
 import           Flowbox.System.Log.Logger     
 import qualified Flowbox.System.Log.LogEntry as LogEntry
 
-logger = getLogger "Flowbox.Luna.Codegen.Hs.Generator"
+logger = getLogger "Flowbox.Luna.Passes.SSA.State"
 
 data SSAState = SSAState { varcount :: Int
                          , varmap   :: Map String String

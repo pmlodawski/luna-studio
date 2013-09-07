@@ -5,22 +5,22 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.ClassGenerator where
+module Flowbox.Luna.Passes.HSGen.ClassGenerator where
 
 --import qualified Flowbox.Luna.Network.Def.Definition  as Definition
 --import           Flowbox.Luna.Network.Def.Definition    (Definition)
---import qualified Flowbox.Luna.Codegen.Hs.AST.DataType as DataType
---import           Flowbox.Luna.Codegen.Hs.AST.DataType   (DataType)
---import qualified Flowbox.Luna.Codegen.Hs.AST.Expr     as Expr
---import           Flowbox.Luna.Codegen.Hs.AST.Expr       (Expr(..))
+--import qualified Flowbox.Luna.Passes.HSGen.AST.DataType as DataType
+--import           Flowbox.Luna.Passes.HSGen.AST.DataType   (DataType)
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Expr     as Expr
+--import           Flowbox.Luna.Passes.HSGen.AST.Expr       (Expr(..))
 --import qualified Flowbox.Luna.Type.Type               as Type
---import qualified Flowbox.Luna.Codegen.Hs.Path         as Path
---import qualified Flowbox.Luna.Codegen.Hs.AST.Module   as Module
---import           Flowbox.Luna.Codegen.Hs.AST.Module     (Module)
---import qualified Flowbox.Luna.Codegen.Hs.AST.Function as Function
---import qualified Flowbox.Luna.Codegen.Hs.Import       as Import
---import qualified Flowbox.Luna.Codegen.Hs.AST.Deriving as Deriving
---import qualified Flowbox.Luna.Codegen.Hs.AST.Instance as Instance
+--import qualified Flowbox.Luna.Passes.HSGen.Path         as Path
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Module   as Module
+--import           Flowbox.Luna.Passes.HSGen.AST.Module     (Module)
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Function as Function
+--import qualified Flowbox.Luna.Passes.HSGen.Import       as Import
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Deriving as Deriving
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Instance as Instance
 
 
 --generateClass :: Definition -> Module -> (DataType, Module)

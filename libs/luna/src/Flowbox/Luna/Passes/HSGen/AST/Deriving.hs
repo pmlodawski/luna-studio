@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.AST.Deriving (
+module Flowbox.Luna.Passes.HSGen.AST.Deriving (
     Deriving(..),
     genCode
 )where

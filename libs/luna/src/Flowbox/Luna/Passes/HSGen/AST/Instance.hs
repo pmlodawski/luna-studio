@@ -5,16 +5,16 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.AST.Instance where
+module Flowbox.Luna.Passes.HSGen.AST.Instance where
 
 --import           Debug.Trace                            
 
---import qualified Flowbox.Luna.Codegen.Hs.AST.Expr     as Expr
---import           Flowbox.Luna.Codegen.Hs.AST.Expr       (Expr)
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Expr     as Expr
+--import           Flowbox.Luna.Passes.HSGen.AST.Expr       (Expr)
 --import           Data.String.Utils                      (join)
---import qualified Flowbox.Luna.Codegen.Hs.Path         as Path
---import qualified Flowbox.Luna.Codegen.Hs.AST.Function as Function
---import           Flowbox.Luna.Codegen.Hs.AST.Function   (Function)
+--import qualified Flowbox.Luna.Passes.HSGen.Path         as Path
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Function as Function
+--import           Flowbox.Luna.Passes.HSGen.AST.Function   (Function)
 
 
 --data Instance = Instance { name   :: String,

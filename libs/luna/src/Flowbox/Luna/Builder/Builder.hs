@@ -7,19 +7,19 @@
 
 module Flowbox.Luna.Builder.Builder where
 
-import qualified Flowbox.Luna.Lib.Library             as Library
-import           Flowbox.Luna.Lib.Library               (Library)
-import qualified Flowbox.Luna.Network.Def.DefManager  as DefManager
-import           Flowbox.Luna.Network.Def.DefManager    (DefManager)
-import qualified Flowbox.Luna.Network.Def.Definition  as Definition
-import           Flowbox.Luna.Network.Def.Definition    (Definition)
-import qualified Flowbox.System.UniPath               as UniPath
-import           Flowbox.System.UniPath                 (UniPath)
-import qualified Flowbox.Luna.Codegen.Hs.DefGenerator as DG
-import qualified Flowbox.Luna.Codegen.Hs.AST.Module   as Module
-import qualified Flowbox.Luna.Codegen.Hs.Path         as Path
-import qualified Flowbox.System.IO.IO                 as IO
-import           Flowbox.System.Directory             as Dir
+import qualified Flowbox.Luna.Lib.Library               as Library
+import           Flowbox.Luna.Lib.Library                 (Library)
+import qualified Flowbox.Luna.Network.Def.DefManager    as DefManager
+import           Flowbox.Luna.Network.Def.DefManager      (DefManager)
+import qualified Flowbox.Luna.Network.Def.Definition    as Definition
+import           Flowbox.Luna.Network.Def.Definition      (Definition)
+import qualified Flowbox.System.UniPath                 as UniPath
+import           Flowbox.System.UniPath                   (UniPath)
+import qualified Flowbox.Luna.Passes.HSGen.DefGenerator as DG
+import qualified Flowbox.Luna.Passes.HSGen.AST.Module   as Module
+import qualified Flowbox.Luna.Passes.HSGen.Path         as Path
+import qualified Flowbox.System.IO.IO                   as IO
+import           Flowbox.System.Directory               as Dir
 
 
 

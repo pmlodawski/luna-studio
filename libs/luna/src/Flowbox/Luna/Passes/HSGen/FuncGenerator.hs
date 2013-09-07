@@ -5,13 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Codegen.Hs.FuncGenerator where
+module Flowbox.Luna.Passes.HSGen.FuncGenerator where
 
 --import           Data.Maybe                                (fromJust)
 
 
 --import qualified Flowbox.Luna.Type.Type                  as Type
---import qualified Flowbox.Luna.Codegen.Hs.Import          as Import
+--import qualified Flowbox.Luna.Passes.HSGen.Import          as Import
 --import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 --import           Flowbox.Luna.Network.Graph.Graph          (Graph)
 --import qualified Flowbox.Luna.Network.Def.Definition     as Definition
@@ -20,14 +20,14 @@ module Flowbox.Luna.Codegen.Hs.FuncGenerator where
 --import           Flowbox.Luna.Network.Graph.Node           (Node)
 --import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
 --import qualified Flowbox.Luna.Network.Flags              as Flags
---import qualified Flowbox.Luna.Codegen.Hs.Path            as Path
+--import qualified Flowbox.Luna.Passes.HSGen.Path            as Path
 
 
---import qualified Flowbox.Luna.Codegen.Hs.AST.Function    as Function
---import           Flowbox.Luna.Codegen.Hs.AST.Function      (Function)
---import qualified Flowbox.Luna.Codegen.Hs.AST.Expr        as Expr
---import qualified Flowbox.Luna.Codegen.Hs.AST.Module      as Module
---import           Flowbox.Luna.Codegen.Hs.AST.Module        (Module)
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Function    as Function
+--import           Flowbox.Luna.Passes.HSGen.AST.Function      (Function)
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Expr        as Expr
+--import qualified Flowbox.Luna.Passes.HSGen.AST.Module      as Module
+--import           Flowbox.Luna.Passes.HSGen.AST.Module        (Module)
 
 
 --import           Flowbox.Luna.Data.List                    

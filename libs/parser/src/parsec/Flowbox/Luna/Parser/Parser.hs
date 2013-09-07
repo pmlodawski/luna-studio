@@ -98,7 +98,7 @@ pClass i          = Class.mk     <$  L.pClass
 
 pClassBody i      = choice [ Class.addMethod <$> pFunc i
                            , Class.addField  <$> pField i
-                           , pClass i *> error "Nested classes are not yet supported."
+                           , pClass i *> unexpected "class declaration. Nested classes are not supported yet."
                            ]
 
 
