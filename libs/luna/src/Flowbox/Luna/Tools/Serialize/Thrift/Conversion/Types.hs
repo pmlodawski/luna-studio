@@ -10,7 +10,7 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types () where
 
-
+import           Flowbox.Prelude
 import           Data.Text.Lazy                (pack, unpack)
 import qualified Data.Vector                 as Vector
 

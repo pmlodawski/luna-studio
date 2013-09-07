@@ -14,6 +14,7 @@ module Flowbox.Luna.Network.Path.Import(
     --genCode
 ) where
 
+import           Flowbox.Prelude
 import           Flowbox.Luna.Network.Path.Path   (Path)
 
 data Import = Import {path :: Path, items :: [String]} deriving (Show)

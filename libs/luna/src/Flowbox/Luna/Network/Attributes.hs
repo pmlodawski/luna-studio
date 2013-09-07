@@ -10,6 +10,7 @@ module Flowbox.Luna.Network.Attributes (
     module Data.Map
 ) where
 
+import           Flowbox.Prelude
 import           Data.Map   
 
 type Attributes = Map String (Map String String)

@@ -10,6 +10,7 @@
 
 module Flowbox.Luna.Passes.Txt2AST.Lexer where
 
+import           Flowbox.Prelude
 import           Control.Applicative                 
 import           Text.Parsec                       hiding (many, optional, (<|>))
 import           Data.List                           ( nub, sort )

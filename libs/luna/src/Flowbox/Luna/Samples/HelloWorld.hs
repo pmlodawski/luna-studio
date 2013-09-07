@@ -6,6 +6,8 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Samples.HelloWorld where
+
+import           Flowbox.Prelude
 -- TODO [PM] Compatibility after removal of Call, Type and New
 -- (
 --    workspacelib,

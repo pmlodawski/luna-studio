@@ -15,6 +15,8 @@ mkFunction,
 mkModule
 ) where
 
+import           Flowbox.Prelude
+
 data Type = Undefined
           | TypeVariable {name   :: String}
           | Class        {name   :: String, typeparams :: [String], params :: [Type]}

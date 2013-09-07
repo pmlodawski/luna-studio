@@ -11,10 +11,7 @@ module Flowbox.Luna.Passes.HSGen.Cabal.Section (
     genCode,
 )where
 
-import           Debug.Trace                               
-
-import           Data.String.Utils                         (join)
-
+import           Flowbox.Prelude
 
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr      as Expr
 import           Flowbox.Luna.Passes.HSGen.AST.Expr        (Expr)
@@ -23,6 +20,9 @@ import qualified Flowbox.Luna.Passes.HSGen.AST.Function  as Function
 import           Flowbox.Luna.Passes.HSGen.AST.Function    (Function)
 import qualified Flowbox.Luna.Passes.HSGen.AST.Extension as Extension
 import           Flowbox.Luna.Passes.HSGen.AST.Extension   (Extension)
+
+import           Debug.Trace                               
+import           Data.String.Utils                         (join)
 
 
 data SectionType = Library | Executable deriving(Show)

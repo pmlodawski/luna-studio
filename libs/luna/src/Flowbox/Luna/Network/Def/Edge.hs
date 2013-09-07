@@ -8,5 +8,7 @@
 module Flowbox.Luna.Network.Def.Edge(
     Edge(..)
 ) where
-    
+
+import           Flowbox.Prelude
+
 data Edge = Edge deriving (Show, Read, Ord, Eq)

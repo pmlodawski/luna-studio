@@ -10,6 +10,7 @@ module Flowbox.Luna.Passes.HSGen.AST.Extension (
     genCode
 )where
 
+import           Flowbox.Prelude
 import           Data.String.Utils   (join)
 
 data Extension = AlternativeLayoutRule                

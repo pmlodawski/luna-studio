@@ -8,6 +8,8 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 
+import           Flowbox.Prelude
+
 import           Control.Monad.State                    
 import           Control.Monad.Writer                   
 import           Control.Monad.RWS                      
@@ -16,7 +18,7 @@ import           Control.Monad.Trans.Either
 import           Flowbox.System.Log.Logger              
 import qualified Flowbox.System.Log.Logger            as Logger
 import qualified Flowbox.System.Log.LogEntry          as LogEntry
-import qualified Flowbox.Luna.Passes.HSGen.Generator  as Gen
+import qualified Flowbox.Luna.Passes.HSGen.Generator  as HSGen
 import qualified Flowbox.Luna.Passes.SSA.SSA          as SSA
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module as Module
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr   as Expr
@@ -32,7 +34,8 @@ import           Data.Either.Utils                      (forceEither)
 import qualified Text.Show.Pretty                     as PP
 import qualified Data.DList                           as DList
 
-import           Prelude                              hiding (log)
+import           Control.Applicative
+
 import           System.TimeIt                          
 
 logger :: Logger
@@ -47,15 +50,22 @@ example = Source.Source ["Workspace"]
                   ]
 
 main :: IO ()
-main = timeIt main_inner
+main = timeIt main_inner *> return ()
 
-main_inner :: IO ()
-main_inner = do
-    out <- Luna.run $ do
-        ast <- Txt2AST.run example
-        ssa <- SSA.run     ast
-        return ssa
+main_inner :: IO (Either String ())
+main_inner = Luna.run $ do
+    putStrLn "\n-------- AST --------"
+    ast <- Txt2AST.run example
+    putStrLn $ PP.ppShow ast
 
-    putStrLn $ PP.ppShow out
+    putStrLn "\n-------- SSA --------"
+    ssa <- SSA.run     ast
+    putStrLn $ PP.ppShow ssa
+
+    putStrLn "\n-------- HSC --------"
+    hsc <- HSGen.run   ssa
+    putStrLn $ PP.ppShow hsc
+
+
     return ()
 

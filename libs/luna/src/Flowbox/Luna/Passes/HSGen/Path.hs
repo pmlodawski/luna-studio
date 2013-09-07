@@ -27,8 +27,8 @@ module Flowbox.Luna.Passes.HSGen.Path (
     mkFuncName
 )where
 
-import qualified Prelude                          
-import           Prelude                        hiding (last, init, tail, last)
+import qualified Flowbox.Prelude      as Prelude                     
+import           Flowbox.Prelude                        hiding (last, init, tail, last)
 import           Data.String.Utils                (join)
 
 import           Flowbox.Luna.Network.Path.Path   

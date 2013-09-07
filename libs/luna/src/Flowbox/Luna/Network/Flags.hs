@@ -10,6 +10,8 @@ module Flowbox.Luna.Network.Flags(
     empty
 ) where
 
+import           Flowbox.Prelude
+
 data Flags = Flags {io :: Bool, omit :: Bool } deriving (Show)
 
 --type Flags = [Flag]

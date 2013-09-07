@@ -10,6 +10,7 @@ module Flowbox.Luna.Passes.HSGen.AST.Cons (
 	module Flowbox.Luna.Passes.HSGen.AST.Expr
 )where
 
+import           Flowbox.Prelude
 import           Flowbox.Luna.Passes.HSGen.AST.Expr   
 
 empty :: Expr

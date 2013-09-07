@@ -25,7 +25,8 @@ Library
   GHC-Options:    -Wall 
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
-                  TemplateHaskell
+                  TemplateHaskell,
+                  NoImplicitPrelude
   
   Exposed-modules: 
         Flowbox.Luna.Tools.TypeChecker,
@@ -137,6 +138,8 @@ Executable luna
 
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
+                  NoImplicitPrelude
+
   Build-Depends:  base,
                   dlist,
                   either,
@@ -161,6 +164,8 @@ Executable luna
 
 --  Extensions:     DoAndIfThenElse
 --                  MultiParamTypeClasses
+--                  NoImplicitPrelude
+--
 --  Build-Depends:  base,
 --                  flowbox-luna-parser,
 --                  uu-parsinglib,

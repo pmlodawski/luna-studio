@@ -7,6 +7,7 @@
 
 module Flowbox.Luna.Passes.HSGen.AST.Instance where
 
+import           Flowbox.Prelude
 --import           Debug.Trace                            
 
 --import qualified Flowbox.Luna.Passes.HSGen.AST.Expr     as Expr

@@ -7,8 +7,8 @@
 
 module Flowbox.Luna.Passes.HSGen.AST.Constant where
 
-import qualified Prelude   
-import           Prelude hiding (String, Char, Integer)
+import qualified Flowbox.Prelude as Prelude   
+import           Flowbox.Prelude hiding (String, Char, Integer)
 
 data Constant = Integer Prelude.String
               | String  Prelude.String

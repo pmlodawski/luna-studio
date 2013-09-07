@@ -13,6 +13,7 @@ module Flowbox.Luna.Network.Def.Definition(
     mkModule
 ) where
 
+import           Flowbox.Prelude
 import qualified Flowbox.Luna.XOLD.Type.Type      as Type
 import           Flowbox.Luna.XOLD.Type.Type        (Type)
 import           Flowbox.Luna.Network.Graph.Graph   (Graph)

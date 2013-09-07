@@ -7,6 +7,7 @@
 
 module Flowbox.Luna.Passes.HSGen.AST.Module where
 
+import           Flowbox.Prelude
 import           Flowbox.Luna.Passes.HSGen.AST.Expr as Expr
 
 

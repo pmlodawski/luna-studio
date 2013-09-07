@@ -21,6 +21,7 @@ Library
   Extensions:     DoAndIfThenElse
 
   Exposed-modules: 
+        Flowbox.Prelude,
         Flowbox.Control.Applicative,
         Flowbox.Control.Error,
         Flowbox.Control.Exception,

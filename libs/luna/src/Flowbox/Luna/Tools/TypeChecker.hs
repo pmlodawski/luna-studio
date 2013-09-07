@@ -9,6 +9,8 @@ module Flowbox.Luna.Tools.TypeChecker(
     --typeCheck
 ) where
 
+import           Flowbox.Prelude
+
 --import qualified Data.Graph.Inductive as DG
 --import qualified Data.Map     as Map
 --import           Data.Map       (Map)

@@ -10,6 +10,7 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs where
 
+import           Flowbox.Prelude
 import qualified Data.HashMap.Strict             as HashMap
 import           Data.HashMap.Strict               (HashMap)
 import           Data.Text.Lazy                    (Text, pack, unpack)

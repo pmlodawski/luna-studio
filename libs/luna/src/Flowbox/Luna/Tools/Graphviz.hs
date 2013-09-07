@@ -10,6 +10,8 @@ module Flowbox.Luna.Tools.Graphviz(
 --showGraph
 ) where
 
+import           Flowbox.Prelude
+
 --import qualified Data.Graph.Inductive as DG
 --import qualified Data.GraphViz as GV
 

@@ -7,6 +7,8 @@
 
 module Flowbox.Luna.AST.Type where
 
+import           Flowbox.Prelude
+
 data Type = Unknown
 	      | Type   { name   :: String                       }
 	      | Tuple  { items  :: [Type]                       }

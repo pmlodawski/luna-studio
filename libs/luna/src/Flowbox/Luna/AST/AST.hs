@@ -8,6 +8,7 @@
 
 module Flowbox.Luna.AST.AST where
 
+import           Flowbox.Prelude
 import           Flowbox.Luna.AST.Type       (Type)
 import qualified Flowbox.Luna.AST.Constant as Constant
 

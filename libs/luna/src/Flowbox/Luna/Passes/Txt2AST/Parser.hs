@@ -10,6 +10,7 @@
 
 module Flowbox.Luna.Passes.Txt2AST.Parser where
 
+import           Flowbox.Prelude
 import           Control.Applicative                 
 import           Text.Parsec                       hiding (parse, many, optional, (<|>))
 import qualified Text.Parsec                       as Parsec

@@ -17,6 +17,7 @@ module Flowbox.Luna.Network.Def.DefManager(
     parent
 ) where
 
+import           Flowbox.Prelude
 import           Data.Maybe                            (fromJust)
 
 import qualified Flowbox.Luna.XOLD.Type.Type         as Type

@@ -21,8 +21,8 @@ import           Control.Applicative
 
 import           Flowbox.System.Log.Logger       
 
-import qualified Prelude                       as Prelude
-import           Prelude                       hiding (error)
+import qualified Flowbox.Prelude                       as Prelude
+import           Flowbox.Prelude                       hiding (error)
 
 
 logger :: Logger

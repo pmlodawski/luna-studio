@@ -9,6 +9,8 @@ module Flowbox.Luna.Data.List(
     foldri
 ) where
 
+import           Flowbox.Prelude
+
 foldri :: (a -> b -> b) -> [a] -> b -> b
 foldri a b c = foldr a c b
 

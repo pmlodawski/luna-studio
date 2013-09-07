@@ -12,10 +12,9 @@ module Flowbox.Luna.Passes.HSGen.Cabal.Config (
     addSection
 )where
 
+import           Flowbox.Prelude
 import           Debug.Trace                               
-
 import           Data.String.Utils                         (join)
-
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr      as Expr
 import           Flowbox.Luna.Passes.HSGen.AST.Expr        (Expr)
 import qualified Flowbox.Luna.Passes.HSGen.Path          as Path

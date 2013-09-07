@@ -10,6 +10,7 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs where
 
+import           Flowbox.Prelude
 import           Data.Text.Lazy                        (pack, unpack)
 
 import qualified Libs_Types                          as TLibs

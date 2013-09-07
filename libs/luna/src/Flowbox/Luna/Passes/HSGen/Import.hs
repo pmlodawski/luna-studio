@@ -15,6 +15,7 @@ module Flowbox.Luna.Passes.HSGen.Import (
     genCode
 )where
 
+import           Flowbox.Prelude
 import qualified Flowbox.Luna.Passes.HSGen.Path as Path
 import           Flowbox.Luna.Passes.HSGen.Path   (Path(..))
 

@@ -8,6 +8,7 @@
 
 module Flowbox.Luna.Passes.Pass where
 
+import           Flowbox.Prelude
 import           Control.Monad.State          
 
 import           Control.Monad.RWS            
@@ -29,6 +30,10 @@ data NoState = NoState deriving (Show)
 
 run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
 run s f = runRWS (runEitherT f) [] s
+
+
+--run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
+runT s f = runRWST (runEitherT f) [] s
 
 
 runM :: PassMonad s m => state -> Transformer state a m b

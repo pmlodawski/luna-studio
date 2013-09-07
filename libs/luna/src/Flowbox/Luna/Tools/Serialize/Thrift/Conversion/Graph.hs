@@ -11,7 +11,7 @@
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph where
 
 --import Control.Monad
-
+import           Flowbox.Prelude
 import qualified Data.Graph.Inductive.Graph                             
 import qualified Data.HashMap.Strict                                  as HashMap
 import           Data.HashMap.Strict                                    (HashMap)

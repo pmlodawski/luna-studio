@@ -13,6 +13,7 @@ module Flowbox.Luna.Lib.LibManager(
     loadLibrary,
 ) where
 
+import           Flowbox.Prelude
 import qualified Flowbox.Luna.Tools.Serialize.Lib as LibSerialization
 import qualified Flowbox.Luna.Data.Graph          as DG
 import           Flowbox.Luna.Data.Graph          hiding (Graph, Edge, empty)

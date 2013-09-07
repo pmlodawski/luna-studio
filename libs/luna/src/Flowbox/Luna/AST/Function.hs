@@ -7,6 +7,7 @@
 
 module Flowbox.Luna.AST.Function where
 
+import           Flowbox.Prelude
 --import           Flowbox.Luna.Parser.AST.AST    
 --import qualified Flowbox.Luna.Parser.AST.Type as Type
 --import           Flowbox.Luna.Parser.AST.Type   (Type)

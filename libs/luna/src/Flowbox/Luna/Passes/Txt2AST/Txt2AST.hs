@@ -18,8 +18,8 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.Luna.Passes.Txt2AST.Parser as Parser
 import           Control.Monad.State                  
 
-import qualified Prelude                            as Prelude
-import           Prelude                            hiding (error)
+import qualified Flowbox.Prelude                            as Prelude
+import           Flowbox.Prelude                            hiding (error)
 
 
 logger :: Logger

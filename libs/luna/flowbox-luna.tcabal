@@ -19,7 +19,8 @@ Library
   GHC-Options:    -Wall 
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
-                  TemplateHaskell
+                  TemplateHaskell,
+                  NoImplicitPrelude
   
   Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*Flowbox/Luna/Tools/Serialize/Thrift/Generated/.*')`,
                    `findmodules('src/Flowbox/Luna/Tools/Serialize/Thrift/Generated', '.*\.hs')`
@@ -60,6 +61,8 @@ Executable luna
 
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
+                  NoImplicitPrelude
+
   Build-Depends:  base,
                   dlist,
                   either,
@@ -84,6 +87,8 @@ Executable luna
 
 --  Extensions:     DoAndIfThenElse
 --                  MultiParamTypeClasses
+--                  NoImplicitPrelude
+--
 --  Build-Depends:  base,
 --                  flowbox-luna-parser,
 --                  uu-parsinglib,
