@@ -28,14 +28,14 @@ import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue(..))
 import qualified Flowbox.Luna.Network.Graph.Edge         as Edge
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
-import qualified Flowbox.Luna.Parser.AST.AST             as AST
-import qualified Flowbox.Luna.Parser.AST.Type            as ASTType
-import qualified Flowbox.Luna.Parser.Parser              as Parser
+import qualified Flowbox.Luna.AST.AST                    as AST
+import qualified Flowbox.Luna.AST.Type                   as ASTType
+import qualified Flowbox.Luna.AST.Constant               as ASTConstant
+import qualified Flowbox.Luna.Passes.Txt2AST.Parser      as Parser
 import qualified Flowbox.Luna.XOLD.Type.Type             as Type
 import           Flowbox.Luna.XOLD.Type.Type               (Type)
 import qualified Flowbox.System.UniPath                  as UniPath
 import           Flowbox.System.UniPath                    (UniPath)
-import qualified Flowbox.Luna.Parser.AST.Constant        as ASTConstant
 
 
 

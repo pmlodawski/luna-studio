@@ -22,18 +22,18 @@ Library
 
   Exposed-modules: 
         Flowbox.Prelude,
-        Flowbox.Tools.Conversion,
-        Flowbox.Control.Exception,
         Flowbox.Control.Error,
+        Flowbox.Control.Exception,
         Flowbox.Control.Applicative,
+        Flowbox.Data.Version,
+        Flowbox.Tools.Conversion,
         Flowbox.System.UniPath,
         Flowbox.System.Directory,
         Flowbox.System.IO.IO,
         Flowbox.System.IO.Serializer,
-        Flowbox.System.Log.LogEntry,
         Flowbox.System.Log.Conf,
         Flowbox.System.Log.Logger,
-        Flowbox.Data.Version
+        Flowbox.System.Log.LogEntry
 
   Build-Depends:  base,
                   containers,
