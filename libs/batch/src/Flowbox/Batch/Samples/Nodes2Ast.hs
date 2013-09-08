@@ -32,11 +32,11 @@ import           Flowbox.Luna.Lib.Library                  (Library(..))
 import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Def.Definition     as Definition
 import           Flowbox.Luna.Network.Def.Definition       (Definition(..))
+import qualified Flowbox.Luna.Network.Def.Edge         as Edge
+import           Flowbox.Luna.Network.Def.Edge           (Edge(..))
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
 import           Flowbox.Luna.Network.Def.DefManager       (DefManager)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
-import qualified Flowbox.Luna.Network.Graph.Edge         as Edge
-import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
 import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node(..))
@@ -69,8 +69,15 @@ main_inner = Luna.run $ do
         cls1_df = Definition.empty { Definition.cls = Class "Ala" ["a"] [Named "x" $ Type "X", Named "y" $ Type "Y", Named "z" $Type "Int"]
                                    }
 
-        defManager = DefManager.insNodes [(0, fun1_df)
-                                         ,(1, cls1_df)] 
+        mod1_df = Definition.empty { Definition.cls = Module "Std" }
+        mod2_df = Definition.empty { Definition.cls = Module "Test" }
+        defManager = DefManager.insEdges [(2, 3, Edge)
+                                         ,(3, 1, Edge)
+                                         ,(3, 0, Edge)]
+                   $ DefManager.insNodes [(0, fun1_df)
+                                         ,(1, cls1_df) 
+                                         ,(2, mod1_df) 
+                                         ,(3, mod2_df)]
                                          DefManager.empty
                                    
 
@@ -79,3 +86,6 @@ main_inner = Luna.run $ do
     putStrLn "--------------------------------------------"
     out_cls1 <- Graph2AST.run defManager (1, cls1_df)
     putStrLn $ ppShow out_cls1
+    putStrLn "--------------------------------------------"
+    out_mod1 <- Graph2AST.run defManager (2, mod1_df)
+    putStrLn $ ppShow out_mod1
