@@ -29,7 +29,6 @@ enum NodeType {
     Default,
     Inputs,
     Outputs,
-    Tuple,
     NTuple
 }
 

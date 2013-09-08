@@ -14,7 +14,7 @@ import           System.IO
 import           Thrift.Protocol.Binary                                     
 import           Thrift.Transport.Handle                                    ()
 
-import           Flowbox.Prelude                           
+import           Flowbox.Prelude                                            
 import qualified Flowbox.Batch.Project.Project                            as Project
 import           Flowbox.Batch.Project.Project                              (Project)
 import qualified Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects   ()

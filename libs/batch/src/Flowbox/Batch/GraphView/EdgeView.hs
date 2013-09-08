@@ -9,7 +9,7 @@ module Flowbox.Batch.GraphView.EdgeView(
 	EdgeView(..),
 ) where
 
-import           Flowbox.Prelude                           
+import           Flowbox.Prelude                          
 import           Flowbox.Batch.GraphView.PortDescriptor   (PortDescriptor)
 
 

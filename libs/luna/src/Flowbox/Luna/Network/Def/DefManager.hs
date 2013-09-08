@@ -26,8 +26,8 @@ import qualified Flowbox.Luna.Network.Def.Definition as Definition
 import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
 import           Flowbox.Luna.Network.Def.Edge         (Edge(..))
 
-import           Flowbox.Luna.Data.Graph              hiding (Graph, Edge, empty)
-import qualified Flowbox.Luna.Data.Graph              as DG
+import           Flowbox.Luna.Data.Graph             hiding (Graph, Edge, empty)
+import qualified Flowbox.Luna.Data.Graph             as DG
 import           Flowbox.Luna.Data.List                (foldri)
 
 type DefManager = DG.Graph Definition Edge

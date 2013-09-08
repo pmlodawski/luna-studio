@@ -13,7 +13,7 @@ module Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects where
 import qualified Data.Vector                                         as Vector
 import           Data.Text.Lazy                                        (pack, unpack)
 
-import           Flowbox.Prelude                           
+import           Flowbox.Prelude                                       
 import qualified Flowbox.Batch.Project.Project                       as Project
 import           Flowbox.Batch.Project.Project                         (Project(..))
 import           Flowbox.Control.Error                                 

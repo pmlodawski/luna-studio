@@ -12,7 +12,7 @@ module Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView where
 
 import qualified Data.Vector                                          as Vector
 
-import           Flowbox.Prelude                           
+import           Flowbox.Prelude                                        
 import           Flowbox.Batch.GraphView.EdgeView                       (EdgeView(..))
 import           Flowbox.Batch.GraphView.GraphView                      (GraphView)
 import           Flowbox.Control.Error                                  

@@ -120,7 +120,6 @@ instance Convert (Int, Node) TGraph.Node where
                    Node.Default {} -> TGraph.Default
                    Node.Inputs  {} -> TGraph.Inputs
                    Node.Outputs {} -> TGraph.Outputs
-                   Node.Tuple   {} -> TGraph.Tuple
                    Node.NTuple  {} -> TGraph.NTuple
 
       nodeExpression :: Maybe Text.Text
@@ -136,7 +135,6 @@ instance Convert (Int, Node) TGraph.Node where
                    Node.Expr  _ aflags _ -> Just aflags
                    Node.Inputs  aflags _ -> Just aflags
                    Node.Outputs aflags _ -> Just aflags
-                   Node.Tuple   aflags _ -> Just aflags
                    Node.NTuple  aflags _ -> Just aflags
                    _                     -> Nothing
 
@@ -195,10 +193,6 @@ instance Convert (Int, Node) TGraph.Node where
                   ggflags <- gflags
                   ggattrs <- gattrs
                   Right $ Node.Outputs ggflags ggattrs
-                TGraph.Tuple -> do
-                  ggflags <- gflags
-                  ggattrs <- gattrs
-                  Right $ Node.Tuple ggflags ggattrs
                 TGraph.NTuple -> do
                   ggflags <- gflags
                   ggattrs <- gattrs

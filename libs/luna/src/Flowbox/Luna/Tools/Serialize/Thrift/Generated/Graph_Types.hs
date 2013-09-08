@@ -48,22 +48,20 @@ instance Enum DefaultValueType where
     _ -> throw ThriftException
 instance Hashable DefaultValueType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
-data NodeType = Expr|Default|Inputs|Outputs|Tuple|NTuple  deriving (Show,Eq, Typeable, Ord)
+data NodeType = Expr|Default|Inputs|Outputs|NTuple  deriving (Show,Eq, Typeable, Ord)
 instance Enum NodeType where
   fromEnum t = case t of
     Expr -> 0
     Default -> 1
     Inputs -> 2
     Outputs -> 3
-    Tuple -> 4
-    NTuple -> 5
+    NTuple -> 4
   toEnum t = case t of
     0 -> Expr
     1 -> Default
     2 -> Inputs
     3 -> Outputs
-    4 -> Tuple
-    5 -> NTuple
+    4 -> NTuple
     _ -> throw ThriftException
 instance Hashable NodeType where
   hashWithSalt salt = hashWithSalt salt . fromEnum

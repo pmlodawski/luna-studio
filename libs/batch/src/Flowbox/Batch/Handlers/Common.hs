@@ -24,7 +24,7 @@ module Flowbox.Batch.Handlers.Common (
     nodeOp,
 ) where
 
-import           Flowbox.Prelude                           
+import           Flowbox.Prelude                        
 import qualified Flowbox.Batch.Batch                  as Batch
 import           Flowbox.Batch.Batch                    (Batch(..))
 import qualified Flowbox.Batch.GraphView.GraphView    as GraphView

@@ -12,7 +12,7 @@ module Flowbox.Batch.Project.ProjectManager (
     openProject,
 ) where
 
-import           Flowbox.Prelude                           
+import           Flowbox.Prelude                         
 import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
 import           Flowbox.System.UniPath                  (UniPath)
 import qualified Flowbox.Batch.Project.Project         as Project

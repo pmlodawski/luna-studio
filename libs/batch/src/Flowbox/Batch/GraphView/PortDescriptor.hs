@@ -10,7 +10,7 @@ module Flowbox.Batch.GraphView.PortDescriptor(
 	empty,
 ) where
 
-import           Flowbox.Prelude                           
+import           Flowbox.Prelude   
 
 
 

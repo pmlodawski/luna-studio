@@ -12,7 +12,7 @@ module Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Item where
 
 import           Data.Text.Lazy                                        (pack, unpack)
 
-import           Flowbox.Prelude                           
+import           Flowbox.Prelude                                       
 import qualified Flowbox.Batch.FileSystem.Item                       as Item
 import           Flowbox.Batch.FileSystem.Item                         (Item(..))
 import           Flowbox.Control.Error                                 

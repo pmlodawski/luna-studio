@@ -41,7 +41,7 @@ import           Flowbox.Luna.Passes.Pass                  (PassMonad)
 import qualified Flowbox.Luna.Passes.Txt2AST.Parser      as Parser
 import qualified Flowbox.Luna.XOLD.Type.Type             as Type
 import           Flowbox.Luna.XOLD.Type.Type               (Type)
-import           Flowbox.System.Log.Logger                              
+import           Flowbox.System.Log.Logger                 
 import qualified Flowbox.System.UniPath                  as UniPath
 import           Flowbox.System.UniPath                    (UniPath)
 
@@ -115,10 +115,9 @@ node2AST agraph (nodeID, node) list = do
         Node.Expr expression flags _ -> case Parser.parseExpr expression of 
                                             Left  err  -> fail $ show err
                                             Right expr -> return expr
-        Node.Default value _ -> return AST.NOP
+        Node.Default value _ -> return $ AST.Constant $ toASTConstant value
         Node.Inputs  flags _ -> return AST.NOP
         Node.Outputs flags _ -> return AST.NOP
-        Node.Tuple   flags _ -> return AST.NOP
         Node.NTuple  flags _ -> return AST.NOP
 
     let assignments = [AST.NOP]
