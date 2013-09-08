@@ -36,6 +36,7 @@ Library
         Flowbox.Luna.Passes.SSA.State,
         Flowbox.Luna.Passes.Graph2AST.Graph2AST,
         Flowbox.Luna.Passes.HSGen.CodeGenerator,
+        Flowbox.Luna.Passes.HSGen.GenState,
         Flowbox.Luna.Passes.HSGen.DefGenerator,
         Flowbox.Luna.Passes.HSGen.HSGen,
         Flowbox.Luna.Passes.HSGen.Path,

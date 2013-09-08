@@ -46,27 +46,32 @@ runNested f = do
 
 ssaAST :: SSAMonad m => Mode -> LAST.Expr -> Pass.Result m LAST.Expr
 ssaAST mode ast = case ast of
-    LAST.Module     path body             -> LAST.Module path <$> mapM (ssaAST mode) body
-    LAST.Function   name signature body   -> runNested $ do
-                                                    SSAState.registerVar (name, name)
-                                                    ssaType signature
-                                                    LAST.Function name signature <$> mapM (ssaAST mode) body
-    LAST.Assignment src  dst              -> flip LAST.Assignment <$> ssaAST mode dst <*> ssaAST Write src
-    LAST.Pattern    pat                   -> LAST.Pattern         <$> ssaAST mode pat
-    LAST.Identifier name                  -> case mode of
-                                                 Write -> LAST.Identifier <$> SSAState.handleVar name
-                                                 Read  -> do
-                                                     v <- SSAState.lookupVar name
-                                                     case v of
-                                                        Nothing      -> (logger error $ "Not in scope: '" ++ name ++ "'") *> Pass.fail
-                                                        Just newname -> return $ LAST.Identifier newname
-    LAST.Operator   name src    dst       -> LAST.Operator name <$> ssaAST mode src <*> ssaAST mode dst
-    LAST.Call       src  args             -> LAST.Call <$> ssaAST mode src <*> mapM (ssaAST mode) args
-    LAST.Class      cls  fields methods   -> do ssaType cls
-                                                LAST.Class cls <$> mapM (ssaAST mode) fields <*> mapM (ssaAST mode) methods
-    LAST.Constant {}                      -> return ast
-    _                                     -> logger error "SSA Pass error: Unknown expression." *> Pass.fail
-
+    LAST.Module     cls classes fields 
+                    methods modules     -> LAST.Module cls <$> ssamap classes <*> ssamap fields <*> ssamap methods <*> ssamap modules
+    LAST.Function   name signature body -> runNested $ do
+                                               SSAState.registerVar (name, name)
+                                               ssaType signature
+                                               LAST.Function name signature <$> ssamap body
+    LAST.Assignment src dst             -> flip LAST.Assignment <$> ssaAST mode dst <*> ssaAST Write src
+    LAST.Pattern    pat                 -> LAST.Pattern         <$> ssaAST mode pat
+    LAST.Identifier name                -> case mode of
+                                               Write -> LAST.Identifier <$> SSAState.handleVar name
+                                               Read  -> do
+                                                   v <- SSAState.lookupVar name
+                                                   case v of
+                                                       Nothing      -> (logger error $ "Not in scope: '" ++ name ++ "'") *> Pass.fail "Not in scope"
+                                                       Just newname -> return $ LAST.Identifier newname
+    LAST.Operator   name src dst        -> LAST.Operator name <$> ssaAST mode src <*> ssaAST mode dst
+    LAST.Call       src args            -> LAST.Call <$> ssaAST mode src <*> ssamap args
+    LAST.Class      cls classes fields 
+                    methods             -> do ssaType cls
+                                              LAST.Class cls <$> ssamap classes 
+                                                             <*> ssamap fields 
+                                                             <*> ssamap methods
+    LAST.Constant {}                    -> return ast
+    _                                   -> logger error "SSA Pass error: Unknown expression." *> Pass.fail "Unknown expression"
+    where
+        ssamap = mapM (ssaAST mode)
 
 ssaType :: SSAMonad m => Type -> Pass.Result m ()
 ssaType ast = case ast of
@@ -74,4 +79,4 @@ ssaType ast = case ast of
     Type.Tuple  items          -> mapM ssaType items *> return ()
     Type.Type   name           -> SSAState.registerVar (name, name)
     Type.Class  name   _       -> SSAState.registerVar (name, name)
-    _                          -> logger error "SSA Pass error: Unknown type." *> Pass.fail
+    _                          -> logger error "SSA Pass error: Unknown type." *> Pass.fail "Unknown type"

@@ -94,11 +94,13 @@ pClass i          = Class.mk     <$  L.pClass
                                  -- <*> (try (pBlockBegin pClassBody i) <|> return [])
                                  <?> "class definition"
 
+pModule name i    = pure (Module.mk name)  <??$> try(pSegmentBegin pClassBody i)
 
 
-pClassBody i      = choice [ Class.addMethod <$> pFunc i
-                           , Class.addField  <$> pField
-                           , pClass i *> unexpected "class declaration. Nested classes are not supported yet."
+
+pClassBody i      = choice [ AST.addMethod <$> pFunc i
+                           , AST.addField  <$> pField
+                           , AST.addClass  <$> pClass i
                            ]
 
 
@@ -208,13 +210,15 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 -- Program
 -----------------------------------------------------------
 
-pProgram mod = AST.Module (AST.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
-                                         <|> pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
+--pProgram mod = AST.Module (AST.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
+--                                         <|> pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
 
+
+pProgram mod = pModule mod 0 <* many(L.eol <* L.pSpaces) <* eof
 
 pExprTemp = expr 0 <* many(L.eol <* L.pSpaces) <* eof
 
-parseExpr input = Parsec.parse pExprTemp "Luna Parser" input
+--parseExpr input = Parsec.parse pExprTemp "Luna Parser" input
 
 --pProgram = many $ pPattern 0
 

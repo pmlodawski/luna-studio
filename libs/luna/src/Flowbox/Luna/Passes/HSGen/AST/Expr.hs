@@ -45,6 +45,7 @@ data Expr = Assignment { src   :: Expr    , dst :: Expr    , ctx :: Context     
           | DataType   { name  :: String  , params :: [String], constructors :: [Expr] }
           | Cons       { name  :: String  , fields :: [Expr]                     }
           | Module     { path  :: [String], datatypes :: [Expr] }
+          | Undefined
           deriving (Show)
 
 

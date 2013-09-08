@@ -14,18 +14,12 @@ import qualified Flowbox.Luna.AST.Type as Type
 
 
 mk :: String -> [String] -> Expr
-mk name' params' =Class (Type.Class name' params') [] []
+mk name' params' = Class (Type.Class name' params') [] [] []
 
 
-parseBody :: Expr -> Expr -> Expr
-parseBody expr cls' = case expr of
-    Function {} -> addMethod expr cls'
-    _           -> cls' -- error $ "class parse body error " ++ show expr
+--parseBody :: Expr -> Expr -> Expr
+--parseBody expr cls' = case expr of
+--    Function {} -> addMethod expr cls'
+--    _           -> cls' -- error $ "class parse body error " ++ show expr
 
 
-addMethod :: Expr -> Expr -> Expr
-addMethod method cls' = cls' { methods = method : methods cls' }
-
-
-addField :: Expr -> Expr -> Expr
-addField field cls' = cls' { fields = field : fields cls' }

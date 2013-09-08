@@ -44,12 +44,16 @@ logger = getLogger "Flowbox"
 
 
 example :: Source
-example = Source.Source ["Workspace"] 
-        $ unlines [ "class X"
+example = Source.Source "Workspace"
+        $ unlines [ "\n\n\n"
                   ]
 
 main :: IO ()
-main = timeIt main_inner *> return ()
+main = do
+    out <- timeIt main_inner
+    case out of
+        Right _ -> return ()
+        Left  e -> putStrLn e
 
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
@@ -57,16 +61,14 @@ main_inner = Luna.run $ do
     ast <- Txt2AST.run example
     putStrLn $ PP.ppShow ast
 
-    putStrLn "\n-------- SSA --------"
-    ssa <- SSA.run     ast
-    putStrLn $ PP.ppShow ssa
+    --putStrLn "\n-------- SSA --------"
+    --ssa <- SSA.run     ast
+    --putStrLn $ PP.ppShow ssa
 
-    putStrLn "\n-------- HAST --------"
-    hast <- HSGen.run  ssa
-    putStrLn $ PP.ppShow hast
+    --putStrLn "\n-------- HAST --------"
+    --hast <- HSGen.run  ssa
+    --putStrLn $ PP.ppShow hast
 
-    out <- Graph2AST.run 5
-    print out
 
     --putStrLn "\n-------- HSC --------"
     --hsc <- HSGen.genCode  hast

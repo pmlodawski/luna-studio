@@ -13,5 +13,6 @@ data Type = Unknown
 	      | Type   { name   :: String                       }
 	      | Tuple  { items  :: [Type]                       }
 	      | Class  { name   :: String , params  :: [String] }
+          | Module { name   :: String                       }
 	      | Lambda { inputs :: Type   , outputs :: Type     }
           deriving (Show, Eq)
