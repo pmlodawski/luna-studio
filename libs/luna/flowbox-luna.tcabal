@@ -19,7 +19,8 @@ Library
   GHC-Options:    -Wall 
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
-                  TemplateHaskell
+                  TemplateHaskell,
+                  NoImplicitPrelude
   
   Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*Flowbox/Luna/Tools/Serialize/Thrift/Generated/.*')`,
                    `findmodules('src/Flowbox/Luna/Tools/Serialize/Thrift/Generated', '.*\.hs')`
@@ -33,9 +34,7 @@ Library
                   either,
                   errors,
                   fgl,
-                  flowbox-luna-parser,
                   flowbox-utils,
-                  graphviz,
                   hashable,
                   MissingH == 1.2.0.0,
                   mtl,
@@ -62,12 +61,13 @@ Executable luna
 
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
+                  NoImplicitPrelude
+
   Build-Depends:  base,
                   dlist,
                   either,
                   errors,
                   flowbox-luna,
-                  flowbox-luna-parser,
                   flowbox-utils,
                   MissingH,
                   pretty-show,
@@ -75,3 +75,14 @@ Executable luna
                   transformers,
                   mtl,
                   parsec
+
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: tests
+  GHC-Options:    -Wall -threaded
+  Build-Depends:  base, 
+                  flowbox-luna,
+                  hspec,
+                  MissingH

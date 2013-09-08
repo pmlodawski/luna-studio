@@ -8,6 +8,7 @@
 
 module Flowbox.Luna.Passes.Pass where
 
+import           Flowbox.Prelude              
 import           Control.Monad.State          
 
 import           Control.Monad.RWS            
@@ -20,18 +21,23 @@ import           Prelude                    hiding (fail)
 import qualified Prelude                    as Prelude
 
 
-type PassMonad   s m      = (Functor m, MonadState s m, LogWriter m)
-type Transformer s a m b  = EitherT a (RWS [Int] LogList s) b -> EitherT a m b
-type Result      m output = EitherT String m output
+type PassMonad    s m       = (Functor m, MonadState s m, LogWriter m)
+type Transformer  s a m b   = EitherT a (RWS [Int] LogList s) b -> EitherT a m b
+type TransformerT s a m b   = EitherT a (RWST [Int] LogList s m) b -> m (Either a b)
+type Result       m output  = EitherT String m output
 
 data NoState = NoState deriving (Show)
 
 
---run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
+run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
 run s f = runRWS (runEitherT f) [] s
 
 
---runM :: PassMonad s m => state -> Transformer state a m b
+--run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
+runT s f = runRWST (runEitherT f) [] s
+
+
+runM :: PassMonad s m => state -> Transformer state a m b 
 runM s f = do
     let (nast, _, logs) = run s f
     Logger.append logs

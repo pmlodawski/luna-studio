@@ -175,7 +175,7 @@ int main(int argc, char **argv) {
 
         DefaultValue dv2;
         dv2.__set_cls(DefaultValueType::IntV);
-        dv2.__set_i(4);
+        dv2.__set_s("4");
 
         map<PortDescriptor, DefaultValue> defaults;
         batch.nodeDefaults(defaults, outputsID, fun.defID, workspacelib.libID, proj.projectID);

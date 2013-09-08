@@ -29,6 +29,8 @@ module Flowbox.Luna.Data.Graph (
     topsortl,
 ) where
 
+import           Flowbox.Prelude        
+
 import           Data.Functor           ((<$>))
 import           Data.Maybe             (fromJust)
 import qualified Data.Graph.Inductive as DG

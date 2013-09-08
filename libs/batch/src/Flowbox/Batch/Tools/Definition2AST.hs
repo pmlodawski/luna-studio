@@ -31,8 +31,8 @@ import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import qualified Flowbox.Luna.Parser.AST.AST             as AST
 import qualified Flowbox.Luna.Parser.AST.Type            as ASTType
 import qualified Flowbox.Luna.Parser.Parser              as Parser
-import qualified Flowbox.Luna.Type.Type                  as Type
-import           Flowbox.Luna.Type.Type                    (Type)
+import qualified Flowbox.Luna.XOLD.Type.Type             as Type
+import           Flowbox.Luna.XOLD.Type.Type               (Type)
 import qualified Flowbox.System.UniPath                  as UniPath
 import           Flowbox.System.UniPath                    (UniPath)
 import qualified Flowbox.Luna.Parser.AST.Constant        as ASTConstant

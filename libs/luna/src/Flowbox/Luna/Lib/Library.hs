@@ -13,6 +13,7 @@ module Flowbox.Luna.Lib.Library(
     make
 ) where
 
+import           Flowbox.Prelude                       
 import qualified Flowbox.System.UniPath              as UniPath
 import           Flowbox.System.UniPath                (UniPath)
 import qualified Flowbox.Luna.Network.Def.DefManager as DefManager

@@ -7,8 +7,8 @@
 
 module Flowbox.Luna.Passes.HSGen.AST.Function where
 
+import           Flowbox.Prelude                      
 import           Debug.Trace                          
-
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr as Expr
 import           Flowbox.Luna.Passes.HSGen.AST.Expr   (Expr)
 import           Data.String.Utils                    (join)

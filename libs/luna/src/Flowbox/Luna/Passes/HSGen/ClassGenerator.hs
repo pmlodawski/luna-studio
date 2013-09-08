@@ -7,6 +7,8 @@
 
 module Flowbox.Luna.Passes.HSGen.ClassGenerator where
 
+import           Flowbox.Prelude   
+
 --import qualified Flowbox.Luna.Network.Def.Definition  as Definition
 --import           Flowbox.Luna.Network.Def.Definition    (Definition)
 --import qualified Flowbox.Luna.Passes.HSGen.AST.DataType as DataType

@@ -15,6 +15,8 @@ module Flowbox.Luna.Network.Graph.Node(
     mkNTuple,
 ) where
 
+import           Flowbox.Prelude                           
+
 import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue)
 import qualified Flowbox.Luna.Network.Flags              as Flags
 import           Flowbox.Luna.Network.Flags                (Flags)

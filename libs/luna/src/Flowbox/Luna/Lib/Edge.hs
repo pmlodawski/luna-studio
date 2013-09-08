@@ -11,6 +11,7 @@ module Flowbox.Luna.Lib.Edge(
     noEdges
 ) where
 
+import           Flowbox.Prelude            
 import qualified Flowbox.Luna.Lib.Library as Library
 
 data EdgeCls = Standard deriving (Show, Read, Ord, Eq)
