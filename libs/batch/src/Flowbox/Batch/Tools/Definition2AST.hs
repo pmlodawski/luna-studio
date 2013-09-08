@@ -92,7 +92,7 @@ node2AST :: Graph -> (Node.ID, Node.Node) -> [AST.Expr] -> Either String [AST.Ex
 node2AST agraph (nodeID, node) list = do
 
     call <- case node of 
-        Node.Expr expression flags _ -> case Parser.parse expression of 
+        Node.Expr expression flags _ -> case Parser.parseExpr expression of 
                                             Left  err  -> Left $ show err
                                             Right expr -> Right expr
         Node.Default value _ -> return AST.NOP

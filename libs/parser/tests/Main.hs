@@ -16,8 +16,16 @@ import           System.TimeIt
 
 
 example :: String
-example = unlines [ "class A:"
-                  , "    class B"
+example = unlines [ ""
+                  --, "class A:"
+                  --, "    x :: X"
+                  --, "    z :: Y"
+                  --, ""
+                  , "def f(x, y):"
+                  , "    x = x + 1"
+                  --, "x = 4"
+                  --, "x = x + 1"
+                  --, "y = f g x 1"
                   ]
 
 main :: IO ()
