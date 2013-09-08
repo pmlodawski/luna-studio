@@ -7,6 +7,7 @@
 
 module Flowbox.Luna.Passes.HSGen.AST.Class where
 
+import           Flowbox.Prelude   
 --import           Debug.Trace                            
 
 --import           Data.String.Utils                      (join)

@@ -7,6 +7,8 @@
 
 module Flowbox.Luna.Passes.HSGen.FuncGenerator where
 
+import           Flowbox.Prelude   
+
 --import           Data.Maybe                                (fromJust)
 
 

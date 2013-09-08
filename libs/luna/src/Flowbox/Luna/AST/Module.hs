@@ -5,12 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Parser.AST.Constant where
+module Flowbox.Luna.AST.Module where
 
-import qualified Prelude   
-import           Prelude   (Show, Eq)
+import           Flowbox.Prelude         
+import           Flowbox.Luna.AST.AST    
+import qualified Flowbox.Luna.AST.Type as Type
 
-data Constant = Integer Prelude.String
-              | String  Prelude.String
-              | Char    Prelude.Char
-              deriving (Show, Eq)
+
+mk :: [Expr] -> Expr
+mk body = Module NOP body

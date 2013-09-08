@@ -8,6 +8,7 @@
 
 module Flowbox.Luna.Passes.SSA.State where
 
+import           Flowbox.Prelude             
 import           Control.Monad.State         
 import qualified Data.Map                  as Map
 import           Data.Map                    (Map)

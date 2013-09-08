@@ -10,6 +10,7 @@ module Flowbox.Luna.Passes.HSGen.AST.Deriving (
     genCode
 )where
 
+import           Flowbox.Prelude     
 import           Data.String.Utils   (join)
 
 data Deriving = Eq

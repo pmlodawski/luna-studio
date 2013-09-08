@@ -6,8 +6,9 @@
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Flowbox.Luna.Parser.Utils where
+module Flowbox.Luna.Passes.Txt2AST.Utils where
 
+import           Flowbox.Prelude       
 import           Control.Applicative   
 import           Text.Parsec         hiding (parse, many, optional, (<|>))
 

@@ -14,6 +14,8 @@ module Flowbox.Luna.Network.Graph.Graph(
     make,
 ) where
 
+import           Flowbox.Prelude                   
+
 import           Flowbox.Luna.Network.Graph.Edge   (Edge(..))
 import qualified Flowbox.Luna.Network.Graph.Node as Node
 import           Flowbox.Luna.Network.Graph.Node   (Node(..))

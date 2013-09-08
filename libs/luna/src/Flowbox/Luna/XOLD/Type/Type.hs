@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Type.Type(
+module Flowbox.Luna.XOLD.Type.Type(
 Type(..),
 
 noInputs,
@@ -14,6 +14,8 @@ noParams,
 mkFunction,
 mkModule
 ) where
+
+import           Flowbox.Prelude   
 
 data Type = Undefined
 		  | Type         {name   :: String}

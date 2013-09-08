@@ -9,6 +9,7 @@ module Flowbox.Luna.Tools.Serialize.Lib(
     restoreLibrary,
 ) where
 
+import           Flowbox.Prelude                                        
 import           System.IO                                              
 
 import           Thrift.Protocol.Binary                                 

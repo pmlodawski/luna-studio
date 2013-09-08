@@ -7,8 +7,8 @@
 
 module Flowbox.Luna.Passes.HSGen.AST.Expr where
 
+import           Flowbox.Prelude                          
 import           Debug.Trace                              
-
 import           Data.String.Utils                        (join)
 import qualified Flowbox.Luna.Passes.HSGen.Path         as Path
 --import qualified Flowbox.Luna.Passes.HSGen.GenState         as GenState
@@ -44,7 +44,7 @@ data Expr = Assignment { src   :: Expr    , dst :: Expr    , ctx :: Context     
           -- | Class      { name  :: String  , params :: [String]  , body :: [Expr] }
           | DataType   { name  :: String  , params :: [String], constructors :: [Expr] }
           | Cons       { name  :: String  , fields :: [Expr]                     }
-          | Module     { datatypes :: [Expr] }
+          | Module     { path  :: [String], datatypes :: [Expr] }
           deriving (Show)
 
 

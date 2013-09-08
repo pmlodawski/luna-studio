@@ -36,8 +36,8 @@ import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
 import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node(..))
-import qualified Flowbox.Luna.Type.Type                  as Type
-import           Flowbox.Luna.Type.Type                    (Type(..))
+import qualified Flowbox.Luna.XOLD.Type.Type             as Type
+import           Flowbox.Luna.XOLD.Type.Type               (Type(..))
 import qualified Flowbox.System.UniPath                  as UniPath
 import           Flowbox.System.UniPath                    (UniPath)
 import qualified Flowbox.Batch.Tools.Definition2AST      as Definition2AST

@@ -11,6 +11,8 @@ standard,
 noEdges,
 ) where
 
+import           Flowbox.Prelude   
+
 --import qualified Data.Serialize          as Serialize
 --import           Data.Serialize            (Serialize)
 --import           Control.Monad             (liftM)

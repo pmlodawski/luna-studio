@@ -6,10 +6,11 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances #-}
 
-module Flowbox.Luna.Parser.AST.Class where
+module Flowbox.Luna.AST.Class where
 
-import           Flowbox.Luna.Parser.AST.AST    
-import qualified Flowbox.Luna.Parser.AST.Type as Type
+import           Flowbox.Prelude         
+import           Flowbox.Luna.AST.AST    
+import qualified Flowbox.Luna.AST.Type as Type
 
 
 mk :: String -> [String] -> Expr

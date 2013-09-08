@@ -5,14 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
+module Flowbox.Luna.Data.Source where
 
-import           Debug.Trace                  
+import           Flowbox.Prelude   
 
-import qualified Flowbox.Luna.Parser.Parser as Parser
-import qualified Flowbox.Luna.Parser.Lexer  as Lexer
-
-
-main :: IO ()
-main = do 
-    Parser.main
+data Source = Source { mod  :: [String]
+                     , code :: String
+                     }

@@ -7,6 +7,8 @@
 
 module Flowbox.Luna.Passes.HSGen.CodeGenerator where
 
+import           Flowbox.Prelude   
+
 --import           Debug.Trace                              
 
 

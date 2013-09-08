@@ -8,9 +8,9 @@
 
 module Flowbox.Luna.Passes.SSA.SSA where
 
-import qualified Flowbox.Luna.Parser.AST.AST   as LAST
-import qualified Flowbox.Luna.Parser.AST.Type  as Type
-import           Flowbox.Luna.Parser.AST.Type    (Type)
+import qualified Flowbox.Luna.AST.AST          as LAST
+import qualified Flowbox.Luna.AST.Type         as Type
+import           Flowbox.Luna.AST.Type           (Type)
 import qualified Flowbox.Luna.Passes.SSA.State as SSAState
 import           Flowbox.Luna.Passes.SSA.State   (SSAState)
 import qualified Flowbox.Luna.Passes.Pass      as Pass
@@ -21,8 +21,8 @@ import           Control.Applicative
 
 import           Flowbox.System.Log.Logger       
 
-import qualified Prelude                       as Prelude
-import           Prelude                       hiding (error)
+import qualified Flowbox.Prelude               as Prelude
+import           Flowbox.Prelude               hiding (error)
 
 
 logger :: Logger
@@ -46,12 +46,12 @@ runNested f = do
 
 ssaAST :: SSAMonad m => Mode -> LAST.Expr -> Pass.Result m LAST.Expr
 ssaAST mode ast = case ast of
-    LAST.Program    body                  -> LAST.Program <$> mapM (ssaAST mode) body
+    LAST.Module     path body             -> LAST.Module path <$> mapM (ssaAST mode) body
     LAST.Function   name signature body   -> runNested $ do
                                                     SSAState.registerVar (name, name)
                                                     ssaType signature
                                                     LAST.Function name signature <$> mapM (ssaAST mode) body
-    LAST.Assignment src dst               -> flip LAST.Assignment <$> ssaAST mode dst <*> ssaAST Write src
+    LAST.Assignment src  dst              -> flip LAST.Assignment <$> ssaAST mode dst <*> ssaAST Write src
     LAST.Pattern    pat                   -> LAST.Pattern         <$> ssaAST mode pat
     LAST.Identifier name                  -> case mode of
                                                  Write -> LAST.Identifier <$> SSAState.handleVar name
@@ -60,8 +60,10 @@ ssaAST mode ast = case ast of
                                                      case v of
                                                         Nothing      -> (logger error $ "Not in scope: '" ++ name ++ "'") *> Pass.fail
                                                         Just newname -> return $ LAST.Identifier newname
-    LAST.Operator   name src dst          -> LAST.Operator name <$> ssaAST mode src <*> ssaAST mode dst
-    LAST.Call       src args              -> LAST.Call <$> ssaAST mode src <*> mapM (ssaAST mode) args
+    LAST.Operator   name src    dst       -> LAST.Operator name <$> ssaAST mode src <*> ssaAST mode dst
+    LAST.Call       src  args             -> LAST.Call <$> ssaAST mode src <*> mapM (ssaAST mode) args
+    LAST.Class      cls  fields methods   -> do ssaType cls
+                                                LAST.Class cls <$> mapM (ssaAST mode) fields <*> mapM (ssaAST mode) methods
     LAST.Constant {}                      -> return ast
     _                                     -> logger error "SSA Pass error: Unknown expression." *> Pass.fail
 
@@ -71,4 +73,5 @@ ssaType ast = case ast of
     Type.Lambda inputs _       -> ssaType inputs
     Type.Tuple  items          -> mapM ssaType items *> return ()
     Type.Type   name           -> SSAState.registerVar (name, name)
+    Type.Class  name   _       -> SSAState.registerVar (name, name)
     _                          -> logger error "SSA Pass error: Unknown type." *> Pass.fail
