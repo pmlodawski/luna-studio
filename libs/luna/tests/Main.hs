@@ -22,7 +22,6 @@ import qualified Flowbox.Luna.Passes.HSGen.HSGen         as HSGen
 import qualified Flowbox.Luna.Passes.SSA.SSA             as SSA
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module    as Module
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr      as Expr
-import qualified Flowbox.Luna.Passes.Graph2AST.Graph2AST as Graph2AST
 import qualified Flowbox.Luna.Passes.SSA.State           as SSAState
 import           Flowbox.Luna.Passes.SSA.State             (SSAState)
 import qualified Flowbox.Luna.Passes.Luna.Luna           as Luna
@@ -64,9 +63,6 @@ main_inner = Luna.run $ do
     putStrLn "\n-------- HAST --------"
     hast <- HSGen.run  ssa
     putStrLn $ PP.ppShow hast
-
-    out <- Graph2AST.run 5
-    print out
 
     --putStrLn "\n-------- HSC --------"
     --hsc <- HSGen.genCode  hast

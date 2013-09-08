@@ -19,8 +19,8 @@ Library
   GHC-Options:    -Wall 
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
-                  TemplateHaskell,
-                  NoImplicitPrelude
+                  NoImplicitPrelude,
+                  TemplateHaskell
   
   Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*Flowbox/Luna/Tools/Serialize/Thrift/Generated/.*')`,
                    `findmodules('src/Flowbox/Luna/Tools/Serialize/Thrift/Generated', '.*\.hs')`

@@ -10,6 +10,9 @@ module Flowbox.Batch.GraphView.PortDescriptor(
 	empty,
 ) where
 
+import           Flowbox.Prelude                           
+
+
 
 type PortDescriptor = [Int]
 

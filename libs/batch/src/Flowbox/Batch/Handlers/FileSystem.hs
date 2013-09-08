@@ -19,6 +19,7 @@ where
 import qualified System.Directory              as Directory
 import qualified System.IO                     as IO
 
+import           Flowbox.Prelude                           
 import           Flowbox.Batch.FileSystem.Item   (Item(..))
 import qualified Flowbox.System.UniPath        as UniPath
 import           Flowbox.System.UniPath          (UniPath)

@@ -16,6 +16,7 @@ module Flowbox.Batch.GraphView.Defaults (
 import           Data.Map                                  (Map)
 import qualified Data.Map                                as Map
 
+import           Flowbox.Prelude                           
 import qualified Flowbox.Batch.Batch                     as Batch
 import           Flowbox.Batch.GraphView.PortDescriptor    (PortDescriptor)
 import qualified Flowbox.Luna.Network.Attributes         as Attributes

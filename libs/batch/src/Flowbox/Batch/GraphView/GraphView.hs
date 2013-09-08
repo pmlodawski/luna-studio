@@ -21,6 +21,7 @@ import           Data.Map                                  (Map)
 import qualified Data.Map                                as Map
 import           Data.Foldable                             (foldrM)
 
+import           Flowbox.Prelude                           
 import qualified Flowbox.Batch.Batch                     as Batch
 import qualified Flowbox.Batch.GraphView.Defaults        as Defaults
 import qualified Flowbox.Batch.GraphView.EdgeView        as EdgeView

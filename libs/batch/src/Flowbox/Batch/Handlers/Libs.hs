@@ -22,6 +22,7 @@ module Flowbox.Batch.Handlers.Libs (
     libraryOp',
 ) where
 
+import           Flowbox.Prelude                           
 import           Flowbox.Batch.Batch                   (Batch(..))
 import           Flowbox.Batch.Handlers.Common         (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
 import qualified Flowbox.Batch.Project.Project       as Project

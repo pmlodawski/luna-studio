@@ -8,7 +8,11 @@
 
 module Flowbox.Batch.Samples.Nodes2Ast where
 
+import           Control.Applicative                       
+import           System.TimeIt                             
 import           Text.Show.Pretty                          
+
+import           Flowbox.Prelude                           
 import qualified Flowbox.Batch.Batch                     as Batch
 import           Flowbox.Batch.Batch                       (Batch(..))
 import qualified Flowbox.Batch.GraphView.GraphView       as GraphView
@@ -36,21 +40,26 @@ import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
 import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node(..))
+import qualified Flowbox.Luna.Passes.Graph2AST.Graph2AST as Graph2AST
+import qualified Flowbox.Luna.Passes.Luna.Luna           as Luna
 import qualified Flowbox.Luna.XOLD.Type.Type             as Type
 import           Flowbox.Luna.XOLD.Type.Type               (Type(..))
 import qualified Flowbox.System.UniPath                  as UniPath
 import           Flowbox.System.UniPath                    (UniPath)
-import qualified Flowbox.Batch.Tools.Definition2AST      as Definition2AST
+
 
 main :: IO ()
-main = eRunScript $ do
+main = timeIt main_inner *> return ()
+
+main_inner :: IO (Either String ())
+main_inner = Luna.run $ do
     let fun1_gv = GraphView.insEdges [(0, 2, EdgeView [0]    [0])
                                      ,(2, 1, EdgeView [0, 1] [0])]
                 $ GraphView.insNodes [(0, Node.mkInputs)
                                      ,(1, Node.mkOutputs)
                                      ,(2, Node.mkExpr "alamakota" )] 
                                      GraphView.empty                                     
-    fun1_graph <- tryRight $ GraphView.toGraph fun1_gv
+        Right fun1_graph = GraphView.toGraph fun1_gv
 
     let fun1_df = Definition.empty { Definition.cls = Function "fun1" (Type.Tuple []) (Type.Tuple [])
                                    , Definition.graph = fun1_graph
@@ -64,11 +73,8 @@ main = eRunScript $ do
                                          DefManager.empty
                                    
 
-    scriptIO $ do 
-                  --print fun1_df
-                  putStrLn $ ppShow $ Definition2AST.def2AST defManager (0, fun1_df)
-                  
-                  putStrLn "--------------------------------------------"
-
-                  --print cls1_df
-                  putStrLn $ ppShow $ Definition2AST.def2AST defManager (1, cls1_df)
+    out_fun1 <- Graph2AST.run defManager (0, fun1_df)
+    putStrLn $ ppShow out_fun1
+    putStrLn "--------------------------------------------"
+    out_cls1 <- Graph2AST.run defManager (0, fun1_df)
+    putStrLn $ ppShow out_cls1

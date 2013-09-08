@@ -14,7 +14,7 @@ import           System.IO
 import           Thrift.Protocol.Binary                                     
 import           Thrift.Transport.Handle                                    ()
 
-import qualified Projects_Types                                           as TProject
+import           Flowbox.Prelude                           
 import qualified Flowbox.Batch.Project.Project                            as Project
 import           Flowbox.Batch.Project.Project                              (Project)
 import qualified Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects   ()
@@ -24,6 +24,7 @@ import           Flowbox.System.IO.Serializer                               (Ser
 import qualified Flowbox.System.UniPath                                   as UniPath
 import           Flowbox.System.UniPath                                     (UniPath)
 import           Flowbox.Tools.Conversion                                   
+import qualified Projects_Types                                           as TProject
 
 
 

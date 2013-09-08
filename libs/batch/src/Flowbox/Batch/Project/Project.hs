@@ -12,6 +12,7 @@ module Flowbox.Batch.Project.Project(
 	make,
 ) where
 
+import           Flowbox.Prelude                           
 import qualified Flowbox.Luna.Lib.LibManager     as LibManager
 import           Flowbox.Luna.Lib.LibManager       (LibManager)
 import qualified Flowbox.Luna.Network.Attributes as Attributes

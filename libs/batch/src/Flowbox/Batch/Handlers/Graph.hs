@@ -16,6 +16,7 @@ module Flowbox.Batch.Handlers.Graph (
     disconnect,
 ) where
 
+import           Flowbox.Prelude                          
 import           Flowbox.Batch.Batch                      (Batch(..))
 import           Flowbox.Batch.Handlers.Common            (noresult, readonly, graphViewOp, nodeOp)
 import           Flowbox.Batch.GraphView.EdgeView         (EdgeView(..))

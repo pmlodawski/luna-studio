@@ -7,6 +7,7 @@
 
 module Flowbox.Batch.Samples.Modules where
 
+import           Flowbox.Prelude                           
 import qualified Flowbox.Batch.Project.Project           as Project
 import           Flowbox.Batch.Project.Project             (Project)
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager

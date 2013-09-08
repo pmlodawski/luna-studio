@@ -19,6 +19,7 @@ module Flowbox.Batch.Handlers.Defs (
     definitionOp,
 ) where
 
+import           Flowbox.Prelude                           
 import           Flowbox.Batch.Batch                   (Batch(..))
 import           Flowbox.Batch.Handlers.Common         (noresult, readonly, defManagerOp, definitionOp)
 import qualified Flowbox.Batch.Project.Project       as Project

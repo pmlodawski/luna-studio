@@ -13,6 +13,7 @@ module Flowbox.Batch.Handlers.Defaults (
 
 import qualified Data.Map                                as Map
 
+import           Flowbox.Prelude                           
 import           Flowbox.Batch.Batch                       (Batch(..))
 import qualified Flowbox.Batch.GraphView.Defaults        as Defaults
 import           Flowbox.Batch.GraphView.Defaults          (DefaultsMap)

@@ -9,7 +9,9 @@ module Flowbox.Batch.FileSystem.Item (
     Item(..)
 ) where 
 
+import           Flowbox.Prelude                           
 import           Flowbox.System.UniPath   (UniPath)
+
 
 
 data Item = File      { path :: UniPath, size :: Int }

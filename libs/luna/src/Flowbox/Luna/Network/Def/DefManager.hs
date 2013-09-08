@@ -14,7 +14,8 @@ module Flowbox.Luna.Network.Def.DefManager(
     delete,
     pathNames,
     children,
-    parent
+    parent,
+    empty
 ) where
 
 import           Flowbox.Prelude                       
@@ -25,10 +26,15 @@ import qualified Flowbox.Luna.Network.Def.Definition as Definition
 import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
 import           Flowbox.Luna.Network.Def.Edge         (Edge(..))
 
-import           Flowbox.Luna.Data.Graph             hiding (Edge)
+import           Flowbox.Luna.Data.Graph              hiding (Graph, Edge, empty)
+import qualified Flowbox.Luna.Data.Graph              as DG
 import           Flowbox.Luna.Data.List                (foldri)
 
-type DefManager = Graph Definition Edge
+type DefManager = DG.Graph Definition Edge
+
+
+empty :: DefManager
+empty = DG.empty
 
 
 addToParent :: (Definition.ID, Definition.ID, Definition) -> DefManager -> DefManager

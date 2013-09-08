@@ -18,6 +18,7 @@ Library
     GHC-Options:    -Wall 
 
     Extensions:     FlexibleInstances,
+                    NoImplicitPrelude,
                     TypeSynonymInstances
  
     Exposed-modules: 
@@ -36,6 +37,7 @@ Library
                     pretty-show,
                     text,
                     thrift,
+                    timeit,
                     unordered-containers,
                     vector
 
@@ -47,8 +49,8 @@ Executable batch
 
   GHC-Options:    -Wall 
 
---  Extensions:     DoAndIfThenElse
---                  MultiParamTypeClasses
+  Extensions:     DoAndIfThenElse,
+                  NoImplicitPrelude
 
   Build-Depends:    base,
                     bytestring,
@@ -63,5 +65,6 @@ Executable batch
                     pretty-show,
                     text,
                     thrift,
+                    timeit,
                     unordered-containers,
                     vector
