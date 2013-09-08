@@ -22,6 +22,7 @@ module Flowbox.Luna.Data.Graph (
     sucl,
     pre_,
     prel,
+    lprel,
     path,
     newVtxs,
     newVtx,
@@ -80,6 +81,10 @@ pre_ g vtx = map (fromJust . (lab g)) $ pre g vtx
 
 prel :: Graph a b -> Vertex -> [LVertex a]
 prel g vtx = map (fromJust . (labVtx g)) $ pre g vtx
+
+
+lprel :: Graph a b -> Vertex -> [(Vertex, a, b)]
+lprel g vtx = map (\((v, b)) -> (v, fromJust $ lab g v, b)) $ lpre g vtx
 
 
 path :: Graph a b -> Vertex -> [Vertex]

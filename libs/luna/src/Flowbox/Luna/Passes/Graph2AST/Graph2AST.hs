@@ -16,6 +16,7 @@ import           Control.Monad.Trans.Maybe
 import           Control.Monad.Trans.Either                
 import           Data.Foldable                             (foldrM)
 import           Data.Maybe                                (fromJust)
+import qualified Data.List                               as List
 
 import           Flowbox.Prelude                           
 import           Flowbox.Control.Error                     
@@ -60,15 +61,13 @@ run defManager (defID, def) = (Pass.runM Pass.NoState) $ def2AST defManager (def
 
 def2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m AST.Expr
 def2AST defManager (defID, def) = do 
-    let (Definition acls agraph aimports (Flags _ aomit) _) = def
+    let (Definition acls graph aimports (Flags _ aomit) _) = def
     case acls of
         Type.Class _ _ params             -> do let astCls    = (snd . toASTType) acls
                                                     astFields = map type2Field params
                                                 astMethods <- mapM (def2AST defManager) $ DefManager.sucl defManager defID
                                                 return $ AST.Class astCls astFields astMethods
-        Type.Function name inputs outputs -> AST.Function <$> pure name 
-                                                          <*> pure ASTType.Unknown 
-                                                          <*> graph2AST agraph
+        Type.Function name inputs outputs -> AST.Function name (snd $ toASTType acls) <$> graph2AST graph
         _                          -> return AST.NOP
     
 
@@ -105,21 +104,34 @@ type2Field t = AST.Field name cls where
 
 
 graph2AST :: Graph2ASTMonad m => Graph -> Pass.Result m [AST.Expr]
-graph2AST agraph = foldrM (node2AST agraph) [] $ Graph.topsortl agraph
+graph2AST graph = foldrM (node2AST graph) [] $ Graph.topsortl graph
 
 
 node2AST :: Graph2ASTMonad m => Graph -> (Node.ID, Node.Node) -> [AST.Expr] -> Pass.Result m [AST.Expr] 
-node2AST agraph (nodeID, node) list = do
+node2AST graph (nodeID, node) list = do
+    let 
+        order :: (Node.ID, Node.Node, Edge) -> (Node.ID, Node.Node, Edge) -> Ordering
+        order (_, _, Edge a) (_, _, Edge b) = compare a b
+
+        resultName :: Node.ID -> AST.Expr
+        resultName id = AST.Identifier $ "result_" ++ show id
+
+        argName :: (Node.ID, Node.Node, Edge) -> AST.Expr
+        argName (id, _, _) = resultName id
+
+
+        argNodes = List.sortBy order $ Graph.lprel graph nodeID
+        argNames = map argName argNodes
 
     call <- case node of 
         Node.Expr expression flags _ -> case Parser.parseExpr expression of 
                                             Left  err  -> fail $ show err
-                                            Right expr -> return expr
+                                            Right expr -> return $ AST.Call expr argNames
         Node.Default value _ -> return $ AST.Constant $ toASTConstant value
         Node.Inputs  flags _ -> return AST.NOP
-        Node.Outputs flags _ -> return AST.NOP
-        Node.NTuple  flags _ -> return AST.NOP
+        Node.Outputs flags _ -> return $ AST.Tuple argNames
+        Node.NTuple  flags _ -> return $ AST.Tuple argNames
 
-    let assignments = [AST.NOP]
+    let assignment =  AST.Assignment (AST.Pattern $ resultName nodeID) call
 
-    return $ list ++ assignments ++ [call]
+    return $ list ++ [assignment]
