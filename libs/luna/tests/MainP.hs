@@ -7,17 +7,22 @@
 
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
+import           Flowbox.Prelude
 import           Debug.Trace                  
 
-import qualified Flowbox.Luna.Parser.Parser as Parser
-import qualified Flowbox.Luna.Parser.Lexer  as Lexer
-import qualified Text.Show.Pretty           as PP
-import           System.TimeIt                
+import qualified Flowbox.Luna.Passes.Txt2AST.Parser as Parser
+import qualified Flowbox.Luna.Passes.Txt2AST.Lexer  as Lexer
+import qualified Text.Show.Pretty                   as PP
+import qualified Flowbox.Luna.Data.Source           as Source
+import           Flowbox.Luna.Data.Source             (Source)
+import           System.TimeIt                 
 
 
-example :: String
-example = unlines [ "class A:"
-                  , "    def f()"
+example :: Source
+example = Source.Source ["Workspace"] 
+        $ unlines [ "def f(x):"
+                  , "   def g(y):"
+                  , "       f = x + y"
                   ]
 
 main :: IO ()

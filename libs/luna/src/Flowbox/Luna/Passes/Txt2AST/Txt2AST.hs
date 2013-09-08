@@ -33,6 +33,6 @@ run = (Pass.runM Pass.NoState) . parse
 
 
 parse :: ParserMonad m => Source -> Pass.Result m LAST.Expr
-parse (Source.Source mod code) = case Parser.parse code of
+parse src = case Parser.parse src of
     Left  _ -> Pass.fail
     Right v -> return v

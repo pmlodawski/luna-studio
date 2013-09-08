@@ -24,6 +24,7 @@ import qualified Flowbox.Luna.AST.Field            as Field
 import qualified Flowbox.Luna.AST.Module           as Module
 import qualified Flowbox.Luna.AST.Type             as Type
 import qualified Flowbox.Luna.AST.Constant         as Constant
+import qualified Flowbox.Luna.Data.Source          as Source
 
 
 -----------------------------------------------------------
@@ -207,12 +208,12 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 -- Program
 -----------------------------------------------------------
 
-pProgram = Module.mk <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
-                     <|> pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
+pProgram mod = AST.Module (AST.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
+                                         <|> pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
 
 --pProgram = many $ pPattern 0
 
-parse input = Parsec.parse pProgram "Luna Parser" input
+parse (Source.Source mod code) = Parsec.parse (pProgram mod) "Luna Parser" $ code
 
 
 

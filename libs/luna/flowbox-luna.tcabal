@@ -77,29 +77,6 @@ Executable luna
                   parsec
 
 
---Executable parser 
---  Main-Is:        MainP.hs
---  Hs-Source-Dirs: tests
-
---  if flag(debug)
---    GHC-Options:  -csacc
---  GHC-Options:    -Wall 
-
---  Extensions:     DoAndIfThenElse
---                  MultiParamTypeClasses
---                  NoImplicitPrelude
---
---  Build-Depends:  base,
---                  flowbox-luna-parser,
---                  uu-parsinglib,
---                  pretty-show,
---                  ListLike,
---                  timeit,
---                  parsec,
---                  mtl,
---                  indents,
---                  MissingH
-
 Test-Suite tests
   Type:           exitcode-stdio-1.0
   Main-Is:        Spec.hs

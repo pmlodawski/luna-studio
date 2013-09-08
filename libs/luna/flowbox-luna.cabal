@@ -48,7 +48,7 @@ Library
         Flowbox.Luna.Passes.HSGen.DefGenerator,
         Flowbox.Luna.Passes.HSGen.CodeGenerator,
         Flowbox.Luna.Passes.HSGen.Path,
-        Flowbox.Luna.Passes.HSGen.Generator,
+        Flowbox.Luna.Passes.HSGen.HSGen,
         Flowbox.Luna.Passes.HSGen.Cabal.Config,
         Flowbox.Luna.Passes.HSGen.Cabal.Section,
         Flowbox.Luna.Passes.HSGen.AST.Cons,
@@ -153,29 +153,6 @@ Executable luna
                   mtl,
                   parsec
 
-
---Executable parser 
---  Main-Is:        MainP.hs
---  Hs-Source-Dirs: tests
-
---  if flag(debug)
---    GHC-Options:  -csacc
---  GHC-Options:    -Wall 
-
---  Extensions:     DoAndIfThenElse
---                  MultiParamTypeClasses
---                  NoImplicitPrelude
---
---  Build-Depends:  base,
---                  flowbox-luna-parser,
---                  uu-parsinglib,
---                  pretty-show,
---                  ListLike,
---                  timeit,
---                  parsec,
---                  mtl,
---                  indents,
---                  MissingH
 
 Test-Suite tests
   Type:           exitcode-stdio-1.0

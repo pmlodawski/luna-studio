@@ -18,7 +18,7 @@ import           Control.Monad.Trans.Either
 import           Flowbox.System.Log.Logger              
 import qualified Flowbox.System.Log.Logger            as Logger
 import qualified Flowbox.System.Log.LogEntry          as LogEntry
-import qualified Flowbox.Luna.Passes.HSGen.Generator  as HSGen
+import qualified Flowbox.Luna.Passes.HSGen.HSGen      as HSGen
 import qualified Flowbox.Luna.Passes.SSA.SSA          as SSA
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module as Module
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr   as Expr
@@ -44,9 +44,7 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source ["Workspace"] 
-        $ unlines [ "def f(x):"
-                  , "   def g(y):"
-                  , "       f = x + y"
+        $ unlines [ "class X"
                   ]
 
 main :: IO ()
@@ -62,10 +60,13 @@ main_inner = Luna.run $ do
     ssa <- SSA.run     ast
     putStrLn $ PP.ppShow ssa
 
-    putStrLn "\n-------- HSC --------"
-    hsc <- HSGen.run   ssa
-    putStrLn $ PP.ppShow hsc
+    putStrLn "\n-------- HAST --------"
+    hast <- HSGen.run  ssa
+    putStrLn $ PP.ppShow hast
 
+    --putStrLn "\n-------- HSC --------"
+    --hsc <- HSGen.genCode  hast
+    --putStrLn $ PP.ppShow hsc
 
     return ()
 

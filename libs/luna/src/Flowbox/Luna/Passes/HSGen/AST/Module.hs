@@ -5,14 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.HSGen.AST.Module where
+module Flowbox.Luna.Passes.HSGen.AST.Module (
+	module Flowbox.Luna.Passes.HSGen.AST.Module,
+	module Flowbox.Luna.Passes.HSGen.AST.Expr
+)where
 
 import           Flowbox.Prelude
-import           Flowbox.Luna.Passes.HSGen.AST.Expr as Expr
+import           Flowbox.Luna.Passes.HSGen.AST.Expr
 
 
 empty :: Expr 
-empty = Expr.Module []
+empty = Module [] []
 
 
 --import           Debug.Trace                             
