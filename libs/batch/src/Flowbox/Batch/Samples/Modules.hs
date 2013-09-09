@@ -18,8 +18,8 @@ import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import qualified Flowbox.Luna.Lib.LibManager             as LibManager
 import           Flowbox.Luna.Lib.LibManager               (LibManager)
 import qualified Flowbox.Luna.Lib.Library                as Library
-import           Flowbox.Luna.Lib.Library                  (Library(..))
-import           Flowbox.Luna.XOLD.Type.Type               (Type(..))
+import           Flowbox.Luna.Lib.Library                  (Library)
+import           Flowbox.Luna.XOLD.Type.Type               (Type)
 import qualified Flowbox.Luna.XOLD.Type.Type             as Type
 import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
@@ -38,32 +38,32 @@ mkDefinition acls = Definition.empty{ Definition.cls = acls
                                   }
 
 mkModule :: String -> Definition
-mkModule aname = mkDefinition (Module aname) 
+mkModule name = mkDefinition (Type.mkModule name ) 
 
 
 mkClass :: String -> Definition
-mkClass aname  = mkDefinition (Class aname [] [])
+mkClass name  = mkDefinition (Type.mkClass name)
 
 
 mkFunction :: String -> Definition
-mkFunction aname = mkDefinition (Function aname ( Tuple [ Tuple [ Class "a" [] [Class "g" [] []]
-                                                                , Class "b" [] []
-                                                                , Named "n" $ Class "f" [] []
+mkFunction name = mkDefinition (Type.Function name ( Type.Tuple [ Type.Tuple [ Type.Class "a" [] [Type.Class "g" [] []]
+                                                                , Type.Class "b" [] []
+                                                                , Type.Named "n" $ Type.Class "f" [] []
                                                                 ]
-                                                        , Class "c" [] []
-                                                        , Function "d" ( Tuple [ Class "e" [] []
-                                                                               ]
+                                                   , Type.Class "c" [] []
+                                                   , Type.Function "d" ( Type.Tuple [ Type.Class "e" [] []
+                                                                                    ]
                                                                        ) 
-                                                                       ( Tuple []
+                                                                       ( Type.Tuple []
                                                                        )
-                                                        ]
-                                                 ) 
-                                                 ( Tuple [ Class "o1" [] []
-                                                         , Class "o2" [] []
-                                                         , Class "o3" [] []
-                                                         ]
-                                                 )
-                                 )
+                                                                ]
+                                                   ) 
+                                                   ( Type.Tuple [ Type.Class "o1" [] []
+                                                                , Type.Class "o2" [] []
+                                                                , Type.Class "o3" [] []
+                                                                ]
+                                                   )
+                               )
 
 
 listToDefs :: [String] -> Definition.ID -> Definition.ID -> (String -> Definition)
@@ -88,21 +88,21 @@ cls_console = Definition.empty { Definition.cls   = Type.Class "Console" [] []
 
 cls_vector :: Definition
 cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeName "a"), Type.Named "y" (Type.TypeName "a"), Type.Named "z" (Type.TypeName "a")]
-                    , Definition.graph = Graph.empty
-                    }
+                             , Definition.graph = Graph.empty
+                             }
 
 
 addSomeDefs :: DefManager -> DefManager
-addSomeDefs adefs = DefManager.addToParentMany (listToDefs atrybuty     2000 20 mkClass)
-                  $ DefManager.addToParent (0, 20, mkModule "atrybuty")
-                  $ DefManager.addToParentMany (listToDefs wladcyPolski 1000 10 mkFunction)
-                  $ DefManager.addToParent (0, 10, mkModule "wladcyPolski")
-                  $ DefManager.addToParent (4, 5 , func_vec_incx)
-                  $ DefManager.addToParent (3, 4 , cls_vector)
-                  $ DefManager.addToParent (1, 3 , mkModule "Math")
-                  $ DefManager.addToParent (1, 2 , mkModule "IO")
-                  $ DefManager.addToParent (0, 1 , mkModule "Std")
-                  $ adefs
+addSomeDefs defs = DefManager.addToParentMany (listToDefs atrybuty     2000 20 mkClass)
+                 $ DefManager.addToParent (0, 20, mkModule "atrybuty")
+                 $ DefManager.addToParentMany (listToDefs wladcyPolski 1000 10 mkFunction)
+                 $ DefManager.addToParent (0, 10, mkModule "wladcyPolski")
+                 $ DefManager.addToParent (4, 5 , func_vec_incx)
+                 $ DefManager.addToParent (3, 4 , cls_vector)
+                 $ DefManager.addToParent (1, 3 , mkModule "Math")
+                 $ DefManager.addToParent (1, 2 , mkModule "IO")
+                 $ DefManager.addToParent (0, 1 , mkModule "Std")
+                 $ defs
 
 
 func_vec_incx_graph :: LibManager.Gr Node Edge

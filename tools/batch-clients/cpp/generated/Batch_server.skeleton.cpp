@@ -132,12 +132,12 @@ class BatchHandler : virtual public BatchIf {
     printf("definitionParent\n");
   }
 
-  void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name) {
+  void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector< ::flowbox::batch::types::Type> & fields) {
     // Your implementation goes here
     printf("newTypeModule\n");
   }
 
-  void newTypeClass( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::types::Type> & params) {
+  void newTypeClass( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector<std::string> & params, const std::vector< ::flowbox::batch::types::Type> & fields) {
     // Your implementation goes here
     printf("newTypeClass\n");
   }

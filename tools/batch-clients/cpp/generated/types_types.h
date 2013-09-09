@@ -32,11 +32,11 @@ struct TypeType {
 extern const std::map<int, const char*> _TypeType_VALUES_TO_NAMES;
 
 typedef struct _TypeProto__isset {
-  _TypeProto__isset() : name(false), items(true), typeparams(true), params(true), inputs(false), outputs(false), type(false) {}
+  _TypeProto__isset() : name(false), items(true), params(true), fields(true), inputs(false), outputs(false), type(false) {}
   bool name;
   bool items;
-  bool typeparams;
   bool params;
+  bool fields;
   bool inputs;
   bool outputs;
   bool type;
@@ -59,8 +59,8 @@ class TypeProto {
   TypeType::type cls;
   std::string name;
   std::vector<int32_t>  items;
-  std::vector<std::string>  typeparams;
-  std::vector<int32_t>  params;
+  std::vector<std::string>  params;
+  std::vector<int32_t>  fields;
   int32_t inputs;
   int32_t outputs;
   int32_t type;
@@ -81,14 +81,14 @@ class TypeProto {
     __isset.items = true;
   }
 
-  void __set_typeparams(const std::vector<std::string> & val) {
-    typeparams = val;
-    __isset.typeparams = true;
-  }
-
-  void __set_params(const std::vector<int32_t> & val) {
+  void __set_params(const std::vector<std::string> & val) {
     params = val;
     __isset.params = true;
+  }
+
+  void __set_fields(const std::vector<int32_t> & val) {
+    fields = val;
+    __isset.fields = true;
   }
 
   void __set_inputs(const int32_t val) {
@@ -118,13 +118,13 @@ class TypeProto {
       return false;
     else if (__isset.items && !(items == rhs.items))
       return false;
-    if (__isset.typeparams != rhs.__isset.typeparams)
-      return false;
-    else if (__isset.typeparams && !(typeparams == rhs.typeparams))
-      return false;
     if (__isset.params != rhs.__isset.params)
       return false;
     else if (__isset.params && !(params == rhs.params))
+      return false;
+    if (__isset.fields != rhs.__isset.fields)
+      return false;
+    else if (__isset.fields && !(fields == rhs.fields))
       return false;
     if (__isset.inputs != rhs.__isset.inputs)
       return false;

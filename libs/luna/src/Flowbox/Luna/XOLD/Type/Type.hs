@@ -6,26 +6,31 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.XOLD.Type.Type(
-Type(..),
+    Type(..),
 
-noInputs,
-noOutputs,
-noParams,
-mkFunction,
-mkModule
+    noFields,
+    noInputs,
+    noOutputs,
+    noParams,
+    mkClass,
+    mkModule,
+    mkFunction,
 ) where
 
 import           Flowbox.Prelude   
 
 data Type = Undefined
           | TypeName     {name   :: String}
-          | Module       {name   :: String}
-          | Class        {name   :: String, typeparams :: [String], params :: [Type]}
-          | Function     {name   :: String, inputs ::      Type,   outputs :: Type}
+          | Module       {name   :: String,                     fields :: [Type] }
+          | Class        {name   :: String, params :: [String], fields :: [Type]}
+          | Function     {name   :: String, inputs ::  Type , outputs :: Type}
           | Interface    {fields :: [Type], methods :: [Type]}
           | Tuple        {items  :: [Type]}
           | Named        {name   :: String, cls :: Type}
           deriving (Show)
+
+noFields :: [Type]
+noFields = []
 
 noInputs :: Type
 noInputs = Tuple []
@@ -33,11 +38,14 @@ noInputs = Tuple []
 noOutputs :: Type
 noOutputs = Tuple []
 
-noParams :: [Type]
+noParams :: [String]
 noParams = []
 
+mkClass :: String -> Type
+mkClass name' = Class name' noParams noFields
+
 mkModule :: String -> Type
-mkModule name' = Module name'
+mkModule name' = Module name' noFields
 
 mkFunction :: String -> Type
 mkFunction name' = Function name' noInputs noOutputs

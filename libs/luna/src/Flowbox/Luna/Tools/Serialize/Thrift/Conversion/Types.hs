@@ -16,7 +16,8 @@ import qualified Data.Vector                 as Vector
 
 import qualified Types_Types                 as TTypes
 import           Flowbox.Control.Error         
-import           Flowbox.Luna.XOLD.Type.Type   (Type(..))
+import qualified Flowbox.Luna.XOLD.Type.Type as Type
+import           Flowbox.Luna.XOLD.Type.Type   (Type)
 import           Flowbox.Tools.Conversion      
 
 
@@ -36,17 +37,19 @@ typeList2typeProtoList level types = case types of
 
 type2typeProtoList :: Int -> Type -> [TTypes.TypeProto]
 type2typeProtoList level t = case t of 
-    Undefined       -> [tcurrent] where
+    Type.Undefined       -> [tcurrent] where
        tcls       = Just TTypes.Undefined
        tcurrent   = TTypes.TypeProto tcls Nothing Nothing Nothing Nothing Nothing Nothing Nothing
-    Module aname     -> [tcurrent] where
+    Type.Module name fields -> tcurrent : tfields where
        tcls       = Just TTypes.Module
-       tname      = Just $ pack aname
-       
-       tcurrent   = TTypes.TypeProto tcls tname   Nothing Nothing Nothing Nothing Nothing Nothing
-    Function aname ainputs aoutputs -> tcurrent : tinputs ++ toutputs where
+       tname      = Just $ pack name
+       fieldsLevel   = level + 1
+       (tfieldsLevels', tfields) = typeList2typeProtoList fieldsLevel fields
+       tfieldsLevels = Just $ Vector.fromList $ map (itoi32) tfieldsLevels'
+       tcurrent   = TTypes.TypeProto tcls tname   Nothing Nothing tfieldsLevels Nothing Nothing Nothing
+    Type.Function name ainputs aoutputs -> tcurrent : tinputs ++ toutputs where
        tcls          = Just TTypes.Function
-       tname         = Just $ pack aname
+       tname         = Just $ pack name
 
        inputsLevel   = level + 1
        tinputsLevel  = Just $ itoi32 inputsLevel
@@ -57,73 +60,74 @@ type2typeProtoList level t = case t of
        toutputs      = type2typeProtoList outputsLevel aoutputs
        
        tcurrent      = TTypes.TypeProto tcls tname   Nothing Nothing Nothing tinputsLevel toutputsLevel Nothing
-    Tuple aitems     -> tcurrent : titems where
+    Type.Tuple aitems     -> tcurrent : titems where
        tcls          = Just TTypes.Tuple
        itemsLevel    = level + 1
        (itemsLevels', titems) = typeList2typeProtoList itemsLevel aitems
        titemsLevels  = Just $ Vector.fromList $ map (itoi32) itemsLevels'
        tcurrent      = TTypes.TypeProto tcls Nothing titemsLevels Nothing Nothing Nothing Nothing Nothing
-    Class aname atypeparams aparams -> tcurrent : tparams where
+    Type.Class name atypeparams fields -> tcurrent : tfields where
        tcls          = Just TTypes.Class
-       tname         = Just $ pack aname
+       tname         = Just $ pack name
        ttypeparams   = Just $ Vector.fromList $ map (pack) atypeparams
-       paramsLevel   = level + 1
-       (tparamsLevels', tparams) = typeList2typeProtoList paramsLevel aparams
-       tparamsLevels = Just $ Vector.fromList $ map (itoi32) tparamsLevels'
-       tcurrent      = TTypes.TypeProto tcls tname Nothing ttypeparams tparamsLevels  Nothing Nothing Nothing
-    Named aname atype -> tcurrent:ttype where
+       fieldsLevel   = level + 1
+       (tfieldsLevels', tfields) = typeList2typeProtoList fieldsLevel fields
+       tfieldsLevels = Just $ Vector.fromList $ map (itoi32) tfieldsLevels'
+       tcurrent      = TTypes.TypeProto tcls tname Nothing ttypeparams tfieldsLevels  Nothing Nothing Nothing
+    Type.Named name atype -> tcurrent:ttype where
        tcls       = Just TTypes.Named
        typeLevel  = level + 1
        ttypeLevel = Just $ itoi32 typeLevel
-       tname      = Just $ pack aname
+       tname      = Just $ pack name
        tcurrent   = TTypes.TypeProto tcls tname Nothing Nothing Nothing Nothing Nothing ttypeLevel
        
        ttype      = type2typeProtoList (level+1) atype
-    TypeName aname -> [tcurrent] where
+    Type.TypeName name -> [tcurrent] where
        tcls       = Just TTypes.TypeName
-       tname      = Just $ pack aname
+       tname      = Just $ pack name
        
        tcurrent   = TTypes.TypeProto tcls tname   Nothing Nothing Nothing Nothing Nothing Nothing 
 
 
 typeFromListAt :: [TTypes.TypeProto] -> Int -> Either String Type
 typeFromListAt list index = t where
-    (TTypes.TypeProto mtcls mtname mtitemsInds mttypeparams mtparamsInds mtinputsIndex mtoutputsIndex mttypeIndex) = list !! index
+    (TTypes.TypeProto mtcls mtname mtitemsInds mttypeparams mtfieldsInds mtinputsIndex mtoutputsIndex mttypeIndex) = list !! index
     t = case mtcls of 
-        Just TTypes.Undefined -> Right Undefined
+        Just TTypes.Undefined -> Right Type.Undefined
         Just TTypes.Module    -> do 
-            tname <- mtname <?> "Failed to decode Type: `name` field is missing"
-            return $ Module $ unpack tname
+            tname       <- mtname       <?> "Failed to decode Type: `name` field is missing"
+            tfieldsInds <- mtfieldsInds <?> "Failed to decode Type: `params` field is missing"
+            let fieldsInds = map (i32toi) $ Vector.toList tfieldsInds
+            fields         <- convert $ map (typeFromListAt list) fieldsInds
+            return $ Type.Module (unpack tname) fields
         Just TTypes.Function  -> do 
             tname           <- mtname         <?> "Failed to decode Type: `name` field is missing"
             tinputsIndex    <- mtinputsIndex  <?> "Failed to decode Type: `inputs` field is missing"
             toutputsIndex   <- mtoutputsIndex <?> "Failed to decode Type: `outputs` field is missing"
             ainputs         <- typeFromListAt list $ i32toi tinputsIndex
             aoutputs        <- typeFromListAt list $ i32toi toutputsIndex
-            return $ Function (unpack tname) ainputs aoutputs
+            return $ Type.Function (unpack tname) ainputs aoutputs
         Just TTypes.Tuple -> do 
             titemsInds      <- mtitemsInds <?> "Failed to decode Type: `items` field is missing"
             let itemsInds   = map (i32toi) $ Vector.toList titemsInds
-                aitems      = map (typeFromListAt list) itemsInds
-            aitems'         <- convert aitems
-            return $ Tuple aitems'
+            items  <- convert $ map (typeFromListAt list) itemsInds
+            return $ Type.Tuple items
         Just TTypes.Class -> do 
             tname           <- mtname       <?> "Failed to decode Type: `name` field is missing"
             ttypeparams     <- mttypeparams <?> "Failed to decode Type: `typeparams` field is missing"
-            tparamsInds     <- mtparamsInds <?>  "Failed to decode Type: `params` field is missing"
-            let atypeparams = map (unpack) $ Vector.toList ttypeparams
-                paramsInds  = map (i32toi) $ Vector.toList tparamsInds
-                aparams     = map (typeFromListAt list) paramsInds
-            aparams'        <- convert aparams
-            return $ Class (unpack tname) atypeparams aparams'
+            tfieldsInds     <- mtfieldsInds <?> "Failed to decode Type: `params` field is missing"
+            let typeparams = map (unpack) $ Vector.toList ttypeparams
+                fieldsInds = map (i32toi) $ Vector.toList tfieldsInds
+            fields        <- convert $ map (typeFromListAt list) fieldsInds
+            return $ Type.Class (unpack tname) typeparams fields
         Just TTypes.Named  -> do
             tname           <- mtname <?>  "Failed to decode Type: `name` field is missing"
             ttypeIndex      <- mttypeIndex <?> "Failed to decode Type: `type` field is missing"
             internal        <- typeFromListAt list (i32toi ttypeIndex)
-            return $ Named (unpack tname) internal
+            return $ Type.Named (unpack tname) internal
         Just TTypes.TypeName -> do 
             tname <- mtname <?> "Failed to decode Type: `name` field is missing" 
-            return $ TypeName $ unpack tname
+            return $ Type.TypeName $ unpack tname
         Nothing                    -> Left "Failed to decode Type: `cls` field is missing"
 
 

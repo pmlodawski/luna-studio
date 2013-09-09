@@ -72,10 +72,10 @@ def2AST defManager (defID, def) = do
             Type.Function name _ _ -> AST.Function name (snd $ type2ASTType cls) 
                                                <$> graph2AST graph
                                                -- notImplementedList
-            Type.Module   _        -> AST.Module (snd $ type2ASTType cls)
+            Type.Module   _ params -> AST.Module (snd $ type2ASTType cls)
                                                  (map import2ASTimport imports)
                                              <$> nextDefs classes
-                                             <*> pure notImplementedList
+                                             <*> pure (map type2Field params)
                                              <*> nextDefs methods
                                              <*> nextDefs modules
             _                      -> return AST.NOP
@@ -103,10 +103,10 @@ type2ASTType :: Type -> (String, ASTType.Type)
 type2ASTType t = case t of 
     Type.Undefined                        -> (""  , ASTType.Unknown)
     Type.TypeName     name                -> (name, ASTType.Type name)
-    Type.Class        name typeparams _   -> (""  , ASTType.Class name typeparams)
+    Type.Class        name params _       -> (""  , ASTType.Class name params)
     Type.Function     name inputs outputs -> (name, ASTType.Lambda (snd $ type2ASTType inputs) (snd $ type2ASTType outputs))
     Type.Tuple        items               -> (""  , ASTType.Tuple (map (snd.type2ASTType) items))
-    Type.Module       name                -> (name, ASTType.Module name)
+    Type.Module       name _              -> (name, ASTType.Module name)
     Type.Named        name cls            -> (name, snd $ type2ASTType cls)
 
 

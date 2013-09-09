@@ -22,14 +22,14 @@ enum TypeType {
 
 
 struct TypeProto {
-    1: required TypeType  cls
-    2: optional string    name
-    3: optional list<i32> items         = []
-    4: optional list<string> typeparams = []
-    5: optional list<i32> params        = []
-    6: optional i32 inputs
-    7: optional i32 outputs
-    8: optional i32 type
+    1: required TypeType     cls
+    2: optional string       name
+    3: optional list<i32>    items   = []
+    4: optional list<string> params  = []
+    5: optional list<i32>    fields  = []
+    6: optional i32          inputs
+    7: optional i32          outputs
+    8: optional i32          type
 }
 
 

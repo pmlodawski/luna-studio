@@ -35,23 +35,25 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Types"
 
 ------ public api -------------------------------------------------
 
-newTypeModule :: b -> Maybe Text -> IO TTypes.Type
-newTypeModule _ mtname = tRunScript $ do 
+newTypeModule :: b -> Maybe Text -> Maybe (Vector TTypes.Type) -> IO TTypes.Type
+newTypeModule _ mtname mtfields = tRunScript $ do 
     scriptIO $ loggerIO info "called newTypeModule"
-    tname <- mtname <??> "'name' argument is missing"
-    return $ encode $ Module $ unpack tname
+    tname   <- mtname   <??> "'name' argument is missing"
+    tfields <- mtfields <??> "'fields' argument is missing"
+    fields  <- tryRight $ decode $ Vector.toList tfields 
+    return $ encode $ Module (unpack tname) fields
 
 
 newTypeClass :: b -> Maybe Text -> Maybe (Vector Text) -> Maybe (Vector TTypes.Type) -> IO TTypes.Type
-newTypeClass _ mtname mttypeparams mtparams = tRunScript $ do 
+newTypeClass _ mtname mtparams mtfields = tRunScript $ do 
     scriptIO $ loggerIO info "called newTypeClass"
-    tname       <- mtname       <??> "'name' argument is missing"
-    ttypeparams <- mttypeparams <??> "'typeparams' argument is missing"
-    tparams     <- mtparams     <??> "'params' argument is missing"
-    aparams     <- tryRight $ decode $ Vector.toList tparams 
-    let aname       = unpack tname
-        atypeparams = map (unpack) $ Vector.toList ttypeparams
-    return $ encode $ Class aname atypeparams aparams
+    tname      <- mtname   <??> "'name' argument is missing"
+    tparams    <- mtparams <??> "'params' argument is missing"
+    tfields    <- mtfields <??> "'fields' argument is missing"
+    fields     <- tryRight $ decode $ Vector.toList tfields 
+    let name   = unpack tname
+        params = map (unpack) $ Vector.toList tparams
+    return $ encode $ Class name params fields
 
 
 newTypeFunction :: b -> Maybe Text -> Maybe TTypes.Type -> Maybe TTypes.Type -> IO TTypes.Type
@@ -59,10 +61,10 @@ newTypeFunction _ mtname mtinputs mtoutputs = tRunScript $ do
     scriptIO $ loggerIO info "called newTypeFunction"
     tname    <- mtname    <??> "'name' argument is missing"
     tinputs  <- mtinputs  <??> "'inputs' argument is missing"
-    ainputs  <- tryRight   $ decode tinputs
+    inputs   <- tryRight   $ decode tinputs
     toutputs <- mtoutputs <??> "'outputs' argument is missing"
-    aoutputs <- tryRight   $ decode toutputs
-    return $ encode $ Function (unpack tname) ainputs aoutputs
+    outputs  <- tryRight   $ decode toutputs
+    return $ encode $ Function (unpack tname) inputs outputs
 
 
 newTypeUdefined :: b -> IO TTypes.Type
@@ -91,7 +93,7 @@ newTypeTuple :: b -> Maybe (Vector TTypes.Type) -> IO TTypes.Type
 newTypeTuple _ mttypes = tRunScript $ do
     scriptIO $ loggerIO info "called newTypeTuple"
     ttypes <- mttypes <??> "'types' argument is missing"
-    atypes <- tryRight $ decode $ Vector.toList ttypes
-    return $ encode $ Tuple atypes
+    types  <- tryRight $ decode $ Vector.toList ttypes
+    return $ encode $ Tuple types
     
  

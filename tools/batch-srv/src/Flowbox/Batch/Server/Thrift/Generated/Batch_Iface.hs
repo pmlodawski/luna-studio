@@ -67,7 +67,7 @@ class Batch_Iface a where
   removeDefinition :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
   definitionChildren :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO (Vector.Vector Defs_Types.Definition)
   definitionParent :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition
-  newTypeModule :: a -> Maybe Text -> IO Types_Types.Type
+  newTypeModule :: a -> Maybe Text -> Maybe (Vector.Vector Types_Types.Type) -> IO Types_Types.Type
   newTypeClass :: a -> Maybe Text -> Maybe (Vector.Vector Text) -> Maybe (Vector.Vector Types_Types.Type) -> IO Types_Types.Type
   newTypeFunction :: a -> Maybe Text -> Maybe Types_Types.Type -> Maybe Types_Types.Type -> IO Types_Types.Type
   newTypeUdefined :: a -> IO Types_Types.Type

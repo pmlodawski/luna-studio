@@ -43,7 +43,7 @@ noImports = []
 
 
 mkModule :: String -> Definition
-mkModule name = empty { cls = Type.Module name }
+mkModule name = empty { cls = Type.mkModule name }
 
 --make :: Type -> Library.ID -> Definition
 --make t lib = Definition t Graph.empty Flags.empty Attributes.empty lib

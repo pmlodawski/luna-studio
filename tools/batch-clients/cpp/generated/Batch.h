@@ -37,8 +37,8 @@ class BatchIf {
   virtual void removeDefinition(const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
-  virtual void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name) = 0;
-  virtual void newTypeClass( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::types::Type> & params) = 0;
+  virtual void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector< ::flowbox::batch::types::Type> & fields) = 0;
+  virtual void newTypeClass( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector<std::string> & params, const std::vector< ::flowbox::batch::types::Type> & fields) = 0;
   virtual void newTypeFunction( ::flowbox::batch::types::Type& _return, const std::string& name, const  ::flowbox::batch::types::Type& inputs, const  ::flowbox::batch::types::Type& outputs) = 0;
   virtual void newTypeUdefined( ::flowbox::batch::types::Type& _return) = 0;
   virtual void newTypeNamed( ::flowbox::batch::types::Type& _return, const std::string& name, const  ::flowbox::batch::types::Type& type) = 0;
@@ -159,10 +159,10 @@ class BatchNull : virtual public BatchIf {
   void definitionParent( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
     return;
   }
-  void newTypeModule( ::flowbox::batch::types::Type& /* _return */, const std::string& /* name */) {
+  void newTypeModule( ::flowbox::batch::types::Type& /* _return */, const std::string& /* name */, const std::vector< ::flowbox::batch::types::Type> & /* fields */) {
     return;
   }
-  void newTypeClass( ::flowbox::batch::types::Type& /* _return */, const std::string& /* name */, const std::vector<std::string> & /* typeparams */, const std::vector< ::flowbox::batch::types::Type> & /* params */) {
+  void newTypeClass( ::flowbox::batch::types::Type& /* _return */, const std::string& /* name */, const std::vector<std::string> & /* params */, const std::vector< ::flowbox::batch::types::Type> & /* fields */) {
     return;
   }
   void newTypeFunction( ::flowbox::batch::types::Type& /* _return */, const std::string& /* name */, const  ::flowbox::batch::types::Type& /* inputs */, const  ::flowbox::batch::types::Type& /* outputs */) {
@@ -2924,8 +2924,9 @@ class Batch_definitionParent_presult {
 };
 
 typedef struct _Batch_newTypeModule_args__isset {
-  _Batch_newTypeModule_args__isset() : name(false) {}
+  _Batch_newTypeModule_args__isset() : name(false), fields(false) {}
   bool name;
+  bool fields;
 } _Batch_newTypeModule_args__isset;
 
 class Batch_newTypeModule_args {
@@ -2937,6 +2938,7 @@ class Batch_newTypeModule_args {
   virtual ~Batch_newTypeModule_args() throw() {}
 
   std::string name;
+  std::vector< ::flowbox::batch::types::Type>  fields;
 
   _Batch_newTypeModule_args__isset __isset;
 
@@ -2944,9 +2946,15 @@ class Batch_newTypeModule_args {
     name = val;
   }
 
+  void __set_fields(const std::vector< ::flowbox::batch::types::Type> & val) {
+    fields = val;
+  }
+
   bool operator == (const Batch_newTypeModule_args & rhs) const
   {
     if (!(name == rhs.name))
+      return false;
+    if (!(fields == rhs.fields))
       return false;
     return true;
   }
@@ -2969,6 +2977,7 @@ class Batch_newTypeModule_pargs {
   virtual ~Batch_newTypeModule_pargs() throw() {}
 
   const std::string* name;
+  const std::vector< ::flowbox::batch::types::Type> * fields;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -3042,10 +3051,10 @@ class Batch_newTypeModule_presult {
 };
 
 typedef struct _Batch_newTypeClass_args__isset {
-  _Batch_newTypeClass_args__isset() : name(false), typeparams(false), params(false) {}
+  _Batch_newTypeClass_args__isset() : name(false), params(false), fields(false) {}
   bool name;
-  bool typeparams;
   bool params;
+  bool fields;
 } _Batch_newTypeClass_args__isset;
 
 class Batch_newTypeClass_args {
@@ -3057,8 +3066,8 @@ class Batch_newTypeClass_args {
   virtual ~Batch_newTypeClass_args() throw() {}
 
   std::string name;
-  std::vector<std::string>  typeparams;
-  std::vector< ::flowbox::batch::types::Type>  params;
+  std::vector<std::string>  params;
+  std::vector< ::flowbox::batch::types::Type>  fields;
 
   _Batch_newTypeClass_args__isset __isset;
 
@@ -3066,21 +3075,21 @@ class Batch_newTypeClass_args {
     name = val;
   }
 
-  void __set_typeparams(const std::vector<std::string> & val) {
-    typeparams = val;
+  void __set_params(const std::vector<std::string> & val) {
+    params = val;
   }
 
-  void __set_params(const std::vector< ::flowbox::batch::types::Type> & val) {
-    params = val;
+  void __set_fields(const std::vector< ::flowbox::batch::types::Type> & val) {
+    fields = val;
   }
 
   bool operator == (const Batch_newTypeClass_args & rhs) const
   {
     if (!(name == rhs.name))
       return false;
-    if (!(typeparams == rhs.typeparams))
-      return false;
     if (!(params == rhs.params))
+      return false;
+    if (!(fields == rhs.fields))
       return false;
     return true;
   }
@@ -3103,8 +3112,8 @@ class Batch_newTypeClass_pargs {
   virtual ~Batch_newTypeClass_pargs() throw() {}
 
   const std::string* name;
-  const std::vector<std::string> * typeparams;
-  const std::vector< ::flowbox::batch::types::Type> * params;
+  const std::vector<std::string> * params;
+  const std::vector< ::flowbox::batch::types::Type> * fields;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -6334,11 +6343,11 @@ class BatchClient : virtual public BatchIf {
   void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_definitionParent(const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_definitionParent( ::flowbox::batch::defs::Definition& _return);
-  void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name);
-  void send_newTypeModule(const std::string& name);
+  void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector< ::flowbox::batch::types::Type> & fields);
+  void send_newTypeModule(const std::string& name, const std::vector< ::flowbox::batch::types::Type> & fields);
   void recv_newTypeModule( ::flowbox::batch::types::Type& _return);
-  void newTypeClass( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::types::Type> & params);
-  void send_newTypeClass(const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::types::Type> & params);
+  void newTypeClass( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector<std::string> & params, const std::vector< ::flowbox::batch::types::Type> & fields);
+  void send_newTypeClass(const std::string& name, const std::vector<std::string> & params, const std::vector< ::flowbox::batch::types::Type> & fields);
   void recv_newTypeClass( ::flowbox::batch::types::Type& _return);
   void newTypeFunction( ::flowbox::batch::types::Type& _return, const std::string& name, const  ::flowbox::batch::types::Type& inputs, const  ::flowbox::batch::types::Type& outputs);
   void send_newTypeFunction(const std::string& name, const  ::flowbox::batch::types::Type& inputs, const  ::flowbox::batch::types::Type& outputs);
@@ -6771,23 +6780,23 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name) {
+  void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector< ::flowbox::batch::types::Type> & fields) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->newTypeModule(_return, name);
+      ifaces_[i]->newTypeModule(_return, name, fields);
     }
-    ifaces_[i]->newTypeModule(_return, name);
+    ifaces_[i]->newTypeModule(_return, name, fields);
     return;
   }
 
-  void newTypeClass( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector<std::string> & typeparams, const std::vector< ::flowbox::batch::types::Type> & params) {
+  void newTypeClass( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector<std::string> & params, const std::vector< ::flowbox::batch::types::Type> & fields) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->newTypeClass(_return, name, typeparams, params);
+      ifaces_[i]->newTypeClass(_return, name, params, fields);
     }
-    ifaces_[i]->newTypeClass(_return, name, typeparams, params);
+    ifaces_[i]->newTypeClass(_return, name, params, fields);
     return;
   }
 
