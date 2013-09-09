@@ -63,7 +63,10 @@ restoreLibrary :: UniPath -> IO Library
 restoreLibrary lpath = do
     let dlib = Deserializable lpath getLib
 
-    Serializer.deserialize dlib
+    library <- Serializer.deserialize dlib
+    
+    return $ library{Library.path = lpath}
+
 
 
 --- [PM] OLD VERSION BELOW ----
