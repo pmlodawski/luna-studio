@@ -38,6 +38,16 @@ main_inner = Luna.run $ do
                                      GraphView.empty                                     
         Right fun1_graph = GraphView.toGraph fun1_gv
 
+        fun2_gv = GraphView.insEdges [(0, 3, EdgeView [1, 2, 3] [4, 5, 9])
+                                     ,(0, 2, EdgeView [6, 9] [])]
+                $ GraphView.insNodes [(0, Node.mkInputs)
+                                     ,(1, Node.mkOutputs)
+                                     ,(2, Node.mkExpr "dummy2")
+                                     ,(3, Node.mkExpr "dummy3")] 
+                                     GraphView.empty                                     
+        Right fun2_graph = GraphView.toGraph fun2_gv
+        Right f2         = GraphView.fromGraph fun2_graph
+
     let fun1_df = Definition.empty { Definition.cls = Function "fun1" (Type.Tuple []) (Type.Tuple [])
                                    , Definition.graph = fun1_graph
                                    }
@@ -57,6 +67,10 @@ main_inner = Luna.run $ do
                                          DefManager.empty
                                    
 
+    print fun2_gv
+    print f2
+    print fun2_graph
+    putStrLn "--------------------------------------------"
     out_fun1 <- Graph2AST.run defManager (0, fun1_df)
     putStrLn $ ppShow out_fun1
     putStrLn "--------------------------------------------"

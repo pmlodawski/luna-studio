@@ -78,9 +78,9 @@ instance Convert (Int, Int, Edge) TGraph.Edge where
                           Port.All            -> Nothing
                           Port.Number portDst -> Just $ itoi32 portDst
         in TGraph.Edge tportSrc tportDst (Just $ itoi32 nodeSrc) (Just $ itoi32 nodeDst)
-    decode (TGraph.Edge mtnodeSrc mtnodeDst mtportSrc mtportDst) = do
+    decode (TGraph.Edge mtportSrc mtportDst mtnodeSrc mtnodeDst) = do
         tnodeSrc   <- mtnodeSrc <?> "Failed to decode Edge: `srcNode` field is missing"
-        tnodeDst   <- mtnodeDst <?> "Failed to decode Edge: `srcNode` field is missing"
+        tnodeDst   <- mtnodeDst <?> "Failed to decode Edge: `dstNode` field is missing"
         let portSrc = case mtportSrc of 
                         Nothing       -> Port.All
                         Just tportSrc -> Port.Number $ i32toi tportSrc
