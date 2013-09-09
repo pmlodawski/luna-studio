@@ -15,30 +15,27 @@ import qualified Flowbox.Luna.AST.Constant as Constant
 type Constant = Constant.Constant
 
 data Expr  = NOP
-           | Import          { paths     :: [Expr]                                                                   }
-           | ImportQualified { path      :: Expr     , imports   :: Expr                                             }
-           | Identifier      { name      :: String                                                                   }
-           | TypeIdentifier  { name      :: String                                                                   }
-           | Constant        { value     :: Constant                                                                 }
-           | Assignment      { src       :: Expr     , dst       :: Expr                                             }
-           | Tuple           { items     :: [Expr]                                                                   }
-           | Interface       { name      :: String   , body      :: [Expr]                                           }
-           | Typed           { name      :: String   , src       :: Expr                                             }
-           | Path            { segments  :: [String]                                                                 }
-           | Named           { name      :: String   , item      :: Expr                                             }
-           | Call            { src       :: Expr     , args      :: [Expr]                                           }
-           | CallConstructor { args      :: [Expr]                                                                   }
-           | Accessor        { src       :: Expr     , dst       :: Expr                                             }
-           | Operator        { name      :: String   , src       :: Expr   , dst     :: Expr                         }
-                                                                                                                     
-           | Comment         { txt       :: String                                                                   }
-           | Class           { cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr] }
-           | Module          { cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr] , modules :: [Expr] }
-           | Field           { name      :: String   , cls       :: Type                                             }
-           | Lambda          { signature :: Type     , body      :: [Expr]                                           }
-           | Cons            { src       :: Expr     , args      :: [Expr]                                           }
-           | Function        { name      :: String   , signature :: Type   , body    :: [Expr]                       }
-           | Pattern         { expr      :: Expr                                                                     }
+           | Import          { segments  :: [String] , name      :: String                                                                                   }
+           | Identifier      { name      :: String                                                                                                           }
+           | TypeIdentifier  { name      :: String                                                                                                           }
+           | Constant        { value     :: Constant                                                                                                         }
+           | Assignment      { src       :: Expr     , dst       :: Expr                                                                                     }
+           | Tuple           { items     :: [Expr]                                                                                                           }
+           | Interface       { name      :: String   , body      :: [Expr]                                                                                   }
+           | Typed           { name      :: String   , src       :: Expr                                                                                     }
+           | Path            { segments  :: [String]                                                                                                         }
+           | Call            { src       :: Expr     , args      :: [Expr]                                                                                   }
+           | CallConstructor { args      :: [Expr]                                                                                                           }
+           | Accessor        { src       :: Expr     , dst       :: Expr                                                                                     }
+           | Operator        { name      :: String   , src       :: Expr   , dst     :: Expr                                                                 }                                                               
+           | Comment         { txt       :: String                                                                                                           }
+           | Class           { cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]                                         }
+           | Module          { cls       :: Type     , imports   :: [Expr] , classes   :: [Expr] , fields  :: [Expr] , methods :: [Expr] , modules :: [Expr] }
+           | Field           { name      :: String   , cls       :: Type                                                                                     }
+           | Lambda          { signature :: Type     , body      :: [Expr]                                                                                   }
+           | Cons            { src       :: Expr     , args      :: [Expr]                                                                                   }
+           | Function        { name      :: String   , signature :: Type   , body    :: [Expr]                                                               }
+           | Pattern         { expr      :: Expr                                                                                                             }
            | Wildcard
            deriving (Show, Eq)
 
@@ -73,3 +70,7 @@ addField field e = e { fields = field : fields e }
 
 addClass :: Expr -> Expr -> Expr
 addClass ncls e = e { classes = ncls : classes e }
+
+
+addImport :: Expr -> Expr -> Expr
+addImport imp e = e { imports = imp : imports e }

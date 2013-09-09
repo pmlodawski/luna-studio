@@ -46,8 +46,8 @@ runNested f = do
 
 ssaAST :: SSAMonad m => Mode -> LAST.Expr -> Pass.Result m LAST.Expr
 ssaAST mode ast = case ast of
-    LAST.Module     cls classes fields 
-                    methods modules     -> LAST.Module cls <$> ssamap classes <*> ssamap fields <*> ssamap methods <*> ssamap modules
+    LAST.Module     cls imports classes fields 
+                    methods modules     -> LAST.Module cls imports <$> ssamap classes <*> ssamap fields <*> ssamap methods <*> ssamap modules
     LAST.Function   name signature body -> runNested $ do
                                                SSAState.registerVar (name, name)
                                                ssaType signature
@@ -68,7 +68,8 @@ ssaAST mode ast = case ast of
                                               LAST.Class cls <$> ssamap classes 
                                                              <*> ssamap fields 
                                                              <*> ssamap methods
-    LAST.Constant {}                    -> return ast
+    LAST.Field      {}                  -> return ast
+    LAST.Constant   {}                  -> return ast
     _                                   -> logger error "SSA Pass error: Unknown expression." *> Pass.fail "Unknown expression"
     where
         ssamap = mapM (ssaAST mode)

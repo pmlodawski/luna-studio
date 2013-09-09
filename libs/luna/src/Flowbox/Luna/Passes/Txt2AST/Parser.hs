@@ -24,6 +24,7 @@ import qualified Flowbox.Luna.AST.Field            as Field
 import qualified Flowbox.Luna.AST.Module           as Module
 import qualified Flowbox.Luna.AST.Type             as Type
 import qualified Flowbox.Luna.AST.Constant         as Constant
+import qualified Flowbox.Luna.AST.Import           as Import
 import qualified Flowbox.Luna.Data.Source          as Source
 
 
@@ -67,13 +68,14 @@ pTLambda  = Type.Lambda <$> (Type.Tuple <$> pTuplePure (pType)) <*> return Type.
 -- Expression Entities
 -----------------------------------------------------------
 
-pImportPath _     = (AST.Path <$> L.pPath) <??> (AST.Named <$ L.pAs <*> L.pIdent)
+--pImportPath _     = (AST.Path <$> L.pPath) <??> (AST.Named <$ L.pAs <*> L.pIdent)
 
-pImport i         = (AST.ImportQualified <$ L.pFrom <*> pImportPath i) 
-               <?*> (AST.Import   <$ L.pImport  <*> ((:) <$> pImportPath i) <?*> pImportBlock i)
+--pImport i         = (AST.Import   <$ L.pImport  <*> ((:) <$> pImportPath i) <?*> pImportBlock i)
 
-pImportBlock i    = try(pBlock pImportPath (i+1)) <|> return []
+--pImportBlock i    = try(pBlock pImportPath (i+1)) <|> return []
 
+
+pImport i         = Import.mk    <$  L.pImport <*> L.pPath <*> (try (Just <$ L.pAs <*> (L.pIdent <?> "import name")) <|> pure Nothing)
 
 pFunc i           = AST.Function <$  L.pDef 
                                  <*> L.pIdentVar 
@@ -94,13 +96,17 @@ pClass i          = Class.mk     <$  L.pClass
                                  -- <*> (try (pBlockBegin pClassBody i) <|> return [])
                                  <?> "class definition"
 
-pModule name i    = pure (Module.mk name)  <??$> try(pSegmentBegin pClassBody i)
+pModule name i    = pure (Module.mk name)  <??$> try(pSegmentBegin pModuleBody i)
 
 
 
 pClassBody i      = choice [ AST.addMethod <$> pFunc i
                            , AST.addField  <$> pField
                            , AST.addClass  <$> pClass i
+                           ]
+
+pModuleBody i     = choice [ pClassBody i
+                           , AST.addImport <$> pImport i
                            ]
 
 
@@ -117,9 +123,9 @@ pExprBlock      i = pBlockBegin expr i --L.pBlockBegin *> ( pBlock expr (i+1) <|
 
 --pBlockOpt     p i = (try (pBlockBegin p i) <|> return [])
 
-pBlockBegin   p i = L.pBlockBegin *> ( pBlock p (i+1))
+pBlockBegin   p i = L.pBlockBegin *> pBlock p (i+1)  
 
-pBlock        p i = L.eol *> pSegmentBegin p i
+pBlock        p i = L.eol *> pSegmentBegin p i <?> "indented block"
 
 
 -----------------------------------------------------------

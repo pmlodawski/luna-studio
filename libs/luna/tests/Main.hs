@@ -45,8 +45,9 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "\n\n\n"
+        $ unlines [ "import Std.Math.Vector as V"
                   ]
+
 
 main :: IO ()
 main = do
@@ -61,13 +62,13 @@ main_inner = Luna.run $ do
     ast <- Txt2AST.run example
     putStrLn $ PP.ppShow ast
 
-    --putStrLn "\n-------- SSA --------"
-    --ssa <- SSA.run     ast
-    --putStrLn $ PP.ppShow ssa
+    putStrLn "\n-------- SSA --------"
+    ssa <- SSA.run     ast
+    putStrLn $ PP.ppShow ssa
 
-    --putStrLn "\n-------- HAST --------"
-    --hast <- HSGen.run  ssa
-    --putStrLn $ PP.ppShow hast
+    putStrLn "\n-------- HAST --------" 
+    hast <- HSGen.run  ssa
+    putStrLn $ PP.ppShow hast
 
 
     --putStrLn "\n-------- HSC --------"
@@ -75,4 +76,6 @@ main_inner = Luna.run $ do
     --putStrLn $ PP.ppShow hsc
 
     return ()
+
+
 

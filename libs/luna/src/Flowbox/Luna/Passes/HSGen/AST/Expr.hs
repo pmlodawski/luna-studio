@@ -17,35 +17,34 @@ import qualified Flowbox.Luna.Passes.HSGen.AST.Constant as Constant
 
 data Context = Pure | IO deriving (Show, Eq)
 
-data Expr = Assignment { src   :: Expr    , dst :: Expr    , ctx :: Context      }
-          
-          | VarRef     { vid   :: Int                                            } 
-          | Tuple      { items :: [Expr]                                         }
-          | NTuple     { items :: [Expr]                                         }
-          | Type       { name  :: String  , params :: [String]                   }
-          | Call       { name  :: String  , args :: [Expr] , ctx :: Context      }
-          | StringLit  { val   :: String                                         }
-          | Default    { val   :: String                                         }
-          | THExprCtx  { name  :: String                                         }
-          | THTypeCtx  { name  :: String                                         }
-          
-          | At         { name  :: String  , dst :: Expr                          }
-          | Any        {                                                         }
-          | Block      { body  :: [Expr]  , ctx :: Context                       }
-          | BlockRet   { name  :: String  , ctx :: Context                       }
-          | FuncType   { items :: [Expr]                                         }
-          | NOP        {                                                         }
+type Constant = Constant.Constant
 
-          | Var        { name  :: String                                         }
-          | Typed      { name  :: String  , expr :: Expr                         }
-          | Operator   { name  :: String  , src :: Expr    , dst :: Expr         }
-          | Constant   { cval  :: Constant.Constant                              }
-          | Function   { name  :: String  , signature :: [Expr] , body :: [Expr] }
-          -- | Class      { name  :: String  , params :: [String]  , body :: [Expr] }
-          | DataType   { name  :: String  , params :: [String], constructors :: [Expr] }
-          | Cons       { name  :: String  , fields :: [Expr]                     }
-          | Module     { path  :: [String], datatypes :: [Expr] }
+data Expr = Assignment { src      :: Expr     , dst       :: Expr     , ctx         :: Context }
+          | Tuple      { items    :: [Expr]                                                    }
+          | Call       { name     :: String   , args      :: [Expr]   , ctx         :: Context }
+          | StringLit  { val      :: String                                                    }
+          | NOP        {                                                                       }
+          | Var        { name     :: String                                                    }
+          | Typed      { name     :: String   , expr      :: Expr                              }
+          | Function   { name     :: String   , signature :: [Expr]   , body         :: [Expr] }
+          | DataType   { name     :: String   , params    :: [String] , constructors :: [Expr] }
+          | Cons       { name     :: String   , fields    :: [Expr]                            }
+          | Module     { path     :: [String] , datatypes :: [Expr]                            }
+          | Import     { segments :: [String] , name      :: String                            }
           | Undefined
+          -- | VarRef     { vid      :: Int                                                       } 
+          -- | NTuple     { items    :: [Expr]                                                    }
+          -- | Type       { name     :: String   , params    :: [String]                          }
+          -- | Default    { val      :: String                                                    }
+          -- | THExprCtx  { name     :: String                                                    }
+          -- | THTypeCtx  { name     :: String                                                    }
+          -- | At         { name     :: String   , dst       :: Expr                              }
+          -- | Any        {                                                                       }
+          -- | Block      { body     :: [Expr]   , ctx       :: Context                           }
+          -- | BlockRet   { name     :: String   , ctx       :: Context                           }
+          -- | FuncType   { items    :: [Expr]                                                    }
+          -- | Operator   { name     :: String   , src       :: Expr     , dst          :: Expr   }
+          -- | Constant   { cval     :: Constant                                                  }
           deriving (Show)
 
 
