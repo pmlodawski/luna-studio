@@ -44,7 +44,9 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "import Std.Math.Vector as V"
+        $ unlines [ "import Std.Math.Scalar"
+                  , "class Vector a:"
+                  , "    x :: a"
                   ]
 
 

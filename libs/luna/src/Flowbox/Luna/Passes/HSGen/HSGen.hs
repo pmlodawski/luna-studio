@@ -60,6 +60,7 @@ genModule :: GenMonad m => LAST.Expr -> Pass.Result m HAST.Expr
 genModule ast = case ast of
     LAST.Module cls imports classes fields methods modules -> do GenState.setModule Module.empty
                                                                  mapM (genHAST >=> GenState.addDataType) classes
+                                                                 mapM (genHAST >=> GenState.addImport)   imports
                                                                  GenState.getModule
     _                                                      -> fail "o nie"
 
@@ -96,7 +97,7 @@ genHAST ast = case ast of
     --                                                               , HAST.constructors = [cons]
     --                                                               }  
 
-    --LAST.Import segments name           -> 
+    LAST.Import segments name           -> return $ HAST.Import segments name
 
     LAST.Class  cls classes fields 
                 methods                 -> do cons   <- HAST.Cons name <$> mapM genField fields

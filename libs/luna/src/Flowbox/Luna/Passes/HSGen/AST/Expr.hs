@@ -29,7 +29,7 @@ data Expr = Assignment { src      :: Expr     , dst       :: Expr     , ctx     
           | Function   { name     :: String   , signature :: [Expr]   , body         :: [Expr] }
           | DataType   { name     :: String   , params    :: [String] , constructors :: [Expr] }
           | Cons       { name     :: String   , fields    :: [Expr]                            }
-          | Module     { path     :: [String] , datatypes :: [Expr]                            }
+          | Module     { path     :: [String] , imports   :: [Expr]   , datatypes    :: [Expr] }
           | Import     { segments :: [String] , name      :: String                            }
           | Undefined
           -- | VarRef     { vid      :: Int                                                       } 
