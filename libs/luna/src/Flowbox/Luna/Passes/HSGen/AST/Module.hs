@@ -15,7 +15,7 @@ import           Flowbox.Luna.Passes.HSGen.AST.Expr
 
 
 empty :: Expr 
-empty = Module [] []
+empty = Module [] [] []
 
 
 --import           Debug.Trace                             
