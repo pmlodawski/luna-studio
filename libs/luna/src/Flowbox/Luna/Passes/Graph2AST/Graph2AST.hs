@@ -10,31 +10,22 @@ module Flowbox.Luna.Passes.Graph2AST.Graph2AST where
 
 import           Control.Applicative                       
 import           Control.Monad.State                       
-import           Control.Monad.Writer                      
-import           Control.Monad.RWS                         
-import           Control.Monad.Trans.Maybe                 
-import           Control.Monad.Trans.Either                
 import           Data.Foldable                             (foldrM)
-import           Data.Maybe                                (fromJust)
 import qualified Data.List                               as List
 
 import           Flowbox.Prelude                           
-import           Flowbox.Control.Error                     
+import           Flowbox.Control.Error                     ()
 import qualified Flowbox.Luna.AST.AST                    as AST
 import qualified Flowbox.Luna.AST.Type                   as ASTType
 import qualified Flowbox.Luna.AST.Constant               as ASTConstant
-import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
 import           Flowbox.Luna.Network.Def.DefManager       (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition     as Definition
 import           Flowbox.Luna.Network.Def.Definition       (Definition(Definition))
-import qualified Flowbox.Luna.Network.Flags              as Flags
 import           Flowbox.Luna.Network.Flags                (Flags(Flags))
 import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import           Flowbox.Luna.Network.Graph.Graph          (Graph)
-import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
 import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue(..))
-import qualified Flowbox.Luna.Network.Graph.Edge         as Edge
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(Edge))
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import qualified Flowbox.Luna.Passes.Pass                as Pass
@@ -43,8 +34,6 @@ import qualified Flowbox.Luna.Passes.Txt2AST.Parser      as Parser
 import qualified Flowbox.Luna.XOLD.Type.Type             as Type
 import           Flowbox.Luna.XOLD.Type.Type               (Type)
 import           Flowbox.System.Log.Logger                 
-import qualified Flowbox.System.UniPath                  as UniPath
-import           Flowbox.System.UniPath                    (UniPath)
 
 
 
@@ -58,28 +47,36 @@ run :: PassMonad s m => DefManager -> (Definition.ID, Definition) -> Pass.Result
 run defManager (defID, def) = (Pass.runM Pass.NoState) $ def2AST defManager (defID, def)
 
 
-
 def2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m AST.Expr
 def2AST defManager (defID, def) = do 
-    let (Definition cls graph aimports (Flags _ aomit) _) = def
-
+    let 
+        nextDefs :: Graph2ASTMonad m => Pass.Result m [AST.Expr]
         nextDefs = (mapM (def2AST defManager) $ DefManager.sucl defManager defID)
-    case cls of
-        Type.Class _ _ params             -> AST.Class (snd $ type2ASTType cls)
-                                                       (map type2Field params)
-                                                   <$> nextDefs
-        Type.Function name inputs outputs -> AST.Function name (snd $ type2ASTType cls) <$> graph2AST graph
-        Type.Module   name                -> AST.Module (AST.Path $ module2ASTPath defManager defID ++ [name])
-                                                    <$> nextDefs
-        _                          -> return AST.NOP
-    
 
+    case def of 
+        Definition _   _     _       (Flags _ True ) _ -> return $ AST.Comment ""
+        Definition cls graph imports (Flags _ False) _ -> case cls of
+            Type.Class _ _ params  -> AST.Class (snd $ type2ASTType cls)
+                                                (map type2Field params)
+                                            <$> nextDefs
+            Type.Function name _ _ -> AST.Function name (snd $ type2ASTType cls) <$> graph2AST graph
+            Type.Module   name     -> AST.Module <$> (module2ASTPath defManager defID name)
+                                                 <*>  nextDefs
+            _                      -> return AST.NOP
+        
 
-module2ASTPath :: DefManager -> Definition.ID -> [String]
-module2ASTPath defManager defID = case DefManager.prel defManager defID of
-    [(preID, Definition cls _ _ _ _)] -> (module2ASTPath defManager preID)
-                                         ++ [Type.name cls]
-    []                                -> []
+module2ASTPath :: Graph2ASTMonad m => DefManager -> Definition.ID -> String -> Pass.Result m AST.Expr
+module2ASTPath defManager defID name = do
+    let 
+        module2ASTPath' :: Graph2ASTMonad m => Definition.ID -> Pass.Result m [String]
+        module2ASTPath' dID = case DefManager.prel defManager dID of
+            [(preID, Definition cls _ _ _ _)] -> do prev <- (module2ASTPath' preID)
+                                                    return $ prev ++ [Type.name cls]
+            []                                -> return []
+            _                                 -> fail "Definition has multiple parents"
+    prev <- module2ASTPath' defID
+    return $ AST.Path $ prev ++ [name]
+
 
 
 notImplementedList :: [a]
@@ -88,16 +85,16 @@ notImplementedList = []
 
 type2ASTType :: Type -> (String, ASTType.Type)
 type2ASTType t = case t of 
-    Type.Undefined                           -> (""  , ASTType.Unknown)
-    Type.Type         name                   -> (name, ASTType.Type name)
-    Type.TypeVariable name                   -> (name, ASTType.Unknown)
-    Type.Class        name typeparams params -> (""  , ASTType.Class name typeparams)
-    Type.Function     name inputs outputs    -> (name, ASTType.Lambda (snd $ type2ASTType inputs) (snd $ type2ASTType outputs))
-    Type.Tuple        items                  -> (""  , ASTType.Tuple (map (snd.type2ASTType) items))
-    Type.List         item                   -> (""  , ASTType.Unknown)
-    Type.Interface    fields methods         -> (""  , ASTType.Unknown)
-    Type.Module       name                   -> (name, ASTType.Unknown)
-    Type.Named        name cls               -> (name, snd $ type2ASTType cls)
+    Type.Undefined                        -> (""  , ASTType.Unknown)
+    Type.Type         name                -> (name, ASTType.Type name)
+    Type.TypeVariable name                -> (name, ASTType.Unknown)
+    Type.Class        name typeparams _   -> (""  , ASTType.Class name typeparams)
+    Type.Function     name inputs outputs -> (name, ASTType.Lambda (snd $ type2ASTType inputs) (snd $ type2ASTType outputs))
+    Type.Tuple        items               -> (""  , ASTType.Tuple (map (snd.type2ASTType) items))
+    Type.List         item                -> (""  , ASTType.Unknown)
+    Type.Interface    fields methods      -> (""  , ASTType.Unknown)
+    Type.Module       name                -> (name, ASTType.Unknown)
+    Type.Named        name cls            -> (name, snd $ type2ASTType cls)
 
 
 defaultVal2ASTConstant :: DefaultValue -> ASTConstant.Constant
@@ -119,28 +116,36 @@ graph2AST graph = foldrM (node2AST graph) [] $ Graph.topsortl graph
 node2AST :: Graph2ASTMonad m => Graph -> (Node.ID, Node.Node) -> [AST.Expr] -> Pass.Result m [AST.Expr] 
 node2AST graph (nodeID, node) list = do
     let 
-        order :: (Node.ID, Node.Node, Edge) -> (Node.ID, Node.Node, Edge) -> Ordering
-        order (_, _, Edge a) (_, _, Edge b) = compare a b
+        return' :: Graph2ASTMonad m => AST.Expr -> Pass.Result m [AST.Expr] 
+        return' a = return (list ++ [a])
 
-        resultName :: Node.ID -> AST.Expr
-        resultName id = AST.Identifier $ "result_" ++ show id
+    case node of 
+        Node.Expr expression (Flags _ True) _ -> return' $ AST.Comment expression
+        Node.Inputs          (Flags _ True) _ -> return' $ AST.Comment ""
+        Node.Outputs         (Flags _ True) _ -> return' $ AST.Comment ""
+        Node.NTuple          (Flags _ True) _ -> return' $ AST.Comment ""
+        _                                     -> do
+            let 
+                order :: (Node.ID, Node.Node, Edge) -> (Node.ID, Node.Node, Edge) -> Ordering
+                order (_, _, Edge a) (_, _, Edge b) = compare a b
 
-        argName :: (Node.ID, Node.Node, Edge) -> AST.Expr
-        argName (id, _, _) = resultName id
+                resultName :: Node.ID -> AST.Expr
+                resultName nID = AST.Identifier $ "result_" ++ show nID
+
+                argName :: (Node.ID, Node.Node, Edge) -> AST.Expr
+                argName (nID, _, _) = resultName nID
 
 
-        argNodes = List.sortBy order $ Graph.lprel graph nodeID
-        argNames = map argName argNodes
+                argNodes = List.sortBy order $ Graph.lprel graph nodeID
+                argNames = map argName argNodes
 
-    call <- case node of 
-        Node.Expr expression flags _ -> case Parser.parseExpr expression of 
-                                            Left  err  -> fail $ show err
-                                            Right expr -> return $ AST.Call expr argNames
-        Node.Default value _ -> return $ AST.Constant $ defaultVal2ASTConstant value
-        Node.Inputs  flags _ -> return AST.NOP
-        Node.Outputs flags _ -> return $ AST.Tuple argNames
-        Node.NTuple  flags _ -> return $ AST.Tuple argNames
+            call <- case node of 
+                Node.Expr expression _ _ -> case Parser.parseExpr expression of 
+                                                    Left  e    -> fail $ show e
+                                                    Right expr -> return $ AST.Call expr argNames
+                Node.Default value _ -> return $ AST.Constant $ defaultVal2ASTConstant value
+                Node.Inputs  _     _ -> return   AST.NOP
+                Node.Outputs _     _ -> return $ AST.Tuple argNames
+                Node.NTuple  _     _ -> return $ AST.Tuple argNames
 
-    let assignment =  AST.Assignment (AST.Pattern $ resultName nodeID) call
-
-    return $ list ++ [assignment]
+            return' $ AST.Assignment (AST.Pattern $ resultName nodeID) call

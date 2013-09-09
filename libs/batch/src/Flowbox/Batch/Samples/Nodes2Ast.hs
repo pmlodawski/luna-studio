@@ -4,7 +4,6 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 module Flowbox.Batch.Samples.Nodes2Ast where
 
@@ -13,39 +12,16 @@ import           System.TimeIt
 import           Text.Show.Pretty                          
 
 import           Flowbox.Prelude                           
-import qualified Flowbox.Batch.Batch                     as Batch
-import           Flowbox.Batch.Batch                       (Batch(..))
 import qualified Flowbox.Batch.GraphView.GraphView       as GraphView
-import qualified Flowbox.Batch.GraphView.EdgeView        as EdgeView
 import           Flowbox.Batch.GraphView.EdgeView          (EdgeView(..))
-import qualified Flowbox.Batch.Handlers.Defs             as BatchD
-import qualified Flowbox.Batch.Handlers.Graph            as BatchG
-import qualified Flowbox.Batch.Handlers.Libs             as BatchL
-import qualified Flowbox.Batch.Handlers.Projects         as BatchP
-import qualified Flowbox.Batch.Project.Project           as Project
-import           Flowbox.Batch.Project.Project             (Project(..))
-import           Flowbox.Control.Error                     
-import qualified Flowbox.Luna.Lib.LibManager             as LibManager
-import           Flowbox.Luna.Lib.LibManager               (LibManager)
-import qualified Flowbox.Luna.Lib.Library                as Library
-import           Flowbox.Luna.Lib.Library                  (Library(..))
-import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Def.Definition     as Definition
-import           Flowbox.Luna.Network.Def.Definition       (Definition(..))
-import qualified Flowbox.Luna.Network.Def.Edge         as Edge
 import           Flowbox.Luna.Network.Def.Edge           (Edge(..))
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
-import           Flowbox.Luna.Network.Def.DefManager       (DefManager)
-import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
-import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
-import           Flowbox.Luna.Network.Graph.Node           (Node(..))
 import qualified Flowbox.Luna.Passes.Graph2AST.Graph2AST as Graph2AST
 import qualified Flowbox.Luna.Passes.Luna.Luna           as Luna
 import qualified Flowbox.Luna.XOLD.Type.Type             as Type
 import           Flowbox.Luna.XOLD.Type.Type               (Type(..))
-import qualified Flowbox.System.UniPath                  as UniPath
-import           Flowbox.System.UniPath                    (UniPath)
 
 
 main :: IO ()
