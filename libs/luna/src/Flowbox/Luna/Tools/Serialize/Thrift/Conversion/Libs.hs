@@ -15,25 +15,26 @@ import           Data.Text.Lazy                        (pack, unpack)
 
 import qualified Libs_Types                          as TLibs
 import           Flowbox.Control.Error                 
-import           Flowbox.Luna.Lib.Library            as Library
+import qualified Flowbox.Luna.Lib.Library            as Library
+import           Flowbox.Luna.Lib.Library              (Library(Library))
 import           Flowbox.Luna.Network.Def.DefManager   (DefManager)
 import qualified Flowbox.System.UniPath              as UniPath
 import           Flowbox.Tools.Conversion              
 
 
 instance Convert (Int, Library) (TLibs.Library, DefManager) where
-    encode (libID, Library aname apath adefs) = (TLibs.Library mtlibID mtname mtpath mtrootNodeDefID, adefs) where
+    encode (libID, Library name path defs) = (TLibs.Library mtlibID mtname mtpath mtrootNodeDefID, defs) where
         mtlibID = Just $ itoi32 libID
-        mtname  = Just $ pack aname
-        mtpath  = Just $ pack $ UniPath.toUnixString apath
+        mtname  = Just $ pack name
+        mtpath  = Just $ pack $ UniPath.toUnixString path
         mtrootNodeDefID = Just $ itoi32 Library.rootDefID
-    decode (TLibs.Library mtlibID mtname mtpath _, adefs) = do 
+    decode (TLibs.Library mtlibID mtname mtpath _, defs) = do 
         tlibID <- mtlibID <?> "Failed to decode Library: `libID` field is missing."
         tname  <- mtname  <?> "Failed to decode Library: `name` field is missing."
         tpath  <- mtpath  <?> "Failed to decode Library: `path` field is missing."
-        let aname = unpack tname
-            apath = UniPath.fromUnixString $ unpack tpath
+        let name = unpack tname
+            path = UniPath.fromUnixString $ unpack tpath
             libID = i32toi tlibID
 
-        return (libID, Library aname apath adefs)
+        return (libID, Library name path defs)
 

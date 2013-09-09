@@ -7,26 +7,10 @@
 
 module Flowbox.Luna.Network.Path.Import(
     Import(..),
-    noItems,
-    simple,
-    single,
-    multi,
-    --genCode
 ) where
 
 import           Flowbox.Prelude                  
 import           Flowbox.Luna.Network.Path.Path   (Path)
 
-data Import = Import {path :: Path, items :: [String]} deriving (Show)
+data Import = Import {path :: Path, name :: String} deriving (Show)
 
-noItems :: [String]
-noItems = []
-
-simple :: Path -> Import
-simple p = Import p noItems
-
-single :: Path -> String -> Import
-single p item = Import p [item]
-
-multi :: Path -> [String] -> Import
-multi p items' = Import p items'

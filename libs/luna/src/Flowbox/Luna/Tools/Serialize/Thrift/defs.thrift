@@ -19,7 +19,7 @@ typedef i32 DefID
 
 struct Import {
     1: optional list<string> path
-    2: optional list<string> items
+    2: optional string       name
 }
 
 typedef list<Import> Imports

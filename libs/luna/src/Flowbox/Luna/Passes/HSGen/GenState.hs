@@ -8,14 +8,14 @@
 
 module Flowbox.Luna.Passes.HSGen.GenState where
 
-import           Flowbox.Prelude                      hiding(mod)                  
+import           Flowbox.Prelude                      hiding (mod)
 import           Control.Monad.State                    
 import qualified Data.Map                             as Map
 import           Data.Map                               (Map)
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr   as HAST
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module as Module
 
-import           Flowbox.System.Log.Logger            
+import           Flowbox.System.Log.Logger              
 
 
 logger :: Logger

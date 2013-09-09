@@ -17,15 +17,15 @@ import           Data.Text.Lazy                    (Text, pack, unpack)
 
 import qualified Attrs_Types                     as TAttrs
 import           Flowbox.Control.Error             
-import           Flowbox.Luna.Network.Flags        (Flags(..))
+import           Flowbox.Luna.Network.Flags        (Flags(Flags))
 import qualified Flowbox.Luna.Network.Attributes as Attributes
 import           Flowbox.Luna.Network.Attributes   (Attributes)
 import           Flowbox.Tools.Conversion          
 
 
 instance Convert Flags TAttrs.Flags where
-    encode (Flags aio aomit) = TAttrs.Flags (Just aio) (Just aomit)
-    decode (TAttrs.Flags (Just aio) (Just aomit)) = Right $ Flags aio aomit
+    encode (Flags io omit) = TAttrs.Flags (Just io) (Just omit)
+    decode (TAttrs.Flags (Just io) (Just omit)) = Right $ Flags io omit
     decode (TAttrs.Flags (Just _  ) Nothing     ) = Left "Failed to decode Flags: `omit` field is missing"
     decode (TAttrs.Flags {}                     ) = Left "Failed to decode Flags: `io` field is missing"
 

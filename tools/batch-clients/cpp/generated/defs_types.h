@@ -25,24 +25,24 @@ typedef int32_t DefID;
 typedef std::vector<class Import>  Imports;
 
 typedef struct _Import__isset {
-  _Import__isset() : path(false), items(false) {}
+  _Import__isset() : path(false), name(false) {}
   bool path;
-  bool items;
+  bool name;
 } _Import__isset;
 
 class Import {
  public:
 
-  static const char* ascii_fingerprint; // = "92AA23526EDCB0628C830C8758ED7059";
-  static const uint8_t binary_fingerprint[16]; // = {0x92,0xAA,0x23,0x52,0x6E,0xDC,0xB0,0x62,0x8C,0x83,0x0C,0x87,0x58,0xED,0x70,0x59};
+  static const char* ascii_fingerprint; // = "C6BDC91060F17E46D86CE1794BF33C1A";
+  static const uint8_t binary_fingerprint[16]; // = {0xC6,0xBD,0xC9,0x10,0x60,0xF1,0x7E,0x46,0xD8,0x6C,0xE1,0x79,0x4B,0xF3,0x3C,0x1A};
 
-  Import() {
+  Import() : name() {
   }
 
   virtual ~Import() throw() {}
 
   std::vector<std::string>  path;
-  std::vector<std::string>  items;
+  std::string name;
 
   _Import__isset __isset;
 
@@ -51,9 +51,9 @@ class Import {
     __isset.path = true;
   }
 
-  void __set_items(const std::vector<std::string> & val) {
-    items = val;
-    __isset.items = true;
+  void __set_name(const std::string& val) {
+    name = val;
+    __isset.name = true;
   }
 
   bool operator == (const Import & rhs) const
@@ -62,9 +62,9 @@ class Import {
       return false;
     else if (__isset.path && !(path == rhs.path))
       return false;
-    if (__isset.items != rhs.__isset.items)
+    if (__isset.name != rhs.__isset.name)
       return false;
-    else if (__isset.items && !(items == rhs.items))
+    else if (__isset.name && !(name == rhs.name))
       return false;
     return true;
   }
@@ -93,8 +93,8 @@ typedef struct _Definition__isset {
 class Definition {
  public:
 
-  static const char* ascii_fingerprint; // = "37C5904B6456CFA1936B4DCB7E2E667D";
-  static const uint8_t binary_fingerprint[16]; // = {0x37,0xC5,0x90,0x4B,0x64,0x56,0xCF,0xA1,0x93,0x6B,0x4D,0xCB,0x7E,0x2E,0x66,0x7D};
+  static const char* ascii_fingerprint; // = "5ADBA4014C5034CFF53DD292BCEF0C81";
+  static const uint8_t binary_fingerprint[16]; // = {0x5A,0xDB,0xA4,0x01,0x4C,0x50,0x34,0xCF,0xF5,0x3D,0xD2,0x92,0xBC,0xEF,0x0C,0x81};
 
   Definition() : defID(-1) {
 
@@ -240,8 +240,8 @@ typedef struct _DefsGraph__isset {
 class DefsGraph {
  public:
 
-  static const char* ascii_fingerprint; // = "635C3E7C30A40F02DDADB144E29783F6";
-  static const uint8_t binary_fingerprint[16]; // = {0x63,0x5C,0x3E,0x7C,0x30,0xA4,0x0F,0x02,0xDD,0xAD,0xB1,0x44,0xE2,0x97,0x83,0xF6};
+  static const char* ascii_fingerprint; // = "35EB8A29C79B338AB1F79CF0229023E2";
+  static const uint8_t binary_fingerprint[16]; // = {0x35,0xEB,0x8A,0x29,0xC7,0x9B,0x33,0x8A,0xB1,0xF7,0x9C,0xF0,0x22,0x90,0x23,0xE2};
 
   DefsGraph() {
   }
@@ -298,8 +298,8 @@ typedef struct _DefManager__isset {
 class DefManager {
  public:
 
-  static const char* ascii_fingerprint; // = "60F7A7B480381DB70CD7333DA3CDFAA5";
-  static const uint8_t binary_fingerprint[16]; // = {0x60,0xF7,0xA7,0xB4,0x80,0x38,0x1D,0xB7,0x0C,0xD7,0x33,0x3D,0xA3,0xCD,0xFA,0xA5};
+  static const char* ascii_fingerprint; // = "47CB96C55C56A168FAE4616D5BA09560";
+  static const uint8_t binary_fingerprint[16]; // = {0x47,0xCB,0x96,0xC5,0x5C,0x56,0xA1,0x68,0xFA,0xE4,0x61,0x6D,0x5B,0xA0,0x95,0x60};
 
   DefManager() {
   }

@@ -10,8 +10,8 @@
 
 namespace flowbox { namespace batch { namespace defs {
 
-const char* Import::ascii_fingerprint = "92AA23526EDCB0628C830C8758ED7059";
-const uint8_t Import::binary_fingerprint[16] = {0x92,0xAA,0x23,0x52,0x6E,0xDC,0xB0,0x62,0x8C,0x83,0x0C,0x87,0x58,0xED,0x70,0x59};
+const char* Import::ascii_fingerprint = "C6BDC91060F17E46D86CE1794BF33C1A";
+const uint8_t Import::binary_fingerprint[16] = {0xC6,0xBD,0xC9,0x10,0x60,0xF1,0x7E,0x46,0xD8,0x6C,0xE1,0x79,0x4B,0xF3,0x3C,0x1A};
 
 uint32_t Import::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -54,21 +54,9 @@ uint32_t Import::read(::apache::thrift::protocol::TProtocol* iprot) {
         }
         break;
       case 2:
-        if (ftype == ::apache::thrift::protocol::T_LIST) {
-          {
-            this->items.clear();
-            uint32_t _size5;
-            ::apache::thrift::protocol::TType _etype8;
-            xfer += iprot->readListBegin(_etype8, _size5);
-            this->items.resize(_size5);
-            uint32_t _i9;
-            for (_i9 = 0; _i9 < _size5; ++_i9)
-            {
-              xfer += iprot->readString(this->items[_i9]);
-            }
-            xfer += iprot->readListEnd();
-          }
-          this->__isset.items = true;
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->name);
+          this->__isset.name = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -93,26 +81,18 @@ uint32_t Import::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeFieldBegin("path", ::apache::thrift::protocol::T_LIST, 1);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->path.size()));
-      std::vector<std::string> ::const_iterator _iter10;
-      for (_iter10 = this->path.begin(); _iter10 != this->path.end(); ++_iter10)
+      std::vector<std::string> ::const_iterator _iter5;
+      for (_iter5 = this->path.begin(); _iter5 != this->path.end(); ++_iter5)
       {
-        xfer += oprot->writeString((*_iter10));
+        xfer += oprot->writeString((*_iter5));
       }
       xfer += oprot->writeListEnd();
     }
     xfer += oprot->writeFieldEnd();
   }
-  if (this->__isset.items) {
-    xfer += oprot->writeFieldBegin("items", ::apache::thrift::protocol::T_LIST, 2);
-    {
-      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->items.size()));
-      std::vector<std::string> ::const_iterator _iter11;
-      for (_iter11 = this->items.begin(); _iter11 != this->items.end(); ++_iter11)
-      {
-        xfer += oprot->writeString((*_iter11));
-      }
-      xfer += oprot->writeListEnd();
-    }
+  if (this->__isset.name) {
+    xfer += oprot->writeFieldBegin("name", ::apache::thrift::protocol::T_STRING, 2);
+    xfer += oprot->writeString(this->name);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -123,12 +103,12 @@ uint32_t Import::write(::apache::thrift::protocol::TProtocol* oprot) const {
 void swap(Import &a, Import &b) {
   using ::std::swap;
   swap(a.path, b.path);
-  swap(a.items, b.items);
+  swap(a.name, b.name);
   swap(a.__isset, b.__isset);
 }
 
-const char* Definition::ascii_fingerprint = "37C5904B6456CFA1936B4DCB7E2E667D";
-const uint8_t Definition::binary_fingerprint[16] = {0x37,0xC5,0x90,0x4B,0x64,0x56,0xCF,0xA1,0x93,0x6B,0x4D,0xCB,0x7E,0x2E,0x66,0x7D};
+const char* Definition::ascii_fingerprint = "5ADBA4014C5034CFF53DD292BCEF0C81";
+const uint8_t Definition::binary_fingerprint[16] = {0x5A,0xDB,0xA4,0x01,0x4C,0x50,0x34,0xCF,0xF5,0x3D,0xD2,0x92,0xBC,0xEF,0x0C,0x81};
 
 uint32_t Definition::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -162,14 +142,14 @@ uint32_t Definition::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->imports.clear();
-            uint32_t _size12;
-            ::apache::thrift::protocol::TType _etype15;
-            xfer += iprot->readListBegin(_etype15, _size12);
-            this->imports.resize(_size12);
-            uint32_t _i16;
-            for (_i16 = 0; _i16 < _size12; ++_i16)
+            uint32_t _size6;
+            ::apache::thrift::protocol::TType _etype9;
+            xfer += iprot->readListBegin(_etype9, _size6);
+            this->imports.resize(_size6);
+            uint32_t _i10;
+            for (_i10 = 0; _i10 < _size6; ++_i10)
             {
-              xfer += this->imports[_i16].read(iprot);
+              xfer += this->imports[_i10].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -227,10 +207,10 @@ uint32_t Definition::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeFieldBegin("imports", ::apache::thrift::protocol::T_LIST, 2);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->imports.size()));
-      std::vector<Import> ::const_iterator _iter17;
-      for (_iter17 = this->imports.begin(); _iter17 != this->imports.end(); ++_iter17)
+      std::vector<Import> ::const_iterator _iter11;
+      for (_iter11 = this->imports.begin(); _iter11 != this->imports.end(); ++_iter11)
       {
-        xfer += (*_iter17).write(oprot);
+        xfer += (*_iter11).write(oprot);
       }
       xfer += oprot->writeListEnd();
     }
@@ -343,8 +323,8 @@ void swap(DEdge &a, DEdge &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* DefsGraph::ascii_fingerprint = "635C3E7C30A40F02DDADB144E29783F6";
-const uint8_t DefsGraph::binary_fingerprint[16] = {0x63,0x5C,0x3E,0x7C,0x30,0xA4,0x0F,0x02,0xDD,0xAD,0xB1,0x44,0xE2,0x97,0x83,0xF6};
+const char* DefsGraph::ascii_fingerprint = "35EB8A29C79B338AB1F79CF0229023E2";
+const uint8_t DefsGraph::binary_fingerprint[16] = {0x35,0xEB,0x8A,0x29,0xC7,0x9B,0x33,0x8A,0xB1,0xF7,0x9C,0xF0,0x22,0x90,0x23,0xE2};
 
 uint32_t DefsGraph::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -370,17 +350,17 @@ uint32_t DefsGraph::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_MAP) {
           {
             this->defs.clear();
-            uint32_t _size18;
-            ::apache::thrift::protocol::TType _ktype19;
-            ::apache::thrift::protocol::TType _vtype20;
-            xfer += iprot->readMapBegin(_ktype19, _vtype20, _size18);
-            uint32_t _i22;
-            for (_i22 = 0; _i22 < _size18; ++_i22)
+            uint32_t _size12;
+            ::apache::thrift::protocol::TType _ktype13;
+            ::apache::thrift::protocol::TType _vtype14;
+            xfer += iprot->readMapBegin(_ktype13, _vtype14, _size12);
+            uint32_t _i16;
+            for (_i16 = 0; _i16 < _size12; ++_i16)
             {
-              DefID _key23;
-              xfer += iprot->readI32(_key23);
-              Definition& _val24 = this->defs[_key23];
-              xfer += _val24.read(iprot);
+              DefID _key17;
+              xfer += iprot->readI32(_key17);
+              Definition& _val18 = this->defs[_key17];
+              xfer += _val18.read(iprot);
             }
             xfer += iprot->readMapEnd();
           }
@@ -393,14 +373,14 @@ uint32_t DefsGraph::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->edges.clear();
-            uint32_t _size25;
-            ::apache::thrift::protocol::TType _etype28;
-            xfer += iprot->readListBegin(_etype28, _size25);
-            this->edges.resize(_size25);
-            uint32_t _i29;
-            for (_i29 = 0; _i29 < _size25; ++_i29)
+            uint32_t _size19;
+            ::apache::thrift::protocol::TType _etype22;
+            xfer += iprot->readListBegin(_etype22, _size19);
+            this->edges.resize(_size19);
+            uint32_t _i23;
+            for (_i23 = 0; _i23 < _size19; ++_i23)
             {
-              xfer += this->edges[_i29].read(iprot);
+              xfer += this->edges[_i23].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -429,11 +409,11 @@ uint32_t DefsGraph::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeFieldBegin("defs", ::apache::thrift::protocol::T_MAP, 1);
     {
       xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I32, ::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->defs.size()));
-      std::map<DefID, Definition> ::const_iterator _iter30;
-      for (_iter30 = this->defs.begin(); _iter30 != this->defs.end(); ++_iter30)
+      std::map<DefID, Definition> ::const_iterator _iter24;
+      for (_iter24 = this->defs.begin(); _iter24 != this->defs.end(); ++_iter24)
       {
-        xfer += oprot->writeI32(_iter30->first);
-        xfer += _iter30->second.write(oprot);
+        xfer += oprot->writeI32(_iter24->first);
+        xfer += _iter24->second.write(oprot);
       }
       xfer += oprot->writeMapEnd();
     }
@@ -443,10 +423,10 @@ uint32_t DefsGraph::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeFieldBegin("edges", ::apache::thrift::protocol::T_LIST, 2);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->edges.size()));
-      std::vector<DEdge> ::const_iterator _iter31;
-      for (_iter31 = this->edges.begin(); _iter31 != this->edges.end(); ++_iter31)
+      std::vector<DEdge> ::const_iterator _iter25;
+      for (_iter25 = this->edges.begin(); _iter25 != this->edges.end(); ++_iter25)
       {
-        xfer += (*_iter31).write(oprot);
+        xfer += (*_iter25).write(oprot);
       }
       xfer += oprot->writeListEnd();
     }
@@ -464,8 +444,8 @@ void swap(DefsGraph &a, DefsGraph &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* DefManager::ascii_fingerprint = "60F7A7B480381DB70CD7333DA3CDFAA5";
-const uint8_t DefManager::binary_fingerprint[16] = {0x60,0xF7,0xA7,0xB4,0x80,0x38,0x1D,0xB7,0x0C,0xD7,0x33,0x3D,0xA3,0xCD,0xFA,0xA5};
+const char* DefManager::ascii_fingerprint = "47CB96C55C56A168FAE4616D5BA09560";
+const uint8_t DefManager::binary_fingerprint[16] = {0x47,0xCB,0x96,0xC5,0x5C,0x56,0xA1,0x68,0xFA,0xE4,0x61,0x6D,0x5B,0xA0,0x95,0x60};
 
 uint32_t DefManager::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -491,14 +471,14 @@ uint32_t DefManager::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->defs.clear();
-            uint32_t _size32;
-            ::apache::thrift::protocol::TType _etype35;
-            xfer += iprot->readListBegin(_etype35, _size32);
-            this->defs.resize(_size32);
-            uint32_t _i36;
-            for (_i36 = 0; _i36 < _size32; ++_i36)
+            uint32_t _size26;
+            ::apache::thrift::protocol::TType _etype29;
+            xfer += iprot->readListBegin(_etype29, _size26);
+            this->defs.resize(_size26);
+            uint32_t _i30;
+            for (_i30 = 0; _i30 < _size26; ++_i30)
             {
-              xfer += this->defs[_i36].read(iprot);
+              xfer += this->defs[_i30].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -511,14 +491,14 @@ uint32_t DefManager::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->graphs.clear();
-            uint32_t _size37;
-            ::apache::thrift::protocol::TType _etype40;
-            xfer += iprot->readListBegin(_etype40, _size37);
-            this->graphs.resize(_size37);
-            uint32_t _i41;
-            for (_i41 = 0; _i41 < _size37; ++_i41)
+            uint32_t _size31;
+            ::apache::thrift::protocol::TType _etype34;
+            xfer += iprot->readListBegin(_etype34, _size31);
+            this->graphs.resize(_size31);
+            uint32_t _i35;
+            for (_i35 = 0; _i35 < _size31; ++_i35)
             {
-              xfer += this->graphs[_i41].read(iprot);
+              xfer += this->graphs[_i35].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -531,14 +511,14 @@ uint32_t DefManager::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->edges.clear();
-            uint32_t _size42;
-            ::apache::thrift::protocol::TType _etype45;
-            xfer += iprot->readListBegin(_etype45, _size42);
-            this->edges.resize(_size42);
-            uint32_t _i46;
-            for (_i46 = 0; _i46 < _size42; ++_i46)
+            uint32_t _size36;
+            ::apache::thrift::protocol::TType _etype39;
+            xfer += iprot->readListBegin(_etype39, _size36);
+            this->edges.resize(_size36);
+            uint32_t _i40;
+            for (_i40 = 0; _i40 < _size36; ++_i40)
             {
-              xfer += this->edges[_i46].read(iprot);
+              xfer += this->edges[_i40].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -567,10 +547,10 @@ uint32_t DefManager::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeFieldBegin("defs", ::apache::thrift::protocol::T_LIST, 1);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->defs.size()));
-      std::vector<Definition> ::const_iterator _iter47;
-      for (_iter47 = this->defs.begin(); _iter47 != this->defs.end(); ++_iter47)
+      std::vector<Definition> ::const_iterator _iter41;
+      for (_iter41 = this->defs.begin(); _iter41 != this->defs.end(); ++_iter41)
       {
-        xfer += (*_iter47).write(oprot);
+        xfer += (*_iter41).write(oprot);
       }
       xfer += oprot->writeListEnd();
     }
@@ -580,10 +560,10 @@ uint32_t DefManager::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeFieldBegin("graphs", ::apache::thrift::protocol::T_LIST, 2);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->graphs.size()));
-      std::vector< ::flowbox::batch::graph::Graph> ::const_iterator _iter48;
-      for (_iter48 = this->graphs.begin(); _iter48 != this->graphs.end(); ++_iter48)
+      std::vector< ::flowbox::batch::graph::Graph> ::const_iterator _iter42;
+      for (_iter42 = this->graphs.begin(); _iter42 != this->graphs.end(); ++_iter42)
       {
-        xfer += (*_iter48).write(oprot);
+        xfer += (*_iter42).write(oprot);
       }
       xfer += oprot->writeListEnd();
     }
@@ -593,10 +573,10 @@ uint32_t DefManager::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += oprot->writeFieldBegin("edges", ::apache::thrift::protocol::T_LIST, 3);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->edges.size()));
-      std::vector<DEdge> ::const_iterator _iter49;
-      for (_iter49 = this->edges.begin(); _iter49 != this->edges.end(); ++_iter49)
+      std::vector<DEdge> ::const_iterator _iter43;
+      for (_iter43 = this->edges.begin(); _iter43 != this->edges.end(); ++_iter43)
       {
-        xfer += (*_iter49).write(oprot);
+        xfer += (*_iter43).write(oprot);
       }
       xfer += oprot->writeListEnd();
     }

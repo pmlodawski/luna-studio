@@ -42,44 +42,44 @@ type DefID = Int32
 
 type Imports = Vector.Vector Import
 
-data Import = Import{f_Import_path :: Maybe (Vector.Vector Text),f_Import_items :: Maybe (Vector.Vector Text)} deriving (Show,Eq,Typeable)
+data Import = Import{f_Import_path :: Maybe (Vector.Vector Text),f_Import_name :: Maybe Text} deriving (Show,Eq,Typeable)
 instance Hashable Import where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Import_path record   `hashWithSalt` f_Import_items record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_Import_path record   `hashWithSalt` f_Import_name record  
 write_Import oprot record = do
   writeStructBegin oprot "Import"
   case f_Import_path record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("path",T_LIST,1)
     (let f = Vector.mapM_ (\_viter2 -> writeString oprot _viter2) in do {writeListBegin oprot (T_STRING,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
-  case f_Import_items record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("items",T_LIST,2)
-    (let f = Vector.mapM_ (\_viter3 -> writeString oprot _viter3) in do {writeListBegin oprot (T_STRING,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+  case f_Import_name record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("name",T_STRING,2)
+    writeString oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_Import_fields iprot record = do
-  (_,_t5,_id6) <- readFieldBegin iprot
-  if _t5 == T_STOP then return record else
-    case _id6 of 
-      1 -> if _t5 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) (readString iprot) in do {(_etype10,_size7) <- readListBegin iprot; f _size7})
+  (_,_t4,_id5) <- readFieldBegin iprot
+  if _t4 == T_STOP then return record else
+    case _id5 of 
+      1 -> if _t4 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) (readString iprot) in do {(_etype9,_size6) <- readListBegin iprot; f _size6})
         read_Import_fields iprot record{f_Import_path=Just s}
         else do
-          skip iprot _t5
+          skip iprot _t4
           read_Import_fields iprot record
-      2 -> if _t5 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) (readString iprot) in do {(_etype15,_size12) <- readListBegin iprot; f _size12})
-        read_Import_fields iprot record{f_Import_items=Just s}
+      2 -> if _t4 == T_STRING then do
+        s <- readString iprot
+        read_Import_fields iprot record{f_Import_name=Just s}
         else do
-          skip iprot _t5
+          skip iprot _t4
           read_Import_fields iprot record
       _ -> do
-        skip iprot _t5
+        skip iprot _t4
         readFieldEnd iprot
         read_Import_fields iprot record
 read_Import iprot = do
   _ <- readStructBegin iprot
-  record <- read_Import_fields iprot (Import{f_Import_path=Nothing,f_Import_items=Nothing})
+  record <- read_Import_fields iprot (Import{f_Import_path=Nothing,f_Import_name=Nothing})
   readStructEnd iprot
   return record
 data Definition = Definition{f_Definition_cls :: Maybe Types_Types.Type,f_Definition_imports :: Maybe (Vector.Vector Import),f_Definition_flags :: Maybe Attrs_Types.Flags,f_Definition_attribs :: Maybe Attrs_Types.Attributes,f_Definition_defID :: Maybe Int32} deriving (Show,Eq,Typeable)
@@ -93,7 +93,7 @@ write_Definition oprot record = do
     writeFieldEnd oprot}
   case f_Definition_imports record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("imports",T_LIST,2)
-    (let f = Vector.mapM_ (\_viter19 -> write_Import oprot _viter19) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter13 -> write_Import oprot _viter13) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_Definition_flags record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("flags",T_STRUCT,3)
@@ -110,41 +110,41 @@ write_Definition oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Definition_fields iprot record = do
-  (_,_t21,_id22) <- readFieldBegin iprot
-  if _t21 == T_STOP then return record else
-    case _id22 of 
-      1 -> if _t21 == T_STRUCT then do
+  (_,_t15,_id16) <- readFieldBegin iprot
+  if _t15 == T_STOP then return record else
+    case _id16 of 
+      1 -> if _t15 == T_STRUCT then do
         s <- (read_Type iprot)
         read_Definition_fields iprot record{f_Definition_cls=Just s}
         else do
-          skip iprot _t21
+          skip iprot _t15
           read_Definition_fields iprot record
-      2 -> if _t21 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Import iprot)) in do {(_etype26,_size23) <- readListBegin iprot; f _size23})
+      2 -> if _t15 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Import iprot)) in do {(_etype20,_size17) <- readListBegin iprot; f _size17})
         read_Definition_fields iprot record{f_Definition_imports=Just s}
         else do
-          skip iprot _t21
+          skip iprot _t15
           read_Definition_fields iprot record
-      3 -> if _t21 == T_STRUCT then do
+      3 -> if _t15 == T_STRUCT then do
         s <- (read_Flags iprot)
         read_Definition_fields iprot record{f_Definition_flags=Just s}
         else do
-          skip iprot _t21
+          skip iprot _t15
           read_Definition_fields iprot record
-      4 -> if _t21 == T_STRUCT then do
+      4 -> if _t15 == T_STRUCT then do
         s <- (read_Attributes iprot)
         read_Definition_fields iprot record{f_Definition_attribs=Just s}
         else do
-          skip iprot _t21
+          skip iprot _t15
           read_Definition_fields iprot record
-      5 -> if _t21 == T_I32 then do
+      5 -> if _t15 == T_I32 then do
         s <- readI32 iprot
         read_Definition_fields iprot record{f_Definition_defID=Just s}
         else do
-          skip iprot _t21
+          skip iprot _t15
           read_Definition_fields iprot record
       _ -> do
-        skip iprot _t21
+        skip iprot _t15
         readFieldEnd iprot
         read_Definition_fields iprot record
 read_Definition iprot = do
@@ -168,23 +168,23 @@ write_DEdge oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_DEdge_fields iprot record = do
-  (_,_t31,_id32) <- readFieldBegin iprot
-  if _t31 == T_STOP then return record else
-    case _id32 of 
-      1 -> if _t31 == T_I32 then do
+  (_,_t25,_id26) <- readFieldBegin iprot
+  if _t25 == T_STOP then return record else
+    case _id26 of 
+      1 -> if _t25 == T_I32 then do
         s <- readI32 iprot
         read_DEdge_fields iprot record{f_DEdge_src=Just s}
         else do
-          skip iprot _t31
+          skip iprot _t25
           read_DEdge_fields iprot record
-      2 -> if _t31 == T_I32 then do
+      2 -> if _t25 == T_I32 then do
         s <- readI32 iprot
         read_DEdge_fields iprot record{f_DEdge_dst=Just s}
         else do
-          skip iprot _t31
+          skip iprot _t25
           read_DEdge_fields iprot record
       _ -> do
-        skip iprot _t31
+        skip iprot _t25
         readFieldEnd iprot
         read_DEdge_fields iprot record
 read_DEdge iprot = do
@@ -199,32 +199,32 @@ write_DefsGraph oprot record = do
   writeStructBegin oprot "DefsGraph"
   case f_DefsGraph_defs record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("defs",T_MAP,1)
-    (let {f [] = return (); f ((_kiter35,_viter36):t) = do {do {writeI32 oprot _kiter35;write_Definition oprot _viter36};f t}} in do {writeMapBegin oprot (T_I32,T_STRUCT,fromIntegral $ Map.size _v); f (Map.toList _v);writeMapEnd oprot})
+    (let {f [] = return (); f ((_kiter29,_viter30):t) = do {do {writeI32 oprot _kiter29;write_Definition oprot _viter30};f t}} in do {writeMapBegin oprot (T_I32,T_STRUCT,fromIntegral $ Map.size _v); f (Map.toList _v);writeMapEnd oprot})
     writeFieldEnd oprot}
   case f_DefsGraph_edges record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("edges",T_LIST,2)
-    (let f = Vector.mapM_ (\_viter37 -> write_DEdge oprot _viter37) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter31 -> write_DEdge oprot _viter31) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_DefsGraph_fields iprot record = do
-  (_,_t39,_id40) <- readFieldBegin iprot
-  if _t39 == T_STOP then return record else
-    case _id40 of 
-      1 -> if _t39 == T_MAP then do
-        s <- (let {f 0 = return []; f n = do {k <- readI32 iprot; v <- (read_Definition iprot);r <- f (n-1); return $ (k,v):r}} in do {(_ktype42,_vtype43,_size41) <- readMapBegin iprot; l <- f _size41; return $ Map.fromList l})
+  (_,_t33,_id34) <- readFieldBegin iprot
+  if _t33 == T_STOP then return record else
+    case _id34 of 
+      1 -> if _t33 == T_MAP then do
+        s <- (let {f 0 = return []; f n = do {k <- readI32 iprot; v <- (read_Definition iprot);r <- f (n-1); return $ (k,v):r}} in do {(_ktype36,_vtype37,_size35) <- readMapBegin iprot; l <- f _size35; return $ Map.fromList l})
         read_DefsGraph_fields iprot record{f_DefsGraph_defs=Just s}
         else do
-          skip iprot _t39
+          skip iprot _t33
           read_DefsGraph_fields iprot record
-      2 -> if _t39 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_DEdge iprot)) in do {(_etype49,_size46) <- readListBegin iprot; f _size46})
+      2 -> if _t33 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_DEdge iprot)) in do {(_etype43,_size40) <- readListBegin iprot; f _size40})
         read_DefsGraph_fields iprot record{f_DefsGraph_edges=Just s}
         else do
-          skip iprot _t39
+          skip iprot _t33
           read_DefsGraph_fields iprot record
       _ -> do
-        skip iprot _t39
+        skip iprot _t33
         readFieldEnd iprot
         read_DefsGraph_fields iprot record
 read_DefsGraph iprot = do
@@ -239,42 +239,42 @@ write_DefManager oprot record = do
   writeStructBegin oprot "DefManager"
   case f_DefManager_defs record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("defs",T_LIST,1)
-    (let f = Vector.mapM_ (\_viter53 -> write_Definition oprot _viter53) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter47 -> write_Definition oprot _viter47) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_DefManager_graphs record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("graphs",T_LIST,2)
-    (let f = Vector.mapM_ (\_viter54 -> Graph_Types.write_Graph oprot _viter54) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter48 -> Graph_Types.write_Graph oprot _viter48) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   case f_DefManager_edges record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("edges",T_LIST,3)
-    (let f = Vector.mapM_ (\_viter55 -> write_DEdge oprot _viter55) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter49 -> write_DEdge oprot _viter49) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_DefManager_fields iprot record = do
-  (_,_t57,_id58) <- readFieldBegin iprot
-  if _t57 == T_STOP then return record else
-    case _id58 of 
-      1 -> if _t57 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Definition iprot)) in do {(_etype62,_size59) <- readListBegin iprot; f _size59})
+  (_,_t51,_id52) <- readFieldBegin iprot
+  if _t51 == T_STOP then return record else
+    case _id52 of 
+      1 -> if _t51 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Definition iprot)) in do {(_etype56,_size53) <- readListBegin iprot; f _size53})
         read_DefManager_fields iprot record{f_DefManager_defs=Just s}
         else do
-          skip iprot _t57
+          skip iprot _t51
           read_DefManager_fields iprot record
-      2 -> if _t57 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Graph iprot)) in do {(_etype67,_size64) <- readListBegin iprot; f _size64})
+      2 -> if _t51 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Graph iprot)) in do {(_etype61,_size58) <- readListBegin iprot; f _size58})
         read_DefManager_fields iprot record{f_DefManager_graphs=Just s}
         else do
-          skip iprot _t57
+          skip iprot _t51
           read_DefManager_fields iprot record
-      3 -> if _t57 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_DEdge iprot)) in do {(_etype72,_size69) <- readListBegin iprot; f _size69})
+      3 -> if _t51 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_DEdge iprot)) in do {(_etype66,_size63) <- readListBegin iprot; f _size63})
         read_DefManager_fields iprot record{f_DefManager_edges=Just s}
         else do
-          skip iprot _t57
+          skip iprot _t51
           read_DefManager_fields iprot record
       _ -> do
-        skip iprot _t57
+        skip iprot _t51
         readFieldEnd iprot
         read_DefManager_fields iprot record
 read_DefManager iprot = do
