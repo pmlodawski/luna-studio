@@ -145,7 +145,7 @@ node2AST graph (nodeID, node) list = do
         _                                     -> do
             let 
                 order :: (Node.ID, Node.Node, Edge) -> (Node.ID, Node.Node, Edge) -> Ordering
-                order (_, _, Edge a) (_, _, Edge b) = compare a b
+                order (_, _, Edge _ a) (_, _, Edge _ b) = compare a b
 
                 resultName :: Node.ID -> AST.Expr
                 resultName nID = AST.Identifier $ "result_" ++ show nID

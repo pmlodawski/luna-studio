@@ -25,8 +25,9 @@ import           Flowbox.Prelude
 import qualified Flowbox.Batch.Batch                     as Batch
 import qualified Flowbox.Batch.GraphView.Defaults        as Defaults
 import qualified Flowbox.Batch.GraphView.EdgeView        as EdgeView
-import           Flowbox.Batch.GraphView.EdgeView          (EdgeView(..))
+import           Flowbox.Batch.GraphView.EdgeView          (EdgeView(EdgeView))
 import           Flowbox.Batch.GraphView.PortDescriptor    (PortDescriptor)
+import           Flowbox.Control.Error                     ()
 import qualified Flowbox.Luna.Data.Graph                 as DG
 import           Flowbox.Luna.Data.Graph                 hiding (Graph, Edge, empty, fromGraph)
 import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue)
@@ -35,10 +36,11 @@ import           Flowbox.Luna.Network.Graph.Graph          (Graph)
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node(..))
+import qualified Flowbox.Luna.Network.Graph.Port         as Port
+import           Flowbox.Luna.Network.Graph.Port           (Port)
 import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import           Flowbox.Luna.Network.Attributes           (Attributes)
 import qualified Flowbox.Luna.Network.Flags              as Flags
-import           Flowbox.Control.Error                     ()
 
 
 
@@ -85,134 +87,168 @@ selectAttrs num = Attributes.fromList [(Batch.attributeKey, Map.fromList [(isGen
 removeEdges :: DG.Graph a b -> DG.Graph a c
 removeEdges graph = mkGraph (labNodes graph) []
 
+--connectG :: (Node.ID, Node.ID, EdgeView) -> Graph -> Either String Graph
+--connectG (srcNodeID, dstNodeID, EdgeView srcPorts dstPorts) graph = case srcPorts of 
+--    [] -> connectGTuples (srcNodeID, dstNodeID, dstPorts) 0 graph
+--    _  -> connectG (selectID, dstNodeID, EdgeView srcPortsTail dstPorts) newGraph where
+--        srcPortsHead = head srcPorts
+--        srcPortsTail = tail srcPorts
+--        (selectID, newGraph) = createSelect srcNodeID graph srcPortsHead
 
-findMatchingTuple :: Node.ID -> Int -> Graph -> Maybe (Node.ID, Node.ID, Edge)
-findMatchingTuple nodeID p graph = mt where
-    mt = List.find matching (inn graph nodeID)
-    matching (t, _, Edge existingTuplePort) = case lab graph t of 
-                                                    Just (NTuple {}) -> existingTuplePort == p
-                                                    _                -> False
+------------------------------------------------------------------------------------------------------------------------
 
-
-getOrCreateTuple :: Node.ID -> Graph -> Int -> Either String (Node.ID, Graph)
-getOrCreateTuple nodeID graph p = case findMatchingTuple nodeID p graph of 
-    Nothing                           -> do let [newTupleID] = Graph.newNodes 1 graph
-                                                newTupleNode = NTuple Flags.empty generatedAttrs
-                                                newGraphT    = Graph.insEdge (newTupleID, nodeID, Edge p)
-                                                             $ Graph.insNode (newTupleID, newTupleNode) graph
-                                            return (newTupleID, newGraphT)
-    Just (existingTupleID, _, Edge _) -> Right (existingTupleID, graph)
-
-
-createSelect :: Node.ID -> Graph -> Int -> (Node.ID, Graph)
-createSelect nodeID graph p = (selectID, newGraph) where
-    selectNode = Expr ("select" ++ show p) Flags.empty $ selectAttrs p
-    [selectID] = Graph.newNodes 1 graph
-    newGraph = Graph.insEdge (nodeID, selectID, Edge 0)
-             $ Graph.insNode (selectID, selectNode) graph
+--findMatchingTuple :: Node.ID -> Int -> Graph -> Maybe (Node.ID, Node.ID, Edge)
+--findMatchingTuple nodeID p graph = mt where
+--    mt = List.find matching (inn graph nodeID)
+--    matching (t, _, Edge existingTuplePort) = case lab graph t of 
+--                                                    Just (NTuple {}) -> existingTuplePort == p
+--                                                    _                -> False
 
 
-connectGTuples :: (Node.ID, Node.ID, PortDescriptor) -> Int -> Graph -> Either String Graph
-connectGTuples (srcNodeID, dstNodeID, dstPorts) p graph =  case dstPorts of 
-        []         -> Right $ Graph.insEdge (srcNodeID, dstNodeID, Edge p) graph
-        _ -> do
-            let dstPortsInit = init dstPorts
-            let dstPortsLast = last dstPorts
-            (tupleID, graphT) <- getOrCreateTuple dstNodeID graph p
-            connectGTuples (srcNodeID, tupleID, dstPortsInit) dstPortsLast graphT
+--getOrCreateTuple :: Node.ID -> Graph -> Int -> Either String (Node.ID, Graph)
+--getOrCreateTuple nodeID graph p = case findMatchingTuple nodeID p graph of 
+--    Nothing                           -> do let [newTupleID] = Graph.newNodes 1 graph
+--                                                newTupleNode = NTuple Flags.empty generatedAttrs
+--                                                newGraphT    = Graph.insEdge (newTupleID, nodeID, Edge p)
+--                                                             $ Graph.insNode (newTupleID, newTupleNode) graph
+--                                            return (newTupleID, newGraphT)
+--    Just (existingTupleID, _, Edge _) -> Right (existingTupleID, graph)
+
+
+--createSelect :: Node.ID -> Graph -> Int -> (Node.ID, Graph)
+--createSelect nodeID graph p = (selectID, newGraph) where
+--    selectNode = Expr ("select" ++ show p) Flags.empty $ selectAttrs p
+--    [selectID] = Graph.newNodes 1 graph
+--    newGraph = Graph.insEdge (nodeID, selectID, Edge 0)
+--             $ Graph.insNode (selectID, selectNode) graph
+
+
+--connectGTuples :: (Node.ID, Node.ID, PortDescriptor) -> Int -> Graph -> Either String Graph
+--connectGTuples (srcNodeID, dstNodeID, dstPorts) p graph =  case dstPorts of 
+--        []         -> Right $ Graph.insEdge (srcNodeID, dstNodeID, Edge p) graph
+--        _ -> do
+--            let dstPortsInit = init dstPorts
+--            let dstPortsLast = last dstPorts
+--            (tupleID, graphT) <- getOrCreateTuple dstNodeID graph p
+--            connectGTuples (srcNodeID, tupleID, dstPortsInit) dstPortsLast graphT
+
+
+
+connectGTuples :: Node.ID -> Node.ID -> Port -> PortDescriptor -> Graph -> Either String Graph
+connectGTuples srcNodeID dstNodeID srcPort dstPorts graph = case dstPorts of 
+    []  -> return $ Graph.insEdge (srcNodeID, dstNodeID, Edge srcPort  Port.All      ) graph
+    [p] -> return $ Graph.insEdge (srcNodeID, dstNodeID, Edge srcPort (Port.Number p)) graph
+    _   -> undefined
+
+
+createSelect :: Int -> Node
+createSelect p = Expr ("select" ++ show p) Flags.empty $ selectAttrs p
+
+
+insertSelects :: PortDescriptor -> Graph -> (Node.ID, Node.ID, Graph)
+insertSelects ports graph = case ports of 
+    [p] -> (selectID, selectID, newGraph) where
+           (newGraph, selectID) = Graph.insNewNode (createSelect p) graph
+    _   -> (fSelectID, lSelectID, newGraph) where
+           ( selectID, lSelectID, sgraph) = insertSelects (tail ports) graph
+           [fSelectID] = Graph.newNodes 1 graph
+           newGraph    = Graph.insEdge (fSelectID, selectID, Edge Port.All Port.All)
+                       $ Graph.insNode (fSelectID, createSelect (head ports)) sgraph
+
+
 
 connectG :: (Node.ID, Node.ID, EdgeView) -> Graph -> Either String Graph
 connectG (srcNodeID, dstNodeID, EdgeView srcPorts dstPorts) graph = case srcPorts of 
-    [] -> connectGTuples (srcNodeID, dstNodeID, dstPorts) 0 graph
-    _  -> connectG (selectID, dstNodeID, EdgeView srcPortsTail dstPorts) newGraph where
-        srcPortsHead = head srcPorts
-        srcPortsTail = tail srcPorts
-        (selectID, newGraph) = createSelect srcNodeID graph srcPortsHead
+    []        -> connectGTuples srcNodeID    dstNodeID  Port.All             dstPorts graph
+    [srcPort] -> connectGTuples srcNodeID    dstNodeID (Port.Number srcPort) dstPorts graph
+    _         -> connectGTuples lastSelectID dstNodeID  Port.All             dstPorts newGraph where
+                (firstSelectID, lastSelectID, graphWithSelects) = insertSelects (tail srcPorts) graph
+                newEdge  = Edge (Port.Number (head srcPorts)) Port.All
+                newGraph = Graph.insEdge (srcNodeID, firstSelectID, newEdge) graphWithSelects
+
+--addNodeDefaults :: GraphView -> (Node.ID, Node) -> Graph -> Either String Graph
+--addNodeDefaults graphview (nodeID, node) graph = do
+
+--    let 
+--        addNodeDefault :: (PortDescriptor, DefaultValue) -> Graph -> Either String Graph
+--        addNodeDefault (adstPort, defaultValue) g = do
+--            if isNotAlreadyConnected graphview nodeID adstPort
+--                then do let (newG1, defaultNodeID) = Graph.insNewNode (Default defaultValue generatedAttrs) g
+--                        connectG (defaultNodeID, nodeID, EdgeView [] adstPort) newG1
+--                else Right g
+
+--    let defaultsMap = Defaults.getDefaults node
+--    foldrM addNodeDefault graph $ Map.toList defaultsMap
 
 
-
-addNodeDefaults :: GraphView -> (Node.ID, Node) -> Graph -> Either String Graph
-addNodeDefaults graphview (nodeID, node) graph = do
-
-    let 
-        addNodeDefault :: (PortDescriptor, DefaultValue) -> Graph -> Either String Graph
-        addNodeDefault (adstPort, defaultValue) g = do
-            if isNotAlreadyConnected graphview nodeID adstPort
-                then do let (newG1, defaultNodeID) = Graph.insNewNode (Default defaultValue generatedAttrs) g
-                        connectG (defaultNodeID, nodeID, EdgeView [] adstPort) newG1
-                else Right g
-
-    let defaultsMap = Defaults.getDefaults node
-    foldrM addNodeDefault graph $ Map.toList defaultsMap
-
-
-addNodesDefaults :: GraphView -> Graph -> Either String Graph
-addNodesDefaults graphview graphWithoutDefaults = 
-    foldrM (addNodeDefaults graphview) graphWithoutDefaults (labNodes graphWithoutDefaults)
+--addNodesDefaults :: GraphView -> Graph -> Either String Graph
+--addNodesDefaults graphview graphWithoutDefaults = 
+--    foldrM (addNodeDefaults graphview) graphWithoutDefaults (labNodes graphWithoutDefaults)
 
 
 toGraph :: GraphView -> Either String Graph
 toGraph graphview = do
     let graphWithoutEdges = removeEdges graphview
     graphWithoutDefaults <- foldrM (connectG) graphWithoutEdges $ labEdges graphview
-    graph                <- addNodesDefaults graphview graphWithoutDefaults 
-    return graph
+    --graph                <- addNodesDefaults graphview graphWithoutDefaults 
+    --return graph
+    return graphWithoutDefaults
 
 
-graph2graphView :: Graph -> GraphView
-graph2graphView graph = graphv where
+--graph2graphView :: Graph -> GraphView
+--graph2graphView graph = graphv where
 
-    edge2edgeView :: (Node.ID, Node.ID, Edge) -> (Node.ID, Node.ID, EdgeView)
-    edge2edgeView (s, d, Edge adst) = case lab graph d of
-        Just (NTuple {}) -> (s, d, EdgeView [] [adst])
-        _                -> (s, d, EdgeView [] [])
+--    edge2edgeView :: (Node.ID, Node.ID, Edge) -> (Node.ID, Node.ID, EdgeView)
+--    edge2edgeView (s, d, Edge adst) = case lab graph d of
+--        Just (NTuple {}) -> (s, d, EdgeView [] [adst])
+--        _                -> (s, d, EdgeView [] [])
     
-    anodes  = labNodes graph
-    aedges  = map edge2edgeView $ labEdges graph
-    graphv = mkGraph anodes aedges
+--    anodes  = labNodes graph
+--    aedges  = map edge2edgeView $ labEdges graph
+--    graphv = mkGraph anodes aedges
 
 
 fromGraph :: Graph -> Either String GraphView
-fromGraph graph = do
-    let graphC = graph2graphView graph
-    foldrM (delGenerated) graphC $ labNodes graphC
+fromGraph graph = undefined --do
+    --let graphC = graph2graphView graph
+    --foldrM (delGenerated) graphC $ labNodes graphC
     
 
-getBatchAttrs :: Node -> Maybe (Map String String)
-getBatchAttrs node = Map.lookup Batch.attributeKey attrs where
-    attrs = Node.attributes node
+--getBatchAttrs :: Node -> Maybe (Map String String)
+--getBatchAttrs node = Map.lookup Batch.attributeKey attrs where
+--    attrs = Node.attributes node
                   
 
-isGenerated :: Node -> Bool
-isGenerated node = case getBatchAttrs node of
-    Nothing         -> False
-    Just batchAttrs -> case Map.lookup isGeneratedKey batchAttrs of 
-        Just "True" -> True
-        _           -> False
+--isGenerated :: Node -> Bool
+--isGenerated node = case getBatchAttrs node of
+--    Nothing         -> False
+--    Just batchAttrs -> case Map.lookup isGeneratedKey batchAttrs of 
+--        Just "True" -> True
+--        _           -> False
 
 
-selectNo :: Node -> Maybe Int
-selectNo node = do 
-    batchAttrs <- getBatchAttrs node
-    num        <- Map.lookup selectKey batchAttrs
-    return $ read num
+--selectNo :: Node -> Maybe Int
+--selectNo node = do 
+--    batchAttrs <- getBatchAttrs node
+--    num        <- Map.lookup selectKey batchAttrs
+--    return $ read num
 
 
-delGenerated :: (Node.ID, Node) -> GraphView -> Either String GraphView
-delGenerated (nodeID, node) graph = case isGenerated node of 
-    False -> Right graph
-    True  -> case node of 
-        NTuple {}  -> case (inn graph nodeID, out graph nodeID, suc graph nodeID) of
-                        (inEdges, [(_, _, EdgeView _ op)], [adst]) -> Right $ delNode nodeID
-                                                                          $ insEdges newEdges graph where 
-                                                   newEdges = map (\(asrc, _, EdgeView a ip) -> (asrc, adst, EdgeView a (ip++op))) inEdges
-                        _ -> Left "Batch attributes mismatch - incorrectly connected NTuple"
-        Default {} -> Right $ delNode nodeID graph
-        _          -> case (selectNo node, inn graph nodeID, out graph nodeID) of 
-                        (Just num, [(asrc, _, EdgeView isrcPort _)], [(_, adst, EdgeView osrcPort odstPort)])
-                            -> Right $ delNode nodeID 
-                                     $ insEdge (asrc, adst, EdgeView (isrcPort ++ [num] ++ osrcPort) odstPort) graph
-                        _   -> Left "Batch attributes mismatch - incorrectly connected Select"
+--delGenerated :: (Node.ID, Node) -> GraphView -> Either String GraphView
+--delGenerated (nodeID, node) graph = case isGenerated node of 
+--    False -> Right graph
+--    True  -> case node of 
+--        NTuple {}  -> case (inn graph nodeID, out graph nodeID, suc graph nodeID) of
+--                        (inEdges, [(_, _, EdgeView _ op)], [adst]) -> Right $ delNode nodeID
+--                                                                          $ insEdges newEdges graph where 
+--                                                   newEdges = map (\(asrc, _, EdgeView a ip) -> (asrc, adst, EdgeView a (ip++op))) inEdges
+--                        _ -> Left "Batch attributes mismatch - incorrectly connected NTuple"
+--        Default {} -> Right $ delNode nodeID graph
+--        _          -> case (selectNo node, inn graph nodeID, out graph nodeID) of 
+--                        (Just num, [(asrc, _, EdgeView isrcPort _)], [(_, adst, EdgeView osrcPort odstPort)])
+--                            -> Right $ delNode nodeID 
+--                                     $ insEdge (asrc, adst, EdgeView (isrcPort ++ [num] ++ osrcPort) odstPort) graph
+--                        _   -> Left "Batch attributes mismatch - incorrectly connected Select"
 
 
 

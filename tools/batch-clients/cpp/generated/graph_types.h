@@ -199,7 +199,8 @@ class Node {
 void swap(Node &a, Node &b);
 
 typedef struct _Edge__isset {
-  _Edge__isset() : portDst(false), nodeSrc(false), nodeDst(false) {}
+  _Edge__isset() : portSrc(false), portDst(false), nodeSrc(false), nodeDst(false) {}
+  bool portSrc;
   bool portDst;
   bool nodeSrc;
   bool nodeDst;
@@ -208,19 +209,25 @@ typedef struct _Edge__isset {
 class Edge {
  public:
 
-  static const char* ascii_fingerprint; // = "C19C3C50DCAC5D78DEDA8D5FC1C59402";
-  static const uint8_t binary_fingerprint[16]; // = {0xC1,0x9C,0x3C,0x50,0xDC,0xAC,0x5D,0x78,0xDE,0xDA,0x8D,0x5F,0xC1,0xC5,0x94,0x02};
+  static const char* ascii_fingerprint; // = "E3E2F869E2831D70F619B6B13F64FB99";
+  static const uint8_t binary_fingerprint[16]; // = {0xE3,0xE2,0xF8,0x69,0xE2,0x83,0x1D,0x70,0xF6,0x19,0xB6,0xB1,0x3F,0x64,0xFB,0x99};
 
-  Edge() : portDst(0), nodeSrc(0), nodeDst(0) {
+  Edge() : portSrc(0), portDst(0), nodeSrc(0), nodeDst(0) {
   }
 
   virtual ~Edge() throw() {}
 
+  int32_t portSrc;
   int32_t portDst;
   NodeID nodeSrc;
   NodeID nodeDst;
 
   _Edge__isset __isset;
+
+  void __set_portSrc(const int32_t val) {
+    portSrc = val;
+    __isset.portSrc = true;
+  }
 
   void __set_portDst(const int32_t val) {
     portDst = val;
@@ -239,6 +246,10 @@ class Edge {
 
   bool operator == (const Edge & rhs) const
   {
+    if (__isset.portSrc != rhs.__isset.portSrc)
+      return false;
+    else if (__isset.portSrc && !(portSrc == rhs.portSrc))
+      return false;
     if (__isset.portDst != rhs.__isset.portDst)
       return false;
     else if (__isset.portDst && !(portDst == rhs.portDst))
@@ -275,8 +286,8 @@ typedef struct _Graph__isset {
 class Graph {
  public:
 
-  static const char* ascii_fingerprint; // = "D19D2DE502228DB63935731D4453CC2B";
-  static const uint8_t binary_fingerprint[16]; // = {0xD1,0x9D,0x2D,0xE5,0x02,0x22,0x8D,0xB6,0x39,0x35,0x73,0x1D,0x44,0x53,0xCC,0x2B};
+  static const char* ascii_fingerprint; // = "264B0D6DEF051B71B36774F812AC7CC4";
+  static const uint8_t binary_fingerprint[16]; // = {0x26,0x4B,0x0D,0x6D,0xEF,0x05,0x1B,0x71,0xB3,0x67,0x74,0xF8,0x12,0xAC,0x7C,0xC4};
 
   Graph() {
   }

@@ -30,8 +30,8 @@ empty :: Graph
 empty = DG.empty
 
 
-connect :: Graph -> Node.ID -> Node.ID -> Int -> Graph
-connect graph srcID dstID dstPort = insEdge (srcID, dstID, Edge dstPort) graph
+connect :: Graph -> Node.ID -> Node.ID -> Edge -> Graph
+connect graph srcID dstID edge = insEdge (srcID, dstID, edge) graph
 
 
 make :: Graph

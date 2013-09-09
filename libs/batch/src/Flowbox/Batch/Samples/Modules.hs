@@ -25,8 +25,8 @@ import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node)
 import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
-import qualified Flowbox.Luna.Network.Graph.Edge         as Edge
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
+import qualified Flowbox.Luna.Network.Graph.Port         as Port
 import qualified Flowbox.System.UniPath                  as UniPath
 import           Flowbox.System.UniPath                    (UniPath)
 
@@ -107,18 +107,18 @@ addSomeDefs defs = DefManager.addToParentMany (listToDefs atrybuty     2000 20 m
 
 func_vec_incx_graph :: LibManager.Gr Node Edge
 func_vec_incx_graph = Graph.insEdges [
-                              (0, 1, Edge.standard),
-                              (1, 2, Edge.standard),
-                              (2, 3, Edge.standard),
-                              (3, 4, Edge.standard),
-                              (5, 6, Edge.standard),
-                              (4, 6, Edge.standard),
-                              (6, 7, Edge.standard),
-                              (7, 8, Edge.standard),
-                              (8, 9, Edge.standard),
-                              (1, 9, Edge.standard),
-                              (9, 10, Edge.standard),
-                              (10, 11, Edge.standard)
+                              (0, 1, Edge Port.All Port.All),
+                              (1, 2, Edge Port.All Port.All),
+                              (2, 3, Edge Port.All Port.All),
+                              (3, 4, Edge Port.All Port.All),
+                              (5, 6, Edge Port.All Port.All),
+                              (4, 6, Edge Port.All Port.All),
+                              (6, 7, Edge Port.All Port.All),
+                              (7, 8, Edge Port.All Port.All),
+                              (8, 9, Edge Port.All Port.All),
+                              (1, 9, Edge Port.All Port.All),
+                              (9, 10, Edge Port.All Port.All),
+                              (10, 11, Edge Port.All Port.All)
                              ]
 
            $ Graph.insNodes [(0,  Node.mkInputs             ),

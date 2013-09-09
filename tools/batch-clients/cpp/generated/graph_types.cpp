@@ -254,8 +254,8 @@ void swap(Node &a, Node &b) {
   swap(a.__isset, b.__isset);
 }
 
-const char* Edge::ascii_fingerprint = "C19C3C50DCAC5D78DEDA8D5FC1C59402";
-const uint8_t Edge::binary_fingerprint[16] = {0xC1,0x9C,0x3C,0x50,0xDC,0xAC,0x5D,0x78,0xDE,0xDA,0x8D,0x5F,0xC1,0xC5,0x94,0x02};
+const char* Edge::ascii_fingerprint = "E3E2F869E2831D70F619B6B13F64FB99";
+const uint8_t Edge::binary_fingerprint[16] = {0xE3,0xE2,0xF8,0x69,0xE2,0x83,0x1D,0x70,0xF6,0x19,0xB6,0xB1,0x3F,0x64,0xFB,0x99};
 
 uint32_t Edge::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -277,6 +277,14 @@ uint32_t Edge::read(::apache::thrift::protocol::TProtocol* iprot) {
     }
     switch (fid)
     {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->portSrc);
+          this->__isset.portSrc = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       case 2:
         if (ftype == ::apache::thrift::protocol::T_I32) {
           xfer += iprot->readI32(this->portDst);
@@ -317,6 +325,11 @@ uint32_t Edge::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("Edge");
 
+  if (this->__isset.portSrc) {
+    xfer += oprot->writeFieldBegin("portSrc", ::apache::thrift::protocol::T_I32, 1);
+    xfer += oprot->writeI32(this->portSrc);
+    xfer += oprot->writeFieldEnd();
+  }
   if (this->__isset.portDst) {
     xfer += oprot->writeFieldBegin("portDst", ::apache::thrift::protocol::T_I32, 2);
     xfer += oprot->writeI32(this->portDst);
@@ -339,14 +352,15 @@ uint32_t Edge::write(::apache::thrift::protocol::TProtocol* oprot) const {
 
 void swap(Edge &a, Edge &b) {
   using ::std::swap;
+  swap(a.portSrc, b.portSrc);
   swap(a.portDst, b.portDst);
   swap(a.nodeSrc, b.nodeSrc);
   swap(a.nodeDst, b.nodeDst);
   swap(a.__isset, b.__isset);
 }
 
-const char* Graph::ascii_fingerprint = "D19D2DE502228DB63935731D4453CC2B";
-const uint8_t Graph::binary_fingerprint[16] = {0xD1,0x9D,0x2D,0xE5,0x02,0x22,0x8D,0xB6,0x39,0x35,0x73,0x1D,0x44,0x53,0xCC,0x2B};
+const char* Graph::ascii_fingerprint = "264B0D6DEF051B71B36774F812AC7CC4";
+const uint8_t Graph::binary_fingerprint[16] = {0x26,0x4B,0x0D,0x6D,0xEF,0x05,0x1B,0x71,0xB3,0x67,0x74,0xF8,0x12,0xAC,0x7C,0xC4};
 
 uint32_t Graph::read(::apache::thrift::protocol::TProtocol* iprot) {
 

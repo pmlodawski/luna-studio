@@ -22,17 +22,19 @@ import qualified Data.Vector                                          as Vector
 
 import qualified Attrs_Types                                          as TAttrs
 import qualified Graph_Types                                          as TGraph
+import           Flowbox.Control.Error                                  
 import           Flowbox.Luna.Network.Attributes                        (Attributes)
 import           Flowbox.Luna.Network.Flags                             (Flags(..))
 import           Flowbox.Luna.Network.Graph.DefaultValue                (DefaultValue(..))
-import qualified Flowbox.Luna.Network.Graph.Edge                      as Edge
-import           Flowbox.Luna.Network.Graph.Edge                        (Edge(..))
+import           Flowbox.Luna.Network.Graph.Edge                        (Edge(Edge))
 import qualified Flowbox.Luna.Network.Graph.Graph                     as Graph
 import           Flowbox.Luna.Network.Graph.Graph                       (Graph)
 import qualified Flowbox.Luna.Network.Graph.Node                      as Node
 import           Flowbox.Luna.Network.Graph.Node                        (Node(..))
+import qualified Flowbox.Luna.Network.Graph.Port                      as Port
 import           Flowbox.Tools.Conversion                               
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
+
 
 
 encodeGraph :: (Convert (Int, t) v, Convert (Graph.LEdge b) a,
@@ -68,20 +70,24 @@ decodeGraph (mtnodes, mtedges) = case mtnodes of
 
 
 instance Convert (Int, Int, Edge) TGraph.Edge where
-  encode (nsrc, ndst, a) =  let 
-      adst = itoi32 $ Edge.dst a
-    in TGraph.Edge (Just adst) (Just $ itoi32 nsrc) (Just $ itoi32 ndst)
-  decode b =
-    case TGraph.f_Edge_portDst b of
-      Just adst ->
-        case TGraph.f_Edge_nodeSrc b of
-          Just nodeSrc ->
-            case TGraph.f_Edge_nodeDst b of
-              Just nodeDst ->
-                Right $ (i32toi nodeSrc, i32toi nodeDst, Edge (i32toi adst))
-              Nothing      -> Left "No destination node specified"
-          Nothing      ->  Left "No source node specified"
-      Nothing  -> Left "No destination port specified"
+    encode (nodeSrc, nodeDst, Edge mportSrc mportDst) =  
+        let  tportSrc = case mportSrc of 
+                          Port.All            -> Nothing
+                          Port.Number portSrc -> Just $ itoi32 portSrc
+             tportDst = case mportDst of 
+                          Port.All            -> Nothing
+                          Port.Number portDst -> Just $ itoi32 portDst
+        in TGraph.Edge tportSrc tportDst (Just $ itoi32 nodeSrc) (Just $ itoi32 nodeDst)
+    decode (TGraph.Edge mtnodeSrc mtnodeDst mtportSrc mtportDst) = do
+        tnodeSrc   <- mtnodeSrc <?> "Failed to decode Edge: `srcNode` field is missing"
+        tnodeDst   <- mtnodeDst <?> "Failed to decode Edge: `srcNode` field is missing"
+        let portSrc = case mtportSrc of 
+                        Nothing       -> Port.All
+                        Just tportSrc -> Port.Number $ i32toi tportSrc
+        let portDst = case mtportDst of 
+                        Nothing       -> Port.All
+                        Just tportDst -> Port.Number $ i32toi tportDst
+        return  $ (i32toi tnodeSrc, i32toi tnodeDst, Edge portSrc portDst)
 
 
 instance Convert Graph TGraph.Graph where

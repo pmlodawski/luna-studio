@@ -42,7 +42,8 @@ struct Node {
 }
 
 struct Edge {
-    2: optional i32 portDst
+    1: optional i32    portSrc
+    2: optional i32    portDst
     3: optional NodeID nodeSrc
     4: optional NodeID nodeDst
 }

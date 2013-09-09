@@ -82,6 +82,7 @@ Library
         Flowbox.Luna.Network.Flags,
         Flowbox.Luna.Network.Graph.Graph,
         Flowbox.Luna.Network.Graph.Node,
+        Flowbox.Luna.Network.Graph.Port,
         Flowbox.Luna.Network.Graph.Edge,
         Flowbox.Luna.Network.Graph.DefaultValue,
         Flowbox.Luna.Network.Def.DefManager,
