@@ -19,18 +19,18 @@ data Context = Pure | IO deriving (Show, Eq)
 
 type Constant = Constant.Constant
 
-data Expr = Assignment { src      :: Expr     , dst       :: Expr     , ctx         :: Context }
-          | Tuple      { items    :: [Expr]                                                    }
-          | Call       { name     :: String   , args      :: [Expr]   , ctx         :: Context }
-          | StringLit  { val      :: String                                                    }
-          | NOP        {                                                                       }
-          | Var        { name     :: String                                                    }
-          | Typed      { name     :: String   , expr      :: Expr                              }
-          | Function   { name     :: String   , signature :: [Expr]   , body         :: [Expr] }
-          | DataType   { name     :: String   , params    :: [String] , constructors :: [Expr] }
-          | Cons       { name     :: String   , fields    :: [Expr]                            }
-          | Module     { path     :: [String] , imports   :: [Expr]   , datatypes    :: [Expr] }
-          | Import     { segments :: [String] , name      :: String                            }
+data Expr = Assignment { src      :: Expr     , dst       :: Expr     , ctx       :: Context }
+          | Tuple      { items    :: [Expr]                                                  }
+          | Call       { name     :: String   , args      :: [Expr]   , ctx       :: Context }
+          | StringLit  { val      :: String                                                  }
+          | NOP        {                                                                     }
+          | Var        { name     :: String                                                  }
+          | Typed      { name     :: String   , expr      :: Expr                            }
+          | Function   { name     :: String   , signature :: [Expr]   , body      :: [Expr]  }
+          | DataType   { name     :: String   , params    :: [String] , cons      :: [Expr]  }
+          | Cons       { name     :: String   , fields    :: [Expr]                          }
+          | Module     { path     :: [String] , imports   :: [Expr]   , datatypes :: [Expr]  }
+          | Import     { segments :: [String] , name      :: String                          }
           | Undefined
           -- | VarRef     { vid      :: Int                                                       } 
           -- | NTuple     { items    :: [Expr]                                                    }
@@ -67,47 +67,47 @@ data Expr = Assignment { src      :: Expr     , dst       :: Expr     , ctx     
 --mkBlock retname = Block [BlockRet retname IO] Pure
 
 
-genCode :: Expr -> String
-genCode expr = case expr of
-    Var      name'                       -> name'
-    Typed    name' expr'                 -> genCode expr' ++ " :: " ++ name'
-    Cons     name' fields'               -> name' ++ " { " ++ join ", " (map genCode fields') ++ " }"
-    DataType name' params' constructors' -> "data " ++ name' ++ params'' ++ " = " ++ join " | " (map genCode constructors') where
-                                            params'' = if not $ null params' then " " ++ join " " params' else ""
-    Function name' signature' body'      -> name' ++ " " ++ join " " (map genCode signature') ++ " = " ++ "{ " ++ join "; " (map genCode body') ++ " }"
---    Assignment src' dst' ctx'   -> genCode src' ++ " " ++ operator ++ " " ++ genCode dst' where
---                                   operator = case ctx' of
---                                       Pure -> "="
---                                       IO   -> "<-"
---    Var        name'            -> name'
---    Default    val'             -> val'
---    StringLit  val'             -> show val'
---    VarRef     vid'             -> "v'" ++ show vid'
---    Call       name' args' ctx' -> fname' ++ " " ++ join " " (map (("("++) . (++")") . genCode) args') where
---                                   fname' = case ctx' of
---                                       Pure -> name'
---                                       IO   -> name' ++ mpostfix
---    Tuple      elems'           -> if length elems' == 1
---                                     then "OneTuple " ++ body
---                                     else "(" ++ body ++ ")"
---                                         where body = join ", " (map (genCode) elems')
---    NTuple     elems'           -> "(" ++ join ", (" (map (genCode) elems') ++ ", ()" ++ replicate (length elems') ')'
---    Type       name' params'    -> name' ++ (if null params' then "" else " " ++ join " " params')
---    THExprCtx  name'            -> "'"  ++ name'
---    THTypeCtx  name'            -> "''" ++ name'
---    Cons       name' fields'    -> name' ++ " {" ++ join ", " (map genCode fields') ++ "}"
---    --Typed      src' t'          -> genCode src' ++ " :: " ++ genCode t'
---    At         name' dst'       -> name' ++ "@" ++ genCode dst'
---    Any                         -> "_"
---    Block      body' ctx'       -> prefix ++ genBlockCode body' IO where
---                                       prefix = case ctx' of
---                                           Pure -> "\n"
---                                           IO   -> "do\n"
---    BlockRet   name' ctx'       -> case ctx' of
---                                       Pure -> "in " ++ name'
---                                       IO   -> "return " ++ name'
---    FuncType   elems'           -> join " -> " (map genCode elems')
-    NOP                         -> ""
+--genCode :: Expr -> String
+--genCode expr = case expr of
+--    Var      name'                       -> name'
+--    Typed    name' expr'                 -> genCode expr' ++ " :: " ++ name'
+--    Cons     name' fields'               -> name' ++ " { " ++ join ", " (map genCode fields') ++ " }"
+--    DataType name' params' constructors' -> "data " ++ name' ++ params'' ++ " = " ++ join " | " (map genCode constructors') where
+--                                            params'' = if not $ null params' then " " ++ join " " params' else ""
+--    Function name' signature' body'      -> name' ++ " " ++ join " " (map genCode signature') ++ " = " ++ "{ " ++ join "; " (map genCode body') ++ " }"
+----    Assignment src' dst' ctx'   -> genCode src' ++ " " ++ operator ++ " " ++ genCode dst' where
+----                                   operator = case ctx' of
+----                                       Pure -> "="
+----                                       IO   -> "<-"
+----    Var        name'            -> name'
+----    Default    val'             -> val'
+----    StringLit  val'             -> show val'
+----    VarRef     vid'             -> "v'" ++ show vid'
+----    Call       name' args' ctx' -> fname' ++ " " ++ join " " (map (("("++) . (++")") . genCode) args') where
+----                                   fname' = case ctx' of
+----                                       Pure -> name'
+----                                       IO   -> name' ++ mpostfix
+----    Tuple      elems'           -> if length elems' == 1
+----                                     then "OneTuple " ++ body
+----                                     else "(" ++ body ++ ")"
+----                                         where body = join ", " (map (genCode) elems')
+----    NTuple     elems'           -> "(" ++ join ", (" (map (genCode) elems') ++ ", ()" ++ replicate (length elems') ')'
+----    Type       name' params'    -> name' ++ (if null params' then "" else " " ++ join " " params')
+----    THExprCtx  name'            -> "'"  ++ name'
+----    THTypeCtx  name'            -> "''" ++ name'
+----    Cons       name' fields'    -> name' ++ " {" ++ join ", " (map genCode fields') ++ "}"
+----    --Typed      src' t'          -> genCode src' ++ " :: " ++ genCode t'
+----    At         name' dst'       -> name' ++ "@" ++ genCode dst'
+----    Any                         -> "_"
+----    Block      body' ctx'       -> prefix ++ genBlockCode body' IO where
+----                                       prefix = case ctx' of
+----                                           Pure -> "\n"
+----                                           IO   -> "do\n"
+----    BlockRet   name' ctx'       -> case ctx' of
+----                                       Pure -> "in " ++ name'
+----                                       IO   -> "return " ++ name'
+----    FuncType   elems'           -> join " -> " (map genCode elems')
+--    NOP                         -> ""
 
 
 --genBlockCode :: [Expr] -> Context -> String
