@@ -37,6 +37,7 @@ import qualified Flowbox.Luna.XOLD.Type.Type             as Type
 import           Flowbox.Luna.XOLD.Type.Type               (Type)
 
 
+
 type Graph2ASTMonad m = PassMonad Pass.NoState m
 
 
@@ -56,11 +57,11 @@ def2AST defManager (defID, def) = do
 
         methods :: (Definition.ID, Definition) -> Bool
         methods (_, Definition (Type.Function {}) _ _ _ _) = True
-        methods (_, Definition {}                     ) = False
+        methods (_, Definition {}                        ) = False
 
         modules :: (Definition.ID, Definition) -> Bool
         modules (_, Definition (Type.Module {}) _ _ _ _) = True
-        modules (_, Definition {}                     ) = False
+        modules (_, Definition {}                      ) = False
 
     case def of 
         Definition _   _     _       (Flags _ True ) _ -> return $ AST.Comment ""
