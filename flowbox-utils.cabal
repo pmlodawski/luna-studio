@@ -33,6 +33,7 @@ Library
         Flowbox.System.Log.LogEntry,
         Flowbox.System.Log.Conf,
         Flowbox.System.Log.Logger,
+        Flowbox.System.Directory.Tree,
         Flowbox.Data.Version
 
   Build-Depends:  base,
