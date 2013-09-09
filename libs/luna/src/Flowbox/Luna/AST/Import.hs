@@ -6,20 +6,17 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances #-}
 
-module Flowbox.Luna.AST.Class where
+module Flowbox.Luna.AST.Import where
 
 import           Flowbox.Prelude         
 import           Flowbox.Luna.AST.AST    
 import qualified Flowbox.Luna.AST.Type as Type
 
 
-mk :: String -> [String] -> Expr
-mk name' params' = Class (Type.Class name' params') [] [] []
+mk :: [String] -> Maybe String -> Expr
+mk segments' mname = Import segments' $ case mname of
+                         Just  n -> n
+                         Nothing -> last segments'
 
-
---parseBody :: Expr -> Expr -> Expr
---parseBody expr cls' = case expr of
---    Function {} -> addMethod expr cls'
---    _           -> cls' -- error $ "class parse body error " ++ show expr
 
 

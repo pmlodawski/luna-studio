@@ -34,5 +34,5 @@ run = (Pass.runM Pass.NoState) . parse
 
 parse :: ParserMonad m => Source -> Pass.Result m LAST.Expr
 parse src = case Parser.parse src of
-    Left  _ -> Pass.fail
+    Left  e -> Pass.fail $ show e
     Right v -> return v

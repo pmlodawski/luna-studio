@@ -43,12 +43,17 @@ logger = getLogger "Flowbox"
 
 
 example :: Source
-example = Source.Source ["Workspace"] 
-        $ unlines [ "class X"
+example = Source.Source "Workspace"
+        $ unlines [ "import Std.Math.Vector as V"
                   ]
 
+
 main :: IO ()
-main = timeIt main_inner *> return ()
+main = do
+    out <- timeIt main_inner
+    case out of
+        Right _ -> return ()
+        Left  e -> putStrLn e
 
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
@@ -60,7 +65,7 @@ main_inner = Luna.run $ do
     ssa <- SSA.run     ast
     putStrLn $ PP.ppShow ssa
 
-    putStrLn "\n-------- HAST --------"
+    putStrLn "\n-------- HAST --------" 
     hast <- HSGen.run  ssa
     putStrLn $ PP.ppShow hast
 
@@ -69,4 +74,6 @@ main_inner = Luna.run $ do
     --putStrLn $ PP.ppShow hsc
 
     return ()
+
+
 

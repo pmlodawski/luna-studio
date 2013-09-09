@@ -56,12 +56,19 @@ def2AST defManager (defID, def) = do
     case def of 
         Definition _   _     _       (Flags _ True ) _ -> return $ AST.Comment ""
         Definition cls graph imports (Flags _ False) _ -> case cls of
-            Type.Class _ _ params  -> AST.Class (snd $ type2ASTType cls)
+            Type.Class _ _ params  -> return $ AST.Class (snd $ type2ASTType cls)
                                                 (map type2Field params)
-                                            <$> nextDefs
-            Type.Function name _ _ -> AST.Function name (snd $ type2ASTType cls) <$> graph2AST graph
-            Type.Module   name     -> AST.Module <$> (module2ASTPath defManager defID name)
-                                                 <*>  nextDefs
+                                                notImplementedList
+                                                notImplementedList
+            Type.Function name _ _ -> AST.Function name (snd $ type2ASTType cls) 
+                                               <$> graph2AST graph
+                                               -- notImplementedList
+            Type.Module   name     -> return $ AST.Module (snd $ type2ASTType cls)
+                                                 notImplementedList
+                                                 notImplementedList
+                                                 notImplementedList
+                                                 notImplementedList
+                                                 notImplementedList
             _                      -> return AST.NOP
         
 
@@ -91,7 +98,7 @@ type2ASTType t = case t of
     Type.Function     name inputs outputs -> (name, ASTType.Lambda (snd $ type2ASTType inputs) (snd $ type2ASTType outputs))
     Type.Tuple        items               -> (""  , ASTType.Tuple (map (snd.type2ASTType) items))
     Type.Interface    fields methods      -> (""  , ASTType.Unknown)
-    Type.Module       name                -> (name, ASTType.Unknown)
+    Type.Module       name                -> (name, ASTType.Module name)
     Type.Named        name cls            -> (name, snd $ type2ASTType cls)
 
 

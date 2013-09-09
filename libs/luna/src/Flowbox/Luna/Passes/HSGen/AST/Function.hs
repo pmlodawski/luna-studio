@@ -66,21 +66,21 @@ genCode func = "<function>"
 --addAlias alias func = setBody (Expr.addExpr (Expr.mkAlias alias) $ body func) func
 
 
-getter :: String -> String -> Expr
-getter obj param = Expr.Call "mkGetter" [ Expr.StringLit param
-                                        , Expr.THTypeCtx obj
-                                        ] Expr.Pure
+--getter :: String -> String -> Expr
+--getter obj param = Expr.Call "mkGetter" [ Expr.StringLit param
+--                                        , Expr.THTypeCtx obj
+--                                        ] Expr.Pure
 
 
-setter :: String -> String -> Expr
-setter obj param = Expr.Call "mkSetter" [ Expr.StringLit param
-                                        , Expr.THTypeCtx obj
-                                        ] Expr.Pure
+--setter :: String -> String -> Expr
+--setter obj param = Expr.Call "mkSetter" [ Expr.StringLit param
+--                                        , Expr.THTypeCtx obj
+--                                        ] Expr.Pure
 
 
 
-mkSpec :: String -> String -> String -> Function
-mkSpec spec name' basefunc = empty { name      = name'
-                                   , signature = [Expr.At Path.inputs (Expr.Tuple [Expr.Cons spec [], Expr.Any])]
-                                   --, body      = Expr.Call basefunc [Expr.Var Path.inputs] Expr.IO
-                                   }
+--mkSpec :: String -> String -> String -> Function
+--mkSpec spec name' basefunc = empty { name      = name'
+--                                   , signature = [Expr.At Path.inputs (Expr.Tuple [Expr.Cons spec [], Expr.Any])]
+--                                   --, body      = Expr.Call basefunc [Expr.Var Path.inputs] Expr.IO
+--                                   }

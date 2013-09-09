@@ -228,7 +228,8 @@ isReservedOp name = isReserved (sort reservedOpNames) name
 -----------------------------------------------------------
 -- Identifiers & Reserved words
 -----------------------------------------------------------
-reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
+reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> "")
+--reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
 
 pIdentVar     = pIdentLower <?> "variable identifier"
 pIdentType    = pIdentUpper <?> "type identifier"
@@ -257,7 +258,7 @@ isReservedName name = isReserved (sort reservedNames) name
 -----------------------------------------------------------
 -- White space & symbols
 -----------------------------------------------------------
-lexeme p    = p <* skipMany pSpaces1
+lexeme p    = p <* skipMany pSpaces1 
 
 symbols name = try $ lexeme (string name)
 symbol  name = lexeme (char name)
@@ -281,6 +282,6 @@ inComment =   try (string commentEnd)            *> return ""
           	startEnd   = nub (commentEnd ++ commentStart)
 
 
-eol = (char '\n' <|> (char '\r' >> option '\n' (char '\n'))) >> return ()
+eol = (char '\n' <|> (char '\r' >> option '\n' (char '\n'))) >> return () <?> ""
 
 

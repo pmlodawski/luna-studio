@@ -44,5 +44,5 @@ runM s f = do
     hoistEither nast
 
 
-fail :: Monad m => EitherT String m a
-fail = left "Pass failed"
+fail :: Monad m => String -> EitherT String m a
+fail = left

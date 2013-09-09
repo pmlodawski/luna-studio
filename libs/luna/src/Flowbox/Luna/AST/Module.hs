@@ -12,5 +12,5 @@ import           Flowbox.Luna.AST.AST
 import qualified Flowbox.Luna.AST.Type as Type
 
 
-mk :: [Expr] -> Expr
-mk body = Module NOP body
+mk :: String -> Expr
+mk name = Module (Type.Module name) [] [] [] [] []
