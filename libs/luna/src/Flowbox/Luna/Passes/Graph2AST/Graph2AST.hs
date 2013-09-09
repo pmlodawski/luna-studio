@@ -10,11 +10,12 @@ module Flowbox.Luna.Passes.Graph2AST.Graph2AST where
 
 import           Control.Applicative                       
 import           Control.Monad.State                       
-import           Data.Foldable                             (foldrM)
+import           Data.Foldable                             (foldlM)
 import qualified Data.List                               as List
 
 import           Flowbox.Prelude                           
 import           Flowbox.Control.Error                     ()
+import qualified Flowbox.Luna.Data.List                  as FList
 import qualified Flowbox.Luna.AST.AST                    as AST
 import qualified Flowbox.Luna.AST.Type                   as ASTType
 import qualified Flowbox.Luna.AST.Constant               as ASTConstant
@@ -28,6 +29,8 @@ import           Flowbox.Luna.Network.Graph.Graph          (Graph)
 import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue(..))
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(Edge))
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
+import qualified Flowbox.Luna.Network.Graph.Port         as Port
+import           Flowbox.Luna.Network.Graph.Port           (Port)
 import           Flowbox.Luna.Network.Path.Import          (Import(Import))
 import           Flowbox.Luna.Network.Path.Path            (Path(Path))
 import qualified Flowbox.Luna.Passes.Pass                as Pass
@@ -128,11 +131,11 @@ import2ASTimport (Import (Path path) name) = AST.Import path name
 
 
 graph2AST :: Graph2ASTMonad m => Graph -> Pass.Result m [AST.Expr]
-graph2AST graph = foldrM (node2AST graph) [] $ Graph.topsortl graph
+graph2AST graph = foldlM (node2AST graph) [] $ Graph.topsortl graph
 
 
-node2AST :: Graph2ASTMonad m => Graph -> (Node.ID, Node.Node) -> [AST.Expr] -> Pass.Result m [AST.Expr] 
-node2AST graph (nodeID, node) list = do
+node2AST :: Graph2ASTMonad m => Graph -> [AST.Expr] -> (Node.ID, Node.Node) -> Pass.Result m [AST.Expr] 
+node2AST graph list (nodeID, node) = do
     let 
         return' :: Graph2ASTMonad m => AST.Expr -> Pass.Result m [AST.Expr] 
         return' a = return (list ++ [a])
@@ -150,9 +153,10 @@ node2AST graph (nodeID, node) list = do
                 resultName :: Node.ID -> AST.Expr
                 resultName nID = AST.Identifier $ "result_" ++ show nID
 
-                argName :: (Node.ID, Node.Node, Edge) -> AST.Expr
-                argName (nID, _, _) = resultName nID
-
+                argName :: (Node.ID, a, Edge) -> AST.Expr
+                argName (nID, _, Edge srcPort _) = case srcPort of 
+                    Port.All      -> resultName nID
+                    Port.Number n -> AST.Identifier $ "result_" ++ show nID ++ "_" ++ show n
 
                 argNodes = List.sortBy order $ Graph.lprel graph nodeID
                 argNames = map argName argNodes
@@ -166,4 +170,22 @@ node2AST graph (nodeID, node) list = do
                 Node.Outputs _     _ -> return $ AST.Tuple argNames
                 Node.NTuple  _     _ -> return $ AST.Tuple argNames
 
-            return' $ AST.Assignment (AST.Pattern $ resultName nodeID) call
+
+            let inEdges          = Graph.out graph nodeID 
+                allConnected     = length inEdges
+                gettersConnected = FList.count isGetter inEdges
+
+                isGetter :: (Node.ID, Node.ID, Edge) -> Bool
+                isGetter (_, _, Edge (Port.Number _) _) = True
+                isGetter _                              = False
+
+
+                allPattern     = AST.Pattern $ resultName nodeID
+                gettersPattern = AST.Pattern $ AST.Tuple $ map argName inEdges
+
+            if gettersConnected == 0 
+                then return' $ AST.Assignment call allPattern
+                else if gettersConnected == allConnected
+                    then return' $ AST.Assignment call gettersPattern
+                    else return  $ list ++ [AST.Assignment call allPattern
+                                           ,AST.Assignment (resultName nodeID) gettersPattern]
