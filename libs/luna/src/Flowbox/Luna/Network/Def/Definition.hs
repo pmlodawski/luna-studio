@@ -25,8 +25,7 @@ import           Flowbox.Luna.Network.Attributes    (Attributes)
 import           Flowbox.Luna.Network.Path.Import   (Import)
 
 
-data Definition = NotLoaded
-                | Definition { cls        :: Type
+data Definition = Definition { cls        :: Type
                              , graph      :: Graph
                              , imports    :: [Import]
                              , flags      :: Flags

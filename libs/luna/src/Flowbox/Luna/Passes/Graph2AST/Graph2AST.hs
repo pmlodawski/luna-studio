@@ -50,25 +50,37 @@ run defManager (defID, def) = (Pass.runM Pass.NoState) $ def2AST defManager (def
 def2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m AST.Expr
 def2AST defManager (defID, def) = do 
     let 
-        nextDefs :: Graph2ASTMonad m => Pass.Result m [AST.Expr]
-        nextDefs = (mapM (def2AST defManager) $ DefManager.sucl defManager defID)
+        nextDefs :: Graph2ASTMonad m => ((Definition.ID, Definition) -> Bool) -> Pass.Result m [AST.Expr]
+        nextDefs f = (mapM (def2AST defManager) $ filter f $ DefManager.sucl defManager defID)
+
+        classes :: (Definition.ID, Definition) -> Bool
+        classes (_, Definition (Type.Class {}) _ _ _ _) = True
+        classes (_, Definition {}                     ) = False
+
+        methods :: (Definition.ID, Definition) -> Bool
+        methods (_, Definition (Type.Function {}) _ _ _ _) = True
+        methods (_, Definition {}                     ) = False
+
+        modules :: (Definition.ID, Definition) -> Bool
+        modules (_, Definition (Type.Module {}) _ _ _ _) = True
+        modules (_, Definition {}                     ) = False
 
     case def of 
         Definition _   _     _       (Flags _ True ) _ -> return $ AST.Comment ""
         Definition cls graph imports (Flags _ False) _ -> case cls of
-            Type.Class _ _ params  -> return $ AST.Class (snd $ type2ASTType cls)
-                                                (map type2Field params)
-                                                notImplementedList
-                                                notImplementedList
+            Type.Class _ _ params  -> AST.Class (snd $ type2ASTType cls)
+                                             <$> nextDefs classes
+                                             <*> pure (map type2Field params)
+                                             <*> nextDefs methods
             Type.Function name _ _ -> AST.Function name (snd $ type2ASTType cls) 
                                                <$> graph2AST graph
                                                -- notImplementedList
-            Type.Module   name     -> return $ AST.Module (snd $ type2ASTType cls)
+            Type.Module   _        -> AST.Module (snd $ type2ASTType cls)
                                                  notImplementedList
-                                                 notImplementedList
-                                                 notImplementedList
-                                                 notImplementedList
-                                                 notImplementedList
+                                             <$> nextDefs classes
+                                             <*> pure notImplementedList
+                                             <*> nextDefs methods
+                                             <*> nextDefs modules
             _                      -> return AST.NOP
         
 
