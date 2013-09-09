@@ -72,8 +72,7 @@ class Batch_Iface a where
   newTypeFunction :: a -> Maybe Text -> Maybe Types_Types.Type -> Maybe Types_Types.Type -> IO Types_Types.Type
   newTypeUdefined :: a -> IO Types_Types.Type
   newTypeNamed :: a -> Maybe Text -> Maybe Types_Types.Type -> IO Types_Types.Type
-  newTypeVariable :: a -> Maybe Text -> IO Types_Types.Type
-  newTypeList :: a -> Maybe Types_Types.Type -> IO Types_Types.Type
+  newTypeName :: a -> Maybe Text -> IO Types_Types.Type
   newTypeTuple :: a -> Maybe (Vector.Vector Types_Types.Type) -> IO Types_Types.Type
   nodesGraph :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Graphview_Types.GraphView
   nodeByID :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Graph_Types.Node

@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,projectByID,createProject,openProject,updateProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeVariable,newTypeList,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump,shutdown) where
+module Batch_Client(projects,projectByID,createProject,openProject,updateProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeName,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump,shutdown) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -718,58 +718,32 @@ recv_newTypeNamed ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "newTypeNamed failed: unknown result")
-newTypeVariable (ip,op) arg_name = do
-  send_newTypeVariable op arg_name
-  recv_newTypeVariable ip
-send_newTypeVariable op arg_name = do
+newTypeName (ip,op) arg_name = do
+  send_newTypeName op arg_name
+  recv_newTypeName ip
+send_newTypeName op arg_name = do
   seq <- seqid
   seqn <- readIORef seq
-  writeMessageBegin op ("newTypeVariable", M_CALL, seqn)
-  write_NewTypeVariable_args op (NewTypeVariable_args{f_NewTypeVariable_args_name=Just arg_name})
+  writeMessageBegin op ("newTypeName", M_CALL, seqn)
+  write_NewTypeName_args op (NewTypeName_args{f_NewTypeName_args_name=Just arg_name})
   writeMessageEnd op
   tFlush (getTransport op)
-recv_newTypeVariable ip = do
+recv_newTypeName ip = do
   (fname, mtype, rseqid) <- readMessageBegin ip
   if mtype == M_EXCEPTION then do
     x <- readAppExn ip
     readMessageEnd ip
     throw x
     else return ()
-  res <- read_NewTypeVariable_result ip
+  res <- read_NewTypeName_result ip
   readMessageEnd ip
-  case f_NewTypeVariable_result_success res of
+  case f_NewTypeName_result_success res of
     Just v -> return v
     Nothing -> do
-      case f_NewTypeVariable_result_missingFields res of
+      case f_NewTypeName_result_missingFields res of
         Nothing -> return ()
         Just _v -> throw _v
-      throw (AppExn AE_MISSING_RESULT "newTypeVariable failed: unknown result")
-newTypeList (ip,op) arg_type = do
-  send_newTypeList op arg_type
-  recv_newTypeList ip
-send_newTypeList op arg_type = do
-  seq <- seqid
-  seqn <- readIORef seq
-  writeMessageBegin op ("newTypeList", M_CALL, seqn)
-  write_NewTypeList_args op (NewTypeList_args{f_NewTypeList_args_type=Just arg_type})
-  writeMessageEnd op
-  tFlush (getTransport op)
-recv_newTypeList ip = do
-  (fname, mtype, rseqid) <- readMessageBegin ip
-  if mtype == M_EXCEPTION then do
-    x <- readAppExn ip
-    readMessageEnd ip
-    throw x
-    else return ()
-  res <- read_NewTypeList_result ip
-  readMessageEnd ip
-  case f_NewTypeList_result_success res of
-    Just v -> return v
-    Nothing -> do
-      case f_NewTypeList_result_missingFields res of
-        Nothing -> return ()
-        Just _v -> throw _v
-      throw (AppExn AE_MISSING_RESULT "newTypeList failed: unknown result")
+      throw (AppExn AE_MISSING_RESULT "newTypeName failed: unknown result")
 newTypeTuple (ip,op) arg_types = do
   send_newTypeTuple op arg_types
   recv_newTypeTuple ip

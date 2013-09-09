@@ -17,9 +17,8 @@ int _kTypeTypeValues[] = {
   TypeType::Class,
   TypeType::Interface,
   TypeType::Named,
-  TypeType::TypeVariable,
-  TypeType::Tuple,
-  TypeType::List
+  TypeType::TypeName,
+  TypeType::Tuple
 };
 const char* _kTypeTypeNames[] = {
   "Undefined",
@@ -28,11 +27,10 @@ const char* _kTypeTypeNames[] = {
   "Class",
   "Interface",
   "Named",
-  "TypeVariable",
-  "Tuple",
-  "List"
+  "TypeName",
+  "Tuple"
 };
-const std::map<int, const char*> _TypeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(9, _kTypeTypeValues, _kTypeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+const std::map<int, const char*> _TypeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(8, _kTypeTypeValues, _kTypeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
 const char* TypeProto::ascii_fingerprint = "41C95B9BAE14CE08755F6104411F858E";
 const uint8_t TypeProto::binary_fingerprint[16] = {0x41,0xC9,0x5B,0x9B,0xAE,0x14,0xCE,0x08,0x75,0x5F,0x61,0x04,0x41,0x1F,0x85,0x8E};

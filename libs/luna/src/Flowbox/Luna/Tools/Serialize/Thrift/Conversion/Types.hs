@@ -44,14 +44,6 @@ type2typeProtoList level t = case t of
        tname      = Just $ pack aname
        
        tcurrent   = TTypes.TypeProto tcls tname   Nothing Nothing Nothing Nothing Nothing Nothing
-    List aitem       -> tcurrent:titem where
-       tcls       = Just TTypes.List
-       itemLevel  = level + 1
-       titemLevel = Just $ itoi32 itemLevel
-       
-       tcurrent   = TTypes.TypeProto tcls Nothing Nothing Nothing Nothing Nothing Nothing titemLevel
-       
-       titem      = type2typeProtoList (level+1) aitem
     Function aname ainputs aoutputs -> tcurrent : tinputs ++ toutputs where
        tcls          = Just TTypes.Function
        tname         = Just $ pack aname
@@ -87,8 +79,8 @@ type2typeProtoList level t = case t of
        tcurrent   = TTypes.TypeProto tcls tname Nothing Nothing Nothing Nothing Nothing ttypeLevel
        
        ttype      = type2typeProtoList (level+1) atype
-    TypeVariable aname -> [tcurrent] where
-       tcls       = Just TTypes.TypeVariable
+    TypeName aname -> [tcurrent] where
+       tcls       = Just TTypes.TypeName
        tname      = Just $ pack aname
        
        tcurrent   = TTypes.TypeProto tcls tname   Nothing Nothing Nothing Nothing Nothing Nothing 
@@ -102,10 +94,6 @@ typeFromListAt list index = t where
         Just TTypes.Module    -> do 
             tname <- mtname <?> "Failed to decode Type: `name` field is missing"
             return $ Module $ unpack tname
-        Just TTypes.List      -> do 
-            typeIndex <- mttypeIndex <?> "Failed to decode Type: `type` field is missing"
-            aitems    <- typeFromListAt list $ i32toi typeIndex
-            return $ List aitems
         Just TTypes.Function  -> do 
             tname           <- mtname         <?> "Failed to decode Type: `name` field is missing"
             tinputsIndex    <- mtinputsIndex  <?> "Failed to decode Type: `inputs` field is missing"
@@ -133,11 +121,10 @@ typeFromListAt list index = t where
             ttypeIndex      <- mttypeIndex <?> "Failed to decode Type: `type` field is missing"
             internal        <- typeFromListAt list (i32toi ttypeIndex)
             return $ Named (unpack tname) internal
-        Just TTypes.TypeVariable -> do 
+        Just TTypes.TypeName -> do 
             tname <- mtname <?> "Failed to decode Type: `name` field is missing" 
-            return $ TypeVariable $ unpack tname
+            return $ TypeName $ unpack tname
         Nothing                    -> Left "Failed to decode Type: `cls` field is missing"
-        _                          -> Left "Failed to decode Type: Unsupported `cls` (not implemented)"
 
 
 instance Convert Type TTypes.Type where

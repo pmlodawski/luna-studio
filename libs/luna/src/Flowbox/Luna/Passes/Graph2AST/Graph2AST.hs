@@ -86,12 +86,10 @@ notImplementedList = []
 type2ASTType :: Type -> (String, ASTType.Type)
 type2ASTType t = case t of 
     Type.Undefined                        -> (""  , ASTType.Unknown)
-    Type.Type         name                -> (name, ASTType.Type name)
-    Type.TypeVariable name                -> (name, ASTType.Unknown)
+    Type.TypeName     name                -> (name, ASTType.Type name)
     Type.Class        name typeparams _   -> (""  , ASTType.Class name typeparams)
     Type.Function     name inputs outputs -> (name, ASTType.Lambda (snd $ type2ASTType inputs) (snd $ type2ASTType outputs))
     Type.Tuple        items               -> (""  , ASTType.Tuple (map (snd.type2ASTType) items))
-    Type.List         item                -> (""  , ASTType.Unknown)
     Type.Interface    fields methods      -> (""  , ASTType.Unknown)
     Type.Module       name                -> (name, ASTType.Unknown)
     Type.Named        name cls            -> (name, snd $ type2ASTType cls)

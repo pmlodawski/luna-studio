@@ -157,14 +157,9 @@ class BatchHandler : virtual public BatchIf {
     printf("newTypeNamed\n");
   }
 
-  void newTypeVariable( ::flowbox::batch::types::Type& _return, const std::string& name) {
+  void newTypeName( ::flowbox::batch::types::Type& _return, const std::string& name) {
     // Your implementation goes here
-    printf("newTypeVariable\n");
-  }
-
-  void newTypeList( ::flowbox::batch::types::Type& _return, const  ::flowbox::batch::types::Type& type) {
-    // Your implementation goes here
-    printf("newTypeList\n");
+    printf("newTypeName\n");
   }
 
   void newTypeTuple( ::flowbox::batch::types::Type& _return, const std::vector< ::flowbox::batch::types::Type> & types) {

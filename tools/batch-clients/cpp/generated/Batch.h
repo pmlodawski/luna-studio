@@ -42,8 +42,7 @@ class BatchIf {
   virtual void newTypeFunction( ::flowbox::batch::types::Type& _return, const std::string& name, const  ::flowbox::batch::types::Type& inputs, const  ::flowbox::batch::types::Type& outputs) = 0;
   virtual void newTypeUdefined( ::flowbox::batch::types::Type& _return) = 0;
   virtual void newTypeNamed( ::flowbox::batch::types::Type& _return, const std::string& name, const  ::flowbox::batch::types::Type& type) = 0;
-  virtual void newTypeVariable( ::flowbox::batch::types::Type& _return, const std::string& name) = 0;
-  virtual void newTypeList( ::flowbox::batch::types::Type& _return, const  ::flowbox::batch::types::Type& type) = 0;
+  virtual void newTypeName( ::flowbox::batch::types::Type& _return, const std::string& name) = 0;
   virtual void newTypeTuple( ::flowbox::batch::types::Type& _return, const std::vector< ::flowbox::batch::types::Type> & types) = 0;
   virtual void nodesGraph( ::flowbox::batch::graph::GraphView& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void nodeByID( ::flowbox::batch::graph::Node& _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
@@ -175,10 +174,7 @@ class BatchNull : virtual public BatchIf {
   void newTypeNamed( ::flowbox::batch::types::Type& /* _return */, const std::string& /* name */, const  ::flowbox::batch::types::Type& /* type */) {
     return;
   }
-  void newTypeVariable( ::flowbox::batch::types::Type& /* _return */, const std::string& /* name */) {
-    return;
-  }
-  void newTypeList( ::flowbox::batch::types::Type& /* _return */, const  ::flowbox::batch::types::Type& /* type */) {
+  void newTypeName( ::flowbox::batch::types::Type& /* _return */, const std::string& /* name */) {
     return;
   }
   void newTypeTuple( ::flowbox::batch::types::Type& /* _return */, const std::vector< ::flowbox::batch::types::Type> & /* types */) {
@@ -3538,38 +3534,38 @@ class Batch_newTypeNamed_presult {
 
 };
 
-typedef struct _Batch_newTypeVariable_args__isset {
-  _Batch_newTypeVariable_args__isset() : name(false) {}
+typedef struct _Batch_newTypeName_args__isset {
+  _Batch_newTypeName_args__isset() : name(false) {}
   bool name;
-} _Batch_newTypeVariable_args__isset;
+} _Batch_newTypeName_args__isset;
 
-class Batch_newTypeVariable_args {
+class Batch_newTypeName_args {
  public:
 
-  Batch_newTypeVariable_args() : name() {
+  Batch_newTypeName_args() : name() {
   }
 
-  virtual ~Batch_newTypeVariable_args() throw() {}
+  virtual ~Batch_newTypeName_args() throw() {}
 
   std::string name;
 
-  _Batch_newTypeVariable_args__isset __isset;
+  _Batch_newTypeName_args__isset __isset;
 
   void __set_name(const std::string& val) {
     name = val;
   }
 
-  bool operator == (const Batch_newTypeVariable_args & rhs) const
+  bool operator == (const Batch_newTypeName_args & rhs) const
   {
     if (!(name == rhs.name))
       return false;
     return true;
   }
-  bool operator != (const Batch_newTypeVariable_args &rhs) const {
+  bool operator != (const Batch_newTypeName_args &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_newTypeVariable_args & ) const;
+  bool operator < (const Batch_newTypeName_args & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -3577,11 +3573,11 @@ class Batch_newTypeVariable_args {
 };
 
 
-class Batch_newTypeVariable_pargs {
+class Batch_newTypeName_pargs {
  public:
 
 
-  virtual ~Batch_newTypeVariable_pargs() throw() {}
+  virtual ~Batch_newTypeName_pargs() throw() {}
 
   const std::string* name;
 
@@ -3589,24 +3585,24 @@ class Batch_newTypeVariable_pargs {
 
 };
 
-typedef struct _Batch_newTypeVariable_result__isset {
-  _Batch_newTypeVariable_result__isset() : success(false), missingFields(false) {}
+typedef struct _Batch_newTypeName_result__isset {
+  _Batch_newTypeName_result__isset() : success(false), missingFields(false) {}
   bool success;
   bool missingFields;
-} _Batch_newTypeVariable_result__isset;
+} _Batch_newTypeName_result__isset;
 
-class Batch_newTypeVariable_result {
+class Batch_newTypeName_result {
  public:
 
-  Batch_newTypeVariable_result() {
+  Batch_newTypeName_result() {
   }
 
-  virtual ~Batch_newTypeVariable_result() throw() {}
+  virtual ~Batch_newTypeName_result() throw() {}
 
    ::flowbox::batch::types::Type success;
   ArgumentException missingFields;
 
-  _Batch_newTypeVariable_result__isset __isset;
+  _Batch_newTypeName_result__isset __isset;
 
   void __set_success(const  ::flowbox::batch::types::Type& val) {
     success = val;
@@ -3616,7 +3612,7 @@ class Batch_newTypeVariable_result {
     missingFields = val;
   }
 
-  bool operator == (const Batch_newTypeVariable_result & rhs) const
+  bool operator == (const Batch_newTypeName_result & rhs) const
   {
     if (!(success == rhs.success))
       return false;
@@ -3624,151 +3620,33 @@ class Batch_newTypeVariable_result {
       return false;
     return true;
   }
-  bool operator != (const Batch_newTypeVariable_result &rhs) const {
+  bool operator != (const Batch_newTypeName_result &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const Batch_newTypeVariable_result & ) const;
+  bool operator < (const Batch_newTypeName_result & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
-typedef struct _Batch_newTypeVariable_presult__isset {
-  _Batch_newTypeVariable_presult__isset() : success(false), missingFields(false) {}
+typedef struct _Batch_newTypeName_presult__isset {
+  _Batch_newTypeName_presult__isset() : success(false), missingFields(false) {}
   bool success;
   bool missingFields;
-} _Batch_newTypeVariable_presult__isset;
+} _Batch_newTypeName_presult__isset;
 
-class Batch_newTypeVariable_presult {
+class Batch_newTypeName_presult {
  public:
 
 
-  virtual ~Batch_newTypeVariable_presult() throw() {}
+  virtual ~Batch_newTypeName_presult() throw() {}
 
    ::flowbox::batch::types::Type* success;
   ArgumentException missingFields;
 
-  _Batch_newTypeVariable_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-};
-
-typedef struct _Batch_newTypeList_args__isset {
-  _Batch_newTypeList_args__isset() : type(false) {}
-  bool type;
-} _Batch_newTypeList_args__isset;
-
-class Batch_newTypeList_args {
- public:
-
-  Batch_newTypeList_args() {
-  }
-
-  virtual ~Batch_newTypeList_args() throw() {}
-
-   ::flowbox::batch::types::Type type;
-
-  _Batch_newTypeList_args__isset __isset;
-
-  void __set_type(const  ::flowbox::batch::types::Type& val) {
-    type = val;
-  }
-
-  bool operator == (const Batch_newTypeList_args & rhs) const
-  {
-    if (!(type == rhs.type))
-      return false;
-    return true;
-  }
-  bool operator != (const Batch_newTypeList_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const Batch_newTypeList_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-
-class Batch_newTypeList_pargs {
- public:
-
-
-  virtual ~Batch_newTypeList_pargs() throw() {}
-
-  const  ::flowbox::batch::types::Type* type;
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _Batch_newTypeList_result__isset {
-  _Batch_newTypeList_result__isset() : success(false), missingFields(false) {}
-  bool success;
-  bool missingFields;
-} _Batch_newTypeList_result__isset;
-
-class Batch_newTypeList_result {
- public:
-
-  Batch_newTypeList_result() {
-  }
-
-  virtual ~Batch_newTypeList_result() throw() {}
-
-   ::flowbox::batch::types::Type success;
-  ArgumentException missingFields;
-
-  _Batch_newTypeList_result__isset __isset;
-
-  void __set_success(const  ::flowbox::batch::types::Type& val) {
-    success = val;
-  }
-
-  void __set_missingFields(const ArgumentException& val) {
-    missingFields = val;
-  }
-
-  bool operator == (const Batch_newTypeList_result & rhs) const
-  {
-    if (!(success == rhs.success))
-      return false;
-    if (!(missingFields == rhs.missingFields))
-      return false;
-    return true;
-  }
-  bool operator != (const Batch_newTypeList_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const Batch_newTypeList_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _Batch_newTypeList_presult__isset {
-  _Batch_newTypeList_presult__isset() : success(false), missingFields(false) {}
-  bool success;
-  bool missingFields;
-} _Batch_newTypeList_presult__isset;
-
-class Batch_newTypeList_presult {
- public:
-
-
-  virtual ~Batch_newTypeList_presult() throw() {}
-
-   ::flowbox::batch::types::Type* success;
-  ArgumentException missingFields;
-
-  _Batch_newTypeList_presult__isset __isset;
+  _Batch_newTypeName_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -6471,12 +6349,9 @@ class BatchClient : virtual public BatchIf {
   void newTypeNamed( ::flowbox::batch::types::Type& _return, const std::string& name, const  ::flowbox::batch::types::Type& type);
   void send_newTypeNamed(const std::string& name, const  ::flowbox::batch::types::Type& type);
   void recv_newTypeNamed( ::flowbox::batch::types::Type& _return);
-  void newTypeVariable( ::flowbox::batch::types::Type& _return, const std::string& name);
-  void send_newTypeVariable(const std::string& name);
-  void recv_newTypeVariable( ::flowbox::batch::types::Type& _return);
-  void newTypeList( ::flowbox::batch::types::Type& _return, const  ::flowbox::batch::types::Type& type);
-  void send_newTypeList(const  ::flowbox::batch::types::Type& type);
-  void recv_newTypeList( ::flowbox::batch::types::Type& _return);
+  void newTypeName( ::flowbox::batch::types::Type& _return, const std::string& name);
+  void send_newTypeName(const std::string& name);
+  void recv_newTypeName( ::flowbox::batch::types::Type& _return);
   void newTypeTuple( ::flowbox::batch::types::Type& _return, const std::vector< ::flowbox::batch::types::Type> & types);
   void send_newTypeTuple(const std::vector< ::flowbox::batch::types::Type> & types);
   void recv_newTypeTuple( ::flowbox::batch::types::Type& _return);
@@ -6582,8 +6457,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_newTypeFunction(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_newTypeUdefined(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_newTypeNamed(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_newTypeVariable(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_newTypeList(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_newTypeName(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_newTypeTuple(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_nodesGraph(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_nodeByID(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -6635,8 +6509,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["newTypeFunction"] = &BatchProcessor::process_newTypeFunction;
     processMap_["newTypeUdefined"] = &BatchProcessor::process_newTypeUdefined;
     processMap_["newTypeNamed"] = &BatchProcessor::process_newTypeNamed;
-    processMap_["newTypeVariable"] = &BatchProcessor::process_newTypeVariable;
-    processMap_["newTypeList"] = &BatchProcessor::process_newTypeList;
+    processMap_["newTypeName"] = &BatchProcessor::process_newTypeName;
     processMap_["newTypeTuple"] = &BatchProcessor::process_newTypeTuple;
     processMap_["nodesGraph"] = &BatchProcessor::process_nodesGraph;
     processMap_["nodeByID"] = &BatchProcessor::process_nodeByID;
@@ -6948,23 +6821,13 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void newTypeVariable( ::flowbox::batch::types::Type& _return, const std::string& name) {
+  void newTypeName( ::flowbox::batch::types::Type& _return, const std::string& name) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->newTypeVariable(_return, name);
+      ifaces_[i]->newTypeName(_return, name);
     }
-    ifaces_[i]->newTypeVariable(_return, name);
-    return;
-  }
-
-  void newTypeList( ::flowbox::batch::types::Type& _return, const  ::flowbox::batch::types::Type& type) {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->newTypeList(_return, type);
-    }
-    ifaces_[i]->newTypeList(_return, type);
+    ifaces_[i]->newTypeName(_return, name);
     return;
   }
 

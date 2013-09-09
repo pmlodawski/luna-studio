@@ -10,9 +10,8 @@ module Flowbox.Batch.Server.Handlers.Types (
     newTypeFunction,
     newTypeUdefined,
     newTypeNamed,
-    newTypeVariable,
-    newTypeList,
-    newTypeTuple
+    newTypeName,
+    newTypeTuple,
 ) 
 where
 
@@ -81,19 +80,11 @@ newTypeNamed _ mtname mttype = tRunScript $ do
     return $ encode $ Named (unpack tname) atype
 
 
-newTypeVariable :: b -> Maybe Text -> IO TTypes.Type
-newTypeVariable _ mtname = tRunScript $ do 
-    scriptIO $ loggerIO info "called newTypeVariable"
+newTypeName :: b -> Maybe Text -> IO TTypes.Type
+newTypeName _ mtname = tRunScript $ do 
+    scriptIO $ loggerIO info "called newTypeName"
     tname <- mtname  <??> "'name' argument is missing"
-    return $ encode $ TypeVariable $ unpack tname
-
-
-newTypeList :: b -> Maybe TTypes.Type -> IO TTypes.Type
-newTypeList _ mttype = tRunScript $ do 
-    scriptIO $ loggerIO info "called newTypeList"
-    ttype <- mttype  <??> "'type' argument is missing"
-    atype <- tryRight $ decode ttype 
-    return $ encode $ List atype
+    return $ encode $ TypeName $ unpack tname
 
 
 newTypeTuple :: b -> Maybe (Vector TTypes.Type) -> IO TTypes.Type

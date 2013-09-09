@@ -18,14 +18,12 @@ mkModule
 import           Flowbox.Prelude   
 
 data Type = Undefined
-		  | Type         {name   :: String}
-          | TypeVariable {name   :: String}
-          | Class        {name   :: String, typeparams :: [String], params :: [Type]}
-          | Function     {name   :: String, inputs ::  Type, outputs :: Type}
-          | Tuple        {items  :: [Type]}
-          | List         {item   ::  Type }
-          | Interface    {fields :: [Type], methods :: [Type]}
+          | TypeName     {name   :: String}
           | Module       {name   :: String}
+          | Class        {name   :: String, typeparams :: [String], params :: [Type]}
+          | Function     {name   :: String, inputs ::      Type,   outputs :: Type}
+          | Interface    {fields :: [Type], methods :: [Type]}
+          | Tuple        {items  :: [Type]}
           | Named        {name   :: String, cls :: Type}
           deriving (Show)
 

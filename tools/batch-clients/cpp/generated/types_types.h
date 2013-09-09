@@ -24,9 +24,8 @@ struct TypeType {
     Class = 3,
     Interface = 4,
     Named = 5,
-    TypeVariable = 6,
-    Tuple = 7,
-    List = 8
+    TypeName = 6,
+    Tuple = 7
   };
 };
 

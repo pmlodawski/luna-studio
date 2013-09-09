@@ -27,7 +27,6 @@ int _kNodeTypeValues[] = {
   NodeType::Default,
   NodeType::Inputs,
   NodeType::Outputs,
-  NodeType::Tuple,
   NodeType::NTuple
 };
 const char* _kNodeTypeNames[] = {
@@ -35,10 +34,9 @@ const char* _kNodeTypeNames[] = {
   "Default",
   "Inputs",
   "Outputs",
-  "Tuple",
   "NTuple"
 };
-const std::map<int, const char*> _NodeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(6, _kNodeTypeValues, _kNodeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+const std::map<int, const char*> _NodeType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(5, _kNodeTypeValues, _kNodeTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
 const char* DefaultValue::ascii_fingerprint = "543465A32DEDFDAFF94B9327A9320F0A";
 const uint8_t DefaultValue::binary_fingerprint[16] = {0x54,0x34,0x65,0xA3,0x2D,0xED,0xFD,0xAF,0xF9,0x4B,0x93,0x27,0xA9,0x32,0x0F,0x0A};

@@ -10,15 +10,14 @@ namespace hs  flowbox.batch.types
 
 
 enum TypeType {
-    Undefined,
-    Module,
-    Function,
-    Class,
-    Interface,
-    Named, 
-    TypeVariable,
-    Tuple,
-    List;
+    Undefined = 0,
+    Module    = 1,
+    Function  = 2,
+    Class     = 3,
+    Interface = 4,
+    Named     = 5,
+    TypeName  = 6,
+    Tuple     = 7;
 }
 
 

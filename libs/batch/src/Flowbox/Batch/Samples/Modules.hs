@@ -48,7 +48,7 @@ mkClass aname  = mkDefinition (Class aname [] [])
 mkFunction :: String -> Definition
 mkFunction aname = mkDefinition (Function aname ( Tuple [ Tuple [ Class "a" [] [Class "g" [] []]
                                                                 , Class "b" [] []
-                                                                , List $ Named "n" $ Class "f" [] []
+                                                                , Named "n" $ Class "f" [] []
                                                                 ]
                                                         , Class "c" [] []
                                                         , Function "d" ( Tuple [ Class "e" [] []
@@ -87,7 +87,7 @@ cls_console = Definition.empty { Definition.cls   = Type.Class "Console" [] []
 
 
 cls_vector :: Definition
-cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeVariable "a"), Type.Named "y" (Type.TypeVariable "a"), Type.Named "z" (Type.TypeVariable "a")]
+cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Type.Named "x" (Type.TypeName "a"), Type.Named "y" (Type.TypeName "a"), Type.Named "z" (Type.TypeName "a")]
                     , Definition.graph = Graph.empty
                     }
 
@@ -138,8 +138,8 @@ func_vec_incx_graph = Graph.insEdges [
 
 
 func_vec_incx_inputs :: Type
-func_vec_incx_inputs = Type.Tuple [Type.Named "self" $ Type.TypeVariable "a", 
-                                   Type.Named "in2" $ Type.TypeVariable "a"]
+func_vec_incx_inputs = Type.Tuple [Type.Named "self" $ Type.TypeName "a", 
+                                   Type.Named "in2"  $ Type.TypeName "a"]
 
 
 func_vec_incx :: Definition

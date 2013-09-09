@@ -94,8 +94,7 @@ instance Batch_Iface BatchHandler where
     newTypeFunction     = HTypes.newTypeFunction
     newTypeUdefined     = HTypes.newTypeUdefined
     newTypeNamed        = HTypes.newTypeNamed
-    newTypeVariable     = HTypes.newTypeVariable
-    newTypeList         = HTypes.newTypeList
+    newTypeName         = HTypes.newTypeName
     newTypeTuple        = HTypes.newTypeTuple
 
     nodesGraph          = HGraph.nodesGraph

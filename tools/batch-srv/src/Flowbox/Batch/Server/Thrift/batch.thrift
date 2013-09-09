@@ -117,8 +117,7 @@ service Batch {
     types.Type newTypeUdefined ()
     types.Type newTypeNamed    (1: string           name, 
                                 2: types.Type       type)       throws (1: ArgumentException missingFields)
-    types.Type newTypeVariable (1: string           name)       throws (1: ArgumentException missingFields)
-    types.Type newTypeList     (1: types.Type       type)       throws (1: ArgumentException missingFields)
+    types.Type newTypeName     (1: string           name)       throws (1: ArgumentException missingFields)
     types.Type newTypeTuple    (1: list<types.Type> types)      throws (1: ArgumentException missingFields)
 
     /*

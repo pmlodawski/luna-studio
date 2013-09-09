@@ -33,8 +33,7 @@ struct NodeType {
     Default = 1,
     Inputs = 2,
     Outputs = 3,
-    Tuple = 4,
-    NTuple = 5
+    NTuple = 4
   };
 };
 

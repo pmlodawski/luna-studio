@@ -15,7 +15,7 @@ import           Flowbox.Prelude
 import qualified Flowbox.Batch.GraphView.GraphView       as GraphView
 import           Flowbox.Batch.GraphView.EdgeView          (EdgeView(..))
 import qualified Flowbox.Luna.Network.Def.Definition     as Definition
-import           Flowbox.Luna.Network.Def.Edge           (Edge(..))
+import           Flowbox.Luna.Network.Def.Edge             (Edge(..))
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import qualified Flowbox.Luna.Passes.Graph2AST.Graph2AST as Graph2AST
@@ -42,7 +42,7 @@ main_inner = Luna.run $ do
                                    , Definition.graph = fun1_graph
                                    }
 
-        cls1_df = Definition.empty { Definition.cls = Class "Ala" ["a"] [Named "x" $ Type "X", Named "y" $ Type "Y", Named "z" $Type "Int"]
+        cls1_df = Definition.empty { Definition.cls = Class "Ala" ["a"] [Named "x" $ TypeName "X", Named "y" $ TypeName "Y", Named "z" $ TypeName "Int"]
                                    }
 
         mod1_df = Definition.empty { Definition.cls = Module "Std" }

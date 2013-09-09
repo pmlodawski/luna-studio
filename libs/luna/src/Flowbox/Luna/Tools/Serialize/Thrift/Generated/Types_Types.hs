@@ -33,7 +33,7 @@ import           Thrift
 import           Thrift.Types           ()
 
 
-data TypeType = Undefined|Module|Function|Class|Interface|Named|TypeVariable|Tuple|List  deriving (Show,Eq, Typeable, Ord)
+data TypeType = Undefined|Module|Function|Class|Interface|Named|TypeName|Tuple  deriving (Show,Eq, Typeable, Ord)
 instance Enum TypeType where
   fromEnum t = case t of
     Undefined -> 0
@@ -42,9 +42,8 @@ instance Enum TypeType where
     Class -> 3
     Interface -> 4
     Named -> 5
-    TypeVariable -> 6
+    TypeName -> 6
     Tuple -> 7
-    List -> 8
   toEnum t = case t of
     0 -> Undefined
     1 -> Module
@@ -52,9 +51,8 @@ instance Enum TypeType where
     3 -> Class
     4 -> Interface
     5 -> Named
-    6 -> TypeVariable
+    6 -> TypeName
     7 -> Tuple
-    8 -> List
     _ -> throw ThriftException
 instance Hashable TypeType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
