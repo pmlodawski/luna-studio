@@ -45,7 +45,7 @@ main_inner = Luna.run $ do
         cls1_df = Definition.empty { Definition.cls = Class "Ala" ["a"] [Named "x" $ TypeName "X", Named "y" $ TypeName "Y", Named "z" $ TypeName "Int"]
                                    }
 
-        mod1_df = Definition.empty { Definition.cls = Module "Std" }
+        mod1_df = Definition.empty { Definition.cls = Module "Std"  }
         mod2_df = Definition.empty { Definition.cls = Module "Test" }
         defManager = DefManager.insEdges [(2, 3, Edge)
                                          ,(3, 1, Edge)

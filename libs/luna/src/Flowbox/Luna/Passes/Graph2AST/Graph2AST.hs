@@ -28,17 +28,14 @@ import           Flowbox.Luna.Network.Graph.Graph          (Graph)
 import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue(..))
 import           Flowbox.Luna.Network.Graph.Edge           (Edge(Edge))
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
+import           Flowbox.Luna.Network.Path.Import          (Import(Import))
+import           Flowbox.Luna.Network.Path.Path            (Path(Path))
 import qualified Flowbox.Luna.Passes.Pass                as Pass
 import           Flowbox.Luna.Passes.Pass                  (PassMonad)
 import qualified Flowbox.Luna.Passes.Txt2AST.Parser      as Parser
 import qualified Flowbox.Luna.XOLD.Type.Type             as Type
 import           Flowbox.Luna.XOLD.Type.Type               (Type)
-import           Flowbox.System.Log.Logger                 
 
-
-
-logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Graph2AST.Graph2AST"
 
 type Graph2ASTMonad m = PassMonad Pass.NoState m
 
@@ -76,7 +73,7 @@ def2AST defManager (defID, def) = do
                                                <$> graph2AST graph
                                                -- notImplementedList
             Type.Module   _        -> AST.Module (snd $ type2ASTType cls)
-                                                 notImplementedList
+                                                 (map import2ASTimport imports)
                                              <$> nextDefs classes
                                              <*> pure notImplementedList
                                              <*> nextDefs methods
@@ -109,7 +106,6 @@ type2ASTType t = case t of
     Type.Class        name typeparams _   -> (""  , ASTType.Class name typeparams)
     Type.Function     name inputs outputs -> (name, ASTType.Lambda (snd $ type2ASTType inputs) (snd $ type2ASTType outputs))
     Type.Tuple        items               -> (""  , ASTType.Tuple (map (snd.type2ASTType) items))
-    Type.Interface    fields methods      -> (""  , ASTType.Unknown)
     Type.Module       name                -> (name, ASTType.Module name)
     Type.Named        name cls            -> (name, snd $ type2ASTType cls)
 
@@ -124,6 +120,10 @@ defaultVal2ASTConstant value = case value of
 type2Field :: Type -> AST.Expr
 type2Field t = AST.Field name cls where
     (name, cls) = type2ASTType t
+
+
+import2ASTimport :: Import -> AST.Expr
+import2ASTimport (Import (Path path) name) = AST.Import path name
 
 
 graph2AST :: Graph2ASTMonad m => Graph -> Pass.Result m [AST.Expr]
