@@ -94,14 +94,14 @@ findMatchingTuple nodeID port graph = mt where
 
     matching :: (Node.ID, Node.ID, Edge) -> Bool
     matching (t, _, Edge _ (Port.Number existingTuplePort)) = case lab graph t of 
-                              Just (NTuple {}) -> existingTuplePort == port
-                              _                -> False
+                              Just (Tuple {}) -> existingTuplePort == port
+                              _               -> False
     matching _ = False
 
 getOrCreateTuple :: Node.ID -> Int -> Graph -> Either String (Node.ID, Graph)
 getOrCreateTuple nodeID port graph = case findMatchingTuple nodeID port graph of 
     Nothing                      -> do let [newTupleID] = Graph.newNodes 1 graph
-                                           newTupleNode = NTuple Flags.empty generatedAttrs
+                                           newTupleNode = Tuple Flags.empty generatedAttrs
                                            newGraphT    = Graph.insEdge (newTupleID, nodeID, Edge Port.All (Port.Number port))
                                                         $ Graph.insNode (newTupleID, newTupleNode) graph
                                        return (newTupleID, newGraphT)
@@ -210,7 +210,7 @@ delGenerated :: (Node.ID, Node) -> GraphView -> Either String GraphView
 delGenerated (nodeID, node) graph = case isGenerated node of 
     False -> Right graph
     True  -> case node of 
-        NTuple {}  -> case (inn graph nodeID, out graph nodeID, suc graph nodeID) of
+        Tuple  {}  -> case (inn graph nodeID, out graph nodeID, suc graph nodeID) of
                         (inEdges, [(_, _, EdgeView _ op)], [adst]) -> Right $ delNode nodeID
                                                                           $ insEdges newEdges graph where 
                                                    newEdges = map (\(asrc, _, EdgeView a ip) -> (asrc, adst, EdgeView a (ip++op))) inEdges

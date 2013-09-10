@@ -28,7 +28,7 @@ data Node = Expr     { expression :: String, flags :: Flags, attributes :: Attri
           | Default  { value :: DefaultValue, attributes :: Attributes}
           | Inputs   { flags :: Flags, attributes :: Attributes }
           | Outputs  { flags :: Flags, attributes :: Attributes }
-          | NTuple   { flags :: Flags, attributes :: Attributes }
+          | Tuple    { flags :: Flags, attributes :: Attributes }
           
           deriving (Show)
 
@@ -44,7 +44,7 @@ mkOutputs :: Node
 mkOutputs = Outputs Flags.empty Attributes.empty
 
 mkNTuple :: Node
-mkNTuple = NTuple Flags.empty Attributes.empty
+mkNTuple = Tuple Flags.empty Attributes.empty
 
  
 ------------------------- INSTANCES -------------------------

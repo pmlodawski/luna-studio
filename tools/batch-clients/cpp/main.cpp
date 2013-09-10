@@ -170,12 +170,12 @@ int main(int argc, char **argv) {
 
         DefaultValue dv;
         dv.__set_cls(DefaultValueType::StringV);
-        dv.__set_s("ala");
+        dv.__set_value("ala");
 
 
         DefaultValue dv2;
         dv2.__set_cls(DefaultValueType::IntV);
-        dv2.__set_s("4");
+        dv2.__set_value("4");
 
         map<PortDescriptor, DefaultValue> defaults;
         batch.nodeDefaults(defaults, outputsID, fun.defID, workspacelib.libID, proj.projectID);

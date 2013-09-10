@@ -144,7 +144,7 @@ node2AST graph list (nodeID, node) = do
         Node.Expr expression (Flags _ True) _ -> return' $ AST.Comment expression
         Node.Inputs          (Flags _ True) _ -> return' $ AST.Comment ""
         Node.Outputs         (Flags _ True) _ -> return' $ AST.Comment ""
-        Node.NTuple          (Flags _ True) _ -> return' $ AST.Comment ""
+        Node.Tuple           (Flags _ True) _ -> return' $ AST.Comment ""
         _                                     -> do
             let 
                 order :: (Node.ID, Node.Node, Edge) -> (Node.ID, Node.Node, Edge) -> Ordering
@@ -168,7 +168,7 @@ node2AST graph list (nodeID, node) = do
                 Node.Default value _ -> return $ AST.Constant $ defaultVal2ASTConstant value
                 Node.Inputs  _     _ -> return   AST.NOP
                 Node.Outputs _     _ -> return $ AST.Tuple argNames
-                Node.NTuple  _     _ -> return $ AST.Tuple argNames
+                Node.Tuple   _     _ -> return $ AST.Tuple argNames
 
 
             let inEdges          = Graph.out graph nodeID 

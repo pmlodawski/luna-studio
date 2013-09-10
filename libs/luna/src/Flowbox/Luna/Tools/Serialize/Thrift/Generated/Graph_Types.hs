@@ -48,36 +48,47 @@ instance Enum DefaultValueType where
     _ -> throw ThriftException
 instance Hashable DefaultValueType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
-data NodeType = Expr|Default|Inputs|Outputs|NTuple  deriving (Show,Eq, Typeable, Ord)
+data NodeType = Expr|Default|Inputs|Outputs|Tuple  deriving (Show,Eq, Typeable, Ord)
 instance Enum NodeType where
   fromEnum t = case t of
     Expr -> 0
     Default -> 1
     Inputs -> 2
     Outputs -> 3
-    NTuple -> 4
+    Tuple -> 4
   toEnum t = case t of
     0 -> Expr
     1 -> Default
     2 -> Inputs
     3 -> Outputs
-    4 -> NTuple
+    4 -> Tuple
     _ -> throw ThriftException
 instance Hashable NodeType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
+data PortType = All|Number  deriving (Show,Eq, Typeable, Ord)
+instance Enum PortType where
+  fromEnum t = case t of
+    All -> 0
+    Number -> 1
+  toEnum t = case t of
+    0 -> All
+    1 -> Number
+    _ -> throw ThriftException
+instance Hashable PortType where
+  hashWithSalt salt = hashWithSalt salt . fromEnum
 type NodeID = Int32
 
-data DefaultValue = DefaultValue{f_DefaultValue_cls :: Maybe DefaultValueType,f_DefaultValue_s :: Maybe Text} deriving (Show,Eq,Typeable)
+data DefaultValue = DefaultValue{f_DefaultValue_cls :: Maybe DefaultValueType,f_DefaultValue_value :: Maybe Text} deriving (Show,Eq,Typeable)
 instance Hashable DefaultValue where
-  hashWithSalt salt record = salt   `hashWithSalt` f_DefaultValue_cls record   `hashWithSalt` f_DefaultValue_s record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_DefaultValue_cls record   `hashWithSalt` f_DefaultValue_value record  
 write_DefaultValue oprot record = do
   writeStructBegin oprot "DefaultValue"
   case f_DefaultValue_cls record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("cls",T_I32,1)
     writeI32 oprot (fromIntegral $ fromEnum _v)
     writeFieldEnd oprot}
-  case f_DefaultValue_s record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("s",T_STRING,3)
+  case f_DefaultValue_value record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("value",T_STRING,2)
     writeString oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
@@ -92,9 +103,9 @@ read_DefaultValue_fields iprot record = do
         else do
           skip iprot _t3
           read_DefaultValue_fields iprot record
-      3 -> if _t3 == T_STRING then do
+      2 -> if _t3 == T_STRING then do
         s <- readString iprot
-        read_DefaultValue_fields iprot record{f_DefaultValue_s=Just s}
+        read_DefaultValue_fields iprot record{f_DefaultValue_value=Just s}
         else do
           skip iprot _t3
           read_DefaultValue_fields iprot record
@@ -104,7 +115,7 @@ read_DefaultValue_fields iprot record = do
         read_DefaultValue_fields iprot record
 read_DefaultValue iprot = do
   _ <- readStructBegin iprot
-  record <- read_DefaultValue_fields iprot (DefaultValue{f_DefaultValue_cls=Nothing,f_DefaultValue_s=Nothing})
+  record <- read_DefaultValue_fields iprot (DefaultValue{f_DefaultValue_cls=Nothing,f_DefaultValue_value=Nothing})
   readStructEnd iprot
   return record
 data Node = Node{f_Node_cls :: Maybe NodeType,f_Node_expression :: Maybe Text,f_Node_nodeID :: Maybe Int32,f_Node_flags :: Maybe Attrs_Types.Flags,f_Node_attrs :: Maybe Attrs_Types.Attributes,f_Node_defVal :: Maybe DefaultValue} deriving (Show,Eq,Typeable)
@@ -187,64 +198,104 @@ read_Node iprot = do
   record <- read_Node_fields iprot (Node{f_Node_cls=Nothing,f_Node_expression=Nothing,f_Node_nodeID=Nothing,f_Node_flags=Nothing,f_Node_attrs=Nothing,f_Node_defVal=Nothing})
   readStructEnd iprot
   return record
-data Edge = Edge{f_Edge_portSrc :: Maybe Int32,f_Edge_portDst :: Maybe Int32,f_Edge_nodeSrc :: Maybe Int32,f_Edge_nodeDst :: Maybe Int32} deriving (Show,Eq,Typeable)
-instance Hashable Edge where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Edge_portSrc record   `hashWithSalt` f_Edge_portDst record   `hashWithSalt` f_Edge_nodeSrc record   `hashWithSalt` f_Edge_nodeDst record  
-write_Edge oprot record = do
-  writeStructBegin oprot "Edge"
-  case f_Edge_portSrc record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("portSrc",T_I32,1)
-    writeI32 oprot _v
+data Port = Port{f_Port_cls :: Maybe PortType,f_Port_number :: Maybe Int32} deriving (Show,Eq,Typeable)
+instance Hashable Port where
+  hashWithSalt salt record = salt   `hashWithSalt` f_Port_cls record   `hashWithSalt` f_Port_number record  
+write_Port oprot record = do
+  writeStructBegin oprot "Port"
+  case f_Port_cls record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("cls",T_I32,1)
+    writeI32 oprot (fromIntegral $ fromEnum _v)
     writeFieldEnd oprot}
-  case f_Edge_portDst record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("portDst",T_I32,2)
-    writeI32 oprot _v
-    writeFieldEnd oprot}
-  case f_Edge_nodeSrc record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("nodeSrc",T_I32,3)
-    writeI32 oprot _v
-    writeFieldEnd oprot}
-  case f_Edge_nodeDst record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("nodeDst",T_I32,4)
+  case f_Port_number record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("number",T_I32,2)
     writeI32 oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
-read_Edge_fields iprot record = do
+read_Port_fields iprot record = do
   (_,_t13,_id14) <- readFieldBegin iprot
   if _t13 == T_STOP then return record else
     case _id14 of 
       1 -> if _t13 == T_I32 then do
-        s <- readI32 iprot
-        read_Edge_fields iprot record{f_Edge_portSrc=Just s}
+        s <- (do {i <- readI32 iprot; return $ toEnum $ fromIntegral i})
+        read_Port_fields iprot record{f_Port_cls=Just s}
         else do
           skip iprot _t13
-          read_Edge_fields iprot record
+          read_Port_fields iprot record
       2 -> if _t13 == T_I32 then do
         s <- readI32 iprot
-        read_Edge_fields iprot record{f_Edge_portDst=Just s}
+        read_Port_fields iprot record{f_Port_number=Just s}
         else do
           skip iprot _t13
-          read_Edge_fields iprot record
-      3 -> if _t13 == T_I32 then do
+          read_Port_fields iprot record
+      _ -> do
+        skip iprot _t13
+        readFieldEnd iprot
+        read_Port_fields iprot record
+read_Port iprot = do
+  _ <- readStructBegin iprot
+  record <- read_Port_fields iprot (Port{f_Port_cls=Nothing,f_Port_number=Nothing})
+  readStructEnd iprot
+  return record
+data Edge = Edge{f_Edge_nodeSrc :: Maybe Int32,f_Edge_nodeDst :: Maybe Int32,f_Edge_portSrc :: Maybe Port,f_Edge_portDst :: Maybe Port} deriving (Show,Eq,Typeable)
+instance Hashable Edge where
+  hashWithSalt salt record = salt   `hashWithSalt` f_Edge_nodeSrc record   `hashWithSalt` f_Edge_nodeDst record   `hashWithSalt` f_Edge_portSrc record   `hashWithSalt` f_Edge_portDst record  
+write_Edge oprot record = do
+  writeStructBegin oprot "Edge"
+  case f_Edge_nodeSrc record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("nodeSrc",T_I32,1)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  case f_Edge_nodeDst record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("nodeDst",T_I32,2)
+    writeI32 oprot _v
+    writeFieldEnd oprot}
+  case f_Edge_portSrc record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("portSrc",T_STRUCT,3)
+    write_Port oprot _v
+    writeFieldEnd oprot}
+  case f_Edge_portDst record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("portDst",T_STRUCT,4)
+    write_Port oprot _v
+    writeFieldEnd oprot}
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_Edge_fields iprot record = do
+  (_,_t18,_id19) <- readFieldBegin iprot
+  if _t18 == T_STOP then return record else
+    case _id19 of 
+      1 -> if _t18 == T_I32 then do
         s <- readI32 iprot
         read_Edge_fields iprot record{f_Edge_nodeSrc=Just s}
         else do
-          skip iprot _t13
+          skip iprot _t18
           read_Edge_fields iprot record
-      4 -> if _t13 == T_I32 then do
+      2 -> if _t18 == T_I32 then do
         s <- readI32 iprot
         read_Edge_fields iprot record{f_Edge_nodeDst=Just s}
         else do
-          skip iprot _t13
+          skip iprot _t18
+          read_Edge_fields iprot record
+      3 -> if _t18 == T_STRUCT then do
+        s <- (read_Port iprot)
+        read_Edge_fields iprot record{f_Edge_portSrc=Just s}
+        else do
+          skip iprot _t18
+          read_Edge_fields iprot record
+      4 -> if _t18 == T_STRUCT then do
+        s <- (read_Port iprot)
+        read_Edge_fields iprot record{f_Edge_portDst=Just s}
+        else do
+          skip iprot _t18
           read_Edge_fields iprot record
       _ -> do
-        skip iprot _t13
+        skip iprot _t18
         readFieldEnd iprot
         read_Edge_fields iprot record
 read_Edge iprot = do
   _ <- readStructBegin iprot
-  record <- read_Edge_fields iprot (Edge{f_Edge_portSrc=Nothing,f_Edge_portDst=Nothing,f_Edge_nodeSrc=Nothing,f_Edge_nodeDst=Nothing})
+  record <- read_Edge_fields iprot (Edge{f_Edge_nodeSrc=Nothing,f_Edge_nodeDst=Nothing,f_Edge_portSrc=Nothing,f_Edge_portDst=Nothing})
   readStructEnd iprot
   return record
 data Graph = Graph{f_Graph_nodes :: Maybe (Map.HashMap Int32 Node),f_Graph_edges :: Maybe (Vector.Vector Edge)} deriving (Show,Eq,Typeable)
@@ -254,32 +305,32 @@ write_Graph oprot record = do
   writeStructBegin oprot "Graph"
   case f_Graph_nodes record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("nodes",T_MAP,1)
-    (let {f [] = return (); f ((_kiter17,_viter18):t) = do {do {writeI32 oprot _kiter17;write_Node oprot _viter18};f t}} in do {writeMapBegin oprot (T_I32,T_STRUCT,fromIntegral $ Map.size _v); f (Map.toList _v);writeMapEnd oprot})
+    (let {f [] = return (); f ((_kiter22,_viter23):t) = do {do {writeI32 oprot _kiter22;write_Node oprot _viter23};f t}} in do {writeMapBegin oprot (T_I32,T_STRUCT,fromIntegral $ Map.size _v); f (Map.toList _v);writeMapEnd oprot})
     writeFieldEnd oprot}
   case f_Graph_edges record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("edges",T_LIST,2)
-    (let f = Vector.mapM_ (\_viter19 -> write_Edge oprot _viter19) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
+    (let f = Vector.mapM_ (\_viter24 -> write_Edge oprot _viter24) in do {writeListBegin oprot (T_STRUCT,fromIntegral $ Vector.length _v); f _v;writeListEnd oprot})
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
 read_Graph_fields iprot record = do
-  (_,_t21,_id22) <- readFieldBegin iprot
-  if _t21 == T_STOP then return record else
-    case _id22 of 
-      1 -> if _t21 == T_MAP then do
-        s <- (let {f 0 = return []; f n = do {k <- readI32 iprot; v <- (read_Node iprot);r <- f (n-1); return $ (k,v):r}} in do {(_ktype24,_vtype25,_size23) <- readMapBegin iprot; l <- f _size23; return $ Map.fromList l})
+  (_,_t26,_id27) <- readFieldBegin iprot
+  if _t26 == T_STOP then return record else
+    case _id27 of 
+      1 -> if _t26 == T_MAP then do
+        s <- (let {f 0 = return []; f n = do {k <- readI32 iprot; v <- (read_Node iprot);r <- f (n-1); return $ (k,v):r}} in do {(_ktype29,_vtype30,_size28) <- readMapBegin iprot; l <- f _size28; return $ Map.fromList l})
         read_Graph_fields iprot record{f_Graph_nodes=Just s}
         else do
-          skip iprot _t21
+          skip iprot _t26
           read_Graph_fields iprot record
-      2 -> if _t21 == T_LIST then do
-        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Edge iprot)) in do {(_etype31,_size28) <- readListBegin iprot; f _size28})
+      2 -> if _t26 == T_LIST then do
+        s <- (let f n = Vector.replicateM (fromIntegral n) ((read_Edge iprot)) in do {(_etype36,_size33) <- readListBegin iprot; f _size33})
         read_Graph_fields iprot record{f_Graph_edges=Just s}
         else do
-          skip iprot _t21
+          skip iprot _t26
           read_Graph_fields iprot record
       _ -> do
-        skip iprot _t21
+        skip iprot _t26
         readFieldEnd iprot
         read_Graph_fields iprot record
 read_Graph iprot = do

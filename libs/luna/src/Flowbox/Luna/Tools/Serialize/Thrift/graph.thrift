@@ -21,15 +21,15 @@ enum DefaultValueType {
 
 struct DefaultValue {
     1: required DefaultValueType cls,
-    3: optional string s
+    2: optional string           value         
 }
 
 enum NodeType {
-    Expr,
-    Default,
-    Inputs,
-    Outputs,
-    NTuple
+    Expr    = 0,
+    Default = 1,
+    Inputs  = 2,
+    Outputs = 3,
+    Tuple   = 4
 }
 
 struct Node {
@@ -41,11 +41,22 @@ struct Node {
     6: optional DefaultValue     defVal     = {}
 }
 
+
+enum PortType {
+    All    = 0,
+    Number = 1
+}
+
+struct Port {
+    1: optional PortType cls
+    2: optional i32      number
+}
+
 struct Edge {
-    1: optional i32    portSrc
-    2: optional i32    portDst
-    3: optional NodeID nodeSrc
-    4: optional NodeID nodeDst
+    1: optional NodeID nodeSrc
+    2: optional NodeID nodeDst
+    3: optional Port   portSrc
+    4: optional Port   portDst
 }
 
 struct Graph {

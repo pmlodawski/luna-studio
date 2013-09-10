@@ -30,8 +30,9 @@ import           Flowbox.Luna.Network.Graph.Edge                        (Edge(Ed
 import qualified Flowbox.Luna.Network.Graph.Graph                     as Graph
 import           Flowbox.Luna.Network.Graph.Graph                       (Graph)
 import qualified Flowbox.Luna.Network.Graph.Node                      as Node
-import           Flowbox.Luna.Network.Graph.Node                        (Node(..))
+import           Flowbox.Luna.Network.Graph.Node                        (Node)
 import qualified Flowbox.Luna.Network.Graph.Port                      as Port
+import           Flowbox.Luna.Network.Graph.Port                        (Port)
 import           Flowbox.Tools.Conversion                               
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
 
@@ -50,7 +51,7 @@ decodeGraph :: (Data.Graph.Inductive.Graph.Graph gr, Convert (Graph.LEdge b) a)
             => (Maybe (HashMap Int32 TGraph.Node), Maybe (Vector.Vector a))
             -> Either [Char] (gr Node b)
 decodeGraph (mtnodes, mtedges) = case mtnodes of
-    Nothing    -> Left "`nodes` field is missing"
+    Nothing    -> Left "'nodes' field is missing"
     Just tnodes -> case mtedges of
         Nothing    -> Left "Edges are not defined" 
         Just tedges ->
@@ -69,25 +70,31 @@ decodeGraph (mtnodes, mtedges) = case mtnodes of
                     Right gedges -> Right $ Graph.mkGraph gnodes gedges
 
 
+instance Convert Port TGraph.Port where
+    encode port = case port of 
+        Port.All      -> TGraph.Port (Just TGraph.All   ) Nothing
+        Port.Number p -> TGraph.Port (Just TGraph.Number) (Just $ itoi32 p)
+    decode (TGraph.Port mtcls mtnumber) = case mtcls of 
+        Just TGraph.All    -> return $ Port.All
+        Just TGraph.Number -> do tnumber <- mtnumber <?> "Failed to decode Port: 'number' field is missing"
+                                 return $ Port.Number $ i32toi tnumber
+        Nothing            -> Left "Failed to decode Port: 'cls' field is missing"
+
+
+
 instance Convert (Int, Int, Edge) TGraph.Edge where
-    encode (nodeSrc, nodeDst, Edge mportSrc mportDst) =  
-        let  tportSrc = case mportSrc of 
-                          Port.All            -> Nothing
-                          Port.Number portSrc -> Just $ itoi32 portSrc
-             tportDst = case mportDst of 
-                          Port.All            -> Nothing
-                          Port.Number portDst -> Just $ itoi32 portDst
-        in TGraph.Edge tportSrc tportDst (Just $ itoi32 nodeSrc) (Just $ itoi32 nodeDst)
-    decode (TGraph.Edge mtportSrc mtportDst mtnodeSrc mtnodeDst) = do
-        tnodeSrc   <- mtnodeSrc <?> "Failed to decode Edge: `srcNode` field is missing"
-        tnodeDst   <- mtnodeDst <?> "Failed to decode Edge: `dstNode` field is missing"
-        let portSrc = case mtportSrc of 
-                        Nothing       -> Port.All
-                        Just tportSrc -> Port.Number $ i32toi tportSrc
-        let portDst = case mtportDst of 
-                        Nothing       -> Port.All
-                        Just tportDst -> Port.Number $ i32toi tportDst
-        return  $ (i32toi tnodeSrc, i32toi tnodeDst, Edge portSrc portDst)
+    encode (nodeSrc, nodeDst, Edge portSrc portDst) =  
+        let  mtportSrc = Just $ encode portSrc
+             mtportDst = Just $ encode portDst
+        in TGraph.Edge (Just $ itoi32 nodeSrc) (Just $ itoi32 nodeDst) mtportSrc mtportDst
+    decode (TGraph.Edge mtnodeSrc mtnodeDst mtportSrc mtportDst) = do
+        tnodeSrc   <- mtnodeSrc <?> "Failed to decode Edge: 'srcNode' field is missing"
+        tnodeDst   <- mtnodeDst <?> "Failed to decode Edge: 'dstNode' field is missing"
+        tportSrc   <- mtportSrc <?> "Failed to decode Edge: 'srcPort' field is missing"
+        tportDst   <- mtportDst <?> "Failed to decode Edge: 'dstPort' field is missing"
+        portSrc    <- decode tportSrc
+        portDst    <- decode tportDst
+        return $ (i32toi tnodeSrc, i32toi tnodeDst, Edge portSrc portDst)
 
 
 instance Convert Graph TGraph.Graph where
@@ -97,24 +104,19 @@ instance Convert Graph TGraph.Graph where
 
 
 instance Convert DefaultValue TGraph.DefaultValue where
-  encode a =
-    case a of
+  encode a = case a of
       DefaultChar   ss -> TGraph.DefaultValue (Just TGraph.StringV) (Just $ Text.pack [ss])
       DefaultInt    ss -> TGraph.DefaultValue (Just TGraph.IntV   ) (Just $ Text.pack ss)
       DefaultString ss -> TGraph.DefaultValue (Just TGraph.StringV) (Just $ Text.pack ss)
 
-  decode b =
-    case TGraph.f_DefaultValue_cls b of
-      Just TGraph.CharV -> case TGraph.f_DefaultValue_s b of
-                              Just ss -> Right $ DefaultChar $ head $ Text.unpack ss
-                              Nothing -> Left "No char default value specified"
-      Just TGraph.IntV    -> case TGraph.f_DefaultValue_s b of
-                              Just ii -> Right $ DefaultInt $ Text.unpack ii
-                              Nothing -> Left "No integral default value specified"
-      Just TGraph.StringV -> case TGraph.f_DefaultValue_s b of
-                              Just ss -> Right $ DefaultString $ Text.unpack ss
-                              Nothing -> Left "No string default value specified"
-      Nothing -> Left "No default value type specified"    
+  decode (TGraph.DefaultValue mtcls mtvalue) = do 
+      tvalue <- mtvalue <?> "Failed to decode DefaultValue: 'value' field is missing"
+      let value = Text.unpack tvalue
+      case mtcls of
+          Just TGraph.CharV   -> return $ DefaultChar $ head value
+          Just TGraph.IntV    -> return $ DefaultInt value
+          Just TGraph.StringV -> return $ DefaultString value
+          Nothing             -> Left "Failed to decode DefaultValue: 'cls' field is missing"
 
 
 instance Convert (Int, Node) TGraph.Node where
@@ -126,7 +128,7 @@ instance Convert (Int, Node) TGraph.Node where
                    Node.Default {} -> TGraph.Default
                    Node.Inputs  {} -> TGraph.Inputs
                    Node.Outputs {} -> TGraph.Outputs
-                   Node.NTuple  {} -> TGraph.NTuple
+                   Node.Tuple   {} -> TGraph.Tuple
 
       nodeExpression :: Maybe Text.Text
       nodeExpression = fmap Text.pack $ case a of
@@ -141,7 +143,7 @@ instance Convert (Int, Node) TGraph.Node where
                    Node.Expr  _ aflags _ -> Just aflags
                    Node.Inputs  aflags _ -> Just aflags
                    Node.Outputs aflags _ -> Just aflags
-                   Node.NTuple  aflags _ -> Just aflags
+                   Node.Tuple   aflags _ -> Just aflags
                    _                     -> Nothing
 
       nodeAttrs :: TAttrs.Attributes
@@ -199,10 +201,10 @@ instance Convert (Int, Node) TGraph.Node where
                   ggflags <- gflags
                   ggattrs <- gattrs
                   Right $ Node.Outputs ggflags ggattrs
-                TGraph.NTuple -> do
+                TGraph.Tuple -> do
                   ggflags <- gflags
                   ggattrs <- gattrs
-                  Right $ Node.NTuple ggflags ggattrs
+                  Right $ Node.Tuple ggflags ggattrs
             Nothing     -> Left "Node type not defined"
 
     in

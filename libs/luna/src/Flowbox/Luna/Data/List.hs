@@ -10,7 +10,7 @@ module Flowbox.Luna.Data.List(
     count,
 ) where
 
-import qualified Data.List as List
+import qualified Data.List       as List
 import           Flowbox.Prelude   
 
 foldri :: (a -> b -> b) -> [a] -> b -> b
