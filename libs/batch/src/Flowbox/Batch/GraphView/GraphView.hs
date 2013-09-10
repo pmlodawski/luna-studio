@@ -113,8 +113,8 @@ connectGTuples srcNodeID dstNodeID srcPort dstPorts graph = case dstPorts of
     []  -> return $ Graph.insEdge (srcNodeID, dstNodeID, Edge srcPort  Port.All      ) graph
     [p] -> return $ Graph.insEdge (srcNodeID, dstNodeID, Edge srcPort (Port.Number p)) graph
     _   -> do
-              (tupleID, graphT) <- getOrCreateTuple dstNodeID (last dstPorts) graph
-              connectGTuples srcNodeID tupleID srcPort (init dstPorts) graphT
+              (tupleID, graphT) <- getOrCreateTuple dstNodeID (head dstPorts) graph
+              connectGTuples srcNodeID tupleID srcPort (tail dstPorts) graphT
 
 
 createSelect :: Int -> Node
@@ -213,7 +213,7 @@ delGenerated (nodeID, node) graph = case isGenerated node of
         Tuple  {}  -> case (inn graph nodeID, out graph nodeID, suc graph nodeID) of
                         (inEdges, [(_, _, EdgeView _ op)], [adst]) -> Right $ delNode nodeID
                                                                           $ insEdges newEdges graph where 
-                                                   newEdges = map (\(asrc, _, EdgeView a ip) -> (asrc, adst, EdgeView a (ip++op))) inEdges
+                                                   newEdges = map (\(asrc, _, EdgeView a ip) -> (asrc, adst, EdgeView a (op++ip))) inEdges
                         _ -> Left "Batch attributes mismatch - incorrectly connected NTuple"
         Default {} -> Right $ delNode nodeID graph
         _          -> case (selectNo node, inn graph nodeID, out graph nodeID) of 

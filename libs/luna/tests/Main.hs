@@ -50,6 +50,9 @@ example = Source.Source "Workspace"
         $ unlines [ "import Std.Math.Scalar"
                   , "class Vector a:"
                   , "    x :: a"
+                  , "def f(x, y):"
+                  , "    z = x + 7"
+                  , "    return = (z, y)"
                   ]
 
 

@@ -28,7 +28,8 @@ main = timeIt main_inner *> return ()
 
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
-    let fun1_gv = GraphView.insEdges [(0, 2, EdgeView [0]    [0, 1])
+    let fun1_gv = GraphView.insEdges [(0, 2, EdgeView [0]    [0, 0])
+                                     ,(0, 2, EdgeView [1]    [0, 1])
                                      ,(0, 1, EdgeView [1]    [1])
                                      ,(2, 1, EdgeView [0, 1] [0])]
                 $ GraphView.insNodes [(0, Node.mkInputs)

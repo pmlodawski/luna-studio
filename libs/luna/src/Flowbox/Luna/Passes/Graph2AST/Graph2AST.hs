@@ -66,22 +66,27 @@ def2AST defManager (defID, def) = do
         modules (_, Definition (Type.Module {}) _ _ _ _) = True
         modules (_, Definition {}                      ) = False
 
+        getInputsNames :: Graph2ASTMonad m => Type -> Pass.Result m [String]
+        getInputsNames (Type.Tuple items) = return $ map (fst . type2ASTType) items
+        getInputsNames _                  = fail "Inputs is not a tuple"
+
     case def of 
         Definition _   _     _       (Flags _ True ) _ -> return $ AST.Comment ""
         Definition cls graph imports (Flags _ False) _ -> case cls of
-            Type.Class _ _ params  -> AST.Class (snd $ type2ASTType cls)
-                                             <$> nextDefs classes
-                                             <*> pure (map type2Field params)
-                                             <*> nextDefs methods
-            Type.Function name _ _ -> AST.Function name (snd $ type2ASTType cls) 
-                                               <$> graph2AST graph
+            Type.Class _ _ params       -> AST.Class (snd $ type2ASTType cls)
+                                                 <$> nextDefs classes
+                                                 <*> pure (map type2Field params)
+                                                 <*> nextDefs methods
+            Type.Function name inputs _ -> do inputsNames <- getInputsNames inputs
+                                              graphAst <- graph2AST graph inputsNames
+                                              return $ AST.Function name (snd $ type2ASTType cls) graphAst
                                                -- notImplementedList
-            Type.Module   _ params -> AST.Module (snd $ type2ASTType cls)
-                                                 (map import2ASTimport imports)
-                                             <$> nextDefs classes
-                                             <*> pure (map type2Field params)
-                                             <*> nextDefs methods
-                                             <*> nextDefs modules
+            Type.Module   _ params      -> AST.Module (snd $ type2ASTType cls)
+                                                      (map import2ASTimport imports)
+                                                  <$> nextDefs classes
+                                                  <*> pure (map type2Field params)
+                                                  <*> nextDefs methods
+                                                  <*> nextDefs modules
             _                      -> return AST.NOP
         
 
@@ -130,19 +135,19 @@ import2ASTimport :: Import -> AST.Expr
 import2ASTimport (Import (Path path) name) = AST.Import path name
 
 
-graph2AST :: Graph2ASTMonad m => Graph -> Pass.Result m [AST.Expr]
-graph2AST graph = foldlM (node2AST graph) [] $ Graph.topsortl graph
+graph2AST :: Graph2ASTMonad m => Graph -> [String] -> Pass.Result m [AST.Expr]
+graph2AST graph inputsNames = foldlM (node2AST graph inputsNames) [] $ Graph.topsortl graph
 
 
-node2AST :: Graph2ASTMonad m => Graph -> [AST.Expr] -> (Node.ID, Node.Node) -> Pass.Result m [AST.Expr] 
-node2AST graph list (nodeID, node) = do
+node2AST :: Graph2ASTMonad m => Graph -> [String] -> [AST.Expr] -> (Node.ID, Node.Node) -> Pass.Result m [AST.Expr] 
+node2AST graph inputsNames list (nodeID, node) = do
     let 
         return' :: Graph2ASTMonad m => AST.Expr -> Pass.Result m [AST.Expr] 
         return' a = return (list ++ [a])
 
     case node of 
         Node.Expr expression (Flags _ True) _ -> return' $ AST.Comment expression
-        Node.Inputs          (Flags _ True) _ -> return' $ AST.Comment ""
+        Node.Inputs          _              _ -> return list
         Node.Outputs         (Flags _ True) _ -> return' $ AST.Comment ""
         Node.Tuple           (Flags _ True) _ -> return' $ AST.Comment ""
         _                                     -> do
@@ -150,13 +155,18 @@ node2AST graph list (nodeID, node) = do
                 order :: (Node.ID, Node.Node, Edge) -> (Node.ID, Node.Node, Edge) -> Ordering
                 order (_, _, Edge _ a) (_, _, Edge _ b) = compare a b
 
-                resultName :: Node.ID -> AST.Expr
-                resultName nID = AST.Identifier $ "result_" ++ show nID
+                resultName :: Node.ID -> Port -> String
+                resultName nID port = case Graph.lab graph nID of 
+                    Just (Node.Inputs {} ) -> case port of 
+                                                Port.All      -> "arguments"
+                                                Port.Number p -> inputsNames !! p
+                    _                      -> case port of 
+                                                Port.All      -> "result_" ++ show nID
+                                                Port.Number p -> "result_" ++ show nID ++ "_" ++ show p
+
 
                 argName :: (Node.ID, a, Edge) -> AST.Expr
-                argName (nID, _, Edge srcPort _) = case srcPort of 
-                    Port.All      -> resultName nID
-                    Port.Number n -> AST.Identifier $ "result_" ++ show nID ++ "_" ++ show n
+                argName (nID, _, Edge srcPort _) = AST.Identifier $ resultName nID srcPort
 
                 argNodes = List.sortBy order $ Graph.lprel graph nodeID
                 argNames = map argName argNodes
@@ -179,13 +189,12 @@ node2AST graph list (nodeID, node) = do
                 isGetter (_, _, Edge (Port.Number _) _) = True
                 isGetter _                              = False
 
-
-                allPattern     = AST.Pattern $ resultName nodeID
-                gettersPattern = AST.Pattern $ AST.Tuple $ map argName inEdges
+                allPattern     = AST.Pattern $ AST.Identifier $ resultName nodeID Port.All
+                gettersPattern = AST.Pattern $ AST.Tuple $ map (\i -> AST.Identifier $ resultName nodeID $ Port.Number i) [0..(allConnected - 1)] 
 
             if gettersConnected == 0 
                 then return' $ AST.Assignment call allPattern
                 else if gettersConnected == allConnected
                     then return' $ AST.Assignment call gettersPattern
                     else return  $ list ++ [AST.Assignment call allPattern
-                                           ,AST.Assignment (resultName nodeID) gettersPattern]
+                                           ,AST.Assignment allPattern gettersPattern]
