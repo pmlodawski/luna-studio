@@ -90,6 +90,10 @@ def main():
         info("Compiling luna library")
         if call(['cabal-dev', 'install', p_luna, '--force-reinstalls']): error()
 
+    if cmds & (opts_lunac | opts_luna):
+        info("Compiling lunac")
+        if call(['cabal-dev', 'install', p_lunac, '--force-reinstalls']): error()
+
     if cmds & (opts_batchlib | opts_batch):
         info("Compiling batch library")
         if call(['cabal-dev', 'install', p_batch, '--force-reinstalls']): error()
@@ -97,10 +101,6 @@ def main():
     if cmds & (opts_batchsrv | opts_batch):
         info("Compiling batchsrv")
         if call(['cabal-dev', 'install', p_batchsrv, '--force-reinstalls']): error()
-
-    if cmds & (opts_lunac | opts_luna):
-        info("Compiling lunac")
-        if call(['cabal-dev', 'install', p_lunac, '--force-reinstalls']): error()
 
     if cmds & (opts_cppclient):
         info("Compiling CPP-Client")
