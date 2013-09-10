@@ -193,8 +193,8 @@ node2AST graph inputsNames list (nodeID, node) = do
                 gettersPattern = AST.Pattern $ AST.Tuple $ map (\i -> AST.Identifier $ resultName nodeID $ Port.Number i) [0..(allConnected - 1)] 
 
             if gettersConnected == 0 
-                then return' $ AST.Assignment call allPattern
+                then return' $ AST.Assignment allPattern call
                 else if gettersConnected == allConnected
-                    then return' $ AST.Assignment call gettersPattern
-                    else return  $ list ++ [AST.Assignment call allPattern
-                                           ,AST.Assignment allPattern gettersPattern]
+                    then return' $ AST.Assignment gettersPattern call
+                    else return  $ list ++ [AST.Assignment allPattern call
+                                           ,AST.Assignment gettersPattern allPattern]

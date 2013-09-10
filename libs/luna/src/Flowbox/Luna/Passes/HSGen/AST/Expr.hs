@@ -19,7 +19,7 @@ data Context = Pure | IO deriving (Show, Eq)
 
 type Constant = Constant.Constant
 
-data Expr = Assignment { src      :: Expr     , dst       :: Expr     , ctx       :: Context }
+data Expr = Assignment { pattern  :: Expr     , value     :: Expr     , ctx       :: Context }
           | Tuple      { items    :: [Expr]                                                  }
           | Call       { name     :: String   , args      :: [Expr]   , ctx       :: Context }
           | StringLit  { val      :: String                                                  }

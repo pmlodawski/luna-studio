@@ -72,8 +72,17 @@ int main(int argc, char **argv) {
 
         /* Add new definition */
         
+        vector<Type> inputsTypes;
+        for (auto name : {"arg0", "arg1", "anotherArg", "argx", "argy"}) {
+            Type inputTypeName;
+            batch.newTypeName(inputTypeName, "A");
+            Type inputTypeNamed;
+            batch.newTypeNamed(inputTypeNamed, name, inputTypeName);
+            inputsTypes.push_back(inputTypeNamed);
+        }
+
         Type funInputsType;
-        batch.newTypeTuple(funInputsType, {});
+        batch.newTypeTuple(funInputsType, inputsTypes);
         Type funOutputsType;
         batch.newTypeTuple(funOutputsType, {});
 
@@ -146,7 +155,7 @@ int main(int argc, char **argv) {
         batch.addNode(dummy3, dummy3, fun.defID, workspacelib.libID, proj.projectID);
 
         batch.connect(inputsID, {1, 2, 3}, dummy3.nodeID, {4,5,9}, fun.defID, workspacelib.libID, proj.projectID);
-        batch.connect(inputsID, {6, 9}, dummy2.nodeID, {}, fun.defID, workspacelib.libID, proj.projectID);
+        batch.connect(inputsID, {4, 9}, dummy2.nodeID, {}, fun.defID, workspacelib.libID, proj.projectID);
 
         try {
             batch.connect(inputsID, {0, 0, 0}, dummy2.nodeID, {1}, fun.defID, workspacelib.libID, proj.projectID);
@@ -155,7 +164,7 @@ int main(int argc, char **argv) {
         }
 
         batch.connect(inputsID, {1, 2, 5}, outputsID, {1}, fun.defID, workspacelib.libID, proj.projectID);
-        batch.connect(inputsID, {7, 8}, outputsID, {5}, fun.defID, workspacelib.libID, proj.projectID);
+        batch.connect(inputsID, {3, 8}, outputsID, {5}, fun.defID, workspacelib.libID, proj.projectID);
 
         try {
             batch.connect(inputsID, {0, 0, 0}, outputsID, {}, fun.defID, workspacelib.libID, proj.projectID);
@@ -193,7 +202,12 @@ int main(int argc, char **argv) {
 
         batch.storeLibrary(workspacelib.libID, proj.projectID);
         
-        batch.buildLibrary(workspacelib.libID, proj.projectID);
+        try {
+            batch.buildLibrary(workspacelib.libID, proj.projectID);
+        } catch (ArgumentException e) {
+        cout << "Error building library: "<< endl
+             << "\t" << e.message << endl;
+        }
 
         batch.libraries(registeredLibs, proj.projectID);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
