@@ -21,7 +21,6 @@ import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import qualified Flowbox.Luna.Passes.Graph2AST.Graph2AST as Graph2AST
 import qualified Flowbox.Luna.Passes.Luna.Luna           as Luna
 import qualified Flowbox.Luna.XOLD.Type.Type             as Type
-import           Flowbox.Luna.XOLD.Type.Type               (Type(..))
 
 
 main :: IO ()
@@ -30,7 +29,7 @@ main = timeIt main_inner *> return ()
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
     let fun1_gv = GraphView.insEdges [(0, 2, EdgeView [0]    [0, 1])
-                                     ,(0, 2, EdgeView []     [0, 2])
+                                     ,(0, 1, EdgeView [1]    [1])
                                      ,(2, 1, EdgeView [0, 1] [0])]
                 $ GraphView.insNodes [(0, Node.mkInputs)
                                      ,(1, Node.mkOutputs)
@@ -48,11 +47,21 @@ main_inner = Luna.run $ do
         Right fun2_graph = GraphView.toGraph fun2_gv
         Right f2         = GraphView.fromGraph fun2_graph
 
-    let fun1_df = Definition.empty { Definition.cls = Function "fun1" (Type.Tuple []) (Type.Tuple [])
+    let fun1_df = Definition.empty { Definition.cls = Type.Function "fun1" (Type.Tuple [Type.Named "argx" $ Type.TypeName "X"
+                                                                                       ,Type.Named "argy" $ Type.TypeName "Y"
+                                                                                       ]
+                                                                           ) 
+                                                                           (Type.Tuple [Type.Named "res1" $ Type.TypeName "Z"
+                                                                                       ,Type.Named "res8" $ Type.TypeName "Alpha"
+                                                                                       ]
+                                                                           )
                                    , Definition.graph = fun1_graph
                                    }
 
-        cls1_df = Definition.empty { Definition.cls = Class "Ala" ["a"] [Named "x" $ TypeName "X", Named "y" $ TypeName "Y", Named "z" $ TypeName "Int"]
+        cls1_df = Definition.empty { Definition.cls = Type.Class "Ala" ["a"] [Type.Named "x" $ Type.TypeName "X" 
+                                                                             ,Type.Named "y" $ Type.TypeName "Y"
+                                                                             ,Type.Named "z" $ Type.TypeName "Int"
+                                                                             ]
                                    }
 
         mod1_df = Definition.empty { Definition.cls = Type.mkModule "Std"  }
