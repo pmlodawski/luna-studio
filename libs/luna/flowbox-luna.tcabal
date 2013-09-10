@@ -26,28 +26,21 @@ Library
                    `findmodules('src/Flowbox/Luna/Tools/Serialize/Thrift/Generated', '.*\.hs')`
 
   
-  Build-Depends:  base, 
+  Build-Depends:  base,
                   bytestring,
-                  cereal,
                   containers,
-                  directory,
                   either,
-                  errors,
                   fgl,
                   flowbox-utils,
                   hashable,
                   MissingH == 1.2.0.0,
                   mtl,
-                  regex-posix,
-                  split,
+                  parsec,
                   text,
                   thrift >= 0.9,
                   transformers,
                   unordered-containers,
-                  vector,
-                  uu-parsinglib,
-                  pretty-show,
-                  parsec
+                  vector
 
 
 
@@ -66,15 +59,13 @@ Executable luna
   Build-Depends:  base,
                   dlist,
                   either,
-                  errors,
                   flowbox-luna,
                   flowbox-utils,
                   MissingH,
+                  mtl,
                   pretty-show,
                   timeit,
-                  transformers,
-                  mtl,
-                  parsec
+                  transformers
 
 
 Test-Suite tests
@@ -82,7 +73,7 @@ Test-Suite tests
   Main-Is:        Spec.hs
   Hs-Source-Dirs: tests
   GHC-Options:    -Wall -threaded
-  Build-Depends:  base, 
+  Build-Depends:  base,
                   flowbox-luna,
                   hspec,
                   MissingH

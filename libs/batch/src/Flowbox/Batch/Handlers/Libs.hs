@@ -31,10 +31,10 @@ import qualified Flowbox.Luna.Lib.Library            as Library
 import           Flowbox.Luna.Lib.Library              (Library(..))
 import qualified Flowbox.Luna.Network.Def.Definition as Definition
 import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
+import qualified Flowbox.Lunac.Builder               as Builder
 import qualified Flowbox.Luna.Tools.Serialize.Lib    as LibSerialization
 import           Flowbox.System.UniPath                (UniPath)
 import           Flowbox.System.Log.Logger             
-
 
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch"
@@ -82,7 +82,7 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
     --    Just proj = ProjectManager.lab aprojectManager projectID
     --    ppath = Project.path proj
     --    b = Builder ppath
-    --Builder.buildLibrary b library
+    Builder.buildLibrary library
     loggerIO warning "Build library not implemented"
     return (library, ()))
 

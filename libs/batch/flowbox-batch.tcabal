@@ -30,6 +30,7 @@ Library
                     containers,
                     directory,
                     flowbox-luna,
+                    flowbox-lunac,
                     flowbox-utils,
                     hashable,
                     network,

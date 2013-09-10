@@ -193,8 +193,7 @@ int main(int argc, char **argv) {
 
         batch.storeLibrary(workspacelib.libID, proj.projectID);
         
-        // TODO [PM] Compatibility after removal of Call, Type and New
-        // batch.buildLibrary(workspacelib.libID, proj.projectID);
+        batch.buildLibrary(workspacelib.libID, proj.projectID);
 
         batch.libraries(registeredLibs, proj.projectID);
         cout << "Libraries loaded: " << registeredLibs.size() << endl;
