@@ -17,18 +17,18 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  ansi-terminal,
                   containers,
                   directory,
                   dlist,
-                  either,
+                  --either,
                   errors,
+                  hslogger,
                   MissingH == 1.2.0.0,
                   mtl,
                   split,
                   text,
-                  transformers,
-                  ansi-terminal,
-                  hslogger
+                  transformers
 
 
 Executable utils 
@@ -40,9 +40,9 @@ Executable utils
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
   Build-Depends:  base,
-                  dlist,
-                  ansi-terminal,
-                  either,
-                  hslogger,
-                  mtl,
+                  --dlist,
+                  --ansi-terminal,
+                  --either,
+                  --hslogger,
+                  --mtl,
                   flowbox-utils
