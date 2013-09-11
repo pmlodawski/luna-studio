@@ -11,6 +11,6 @@ module Flowbox.Luna.Network.Graph.Port(
 
 import           Flowbox.Prelude   
 
-data Port = Number Int
-          | All
+data Port = All
+          | Number Int
           deriving (Show, Read, Ord, Eq)

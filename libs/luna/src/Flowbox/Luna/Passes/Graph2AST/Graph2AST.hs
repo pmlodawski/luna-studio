@@ -152,11 +152,20 @@ node2AST graph inputsNames list (nodeID, node) = do
         Node.Tuple           (Flags _ True) _ -> return' $ AST.Comment ""
         _                                     -> do
             let 
-                order :: (Node.ID, Node.Node, Edge) -> (Node.ID, Node.Node, Edge) -> Ordering
-                order (_, _, Edge _ a) (_, _, Edge _ b) = compare a b
+                biggestPort :: ((a, b, Edge) -> Port) -> (a, b, Edge) -> Port -> Port
+                biggestPort portCompare edge biggest = max (portCompare edge) biggest
+
+                argID :: (a, b, Edge) -> Port
+                argID (_, _, Edge _ p) = p
+
+                arg :: [(Node.ID, b, Edge)] -> Port -> AST.Expr
+                arg iedges port = case List.find (\a -> (argID a) == port) iedges of
+                    Nothing                  -> AST.Wildcard
+                    Just (nID, _, Edge p _)  -> AST.Identifier $ resultName nID p
 
                 resultName :: Node.ID -> Port -> String
                 resultName nID port = case Graph.lab graph nID of 
+                    Just (Node.Outputs {}) -> "return"
                     Just (Node.Inputs {} ) -> case port of 
                                                 Port.All      -> "arguments"
                                                 Port.Number p -> inputsNames !! p
@@ -165,36 +174,49 @@ node2AST graph inputsNames list (nodeID, node) = do
                                                 Port.Number p -> "result_" ++ show nID ++ "_" ++ show p
 
 
-                argName :: (Node.ID, a, Edge) -> AST.Expr
-                argName (nID, _, Edge srcPort _) = AST.Identifier $ resultName nID srcPort
+                inEdges = Graph.lprel graph nodeID
 
-                argNodes = List.sortBy order $ Graph.lprel graph nodeID
-                argNames = map argName argNodes
+                maxArg = foldr (biggestPort argID) Port.All inEdges 
+
+                args = case maxArg of 
+                    Port.All      -> [arg inEdges maxArg]
+                    Port.Number p -> map (\i -> arg inEdges $ Port.Number i) [0..p]
+            
 
             call <- case node of 
                 Node.Expr expression _ _ -> case Parser.parseExpr expression of 
                                                     Left  e    -> fail $ show e
-                                                    Right expr -> return $ AST.Call expr argNames
+                                                    Right expr -> return $ AST.Call expr args
                 Node.Default value _ -> return $ AST.Constant $ defaultVal2ASTConstant value
                 Node.Inputs  _     _ -> return   AST.NOP
-                Node.Outputs _     _ -> return $ AST.Tuple argNames
-                Node.Tuple   _     _ -> return $ AST.Tuple argNames
+                Node.Outputs _     _ -> return $ AST.Tuple args
+                Node.Tuple   _     _ -> return $ AST.Tuple args
 
 
-            let inEdges          = Graph.out graph nodeID 
-                allConnected     = length inEdges
-                gettersConnected = FList.count isGetter inEdges
+            let outEdges          = Graph.out graph nodeID 
+                allConnected     = length outEdges
+                gettersConnected = FList.count isGetter outEdges
 
                 isGetter :: (Node.ID, Node.ID, Edge) -> Bool
                 isGetter (_, _, Edge (Port.Number _) _) = True
                 isGetter _                              = False
-
+                
                 allPattern     = AST.Pattern $ AST.Identifier $ resultName nodeID Port.All
-                gettersPattern = AST.Pattern $ AST.Tuple $ map (\i -> AST.Identifier $ resultName nodeID $ Port.Number i) [0..(allConnected - 1)] 
 
             if gettersConnected == 0 
                 then return' $ AST.Assignment allPattern call
-                else if gettersConnected == allConnected
-                    then return' $ AST.Assignment gettersPattern call
-                    else return  $ list ++ [AST.Assignment allPattern call
-                                           ,AST.Assignment gettersPattern allPattern]
+                else let (Port.Number maxGetter) = foldr (biggestPort resultID) Port.All outEdges 
+
+                         resultID ::(a, b, Edge) -> Port
+                         resultID (_, _, Edge p _) = p
+
+                         res :: [(Node.ID, b, Edge)] -> Port -> AST.Expr
+                         res iedges port = case List.find (\a -> (resultID a) == port) iedges of
+                                Nothing                  -> AST.Wildcard
+                                Just (nID, _, Edge p _)  -> AST.Identifier $ resultName nID p
+
+                         gettersPattern = AST.Pattern $ AST.Tuple $ map (\i -> res outEdges $ Port.Number i) [0..maxGetter] 
+                     in if gettersConnected == allConnected
+                            then return' $ AST.Assignment gettersPattern call
+                            else return  $ list ++ [AST.Assignment allPattern call
+                                                   ,AST.Assignment gettersPattern allPattern]

@@ -29,14 +29,15 @@ main = timeIt main_inner *> return ()
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
     let fun1_gv = GraphView.insEdges [(0, 2, EdgeView [0]    [0, 0])
-                                     ,(0, 2, EdgeView [1]    [0, 1])
+                                     ,(0, 2, EdgeView [1]    [2, 3])
                                      ,(0, 1, EdgeView [1]    [1])
-                                     ,(2, 1, EdgeView [0, 1] [0])]
+                                     ,(2, 1, EdgeView [3, 1] [5])]
                 $ GraphView.insNodes [(0, Node.mkInputs)
                                      ,(1, Node.mkOutputs)
                                      ,(2, Node.mkExpr "alamakota" )] 
                                      GraphView.empty                                     
         Right fun1_graph = GraphView.toGraph fun1_gv
+        Right f1         = GraphView.fromGraph fun1_graph
 
         fun2_gv = GraphView.insEdges [(0, 3, EdgeView [1, 2, 3] [4, 5, 9])
                                      ,(0, 2, EdgeView [6, 9] [])]
@@ -82,6 +83,7 @@ main_inner = Luna.run $ do
     print fun2_graph
     putStrLn "--------------------------------------------"
     print fun1_gv
+    print f1
     print fun1_graph
     --putStrLn "--------------------------------------------"
     --out_fun1 <- Graph2AST.run defManager (0, fun1_df)
