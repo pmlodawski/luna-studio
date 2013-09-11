@@ -28,7 +28,9 @@ import qualified Flowbox.Luna.Lib.Library            as Library
 import qualified Flowbox.Luna.Network.Def.DefManager as DefManager
 import           Flowbox.Luna.Network.Def.DefManager   (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition as Definition
-import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
+import           Flowbox.Luna.Network.Def.Definition   (Definition)
+import qualified Flowbox.Luna.Network.Graph.Graph    as Graph
+import qualified Flowbox.Luna.XOLD.Type.Type         as Type
 
 
 
@@ -46,7 +48,11 @@ addDefinition :: Definition -> Definition.ID
               -> Library.ID -> Project.ID -> Batch -> Either String (Batch, Definition.ID)
 addDefinition definition parentID libID projectID = defManagerOp libID projectID (\_ defManager -> do
     DefManager.gelem parentID defManager `ifnot` ("Wrong 'parentID' = " ++ show parentID)
-    return $ DefManager.addNewToParent (parentID, definition) defManager)
+    let cls   = Definition.cls definition
+        graph = case cls of Type.Function {} -> Graph.make
+                            _                -> Graph.empty
+        definitionWithGraph = definition { Definition.graph = graph }
+    return $ DefManager.addNewToParent (parentID, definitionWithGraph) defManager)
 
 
 updateDefinition :: (Definition.ID, Definition) 
