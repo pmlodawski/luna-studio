@@ -13,7 +13,6 @@ module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types () where
 import           Flowbox.Prelude               
 import           Data.Text.Lazy                (pack, unpack)
 import qualified Data.Vector                 as Vector
-
 import qualified Types_Types                 as TTypes
 import           Flowbox.Control.Error         
 import qualified Flowbox.Luna.XOLD.Type.Type as Type
@@ -98,7 +97,7 @@ typeFromListAt list index = t where
             tname       <- mtname       <?> "Failed to decode Type: `name` field is missing"
             tfieldsInds <- mtfieldsInds <?> "Failed to decode Type: `params` field is missing"
             let fieldsInds = map (i32toi) $ Vector.toList tfieldsInds
-            fields         <- convert $ map (typeFromListAt list) fieldsInds
+            fields         <- mapM (typeFromListAt list) fieldsInds
             return $ Type.Module (unpack tname) fields
         Just TTypes.Function  -> do 
             tname           <- mtname         <?> "Failed to decode Type: `name` field is missing"
@@ -110,7 +109,7 @@ typeFromListAt list index = t where
         Just TTypes.Tuple -> do 
             titemsInds      <- mtitemsInds <?> "Failed to decode Type: `items` field is missing"
             let itemsInds   = map (i32toi) $ Vector.toList titemsInds
-            items  <- convert $ map (typeFromListAt list) itemsInds
+            items           <- mapM (typeFromListAt list) itemsInds
             return $ Type.Tuple items
         Just TTypes.Class -> do 
             tname           <- mtname       <?> "Failed to decode Type: `name` field is missing"
@@ -118,7 +117,7 @@ typeFromListAt list index = t where
             tfieldsInds     <- mtfieldsInds <?> "Failed to decode Type: `params` field is missing"
             let typeparams = map (unpack) $ Vector.toList ttypeparams
                 fieldsInds = map (i32toi) $ Vector.toList tfieldsInds
-            fields        <- convert $ map (typeFromListAt list) fieldsInds
+            fields        <- mapM (typeFromListAt list) fieldsInds
             return $ Type.Class (unpack tname) typeparams fields
         Just TTypes.Named  -> do
             tname           <- mtname <?>  "Failed to decode Type: `name` field is missing"
@@ -143,5 +142,5 @@ instance Convert Type TTypes.Type where
 
 instance Convert [Type] [TTypes.Type] where
   encode t  = map (encode) t
-  decode tt = convert $ map (decode) tt
+  decode tt = mapM (decode) tt
  

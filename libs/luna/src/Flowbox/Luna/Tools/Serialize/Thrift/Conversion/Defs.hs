@@ -36,7 +36,6 @@ import           Flowbox.Tools.Conversion
 encodeLabNode :: (Definition.ID, Definition) -> (Int32, TDefs.Definition)
 encodeLabNode node@(defID, _) = tnode where
     tnode = (itoi32 defID, encodeDef node)
-
     encodeDef d = td where
         (td, _) = encode d
 
@@ -78,12 +77,12 @@ instance Convert DefManager TDefs.DefManager where
         tdefsv   <- mtdefs   <?> "Failed to decode DefsGraph: `defs` field is missing"
         tgraphsv <- mtgraphs <?> "Failed to decode DefsGraph: `graphs` field is missing"
         tedges   <- mtedges  <?> "Failed to decode DefsGraph: `tedges` field is missing"
-        let agraphs = convert $ map (decode) $ Vector.toList tgraphsv
+        let agraphs = mapM (decode) $ Vector.toList tgraphsv
         graphs <- agraphs
         let tdefs   = Vector.toList tdefsv
             tdefGr  = zip tdefs graphs
-        nodes <- convert $ map (decode) tdefGr
-        edges <- convert $ map (decode) $ Vector.toList tedges
+        nodes <- mapM (decode) tdefGr
+        edges <- mapM (decode) $ Vector.toList tedges
         return $ DefManager.mkGraph nodes edges
 
 
@@ -105,9 +104,7 @@ instance Convert Import TDefs.Import where
 instance Convert [Import] TDefs.Imports where
     encode imports = Vector.fromList $ map (encode) imports
     decode timports = imports where
-        timportsList = Vector.toList timports
-        imports1 = map (decode :: TDefs.Import -> Either String Import) timportsList
-        imports = convert imports1
+        imports = mapM decode $ Vector.toList timports
 
 
 instance Convert (Int, Definition) (TDefs.Definition, Graph) where
