@@ -73,11 +73,11 @@ listToDefs l start parentID mk = map (\(i, n)-> (parentID, i, mk n)) $ zip [star
 
 
 wladcyPolski :: [String]
-wladcyPolski = ["Bronislaw Komorowski", "Donald Tusk", "Lech Kaczynski", "Jaroslaw Kaczynski", "Leszek Miller", "Jerzy Buzek", "Wlodzimierz Cimoszewicz", "Jozef Oleksy", "Waldemar Pawlak", "Jan Krzysztof Bielecki", "Hanna Suchocka", "Aleksander Kwasniewski", "Lech Walesa", "Tadeusz Mazowiecki", "Wojciech Jaruzelski", "Mieczyslaw F. Rakowski", "Zbigniew Messner", "Henryk Jablonski", "Stanislaw Kania", "Edward Gierek", "Wladyslaw Gomulka", "Edward Ochab", "Jozef Cyrankiewicz", "Piotr Jaroszewicz", "Boleslaw Bierut", "Ignacy Moscicki", "Jozef Pilsudski", "Stanislaw Wojciechowski", "Franciszek Jozef", "Wanda", "Piast", "Siemomysl", "Kazimierz Wielki", "prof. Andrzej M. Skulimowski", "Wladyslaw Lokietek", "Mieszko I", "Krak", "Popiel", "Fryderyk August"]
+wladcyPolski = ["BronislawKomorowski", "DonaldTusk", "LechKaczynski", "JaroslawKaczynski", "LeszekMiller", "JerzyBuzek", "WlodzimierzCimoszewicz", "JozefOleksy", "WaldemarPawlak", "JanKrzysztofBielecki", "HannaSuchocka", "AleksanderKwasniewski", "LechWalesa", "TadeuszMazowiecki", "WojciechJaruzelski", "MieczyslawFRakowski", "ZbigniewMessner", "HenrykJablonski", "StanislawKania", "EdwardGierek", "WladyslawGomulka", "EdwardOchab", "JozefCyrankiewicz", "PiotrJaroszewicz", "BoleslawBierut", "IgnacyMoscicki", "JozefPilsudski", "StanislawWojciechowski", "FranciszekJozef", "Wanda", "Piast", "Siemomysl", "KazimierzWielki", "ProfAndrzejMSkulimowski", "WladyslawLokietek", "MieszkoI", "Krak", "Popiel", "FryderykAugust"]
 
 
 atrybuty :: [String]
-atrybuty = ["Berlo", "Konstytucja 3 maja", "iPad", "jablko", "korona", "front jednosci narodu", "lista wyborcza", "cenzura", "wstazka", "dwie wstazki", "order pracy ze wstazka", "order pracy bez wstazki", "partia", "narod", "komitet wyborczy", "wyborcy", "lud", "elity", "reputacja", "media", "stronnicze media", "obiektywne media", "praworzadnosc", "promienny usmiech", "usmiech do zlej gry", "kabel", "BOR", "garnitur", "mundur"]
+atrybuty = ["berlo", "konstytucja3maja", "iPad", "jablko", "korona", "frontJednosciNarodu", "listaWyborcza", "cenzura", "wstazka", "dwieWstazki", "orderPracyZeWstazka", "orderPracyBezWstazki", "partia", "narod", "komitetWyborczy", "wyborcy", "lud", "elity", "reputacja", "media", "stronniczeMedia", "obiektywneMedia", "praworzadnosc", "promiennyUsmiech", "usmiechDoZlejGry", "kabel", "bOR", "garnitur", "mundur"]
 
 
 cls_console :: Definition
@@ -93,9 +93,9 @@ cls_vector = Definition.empty{ Definition.cls   = Type.Class "Vector" ["a"] [Typ
 
 
 addSomeDefs :: DefManager -> DefManager
-addSomeDefs defs = DefManager.addToParentMany (listToDefs atrybuty     2000 20 mkClass)
+addSomeDefs defs = DefManager.addToParentMany (listToDefs atrybuty     2000 20 mkFunction)
                  $ DefManager.addToParent (0, 20, mkModule "atrybuty")
-                 $ DefManager.addToParentMany (listToDefs wladcyPolski 1000 10 mkFunction)
+                 $ DefManager.addToParentMany (listToDefs wladcyPolski 1000 10 mkClass)
                  $ DefManager.addToParent (0, 10, mkModule "wladcyPolski")
                  $ DefManager.addToParent (4, 5 , func_vec_incx)
                  $ DefManager.addToParent (3, 4 , cls_vector)
