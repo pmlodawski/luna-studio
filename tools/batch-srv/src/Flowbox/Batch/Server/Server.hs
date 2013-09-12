@@ -13,17 +13,18 @@ module Flowbox.Batch.Server.Server (
     runSingleConnectionServer,
 ) where
 
-import           Control.Monad               (forever, when)
-import qualified Control.Exception         as Exception
-import qualified Network                   as Network
-import qualified System.IO                 as IO
+import           Control.Monad                    (forever, when)
+import qualified Control.Exception              as Exception
+import qualified Network                        as Network
+import qualified System.IO                      as IO
+import qualified System.Environment             as Environment
 
-import           Thrift.Transport.Handle     ()
-import qualified Thrift.Protocol.Binary    as TProtocol
-import           Thrift.Protocol.Binary      (Protocol)
-import           Thrift.Transport            (Transport)
-import           Flowbox.System.Log.Logger   
-
+import           Thrift.Transport.Handle          ()
+import qualified Thrift.Protocol.Binary         as TProtocol
+import           Thrift.Protocol.Binary           (Protocol)
+import           Thrift.Transport                 (Transport)
+import qualified Flowbox.Batch.Server.Arguments as Arguments
+import           Flowbox.System.Log.Logger        
 
 
 loggerIO :: LoggerIO
@@ -57,6 +58,12 @@ runSingleConnectionServer accepter_ hand proc_ port_ = do
 singleAcceptLoop :: IO t -> (t -> IO Bool) -> IO a
 singleAcceptLoop accepter_ proc_ = forever $
     do ps <- accepter_
-       Exception.handle (\(e :: Exception.SomeException) -> loggerIO critical $ "Connection to client lost: " ++ show e)
-                        (loop $ proc_ ps)
+
+       args <- Environment.getArgs
+       if elem Arguments.shutdownWithClient args 
+          then Exception.handle 
+                 (\(e :: Exception.SomeException) -> loggerIO critical $ "Connection to client lost: " ++ show e) 
+                 (loop $ proc_ ps)
+          else loop $ proc_ ps
+                        
   where loop m = do { continue <- m; when continue (loop m) }
