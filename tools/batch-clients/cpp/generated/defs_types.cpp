@@ -444,6 +444,83 @@ void swap(DefsGraph &a, DefsGraph &b) {
   swap(a.__isset, b.__isset);
 }
 
+const char* DefPtr::ascii_fingerprint = "C1241AF5AA92C586B664FD41DC97C576";
+const uint8_t DefPtr::binary_fingerprint[16] = {0xC1,0x24,0x1A,0xF5,0xAA,0x92,0xC5,0x86,0xB6,0x64,0xFD,0x41,0xDC,0x97,0xC5,0x76};
+
+uint32_t DefPtr::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->defID);
+          this->__isset.defID = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->libID);
+          this->__isset.libID = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t DefPtr::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("DefPtr");
+
+  if (this->__isset.defID) {
+    xfer += oprot->writeFieldBegin("defID", ::apache::thrift::protocol::T_I32, 1);
+    xfer += oprot->writeI32(this->defID);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.libID) {
+    xfer += oprot->writeFieldBegin("libID", ::apache::thrift::protocol::T_I32, 2);
+    xfer += oprot->writeI32(this->libID);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(DefPtr &a, DefPtr &b) {
+  using ::std::swap;
+  swap(a.defID, b.defID);
+  swap(a.libID, b.libID);
+  swap(a.__isset, b.__isset);
+}
+
 const char* DefManager::ascii_fingerprint = "3AC67F88FFAB54DD8D17896DB4CB5B0D";
 const uint8_t DefManager::binary_fingerprint[16] = {0x3A,0xC6,0x7F,0x88,0xFF,0xAB,0x54,0xDD,0x8D,0x17,0x89,0x6D,0xB4,0xCB,0x5B,0x0D};
 

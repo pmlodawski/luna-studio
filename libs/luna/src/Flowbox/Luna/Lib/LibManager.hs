@@ -13,6 +13,8 @@ module Flowbox.Luna.Lib.LibManager(
     loadLibrary,
 ) where
 
+import qualified Data.List                        as List
+
 import           Flowbox.Prelude                    
 import qualified Flowbox.Luna.Tools.Serialize.Lib as LibSerialization
 import qualified Flowbox.Luna.Data.Graph          as DG
@@ -35,4 +37,3 @@ loadLibrary apath libManager = do
     library <- LibSerialization.restoreLibrary apath
     let (newLibManager, libID) = insNewNode library libManager
     return (newLibManager, (libID, library))
-

@@ -127,6 +127,11 @@ int main(int argc, char **argv) {
              << defsGraph.defs.size() << " defs and " 
              << defsGraph.edges.size() << " edges" << endl;
 
+
+        vector<DefPtr> resolved;
+        batch.resolveDefinition(resolved, "workspace.myclass", myModule.defID, workspacelib.libID, proj.projectID);
+        cout << "Resolved definition: matches: " << resolved.size() << endl;
+        cout << "Resolved definition: " << resolved[0].defID << endl;
         /* Add some nodes */
 
         GraphView graph;

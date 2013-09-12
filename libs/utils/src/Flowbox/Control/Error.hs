@@ -13,6 +13,7 @@ module Flowbox.Control.Error (
     tryReadIORef,
     tryWriteIORef,
     tryGetID,
+    tryGetString,
     tryGetUniPath,
 ) where
 
@@ -58,13 +59,18 @@ ifnot bool msg = if bool
 
 tryGetID :: Monad m => Maybe Int32 -> String -> EitherT String m Int
 tryGetID mtID name = do
-    tID <- mtID <??> ("`" ++ name  ++ "` argument is missing")
+    tID <- mtID <??> ("'" ++ name  ++ "' argument is missing")
     return $ i32toi tID
+
+
+tryGetString :: Monad m => Maybe Text -> String -> EitherT String m String
+tryGetString mtstring name = do
+    tstring <- mtstring <??> ("'" ++ name  ++ "' argument is missing")
+    return $ unpack tstring
 
 
 tryGetUniPath :: Monad m => Maybe Text -> String -> EitherT String m UniPath.UniPath
 tryGetUniPath mtpath name = do
-    tpath <- mtpath <??> ("`" ++ name  ++ "` argument is missing")
+    tpath <- mtpath <??> ("'" ++ name  ++ "' argument is missing")
     return $ UniPath.fromUnixString $ unpack tpath
-
 

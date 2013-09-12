@@ -14,14 +14,12 @@ module Flowbox.Batch.Handlers.Defs (
     removeDefinition,
     definitionChildren,
     definitionParent,
-
-    defManagerOp,
-    definitionOp,
+    resolveDefinition,
 ) where
 
 import           Flowbox.Prelude                       
 import           Flowbox.Batch.Batch                   (Batch(..))
-import           Flowbox.Batch.Handlers.Common         (noresult, readonly, defManagerOp, definitionOp)
+import           Flowbox.Batch.Handlers.Common         (noresult, readonly, libManagerOp, defManagerOp, definitionOp)
 import qualified Flowbox.Batch.Project.Project       as Project
 import           Flowbox.Control.Error                 ((<?>), ifnot)
 import qualified Flowbox.Luna.Lib.Library            as Library
@@ -31,7 +29,7 @@ import qualified Flowbox.Luna.Network.Def.Definition as Definition
 import           Flowbox.Luna.Network.Def.Definition   (Definition)
 import qualified Flowbox.Luna.Network.Graph.Graph    as Graph
 import qualified Flowbox.Luna.XOLD.Type.Type         as Type
-
+import qualified Flowbox.Luna.Lib.NameResolver       as NameResolver
 
 
 defsGraph :: Library.ID -> Project.ID -> Batch -> Either String DefManager
@@ -85,3 +83,9 @@ definitionParent defID libID projectID = readonly . defManagerOp libID projectID
     DefManager.gelem defID defManager `ifnot` ("Wrong 'defID' = " ++ show defID)
     parent <- DefManager.parent defManager defID <?> "Definition has no parent"
     return (defManager, parent))
+
+
+resolveDefinition :: String -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String [(Definition.ID, Library.ID)]
+resolveDefinition name parentID libID projectID = readonly . libManagerOp projectID (\_ libManager -> do
+    result <- NameResolver.resolveDefinition name parentID libID libManager
+    return (libManager, result))

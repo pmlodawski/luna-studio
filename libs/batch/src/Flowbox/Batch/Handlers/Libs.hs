@@ -15,11 +15,6 @@ module Flowbox.Batch.Handlers.Libs (
     storeLibrary,
     buildLibrary,
     libraryRootDef,
-
-    libManagerOp,
-    libManagerOp',
-    libraryOp,
-    libraryOp',
 ) where
 
 import           Flowbox.Prelude                       

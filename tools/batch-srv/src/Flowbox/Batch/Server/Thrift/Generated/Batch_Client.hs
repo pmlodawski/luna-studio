@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,projectByID,createProject,openProject,updateProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeName,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump,shutdown) where
+module Batch_Client(projects,projectByID,createProject,openProject,updateProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,resolveDefinition,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeName,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump,shutdown) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -591,6 +591,32 @@ recv_definitionParent ip = do
         Nothing -> return ()
         Just _v -> throw _v
       throw (AppExn AE_MISSING_RESULT "definitionParent failed: unknown result")
+resolveDefinition (ip,op) arg_name arg_parentID arg_libID arg_projectID = do
+  send_resolveDefinition op arg_name arg_parentID arg_libID arg_projectID
+  recv_resolveDefinition ip
+send_resolveDefinition op arg_name arg_parentID arg_libID arg_projectID = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("resolveDefinition", M_CALL, seqn)
+  write_ResolveDefinition_args op (ResolveDefinition_args{f_ResolveDefinition_args_name=Just arg_name,f_ResolveDefinition_args_parentID=Just arg_parentID,f_ResolveDefinition_args_libID=Just arg_libID,f_ResolveDefinition_args_projectID=Just arg_projectID})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_resolveDefinition ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_ResolveDefinition_result ip
+  readMessageEnd ip
+  case f_ResolveDefinition_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_ResolveDefinition_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "resolveDefinition failed: unknown result")
 newTypeModule (ip,op) arg_name arg_fields = do
   send_newTypeModule op arg_name arg_fields
   recv_newTypeModule ip

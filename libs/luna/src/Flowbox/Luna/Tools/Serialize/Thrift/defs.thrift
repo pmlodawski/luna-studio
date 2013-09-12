@@ -45,6 +45,10 @@ struct DefsGraph {
     2: optional list<DEdge>             edges
 }
 
+struct DefPtr {
+    1: optional DefID      defID,
+    2: optional libs.LibID libID
+}
 
 // structure for serialization to a single file - to remove in the future
 struct DefManager {

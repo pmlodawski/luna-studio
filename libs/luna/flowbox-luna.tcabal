@@ -36,6 +36,7 @@ Library
                   MissingH == 1.2.0.0,
                   mtl,
                   parsec,
+                  split,
                   text,
                   thrift >= 0.9,
                   transformers,

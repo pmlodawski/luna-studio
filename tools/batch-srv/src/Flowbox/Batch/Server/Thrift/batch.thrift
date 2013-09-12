@@ -103,6 +103,10 @@ service Batch {
                                              2: libs.LibID         libID,
                                              3: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
 
+    list<defs.DefPtr>      resolveDefinition(1: string             name,
+                                             2: defs.DefID         parentID, 
+                                             3: libs.LibID         libID,
+                                             4: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
     /*
      * Types
      */

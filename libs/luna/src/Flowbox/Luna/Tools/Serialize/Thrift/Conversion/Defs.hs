@@ -18,6 +18,7 @@ import qualified Data.Vector                                          as Vector
 
 import qualified Defs_Types                                           as TDefs
 import           Flowbox.Control.Error                                  
+import qualified Flowbox.Luna.Lib.Library                             as Library
 import           Flowbox.Luna.Network.Graph.Graph                       (Graph)
 import           Flowbox.Luna.Network.Def.Edge                          (Edge(Edge))
 import qualified Flowbox.Luna.Network.Def.Definition                  as Definition
@@ -48,8 +49,8 @@ instance Convert (Int, Int, Edge) TDefs.DEdge where
     encode (src, dst, _) = tedge where
         tedge = TDefs.DEdge (Just $ itoi32 src) (Just $ itoi32 dst)
     decode (TDefs.DEdge mtsrc mtdst) = do 
-        tsrc <- mtsrc <?> "Failed to decode Edge: `src` field is missing"
-        tdst <- mtdst <?> "Failed to decode Edge: `dst` field is missing"
+        tsrc <- mtsrc <?> "Failed to decode Edge: 'src' field is missing"
+        tdst <- mtdst <?> "Failed to decode Edge: 'dst' field is missing"
         return (i32toi tsrc, i32toi tdst, Edge) 
 
 
@@ -74,9 +75,9 @@ instance Convert DefManager TDefs.DefManager where
         tedges          = Vector.fromList $ map (encode) edges
         tdefManager     = TDefs.DefManager (Just tdefsv) (Just tgraphsv) (Just tedges)
     decode (TDefs.DefManager mtdefs mtgraphs mtedges) = do
-        tdefsv   <- mtdefs   <?> "Failed to decode DefsGraph: `defs` field is missing"
-        tgraphsv <- mtgraphs <?> "Failed to decode DefsGraph: `graphs` field is missing"
-        tedges   <- mtedges  <?> "Failed to decode DefsGraph: `tedges` field is missing"
+        tdefsv   <- mtdefs   <?> "Failed to decode DefsGraph: 'defs' field is missing"
+        tgraphsv <- mtgraphs <?> "Failed to decode DefsGraph: 'graphs' field is missing"
+        tedges   <- mtedges  <?> "Failed to decode DefsGraph: 'tedges' field is missing"
         let agraphs = mapM (decode) $ Vector.toList tgraphsv
         graphs <- agraphs
         let tdefs   = Vector.toList tdefsv
@@ -92,8 +93,8 @@ instance Convert Import TDefs.Import where
         mtitems  = Just $ (pack) name
         timport  = TDefs.Import mtpath mtitems
     decode (TDefs.Import mtpath mtname) = do
-        tpath <- mtpath  <?> "Failed to decode Import: `path` field is missing"
-        tname <- mtname <?> "Failed to decode Import: `items` field is missing"
+        tpath <- mtpath  <?> "Failed to decode Import: 'path' field is missing"
+        tname <- mtname <?> "Failed to decode Import: 'items' field is missing"
         let
             path  = Path.fromList $ map (unpack) $ Vector.toList tpath
             name = unpack tname
@@ -116,11 +117,11 @@ instance Convert (Int, Definition) (TDefs.Definition, Graph) where
         tdefID      = Just $ itoi32 defID
         tdef = TDefs.Definition tcls timports tflags tattributes tdefID 
     decode (TDefs.Definition mtcls mtimports mtflags mtattributes mtdefID, graph) = do 
-        tcls        <- mtcls        <?> "Failed to decode Definition: `type` field is missing"
-        timports    <- mtimports    <?> "Failed to decode Definition: `imports` field is missing"
-        tflags      <- mtflags      <?> "Failed to decode Definition: `flags` field is missing"
-        tattributes <- mtattributes <?> "Failed to decode Definition: `attributes` field is missing"
-        tdefID      <- mtdefID      <?> "Failed to decode Definition: `defID` field is missing"
+        tcls        <- mtcls        <?> "Failed to decode Definition: 'type' field is missing"
+        timports    <- mtimports    <?> "Failed to decode Definition: 'imports' field is missing"
+        tflags      <- mtflags      <?> "Failed to decode Definition: 'flags' field is missing"
+        tattributes <- mtattributes <?> "Failed to decode Definition: 'attributes' field is missing"
+        tdefID      <- mtdefID      <?> "Failed to decode Definition: 'defID' field is missing"
         cls         <- decode tcls
         imports     <- decode timports
         flags       <- decode tflags
@@ -128,3 +129,10 @@ instance Convert (Int, Definition) (TDefs.Definition, Graph) where
         let nodeDef = Definition cls graph imports flags attributes
             defID = i32toi tdefID
         return (defID, nodeDef)
+
+instance Convert (Definition.ID, Library.ID) (TDefs.DefPtr) where
+    encode (defID, libID) = TDefs.DefPtr (Just $ itoi32 defID) (Just $ itoi32 libID)
+    decode (TDefs.DefPtr mtdefID mtlibID) = do
+        tdefID <- mtdefID <?> "Failed to decode DefPtr: 'defID' field is missing"
+        tlibID <- mtlibID <?> "Failed to decode DefPtr: 'libID' field is missing"
+        return $ (i32toi tdefID, i32toi tlibID)

@@ -10,7 +10,8 @@ module Flowbox.Luna.Network.Def.Definition(
     ID,
     empty,
     noImports,
-    mkModule
+    mkModule,
+    name
 ) where
 
 import           Flowbox.Prelude                    
@@ -43,7 +44,16 @@ noImports = []
 
 
 mkModule :: String -> Definition
-mkModule name = empty { cls = Type.mkModule name }
+mkModule name' = empty { cls = Type.mkModule name' }
+
+
+name :: Definition -> Maybe String
+name definition = case cls definition of 
+    Type.Module n _     -> Just n
+    Type.Class  n _ _   -> Just n
+    Type.Function n _ _ -> Just n
+    _                   -> Nothing
+
 
 --make :: Type -> Library.ID -> Definition
 --make t lib = Definition t Graph.empty Flags.empty Attributes.empty lib

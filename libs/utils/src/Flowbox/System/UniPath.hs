@@ -6,19 +6,20 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.System.UniPath(
-UniPath,
-empty,
-fromUnixString,
-toUnixString,
-fromList,
-append,
-prepend,
-toPathItem,
-normalise,
-fileName,
-basePath,
-setExtension,
-dirOf
+    UniPath,
+    empty,
+    
+    fromUnixString,
+    toUnixString,
+    fromList,
+    append,
+    prepend,
+    toPathItem,
+    normalise,
+    fileName,
+    basePath,
+    setExtension,
+    dirOf
 ) where
 
 import           Data.List.Split     (splitOn)

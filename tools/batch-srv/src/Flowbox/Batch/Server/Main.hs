@@ -90,6 +90,7 @@ instance Batch_Iface BatchHandler where
     removeDefinition    = HDefs.removeDefinition
     definitionChildren  = HDefs.definitionChildren
     definitionParent    = HDefs.definitionParent
+    resolveDefinition   = HDefs.resolveDefinition
 
     newTypeModule       = HTypes.newTypeModule
     newTypeClass        = HTypes.newTypeClass

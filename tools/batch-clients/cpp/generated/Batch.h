@@ -37,6 +37,7 @@ class BatchIf {
   virtual void removeDefinition(const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void definitionChildren(std::vector< ::flowbox::batch::defs::Definition> & _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
+  virtual void resolveDefinition(std::vector< ::flowbox::batch::defs::DefPtr> & _return, const std::string& name, const  ::flowbox::batch::defs::DefID parentID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector< ::flowbox::batch::types::Type> & fields) = 0;
   virtual void newTypeClass( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector<std::string> & params, const std::vector< ::flowbox::batch::types::Type> & fields) = 0;
   virtual void newTypeFunction( ::flowbox::batch::types::Type& _return, const std::string& name, const  ::flowbox::batch::types::Type& inputs, const  ::flowbox::batch::types::Type& outputs) = 0;
@@ -157,6 +158,9 @@ class BatchNull : virtual public BatchIf {
     return;
   }
   void definitionParent( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
+    return;
+  }
+  void resolveDefinition(std::vector< ::flowbox::batch::defs::DefPtr> & /* _return */, const std::string& /* name */, const  ::flowbox::batch::defs::DefID /* parentID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
     return;
   }
   void newTypeModule( ::flowbox::batch::types::Type& /* _return */, const std::string& /* name */, const std::vector< ::flowbox::batch::types::Type> & /* fields */) {
@@ -2918,6 +2922,151 @@ class Batch_definitionParent_presult {
   ArgumentException missingFields;
 
   _Batch_definitionParent_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_resolveDefinition_args__isset {
+  _Batch_resolveDefinition_args__isset() : name(false), parentID(false), libID(false), projectID(false) {}
+  bool name;
+  bool parentID;
+  bool libID;
+  bool projectID;
+} _Batch_resolveDefinition_args__isset;
+
+class Batch_resolveDefinition_args {
+ public:
+
+  Batch_resolveDefinition_args() : name(), parentID(0), libID(0), projectID(0) {
+  }
+
+  virtual ~Batch_resolveDefinition_args() throw() {}
+
+  std::string name;
+   ::flowbox::batch::defs::DefID parentID;
+   ::flowbox::batch::libs::LibID libID;
+   ::flowbox::batch::projects::ProjectID projectID;
+
+  _Batch_resolveDefinition_args__isset __isset;
+
+  void __set_name(const std::string& val) {
+    name = val;
+  }
+
+  void __set_parentID(const  ::flowbox::batch::defs::DefID val) {
+    parentID = val;
+  }
+
+  void __set_libID(const  ::flowbox::batch::libs::LibID val) {
+    libID = val;
+  }
+
+  void __set_projectID(const  ::flowbox::batch::projects::ProjectID val) {
+    projectID = val;
+  }
+
+  bool operator == (const Batch_resolveDefinition_args & rhs) const
+  {
+    if (!(name == rhs.name))
+      return false;
+    if (!(parentID == rhs.parentID))
+      return false;
+    if (!(libID == rhs.libID))
+      return false;
+    if (!(projectID == rhs.projectID))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_resolveDefinition_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_resolveDefinition_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_resolveDefinition_pargs {
+ public:
+
+
+  virtual ~Batch_resolveDefinition_pargs() throw() {}
+
+  const std::string* name;
+  const  ::flowbox::batch::defs::DefID* parentID;
+  const  ::flowbox::batch::libs::LibID* libID;
+  const  ::flowbox::batch::projects::ProjectID* projectID;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_resolveDefinition_result__isset {
+  _Batch_resolveDefinition_result__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_resolveDefinition_result__isset;
+
+class Batch_resolveDefinition_result {
+ public:
+
+  Batch_resolveDefinition_result() {
+  }
+
+  virtual ~Batch_resolveDefinition_result() throw() {}
+
+  std::vector< ::flowbox::batch::defs::DefPtr>  success;
+  ArgumentException missingFields;
+
+  _Batch_resolveDefinition_result__isset __isset;
+
+  void __set_success(const std::vector< ::flowbox::batch::defs::DefPtr> & val) {
+    success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_resolveDefinition_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_resolveDefinition_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_resolveDefinition_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_resolveDefinition_presult__isset {
+  _Batch_resolveDefinition_presult__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_resolveDefinition_presult__isset;
+
+class Batch_resolveDefinition_presult {
+ public:
+
+
+  virtual ~Batch_resolveDefinition_presult() throw() {}
+
+  std::vector< ::flowbox::batch::defs::DefPtr> * success;
+  ArgumentException missingFields;
+
+  _Batch_resolveDefinition_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -6343,6 +6492,9 @@ class BatchClient : virtual public BatchIf {
   void definitionParent( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_definitionParent(const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_definitionParent( ::flowbox::batch::defs::Definition& _return);
+  void resolveDefinition(std::vector< ::flowbox::batch::defs::DefPtr> & _return, const std::string& name, const  ::flowbox::batch::defs::DefID parentID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void send_resolveDefinition(const std::string& name, const  ::flowbox::batch::defs::DefID parentID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void recv_resolveDefinition(std::vector< ::flowbox::batch::defs::DefPtr> & _return);
   void newTypeModule( ::flowbox::batch::types::Type& _return, const std::string& name, const std::vector< ::flowbox::batch::types::Type> & fields);
   void send_newTypeModule(const std::string& name, const std::vector< ::flowbox::batch::types::Type> & fields);
   void recv_newTypeModule( ::flowbox::batch::types::Type& _return);
@@ -6461,6 +6613,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_removeDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_definitionChildren(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_definitionParent(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_resolveDefinition(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_newTypeModule(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_newTypeClass(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_newTypeFunction(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -6513,6 +6666,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["removeDefinition"] = &BatchProcessor::process_removeDefinition;
     processMap_["definitionChildren"] = &BatchProcessor::process_definitionChildren;
     processMap_["definitionParent"] = &BatchProcessor::process_definitionParent;
+    processMap_["resolveDefinition"] = &BatchProcessor::process_resolveDefinition;
     processMap_["newTypeModule"] = &BatchProcessor::process_newTypeModule;
     processMap_["newTypeClass"] = &BatchProcessor::process_newTypeClass;
     processMap_["newTypeFunction"] = &BatchProcessor::process_newTypeFunction;
@@ -6777,6 +6931,16 @@ class BatchMultiface : virtual public BatchIf {
       ifaces_[i]->definitionParent(_return, defID, libID, projectID);
     }
     ifaces_[i]->definitionParent(_return, defID, libID, projectID);
+    return;
+  }
+
+  void resolveDefinition(std::vector< ::flowbox::batch::defs::DefPtr> & _return, const std::string& name, const  ::flowbox::batch::defs::DefID parentID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->resolveDefinition(_return, name, parentID, libID, projectID);
+    }
+    ifaces_[i]->resolveDefinition(_return, name, parentID, libID, projectID);
     return;
   }
 

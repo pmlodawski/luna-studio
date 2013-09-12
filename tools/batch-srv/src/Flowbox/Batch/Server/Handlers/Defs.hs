@@ -14,6 +14,7 @@ module Flowbox.Batch.Server.Handlers.Defs (
 
     definitionChildren,
     definitionParent,
+    resolveDefinition,
 ) 
 where
 
@@ -22,6 +23,7 @@ import           Data.Int                                              (Int32)
 import           Data.IORef                                            
 import qualified Data.Vector                                         as Vector
 import           Data.Vector                                           (Vector)
+import           Data.Text.Lazy                                        (Text)
 
 import qualified Defs_Types                                          as TDefs
 import           Flowbox.Batch.Server.Handlers.Common                  (tRunScript)
@@ -130,4 +132,17 @@ definitionParent batchHandler mtdefID mtlibID mtprojectID = tRunScript $ do
     batch       <- tryReadIORef batchHandler
     parent      <- tryRight $ BatchD.definitionParent defID libID projectID batch
     return $ fst (encode parent :: (TDefs.Definition, Graph))
+
+
+resolveDefinition :: IORef Batch -> Maybe Text -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO (Vector TDefs.DefPtr)
+resolveDefinition batchHandler mtname mtparentID mtlibID mtprojectID = tRunScript $ do
+    scriptIO $ loggerIO info "called resolveDefinition"
+    name        <- tryGetString mtname "name"
+    parentID    <- tryGetID mtparentID "parentID"
+    libID       <- tryGetID mtlibID "libID"
+    projectID   <- tryGetID mtprojectID "projectID"
+    batch       <- tryReadIORef batchHandler
+    scriptIO $ loggerIO debug $ "name: "++ name ++ " parentID: " ++ (show parentID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    results     <- tryRight $ BatchD.resolveDefinition name parentID libID projectID batch
+    return $ Vector.fromList $ map encode results
 

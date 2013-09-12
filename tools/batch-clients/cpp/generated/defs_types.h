@@ -288,6 +288,63 @@ class DefsGraph {
 
 void swap(DefsGraph &a, DefsGraph &b);
 
+typedef struct _DefPtr__isset {
+  _DefPtr__isset() : defID(false), libID(false) {}
+  bool defID;
+  bool libID;
+} _DefPtr__isset;
+
+class DefPtr {
+ public:
+
+  static const char* ascii_fingerprint; // = "C1241AF5AA92C586B664FD41DC97C576";
+  static const uint8_t binary_fingerprint[16]; // = {0xC1,0x24,0x1A,0xF5,0xAA,0x92,0xC5,0x86,0xB6,0x64,0xFD,0x41,0xDC,0x97,0xC5,0x76};
+
+  DefPtr() : defID(0), libID(0) {
+  }
+
+  virtual ~DefPtr() throw() {}
+
+  DefID defID;
+   ::flowbox::batch::libs::LibID libID;
+
+  _DefPtr__isset __isset;
+
+  void __set_defID(const DefID val) {
+    defID = val;
+    __isset.defID = true;
+  }
+
+  void __set_libID(const  ::flowbox::batch::libs::LibID val) {
+    libID = val;
+    __isset.libID = true;
+  }
+
+  bool operator == (const DefPtr & rhs) const
+  {
+    if (__isset.defID != rhs.__isset.defID)
+      return false;
+    else if (__isset.defID && !(defID == rhs.defID))
+      return false;
+    if (__isset.libID != rhs.__isset.libID)
+      return false;
+    else if (__isset.libID && !(libID == rhs.libID))
+      return false;
+    return true;
+  }
+  bool operator != (const DefPtr &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DefPtr & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(DefPtr &a, DefPtr &b);
+
 typedef struct _DefManager__isset {
   _DefManager__isset() : defs(false), graphs(false), edges(false) {}
   bool defs;
