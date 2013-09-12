@@ -49,6 +49,8 @@ example = Source.Source "Workspace"
         $ unlines [ "import Std.Math.Scalar"
                   , "class Vector a:"
                   , "    x :: a"
+                  , "def f(mod,a,b):"
+                  ,"    a+b"
                   ]
 
 

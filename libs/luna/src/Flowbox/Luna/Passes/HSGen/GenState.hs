@@ -51,3 +51,8 @@ addDataType dt = do m <- getModule
 addImport :: GenStateM m => HAST.Expr -> m ()
 addImport imp = do m <- getModule
                    setModule $ m { Module.imports = imp : Module.imports m }
+
+
+addMethod :: GenStateM m => HAST.Expr -> m ()
+addMethod fun = do m <- getModule
+                   setModule $ m { Module.methods = fun : Module.methods m }

@@ -26,10 +26,11 @@ data Expr = Assignment { src      :: Expr     , dst       :: Expr     , ctx     
           | NOP        {                                                                     }
           | Var        { name     :: String                                                  }
           | Typed      { name     :: String   , expr      :: Expr                            }
-          | Function   { name     :: String   , signature :: [Expr]   , body      :: [Expr]  }
+          | Function   { name     :: String   , signature :: [Expr]   , expr      :: Expr    }
+          | LetBlock   { exprs    :: [Expr]   , result    :: Expr                            }
           | DataType   { name     :: String   , params    :: [String] , cons      :: [Expr]  }
           | Cons       { name     :: String   , fields    :: [Expr]                          }
-          | Module     { path     :: [String] , imports   :: [Expr]   , datatypes :: [Expr]  }
+          | Module     { path     :: [String] , imports   :: [Expr]   , datatypes :: [Expr]  , methods :: [Expr]  }
           | Import     { segments :: [String] , name      :: String                          }
           | Undefined
           -- | VarRef     { vid      :: Int                                                       } 
@@ -43,7 +44,7 @@ data Expr = Assignment { src      :: Expr     , dst       :: Expr     , ctx     
           -- | Block      { body     :: [Expr]   , ctx       :: Context                           }
           -- | BlockRet   { name     :: String   , ctx       :: Context                           }
           -- | FuncType   { items    :: [Expr]                                                    }
-          -- | Operator   { name     :: String   , src       :: Expr     , dst          :: Expr   }
+           | Operator   { name     :: String   , src       :: Expr     , dst          :: Expr   }
           -- | Constant   { cval     :: Constant                                                  }
           deriving (Show)
 

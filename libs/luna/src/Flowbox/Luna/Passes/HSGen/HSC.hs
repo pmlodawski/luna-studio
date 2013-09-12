@@ -17,9 +17,7 @@ import qualified Flowbox.Luna.Passes.HSGen.AST.Expr     as HAST
 import qualified Flowbox.Luna.Passes.HSGen.AST.Constant as Constant
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module   as Module
 import qualified Flowbox.Luna.Passes.HSGen.AST.DataType as DataType
-import qualified Flowbox.Luna.Passes.HSGen.AST.Function as Function
 import qualified Flowbox.Luna.Passes.HSGen.AST.Cons     as Cons
-import           Flowbox.Luna.Passes.HSGen.AST.Function   (Function)
 import qualified Flowbox.Luna.Passes.HSGen.GenState     as GenState
 import           Flowbox.Luna.Passes.HSGen.GenState       (GenState)
 import qualified Flowbox.Luna.Passes.Pass               as Pass
@@ -64,11 +62,17 @@ genCode :: HAST.Expr -> String
 genCode expr = case expr of
     HAST.Var      name                 -> name
     HAST.Import   segments name        -> "import qualified " ++ join "." segments ++ " as " ++ name
-    HAST.Module path imports datatypes -> header 
+    HAST.Module path imports datatypes 
+                methods                -> header 
                                        ++ genSection "imports"   genCode imports
                                        ++ genSection "datatypes" genCode datatypes
+                                       ++ genSection "methods"   genCode methods
                                           where header = "module " ++ join "." path ++ " where" ++ eol
     HAST.DataType name params cons     -> "data " ++ name ++ params' ++ " = " ++ join " | " (map genCode cons)
                                           where params' = if null params then "" else " " ++ join " " params
     HAST.Cons     name fields          -> name ++ " { " ++ join ", " (map genCode fields) ++ " }"
     HAST.Typed    name expr            -> genCode expr ++ " :: " ++ name
+    HAST.Function name signature expr  -> name ++ " " ++ join " " (map genCode signature) ++ " = " ++ genCode expr
+    HAST.LetBlock exprs result         -> "let{ " ++ join ";" (map genCode exprs) ++ " } in " ++ genCode result 
+    HAST.Operator name src dst         -> genCode src ++ " " ++ name ++ " " ++ genCode dst
+    HAST.NOP                           -> "NOP"
