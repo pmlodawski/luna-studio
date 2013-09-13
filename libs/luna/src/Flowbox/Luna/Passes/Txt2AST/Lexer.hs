@@ -181,9 +181,9 @@ intStr          = ((:) <$> lexeme signStr <*> natStr) <|> natStr
 signStr         =   char '-'
                 <|> char '+'
 
-natStr          = zeroNumberStr <|> decimalStr
+natStr          = try(zeroNumberStr) <|> decimalStr
 
-zeroNumberStr   = char '0' *> (hexadecimalStr <|> octalStr <|> decimalStr <|> return "") <?> ""
+zeroNumberStr   = char '0' *> (hexadecimalStr <|> octalStr <|> decimalStr) <?> ""
 
 decimalStr      = numberStr digit
 hexadecimalStr  = oneOf "xX" *> numberStr hexDigit
