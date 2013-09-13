@@ -34,6 +34,7 @@ pBlockBegin  = symbol  ':'
 separator    = symbol  ','
 parenL       = symbol  '('
 parenR       = symbol  ')'
+pAccessor    = symbol  '.'
 pTypeDecl    = symbols "::"
 
 opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
@@ -41,7 +42,7 @@ opLetter     = opStart
 reservedOpNames = ["=", "::", ":"]
 
 
-pPath        = sepBy1 pIdent (symbol '.')
+pPath        = sepBy1 pIdent pAccessor
 
 
 -----------------------------------------------------------

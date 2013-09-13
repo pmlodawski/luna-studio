@@ -33,17 +33,6 @@ import qualified Flowbox.Luna.Data.Source          as Source
 -- Entities
 -----------------------------------------------------------
 
-pIdent       = Expr.Var      <$> L.pIdent
-pIdentType   = Expr.Var      <$> L.pIdentType
-pIdentVar    = Expr.Var      <$> L.pIdentVar
-pInt         = Lit.Integer   <$> L.integerStr
-pCharLit     = Lit.Char      <$> L.charLiteral
-pStringLit   = Lit.String    <$> L.stringLiteral
-pLit         = choice [ pInt
-                      , pCharLit
-                      , pStringLit
-                      ]
-
 pTuple p     = try(L.parensed (return () *> optional L.separator) *> pure [])
            <|> try(L.parensed (liftList p <* L.separator))
            <|>     L.parensed (sepBy2' p L.separator)
@@ -52,41 +41,46 @@ pTuple p     = try(L.parensed (return () *> optional L.separator) *> pure [])
 pTupleBody p = sepBy' p L.separator
 pTuplePure p = L.parensed $ pTupleBody p
 
-pEnt i       = choice [ pIdent
-                      , Expr.Lit   <$> pLit
-                      , Expr.Tuple <$> pTuple (expr i)
-                      ]
+pType        = sepBy1 L.pIdentType L.pAccessor
+
+
+-----------------------------------------------------------
+-- Literals
+-----------------------------------------------------------
+pIntL    = Lit.Integer   <$> L.integerStr
+pCharL   = Lit.Char      <$> L.charLiteral
+pStringL = Lit.String    <$> L.stringLiteral
+pLit     = choice [ pIntL
+                  , pCharL
+                  , pStringL
+                  ]
 
 
 -----------------------------------------------------------
 -- Types
 -----------------------------------------------------------
+pSig      = Type.Sig <$> L.pIdentVar 
+pLambdaT  = Type.Lambda <$> (Type.Tuple <$> pTuplePure (pSig)) <*> return Type.Unknown
 
-pSig     = Type.Sig <$> L.pIdentVar 
-pTLambda  = Type.Lambda <$> (Type.Tuple <$> pTuplePure (pSig)) <*> return Type.Unknown
+pEntT     = choice [ Type.Var  <$> L.pIdentVar
+                   , Type.Type <$> pType
+                   ]
+
 
 -----------------------------------------------------------
--- Expression Entities
+-- Declarations
 -----------------------------------------------------------
-
---pImportPath _     = (Expr.Path <$> L.pPath) <??> (Expr.Named <$ L.pAs <*> L.pIdent)
-
---pImport i         = (Expr.Import   <$ L.pImport  <*> ((:) <$> pImportPath i) <?*> pImportBlock i)
-
---pImportBlock i    = try(pBlock pImportPath (i+1)) <|> return []
-
-
 pImport i         = Import.mk     <$  L.pImport <*> L.pPath <*> (try (Just <$ L.pAs <*> (L.pIdent <?> "import name")) <|> pure Nothing)
 
 pFunc i           = Expr.Function <$  L.pDef 
                                   <*> L.pIdentVar 
-                                  <*> pTLambda
+                                  <*> pLambdaT
                                   <*> (try (pExprBlock i) <|> return [])
                                   <?> "function definition"
 
 
 
---pLambda i         = Expr.Lambda   <$> (pTuplePure (expr i) <|> liftList pIdent)
+--pLambda i         = Expr.Lambda   <$> (pTuplePure (pExpr i) <|> liftList pIdent)
 --                                 <*> pExprBlock i
 --                                 <?> "lambda definition"
 
@@ -113,88 +107,80 @@ pModuleBody i     = choice [ pClassBody i
 
 pField            = Field.mk <$> L.pIdent <* L.pTypeDecl <*> L.pIdent
 
-pExprEnt i        = choice [ pImport i
+pDeclaration i    = choice [ pImport i
                            , pFunc   i
                            , pClass  i
                            --, pLambda i
                            ]
-                               
 
-pExprBlock      i = pBlockBegin expr i --L.pBlockBegin *> ( pBlock expr (i+1) <|> (liftList $ expr i) )
-
---pBlockOpt     p i = (try (pBlockBegin p i) <|> return [])
-
-pBlockBegin   p i = L.pBlockBegin *> pBlock p (i+1)  
-
-pBlock        p i = L.eol *> pSegmentBegin p i <?> "indented block"
-
-
------------------------------------------------------------
--- Operator Utils
------------------------------------------------------------
-
-binary   name fun assoc = PExpr.Infix   (L.reservedOp name *> return fun) assoc
-binaryM  name fun assoc = PExpr.Infix   (L.reservedOp name *>        fun) assoc
-prefix   name fun       = PExpr.Prefix  (L.reservedOp name *> return fun)
-prefixM  name fun       = PExpr.Prefix  (L.reservedOp name *>        fun)
-prefixfM      fun       = PExpr.Prefix  (fun)
-postfix  name fun       = PExpr.Postfix (L.reservedOp name *> return fun)
-postfixM name fun       = PExpr.Postfix (L.reservedOp name *>        fun)
 
 -----------------------------------------------------------
 -- Expressions
 -----------------------------------------------------------
 binaryMatch f = \p q -> f (Expr.aftermatch p) (Expr.aftermatch q)
 
-expr     i   = Expr.aftermatch <$> PExpr.buildExpressionParser (exprtable i) (exprterm i)
+pExpr     i   = Expr.aftermatch <$> PExpr.buildExpressionParser (exprtable i) (exprterm i)
            <?> "expression"
 
-exprterm i   = choice[ try $ pExprEnt i
-                     , try $ L.parensed (expr i)
-                     , pEnt i
+exprterm i   = choice[ try $ pDeclaration i
+                     , try $ L.parensed (pExpr i)
+                     , pEntE i
                      ]
-           <?> "simple expression"
+           <?> "expression term"
 
-pPattern  i  = Expr.Pattern <$> patTerm i
+exprtable i  = [ [ binary   "."  (Expr.Accessor)                PExpr.AssocLeft ]
+               , [ postfixM "::" (Expr.Typed <$> pEntT)           ]
+               , [ binary   ""   (Expr.callConstructor)         PExpr.AssocLeft ]
+               , [ binary   "*"  (binaryMatch $ Expr.Infix "*") PExpr.AssocLeft ]
+               , [ binary   "+"  (binaryMatch $ Expr.Infix "+") PExpr.AssocLeft ]
+               , [ prefixfM      (try(binaryMatch Expr.Assignment <$> (pPatExpr i) <* (L.reservedOp "=" <?> "pattern match")))]
+               ]
 
-exprtable i  = [ 
-               [ binary   "."  (Expr.Accessor)                PExpr.AssocLeft ]
-             , [ postfixM "::" (Expr.Typed . Type.Sig <$> L.pIdent)                      ]
-             , [ binary   ""   (Expr.callConstructor)         PExpr.AssocLeft ]
-             , [ binary   "*"  (binaryMatch $ Expr.Infix "*") PExpr.AssocLeft ]
-             , [ binary   "+"  (binaryMatch $ Expr.Infix "+") PExpr.AssocLeft ]
-             --,  [binary   "="   Expr.Assignment          Expr.AssocLeft]
-             , [ prefixfM      (try(binaryMatch Expr.Assignment <$> (pPattern i) <* (L.reservedOp "=" <?> "pattern match")))]
-             ]
-      
+pEntE    i   = choice [ Expr.Var   <$> L.pIdent
+                      , Expr.Lit   <$> pLit
+                      , Expr.Tuple <$> pTuple (pExpr i)
+                      ]
+
+pPatExpr  i  = Expr.Pattern <$> pPattern i
+
+pExprBlock      i = pBlockBegin pExpr i --L.pBlockBegin *> ( pBlock pExpr (i+1) <|> (liftList $ pExpr i) )
+
 
 -----------------------------------------------------------
 -- Patterns
 -----------------------------------------------------------
+--pPattern    i   = Pat.Cons <$> pType <*> PExpr.buildExpressionParser consTableP (pTermP i) 
+--              <?> "pattern"
 
-pWildcard     = Pat.Wildcard     <$  L.pWildcard
+--consTableP      = [ --[ postfixM "::" (Pat.Typed <$> pEntT)       ]
+--                  [ binary   ""   (Pat.callConstructor)      PExpr.AssocLeft ]
+--                  ]
 
-pPatEnt     i = choice [ Pat.Var   <$> L.pIdentVar
-                       , Pat.Lit   <$> pLit
-                       , Pat.Tuple <$> pTuple (patTerm i)
-                       ]
+pPattern    i   = choice [ pConsP i
+                         , pTermP i 
+                         ]
 
-pPatCons    i = Pat.aftermatch <$> L.pIdentType <*> PExpr.buildExpressionParser patConsTable (patTerm i) <?> "data constructor"
+pConsP      i   = Pat.Cons <$> pType <*> many (pTermP i) 
 
-patTerm     i = choice[ try $ L.parensed (patTerm i)
-                      , try $ pPatCons i
-                      , pPatEnt  i
-                      , pWildcard
-                      ]
-             <?> "pattern term"
+pTermP      i   = choice[ try $ L.parensed (pPattern i)
+                        , pEntP  i
+                        ]
+              <?> "pattern term"
 
-patConsTable  = [ [binary   ""   (Pat.callConstructor)      PExpr.AssocLeft]
-                ]
+
+pEntP       i   = choice [ Pat.Var      <$> L.pIdentVar
+                         , Pat.Lit      <$> pLit
+                         , Pat.Tuple    <$> pTuple (pTermP i)
+                         , Pat.Wildcard <$  L.pWildcard
+                         , Pat.Cons     <$> pType <*> pure []
+                         ]
+
+
+
 
 -----------------------------------------------------------
 -- Nested Segments
 -----------------------------------------------------------
-
 pEmptyLines         = do many1 pEmptyLine
 
 pEmptyLine          = try(L.eol *> L.pSpaces1 *> L.eol) <|> L.eol
@@ -212,18 +198,37 @@ pSegmentBegin   p i = do
 
 pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
+pBlockBegin     p i = L.pBlockBegin *> pBlock p (i+1)  
+
+pBlock          p i = L.eol *> pSegmentBegin p i <?> "indented block"
+
+
+-----------------------------------------------------------
+-- Operator Utils
+-----------------------------------------------------------
+binary   name fun assoc = PExpr.Infix   (L.reservedOp name *> return fun) assoc
+binaryM  name fun assoc = PExpr.Infix   (L.reservedOp name *>        fun) assoc
+prefix   name fun       = PExpr.Prefix  (L.reservedOp name *> return fun)
+prefixM  name fun       = PExpr.Prefix  (L.reservedOp name *>        fun)
+prefixfM      fun       = PExpr.Prefix  (fun)
+postfix  name fun       = PExpr.Postfix (L.reservedOp name *> return fun)
+postfixM name fun       = PExpr.Postfix (L.reservedOp name *>        fun)
+
 
 -----------------------------------------------------------
 -- Program
 -----------------------------------------------------------
 
 --pProgram mod = Expr.Module (Expr.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
---                                         <|> pSegmentBegin expr 0 <* many(L.eol <* L.pSpaces) <* eof)
+--                                         <|> pSegmentBegin pExpr 0 <* many(L.eol <* L.pSpaces) <* eof)
 
 
-pProgram mod = pModule mod 0 <* many(L.eol <* L.pSpaces) <* eof
+--pProgram mod = pModule mod 0 <* many(L.eol <* L.pSpaces) <* eof
 
-pExprTemp = expr 0 <* many(L.eol <* L.pSpaces) <* eof
+pProgram mod = pPattern 0
+
+
+pExprTemp = pExpr 0 <* many(L.eol <* L.pSpaces) <* eof
 
 --parseExpr input = Parsec.parse pExprTemp "Luna Parser" input
 

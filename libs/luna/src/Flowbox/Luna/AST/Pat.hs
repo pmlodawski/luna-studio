@@ -17,12 +17,12 @@ import           GHC.Generics
 
 type Lit = Lit.Lit
 
-data Pat = Var             { name      :: String                  }
-         | Lit             { value     :: Lit                     }
-         | Tuple           { items     :: [Pat]                   }
-         | Cons            { name      :: String  , args :: [Pat] }
-         | Typed           { cls       :: Type    , pat  :: Pat   }
-         | CallConstructor { args      :: [Pat]                   }
+data Pat = Var             { name      :: String                    }
+         | Lit             { value     :: Lit                       }
+         | Tuple           { items     :: [Pat]                     }
+         | Cons            { segments  :: [String]  , args :: [Pat] }
+         | Typed           { cls       :: Type      , pat  :: Pat   }
+         | CallConstructor { args      :: [Pat]                     }
          | Wildcard
          deriving (Show, Eq, Generic)
 
@@ -36,7 +36,7 @@ callConstructor src' arg' = case src' of
     _                        -> CallConstructor $ src':[arg']
 
 
-aftermatch :: String -> Pat -> Pat
-aftermatch src' dst' = case dst' of
-    CallConstructor args' -> Cons src' args'
-    _                     -> Cons src' [dst']
+--aftermatch :: String -> Pat -> Pat
+--aftermatch src' dst' = case dst' of
+--    CallConstructor args' -> Cons src' args'
+--    _                     -> Cons src' [dst']

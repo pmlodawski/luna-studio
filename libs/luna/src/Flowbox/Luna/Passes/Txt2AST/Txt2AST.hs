@@ -28,11 +28,11 @@ logger = getLogger "Flowbox.Luna.Passes.Parser.Parser"
 type ParserMonad m = PassMonad Pass.NoState m
 
 
-run :: PassMonad s m => Source -> Pass.Result m Expr
+--run :: PassMonad s m => Source -> Pass.Result m Expr
 run = (Pass.runM Pass.NoState) . parse
 
 
-parse :: ParserMonad m => Source -> Pass.Result m Expr
+--parse :: ParserMonad m => Source -> Pass.Result m Expr
 parse src = case Parser.parse src of
     Left  e -> Pass.fail $ show e
     Right v -> return v

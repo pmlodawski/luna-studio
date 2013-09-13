@@ -47,8 +47,7 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "def f(x,y,z):"
-                  , "    a = V 0 0 0"
+        $ unlines [ "Vector a b c "
                   ]
 
 
@@ -82,3 +81,24 @@ main_inner = Luna.run $ do
 
 
 
+
+
+--a = 1
+
+--Vector x y z = v
+
+--(a :: Vector 0 0 0) = v
+
+-- ~[a,b=1] = [1]
+
+
+--def f x=0 y=0 z=0:
+--    x+y+z
+
+--f 1 {z=1}
+
+--[0..100].each x:
+--    print x
+
+--Std.Math.Vector x y z = v
+--v = Std.Math.Vector 0 0 0
