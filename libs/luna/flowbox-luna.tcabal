@@ -16,7 +16,7 @@ Library
                   src/Flowbox/Luna/Tools/Serialize/Thrift/Generated
   if flag(debug)
     GHC-Options:  -csacc
-  GHC-Options:    -Wall 
+  GHC-Options:    -Wall -O2
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
@@ -51,7 +51,7 @@ Executable luna
 
   if flag(debug)
     GHC-Options:  -csacc
-  GHC-Options:    -Wall 
+  GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
@@ -73,7 +73,7 @@ Test-Suite tests
   Type:           exitcode-stdio-1.0
   Main-Is:        Spec.hs
   Hs-Source-Dirs: tests
-  GHC-Options:    -Wall -threaded
+  GHC-Options:    -Wall -threaded -O2
   Build-Depends:  base,
                   flowbox-luna,
                   hspec,

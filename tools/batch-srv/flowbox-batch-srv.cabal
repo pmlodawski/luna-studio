@@ -16,7 +16,7 @@ Executable batch-srv
                     src/Flowbox/Batch/Server/Thrift/Generated
     Main-Is:        Flowbox/Batch/Server/Main.hs
 
-    GHC-Options:    -Wall 
+    GHC-Options:    -Wall -O2
 
     Extensions:     FlexibleInstances
                     TypeSynonymInstances

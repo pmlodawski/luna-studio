@@ -20,7 +20,7 @@ Library
   Hs-Source-Dirs: src
   if flag(debug)
     GHC-Options:  -csacc
-  GHC-Options:    -Wall 
+  GHC-Options:    -Wall -O2
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
@@ -44,7 +44,7 @@ Executable lunac
 
   if flag(debug)
     GHC-Options:  -csacc
-  GHC-Options:    -Wall 
+  GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses

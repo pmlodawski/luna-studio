@@ -10,7 +10,7 @@ Build-Type:     Simple
 Library
   Hs-Source-Dirs: src
 
-  GHC-Options:    -Wall 
+  GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse
 
@@ -35,7 +35,7 @@ Executable utils
   Main-Is:        Main.hs
   Hs-Source-Dirs: tests
 
-  GHC-Options:    -Wall 
+  GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses

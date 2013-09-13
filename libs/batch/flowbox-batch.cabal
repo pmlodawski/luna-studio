@@ -21,7 +21,7 @@ Library
     Hs-Source-Dirs: src,
                     src/Flowbox/Batch/Tools/Serialize/Thrift/Generated
 
-    GHC-Options:    -Wall 
+    GHC-Options:    -Wall -O2
 
     Extensions:     FlexibleInstances,
                     NoImplicitPrelude,
@@ -81,7 +81,7 @@ Executable batch
   Main-Is:        Flowbox/Batch/Main.hs
   Hs-Source-Dirs: src
 
-  GHC-Options:    -Wall 
+  GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude
