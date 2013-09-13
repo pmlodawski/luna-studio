@@ -9,7 +9,7 @@
 module Flowbox.Luna.Passes.Graph2AST.Graph2AST where
 
 import           Flowbox.Prelude                 
-import qualified Flowbox.Luna.AST.AST          as LAST
+import qualified Flowbox.Luna.AST.Expr         as LExpr
 import qualified Flowbox.Luna.AST.Type         as Type
 import           Flowbox.Luna.AST.Type           (Type)
 import qualified Flowbox.Luna.AST.Constant     as LConstant

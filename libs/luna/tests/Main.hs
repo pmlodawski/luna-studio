@@ -30,15 +30,17 @@ import qualified Flowbox.Luna.Passes.Luna.Luna           as Luna
 import qualified Flowbox.Luna.Passes.Txt2AST.Txt2AST     as Txt2AST
 import qualified Flowbox.Luna.Data.Source                as Source
 import           Flowbox.Luna.Data.Source                  (Source)
+import qualified Flowbox.Text.Show.Pretty                as PP
 
 import           Debug.Trace                               
 import           Data.Either.Utils                         (forceEither)
-import qualified Text.Show.Pretty                        as PP
 import qualified Data.DList                              as DList
 
 import           Control.Applicative                       
 
 import           System.TimeIt                             
+
+
 
 logger :: Logger
 logger = getLogger "Flowbox"
@@ -65,19 +67,20 @@ main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
     putStrLn "\n-------- AST --------"
     ast <- Txt2AST.run example
-    putStrLn $ PP.ppShow ast
+    --putStrLn $ PP.ppShow ast
+    putStrLn $ PP.ppqShow ast
 
-    putStrLn "\n-------- SSA --------"
-    ssa <- SSA.run     ast
-    putStrLn $ PP.ppShow ssa
+    --putStrLn "\n-------- SSA --------"
+    --ssa <- SSA.run     ast
+    --putStrLn $ PP.ppShow ssa
 
-    putStrLn "\n-------- HAST --------" 
-    hast <- HSGen.run  ssa
-    putStrLn $ PP.ppShow hast
+    --putStrLn "\n-------- HAST --------" 
+    --hast <- HSGen.run  ssa
+    --putStrLn $ PP.ppShow hast
 
-    putStrLn "\n-------- HSC --------" 
-    hsc <- HSC.run  hast
-    putStrLn $ hsc
+    --putStrLn "\n-------- HSC --------" 
+    --hsc <- HSC.run  hast
+    --putStrLn $ hsc
 
     return ()
 

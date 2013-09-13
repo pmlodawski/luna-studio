@@ -8,9 +8,10 @@
 module Flowbox.Luna.AST.Field where
 
 import           Flowbox.Prelude         
-import           Flowbox.Luna.AST.AST    
+import qualified Flowbox.Luna.AST.Expr as Expr
+import           Flowbox.Luna.AST.Expr   (Expr)
 import qualified Flowbox.Luna.AST.Type as Type
 
 
 mk :: String -> String -> Expr
-mk name' param' = Field name' (Type.Type param')
+mk name' param' = Expr.Field name' (Type.Type param')

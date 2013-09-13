@@ -46,7 +46,6 @@ Library
                   unordered-containers,
                   vector,
                   uu-parsinglib,
-                  pretty-show,
                   parsec
 
 
@@ -70,7 +69,6 @@ Executable luna
                   flowbox-luna,
                   flowbox-utils,
                   MissingH,
-                  pretty-show,
                   timeit,
                   transformers,
                   mtl,

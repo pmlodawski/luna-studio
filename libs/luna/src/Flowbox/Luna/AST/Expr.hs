@@ -4,20 +4,23 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, DeriveGeneric #-}
 
-module Flowbox.Luna.AST.AST where
+module Flowbox.Luna.AST.Expr where
 
 import           Flowbox.Prelude             
 import           Flowbox.Luna.AST.Type       (Type)
 import qualified Flowbox.Luna.AST.Constant as Constant
+import           Data.Typeable
+import           Flowbox.Generics.Deriving.QShow
+import           GHC.Generics
 
 type Constant = Constant.Constant
 
 data Expr  = NOP
            | Import          { segments  :: [String] , name      :: String                                                                                   }
-           | Identifier      { name      :: String                                                                                                           }
-           | TypeIdentifier  { name      :: String                                                                                                           }
+           | Var             { name      :: String                                                                                                           }
+           | TypeVar         { name      :: String                                                                                                           }
            | Constant        { value     :: Constant                                                                                                         }
            | Assignment      { src       :: Expr     , dst       :: Expr                                                                                     }
            | Tuple           { items     :: [Expr]                                                                                                           }
@@ -27,7 +30,7 @@ data Expr  = NOP
            | Call            { src       :: Expr     , args      :: [Expr]                                                                                   }
            | CallConstructor { args      :: [Expr]                                                                                                           }
            | Accessor        { src       :: Expr     , dst       :: Expr                                                                                     }
-           | Operator        { name      :: String   , src       :: Expr   , dst     :: Expr                                                                 }                                                               
+           | Infix           { name      :: String   , src       :: Expr   , dst     :: Expr                                                                 }                                                               
            | Comment         { txt       :: String                                                                                                           }
            | Class           { cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]                                         }
            | Module          { cls       :: Type     , imports   :: [Expr] , classes   :: [Expr] , fields  :: [Expr] , methods :: [Expr] , modules :: [Expr] }
@@ -37,8 +40,16 @@ data Expr  = NOP
            | Function        { name      :: String   , signature :: Type   , body    :: [Expr]                                                               }
            | Pattern         { expr      :: Expr                                                                                                             }
            | Wildcard
-           deriving (Show, Eq)
+           deriving (Show, Eq, Generic)
 
+
+instance QShow Expr
+
+instance (Typeable a) => Show (IO a) where
+    show e = '(' : (show . typeOf) e ++ ")"
+
+instance (Typeable a, Typeable b) => Show (a -> b) where
+    show e = '(' : (show . typeOf) e ++ ")"
 
 callConstructor :: Expr -> Expr -> Expr
 callConstructor src' arg' = case src' of

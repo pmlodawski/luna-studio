@@ -88,7 +88,7 @@ Library
         Flowbox.Luna.AST.Class,
         Flowbox.Luna.AST.Type,
         Flowbox.Luna.AST.Module,
-        Flowbox.Luna.AST.AST,
+        Flowbox.Luna.AST.Expr,
         Flowbox.Luna.AST.Function,
         Flowbox.Luna.AST.Constant,
                    
@@ -124,7 +124,6 @@ Library
                   unordered-containers,
                   vector,
                   uu-parsinglib,
-                  pretty-show,
                   parsec
 
 
@@ -148,7 +147,6 @@ Executable luna
                   flowbox-luna,
                   flowbox-utils,
                   MissingH,
-                  pretty-show,
                   timeit,
                   transformers,
                   mtl,

@@ -9,12 +9,13 @@
 module Flowbox.Luna.AST.Import where
 
 import           Flowbox.Prelude         
-import           Flowbox.Luna.AST.AST    
+import qualified Flowbox.Luna.AST.Expr as Expr
+import           Flowbox.Luna.AST.Expr   (Expr)
 import qualified Flowbox.Luna.AST.Type as Type
 
 
 mk :: [String] -> Maybe String -> Expr
-mk segments' mname = Import segments' $ case mname of
+mk segments' mname = Expr.Import segments' $ case mname of
                          Just  n -> n
                          Nothing -> last segments'
 
