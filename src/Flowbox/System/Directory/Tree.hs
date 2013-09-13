@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
---module Flowbox.System.Directory.Tree where
+module Flowbox.System.Directory.Tree where
 
 data DirTree a = Dir  { name :: String, contents :: [DirTree a] }
                | File { name :: String, body     :: a           }
