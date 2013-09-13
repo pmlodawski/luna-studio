@@ -47,7 +47,7 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "Vector a b c "
+        $ unlines [ "def f(a,b::Int)"
                   ]
 
 
@@ -102,3 +102,6 @@ main_inner = Luna.run $ do
 
 --Std.Math.Vector x y z = v
 --v = Std.Math.Vector 0 0 0
+
+
+--def f (Vector x y z :: Vector Int)

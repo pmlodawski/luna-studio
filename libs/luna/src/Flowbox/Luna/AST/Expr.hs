@@ -20,27 +20,27 @@ type Lit = Lit.Lit
 type Pat = Pat.Pat
 
 data Expr  = NOP
-           | Import          { segments  :: [String] , name      :: String                                                                                   }
-           | Var             { name      :: String                                                                                                           }
-           | TypeVar         { name      :: String                                                                                                           }
-           | Lit             { value     :: Lit                                                                                                              }
-           | Assignment      { src       :: Expr     , dst       :: Expr                                                                                     }
-           | Tuple           { items     :: [Expr]                                                                                                           }
-           | Interface       { name      :: String   , body      :: [Expr]                                                                                   }
-           | Typed           { cls       :: Type     , expr      :: Expr                                                                                     }
-           | Path            { segments  :: [String]                                                                                                         }
-           | Call            { src       :: Expr     , args      :: [Expr]                                                                                   }
-           | CallConstructor { args      :: [Expr]                                                                                                           }
-           | Accessor        { src       :: Expr     , dst       :: Expr                                                                                     }
-           | Infix           { name      :: String   , src       :: Expr   , dst     :: Expr                                                                 }                                                               
-           | Comment         { txt       :: String                                                                                                           }
-           | Class           { cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]                                         }
-           | Module          { cls       :: Type     , imports   :: [Expr] , classes   :: [Expr] , fields  :: [Expr] , methods :: [Expr] , modules :: [Expr] }
-           | Field           { name      :: String   , cls       :: Type                                                                                     }
-           | Lambda          { signature :: Type     , body      :: [Expr]                                                                                   }
-           | Cons            { src       :: Expr     , args      :: [Expr]                                                                                   }
-           | Function        { name      :: String   , signature :: Type   , body    :: [Expr]                                                               }
-           | Pattern         { pat       :: Pat                                                                                                              }
+           | Import     { segments  :: [String] , name      :: String                                                                                   }
+           | Var        { name      :: String                                                                                                           }
+           | TypeVar    { name      :: String                                                                                                           }
+           | Lit        { value     :: Lit                                                                                                              }
+           | Assignment { src       :: Expr     , dst       :: Expr                                                                                     }
+           | Tuple      { items     :: [Expr]                                                                                                           }
+           | Interface  { name      :: String   , body      :: [Expr]                                                                                   }
+           | Typed      { cls       :: Type     , expr      :: Expr                                                                                     }
+           | Path       { segments  :: [String]                                                                                                         }
+           | App        { src       :: Expr     , args      :: [Expr]                                                                                   }
+           | AppCons_   { args      :: [Expr]                                                                                                           }
+           | Accessor   { src       :: Expr     , dst       :: Expr                                                                                     }
+           | Infix      { name      :: String   , src       :: Expr   , dst     :: Expr                                                                 }                                                               
+           | Comment    { txt       :: String                                                                                                           }
+           | Class      { cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]                                         }
+           | Module     { cls       :: Type     , imports   :: [Expr] , classes   :: [Expr] , fields  :: [Expr] , methods :: [Expr] , modules :: [Expr] }
+           | Field      { name      :: String   , cls       :: Type                                                                                     }
+           | Lambda     { signature :: [Pat]    , body      :: [Expr]                                                                                   }
+           | Cons       { segments  :: [String]                                                                                                         }
+           | Function   { name      :: String   , signature :: [Pat]   , body    :: [Expr]                                                               }
+           | Pattern    { pat       :: Pat                                                                                                              }
            deriving (Show, Eq, Generic)
 
 
@@ -49,14 +49,14 @@ instance QShow Expr
 
 callConstructor :: Expr -> Expr -> Expr
 callConstructor src' arg' = case src' of
-    call @ CallConstructor{} -> call { args = args call ++ [arg'] }
-    _                        -> CallConstructor $ src':[arg']
+    call @ AppCons_{} -> call { args = args call ++ [arg'] }
+    _                 -> AppCons_ $ src':[arg']
 
 
-consConstructor :: Expr -> Expr -> Expr
-consConstructor src' dst' = case dst' of
-    CallConstructor args' -> Cons src' args'
-    _                     -> Cons src' [dst']
+--consConstructor :: Expr -> Expr -> Expr
+--consConstructor src' dst' = case dst' of
+--    AppCons_ args' -> Cons src' args'
+--    _                     -> Cons src' [dst']
 
 --mkClass :: String -> Expr
 --mkClass name' = Class name' [] []
@@ -64,8 +64,8 @@ consConstructor src' dst' = case dst' of
 
 aftermatch :: Expr -> Expr
 aftermatch x = case x of
-    CallConstructor (a:as) -> Call a as
-    _                      -> x
+    AppCons_ (a:as) -> App a as
+    _               -> x
 
 
 addMethod :: Expr -> Expr -> Expr

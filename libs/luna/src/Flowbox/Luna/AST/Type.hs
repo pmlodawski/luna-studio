@@ -14,12 +14,13 @@ import           GHC.Generics
 
 data Type = Unknown
           | Var    { name     :: String                       }
-          | Type   { segments :: [String]                     }
 	      | Sig    { name     :: String                       }
 	      | Tuple  { items    :: [Type]                       }
 	      | Class  { name     :: String , params  :: [String] }
           | Module { name     :: String                       }
 	      | Lambda { inputs   :: Type   , outputs :: Type     }
+	      | Cons   { segments :: [String]                     }
+	      | App    { src      :: Type   , args      :: [Type] }
 	      | List
 	      | Map
           deriving (Show, Eq, Generic)

@@ -41,7 +41,7 @@ pTuple p     = try(L.parensed (return () *> optional L.separator) *> pure [])
 pTupleBody p = sepBy' p L.separator
 pTuplePure p = L.parensed $ pTupleBody p
 
-pType        = sepBy1 L.pIdentType L.pAccessor
+pCons        = sepBy1 L.pIdentType L.pAccessor
 
 
 -----------------------------------------------------------
@@ -57,25 +57,14 @@ pLit     = choice [ pIntL
 
 
 -----------------------------------------------------------
--- Types
------------------------------------------------------------
-pSig      = Type.Sig <$> L.pIdentVar 
-pLambdaT  = Type.Lambda <$> (Type.Tuple <$> pTuplePure (pSig)) <*> return Type.Unknown
-
-pEntT     = choice [ Type.Var  <$> L.pIdentVar
-                   , Type.Type <$> pType
-                   ]
-
-
------------------------------------------------------------
 -- Declarations
 -----------------------------------------------------------
 pImport i         = Import.mk     <$  L.pImport <*> L.pPath <*> (try (Just <$ L.pAs <*> (L.pIdent <?> "import name")) <|> pure Nothing)
 
 pFunc i           = Expr.Function <$  L.pDef 
                                   <*> L.pIdentVar 
-                                  <*> pLambdaT
-                                  <*> (try (pExprBlock i) <|> return [])
+                                  <*> (Pat.items <$> pTupleP i)
+                                  <*> (pExprBlock i <|> return [])
                                   <?> "function definition"
 
 
@@ -117,26 +106,29 @@ pDeclaration i    = choice [ pImport i
 -----------------------------------------------------------
 -- Expressions
 -----------------------------------------------------------
-binaryMatch f = \p q -> f (Expr.aftermatch p) (Expr.aftermatch q)
 
-pExpr     i   = Expr.aftermatch <$> PExpr.buildExpressionParser (exprtable i) (exprterm i)
+
+pExpr     i   = Expr.aftermatch <$> PExpr.buildExpressionParser (optableE i) (pTermE i)
            <?> "expression"
 
-exprterm i   = choice[ try $ pDeclaration i
+pTermE    i   = choice[ try $ pDeclaration i
                      , try $ L.parensed (pExpr i)
                      , pEntE i
                      ]
            <?> "expression term"
 
-exprtable i  = [ [ binary   "."  (Expr.Accessor)                PExpr.AssocLeft ]
-               , [ postfixM "::" (Expr.Typed <$> pEntT)           ]
-               , [ binary   ""   (Expr.callConstructor)         PExpr.AssocLeft ]
-               , [ binary   "*"  (binaryMatch $ Expr.Infix "*") PExpr.AssocLeft ]
-               , [ binary   "+"  (binaryMatch $ Expr.Infix "+") PExpr.AssocLeft ]
-               , [ prefixfM      (try(binaryMatch Expr.Assignment <$> (pPatExpr i) <* (L.reservedOp "=" <?> "pattern match")))]
+optableE  i  = [ [ binary   "."  (Expr.Accessor)                 PExpr.AssocLeft ]
+               , [ postfixM "::" (Expr.Typed <$> pType i)                          ]
+               , [ binary   ""   (Expr.callConstructor)          PExpr.AssocLeft ]
+               , [ binary   "*"  (binaryMatchE $ Expr.Infix "*") PExpr.AssocLeft ]
+               , [ binary   "+"  (binaryMatchE $ Expr.Infix "+") PExpr.AssocLeft ]
+               , [ prefixfM      (try(binaryMatchE Expr.Assignment <$> (pPatExpr i) <* (L.reservedOp "=" <?> "pattern match")))]
                ]
 
-pEntE    i   = choice [ Expr.Var   <$> L.pIdent
+binaryMatchE f = \p q -> f (Expr.aftermatch p) (Expr.aftermatch q)
+
+pEntE    i   = choice [ Expr.Var   <$> L.pIdentVar
+                      , Expr.Cons  <$> pCons
                       , Expr.Lit   <$> pLit
                       , Expr.Tuple <$> pTuple (pExpr i)
                       ]
@@ -147,35 +139,57 @@ pExprBlock      i = pBlockBegin pExpr i --L.pBlockBegin *> ( pBlock pExpr (i+1) 
 
 
 -----------------------------------------------------------
+-- Types
+-----------------------------------------------------------
+pType       i   = choice [ try(pConsAppT i)
+                         , pTermT i 
+                         ]
+              <?> "type"
+
+pTermT      i   = choice[ try $ L.parensed (pType i)
+                        , pEntT i
+                        ]
+              <?> "type term"
+
+pVarT       i   = Type.Var   <$> L.pIdentVar
+pConsT      i   = Type.Cons  <$> pCons
+pTupleT     i   = Type.Tuple <$> pTuple (pType i)
+pConsAppT   i   = Type.App   <$> pConsT i <*> many1 (pTermT i) 
+--pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
+
+pEntT       i   = choice [ pVarT   i
+                         , pTupleT i
+                         , pConsT  i
+                         ]
+
+-----------------------------------------------------------
 -- Patterns
 -----------------------------------------------------------
---pPattern    i   = Pat.Cons <$> pType <*> PExpr.buildExpressionParser consTableP (pTermP i) 
---              <?> "pattern"
-
---consTableP      = [ --[ postfixM "::" (Pat.Typed <$> pEntT)       ]
---                  [ binary   ""   (Pat.callConstructor)      PExpr.AssocLeft ]
---                  ]
-
-pPattern    i   = choice [ pConsP i
+pPattern    i   = choice [ try(pConsAppP i)
                          , pTermP i 
                          ]
 
-pConsP      i   = Pat.Cons <$> pType <*> many (pTermP i) 
-
 pTermP      i   = choice[ try $ L.parensed (pPattern i)
-                        , pEntP  i
+                        , try (Pat.Typed <$> pEntP i <* L.pTypeDecl <*> pType i)
+                        , pEntP i
                         ]
               <?> "pattern term"
 
+pVarP           = Pat.Var      <$> L.pIdentVar
+pLitP           = Pat.Lit      <$> pLit
+pTupleP     i   = Pat.Tuple    <$> pTuple (pTermP i)
+pWildcardP      = Pat.Wildcard <$  L.pWildcard
+pConsP          = Pat.Cons     <$> pCons
+pConsAppP   i   = Pat.App      <$> (Pat.Cons <$> pCons) <*> many1 (pTermP i) 
 
-pEntP       i   = choice [ Pat.Var      <$> L.pIdentVar
-                         , Pat.Lit      <$> pLit
-                         , Pat.Tuple    <$> pTuple (pTermP i)
-                         , Pat.Wildcard <$  L.pWildcard
-                         , Pat.Cons     <$> pType <*> pure []
+pEntP       i   = choice [ pVarP
+                         , pLitP
+                         , pTupleP i
+                         , pWildcardP
+                         , pConsP
                          ]
 
-
+--pLambdaP    i   = 
 
 
 -----------------------------------------------------------
@@ -220,12 +234,12 @@ postfixM name fun       = PExpr.Postfix (L.reservedOp name *>        fun)
 -----------------------------------------------------------
 
 --pProgram mod = Expr.Module (Expr.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
---                                         <|> pSegmentBegin pExpr 0 <* many(L.eol <* L.pSpaces) <* eof)
+--                                           <|> pSegmentBegin pExpr 0 <* many(L.eol <* L.pSpaces) <* eof)
 
 
---pProgram mod = pModule mod 0 <* many(L.eol <* L.pSpaces) <* eof
+pProgram mod = pModule mod 0 <* many(L.eol <* L.pSpaces) <* eof
 
-pProgram mod = pPattern 0
+--pProgram mod = pPattern 0
 
 
 pExprTemp = pExpr 0 <* many(L.eol <* L.pSpaces) <* eof

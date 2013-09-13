@@ -17,12 +17,13 @@ import           GHC.Generics
 
 type Lit = Lit.Lit
 
-data Pat = Var             { name      :: String                    }
-         | Lit             { value     :: Lit                       }
-         | Tuple           { items     :: [Pat]                     }
-         | Cons            { segments  :: [String]  , args :: [Pat] }
-         | Typed           { cls       :: Type      , pat  :: Pat   }
-         | CallConstructor { args      :: [Pat]                     }
+data Pat = Var             { name      :: String                         }
+         | Lit             { value     :: Lit                            }
+         | Tuple           { items     :: [Pat]                          }
+         | Cons            { segments  :: [String]                       }
+         | App             { src       :: Pat       , args      :: [Pat] }
+         | Typed           { pat       :: Pat       , cls       :: Type  }
+         | CallConstructor { args      :: [Pat]                          }
          | Wildcard
          deriving (Show, Eq, Generic)
 
