@@ -14,4 +14,4 @@ import qualified Flowbox.Luna.AST.Type as Type
 
 
 mk :: String -> String -> Expr
-mk name' param' = Expr.Field name' (Type.Type param')
+mk name' param' = Expr.Field name' (Type.Sig param')

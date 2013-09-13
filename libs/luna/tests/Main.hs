@@ -23,7 +23,6 @@ import qualified Flowbox.Luna.Passes.HSGen.HSC           as HSC
 import qualified Flowbox.Luna.Passes.SSA.SSA             as SSA
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module    as Module
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr      as Expr
-import qualified Flowbox.Luna.Passes.Graph2AST.Graph2AST as Graph2AST
 import qualified Flowbox.Luna.Passes.SSA.State           as SSAState
 import           Flowbox.Luna.Passes.SSA.State             (SSAState)
 import qualified Flowbox.Luna.Passes.Luna.Luna           as Luna
@@ -48,11 +47,8 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "import Std.Math.Scalar"
-                  , "class Vector a:"
-                  , "    x :: a"
-                  , "def f(mod,a,b):"
-                  ,"    a+b"
+        $ unlines [ "def f(x,y,z):"
+                  , "    a = V 0 0 0"
                   ]
 
 

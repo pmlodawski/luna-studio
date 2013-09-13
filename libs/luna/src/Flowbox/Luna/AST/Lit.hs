@@ -6,16 +6,16 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveGeneric #-}
 
-module Flowbox.Luna.AST.Constant where
+module Flowbox.Luna.AST.Lit where
 
 import qualified Flowbox.Prelude as Prelude
 import           Flowbox.Prelude   (Show, Eq)
 import           Flowbox.Generics.Deriving.QShow
 import           GHC.Generics
 
-data Constant = Integer Prelude.String
-              | String  Prelude.String
-              | Char    Prelude.Char
-              deriving (Show, Eq, Generic)
+data Lit = Char    Prelude.Char
+         | String  Prelude.String
+         | Integer Prelude.String
+         deriving (Show, Eq, Generic)
 
-instance QShow Constant
+instance QShow Lit

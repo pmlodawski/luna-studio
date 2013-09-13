@@ -10,22 +10,24 @@ module Flowbox.Luna.AST.Expr where
 
 import           Flowbox.Prelude             
 import           Flowbox.Luna.AST.Type       (Type)
-import qualified Flowbox.Luna.AST.Constant as Constant
+import qualified Flowbox.Luna.AST.Lit      as Lit
+import qualified Flowbox.Luna.AST.Pat      as Pat
 import           Data.Typeable
 import           Flowbox.Generics.Deriving.QShow
 import           GHC.Generics
 
-type Constant = Constant.Constant
+type Lit = Lit.Lit
+type Pat = Pat.Pat
 
 data Expr  = NOP
            | Import          { segments  :: [String] , name      :: String                                                                                   }
            | Var             { name      :: String                                                                                                           }
            | TypeVar         { name      :: String                                                                                                           }
-           | Constant        { value     :: Constant                                                                                                         }
+           | Lit             { value     :: Lit                                                                                                              }
            | Assignment      { src       :: Expr     , dst       :: Expr                                                                                     }
            | Tuple           { items     :: [Expr]                                                                                                           }
            | Interface       { name      :: String   , body      :: [Expr]                                                                                   }
-           | Typed           { name      :: String   , src       :: Expr                                                                                     }
+           | Typed           { cls       :: Type     , expr      :: Expr                                                                                     }
            | Path            { segments  :: [String]                                                                                                         }
            | Call            { src       :: Expr     , args      :: [Expr]                                                                                   }
            | CallConstructor { args      :: [Expr]                                                                                                           }
@@ -38,18 +40,12 @@ data Expr  = NOP
            | Lambda          { signature :: Type     , body      :: [Expr]                                                                                   }
            | Cons            { src       :: Expr     , args      :: [Expr]                                                                                   }
            | Function        { name      :: String   , signature :: Type   , body    :: [Expr]                                                               }
-           | Pattern         { expr      :: Expr                                                                                                             }
-           | Wildcard
+           | Pattern         { pat       :: Pat                                                                                                              }
            deriving (Show, Eq, Generic)
 
 
 instance QShow Expr
 
-instance (Typeable a) => Show (IO a) where
-    show e = '(' : (show . typeOf) e ++ ")"
-
-instance (Typeable a, Typeable b) => Show (a -> b) where
-    show e = '(' : (show . typeOf) e ++ ")"
 
 callConstructor :: Expr -> Expr -> Expr
 callConstructor src' arg' = case src' of

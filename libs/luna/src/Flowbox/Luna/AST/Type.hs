@@ -13,11 +13,13 @@ import           Flowbox.Generics.Deriving.QShow
 import           GHC.Generics
 
 data Type = Unknown
-	      | Type   { name   :: String                       }
+	      | Sig    { name   :: String                       }
 	      | Tuple  { items  :: [Type]                       }
 	      | Class  { name   :: String , params  :: [String] }
           | Module { name   :: String                       }
 	      | Lambda { inputs :: Type   , outputs :: Type     }
+	      | List
+	      | Map
           deriving (Show, Eq, Generic)
 
 

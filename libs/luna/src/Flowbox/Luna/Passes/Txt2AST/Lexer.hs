@@ -228,8 +228,8 @@ isReservedOp name = isReserved (sort reservedOpNames) name
 -----------------------------------------------------------
 -- Identifiers & Reserved words
 -----------------------------------------------------------
-reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> "")
---reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
+--reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> "")
+reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
 
 pIdentVar     = pIdentLower <?> "variable identifier"
 pIdentType    = pIdentUpper <?> "type identifier"
