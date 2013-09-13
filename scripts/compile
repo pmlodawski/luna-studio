@@ -106,7 +106,7 @@ def main():
         info("Compiling CPP-Client")
         cwd = os.getcwd()
         os.chdir(p_cppclient)
-        if call(['make', 'clean']): error()
+        # if call(['make', 'clean']): error()
         if call(['make']): error()
         os.chdir(cwd)
 

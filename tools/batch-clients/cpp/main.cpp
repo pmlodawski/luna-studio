@@ -24,7 +24,6 @@ using namespace std;
 int main(int argc, char **argv) {
 
     /* Prepare Batch connection */
-
     boost::shared_ptr<TSocket> socket(new TSocket("localhost", 30521));
     boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
     boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));

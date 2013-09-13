@@ -1,4 +1,4 @@
-GEN_SRC := main.cpp \
+GEN_SRC := \
 generated/attrs_constants.cpp \
 generated/attrs_types.cpp \
 generated/batch_constants.cpp \

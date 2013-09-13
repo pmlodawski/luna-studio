@@ -52,7 +52,8 @@ example = Source.Source "Workspace"
                   , "    x :: a"
                   , "def f(x, y):"
                   , "    z = x + 7"
-                  , "    return = (z, y)"
+                  , "    g = (x, y)"
+                  , "    z+ y"
                   ]
 
 
