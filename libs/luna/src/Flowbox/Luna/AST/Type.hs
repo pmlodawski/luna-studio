@@ -18,7 +18,7 @@ data Type = Unknown
 	      | Tuple  { items    :: [Type]                       }
 	      | Class  { name     :: String , params  :: [String] }
           | Module { name     :: String                       }
-	      | Lambda { inputs   :: Type   , outputs :: Type     }
+	      | Lambda { inputs   :: [Type] , outputs :: [Type]   }
 	      | Cons   { segments :: [String]                     }
 	      | App    { src      :: Type   , args      :: [Type] }
 	      | List

@@ -33,13 +33,20 @@ import qualified Flowbox.Luna.Data.Source          as Source
 -- Entities
 -----------------------------------------------------------
 
-pTuple p     = try(L.parensed (return () *> optional L.separator) *> pure [])
-           <|> try(L.parensed (liftList p <* L.separator))
-           <|>     L.parensed (sepBy2' p L.separator)
+pTuple     p = L.braced (sepBy' p L.separator)
+
+pArgList   p = try(L.parensed (sepBy2 p L.separator)) <|> many p
                
+pArgList'  p = try(L.parensed (sepBy2 p L.separator)) <|> ((:[]) <$> p)
+
+--pTuple p     = try(L.parensed (return () *> optional L.separator) *> pure [])
+--           <|> try(L.parensed (liftList p <* L.separator))
+--           <|>     L.parensed (sepBy2' p L.separator)
+
+pList p      = L.bracketed (sepBy' p L.separator)
 
 pTupleBody p = sepBy' p L.separator
-pTuplePure p = L.parensed $ pTupleBody p
+pTuplePure p = L.braced $ pTupleBody p
 
 pCons        = sepBy1 L.pIdentType L.pAccessor
 
@@ -63,7 +70,7 @@ pImport i         = Import.mk     <$  L.pImport <*> L.pPath <*> (try (Just <$ L.
 
 pFunc i           = Expr.Function <$  L.pDef 
                                   <*> L.pIdentVar 
-                                  <*> (Pat.items <$> pTupleP i)
+                                  <*> pArgList (pPattern i)
                                   <*> (pExprBlock i <|> return [])
                                   <?> "function definition"
 
@@ -131,6 +138,7 @@ pEntE    i   = choice [ Expr.Var   <$> L.pIdentVar
                       , Expr.Cons  <$> pCons
                       , Expr.Lit   <$> pLit
                       , Expr.Tuple <$> pTuple (pExpr i)
+                      , Expr.List  <$> pList (pExpr i)
                       ]
 
 pPatExpr  i  = Expr.Pattern <$> pPattern i
@@ -141,7 +149,8 @@ pExprBlock      i = pBlockBegin pExpr i --L.pBlockBegin *> ( pBlock pExpr (i+1) 
 -----------------------------------------------------------
 -- Types
 -----------------------------------------------------------
-pType       i   = choice [ try(pConsAppT i)
+pType       i   = choice [ try $ pLambdaT i
+                         , try $ pConsAppT i
                          , pTermT i 
                          ]
               <?> "type"
@@ -151,16 +160,18 @@ pTermT      i   = choice[ try $ L.parensed (pType i)
                         ]
               <?> "type term"
 
-pVarT       i   = Type.Var   <$> L.pIdentVar
-pConsT      i   = Type.Cons  <$> pCons
-pTupleT     i   = Type.Tuple <$> pTuple (pType i)
-pConsAppT   i   = Type.App   <$> pConsT i <*> many1 (pTermT i) 
+pVarT       i   = Type.Var    <$> L.pIdentVar
+pConsT      i   = Type.Cons   <$> pCons
+pTupleT     i   = Type.Tuple  <$> pTuple (pType i)
+pConsAppT   i   = Type.App    <$> pConsT i <*> many1 (pTermT i) 
+pLambdaT    i   = Type.Lambda <$> pArgList' (pTermT i) <* L.pArrow <*> pArgList' (pTermT i)
 --pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
 
 pEntT       i   = choice [ pVarT   i
                          , pTupleT i
                          , pConsT  i
                          ]
+
 
 -----------------------------------------------------------
 -- Patterns

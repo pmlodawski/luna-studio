@@ -39,7 +39,8 @@ data Expr  = NOP
            | Field      { name      :: String   , cls       :: Type                                                                                     }
            | Lambda     { signature :: [Pat]    , body      :: [Expr]                                                                                   }
            | Cons       { segments  :: [String]                                                                                                         }
-           | Function   { name      :: String   , signature :: [Pat]   , body    :: [Expr]                                                               }
+           | Function   { name      :: String   , signature :: [Pat]   , body    :: [Expr]                                                              }
+           | List       { items     :: [Expr]                                                                                                           }
            | Pattern    { pat       :: Pat                                                                                                              }
            deriving (Show, Eq, Generic)
 

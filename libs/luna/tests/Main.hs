@@ -47,7 +47,8 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "def f(a,b::Int)"
+        $ unlines [ "def f (a,b):"
+                  , "    a+b"
                   ]
 
 
@@ -81,6 +82,17 @@ main_inner = Luna.run $ do
 
 
 
+--a :: (Int) -> (Int, Int)
+
+
+--g = @f 5
+
+--def f (a,b): a+b
+
+--def f (a): a+b
+
+--(x): x+1
+
 
 
 --a = 1
@@ -105,3 +117,201 @@ main_inner = Luna.run $ do
 
 
 --def f (Vector x y z :: Vector Int)
+
+
+--def add a b : a+b
+
+--def add (a,b) : a+b
+
+--[1..100].each \x:
+    
+
+--a :: Int, Int -> Int
+--a :: Int -> String, Int
+--a :: Int -> String, (Int, Int -> Int)
+
+--def f a ::(Int -> String, (Int, Int -> Int)) b :: (Int) :
+
+--def f (a :: Int -> String, (Int, Int -> Int), b :: Int) :
+
+--def f (a::Int->(String, Int), b::Int->Int):
+--    ...
+
+
+----a :: (Int,Int) -> Int
+
+----a :: (Int,Int) -> ((Int,Int))
+
+----a :: (Int,Int -> Int,Int)
+----a :: ((Int,Int) -> Int)
+
+----a :: Int -> Int -> Int
+
+
+--def subdivide (self, divs=2, preserveNormals=True):
+--    ...
+
+--g.subdivide divs=4 
+
+--def subdivide (self, divs::Int, preserveNormals::Bool)
+
+--def subdivide (self, divf::((Geometry, Int)) -> Geometry, )
+
+--def subdivide (self, div::{Geometry, Int} -> Geometry)
+
+
+--a = [10..20]
+--b = [20..10]
+--(a.zip b).each {x,y}:
+
+
+
+--def f
+
+
+--{x,y,z} = {1,2,3}
+
+--f a b c=3
+
+--f(a,b,c=3)
+
+
+--def f x y z :
+--    x + y + z
+
+
+--[1..100].each {x, y}:
+--    print x
+
+--def add (Vector a, b, c):
+--    a+b
+
+--[1..100].each x:
+--    print x
+
+--f = \x y:4 :
+
+
+
+
+
+--a :: (Int, Int) -> Int
+
+--def a (x,y): 
+--    x+y
+
+
+--def f a::Int b::Int :     # FAIL
+
+--def f a::Int, b::Int :    # OK
+
+--def f (a::Int) (b::Int) : # OK
+
+--def f (a::Int, b::Int) :  # OK
+
+
+
+
+--a :: Int -> Int -> {Int, Int}
+
+--a :: (Int, Int) -> {Int, Int}
+
+
+--def f (a::Int->Int, b):
+
+
+--def f (a,b):
+
+
+--def f {a,b}:
+
+--g = {a,b}: a+b
+
+--g {1,2}
+
+
+--(x::Int, y::Int):
+
+
+-- \x y -> x+y
+
+-- \(x::Int) (y::Int) -> x+y
+
+--{x::Int, y::Int}: x+y
+
+--{1,2,3}
+
+--{1:1, 2:2, 3:3}
+
+
+--f 1 2
+
+--f (1,2) 3
+
+--f ((1,2), 3)
+
+----------- 1 ---------
+-- # types:
+--a :: Int -> (Int, Int)
+
+--b :: (Int, Int) -> (String, String)
+
+-- # definitions od 2 arguments functions:
+
+--def f x y: x+y
+
+--def f (x::Int) y:
+--    x + y
+
+--def f (x::Int) (y::String):
+--    x + y
+
+-- # definition of 1 argument (a tuple) function:
+
+--def g (x,y): x+y
+
+--def g (x::Int, y::String):
+--    x + y
+
+-- # usage:
+--f 1 2
+--g (1,2)
+
+----------- 2 ---------
+-- # types:
+--a :: Int -> (Int, Int)
+
+--b :: (Int, Int) -> (String, String)
+
+-- # definitions od 2 arguments functions:
+
+--def f (x, y): x+y
+
+--def f (x::Int, y):
+--    x + y
+
+--def f (x::Int, y::String):
+--    x + y
+
+-- # definition of 1 argument (a tuple) function:
+
+--def g ((x,y)): x+y
+
+--def g (x::Int, y::String):
+--    x + y
+
+-- # usage:
+--f 1 2
+--g (1,2)
+
+
+
+
+
+
+
+
+
+
+
+

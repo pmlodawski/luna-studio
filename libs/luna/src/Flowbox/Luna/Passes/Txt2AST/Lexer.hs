@@ -34,12 +34,17 @@ pBlockBegin  = symbol  ':'
 separator    = symbol  ','
 parenL       = symbol  '('
 parenR       = symbol  ')'
+bracketL     = symbol  '['
+bracketR     = symbol  ']'
+braceL       = symbol  '{'
+braceR       = symbol  '}'
 pAccessor    = symbol  '.'
+pArrow       = symbols "->"
 pTypeDecl    = symbols "::"
 
 opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart
-reservedOpNames = ["=", "::", ":"]
+reservedOpNames = ["=", "::", ":", ".", "->", "<-"]
 
 
 pPath        = sepBy1 pIdent pAccessor
@@ -65,7 +70,9 @@ pAs         = reserved "as"
     -- Bracketing
 -----------------------------------------------------------
 
-parensed p        = between (parenL) (parenR) p
+parensed  p     = between (parenL)   (parenR)   p
+bracketed p     = between (bracketL) (bracketR) p
+braced    p     = between (braceL)   (braceR)   p
 
 
 -----------------------------------------------------------
