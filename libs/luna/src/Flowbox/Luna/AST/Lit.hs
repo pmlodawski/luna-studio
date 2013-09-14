@@ -11,11 +11,12 @@ module Flowbox.Luna.AST.Lit where
 import qualified Flowbox.Prelude as Prelude
 import           Flowbox.Prelude   (Show, Eq)
 import           Flowbox.Generics.Deriving.QShow
+import           Flowbox.Luna.AST.Utils      (ID)
 import           GHC.Generics
 
-data Lit = Char    Prelude.Char
-         | String  Prelude.String
-         | Integer Prelude.String
+data Lit = Char    { id :: ID, char :: Prelude.Char   }
+         | String  { id :: ID, str  :: Prelude.String }
+         | Integer { id :: ID, str  :: Prelude.String }
          deriving (Show, Eq, Generic)
 
 instance QShow Lit

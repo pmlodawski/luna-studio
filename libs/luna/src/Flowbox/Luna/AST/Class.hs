@@ -14,8 +14,8 @@ import           Flowbox.Luna.AST.Expr   (Expr)
 import qualified Flowbox.Luna.AST.Type as Type
 
 
-mk :: String -> [String] -> Expr
-mk name' params' = Expr.Class (Type.Class name' params') [] [] []
+--mk :: Int -> String -> [String] -> Expr
+mk id cls = Expr.Class id cls [] [] []
 
 
 --parseBody :: Expr -> Expr -> Expr

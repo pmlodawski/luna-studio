@@ -4,69 +4,61 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleInstances, DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances, DeriveGeneric, NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.AST.Expr where
 
-import           Flowbox.Prelude             
+import           Flowbox.Prelude           hiding(id)      
 import           Flowbox.Luna.AST.Type       (Type)
 import qualified Flowbox.Luna.AST.Lit      as Lit
 import qualified Flowbox.Luna.AST.Pat      as Pat
+import           Flowbox.Luna.AST.Utils      (ID)
 import           Data.Typeable
 import           Flowbox.Generics.Deriving.QShow
 import           GHC.Generics
+import           Control.Applicative  
+
+import           Text.Parsec                       hiding (parse, many, optional, (<|>))
 
 type Lit = Lit.Lit
 type Pat = Pat.Pat
 
-data Expr  = NOP
-           | Import     { segments  :: [String] , name      :: String                                                                                   }
-           | Var        { name      :: String                                                                                                           }
-           | TypeVar    { name      :: String                                                                                                           }
-           | Lit        { value     :: Lit                                                                                                              }
-           | Assignment { src       :: Expr     , dst       :: Expr                                                                                     }
-           | Tuple      { items     :: [Expr]                                                                                                           }
-           | Interface  { name      :: String   , body      :: [Expr]                                                                                   }
-           | Typed      { cls       :: Type     , expr      :: Expr                                                                                     }
-           | Path       { segments  :: [String]                                                                                                         }
-           | App        { src       :: Expr     , args      :: [Expr]                                                                                   }
-           | AppCons_   { args      :: [Expr]                                                                                                           }
-           | Accessor   { src       :: Expr     , dst       :: Expr                                                                                     }
-           | Infix      { name      :: String   , src       :: Expr   , dst     :: Expr                                                                 }                                                               
-           | Comment    { txt       :: String                                                                                                           }
-           | Class      { cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]                                         }
-           | Module     { cls       :: Type     , imports   :: [Expr] , classes   :: [Expr] , fields  :: [Expr] , methods :: [Expr] , modules :: [Expr] }
-           | Field      { name      :: String   , cls       :: Type                                                                                     }
-           | Lambda     { signature :: [Pat]    , body      :: [Expr]                                                                                   }
-           | Cons       { segments  :: [String]                                                                                                         }
-           | Function   { name      :: String   , signature :: [Pat]   , body    :: [Expr]                                                              }
-           | List       { items     :: [Expr]                                                                                                           }
-           | Pattern    { pat       :: Pat                                                                                                              }
+data Expr  = NOP        { id :: ID                                                                                                                                }
+           | Import     { id :: ID, segments  :: [String] , name      :: String                                                                                   }
+           | Var        { id :: ID, name      :: String                                                                                                           }
+           | Lit        { id :: ID, value     :: Lit                                                                                                              }
+           | Assignment { id :: ID, src       :: Expr     , dst       :: Expr                                                                                     }
+           | Tuple      { id :: ID, items     :: [Expr]                                                                                                           }
+           | Typed      { id :: ID, cls       :: Type     , expr      :: Expr                                                                                     }
+           | App        { id :: ID, src       :: Expr     , args      :: [Expr]                                                                                   }
+           | AppCons_   { id :: ID, args      :: [Expr]                                                                                                           }
+           | Accessor   { id :: ID, src       :: Expr     , dst       :: Expr                                                                                     }
+           | Infix      { id :: ID, name      :: String   , src       :: Expr   , dst     :: Expr                                                                 }                                                               
+           | Class      { id :: ID, cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]                                         }
+           | Module     { id :: ID, cls       :: Type     , imports   :: [Expr] , classes   :: [Expr] , fields  :: [Expr] , methods :: [Expr] , modules :: [Expr] }
+           | Field      { id :: ID, name      :: String   , cls       :: Type                                                                                     }
+           | Lambda     { id :: ID, signature :: [Pat]    , body      :: [Expr]                                                                                   }
+           | Cons       { id :: ID, segments  :: [String]                                                                                                         }
+           | Function   { id :: ID, name      :: String   , signature :: [Pat]   , body    :: [Expr]                                                              }
+           | List       { id :: ID, items     :: [Expr]                                                                                                           }
+           | Pattern    { id :: ID, pat       :: Pat                                                                                                              }
            deriving (Show, Eq, Generic)
 
 
 instance QShow Expr
 
 
-callConstructor :: Expr -> Expr -> Expr
-callConstructor src' arg' = case src' of
-    call @ AppCons_{} -> call { args = args call ++ [arg'] }
-    _                 -> AppCons_ $ src':[arg']
+callConstructor :: ID -> Expr -> Expr -> Expr
+callConstructor id' src' arg' = case src' of
+    (AppCons_ id'' args') -> AppCons_ id'' (args' ++ [arg'])
+    _                     -> AppCons_ id' (src':[arg'])
 
-
---consConstructor :: Expr -> Expr -> Expr
---consConstructor src' dst' = case dst' of
---    AppCons_ args' -> Cons src' args'
---    _                     -> Cons src' [dst']
-
---mkClass :: String -> Expr
---mkClass name' = Class name' [] []
 
 
 aftermatch :: Expr -> Expr
 aftermatch x = case x of
-    AppCons_ (a:as) -> App a as
-    _               -> x
+    AppCons_ id' (a:as) -> App id' a as
+    _                   -> x
 
 
 addMethod :: Expr -> Expr -> Expr

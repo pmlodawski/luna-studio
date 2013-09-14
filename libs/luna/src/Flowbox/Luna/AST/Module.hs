@@ -13,5 +13,5 @@ import           Flowbox.Luna.AST.Expr   (Expr)
 import qualified Flowbox.Luna.AST.Type as Type
 
 
-mk :: String -> Expr
-mk name = Expr.Module (Type.Module name) [] [] [] [] []
+--mk :: Int -> String -> Expr
+mk id mod = Expr.Module id mod [] [] [] [] []

@@ -8,21 +8,22 @@
 
 module Flowbox.Luna.AST.Type where
 
-import           Flowbox.Prelude  
+import           Flowbox.Prelude  hiding(id)
 import           Flowbox.Generics.Deriving.QShow
+import           Flowbox.Luna.AST.Utils      (ID)
 import           GHC.Generics
 
 data Type = Unknown
-          | Var    { name     :: String                       }
-	      | Sig    { name     :: String                       }
-	      | Tuple  { items    :: [Type]                       }
-	      | Class  { name     :: String , params  :: [String] }
-          | Module { name     :: String                       }
-	      | Lambda { inputs   :: [Type] , outputs :: [Type]   }
-	      | Cons   { segments :: [String]                     }
-	      | App    { src      :: Type   , args      :: [Type] }
-	      | List
-	      | Map
+          | Var    { id :: ID, name     :: String                       }
+	      | Sig    { id :: ID, name     :: String                       }
+	      | Tuple  { id :: ID, items    :: [Type]                       }
+	      | Class  { id :: ID, name     :: String , params  :: [String] }
+          | Module { id :: ID, name     :: String                       }
+	      | Lambda { id :: ID, inputs   :: [Type] , outputs :: [Type]   }
+	      | Cons   { id :: ID, segments :: [String]                     }
+	      | App    { id :: ID, src      :: Type   , args      :: [Type] }
+	      -- | List
+	      -- | Map
           deriving (Show, Eq, Generic)
 
 

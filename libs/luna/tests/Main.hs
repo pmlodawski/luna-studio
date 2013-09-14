@@ -66,13 +66,13 @@ main_inner = Luna.run $ do
     --putStrLn $ PP.ppShow ast
     putStrLn $ PP.ppqShow ast
 
-    putStrLn "\n-------- SSA --------"
-    ssa <- SSA.run     ast
-    putStrLn $ PP.ppShow ssa
+    --putStrLn "\n-------- SSA --------"
+    --ssa <- SSA.run     ast
+    --putStrLn $ PP.ppShow ssa
 
-    putStrLn "\n-------- HAST --------" 
-    hast <- HSGen.run  ssa
-    putStrLn $ PP.ppShow hast
+    --putStrLn "\n-------- HAST --------" 
+    --hast <- HSGen.run  ssa
+    --putStrLn $ PP.ppShow hast
 
     --putStrLn "\n-------- HSC --------" 
     --hsc <- HSC.run  hast

@@ -87,6 +87,7 @@ Library
         Flowbox.Luna.AST.Field,
         Flowbox.Luna.AST.Class,
         Flowbox.Luna.AST.Type,
+        Flowbox.Luna.AST.Utils,
         Flowbox.Luna.AST.Module,
         Flowbox.Luna.AST.Expr,
         Flowbox.Luna.AST.Function,

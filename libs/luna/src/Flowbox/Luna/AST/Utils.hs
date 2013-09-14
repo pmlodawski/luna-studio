@@ -5,13 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.AST.Field where
+module Flowbox.Luna.AST.Utils where
 
-import           Flowbox.Prelude         
-import qualified Flowbox.Luna.AST.Expr as Expr
-import           Flowbox.Luna.AST.Expr   (Expr)
-import qualified Flowbox.Luna.AST.Type as Type
+import           Flowbox.Prelude 
 
-
---mk :: Int -> String -> String -> Expr
-mk id name' sig = Expr.Field id name' sig
+type ID = Int
