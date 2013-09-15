@@ -48,7 +48,7 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source "Workspace"
         $ unlines [ "def f a b:"
-                  , "    a = 5"
+                  , "    a = a+1"
                   ]
 
 
@@ -74,9 +74,9 @@ main_inner = Luna.run $ do
     hast <- HSGen.run  ssa
     putStrLn $ PP.ppShow hast
 
-    --putStrLn "\n-------- HSC --------" 
-    --hsc <- HSC.run  hast
-    --putStrLn $ hsc
+    putStrLn "\n-------- HSC --------" 
+    hsc <- HSC.run  hast
+    putStrLn $ hsc
 
     return ()
 

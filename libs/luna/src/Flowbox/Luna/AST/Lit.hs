@@ -20,3 +20,4 @@ data Lit = Char    { id :: ID, char :: Prelude.Char   }
          deriving (Show, Eq, Generic)
 
 instance QShow Lit
+

@@ -46,36 +46,29 @@ runNested f = do
 
 ssaAST :: SSAMonad m => Expr.Expr -> Pass.Result m Expr.Expr
 ssaAST ast = case ast of
-    Expr.Module     id cls imports classes fields 
-                    methods modules        -> Expr.Module id cls imports <$> ssaExprMap classes <*> ssaExprMap fields <*> ssaExprMap methods <*> ssaExprMap modules
     Expr.Function   id name signature body -> runNested $ do
                                                   SSAState.registerVar (name, name)
                                                   mapM ssaPat signature
                                                   Expr.Function id name signature <$> ssaExprMap body
-    Expr.Assignment id src dst             -> flip (Expr.Assignment id) <$> ssaAST dst <*> ssaAST src
-    Expr.Pattern    id pat                 -> Expr.Pattern id           <$> ssaPat pat
+    Expr.Assignment id src dst             -> (flip (Expr.Assignment id) <$> ssaAST dst <*> ssaAST src)
     Expr.Var        id name                -> do
                                               v <- SSAState.lookupVar name
                                               case v of
                                                   Nothing    -> (logger error $ "Not in scope: '" ++ name ++ "'") *> Pass.fail "Not in scope"
                                                   Just lname -> return $ Expr.Var id lname
-    Expr.Infix      id name src dst        -> Expr.Infix id name <$> ssaAST src <*> ssaAST dst
-    Expr.App        id src args            -> Expr.App id <$> ssaAST src <*> ssaExprMap args
     Expr.Class      id cls classes fields 
                     methods                -> do ssaType cls
                                                  Expr.Class id cls <$> ssaExprMap classes 
                                                                    <*> ssaExprMap fields 
                                                                    <*> ssaExprMap methods
-    Expr.Field      {}                     -> return ast
-    Expr.Lit        {}                     -> return ast
-    _                                      -> logger error "SSA Pass error: Unknown expression." *> Pass.fail "Unknown expression"
+    _                                      -> Expr.traverseM ssaAST ast
     where
         ssaExprMap = mapM ssaAST
 
 ssaPat :: SSAMonad m => Pat -> Pass.Result m Pat
 ssaPat pat = case pat of
-	Pat.Var     id name                 -> Pat.Var id <$> SSAState.handleVar name
-	_                                   -> logger error "SSA Pass error: Unknown pattern." *> Pass.fail "Unknown pattern"
+    Pat.Var     id name                 -> Pat.Var id <$> SSAState.handleVar name
+    _                                   -> logger error "SSA Pass error: Unknown pattern." *> Pass.fail "Unknown pattern"
 
 ssaType :: SSAMonad m => Type -> Pass.Result m ()
 ssaType ast = case ast of
