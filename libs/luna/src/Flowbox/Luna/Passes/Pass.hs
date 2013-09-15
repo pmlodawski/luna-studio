@@ -20,29 +20,37 @@ import qualified Flowbox.System.Log.Logger  as Logger
 import           Prelude                    hiding (fail)
 import qualified Prelude                    as Prelude
 
+type PassError              = String
 
 type PassMonad    s m       = (Functor m, MonadState s m, LogWriter m)
-type Transformer  s a m b   = EitherT a (RWS [Int] LogList s) b -> EitherT a m b
-type TransformerT s a m b   = EitherT a (RWST [Int] LogList s m) b -> m (Either a b)
-type Result       m output  = EitherT String m output
+type Transformer  s b       = EitherT PassError (RWS [Int] LogList s) b 
+type Result       m output  = EitherT PassError m output
+type TransformerT s a m b   = EitherT a (RWST [Int] LogList s m) b -> m (Either a b)  -- do not use
 
 data NoState = NoState deriving (Show)
 
 
-run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
-run s f = runRWS (runEitherT f) [] s
-
+--run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
+--run :: (PassMonad s m, MonadWriter w0 m)=> s -> EitherT e0 (RWS [a1] w0 s) a0 -> EitherT e0 m (a0, s)
+--run :: PassMonad outstate m => state -> Transformer state a m b
+run ::  (MonadWriter LogList m) => state -> Transformer state b -> Result m (b, state)
+run s f = do
+    let (result, state, logs) = runRWS (runEitherT f) [] s
+    Logger.append logs
+    let out = case result of
+                  Left  e  -> Left e
+                  Right r  -> Right (r, state)
+    hoistEither out 
 
 --run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
 runT s f = runRWST (runEitherT f) [] s
 
 
-runM :: PassMonad s m => state -> Transformer state a m b 
-runM s f = do
-    let (nast, _, logs) = run s f
-    Logger.append logs
-    hoistEither nast
+run_ :: PassMonad outstate m => state -> Transformer state b -> Result m b
+run_ s f = do
+    (result, _) <- run s f
+    return result
 
 
-fail :: Monad m => String -> EitherT String m a
+fail :: Monad m => String -> EitherT PassError m a
 fail = left

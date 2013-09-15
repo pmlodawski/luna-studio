@@ -29,7 +29,7 @@ type ParserMonad m = PassMonad Pass.NoState m
 
 
 --run :: PassMonad s m => Source -> Pass.Result m Expr
-run = (Pass.runM Pass.NoState) . parse
+run = (Pass.run_ Pass.NoState) . parse
 
 
 --parse :: ParserMonad m => Source -> Pass.Result m Expr

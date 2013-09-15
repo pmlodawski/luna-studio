@@ -21,7 +21,9 @@ logger = getLogger "Flowbox.Luna.Passes.SSA.State"
 
 
 data SSAState = SSAState { varcount :: Int
-                         , varmap   :: Map String String
+                         , namemap  :: Map String Int
+                         , vars     :: [Int]
+                         , varmap   :: Map Int Int
                          } deriving (Show)
 
 
@@ -29,41 +31,47 @@ type SSAStateM m = MonadState SSAState m
 
 
 empty :: SSAState
-empty = SSAState 0 Map.empty
+empty = SSAState 0 Map.empty [] Map.empty
 
 
-genVarName :: SSAStateM m => m String
-genVarName = do
+--genVarName :: SSAStateM m => m String
+--genVarName = do
+--    s <- get
+--    let vname = "v'" ++ show (varcount s)
+--    put $ s{ varcount = 1 + varcount s }
+--    return vname
+
+bind kid vid = do
     s <- get
-    let vname = "v'" ++ show (varcount s)
-    put $ s{ varcount = 1 + varcount s }
-    return vname
+    put s { varmap = Map.insert kid vid $ varmap s }
 
-
-registerVar :: SSAStateM m => (String, String) -> m ()
-registerVar (alias, vname) = do
+registerVar vid = do
     s <- get
-    put $ s { varmap = Map.insert alias vname $ varmap s }
-    return ()
+    put s { vars = vid : vars s }
 
-lookupVar :: SSAStateM m => String -> m (Maybe String)
+registerVarName :: SSAStateM m => (String, Int) -> m ()
+registerVarName (alias, vname) = do
+    s <- get
+    put $ s { namemap = Map.insert alias vname $ namemap s }
+
+lookupVar :: SSAStateM m => String -> m (Maybe Int)
 lookupVar vname = do
     s <- get
-    return $ Map.lookup vname (varmap s)
+    return $ Map.lookup vname (namemap s)
 
 
-uniqueVar :: SSAStateM m => String -> m String
-uniqueVar vname = do
-    v <- lookupVar vname
-    case v of
-        Nothing      -> return vname
-        Just oldname -> genVarName
+--uniqueVar :: SSAStateM m => String -> m String
+--uniqueVar vname = do
+--    v <- lookupVar vname
+--    case v of
+--        Nothing      -> return vname
+--        Just oldname -> genVarName
 
-handleVar :: SSAStateM m => String -> m String
-handleVar vname = do
-    newname <- uniqueVar vname
-    registerVar (vname, newname)
-    return newname
+--handleVar :: SSAStateM m => String -> m String
+--handleVar vname = do
+--    newname <- uniqueVar vname
+--    registerVarName (vname, newname)
+--    return newname
 
-registerVars :: SSAStateM m => [(String, String)] -> m ()
-registerVars vars = mapM_ registerVar vars
+--registerVars :: SSAStateM m => [(String, String)] -> m ()
+--registerVars vars = mapM_ registerVarName vars
