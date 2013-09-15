@@ -119,7 +119,6 @@ pDeclaration i    = choice [ pImport i
 -- Expressions
 -----------------------------------------------------------
 
-
 pExpr     i   = Expr.aftermatch <$> PExpr.buildExpressionParser (optableE i) (pTermE i)
            <?> "expression"
 
@@ -134,10 +133,11 @@ optableE  i  = [ [ binaryM  "."  (tok Expr.Accessor)             PExpr.AssocLeft
                , [ binaryM   ""  (tok Expr.callConstructor)      PExpr.AssocLeft ]
                , [ binaryM  "*"  (binaryMatchE <$> (tok Expr.Infix <*> pure "*")) PExpr.AssocLeft ]
                , [ binaryM  "+"  (binaryMatchE <$> (tok Expr.Infix <*> pure "+")) PExpr.AssocLeft ]
-               , [ prefixfM      (try(binaryMatchE <$> tok Expr.Assignment <*> (pPatExpr i) <* (L.reservedOp "=" <?> "pattern match")))]
+               , [ prefixfM      (try(binaryMatchE2 <$> tok Expr.Assignment <*> (pPattern i) <* (L.reservedOp "=" <?> "pattern match")))]
                ]
 
-binaryMatchE f p q = f (Expr.aftermatch p) (Expr.aftermatch q)
+binaryMatchE  f p q = f (Expr.aftermatch p) (Expr.aftermatch q)
+binaryMatchE2 f p q = f p (Expr.aftermatch q)
 
 pEntE    i   = choice [ tok Expr.Var   <*> L.pIdentVar
                       , tok Expr.Cons  <*> pCons
@@ -146,9 +146,8 @@ pEntE    i   = choice [ tok Expr.Var   <*> L.pIdentVar
                       , tok Expr.List  <*> pList (pExpr i)
                       ]
 
-pPatExpr  i  = tok Expr.Pattern <*> pPattern i
-
 pExprBlock      i = pBlockBegin pExpr i --L.pBlockBegin *> ( pBlock pExpr (i+1) <|> (liftList $ pExpr i) )
+
 
 
 -----------------------------------------------------------

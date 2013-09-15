@@ -50,7 +50,7 @@ ssaAST ast = case ast of
                                                   SSAState.registerVar (name, name)
                                                   mapM ssaPat signature
                                                   Expr.Function id name signature <$> ssaExprMap body
-    Expr.Assignment id src dst             -> (flip (Expr.Assignment id) <$> ssaAST dst <*> ssaAST src)
+    Expr.Assignment id pat dst             -> (flip (Expr.Assignment id) <$> ssaAST dst <*> ssaPat pat)
     Expr.Var        id name                -> do
                                               v <- SSAState.lookupVar name
                                               case v of
@@ -64,6 +64,27 @@ ssaAST ast = case ast of
     _                                      -> Expr.traverseM ssaAST ast
     where
         ssaExprMap = mapM ssaAST
+
+--ssaAST :: SSAMonad m => Expr.Expr -> Pass.Result m Expr.Expr
+--ssaAST ast = case ast of
+--    Expr.Function   id name signature body -> runNested $ do
+--                                                  SSAState.registerVar (name, name)
+--                                                  mapM ssaPat signature
+--                                                  Expr.Function id name signature <$> ssaExprMap body
+--    Expr.Assignment id src dst             -> (flip (Expr.Assignment id) <$> ssaAST dst <*> ssaAST src)
+--    Expr.Var        id name                -> do
+--                                              v <- SSAState.lookupVar name
+--                                              case v of
+--                                                  Nothing    -> (logger error $ "Not in scope: '" ++ name ++ "'") *> Pass.fail "Not in scope"
+--                                                  Just lname -> return $ Expr.Var id lname
+--    Expr.Class      id cls classes fields 
+--                    methods                -> do ssaType cls
+--                                                 Expr.Class id cls <$> ssaExprMap classes 
+--                                                                   <*> ssaExprMap fields 
+--                                                                   <*> ssaExprMap methods
+--    _                                      -> Expr.traverseM ssaAST ast
+--    where
+--        ssaExprMap = mapM ssaAST
 
 ssaPat :: SSAMonad m => Pat -> Pass.Result m Pat
 ssaPat pat = case pat of

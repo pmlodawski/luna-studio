@@ -27,7 +27,7 @@ data Expr  = NOP        { id :: ID                                              
            | Import     { id :: ID, segments  :: [String] , name      :: String                                                                                   }
            | Var        { id :: ID, name      :: String                                                                                                           }
            | Lit        { id :: ID, value     :: Lit                                                                                                              }
-           | Assignment { id :: ID, src       :: Expr     , dst       :: Expr                                                                                     }
+           | Assignment { id :: ID, pat       :: Pat      , dst       :: Expr                                                                                     }
            | Tuple      { id :: ID, items     :: [Expr]                                                                                                           }
            | Typed      { id :: ID, cls       :: Type     , expr      :: Expr                                                                                     }
            | App        { id :: ID, src       :: Expr     , args      :: [Expr]                                                                                   }
@@ -41,14 +41,13 @@ data Expr  = NOP        { id :: ID                                              
            | Cons       { id :: ID, segments  :: [String]                                                                                                         }
            | Function   { id :: ID, name      :: String   , signature :: [Pat]   , body    :: [Expr]                                                              }
            | List       { id :: ID, items     :: [Expr]                                                                                                           }
-           | Pattern    { id :: ID, pat       :: Pat                                                                                                              }
            deriving (Show, Eq, Generic)
 
 
 instance QShow Expr
 
 traverse f expr = let t = traverse f in case expr of
-    Assignment id src dst                    -> Assignment id (t src) (t dst)
+    Assignment id pat dst                    -> Assignment id pat (t dst)
     Tuple      id items                      -> Tuple      id (map t items)
     Typed      id cls expr                   -> Typed      id cls (t expr)
     App        id src args                   -> App        id (t src) (map t args)
@@ -64,7 +63,7 @@ traverse f expr = let t = traverse f in case expr of
 
 traverseM :: (Functor m, Applicative m, Monad m) => (Expr -> m Expr) -> Expr -> m Expr
 traverseM f expr = let t = f in case expr of
-    Assignment id src dst                    -> Assignment id <$> t src <*> t dst
+    Assignment id pat dst                    -> Assignment id pat <$> t dst
     Tuple      id items                      -> Tuple      id <$> mapM t items
     Typed      id cls expr                   -> Typed      id cls <$> t expr
     App        id src args                   -> App        id <$> t src <*> mapM t args
@@ -80,7 +79,7 @@ traverseM f expr = let t = f in case expr of
 
 transform :: (Expr -> Expr) -> Expr -> Expr
 transform f expr = let t = transform f in case expr of
-    (Assignment id src dst)                    -> f (Assignment id (t src) (t dst))
+    (Assignment id pat dst)                    -> f (Assignment id pat (t dst))
     (Tuple      id items)                      -> f (Tuple      id (map t items))
     (Typed      id cls expr)                   -> f (Typed      id cls (t expr))
     (App        id src args)                   -> f (App        id (t src) (map t args))
@@ -98,7 +97,7 @@ transformM :: (Functor m, Applicative m, Monad m) => (Expr -> m Expr) -> Expr ->
 transformM f expr = let t = transformM f in case expr of
     (Module     id cls imports classes                   
                 fields methods modules)        -> f =<< (Module     id cls <$> mapM t imports <*> mapM t classes <*> mapM t fields <*> mapM t methods <*> mapM t modules)
-    (Assignment id src dst)                    -> f =<< (Assignment id <$> t src <*> t dst)
+    (Assignment id pat dst)                    -> f =<< (Assignment id pat <$> t dst)
     (Tuple      id items)                      -> f =<< (Tuple      id <$> mapM t items)
     (Typed      id cls expr)                   -> f =<< (Typed      id cls <$> t expr)
     (App        id src args)                   -> f =<< (App        id <$> t src <*> mapM t args)
@@ -118,7 +117,7 @@ transformM2 f expr = do
     case e of
       (Module     id cls imports classes                   
                   fields methods modules)        -> (Module     id cls <$> mapM t imports <*> mapM t classes <*> mapM t fields <*> mapM t methods <*> mapM t modules)
-      (Assignment id src dst)                    -> (Assignment id <$> t src <*> t dst)
+      (Assignment id pat dst)                    -> (Assignment id pat <$> t dst)
       (Tuple      id items)                      -> (Tuple      id <$> mapM t items)
       (Typed      id cls expr)                   -> (Typed      id cls <$> t expr)
       (App        id src args)                   -> (App        id <$> t src <*> mapM t args)
