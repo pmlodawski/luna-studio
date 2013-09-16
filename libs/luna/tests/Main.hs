@@ -47,10 +47,7 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "def f a b:"
-                  , "    c = 1"
-                  , "    a = b + 1"
-                  , "    _ = a + b"
+        $ unlines [ "def f a b"
                   ]
 
 
@@ -63,7 +60,7 @@ main = do
 
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
-    putStrLn "\n-------- AST --------"
+    putStrLn "\n-------- Txt2AST --------"
     ast <- Txt2AST.run example
     --putStrLn $ PP.ppShow ast
     putStrLn $ PP.ppqShow ast
@@ -72,13 +69,13 @@ main_inner = Luna.run $ do
     ssa <- VA.run     ast
     putStrLn $ PP.ppShow ssa
 
-    --putStrLn "\n-------- HAST --------" 
-    --hast <- HSGen.run  ssa
-    --putStrLn $ PP.ppShow hast
+    putStrLn "\n-------- HSGen --------" 
+    hast <- HSGen.run  ast
+    putStrLn $ PP.ppShow hast
 
-    --putStrLn "\n-------- HSC --------" 
-    --hsc <- HSC.run  hast
-    --putStrLn $ hsc
+    putStrLn "\n-------- HSC --------" 
+    hsc <- HSC.run  hast
+    putStrLn $ hsc
 
     return ()
 

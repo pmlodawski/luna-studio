@@ -8,89 +8,89 @@
 
 module Flowbox.Luna.Passes.HSGen.HSGen where
 
---import           Flowbox.Prelude                          
---import qualified Flowbox.Luna.AST.Expr                  as LExpr
---import qualified Flowbox.Luna.AST.Type                  as LType
---import qualified Flowbox.Luna.AST.Pat                   as LPat
---import qualified Flowbox.Luna.Passes.HSGen.AST.Expr     as HExpr
---import qualified Flowbox.Luna.Passes.HSGen.AST.Constant as Constant
---import qualified Flowbox.Luna.Passes.HSGen.AST.Module   as Module
---import qualified Flowbox.Luna.Passes.HSGen.AST.DataType as DataType
---import qualified Flowbox.Luna.Passes.HSGen.AST.Cons     as Cons
---import qualified Flowbox.Luna.Passes.HSGen.GenState     as GenState
---import           Flowbox.Luna.Passes.HSGen.GenState       (GenState)
---import qualified Flowbox.Luna.Passes.Pass               as Pass
---import           Flowbox.Luna.Passes.Pass                 (PassMonad)
+import           Flowbox.Prelude                          
+import qualified Flowbox.Luna.AST.Expr                  as LExpr
+import qualified Flowbox.Luna.AST.Type                  as LType
+import qualified Flowbox.Luna.AST.Pat                   as LPat
+import qualified Flowbox.Luna.Passes.HSGen.AST.Expr     as HExpr
+import qualified Flowbox.Luna.Passes.HSGen.AST.Constant as Constant
+import qualified Flowbox.Luna.Passes.HSGen.AST.Module   as Module
+import qualified Flowbox.Luna.Passes.HSGen.AST.DataType as DataType
+import qualified Flowbox.Luna.Passes.HSGen.AST.Cons     as Cons
+import qualified Flowbox.Luna.Passes.HSGen.GenState     as GenState
+import           Flowbox.Luna.Passes.HSGen.GenState       (GenState)
+import qualified Flowbox.Luna.Passes.Pass               as Pass
+import           Flowbox.Luna.Passes.Pass                 (PassMonad)
 
---import           Control.Monad.State                      
---import           Control.Applicative                      
+import           Control.Monad.State                      
+import           Control.Applicative                      
 
---import           Debug.Trace                              
+import           Debug.Trace                              
 
---import           Control.Monad.State                      
---import           Control.Monad.Writer                     
---import           Control.Monad.RWS                        
---import           Control.Monad.Trans.Maybe                
---import           Control.Monad.Trans.Either               
---import           Data.Maybe                               (fromJust)
+import           Control.Monad.State                      
+import           Control.Monad.Writer                     
+import           Control.Monad.RWS                        
+import           Control.Monad.Trans.Maybe                
+import           Control.Monad.Trans.Either               
+import           Data.Maybe                               (fromJust)
 
---import qualified Flowbox.System.Log.Logger              as Logger
---import           Flowbox.System.Log.Logger                
---import qualified Flowbox.System.Log.LogEntry            as LogEntry
+import qualified Flowbox.System.Log.Logger              as Logger
+import           Flowbox.System.Log.Logger                
+import qualified Flowbox.System.Log.LogEntry            as LogEntry
 
---import qualified Prelude                                as Prelude
---import           Prelude                                hiding (error)
+import qualified Prelude                                as Prelude
+import           Prelude                                hiding (error)
 
---logger :: Logger
---logger = getLogger "Flowbox.Luna.Passes.HSGen.HSGen"
+logger :: Logger
+logger = getLogger "Flowbox.Luna.Passes.HSGen.HSGen"
 
---type GenMonad m = PassMonad GenState m
-
-
---run :: PassMonad s m => LExpr.Expr -> Pass.Result m HExpr.Expr
---run = (Pass.runM GenState.empty) . genModule
+type GenMonad m = PassMonad GenState m
 
 
---genModule :: GenMonad m => LExpr.Expr -> Pass.Result m HExpr.Expr
---genModule ast = case ast of
---    LExpr.Module id cls imports classes 
---                 fields methods modules -> do 
---                                           GenState.setModule Module.empty
---                                           mapM (genExpr >=> GenState.addDataType) classes
---                                           mapM (genExpr >=> GenState.addImport)   imports
---                                           mapM (genExpr >=> GenState.addMethod)   methods
---                                           GenState.getModule
---    _                                   -> fail "o nie"
+run :: PassMonad s m => LExpr.Expr -> Pass.Result m HExpr.Expr
+run = (Pass.run_ GenState.empty) . genModule
 
 
---genExpr :: GenMonad m => LExpr.Expr -> Pass.Result m HExpr.Expr
---genExpr ast = case ast of
---    LExpr.Var      id name                    -> return $ HExpr.Var (name)
+genModule :: GenMonad m => LExpr.Expr -> Pass.Result m HExpr.Expr
+genModule ast = case ast of
+    LExpr.Module id cls imports classes 
+                 fields methods modules -> do 
+                                           GenState.setModule Module.empty
+                                           mapM (genExpr >=> GenState.addDataType) classes
+                                           mapM (genExpr >=> GenState.addImport)   imports
+                                           mapM (genExpr >=> GenState.addMethod)   methods
+                                           GenState.getModule
+    _                                   -> fail "o nie"
+
+
+genExpr :: GenMonad m => LExpr.Expr -> Pass.Result m HExpr.Expr
+genExpr ast = case ast of
+    LExpr.Var      id name                    -> return $ HExpr.Var (name)
                                  
---    LExpr.Function id name signature body     -> do
---                                                 body'  <- mapM genExpr body
---                                                 HExpr.Function name <$> mapM genPat signature <*> pure (HExpr.LetBlock body' HExpr.NOP)
+    LExpr.Function id name signature body     -> do
+                                                 body'  <- mapM genExpr body
+                                                 HExpr.Function name <$> mapM genPat signature <*> pure (HExpr.LetBlock body' HExpr.NOP)
 
---    LExpr.Import id segments name             -> return $ HExpr.Import segments name
+    LExpr.Import id segments name             -> return $ HExpr.Import segments name
 
---    LExpr.Class id cls classes fields methods -> do 
---    	                                         cons   <- HExpr.Cons name <$> mapM genField fields
---                                                 return  $ HExpr.DataType name params [cons] 
---                                                 where name   =  LType.name   cls
---                                                       params =  LType.params cls
+    LExpr.Class id cls classes fields methods -> do 
+    	                                         cons   <- HExpr.Cons name <$> mapM genField fields
+                                                 return  $ HExpr.DataType name params [cons] 
+                                                 where name   =  LType.name   cls
+                                                       params =  LType.params cls
 
---    LExpr.Infix id name src dst               -> HExpr.Operator name <$> genExpr src <*> genExpr dst
+    LExpr.Infix id name src dst               -> HExpr.Operator name <$> genExpr src <*> genExpr dst
 
 
 
---genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr.Expr
---genPat pat = case pat of
---    LPat.Var   id name              -> return $ HExpr.Var name
+genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr.Expr
+genPat pat = case pat of
+    LPat.Var   id name              -> return $ HExpr.Var name
                                             
---genType :: GenMonad m => LType.Type -> Pass.Result m HExpr.Expr
---genType t = case t of
---    LType.Var   id name             -> return $ HExpr.Var (name)
---    LType.Tuple id items            -> HExpr.Tuple <$> mapM genType items
+genType :: GenMonad m => LType.Type -> Pass.Result m HExpr.Expr
+genType t = case t of
+    LType.Var   id name             -> return $ HExpr.Var (name)
+    LType.Tuple id items            -> HExpr.Tuple <$> mapM genType items
 
---genField :: GenMonad m => LExpr.Expr -> Pass.Result m HExpr.Expr
---genField (LExpr.Field id name t) = return $ HExpr.Typed (LType.name t) (HExpr.Var name)
+genField :: GenMonad m => LExpr.Expr -> Pass.Result m HExpr.Expr
+genField (LExpr.Field id name t) = return $ HExpr.Typed (LType.name t) (HExpr.Var name)
