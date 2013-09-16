@@ -18,6 +18,7 @@ module Flowbox.Batch.Handlers.FileSystem (
 ) 
 where
 
+import           Control.Applicative             
 import qualified Control.Exception             as Exception
 import qualified System.Directory              as Directory
 import qualified System.IO                     as IO
@@ -31,7 +32,9 @@ import           Flowbox.System.UniPath          (UniPath)
 
 ls :: UniPath -> IO [Item]
 ls upath = do
-    paths <- Directory.getDirectoryContents (UniPath.toUnixString upath)
+    apath <- UniPath.toUnixString <$> UniPath.expand upath
+
+    paths <- Directory.getDirectoryContents apath
     let upaths = map (\u -> UniPath.append u upath) paths
     items <- mapM stat upaths
     return items
@@ -39,7 +42,7 @@ ls upath = do
 
 stat :: UniPath -> IO Item
 stat upath = do
-    let apath = UniPath.toUnixString upath
+    apath <- UniPath.toUnixString <$> UniPath.expand upath
 
     isDir  <- Directory.doesDirectoryExist apath
     if isDir 
@@ -54,16 +57,20 @@ stat upath = do
 
 
 mkdir :: UniPath -> IO ()
-mkdir upath = Directory.createDirectory (UniPath.toUnixString upath)
+mkdir upath = do
+     apath <- UniPath.toUnixString <$> UniPath.expand upath
+     Directory.createDirectory apath
 
 
 touch :: UniPath -> IO ()
-touch upath = IO.writeFile (UniPath.toUnixString upath) ""
+touch upath = do 
+    apath <- UniPath.toUnixString <$> UniPath.expand upath
+    IO.writeFile apath ""
 
 
 rm :: UniPath -> IO ()
 rm upath = do
-    let apath = UniPath.toUnixString upath
+    apath <- UniPath.toUnixString <$> UniPath.expand upath
 
     isDir  <- Directory.doesDirectoryExist apath
     if isDir 
@@ -77,8 +84,8 @@ rm upath = do
 
 cp :: UniPath -> UniPath -> IO ()
 cp usrc udst = do
-    let asrc = UniPath.toUnixString usrc
-        adst = UniPath.toUnixString udst
+    asrc <- UniPath.toUnixString <$> UniPath.expand usrc
+    adst <- UniPath.toUnixString <$> UniPath.expand udst
 
     isDir  <- Directory.doesDirectoryExist asrc
     if isDir 
@@ -93,8 +100,8 @@ cp usrc udst = do
 
 mv :: UniPath -> UniPath -> IO ()
 mv usrc udst = do
-    let asrc = UniPath.toUnixString usrc
-        adst = UniPath.toUnixString udst
+    asrc <- UniPath.toUnixString <$> UniPath.expand usrc
+    adst <- UniPath.toUnixString <$> UniPath.expand udst
 
     isDir  <- Directory.doesDirectoryExist asrc
     if isDir 

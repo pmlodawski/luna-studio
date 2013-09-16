@@ -13,6 +13,7 @@ module Flowbox.System.IO.Serializer(
     deserialize
 ) where
 
+import           Control.Applicative      
 import           System.Directory       as Dir
 import qualified System.IO              as IO
 
@@ -33,13 +34,14 @@ serializeMany serializables = do
 
 serialize :: Serializable -> IO()
 serialize (Serializable upath save) = do
-    let foldername = UniPath.toUnixString $ init upath
-        filename   = UniPath.toUnixString upath
+    apath <- UniPath.expand upath
+    let foldername = UniPath.toUnixString $ init apath
+        filename   = UniPath.toUnixString apath
     Dir.createDirectoryIfMissing True foldername
     IO.withFile filename IO.WriteMode save
 
 
 deserialize :: Deserializable a -> IO a
 deserialize (Deserializable upath load) = do
-    let filename = UniPath.toUnixString upath
+    filename <- UniPath.toUnixString <$> UniPath.expand upath
     IO.withFile filename IO.ReadMode load
