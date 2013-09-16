@@ -58,6 +58,7 @@ Library
         Flowbox.Luna.Passes.SSA.SSA,
         Flowbox.Luna.Passes.SSA.State,
         Flowbox.Luna.Passes.Luna.Luna,
+        Flowbox.Luna.Passes.Graph2AST.IdState,
         Flowbox.Luna.Passes.Graph2AST.Graph2AST,
         Flowbox.Luna.Passes.HSGen.FuncGenerator,
         Flowbox.Luna.Passes.HSGen.ClassGenerator,

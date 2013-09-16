@@ -34,6 +34,8 @@ import qualified Flowbox.Luna.Network.Graph.Port         as Port
 import           Flowbox.Luna.Network.Graph.Port           (Port)
 import           Flowbox.Luna.Network.Path.Import          (Import(Import))
 import           Flowbox.Luna.Network.Path.Path            (Path(Path))
+import qualified Flowbox.Luna.Passes.Graph2AST.IdState   as IdState
+import           Flowbox.Luna.Passes.Graph2AST.IdState     (IdState)
 import qualified Flowbox.Luna.Passes.Pass                as Pass
 import           Flowbox.Luna.Passes.Pass                  (PassMonad)
 import qualified Flowbox.Luna.Passes.Txt2AST.Parser      as Parser
@@ -41,11 +43,11 @@ import qualified Flowbox.Luna.XOLD.Type.Type             as Type
 import           Flowbox.Luna.XOLD.Type.Type               (Type)
 
 
-type Graph2ASTMonad m = PassMonad Pass.NoState m
+type Graph2ASTMonad m = PassMonad IdState m
 
 
 run :: PassMonad s m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTExpr.Expr
-run defManager (defID, def) = (Pass.run_ Pass.NoState) $ def2AST defManager (defID, def)
+run defManager (defID, def) = (Pass.run_ IdState.empty) $ def2AST defManager (defID, def)
 
 
 def2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTExpr.Expr
@@ -89,6 +91,7 @@ def2AST defManager (defID, def) = do
                                                   <*> nextDefs modules
         
 
+
 --module2ASTPath :: Graph2ASTMonad m => DefManager -> Definition.ID -> String -> Pass.Result m ASTExpr.Expr
 --module2ASTPath defManager defID name = do
 --    let 
@@ -102,6 +105,12 @@ def2AST defManager (defID, def) = do
 --    return $ ASTExpr.Path $ prev ++ [name]
 
 
+--function2signature :: Type -> [ASTPat.Pat]
+--function2signature funcls = inputs2signature $ Type.inputs funcls where
+    
+--    inputs2signature :: Type -> [ASTPat.Pat]
+--    inputs2signature inputs = 
+
 
 notImplementedList :: [a]
 notImplementedList = []
@@ -112,7 +121,6 @@ type2ASTType t = case t of
     Type.Undefined                        -> (""  , ASTType.Unknown)
     Type.TypeName     name                -> (name, ASTType.Var (-1) name)
     Type.Class        name params _       -> (""  , ASTType.Class (-1) name params)
-    Type.Function     name inputs outputs -> (name, undefined) --ASTType.Lambda (-1) (snd $ type2ASTType inputs) (snd $ type2ASTType outputs))
     Type.Tuple        items               -> (""  , ASTType.Tuple (-1) (map (snd.type2ASTType) items))
     Type.Module       name _              -> (name, ASTType.Module (-1)  name)
     Type.Named        name cls            -> (name, snd $ type2ASTType cls)
