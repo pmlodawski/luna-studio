@@ -32,26 +32,26 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.VA.VA"
 
 
-type SSAMonad m = PassMonad LocState m
+type VAMonad m = PassMonad LocState m
 
 
 run :: PassMonad s m => Expr.Expr -> Pass.Result m VarStat
 run = (Pass.run_ LocState.empty) . ssaExpr
 
 
-ssaExpr :: SSAMonad m => Expr.Expr -> Pass.Result m VarStat
+ssaExpr :: VAMonad m => Expr.Expr -> Pass.Result m VarStat
 ssaExpr ast = do
     ssaAST ast
     LocState.varstat <$> get
 
 
-runNested :: SSAMonad m => Pass.Transformer LocState b -> Pass.Result m LocState
+runNested :: VAMonad m => Pass.Transformer LocState b -> Pass.Result m LocState
 runNested f = do
     s <- get
     Pass.run'_ s f
 
 
-ssaAST :: SSAMonad m => Expr.Expr -> Pass.Result m ()
+ssaAST :: VAMonad m => Expr.Expr -> Pass.Result m ()
 ssaAST ast = case ast of
     Expr.Function   _ _ signature body    -> do
                                              s <- runNested $ do
@@ -76,14 +76,14 @@ ssaAST ast = case ast of
 
 
 
-ssaPat :: SSAMonad m => Pat -> Pass.Result m ()
+ssaPat :: VAMonad m => Pat -> Pass.Result m ()
 ssaPat pat = case pat of
     Pat.Var     id name                 -> LocState.registerVarName (name, id)
     Pat.Wildcard _                      -> return ()
     _                                   -> logger error "SSA Pass error: Unknown pattern." *> Pass.fail "Unknown pattern"
 
-ssaType :: SSAMonad m => Type -> Pass.Result m ()
+ssaType :: VAMonad m => Type -> Pass.Result m ()
 ssaType ast = case ast of
-    Type.Tuple  _ items           -> mapM ssaType items *> return ()
-    Type.Var    _ _               -> return ()
-    _                             -> logger error "SSA Pass error: Unknown type." *> Pass.fail "Unknown type"
+    Type.Tuple  _ items                 -> mapM ssaType items *> return ()
+    Type.Var    _ _                     -> return ()
+    _                                   -> logger error "SSA Pass error: Unknown type." *> Pass.fail "Unknown type"
