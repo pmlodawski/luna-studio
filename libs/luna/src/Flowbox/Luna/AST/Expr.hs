@@ -78,19 +78,19 @@ traverseM f expr = let t = f in case expr of
     _                                        -> pure expr
 
 traverseM_ :: (Functor m, Applicative m, Monad m) => (Expr -> m ()) -> Expr -> m ()
-traverseM_ f expr = let t = f in case expr of
-    --Assignment id pat dst                    -> Assignment id pat <$> t dst
-    --Tuple      id items                      -> Tuple      id <$> mapM t items
-    --Typed      id cls expr                   -> Typed      id cls <$> t expr
-    --App        id src args                   -> App        id <$> t src <*> mapM t args
-    --Accessor   id src dst                    -> Accessor   id <$> t src <*> t dst
-    --Infix      id name src dst               -> Infix      id name <$> t src <*> t dst
-    --Class      id cls classes fields methods -> Class      id cls <$> mapM t classes <*> mapM t fields <*> mapM t methods
-    --Module     id cls imports classes             
-    --           fields methods modules        -> Module     id cls <$> mapM t imports <*> mapM t classes <*> mapM t fields <*> mapM t methods <*> mapM t modules
-    --Lambda     id signature body             -> Lambda     id signature <$> mapM t body
-    --Function   id name signature body        -> Function   id name signature <$> mapM t body
-    --List       id items                      -> List       id <$> mapM t items
+traverseM_ f expr = case expr of
+    Assignment id pat dst                    -> f dst
+    Tuple      id items                      -> mapM_ f items
+    Typed      id cls expr                   -> f expr
+    App        id src args                   -> f src <* mapM f args
+    Accessor   id src dst                    -> f src <* f dst
+    Infix      id name src dst               -> f src <* f dst
+    Class      id cls classes fields methods -> mapM_ f classes <* mapM_ f fields <* mapM_ f methods
+    Module     id cls imports classes             
+               fields methods modules        -> mapM_ f imports <* mapM_ f classes <* mapM_ f fields <* mapM_ f methods <* mapM_ f modules
+    Lambda     id signature body             -> mapM_ f body
+    Function   id name signature body        -> mapM_ f body
+    List       id items                      -> mapM_ f items
     _                                        -> pure ()
 
 transform :: (Expr -> Expr) -> Expr -> Expr
