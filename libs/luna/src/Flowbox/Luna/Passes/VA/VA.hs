@@ -8,26 +8,24 @@
 
 module Flowbox.Luna.Passes.VA.VA where
 
-import qualified Flowbox.Luna.AST.Expr         as Expr
-import qualified Flowbox.Luna.AST.Type         as Type
-import           Flowbox.Luna.AST.Type           (Type)
-import qualified Flowbox.Luna.AST.Pat          as Pat
-import           Flowbox.Luna.AST.Pat            (Pat)
+import qualified Flowbox.Luna.AST.Expr        as Expr
+import qualified Flowbox.Luna.AST.Type        as Type
+import           Flowbox.Luna.AST.Type          (Type)
+import qualified Flowbox.Luna.AST.Pat         as Pat
+import           Flowbox.Luna.AST.Pat           (Pat)
 import qualified Flowbox.Luna.Passes.VA.State as LocState
 import           Flowbox.Luna.Passes.VA.State   (LocState)
 import           Flowbox.Luna.Passes.VA.State   (VarStat)
-import qualified Flowbox.Luna.Passes.Pass      as Pass
-import           Flowbox.Luna.Passes.Pass        (PassMonad)
+import qualified Flowbox.Luna.Passes.Pass     as Pass
+import           Flowbox.Luna.Passes.Pass       (PassMonad)
 
-import           Control.Monad.State             
-import           Control.Applicative             
+import           Control.Monad.State            
+import           Control.Applicative            
 
-import           Flowbox.System.Log.Logger       
+import           Flowbox.System.Log.Logger      
 
-import qualified Flowbox.Prelude               as Prelude
-import           Flowbox.Prelude               hiding (error)
+import           Flowbox.Prelude              hiding (error, id)
 
-import Debug.Trace
 
 
 logger :: Logger
@@ -55,37 +53,37 @@ runNested f = do
 
 ssaAST :: SSAMonad m => Expr.Expr -> Pass.Result m ()
 ssaAST ast = case ast of
-    Expr.Function   id name signature body -> do
-                                              s <- runNested $ do
-                                                  mapM ssaPat signature
-                                                  ssaExprMap body
-                                              LocState.updateVarStat s
-    Expr.Assignment id pat dst             -> ssaAST dst <* ssaPat pat
-    Expr.Var        id name                -> do
-                                              v <- LocState.lookupVar name
-                                              case v of
-                                                  Nothing    -> return () 
-                                                  Just vid   -> LocState.bind id vid
-    Expr.Class      id cls classes fields 
-                    methods                -> () <$ do 
-                                                 ssaType cls
-                                                 ssaExprMap classes 
-                                                 ssaExprMap fields 
-                                                 ssaExprMap methods
-    _                                      -> Expr.traverseM_ ssaAST ast
+    Expr.Function   _ _ signature body    -> do
+                                             s <- runNested $ do
+                                                 mapM_ ssaPat signature
+                                                 ssaExprMap body
+                                             LocState.updateVarStat s
+    Expr.Assignment _ pat dst             -> ssaAST dst <* ssaPat pat
+    Expr.Var        id name               -> do
+                                             v <- LocState.lookupVar name
+                                             case v of
+                                                 Nothing    -> return () 
+                                                 Just vid   -> LocState.bind id vid
+    Expr.Class      _ cls classes fields 
+                    methods               -> () <$ do 
+                                                   ssaType cls
+                                                   ssaExprMap classes 
+                                                   ssaExprMap fields 
+                                                   ssaExprMap methods
+    _                                     -> Expr.traverseM_ ssaAST ast
     where
-        ssaExprMap = mapM ssaAST
+        ssaExprMap = mapM_ ssaAST
 
 
 
 ssaPat :: SSAMonad m => Pat -> Pass.Result m ()
 ssaPat pat = case pat of
     Pat.Var     id name                 -> LocState.registerVarName (name, id)
-    Pat.Wildcard id                     -> return ()
+    Pat.Wildcard _                      -> return ()
     _                                   -> logger error "SSA Pass error: Unknown pattern." *> Pass.fail "Unknown pattern"
 
 ssaType :: SSAMonad m => Type -> Pass.Result m ()
 ssaType ast = case ast of
-    Type.Tuple  id items          -> mapM ssaType items *> return ()
-    Type.Var    id name           -> return ()
+    Type.Tuple  _ items           -> mapM ssaType items *> return ()
+    Type.Var    _ _               -> return ()
     _                             -> logger error "SSA Pass error: Unknown type." *> Pass.fail "Unknown type"

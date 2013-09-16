@@ -8,17 +8,17 @@
 
 module Flowbox.Luna.AST.Expr where
 
-import           Flowbox.Prelude           hiding(id)      
-import           Flowbox.Luna.AST.Type       (Type)
-import qualified Flowbox.Luna.AST.Lit      as Lit
-import qualified Flowbox.Luna.AST.Pat      as Pat
-import           Flowbox.Luna.AST.Utils      (ID)
-import           Data.Typeable
-import           Flowbox.Generics.Deriving.QShow
-import           GHC.Generics (Generic)
-import           Control.Applicative  
+import           Flowbox.Prelude                 hiding (id)
+import           Flowbox.Luna.AST.Type             (Type)
+import qualified Flowbox.Luna.AST.Lit            as Lit
+import qualified Flowbox.Luna.AST.Pat            as Pat
+import           Flowbox.Luna.AST.Utils            (ID)
+import           Data.Typeable                     
+import           Flowbox.Generics.Deriving.QShow   
+import           GHC.Generics                      (Generic)
+import           Control.Applicative               
 
-import           Text.Parsec                       hiding (parse, many, optional, (<|>))
+import           Text.Parsec                     hiding (parse, many, optional, (<|>))
 
 type Lit = Lit.Lit
 type Pat = Pat.Pat

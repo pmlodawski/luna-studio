@@ -14,7 +14,7 @@ module Flowbox.Prelude(
 import           Prelude                hiding (print, putStr, putStrLn)
 import qualified Prelude                as Prelude
 import           Control.Monad.IO.Class   (liftIO, MonadIO)
-import           Data.Typeable
+import           Data.Typeable            
 
 print :: MonadIO m => String -> m ()
 print    = liftIO . Prelude.print

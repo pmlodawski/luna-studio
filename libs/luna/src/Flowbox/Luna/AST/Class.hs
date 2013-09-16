@@ -8,7 +8,7 @@
 
 module Flowbox.Luna.AST.Class where
 
-import           Flowbox.Prelude      
+import           Flowbox.Prelude         
 import qualified Flowbox.Luna.AST.Expr as Expr
 import           Flowbox.Luna.AST.Expr   (Expr)
 import qualified Flowbox.Luna.AST.Type as Type

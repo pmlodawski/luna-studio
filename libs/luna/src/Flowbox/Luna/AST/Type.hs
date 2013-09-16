@@ -8,10 +8,10 @@
 
 module Flowbox.Luna.AST.Type where
 
-import           Flowbox.Prelude  hiding(id)
-import           Flowbox.Generics.Deriving.QShow
-import           Flowbox.Luna.AST.Utils      (ID)
-import           GHC.Generics
+import           Flowbox.Prelude                 hiding (id)
+import           Flowbox.Generics.Deriving.QShow   
+import           Flowbox.Luna.AST.Utils            (ID)
+import           GHC.Generics                      
 
 data Type = Unknown
           | Var    { id :: ID, name     :: String                       }

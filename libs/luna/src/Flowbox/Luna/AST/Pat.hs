@@ -8,13 +8,13 @@
 
 module Flowbox.Luna.AST.Pat where
 
-import           Flowbox.Prelude
-import qualified Flowbox.Luna.AST.Lit      as Lit
-import qualified Flowbox.Luna.AST.Type     as Type
-import           Flowbox.Luna.AST.Type       (Type)
-import           Flowbox.Luna.AST.Utils      (ID)
-import           Flowbox.Generics.Deriving.QShow
-import           GHC.Generics
+import           Flowbox.Prelude                   
+import qualified Flowbox.Luna.AST.Lit            as Lit
+import qualified Flowbox.Luna.AST.Type           as Type
+import           Flowbox.Luna.AST.Type             (Type)
+import           Flowbox.Luna.AST.Utils            (ID)
+import           Flowbox.Generics.Deriving.QShow   
+import           GHC.Generics                      
 
 type Lit = Lit.Lit
 
