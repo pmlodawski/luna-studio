@@ -55,6 +55,10 @@ example = Source.Source "Workspace"
                   --, "    z = x + 7"
                   --, "    g = (x, y)"
                   --, "    z+ y"
+                  --, "def f a b:"
+                  --, "    c = 1"
+                  --, "    a = b + 1"
+                  --, "    _ = a + b"
                   ]
 
 

@@ -97,7 +97,7 @@ pModule name i    = tok Module.mk <*>   (tok Type.Module <*> pure name)
 
 
 pClassBody i      = choice [ Expr.addMethod <$> pFunc i
-                           , Expr.addField  <$> pField
+                           , Expr.addField  <$> pField i
                            , Expr.addClass  <$> pClass i
                            ]
 
@@ -106,7 +106,7 @@ pModuleBody i     = choice [ pClassBody i
                            ]
 
 
-pField            = tok Field.mk <*> L.pIdent <* L.pTypeDecl <*> (tok Type.Sig <*> L.pIdent)
+pField       i    = tok Field.mk <*> L.pIdent <* L.pTypeDecl <*> pType i
 
 pDeclaration i    = choice [ pImport i
                            , pFunc   i

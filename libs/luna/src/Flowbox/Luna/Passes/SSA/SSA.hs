@@ -26,6 +26,8 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.Prelude               as Prelude
 import           Flowbox.Prelude               hiding (error)
 
+import Debug.Trace
+
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.SSA.SSA"
@@ -38,23 +40,25 @@ run :: PassMonad s m => Expr.Expr -> Pass.Result m Expr.Expr
 run = (Pass.run_ SSAState.empty) . ssaAST
 
 
-runNested :: SSAMonad m => Pass.Transformer SSAState b -> Pass.Result m b 
+runNested :: SSAMonad m => Pass.Transformer SSAState b -> Pass.Result m (b, SSAState)
 runNested f = do
     s <- get
-    Pass.run_ s f
+    Pass.run s f
 
 
 ssaAST :: SSAMonad m => Expr.Expr -> Pass.Result m Expr.Expr
 ssaAST ast = case ast of
-    Expr.Function   id name signature body -> runNested $ do
+    Expr.Function   id name signature body -> do
+                                              (r,s) <- runNested $ do
                                                   --SSAState.registerVar (name, name)
-                                                  --mapM ssaPat signature
+                                                  mapM ssaPat signature
                                                   Expr.Function id name signature <$> ssaExprMap body
+                                              return $ trace (show s) r
     Expr.Assignment id pat dst             -> (flip (Expr.Assignment id) <$> ssaAST dst <*> ssaPat pat)
     Expr.Var        id name                -> do
                                               v <- SSAState.lookupVar name
                                               case v of
-                                                  Nothing    -> (logger error $ "Not in scope: '" ++ name ++ "'") *> Pass.fail "Not in scope"
+                                                  Nothing    -> return () -- (logger error $ "Not in scope: '" ++ name ++ "'") *> Pass.fail "Not in scope"
                                                   Just vid   -> SSAState.bind id vid
                                               return ast
     Expr.Class      id cls classes fields 
@@ -65,6 +69,10 @@ ssaAST ast = case ast of
     _                                      -> Expr.traverseM ssaAST ast
     where
         ssaExprMap = mapM ssaAST
+
+
+
+
 
 --ssaAST :: SSAMonad m => Expr.Expr -> Pass.Result m Expr.Expr
 --ssaAST ast = case ast of
@@ -89,14 +97,17 @@ ssaAST ast = case ast of
 
 ssaPat :: SSAMonad m => Pat -> Pass.Result m Pat
 ssaPat pat = case pat of
-    Pat.Var     id name                 -> return $ Pat.Var id name -- <$> SSAState.handleVar name
+    Pat.Var     id name                 -> do
+                                           SSAState.registerVar id
+                                           SSAState.registerVarName (name, id)
+                                           return $ Pat.Var id name -- <$> SSAState.handleVar name
+    Pat.Wildcard id                     -> return pat
     _                                   -> logger error "SSA Pass error: Unknown pattern." *> Pass.fail "Unknown pattern"
 
 ssaType :: SSAMonad m => Type -> Pass.Result m ()
 ssaType ast = case ast of
     Type.Tuple  id items          -> mapM ssaType items *> return ()
-    Type.Var    id name           -> do
-                                     SSAState.registerVar id
-                                     SSAState.registerVarName (name, id)
+    Type.Var    id name           -> return ()
+                                     
     --Type.Class  id name   _       -> SSAState.registerVar (name, name)
     _                             -> logger error "SSA Pass error: Unknown type." *> Pass.fail "Unknown type"
