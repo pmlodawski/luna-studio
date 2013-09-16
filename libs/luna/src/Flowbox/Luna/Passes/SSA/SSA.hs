@@ -32,10 +32,11 @@ logger = getLogger "Flowbox.Luna.Passes.SSA.SSA"
 type SSAMonad m = PassMonad Pass.NoState m
 
 
-run :: PassMonad s m => Expr.Expr -> Pass.Result m ()
+run :: PassMonad s m => Expr.Expr -> Pass.Result m Expr.Expr
 run = (Pass.run_ Pass.NoState) . ssaExpr
 
 
-ssaExpr :: SSAMonad m => Expr.Expr -> Pass.Result m ()
-ssaExpr ast = return ()
-
+ssaExpr :: SSAMonad m => Expr.Expr -> Pass.Result m Expr.Expr
+ssaExpr ast = case ast of
+    Expr.Var        id name               -> return $ Expr.Var id ("v_" ++ show id)
+    _                                     -> Expr.traverseM ssaExpr ast

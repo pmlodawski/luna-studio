@@ -21,6 +21,7 @@ import qualified Flowbox.System.Log.LogEntry          as LogEntry
 import qualified Flowbox.Luna.Passes.HSGen.HSGen      as HSGen
 import qualified Flowbox.Luna.Passes.HSGen.HSC        as HSC
 import qualified Flowbox.Luna.Passes.VA.VA            as VA
+import qualified Flowbox.Luna.Passes.SSA.SSA          as SSA
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module as Module
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr   as Expr
 --import qualified Flowbox.Luna.Passes.SSA.State           as SSAState
@@ -59,6 +60,7 @@ main = do
         Right _ -> return ()
         Left  e -> putStrLn e
 
+
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
     putStrLn "\n-------- Txt2AST --------"
@@ -67,8 +69,12 @@ main_inner = Luna.run $ do
     putStrLn $ PP.ppqShow ast
 
     putStrLn "\n-------- VA --------"
-    ssa <- VA.run     ast
-    putStrLn $ PP.ppShow ssa
+    va <- VA.run     ast
+    putStrLn $ PP.ppShow va
+
+    putStrLn "\n-------- SSA --------" 
+    ssa <- SSA.run  ast
+    putStrLn $ PP.ppqShow ssa
 
     putStrLn "\n-------- HSGen --------" 
     hast <- HSGen.run  ast
