@@ -39,4 +39,4 @@ run = (Pass.run_ Pass.NoState) . ssaExpr
 ssaExpr :: SSAMonad m => Expr.Expr -> Pass.Result m Expr.Expr
 ssaExpr ast = case ast of
     Expr.Var        id name               -> return $ Expr.Var id ("v_" ++ show id)
-    _                                     -> Expr.traverseM ssaExpr ast
+    _                                     -> Expr.traverseM' ssaExpr ast

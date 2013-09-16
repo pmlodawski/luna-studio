@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleInstances, DeriveGeneric, NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleInstances, DeriveGeneric, NoMonomorphismRestriction, ConstraintKinds #-}
 
 module Flowbox.Luna.AST.Expr where
 
@@ -46,69 +46,76 @@ data Expr  = NOP        { id :: ID                                              
 
 instance QShow Expr
 
---traverseM' :: (Functor m, Applicative m, Monad m) => (Expr -> m Expr) -> Expr -> m Expr
-traverseM' fexp fpat flit expr = case expr of
-    Assignment id pat dst                    -> Assignment id pat <$> fexp dst
+
+type Traversal m = (Functor m, Applicative m, Monad m)
+
+traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
+traverseM fexp ftype fpat flit expr = case expr of
+    NOP        {}                            -> pure expr
+    Import     {}                            -> pure expr
+    Var        {}                            -> pure expr
+    Lit        id val                        -> Lit        id <$> flit val
+    Assignment id pat dst                    -> Assignment id <$> fpat pat <*> fexp dst
     Tuple      id items                      -> Tuple      id <$> mapM fexp items
-    Typed      id cls expr                   -> Typed      id cls <$> fexp expr
+    Typed      id cls expr                   -> Typed      id <$> ftype cls <*> fexp expr
     App        id src args                   -> App        id <$> fexp src <*> mapM fexp args
     Accessor   id src dst                    -> Accessor   id <$> fexp src <*> fexp dst
     Infix      id name src dst               -> Infix      id name <$> fexp src <*> fexp dst
-    Class      id cls classes fields methods -> Class      id cls <$> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods
+    Class      id cls classes fields methods -> Class      id <$> ftype cls <*> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods
     Module     id cls imports classes             
-               fields methods modules        -> Module     id cls <$> mapM fexp imports <*> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods <*> mapM fexp modules
-    Lambda     id signature body             -> Lambda     id signature <$> mapM fexp body
-    Function   id name signature body        -> Function   id name signature <$> mapM fexp body
+               fields methods modules        -> Module     id <$> ftype cls <*> mapM fexp imports <*> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods <*> mapM fexp modules
+    Lambda     id signature body             -> Lambda     id <$> mapM fpat signature <*> mapM fexp body
+    Cons       {}                            -> pure expr
+    Function   id name signature body        -> Function   id name <$> mapM fpat signature <*> mapM fexp body
     List       id items                      -> List       id <$> mapM fexp items
-    _                                        -> pure expr
+    _                                        -> fail "Unexpected expression"
 
-traverse :: (Expr -> Expr) -> Expr -> Expr
-traverse fexp expr = let t = traverse fexp in case expr of
-    Assignment id pat dst                    -> Assignment id pat (t dst)
-    Tuple      id items                      -> Tuple      id (map t items)
-    Typed      id cls expr                   -> Typed      id cls (t expr)
-    App        id src args                   -> App        id (t src) (map t args)
-    Accessor   id src dst                    -> Accessor   id (t src) (t dst)
-    Infix      id name src dst               -> Infix      id name (t src) (t dst)
-    Class      id cls classes fields methods -> Class      id cls (map t classes) (map t fields) (map t methods)
+traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Expr -> m ()
+traverseM_ fexp ftype fpat flit expr = case expr of
+    NOP        {}                            -> pure ()
+    Import     {}                            -> pure ()
+    Var        {}                            -> pure ()
+    Lit        id val                        -> pure () <* flit val
+    Assignment id pat dst                    -> pure () <* fpat pat  <* fexp dst
+    Tuple      id items                      -> pure () <* mapM_ fexp items
+    Typed      id cls expr                   -> pure () <* ftype cls <* fexp expr
+    App        id src args                   -> pure () <* fexp src  <* mapM_ fexp args
+    Accessor   id src dst                    -> pure () <* fexp src  <* fexp dst
+    Infix      id name src dst               -> pure () <* fexp src  <* fexp dst
+    Class      id cls classes fields methods -> pure () <* ftype cls <* mapM_ fexp classes <* mapM_ fexp fields <* mapM_ fexp methods
     Module     id cls imports classes             
-               fields methods modules        -> Module     id cls (map t imports) (map t classes) (map t fields) (map t methods) (map t modules)
-    Lambda     id signature body             -> Lambda     id signature (map t body)
-    Function   id name signature body        -> Function   id name signature (map t body)
-    List       id items                      -> List       id (map t items)
-    _                                        -> expr
+               fields methods modules        -> pure () <* ftype cls <* mapM_ fexp imports <* mapM_ fexp classes <* mapM_ fexp fields <* mapM_ fexp methods <* mapM_ fexp modules
+    Lambda     id signature body             -> pure () <* mapM_ fpat signature <* mapM_ fexp body
+    Cons       {}                            -> pure ()
+    Function   id name signature body        -> pure () <* mapM_ fpat signature <* mapM_ fexp body
+    List       id items                      -> pure () <* mapM_ fexp items
+    _                                        -> fail "Unexpected expression"
 
-traverseM :: (Functor m, Applicative m, Monad m) => (Expr -> m Expr) -> Expr -> m Expr
-traverseM fexp expr = case expr of
-    Assignment id pat dst                    -> Assignment id pat <$> fexp dst
-    Tuple      id items                      -> Tuple      id <$> mapM fexp items
-    Typed      id cls expr                   -> Typed      id cls <$> fexp expr
-    App        id src args                   -> App        id <$> fexp src <*> mapM fexp args
-    Accessor   id src dst                    -> Accessor   id <$> fexp src <*> fexp dst
-    Infix      id name src dst               -> Infix      id name <$> fexp src <*> fexp dst
-    Class      id cls classes fields methods -> Class      id cls <$> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods
-    Module     id cls imports classes             
-               fields methods modules        -> Module     id cls <$> mapM fexp imports <*> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods <*> mapM fexp modules
-    Lambda     id signature body             -> Lambda     id signature <$> mapM fexp body
-    Function   id name signature body        -> Function   id name signature <$> mapM fexp body
-    List       id items                      -> List       id <$> mapM fexp items
-    _                                        -> pure expr
 
-traverseM_ :: (Functor m, Applicative m, Monad m) => (Expr -> m ()) -> Expr -> m ()
-traverseM_ fexp expr = case expr of
-    Assignment id pat dst                    -> fexp dst
-    Tuple      id items                      -> mapM_ fexp items
-    Typed      id cls expr                   -> fexp expr
-    App        id src args                   -> fexp src <* mapM fexp args
-    Accessor   id src dst                    -> fexp src <* fexp dst
-    Infix      id name src dst               -> fexp src <* fexp dst
-    Class      id cls classes fields methods -> mapM_ fexp classes <* mapM_ fexp fields <* mapM_ fexp methods
-    Module     id cls imports classes             
-               fields methods modules        -> mapM_ fexp imports <* mapM_ fexp classes <* mapM_ fexp fields <* mapM_ fexp methods <* mapM_ fexp modules
-    Lambda     id signature body             -> mapM_ fexp body
-    Function   id name signature body        -> mapM_ fexp body
-    List       id items                      -> mapM_ fexp items
-    _                                        -> pure ()
+traverseM' :: Traversal m => (Expr -> m Expr) -> Expr -> m Expr
+traverseM' fexp expr = traverseM fexp pure pure pure expr
+
+
+
+traverseM'_ :: Traversal m => (Expr -> m ()) -> Expr -> m ()
+traverseM'_ fexp expr = traverseM_ fexp pure pure pure expr
+
+
+--traverse :: (Expr -> Expr) -> Expr -> Expr
+--traverse fexp expr = let t = traverse fexp in case expr of
+--    Assignment id pat dst                    -> Assignment id pat (t dst)
+--    Tuple      id items                      -> Tuple      id (map t items)
+--    Typed      id cls expr                   -> Typed      id cls (t expr)
+--    App        id src args                   -> App        id (t src) (map t args)
+--    Accessor   id src dst                    -> Accessor   id (t src) (t dst)
+--    Infix      id name src dst               -> Infix      id name (t src) (t dst)
+--    Class      id cls classes fields methods -> Class      id cls (map t classes) (map t fields) (map t methods)
+--    Module     id cls imports classes             
+--               fields methods modules        -> Module     id cls (map t imports) (map t classes) (map t fields) (map t methods) (map t modules)
+--    Lambda     id signature body             -> Lambda     id signature (map t body)
+--    Function   id name signature body        -> Function   id name signature (map t body)
+--    List       id items                      -> List       id (map t items)
+--    _                                        -> expr
 
 --transform :: (Expr -> Expr) -> Expr -> Expr
 --transform f expr = let t = transform f in case expr of

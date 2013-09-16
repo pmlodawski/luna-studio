@@ -70,7 +70,7 @@ ssaAST ast = case ast of
                                                    ssaExprMap classes 
                                                    ssaExprMap fields 
                                                    ssaExprMap methods
-    _                                     -> Expr.traverseM_ ssaAST ast
+    _                                     -> Expr.traverseM'_ ssaAST ast
     where
         ssaExprMap = mapM_ ssaAST
 
