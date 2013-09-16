@@ -13,6 +13,9 @@ import           Control.Monad.State
 import qualified Data.Map                  as Map
 import           Data.Map                    (Map)
 
+import qualified Data.IntMap               as IntMap
+import           Data.IntMap                 (IntMap)
+
 import           Flowbox.System.Log.Logger   
 
 
@@ -20,66 +23,42 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.VA.State"
 
 
-data LocState = LocState { namemap :: Map String Int
-                         , varstat :: VarStat
-                         } deriving (Show)
+data VarStat     = VarStat  { varmap :: IntMap Int } 
+                            deriving (Show)
 
-
-data VarStat = VarStat { varmap :: Map Int Int } deriving (Show)
-
+data LocState    = LocState { namemap :: Map String Int
+                            , varstat :: VarStat
+                            } deriving (Show)
 
 type LocStateM m = MonadState LocState m
 
 
 empty :: LocState
-empty = LocState Map.empty (VarStat Map.empty)
+empty = LocState Map.empty (VarStat IntMap.empty)
 
 
---genVarName :: LocStateM m => m String
---genVarName = do
---    s <- get
---    let vname = "v'" ++ show (varcount s)
---    put $ s{ varcount = 1 + varcount s }
---    return vname
-
+bind :: LocStateM m => Int -> Int -> m ()
 bind kid vid = do
     s <- get
     let vs = varstat s
-    let nvs = vs { varmap = Map.insert kid vid $ varmap vs }
+    let nvs = vs { varmap = IntMap.insert kid vid $ varmap vs }
     put s { varstat = nvs }
 
+
+updateVarStat :: LocStateM m => LocState -> m ()
 updateVarStat ns = do
     let nvs = varstat ns
     s <- get
     put $ s { varstat = nvs }
 
---registerVar vid = do
---    s <- get
---    put s { vars = vid : vars s }
 
 registerVarName :: LocStateM m => (String, Int) -> m ()
 registerVarName (alias, vname) = do
     s <- get
     put $ s { namemap = Map.insert alias vname $ namemap s }
 
+
 lookupVar :: LocStateM m => String -> m (Maybe Int)
 lookupVar vname = do
     s <- get
     return $ Map.lookup vname (namemap s)
-
-
---uniqueVar :: LocStateM m => String -> m String
---uniqueVar vname = do
---    v <- lookupVar vname
---    case v of
---        Nothing      -> return vname
---        Just oldname -> genVarName
-
---handleVar :: LocStateM m => String -> m String
---handleVar vname = do
---    newname <- uniqueVar vname
---    registerVarName (vname, newname)
---    return newname
-
---registerVars :: LocStateM m => [(String, String)] -> m ()
---registerVars vars = mapM_ registerVarName vars
