@@ -5,12 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.AST.Constant where
+module Flowbox.Luna.AST.Utils where
 
-import qualified Flowbox.Prelude as Prelude
-import           Flowbox.Prelude   (Show, Eq)
+import           Flowbox.Prelude   
 
-data Constant = Integer Prelude.String
-              | String  Prelude.String
-              | Char    Prelude.Char
-              deriving (Show, Eq)
+type ID = Int

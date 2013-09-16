@@ -16,9 +16,10 @@ import qualified Data.List                               as List
 import           Flowbox.Prelude                           
 import           Flowbox.Control.Error                     ()
 import qualified Flowbox.Luna.Data.List                  as FList
-import qualified Flowbox.Luna.AST.AST                    as AST
+import qualified Flowbox.Luna.AST.Expr                   as ASTExpr
+import qualified Flowbox.Luna.AST.Lit                    as ASTLit
+import qualified Flowbox.Luna.AST.Pat                    as ASTPat
 import qualified Flowbox.Luna.AST.Type                   as ASTType
-import qualified Flowbox.Luna.AST.Constant               as ASTConstant
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
 import           Flowbox.Luna.Network.Def.DefManager       (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition     as Definition
@@ -40,18 +41,17 @@ import qualified Flowbox.Luna.XOLD.Type.Type             as Type
 import           Flowbox.Luna.XOLD.Type.Type               (Type)
 
 
-
 type Graph2ASTMonad m = PassMonad Pass.NoState m
 
 
-run :: PassMonad s m => DefManager -> (Definition.ID, Definition) -> Pass.Result m AST.Expr
-run defManager (defID, def) = (Pass.runM Pass.NoState) $ def2AST defManager (defID, def)
+run :: PassMonad s m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTExpr.Expr
+run defManager (defID, def) = (Pass.run_ Pass.NoState) $ def2AST defManager (defID, def)
 
 
-def2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m AST.Expr
+def2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTExpr.Expr
 def2AST defManager (defID, def) = do 
     let 
-        nextDefs :: Graph2ASTMonad m => ((Definition.ID, Definition) -> Bool) -> Pass.Result m [AST.Expr]
+        nextDefs :: Graph2ASTMonad m => ((Definition.ID, Definition) -> Bool) -> Pass.Result m [ASTExpr.Expr]
         nextDefs f = (mapM (def2AST defManager) $ filter f $ DefManager.sucl defManager defID)
 
         classes :: (Definition.ID, Definition) -> Bool
@@ -71,36 +71,35 @@ def2AST defManager (defID, def) = do
         getInputsNames _                  = fail "Inputs is not a tuple"
 
     case def of 
-        Definition _   _     _       (Flags _ True ) _ -> return $ AST.Comment ""
+        Definition _   _     _       (Flags _ True ) _ -> return $ ASTExpr.NOP defID -- Comment
         Definition cls graph imports (Flags _ False) _ -> case cls of
-            Type.Class _ _ params       -> AST.Class (snd $ type2ASTType cls)
+            Type.Class _ _ params       -> ASTExpr.Class defID (snd $ type2ASTType cls)
                                                  <$> nextDefs classes
                                                  <*> pure (map type2Field params)
                                                  <*> nextDefs methods
             Type.Function name inputs _ -> do inputsNames <- getInputsNames inputs
                                               graphAst <- graph2AST graph inputsNames
-                                              return $ AST.Function name (snd $ type2ASTType cls) graphAst
+                                              return $ ASTExpr.Function defID name undefined {-(snd $ type2ASTType cls)-} graphAst
                                                -- notImplementedList
-            Type.Module   _ params      -> AST.Module (snd $ type2ASTType cls)
+            Type.Module   _ params      -> ASTExpr.Module defID (snd $ type2ASTType cls)
                                                       (map import2ASTimport imports)
                                                   <$> nextDefs classes
                                                   <*> pure (map type2Field params)
                                                   <*> nextDefs methods
                                                   <*> nextDefs modules
-            _                      -> return AST.NOP
         
 
-module2ASTPath :: Graph2ASTMonad m => DefManager -> Definition.ID -> String -> Pass.Result m AST.Expr
-module2ASTPath defManager defID name = do
-    let 
-        module2ASTPath' :: Graph2ASTMonad m => Definition.ID -> Pass.Result m [String]
-        module2ASTPath' dID = case DefManager.prel defManager dID of
-            [(preID, Definition cls _ _ _ _)] -> do prev <- (module2ASTPath' preID)
-                                                    return $ prev ++ [Type.name cls]
-            []                                -> return []
-            _                                 -> fail "Definition has multiple parents"
-    prev <- module2ASTPath' defID
-    return $ AST.Path $ prev ++ [name]
+--module2ASTPath :: Graph2ASTMonad m => DefManager -> Definition.ID -> String -> Pass.Result m ASTExpr.Expr
+--module2ASTPath defManager defID name = do
+--    let 
+--        module2ASTPath' :: Graph2ASTMonad m => Definition.ID -> Pass.Result m [String]
+--        module2ASTPath' dID = case DefManager.prel defManager dID of
+--            [(preID, Definition cls _ _ _ _)] -> do prev <- (module2ASTPath' preID)
+--                                                    return $ prev ++ [Type.name cls]
+--            []                                -> return []
+--            _                                 -> fail "Definition has multiple parents"
+--    prev <- module2ASTPath' defID
+--    return $ ASTExpr.Path $ prev ++ [name]
 
 
 
@@ -111,45 +110,45 @@ notImplementedList = []
 type2ASTType :: Type -> (String, ASTType.Type)
 type2ASTType t = case t of 
     Type.Undefined                        -> (""  , ASTType.Unknown)
-    Type.TypeName     name                -> (name, ASTType.Type name)
-    Type.Class        name params _       -> (""  , ASTType.Class name params)
-    Type.Function     name inputs outputs -> (name, ASTType.Lambda (snd $ type2ASTType inputs) (snd $ type2ASTType outputs))
-    Type.Tuple        items               -> (""  , ASTType.Tuple (map (snd.type2ASTType) items))
-    Type.Module       name _              -> (name, ASTType.Module name)
+    Type.TypeName     name                -> (name, ASTType.Var (-1) name)
+    Type.Class        name params _       -> (""  , ASTType.Class (-1) name params)
+    Type.Function     name inputs outputs -> (name, undefined) --ASTType.Lambda (-1) (snd $ type2ASTType inputs) (snd $ type2ASTType outputs))
+    Type.Tuple        items               -> (""  , ASTType.Tuple (-1) (map (snd.type2ASTType) items))
+    Type.Module       name _              -> (name, ASTType.Module (-1)  name)
     Type.Named        name cls            -> (name, snd $ type2ASTType cls)
 
 
-defaultVal2ASTConstant :: DefaultValue -> ASTConstant.Constant
-defaultVal2ASTConstant value = case value of 
-    DefaultChar   v -> ASTConstant.Char  v
-    DefaultInt    v -> ASTConstant.Integer v
-    DefaultString v -> ASTConstant.String  v
+defaultVal2ASTLit :: Int -> DefaultValue -> ASTLit.Lit
+defaultVal2ASTLit i value = case value of 
+    DefaultChar   v -> ASTLit.Char    i v
+    DefaultInt    v -> ASTLit.Integer i v
+    DefaultString v -> ASTLit.String  i v
 
 
-type2Field :: Type -> AST.Expr
-type2Field t = AST.Field name cls where
+type2Field :: Type -> ASTExpr.Expr
+type2Field t = ASTExpr.Field (-1) name cls where
     (name, cls) = type2ASTType t
 
 
-import2ASTimport :: Import -> AST.Expr
-import2ASTimport (Import (Path path) name) = AST.Import path name
+import2ASTimport :: Import -> ASTExpr.Expr
+import2ASTimport (Import (Path path) name) = ASTExpr.Import (-1) path name
 
 
-graph2AST :: Graph2ASTMonad m => Graph -> [String] -> Pass.Result m [AST.Expr]
+graph2AST :: Graph2ASTMonad m => Graph -> [String] -> Pass.Result m [ASTExpr.Expr]
 graph2AST graph inputsNames = foldlM (node2AST graph inputsNames) [] $ Graph.topsortl graph
 
 
-node2AST :: Graph2ASTMonad m => Graph -> [String] -> [AST.Expr] -> (Node.ID, Node.Node) -> Pass.Result m [AST.Expr] 
+node2AST :: Graph2ASTMonad m => Graph -> [String] -> [ASTExpr.Expr] -> (Node.ID, Node.Node) -> Pass.Result m [ASTExpr.Expr] 
 node2AST graph inputsNames list (nodeID, node) = do
     let 
-        return' :: Graph2ASTMonad m => AST.Expr -> Pass.Result m [AST.Expr] 
+        return' :: Graph2ASTMonad m => ASTExpr.Expr -> Pass.Result m [ASTExpr.Expr] 
         return' a = return (list ++ [a])
 
     case node of 
-        Node.Expr expression (Flags _ True) _ -> return' $ AST.Comment expression
+        Node.Expr expression (Flags _ True) _ -> return' $ ASTExpr.NOP (-1) -- Comment
         Node.Inputs          _              _ -> return list
-        Node.Outputs         (Flags _ True) _ -> return' $ AST.Comment ""
-        Node.Tuple           (Flags _ True) _ -> return' $ AST.Comment ""
+        Node.Outputs         (Flags _ True) _ -> return' $ ASTExpr.NOP (-1) -- Comment
+        Node.Tuple           (Flags _ True) _ -> return' $ ASTExpr.NOP (-1) -- Comment
         _                                     -> do
             let 
                 biggestPort :: ((a, b, Edge) -> Port) -> (a, b, Edge) -> Port -> Port
@@ -158,10 +157,10 @@ node2AST graph inputsNames list (nodeID, node) = do
                 argID :: (a, b, Edge) -> Port
                 argID (_, _, Edge _ p) = p
 
-                arg :: [(Node.ID, b, Edge)] -> Port -> AST.Expr
+                arg :: [(Node.ID, b, Edge)] -> Port -> ASTExpr.Expr
                 arg iedges port = case List.find (\a -> (argID a) == port) iedges of
-                    Nothing                  -> AST.Wildcard
-                    Just (nID, _, Edge p _)  -> AST.Identifier $ resultName nID p
+                    Nothing                  -> ASTExpr.Wildcard (-1)
+                    Just (nID, _, Edge p _)  -> ASTExpr.Var (-1) $ resultName nID p
 
                 resultName :: Node.ID -> Port -> String
                 resultName nID port = case Graph.lab graph nID of 
@@ -186,11 +185,10 @@ node2AST graph inputsNames list (nodeID, node) = do
             call <- case node of 
                 Node.Expr expression _ _ -> case Parser.parseExpr expression of 
                                                     Left  e    -> fail $ show e
-                                                    Right expr -> return $ AST.Call expr args
-                Node.Default value _ -> return $ AST.Constant $ defaultVal2ASTConstant value
-                Node.Inputs  _     _ -> return   AST.NOP
-                Node.Outputs _     _ -> return $ AST.Tuple args
-                Node.Tuple   _     _ -> return $ AST.Tuple args
+                                                    Right expr -> return $ ASTExpr.App (-1) expr args
+                Node.Default value _ -> return $ ASTExpr.Lit (-1) $ defaultVal2ASTLit nodeID value
+                Node.Outputs _     _ -> return $ ASTExpr.Tuple (-1) args
+                Node.Tuple   _     _ -> return $ ASTExpr.Tuple (-1) args
 
 
             let outEdges          = Graph.out graph nodeID 
@@ -201,22 +199,26 @@ node2AST graph inputsNames list (nodeID, node) = do
                 isGetter (_, _, Edge (Port.Number _) _) = True
                 isGetter _                              = False
                 
-                allPattern     = AST.Pattern $ AST.Identifier $ resultName nodeID Port.All
+                allResultName  = resultName nodeID Port.All
+
+                allResult      = ASTExpr.Var (-1) allResultName
+                allPattern     = ASTPat.Var  (-1) allResultName
+
 
             if gettersConnected == 0 
-                then return' $ AST.Assignment allPattern call
+                then return' $ ASTExpr.Assignment (-1) allPattern call
                 else let (Port.Number maxGetter) = foldr (biggestPort resultID) Port.All outEdges 
 
                          resultID ::(a, b, Edge) -> Port
                          resultID (_, _, Edge p _) = p
 
-                         res :: [(Node.ID, b, Edge)] -> Port -> AST.Expr
+                         res :: [(Node.ID, b, Edge)] -> Port -> ASTPat.Pat
                          res iedges port = case List.find (\a -> (resultID a) == port) iedges of
-                                Nothing                  -> AST.Wildcard
-                                Just (nID, _, Edge p _)  -> AST.Identifier $ resultName nID p
+                                Nothing                  -> ASTPat.Wildcard (-1)
+                                Just (nID, _, Edge p _)  -> ASTPat.Var (-1) $ resultName nID p
 
-                         gettersPattern = AST.Pattern $ AST.Tuple $ map (\i -> res outEdges $ Port.Number i) [0..maxGetter] 
+                         gettersPattern = ASTPat.Tuple (-1) $ map (\i -> res outEdges $ Port.Number i) [0..maxGetter] 
                      in if gettersConnected == allConnected
-                            then return' $ AST.Assignment gettersPattern call
-                            else return  $ list ++ [AST.Assignment allPattern call
-                                                   ,AST.Assignment gettersPattern allPattern]
+                            then return' $ ASTExpr.Assignment (-1) gettersPattern call
+                            else return  $ list ++ [ASTExpr.Assignment (-1) allPattern call
+                                                   ,ASTExpr.Assignment (-1) gettersPattern allResult]

@@ -8,9 +8,11 @@
 
 module Flowbox.Luna.Passes.SSA.SSA where
 
-import qualified Flowbox.Luna.AST.AST          as LAST
+import qualified Flowbox.Luna.AST.Expr         as Expr
 import qualified Flowbox.Luna.AST.Type         as Type
 import           Flowbox.Luna.AST.Type           (Type)
+import qualified Flowbox.Luna.AST.Pat          as Pat
+import           Flowbox.Luna.AST.Pat            (Pat)
 import qualified Flowbox.Luna.Passes.SSA.State as SSAState
 import           Flowbox.Luna.Passes.SSA.State   (SSAState)
 import qualified Flowbox.Luna.Passes.Pass      as Pass
@@ -29,55 +31,72 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.SSA.SSA"
 
 
-data Mode = Write | Read
-
 type SSAMonad m = PassMonad SSAState m
 
 
-run :: PassMonad s m => LAST.Expr -> Pass.Result m LAST.Expr
-run = (Pass.runM SSAState.empty) . (ssaAST Read)
+run :: PassMonad s m => Expr.Expr -> Pass.Result m Expr.Expr
+run = (Pass.run_ SSAState.empty) . ssaAST
 
 
-runNested :: SSAMonad m => Pass.Transformer SSAState a m b 
+runNested :: SSAMonad m => Pass.Transformer SSAState b -> Pass.Result m b 
 runNested f = do
     s <- get
-    Pass.runM s f
+    Pass.run_ s f
 
 
-ssaAST :: SSAMonad m => Mode -> LAST.Expr -> Pass.Result m LAST.Expr
-ssaAST mode ast = case ast of
-    LAST.Module     cls imports classes fields 
-                    methods modules     -> LAST.Module cls imports <$> ssamap classes <*> ssamap fields <*> ssamap methods <*> ssamap modules
-    LAST.Function   name signature body -> runNested $ do
-                                               SSAState.registerVar (name, name)
-                                               ssaType signature
-                                               LAST.Function name signature <$> ssamap body
-    LAST.Assignment src dst             -> flip LAST.Assignment <$> ssaAST mode dst <*> ssaAST Write src
-    LAST.Pattern    pat                 -> LAST.Pattern         <$> ssaAST mode pat
-    LAST.Identifier name                -> case mode of
-                                               Write -> LAST.Identifier <$> SSAState.handleVar name
-                                               Read  -> do
-                                                   v <- SSAState.lookupVar name
-                                                   case v of
-                                                       Nothing      -> (logger error $ "Not in scope: '" ++ name ++ "'") *> Pass.fail "Not in scope"
-                                                       Just newname -> return $ LAST.Identifier newname
-    LAST.Operator   name src dst        -> LAST.Operator name <$> ssaAST mode src <*> ssaAST mode dst
-    LAST.Call       src args            -> LAST.Call <$> ssaAST mode src <*> ssamap args
-    LAST.Class      cls classes fields 
-                    methods             -> do ssaType cls
-                                              LAST.Class cls <$> ssamap classes 
-                                                             <*> ssamap fields 
-                                                             <*> ssamap methods
-    LAST.Field      {}                  -> return ast
-    LAST.Constant   {}                  -> return ast
-    _                                   -> logger error "SSA Pass error: Unknown expression." *> Pass.fail "Unknown expression"
+ssaAST :: SSAMonad m => Expr.Expr -> Pass.Result m Expr.Expr
+ssaAST ast = case ast of
+    Expr.Function   id name signature body -> runNested $ do
+                                                  --SSAState.registerVar (name, name)
+                                                  --mapM ssaPat signature
+                                                  Expr.Function id name signature <$> ssaExprMap body
+    Expr.Assignment id pat dst             -> (flip (Expr.Assignment id) <$> ssaAST dst <*> ssaPat pat)
+    Expr.Var        id name                -> do
+                                              v <- SSAState.lookupVar name
+                                              case v of
+                                                  Nothing    -> (logger error $ "Not in scope: '" ++ name ++ "'") *> Pass.fail "Not in scope"
+                                                  Just vid   -> SSAState.bind id vid
+                                              return ast
+    Expr.Class      id cls classes fields 
+                    methods                -> do ssaType cls
+                                                 Expr.Class id cls <$> ssaExprMap classes 
+                                                                   <*> ssaExprMap fields 
+                                                                   <*> ssaExprMap methods
+    _                                      -> Expr.traverseM ssaAST ast
     where
-        ssamap = mapM (ssaAST mode)
+        ssaExprMap = mapM ssaAST
+
+--ssaAST :: SSAMonad m => Expr.Expr -> Pass.Result m Expr.Expr
+--ssaAST ast = case ast of
+--    Expr.Function   id name signature body -> runNested $ do
+--                                                  SSAState.registerVar (name, name)
+--                                                  mapM ssaPat signature
+--                                                  Expr.Function id name signature <$> ssaExprMap body
+--    Expr.Assignment id src dst             -> (flip (Expr.Assignment id) <$> ssaAST dst <*> ssaAST src)
+--    Expr.Var        id name                -> do
+--                                              v <- SSAState.lookupVar name
+--                                              case v of
+--                                                  Nothing    -> (logger error $ "Not in scope: '" ++ name ++ "'") *> Pass.fail "Not in scope"
+--                                                  Just lname -> return $ Expr.Var id lname
+--    Expr.Class      id cls classes fields 
+--                    methods                -> do ssaType cls
+--                                                 Expr.Class id cls <$> ssaExprMap classes 
+--                                                                   <*> ssaExprMap fields 
+--                                                                   <*> ssaExprMap methods
+--    _                                      -> Expr.traverseM ssaAST ast
+--    where
+--        ssaExprMap = mapM ssaAST
+
+ssaPat :: SSAMonad m => Pat -> Pass.Result m Pat
+ssaPat pat = case pat of
+    Pat.Var     id name                 -> return $ Pat.Var id name -- <$> SSAState.handleVar name
+    _                                   -> logger error "SSA Pass error: Unknown pattern." *> Pass.fail "Unknown pattern"
 
 ssaType :: SSAMonad m => Type -> Pass.Result m ()
 ssaType ast = case ast of
-    Type.Lambda inputs _       -> ssaType inputs
-    Type.Tuple  items          -> mapM ssaType items *> return ()
-    Type.Type   name           -> SSAState.registerVar (name, name)
-    Type.Class  name   _       -> SSAState.registerVar (name, name)
-    _                          -> logger error "SSA Pass error: Unknown type." *> Pass.fail "Unknown type"
+    Type.Tuple  id items          -> mapM ssaType items *> return ()
+    Type.Var    id name           -> do
+                                     SSAState.registerVar id
+                                     SSAState.registerVarName (name, id)
+    --Type.Class  id name   _       -> SSAState.registerVar (name, name)
+    _                             -> logger error "SSA Pass error: Unknown type." *> Pass.fail "Unknown type"

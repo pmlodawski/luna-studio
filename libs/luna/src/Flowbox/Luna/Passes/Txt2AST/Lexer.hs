@@ -34,14 +34,20 @@ pBlockBegin  = symbol  ':'
 separator    = symbol  ','
 parenL       = symbol  '('
 parenR       = symbol  ')'
+bracketL     = symbol  '['
+bracketR     = symbol  ']'
+braceL       = symbol  '{'
+braceR       = symbol  '}'
+pAccessor    = symbol  '.'
+pArrow       = symbols "->"
 pTypeDecl    = symbols "::"
 
 opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart
-reservedOpNames = ["=", "::", ":"]
+reservedOpNames = ["=", "::", ":", ".", "->", "<-"]
 
 
-pPath        = sepBy1 pIdent (symbol '.')
+pPath        = sepBy1 pIdent pAccessor
 
 
 -----------------------------------------------------------
@@ -64,7 +70,9 @@ pAs         = reserved "as"
     -- Bracketing
 -----------------------------------------------------------
 
-parensed p        = between (parenL) (parenR) p
+parensed  p     = between (parenL)   (parenR)   p
+bracketed p     = between (bracketL) (bracketR) p
+braced    p     = between (braceL)   (braceR)   p
 
 
 -----------------------------------------------------------
@@ -181,9 +189,9 @@ intStr          = ((:) <$> lexeme signStr <*> natStr) <|> natStr
 signStr         =   char '-'
                 <|> char '+'
 
-natStr          = zeroNumberStr <|> decimalStr
+natStr          = try(zeroNumberStr) <|> decimalStr
 
-zeroNumberStr   = char '0' *> (hexadecimalStr <|> octalStr <|> decimalStr <|> return "") <?> ""
+zeroNumberStr   = char '0' *> (hexadecimalStr <|> octalStr <|> decimalStr) <?> ""
 
 decimalStr      = numberStr digit
 hexadecimalStr  = oneOf "xX" *> numberStr hexDigit
@@ -228,8 +236,8 @@ isReservedOp name = isReserved (sort reservedOpNames) name
 -----------------------------------------------------------
 -- Identifiers & Reserved words
 -----------------------------------------------------------
-reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> "")
---reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
+--reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> "")
+reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
 
 pIdentVar     = pIdentLower <?> "variable identifier"
 pIdentType    = pIdentUpper <?> "type identifier"

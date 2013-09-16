@@ -32,6 +32,7 @@ Library
                   either,
                   fgl,
                   flowbox-utils,
+                  ghc-prim,
                   hashable,
                   MissingH == 1.2.0.0,
                   mtl,
@@ -40,7 +41,9 @@ Library
                   text,
                   thrift >= 0.9,
                   transformers,
+                  parsec,
                   unordered-containers,
+                  uu-parsinglib,
                   vector
 
 
@@ -64,7 +67,6 @@ Executable luna
                   flowbox-utils,
                   MissingH,
                   mtl,
-                  pretty-show,
                   timeit,
                   transformers
 

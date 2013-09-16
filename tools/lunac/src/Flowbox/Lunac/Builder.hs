@@ -14,7 +14,7 @@ import qualified Text.Show.Pretty                        as PP
 import           System.TimeIt                             
 
 import           Flowbox.Prelude                           
-import qualified Flowbox.Luna.AST.AST                    as AST
+import qualified Flowbox.Luna.AST.Expr                   as ASTExpr
 import qualified Flowbox.Luna.Lib.Library                as Library
 import           Flowbox.Luna.Lib.Library                  (Library)
 import qualified Flowbox.Luna.Network.Def.Definition     as Definition
@@ -56,19 +56,19 @@ buildGraph defManager def = Luna.run $ do
     buildAST ast
 
 
-buildAST :: (MonadIO m, PassMonad s m) => AST.Expr -> Pass.Result m ()
-buildAST (ast :: AST.Expr) = do
+buildAST :: (MonadIO m, PassMonad s m) => ASTExpr.Expr -> Pass.Result m ()
+buildAST (ast :: ASTExpr.Expr) = do
     putStrLn "\n-------- SSA --------"
     ssa <- SSA.run     ast
     putStrLn $ PP.ppShow ssa
 
-    putStrLn "\n-------- HAST --------" 
-    hast <- HSGen.run  ssa
-    putStrLn $ PP.ppShow hast
+    --putStrLn "\n-------- HAST --------" 
+    --hast <- HSGen.run  ssa
+    --putStrLn $ PP.ppShow hast
 
-    putStrLn "\n-------- HSC --------" 
-    hsc <- HSC.run  hast
-    putStrLn $ hsc
+    --putStrLn "\n-------- HSC --------" 
+    --hsc <- HSC.run  hast
+    --putStrLn $ hsc
 
     return ()
 
