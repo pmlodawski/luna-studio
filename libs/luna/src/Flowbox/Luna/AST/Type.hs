@@ -15,7 +15,6 @@ import           GHC.Generics
 
 data Type = Unknown
           | Var    { id :: ID, name     :: String                       }
-	      | Sig    { id :: ID, name     :: String                       }
 	      | Tuple  { id :: ID, items    :: [Type]                       }
 	      | Class  { id :: ID, name     :: String , params  :: [String] }
           | Module { id :: ID, name     :: String                       }

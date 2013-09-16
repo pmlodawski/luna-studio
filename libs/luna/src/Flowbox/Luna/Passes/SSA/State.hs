@@ -20,8 +20,7 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.SSA.State"
 
 
-data SSAState = SSAState { varcount :: Int
-                         , namemap  :: Map String Int
+data SSAState = SSAState { namemap  :: Map String Int
                          , vars     :: [Int]
                          , varmap   :: Map Int Int
                          } deriving (Show)
@@ -31,7 +30,7 @@ type SSAStateM m = MonadState SSAState m
 
 
 empty :: SSAState
-empty = SSAState 0 Map.empty [] Map.empty
+empty = SSAState Map.empty [] Map.empty
 
 
 --genVarName :: SSAStateM m => m String
