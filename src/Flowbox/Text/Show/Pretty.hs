@@ -10,9 +10,9 @@ module Flowbox.Text.Show.Pretty (
 	module Text.Show.Pretty
 ) where
 
-import           Text.Show.Pretty
-import           Text.PrettyPrint
-import           Flowbox.Generics.Deriving.QShow
+import           Text.Show.Pretty                  
+import           Text.PrettyPrint                  
+import           Flowbox.Generics.Deriving.QShow   
 
 
 ppqShow :: QShow a => a -> String
