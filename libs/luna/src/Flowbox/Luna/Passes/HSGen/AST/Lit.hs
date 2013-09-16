@@ -5,18 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.HSGen.AST.Constant where
+module Flowbox.Luna.Passes.HSGen.AST.Lit where
 
 import qualified Flowbox.Prelude as Prelude
 import           Flowbox.Prelude hiding (String, Char, Integer)
 
-data Constant = Integer Prelude.String
-              | String  Prelude.String
-              | Char    Prelude.Char
-              deriving (Show, Eq)
+data Lit = Char    Prelude.Char
+         | String  Prelude.String
+         | Integer Prelude.String
+         deriving (Show, Eq)
 
-genCode :: Constant -> Prelude.String
-genCode e = case e of
-	Integer val -> val
-	String  val -> "\"" ++ val   ++ "\""
-	Char    val -> "'"  ++ [val] ++ "'"

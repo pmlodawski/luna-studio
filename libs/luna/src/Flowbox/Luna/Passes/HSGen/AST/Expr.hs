@@ -13,21 +13,20 @@ import           Data.String.Utils                        (join)
 import qualified Flowbox.Luna.Passes.HSGen.Path         as Path
 --import qualified Flowbox.Luna.Passes.HSGen.GenState         as GenState
 --import           Flowbox.Luna.Passes.HSGen.GenState           (GenState)
-import qualified Flowbox.Luna.Passes.HSGen.AST.Constant as Constant
+import qualified Flowbox.Luna.Passes.HSGen.AST.Lit as Lit
 
-data Context = Pure | IO deriving (Show, Eq)
+type Lit = Lit.Lit
 
-type Constant = Constant.Constant
-
-data Expr = Assignment { src      :: Expr     , dst       :: Expr     , ctx       :: Context }
+data Expr = Assignment { src      :: Expr     , dst       :: Expr    }
           | Tuple      { items    :: [Expr]                                                  }
-          | Call       { name     :: String   , args      :: [Expr]   , ctx       :: Context }
+          -- | Call       { name     :: String   , args      :: [Expr]   , ctx       :: Context }
           | StringLit  { val      :: String                                                  }
           | NOP        {                                                                     }
           | Var        { name     :: String                                                  }
           | Typed      { name     :: String   , expr      :: Expr                            }
           | Function   { name     :: String   , signature :: [Expr]   , expr      :: Expr    }
           | LetBlock   { exprs    :: [Expr]   , result    :: Expr                            }
+          | DoBlock    { exprs    :: [Expr]                                                  }
           | DataType   { name     :: String   , params    :: [String] , cons      :: [Expr]  }
           | Cons       { name     :: String   , fields    :: [Expr]                          }
           | Module     { path     :: [String] , imports   :: [Expr]   , datatypes :: [Expr]  , methods :: [Expr]  }
@@ -44,7 +43,8 @@ data Expr = Assignment { src      :: Expr     , dst       :: Expr     , ctx     
           -- | Block      { body     :: [Expr]   , ctx       :: Context                           }
           -- | BlockRet   { name     :: String   , ctx       :: Context                           }
           -- | FuncType   { items    :: [Expr]                                                    }
-           | Operator   { name     :: String   , src       :: Expr     , dst          :: Expr   }
+           | Infix      { name     :: String   , src       :: Expr     , dst          :: Expr   }
+           | Lit        { lval     :: Lit                                                   }
           -- | Constant   { cval     :: Constant                                                  }
           deriving (Show)
 

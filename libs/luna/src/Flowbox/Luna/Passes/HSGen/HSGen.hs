@@ -12,8 +12,9 @@ import           Flowbox.Prelude
 import qualified Flowbox.Luna.AST.Expr                  as LExpr
 import qualified Flowbox.Luna.AST.Type                  as LType
 import qualified Flowbox.Luna.AST.Pat                   as LPat
+import qualified Flowbox.Luna.AST.Lit                   as LLit
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr     as HExpr
-import qualified Flowbox.Luna.Passes.HSGen.AST.Constant as Constant
+import qualified Flowbox.Luna.Passes.HSGen.AST.Lit      as HLit
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module   as Module
 import qualified Flowbox.Luna.Passes.HSGen.AST.DataType as DataType
 import qualified Flowbox.Luna.Passes.HSGen.AST.Cons     as Cons
@@ -69,17 +70,20 @@ genExpr ast = case ast of
                                  
     LExpr.Function id name signature body     -> do
                                                  body'  <- mapM genExpr body
-                                                 HExpr.Function name <$> mapM genPat signature <*> pure (HExpr.LetBlock body' HExpr.NOP)
+                                                 HExpr.Function name <$> mapM genPat signature <*> pure (HExpr.DoBlock body')
 
     LExpr.Import id segments name             -> return $ HExpr.Import segments name
 
     LExpr.Class id cls classes fields methods -> do 
-    	                                         cons   <- HExpr.Cons name <$> mapM genField fields
+                                                 cons   <- HExpr.Cons name <$> mapM genField fields
                                                  return  $ HExpr.DataType name params [cons] 
+                         
                                                  where name   =  LType.name   cls
                                                        params =  LType.params cls
 
-    LExpr.Infix id name src dst               -> HExpr.Operator name <$> genExpr src <*> genExpr dst
+    LExpr.Infix id name src dst               -> HExpr.Infix name <$> genExpr src <*> genExpr dst
+    LExpr.Assignment id pat dst               -> HExpr.Assignment <$> genPat pat <*> genExpr dst
+    LExpr.Lit        id value                 -> HExpr.Lit <$> genLit value
 
 
 
@@ -94,3 +98,7 @@ genType t = case t of
 
 genField :: GenMonad m => LExpr.Expr -> Pass.Result m HExpr.Expr
 genField (LExpr.Field id name t) = return $ HExpr.Typed (LType.name t) (HExpr.Var name)
+
+genLit :: GenMonad m => LLit.Lit -> Pass.Result m HLit.Lit
+genLit l = case l of
+    LLit.Integer id str  -> return $ HLit.Integer str
