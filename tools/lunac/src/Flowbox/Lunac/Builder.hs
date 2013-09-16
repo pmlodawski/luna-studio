@@ -27,9 +27,8 @@ import qualified Flowbox.Luna.Passes.HSGen.HSGen         as HSGen
 import qualified Flowbox.Luna.Passes.Luna.Luna           as Luna
 import qualified Flowbox.Luna.Passes.Pass                as Pass
 import           Flowbox.Luna.Passes.Pass                  (PassMonad)
-import qualified Flowbox.Luna.Passes.SSA.SSA             as SSA
+import qualified Flowbox.Luna.Passes.VA.VA               as VA
 import           Flowbox.System.Log.Logger                 
-
 
 
 logger :: Logger
@@ -58,17 +57,17 @@ buildGraph defManager def = Luna.run $ do
 
 buildAST :: (MonadIO m, PassMonad s m) => ASTExpr.Expr -> Pass.Result m ()
 buildAST (ast :: ASTExpr.Expr) = do
-    putStrLn "\n-------- SSA --------"
-    ssa <- SSA.run     ast
+    putStrLn "\n-------- VA --------"
+    ssa <- VA.run     ast
     putStrLn $ PP.ppShow ssa
 
-    --putStrLn "\n-------- HAST --------" 
-    --hast <- HSGen.run  ssa
-    --putStrLn $ PP.ppShow hast
+    putStrLn "\n-------- HSGen --------" 
+    hast <- HSGen.run  ast
+    putStrLn $ PP.ppShow hast
 
-    --putStrLn "\n-------- HSC --------" 
-    --hsc <- HSC.run  hast
-    --putStrLn $ hsc
+    putStrLn "\n-------- HSC --------" 
+    hsc <- HSC.run  hast
+    putStrLn $ hsc
 
     return ()
 

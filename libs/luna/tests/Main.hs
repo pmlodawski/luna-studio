@@ -7,8 +7,6 @@
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
-
-
 import           Flowbox.Prelude                        
 
 import           Control.Monad.State                    
@@ -21,11 +19,11 @@ import qualified Flowbox.System.Log.Logger            as Logger
 import qualified Flowbox.System.Log.LogEntry          as LogEntry
 import qualified Flowbox.Luna.Passes.HSGen.HSGen      as HSGen
 import qualified Flowbox.Luna.Passes.HSGen.HSC        as HSC
-import qualified Flowbox.Luna.Passes.SSA.SSA          as SSA
+import qualified Flowbox.Luna.Passes.VA.VA            as VA
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module as Module
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr   as Expr
-import qualified Flowbox.Luna.Passes.SSA.State        as SSAState
-import           Flowbox.Luna.Passes.SSA.State          (SSAState)
+--import qualified Flowbox.Luna.Passes.SSA.State           as SSAState
+--import           Flowbox.Luna.Passes.SSA.State             (SSAState)
 import qualified Flowbox.Luna.Passes.Luna.Luna        as Luna
 import qualified Flowbox.Luna.Passes.Txt2AST.Txt2AST  as Txt2AST
 import qualified Flowbox.Luna.Data.Source             as Source
@@ -74,22 +72,22 @@ main = do
 
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
-    putStrLn "\n-------- AST --------"
+    putStrLn "\n-------- Txt2AST --------"
     ast <- Txt2AST.run example
     --putStrLn $ PP.ppShow ast
     putStrLn $ PP.ppqShow ast
 
-    --putStrLn "\n-------- SSA --------"
-    --ssa <- SSA.run     ast
-    --putStrLn $ PP.ppShow ssa
+    putStrLn "\n-------- VA --------"
+    ssa <- VA.run     ast
+    putStrLn $ PP.ppShow ssa
 
-    --putStrLn "\n-------- HAST --------" 
-    --hast <- HSGen.run  ssa
-    --putStrLn $ PP.ppShow hast
+    putStrLn "\n-------- HSGen --------" 
+    hast <- HSGen.run  ast
+    putStrLn $ PP.ppShow hast
 
-    --putStrLn "\n-------- HSC --------" 
-    --hsc <- HSC.run  hast
-    --putStrLn $ hsc
+    putStrLn "\n-------- HSC --------" 
+    hsc <- HSC.run  hast
+    putStrLn $ hsc
 
     return ()
 

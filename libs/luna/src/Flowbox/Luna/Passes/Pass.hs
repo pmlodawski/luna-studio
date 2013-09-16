@@ -52,5 +52,11 @@ run_ s f = do
     return result
 
 
+run'_ :: PassMonad outstate m => state -> Transformer state b -> Result m state
+run'_ s f = do
+    (_, state) <- run s f
+    return state
+
+
 fail :: Monad m => String -> EitherT PassError m a
 fail = left
