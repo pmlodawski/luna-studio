@@ -46,6 +46,22 @@ data Expr  = NOP        { id :: ID                                              
 
 instance QShow Expr
 
+--traverseM' :: (Functor m, Applicative m, Monad m) => (Expr -> m Expr) -> Expr -> m Expr
+traverseM' fexp fpat flit expr = case expr of
+    Assignment id pat dst                    -> Assignment id pat <$> fexp dst
+    Tuple      id items                      -> Tuple      id <$> mapM fexp items
+    Typed      id cls expr                   -> Typed      id cls <$> fexp expr
+    App        id src args                   -> App        id <$> fexp src <*> mapM fexp args
+    Accessor   id src dst                    -> Accessor   id <$> fexp src <*> fexp dst
+    Infix      id name src dst               -> Infix      id name <$> fexp src <*> fexp dst
+    Class      id cls classes fields methods -> Class      id cls <$> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods
+    Module     id cls imports classes             
+               fields methods modules        -> Module     id cls <$> mapM fexp imports <*> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods <*> mapM fexp modules
+    Lambda     id signature body             -> Lambda     id signature <$> mapM fexp body
+    Function   id name signature body        -> Function   id name signature <$> mapM fexp body
+    List       id items                      -> List       id <$> mapM fexp items
+    _                                        -> pure expr
+
 traverse :: (Expr -> Expr) -> Expr -> Expr
 traverse fexp expr = let t = traverse fexp in case expr of
     Assignment id pat dst                    -> Assignment id pat (t dst)
