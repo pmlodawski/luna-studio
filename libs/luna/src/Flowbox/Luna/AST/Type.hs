@@ -12,7 +12,7 @@ import           Flowbox.Prelude                 hiding (id)
 import           Flowbox.Generics.Deriving.QShow   
 import           Flowbox.Luna.AST.Utils            (ID)
 import           GHC.Generics                      
-import           Control.Applicative        
+import           Control.Applicative               
 
 data Type = Unknown
           | Var    { id :: ID, name     :: String                       }

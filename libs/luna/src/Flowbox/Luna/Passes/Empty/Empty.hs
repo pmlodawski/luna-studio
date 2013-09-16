@@ -8,11 +8,11 @@
 
 module Flowbox.Luna.Passes.Empty.Empty where
 
-import qualified Flowbox.Luna.Passes.Pass     as Pass
-import           Flowbox.Luna.Passes.Pass       (PassMonad)
+import qualified Flowbox.Luna.Passes.Pass  as Pass
+import           Flowbox.Luna.Passes.Pass    (PassMonad)
 
-import           Flowbox.System.Log.Logger      
-import           Flowbox.Prelude              hiding (error, id)
+import           Flowbox.System.Log.Logger   
+import           Flowbox.Prelude           hiding (error, id)
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Empty.Empty"

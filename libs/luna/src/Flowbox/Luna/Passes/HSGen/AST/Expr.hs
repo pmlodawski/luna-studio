@@ -7,10 +7,10 @@
 
 module Flowbox.Luna.Passes.HSGen.AST.Expr where
 
-import           Flowbox.Prelude                          
-import           Debug.Trace                              
-import           Data.String.Utils                        (join)
-import qualified Flowbox.Luna.Passes.HSGen.Path         as Path
+import           Flowbox.Prelude                     
+import           Debug.Trace                         
+import           Data.String.Utils                   (join)
+import qualified Flowbox.Luna.Passes.HSGen.Path    as Path
 --import qualified Flowbox.Luna.Passes.HSGen.GenState         as GenState
 --import           Flowbox.Luna.Passes.HSGen.GenState           (GenState)
 import qualified Flowbox.Luna.Passes.HSGen.AST.Lit as Lit
@@ -23,12 +23,13 @@ data Expr = Assignment { src      :: Expr     , dst       :: Expr    }
           | StringLit  { val      :: String                                                  }
           | NOP        {                                                                     }
           | Var        { name     :: String                                                  }
-          | Typed      { name     :: String   , expr      :: Expr                            }
+          | Typed      { cls      :: Expr     , expr      :: Expr                            }
           | Function   { name     :: String   , signature :: [Expr]   , expr      :: Expr    }
           | LetBlock   { exprs    :: [Expr]   , result    :: Expr                            }
           | DoBlock    { exprs    :: [Expr]                                                  }
           | DataType   { name     :: String   , params    :: [String] , cons      :: [Expr]  }
           | Cons       { name     :: String   , fields    :: [Expr]                          }
+          | ConsE      { segments :: [String]                                                }
           | Module     { path     :: [String] , imports   :: [Expr]   , datatypes :: [Expr]  , methods :: [Expr]  }
           | Import     { segments :: [String] , name      :: String                          }
           | Undefined

@@ -56,25 +56,27 @@ genSection header generator d = if null d
 
 genExpr :: HExpr.Expr -> String
 genExpr expr = case expr of
-    HExpr.Var      name                 -> name
-    HExpr.Import   segments name        -> "import qualified " ++ join "." segments ++ " as " ++ name
-    HExpr.Module path imports datatypes 
-                methods                -> header 
-                                       ++ genSection "imports"   genExpr imports
-                                       ++ genSection "datatypes" genExpr datatypes
-                                       ++ genSection "methods"   genExpr methods
-                                          where header = "module " ++ join "." path ++ " where" ++ eol
-    HExpr.DataType name params cons     -> "data " ++ name ++ params' ++ " = " ++ join " | " (map genExpr cons)
-                                          where params' = if null params then "" else " " ++ join " " params
-    HExpr.Cons     name fields          -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"
-    HExpr.Typed    name expr            -> genExpr expr ++ " :: " ++ name
-    HExpr.Function name signature expr  -> name ++ " " ++ join " " (map genExpr signature) ++ " = " ++ genExpr expr
-    HExpr.LetBlock exprs result         -> "let { " ++ join ";" (map genExpr exprs) ++ " } in " ++ genExpr result 
-    HExpr.DoBlock  exprs                -> "do { " ++ join ";" (map genExpr exprs) ++ " }"
-    HExpr.Infix    name src dst         -> genExpr src ++ " " ++ name ++ " " ++ genExpr dst
-    HExpr.NOP                           -> "NOP"
-    HExpr.Assignment src dst            -> genExpr src ++ " <- " ++ genExpr dst
-    HExpr.Lit      val                  -> genLit val
+    HExpr.Var      name                   -> name
+    HExpr.Import   segments name          -> "import qualified " ++ join "." segments ++ " as " ++ name
+    HExpr.Module   path imports datatypes 
+                   methods                -> header 
+                                          ++ genSection "imports"   genExpr imports
+                                          ++ genSection "datatypes" genExpr datatypes
+                                          ++ genSection "methods"   genExpr methods
+                                             where header = "module " ++ join "." path ++ " where" ++ eol
+    HExpr.DataType name params cons       -> "data " ++ name ++ params' ++ " = " ++ join " | " (map genExpr cons)
+                                             where params' = if null params then "" else " " ++ join " " params
+    HExpr.Cons     name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"
+    HExpr.Typed    cls  expr              -> genExpr expr ++ " :: " ++ genExpr cls
+    HExpr.Function name signature expr    -> name ++ " " ++ join " " (map genExpr signature) ++ " = " ++ genExpr expr
+    HExpr.LetBlock exprs result           -> "let { " ++ join ";" (map genExpr exprs) ++ " } in " ++ genExpr result 
+    HExpr.DoBlock  exprs                  -> "do { " ++ join ";" (map genExpr exprs) ++ " }"
+    HExpr.Infix    name src dst           -> genExpr src ++ " " ++ name ++ " " ++ genExpr dst
+    HExpr.NOP                             -> "NOP"
+    HExpr.Assignment src dst              -> genExpr src ++ " <- " ++ genExpr dst
+    HExpr.Lit      val                    -> genLit val
+    HExpr.Tuple    items                  -> "(" ++ join "," (map genExpr items) ++ ")"
+    HExpr.ConsE    segments               -> join " " segments
 
 
 genLit :: HLit.Lit -> String

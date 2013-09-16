@@ -75,7 +75,7 @@ genExpr ast = case ast of
     LExpr.Import id segments name             -> return $ HExpr.Import segments name
 
     LExpr.Class id cls classes fields methods -> do 
-                                                 cons   <- HExpr.Cons name <$> mapM genField fields
+                                                 cons   <- HExpr.Cons name <$> mapM genExpr fields
                                                  return  $ HExpr.DataType name params [cons] 
                          
                                                  where name   =  LType.name   cls
@@ -84,21 +84,22 @@ genExpr ast = case ast of
     LExpr.Infix id name src dst               -> HExpr.Infix name <$> genExpr src <*> genExpr dst
     LExpr.Assignment id pat dst               -> HExpr.Assignment <$> genPat pat <*> genExpr dst
     LExpr.Lit        id value                 -> HExpr.Lit <$> genLit value
+    LExpr.Tuple      id items                 -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
+    LExpr.Field      id name cls              -> HExpr.Typed <$> genType cls <*> pure (HExpr.Var name)
 
 
 
 genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr.Expr
 genPat pat = case pat of
-    LPat.Var   id name              -> return $ HExpr.Var name
+    LPat.Var     id name     -> return $ HExpr.Var name
                                             
 genType :: GenMonad m => LType.Type -> Pass.Result m HExpr.Expr
 genType t = case t of
-    LType.Var   id name             -> return $ HExpr.Var (name)
-    LType.Tuple id items            -> HExpr.Tuple <$> mapM genType items
-
-genField :: GenMonad m => LExpr.Expr -> Pass.Result m HExpr.Expr
-genField (LExpr.Field id name t) = return $ HExpr.Typed (LType.name t) (HExpr.Var name)
+    LType.Var    id name     -> return $ HExpr.Var (name)
+    LType.Cons   id segments -> return $ HExpr.ConsE segments
+    LType.Tuple  id items    -> HExpr.Tuple <$> mapM genType items
 
 genLit :: GenMonad m => LLit.Lit -> Pass.Result m HLit.Lit
 genLit l = case l of
-    LLit.Integer id str  -> return $ HLit.Integer str
+    LLit.Integer id str      -> return $ HLit.Integer str
+

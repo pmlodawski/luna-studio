@@ -64,6 +64,7 @@ traverseM fexp ftype fpat flit expr = case expr of
     Class      id cls classes fields methods -> Class      id <$> ftype cls <*> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods
     Module     id cls imports classes             
                fields methods modules        -> Module     id <$> ftype cls <*> mapM fexp imports <*> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods <*> mapM fexp modules
+    Field      id name cls                   -> Field      id name <$> ftype cls
     Lambda     id signature body             -> Lambda     id <$> mapM fpat signature <*> mapM fexp body
     Cons       {}                            -> pure expr
     Function   id name signature body        -> Function   id name <$> mapM fpat signature <*> mapM fexp body
@@ -85,6 +86,7 @@ traverseM_ fexp ftype fpat flit expr = case expr of
     Class      id cls classes fields methods -> pure () <* ftype cls <* mapM_ fexp classes <* mapM_ fexp fields <* mapM_ fexp methods
     Module     id cls imports classes             
                fields methods modules        -> pure () <* ftype cls <* mapM_ fexp imports <* mapM_ fexp classes <* mapM_ fexp fields <* mapM_ fexp methods <* mapM_ fexp modules
+    Field      id name cls                   -> pure () <* ftype cls
     Lambda     id signature body             -> pure () <* mapM_ fpat signature <* mapM_ fexp body
     Cons       {}                            -> pure ()
     Function   id name signature body        -> pure () <* mapM_ fpat signature <* mapM_ fexp body

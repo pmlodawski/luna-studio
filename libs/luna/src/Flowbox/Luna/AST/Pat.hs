@@ -15,7 +15,7 @@ import           Flowbox.Luna.AST.Type             (Type)
 import           Flowbox.Luna.AST.Utils            (ID)
 import           Flowbox.Generics.Deriving.QShow   
 import           GHC.Generics                      
-import           Control.Applicative 
+import           Control.Applicative               
 
 type Lit = Lit.Lit
 

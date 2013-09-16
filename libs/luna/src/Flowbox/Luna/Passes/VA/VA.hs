@@ -36,12 +36,12 @@ type VAMonad m = PassMonad LocState m
 
 
 run :: PassMonad s m => Expr.Expr -> Pass.Result m VarStat
-run = (Pass.run_ LocState.empty) . ssaExpr
+run = (Pass.run_ LocState.empty) . vaExpr
 
 
-ssaExpr :: VAMonad m => Expr.Expr -> Pass.Result m VarStat
-ssaExpr ast = do
-    ssaAST ast
+vaExpr :: VAMonad m => Expr.Expr -> Pass.Result m VarStat
+vaExpr ast = do
+    vaAST ast
     LocState.varstat <$> get
 
 
@@ -51,14 +51,14 @@ runNested f = do
     Pass.run'_ s f
 
 
-ssaAST :: VAMonad m => Expr.Expr -> Pass.Result m ()
-ssaAST ast = case ast of
+vaAST :: VAMonad m => Expr.Expr -> Pass.Result m ()
+vaAST ast = case ast of
     Expr.Function   _ _ signature body    -> do
                                              s <- runNested $ do
-                                                 mapM_ ssaPat signature
-                                                 ssaExprMap body
+                                                 mapM_ vaPat signature
+                                                 vaExprMap body
                                              LocState.updateVarStat s
-    Expr.Assignment _ pat dst             -> ssaAST dst <* ssaPat pat
+    Expr.Assignment _ pat dst             -> vaAST dst <* vaPat pat
     Expr.Var        id name               -> do
                                              v <- LocState.lookupVar name
                                              case v of
@@ -66,24 +66,23 @@ ssaAST ast = case ast of
                                                  Just vid   -> LocState.bind id vid
     Expr.Class      _ cls classes fields 
                     methods               -> () <$ do 
-                                                   ssaType cls
-                                                   ssaExprMap classes 
-                                                   ssaExprMap fields 
-                                                   ssaExprMap methods
-    _                                     -> Expr.traverseM'_ ssaAST ast
+                                                   vaType cls
+                                                   vaExprMap classes 
+                                                   vaExprMap fields 
+                                                   vaExprMap methods
+    _                                     -> Expr.traverseM'_ vaAST ast
     where
-        ssaExprMap = mapM_ ssaAST
+        vaExprMap = mapM_ vaAST
 
 
 
-ssaPat :: VAMonad m => Pat -> Pass.Result m ()
-ssaPat pat = case pat of
+vaPat :: VAMonad m => Pat -> Pass.Result m ()
+vaPat pat = case pat of
     Pat.Var     id name                 -> LocState.registerVarName (name, id)
     Pat.Wildcard _                      -> return ()
-    _                                   -> logger error "SSA Pass error: Unknown pattern." *> Pass.fail "Unknown pattern"
+    _                                   -> Pat.traverseM_ vaPat vaType pure pat
 
-ssaType :: VAMonad m => Type -> Pass.Result m ()
-ssaType ast = case ast of
-    Type.Tuple  _ items                 -> mapM ssaType items *> return ()
-    Type.Var    _ _                     -> return ()
-    _                                   -> logger error "SSA Pass error: Unknown type." *> Pass.fail "Unknown type"
+vaType :: VAMonad m => Type -> Pass.Result m ()
+vaType t = case t of
+    Type.Tuple  _ items                 -> mapM vaType items *> return ()
+    _                                   -> Type.traverseM_ vaType t
