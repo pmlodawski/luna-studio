@@ -60,6 +60,8 @@ Library
         Flowbox.Luna.Passes.HSGen.AST.Instance,
         Flowbox.Luna.Passes.HSGen.AST.Deriving,
         Flowbox.Luna.Passes.HSGen.AST.Extension,
+        Flowbox.Luna.Passes.SSA.SSA,
+        Flowbox.Luna.Passes.Empty.Empty,
         Flowbox.Luna.Passes.Luna.Luna,
         Flowbox.Luna.Passes.VA.State,
         Flowbox.Luna.Passes.VA.VA,
