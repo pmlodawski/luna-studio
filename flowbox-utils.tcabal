@@ -23,9 +23,12 @@ Library
                   dlist,
                   --either,
                   errors,
+                  generic-deriving,
                   hslogger,
                   MissingH == 1.2.0.0,
                   mtl,
+                  pretty,
+                  pretty-show,
                   split,
                   text,
                   transformers
