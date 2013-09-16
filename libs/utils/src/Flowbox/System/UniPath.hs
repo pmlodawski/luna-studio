@@ -11,6 +11,7 @@ module Flowbox.System.UniPath(
     
     fromUnixString,
     toUnixString,
+    expand,
     fromList,
     append,
     prepend,
@@ -22,12 +23,18 @@ module Flowbox.System.UniPath(
     dirOf
 ) where
 
-import           Data.List.Split     (splitOn)
-import           Data.List           (intercalate, intersperse)
-import           Data.String.Utils   (join)
+import           Control.Applicative hiding (empty)
+import           Data.List.Split       (splitOn)
+import           Data.List             (intercalate, intersperse)
+import           Data.String.Utils     (join)
+import qualified System.Directory    as Directory
 
-
-data PathItem = Node String | Root String | Up | Current| Empty deriving (Eq,Ord,Show)  
+data PathItem = Node String 
+              | Root String
+              | Var String 
+              | Up
+              | Current 
+              | Empty deriving (Eq,Ord,Show)  
 
 type UniPath = [PathItem]
 
@@ -39,6 +46,7 @@ fromUnixString :: String -> UniPath
 fromUnixString []           = empty
 fromUnixString spath@(x:xs) = case x of
         '/' -> fromList $ "/" : splitOn "/" xs
+        '~' -> Var "~" : fromUnixString xs
         _   -> fromList $ splitOn "/" spath
 
 
@@ -50,6 +58,16 @@ toUnixString path = join "/" $ fmap str path where
                 Up       -> ".."
                 Current  -> "."
                 Empty    -> ""
+                Var v    -> v
+
+expand :: UniPath -> IO UniPath
+expand [] = return empty
+expand spath@(x:xs) = case x of
+        Var "~" -> do home <- Directory.getHomeDirectory
+                      rest <- expand xs
+                      return $ (fromUnixString home) ++ rest
+        _       -> (:) x <$> expand xs
+
 
 fromList :: [String] -> UniPath
 fromList path = foldr prepend empty path
