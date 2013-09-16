@@ -6,7 +6,9 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, TupleSections #-}
 
-module Flowbox.Luna.Passes.Graph2AST.Graph2AST where
+module Flowbox.Luna.Passes.Graph2AST.Graph2AST (
+    run
+) where
 
 import           Control.Applicative                       
 import           Control.Monad.State                       
@@ -81,7 +83,9 @@ def2AST defManager (defID, def) = do
                                                  <*> nextDefs methods
             Type.Function name inputs _ -> do inputsNames <- getInputsNames inputs
                                               graphAst <- graph2AST graph inputsNames
-                                              return $ ASTExpr.Function defID name undefined {-(snd $ type2ASTType cls)-} graphAst
+                                              return $ ASTExpr.Function defID name 
+                                                                        (function2signature cls)
+                                                                        graphAst
                                                -- notImplementedList
             Type.Module   _ params      -> ASTExpr.Module defID (snd $ type2ASTType cls)
                                                       (map import2ASTimport imports)
@@ -105,21 +109,19 @@ def2AST defManager (defID, def) = do
 --    return $ ASTExpr.Path $ prev ++ [name]
 
 
---function2signature :: Type -> [ASTPat.Pat]
---function2signature funcls = inputs2signature $ Type.inputs funcls where
+function2signature :: Type -> [ASTPat.Pat]
+function2signature funcls = map input2signature i where
+    Type.Tuple i = Type.inputs funcls
     
---    inputs2signature :: Type -> [ASTPat.Pat]
---    inputs2signature inputs = 
-
-
-notImplementedList :: [a]
-notImplementedList = []
-
+    input2signature :: Type -> ASTPat.Pat
+    input2signature input = ASTPat.Typed (-1) (ASTPat.Var (-1) name) (ASTType.Cons (-1) [cls]) where
+        (name, ASTType.Var _ cls) = type2ASTType input
+        
 
 type2ASTType :: Type -> (String, ASTType.Type)
 type2ASTType t = case t of 
     Type.Undefined                        -> (""  , ASTType.Unknown)
-    Type.TypeName     name                -> (name, ASTType.Var (-1) name)
+    Type.TypeName     name                -> (""  , ASTType.Var (-1) name)
     Type.Class        name params _       -> (""  , ASTType.Class (-1) name params)
     Type.Tuple        items               -> (""  , ASTType.Tuple (-1) (map (snd.type2ASTType) items))
     Type.Module       name _              -> (name, ASTType.Module (-1)  name)
@@ -153,10 +155,10 @@ node2AST graph inputsNames list (nodeID, node) = do
         return' a = return (list ++ [a])
 
     case node of 
-        Node.Expr expression (Flags _ True) _ -> return' $ ASTExpr.NOP (-1) -- Comment
-        Node.Inputs          _              _ -> return list
-        Node.Outputs         (Flags _ True) _ -> return' $ ASTExpr.NOP (-1) -- Comment
-        Node.Tuple           (Flags _ True) _ -> return' $ ASTExpr.NOP (-1) -- Comment
+        Node.Expr    _ (Flags _ True) _ -> return' $ ASTExpr.NOP (-1) -- Comment
+        Node.Inputs    _              _ -> return list
+        Node.Outputs   (Flags _ True) _ -> return' $ ASTExpr.NOP (-1) -- Comment
+        Node.Tuple     (Flags _ True) _ -> return' $ ASTExpr.NOP (-1) -- Comment
         _                                     -> do
             let 
                 biggestPort :: ((a, b, Edge) -> Port) -> (a, b, Edge) -> Port -> Port

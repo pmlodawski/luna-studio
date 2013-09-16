@@ -24,7 +24,7 @@ type Lit = Lit.Lit
 type Pat = Pat.Pat
 
 data Expr  = NOP        { id :: ID                                                                                                                                }
-           | Wildcard   { id :: ID                                                                                                                                }
+           | Wildcard   { id :: ID  {- PM: I use it to mark not provided function arguments -}                                                                    }
            | Import     { id :: ID, segments  :: [String] , name      :: String                                                                                   }
            | Var        { id :: ID, name      :: String                                                                                                           }
            | Lit        { id :: ID, value     :: Lit                                                                                                              }
