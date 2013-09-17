@@ -46,17 +46,18 @@ logger :: Logger
 logger = getLogger "Flowbox"
 
 
---example :: Source
---example = Source.Source "Workspace"
---        $ unlines [ "def f (a) b:"
---                  , "    a = 1"
---                  ]
-
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "class A:"
-                  , "    a :: Std.Math.Vector (Int a) b"
+        $ unlines [ "def f a b:"
+                  , "    a = a+b"
+                  , "    a = a+b"
                   ]
+
+--example :: Source
+--example = Source.Source "Workspace"
+--        $ unlines [ "class A:"
+--                  , "    a :: Std.Math.Vector (Int a) b"
+--                  ]
 
 --example :: Source
 --example = Source.Source "Workspace"

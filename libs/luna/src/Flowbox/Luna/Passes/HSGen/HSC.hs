@@ -69,8 +69,8 @@ genExpr expr = case expr of
     HExpr.Cons     name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"
     HExpr.Typed    cls  expr              -> genExpr expr ++ " :: " ++ genExpr cls
     HExpr.Function name signature expr    -> name ++ " " ++ join " " (map genExpr signature) ++ " = " ++ genExpr expr
-    HExpr.LetBlock exprs result           -> "let { " ++ join ";" (map genExpr exprs) ++ " } in " ++ genExpr result 
-    HExpr.DoBlock  exprs                  -> "do { " ++ join ";" (map genExpr exprs) ++ " }"
+    HExpr.LetBlock exprs result           -> "let { " ++ join "; " (map genExpr exprs) ++ " } in " ++ genExpr result 
+    HExpr.DoBlock  exprs                  -> "do { " ++ join "; " (map genExpr exprs) ++ " }"
     HExpr.Infix    name src dst           -> genExpr src ++ " " ++ name ++ " " ++ genExpr dst
     HExpr.NOP                             -> "NOP"
     HExpr.Assignment src dst              -> genExpr src ++ " <- " ++ genExpr dst
