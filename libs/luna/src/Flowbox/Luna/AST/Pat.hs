@@ -36,25 +36,28 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 traverseM :: Traversal m => (Pat -> m Pat) -> (Type -> m Type) -> (Lit -> m Lit) -> Pat -> m Pat
 traverseM fpat ftype flit pat = case pat of
-    Var        {}                            -> pure pat
-    Lit        id val                        -> Lit id <$> flit val
-    Tuple      id items                      -> Tuple id <$> mapM fpat items
-    Cons       {}                            -> pure pat
-    App        id src args                   -> App id <$> fpat src <*> mapM fpat args
+    Lit        id val                        -> Lit   id <$> flit val
+    Tuple      id items                      -> Tuple id <$> fpatMap items
+    App        id src args                   -> App   id <$> fpat src <*> fpatMap args
     Typed      id pat cls                    -> Typed id <$> fpat pat <*> ftype cls
+    Var        {}                            -> pure pat
+    Cons       {}                            -> pure pat
     Wildcard   {}                            -> pure pat
     _                                        -> fail "Unexpected pattern"
+    where fpatMap = mapM fpat
 
 traverseM_ :: Traversal m => (Pat -> m c) -> (Type -> m b) -> (Lit -> m d) -> Pat -> m ()
 traverseM_ fpat ftype flit pat = case pat of
-    Var        {}                            -> pure ()
-    Lit        id val                        -> pure () <* flit val
-    Tuple      id items                      -> pure () <* mapM_ fpat items
-    Cons       {}                            -> pure ()
-    App        id src args                   -> pure () <* fpat src <* mapM_ fpat args
-    Typed      id pat cls                    -> pure () <* fpat pat <* ftype cls
-    Wildcard   {}                            -> pure ()
+    Lit        id val                        -> drop <* flit val
+    Tuple      id items                      -> drop <* fpatMap items
+    App        id src args                   -> drop <* fpat src <* fpatMap args
+    Typed      id pat cls                    -> drop <* fpat pat <* ftype cls
+    Var        {}                            -> drop
+    Cons       {}                            -> drop
+    Wildcard   {}                            -> drop
     _                                        -> fail "Unexpected pattern"
+    where drop    = pure ()
+          fpatMap = mapM_ fpat
 
 
 traverseM' :: Traversal m => (Pat -> m Pat) -> Pat -> m Pat

@@ -35,24 +35,27 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 traverseM :: Traversal m => (Type -> m Type) -> Type -> m Type
 traverseM ftype t = case t of
+    Tuple      id items                      -> Tuple  id <$> ftypeMap items
+    Lambda     id inputs outputs             -> Lambda id <$> ftypeMap inputs <*> ftypeMap outputs
+    App        id src args                   -> App    id <$> ftype    src    <*> ftypeMap args
     Var        {}                            -> pure t
-    Tuple      id items                      -> Tuple id <$> mapM ftype items
     Class      {}                            -> pure t
     Module     {}                            -> pure t
-    Lambda     id inputs outputs             -> Lambda id <$> mapM ftype inputs <*> mapM ftype outputs
     Cons       {}                            -> pure t
-    App        id src args                   -> App id <$> ftype src <*> mapM ftype args
     _                                        -> fail "Unexpected type"
+    where ftypeMap = mapM ftype
 
 traverseM_ :: Traversal m => (Type -> m b) -> Type -> m ()
 traverseM_ ftype t = case t of
-    Var        {}                            -> pure ()
-    Tuple      id items                      -> pure () <* mapM_ ftype items
-    Class      {}                            -> pure ()
-    Module     {}                            -> pure ()
-    Lambda     id inputs outputs             -> pure () <* mapM_ ftype inputs <* mapM_ ftype outputs
-    Cons       {}                            -> pure ()
-    App        id src args                   -> pure () <* ftype src <* mapM_ ftype args
+    Tuple      id items                      -> drop <* ftypeMap items
+    Lambda     id inputs outputs             -> drop <* ftypeMap inputs <* ftypeMap outputs
+    App        id src args                   -> drop <* ftype    src    <* ftypeMap args
+    Var        {}                            -> drop
+    Class      {}                            -> drop
+    Module     {}                            -> drop
+    Cons       {}                            -> drop
     _                                        -> fail "Unexpected type"
+    where drop     = pure ()
+          ftypeMap = ftypeMap
 
 

@@ -51,47 +51,52 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
 traverseM fexp ftype fpat flit expr = case expr of
+    Module     id cls imports classes             
+               fields methods modules        -> Module     id      <$> ftype cls <*> fexpMap imports <*> fexpMap classes <*> fexpMap fields <*> fexpMap methods <*> fexpMap modules
+    Assignment id pat dst                    -> Assignment id      <$> fpat pat  <*> fexp dst
+    Typed      id cls expr                   -> Typed      id      <$> ftype cls <*> fexp expr
+    App        id src args                   -> App        id      <$> fexp src  <*> fexpMap args
+    Accessor   id src dst                    -> Accessor   id      <$> fexp src  <*> fexp dst
+    Class      id cls classes fields methods -> Class      id      <$> ftype cls <*> fexpMap classes <*> fexpMap fields <*> fexpMap methods
+    Lit        id val                        -> Lit        id      <$> flit val
+    Tuple      id items                      -> Tuple      id      <$> fexpMap items
+    Infix      id name src dst               -> Infix      id name <$> fexp src  <*> fexp dst
+    Field      id name cls                   -> Field      id name <$> ftype cls
+    Function   id name signature body        -> Function   id name <$> fpatMap signature <*> fexpMap body
+    Lambda     id signature body             -> Lambda     id      <$> fpatMap signature <*> fexpMap body
+    List       id items                      -> List       id      <$> fexpMap items
     NOP        {}                            -> pure expr
     Import     {}                            -> pure expr
     Var        {}                            -> pure expr
-    Lit        id val                        -> Lit        id <$> flit val
-    Assignment id pat dst                    -> Assignment id <$> fpat pat <*> fexp dst
-    Tuple      id items                      -> Tuple      id <$> mapM fexp items
-    Typed      id cls expr                   -> Typed      id <$> ftype cls <*> fexp expr
-    App        id src args                   -> App        id <$> fexp src <*> mapM fexp args
-    Accessor   id src dst                    -> Accessor   id <$> fexp src <*> fexp dst
-    Infix      id name src dst               -> Infix      id name <$> fexp src <*> fexp dst
-    Class      id cls classes fields methods -> Class      id <$> ftype cls <*> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods
-    Module     id cls imports classes             
-               fields methods modules        -> Module     id <$> ftype cls <*> mapM fexp imports <*> mapM fexp classes <*> mapM fexp fields <*> mapM fexp methods <*> mapM fexp modules
-    Field      id name cls                   -> Field      id name <$> ftype cls
-    Lambda     id signature body             -> Lambda     id <$> mapM fpat signature <*> mapM fexp body
     Cons       {}                            -> pure expr
-    Function   id name signature body        -> Function   id name <$> mapM fpat signature <*> mapM fexp body
-    List       id items                      -> List       id <$> mapM fexp items
     _                                        -> fail "Unexpected expression"
+    where fexpMap = mapM fexp
+          fpatMap = mapM fpat
 
 traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Expr -> m ()
 traverseM_ fexp ftype fpat flit expr = case expr of
-    NOP        {}                            -> pure ()
-    Import     {}                            -> pure ()
-    Var        {}                            -> pure ()
-    Lit        id val                        -> pure () <* flit val
-    Assignment id pat dst                    -> pure () <* fpat pat  <* fexp dst
-    Tuple      id items                      -> pure () <* mapM_ fexp items
-    Typed      id cls expr                   -> pure () <* ftype cls <* fexp expr
-    App        id src args                   -> pure () <* fexp src  <* mapM_ fexp args
-    Accessor   id src dst                    -> pure () <* fexp src  <* fexp dst
-    Infix      id name src dst               -> pure () <* fexp src  <* fexp dst
-    Class      id cls classes fields methods -> pure () <* ftype cls <* mapM_ fexp classes <* mapM_ fexp fields <* mapM_ fexp methods
     Module     id cls imports classes             
-               fields methods modules        -> pure () <* ftype cls <* mapM_ fexp imports <* mapM_ fexp classes <* mapM_ fexp fields <* mapM_ fexp methods <* mapM_ fexp modules
-    Field      id name cls                   -> pure () <* ftype cls
-    Lambda     id signature body             -> pure () <* mapM_ fpat signature <* mapM_ fexp body
-    Cons       {}                            -> pure ()
-    Function   id name signature body        -> pure () <* mapM_ fpat signature <* mapM_ fexp body
-    List       id items                      -> pure () <* mapM_ fexp items
+               fields methods modules        -> drop <* ftype cls <* fexpMap imports <* fexpMap classes <* fexpMap fields <* fexpMap methods <* fexpMap modules
+    Assignment id pat dst                    -> drop <* fpat pat  <* fexp dst
+    Typed      id cls expr                   -> drop <* ftype cls <* fexp expr
+    App        id src args                   -> drop <* fexp src  <* fexpMap args
+    Accessor   id src dst                    -> drop <* fexp src  <* fexp dst
+    Class      id cls classes fields methods -> drop <* ftype cls <* fexpMap classes <* fexpMap fields <* fexpMap methods
+    Lit        id val                        -> drop <* flit val
+    Tuple      id items                      -> drop <* fexpMap items
+    Infix      id name src dst               -> drop <* fexp src  <* fexp dst
+    Field      id name cls                   -> drop <* ftype cls
+    Function   id name signature body        -> drop <* fpatMap signature <* fexpMap body
+    Lambda     id signature body             -> drop <* fpatMap signature <* fexpMap body
+    List       id items                      -> drop <* fexpMap items
+    NOP        {}                            -> drop
+    Import     {}                            -> drop
+    Var        {}                            -> drop
+    Cons       {}                            -> drop
     _                                        -> fail "Unexpected expression"
+    where drop    = pure ()
+          fexpMap = mapM_ fexp
+          fpatMap = fpatMap
 
 
 traverseM' :: Traversal m => (Expr -> m Expr) -> Expr -> m Expr
