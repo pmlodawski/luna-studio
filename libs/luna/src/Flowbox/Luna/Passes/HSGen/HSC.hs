@@ -76,7 +76,9 @@ genExpr expr = case expr of
     HExpr.Assignment src dst              -> genExpr src ++ " <- " ++ genExpr dst
     HExpr.Lit      val                    -> genLit val
     HExpr.Tuple    items                  -> "(" ++ join "," (map genExpr items) ++ ")"
-    HExpr.ConsE    segments               -> join " " segments
+    HExpr.ConsE    qname                  -> join "." qname
+    HExpr.ConsT    name                   -> name
+    HExpr.AppT     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
 
 
 genLit :: HLit.Lit -> String

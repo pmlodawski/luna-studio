@@ -83,7 +83,7 @@ genExpr ast = case ast of
 
     LExpr.Infix id name src dst               -> HExpr.Infix name <$> genExpr src <*> genExpr dst
     LExpr.Assignment id pat dst               -> HExpr.Assignment <$> genPat pat <*> genExpr dst
-    LExpr.Lit        id value                 -> HExpr.Lit <$> genLit value
+    LExpr.Lit        id value                 -> genLit value
     LExpr.Tuple      id items                 -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
     LExpr.Field      id name cls              -> HExpr.Typed <$> genType cls <*> pure (HExpr.Var name)
 
@@ -96,10 +96,13 @@ genPat pat = case pat of
 genType :: GenMonad m => LType.Type -> Pass.Result m HExpr.Expr
 genType t = case t of
     LType.Var    id name     -> return $ HExpr.Var (name)
-    LType.Cons   id segments -> return $ HExpr.ConsE segments
+    LType.Cons   id qname    -> return $ HExpr.ConsE qname
     LType.Tuple  id items    -> HExpr.Tuple <$> mapM genType items
+    LType.App    id src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
+    --HExpr.AppT <$> genType src <*> genType (args !! 0)
 
-genLit :: GenMonad m => LLit.Lit -> Pass.Result m HLit.Lit
-genLit l = case l of
-    LLit.Integer id str      -> return $ HLit.Integer str
+genLit :: GenMonad m => LLit.Lit -> Pass.Result m HExpr.Expr
+genLit lit = case lit of
+    LLit.Integer id str      -> mkLit "Int" (HLit.Integer str)
+    where mkLit cons hast = return $ HExpr.Typed (HExpr.ConsT cons) (HExpr.Lit hast)
 

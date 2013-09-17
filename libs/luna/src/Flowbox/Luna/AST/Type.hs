@@ -20,7 +20,7 @@ data Type = Unknown
           | Class  { id :: ID, name     :: String , params  :: [String] }
           | Module { id :: ID, name     :: String                       }
           | Lambda { id :: ID, inputs   :: [Type] , outputs :: [Type]   }
-          | Cons   { id :: ID, segments :: [String]                     }
+          | Cons   { id :: ID, qname    :: [String]                     }
           | App    { id :: ID, src      :: Type   , args      :: [Type] }
           -- | List
           -- | Map
@@ -56,6 +56,6 @@ traverseM_ ftype t = case t of
     Cons       {}                            -> drop
     _                                        -> fail "Unexpected type"
     where drop     = pure ()
-          ftypeMap = ftypeMap
+          ftypeMap = mapM_ ftype
 
 

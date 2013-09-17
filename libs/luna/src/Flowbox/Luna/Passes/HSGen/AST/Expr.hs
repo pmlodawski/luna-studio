@@ -17,21 +17,24 @@ import qualified Flowbox.Luna.Passes.HSGen.AST.Lit as Lit
 
 type Lit = Lit.Lit
 
-data Expr = Assignment { src      :: Expr     , dst       :: Expr    }
-          | Tuple      { items    :: [Expr]                                                  }
+data Expr = Assignment { src      :: Expr     , dst       :: Expr                             }
+          | Tuple      { items    :: [Expr]                                                   }
           -- | Call       { name     :: String   , args      :: [Expr]   , ctx       :: Context }
-          | StringLit  { val      :: String                                                  }
-          | NOP        {                                                                     }
-          | Var        { name     :: String                                                  }
-          | Typed      { cls      :: Expr     , expr      :: Expr                            }
-          | Function   { name     :: String   , signature :: [Expr]   , expr      :: Expr    }
-          | LetBlock   { exprs    :: [Expr]   , result    :: Expr                            }
-          | DoBlock    { exprs    :: [Expr]                                                  }
-          | DataType   { name     :: String   , params    :: [String] , cons      :: [Expr]  }
-          | Cons       { name     :: String   , fields    :: [Expr]                          }
-          | ConsE      { segments :: [String]                                                }
+          | StringLit  { val      :: String                                                   }
+          | NOP        {                                                                      }
+          | Var        { name     :: String                                                   }
+          | Typed      { cls      :: Expr     , expr      :: Expr                             }
+          | Function   { name     :: String   , signature :: [Expr]   , expr      :: Expr     }
+          | LetBlock   { exprs    :: [Expr]   , result    :: Expr                             }
+          | DoBlock    { exprs    :: [Expr]                                                   }
+          | DataType   { name     :: String   , params    :: [String] , cons      :: [Expr]   }
+          | Cons       { name     :: String   , fields    :: [Expr]                           }
+          | ConsE      { qname    :: [String]                                                 }
+          | ConsT      { name     :: String                                                   }
           | Module     { path     :: [String] , imports   :: [Expr]   , datatypes :: [Expr]  , methods :: [Expr]  }
-          | Import     { segments :: [String] , name      :: String                          }
+          | Import     { segments :: [String] , name      :: String                           }
+          | AppE       { src      :: Expr     , dst       :: Expr                             }
+          | AppT       { src      :: Expr     , dst       :: Expr                             }
           | Undefined
           -- | VarRef     { vid      :: Int                                                       } 
           -- | NTuple     { items    :: [Expr]                                                    }
@@ -44,8 +47,8 @@ data Expr = Assignment { src      :: Expr     , dst       :: Expr    }
           -- | Block      { body     :: [Expr]   , ctx       :: Context                           }
           -- | BlockRet   { name     :: String   , ctx       :: Context                           }
           -- | FuncType   { items    :: [Expr]                                                    }
-           | Infix      { name     :: String   , src       :: Expr     , dst          :: Expr   }
-           | Lit        { lval     :: Lit                                                   }
+           | Infix      { name     :: String   , src       :: Expr     , dst          :: Expr }
+           | Lit        { lval     :: Lit                                                     }
           -- | Constant   { cval     :: Constant                                                  }
           deriving (Show)
 
