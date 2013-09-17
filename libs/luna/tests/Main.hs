@@ -47,19 +47,19 @@ logger :: Logger
 logger = getLogger "Flowbox"
 
 
---example :: Source
---example = Source.Source "Workspace"
---        $ unlines [ "def f a b:"
---                  , "    a = a+b"
---                  , "    a = a+b"
---                  ]
-
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "class A:"
-                  , "    a :: Std.Math.Vector (Int a) b"
-                  , "    a :: Std.Math.Vector (Int a) b"
+        $ unlines [ "def f:"
+                  , "    a (b) c"
                   ]
+
+
+--example :: Source
+--example = Source.Source "Workspace"
+--        $ unlines [ "class A:"
+--                  , "    a :: Std.Math.Vector (Int a) b"
+--                  , "    a :: Std.Math.Vector (Int a) b"
+--                  ]
 
 --example :: Source
 --example = Source.Source "Workspace"
@@ -94,12 +94,12 @@ main_inner = Luna.run $ do
     hast <- HSGen.run  ssa
     putStrLn $ PP.ppShow hast
 
-    putStrLn "\n-------- HSC --------" 
+    --putStrLn "\n-------- HSC --------" 
     hsc <- HSC.run  hast
-    putStrLn $ hsc
+    --putStrLn $ hsc
 
     putStrLn "\n-------- PHSC --------" 
-    phsc <- HSPrint.run  hsc
+    phsc <- HSPrint.run hsc
     putStrLn $ phsc
 
     return ()

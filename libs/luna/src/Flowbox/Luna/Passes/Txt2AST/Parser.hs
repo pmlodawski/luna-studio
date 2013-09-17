@@ -35,6 +35,8 @@ import qualified Flowbox.Luna.Data.Source          as Source
 
 pTuple     p = L.braced (sepBy' p L.separator)
 
+pCallList  p = L.parensed (sepBy p L.separator)
+
 pArgList   p = try(L.parensed (sepBy2 p L.separator)) <|> many p
                
 pArgList'  p = try(L.parensed (sepBy2 p L.separator)) <|> ((:[]) <$> p)
@@ -123,28 +125,35 @@ pExpr     i   = Expr.aftermatch <$> PExpr.buildExpressionParser (optableE i) (pT
            <?> "expression"
 
 pTermE    i   = choice[ try $ pDeclaration i
-                     , try $ L.parensed (pExpr i)
-                     , pEntE i
-                     ]
+                      , try $ L.parensed (pExpr i)
+                      , pEntE i
+                      ]
            <?> "expression term"
 
 optableE  i  = [ [ binaryM  "."  (tok Expr.Accessor)             PExpr.AssocLeft ]
                , [ postfixM "::" (tok Expr.Typed <*> pType i)                    ]
-               , [ binaryM   ""  (tok Expr.callConstructor)      PExpr.AssocLeft ]
+               , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
                , [ binaryM  "*"  (binaryMatchE <$> (tok Expr.Infix <*> pure "*")) PExpr.AssocLeft ]
                , [ binaryM  "+"  (binaryMatchE <$> (tok Expr.Infix <*> pure "+")) PExpr.AssocLeft ]
                , [ prefixfM      (try(binaryMatchE2 <$> tok Expr.Assignment <*> (pPattern i) <* (L.reservedOp "=" <?> "pattern match")))]
                ]
 
-binaryMatchE  f p q = f (Expr.aftermatch p) (Expr.aftermatch q)
+binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 binaryMatchE2 f p q = f p (Expr.aftermatch q)
 
-pEntE    i   = choice [ tok Expr.Var   <*> L.pIdentVar
+pEntBaseE  i = choice [ tok Expr.Var   <*> L.pIdentVar
                       , tok Expr.Cons  <*> pCons
                       , tok Expr.Lit   <*> pLit
                       , tok Expr.Tuple <*> pTuple (pExpr i)
                       , tok Expr.List  <*> pList (pExpr i)
                       ]
+
+-- Function application using parenthesis notation, e.g. f(1,2,3) <=> f 1 2 3 or f(1) <=> f 1
+pEntE      i = choice [ try $ tok Expr.App <*> pEntBaseE i <*> pCallList (pTermE i)
+                      ,       pEntBaseE i
+                      ]
+
+-- try $ tok Expr.App   <*> pEntE i <*> pArgList (pTermE i)
 
 pExprBlock      i = pBlockBegin pExpr i --L.pBlockBegin *> ( pBlock pExpr (i+1) <|> (liftList $ pExpr i) )
 
