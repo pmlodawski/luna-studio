@@ -45,7 +45,7 @@ ssaExpr :: SSAMonad m => VarStat -> Expr.Expr -> Pass.Result m Expr.Expr
 ssaExpr vs ast = case ast of
     Expr.Var        id name               -> case IntMap.lookup id (VarStat.varmap vs) of
                                                   Just nid -> return $ Expr.Var id (mkVar nid)
-                                                  Nothing  -> logger error ("not in scope '" ++ name ++ "'") *> Pass.fail ("not in scope '" ++ name ++ "'")
+                                                  Nothing  -> logger error ("Not in scope '" ++ name ++ "'") *> Pass.fail ("Not in scope '" ++ name ++ "'")
     _                                     -> Expr.traverseM (ssaExpr vs) pure ssaPat pure ast
 
 

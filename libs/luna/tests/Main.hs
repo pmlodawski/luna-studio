@@ -48,8 +48,8 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "class A:"
-                  , "    a::Int"
+        $ unlines [ "def f a b:"
+                  , "    a = {a,a}"
                   ]
 
 

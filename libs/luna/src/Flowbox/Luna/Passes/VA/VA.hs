@@ -62,15 +62,9 @@ vaAST ast = case ast of
     Expr.Var        id name               -> do
                                              v <- LocState.lookupVar name
                                              case v of
-                                                 Nothing    -> return () 
+                                                 Nothing    -> logger error ("Not in scope '" ++ name ++ "'. Forward declaration not supported yet.") *> Pass.fail ("not in scope '" ++ name ++ "'")
                                                  Just vid   -> LocState.bind id vid
-    Expr.Class      _ cls classes fields 
-                    methods               -> () <$ do 
-                                                   vaType cls
-                                                   vaExprMap classes 
-                                                   vaExprMap fields 
-                                                   vaExprMap methods
-    _                                     -> Expr.traverseM'_ vaAST ast
+    _                                     -> Expr.traverseM_ vaAST vaType vaPat pure ast
     where
         vaExprMap = mapM_ vaAST
 
