@@ -86,6 +86,7 @@ genExpr ast = case ast of
     LExpr.Lit        id value                 -> genLit value
     LExpr.Tuple      id items                 -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
     LExpr.Field      id name cls              -> HExpr.Typed <$> genType cls <*> pure (HExpr.Var name)
+    LExpr.App        id src args              -> (liftM2 . foldl) HExpr.AppE (genExpr src) (mapM genExpr args)
 
 
 
