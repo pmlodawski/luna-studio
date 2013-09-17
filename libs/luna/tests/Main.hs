@@ -20,6 +20,7 @@ import qualified Flowbox.System.Log.Logger            as Logger
 import qualified Flowbox.System.Log.LogEntry          as LogEntry
 import qualified Flowbox.Luna.Passes.HSGen.HSGen      as HSGen
 import qualified Flowbox.Luna.Passes.HSGen.HSC        as HSC
+import qualified Flowbox.Luna.Passes.HSPrint.HSPrint  as HSPrint
 import qualified Flowbox.Luna.Passes.VA.VA            as VA
 import qualified Flowbox.Luna.Passes.SSA.SSA          as SSA
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module as Module
@@ -95,6 +96,10 @@ main_inner = Luna.run $ do
     putStrLn "\n-------- HSC --------" 
     hsc <- HSC.run  hast
     putStrLn $ hsc
+
+    putStrLn "\n-------- PHSC --------" 
+    phsc <- HSPrint.run  hsc
+    putStrLn $ phsc
 
     return ()
 
