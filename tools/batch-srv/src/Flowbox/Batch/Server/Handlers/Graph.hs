@@ -123,7 +123,7 @@ connect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtlibID
     libID     <- tryGetID mtlibID     "libID"
     projectID <- tryGetID mtprojectID "projectID"
     batch     <- tryReadIORef batchHandler
-    scriptIO $ loggerIO debug $ "srcNodeID: " ++ (show srcPort) ++ " srcPort: " ++ (show dstNodeID) ++ " dstNodeID: " ++ (show srcNodeID) ++ " dstPort: " ++ (show dstPort) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "srcNodeID: " ++ (show srcNodeID) ++ " srcPort: " ++ (show srcPort) ++ " dstNodeID: " ++ (show dstNodeID) ++ " dstPort: " ++ (show dstPort) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch  <- tryRight $ BatchG.connect srcNodeID srcPort dstNodeID dstPort defID libID projectID batch
     tryWriteIORef batchHandler newBatch
     return ()
@@ -144,7 +144,7 @@ disconnect batchHandler mtsrcNodeID mtsrcPort mtdstNodeID mtdstPort mtdefID mtli
     libID       <- tryGetID mtlibID     "libID"
     projectID   <- tryGetID mtprojectID "projectID"
     batch       <- tryReadIORef batchHandler
-    scriptIO $ loggerIO debug $ "srcNodeID: " ++ (show srcPort) ++ " srcPort: " ++ (show dstNodeID) ++ " dstNodeID: " ++ (show srcNodeID) ++ " dstPort: " ++ (show dstPort) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    scriptIO $ loggerIO debug $ "srcNodeID: " ++ (show srcNodeID) ++ " srcPort: " ++ (show srcPort) ++ " dstNodeID: " ++ (show dstNodeID) ++ " dstPort: " ++ (show dstPort) ++ " defID: " ++ (show defID) ++ " libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch    <- tryRight $ BatchG.disconnect srcNodeID srcPort dstNodeID dstPort defID libID projectID batch
     tryWriteIORef batchHandler newBatch
 
