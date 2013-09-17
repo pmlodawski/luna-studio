@@ -9,8 +9,8 @@
 module Flowbox.Luna.Passes.HSGen.HSC where
 
 import           Flowbox.Prelude                          
-import qualified Flowbox.Luna.Passes.HSGen.AST.Expr     as HAST
-import qualified Flowbox.Luna.Passes.HSGen.AST.Constant as Constant
+import qualified Flowbox.Luna.Passes.HSGen.AST.Expr     as HExpr
+import qualified Flowbox.Luna.Passes.HSGen.AST.Lit      as HLit
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module   as Module
 import qualified Flowbox.Luna.Passes.HSGen.AST.DataType as DataType
 import qualified Flowbox.Luna.Passes.HSGen.AST.Cons     as Cons
@@ -40,8 +40,8 @@ type HSCMonad m = PassMonad Pass.NoState m
 
 
 
-run :: PassMonad s m => HAST.Expr -> Pass.Result m String
-run expr = (Pass.run_ Pass.NoState) (return $ genCode expr)
+run :: PassMonad s m => HExpr.Expr -> Pass.Result m String
+run expr = (Pass.run_ Pass.NoState) (return $ genExpr expr)
 
 
 eol :: String
@@ -54,21 +54,35 @@ genSection header generator d = if null d
     else "-- " ++ header ++ "\n" ++ (join "\n" $ map generator d) ++ "\n\n"
 
 
-genCode :: HAST.Expr -> String
-genCode expr = case expr of
-    HAST.Var      name                 -> name
-    HAST.Import   segments name        -> "import qualified " ++ join "." segments ++ " as " ++ name
-    HAST.Module path imports datatypes 
-                methods                -> header 
-                                       ++ genSection "imports"   genCode imports
-                                       ++ genSection "datatypes" genCode datatypes
-                                       ++ genSection "methods"   genCode methods
-                                          where header = "module " ++ join "." path ++ " where" ++ eol
-    HAST.DataType name params cons     -> "data " ++ name ++ params' ++ " = " ++ join " | " (map genCode cons)
-                                          where params' = if null params then "" else " " ++ join " " params
-    HAST.Cons     name fields          -> name ++ " { " ++ join ", " (map genCode fields) ++ " }"
-    HAST.Typed    name expr            -> genCode expr ++ " :: " ++ name
-    HAST.Function name signature expr  -> name ++ " " ++ join " " (map genCode signature) ++ " = " ++ genCode expr
-    HAST.LetBlock exprs result         -> "let{ " ++ join ";" (map genCode exprs) ++ " } in " ++ genCode result 
-    HAST.Operator name src dst         -> genCode src ++ " " ++ name ++ " " ++ genCode dst
-    HAST.NOP                           -> "NOP"
+genExpr :: HExpr.Expr -> String
+genExpr expr = case expr of
+    HExpr.Var      name                   -> name
+    HExpr.Import   segments name          -> "import qualified " ++ join "." segments ++ " as " ++ name
+    HExpr.Module   path imports datatypes 
+                   methods                -> header 
+                                          ++ genSection "imports"   genExpr imports
+                                          ++ genSection "datatypes" genExpr datatypes
+                                          ++ genSection "methods"   genExpr methods
+                                             where header = "module " ++ join "." path ++ " where" ++ eol
+    HExpr.DataType name params cons       -> "data " ++ name ++ params' ++ " = " ++ join " | " (map genExpr cons)
+                                             where params' = if null params then "" else " " ++ join " " params
+    HExpr.Cons     name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"
+    HExpr.Typed    cls  expr              -> genExpr expr ++ " :: " ++ genExpr cls
+    HExpr.Function name signature expr    -> name ++ " " ++ join " " (map genExpr signature) ++ " = " ++ genExpr expr
+    HExpr.LetBlock exprs result           -> "let { " ++ join ";" (map genExpr exprs) ++ " } in " ++ genExpr result 
+    HExpr.DoBlock  exprs                  -> "do { " ++ join ";" (map genExpr exprs) ++ " }"
+    HExpr.Infix    name src dst           -> genExpr src ++ " " ++ name ++ " " ++ genExpr dst
+    HExpr.NOP                             -> "NOP"
+    HExpr.Assignment src dst              -> genExpr src ++ " <- " ++ genExpr dst
+    HExpr.Lit      val                    -> genLit val
+    HExpr.Tuple    items                  -> "(" ++ join "," (map genExpr items) ++ ")"
+    HExpr.ConsE    qname                  -> join "." qname
+    HExpr.ConsT    name                   -> name
+    HExpr.AppT     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
+
+
+genLit :: HLit.Lit -> String
+genLit lit = case lit of
+	HLit.Integer val -> val
+	HLit.String  val -> "\"" ++ val   ++ "\""
+	HLit.Char    val -> "'"  ++ [val] ++ "'"

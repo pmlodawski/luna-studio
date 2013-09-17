@@ -20,6 +20,7 @@ import qualified Flowbox.System.Log.LogEntry          as LogEntry
 import qualified Flowbox.Luna.Passes.HSGen.HSGen      as HSGen
 import qualified Flowbox.Luna.Passes.HSGen.HSC        as HSC
 import qualified Flowbox.Luna.Passes.VA.VA            as VA
+import qualified Flowbox.Luna.Passes.SSA.SSA          as SSA
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module as Module
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr   as Expr
 --import qualified Flowbox.Luna.Passes.SSA.State           as SSAState
@@ -44,6 +45,12 @@ logger :: Logger
 logger = getLogger "Flowbox"
 
 
+--example :: Source
+--example = Source.Source "Workspace"
+--        $ unlines [ "def f (a) b:"
+--                  , "    a = 1"
+--                  ]
+
 example :: Source
 example = Source.Source "Workspace"
         $ unlines [ "import Std.Math.Scalar"
@@ -60,7 +67,16 @@ example = Source.Source "Workspace"
                   , "    c = 1"
                   , "    a = b + 1"
                   , "    _ = a + b"
+                  , ""
+                  , "class A:"
+                  , "    a :: Std.Math.Vector (Int a) b"
                   ]
+
+--example :: Source
+--example = Source.Source "Workspace"
+--        $ unlines [ "def f (a::Vector a b Int c):"
+--                  , "    a = Vector a b Int c"
+--                  ]
 
 
 main :: IO ()
@@ -70,19 +86,23 @@ main = do
         Right _ -> return ()
         Left  e -> putStrLn e
 
+
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
     putStrLn "\n-------- Txt2AST --------"
     ast <- Txt2AST.run example
-    --putStrLn $ PP.ppShow ast
     putStrLn $ PP.ppqShow ast
 
     putStrLn "\n-------- VA --------"
-    ssa <- VA.run     ast
-    putStrLn $ PP.ppShow ssa
+    va <- VA.run     ast
+    putStrLn $ PP.ppShow va
+
+    putStrLn "\n-------- SSA --------" 
+    ssa <- SSA.run va ast
+    putStrLn $ PP.ppqShow ssa
 
     putStrLn "\n-------- HSGen --------" 
-    hast <- HSGen.run  ast
+    hast <- HSGen.run  ssa
     putStrLn $ PP.ppShow hast
 
     putStrLn "\n-------- HSC --------" 
@@ -90,239 +110,4 @@ main_inner = Luna.run $ do
     putStrLn $ hsc
 
     return ()
-
-
-
---a :: (Int) -> (Int, Int)
-
-
---g = @f 5
-
---def f (a,b): a+b
-
---def f (a): a+b
-
---(x): x+1
-
-
-
---a = 1
-
---Vector x y z = v
-
---(a :: Vector 0 0 0) = v
-
--- ~[a,b=1] = [1]
-
-
---def f x=0 y=0 z=0:
---    x+y+z
-
---f 1 {z=1}
-
---[0..100].each x:
---    print x
-
---Std.Math.Vector x y z = v
---v = Std.Math.Vector 0 0 0
-
-
---def f (Vector x y z :: Vector Int)
-
-
---def add a b : a+b
-
---def add (a,b) : a+b
-
---[1..100].each \x:
-    
-
---a :: Int, Int -> Int
---a :: Int -> String, Int
---a :: Int -> String, (Int, Int -> Int)
-
---def f a ::(Int -> String, (Int, Int -> Int)) b :: (Int) :
-
---def f (a :: Int -> String, (Int, Int -> Int), b :: Int) :
-
---def f (a::Int->(String, Int), b::Int->Int):
---    ...
-
-
-----a :: (Int,Int) -> Int
-
-----a :: (Int,Int) -> ((Int,Int))
-
-----a :: (Int,Int -> Int,Int)
-----a :: ((Int,Int) -> Int)
-
-----a :: Int -> Int -> Int
-
-
---def subdivide (self, divs=2, preserveNormals=True):
---    ...
-
---g.subdivide divs=4 
-
---def subdivide (self, divs::Int, preserveNormals::Bool)
-
---def subdivide (self, divf::((Geometry, Int)) -> Geometry, )
-
---def subdivide (self, div::{Geometry, Int} -> Geometry)
-
-
---a = [10..20]
---b = [20..10]
---(a.zip b).each {x,y}:
-
-
-
---def f
-
-
---{x,y,z} = {1,2,3}
-
---f a b c=3
-
---f(a,b,c=3)
-
-
---def f x y z :
---    x + y + z
-
-
---[1..100].each {x, y}:
---    print x
-
---def add (Vector a, b, c):
---    a+b
-
---[1..100].each x:
---    print x
-
---f = \x y:4 :
-
-
-
-
-
---a :: (Int, Int) -> Int
-
---def a (x,y): 
---    x+y
-
-
---def f a::Int b::Int :     # FAIL
-
---def f a::Int, b::Int :    # OK
-
---def f (a::Int) (b::Int) : # OK
-
---def f (a::Int, b::Int) :  # OK
-
-
-
-
---a :: Int -> Int -> {Int, Int}
-
---a :: (Int, Int) -> {Int, Int}
-
-
---def f (a::Int->Int, b):
-
-
---def f (a,b):
-
-
---def f {a,b}:
-
---g = {a,b}: a+b
-
---g {1,2}
-
-
---(x::Int, y::Int):
-
-
--- \x y -> x+y
-
--- \(x::Int) (y::Int) -> x+y
-
---{x::Int, y::Int}: x+y
-
---{1,2,3}
-
---{1:1, 2:2, 3:3}
-
-
---f 1 2
-
---f (1,2) 3
-
---f ((1,2), 3)
-
------------ 1 ---------
--- # types:
---a :: Int -> (Int, Int)
-
---b :: (Int, Int) -> (String, String)
-
--- # definitions od 2 arguments functions:
-
---def f x y: x+y
-
---def f (x::Int) y:
---    x + y
-
---def f (x::Int) (y::String):
---    x + y
-
--- # definition of 1 argument (a tuple) function:
-
---def g (x,y): x+y
-
---def g (x::Int, y::String):
---    x + y
-
--- # usage:
---f 1 2
---g (1,2)
-
------------ 2 ---------
--- # types:
---a :: Int -> (Int, Int)
-
---b :: (Int, Int) -> (String, String)
-
--- # definitions od 2 arguments functions:
-
---def f (x, y): x+y
-
---def f (x::Int, y):
---    x + y
-
---def f (x::Int, y::String):
---    x + y
-
--- # definition of 1 argument (a tuple) function:
-
---def g ((x,y)): x+y
-
---def g (x::Int, y::String):
---    x + y
-
--- # usage:
---f 1 2
---g (1,2)
-
-
-
-
-
-
-
-
-
-
-
 
