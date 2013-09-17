@@ -259,7 +259,7 @@ pProgram mod = pModule mod 0 <* many(L.eol <* L.pSpaces) <* eof
 
 pExprTemp = pExpr 0 <* many(L.eol <* L.pSpaces) <* eof
 
-parseExpr input = Parsec.runParser pExprTemp (0::Int) "Luna Parser" input
+parseExpr input startID = Parsec.runParser pExprTemp startID "Luna Parser" input
 
 --pProgram = many $ pPattern 0
 

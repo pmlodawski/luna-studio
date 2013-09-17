@@ -167,17 +167,14 @@ graph2AST graph inputsNames = foldlM (node2AST graph inputsNames) [] $ Graph.top
 
 node2AST :: Graph2ASTMonad m => Graph -> [String] -> [ASTExpr.Expr] -> (Node.ID, Node.Node) -> Pass.Result m [ASTExpr.Expr] 
 node2AST graph inputsNames list (nodeID, node) = do
-    let 
-        return' :: Graph2ASTMonad m => ASTExpr.Expr -> Pass.Result m [ASTExpr.Expr] 
-        return' a = return (list ++ [a])
 
     astNodeID <- IdState.newID
 
-    case node of 
-        Node.Expr    _ (Flags _ True) _ -> return' $ ASTExpr.NOP astNodeID -- Comment
-        Node.Inputs    _              _ -> return list
-        Node.Outputs   (Flags _ True) _ -> return' $ ASTExpr.NOP astNodeID -- Comment
-        Node.Tuple     (Flags _ True) _ -> return' $ ASTExpr.NOP astNodeID -- Comment
+    (++) list <$> case node of 
+        Node.Expr    _ (Flags _ True) _ -> return [ASTExpr.NOP astNodeID] -- Comment
+        Node.Inputs    _              _ -> return []
+        Node.Outputs   (Flags _ True) _ -> return [ASTExpr.NOP astNodeID] -- Comment
+        Node.Tuple     (Flags _ True) _ -> return [ASTExpr.NOP astNodeID] -- Comment
         _                               -> do
             let 
                 biggestPort :: ((a, b, Edge) -> Port) -> (a, b, Edge) -> Port -> Port
@@ -212,9 +209,10 @@ node2AST graph inputsNames list (nodeID, node) = do
                                     return [onlyArg]
                 Port.Number p -> mapM (\i -> arg inEdges $ Port.Number i) [0..p]
             
+            parseID <- IdState.newID
 
             call <- case node of 
-                Node.Expr expression _ _ -> case Parser.parseExpr expression of 
+                Node.Expr expression _ _ -> case Parser.parseExpr expression parseID of 
                                                     Left  e    -> fail $ show e
                                                     Right expr -> return $ ASTExpr.App astNodeID expr args
                 Node.Default value _ -> ASTExpr.Lit astNodeID <$> defaultVal2ASTLit value
@@ -224,8 +222,8 @@ node2AST graph inputsNames list (nodeID, node) = do
 
 
             let outEdges          = Graph.out graph nodeID 
-                allConnected     = length outEdges
-                gettersConnected = FList.count isGetter outEdges
+                numConnected     = length outEdges
+                numGetters = FList.count isGetter outEdges
 
                 isGetter :: (Node.ID, Node.ID, Edge) -> Bool
                 isGetter (_, _, Edge (Port.Number _) _) = True
@@ -237,9 +235,9 @@ node2AST graph inputsNames list (nodeID, node) = do
             allPattern <- ASTPat.Var  <$> IdState.newID <*> pure allResultName
 
 
-            if gettersConnected == 0 
+            if numGetters == 0 
                 then do id <- IdState.newID 
-                        return' $ ASTExpr.Assignment id allPattern call
+                        return [ASTExpr.Assignment id allPattern call]
                 else do let (Port.Number maxGetter) = foldr (biggestPort resultID) Port.All outEdges 
 
                             resultID ::(a, b, Edge) -> Port
@@ -253,10 +251,10 @@ node2AST graph inputsNames list (nodeID, node) = do
 
                         gettersPattern <- ASTPat.Tuple <$> IdState.newID 
                                                        <*> mapM (\i -> res outEdges $ Port.Number i) [0..maxGetter]
-                        if gettersConnected == allConnected
+                        if numGetters == numConnected
                             then do id <- IdState.newID 
-                                    return' $ ASTExpr.Assignment id gettersPattern call
+                                    return [ASTExpr.Assignment id gettersPattern call]
                             else do id1 <- IdState.newID 
                                     id2 <- IdState.newID 
-                                    return  $ list ++ [ASTExpr.Assignment id1 allPattern call
-                                                      ,ASTExpr.Assignment id2 gettersPattern allResult]
+                                    return [ASTExpr.Assignment id1 allPattern call
+                                           ,ASTExpr.Assignment id2 gettersPattern allResult]
