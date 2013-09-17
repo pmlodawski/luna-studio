@@ -32,53 +32,46 @@ import qualified Flowbox.Luna.Data.Source          as Source
 -----------------------------------------------------------
 -- Entities
 -----------------------------------------------------------
-
-pTuple     p = L.braced (sepBy' p L.separator)
-
-pCallList  p = L.parensed (sepBy p L.separator)
-
-pArgList   p = try(L.parensed (sepBy2 p L.separator)) <|> many p
-               
-pArgList'  p = try(L.parensed (sepBy2 p L.separator)) <|> ((:[]) <$> p)
-
---pTuple p     = try(L.parensed (return () *> optional L.separator) *> pure [])
---           <|> try(L.parensed (liftList p <* L.separator))
---           <|>     L.parensed (sepBy2' p L.separator)
-
-pList p      = L.bracketed (sepBy' p L.separator)
-
-pTupleBody p = sepBy' p L.separator
-pTuplePure p = L.braced $ pTupleBody p
-
-pCons        = sepBy1 L.pIdentType L.pAccessor
+pTuple      p = L.braced (sepBy' p L.separator)
+pCallList s p = L.parensed s (sepBy p L.separator)
+pArgList  s p = try(L.parensed s (sepBy2 p L.separator)) <|> many p
+pArgList' s p = try(L.parensed s (sepBy2 p L.separator)) <|> ((:[]) <$> p)
+pTupleBody  p = sepBy' p L.separator
+pTuplePure  p = L.braced $ pTupleBody p
+pList p       = L.bracketed (sepBy' p L.separator)
+pCons s       = sepBy1 (L.pIdentType s) L.pAccessor
 
 
 -----------------------------------------------------------
 -- Literals
 -----------------------------------------------------------
-pIntL    = tok Lit.Integer <*> L.integerStr
-pCharL   = tok Lit.Char    <*> L.charLiteral
-pStringL = tok Lit.String  <*> L.stringLiteral
-pLit     = choice [ pIntL
-                  , pCharL
-                  , pStringL
-                  ]
-
+pIntL    s = tok Lit.Integer <*> L.integerStr s
+pCharL   s = tok Lit.Char    <*> L.charLiteral s
+pStringL s = tok Lit.String  <*> L.stringLiteral s
+pLit     s = choice [ pIntL    s
+                    , pCharL   s
+                    , pStringL s
+                    ]
 
 tok a = do
     id <- getState
     setState (id+1)
     a <$> pure id
 
+genID = do
+    id <- getState
+    setState (id+1)
+    pure id
+
 -----------------------------------------------------------
 -- Declarations
 -----------------------------------------------------------
-pImport i         = tok Import.mk     <*  L.pImport <*> L.pPath <*> (try (Just <$ L.pAs <*> (L.pIdent <?> "import name")) <|> pure Nothing)
+pImport     s i    = tok Import.mk     <*  L.pImport <*> L.pPath <*> (try (Just <$ L.pAs <*> (L.pIdent s <?> "import name")) <|> pure Nothing)
 
-pFunc i           = tok Expr.Function <*  L.pDef 
-                                      <*> L.pIdentVar 
-                                      <*> pArgList (pPattern i)
-                                      <*> (pExprBlock i <|> return [])
+pFunc       s i    = tok Expr.Function <*  L.pDef 
+                                      <*> L.pIdentVar s
+                                      <*> pArgList s (pPattern s i)
+                                      <*> (pExprBlock s i <|> return [])
                                       <?> "function definition"
 
 
@@ -87,32 +80,32 @@ pFunc i           = tok Expr.Function <*  L.pDef
 --                                 <*> pExprBlock i
 --                                 <?> "lambda definition"
 
-pClass i          = tok Class.mk  <*  L.pClass
-                                  <*> (tok Type.Class <*> L.pIdentType <*> many L.pIdentTypeVar)
-                                  <??$> pBlockBegin pClassBody i 
+pClass       s i    = tok Class.mk  <*  L.pClass
+                                  <*> (tok Type.Class <*> L.pIdentType s <*> many (L.pIdentTypeVar s))
+                                  <??$> pBlockBegin (pClassBody s) i 
                                   -- <*> (try (pBlockBegin pClassBody i) <|> return [])
                                   <?> "class definition"
 
-pModule name i    = tok Module.mk <*>   (tok Type.Module <*> pure name)
-                                  <??$> try(pSegmentBegin pModuleBody i)
+pModule name s i    = tok Module.mk <*>   (tok Type.Module <*> pure name)
+                                  <??$> try(pSegmentBegin (pModuleBody s) i)
 
 
 
-pClassBody i      = choice [ Expr.addMethod <$> pFunc i
-                           , Expr.addField  <$> pField i
-                           , Expr.addClass  <$> pClass i
+pClassBody   s i    = choice [ Expr.addMethod <$> pFunc s i
+                           , Expr.addField  <$> pField s i
+                           , Expr.addClass  <$> pClass s i
                            ]
 
-pModuleBody i     = choice [ pClassBody i
-                           , Expr.addImport <$> pImport i
+pModuleBody  s i    = choice [ pClassBody s i
+                           , Expr.addImport <$> pImport s i
                            ]
 
 
-pField       i    = tok Field.mk <*> L.pIdent <* L.pTypeDecl <*> pType i
+pField       s i    = tok Field.mk <*> L.pIdent s <* L.pTypeDecl <*> pType s i
 
-pDeclaration i    = choice [ pImport i
-                           , pFunc   i
-                           , pClass  i
+pDeclaration s i    = choice [ pImport s i
+                           , pFunc   s i
+                           , pClass  s i
                            --, pLambda i
                            ]
 
@@ -120,100 +113,96 @@ pDeclaration i    = choice [ pImport i
 -----------------------------------------------------------
 -- Expressions
 -----------------------------------------------------------
-
-pExpr     i   = Expr.aftermatch <$> PExpr.buildExpressionParser (optableE i) (pTermE i)
+pExpr     s i   = Expr.aftermatch <$> PExpr.buildExpressionParser (optableE s i) (pTermE s i)
            <?> "expression"
 
-pTermE    i   = choice[ try $ pDeclaration i
-                      , try $ L.parensed (pExpr i)
-                      , pEntE i
-                      ]
+pTermE    s i   = choice[ try $ pDeclaration s i
+                        , try $ L.parensed s (pExpr s i)
+                        , pEntE s i
+                        ]
            <?> "expression term"
 
-optableE  i  = [ [ binaryM  "."  (tok Expr.Accessor)             PExpr.AssocLeft ]
-               , [ postfixM "::" (tok Expr.Typed <*> pType i)                    ]
+optableE  s i  = [ [ binaryM  "."  (tok Expr.Accessor)             PExpr.AssocLeft ]
+               , [ postfixM "::" (tok Expr.Typed <*> pType s i)                    ]
                , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
                , [ binaryM  "*"  (binaryMatchE <$> (tok Expr.Infix <*> pure "*")) PExpr.AssocLeft ]
                , [ binaryM  "+"  (binaryMatchE <$> (tok Expr.Infix <*> pure "+")) PExpr.AssocLeft ]
-               , [ prefixfM      (try(binaryMatchE2 <$> tok Expr.Assignment <*> (pPattern i) <* (L.reservedOp "=" <?> "pattern match")))]
+               , [ prefixfM      (try(binaryMatchE2 <$> tok Expr.Assignment <*> (pPattern s i) <* (L.reservedOp "=" <?> "pattern match")))]
                ]
 
 binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 binaryMatchE2 f p q = f p (Expr.aftermatch q)
 
-pEntBaseE  i = choice [ tok Expr.Var   <*> L.pIdentVar
-                      , tok Expr.Cons  <*> pCons
-                      , tok Expr.Lit   <*> pLit
-                      , tok Expr.Tuple <*> pTuple (pExpr i)
-                      , tok Expr.List  <*> pList (pExpr i)
-                      ]
+pEntBaseE s i = choice [ tok Expr.Var   <*> L.pIdentVar s
+                       , tok Expr.Cons  <*> pCons s
+                       , tok Expr.Lit   <*> pLit s
+                       , tok Expr.Tuple <*> pTuple (pExpr s i)
+                       , tok Expr.List  <*> pList  (pExpr s i)
+                       ]
 
--- Function application using parenthesis notation, e.g. f(1,2,3) <=> f 1 2 3 or f(1) <=> f 1
-pEntE      i = choice [ try $ tok Expr.App <*> pEntBaseE i <*> pCallList (pTermE i)
-                      ,       pEntBaseE i
-                      ]
+-- Function application using parenthesis notation, e.g. f(1).next <=> (f 1).next or f (1).next <=> f 1.next
+pEntE     s i = (\expr ops -> foldr ($) expr $ reverse ops)
+             <$> pEntBaseE False i 
+             <*> choice [ try $ many1 ( flip <$> (Expr.App <$> genID) <*> pCallList False (pTermE s i))
+                       ,       [] <$ L.pSpaces
+                       ]
 
--- try $ tok Expr.App   <*> pEntE i <*> pArgList (pTermE i)
-
-pExprBlock      i = pBlockBegin pExpr i --L.pBlockBegin *> ( pBlock pExpr (i+1) <|> (liftList $ pExpr i) )
-
+pExprBlock     s i = pBlockBegin (pExpr s) i
 
 
 -----------------------------------------------------------
 -- Types
 -----------------------------------------------------------
-pType       i   = choice [ try $ pLambdaT i
-                         , try $ pConsAppT i
-                         , pTermT i 
+pType       s i   = choice [ try $ pLambdaT s i
+                         , try $ pConsAppT s i
+                         , pTermT s i 
                          ]
               <?> "type"
 
-pTermT      i   = choice[ try $ L.parensed (pType i)
-                        , pEntT i
+pTermT      s i   = choice[ try $ L.parensed s (pType s i)
+                        , pEntT s i
                         ]
               <?> "type term"
 
-pVarT       i   = tok Type.Var    <*> L.pIdentVar
-pConsT      i   = tok Type.Cons   <*> pCons
-pTupleT     i   = tok Type.Tuple  <*> pTuple (pType i)
-pConsAppT   i   = tok Type.App    <*> pConsT i <*> many1 (pTermT i) 
-pLambdaT    i   = tok Type.Lambda <*> pArgList' (pTermT i) <* L.pArrow <*> pArgList' (pTermT i)
+pVarT       s i   = tok Type.Var    <*> L.pIdentVar s
+pConsT      s i   = tok Type.Cons   <*> pCons s
+pTupleT     s i   = tok Type.Tuple  <*> pTuple (pType s i)
+pConsAppT   s i   = tok Type.App    <*> pConsT s i <*> many1 (pTermT s i) 
+pLambdaT    s i   = tok Type.Lambda <*> pArgList' s (pTermT s i) <* L.pArrow <*> pArgList' s (pTermT s i)
 --pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
 
-pEntT       i   = choice [ pVarT   i
-                         , pTupleT i
-                         , pConsT  i
+pEntT       s i   = choice [ pVarT   s i
+                         , pTupleT s i
+                         , pConsT  s i
                          ]
 
 
 -----------------------------------------------------------
 -- Patterns
 -----------------------------------------------------------
-pPattern    i   = choice [ try(pConsAppP i)
-                         , pTermP i 
+pPattern    s i = choice [ try(pConsAppP s i)
+                         , pTermP s i 
                          ]
 
-pTermP      i   = choice[ try $ L.parensed (pPattern i)
-                        , try (tok Pat.Typed <*> pEntP i <* L.pTypeDecl <*> pType i)
-                        , pEntP i
+pTermP      s i = choice[ try $ L.parensed s (pPattern s i)
+                        , try (tok Pat.Typed <*> pEntP s i <* L.pTypeDecl <*> pType s i)
+                        , pEntP s i
                         ]
               <?> "pattern term"
 
-pVarP           = tok Pat.Var      <*> L.pIdentVar
-pLitP           = tok Pat.Lit      <*> pLit
-pTupleP     i   = tok Pat.Tuple    <*> pTuple (pTermP i)
+pVarP       s   = tok Pat.Var      <*> L.pIdentVar s
+pLitP       s   = tok Pat.Lit      <*> pLit s
+pTupleP     s i = tok Pat.Tuple    <*> pTuple (pTermP s i)
 pWildcardP      = tok Pat.Wildcard <*  L.pWildcard
-pConsP          = tok Pat.Cons     <*> pCons
-pConsAppP   i   = tok Pat.App      <*> (tok Pat.Cons <*> pCons) <*> many1 (pTermP i) 
+pConsP      s   = tok Pat.Cons     <*> pCons s
+pConsAppP   s i = tok Pat.App      <*> (tok Pat.Cons <*> pCons s) <*> many1 (pTermP s i) 
 
-pEntP       i   = choice [ pVarP
-                         , pLitP
-                         , pTupleP i
+pEntP       s i = choice [ pVarP      s
+                         , pLitP      s
+                         , pTupleP    s i
                          , pWildcardP
-                         , pConsP
+                         , pConsP     s
                          ]
-
---pLambdaP    i   = 
 
 
 -----------------------------------------------------------
@@ -261,16 +250,9 @@ postfixM name fun       = PExpr.Postfix (L.reservedOp name *>        fun)
 --                                           <|> pSegmentBegin pExpr 0 <* many(L.eol <* L.pSpaces) <* eof)
 
 
-pProgram mod = pModule mod 0 <* many(L.eol <* L.pSpaces) <* eof
+pProgram mod = pModule mod True 0 <* many(L.eol <* L.pSpaces) <* eof
 
---pProgram mod = pPattern 0
-
-
-pExprTemp = pExpr 0 <* many(L.eol <* L.pSpaces) <* eof
-
---parseExpr input = Parsec.parse pExprTemp "Luna Parser" input
-
---pProgram = many $ pPattern 0
+pExprTemp = pExpr True 0 <* many(L.eol <* L.pSpaces) <* eof
 
 parse (Source.Source mod code) = Parsec.runParser (pProgram mod) (0::Int) "Luna Parser" $ code
 

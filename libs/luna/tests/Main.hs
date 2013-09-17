@@ -50,7 +50,7 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source "Workspace"
         $ unlines [ "def f:"
-                  , "    a (b) c"
+                  , "    a(b) c d"
                   ]
 
 
