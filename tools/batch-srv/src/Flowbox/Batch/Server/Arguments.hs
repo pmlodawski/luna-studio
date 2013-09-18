@@ -11,4 +11,4 @@ module Flowbox.Batch.Server.Arguments where
 
 
 shutdownWithClient :: String
-shutdownWithClient = "shutDownWithClient"
+shutdownWithClient = "shutdownWithClient"

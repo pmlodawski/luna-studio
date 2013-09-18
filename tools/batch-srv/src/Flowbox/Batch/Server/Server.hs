@@ -61,9 +61,9 @@ singleAcceptLoop accepter_ proc_ = forever $
 
        args <- Environment.getArgs
        if elem Arguments.shutdownWithClient args 
-          then Exception.handle 
-                 (\(e :: Exception.SomeException) -> loggerIO critical $ "Connection to client lost: " ++ show e) 
-                 (loop $ proc_ ps)
-          else loop $ proc_ ps
+          then loop $ proc_ ps
+          else Exception.handle 
+                   (\(e :: Exception.SomeException) -> loggerIO critical $ "Connection to client lost: " ++ show e) 
+                   (loop $ proc_ ps)
                         
   where loop m = do { continue <- m; when continue (loop m) }
