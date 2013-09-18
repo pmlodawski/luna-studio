@@ -23,6 +23,7 @@ import           Flowbox.Luna.Network.Def.DefManager       (DefManager)
 import qualified Flowbox.Luna.Passes.Graph2AST.Graph2AST as Graph2AST
 import qualified Flowbox.Luna.Passes.HSGen.HSC           as HSC
 import qualified Flowbox.Luna.Passes.HSGen.HSGen         as HSGen
+import qualified Flowbox.Luna.Passes.HSPrint.HSPrint     as HSPrint
 import qualified Flowbox.Luna.Passes.Luna.Luna           as Luna
 import qualified Flowbox.Luna.Passes.Pass                as Pass
 import           Flowbox.Luna.Passes.Pass                  (PassMonad)
@@ -71,9 +72,14 @@ buildAST (ast :: ASTExpr.Expr) = do
     hast <- HSGen.run  ssa
     putStrLn $ PP.ppShow hast
 
-    putStrLn "\n-------- HSC --------" 
+    --putStrLn "\n-------- HSC --------" 
     hsc <- HSC.run  hast
-    putStrLn $ hsc
+    --putStrLn $ hsc
+
+    putStrLn "\n-------- PHSC --------" 
+    phsc <- HSPrint.run hsc
+    putStrLn $ phsc
+
 
     return ()
 
