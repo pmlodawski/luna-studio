@@ -19,6 +19,7 @@ import qualified Flowbox.System.Log.Logger            as Logger
 import qualified Flowbox.System.Log.LogEntry          as LogEntry
 import qualified Flowbox.Luna.Passes.HSGen.HSGen      as HSGen
 import qualified Flowbox.Luna.Passes.HSGen.HSC        as HSC
+import qualified Flowbox.Luna.Passes.HSPrint.HSPrint  as HSPrint
 import qualified Flowbox.Luna.Passes.VA.VA            as VA
 import qualified Flowbox.Luna.Passes.SSA.SSA          as SSA
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module as Module
@@ -68,11 +69,16 @@ example = Source.Source "Workspace"
                   , "def f a b:"
                   , "    a = a+b"
                   , "    a = a+b"
+                  , ""
+                  , "def f a b:"
+                  , "    a = a b"
                   ]
+
 
 --example :: Source
 --example = Source.Source "Workspace"
 --        $ unlines [ "class A:"
+--                  , "    a :: Std.Math.Vector (Int a) b"
 --                  , "    a :: Std.Math.Vector (Int a) b"
 --                  ]
 
@@ -109,9 +115,13 @@ main_inner = Luna.run $ do
     hast <- HSGen.run  ssa
     putStrLn $ PP.ppShow hast
 
-    putStrLn "\n-------- HSC --------" 
+    --putStrLn "\n-------- HSC --------" 
     hsc <- HSC.run  hast
-    putStrLn $ hsc
+    --putStrLn $ hsc
+
+    putStrLn "\n-------- PHSC --------" 
+    phsc <- HSPrint.run hsc
+    putStrLn $ phsc
 
     return ()
 

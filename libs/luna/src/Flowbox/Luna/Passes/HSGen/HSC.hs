@@ -79,6 +79,7 @@ genExpr expr = case expr of
     HExpr.ConsE    qname                  -> join "." qname
     HExpr.ConsT    name                   -> name
     HExpr.AppT     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
+    HExpr.AppE     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
 
 
 genLit :: HLit.Lit -> String

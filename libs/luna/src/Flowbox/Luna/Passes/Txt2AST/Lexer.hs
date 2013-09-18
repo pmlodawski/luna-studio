@@ -32,8 +32,8 @@ kDef = reserved "def"
 pWildcard    = symbol  '_' <?> "wildcard"
 pBlockBegin  = symbol  ':'
 separator    = symbol  ','
-parenL       = symbol  '('
-parenR       = symbol  ')'
+parenL     s = symbol2 s '('
+parenR     s = symbol2 s ')'
 bracketL     = symbol  '['
 bracketR     = symbol  ']'
 braceL       = symbol  '{'
@@ -47,7 +47,7 @@ opLetter     = opStart
 reservedOpNames = ["=", "::", ":", ".", "->", "<-"]
 
 
-pPath        = sepBy1 pIdent pAccessor
+pPath        = sepBy1 (pIdent True) pAccessor
 
 
 -----------------------------------------------------------
@@ -70,15 +70,15 @@ pAs         = reserved "as"
     -- Bracketing
 -----------------------------------------------------------
 
-parensed  p     = between (parenL)   (parenR)   p
-bracketed p     = between (bracketL) (bracketR) p
-braced    p     = between (braceL)   (braceR)   p
+parensed  s p   = between (parenL True) (parenR s) p
+bracketed   p   = between (bracketL)    (bracketR) p
+braced      p   = between (braceL)      (braceR)   p
 
 
 -----------------------------------------------------------
 -- Chars & Strings
 -----------------------------------------------------------
-charLiteral     = lexeme (between (char '\'')
+charLiteral s   = lexeme2 s (between (char '\'')
                                   (char '\'' <?> "end of character")
                                   characterChar )
                 <?> "character"
@@ -89,7 +89,7 @@ charEscape      = char '\\' *> escapeCode
 
 charLetter      = satisfy (\c -> (c /= '\'') && (c /= '\\') && (c > '\026'))
 
-stringLiteral  = lexeme ( foldr (maybe id (:)) "" <$> between (char '"')
+stringLiteral s = lexeme2 s ( foldr (maybe id (:)) "" <$> between (char '"')
                                                       (char '"' <?> "end of string")
                                                       (many stringChar)
                                                   <?> "literal string" )
@@ -152,7 +152,7 @@ float           = lexeme floating   <?> "float"
 integer         = lexeme int        <?> "integer"
 natural         = lexeme nat        <?> "natural"
 
-integerStr      = lexeme intStr     <?> "integer"
+integerStr    s = lexeme2 s intStr     <?> "integer"
 
 -- floats
 floating        = fractExponent <$*> decimal
@@ -239,17 +239,17 @@ isReservedOp name = isReserved (sort reservedOpNames) name
 --reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> "")
 reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
 
-pIdentVar     = pIdentLower <?> "variable identifier"
-pIdentType    = pIdentUpper <?> "type identifier"
-pIdentTypeVar = pIdentLower <?> "identifier"
+pIdentVar     s = pIdentLower s <?> "variable identifier"
+pIdentType    s = pIdentUpper s <?> "type identifier"
+pIdentTypeVar s = pIdentLower s <?> "identifier"
 
-pIdent        = pIdentLower <|> pIdentUpper <?> "identifier"
+pIdent      s = pIdentLower s <|> pIdentUpper s <?> "identifier"
 
-pIdentUpper   = mkIdent ((:) <$> upper <*> many identLetter) <?> "uppercase identifier"
+pIdentUpper s = mkIdent s ((:) <$> upper <*> many identLetter) <?> "uppercase identifier"
 
-pIdentLower   = mkIdent ((:) <$> lower <*> many identLetter) <?> "lowercase identifier"
+pIdentLower s = mkIdent s ((:) <$> lower <*> many identLetter) <?> "lowercase identifier"
 
-mkIdent p     = lexeme $ try $ checkIf isReservedName "reserved word " p
+mkIdent s p   = lexeme2 s $ try $ checkIf isReservedName "reserved word " p
 
 isReserved names name
     = scan names
@@ -267,9 +267,11 @@ isReservedName name = isReserved (sort reservedNames) name
 -- White space & symbols
 -----------------------------------------------------------
 lexeme p    = p <* skipMany pSpaces1 
+lexeme2 s p = p <* do if s then skipMany pSpaces1 else return ()
 
-symbols name = try $ lexeme (string name)
-symbol  name = lexeme (char name)
+symbols   name = try $ lexeme (string name)
+symbol    name = lexeme (char name)
+symbol2 s name = lexeme2 s (char name)
 
 pSpace      = satisfy (`elem` "\t\f\v ") <?> ""
 pSpacesBase = many1 pSpace <|> try(multiLineComment) <|> oneLineComment <?> ""
