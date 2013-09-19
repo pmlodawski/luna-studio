@@ -34,3 +34,6 @@ tools/batch-clients/cpp/batch_client
 
 #IntelliJ IDEA
 .idea
+
+# cabal configs - they shoudl be generated from tcabal files
+*.cabal
