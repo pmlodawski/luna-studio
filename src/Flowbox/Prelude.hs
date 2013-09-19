@@ -31,3 +31,10 @@ instance (Typeable a) => Show (IO a) where
 
 instance (Typeable a, Typeable b) => Show (a -> b) where
     show e = '(' : (show . typeOf) e ++ ")"
+
+-- f .: g = \x y->f (g x y)
+-- f .: g = (f .) . g
+-- (.:) f = ((f .) .)
+-- (.:) = (.) (.) (.)
+(.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
+(.:) = (.) . (.)
