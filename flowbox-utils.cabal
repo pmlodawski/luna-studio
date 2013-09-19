@@ -22,21 +22,21 @@ Library
 
   Exposed-modules: 
         Flowbox.Prelude,
-        Flowbox.System.UniPath,
-        Flowbox.System.Directory,
-        Flowbox.System.Directory.Tree,
-        Flowbox.System.Log.Logger,
-        Flowbox.System.Log.Conf,
-        Flowbox.System.Log.LogEntry,
-        Flowbox.System.IO.IO,
-        Flowbox.System.IO.Serializer,
-        Flowbox.Generics.Deriving.QShow,
+        Flowbox.Control.Applicative,
         Flowbox.Control.Error,
         Flowbox.Control.Exception,
-        Flowbox.Control.Applicative,
+        Flowbox.Generics.Deriving.QShow,
         Flowbox.Tools.Conversion,
+        Flowbox.Data.Version,
         Flowbox.Text.Show.Pretty,
-        Flowbox.Data.Version
+        Flowbox.System.UniPath,
+        Flowbox.System.Directory,
+        Flowbox.System.IO.Serializer,
+        Flowbox.System.IO.IO,
+        Flowbox.System.Directory.Tree,
+        Flowbox.System.Log.LogEntry,
+        Flowbox.System.Log.Logger,
+        Flowbox.System.Log.Conf
 
   Build-Depends:  base,
                   ansi-terminal,
