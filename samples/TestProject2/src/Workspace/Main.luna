@@ -1,0 +1,25 @@
+import Std.Math.Scalar
+
+class Vector a:
+    x :: a
+
+def f(x::Int, y::Map Int Float):
+    z = x + 7
+    g = {x, y}
+    z = fun(x, y)
+    z+ y
+
+def g a b:
+    c = 1
+    a = b + 1
+    _ = a + b
+
+class A:
+    a :: Std.Math.Vector (Int a) b
+
+def f a b:
+    a = a+b
+    a = a+b
+
+def f a b:
+    a = a b
