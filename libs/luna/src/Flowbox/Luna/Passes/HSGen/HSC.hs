@@ -67,7 +67,7 @@ genExpr expr = case expr of
                                              where header = "module " ++ join "." path ++ " where" ++ eol
     HExpr.DataType name params cons       -> "data " ++ name ++ params' ++ " = " ++ join " | " (map genExpr cons)
                                              where params' = if null params then "" else " " ++ join " " params
-    HExpr.Cons     name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"
+    HExpr.Con      name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"
     HExpr.Typed    cls  expr              -> genExpr expr ++ " :: " ++ genExpr cls
     HExpr.TypedP   cls  expr              -> "(" ++ genExpr expr ++ " :: " ++ genExpr cls ++ ")"
     HExpr.Function name signature expr    -> name ++ " " ++ join " " (map genExpr signature) ++ " = " ++ genExpr expr
@@ -78,8 +78,8 @@ genExpr expr = case expr of
     HExpr.Assignment src dst              -> genExpr src ++ " <- " ++ genExpr dst
     HExpr.Lit      val                    -> genLit val
     HExpr.Tuple    items                  -> "(" ++ join "," (map genExpr items) ++ ")"
-    HExpr.ConsE    qname                  -> join "." qname
-    HExpr.ConsT    name                   -> name
+    HExpr.ConE     qname                  -> join "." qname
+    HExpr.ConT     name                   -> name
     HExpr.AppT     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
     HExpr.AppE     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
 

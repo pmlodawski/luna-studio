@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Passes.HSGen.AST.Cons (
-	module Flowbox.Luna.Passes.HSGen.AST.Cons,
-	module Flowbox.Luna.Passes.HSGen.AST.Expr
+	--module Flowbox.Luna.Passes.HSGen.AST.Cons,
+	--module Flowbox.Luna.Passes.HSGen.AST.Expr
 )where
 
-import           Flowbox.Prelude                      
-import           Flowbox.Luna.Passes.HSGen.AST.Expr   
+--import           Flowbox.Prelude                      
+--import           Flowbox.Luna.Passes.HSGen.AST.Expr   
 
-empty :: Expr
-empty = Cons "" []
+--empty :: Expr
+--empty = Cons "" []

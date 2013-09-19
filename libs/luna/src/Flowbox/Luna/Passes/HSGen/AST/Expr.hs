@@ -30,9 +30,9 @@ data Expr = Assignment { src      :: Expr     , dst       :: Expr               
           | LetBlock   { exprs    :: [Expr]   , result    :: Expr                             }
           | DoBlock    { exprs    :: [Expr]                                                   }
           | DataType   { name     :: String   , params    :: [String] , cons      :: [Expr]   }
-          | Cons       { name     :: String   , fields    :: [Expr]                           }
-          | ConsE      { qname    :: [String]                                                 }
-          | ConsT      { name     :: String                                                   }
+          | Con        { name     :: String   , fields    :: [Expr]                           }
+          | ConE       { qname    :: [String]                                                 }
+          | ConT       { name     :: String                                                   }
           | Module     { path     :: [String] , imports   :: [Expr]   , datatypes :: [Expr]  , methods :: [Expr]  }
           | Import     { segments :: [String] , name      :: String                           }
           | AppE       { src      :: Expr     , dst       :: Expr                             }
