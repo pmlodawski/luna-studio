@@ -47,4 +47,4 @@ generate m = r where
     r = case m of 
         Library      _ -> "Library:\n"               ++ body
         Executable n _ -> "Executable " ++ n ++ "\n" ++ body
-    body = List.concat $ map Section.generate $ sections m
+    body = List.concat $ map (Section.generate 4) $ sections m

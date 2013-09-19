@@ -20,6 +20,8 @@ import           Control.Monad.Trans.Either
 import           System.TimeIt                                 
 
 import           Flowbox.Prelude                               
+import qualified Flowbox.Luna.Passes.CabalGen.CabalGen       as CabalGen
+import qualified Flowbox.Luna.Passes.CabalStore.CabalStore   as CabalStore
 import qualified Flowbox.Luna.Passes.FileReader.SourceReader as SourceReader
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr          as Expr
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module        as Module
@@ -77,13 +79,17 @@ main = do
 
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
+
+    cabal <- CabalGen.run "TestProject2"
+
+    CabalStore.run cabal $ UniPath.fromUnixString "samples/TestProject2/build/hs/TestProject2.cabal"
     --source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
     --                           (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
                                
-    let source = example
-    putStrLn "\n-------- Txt2AST --------"
-    ast <- Txt2AST.run source
-    putStrLn $ PP.ppqShow ast
+    --let source = example
+    --putStrLn "\n-------- Txt2AST --------"
+    --ast <- Txt2AST.run source
+    --putStrLn $ PP.ppqShow ast
 
     --putStrLn "\n-------- VA --------"
     --va <- VA.run     ast

@@ -17,9 +17,10 @@ data Section = Section { name  :: String
                        }
 
 
-generate :: Section -> String
-generate (Section n i) = spaces 4 ++ n ++ ":\n" ++ body ++ "\n" where
-    body = List.concat $ List.intersperse ("," ++ spaces 8 ++ "\n") i
+generate :: Int -> Section -> String
+generate indent (Section n i) = spaces indent ++ n ++ ":\n" ++ bodyIndent ++ body ++ "\n" where
+    body = List.concat $ List.intersperse (",\n" ++ bodyIndent) i
+    bodyIndent = spaces $ indent + 4
 
 
 spaces :: Int -> String

@@ -35,6 +35,6 @@ make name version cabalVersion author maintainer buildType modules =
 
 generate :: CabalConfig -> String
 generate config = cabalHeader ++ "\n\n\n" ++ cabalBody where
-    cabalHeader = List.concat $ map Section.generate $ sections config
+    cabalHeader = List.concat $ map (Section.generate 0) $ sections config
     cabalBody   = List.concat $ List.intersperse "\n" $ map CabalModule.generate $ cabalModules config
 
