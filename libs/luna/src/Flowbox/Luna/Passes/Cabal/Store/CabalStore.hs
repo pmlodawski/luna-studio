@@ -5,17 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CabalStore.CabalStore where
+module Flowbox.Luna.Passes.Cabal.Store.CabalStore where
 
-import           Control.Monad.RWS                          
-import qualified System.IO                                as IO
+import           Control.Monad.RWS                       
+import qualified System.IO                             as IO
 
-import           Flowbox.Prelude                            
-import qualified Flowbox.Luna.Passes.CabalGen.CabalConfig as CabalConfig
-import           Flowbox.Luna.Passes.CabalGen.CabalConfig   (CabalConfig)
-import           Flowbox.System.UniPath                     (UniPath)
-import qualified Flowbox.System.IO.Serializer             as Serializer
-import           Flowbox.System.IO.Serializer               (Serializable(Serializable))
+import           Flowbox.Prelude                         
+import qualified Flowbox.Luna.Passes.Cabal.CabalConfig as CabalConfig
+import           Flowbox.Luna.Passes.Cabal.CabalConfig   (CabalConfig)
+import           Flowbox.System.UniPath                  (UniPath)
+import qualified Flowbox.System.IO.Serializer          as Serializer
+import           Flowbox.System.IO.Serializer            (Serializable(Serializable))
 
 
 

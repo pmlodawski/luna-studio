@@ -20,8 +20,8 @@ import           Control.Monad.Trans.Either
 import           System.TimeIt                                 
 
 import           Flowbox.Prelude                               
-import qualified Flowbox.Luna.Passes.CabalGen.CabalGen       as CabalGen
-import qualified Flowbox.Luna.Passes.CabalStore.CabalStore   as CabalStore
+import qualified Flowbox.Luna.Passes.Cabal.Gen.CabalGen      as CabalGen
+import qualified Flowbox.Luna.Passes.Cabal.Store.CabalStore  as CabalStore
 import qualified Flowbox.Luna.Passes.FileReader.SourceReader as SourceReader
 import qualified Flowbox.Luna.Passes.HSGen.AST.Expr          as Expr
 import qualified Flowbox.Luna.Passes.HSGen.AST.Module        as Module

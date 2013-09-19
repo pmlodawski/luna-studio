@@ -5,15 +5,15 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CabalGen.CabalConfig where
+module Flowbox.Luna.Passes.Cabal.CabalConfig where
 
-import qualified Data.List                                as List
+import qualified Data.List                             as List
 
-import           Flowbox.Prelude                            
-import qualified Flowbox.Luna.Passes.CabalGen.CabalModule as CabalModule
-import           Flowbox.Luna.Passes.CabalGen.CabalModule   (CabalModule)
-import qualified Flowbox.Luna.Passes.CabalGen.Section     as Section
-import           Flowbox.Luna.Passes.CabalGen.Section       (Section(Section))
+import           Flowbox.Prelude                         
+import qualified Flowbox.Luna.Passes.Cabal.CabalModule as CabalModule
+import           Flowbox.Luna.Passes.Cabal.CabalModule   (CabalModule)
+import qualified Flowbox.Luna.Passes.Cabal.Section     as Section
+import           Flowbox.Luna.Passes.Cabal.Section       (Section(Section))
 
 
 

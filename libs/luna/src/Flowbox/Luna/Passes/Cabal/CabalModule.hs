@@ -5,13 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CabalGen.CabalModule where
+module Flowbox.Luna.Passes.Cabal.CabalModule where
 
-import qualified Data.List                            as List
+import qualified Data.List                         as List
 
-import           Flowbox.Prelude                        
-import qualified Flowbox.Luna.Passes.CabalGen.Section as Section
-import           Flowbox.Luna.Passes.CabalGen.Section   (Section(Section))
+import           Flowbox.Prelude                     
+import qualified Flowbox.Luna.Passes.Cabal.Section as Section
+import           Flowbox.Luna.Passes.Cabal.Section   (Section(Section))
 
 
 
@@ -33,8 +33,8 @@ mkLibrary hsSourceDirs ghcOptions extensions buildDepends exposedModules =
 
 
 mkExecutable :: String -> [String] -> [String] -> [String] -> [String] -> String -> CabalModule
-mkExecutable name hsSourceDirs ghcOptions extensions buildDepends mainIs = 
-    Executable name [ Section "Hs-Source-Dirs" hsSourceDirs 
+mkExecutable name' hsSourceDirs ghcOptions extensions buildDepends mainIs = 
+    Executable name' [ Section "Hs-Source-Dirs" hsSourceDirs 
                     , Section "GHC-Options" ghcOptions
                     , Section "Extensions" extensions
                     , Section "Build-Depends" buildDepends

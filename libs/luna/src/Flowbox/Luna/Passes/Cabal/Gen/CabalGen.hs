@@ -6,16 +6,16 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, ConstraintKinds #-}
 
-module Flowbox.Luna.Passes.CabalGen.CabalGen where
+module Flowbox.Luna.Passes.Cabal.Gen.CabalGen where
 
-import           Control.Monad.RWS                          
+import           Control.Monad.RWS                        
 
-import           Flowbox.Prelude                            
-import           Flowbox.Luna.Passes.CabalGen.CabalConfig   (CabalConfig)
-import qualified Flowbox.System.UniPath                   as UniPath
-import qualified Flowbox.Luna.Passes.CabalGen.Defaults    as Defaults
-import qualified Flowbox.Luna.Passes.Pass                 as Pass
-import           Flowbox.Luna.Passes.Pass                   (PassMonad)
+import           Flowbox.Prelude                          
+import           Flowbox.Luna.Passes.Cabal.CabalConfig    (CabalConfig)
+import qualified Flowbox.System.UniPath                 as UniPath
+import qualified Flowbox.Luna.Passes.Cabal.Gen.Defaults as Defaults
+import qualified Flowbox.Luna.Passes.Pass               as Pass
+import           Flowbox.Luna.Passes.Pass                 (PassMonad)
 
 
 

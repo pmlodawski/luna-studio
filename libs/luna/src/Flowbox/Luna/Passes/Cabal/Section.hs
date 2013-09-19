@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CabalGen.Section where
+module Flowbox.Luna.Passes.Cabal.Section where
 
 import qualified Data.List       as List
 import           Flowbox.Prelude   

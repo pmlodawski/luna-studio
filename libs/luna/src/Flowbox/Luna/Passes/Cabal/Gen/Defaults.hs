@@ -5,15 +5,15 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CabalGen.Defaults where
+module Flowbox.Luna.Passes.Cabal.Gen.Defaults where
 
-import           Flowbox.Prelude                            
-import           Flowbox.Luna.Passes.CabalGen.CabalConfig   (CabalConfig(CabalConfig))
-import qualified Flowbox.Luna.Passes.CabalGen.CabalModule as CabalModule
-import           Flowbox.Luna.Passes.CabalGen.CabalModule   (CabalModule)
-import           Flowbox.Luna.Passes.CabalGen.Section       (Section(Section))
-import qualified Flowbox.System.UniPath                   as UniPath
-import           Flowbox.System.UniPath                     (UniPath)
+import           Flowbox.Prelude                         
+import           Flowbox.Luna.Passes.Cabal.CabalConfig   (CabalConfig(CabalConfig))
+import qualified Flowbox.Luna.Passes.Cabal.CabalModule as CabalModule
+import           Flowbox.Luna.Passes.Cabal.CabalModule   (CabalModule)
+import           Flowbox.Luna.Passes.Cabal.Section       (Section(Section))
+import qualified Flowbox.System.UniPath                as UniPath
+import           Flowbox.System.UniPath                  (UniPath)
 
 
 defaultConfig :: String -> [UniPath] -> UniPath -> CabalConfig
