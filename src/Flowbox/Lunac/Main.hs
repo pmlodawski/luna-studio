@@ -44,7 +44,7 @@ data Conf = Compilation { inputs   :: [String]
 
 
 parser :: Parser Conf
-parser   = flag' Version (long "version" <> hidden)
+parser = flag' Version (long "version" <> hidden)
        <|> Compilation
            <$> many1(argument str ( metavar "inputs" ))
            -- <*> strOption (long "verbose"  <> short 'v' <> value "0" <> help "Verbose level")
