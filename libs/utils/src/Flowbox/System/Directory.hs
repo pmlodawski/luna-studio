@@ -6,10 +6,9 @@
 
 module Flowbox.System.Directory where
 
-
 import           Control.Applicative      
-import qualified Data.List                as List
-import qualified System.Directory      as Directory   
+import qualified Data.List              as List
+import qualified System.Directory       as Directory
 
 import           Flowbox.Prelude          
 import qualified Flowbox.System.UniPath as UniPath
@@ -21,14 +20,13 @@ getDirectoryRecursive :: UniPath -> IO [UniPath]
 getDirectoryRecursive upath = do
     path <- UniPath.toUnixString <$> UniPath.expand upath
     isDir <- Directory.doesDirectoryExist path
-    if isDir 
+    if isDir
         then do paths <- Directory.getDirectoryContents path
-                children <- mapM getDirectoryRecursive $ map UniPath.fromUnixString paths
-                let upaths = map UniPath.fromUnixString paths
-                return $ upaths ++ (List.concat children)
+                let filtered = filter (/= ".") $ filter (/= "..") paths
+                    upaths = map (\a -> UniPath.append a upath) filtered
+                children <- mapM getDirectoryRecursive upaths
+                return $ List.concat children
         else return [upath]
-
-
 
 
 createDirectoryIfMissing :: Bool -> UniPath -> IO ()
