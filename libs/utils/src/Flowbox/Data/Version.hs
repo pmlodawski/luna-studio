@@ -6,6 +6,9 @@
 ---------------------------------------------------------------------------
 module Flowbox.Data.Version where
 
+import           Flowbox.Prelude   
+
+
 
 data Version = Version { major :: Int
                        , minor :: Int

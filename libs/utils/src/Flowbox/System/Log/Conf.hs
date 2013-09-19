@@ -11,6 +11,9 @@ import           Control.Concurrent.MVar
 import           System.IO.Unsafe          (unsafePerformIO)
 import qualified Data.Map                as Map
 
+import           Flowbox.Prelude           
+
+
 
 data Conf = Conf { indent  :: Int
                  , colored :: Bool

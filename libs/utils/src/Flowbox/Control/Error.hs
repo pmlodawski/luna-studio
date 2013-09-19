@@ -23,6 +23,7 @@ import           Data.IORef
 import           Data.Text.Lazy             (Text, unpack)
 import qualified Control.Monad.IO.Class     
 
+import           Flowbox.Prelude            
 import qualified Flowbox.System.UniPath   as UniPath
 import           Flowbox.Tools.Conversion   
 

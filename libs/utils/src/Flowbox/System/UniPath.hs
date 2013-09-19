@@ -33,6 +33,8 @@ import           Data.String.Utils     (join)
 import qualified System.Directory    as Directory
 import qualified System.FilePath     as FilePath
 
+import           Flowbox.Prelude       
+
 
 
 data PathItem = Node String 

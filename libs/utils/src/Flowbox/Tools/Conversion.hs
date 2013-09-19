@@ -9,7 +9,10 @@
 
 module Flowbox.Tools.Conversion where
 
-import           Data.Int   
+import           Data.Int          
+
+import           Flowbox.Prelude   
+
 
 
 class Convert a b | a -> b, b -> a where

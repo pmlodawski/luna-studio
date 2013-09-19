@@ -10,6 +10,10 @@ module Flowbox.Control.Exception where
 
 import qualified Control.Exception as Exc
 
+import           Flowbox.Prelude     
+
+
+
 try a = do
     r <- Exc.try a
     return $ case r of

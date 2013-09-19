@@ -9,6 +9,10 @@ module Flowbox.System.Log.LogEntry where
 
 import           System.Log.Logger   (Priority)
 
+import           Flowbox.Prelude     
+
+
+
 data LogEntry = LogEntry { name     :: String
                          , priority :: Priority
                          , msg      :: String

@@ -19,6 +19,7 @@ Library
   GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse
+                  NoImplicitPrelude
 
   Exposed-modules: 
         Flowbox.Prelude,
@@ -66,6 +67,7 @@ Executable utils
 
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
+                  NoImplicitPrelude
   Build-Depends:  base,
                   --dlist,
                   --ansi-terminal,

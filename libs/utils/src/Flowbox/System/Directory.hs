@@ -4,14 +4,32 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.System.Directory(
-	createDirectoryIfMissing
-) where
+module Flowbox.System.Directory where
 
 
-import qualified System.Directory         
+import           Control.Applicative      
+import qualified Data.List                as List
+import qualified System.Directory      as Directory   
+
+import           Flowbox.Prelude          
 import qualified Flowbox.System.UniPath as UniPath
 import           Flowbox.System.UniPath   (UniPath)
 
+
+
+getDirectoryRecursive :: UniPath -> IO [UniPath]
+getDirectoryRecursive upath = do
+    path <- UniPath.toUnixString <$> UniPath.expand upath
+    isDir <- Directory.doesDirectoryExist path
+    if isDir 
+        then do paths <- Directory.getDirectoryContents path
+                children <- mapM getDirectoryRecursive $ map UniPath.fromUnixString paths
+                let upaths = map UniPath.fromUnixString paths
+                return $ upaths ++ (List.concat children)
+        else return [upath]
+
+
+
+
 createDirectoryIfMissing :: Bool -> UniPath -> IO ()
-createDirectoryIfMissing create_parents path = System.Directory.createDirectoryIfMissing create_parents (UniPath.toUnixString path)
+createDirectoryIfMissing create_parents path = Directory.createDirectoryIfMissing create_parents (UniPath.toUnixString path)
