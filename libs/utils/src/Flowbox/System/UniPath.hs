@@ -19,6 +19,7 @@ module Flowbox.System.UniPath(
     normalise,
     fileName,
     basePath,
+    extension,
     setExtension,
     dropExtension,
     dirOf,
@@ -124,11 +125,15 @@ basePath path = normalise $ case last $ normalise path of
                               Node _ -> path ++ [Up]
                               _      -> path
 
+
+extension :: UniPath -> String
+extension path = FilePath.takeExtension (toUnixString path)
+
+
 setExtension :: String -> UniPath -> UniPath
 setExtension ext path =
     normalise $ path ++ [Up] ++ [Node $ (fileName path) ++ ext]
   
-
 
 dropExtension :: UniPath -> UniPath
 dropExtension path = fromUnixString $ FilePath.dropExtension $ toUnixString path
@@ -137,4 +142,3 @@ dropExtension path = fromUnixString $ FilePath.dropExtension $ toUnixString path
 makeRelative :: UniPath -> UniPath -> UniPath
 makeRelative path1 path2 = 
     fromUnixString $ FilePath.makeRelative (toUnixString path1) (toUnixString path2)
-

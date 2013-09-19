@@ -25,6 +25,7 @@ Library
         Flowbox.System.UniPath,
         Flowbox.System.Directory,
         Flowbox.System.Directory.Tree,
+        Flowbox.System.Directory.Scanner,
         Flowbox.System.Log.Logger,
         Flowbox.System.Log.Conf,
         Flowbox.System.Log.LogEntry,

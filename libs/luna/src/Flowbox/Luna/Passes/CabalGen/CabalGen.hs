@@ -7,7 +7,7 @@
 
 module Flowbox.Luna.Passes.CabalGen.CabalGen where
 
-import           Control.Monad.RWS          
+import           Control.Monad.RWS                          
 import qualified System.IO                                as IO
 
 import           Flowbox.Prelude                            
