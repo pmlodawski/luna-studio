@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CabalGen.CabalGen where
+module Flowbox.Luna.Passes.CabalStore.CabalStore where
 
 import           Control.Monad.RWS                          
 import qualified System.IO                                as IO
@@ -22,11 +22,11 @@ import           Flowbox.System.IO.Serializer               (Serializable(Serial
 
 run :: MonadIO m => CabalConfig -> UniPath -> m ()
 run config path = do
-    liftIO $ generateCabal config path
+    liftIO $ storeCabal config path
 
 
-generateCabal :: CabalConfig -> UniPath -> IO ()
-generateCabal config path = do 
+storeCabal :: CabalConfig -> UniPath -> IO ()
+storeCabal config path = do 
     let cabal = CabalConfig.generate config
         s     = Serializable path (\h -> IO.hPutStr h cabal)
     Serializer.serialize s
