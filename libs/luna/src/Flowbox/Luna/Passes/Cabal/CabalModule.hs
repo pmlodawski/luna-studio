@@ -22,20 +22,20 @@ data CabalModule = Library    { sections :: [Section]
                               }
 
 
-mkLibrary :: [String] -> [String] -> [String] -> [String] -> [String] -> CabalModule
+mkLibrary :: [String] -> String -> [String] -> [String] -> [String] -> CabalModule
 mkLibrary hsSourceDirs ghcOptions extensions buildDepends exposedModules = 
     Library [ Section "Hs-Source-Dirs" hsSourceDirs 
-            , Section "GHC-Options" ghcOptions
+            , Section "GHC-Options" [ghcOptions]
             , Section "Extensions" extensions
             , Section "Build-Depends" buildDepends
             , Section "Exposed-modules" exposedModules
             ]
 
 
-mkExecutable :: String -> [String] -> [String] -> [String] -> [String] -> String -> CabalModule
+mkExecutable :: String -> [String] -> String -> [String] -> [String] -> String -> CabalModule
 mkExecutable name' hsSourceDirs ghcOptions extensions buildDepends mainIs = 
     Executable name' [ Section "Hs-Source-Dirs" hsSourceDirs 
-                    , Section "GHC-Options" ghcOptions
+                    , Section "GHC-Options" [ghcOptions]
                     , Section "Extensions" extensions
                     , Section "Build-Depends" buildDepends
                     , Section "Main-Is" [mainIs]

@@ -22,13 +22,11 @@ data CabalConfig = CabalConfig { sections     :: [Section]
                                }
 
 
-make :: String -> String -> String -> String -> String -> String -> [CabalModule] -> CabalConfig
-make name version cabalVersion author maintainer buildType modules = 
+make :: String -> String -> String -> String -> [CabalModule] -> CabalConfig
+make name version cabalVersion buildType modules = 
     CabalConfig [ Section "Name" [name]
                 , Section "Version" [version]
                 , Section "Cabal-Version" [cabalVersion]
-                , Section "Author" [author]
-                , Section "Maintainer" [maintainer]
                 , Section "Build-Type" [buildType]
                 ] modules
 
