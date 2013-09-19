@@ -25,7 +25,8 @@ data Expr = Assignment { src      :: Expr     , dst       :: Expr               
           | Var        { name     :: String                                                   }
           | VarE       { name     :: String                                                   }
           | Typed      { cls      :: Expr     , expr      :: Expr                             }
-          | Function   { name     :: String   , signature :: [Expr]   , expr      :: Expr     }
+          | TypedP     { cls      :: Expr     , expr      :: Expr                             }
+          | Function   { name     :: String   , pats      :: [Expr]   , expr      :: Expr     }
           | LetBlock   { exprs    :: [Expr]   , result    :: Expr                             }
           | DoBlock    { exprs    :: [Expr]                                                   }
           | DataType   { name     :: String   , params    :: [String] , cons      :: [Expr]   }

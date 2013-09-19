@@ -34,7 +34,7 @@ import qualified Flowbox.Luna.Data.Source          as Source
 -----------------------------------------------------------
 pTuple      p = L.braced (sepBy' p L.separator)
 pCallList s p = L.parensed s (sepBy p L.separator)
-pArgList  s p = try(L.parensed s (sepBy2 p L.separator)) <|> many p
+pArgList  s p = try(L.parensed s (sepBy2 p L.separator)) <|> many (try p)
 pArgList' s p = try(L.parensed s (sepBy2 p L.separator)) <|> ((:[]) <$> p)
 pTupleBody  p = sepBy' p L.separator
 pTuplePure  p = L.braced $ pTupleBody p
@@ -69,10 +69,11 @@ genID = do
 pImport     s i    = tok Import.mk     <*  L.pImport <*> L.pPath <*> (try (Just <$ L.pAs <*> (L.pIdent s <?> "import name")) <|> pure Nothing)
 
 pFunc       s i    = tok Expr.Function <*  L.pDef 
-                                      <*> L.pIdentVar s
-                                      <*> pArgList s (pPattern s i)
-                                      <*> (pExprBlock s i <|> return [])
-                                      <?> "function definition"
+                                       <*> L.pIdentVar s
+                                       <*> pArgList s (pPattern s i)
+                                       <*> (try (L.pArrow *> pType s i) <|> tok Type.Unknown)
+                                       <*> (pExprBlock s i <|> return [])
+                                       <?> "function definition"
 
 
 
@@ -164,17 +165,19 @@ pTermT      s i   = choice[ try $ L.parensed s (pType s i)
                         ]
               <?> "type term"
 
-pVarT       s i   = tok Type.Var    <*> L.pIdentVar s
-pConsT      s i   = tok Type.Cons   <*> pCons s
-pTupleT     s i   = tok Type.Tuple  <*> pTuple (pType s i)
-pConsAppT   s i   = tok Type.App    <*> pConsT s i <*> many1 (pTermT s i) 
-pLambdaT    s i   = tok Type.Lambda <*> pArgList' s (pTermT s i) <* L.pArrow <*> pArgList' s (pTermT s i)
+pConsAppT   s i   = tok Type.App     <*> pConsT s i <*> many1 (pTermT s i) 
+pLambdaT    s i   = tok Type.Lambda  <*> pArgList' s (pTermT s i) <* L.pArrow <*> pTermT s i
+pVarT       s i   = tok Type.Var     <*> L.pIdentVar s
+pConsT      s i   = tok Type.Cons    <*> pCons s
+pTupleT     s i   = tok Type.Tuple   <*> pTuple (pType s i)
+pWildcardT        = tok Type.Unknown <*  L.pWildcard
 --pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
 
 pEntT       s i   = choice [ pVarT   s i
-                         , pTupleT s i
-                         , pConsT  s i
-                         ]
+                           , pConsT  s i
+                           , pTupleT s i
+                           , pWildcardT
+                           ]
 
 
 -----------------------------------------------------------

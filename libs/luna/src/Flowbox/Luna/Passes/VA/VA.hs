@@ -53,9 +53,9 @@ runNested f = do
 
 vaAST :: VAMonad m => Expr.Expr -> Pass.Result m ()
 vaAST ast = case ast of
-    Expr.Function   _ _ signature body    -> do
+    Expr.Function   _ _ pats _ body       -> do
                                              s <- runNested $ do
-                                                 mapM_ vaPat signature
+                                                 mapM_ vaPat pats
                                                  vaExprMap body
                                              LocState.updateVarStat s
     Expr.Assignment _ pat dst             -> vaAST dst <* vaPat pat

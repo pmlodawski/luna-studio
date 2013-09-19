@@ -24,24 +24,24 @@ type Lit = Lit.Lit
 type Pat = Pat.Pat
 
 data Expr  = NOP        { id :: ID                                                                                                                                }
-           | Wildcard   { id :: ID  {- PM: I use it to mark not provided function arguments -}                                                                    }
-           | Import     { id :: ID, segments  :: [String] , name      :: String                                                                                   }
-           | Var        { id :: ID, name      :: String                                                                                                           }
-           | Lit        { id :: ID, value     :: Lit                                                                                                              }
-           | Assignment { id :: ID, pat       :: Pat      , dst       :: Expr                                                                                     }
-           | Tuple      { id :: ID, items     :: [Expr]                                                                                                           }
-           | Typed      { id :: ID, cls       :: Type     , expr      :: Expr                                                                                     }
+           | Accessor   { id :: ID, src       :: Expr     , dst       :: Expr                                                                                     }
            | App        { id :: ID, src       :: Expr     , args      :: [Expr]                                                                                   }
            | AppCons_   { id :: ID, args      :: [Expr]                                                                                                           }
-           | Accessor   { id :: ID, src       :: Expr     , dst       :: Expr                                                                                     }
-           | Infix      { id :: ID, name      :: String   , src       :: Expr   , dst     :: Expr                                                                 }                                                               
+           | Assignment { id :: ID, pat       :: Pat      , dst       :: Expr                                                                                     }
            | Class      { id :: ID, cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]                                         }
-           | Module     { id :: ID, cls       :: Type     , imports   :: [Expr] , classes   :: [Expr] , fields  :: [Expr] , methods :: [Expr] , modules :: [Expr] }
-           | Field      { id :: ID, name      :: String   , cls       :: Type                                                                                     }
-           | Lambda     { id :: ID, signature :: [Pat]    , body      :: [Expr]                                                                                   }
            | Cons       { id :: ID, name      :: String                                                                                                           }
-           | Function   { id :: ID, name      :: String   , signature :: [Pat]   , body    :: [Expr]                                                              }
+           | Field      { id :: ID, name      :: String   , cls       :: Type                                                                                     }
+           | Function   { id :: ID, name      :: String   , pats      :: [Pat]  , output    :: Type   ,  body    :: [Expr]                                        }
+           | Import     { id :: ID, segments  :: [String] , name      :: String                                                                                   }
+           | Infix      { id :: ID, name      :: String   , src       :: Expr   , dst       :: Expr                                                               }                                                               
+           | Lambda     { id :: ID, pats      :: [Pat]    , output    :: Type   , body      :: [Expr]                                                                                   }
            | List       { id :: ID, items     :: [Expr]                                                                                                           }
+           | Lit        { id :: ID, value     :: Lit                                                                                                              }
+           | Module     { id :: ID, cls       :: Type     , imports   :: [Expr] , classes   :: [Expr] , fields  :: [Expr] , methods :: [Expr] , modules :: [Expr] }
+           | Tuple      { id :: ID, items     :: [Expr]                                                                                                           }
+           | Typed      { id :: ID, cls       :: Type     , expr      :: Expr                                                                                     }
+           | Var        { id :: ID, name      :: String                                                                                                           }
+           | Wildcard   { id :: ID  {- PM: I use it to mark not provided function arguments -}                                                                    }
            deriving (Show, Eq, Generic)
 
 
@@ -52,48 +52,48 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
 traverseM fexp ftype fpat flit expr = case expr of
+    Accessor   id src dst                    -> Accessor   id      <$> fexp src  <*> fexp dst
+    App        id src args                   -> App        id      <$> fexp src  <*> fexpMap args
+    Assignment id pat dst                    -> Assignment id      <$> fpat pat  <*> fexp dst
+    Class      id cls classes fields methods -> Class      id      <$> ftype cls <*> fexpMap classes <*> fexpMap fields <*> fexpMap methods
+    Cons       {}                            -> pure expr
+    Field      id name cls                   -> Field      id name <$> ftype cls
+    Function   id name pats output body      -> Function   id name <$> fpatMap pats <*> ftype output <*> fexpMap body
+    Lambda     id      pats output body      -> Lambda     id      <$> fpatMap pats <*> ftype output <*> fexpMap body
+    Import     {}                            -> pure expr
+    Infix      id name src dst               -> Infix      id name <$> fexp src     <*> fexp dst
+    List       id items                      -> List       id      <$> fexpMap items
+    Lit        id val                        -> Lit        id      <$> flit val
     Module     id cls imports classes             
                fields methods modules        -> Module     id      <$> ftype cls <*> fexpMap imports <*> fexpMap classes <*> fexpMap fields <*> fexpMap methods <*> fexpMap modules
-    Assignment id pat dst                    -> Assignment id      <$> fpat pat  <*> fexp dst
-    Typed      id cls expr                   -> Typed      id      <$> ftype cls <*> fexp expr
-    App        id src args                   -> App        id      <$> fexp src  <*> fexpMap args
-    Accessor   id src dst                    -> Accessor   id      <$> fexp src  <*> fexp dst
-    Class      id cls classes fields methods -> Class      id      <$> ftype cls <*> fexpMap classes <*> fexpMap fields <*> fexpMap methods
-    Lit        id val                        -> Lit        id      <$> flit val
     Tuple      id items                      -> Tuple      id      <$> fexpMap items
-    Infix      id name src dst               -> Infix      id name <$> fexp src  <*> fexp dst
-    Field      id name cls                   -> Field      id name <$> ftype cls
-    Function   id name signature body        -> Function   id name <$> fpatMap signature <*> fexpMap body
-    Lambda     id signature body             -> Lambda     id      <$> fpatMap signature <*> fexpMap body
-    List       id items                      -> List       id      <$> fexpMap items
-    NOP        {}                            -> pure expr
-    Import     {}                            -> pure expr
+    Typed      id cls expr                   -> Typed      id      <$> ftype cls <*> fexp expr
     Var        {}                            -> pure expr
-    Cons       {}                            -> pure expr
+    NOP        {}                            -> pure expr
     _                                        -> fail "Unexpected expression"
     where fexpMap = mapM fexp
           fpatMap = mapM fpat
 
 traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Expr -> m ()
 traverseM_ fexp ftype fpat flit expr = case expr of
+    Accessor   id src dst                    -> drop <* fexp src  <* fexp dst
+    App        id src args                   -> drop <* fexp src  <* fexpMap args
+    Assignment id pat dst                    -> drop <* fpat pat  <* fexp dst
+    Class      id cls classes fields methods -> drop <* ftype cls <* fexpMap classes <* fexpMap fields <* fexpMap methods
+    Cons       {}                            -> drop
+    Field      id name cls                   -> drop <* ftype cls
+    Function   id name pargs output body     -> drop <* fpatMap pargs <* ftype output <* fexpMap body
+    Lambda     id      pargs output body     -> drop <* fpatMap pargs <* ftype output <* fexpMap body
+    Import     {}                            -> drop
+    Infix      id name src dst               -> drop <* fexp src       <* fexp dst
+    List       id items                      -> drop <* fexpMap items
+    Lit        id val                        -> drop <* flit val
     Module     id cls imports classes             
                fields methods modules        -> drop <* ftype cls <* fexpMap imports <* fexpMap classes <* fexpMap fields <* fexpMap methods <* fexpMap modules
-    Assignment id pat dst                    -> drop <* fpat pat  <* fexp dst
-    Typed      id cls expr                   -> drop <* ftype cls <* fexp expr
-    App        id src args                   -> drop <* fexp src  <* fexpMap args
-    Accessor   id src dst                    -> drop <* fexp src  <* fexp dst
-    Class      id cls classes fields methods -> drop <* ftype cls <* fexpMap classes <* fexpMap fields <* fexpMap methods
-    Lit        id val                        -> drop <* flit val
     Tuple      id items                      -> drop <* fexpMap items
-    Infix      id name src dst               -> drop <* fexp src  <* fexp dst
-    Field      id name cls                   -> drop <* ftype cls
-    Function   id name signature body        -> drop <* fpatMap signature <* fexpMap body
-    Lambda     id signature body             -> drop <* fpatMap signature <* fexpMap body
-    List       id items                      -> drop <* fexpMap items
-    NOP        {}                            -> drop
-    Import     {}                            -> drop
+    Typed      id cls expr                   -> drop <* ftype cls <* fexp expr
     Var        {}                            -> drop
-    Cons       {}                            -> drop
+    NOP        {}                            -> drop
     _                                        -> fail "Unexpected expression"
     where drop    = pure ()
           fexpMap = mapM_ fexp
