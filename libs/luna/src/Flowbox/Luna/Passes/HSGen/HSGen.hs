@@ -68,9 +68,9 @@ genExpr :: GenMonad m => LExpr.Expr -> Pass.Result m HExpr.Expr
 genExpr ast = case ast of
     LExpr.Var      id name                    -> return $ HExpr.Var (name)
                                  
-    LExpr.Function id name signature body     -> do
-                                                 body'  <- mapM genExpr body
-                                                 HExpr.Function name <$> mapM genPat signature <*> pure (HExpr.DoBlock body')
+    LExpr.Function id name signature body     ->     HExpr.Function name 
+                                                 <$> mapM genPat signature 
+                                                 <*> (HExpr.DoBlock <$> genFuncBody body)
 
     LExpr.Import id segments name             -> return $ HExpr.Import segments name
 
@@ -86,8 +86,16 @@ genExpr ast = case ast of
     LExpr.Lit        id value                 -> genLit value
     LExpr.Tuple      id items                 -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
     LExpr.Field      id name cls              -> HExpr.Typed <$> genType cls <*> pure (HExpr.Var name)
-    LExpr.App        id src args              -> (liftM2 . foldl) HExpr.AppE (genExpr src) (mapM genExpr args)
+    LExpr.App        id src args              -> (liftM2 . foldl) HExpr.AppE (HExpr.AppE (HExpr.Var $ "get" ++ show (length args)) <$> genExpr src) (mapM genExpr args)
+    LExpr.Accessor   id src dst               -> HExpr.AppE <$> genExpr dst <*> genExpr src
 
+
+genFuncBody :: GenMonad m => [LExpr.Expr] -> Pass.Result m [HExpr.Expr]
+genFuncBody exprs = case exprs of
+    x:[] -> (:[]) <$> case x of
+        LExpr.Assignment _ _ dst -> genExpr dst
+        _                        -> genExpr x
+    x:xs -> (:) <$> genExpr x <*> genFuncBody xs
 
 
 genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr.Expr

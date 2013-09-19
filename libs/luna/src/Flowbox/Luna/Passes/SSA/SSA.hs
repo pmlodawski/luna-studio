@@ -43,6 +43,7 @@ run vs = (Pass.run_ Pass.NoState) . (ssaExpr vs)
 
 ssaExpr :: SSAMonad m => VarStat -> Expr.Expr -> Pass.Result m Expr.Expr
 ssaExpr vs ast = case ast of
+    Expr.Accessor   id src dst            -> Expr.Accessor id <$> ssaExpr vs src <*> pure dst
     Expr.Var        id name               -> case IntMap.lookup id (VarStat.varmap vs) of
                                                   Just nid -> return $ Expr.Var id (mkVar nid)
                                                   Nothing  -> logger error ("Not in scope '" ++ name ++ "'") *> Pass.fail ("Not in scope '" ++ name ++ "'")

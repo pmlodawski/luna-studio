@@ -23,6 +23,7 @@ data Expr = Assignment { src      :: Expr     , dst       :: Expr               
           | StringLit  { val      :: String                                                   }
           | NOP        {                                                                      }
           | Var        { name     :: String                                                   }
+          | VarE       { name     :: String                                                   }
           | Typed      { cls      :: Expr     , expr      :: Expr                             }
           | Function   { name     :: String   , signature :: [Expr]   , expr      :: Expr     }
           | LetBlock   { exprs    :: [Expr]   , result    :: Expr                             }

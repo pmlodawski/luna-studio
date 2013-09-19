@@ -49,8 +49,16 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source "Workspace"
         $ unlines [ "def f x y:"
-                  , "    Std.Math.add x y"
+                  , "    a.b.add y z"
                   ]
+
+
+--x.add y
+--get1 (add x) y
+
+--x.y.add z
+
+--(add (y x))
 
 
 --example :: Source
@@ -65,7 +73,6 @@ example = Source.Source "Workspace"
 --        $ unlines [ "def f (a::Vector a b Int c):"
 --                  , "    a = Vector a b Int c"
 --                  ]
-
 
 main :: IO ()
 main = do
@@ -93,17 +100,17 @@ main_inner = Luna.run $ do
     --ssa <- SSA.run va ast
     --putStrLn $ PP.ppqShow ssa
 
-    --putStrLn "\n-------- HSGen --------" 
-    --hast <- HSGen.run  ssa
-    --putStrLn $ PP.ppShow hast
+    putStrLn "\n-------- HSGen --------" 
+    hast <- HSGen.run  ast
+    putStrLn $ PP.ppShow hast
 
-    ----putStrLn "\n-------- HSC --------" 
-    --hsc <- HSC.run  hast
-    ----putStrLn $ hsc
+    --putStrLn "\n-------- HSC --------" 
+    hsc <- HSC.run  hast
+    --putStrLn $ hsc
 
-    --putStrLn "\n-------- PHSC --------" 
-    --phsc <- HSPrint.run hsc
-    --putStrLn $ phsc
+    putStrLn "\n-------- PHSC --------" 
+    phsc <- HSPrint.run hsc
+    putStrLn $ phsc
 
     return ()
 

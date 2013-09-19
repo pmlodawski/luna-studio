@@ -57,6 +57,7 @@ genSection header generator d = if null d
 genExpr :: HExpr.Expr -> String
 genExpr expr = case expr of
     HExpr.Var      name                   -> name
+    HExpr.VarE     name                   -> name
     HExpr.Import   segments name          -> "import qualified " ++ join "." segments ++ " as " ++ name
     HExpr.Module   path imports datatypes 
                    methods                -> header 
@@ -80,6 +81,7 @@ genExpr expr = case expr of
     HExpr.ConsT    name                   -> name
     HExpr.AppT     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
     HExpr.AppE     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
+
 
 
 genLit :: HLit.Lit -> String
