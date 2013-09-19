@@ -20,14 +20,19 @@ module Flowbox.System.UniPath(
     fileName,
     basePath,
     setExtension,
-    dirOf
+    dropExtension,
+    dirOf,
+    makeRelative,
 ) where
 
 import           Control.Applicative hiding (empty)
-import           Data.List.Split       (splitOn)
-import           Data.List             (intercalate, intersperse)
+import qualified Data.List.Split     as Split
+import qualified Data.List           as List
 import           Data.String.Utils     (join)
 import qualified System.Directory    as Directory
+import qualified System.FilePath     as FilePath
+
+
 
 data PathItem = Node String 
               | Root String
@@ -45,9 +50,9 @@ empty = []
 fromUnixString :: String -> UniPath
 fromUnixString []           = empty
 fromUnixString spath@(x:xs) = case x of
-        '/' -> fromList $ "/" : splitOn "/" xs
+        '/' -> fromList $ "/" : Split.splitOn "/" xs
         '~' -> Var "~" : fromUnixString xs
-        _   -> fromList $ splitOn "/" spath
+        _   -> fromList $ Split.splitOn "/" spath
 
 
 toUnixString :: UniPath -> String
@@ -62,7 +67,7 @@ toUnixString path = join "/" $ fmap str path where
 
 expand :: UniPath -> IO UniPath
 expand [] = return empty
-expand spath@(x:xs) = case x of
+expand (x:xs) = case x of
         Var "~" -> do home <- Directory.getHomeDirectory
                       rest <- expand xs
                       return $ (fromUnixString home) ++ rest
@@ -110,7 +115,7 @@ normalise_r path undo = case path of
 
 fileName :: UniPath -> String
 fileName path = case last $ normalise path of
-                  Node fname -> intercalate "." $ splitOn "." fname
+                  Node fname -> List.intercalate "." $ Split.splitOn "." fname
                   _          -> error "something is wrong with the path " ++ toUnixString path
 
 --removes the name of a file, if present
@@ -121,14 +126,15 @@ basePath path = normalise $ case last $ normalise path of
 
 setExtension :: String -> UniPath -> UniPath
 setExtension ext path =
-  normalise $ path ++ [Up] ++ [Node $ (fileName path) ++ ext]
+    normalise $ path ++ [Up] ++ [Node $ (fileName path) ++ ext]
   
 
 
+dropExtension :: UniPath -> UniPath
+dropExtension path = fromUnixString $ FilePath.dropExtension $ toUnixString path
 
 
-
-
-
-
+makeRelative :: UniPath -> UniPath -> UniPath
+makeRelative path1 path2 = 
+    fromUnixString $ FilePath.makeRelative (toUnixString path1) (toUnixString path2)
 

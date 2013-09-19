@@ -23,6 +23,7 @@ Library
                   dlist,
                   --either,
                   errors,
+                  filepath,
                   generic-deriving,
                   hslogger,
                   MissingH == 1.2.0.0,
