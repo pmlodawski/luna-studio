@@ -68,9 +68,9 @@ genExpr :: GenMonad m => LExpr.Expr -> Pass.Result m HExpr.Expr
 genExpr ast = case ast of
     LExpr.Var      id name                    -> return $ HExpr.Var (name)
                                  
-    LExpr.Function id name pats _ body        ->     HExpr.Function name 
+    LExpr.Function id name pats output body   ->     HExpr.Function name 
                                                  <$> mapM genPat pats 
-                                                 <*> (HExpr.DoBlock <$> genFuncBody body)
+                                                 <*> (HExpr.DoBlock <$> genFuncBody body output)
 
     LExpr.Import id segments name             -> return $ HExpr.Import segments name
 
@@ -90,12 +90,12 @@ genExpr ast = case ast of
     LExpr.Accessor   id src dst               -> HExpr.AppE <$> genExpr dst <*> genExpr src
 
 
-genFuncBody :: GenMonad m => [LExpr.Expr] -> Pass.Result m [HExpr.Expr]
-genFuncBody exprs = case exprs of
-    x:[] -> (:[]) <$> case x of
-        LExpr.Assignment _ _ dst -> genExpr dst
-        _                        -> genExpr x
-    x:xs -> (:) <$> genExpr x <*> genFuncBody xs
+genFuncBody :: GenMonad m => [LExpr.Expr] -> LType.Type -> Pass.Result m [HExpr.Expr]
+genFuncBody exprs output = case exprs of
+    x:[] -> (:[]) .: HExpr.Typed <$> genType output <*> case x of
+        LExpr.Assignment _ _ dst -> genExpr dst 
+        _                        -> genExpr x 
+    x:xs -> (:) <$> genExpr x <*> genFuncBody xs output
 
 
 genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr.Expr

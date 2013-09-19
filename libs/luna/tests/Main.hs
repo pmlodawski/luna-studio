@@ -100,17 +100,17 @@ main_inner = Luna.run $ do
     --ssa <- SSA.run va ast
     --putStrLn $ PP.ppqShow ssa
 
-        --putStrLn "\n-------- HSGen --------" 
-        --hast <- HSGen.run  ast
-        --putStrLn $ PP.ppShow hast
+    putStrLn "\n-------- HSGen --------" 
+    hast <- HSGen.run  ast
+    putStrLn $ PP.ppShow hast
 
-        ----putStrLn "\n-------- HSC --------" 
-        --hsc <- HSC.run  hast
-        ----putStrLn $ hsc
+    --putStrLn "\n-------- HSC --------" 
+    hsc <- HSC.run  hast
+    --putStrLn $ hsc
 
-        --putStrLn "\n-------- PHSC --------" 
-        --phsc <- HSPrint.run hsc
-        --putStrLn $ phsc
+    putStrLn "\n-------- PHSC --------" 
+    phsc <- HSPrint.run hsc
+    putStrLn $ phsc
 
     return ()
 
