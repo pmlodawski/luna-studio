@@ -22,7 +22,7 @@ type Lit = Lit.Lit
 data Pat = Var             { id :: ID, name      :: String                         }
          | Lit             { id :: ID, value     :: Lit                            }
          | Tuple           { id :: ID, items     :: [Pat]                          }
-         | Cons            { id :: ID, segments  :: [String]                       }
+         | Cons            { id :: ID, name      :: String                         }
          | App             { id :: ID, src       :: Pat       , args      :: [Pat] }
          | Typed           { id :: ID, pat       :: Pat       , cls       :: Type  }
          | CallConstructor { id :: ID, args      :: [Pat]                          }

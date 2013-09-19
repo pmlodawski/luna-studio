@@ -122,7 +122,7 @@ function2signature funcls = mapM input2signature i where
         inpID  <- IdState.newID
         varID  <- IdState.newID
         consID <- IdState.newID
-        return $ ASTPat.Typed inpID (ASTPat.Var varID name) (ASTType.Cons consID [cls]) 
+        return $ ASTPat.Typed inpID (ASTPat.Var varID name) (ASTType.Cons consID cls) 
         
 
 type2ASTType :: Graph2ASTMonad m => Type -> Pass.Result m (String, ASTType.Type)

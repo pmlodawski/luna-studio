@@ -39,7 +39,7 @@ pArgList' s p = try(L.parensed s (sepBy2 p L.separator)) <|> ((:[]) <$> p)
 pTupleBody  p = sepBy' p L.separator
 pTuplePure  p = L.braced $ pTupleBody p
 pList p       = L.bracketed (sepBy' p L.separator)
-pCons s       = sepBy1 (L.pIdentType s) L.pAccessor
+pCons s       = L.pIdentType s
 
 
 -----------------------------------------------------------

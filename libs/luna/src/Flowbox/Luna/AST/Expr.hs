@@ -39,7 +39,7 @@ data Expr  = NOP        { id :: ID                                              
            | Module     { id :: ID, cls       :: Type     , imports   :: [Expr] , classes   :: [Expr] , fields  :: [Expr] , methods :: [Expr] , modules :: [Expr] }
            | Field      { id :: ID, name      :: String   , cls       :: Type                                                                                     }
            | Lambda     { id :: ID, signature :: [Pat]    , body      :: [Expr]                                                                                   }
-           | Cons       { id :: ID, qname     :: [String]                                                                                                         }
+           | Cons       { id :: ID, name      :: String                                                                                                           }
            | Function   { id :: ID, name      :: String   , signature :: [Pat]   , body    :: [Expr]                                                              }
            | List       { id :: ID, items     :: [Expr]                                                                                                           }
            deriving (Show, Eq, Generic)

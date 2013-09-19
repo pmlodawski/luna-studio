@@ -48,31 +48,8 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "import Std.Math.Scalar"
-                  , ""
-                  , "class Vector a:"
-                  , "    x :: a"
-                  , ""
-                  , "def f(x::Int, y::Map Int Float):"
-                  , "    z = x + 7"
-                  , "    g = {x, y}"
-                  , "    z = fun(x, y)"
-                  , "    z+ y"
-                  , ""
-                  , "def g a b:"
-                  , "    c = 1"
-                  , "    a = b + 1"
-                  , "    _ = a + b"
-                  , ""
-                  , "class A:"
-                  , "    a :: Std.Math.Vector (Int a) b"
-                  , ""
-                  , "def f a b:"
-                  , "    a = a+b"
-                  , "    a = a+b"
-                  , ""
-                  , "def f a b:"
-                  , "    a = a b"
+        $ unlines [ "def f x y:"
+                  , "    Std.Math.add x y"
                   ]
 
 
@@ -100,32 +77,33 @@ main = do
 
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
-    source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
-                               (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
+    --source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
+    --                           (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
                                
+    let source = example
     putStrLn "\n-------- Txt2AST --------"
     ast <- Txt2AST.run source
     putStrLn $ PP.ppqShow ast
 
-    putStrLn "\n-------- VA --------"
-    va <- VA.run     ast
-    putStrLn $ PP.ppShow va
+    --putStrLn "\n-------- VA --------"
+    --va <- VA.run     ast
+    --putStrLn $ PP.ppShow va
 
-    putStrLn "\n-------- SSA --------" 
-    ssa <- SSA.run va ast
-    putStrLn $ PP.ppqShow ssa
+    --putStrLn "\n-------- SSA --------" 
+    --ssa <- SSA.run va ast
+    --putStrLn $ PP.ppqShow ssa
 
-    putStrLn "\n-------- HSGen --------" 
-    hast <- HSGen.run  ssa
-    putStrLn $ PP.ppShow hast
+    --putStrLn "\n-------- HSGen --------" 
+    --hast <- HSGen.run  ssa
+    --putStrLn $ PP.ppShow hast
 
-    --putStrLn "\n-------- HSC --------" 
-    hsc <- HSC.run  hast
-    --putStrLn $ hsc
+    ----putStrLn "\n-------- HSC --------" 
+    --hsc <- HSC.run  hast
+    ----putStrLn $ hsc
 
-    putStrLn "\n-------- PHSC --------" 
-    phsc <- HSPrint.run hsc
-    putStrLn $ phsc
+    --putStrLn "\n-------- PHSC --------" 
+    --phsc <- HSPrint.run hsc
+    --putStrLn $ phsc
 
     return ()
 
