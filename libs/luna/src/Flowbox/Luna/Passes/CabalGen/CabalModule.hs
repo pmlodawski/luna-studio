@@ -7,18 +7,44 @@
 
 module Flowbox.Luna.Passes.CabalGen.CabalModule where
 
-import           Flowbox.Prelude   
+import qualified Data.List                            as List
 
-data CabalModule = Library { hsSourceDirs   :: [String]
-                           , ghcOptions     :: [String]
-                           , extensions     :: [String]
-                           , buildDepends   :: [String]
-                           , exposedModules :: [String]
-                           }
-                 | Executable { name         :: String
-                              , hsSourceDirs :: [String]
-                              , ghcOptions   :: [String]
-                              , extensions   :: [String]
-                              , buildDepends :: [String]
-                              , mainIs       :: String
+import           Flowbox.Prelude                        
+import qualified Flowbox.Luna.Passes.CabalGen.Section as Section
+import           Flowbox.Luna.Passes.CabalGen.Section   (Section(Section))
+
+
+
+data CabalModule = Library    { sections :: [Section]
                               }
+                 | Executable { name     :: String
+                              , sections :: [Section] 
+                              }
+
+
+mkLibrary :: [String] -> [String] -> [String] -> [String] -> [String] -> CabalModule
+mkLibrary hsSourceDirs ghcOptions extensions buildDepends exposedModules = 
+    Library [ Section "Hs-Source-Dirs" hsSourceDirs 
+            , Section "GHC-Options" ghcOptions
+            , Section "Extensions" extensions
+            , Section "Build-Depends" buildDepends
+            , Section "Exposed-modules" exposedModules
+            ]
+
+
+mkExecutable :: String -> [String] -> [String] -> [String] -> [String] -> String -> CabalModule
+mkExecutable name hsSourceDirs ghcOptions extensions buildDepends mainIs = 
+    Executable name [ Section "Hs-Source-Dirs" hsSourceDirs 
+                    , Section "GHC-Options" ghcOptions
+                    , Section "Extensions" extensions
+                    , Section "Build-Depends" buildDepends
+                    , Section "Main-Is" [mainIs]
+                    ]
+
+
+generate :: CabalModule -> String
+generate m = r where 
+    r = case m of 
+        Library      _ -> "Library:\n"               ++ body
+        Executable n _ -> "Executable " ++ n ++ "\n" ++ body
+    body = List.concat $ map Section.generate $ sections m

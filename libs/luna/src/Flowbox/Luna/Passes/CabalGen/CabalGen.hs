@@ -7,15 +7,26 @@
 
 module Flowbox.Luna.Passes.CabalGen.CabalGen where
 
+import           Control.Monad.RWS          
+import qualified System.IO                                as IO
+
 import           Flowbox.Prelude                            
 import qualified Flowbox.Luna.Passes.CabalGen.CabalConfig as CabalConfig
 import           Flowbox.Luna.Passes.CabalGen.CabalConfig   (CabalConfig)
-import qualified Flowbox.Luna.Passes.CabalGen.CabalModule as CabalModule
-import           Flowbox.Luna.Passes.CabalGen.CabalModule   (CabalModule)
-import qualified Flowbox.System.UniPath   as UniPath
-import           Flowbox.System.UniPath     (UniPath)
+import           Flowbox.System.UniPath                     (UniPath)
+import qualified Flowbox.System.IO.Serializer             as Serializer
+import           Flowbox.System.IO.Serializer               (Serializable(Serializable))
 
+
+
+
+run :: MonadIO m => CabalConfig -> UniPath -> m ()
+run config path = do
+    liftIO $ generateCabal config path
 
 
 generateCabal :: CabalConfig -> UniPath -> IO ()
-generateCabal config path = undefined
+generateCabal config path = do 
+    let cabal = CabalConfig.generate config
+        s     = Serializable path (\h -> IO.hPutStr h cabal)
+    Serializer.serialize s

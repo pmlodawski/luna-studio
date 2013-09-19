@@ -44,6 +44,7 @@ Library
         Flowbox.Luna.Passes.FileReader.SourceReader,
         Flowbox.Luna.Passes.CabalGen.CabalGen,
         Flowbox.Luna.Passes.CabalGen.CabalModule,
+        Flowbox.Luna.Passes.CabalGen.Section,
         Flowbox.Luna.Passes.CabalGen.CabalConfig,
         Flowbox.Luna.Passes.Graph2AST.IdState,
         Flowbox.Luna.Passes.Graph2AST.Graph2AST,
