@@ -97,7 +97,7 @@ genPat pat = case pat of
 genType :: GenMonad m => LType.Type -> Pass.Result m HExpr.Expr
 genType t = case t of
     LType.Var    id name     -> return $ HExpr.Var (name)
-    LType.Cons   id qname    -> return $ HExpr.ConsE qname
+    LType.Cons   id name     -> return $ HExpr.ConsE [name] -- FIXME ConsE [String] => ConsE String
     LType.Tuple  id items    -> HExpr.Tuple <$> mapM genType items
     LType.App    id src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
     --HExpr.AppT <$> genType src <*> genType (args !! 0)
