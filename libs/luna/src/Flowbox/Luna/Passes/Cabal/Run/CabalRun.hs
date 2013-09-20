@@ -5,10 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Cabal.Build.CabalBuild where
+module Flowbox.Luna.Passes.Cabal.Run.CabalRun where
 
 import           Control.Monad.RWS           
 import qualified Control.Exception         as Exception
+import qualified Data.List                 as List
 import qualified System.Directory          as Directory
 
 import           Flowbox.Prelude           hiding (error)
@@ -19,19 +20,18 @@ import           Flowbox.System.Log.Logger
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Luna.Passes.Cabal.Build.BuildCabal"
+loggerIO = getLoggerIO "Flowbox.Luna.Passes.Cabal.Run.RunCabal"
 
 
-run :: MonadIO m => UniPath -> m ()
-run = liftIO . buildCabal
+run :: MonadIO m => UniPath -> String -> [String] -> m ()
+run projectPath name args = liftIO $ runCabal projectPath name args
 
 
-buildCabal :: UniPath -> IO ()
-buildCabal projectPath = do 
+runCabal :: UniPath -> String -> [String] -> IO ()
+runCabal projectPath name args = do 
     workingDir <- Directory.getCurrentDirectory
-    let buildPath = UniPath.append "build/hs" projectPath
-    Directory.setCurrentDirectory $ UniPath.toUnixString buildPath
+    let runPath = UniPath.append ("build/hs/dist/build/" ++ name) projectPath
+    Directory.setCurrentDirectory $ UniPath.toUnixString runPath
 
-    Exception.finally (do Process.runCommand "cabal" ["configure"] loggerIO
-                          Process.runCommand "cabal" ["build"] loggerIO)
+    Exception.finally (Process.runCommand ("./" ++ name) args loggerIO)
                       (Directory.setCurrentDirectory workingDir)

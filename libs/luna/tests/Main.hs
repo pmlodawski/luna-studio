@@ -21,6 +21,7 @@ import           System.TimeIt
 
 import           Flowbox.Prelude                               
 import qualified Flowbox.Luna.Passes.Cabal.Build.CabalBuild  as CabalBuild
+import qualified Flowbox.Luna.Passes.Cabal.Run.CabalRun      as CabalRun
 import qualified Flowbox.Luna.Passes.Cabal.Gen.CabalGen      as CabalGen
 import qualified Flowbox.Luna.Passes.Cabal.Store.CabalStore  as CabalStore
 import qualified Flowbox.Luna.Passes.FileReader.SourceReader as SourceReader
@@ -87,6 +88,7 @@ main_inner = Luna.run $ do
 
     CabalStore.run cabal $ UniPath.fromUnixString "samples/TestProject2/build/hs/TestProject2.cabal"
     CabalBuild.run $ UniPath.fromUnixString "samples/TestProject2"
+    CabalRun.run (UniPath.fromUnixString "samples/TestProject2") "TestProject2" []
     --source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
     --                           (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
                                

@@ -43,7 +43,6 @@ Library
                   thrift >= 0.9,
                   transformers,
                   parsec,
-                  process,
                   unordered-containers,
                   uu-parsinglib,
                   vector
