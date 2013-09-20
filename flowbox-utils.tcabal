@@ -24,6 +24,7 @@ Library
                   dlist,
                   --either,
                   errors,
+                  fgl,
                   filepath,
                   generic-deriving,
                   hslogger,
