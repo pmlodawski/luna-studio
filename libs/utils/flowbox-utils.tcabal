@@ -13,6 +13,7 @@ Library
   GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse
+                  NoImplicitPrelude
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
@@ -31,6 +32,7 @@ Library
                   mtl,
                   pretty,
                   pretty-show,
+                  process,
                   split,
                   text,
                   transformers
@@ -44,6 +46,7 @@ Executable utils
 
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
+                  NoImplicitPrelude
   Build-Depends:  base,
                   --dlist,
                   --ansi-terminal,

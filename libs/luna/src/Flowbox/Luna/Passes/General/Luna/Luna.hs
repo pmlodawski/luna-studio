@@ -25,5 +25,4 @@ run :: Pass.TransformerT Pass.NoState a IO b
 run f = do
 	(result, _, logs) <- Pass.runT Pass.NoState f
 	Logger.logsIO logs
-	putStrLn "test"
 	return result

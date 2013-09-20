@@ -12,7 +12,10 @@ module Flowbox.Text.Show.Pretty (
 
 import           Text.Show.Pretty                  
 import           Text.PrettyPrint                  
+
+import           Flowbox.Prelude                   
 import           Flowbox.Generics.Deriving.QShow   
+
 
 
 ppqShow :: QShow a => a -> String

@@ -24,7 +24,8 @@ import qualified System.Directory              as Directory
 import qualified System.IO                     as IO
 
 import           Flowbox.Prelude                 
-import           Flowbox.Batch.FileSystem.Item   (Item(..))
+import qualified Flowbox.Batch.FileSystem.Item as Item
+import           Flowbox.Batch.FileSystem.Item   (Item)
 import qualified Flowbox.System.UniPath        as UniPath
 import           Flowbox.System.UniPath          (UniPath)
 
@@ -32,9 +33,9 @@ import           Flowbox.System.UniPath          (UniPath)
 
 ls :: UniPath -> IO [Item]
 ls upath = do
-    apath <- UniPath.toUnixString <$> UniPath.expand upath
+    path <- UniPath.toUnixString <$> UniPath.expand upath
 
-    paths <- Directory.getDirectoryContents apath
+    paths <- Directory.getDirectoryContents path
     let upaths = map (\u -> UniPath.append u upath) paths
     items <- mapM stat upaths
     return items
@@ -42,72 +43,72 @@ ls upath = do
 
 stat :: UniPath -> IO Item
 stat upath = do
-    apath <- UniPath.toUnixString <$> UniPath.expand upath
+    path <- UniPath.toUnixString <$> UniPath.expand upath
 
-    isDir  <- Directory.doesDirectoryExist apath
+    isDir  <- Directory.doesDirectoryExist path
     if isDir 
-        then return $ Directory upath 0
+        then return $ Item.Directory upath 0
         else do
-            isFile <- Directory.doesFileExist apath
+            isFile <- Directory.doesFileExist path
             if isFile 
-                then Exception.handle (\(_ :: Exception.SomeException) -> return $ File upath (-1))
-                     (do asize <- IO.withFile apath IO.ReadMode IO.hFileSize
-                         return $ File upath $ fromInteger asize)
-                else return $ Other upath (-1)
+                then Exception.handle (\(_ :: Exception.SomeException) -> return $ Item.File upath (-1))
+                     (do asize <- IO.withFile path IO.ReadMode IO.hFileSize
+                         return $ Item.File upath $ fromInteger asize)
+                else return $ Item.Other upath (-1)
 
 
 mkdir :: UniPath -> IO ()
 mkdir upath = do
-     apath <- UniPath.toUnixString <$> UniPath.expand upath
-     Directory.createDirectory apath
+     path <- UniPath.toUnixString <$> UniPath.expand upath
+     Directory.createDirectory path
 
 
 touch :: UniPath -> IO ()
 touch upath = do 
-    apath <- UniPath.toUnixString <$> UniPath.expand upath
-    IO.writeFile apath ""
+    path <- UniPath.toUnixString <$> UniPath.expand upath
+    IO.writeFile path ""
 
 
 rm :: UniPath -> IO ()
 rm upath = do
-    apath <- UniPath.toUnixString <$> UniPath.expand upath
+    path <- UniPath.toUnixString <$> UniPath.expand upath
 
-    isDir  <- Directory.doesDirectoryExist apath
+    isDir  <- Directory.doesDirectoryExist path
     if isDir 
-        then Directory.removeDirectoryRecursive apath
+        then Directory.removeDirectoryRecursive path
         else do
-            isFile <- Directory.doesFileExist apath
+            isFile <- Directory.doesFileExist path
             if isFile 
-                then Directory.removeFile apath
+                then Directory.removeFile path
                 else error "Could not remove object: Unsupported type."
 
 
 cp :: UniPath -> UniPath -> IO ()
 cp usrc udst = do
-    asrc <- UniPath.toUnixString <$> UniPath.expand usrc
-    adst <- UniPath.toUnixString <$> UniPath.expand udst
+    src <- UniPath.toUnixString <$> UniPath.expand usrc
+    dst <- UniPath.toUnixString <$> UniPath.expand udst
 
-    isDir  <- Directory.doesDirectoryExist asrc
+    isDir  <- Directory.doesDirectoryExist src
     if isDir 
         -- TODO [PM] : Implement copying of folders
         then putStrLn "Could not copy folder: Not Implemented. Sorry."
         else do
-            isFile <- Directory.doesFileExist asrc
+            isFile <- Directory.doesFileExist src
             if isFile 
-                then Directory.copyFile asrc adst
+                then Directory.copyFile src dst
                 else error "Could not copy object: Unsupported type."
     
 
 mv :: UniPath -> UniPath -> IO ()
 mv usrc udst = do
-    asrc <- UniPath.toUnixString <$> UniPath.expand usrc
-    adst <- UniPath.toUnixString <$> UniPath.expand udst
+    src <- UniPath.toUnixString <$> UniPath.expand usrc
+    dst <- UniPath.toUnixString <$> UniPath.expand udst
 
-    isDir  <- Directory.doesDirectoryExist asrc
+    isDir  <- Directory.doesDirectoryExist src
     if isDir 
-        then Directory.renameDirectory asrc adst
+        then Directory.renameDirectory src dst
         else do
-            isFile <- Directory.doesFileExist asrc
+            isFile <- Directory.doesFileExist src
             if isFile 
-                then Directory.renameFile asrc adst
+                then Directory.renameFile src dst
                 else error "Could not move object: Unsupported type."

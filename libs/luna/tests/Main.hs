@@ -8,6 +8,7 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 
+
 import           Debug.Trace                                             
 import           Data.Either.Utils                                       (forceEither)
 import qualified Data.DList                                            as DList
@@ -20,6 +21,10 @@ import           Control.Monad.Trans.Either
 import           System.TimeIt                                           
 
 import           Flowbox.Prelude                                         
+import qualified Flowbox.Luna.Passes.Cabal.Build.CabalBuild            as CabalBuild
+import qualified Flowbox.Luna.Passes.Cabal.Run.CabalRun                as CabalRun
+import qualified Flowbox.Luna.Passes.Cabal.Gen.CabalGen                as CabalGen
+import qualified Flowbox.Luna.Passes.Cabal.Store.CabalStore            as CabalStore
 import qualified Flowbox.Luna.Passes.Transform.Source.Reader.Reader    as SourceReader
 import qualified Flowbox.Luna.Data.HAST.Expr                           as Expr
 import qualified Flowbox.Luna.Data.HAST.Module                         as Module
@@ -63,6 +68,8 @@ example = Source.Source "Workspace"
 
 main :: IO ()
 main = do
+    logger setLevel DEBUG
+    
     out <- timeIt main_inner
     case out of
         Right _ -> return ()
@@ -71,10 +78,16 @@ main = do
 
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
-    --source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
-    --                           (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
+
+    cabal <- CabalGen.run "TestProject2"
+
+    CabalStore.run cabal $ UniPath.fromUnixString "samples/TestProject2/build/hs/TestProject2.cabal"
+    CabalBuild.run $ UniPath.fromUnixString "samples/TestProject2"
+    CabalRun.run (UniPath.fromUnixString "samples/TestProject2") "TestProject2" []
+    source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
+                               (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
                                
-    let source = example
+    --let source = example
     putStrLn "\n-------- TxtParser --------"
     ast <- TxtParser.run source
     putStrLn $ PP.ppqShow ast

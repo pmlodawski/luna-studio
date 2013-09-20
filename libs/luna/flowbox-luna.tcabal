@@ -29,6 +29,7 @@ Library
   Build-Depends:  base,
                   bytestring,
                   containers,
+                  directory,
                   either,
                   fgl,
                   flowbox-utils,
@@ -45,7 +46,6 @@ Library
                   unordered-containers,
                   uu-parsinglib,
                   vector
-
 
 
 Executable luna

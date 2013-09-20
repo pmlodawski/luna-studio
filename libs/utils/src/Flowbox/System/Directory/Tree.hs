@@ -7,6 +7,10 @@
 
 module Flowbox.System.Directory.Tree where
 
+import           Flowbox.Prelude   
+
+
+
 data DirTree a = Dir  { name :: String, contents :: [DirTree a] }
                | File { name :: String, body     :: a           }
                deriving (Show)

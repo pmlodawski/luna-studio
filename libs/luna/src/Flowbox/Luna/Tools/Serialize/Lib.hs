@@ -23,7 +23,7 @@ import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs    ()
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph   ()
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs    ()
 import qualified Flowbox.System.IO.Serializer                         as Serializer
-import           Flowbox.System.IO.Serializer                           (Serializable(..), Deserializable(..))
+import           Flowbox.System.IO.Serializer                           (Serializable(Serializable), Deserializable(Deserializable))
 import           Flowbox.System.UniPath                                 (UniPath)
 import           Flowbox.Tools.Conversion                               
 
@@ -60,12 +60,12 @@ storeLibrary lib = do
 
 
 restoreLibrary :: UniPath -> IO Library
-restoreLibrary lpath = do
-    let dlib = Deserializable lpath getLib
+restoreLibrary path = do
+    let dlib = Deserializable path getLib
 
     library <- Serializer.deserialize dlib
     
-    return $ library{Library.path = lpath}
+    return $ library{Library.path = path}
 
 
 

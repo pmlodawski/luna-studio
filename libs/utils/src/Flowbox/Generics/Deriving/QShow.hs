@@ -28,6 +28,8 @@ module Flowbox.Generics.Deriving.QShow (
 import Generics.Deriving.Base
 import Generics.Deriving.Instances ()
 
+import           Flowbox.Prelude          
+
 --------------------------------------------------------------------------------
 -- Generic show
 --------------------------------------------------------------------------------

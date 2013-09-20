@@ -8,23 +8,23 @@
 
 module Flowbox.Luna.Passes.Transform.SSA.SSA where
 
-import qualified Flowbox.Luna.Data.AST.Expr                  as Expr
-import qualified Flowbox.Luna.Data.AST.Type                  as Type
-import           Flowbox.Luna.Data.AST.Type                    (Type)
-import qualified Flowbox.Luna.Data.AST.Pat                   as Pat
-import           Flowbox.Luna.Data.AST.Pat                     (Pat)
-import qualified Flowbox.Luna.Data.AliasAnalysis             as AA
-import           Flowbox.Luna.Data.AliasAnalysis               (AA)
-import qualified Flowbox.Luna.Passes.Pass                    as Pass
-import           Flowbox.Luna.Passes.Pass                      (PassMonad)
-import qualified Data.IntMap                                 as IntMap
+import qualified Flowbox.Luna.Data.AST.Expr      as Expr
+import qualified Flowbox.Luna.Data.AST.Type      as Type
+import           Flowbox.Luna.Data.AST.Type        (Type)
+import qualified Flowbox.Luna.Data.AST.Pat       as Pat
+import           Flowbox.Luna.Data.AST.Pat         (Pat)
+import qualified Flowbox.Luna.Data.AliasAnalysis as AA
+import           Flowbox.Luna.Data.AliasAnalysis   (AA)
+import qualified Flowbox.Luna.Passes.Pass        as Pass
+import           Flowbox.Luna.Passes.Pass          (PassMonad)
+import qualified Data.IntMap                     as IntMap
 
-import           Control.Monad.State                           
-import           Control.Applicative                           
+import           Control.Monad.State               
+import           Control.Applicative               
 
-import           Flowbox.System.Log.Logger                     
+import           Flowbox.System.Log.Logger         
 
-import           Flowbox.Prelude                             hiding (error, id)
+import           Flowbox.Prelude                 hiding (error, id)
 
 
 
