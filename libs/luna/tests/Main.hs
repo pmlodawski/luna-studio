@@ -75,10 +75,10 @@ main_inner = Luna.run $ do
     CabalStore.run cabal $ UniPath.fromUnixString "samples/TestProject2/build/hs/TestProject2.cabal"
     CabalBuild.run $ UniPath.fromUnixString "samples/TestProject2"
     CabalRun.run (UniPath.fromUnixString "samples/TestProject2") "TestProject2" []
-    --source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
-    --                           (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
+    source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
+                               (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
                                
-    let source = example
+    --let source = example
     putStrLn "\n-------- TxtParser --------"
     ast <- TxtParser.run source
     putStrLn $ PP.ppqShow ast

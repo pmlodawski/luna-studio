@@ -6,7 +6,7 @@ class Vector a:
 def f(x::Int, y::Map Int Float):
     z = x + 7
     g = {x, y}
-    z = fun(x, y)
+    z = g(x, y)
     z+ y
 
 def g a b:
@@ -15,7 +15,7 @@ def g a b:
     _ = a + b
 
 class A:
-    a :: Std.Math.Vector (Int a) b
+    a :: Vector (Int a) b
 
 def f a b:
     a = a+b

@@ -82,13 +82,14 @@ def2AST defManager (defID, def) = do
                                                      <*> nextDefs classes
                                                      <*> (mapM type2Field params)
                                                      <*> nextDefs methods
-            Type.Function name inputs _ -> do inputsNames <- getInputsNames inputs
-                                              graphAst    <- graph2AST graph inputsNames
-                                              signature   <- function2signature cls
-                                              return $ ASTExpr.Function defID name 
-                                                                        signature
-                                                                        undefined
-                                                                        graphAst
+            Type.Function name inputs outputs -> do inputsNames <- getInputsNames inputs
+                                                    graphAst    <- graph2AST graph inputsNames
+                                                    signature   <- function2signature cls
+                                                    outputsType <- (liftM snd $ type2ASTType outputs)
+                                                    return $ ASTExpr.Function defID name 
+                                                                              signature
+                                                                              outputsType
+                                                                              graphAst
                                                -- notImplementedList
             Type.Module   _ params      -> ASTExpr.Module defID 
                                                   <$> (liftM snd $ type2ASTType cls)
