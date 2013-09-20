@@ -8,16 +8,16 @@
 
 module Flowbox.Luna.Passes.FileReader.SourceReader where
 
-import           Control.Applicative
-import           Control.Monad.RWS            
-import qualified Data.List                    as List
-import qualified Data.List.Split              as Split
-import qualified System.IO                    as IO
+import           Control.Applicative        
+import           Control.Monad.RWS          
+import qualified Data.List                as List
+import qualified Data.List.Split          as Split
+import qualified System.IO                as IO
 
-import           Flowbox.Prelude              hiding (error, id)
-import           Flowbox.Luna.Data.Source       (Source(Source))
-import qualified Flowbox.System.UniPath       as UniPath
-import           Flowbox.System.UniPath         (UniPath)
+import           Flowbox.Prelude          hiding (error, id)
+import           Flowbox.Luna.Data.Source   (Source(Source))
+import qualified Flowbox.System.UniPath   as UniPath
+import           Flowbox.System.UniPath     (UniPath)
 
 
 

@@ -29,7 +29,7 @@ import qualified Flowbox.Luna.Passes.HSPrint.HSPrint         as HSPrint
 import qualified Flowbox.Luna.Passes.Luna.Luna               as Luna
 import qualified Flowbox.Luna.Passes.SSA.SSA                 as SSA
 import qualified Flowbox.Luna.Passes.Txt2AST.Txt2AST         as Txt2AST
-import qualified Flowbox.Luna.Passes.VA.VA                   as VA
+import qualified Flowbox.Luna.Passes.VarA.VarA               as VarA
 --import qualified Flowbox.Luna.Passes.SSA.State           as SSAState
 --import           Flowbox.Luna.Passes.SSA.State             (SSAState)
 import qualified Flowbox.Luna.Data.Source                    as Source
@@ -48,9 +48,9 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "def f (x::Int, y::Int): "
-                  , "    x=1"
-                  , "    x"
+        $ unlines [ ""
+                  --, "def f x y: "
+                  --, "    print x"
                   ]
 
 
@@ -93,16 +93,16 @@ main_inner = Luna.run $ do
     ast <- Txt2AST.run source
     putStrLn $ PP.ppqShow ast
 
-    --putStrLn "\n-------- VA --------"
-    --va <- VA.run     ast
-    --putStrLn $ PP.ppShow va
+    putStrLn "\n-------- VarA --------"
+    va <- VarA.run     ast
+    putStrLn $ PP.ppShow va
 
-    --putStrLn "\n-------- SSA --------" 
-    --ssa <- SSA.run va ast
-    --putStrLn $ PP.ppqShow ssa
+    putStrLn "\n-------- SSA --------" 
+    ssa <- SSA.run va ast
+    putStrLn $ PP.ppqShow ssa
 
     putStrLn "\n-------- HSGen --------" 
-    hast <- HSGen.run  ast
+    hast <- HSGen.run  ssa
     putStrLn $ PP.ppShow hast
 
     --putStrLn "\n-------- HSC --------" 
@@ -114,4 +114,8 @@ main_inner = Luna.run $ do
     putStrLn $ phsc
 
     return ()
+
+
+
+
 

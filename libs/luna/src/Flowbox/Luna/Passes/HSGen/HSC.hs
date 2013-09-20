@@ -80,7 +80,7 @@ genExpr expr = case expr of
     HExpr.Tuple    items                  -> "(" ++ join "," (map genExpr items) ++ ")"
     HExpr.ConE     qname                  -> join "." qname
     HExpr.ConT     name                   -> name
-    HExpr.AppT     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
+    HExpr.AppT     src dst                -> genExpr src ++ " (" ++ genExpr dst ++ ")" -- for literals, e.g. Pure (1 :: Int)
     HExpr.AppE     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
 
 

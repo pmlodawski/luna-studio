@@ -6,30 +6,30 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Passes.VA.VA where
+module Flowbox.Luna.Passes.VarA.VarA where
 
-import qualified Flowbox.Luna.AST.Expr        as Expr
-import qualified Flowbox.Luna.AST.Type        as Type
-import           Flowbox.Luna.AST.Type          (Type)
-import qualified Flowbox.Luna.AST.Pat         as Pat
-import           Flowbox.Luna.AST.Pat           (Pat)
-import qualified Flowbox.Luna.Passes.VA.State as LocState
-import           Flowbox.Luna.Passes.VA.State   (LocState)
-import           Flowbox.Luna.Passes.VA.State   (VarStat)
-import qualified Flowbox.Luna.Passes.Pass     as Pass
-import           Flowbox.Luna.Passes.Pass       (PassMonad)
+import qualified Flowbox.Luna.AST.Expr          as Expr
+import qualified Flowbox.Luna.AST.Type          as Type
+import           Flowbox.Luna.AST.Type            (Type)
+import qualified Flowbox.Luna.AST.Pat           as Pat
+import           Flowbox.Luna.AST.Pat             (Pat)
+import qualified Flowbox.Luna.Passes.VarA.State as LocState
+import           Flowbox.Luna.Passes.VarA.State   (LocState)
+import           Flowbox.Luna.Passes.VarA.State   (VarStat)
+import qualified Flowbox.Luna.Passes.Pass       as Pass
+import           Flowbox.Luna.Passes.Pass         (PassMonad)
 
-import           Control.Monad.State            
-import           Control.Applicative            
+import           Control.Monad.State              
+import           Control.Applicative              
 
-import           Flowbox.System.Log.Logger      
+import           Flowbox.System.Log.Logger        
 
-import           Flowbox.Prelude              hiding (error, id)
+import           Flowbox.Prelude                hiding (error, id)
 
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.VA.VA"
+logger = getLogger "Flowbox.Luna.Passes.VarA.VarA"
 
 
 type VAMonad m = PassMonad LocState m
@@ -63,7 +63,7 @@ vaAST ast = case ast of
     Expr.Var        id name               -> do
                                              v <- LocState.lookupVar name
                                              case v of
-                                                 Nothing    -> logger error ("Not in scope '" ++ name ++ "'. Forward declaration not supported yet.") *> Pass.fail ("not in scope '" ++ name ++ "'")
+                                                 Nothing    -> logger error ("Not in scope '" ++ name ++ "'.") *> Pass.fail ("not in scope '" ++ name ++ "'")
                                                  Just vid   -> LocState.bind id vid
     _                                     -> Expr.traverseM_ vaAST vaType vaPat pure ast
     where

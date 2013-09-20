@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Passes.VA.State where
+module Flowbox.Luna.Passes.VarA.State where
 
 import           Flowbox.Prelude             
 import           Control.Monad.State         
@@ -20,7 +20,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.VA.State"
+logger = getLogger "Flowbox.Luna.Passes.VarA.State"
 
 
 data VarStat     = VarStat  { varmap :: IntMap Int } 
