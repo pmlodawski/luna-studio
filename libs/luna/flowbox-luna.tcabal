@@ -29,6 +29,7 @@ Library
   Build-Depends:  base,
                   bytestring,
                   containers,
+                  directory,
                   either,
                   fgl,
                   flowbox-utils,
@@ -42,10 +43,10 @@ Library
                   thrift >= 0.9,
                   transformers,
                   parsec,
+                  process,
                   unordered-containers,
                   uu-parsinglib,
                   vector
-
 
 
 Executable luna

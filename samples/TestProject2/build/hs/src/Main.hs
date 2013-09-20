@@ -1,9 +1,7 @@
 -- handwritten
-import           Workspace                      
-import           Workspace.Vector               
-import           Flowbox.Luna.FClasses.U'incx   
-import           Flowbox.Luna.FClasses.U'init   
---import           Data.Default                   
+import           Workspace          
+import           Workspace.Vector   
+
 
 main = do
 	let 
@@ -13,13 +11,7 @@ main = do
 		y = 1
 		z :: Int 
 		z = 1
-		--q = def :: Vector a
-		--a = def -- :: Vector Int
-		--b = a { x'F = 5 }
-		--a = Vector {}
-		--a = def :: Vector Int
+		
 		a = Vector x y z
-		--b = init' (a,(x,(y,(z,()))))
-		b = incx' (a, ())
-	print b
+	print a
 	return ()
