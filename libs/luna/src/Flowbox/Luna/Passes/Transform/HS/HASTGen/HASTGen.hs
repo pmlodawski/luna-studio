@@ -74,7 +74,7 @@ genExpr ast = case ast of
                                                  <$> mapM genPat pats 
                                                  <*> (HExpr.DoBlock <$> genFuncBody body output)
 
-    LExpr.Import id segments name             -> return $ HExpr.Import segments name
+    --LExpr.Import id segments name             -> return $ HExpr.Import segments name
 
     LExpr.Class id cls classes fields methods -> do 
                                                  cons   <- HExpr.Con name <$> mapM genExpr fields

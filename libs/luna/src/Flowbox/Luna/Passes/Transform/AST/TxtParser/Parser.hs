@@ -66,9 +66,10 @@ genID = do
 -----------------------------------------------------------
 -- Declarations
 -----------------------------------------------------------
-pImport     s i    = tok Import.mk     <*  L.pImport 
-                                       <*> L.pPath 
-                                       -- <*  
+pImport     s i    = tok Expr.Import   <*  L.pImport 
+                                       <*> pConsT s i
+                                       <*  L.pBlockBegin
+                                       <*> (try (tok Expr.Wildcard <* L.pImportAll) <|> pIdentE s)
                                        <*> (     try (Just <$ L.pAs <*> (L.pIdent s <?> "import name")) 
                                              <|> pure Nothing
                                            )
@@ -123,25 +124,32 @@ pDeclaration s i    = choice [ pImport s i
 pExpr     s i   = Expr.aftermatch <$> PExpr.buildExpressionParser (optableE s i) (pTermE s i)
            <?> "expression"
 
-pTermE    s i   = choice[ try $ pDeclaration s i
+pTermE    s i   = choice[ pDeclaration s i
                         , try $ L.parensed s (pExpr s i)
                         , pEntE s i
                         ]
            <?> "expression term"
 
 optableE  s i  = [ [ binaryM  "."  (tok Expr.Accessor)             PExpr.AssocLeft ]
-               , [ postfixM "::" (tok Expr.Typed <*> pType s i)                    ]
-               , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
-               , [ binaryM  "*"  (binaryMatchE <$> (tok Expr.Infix <*> pure "*")) PExpr.AssocLeft ]
-               , [ binaryM  "+"  (binaryMatchE <$> (tok Expr.Infix <*> pure "+")) PExpr.AssocLeft ]
-               , [ prefixfM      (try(binaryMatchE2 <$> tok Expr.Assignment <*> (pPattern s i) <* (L.reservedOp "=" <?> "pattern match")))]
-               ]
+                 , [ postfixM "::" (tok Expr.Typed <*> pType s i)                    ]
+                 , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
+                 , [ binaryM  "*"  (binaryMatchE <$> (tok Expr.Infix <*> pure "*")) PExpr.AssocLeft ]
+                 , [ binaryM  "+"  (binaryMatchE <$> (tok Expr.Infix <*> pure "+")) PExpr.AssocLeft ]
+                 , [ prefixfM      (try(binaryMatchE2 <$> tok Expr.Assignment <*> (pPattern s i) <* (L.reservedOp "=" <?> "pattern match")))]
+                 ]
 
 binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 binaryMatchE2 f p q = f p (Expr.aftermatch q)
 
-pEntBaseE s i = choice [ tok Expr.Var   <*> L.pIdentVar s
-                       , tok Expr.Cons  <*> pCons s
+
+pVarE     s   = tok Expr.Var   <*> L.pIdentVar s
+pConE     s   = tok Expr.Cons  <*> pCons s
+
+pIdentE   s   = choice [ pVarE s
+                       , pConE s
+                       ]
+
+pEntBaseE s i = choice [ pIdentE s
                        , tok Expr.Lit   <*> pLit s
                        , tok Expr.Tuple <*> pTuple (pExpr s i)
                        , tok Expr.List  <*> pList  (pExpr s i)
@@ -225,10 +233,13 @@ pEmptyLines         = many1 pEmptyLine
 
 pEmptyLine          = try(L.eol *> L.pSpaces1 *> L.eol) <|> L.eol
 
-pCountAtLast    i p = (++) <$> count i p <*> many p
-
 pIndentExact      i = i <$ count i (char ' ')
-pIdentAtLast      i = length <$> pCountAtLast i (char ' ')
+
+pIdentAtLast      i = do
+                      many (char ' ')
+                      col <- sourceColumn <$> getPosition
+                      if col > i then pure (col-1)
+                                 else fail "incorrect indentation"
 
 pSegments       p i = many $ try $ (pEmptyLines *> pSegment p i)
 
@@ -240,7 +251,7 @@ pSegment        p i = try (id <$ pIndentExact i <*> p i)
 
 pBlockBegin     p i = L.pBlockBegin *> pBlock p (i+1)  
 
-pBlock          p i = L.eol *> pSegmentBegin p i <?> "indented block"
+pBlock          p i = pSegmentBegin p i <?> "indented block"
 
 
 -----------------------------------------------------------

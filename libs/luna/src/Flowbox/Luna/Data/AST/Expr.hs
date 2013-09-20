@@ -32,16 +32,16 @@ data Expr  = NOP        { id :: ID                                              
            | Cons       { id :: ID, name      :: String                                                                                                           }
            | Field      { id :: ID, name      :: String   , cls       :: Type                                                                                     }
            | Function   { id :: ID, name      :: String   , pats      :: [Pat]  , output    :: Type   ,  body    :: [Expr]                                        }
-           | Import     { id :: ID, segments  :: [String] , name      :: String                                                                                   }
+           | Import     { id :: ID, path      :: Type     , target    :: Expr   , rename    :: Maybe String                                                       }
            | Infix      { id :: ID, name      :: String   , src       :: Expr   , dst       :: Expr                                                               }                                                               
-           | Lambda     { id :: ID, pats      :: [Pat]    , output    :: Type   , body      :: [Expr]                                                                                   }
+           | Lambda     { id :: ID, pats      :: [Pat]    , output    :: Type   , body      :: [Expr]                                                             }
            | List       { id :: ID, items     :: [Expr]                                                                                                           }
            | Lit        { id :: ID, value     :: Lit                                                                                                              }
            | Module     { id :: ID, cls       :: Type     , imports   :: [Expr] , classes   :: [Expr] , fields  :: [Expr] , methods :: [Expr] , modules :: [Expr] }
            | Tuple      { id :: ID, items     :: [Expr]                                                                                                           }
            | Typed      { id :: ID, cls       :: Type     , expr      :: Expr                                                                                     }
            | Var        { id :: ID, name      :: String                                                                                                           }
-           | Wildcard   { id :: ID  {- PM: I use it to mark not provided function arguments -}                                                                    }
+           | Wildcard   { id :: ID                                                                                                                                }
            deriving (Show, Eq, Generic)
 
 

@@ -14,10 +14,10 @@ import           Flowbox.Luna.Data.AST.Expr   (Expr)
 import qualified Flowbox.Luna.Data.AST.Type as Type
 
 
-mk :: Int -> [String] -> Maybe String -> Expr
-mk id segments' mname = Expr.Import id segments' $ case mname of
-                            Just  n -> n
-                            Nothing -> last segments'
+--mk :: Int -> [String] -> Maybe String -> Expr
+--mk id segments' mname = Expr.Import id segments' $ case mname of
+--                            Just  n -> n
+--                            Nothing -> last segments'
 
 
 

@@ -41,13 +41,11 @@ braceR       = symbol  '}'
 pAccessor    = symbol  '.'
 pArrow       = symbols "->"
 pTypeDecl    = symbols "::"
+pImportAll   = symbol  '*'
 
 opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart
 reservedOpNames = ["=", "::", ":", ".", "->", "<-"]
-
-
-pPath        = sepBy1 (pIdent True) pAccessor
 
 
 -----------------------------------------------------------
