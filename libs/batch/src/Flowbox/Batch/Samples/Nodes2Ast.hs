@@ -7,20 +7,20 @@
 
 module Flowbox.Batch.Samples.Nodes2Ast where
 
-import           Control.Applicative                       
-import           System.TimeIt                             
-import           Text.Show.Pretty                          
+import           Control.Applicative                                         
+import           System.TimeIt                                               
+import           Text.Show.Pretty                                            
 
-import           Flowbox.Prelude                           
-import qualified Flowbox.Batch.GraphView.GraphView       as GraphView
-import           Flowbox.Batch.GraphView.EdgeView          (EdgeView(..))
-import qualified Flowbox.Luna.Network.Def.Definition     as Definition
-import           Flowbox.Luna.Network.Def.Edge             (Edge(..))
-import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
-import qualified Flowbox.Luna.Network.Graph.Node         as Node
-import qualified Flowbox.Luna.Passes.Graph2AST.Graph2AST as Graph2AST
-import qualified Flowbox.Luna.Passes.Luna.Luna           as Luna
-import qualified Flowbox.Luna.XOLD.Type.Type             as Type
+import           Flowbox.Prelude                                             
+import qualified Flowbox.Batch.GraphView.GraphView                         as GraphView
+import           Flowbox.Batch.GraphView.EdgeView                            (EdgeView(..))
+import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
+import           Flowbox.Luna.Network.Def.Edge                               (Edge(..))
+import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
+import qualified Flowbox.Luna.Network.Graph.Node                           as Node
+import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
+import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
+import qualified Flowbox.Luna.XOLD.Type.Type                               as Type
 
 
 main :: IO ()
@@ -86,11 +86,11 @@ main_inner = Luna.run $ do
     print f1
     print fun1_graph
     --putStrLn "--------------------------------------------"
-    --out_fun1 <- Graph2AST.run defManager (0, fun1_df)
+    --out_fun1 <- GraphParser.run defManager (0, fun1_df)
     --putStrLn $ ppShow out_fun1
     --putStrLn "--------------------------------------------"
-    --out_cls1 <- Graph2AST.run defManager (1, cls1_df)
+    --out_cls1 <- GraphParser.run defManager (1, cls1_df)
     --putStrLn $ ppShow out_cls1
     putStrLn "--------------------------------------------"
-    out_mod1 <- Graph2AST.run defManager (2, mod1_df)
+    out_mod1 <- GraphParser.run defManager (2, mod1_df)
     putStrLn $ ppShow out_mod1

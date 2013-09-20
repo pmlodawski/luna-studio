@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Batch.Project.ProjectManager (
-    module Flowbox.Luna.Data.Graph,
+    module Flowbox.Data.Graph,
     ProjectManager,
     empty,
     openProject,
@@ -17,8 +17,8 @@ import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
 import           Flowbox.System.UniPath                  (UniPath)
 import qualified Flowbox.Batch.Project.Project         as Project
 import           Flowbox.Batch.Project.Project           (Project)
-import           Flowbox.Luna.Data.Graph               hiding (Graph, Edge, empty)
-import qualified Flowbox.Luna.Data.Graph               as DG
+import           Flowbox.Data.Graph                    hiding (Graph, Edge, empty)
+import qualified Flowbox.Data.Graph                    as DG
 
 
 

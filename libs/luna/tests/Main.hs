@@ -8,41 +8,40 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 
-import           Debug.Trace                                   
-import           Data.Either.Utils                             (forceEither)
-import qualified Data.DList                                  as DList
-import           Control.Applicative                           
-import           Control.Monad.State                           
-import           Control.Monad.Writer                          
-import           Control.Monad.RWS                             
-import           Control.Monad.Trans.Maybe                     
-import           Control.Monad.Trans.Either                    
-import           System.TimeIt                                 
 
-import           Flowbox.Prelude                               
-import qualified Flowbox.Luna.Passes.Cabal.Build.CabalBuild  as CabalBuild
-import qualified Flowbox.Luna.Passes.Cabal.Run.CabalRun      as CabalRun
-import qualified Flowbox.Luna.Passes.Cabal.Gen.CabalGen      as CabalGen
-import qualified Flowbox.Luna.Passes.Cabal.Store.CabalStore  as CabalStore
-import qualified Flowbox.Luna.Passes.FileReader.SourceReader as SourceReader
-import qualified Flowbox.Luna.Passes.HSGen.AST.Expr          as Expr
-import qualified Flowbox.Luna.Passes.HSGen.AST.Module        as Module
-import qualified Flowbox.Luna.Passes.HSGen.HSC               as HSC
-import qualified Flowbox.Luna.Passes.HSGen.HSGen             as HSGen
-import qualified Flowbox.Luna.Passes.HSPrint.HSPrint         as HSPrint
-import qualified Flowbox.Luna.Passes.Luna.Luna               as Luna
-import qualified Flowbox.Luna.Passes.SSA.SSA                 as SSA
-import qualified Flowbox.Luna.Passes.Txt2AST.Txt2AST         as Txt2AST
-import qualified Flowbox.Luna.Passes.VA.VA                   as VA
---import qualified Flowbox.Luna.Passes.SSA.State           as SSAState
---import           Flowbox.Luna.Passes.SSA.State             (SSAState)
-import qualified Flowbox.Luna.Data.Source                    as Source
-import           Flowbox.Luna.Data.Source                      (Source)
-import           Flowbox.System.Log.Logger                     
-import qualified Flowbox.System.Log.Logger                   as Logger
-import qualified Flowbox.System.Log.LogEntry                 as LogEntry
-import qualified Flowbox.System.UniPath                      as UniPath
-import qualified Flowbox.Text.Show.Pretty                    as PP
+import           Debug.Trace                                             
+import           Data.Either.Utils                                       (forceEither)
+import qualified Data.DList                                            as DList
+import           Control.Applicative                                     
+import           Control.Monad.State                                     
+import           Control.Monad.Writer                                    
+import           Control.Monad.RWS                                       
+import           Control.Monad.Trans.Maybe                               
+import           Control.Monad.Trans.Either                              
+import           System.TimeIt                                           
+
+import           Flowbox.Prelude                                         
+import qualified Flowbox.Luna.Passes.Cabal.Build.CabalBuild            as CabalBuild
+import qualified Flowbox.Luna.Passes.Cabal.Run.CabalRun                as CabalRun
+import qualified Flowbox.Luna.Passes.Cabal.Gen.CabalGen                as CabalGen
+import qualified Flowbox.Luna.Passes.Cabal.Store.CabalStore            as CabalStore
+import qualified Flowbox.Luna.Passes.Transform.Source.Reader.Reader    as SourceReader
+import qualified Flowbox.Luna.Data.HAST.Expr                           as Expr
+import qualified Flowbox.Luna.Data.HAST.Module                         as Module
+import qualified Flowbox.Luna.Passes.Transform.HS.HASTGen.HASTGen      as HASTGen
+import qualified Flowbox.Luna.Passes.Transform.HS.CodeGen.CodeGen      as CodeGen
+import qualified Flowbox.Luna.Passes.Transform.HS.Print.Print          as HSPrint
+import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
+import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
+import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
+import qualified Flowbox.Luna.Data.Source                              as Source
+import           Flowbox.Luna.Data.Source                                (Source)
+import           Flowbox.System.Log.Logger                               
+import qualified Flowbox.System.Log.Logger                             as Logger
+import qualified Flowbox.System.Log.LogEntry                           as LogEntry
+import qualified Flowbox.System.UniPath                                as UniPath
+import qualified Flowbox.Text.Show.Pretty                              as PP
 
 
 
@@ -52,23 +51,10 @@ logger = getLogger "Flowbox"
 
 example :: Source
 example = Source.Source "Workspace"
-        $ unlines [ "def f x y:"
-                  , "    Std.Math.add x y"
+        $ unlines [ ""
+                  , "def f x y: "
+                  , "    x.add y"
                   ]
-
-
---example :: Source
---example = Source.Source "Workspace"
---        $ unlines [ "class A:"
---                  , "    a :: Std.Math.Vector (Int a) b"
---                  , "    a :: Std.Math.Vector (Int a) b"
---                  ]
-
---example :: Source
---example = Source.Source "Workspace"
---        $ unlines [ "def f (a::Vector a b Int c):"
---                  , "    a = Vector a b Int c"
---                  ]
 
 
 main :: IO ()
@@ -92,30 +78,34 @@ main_inner = Luna.run $ do
     --source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
     --                           (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
                                
-    --let source = example
-    --putStrLn "\n-------- Txt2AST --------"
-    --ast <- Txt2AST.run source
-    --putStrLn $ PP.ppqShow ast
+    let source = example
+    putStrLn "\n-------- TxtParser --------"
+    ast <- TxtParser.run source
+    putStrLn $ PP.ppqShow ast
 
-    --putStrLn "\n-------- VA --------"
-    --va <- VA.run     ast
-    --putStrLn $ PP.ppShow va
+    putStrLn "\n-------- VarAlias --------"
+    va <- VarAlias.run     ast
+    putStrLn $ PP.ppShow va
 
-    --putStrLn "\n-------- SSA --------" 
-    --ssa <- SSA.run va ast
-    --putStrLn $ PP.ppqShow ssa
+    putStrLn "\n-------- SSA --------" 
+    ssa <- SSA.run va ast
+    putStrLn $ PP.ppqShow ssa
 
-    --putStrLn "\n-------- HSGen --------" 
-    --hast <- HSGen.run  ssa
-    --putStrLn $ PP.ppShow hast
+    putStrLn "\n-------- HASTGen --------" 
+    hast <- HASTGen.run  ssa
+    putStrLn $ PP.ppShow hast
 
-    ----putStrLn "\n-------- HSC --------" 
-    --hsc <- HSC.run  hast
-    ----putStrLn $ hsc
+    --putStrLn "\n-------- HS CodeGen --------" 
+    hsc <- CodeGen.run  hast
+    --putStrLn $ hsc
 
-    --putStrLn "\n-------- PHSC --------" 
-    --phsc <- HSPrint.run hsc
-    --putStrLn $ phsc
+    putStrLn "\n-------- PHSC --------" 
+    phsc <- HSPrint.run hsc
+    putStrLn $ phsc
 
     return ()
+
+
+
+
 

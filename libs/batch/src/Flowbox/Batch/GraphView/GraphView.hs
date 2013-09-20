@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Batch.GraphView.GraphView(
-    module Flowbox.Luna.Data.Graph,
+    module Flowbox.Data.Graph,
     GraphView,
     empty,
     
@@ -28,8 +28,8 @@ import qualified Flowbox.Batch.GraphView.EdgeView        as EdgeView
 import           Flowbox.Batch.GraphView.EdgeView          (EdgeView(EdgeView))
 import           Flowbox.Batch.GraphView.PortDescriptor    (PortDescriptor)
 import           Flowbox.Control.Error                     ()
-import qualified Flowbox.Luna.Data.Graph                 as DG
-import           Flowbox.Luna.Data.Graph                 hiding (Graph, Edge, empty, fromGraph, sp)
+import qualified Flowbox.Data.Graph                      as DG
+import           Flowbox.Data.Graph                      hiding (Graph, Edge, empty, fromGraph, sp)
 import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue)
 import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import           Flowbox.Luna.Network.Graph.Graph          (Graph)
