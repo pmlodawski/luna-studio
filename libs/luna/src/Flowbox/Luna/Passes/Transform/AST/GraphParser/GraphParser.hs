@@ -47,15 +47,19 @@ import           Flowbox.Luna.XOLD.Type.Type                             (Type)
 
 type Graph2ASTMonad m = PassMonad IdState m
 
+type ASTExpr = ASTExpr.Expr
+type ASTPat  = ASTPat.Pat
+type ASTType = ASTType.Type
+type ASTLit  = ASTLit.Lit
 
-run :: PassMonad s m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTExpr.Expr
+run :: PassMonad s m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTExpr
 run defManager (defID, def) = (Pass.run_ IdState.empty) $ def2AST defManager (defID, def)
 
 
-def2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTExpr.Expr
+def2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTExpr
 def2AST defManager (defID, def) = do 
     let 
-        nextDefs :: Graph2ASTMonad m => ((Definition.ID, Definition) -> Bool) -> Pass.Result m [ASTExpr.Expr]
+        nextDefs :: Graph2ASTMonad m => ((Definition.ID, Definition) -> Bool) -> Pass.Result m [ASTExpr]
         nextDefs f = (mapM (def2AST defManager) $ filter f $ DefManager.sucl defManager defID)
 
         classes :: (Definition.ID, Definition) -> Bool
@@ -101,7 +105,7 @@ def2AST defManager (defID, def) = do
         
 
 
---module2ASTPath :: Graph2ASTMonad m => DefManager -> Definition.ID -> String -> Pass.Result m ASTExpr.Expr
+--module2ASTPath :: Graph2ASTMonad m => DefManager -> Definition.ID -> String -> Pass.Result m ASTExpr
 --module2ASTPath defManager defID name = do
 --    let 
 --        module2ASTPath' :: Graph2ASTMonad m => Definition.ID -> Pass.Result m [String]
@@ -114,20 +118,20 @@ def2AST defManager (defID, def) = do
 --    return $ ASTExpr.Path $ prev ++ [name]
 
 
-function2signature :: Graph2ASTMonad m => Type -> Pass.Result m [ASTPat.Pat]
+function2signature :: Graph2ASTMonad m => Type -> Pass.Result m [ASTPat]
 function2signature funcls = mapM input2signature i where
     Type.Tuple i = Type.inputs funcls
     
-    input2signature :: Graph2ASTMonad m => Type -> Pass.Result m ASTPat.Pat
+    input2signature :: Graph2ASTMonad m => Type -> Pass.Result m ASTPat
     input2signature input = do 
         (name, ASTType.Var _ cls) <- type2ASTType input
         inpID  <- IdState.newID
         varID  <- IdState.newID
         consID <- IdState.newID
-        return $ ASTPat.Typed inpID (ASTPat.Var varID name) (ASTType.Cons consID cls) 
+        return $ ASTPat.Typed inpID (ASTPat.Var varID name) (ASTType.Cons consID [cls]) 
         
 
-type2ASTType :: Graph2ASTMonad m => Type -> Pass.Result m (String, ASTType.Type)
+type2ASTType :: Graph2ASTMonad m => Type -> Pass.Result m (String, ASTType)
 type2ASTType t = do 
     id <- IdState.newID
     case t of 
@@ -141,7 +145,7 @@ type2ASTType t = do
                                               return (name, type_)
 
 
-defaultVal2ASTLit :: Graph2ASTMonad m => DefaultValue -> Pass.Result m ASTLit.Lit
+defaultVal2ASTLit :: Graph2ASTMonad m => DefaultValue -> Pass.Result m ASTLit
 defaultVal2ASTLit value = do 
     id <- IdState.newID
     return $ case value of 
@@ -150,24 +154,24 @@ defaultVal2ASTLit value = do
         DefaultString v -> ASTLit.String  id v
 
 
-type2Field :: Graph2ASTMonad m => Type -> Pass.Result m ASTExpr.Expr
+type2Field :: Graph2ASTMonad m => Type -> Pass.Result m ASTExpr
 type2Field t = do
     id <- IdState.newID
     (name, cls) <- type2ASTType t
     return $ ASTExpr.Field id name cls
 
 
-import2ASTimport :: Graph2ASTMonad m => Import -> Pass.Result m ASTExpr.Expr
+import2ASTimport :: Graph2ASTMonad m => Import -> Pass.Result m ASTExpr
 import2ASTimport (Import (Path path) name) = do 
     id <- IdState.newID
     return $ ASTExpr.Import id path name
 
 
-graph2AST :: Graph2ASTMonad m => Graph -> [String] -> Pass.Result m [ASTExpr.Expr]
+graph2AST :: Graph2ASTMonad m => Graph -> [String] -> Pass.Result m [ASTExpr]
 graph2AST graph inputsNames = foldlM (node2AST graph inputsNames) [] $ Graph.topsortl graph
 
 
-node2AST :: Graph2ASTMonad m => Graph -> [String] -> [ASTExpr.Expr] -> (Node.ID, Node.Node) -> Pass.Result m [ASTExpr.Expr] 
+node2AST :: Graph2ASTMonad m => Graph -> [String] -> [ASTExpr] -> (Node.ID, Node.Node) -> Pass.Result m [ASTExpr] 
 node2AST graph inputsNames list (nodeID, node) = do
 
     astNodeID <- IdState.newID
@@ -185,7 +189,7 @@ node2AST graph inputsNames list (nodeID, node) = do
                 argID :: (a, b, Edge) -> Port
                 argID (_, _, Edge _ p) = p
 
-                arg :: Graph2ASTMonad m => [(Node.ID, b, Edge)] -> Port -> Pass.Result m ASTExpr.Expr
+                arg :: Graph2ASTMonad m => [(Node.ID, b, Edge)] -> Port -> Pass.Result m ASTExpr
                 arg iedges port = case List.find (\a -> (argID a) == port) iedges of
                     Nothing                  -> ASTExpr.Wildcard <$> IdState.newID
                     Just (nID, _, Edge p _)  -> ASTExpr.Var <$> IdState.newID 
@@ -245,7 +249,7 @@ node2AST graph inputsNames list (nodeID, node) = do
                             resultID ::(a, b, Edge) -> Port
                             resultID (_, _, Edge p _) = p
 
-                            res :: Graph2ASTMonad m => [(Node.ID, b, Edge)] -> Port -> Pass.Result m ASTPat.Pat
+                            res :: Graph2ASTMonad m => [(Node.ID, b, Edge)] -> Port -> Pass.Result m ASTPat
                             res iedges port = case List.find (\a -> (resultID a) == port) iedges of
                                 Nothing                  -> ASTPat.Wildcard <$> IdState.newID 
                                 Just (nID, _, Edge p _)  -> ASTPat.Var <$> IdState.newID 
