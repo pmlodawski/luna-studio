@@ -52,10 +52,28 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source "Workspace"
         $ unlines [ ""
-                  , "class A:"
-                  , "    a :: Std.Math.Vector Int"
+                  --, "import Std.Math.Vector"
+                  , "def f x y:\n x+y"
+                  --, "from Std.Math import Vector "
+                  --, "class A:"
+                  --, "    a :: Std.Math.Vector Int"
                   ]
 
+
+--from Std.Math import Vector
+
+--import Std.Math.Vector
+--import Std.Math
+
+
+
+
+--import Std.Math: Vector
+--                 Scalar as S
+
+--import Std.Math.Vector: f
+
+--v = Std.Math.Vector
 
 --example :: Source
 --example = Source.Source "Workspace"
@@ -81,12 +99,14 @@ main_inner = Luna.run $ do
 
     cabal <- CabalGen.run "TestProject2"
 
-    CabalStore.run cabal $ UniPath.fromUnixString "samples/TestProject2/build/hs/TestProject2.cabal"
-    CabalBuild.run $ UniPath.fromUnixString "samples/TestProject2"
-    CabalRun.run (UniPath.fromUnixString "samples/TestProject2") "TestProject2" []
-    source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
-                               (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
+    --CabalStore.run cabal $ UniPath.fromUnixString "samples/TestProject2/build/hs/TestProject2.cabal"
+    --CabalBuild.run $ UniPath.fromUnixString "samples/TestProject2"
+    --CabalRun.run (UniPath.fromUnixString "samples/TestProject2") "TestProject2" []
+    --source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
+    --                           (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
                                
+    let source = example
+
     --let source = example
     putStrLn "\n-------- TxtParser --------"
     ast <- TxtParser.run source

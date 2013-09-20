@@ -66,7 +66,13 @@ genID = do
 -----------------------------------------------------------
 -- Declarations
 -----------------------------------------------------------
-pImport     s i    = tok Import.mk     <*  L.pImport <*> L.pPath <*> (try (Just <$ L.pAs <*> (L.pIdent s <?> "import name")) <|> pure Nothing)
+pImport     s i    = tok Import.mk     <*  L.pImport 
+                                       <*> L.pPath 
+                                       -- <*  
+                                       <*> (     try (Just <$ L.pAs <*> (L.pIdent s <?> "import name")) 
+                                             <|> pure Nothing
+                                           )
+
 
 pFunc       s i    = tok Expr.Function <*  L.pDef 
                                        <*> L.pIdentVar s
