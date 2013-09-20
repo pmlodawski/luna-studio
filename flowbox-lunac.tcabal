@@ -41,6 +41,7 @@ Executable lunac
 
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
+                  NoImplicitPrelude
   Build-Depends:  base,
                   flowbox-utils,
                   optparse-applicative
