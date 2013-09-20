@@ -20,7 +20,7 @@ data Type = Unknown { id :: ID                                           }
           | Class   { id :: ID, name     :: String , params  :: [String] }
           | Module  { id :: ID, name     :: String                       }
           | Lambda  { id :: ID, inputs   :: [Type] , output  :: Type     }
-          | Cons    { id :: ID, name     :: String                       }
+          | Cons    { id :: ID, segments :: [String]                     }
           | App     { id :: ID, src      :: Type   , args    :: [Type]   }
           -- | List
           -- | Map

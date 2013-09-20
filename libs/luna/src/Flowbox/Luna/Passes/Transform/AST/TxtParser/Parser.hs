@@ -93,9 +93,9 @@ pModule name s i    = tok Module.mk <*>   (tok Type.Module <*> pure name)
 
 
 pClassBody   s i    = choice [ Expr.addMethod <$> pFunc s i
-                           , Expr.addField  <$> pField s i
-                           , Expr.addClass  <$> pClass s i
-                           ]
+                             , Expr.addField  <$> pField s i
+                             , Expr.addClass  <$> pClass s i
+                             ]
 
 pModuleBody  s i    = choice [ pClassBody s i
                            , Expr.addImport <$> pImport s i
@@ -165,13 +165,17 @@ pTermT      s i   = choice[ try $ L.parensed s (pType s i)
                         ]
               <?> "type term"
 
-pConsAppT   s i   = tok Type.App     <*> pConsT s i <*> many1 (pTermT s i) 
+pConsAppT   s i   = tok Type.App     <*> pAppBaseT s i <*> many1 (pTermT s i) 
 pLambdaT    s i   = tok Type.Lambda  <*> pArgList' s (pTermT s i) <* L.pArrow <*> pTermT s i
 pVarT       s i   = tok Type.Var     <*> L.pIdentVar s
-pConsT      s i   = tok Type.Cons    <*> pCons s
+pConsT      s i   = tok Type.Cons    <*> sepBy1 (pCons s) L.pAccessor
 pTupleT     s i   = tok Type.Tuple   <*> pTuple (pType s i)
 pWildcardT        = tok Type.Unknown <*  L.pWildcard
 --pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
+
+pAppBaseT   s i   = choice [ pVarT   s i
+                           , pConsT  s i
+                           ]
 
 pEntT       s i   = choice [ pVarT   s i
                            , pConsT  s i
