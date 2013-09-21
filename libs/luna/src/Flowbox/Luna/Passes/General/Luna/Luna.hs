@@ -8,9 +8,9 @@
 
 module Flowbox.Luna.Passes.General.Luna.Luna where
 
-import qualified Flowbox.Luna.Passes.Pass   as Pass
-import qualified Flowbox.System.Log.Logger  as Logger
-import           Flowbox.Prelude            hiding (error)
+import qualified Flowbox.Luna.Passes.Pass  as Pass
+import qualified Flowbox.System.Log.Logger as Logger
+import           Flowbox.Prelude           hiding (error)
 
 
 run :: Pass.TransformerT Pass.NoState String IO b -> Pass.ResultT IO b
