@@ -1,4 +1,4 @@
-import Std.Math.Scalar
+import Std.Math: Scalar
 
 class Vector a:
     x :: a
