@@ -24,7 +24,7 @@ data Module = Module { id      :: ID
                      , classes :: [Expr] 
                      , fields  :: [Expr] 
                      , methods :: [Expr] 
-                     , modules :: [Expr] 
+                     , modules :: [Module] 
                      } deriving (Show, Generic)
 
 instance QShow Module
@@ -54,8 +54,8 @@ addImport :: Expr -> Module -> Module
 addImport imp mod = mod { imports = imp : imports mod }
 
 
-traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Module -> m Module
-traverseM fexp ftype _{-fpat-} _{-flit-} mod = case mod of
+traverseM :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Module -> m Module
+traverseM fmod fexp ftype _{-fpat-} _{-flit-} mod = case mod of
     Module     id' cls' imports' classes'             
                fields' methods' modules'     ->  Module id' 
                                                  <$> ftype cls' 
@@ -63,11 +63,12 @@ traverseM fexp ftype _{-fpat-} _{-flit-} mod = case mod of
                                                  <*> fexpMap classes' 
                                                  <*> fexpMap fields' 
                                                  <*> fexpMap methods' 
-                                                 <*> fexpMap modules'
+                                                 <*> fmodMap modules'
     where fexpMap = mapM fexp
+          fmodMap = mapM fmod
 
-traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Module -> m ()
-traverseM_ fexp ftype _{-fpat-} _{-flit-} mod = case mod of
+traverseM_ :: Traversal m => (Module -> m a) -> (Expr -> m b) -> (Type -> m c) -> (Pat -> m d) -> (Lit -> m e) -> Module -> m ()
+traverseM_ fmod fexp ftype _{-fpat-} _{-flit-} mod = case mod of
     Module     _ cls' imports' classes'             
                fields' methods' modules'     -> drop 
                                                 <* ftype cls' 
@@ -75,14 +76,15 @@ traverseM_ fexp ftype _{-fpat-} _{-flit-} mod = case mod of
                                                 <* fexpMap classes' 
                                                 <* fexpMap fields' 
                                                 <* fexpMap methods' 
-                                                <* fexpMap modules'
+                                                <* fmodMap modules'
     where drop    = pure ()
           fexpMap = mapM_ fexp
+          fmodMap = mapM_ fmod
 
 
-traverseM' :: Traversal m => (Expr -> m Expr) -> Module -> m Module
-traverseM' fexp mod = traverseM fexp pure pure pure mod
+--traverseM' :: Traversal m => (Expr -> m Expr) -> Module -> m Module
+--traverseM' fexp mod = traverseM fexp pure pure pure mod
 
 
-traverseM'_ :: Traversal m => (Expr -> m ()) -> Module -> m ()
-traverseM'_ fexp mod = traverseM_ fexp pure pure pure mod
+--traverseM'_ :: Traversal m => (Expr -> m ()) -> Module -> m ()
+--traverseM'_ fexp mod = traverseM_ fexp pure pure pure mod

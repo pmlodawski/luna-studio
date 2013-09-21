@@ -43,7 +43,7 @@ run vs = (Pass.run_ Pass.NoState) . (ssaModule vs)
 
 
 ssaModule :: SSAMonad m => AA -> Module -> Pass.Result m Module
-ssaModule vs mod = Module.traverseM (ssaExpr vs) pure ssaPat pure mod
+ssaModule vs mod = Module.traverseM (ssaModule vs) (ssaExpr vs) pure ssaPat pure mod
 
 
 ssaExpr :: SSAMonad m => AA -> Expr.Expr -> Pass.Result m Expr.Expr

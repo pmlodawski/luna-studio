@@ -49,7 +49,7 @@ runNested f = do
 
 vaMod :: VAMonad m => Module -> Pass.Result m AA
 vaMod mod = do
-    Module.traverseM_ vaExpr vaType vaPat pure mod
+    Module.traverseM_ vaMod vaExpr vaType vaPat pure mod
     LocState.varstat <$> get
 
 
