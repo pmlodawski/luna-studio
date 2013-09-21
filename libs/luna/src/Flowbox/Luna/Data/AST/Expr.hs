@@ -8,14 +8,14 @@
 
 module Flowbox.Luna.Data.AST.Expr where
 
-import           Flowbox.Prelude                 hiding (id, drop)  
+import           Flowbox.Prelude                 hiding (id, drop)
 import           Flowbox.Luna.Data.AST.Type        (Type)
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
 import qualified Flowbox.Luna.Data.AST.Pat       as Pat
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           Flowbox.Generics.Deriving.QShow   
 import           GHC.Generics                      (Generic)
-import           Control.Applicative        
+import           Control.Applicative               
      
 
 type Lit         = Lit.Lit
@@ -72,20 +72,20 @@ addClass ncls e = e { classes = ncls : classes e }
 
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
 traverseM fexp ftype fpat flit e = case e of
-    Accessor   id' src' dst'                      -> Accessor   id'      <$> fexp src'  <*> fexp dst'
-    App        id' src' args'                     -> App        id'      <$> fexp src'  <*> fexpMap args'
-    Assignment id' pat' dst'                      -> Assignment id'      <$> fpat pat'  <*> fexp dst'
-    Class      id' cls' classes' fields' methods' -> Class      id'      <$> ftype cls' <*> fexpMap classes' <*> fexpMap fields' <*> fexpMap methods'
+    Accessor   id' src' dst'                      -> Accessor   id'       <$> fexp src'  <*> fexp dst'
+    App        id' src' args'                     -> App        id'       <$> fexp src'  <*> fexpMap args'
+    Assignment id' pat' dst'                      -> Assignment id'       <$> fpat pat'  <*> fexp dst'
+    Class      id' cls' classes' fields' methods' -> Class      id'       <$> ftype cls' <*> fexpMap classes' <*> fexpMap fields' <*> fexpMap methods'
     Cons       {}                                 -> pure e
     Field      id' name' cls'                     -> Field      id' name' <$> ftype cls'
     Function   id' name' pats' output' body'      -> Function   id' name' <$> fpatMap pats' <*> ftype output' <*> fexpMap body'
-    Lambda     id'       pats' output' body'      -> Lambda     id'      <$> fpatMap pats' <*> ftype output' <*> fexpMap body'
+    Lambda     id'       pats' output' body'      -> Lambda     id'       <$> fpatMap pats' <*> ftype output' <*> fexpMap body'
     Import     {}                                 -> pure e
     Infix      id' name' src' dst'                -> Infix      id' name' <$> fexp src'     <*> fexp dst'
-    List       id' items'                         -> List       id'      <$> fexpMap items'
-    Lit        id' val'                           -> Lit        id'      <$> flit val'
-    Tuple      id' items'                         -> Tuple      id'      <$> fexpMap items'
-    Typed      id' cls' expr'                     -> Typed      id'      <$> ftype cls' <*> fexp expr'
+    List       id' items'                         -> List       id'       <$> fexpMap items'
+    Lit        id' val'                           -> Lit        id'       <$> flit val'
+    Tuple      id' items'                         -> Tuple      id'       <$> fexpMap items'
+    Typed      id' cls' expr'                     -> Typed      id'       <$> ftype cls' <*> fexp expr'
     Var        {}                                 -> pure e
     Wildcard   {}                                 -> pure e
     NOP        {}                                 -> pure e
@@ -105,7 +105,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     Function   _  _ pats' output' body'           -> drop <* fpatMap pats' <* ftype output' <* fexpMap body'
     Lambda     _        pats' output' body'       -> drop <* fpatMap pats' <* ftype output' <* fexpMap body'
     Import     {}                                 -> drop
-    Infix      _  _ src' dst'                     -> drop <* fexp src'       <* fexp dst'
+    Infix      _  _ src' dst'                     -> drop <* fexp src'     <* fexp dst'
     List       _  items'                          -> drop <* fexpMap items'
     Lit        _  val'                            -> drop <* flit val'
     Tuple      _  items'                          -> drop <* fexpMap items'

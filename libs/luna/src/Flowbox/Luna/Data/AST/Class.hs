@@ -8,19 +8,11 @@
 
 module Flowbox.Luna.Data.AST.Class where
 
-import           Flowbox.Prelude              
-import qualified Flowbox.Luna.Data.AST.Expr as Expr
-import           Flowbox.Luna.Data.AST.Expr   (Expr)
-import qualified Flowbox.Luna.Data.AST.Type as Type
+import qualified Flowbox.Luna.Data.AST.Expr  as Expr
+import           Flowbox.Luna.Data.AST.Expr    (Expr)
+import           Flowbox.Luna.Data.AST.Type    (Type)
+import           Flowbox.Luna.Data.AST.Utils   (ID)
 
 
---mk :: Int -> String -> [String] -> Expr
+mk :: ID -> Type -> Expr
 mk id cls = Expr.Class id cls [] [] []
-
-
---parseBody :: Expr -> Expr -> Expr
---parseBody expr cls' = case expr of
---    Function {} -> addMethod expr cls'
---    _           -> cls' -- error $ "class parse body error " ++ show expr
-
-

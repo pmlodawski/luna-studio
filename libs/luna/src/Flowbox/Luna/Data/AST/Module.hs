@@ -8,17 +8,15 @@
 
 module Flowbox.Luna.Data.AST.Module where
 
-import           Flowbox.Prelude              
-import qualified Flowbox.Luna.Data.AST.Expr  as Expr
-import           Flowbox.Luna.Data.AST.Expr    (Expr)
-import qualified Flowbox.Luna.Data.AST.Type  as Type
-import qualified Flowbox.Luna.Data.AST.Type    (Type)
+import           Flowbox.Prelude                 hiding (id, drop, mod)
+import           Flowbox.Luna.Data.AST.Expr        (Expr)
+import qualified Flowbox.Luna.Data.AST.Type      as Type
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
 import qualified Flowbox.Luna.Data.AST.Pat       as Pat
-import           Flowbox.Luna.Data.AST.Utils   (ID)
-import           GHC.Generics                  (Generic)
-import           Flowbox.Generics.Deriving.QShow 
-import           Control.Applicative      
+import           Flowbox.Luna.Data.AST.Utils       (ID)
+import           GHC.Generics                      (Generic)
+import           Flowbox.Generics.Deriving.QShow   
+import           Control.Applicative               
 
 data Module = Module { id      :: ID
                      , cls     :: Type     
@@ -36,8 +34,9 @@ type Pat         = Pat.Pat
 type Type        = Type.Type
 type Traversal m = (Functor m, Applicative m, Monad m)
 
---mk :: Int -> String -> Module
-mk id mod = Module id mod [] [] [] [] []
+
+mk :: ID -> Type -> Module
+mk id' mod = Module id' mod [] [] [] [] []
 
 
 addMethod :: Expr -> Module -> Module
@@ -55,26 +54,35 @@ addImport :: Expr -> Module -> Module
 addImport imp mod = mod { imports = imp : imports mod }
 
 
-
-
-
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Module -> m Module
-traverseM fexp ftype fpat flit expr = case expr of
-    Module     id cls imports classes             
-               fields methods modules        -> Module     id      <$> ftype cls <*> fexpMap imports <*> fexpMap classes <*> fexpMap fields <*> fexpMap methods <*> fexpMap modules
+traverseM fexp ftype _{-fpat-} _{-flit-} mod = case mod of
+    Module     id' cls' imports' classes'             
+               fields' methods' modules'     ->  Module id' 
+                                                 <$> ftype cls' 
+                                                 <*> fexpMap imports' 
+                                                 <*> fexpMap classes' 
+                                                 <*> fexpMap fields' 
+                                                 <*> fexpMap methods' 
+                                                 <*> fexpMap modules'
     where fexpMap = mapM fexp
 
 traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Module -> m ()
-traverseM_ fexp ftype fpat flit expr = case expr of
-    Module     id cls imports classes             
-               fields methods modules        -> drop <* ftype cls <* fexpMap imports <* fexpMap classes <* fexpMap fields <* fexpMap methods <* fexpMap modules
+traverseM_ fexp ftype _{-fpat-} _{-flit-} mod = case mod of
+    Module     _ cls' imports' classes'             
+               fields' methods' modules'     -> drop 
+                                                <* ftype cls' 
+                                                <* fexpMap imports'
+                                                <* fexpMap classes' 
+                                                <* fexpMap fields' 
+                                                <* fexpMap methods' 
+                                                <* fexpMap modules'
     where drop    = pure ()
           fexpMap = mapM_ fexp
 
 
 traverseM' :: Traversal m => (Expr -> m Expr) -> Module -> m Module
-traverseM' fexp expr = traverseM fexp pure pure pure expr
+traverseM' fexp mod = traverseM fexp pure pure pure mod
 
 
 traverseM'_ :: Traversal m => (Expr -> m ()) -> Module -> m ()
-traverseM'_ fexp expr = traverseM_ fexp pure pure pure expr
+traverseM'_ fexp mod = traverseM_ fexp pure pure pure mod

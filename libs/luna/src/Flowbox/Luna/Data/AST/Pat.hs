@@ -8,9 +8,8 @@
 
 module Flowbox.Luna.Data.AST.Pat where
 
-import           Flowbox.Prelude                   
+import           Flowbox.Prelude                 hiding (id, drop)
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
-import qualified Flowbox.Luna.Data.AST.Type      as Type
 import           Flowbox.Luna.Data.AST.Type        (Type)
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           Flowbox.Generics.Deriving.QShow   
@@ -25,7 +24,6 @@ data Pat = Var             { id :: ID, name      :: String                      
          | Cons            { id :: ID, name      :: String                         }
          | App             { id :: ID, src       :: Pat       , args      :: [Pat] }
          | Typed           { id :: ID, pat       :: Pat       , cls       :: Type  }
-         | CallConstructor { id :: ID, args      :: [Pat]                          }
          | Wildcard        { id :: ID                                              }
          deriving (Show, Eq, Generic)
 
@@ -35,36 +33,34 @@ instance QShow Pat
 type Traversal m = (Functor m, Applicative m, Monad m)
 
 traverseM :: Traversal m => (Pat -> m Pat) -> (Type -> m Type) -> (Lit -> m Lit) -> Pat -> m Pat
-traverseM fpat ftype flit pat = case pat of
-    Lit        id val                        -> Lit   id <$> flit val
-    Tuple      id items                      -> Tuple id <$> fpatMap items
-    App        id src args                   -> App   id <$> fpat src <*> fpatMap args
-    Typed      id pat cls                    -> Typed id <$> fpat pat <*> ftype cls
-    Var        {}                            -> pure pat
-    Cons       {}                            -> pure pat
-    Wildcard   {}                            -> pure pat
-    _                                        -> fail "Unexpected pattern"
+traverseM fpat ftype flit p = case p of
+    Lit        id' val'                      -> Lit   id' <$> flit val'
+    Tuple      id' items'                    -> Tuple id' <$> fpatMap items'
+    App        id' src' args'                -> App   id' <$> fpat src' <*> fpatMap args'
+    Typed      id' pat' cls'                 -> Typed id' <$> fpat pat' <*> ftype cls'
+    Var        {}                            -> pure p
+    Cons       {}                            -> pure p
+    Wildcard   {}                            -> pure p
     where fpatMap = mapM fpat
 
 traverseM_ :: Traversal m => (Pat -> m c) -> (Type -> m b) -> (Lit -> m d) -> Pat -> m ()
-traverseM_ fpat ftype flit pat = case pat of
-    Lit        id val                        -> drop <* flit val
-    Tuple      id items                      -> drop <* fpatMap items
-    App        id src args                   -> drop <* fpat src <* fpatMap args
-    Typed      id pat cls                    -> drop <* fpat pat <* ftype cls
+traverseM_ fpat ftype flit p = case p of
+    Lit        _  val'                       -> drop <* flit val'
+    Tuple      _  items'                     -> drop <* fpatMap items'
+    App        _  src' args'                 -> drop <* fpat src' <* fpatMap args'
+    Typed      _  pat' cls'                  -> drop <* fpat pat' <* ftype cls'
     Var        {}                            -> drop
     Cons       {}                            -> drop
     Wildcard   {}                            -> drop
-    _                                        -> fail "Unexpected pattern"
     where drop    = pure ()
           fpatMap = mapM_ fpat
 
 
 traverseM' :: Traversal m => (Pat -> m Pat) -> Pat -> m Pat
-traverseM' fpat pat = traverseM fpat pure pure pat
+traverseM' fpat p = traverseM fpat pure pure p
 
 
 traverseM'_ :: Traversal m => (Pat -> m ()) -> Pat -> m ()
-traverseM'_ fpat pat = traverseM_ fpat pure pure pat
+traverseM'_ fpat p = traverseM_ fpat pure pure p
 
 

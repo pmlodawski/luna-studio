@@ -10,22 +10,21 @@
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser where
 
-import           Flowbox.Prelude                                     
 import           Control.Applicative                                 
+
+import qualified Flowbox.Prelude                                   as Prelude
+import           Flowbox.Prelude                                   hiding (id, mod)
 import           Text.Parsec                                       hiding (parse, many, optional, (<|>))
 import qualified Text.Parsec                                       as Parsec
 import qualified Text.Parsec.Expr                                  as PExpr
-
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils   
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer as L
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import qualified Flowbox.Luna.Data.AST.Lit                         as Lit
 import qualified Flowbox.Luna.Data.AST.Pat                         as Pat
 import qualified Flowbox.Luna.Data.AST.Class                       as Class
-import qualified Flowbox.Luna.Data.AST.Field                       as Field
 import qualified Flowbox.Luna.Data.AST.Module                      as Module
 import qualified Flowbox.Luna.Data.AST.Type                        as Type
-import qualified Flowbox.Luna.Data.AST.Import                      as Import
 import qualified Flowbox.Luna.Data.Source                          as Source
 
 
@@ -63,11 +62,12 @@ genID = do
     setState (id+1)
     pure id
 
+
 -----------------------------------------------------------
 -- Declarations
 -----------------------------------------------------------
-pImport     s i    = tok Expr.Import   <*  L.pImport 
-                                       <*> pConsT s i
+pImport     s      = tok Expr.Import   <*  L.pImport 
+                                       <*> pConsT s 
                                        <*  L.pBlockBegin
                                        <*> (try (tok Expr.Wildcard <* L.pImportAll) <|> pIdentE s)
                                        <*> (     try (Just <$ L.pAs <*> (L.pIdent s <?> "import name")) 
@@ -91,7 +91,6 @@ pFunc       s i    = tok Expr.Function <*  L.pDef
 pClass       s i    = tok Class.mk  <*  L.pClass
                                     <*> (tok Type.Class <*> L.pIdentType s <*> many (L.pIdentTypeVar s))
                                     <??$> pBlockBegin (pClassBody s) i 
-                                    -- <*> (try (pBlockBegin pClassBody i) <|> return [])
                                     <?> "class definition"
 
 pModule name s i    = tok Module.mk <*>   (tok Type.Module <*> pure name)
@@ -107,17 +106,16 @@ pClassBody   s i    = choice [ Expr.addMethod <$> pFunc s i
 pModuleBody  s i    = choice [ Module.addMethod <$> pFunc s i
                              , Module.addField  <$> pField s i
                              , Module.addClass  <$> pClass s i
-                             , Module.addImport <$> pImport s i
+                             , Module.addImport <$> pImport s 
                              ]
 
 
-pField       s i    = tok Field.mk <*> L.pIdent s <* L.pTypeDecl <*> pType s i
+pField       s i    = tok Expr.Field <*> L.pIdent s <* L.pTypeDecl <*> pType s i
 
-pDeclaration s i    = choice [ pImport s i
-                           , pFunc   s i
-                           , pClass  s i
-                           --, pLambda i
-                           ]
+pDeclaration s i    = choice [ pImport s 
+                             , pFunc   s i
+                             , pClass  s i
+                             ]
 
 
 -----------------------------------------------------------
@@ -181,20 +179,20 @@ pTermT      s i   = choice[ try $ L.parensed s (pType s i)
                         ]
               <?> "type term"
 
-pConsAppT   s i   = tok Type.App     <*> pAppBaseT s i <*> many1 (pTermT s i) 
+pConsAppT   s i   = tok Type.App     <*> pAppBaseT s <*> many1 (pTermT s i) 
 pLambdaT    s i   = tok Type.Lambda  <*> pArgList' s (pTermT s i) <* L.pArrow <*> pTermT s i
-pVarT       s i   = tok Type.Var     <*> L.pIdentVar s
-pConsT      s i   = tok Type.Cons    <*> sepBy1 (pCons s) L.pAccessor
+pVarT       s     = tok Type.Var     <*> L.pIdentVar s
+pConsT      s     = tok Type.Cons    <*> sepBy1 (pCons s) L.pAccessor
 pTupleT     s i   = tok Type.Tuple   <*> pTuple (pType s i)
 pWildcardT        = tok Type.Unknown <*  L.pWildcard
 --pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
 
-pAppBaseT   s i   = choice [ pVarT   s i
-                           , pConsT  s i
+pAppBaseT   s     = choice [ pVarT   s 
+                           , pConsT  s  
                            ]
 
-pEntT       s i   = choice [ pVarT   s i
-                           , pConsT  s i
+pEntT       s i   = choice [ pVarT   s 
+                           , pConsT  s 
                            , pTupleT s i
                            , pWildcardT
                            ]
@@ -238,7 +236,7 @@ pEmptyLine          = try(L.eol *> L.pSpaces1 *> L.eol) <|> L.eol
 pIndentExact      i = i <$ count i (char ' ')
 
 pIdentAtLast      i = do
-                      many (char ' ')
+                      _   <- many (char ' ')
                       col <- sourceColumn <$> getPosition
                       if col > i then pure (col-1)
                                  else fail "incorrect indentation"
@@ -249,7 +247,7 @@ pSegmentBegin   p i = do
                       j <- many pEmptyLines *> pIdentAtLast i
                       (:) <$> p i <*> pSegments p j
 
-pSegment        p i = try (id <$ pIndentExact i <*> p i)
+pSegment        p i = try (Prelude.id <$ pIndentExact i <*> p i)
 
 pBlockBegin     p i = L.pBlockBegin *> pBlock p (i+1)  
 
@@ -274,7 +272,6 @@ postfixM name fun       = PExpr.Postfix (L.reservedOp name *>        fun)
 
 --pProgram mod = Expr.Module (Expr.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
 --                                           <|> pSegmentBegin pExpr 0 <* many(L.eol <* L.pSpaces) <* eof)
-
 
 
 parseExpr input startID = Parsec.runParser pExprTemp startID "Luna Parser" input

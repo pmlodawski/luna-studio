@@ -112,25 +112,25 @@ main_inner = Luna.run $ do
     ast <- TxtParser.run source
     putStrLn $ PP.ppqShow ast
 
-    putStrLn "\n-------- VarAlias --------"
-    va <- VarAlias.run     ast
-    putStrLn $ PP.ppShow va
+    --putStrLn "\n-------- VarAlias --------"
+    --va <- VarAlias.run     ast
+    --putStrLn $ PP.ppShow va
 
-    putStrLn "\n-------- SSA --------" 
-    ssa <- SSA.run va ast
-    putStrLn $ PP.ppqShow ssa
+    --putStrLn "\n-------- SSA --------" 
+    --ssa <- SSA.run va ast
+    --putStrLn $ PP.ppqShow ssa
 
-    putStrLn "\n-------- HASTGen --------" 
-    hast <- HASTGen.run  ssa
-    putStrLn $ PP.ppShow hast
+    --putStrLn "\n-------- HASTGen --------" 
+    --hast <- HASTGen.run  ssa
+    --putStrLn $ PP.ppShow hast
 
-    --putStrLn "\n-------- HS CodeGen --------" 
-    hsc <- CodeGen.run  hast
-    --putStrLn $ hsc
+    ----putStrLn "\n-------- HS CodeGen --------" 
+    --hsc <- CodeGen.run  hast
+    ----putStrLn $ hsc
 
-    putStrLn "\n-------- PHSC --------" 
-    phsc <- HSPrint.run hsc
-    putStrLn $ phsc
+    --putStrLn "\n-------- PHSC --------" 
+    --phsc <- HSPrint.run hsc
+    --putStrLn $ phsc
 
     return ()
 
