@@ -11,23 +11,11 @@ module Flowbox.Luna.Passes.CodeGen.HSC.HSC where
 import           Flowbox.Prelude                   
 import qualified Flowbox.Luna.Data.HAST.Expr     as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit      as HLit
-import qualified Flowbox.Luna.Data.HAST.Module   as Module
-import qualified Flowbox.Luna.Data.HAST.DataType as DataType
 import qualified Flowbox.Luna.Passes.Pass        as Pass
 import           Flowbox.Luna.Passes.Pass          (PassMonad)
 import           Data.String.Utils                 (join)
 
-import           Control.Applicative               
-
-import           Debug.Trace                       
-
-import           Control.Monad.Trans.Maybe         
-import           Control.Monad.Trans.Either        
-import           Data.Maybe                        (fromJust)
-
-import qualified Flowbox.System.Log.Logger       as Logger
 import           Flowbox.System.Log.Logger         
-import qualified Flowbox.System.Log.LogEntry     as LogEntry
 
 
 logger :: Logger
@@ -52,7 +40,7 @@ genSection header generator d = if null d
 
 
 genExpr :: HExpr.Expr -> String
-genExpr expr = case expr of
+genExpr e = case e of
     HExpr.Var      name                   -> name
     HExpr.VarE     name                   -> name
     HExpr.Import   q segments rename      -> "import " 
@@ -84,7 +72,6 @@ genExpr expr = case expr of
     HExpr.ConT     name                   -> name
     HExpr.AppT     src dst                -> genExpr src ++ " (" ++ genExpr dst ++ ")" -- for literals, e.g. Pure (1 :: Int)
     HExpr.AppE     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
-
 
 
 genLit :: HLit.Lit -> String

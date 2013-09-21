@@ -10,8 +10,6 @@ module Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState where
 
 import           Flowbox.Prelude               hiding (mod)
 import           Control.Monad.State             
-import qualified Data.Map                      as Map
-import           Data.Map                        (Map)
 import qualified Flowbox.Luna.Data.HAST.Expr   as HExpr
 import qualified Flowbox.Luna.Data.HAST.Module as Module
 

@@ -11,7 +11,7 @@ module Flowbox.Luna.Passes.Pass where
 import           Flowbox.Prelude              
 import           Control.Monad.State          
 
-import           Control.Monad.RWS          hiding (state)
+import           Control.Monad.RWS          
 import           Control.Monad.Trans.Either   
 
 import           Flowbox.System.Log.Logger    
@@ -24,8 +24,9 @@ type PassError              = String
 
 type PassMonad    s m       = (Functor m, MonadState s m, LogWriter m)
 type Transformer  s b       = EitherT PassError (RWS [Int] LogList s) b 
+type TransformerT s a m b   = EitherT a (RWST [Int] LogList s m) b
 type Result       m output  = EitherT PassError m output
-type TransformerT s a m b   = EitherT a (RWST [Int] LogList s m) b -> m (Either a b)  -- do not use
+type ResultT      m output  = m (Either PassError output)
 
 data NoState = NoState deriving (Show)
 
@@ -35,14 +36,15 @@ data NoState = NoState deriving (Show)
 --run :: PassMonad outstate m => state -> Transformer state a m b
 run ::  (MonadWriter LogList m) => state -> Transformer state b -> Result m (b, state)
 run s f = do
-    let (result, state, logs) = runRWS (runEitherT f) [] s
+    let (result, state', logs) = runRWS (runEitherT f) [] s
     Logger.append logs
     let out = case result of
                   Left  e  -> Left e
-                  Right r  -> Right (r, state)
+                  Right r  -> Right (r, state')
     hoistEither out 
 
---run :: state -> EitherT a (RWS [Int] LogList state) b -> (Either a b, state, LogList)
+
+runT :: s -> TransformerT s a m b -> m (Either a b, s, LogList)
 runT s f = runRWST (runEitherT f) [] s
 
 
@@ -54,8 +56,8 @@ run_ s f = do
 
 run'_ :: PassMonad outstate m => state -> Transformer state b -> Result m state
 run'_ s f = do
-    (_, state) <- run s f
-    return state
+    (_, state') <- run s f
+    return state'
 
 
 fail :: Monad m => String -> EitherT PassError m a

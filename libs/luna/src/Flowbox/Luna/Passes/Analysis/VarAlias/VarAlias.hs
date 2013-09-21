@@ -26,7 +26,7 @@ import           Control.Applicative
 
 import           Flowbox.System.Log.Logger                     
 
-import           Flowbox.Prelude                             hiding (error, id)
+import           Flowbox.Prelude                             hiding (error, id, mod)
 
 
 

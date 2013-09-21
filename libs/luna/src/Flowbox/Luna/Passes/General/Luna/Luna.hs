@@ -9,19 +9,11 @@
 module Flowbox.Luna.Passes.General.Luna.Luna where
 
 import qualified Flowbox.Luna.Passes.Pass   as Pass
-import           Flowbox.System.Log.Logger    
 import qualified Flowbox.System.Log.Logger  as Logger
-
-import           Control.Monad.RWS            
-import           Control.Monad.Trans.Either   
-
-import qualified Flowbox.Prelude            as Prelude
 import           Flowbox.Prelude            hiding (error)
 
 
-
-
-run :: Pass.TransformerT Pass.NoState a IO b
+run :: Pass.TransformerT Pass.NoState String IO b -> Pass.ResultT IO b
 run f = do
 	(result, _, logs) <- Pass.runT Pass.NoState f
 	Logger.logsIO logs
