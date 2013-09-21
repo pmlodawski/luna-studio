@@ -13,7 +13,7 @@ import           Data.Maybe                                                  (fr
 import           System.TimeIt                                               
 
 import           Flowbox.Prelude                                             
-import qualified Flowbox.Luna.Data.AST.Expr                                as ASTExpr
+import qualified Flowbox.Luna.Data.AST.Module                              as ASTModule
 import qualified Flowbox.Luna.Lib.Library                                  as Library
 import           Flowbox.Luna.Lib.Library                                    (Library)
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
@@ -21,12 +21,12 @@ import           Flowbox.Luna.Network.Def.Definition                         (De
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
+import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
+import qualified Flowbox.Luna.Passes.General.Print.Print                   as HSPrint
 import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
-import qualified Flowbox.Luna.Passes.Transform.HS.HASTGen.HASTGen          as HASTGen
-import qualified Flowbox.Luna.Passes.Transform.HS.CodeGen.CodeGen          as CodeGen
-import qualified Flowbox.Luna.Passes.Transform.HS.Print.Print              as HSPrint
+import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
 import qualified Flowbox.Luna.Passes.Transform.Source.Reader.Reader        as SourceReader
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
@@ -70,35 +70,34 @@ buildFile :: UniPath -> IO ()
 buildFile path = timeLuna $ Luna.run $ do 
     source <- SourceReader.run (UniPath.fromUnixString ".") path
     
-    logger info  "Running TxtParser"
+    logger info "Running TxtParser"
     ast <- TxtParser.run source
-    logger debug  $ PP.ppqShow ast
+    logger debug $ PP.ppqShow ast
 
     buildAST ast
 
 
-buildAST :: (MonadIO m, PassMonad s m) => ASTExpr.Expr -> Pass.Result m ()
-buildAST (ast :: ASTExpr.Expr) = do
-    logger info  "Running VarAlias"
+buildAST :: (MonadIO m, PassMonad s m) => ASTModule.Module -> Pass.Result m ()
+buildAST ast = do
+    logger info "Running VarAlias"
     va <- VarAlias.run     ast
-    logger debug  $ PP.ppShow va
+    logger debug $ PP.ppShow va
 
-    logger info  "Running SSA" 
+    logger info "Running SSA" 
     ssa <- SSA.run va ast
-    logger debug  $ PP.ppqShow ssa
+    logger debug $ PP.ppqShow ssa
 
-    logger info  "Running HASTGen" 
+    logger info "Running HASTGen" 
     hast <- HASTGen.run  ssa
-    logger debug  $ PP.ppShow hast
+    logger debug $ PP.ppShow hast
 
-    logger info  "Running HS CodeGen" 
-    hsc <- CodeGen.run  hast
-    logger debug  $ hsc
+    logger info "Running HSC" 
+    hsc <- HSC.run hast
+    logger debug $ PP.ppShow hsc
 
     logger info  "Running PHSC" 
     phsc <- HSPrint.run hsc
-    logger debug  $ phsc
-
+    logger debug $ phsc
 
     return ()
 
