@@ -40,7 +40,7 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Log.LogEntry                       as LogEntry
 
 import qualified Flowbox.Prelude                                   as Prelude
-import           Flowbox.Prelude                                   hiding (error)
+import           Flowbox.Prelude                                   hiding (error, id)
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.HSGen.HSGen"
