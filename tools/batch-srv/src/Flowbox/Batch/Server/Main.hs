@@ -18,7 +18,6 @@ import qualified Control.Exception                        as Exception
 import qualified Data.IORef                               as IORef
 import           Data.IORef                                 (IORef)
 import           Data.Text.Lazy                             (pack)
-import qualified Network                                  as Network
 import qualified System.Exit                              as Exit
 
 
@@ -49,8 +48,17 @@ import           Flowbox.System.Log.Logger
 logger :: Logger
 logger = getLogger "Flowbox.Batch.Server"
 
+
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server"
+
+
+address :: String
+address = "127.0.0.1"
+
+
+port :: Int
+port = 30521
 
 
 type BatchHandler = IORef Batch
@@ -139,7 +147,7 @@ serve :: MVar Bool -> IO ()
 serve quitmutex = do
     handler   <- newBatchHandler
     loggerIO info "Starting the server"
-    _ <- Server.runSingleConnectionServer Server.accepter handler (processCommand quitmutex) (Network.PortNumber Server.port)
+    _ <- Server.runSingleConnectionServer Server.accepter handler (processCommand quitmutex) address port
     return ()
 
 

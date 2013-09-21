@@ -8,7 +8,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Batch.Server.Server ( 
-    port,
     accepter,
     runSingleConnectionServer,
 ) where
@@ -32,10 +31,6 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server"
 
 
-port :: Network.PortNumber
-port = 30521
-
-
 accepter :: Network.Socket -> IO (TProtocol.BinaryProtocol IO.Handle,
                                     TProtocol.BinaryProtocol IO.Handle)
 accepter s = do
@@ -46,18 +41,17 @@ accepter s = do
 
 runSingleConnectionServer :: (Transport t, Protocol i, Protocol o)
                   => (Network.Socket -> IO (i t, o t))
-                  -> h
-                  -> (h -> (i t, o t) -> IO Bool)
-                  -> Network.PortID
-                  -> IO a
-runSingleConnectionServer accepter_ hand proc_ port_ = Socket.withSocketsDo $ do
+                  -> h -> (h -> (i t, o t) -> IO Bool) -> String -> Int -> IO a
+runSingleConnectionServer accepter_ hand proc_ address port = Socket.withSocketsDo $ do
     let tcp = 6
-        maxConnections = 100
+        maxConnections = 1
 
     serverSocket  <- Socket.socket Socket.AF_INET Socket.Stream tcp
-    serverAddress <- Socket.inet_addr "127.0.0.1"
+    --serverAddress <- Socket.inet_addr "127.0.0.1"
     --Socket.setSocketOption serverSocket Socket.ReuseAddr 1
-    Socket.bindSocket serverSocket $ Socket.SockAddrInet (Socket.PortNum 30521) serverAddress --Socket.iNADDR_ANY
+    (Socket.AddrInfo _ _ _ _ sockAddr _):_ <- Socket.getAddrInfo Nothing (Just address) (Just $ show port)
+    --let sockAddr = Socket.SockAddrInet (Socket.PortNum 30521) serverAddress --Socket.iNADDR_ANY
+    Socket.bindSocket serverSocket sockAddr -- TODO [PM] pretty code doesn't work ;/
     Socket.listen serverSocket maxConnections
     singleAcceptLoop (accepter_ serverSocket) (proc_ hand)
 
