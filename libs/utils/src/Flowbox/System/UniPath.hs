@@ -5,26 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.System.UniPath(
-    UniPath,
-    empty,
-    
-    fromUnixString,
-    toUnixString,
-    expand,
-    fromList,
-    append,
-    prepend,
-    toPathItem,
-    normalise,
-    fileName,
-    basePath,
-    extension,
-    setExtension,
-    dropExtension,
-    dirOf,
-    makeRelative,
-) where
+module Flowbox.System.UniPath where
 
 import           Control.Applicative hiding (empty)
 import qualified Data.List.Split     as Split
@@ -59,14 +40,7 @@ fromUnixString spath@(x:xs) = case x of
 
 
 toUnixString :: UniPath -> String
-toUnixString path = join "/" $ fmap str path where
-        str item = case item of
-                Node txt -> txt
-                Root txt -> txt
-                Up       -> ".."
-                Current  -> "."
-                Empty    -> ""
-                Var v    -> v
+toUnixString path = join "/" $ toList path
 
 expand :: UniPath -> IO UniPath
 expand [] = return empty
@@ -79,6 +53,16 @@ expand (x:xs) = case x of
 
 fromList :: [String] -> UniPath
 fromList path = foldr prepend empty path
+
+toList :: UniPath -> [String]
+toList path = fmap str path where
+    str item = case item of
+            Node txt -> txt
+            Root txt -> txt
+            Up       -> ".."
+            Current  -> "."
+            Empty    -> ""
+            Var v    -> v
 
 append :: String -> UniPath -> UniPath
 append snode path = path ++ [toPathItem snode]

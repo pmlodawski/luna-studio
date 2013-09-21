@@ -20,35 +20,57 @@ import           Control.Applicative
 
 import           Text.Parsec                     hiding (parse, many, optional, (<|>))
 
-type Lit = Lit.Lit
-type Pat = Pat.Pat
+type Lit         = Lit.Lit
+type Pat         = Pat.Pat
+type Traversal m = (Functor m, Applicative m, Monad m)
 
-data Expr  = NOP        { id :: ID                                                                                                                                }
-           | Accessor   { id :: ID, src       :: Expr     , dst       :: Expr                                                                                     }
-           | App        { id :: ID, src       :: Expr     , args      :: [Expr]                                                                                   }
-           | AppCons_   { id :: ID, args      :: [Expr]                                                                                                           }
-           | Assignment { id :: ID, pat       :: Pat      , dst       :: Expr                                                                                     }
-           | Class      { id :: ID, cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]                                         }
-           | Cons       { id :: ID, name      :: String                                                                                                           }
-           | Field      { id :: ID, name      :: String   , cls       :: Type                                                                                     }
-           | Function   { id :: ID, name      :: String   , pats      :: [Pat]  , output    :: Type   ,  body    :: [Expr]                                        }
-           | Import     { id :: ID, path      :: Type     , target    :: Expr   , rename    :: Maybe String                                                       }
-           | Infix      { id :: ID, name      :: String   , src       :: Expr   , dst       :: Expr                                                               }                                                               
-           | Lambda     { id :: ID, pats      :: [Pat]    , output    :: Type   , body      :: [Expr]                                                             }
-           | List       { id :: ID, items     :: [Expr]                                                                                                           }
-           | Lit        { id :: ID, value     :: Lit                                                                                                              }
-           | Module     { id :: ID, cls       :: Type     , imports   :: [Expr] , classes   :: [Expr] , fields  :: [Expr] , methods :: [Expr] , modules :: [Expr] }
-           | Tuple      { id :: ID, items     :: [Expr]                                                                                                           }
-           | Typed      { id :: ID, cls       :: Type     , expr      :: Expr                                                                                     }
-           | Var        { id :: ID, name      :: String                                                                                                           }
-           | Wildcard   { id :: ID                                                                                                                                }
+
+data Expr  = NOP        { id :: ID                                                                                         }
+           | Accessor   { id :: ID, src       :: Expr     , dst       :: Expr                                              }
+           | App        { id :: ID, src       :: Expr     , args      :: [Expr]                                            }
+           | AppCons_   { id :: ID, args      :: [Expr]                                                                    }
+           | Assignment { id :: ID, pat       :: Pat      , dst       :: Expr                                              }
+           | Class      { id :: ID, cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]  }
+           | Cons       { id :: ID, name      :: String                                                                    }
+           | Field      { id :: ID, name      :: String   , cls       :: Type                                              }
+           | Function   { id :: ID, name      :: String   , pats      :: [Pat]  , output    :: Type   ,  body    :: [Expr] }
+           | Import     { id :: ID, path      :: Type     , target    :: Expr   , rename    :: Maybe String                }
+           | Infix      { id :: ID, name      :: String   , src       :: Expr   , dst       :: Expr                        }                                                               
+           | Lambda     { id :: ID, pats      :: [Pat]    , output    :: Type   , body      :: [Expr]                      }
+           | List       { id :: ID, items     :: [Expr]                                                                    }
+           | Lit        { id :: ID, value     :: Lit                                                                       }
+           | Tuple      { id :: ID, items     :: [Expr]                                                                    }
+           | Typed      { id :: ID, cls       :: Type     , expr      :: Expr                                              }
+           | Var        { id :: ID, name      :: String                                                                    }
+           | Wildcard   { id :: ID                                                                                         }
            deriving (Show, Eq, Generic)
-
 
 instance QShow Expr
 
 
-type Traversal m = (Functor m, Applicative m, Monad m)
+callConstructor :: ID -> Expr -> Expr -> Expr
+callConstructor id' src' arg' = case src' of
+    (AppCons_ id'' args') -> AppCons_ id'' (args' ++ [arg'])
+    _                     -> AppCons_ id' (src':[arg'])
+
+
+aftermatch :: Expr -> Expr
+aftermatch x = case x of
+    AppCons_ id' (a:as) -> App id' a as
+    _                   -> x
+
+
+addMethod :: Expr -> Expr -> Expr
+addMethod method expr = expr { methods = method : methods expr }
+
+
+addField :: Expr -> Expr -> Expr
+addField field expr = expr { fields = field : fields expr }
+
+
+addClass :: Expr -> Expr -> Expr
+addClass ncls expr = expr { classes = ncls : classes expr }
+
 
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
 traverseM fexp ftype fpat flit expr = case expr of
@@ -64,8 +86,8 @@ traverseM fexp ftype fpat flit expr = case expr of
     Infix      id name src dst               -> Infix      id name <$> fexp src     <*> fexp dst
     List       id items                      -> List       id      <$> fexpMap items
     Lit        id val                        -> Lit        id      <$> flit val
-    Module     id cls imports classes             
-               fields methods modules        -> Module     id      <$> ftype cls <*> fexpMap imports <*> fexpMap classes <*> fexpMap fields <*> fexpMap methods <*> fexpMap modules
+    --Module     id cls imports classes             
+    --           fields methods modules        -> Module     id      <$> ftype cls <*> fexpMap imports <*> fexpMap classes <*> fexpMap fields <*> fexpMap methods <*> fexpMap modules
     Tuple      id items                      -> Tuple      id      <$> fexpMap items
     Typed      id cls expr                   -> Typed      id      <$> ftype cls <*> fexp expr
     Var        {}                            -> pure expr
@@ -88,8 +110,8 @@ traverseM_ fexp ftype fpat flit expr = case expr of
     Infix      id name src dst               -> drop <* fexp src       <* fexp dst
     List       id items                      -> drop <* fexpMap items
     Lit        id val                        -> drop <* flit val
-    Module     id cls imports classes             
-               fields methods modules        -> drop <* ftype cls <* fexpMap imports <* fexpMap classes <* fexpMap fields <* fexpMap methods <* fexpMap modules
+    --Module     id cls imports classes             
+    --           fields methods modules        -> drop <* ftype cls <* fexpMap imports <* fexpMap classes <* fexpMap fields <* fexpMap methods <* fexpMap modules
     Tuple      id items                      -> drop <* fexpMap items
     Typed      id cls expr                   -> drop <* ftype cls <* fexp expr
     Var        {}                            -> drop
@@ -177,29 +199,6 @@ traverseM'_ fexp expr = traverseM_ fexp pure pure pure expr
 --      (List       id items)                      -> (List       id <$> mapM t items)
 --      _                                          -> (pure expr)
 
-callConstructor :: ID -> Expr -> Expr -> Expr
-callConstructor id' src' arg' = case src' of
-    (AppCons_ id'' args') -> AppCons_ id'' (args' ++ [arg'])
-    _                     -> AppCons_ id' (src':[arg'])
 
 
 
-aftermatch :: Expr -> Expr
-aftermatch x = case x of
-    AppCons_ id' (a:as) -> App id' a as
-    _                   -> x
-
-
-addMethod :: Expr -> Expr -> Expr
-addMethod method e = e { methods = method : methods e }
-
-
-addField :: Expr -> Expr -> Expr
-addField field e = e { fields = field : fields e }
-
-addClass :: Expr -> Expr -> Expr
-addClass ncls e = e { classes = ncls : classes e }
-
-
-addImport :: Expr -> Expr -> Expr
-addImport imp e = e { imports = imp : imports e }

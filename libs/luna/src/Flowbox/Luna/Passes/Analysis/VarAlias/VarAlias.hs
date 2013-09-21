@@ -13,6 +13,8 @@ import qualified Flowbox.Luna.Data.AST.Type                  as Type
 import           Flowbox.Luna.Data.AST.Type                    (Type)
 import qualified Flowbox.Luna.Data.AST.Pat                   as Pat
 import           Flowbox.Luna.Data.AST.Pat                     (Pat)
+import qualified Flowbox.Luna.Data.AST.Module                as Module
+import           Flowbox.Luna.Data.AST.Module                  (Module)
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.State as LocState
 import           Flowbox.Luna.Passes.Analysis.VarAlias.State   (LocState)
 import           Flowbox.Luna.Data.AliasAnalysis               (AA)
@@ -35,14 +37,8 @@ logger = getLogger "Flowbox.Luna.Passes.VarAlias.VarAlias"
 type VAMonad m = PassMonad LocState m
 
 
-run :: PassMonad s m => Expr.Expr -> Pass.Result m AA
-run = (Pass.run_ LocState.empty) . vaExpr
-
-
-vaExpr :: VAMonad m => Expr.Expr -> Pass.Result m AA
-vaExpr ast = do
-    vaAST ast
-    LocState.varstat <$> get
+run :: PassMonad s m => Module -> Pass.Result m AA
+run = (Pass.run_ LocState.empty) . vaMod
 
 
 runNested :: VAMonad m => Pass.Transformer LocState b -> Pass.Result m LocState
@@ -51,23 +47,29 @@ runNested f = do
     Pass.run'_ s f
 
 
-vaAST :: VAMonad m => Expr.Expr -> Pass.Result m ()
-vaAST ast = case ast of
+vaMod :: VAMonad m => Module -> Pass.Result m AA
+vaMod mod = do
+    Module.traverseM_ vaExpr vaType vaPat pure mod
+    LocState.varstat <$> get
+
+
+vaExpr :: VAMonad m => Expr.Expr -> Pass.Result m ()
+vaExpr ast = case ast of
     Expr.Function   _ _ pats _ body       -> do
                                              s <- runNested $ do
                                                  mapM_ vaPat pats
                                                  vaExprMap body
                                              LocState.updateVarStat s
-    Expr.Assignment _ pat dst             -> vaAST dst <* vaPat pat
-    Expr.Accessor   _ src _               -> vaAST src -- we cannot determine if dst exists.
+    Expr.Assignment _ pat dst             -> vaExpr dst <* vaPat pat
+    Expr.Accessor   _ src _               -> vaExpr src -- we cannot determine if dst exists.
     Expr.Var        id name               -> do
                                              v <- LocState.lookupVar name
                                              case v of
                                                  Nothing    -> logger error ("Not in scope '" ++ name ++ "'.") *> Pass.fail ("not in scope '" ++ name ++ "'")
                                                  Just vid   -> LocState.bind id vid
-    _                                     -> Expr.traverseM_ vaAST vaType vaPat pure ast
+    _                                     -> Expr.traverseM_ vaExpr vaType vaPat pure ast
     where
-        vaExprMap = mapM_ vaAST
+        vaExprMap = mapM_ vaExpr
 
 
 

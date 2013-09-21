@@ -21,20 +21,16 @@ import           Flowbox.System.UniPath     (UniPath)
 
 
 
--- TODO [PM] : magic constants
-path2module :: UniPath -> String
-path2module path = 
-    List.concat $ List.intersperse "." $ Split.splitOn "/" $ UniPath.toUnixString $ UniPath.dropExtension path
+path2module :: UniPath -> [String]
+path2module path = UniPath.toList $ UniPath.dropExtension path
 
 
-getModule :: UniPath -> UniPath -> String
-getModule rootPath path = m where
-    m = path2module $ UniPath.makeRelative rootPath path
+getModule :: UniPath -> UniPath -> [String]
+getModule rootPath path = path2module $ UniPath.makeRelative rootPath path
 
 
 run :: MonadIO m => UniPath -> UniPath -> m Source
-run rootPath path = do
-    liftIO $ readSource rootPath path
+run rootPath path = liftIO $ readSource rootPath path
 
 
 readSource :: UniPath -> UniPath -> IO Source

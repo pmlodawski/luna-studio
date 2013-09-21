@@ -17,6 +17,8 @@ import           Flowbox.Luna.Data.HAST.Expr
 empty :: Expr 
 empty = Module [] [] [] []
 
+mk :: [String] -> Expr
+mk path = Module path [] [] [] 
 
 --import           Debug.Trace                             
 

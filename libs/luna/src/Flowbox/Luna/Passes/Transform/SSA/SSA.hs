@@ -8,6 +8,8 @@
 
 module Flowbox.Luna.Passes.Transform.SSA.SSA where
 
+import qualified Flowbox.Luna.Data.AST.Module    as Module
+import           Flowbox.Luna.Data.AST.Module      (Module)
 import qualified Flowbox.Luna.Data.AST.Expr      as Expr
 import qualified Flowbox.Luna.Data.AST.Type      as Type
 import           Flowbox.Luna.Data.AST.Type        (Type)
@@ -37,8 +39,13 @@ type SSAMonad m = PassMonad Pass.NoState m
 
 mkVar id = "v_" ++ show id
 
-run :: PassMonad s m => AA -> Expr.Expr -> Pass.Result m Expr.Expr
-run vs = (Pass.run_ Pass.NoState) . (ssaExpr vs)
+
+run :: PassMonad s m => AA -> Module -> Pass.Result m Module
+run vs = (Pass.run_ Pass.NoState) . (ssaModule vs)
+
+
+ssaModule :: SSAMonad m => AA -> Module -> Pass.Result m Module
+ssaModule vs mod = Module.traverseM (ssaExpr vs) pure ssaPat pure mod
 
 
 ssaExpr :: SSAMonad m => AA -> Expr.Expr -> Pass.Result m Expr.Expr

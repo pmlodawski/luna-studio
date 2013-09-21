@@ -56,13 +56,18 @@ genExpr :: HExpr.Expr -> String
 genExpr expr = case expr of
     HExpr.Var      name                   -> name
     HExpr.VarE     name                   -> name
-    HExpr.Import   segments name          -> "import qualified " ++ join "." segments ++ " as " ++ name
+    HExpr.Import   q segments rename      -> "import " 
+                                             ++ if q then "qualified " else ""
+                                             ++ join "." segments 
+                                             ++ case rename of
+                                                     Just name -> " as " ++ name
+                                                     Nothing   -> ""
     HExpr.Module   path imports datatypes 
                    methods                -> header 
-                                          ++ genSection "imports"   genExpr imports
-                                          ++ genSection "datatypes" genExpr datatypes
-                                          ++ genSection "methods"   genExpr methods
-                                             where header = "module " ++ join "." path ++ " where" ++ eol
+                                             ++ genSection "imports"   genExpr imports
+                                             ++ genSection "datatypes" genExpr datatypes
+                                             ++ genSection "methods"   genExpr methods
+                                                where header = "module " ++ join "." path ++ " where" ++ eol
     HExpr.DataType name params cons       -> "data " ++ name ++ params' ++ " = " ++ join " | " (map genExpr cons)
                                              where params' = if null params then "" else " " ++ join " " params
     HExpr.Con      name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"

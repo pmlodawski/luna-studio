@@ -9,6 +9,6 @@ module Flowbox.Luna.Data.Source where
 
 import           Flowbox.Prelude   
 
-data Source = Source { mod  :: String
+data Source = Source { path :: [String]
                      , code :: String
                      }

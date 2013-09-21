@@ -50,12 +50,10 @@ logger = getLogger "Flowbox"
 
 
 example :: Source
-example = Source.Source "Workspace"
-        $ unlines [ ""
-                  , "import Std.Math: *"
-                  --, "def f x y: x"
-                  --, "           x+y"
-                  --, "    x"
+example = Source.Source ["Main"]
+        $ unlines [ "import Std: Console"
+                  , "def main self:"
+                  , "    Console.print 1"
                   --, "from Std.Math import Vector "
                   --, "class A:"
                   --, "    a :: Std.Math.Vector Int"
@@ -99,7 +97,7 @@ main = do
 main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
 
-    cabal <- CabalGen.run "TestProject2"
+    --cabal <- CabalGen.run "TestProject2"
 
     --CabalStore.run cabal $ UniPath.fromUnixString "samples/TestProject2/build/hs/TestProject2.cabal"
     --CabalBuild.run $ UniPath.fromUnixString "samples/TestProject2"
@@ -114,25 +112,25 @@ main_inner = Luna.run $ do
     ast <- TxtParser.run source
     putStrLn $ PP.ppqShow ast
 
-    --putStrLn "\n-------- VarAlias --------"
-    --va <- VarAlias.run     ast
-    --putStrLn $ PP.ppShow va
+    putStrLn "\n-------- VarAlias --------"
+    va <- VarAlias.run     ast
+    putStrLn $ PP.ppShow va
 
-    --putStrLn "\n-------- SSA --------" 
-    --ssa <- SSA.run va ast
-    --putStrLn $ PP.ppqShow ssa
+    putStrLn "\n-------- SSA --------" 
+    ssa <- SSA.run va ast
+    putStrLn $ PP.ppqShow ssa
 
-    --putStrLn "\n-------- HASTGen --------" 
-    --hast <- HASTGen.run  ssa
-    --putStrLn $ PP.ppShow hast
+    putStrLn "\n-------- HASTGen --------" 
+    hast <- HASTGen.run  ssa
+    putStrLn $ PP.ppShow hast
 
-    ----putStrLn "\n-------- HS CodeGen --------" 
-    --hsc <- CodeGen.run  hast
-    ----putStrLn $ hsc
+    --putStrLn "\n-------- HS CodeGen --------" 
+    hsc <- CodeGen.run  hast
+    --putStrLn $ hsc
 
-    --putStrLn "\n-------- PHSC --------" 
-    --phsc <- HSPrint.run hsc
-    --putStrLn $ phsc
+    putStrLn "\n-------- PHSC --------" 
+    phsc <- HSPrint.run hsc
+    putStrLn $ phsc
 
     return ()
 

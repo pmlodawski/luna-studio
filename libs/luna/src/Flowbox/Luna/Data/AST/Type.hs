@@ -18,7 +18,7 @@ data Type = Unknown { id :: ID                                           }
           | Var     { id :: ID, name     :: String                       }
           | Tuple   { id :: ID, items    :: [Type]                       }
           | Class   { id :: ID, name     :: String , params  :: [String] }
-          | Module  { id :: ID, name     :: String                       }
+          | Module  { id :: ID, path     :: [String]                     }
           | Lambda  { id :: ID, inputs   :: [Type] , output  :: Type     }
           | Cons    { id :: ID, segments :: [String]                     }
           | App     { id :: ID, src      :: Type   , args    :: [Type]   }

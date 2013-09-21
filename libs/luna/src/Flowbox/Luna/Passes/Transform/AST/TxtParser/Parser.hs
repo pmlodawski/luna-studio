@@ -89,13 +89,13 @@ pFunc       s i    = tok Expr.Function <*  L.pDef
 --                                 <?> "lambda definition"
 
 pClass       s i    = tok Class.mk  <*  L.pClass
-                                  <*> (tok Type.Class <*> L.pIdentType s <*> many (L.pIdentTypeVar s))
-                                  <??$> pBlockBegin (pClassBody s) i 
-                                  -- <*> (try (pBlockBegin pClassBody i) <|> return [])
-                                  <?> "class definition"
+                                    <*> (tok Type.Class <*> L.pIdentType s <*> many (L.pIdentTypeVar s))
+                                    <??$> pBlockBegin (pClassBody s) i 
+                                    -- <*> (try (pBlockBegin pClassBody i) <|> return [])
+                                    <?> "class definition"
 
 pModule name s i    = tok Module.mk <*>   (tok Type.Module <*> pure name)
-                                  <??$> try(pSegmentBegin (pModuleBody s) i)
+                                    <??$> try(pSegmentBegin (pModuleBody s) i)
 
 
 
@@ -104,9 +104,11 @@ pClassBody   s i    = choice [ Expr.addMethod <$> pFunc s i
                              , Expr.addClass  <$> pClass s i
                              ]
 
-pModuleBody  s i    = choice [ pClassBody s i
-                           , Expr.addImport <$> pImport s i
-                           ]
+pModuleBody  s i    = choice [ Module.addMethod <$> pFunc s i
+                             , Module.addField  <$> pField s i
+                             , Module.addClass  <$> pClass s i
+                             , Module.addImport <$> pImport s i
+                             ]
 
 
 pField       s i    = tok Field.mk <*> L.pIdent s <* L.pTypeDecl <*> pType s i
