@@ -5,52 +5,45 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
-
+import           Data.List                   as List
 import           Options.Applicative         hiding (info)
 import qualified Options.Applicative         as Opt
-import           Data.List                     
-import           Prelude                     hiding (error)
-import qualified Flowbox.Data.Version        as Version
+
+import           Flowbox.Prelude             hiding (error)
 import           Flowbox.Control.Applicative   
-import qualified System.Environment          as Env
-import           Flowbox.Control.Exception     
+import qualified Flowbox.Data.Version        as Version
+import           Flowbox.Data.Version          (Version)
+import qualified Flowbox.Lunac.Builder       as Builder
+import qualified Flowbox.Lunac.Conf          as Conf
+import           Flowbox.Lunac.Conf            (Conf)
 import           Flowbox.System.Log.Logger     
+import qualified Flowbox.System.UniPath      as UniPath
 
 
-
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Lunac"
 
 logger :: Logger
 logger = getLogger "Flowbox.Lunac"
 
+
 libPathEnv :: String
 libPathEnv = "LUNAPATH"
 
-version :: Version.Version
+
+version :: Version
 version = Version.mk { Version.minor = 1
                      , Version.stage = Version.Alpha
                      }
 
 
-data Conf = Compilation { inputs   :: [String]
-                        , verbose  :: Bool
-                        , noColor  :: Bool
-                        , dump_ast :: Bool
-                        }
-          | Version
-          deriving Show
-
-
 parser :: Parser Conf
-parser = flag' Version (long "version" <> hidden)
-       <|> Compilation
-           <$> many1(argument str ( metavar "inputs" ))
+parser = Opt.flag' Conf.Version (long "version" <> hidden)
+       <|> Conf.Compilation
+           <$> many1  (argument str ( metavar "inputs" ))
            -- <*> strOption (long "verbose"  <> short 'v' <> value "0" <> help "Verbose level")
-           <*> switch    (long "verbose"  <> short 'v'                 <> help "Verbose level")
-           <*> switch    (long "no-color"                              <> help "Disable color output")
-           <*> switch    (long "dump-ast" <> hidden)
+           <*> switch (long "verbose"  <> short 'v'                 <> help "Verbose level"       )
+           <*> switch (long "debug"    <> short 'd' <> hidden                                     )
+           <*> switch (long "no-color"                              <> help "Disable color output")
+           <*> switch (long "dump-ast"              <> hidden                                     )
 
 
 opts :: ParserInfo Conf
@@ -70,12 +63,17 @@ main = execParser opts >>= run
 
 run :: Conf -> IO ()
 run conf = case conf of
-    Version     {} -> putStrLn show_version
-    Compilation {} -> do
-        case verbose conf of
-            True  -> logger setLevel DEBUG
-            False -> logger setLevel INFO
+    Conf.Version     {} -> putStrLn show_version
+    Conf.Compilation {} -> do
+        if Conf.verbose conf
+            then logger setLevel INFO
+            else return ()
+        if Conf.debug conf
+            then logger setLevel DEBUG
+            else return ()
 
+        let inputs = map UniPath.fromUnixString $ Conf.inputs conf
+        mapM_ Builder.buildFile inputs
         -- TODO [PM] : This code does not compile
 
         --case noColor conf of
