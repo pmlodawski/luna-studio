@@ -13,9 +13,11 @@ import           Flowbox.Prelude             hiding (error)
 import           Flowbox.Control.Applicative   
 import qualified Flowbox.Data.Version        as Version
 import           Flowbox.Data.Version          (Version)
+import qualified Flowbox.Lunac.Builder       as Builder
 import qualified Flowbox.Lunac.Conf          as Conf
 import           Flowbox.Lunac.Conf            (Conf)
 import           Flowbox.System.Log.Logger     
+import qualified Flowbox.System.UniPath      as UniPath
 
 
 
@@ -70,7 +72,8 @@ run conf = case conf of
             then logger setLevel DEBUG
             else return ()
 
-        print $ Conf.inputs conf
+        let inputs = map UniPath.fromUnixString $ Conf.inputs conf
+        mapM_ Builder.buildFile inputs
         -- TODO [PM] : This code does not compile
 
         --case noColor conf of

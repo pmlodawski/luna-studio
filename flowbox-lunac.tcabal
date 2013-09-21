@@ -43,5 +43,8 @@ Executable lunac
                   MultiParamTypeClasses
                   NoImplicitPrelude
   Build-Depends:  base,
+                  flowbox-luna,
                   flowbox-utils,
-                  optparse-applicative
+                  mtl,
+                  optparse-applicative,
+                  timeit
