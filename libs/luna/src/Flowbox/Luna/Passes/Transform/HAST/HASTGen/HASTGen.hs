@@ -8,6 +8,8 @@
 
 module Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen where
 
+import qualified Flowbox.Prelude                                     as Prelude
+import           Flowbox.Prelude                                     hiding (error, id)
 import qualified Flowbox.Luna.Data.AST.Expr                          as LExpr
 import qualified Flowbox.Luna.Data.AST.Type                          as LType
 import qualified Flowbox.Luna.Data.AST.Pat                           as LPat
@@ -16,33 +18,14 @@ import qualified Flowbox.Luna.Data.AST.Module                        as LModule
 import qualified Flowbox.Luna.Data.HAST.Expr                         as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit                          as HLit
 import qualified Flowbox.Luna.Data.HAST.Module                       as HModule
-import qualified Flowbox.Luna.Data.HAST.DataType                     as DataType
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState as GenState
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState   (GenState)
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
 import           Flowbox.Luna.Passes.Pass                              (PassMonad)
+import           Flowbox.System.Log.Logger                             
 
 import           Control.Monad.State                                   
 import           Control.Applicative                                   
-
-import           Debug.Trace                                           
-
-import           Control.Monad.State                                   
-import           Control.Monad.Writer                                  
-import           Control.Monad.RWS                                     
-import           Control.Monad.Trans.Maybe                             
-import           Control.Monad.Trans.Either                            
-import           Data.Maybe                                            (fromJust)
-
-import qualified Flowbox.System.Log.Logger                           as Logger
-import           Flowbox.System.Log.Logger                             
-import qualified Flowbox.System.Log.LogEntry                         as LogEntry
-
-import qualified Flowbox.Prelude                                     as Prelude
-import           Flowbox.Prelude                                     hiding (error, id)
-
-logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.HSGen.HSGen"
 
 type GenMonad m = PassMonad GenState m
 
@@ -51,29 +34,34 @@ type LExpr   = LExpr.Expr
 type LType   = LType.Type
 type LModule = LModule.Module
 
+
+logger :: Logger
+logger = getLogger "Flowbox.Luna.Passes.HSGen.HSGen"
+
+
 run :: PassMonad s m => LModule -> Pass.Result m HExpr
 run = (Pass.run_ GenState.empty) . genModule
 
 
 genModule :: GenMonad m => LModule -> Pass.Result m HExpr
-genModule (LModule.Module id cls imports classes fields methods modules) = do 
+genModule (LModule.Module _ cls imports classes _ methods _) = do 
     let (LType.Module _ path) = cls
     GenState.setModule $ HModule.mk path
-    mapM (genExpr >=> GenState.addDataType) classes
-    mapM (genExpr >=> GenState.addImport)   imports
-    mapM (genExpr >=> GenState.addMethod)   methods
+    mapM_ (genExpr >=> GenState.addDataType) classes
+    mapM_ (genExpr >=> GenState.addImport)   imports
+    mapM_ (genExpr >=> GenState.addMethod)   methods
     GenState.getModule
 
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
-    LExpr.Var      id name                       -> pure $ get0 (HExpr.Var name)
-    LExpr.Cons     id name                       -> pure $ get0 (HExpr.Var name)
-    LExpr.Function id name pats output body      ->     HExpr.Function name 
+    LExpr.Var      _ name                       -> pure $ get0 (HExpr.Var name)
+    LExpr.Cons     _ name                       -> pure $ get0 (HExpr.Var name)
+    LExpr.Function _ name pats output body      ->     HExpr.Function name 
                                                     <$> mapM genPat pats 
                                                     <*> (HExpr.DoBlock <$> genFuncBody body output)
                                                        
-    LExpr.Import id path target rename           -> do
+    LExpr.Import _ path target rename           -> do
                                                     let (LType.Cons _ segments) = path
                                                     tname <- case target of
                                                         LExpr.Cons     _ tname -> pure tname
@@ -86,37 +74,39 @@ genExpr ast = case ast of
 
                                                     return $ HExpr.Import False (segments ++ [tname]) Nothing where
                                                      
-    LExpr.Class id cls classes fields methods    -> do 
+    LExpr.Class _ cls _ fields _                -> do 
                                                     cons   <- HExpr.Con name <$> mapM genExpr fields
                                                     return  $ HExpr.DataType name params [cons] 
                                                       
                                                     where name   =  LType.name   cls
                                                           params =  LType.params cls
                                                     
-    LExpr.Infix id name src dst                  -> HExpr.Infix name <$> genExpr src <*> genExpr dst
-    LExpr.Assignment id pat dst                  -> HExpr.Assignment <$> genPat pat <*> genExpr dst
-    LExpr.Lit        id value                    -> genLit value
-    LExpr.Tuple      id items                    -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
-    LExpr.Field      id name cls                 -> genTyped HExpr.Typed cls <*> pure (HExpr.Var name)
-    LExpr.App        id src args                 -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genExpr args)
-    LExpr.Accessor   id src dst                  -> get0 <$> (HExpr.AppE <$> genExpr dst <*> genExpr src)
+    LExpr.Infix _ name src dst                  -> HExpr.Infix name <$> genExpr src <*> genExpr dst
+    LExpr.Assignment _ pat dst                  -> HExpr.Assignment <$> genPat pat <*> genExpr dst
+    LExpr.Lit        _ value                    -> genLit value
+    LExpr.Tuple      _ items                    -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
+    LExpr.Field      _ name cls                 -> genTyped HExpr.Typed cls <*> pure (HExpr.Var name)
+    LExpr.App        _ src args                 -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genExpr args)
+    LExpr.Accessor   _ src dst                  -> get0 <$> (HExpr.AppE <$> genExpr dst <*> genExpr src)
     _                                            -> fail $ show ast
     where
         getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
-        get0   = getN 0
+        get0   = getN (0::Int)
 
 genFuncBody :: GenMonad m => [LExpr] -> LType -> Pass.Result m [HExpr]
 genFuncBody exprs output = case exprs of
+    []   -> pure []
     x:[] -> liftM (:[]) $ genTyped HExpr.Typed output <*> case x of
-        LExpr.Assignment _ _ dst -> genExpr dst 
-        _                        -> genExpr x 
+            LExpr.Assignment _ _ dst -> genExpr dst 
+            _                        -> genExpr x 
     x:xs -> (:) <$> genExpr x <*> genFuncBody xs output
 
 
 genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr
-genPat pat = case pat of
-    LPat.Var     id name     -> return $ HExpr.Var name
-    LPat.Typed   id pat cls  -> genTyped HExpr.TypedP cls <*> genPat pat
+genPat p = case p of
+    LPat.Var     _ name     -> return $ HExpr.Var name
+    LPat.Typed   _ pat cls  -> genTyped HExpr.TypedP cls <*> genPat pat
+    _                       -> Pass.fail $ "Pattern not supported yet: " ++ show p
                                    
 
 genTyped :: GenMonad m => (HExpr -> HExpr -> HExpr) -> LType -> Pass.Result m (HExpr -> HExpr)
@@ -126,17 +116,18 @@ genTyped cls t = case t of
 
 genType :: GenMonad m => LType -> Pass.Result m HExpr
 genType t = case t of
-    LType.Var    id name     -> return $ HExpr.Var (name)
-    LType.Cons   id segments -> return $ HExpr.ConE segments
-    LType.Tuple  id items    -> HExpr.Tuple <$> mapM genType items
-    LType.App    id src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
+    LType.Var     _ name     -> return $ HExpr.Var (name)
+    LType.Cons    _ segments -> return $ HExpr.ConE segments
+    LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType items
+    LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
     LType.Unknown _          -> logger emergency "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"
     _                        -> fail $ show t
     --HExpr.AppT <$> genType src <*> genType (args !! 0)
 
 genLit :: GenMonad m => LLit.Lit -> Pass.Result m HExpr
 genLit lit = case lit of
-    LLit.Integer id str      -> mkLit "Int" (HLit.Integer str)
+    LLit.Integer _ str      -> mkLit "Int" (HLit.Integer str)
+    _                       -> Pass.fail $ "Literal not supported yet: " ++ show lit
     where mkLit cons hast = return . mkPure $ HExpr.Typed (HExpr.ConT cons) (HExpr.Lit hast)
           mkPure = HExpr.AppT (HExpr.ConT "Pure")
 

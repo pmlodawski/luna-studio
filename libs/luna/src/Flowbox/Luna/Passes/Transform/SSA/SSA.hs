@@ -57,5 +57,5 @@ ssaExpr vs ast = case ast of
 
 ssaPat :: SSAMonad m => Pat -> Pass.Result m Pat
 ssaPat pat = case pat of
-    Pat.Var  id name  -> return $ Pat.Var id (mkVar id)
-    _                 -> Pat.traverseM ssaPat pure pure pat
+    Pat.Var  id _  -> return $ Pat.Var id (mkVar id)
+    _              -> Pat.traverseM ssaPat pure pure pat
