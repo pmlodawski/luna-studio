@@ -5,19 +5,20 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, DeriveGeneric #-}
 
 import           Prelude                   hiding (error)
 import           Flowbox.System.Log.Logger as Logger
 import qualified Flowbox.Data.Version      as Version
+import           GHC.Generics   
+import Flowbox.Generics.Deriving.FShow
 
+data Test = Test { x :: Int
+                 , y :: Int
+                 } deriving(Show, Generic)
 
---import           Control.Monad.State          
---import           Control.Monad.Writer         
---import           Control.Monad.RWS            
---import           Control.Monad.Trans.Either   
-
---logger :: (String -> t) -> t
+instance FShow Test
+       
 logger :: Logger
 logger   = getLogger "MyApp.BuggyComponent"
 
@@ -36,9 +37,14 @@ test_logger = runLogger $ do
     logger emergency  "emergency"
 
 
+f :: String -> String
+f x = x
 
 main :: IO ()
 main = do
+    let t = Test 5 5
+    putStrLn $ fshow f t
+
     logger setLevel DEBUG
     test_logger
     let
