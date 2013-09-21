@@ -16,7 +16,6 @@ import qualified Data.Map                        as Map
 import           Data.Map                          (Map)
 
 import qualified Data.IntMap                     as IntMap
-import           Data.IntMap                       (IntMap)
 
 import           Flowbox.System.Log.Logger         
 

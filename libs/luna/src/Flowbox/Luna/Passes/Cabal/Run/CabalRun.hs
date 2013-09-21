@@ -9,7 +9,6 @@ module Flowbox.Luna.Passes.Cabal.Run.CabalRun where
 
 import           Control.Monad.RWS           
 import qualified Control.Exception         as Exception
-import qualified Data.List                 as List
 import qualified System.Directory          as Directory
 
 import           Flowbox.Prelude           hiding (error)

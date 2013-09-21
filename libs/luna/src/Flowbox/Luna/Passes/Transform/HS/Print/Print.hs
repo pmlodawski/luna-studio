@@ -29,7 +29,7 @@ run s = return $ hsprint 0 s
 
 
 hsprint :: Int -> String -> String
-hsprint i []     = []
+hsprint _ []     = []
 hsprint i (x:xs) = case x of
 	'{' -> x : newline (i+1) ++     hsprint (i+1) xs
 	';' -> x : newline (i)   ++     hsprint i xs

@@ -13,7 +13,6 @@ import qualified Flowbox.Luna.Data.HAST.Expr     as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit      as HLit
 import qualified Flowbox.Luna.Data.HAST.Module   as Module
 import qualified Flowbox.Luna.Data.HAST.DataType as DataType
-import qualified Flowbox.Luna.Data.HAST.Cons     as Cons
 import qualified Flowbox.Luna.Passes.Pass        as Pass
 import           Flowbox.Luna.Passes.Pass          (PassMonad)
 import           Data.String.Utils                 (join)

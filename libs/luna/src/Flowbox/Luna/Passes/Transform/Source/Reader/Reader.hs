@@ -10,8 +10,6 @@ module Flowbox.Luna.Passes.Transform.Source.Reader.Reader where
 
 import           Control.Applicative        
 import           Control.Monad.RWS          
-import qualified Data.List                as List
-import qualified Data.List.Split          as Split
 import qualified System.IO                as IO
 
 import           Flowbox.Prelude          hiding (error, id)

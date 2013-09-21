@@ -11,8 +11,6 @@ module Flowbox.Luna.Passes.Transform.SSA.SSA where
 import qualified Flowbox.Luna.Data.AST.Module    as Module
 import           Flowbox.Luna.Data.AST.Module      (Module)
 import qualified Flowbox.Luna.Data.AST.Expr      as Expr
-import qualified Flowbox.Luna.Data.AST.Type      as Type
-import           Flowbox.Luna.Data.AST.Type        (Type)
 import qualified Flowbox.Luna.Data.AST.Pat       as Pat
 import           Flowbox.Luna.Data.AST.Pat         (Pat)
 import qualified Flowbox.Luna.Data.AliasAnalysis as AA
@@ -26,8 +24,7 @@ import           Control.Applicative
 
 import           Flowbox.System.Log.Logger         
 
-import           Flowbox.Prelude                 hiding (error, id)
-
+import           Flowbox.Prelude                 hiding (error, id, mod)
 
 
 logger :: Logger
@@ -37,6 +34,7 @@ logger = getLogger "Flowbox.Luna.Passes.SSA.SSA"
 type SSAMonad m = PassMonad Pass.NoState m
 
 
+mkVar :: Int -> String
 mkVar id = "v_" ++ show id
 
 

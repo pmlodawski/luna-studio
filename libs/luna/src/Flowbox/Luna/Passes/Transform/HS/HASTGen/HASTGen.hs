@@ -17,7 +17,6 @@ import qualified Flowbox.Luna.Data.HAST.Expr                       as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit                        as HLit
 import qualified Flowbox.Luna.Data.HAST.Module                     as HModule
 import qualified Flowbox.Luna.Data.HAST.DataType                   as DataType
-import qualified Flowbox.Luna.Data.HAST.Cons                       as Cons
 import qualified Flowbox.Luna.Passes.Transform.HS.HASTGen.GenState as GenState
 import           Flowbox.Luna.Passes.Transform.HS.HASTGen.GenState   (GenState)
 import qualified Flowbox.Luna.Passes.Pass                          as Pass
