@@ -177,8 +177,11 @@ type2Field t = do
 
 import2ASTimport :: Graph2ASTMonad m => Import -> Pass.Result m ASTExpr
 import2ASTimport (Import (Path path) name) = do 
-    id <- IdState.newID
-    return $ ASTExpr.Import id path name Nothing
+    id1 <- IdState.newID
+    id2 <- IdState.newID
+    id3 <- IdState.newID
+
+    return $ ASTExpr.Import id1 (ASTType.Cons id2 path) (ASTExpr.Cons id3 name) Nothing
 
 
 graph2AST :: Graph2ASTMonad m => Graph -> [String] -> Pass.Result m [ASTExpr]
