@@ -23,11 +23,10 @@ import           Flowbox.Luna.Network.Def.DefManager                         (De
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
-import qualified Flowbox.Luna.Passes.General.Print.Print                   as HSPrint
 import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
-import qualified Flowbox.Luna.Passes.Transform.Source.Reader.Reader        as SourceReader
+import qualified Flowbox.Luna.Passes.Source.FileReader.FileReader          as FileReader
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
 import           Flowbox.Luna.Passes.Pass                                    (PassMonad)
@@ -60,44 +59,33 @@ buildLibrary library = do
 buildGraph :: DefManager -> (Definition.ID, Definition) -> IO ()
 buildGraph defManager def = timeLuna $ Luna.run $ do 
     ast <- GraphParser.run defManager def
-    logger info  "Running AST"
-    logger debug  $ PP.ppShow ast
-
     buildAST ast
 
 
 buildFile :: UniPath -> IO ()
 buildFile path = timeLuna $ Luna.run $ do 
-    source <- SourceReader.run (UniPath.fromUnixString ".") path
-    
-    logger info "Running TxtParser"
-    ast <- TxtParser.run source
-    logger debug $ PP.ppqShow ast
-
+    source <- FileReader.run (UniPath.fromUnixString ".") path
+    ast    <- TxtParser.run source
     buildAST ast
 
 
 buildAST :: (MonadIO m, PassMonad s m) => ASTModule.Module -> Pass.Result m ()
 buildAST ast = do
-    logger info "Running VarAlias"
     va <- VarAlias.run     ast
-    logger debug $ PP.ppShow va
+    --logger debug $ PP.ppShow va
 
-    logger info "Running SSA" 
     ssa <- SSA.run va ast
-    logger debug $ PP.ppqShow ssa
+    --logger debug $ PP.ppqShow ssa
 
-    logger info "Running HASTGen" 
     hast <- HASTGen.run  ssa
-    logger debug $ PP.ppShow hast
+    --logger debug $ PP.ppShow hast
 
-    logger info "Running HSC" 
     hsc <- HSC.run hast
-    logger debug $ PP.ppShow hsc
+    --logger debug $ PP.ppShow hsc
 
-    logger info  "Running PHSC" 
-    phsc <- HSPrint.run hsc
-    logger debug $ phsc
+    --logger info  "Running PHSC" 
+    --phsc <- HSPrint.run hsc
+    --logger debug $ phsc
 
     return ()
 
