@@ -20,17 +20,20 @@ import qualified Flowbox.Luna.Network.Def.Definition                       as De
 import           Flowbox.Luna.Network.Def.Definition                         (Definition)
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
+import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
+import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.HS.HASTGen.HASTGen          as HASTGen
 import qualified Flowbox.Luna.Passes.Transform.HS.CodeGen.CodeGen          as CodeGen
 import qualified Flowbox.Luna.Passes.Transform.HS.Print.Print              as HSPrint
-import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
+import qualified Flowbox.Luna.Passes.Transform.Source.Reader.Reader        as SourceReader
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
 import           Flowbox.Luna.Passes.Pass                                    (PassMonad)
 import           Flowbox.System.Log.Logger                                   
+import qualified Flowbox.System.UniPath                                    as UniPath
+import           Flowbox.System.UniPath                                      (UniPath)
 import qualified Flowbox.Text.Show.Pretty                                  as PP
 
 
@@ -38,47 +41,63 @@ logger :: Logger
 logger = getLogger "Flowbox.Lunac.Builder"
 
 
-buildLibrary :: Library -> IO ()
-buildLibrary library = do
-    let defManger = Library.defs library
-        rootDefID = Library.rootDefID
-        rootDef = fromJust $ DefManager.lab defManger rootDefID
-    out <- timeIt $ buildGraph defManger (rootDefID, rootDef)
+timeLuna :: IO (Either String t) -> IO ()
+timeLuna f = do 
+    out <- timeIt f
     case out of
         Right _ -> return ()
         Left  e -> fail e
 
 
-buildGraph :: DefManager -> (Definition.ID, Definition) -> IO (Either String ())
-buildGraph defManager def = Luna.run $ do 
+buildLibrary :: Library -> IO ()
+buildLibrary library = do
+    let defManger = Library.defs library
+        rootDefID = Library.rootDefID
+        rootDef = fromJust $ DefManager.lab defManger rootDefID
+    buildGraph defManger (rootDefID, rootDef)
+    
+
+buildGraph :: DefManager -> (Definition.ID, Definition) -> IO ()
+buildGraph defManager def = timeLuna $ Luna.run $ do 
     ast <- GraphParser.run defManager def
-    putStrLn "\n-------- AST --------"
-    putStrLn $ PP.ppShow ast
+    logger info  "Running AST"
+    logger debug  $ PP.ppShow ast
+
+    buildAST ast
+
+
+buildFile :: UniPath -> IO ()
+buildFile path = timeLuna $ Luna.run $ do 
+    source <- SourceReader.run (UniPath.fromUnixString ".") path
+    
+    logger info  "Running TxtParser"
+    ast <- TxtParser.run source
+    logger debug  $ PP.ppqShow ast
 
     buildAST ast
 
 
 buildAST :: (MonadIO m, PassMonad s m) => ASTExpr.Expr -> Pass.Result m ()
 buildAST (ast :: ASTExpr.Expr) = do
-    putStrLn "\n-------- VarAlias --------"
+    logger info  "Running VarAlias"
     va <- VarAlias.run     ast
-    putStrLn $ PP.ppShow va
+    logger debug  $ PP.ppShow va
 
-    putStrLn "\n-------- SSA --------" 
+    logger info  "Running SSA" 
     ssa <- SSA.run va ast
-    putStrLn $ PP.ppqShow ssa
+    logger debug  $ PP.ppqShow ssa
 
-    putStrLn "\n-------- HASTGen --------" 
+    logger info  "Running HASTGen" 
     hast <- HASTGen.run  ssa
-    putStrLn $ PP.ppShow hast
+    logger debug  $ PP.ppShow hast
 
-    --putStrLn "\n-------- HS CodeGen --------" 
+    logger info  "Running HS CodeGen" 
     hsc <- CodeGen.run  hast
-    --putStrLn $ hsc
+    logger debug  $ hsc
 
-    putStrLn "\n-------- PHSC --------" 
+    logger info  "Running PHSC" 
     phsc <- HSPrint.run hsc
-    putStrLn $ phsc
+    logger debug  $ phsc
 
 
     return ()
