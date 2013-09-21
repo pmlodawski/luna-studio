@@ -30,6 +30,10 @@ import qualified Flowbox.Luna.Passes.General.Print.Print               as HSPrin
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Build               as CabalBuild
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen                 as CabalGen
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Run                 as CabalRun
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store               as CabalStore
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
 import qualified Flowbox.Luna.Data.Source                              as Source
 import           Flowbox.Luna.Data.Source                                (Source)
@@ -39,6 +43,24 @@ import qualified Flowbox.System.Log.LogEntry                           as LogEnt
 import qualified Flowbox.System.UniPath                                as UniPath
 import qualified Flowbox.Text.Show.Pretty                              as PP
 
+
+import qualified Flowbox.Luna.Data.Cabal.Config as Config
+import qualified Flowbox.Luna.Data.Cabal.Section as Section
+
+
+genProject = let
+    exec = Section.empty Section.Executable
+    conf = Config.addSection exec
+         $ Config.empty
+
+    in conf
+
+main_inner :: IO (Either String ())
+main_inner = Luna.run $ do
+    let conf = genProject
+    putStrLn $ Config.genCode conf
+
+    return ()
 
 
 logger :: Logger
@@ -56,30 +78,6 @@ example = Source.Source ["Main"]
                   ]
 
 
---from Std.Math import Vector
-
---import Std.Math.Vector
---import Std.Math
-
-
-
-
---import Std.Math: Vector
---                 Scalar as S
-
---import Std.Math.Vector: f
-
---v = Std.Math.Vector
-
---example :: Source
---example = Source.Source "Workspace"
---        $ unlines [ ""
---                  , "def f (x::Std.Int) y:"
---                  , "    a :: Int"
---                  , "    a = Std.Math.Vector x x x"
---                  ]
-
-
 main :: IO ()
 main = do
     logger setLevel DEBUG
@@ -90,23 +88,25 @@ main = do
         Left  e -> putStrLn e
 
 
-main_inner :: IO (Either String ())
-main_inner = Luna.run $ do
+--main_inner :: IO (Either String ())
+--main_inner = Luna.run $ do
+--    let conf = Config.empty
+--    print conf
 
-    --cabal <- CabalGen.run "TestProject2"
+    --conf <- CabalGen.run "TestProject2"
 
-    --CabalStore.run cabal $ UniPath.fromUnixString "samples/TestProject2/build/hs/TestProject2.cabal"
+    --CabalStore.run conf $ UniPath.fromUnixString "samples/TestProject2/build/hs/TestProject2.cabal"
     --CabalBuild.run $ UniPath.fromUnixString "samples/TestProject2"
     --CabalRun.run (UniPath.fromUnixString "samples/TestProject2") "TestProject2" []
     --source <- SourceReader.run (UniPath.fromUnixString "samples/TestProject2/src")
     --                           (UniPath.fromUnixString "samples/TestProject2/src/Workspace/Main.luna")
                                
-    let source = example
-
     --let source = example
-    putStrLn "\n-------- TxtParser --------"
-    ast <- TxtParser.run source
-    putStrLn $ PP.ppqShow ast
+
+    ----let source = example
+    --putStrLn "\n-------- TxtParser --------"
+    --ast <- TxtParser.run source
+    --putStrLn $ PP.ppqShow ast
 
     --putStrLn "\n-------- VarAlias --------"
     --va <- VarAlias.run     ast
@@ -128,7 +128,7 @@ main_inner = Luna.run $ do
     --phsc <- HSPrint.run hsc
     --putStrLn $ phsc
 
-    return ()
+    --return ()
 
 
 

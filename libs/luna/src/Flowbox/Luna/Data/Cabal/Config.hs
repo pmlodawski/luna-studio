@@ -10,29 +10,37 @@ module Flowbox.Luna.Data.Cabal.Config where
 import qualified Data.List                       as List
 
 import           Flowbox.Prelude                   
-import qualified Flowbox.Luna.Data.Cabal.Module  as Module
-import           Flowbox.Luna.Data.Cabal.Module    (Module)
 import qualified Flowbox.Luna.Data.Cabal.Section as Section
 import           Flowbox.Luna.Data.Cabal.Section   (Section(Section))
+import           Data.String.Utils                 (join)
 
 
-
-data Config = Config { sections     :: [Section]
-                               , cabalModules :: [Module]
-                               }
-
-
-make :: String -> String -> String -> String -> [Module] -> Config
-make name version cabalVersion buildType modules = 
-    Config [ Section "Name" [name]
-                , Section "Version" [version]
-                , Section "Cabal-Version" [cabalVersion]
-                , Section "Build-Type" [buildType]
-                ] modules
+data Config = Config { name         :: String,
+                       version      :: String,
+                       cabalVersion :: String,
+                       buildType    :: String,
+                       sections     :: [Section]
+                     } deriving (Show)
 
 
-generate :: Config -> String
-generate config = cabalHeader ++ "\n\n\n" ++ cabalBody where
-    cabalHeader = List.concat $ map (Section.generate 0) $ sections config
-    cabalBody   = List.concat $ List.intersperse "\n" $ map Module.generate $ cabalModules config
+empty :: Config
+empty = Config "" "1.0" ">= 1.8" "Simple" []
 
+defaultIndent :: String
+defaultIndent = replicate 18 ' '
+
+
+genField :: String -> String -> String
+genField name' value = name' ++ ":" ++ replicate (18 - length name') ' ' ++ value ++ "\n"
+
+
+genCode :: Config -> String
+genCode conf =  genField "Name"          (name conf)
+             ++ genField "Version"       (version conf)
+             ++ genField "Cabal-Version" (cabalVersion conf)
+             ++ genField "Build-Type"    (buildType conf)
+             ++ "\n" ++  join "\n\n" (map Section.genCode $ sections conf)
+   
+
+addSection :: Section -> Config -> Config
+addSection s conf = conf { sections = s:sections conf }

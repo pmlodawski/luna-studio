@@ -7,31 +7,31 @@
 
 module Flowbox.Luna.Passes.CodeGen.Cabal.Build where
 
-import           Control.Monad.RWS           
-import qualified Control.Exception         as Exception
-import qualified System.Directory          as Directory
+--import           Control.Monad.RWS           
+--import qualified Control.Exception         as Exception
+--import qualified System.Directory          as Directory
 
-import           Flowbox.Prelude           hiding (error)
-import qualified Flowbox.System.Process    as Process
-import qualified Flowbox.System.UniPath    as UniPath
-import           Flowbox.System.UniPath      (UniPath)
-import           Flowbox.System.Log.Logger   
-
-
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Luna.Passes.Cabal.Build.BuildCabal"
+--import           Flowbox.Prelude           hiding (error)
+--import qualified Flowbox.System.Process    as Process
+--import qualified Flowbox.System.UniPath    as UniPath
+--import           Flowbox.System.UniPath      (UniPath)
+--import           Flowbox.System.Log.Logger   
 
 
-run :: MonadIO m => UniPath -> m ()
-run = liftIO . buildCabal
+--loggerIO :: LoggerIO
+--loggerIO = getLoggerIO "Flowbox.Luna.Passes.Cabal.Build.BuildCabal"
 
 
-buildCabal :: UniPath -> IO ()
-buildCabal projectPath = do 
-    workingDir <- Directory.getCurrentDirectory
-    let buildPath = UniPath.append "build/hs" projectPath
-    Directory.setCurrentDirectory $ UniPath.toUnixString buildPath
+--run :: MonadIO m => UniPath -> m ()
+--run = liftIO . buildCabal
 
-    Exception.finally (do Process.runCommand "cabal" ["configure"] loggerIO
-                          Process.runCommand "cabal" ["build"] loggerIO)
-                      (Directory.setCurrentDirectory workingDir)
+
+--buildCabal :: UniPath -> IO ()
+--buildCabal projectPath = do 
+--    workingDir <- Directory.getCurrentDirectory
+--    let buildPath = UniPath.append "build/hs" projectPath
+--    Directory.setCurrentDirectory $ UniPath.toUnixString buildPath
+
+--    Exception.finally (do Process.runCommand "cabal" ["configure"] loggerIO
+--                          Process.runCommand "cabal" ["build"] loggerIO)
+--                      (Directory.setCurrentDirectory workingDir)
