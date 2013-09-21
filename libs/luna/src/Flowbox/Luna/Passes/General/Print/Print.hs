@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, ConstraintKinds #-}
 
-module Flowbox.Luna.Passes.Transform.HS.Print.Print where
+module Flowbox.Luna.Passes.General.Print.Print where
 
 import qualified Flowbox.Luna.Passes.Pass  as Pass
 import           Flowbox.Luna.Passes.Pass    (PassMonad)

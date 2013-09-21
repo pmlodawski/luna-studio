@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, TupleSections #-}
 
-module Flowbox.Luna.Passes.Transform.HS.CodeGen.CodeGen where
+module Flowbox.Luna.Passes.CodeGen.HSC.HSC where
 
 import           Flowbox.Prelude                   
 import qualified Flowbox.Luna.Data.HAST.Expr     as HExpr
@@ -31,7 +31,7 @@ import qualified Flowbox.System.Log.LogEntry     as LogEntry
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.HSGen.HSC"
+logger = getLogger "Flowbox.Luna.Passes.HSC.HSC"
 
 type HSCMonad m = PassMonad Pass.NoState m
 

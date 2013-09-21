@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Passes.Transform.HS.HASTGen.GenState where
+module Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState where
 
 import           Flowbox.Prelude               hiding (mod)
 import           Control.Monad.State             

@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.HS.HASTGen.Path (
+module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Path (
     module Flowbox.Luna.Network.Path.Path,
     toModulePath,
     toModuleName,

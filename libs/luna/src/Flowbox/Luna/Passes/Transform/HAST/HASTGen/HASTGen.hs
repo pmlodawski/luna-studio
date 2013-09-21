@@ -6,40 +6,40 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, TupleSections #-}
 
-module Flowbox.Luna.Passes.Transform.HS.HASTGen.HASTGen where
+module Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen where
 
-import qualified Flowbox.Luna.Data.AST.Expr                        as LExpr
-import qualified Flowbox.Luna.Data.AST.Type                        as LType
-import qualified Flowbox.Luna.Data.AST.Pat                         as LPat
-import qualified Flowbox.Luna.Data.AST.Lit                         as LLit
-import qualified Flowbox.Luna.Data.AST.Module                      as LModule
-import qualified Flowbox.Luna.Data.HAST.Expr                       as HExpr
-import qualified Flowbox.Luna.Data.HAST.Lit                        as HLit
-import qualified Flowbox.Luna.Data.HAST.Module                     as HModule
-import qualified Flowbox.Luna.Data.HAST.DataType                   as DataType
-import qualified Flowbox.Luna.Passes.Transform.HS.HASTGen.GenState as GenState
-import           Flowbox.Luna.Passes.Transform.HS.HASTGen.GenState   (GenState)
-import qualified Flowbox.Luna.Passes.Pass                          as Pass
-import           Flowbox.Luna.Passes.Pass                            (PassMonad)
+import qualified Flowbox.Luna.Data.AST.Expr                          as LExpr
+import qualified Flowbox.Luna.Data.AST.Type                          as LType
+import qualified Flowbox.Luna.Data.AST.Pat                           as LPat
+import qualified Flowbox.Luna.Data.AST.Lit                           as LLit
+import qualified Flowbox.Luna.Data.AST.Module                        as LModule
+import qualified Flowbox.Luna.Data.HAST.Expr                         as HExpr
+import qualified Flowbox.Luna.Data.HAST.Lit                          as HLit
+import qualified Flowbox.Luna.Data.HAST.Module                       as HModule
+import qualified Flowbox.Luna.Data.HAST.DataType                     as DataType
+import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState as GenState
+import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState   (GenState)
+import qualified Flowbox.Luna.Passes.Pass                            as Pass
+import           Flowbox.Luna.Passes.Pass                              (PassMonad)
 
-import           Control.Monad.State                                 
-import           Control.Applicative                                 
+import           Control.Monad.State                                   
+import           Control.Applicative                                   
 
-import           Debug.Trace                                         
+import           Debug.Trace                                           
 
-import           Control.Monad.State                                 
-import           Control.Monad.Writer                                
-import           Control.Monad.RWS                                   
-import           Control.Monad.Trans.Maybe                           
-import           Control.Monad.Trans.Either                          
-import           Data.Maybe                                          (fromJust)
+import           Control.Monad.State                                   
+import           Control.Monad.Writer                                  
+import           Control.Monad.RWS                                     
+import           Control.Monad.Trans.Maybe                             
+import           Control.Monad.Trans.Either                            
+import           Data.Maybe                                            (fromJust)
 
-import qualified Flowbox.System.Log.Logger                         as Logger
-import           Flowbox.System.Log.Logger                           
-import qualified Flowbox.System.Log.LogEntry                       as LogEntry
+import qualified Flowbox.System.Log.Logger                           as Logger
+import           Flowbox.System.Log.Logger                             
+import qualified Flowbox.System.Log.LogEntry                         as LogEntry
 
-import qualified Flowbox.Prelude                                   as Prelude
-import           Flowbox.Prelude                                   hiding (error, id)
+import qualified Flowbox.Prelude                                     as Prelude
+import           Flowbox.Prelude                                     hiding (error, id)
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.HSGen.HSGen"

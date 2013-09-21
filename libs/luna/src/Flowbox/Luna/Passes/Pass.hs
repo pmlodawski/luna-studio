@@ -11,7 +11,7 @@ module Flowbox.Luna.Passes.Pass where
 import           Flowbox.Prelude              
 import           Control.Monad.State          
 
-import           Control.Monad.RWS            hiding(state)
+import           Control.Monad.RWS          hiding (state)
 import           Control.Monad.Trans.Either   
 
 import           Flowbox.System.Log.Logger    

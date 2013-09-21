@@ -7,11 +7,10 @@
 
 module Flowbox.Luna.Data.HAST.Expr where
 
-import           Flowbox.Prelude                                 
-import           Debug.Trace                                     
-import           Data.String.Utils                               (join)
-import qualified Flowbox.Luna.Passes.Transform.HS.HASTGen.Path as Path
-import qualified Flowbox.Luna.Data.HAST.Lit                    as Lit
+import           Flowbox.Prelude              
+import           Debug.Trace                  
+import           Data.String.Utils            (join)
+import qualified Flowbox.Luna.Data.HAST.Lit as Lit
 
 type Lit = Lit.Lit
 

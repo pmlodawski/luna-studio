@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.HS.HASTGen.Import (
+module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Import (
     Import(..),
     noItems,
     qualified,
@@ -15,9 +15,9 @@ module Flowbox.Luna.Passes.Transform.HS.HASTGen.Import (
     genCode
 )where
 
-import           Flowbox.Prelude                                 
-import qualified Flowbox.Luna.Passes.Transform.HS.HASTGen.Path as Path
-import           Flowbox.Luna.Passes.Transform.HS.HASTGen.Path   (Path(..))
+import           Flowbox.Prelude                                   
+import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.Path as Path
+import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Path   (Path(..))
 
 
 data Import = Regular   {path :: Path, item :: String} 

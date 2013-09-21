@@ -21,16 +21,12 @@ import           Control.Monad.Trans.Either
 import           System.TimeIt                                           
 
 import           Flowbox.Prelude                                         
-import qualified Flowbox.Luna.Passes.Cabal.Build.CabalBuild            as CabalBuild
-import qualified Flowbox.Luna.Passes.Cabal.Run.CabalRun                as CabalRun
-import qualified Flowbox.Luna.Passes.Cabal.Gen.CabalGen                as CabalGen
-import qualified Flowbox.Luna.Passes.Cabal.Store.CabalStore            as CabalStore
 import qualified Flowbox.Luna.Passes.Transform.Source.Reader.Reader    as SourceReader
 import qualified Flowbox.Luna.Data.HAST.Expr                           as Expr
 import qualified Flowbox.Luna.Data.HAST.Module                         as Module
-import qualified Flowbox.Luna.Passes.Transform.HS.HASTGen.HASTGen      as HASTGen
-import qualified Flowbox.Luna.Passes.Transform.HS.CodeGen.CodeGen      as CodeGen
-import qualified Flowbox.Luna.Passes.Transform.HS.Print.Print          as HSPrint
+import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
+import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
+import qualified Flowbox.Luna.Passes.General.Print.Print               as HSPrint
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
@@ -124,8 +120,8 @@ main_inner = Luna.run $ do
     --hast <- HASTGen.run  ssa
     --putStrLn $ PP.ppShow hast
 
-    ----putStrLn "\n-------- HS CodeGen --------" 
-    --hsc <- CodeGen.run  hast
+    ----putStrLn "\n-------- HSC --------" 
+    --hsc <- HSC.run  hast
     ----putStrLn $ hsc
 
     --putStrLn "\n-------- PHSC --------" 
