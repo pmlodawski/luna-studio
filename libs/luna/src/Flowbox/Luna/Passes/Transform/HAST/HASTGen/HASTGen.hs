@@ -106,7 +106,6 @@ genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr
 genPat p = case p of
     LPat.Var     _ name     -> return $ HExpr.Var name
     LPat.Typed   _ pat cls  -> genTyped HExpr.TypedP cls <*> genPat pat
-    _                       -> Pass.fail $ "Pattern not supported yet: " ++ show p
                                    
 
 genTyped :: GenMonad m => (HExpr -> HExpr -> HExpr) -> LType -> Pass.Result m (HExpr -> HExpr)
@@ -127,7 +126,6 @@ genType t = case t of
 genLit :: GenMonad m => LLit.Lit -> Pass.Result m HExpr
 genLit lit = case lit of
     LLit.Integer _ str      -> mkLit "Int" (HLit.Integer str)
-    _                       -> Pass.fail $ "Literal not supported yet: " ++ show lit
     where mkLit cons hast = return . mkPure $ HExpr.Typed (HExpr.ConT cons) (HExpr.Lit hast)
           mkPure = HExpr.AppT (HExpr.ConT "Pure")
 

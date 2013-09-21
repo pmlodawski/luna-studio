@@ -72,8 +72,6 @@ genExpr e = case e of
     HExpr.ConT     name                   -> name
     HExpr.AppT     src dst                -> genExpr src ++ " (" ++ genExpr dst ++ ")" -- for literals, e.g. Pure (1 :: Int)
     HExpr.AppE     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
-    HExpr.StringLit _                     -> "TODO"
-    HExpr.Undefined                       -> "<UNDEFINED>"
 
 
 genLit :: HLit.Lit -> String
