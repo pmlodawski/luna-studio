@@ -16,6 +16,7 @@ module Flowbox.Batch.Server.Server (
 import           Control.Monad                    (forever, when)
 import qualified Control.Exception              as Exception
 import qualified Network                        as Network
+import qualified Network.Socket                 as Socket
 import qualified System.IO                      as IO
 import qualified System.Environment             as Environment
 
@@ -43,16 +44,22 @@ accepter s = do
     return (TProtocol.BinaryProtocol h, TProtocol.BinaryProtocol h)
 
 
-
 runSingleConnectionServer :: (Transport t, Protocol i, Protocol o)
                   => (Network.Socket -> IO (i t, o t))
                   -> h
                   -> (h -> (i t, o t) -> IO Bool)
                   -> Network.PortID
                   -> IO a
-runSingleConnectionServer accepter_ hand proc_ port_ = do
-    socket <- Network.listenOn port_
-    singleAcceptLoop (accepter_ socket) (proc_ hand)
+runSingleConnectionServer accepter_ hand proc_ port_ = Socket.withSocketsDo $ do
+    let tcp = 6
+        maxConnections = 100
+
+    serverSocket  <- Socket.socket Socket.AF_INET Socket.Stream tcp
+    serverAddress <- Socket.inet_addr "127.0.0.1"
+    --Socket.setSocketOption serverSocket Socket.ReuseAddr 1
+    Socket.bindSocket serverSocket $ Socket.SockAddrInet (Socket.PortNum 30521) serverAddress --Socket.iNADDR_ANY
+    Socket.listen serverSocket maxConnections
+    singleAcceptLoop (accepter_ serverSocket) (proc_ hand)
 
 
 singleAcceptLoop :: IO t -> (t -> IO Bool) -> IO a
