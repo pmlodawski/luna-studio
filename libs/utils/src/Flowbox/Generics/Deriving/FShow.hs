@@ -25,10 +25,10 @@ module Flowbox.Generics.Deriving.FShow (
   ) where
 
 
-import Generics.Deriving.Base
-import Generics.Deriving.Instances ()
+import           Generics.Deriving.Base        
+import           Generics.Deriving.Instances   ()
 
-import           Flowbox.Prelude          
+import           Flowbox.Prelude               
 
 
 type FType = String->String

@@ -10,7 +10,6 @@ module Flowbox.Luna.Data.Cabal.Section where
 import           Flowbox.Prelude                    
 import           Flowbox.Luna.Data.HAST.Extension   (Extension)
 
-import           Debug.Trace                        
 import           Data.String.Utils                  (join)
 
 

@@ -20,6 +20,8 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath      as UniPath
 
 
+rootLogger :: Logger
+rootLogger = getLogger "Flowbox"
 
 logger :: Logger
 logger = getLogger "Flowbox.Lunac"
@@ -38,12 +40,11 @@ version = Version.mk { Version.minor = 1
 parser :: Parser Conf
 parser = Opt.flag' Conf.Version (long "version" <> hidden)
        <|> Conf.Compilation
-           <$> many1  (argument str ( metavar "inputs" ))
-           -- <*> strOption (long "verbose"  <> short 'v' <> value "0" <> help "Verbose level")
-           <*> switch (long "verbose"  <> short 'v'                 <> help "Verbose level"       )
-           <*> switch (long "debug"    <> short 'd' <> hidden                                     )
-           <*> switch (long "no-color"                              <> help "Disable color output")
-           <*> switch (long "dump-ast"              <> hidden                                     )
+           <$> many1  ( argument str ( metavar "inputs" ))
+           -- <*> strOption ( long "verbose"  <> short 'v' <> value "0" <> help "Verbose level" )
+           <*> switch ( long "verbose"  <> short 'v'                 <> help "Verbose level"        )
+           <*> switch ( long "no-color"                              <> help "Disable color output" )
+           <*> switch ( long "dump-ast"              <> hidden                                      )
 
 
 opts :: ParserInfo Conf
@@ -66,11 +67,8 @@ run conf = case conf of
     Conf.Version     {} -> putStrLn show_version
     Conf.Compilation {} -> do
         if Conf.verbose conf
-            then logger setLevel INFO
-            else return ()
-        if Conf.debug conf
-            then logger setLevel DEBUG
-            else return ()
+            then rootLogger setLevel DEBUG
+            else rootLogger setLevel INFO
 
         let inputs = map UniPath.fromUnixString $ Conf.inputs conf
         mapM_ Builder.buildFile inputs

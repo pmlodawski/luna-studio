@@ -7,14 +7,15 @@
 
 module Flowbox.System.UniPath where
 
-import           Control.Applicative hiding (empty)
-import qualified Data.List.Split     as Split
-import qualified Data.List           as List
-import           Data.String.Utils     (join)
-import qualified System.Directory    as Directory
-import qualified System.FilePath     as FilePath
+import           Control.Applicative    hiding (empty)
+import qualified Data.List.Split        as Split
+import qualified Data.List              as List
+import           Data.String.Utils        (join)
+import qualified System.Directory       as Directory
+import qualified System.FilePath        as FilePath
+import           Control.Monad.IO.Class   (MonadIO, liftIO)
 
-import           Flowbox.Prelude       
+import           Flowbox.Prelude          
 
 
 
@@ -42,9 +43,9 @@ fromUnixString spath@(x:xs) = case x of
 toUnixString :: UniPath -> String
 toUnixString path = join "/" $ toList path
 
-expand :: UniPath -> IO UniPath
+expand :: MonadIO m => UniPath -> m UniPath
 expand [] = return empty
-expand (x:xs) = case x of
+expand (x:xs) = liftIO $ case x of
         Var "~" -> do home <- Directory.getHomeDirectory
                       rest <- expand xs
                       return $ (fromUnixString home) ++ rest

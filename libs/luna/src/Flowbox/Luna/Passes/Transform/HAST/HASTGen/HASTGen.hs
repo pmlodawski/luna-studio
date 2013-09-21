@@ -36,17 +36,20 @@ type LModule = LModule.Module
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.HSGen.HSGen"
+logger = getLogger "Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen"
 
 
 run :: PassMonad s m => LModule -> Pass.Result m HExpr
-run = (Pass.run_ GenState.empty) . genModule
+run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) . genModule
 
 
 genModule :: GenMonad m => LModule -> Pass.Result m HExpr
 genModule (LModule.Module _ cls imports classes _ methods _) = do 
     let (LType.Module _ path) = cls
-    GenState.setModule $ HModule.mk path
+        mod = HModule.addImport ["Flowbox", "Gen", "Core"]
+            $ HModule.mk path
+
+    GenState.setModule mod
     mapM_ (genExpr >=> GenState.addDataType) classes
     mapM_ (genExpr >=> GenState.addImport)   imports
     mapM_ (genExpr >=> GenState.addMethod)   methods
@@ -72,7 +75,7 @@ genExpr ast = case ast of
                                                         Just _                 -> logger error ("Named imports are not supported yet.") *> Pass.fail "Named imports are not supported yet."
                                                         _                      -> pure ()
 
-                                                    return $ HExpr.Import False (segments ++ [tname]) Nothing where
+                                                    return $ HExpr.Import False (["Flowbox", "Libs"] ++ segments ++ [tname]) Nothing where
                                                      
     LExpr.Class _ cls _ fields _                -> do 
                                                     cons   <- HExpr.Con name <$> mapM genExpr fields

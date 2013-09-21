@@ -38,13 +38,13 @@ type VAMonad m = PassMonad LocState m
 
 
 run :: PassMonad s m => Module -> Pass.Result m AA
-run = (Pass.run_ LocState.empty) . vaMod
+run = (Pass.run_ (Pass.Info "VarAlias") LocState.empty) . vaMod
 
 
 runNested :: VAMonad m => Pass.Transformer LocState b -> Pass.Result m LocState
 runNested f = do
     s <- get
-    Pass.run'_ s f
+    Pass.run'_ (Pass.Info "VarAlias") s f
 
 
 vaMod :: VAMonad m => Module -> Pass.Result m AA
@@ -57,15 +57,15 @@ vaExpr :: VAMonad m => Expr.Expr -> Pass.Result m ()
 vaExpr ast = case ast of
     Expr.Function   _ _ pats _ body       -> do
                                              s <- runNested $ do
-                                                 mapM_ vaPat pats
-                                                 vaExprMap body
+                                                  mapM_ vaPat pats
+                                                  vaExprMap body
                                              LocState.updateVarStat s
     Expr.Assignment _ pat dst             -> vaExpr dst <* vaPat pat
     Expr.Accessor   _ src _               -> vaExpr src -- we cannot determine if dst exists.
     Expr.Var        id name               -> do
                                              v <- LocState.lookupVar name
                                              case v of
-                                                 Nothing    -> logger error ("Not in scope '" ++ name ++ "'.") *> Pass.fail ("not in scope '" ++ name ++ "'")
+                                                 Nothing    -> Pass.fail ("Not in scope '" ++ name ++ "'.")
                                                  Just vid   -> LocState.bind id vid
     _                                     -> Expr.traverseM_ vaExpr vaType vaPat pure ast
     where

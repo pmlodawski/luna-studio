@@ -7,11 +7,11 @@
 
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, DeriveGeneric #-}
 
-import           Prelude                   hiding (error)
-import           Flowbox.System.Log.Logger as Logger
-import qualified Flowbox.Data.Version      as Version
-import           GHC.Generics   
-import Flowbox.Generics.Deriving.FShow
+import           Prelude                         hiding (error)
+import           Flowbox.System.Log.Logger       as Logger
+import qualified Flowbox.Data.Version            as Version
+import           GHC.Generics                      
+import           Flowbox.Generics.Deriving.FShow   
 
 data Test = Test { x :: Int
                  , y :: Int

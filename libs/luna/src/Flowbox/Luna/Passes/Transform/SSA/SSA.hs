@@ -39,7 +39,8 @@ mkVar id = "v_" ++ show id
 
 
 run :: PassMonad s m => AA -> Module -> Pass.Result m Module
-run vs = (Pass.run_ Pass.NoState) . (ssaModule vs)
+run vs = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . (ssaModule vs)
+--run vs = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . (ssaModule vs)
 
 
 ssaModule :: SSAMonad m => AA -> Module -> Pass.Result m Module
@@ -51,7 +52,7 @@ ssaExpr vs ast = case ast of
     Expr.Accessor   id src dst            -> Expr.Accessor id <$> ssaExpr vs src <*> pure dst
     Expr.Var        id name               -> case IntMap.lookup id (AA.varmap vs) of
                                                   Just nid -> return $ Expr.Var id (mkVar nid)
-                                                  Nothing  -> logger error ("Not in scope '" ++ name ++ "'") *> Pass.fail ("Not in scope '" ++ name ++ "'")
+                                                  Nothing  -> Pass.fail ("Not in scope '" ++ name ++ "'.")
     _                                     -> Expr.traverseM (ssaExpr vs) pure ssaPat pure ast
 
 

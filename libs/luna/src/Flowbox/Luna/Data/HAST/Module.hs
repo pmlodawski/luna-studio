@@ -19,3 +19,5 @@ empty = Module [] [] [] []
 
 mk :: [String] -> Expr
 mk path' = Module path' [] [] [] 
+
+addImport path mod = mod { imports = (Import False path Nothing) : imports mod }

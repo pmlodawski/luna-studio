@@ -58,7 +58,7 @@ type Graph2ASTMonad m = PassMonad IdState m
 
 
 run :: PassMonad s m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTModule
-run defManager (defID, def) = (Pass.run_ IdState.empty) $ module2AST defManager (defID, def)
+run defManager (defID, def) = (Pass.run_ (Pass.Info "GraphParser") IdState.empty) $ module2AST defManager (defID, def)
 
 
 module2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTModule
