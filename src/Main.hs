@@ -74,9 +74,12 @@ run conf = case conf of
             else rootLogger setLevel INFO
 
         let diag = Diagnostics (Conf.dump_all conf || Conf.dump_ast conf)
+            inputs = map UniPath.fromUnixString $ Conf.inputs conf
 
-        let inputs = map UniPath.fromUnixString $ Conf.inputs conf
-        mapM_ (Builder.buildFile diag) inputs
+        sources <- mapM (Builder.buildFile diag) inputs
+
+        print sources
+
         -- TODO [PM] : This code does not compile
 
         --case noColor conf of
