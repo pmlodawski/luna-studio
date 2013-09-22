@@ -56,8 +56,9 @@ genModule (LModule.Module _ cls imports classes _ methods _) = do
     GenState.getModule
 
 
-nameCF = ("CField_" ++)
-nameGetCF = ("get" ++)
+mkCFName = ("CField_" ++)
+mkFCName = ("FC_" ++)
+mkGetName = ("get" ++)
 mkTHVarName  = ("'" ++)
 mkTHTypeName = ("''" ++)
 
@@ -86,15 +87,16 @@ genExpr ast = case ast of
                                                    let fieldNames  = map LExpr.name fields
                                                        funcNames   = map LExpr.name methods 
                                                        memberNames = fieldNames ++ funcNames
-                                                       cfNames     = map nameCF memberNames
-                                                   logger error $ show memberNames
+                                                       cfNames     = map mkCFName memberNames
+                                                       fcNames     = map mkFCName memberNames
+                                                   logger error $ show (cfNames, memberNames, fcNames)
                                                    -- constructor function
                                                    let fcon = HExpr.Function ("con_" ++ name) [] 
                                                             $ HExpr.AppE (HExpr.Var $ "_mkcon" ++ show (length fields)) (HExpr.Var name)
                                                    GenState.addFunction fcon
 
                                                    -- CField for each class field
-                                                   let mkNt name = HExpr.NewTypeD name ["a"] (HExpr.Con name [HExpr.Typed (HExpr.Var "a") (HExpr.Var $ nameGetCF name)])
+                                                   let mkNt name = HExpr.NewTypeD name ["a"] (HExpr.Con name [HExpr.Typed (HExpr.Var "a") (HExpr.Var $ mkGetName name)])
                                                    let nts = map mkNt cfNames
                                                    mapM_ GenState.addNewType nts
 
@@ -102,10 +104,15 @@ genExpr ast = case ast of
                                                    --let test = HExpr.AppE (HExpr.Var "mkInstC") (HExpr.Var "b")
                                                    --GenState.addTHExpression test
 
-
+                                                   -- FClass imports
                                                    let genImport name = HExpr.Import False ["Flowbox", "Luna", "FClasses", "U_" ++ name] Nothing
                                                    let imps = map genImport memberNames
                                                    mapM_ GenState.addImport imps
+
+
+                                                   let genTH a b c = HExpr.AppE (HExpr.Var "mkInstC") $ HExpr.AppE (HExpr.Var $ mkTHTypeName a) (HExpr.AppE (HExpr.Var $ mkTHVarName b) (HExpr.Var $ mkTHVarName c))
+                                                   let ths = zipWith3 genTH fcNames cfNames memberNames
+                                                   mapM_ GenState.addTHExpression ths
 
                                                    cons   <- HExpr.Con name <$> mapM genExpr fields
                                                    return  $ HExpr.DataType name params [cons] 
