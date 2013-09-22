@@ -21,10 +21,9 @@ import           Flowbox.Luna.Network.Def.Definition                         (De
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Build                   as CabalBuild
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen                     as CabalGen
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Run                     as CabalRun
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                   as CabalStore
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Build.CabalBuild        as CabalBuild
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen.Defaults            as CabalDefaults
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store.CabalStore        as CabalStore
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
@@ -94,12 +93,24 @@ buildAST diag ast = do
     return hsc
 
 
+srcFolder :: String
+srcFolder = "src"
+
+hsExt :: String
+hsExt = ".hs"
+
+cabalExt :: String
+cabalExt = ".cabal"
+
+
 buildSources :: UniPath -> [Source] -> IO ()
 buildSources outputPath sources = either2io $ Luna.run $ do 
-    mapM_ (FileWriter.run outputPath ".hs") sources
+    mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) sources
 
 
-runCabal :: UniPath -> IO ()
-runCabal path = either2io $ Luna.run $ do 
-    logger warning "Generating and running cabal - not implemented"
+runCabal :: UniPath -> String -> IO ()
+runCabal path name = either2io $ Luna.run $ do 
+    let cabal = CabalDefaults.defaultConfig name [UniPath.fromUnixString srcFolder] $ UniPath.fromUnixString "Main.hs"
+    CabalStore.run cabal $ UniPath.append (name ++ cabalExt) path
+    CabalBuild.run path
     
