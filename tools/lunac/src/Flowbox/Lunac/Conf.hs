@@ -12,6 +12,7 @@ import           Flowbox.Prelude
 
 
 data Conf = Compilation { inputs    :: [String]
+                        , output    :: String
                         , verbose   :: Bool
                         , noColor   :: Bool
                         , dump_all  :: Bool
