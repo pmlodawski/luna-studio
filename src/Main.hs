@@ -42,16 +42,17 @@ version = Version.mk { Version.minor = 1
 parser :: Parser Conf
 parser = Opt.flag' Conf.Version (long "version" <> hidden)
        <|> Conf.Compilation
-           <$> many1  ( argument str ( metavar "inputs" ))
+           <$> many1     ( argument str ( metavar "inputs" ))
            -- <*> strOption ( long "verbose"  <> short 'v' <> value "0" <> help "Verbose level" )
-           <*> switch ( long "verbose"  <> short 'v'                 <> help "Verbose level"        )
-           <*> switch ( long "no-color"                              <> help "Disable color output" )
-           <*> switch ( long "dump-all"              <> hidden                                      )
-           <*> switch ( long "dump-ast"              <> hidden                                      )
-           <*> switch ( long "dump-va"               <> hidden                                      )
-           <*> switch ( long "dump-ssa"              <> hidden                                      )
-           <*> switch ( long "dump-hast"             <> hidden                                      )
-           <*> switch ( long "dump-hsc"              <> hidden                                      )
+           <*> strOption ( long "output"   <> short 'o'  <> value "out" <> help "Output folder"        )
+           <*> switch    ( long "verbose"  <> short 'v'                 <> help "Verbose level"        )
+           <*> switch    ( long "no-color"                              <> help "Disable color output" )
+           <*> switch    ( long "dump-all"              <> hidden                                      )
+           <*> switch    ( long "dump-ast"              <> hidden                                      )
+           <*> switch    ( long "dump-va"               <> hidden                                      )
+           <*> switch    ( long "dump-ssa"              <> hidden                                      )
+           <*> switch    ( long "dump-hast"             <> hidden                                      )
+           <*> switch    ( long "dump-hsc"              <> hidden                                      )
 
 
 opts :: ParserInfo Conf
@@ -84,9 +85,11 @@ run conf = case conf of
                                ( Conf.dump_hsc  conf || Conf.dump_all conf )
                                
             inputs = map UniPath.fromUnixString $ Conf.inputs conf
+            output = Conf.output conf
 
-        let outputPath = UniPath.fromUnixString "out"
-            projectName = "out"
+            outputPath = UniPath.fromUnixString output
+            projectName = output
+
         sources <- mapM (Builder.buildFile diag) inputs
         Builder.buildSources outputPath $ List.concat sources
         Builder.runCabal outputPath projectName
