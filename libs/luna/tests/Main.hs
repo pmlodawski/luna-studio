@@ -93,25 +93,25 @@ main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
     let source = example
 
-    --putStrLn "\n-------- TxtParser --------"
-    --ast <- TxtParser.run source
-    --putStrLn $ PP.ppqShow ast
+    logger info "\n-------- TxtParser --------"
+    ast <- TxtParser.run source
+    logger info $ PP.ppqShow ast
 
-    --putStrLn "\n-------- VarAlias --------"
-    --va <- VarAlias.run     ast
-    --putStrLn $ PP.ppShow va
+    logger info "\n-------- VarAlias --------"
+    va <- VarAlias.run     ast
+    logger info $ PP.ppShow va
 
-    --putStrLn "\n-------- SSA --------" 
-    --ssa <- SSA.run va ast
-    --putStrLn $ PP.ppqShow ssa
+    logger info "\n-------- SSA --------" 
+    ssa <- SSA.run va ast
+    logger info $ PP.ppqShow ssa
 
-    --putStrLn "\n-------- HASTGen --------" 
-    --hast <- HASTGen.run  ssa
-    --putStrLn $ PP.ppShow hast
+    logger info "\n-------- HASTGen --------" 
+    hast <- HASTGen.run  ssa
+    logger info $ PP.ppShow hast
 
-    --putStrLn "\n-------- HSC --------" 
-    --hsc <- HSC.run  hast
-    --putStrLn $ join "\n\n" (map printSrc hsc)
+    logger info "\n-------- HSC --------" 
+    hsc <- HSC.run  hast
+    logger info $ join "\n\n" (map printSrc hsc)
 
     --putStrLn "\n-------- PHSC --------" 
     --phsc <- HSPrint.run hsc

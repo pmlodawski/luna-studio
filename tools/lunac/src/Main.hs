@@ -48,6 +48,10 @@ parser = Opt.flag' Conf.Version (long "version" <> hidden)
            <*> switch ( long "no-color"                              <> help "Disable color output" )
            <*> switch ( long "dump-all"              <> hidden                                      )
            <*> switch ( long "dump-ast"              <> hidden                                      )
+           <*> switch ( long "dump-va"               <> hidden                                      )
+           <*> switch ( long "dump-ssa"              <> hidden                                      )
+           <*> switch ( long "dump-hast"             <> hidden                                      )
+           <*> switch ( long "dump-hsc"              <> hidden                                      )
 
 
 opts :: ParserInfo Conf
@@ -73,7 +77,12 @@ run conf = case conf of
             then rootLogger setLevel DEBUG
             else rootLogger setLevel INFO
 
-        let diag = Diagnostics (Conf.dump_all conf || Conf.dump_ast conf)
+        let diag = Diagnostics ( Conf.dump_ast  conf || Conf.dump_all conf )
+                               ( Conf.dump_va   conf || Conf.dump_all conf )
+                               ( Conf.dump_ssa  conf || Conf.dump_all conf )
+                               ( Conf.dump_hast conf || Conf.dump_all conf )
+                               ( Conf.dump_hsc  conf || Conf.dump_all conf )
+                               
             inputs = map UniPath.fromUnixString $ Conf.inputs conf
 
         sources <- mapM (Builder.buildFile diag) inputs
