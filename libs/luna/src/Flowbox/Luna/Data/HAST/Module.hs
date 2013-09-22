@@ -15,10 +15,10 @@ import           Flowbox.Luna.Data.HAST.Expr
 
 
 empty :: Expr 
-empty = Module [] [] [] [] []
+empty = Module [] [] [] [] [] []
 
 mk :: [String] -> Expr
-mk path' = Module path' [] [] [] []
+mk path' = Module path' [] [] [] [] []
 
 addImport :: [String] -> Expr -> Expr
 addImport path' mod = mod { imports = (Import False path' Nothing) : imports mod }

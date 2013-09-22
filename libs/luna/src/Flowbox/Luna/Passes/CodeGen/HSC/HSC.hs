@@ -42,12 +42,13 @@ genSection header generator d = if null d
 
 
 genModule :: HExpr.Expr -> [Source]
-genModule (HExpr.Module path imports newtypes datatypes methods) = sources where
+genModule (HExpr.Module path imports newtypes datatypes methods thexpressions) = sources where
     modcode =  header 
-            ++ genSection "imports"   genExpr imports
-            ++ genSection "datatypes" genExpr datatypes
-            ++ genSection "newtypes"  genExpr newtypes
-            ++ genSection "functions" genExpr methods
+            ++ genSection "imports"        genExpr imports
+            ++ genSection "datatypes"      genExpr datatypes
+            ++ genSection "newtypes"       genExpr newtypes
+            ++ genSection "functions"      genExpr methods
+            ++ genSection "TH expressions" genExpr thexpressions
                where header = "module " ++ join "." path ++ " where" ++ eol ++ eol
     sources = [Source path modcode]
 

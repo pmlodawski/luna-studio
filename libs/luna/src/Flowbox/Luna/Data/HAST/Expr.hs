@@ -29,7 +29,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Con        { name      :: String   , fields    :: [Expr]                           }
           | ConE       { qname     :: [String]                                                 }
           | ConT       { name      :: String                                                   }
-          | Module     { path      :: [String] , imports   :: [Expr]   , newtypes  :: [Expr]       , datatypes :: [Expr]  , methods :: [Expr]  }
+          | Module     { path      :: [String] , imports   :: [Expr]   , newtypes  :: [Expr]       , datatypes :: [Expr]  , methods :: [Expr] , thexpressions :: [Expr] }
           | Import     { qualified :: Bool     , segments  :: [String] , rename    :: Maybe String                           }
           | AppE       { src       :: Expr     , dst       :: Expr                             }
           | AppT       { src       :: Expr     , dst       :: Expr                             }

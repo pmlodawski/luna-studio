@@ -77,6 +77,8 @@ example = Source.Source ["Main"]
                   , "    x :: Int"
                   , "    y :: Int"
                   , "    z :: Int"
+                  , "    def test self:"
+                  , "        Console.print 1"
                   --, "from Std.Math import Vector "
                   --, "class A:"
                   --, "    a :: Std.Math.Vector Int"

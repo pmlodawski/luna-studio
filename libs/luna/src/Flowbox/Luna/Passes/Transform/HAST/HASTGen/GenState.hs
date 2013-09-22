@@ -65,3 +65,9 @@ addFunction :: GenStateM m => HExpr -> m ()
 addFunction fun = do 
     m <- getModule
     setModule $ m { Module.methods = fun : Module.methods m }
+
+
+addTHExpression :: GenStateM m => HExpr -> m ()
+addTHExpression e = do 
+    m <- getModule
+    setModule $ m { Module.thexpressions = e : Module.thexpressions m }
