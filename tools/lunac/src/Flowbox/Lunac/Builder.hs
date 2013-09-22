@@ -31,7 +31,7 @@ import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SS
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
 import           Flowbox.Luna.Passes.Pass                                    (PassMonad)
 import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
-import           Flowbox.Lunac.Diagnostics                                   (Diagnostics)
+import           Flowbox.Lunac.Diagnostics                                   (Diagnostics(Diagnostics))
 import           Flowbox.System.Log.Logger                                   
 import qualified Flowbox.System.UniPath                                    as UniPath
 import           Flowbox.System.UniPath                                      (UniPath)
@@ -48,9 +48,10 @@ either2io f = do
         Left  e -> fail e
 
 
-buildLibrary :: Diagnostics -> Library -> IO [Source]
-buildLibrary diag library = do
-    let defManger = Library.defs library
+buildLibrary :: Library -> IO [Source]
+buildLibrary library = do
+    let diag = Diagnostics False False False False False -- TODO[PM] : remove; added to fix compilation errors
+        defManger = Library.defs library
         rootDefID = Library.rootDefID
         rootDef = fromJust $ DefManager.lab defManger rootDefID
     buildGraph diag defManger (rootDefID, rootDef)
