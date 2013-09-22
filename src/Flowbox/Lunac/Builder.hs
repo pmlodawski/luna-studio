@@ -48,36 +48,42 @@ either2io f = do
         Left  e -> fail e
 
 
-buildLibrary :: Library -> IO [Source]
-buildLibrary library = do
+buildLibrary :: Diagnostics -> Library -> IO [Source]
+buildLibrary diag library = do
     let defManger = Library.defs library
         rootDefID = Library.rootDefID
         rootDef = fromJust $ DefManager.lab defManger rootDefID
-    buildGraph defManger (rootDefID, rootDef)
+    buildGraph diag defManger (rootDefID, rootDef)
     
 
-buildGraph :: DefManager -> (Definition.ID, Definition) -> IO [Source]
-buildGraph defManager def = either2io $ Luna.run $ do 
+buildGraph :: Diagnostics -> DefManager -> (Definition.ID, Definition) -> IO [Source]
+buildGraph diag defManager def = either2io $ Luna.run $ do 
     logger debug "Compiling graph"
     ast <- GraphParser.run defManager def
-    buildAST ast
+    Diagnostics.printAST ast diag 
+    buildAST diag ast
 
 
 buildFile :: Diagnostics -> UniPath -> IO [Source]
 buildFile diag path = either2io $ Luna.run $ do 
     logger debug $ "Compiling file '" ++ UniPath.toUnixString path ++ "'"
+    -- TODO[wd]: "path" in the following line should point relatively to the main file.
     source <- FileReader.run (UniPath.fromUnixString ".") path
     ast    <- TxtParser.run source
-    Diagnostics.printAST ast diag -- TODO[wd]: Diagnostyka powinna byc przekazywana dalej.
-    buildAST ast
+    Diagnostics.printAST ast diag 
+    buildAST diag ast
 
 
-buildAST :: (MonadIO m, PassMonad s m) => ASTModule.Module -> Pass.Result m [Source]
-buildAST ast = do
+buildAST :: (MonadIO m, PassMonad s m) => Diagnostics -> ASTModule.Module -> Pass.Result m [Source]
+buildAST diag ast = do
     va   <- VarAlias.run ast
+    Diagnostics.printVA va diag 
     ssa  <- SSA.run va ast
+    Diagnostics.printSSA ssa diag
     hast <- HASTGen.run ssa
+    Diagnostics.printHAST hast diag
     hsc  <- HSC.run hast
+    Diagnostics.printHSC hsc diag
     return hsc
 
 

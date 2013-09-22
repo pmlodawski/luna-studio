@@ -11,11 +11,15 @@ import           Flowbox.Prelude
 
 
 
-data Conf = Compilation { inputs   :: [String]
-                        , verbose  :: Bool
-                        , noColor  :: Bool
-                        , dump_all :: Bool
-                        , dump_ast :: Bool
+data Conf = Compilation { inputs    :: [String]
+                        , verbose   :: Bool
+                        , noColor   :: Bool
+                        , dump_all  :: Bool
+                        , dump_ast  :: Bool
+                        , dump_va   :: Bool
+                        , dump_ssa  :: Bool
+                        , dump_hast :: Bool
+                        , dump_hsc  :: Bool
                         }
           | Version
           deriving Show

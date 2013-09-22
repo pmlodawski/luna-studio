@@ -25,6 +25,7 @@ Executable lunac
   Build-Depends:  base,
                   flowbox-luna,
                   flowbox-utils,
+                  MissingH,
                   mtl,
                   optparse-applicative,
                   timeit
