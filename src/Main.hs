@@ -87,7 +87,7 @@ run conf = case conf of
 
         sources <- mapM (Builder.buildFile diag) inputs
 
-        print sources
+        --print $ length sources
 
         -- TODO [PM] : This code does not compile
 
