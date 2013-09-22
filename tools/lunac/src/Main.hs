@@ -18,6 +18,8 @@ import qualified Flowbox.Lunac.Conf          as Conf
 import           Flowbox.Lunac.Conf            (Conf)
 import           Flowbox.System.Log.Logger     
 import qualified Flowbox.System.UniPath      as UniPath
+import qualified Flowbox.Lunac.Diagnostics   as Diagnostics
+import           Flowbox.Lunac.Diagnostics     (Diagnostics(Diagnostics))
 
 
 rootLogger :: Logger
@@ -44,6 +46,7 @@ parser = Opt.flag' Conf.Version (long "version" <> hidden)
            -- <*> strOption ( long "verbose"  <> short 'v' <> value "0" <> help "Verbose level" )
            <*> switch ( long "verbose"  <> short 'v'                 <> help "Verbose level"        )
            <*> switch ( long "no-color"                              <> help "Disable color output" )
+           <*> switch ( long "dump-all"              <> hidden                                      )
            <*> switch ( long "dump-ast"              <> hidden                                      )
 
 
@@ -70,8 +73,10 @@ run conf = case conf of
             then rootLogger setLevel DEBUG
             else rootLogger setLevel INFO
 
+        let diag = Diagnostics (Conf.dump_all conf || Conf.dump_ast conf)
+
         let inputs = map UniPath.fromUnixString $ Conf.inputs conf
-        mapM_ Builder.buildFile inputs
+        mapM_ (Builder.buildFile diag) inputs
         -- TODO [PM] : This code does not compile
 
         --case noColor conf of

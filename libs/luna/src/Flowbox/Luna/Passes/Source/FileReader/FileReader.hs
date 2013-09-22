@@ -2,20 +2,20 @@
 
 module Flowbox.Luna.Passes.Source.FileReader.FileReader where
 
-import           Control.Applicative               
-import           Control.Monad.RWS                 
-import qualified System.IO                       as IO
+import           Control.Applicative         
+import           Control.Monad.RWS           
+import qualified System.IO                 as IO
 
-import           Flowbox.Prelude                 hiding (error, id)
-import           Flowbox.Luna.Data.Source          (Source(Source))
-import qualified Flowbox.System.UniPath          as UniPath
-import           Flowbox.System.UniPath            (UniPath)
-import           Data.String.Utils                 (replace)
+import           Flowbox.Prelude           hiding (error, id)
+import           Flowbox.Luna.Data.Source    (Source(Source))
+import qualified Flowbox.System.UniPath    as UniPath
+import           Flowbox.System.UniPath      (UniPath)
+import           Data.String.Utils           (replace)
 
-import qualified Flowbox.Luna.Passes.Pass        as Pass
-import           Flowbox.Luna.Passes.Pass          (PassMonadIO)
+import qualified Flowbox.Luna.Passes.Pass  as Pass
+import           Flowbox.Luna.Passes.Pass    (PassMonadIO)
 
-import           Flowbox.System.Log.Logger         
+import           Flowbox.System.Log.Logger   
 
 
 type FRMonad m = PassMonadIO Pass.NoState m

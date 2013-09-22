@@ -10,37 +10,17 @@ Flag Debug
   Description: Enable debug support
   Default:     False
 
-Library
-  Hs-Source-Dirs: src
-  if flag(debug)
-    GHC-Options:  -csacc
-  GHC-Options:    -Wall -O2
-                  -- -F -pgmF ./util/preprocessors/imports.py
-  Extensions:     DoAndIfThenElse,
-                  NoImplicitPrelude,
-                  TemplateHaskell
-  
-  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*Flowbox/Lunac/Main\.hs)')`
-                   
- Build-Depends:   base,
-                  flowbox-luna,
-                  flowbox-utils,
-                  mtl,
-                  pretty-show,
-                  timeit
-
-
 
 Executable lunac 
-  Main-Is:        Flowbox/Lunac/Main.hs
+  Main-Is:        Main.hs
   Hs-Source-Dirs: src
 
   if flag(debug)
     GHC-Options:  -csacc
   GHC-Options:    -Wall -O2
 
-  Extensions:     DoAndIfThenElse
-                  MultiParamTypeClasses
+  Extensions:     DoAndIfThenElse,
+                  MultiParamTypeClasses,
                   NoImplicitPrelude
   Build-Depends:  base,
                   flowbox-luna,
