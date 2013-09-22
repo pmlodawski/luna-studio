@@ -10,10 +10,10 @@ module Flowbox.Lunac.Builder where
 
 import           Control.Monad.State                                         
 import           Data.Maybe                                                  (fromJust)
-import           System.TimeIt                                               
 
 import           Flowbox.Prelude                                             
 import qualified Flowbox.Luna.Data.AST.Module                              as ASTModule
+import           Flowbox.Luna.Data.Source                                    (Source)
 import qualified Flowbox.Luna.Lib.Library                                  as Library
 import           Flowbox.Luna.Lib.Library                                    (Library)
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
@@ -30,27 +30,25 @@ import qualified Flowbox.Luna.Passes.Source.FileReader.FileReader          as Fi
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
 import           Flowbox.Luna.Passes.Pass                                    (PassMonad)
+import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
+import           Flowbox.Lunac.Diagnostics                                   (Diagnostics)
 import           Flowbox.System.Log.Logger                                   
 import qualified Flowbox.System.UniPath                                    as UniPath
 import           Flowbox.System.UniPath                                      (UniPath)
-import qualified Flowbox.Text.Show.Pretty                                  as PP
-import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
-import           Flowbox.Lunac.Diagnostics                                   (Diagnostics(Diagnostics))
-
 
 logger :: Logger
 logger = getLogger "Flowbox.Lunac.Builder"
 
 
-hoistLuna :: IO (Either String t) -> IO ()
-hoistLuna f = do 
+either2io :: IO (Either String a) -> IO a
+either2io f = do 
     out <- f
     case out of
-        Right _ -> return ()
+        Right r -> return r
         Left  e -> fail e
 
 
-buildLibrary :: Library -> IO ()
+buildLibrary :: Library -> IO [Source]
 buildLibrary library = do
     let defManger = Library.defs library
         rootDefID = Library.rootDefID
@@ -58,15 +56,15 @@ buildLibrary library = do
     buildGraph defManger (rootDefID, rootDef)
     
 
-buildGraph :: DefManager -> (Definition.ID, Definition) -> IO ()
-buildGraph defManager def = hoistLuna $ Luna.run $ do 
+buildGraph :: DefManager -> (Definition.ID, Definition) -> IO [Source]
+buildGraph defManager def = either2io $ Luna.run $ do 
     logger debug "Compiling graph"
     ast <- GraphParser.run defManager def
     buildAST ast
 
 
-buildFile :: Diagnostics -> UniPath -> IO ()
-buildFile diag path = hoistLuna $ Luna.run $ do 
+buildFile :: Diagnostics -> UniPath -> IO [Source]
+buildFile diag path = either2io $ Luna.run $ do 
     logger debug $ "Compiling file '" ++ UniPath.toUnixString path ++ "'"
     source <- FileReader.run (UniPath.fromUnixString ".") path
     ast    <- TxtParser.run source
@@ -74,14 +72,13 @@ buildFile diag path = hoistLuna $ Luna.run $ do
     buildAST ast
 
 
-buildAST :: (MonadIO m, PassMonad s m) => ASTModule.Module -> Pass.Result m ()
+buildAST :: (MonadIO m, PassMonad s m) => ASTModule.Module -> Pass.Result m [Source]
 buildAST ast = do
     va   <- VarAlias.run ast
     ssa  <- SSA.run va ast
     hast <- HASTGen.run ssa
     hsc  <- HSC.run hast
-
-    return ()
+    return hsc
 
 
 
