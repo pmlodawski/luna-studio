@@ -26,7 +26,7 @@ type ParserMonad m = PassMonad Pass.NoState m
 
 
 run :: PassMonad s m => Source -> Pass.Result m Module
-run = (Pass.run_ Pass.NoState) . parse
+run = (Pass.run_ (Pass.Info "Luna Parser") Pass.NoState) . parse
 
 
 parse :: ParserMonad m => Source -> Pass.Result m Module

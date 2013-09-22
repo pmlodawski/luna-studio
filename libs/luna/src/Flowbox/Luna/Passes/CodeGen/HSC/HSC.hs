@@ -14,6 +14,8 @@ import qualified Flowbox.Luna.Data.HAST.Lit  as HLit
 import qualified Flowbox.Luna.Passes.Pass    as Pass
 import           Flowbox.Luna.Passes.Pass      (PassMonad)
 import           Data.String.Utils             (join)
+import qualified Flowbox.Luna.Data.Source    as Source
+import           Flowbox.Luna.Data.Source      (Source(Source))
 
 import           Flowbox.System.Log.Logger     
 
@@ -25,8 +27,8 @@ type HSCMonad m = PassMonad Pass.NoState m
 
 
 
-run :: PassMonad s m => HExpr.Expr -> Pass.Result m String
-run expr = (Pass.run_ Pass.NoState) (return $ genExpr expr)
+run :: PassMonad s m => HExpr.Expr -> Pass.Result m [Source]
+run expr = (Pass.run_ (Pass.Info "HSC") Pass.NoState) (return $ genModule expr)
 
 
 eol :: String
@@ -39,6 +41,16 @@ genSection header generator d = if null d
     else "-- " ++ header ++ "\n" ++ (join "\n" $ map generator d) ++ "\n\n"
 
 
+genModule :: HExpr.Expr -> [Source]
+genModule (HExpr.Module path imports datatypes methods) = sources where
+    modcode =  header 
+            ++ genSection "imports"   genExpr imports
+            ++ genSection "datatypes" genExpr datatypes
+            ++ genSection "functions" genExpr methods
+               where header = "module " ++ join "." path ++ " where" ++ eol ++ eol
+    sources = [Source path modcode]
+
+
 genExpr :: HExpr.Expr -> String
 genExpr e = case e of
     HExpr.Var      name                   -> name
@@ -49,12 +61,6 @@ genExpr e = case e of
                                              ++ case rename of
                                                      Just name -> " as " ++ name
                                                      Nothing   -> ""
-    HExpr.Module   path imports datatypes 
-                   methods                -> header 
-                                             ++ genSection "imports"   genExpr imports
-                                             ++ genSection "datatypes" genExpr datatypes
-                                             ++ genSection "methods"   genExpr methods
-                                                where header = "module " ++ join "." path ++ " where" ++ eol
     HExpr.DataType name params cons       -> "data " ++ name ++ params' ++ " = " ++ join " | " (map genExpr cons)
                                              where params' = if null params then "" else " " ++ join " " params
     HExpr.Con      name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"

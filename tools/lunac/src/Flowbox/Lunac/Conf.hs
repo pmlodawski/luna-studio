@@ -13,8 +13,8 @@ import           Flowbox.Prelude
 
 data Conf = Compilation { inputs   :: [String]
                         , verbose  :: Bool
-                        , debug    :: Bool
                         , noColor  :: Bool
+                        , dump_all :: Bool
                         , dump_ast :: Bool
                         }
           | Version

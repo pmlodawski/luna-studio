@@ -7,30 +7,30 @@
 
 module Flowbox.Luna.Passes.CodeGen.Cabal.Run where
 
-import           Control.Monad.RWS           
-import qualified Control.Exception         as Exception
-import qualified System.Directory          as Directory
+--import           Control.Monad.RWS           
+--import qualified Control.Exception         as Exception
+--import qualified System.Directory          as Directory
 
-import           Flowbox.Prelude           hiding (error)
-import qualified Flowbox.System.Process    as Process
-import qualified Flowbox.System.UniPath    as UniPath
-import           Flowbox.System.UniPath      (UniPath)
-import           Flowbox.System.Log.Logger   
-
-
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Luna.Passes.Cabal.Run.RunCabal"
+--import           Flowbox.Prelude           hiding (error)
+--import qualified Flowbox.System.Process    as Process
+--import qualified Flowbox.System.UniPath    as UniPath
+--import           Flowbox.System.UniPath      (UniPath)
+--import           Flowbox.System.Log.Logger   
 
 
-run :: MonadIO m => UniPath -> String -> [String] -> m ()
-run projectPath name args = liftIO $ runCabal projectPath name args
+--loggerIO :: LoggerIO
+--loggerIO = getLoggerIO "Flowbox.Luna.Passes.Cabal.Run.RunCabal"
 
 
-runCabal :: UniPath -> String -> [String] -> IO ()
-runCabal projectPath name args = do 
-    workingDir <- Directory.getCurrentDirectory
-    let runPath = UniPath.append ("build/hs/dist/build/" ++ name) projectPath
-    Directory.setCurrentDirectory $ UniPath.toUnixString runPath
+--run :: MonadIO m => UniPath -> String -> [String] -> m ()
+--run projectPath name args = liftIO $ runCabal projectPath name args
 
-    Exception.finally (Process.runCommand ("./" ++ name) args loggerIO)
-                      (Directory.setCurrentDirectory workingDir)
+
+--runCabal :: UniPath -> String -> [String] -> IO ()
+--runCabal projectPath name args = do 
+--    workingDir <- Directory.getCurrentDirectory
+--    let runPath = UniPath.append ("build/hs/dist/build/" ++ name) projectPath
+--    Directory.setCurrentDirectory $ UniPath.toUnixString runPath
+
+--    Exception.finally (Process.runCommand ("./" ++ name) args loggerIO)
+--                      (Directory.setCurrentDirectory workingDir)

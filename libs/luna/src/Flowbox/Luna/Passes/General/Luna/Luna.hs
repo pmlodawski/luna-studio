@@ -13,8 +13,10 @@ import qualified Flowbox.System.Log.Logger as Logger
 import           Flowbox.Prelude           hiding (error)
 
 
-run :: Pass.TransformerT Pass.NoState String IO b -> Pass.ResultT IO b
+run :: Pass.TransformerT Pass.NoState String IO b -> IO (Either Pass.PassError b)
 run f = do
-	(result, _, logs) <- Pass.runT Pass.NoState f
+	(result, _, logs) <- Pass.runTRaw (Pass.Info "Luna") Pass.NoState f
 	Logger.logsIO logs
 	return result
+
+
