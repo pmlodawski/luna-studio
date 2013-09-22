@@ -1,3 +1,4 @@
 import Std: Console
 def main self:
     Console.print 1
+
