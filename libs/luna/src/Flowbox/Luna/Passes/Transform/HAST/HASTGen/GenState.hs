@@ -13,7 +13,8 @@ import           Control.Monad.State
 import qualified Flowbox.Luna.Data.HAST.Expr   as HExpr
 import qualified Flowbox.Luna.Data.HAST.Module as Module
 
-import           Flowbox.System.Log.Logger       
+import           Flowbox.System.Log.Logger     
+import           Control.Applicative  
 
 
 logger :: Logger
@@ -25,7 +26,7 @@ type HExpr = HExpr.Expr
 data GenState = GenState { mod :: HExpr
                          }
 
-type GenStateM m = MonadState GenState m
+type GenStateM m = (MonadState GenState m, Functor m)
 
 
 empty :: GenState
@@ -33,26 +34,34 @@ empty = GenState HExpr.Undefined
 
 
 setModule :: GenStateM m => HExpr -> m ()
-setModule m = do s <- get
-                 put s { mod = m }
+setModule m = do 
+    s <- get
+    put s { mod = m }
 
 
 getModule :: GenStateM m => m HExpr
-getModule = do s <- get
-               return $ mod s
-
+getModule = mod <$> get
 
 
 addDataType :: GenStateM m => HExpr -> m ()
-addDataType dt = do m <- getModule
-                    setModule $ m { Module.datatypes = dt : Module.datatypes m }
+addDataType dt = do 
+    m <- getModule
+    setModule $ m { Module.datatypes = dt : Module.datatypes m }
+
+
+addNewType :: GenStateM m => HExpr -> m ()
+addNewType dt = do 
+    m <- getModule
+    setModule $ m { Module.newtypes = dt : Module.newtypes m }
 
 
 addImport :: GenStateM m => HExpr -> m ()
-addImport imp = do m <- getModule
-                   setModule $ m { Module.imports = imp : Module.imports m }
+addImport imp = do 
+    m <- getModule
+    setModule $ m { Module.imports = imp : Module.imports m }
 
 
-addMethod :: GenStateM m => HExpr -> m ()
-addMethod fun = do m <- getModule
-                   setModule $ m { Module.methods = fun : Module.methods m }
+addFunction :: GenStateM m => HExpr -> m ()
+addFunction fun = do 
+    m <- getModule
+    setModule $ m { Module.methods = fun : Module.methods m }

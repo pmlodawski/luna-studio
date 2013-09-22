@@ -52,45 +52,57 @@ genModule (LModule.Module _ cls imports classes _ methods _) = do
     GenState.setModule mod
     mapM_ (genExpr >=> GenState.addDataType) classes
     mapM_ (genExpr >=> GenState.addImport)   imports
-    mapM_ (genExpr >=> GenState.addMethod)   methods
+    mapM_ (genExpr >=> GenState.addFunction)   methods
     GenState.getModule
 
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
-    LExpr.Var      _ name                       -> pure $ get0 (HExpr.Var name)
-    LExpr.Cons     _ name                       -> pure $ get0 (HExpr.Var name)
+    LExpr.Var      _ name                       -> pure $ HExpr.Var name
+    LExpr.Cons     _ name                       -> pure $ HExpr.Var ("con_" ++ name)
     LExpr.Function _ name pats output body      ->     HExpr.Function name 
-                                                    <$> mapM genPat pats 
-                                                    <*> (HExpr.DoBlock <$> genFuncBody body output)
+                                                   <$> mapM genPat pats 
+                                                   <*> (HExpr.DoBlock <$> genFuncBody body output)
                                                        
     LExpr.Import _ path target rename           -> do
-                                                    let (LType.Cons _ segments) = path
-                                                    tname <- case target of
-                                                        LExpr.Cons     _ tname -> pure tname
-                                                        LExpr.Var      _ tname -> pure tname
-                                                        LExpr.Wildcard _       -> logger error ("Wildcard imports are not supported yet.") *> Pass.fail "Wildcard imports are not supported yet."
-                                                        _                      -> Pass.fail "internal error"
-                                                    case rename of
-                                                        Just _                 -> logger error ("Named imports are not supported yet.") *> Pass.fail "Named imports are not supported yet."
-                                                        _                      -> pure ()
+                                                   let (LType.Cons _ segments) = path
+                                                   tname <- case target of
+                                                       LExpr.Cons     _ tname -> pure tname
+                                                       LExpr.Var      _ tname -> pure tname
+                                                       LExpr.Wildcard _       -> logger error ("Wildcard imports are not supported yet.") *> Pass.fail "Wildcard imports are not supported yet."
+                                                       _                      -> Pass.fail "internal error"
+                                                   case rename of
+                                                       Just _                 -> logger error ("Named imports are not supported yet.") *> Pass.fail "Named imports are not supported yet."
+                                                       _                      -> pure ()
 
-                                                    return $ HExpr.Import False (["Flowbox", "Libs"] ++ segments ++ [tname]) Nothing where
+                                                   return $ HExpr.Import False (["Flowbox", "Libs"] ++ segments ++ [tname]) Nothing where
                                                      
     LExpr.Class _ cls _ fields _                -> do 
-                                                    cons   <- HExpr.Con name <$> mapM genExpr fields
-                                                    return  $ HExpr.DataType name params [cons] 
-                                                      
-                                                    where name   =  LType.name   cls
-                                                          params =  LType.params cls
-                                                    
+                                                   -- constructor function
+                                                   let fcon = HExpr.Function ("con_" ++ name) [] 
+                                                            $ HExpr.AppE (HExpr.Var $ "_mkcon" ++ show (length fields)) (HExpr.Var name)
+                                                   GenState.addFunction fcon
+
+                                                   let mkNt field = HExpr.NewTypeD name ["a"] (HExpr.Con name [HExpr.Typed (HExpr.Var "a") (HExpr.Var getname)]) where
+                                                                    name    = ("CField_" ++ LExpr.name field)
+                                                                    getname = "get" ++ name
+
+                                                   let nts = map mkNt fields
+                                                   mapM_ GenState.addNewType nts
+
+                                                   cons   <- HExpr.Con name <$> mapM genExpr fields
+                                                   return  $ HExpr.DataType name params [cons] 
+                                                     
+                                                   where name   =  LType.name   cls
+                                                         params =  LType.params cls
+                                                   
     LExpr.Infix _ name src dst                  -> HExpr.Infix name <$> genExpr src <*> genExpr dst
     LExpr.Assignment _ pat dst                  -> HExpr.Assignment <$> genPat pat <*> genExpr dst
     LExpr.Lit        _ value                    -> genLit value
     LExpr.Tuple      _ items                    -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
     LExpr.Field      _ name cls                 -> genTyped HExpr.Typed cls <*> pure (HExpr.Var name)
     LExpr.App        _ src args                 -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genExpr args)
-    LExpr.Accessor   _ src dst                  -> get0 <$> (HExpr.AppE <$> genExpr dst <*> genExpr src)
+    LExpr.Accessor   _ src dst                  -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
     _                                            -> fail $ show ast
     where
         getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
