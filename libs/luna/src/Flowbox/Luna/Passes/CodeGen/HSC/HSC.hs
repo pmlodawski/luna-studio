@@ -38,15 +38,17 @@ eol = "\n"
 genSection :: String -> (a -> String) -> [a] -> String
 genSection header generator d = if null d 
     then ""
-    else "-- " ++ header ++ "\n" ++ (join "\n" $ map generator d) ++ "\n\n"
+    else "-- " ++ header ++ " --\n" ++ (join "\n" $ map generator d) ++ "\n\n"
 
 
 genModule :: HExpr.Expr -> [Source]
-genModule (HExpr.Module path imports datatypes methods) = sources where
+genModule (HExpr.Module path imports newtypes datatypes methods thexpressions) = sources where
     modcode =  header 
-            ++ genSection "imports"   genExpr imports
-            ++ genSection "datatypes" genExpr datatypes
-            ++ genSection "functions" genExpr methods
+            ++ genSection "imports"        genExpr imports
+            ++ genSection "datatypes"      genExpr datatypes
+            ++ genSection "newtypes"       genExpr newtypes
+            ++ genSection "functions"      genExpr methods
+            ++ genSection "TH expressions" genExpr thexpressions
                where header = "module " ++ join "." path ++ " where" ++ eol ++ eol
     sources = [Source path modcode]
 
@@ -61,12 +63,16 @@ genExpr e = case e of
                                              ++ case rename of
                                                      Just name -> " as " ++ name
                                                      Nothing   -> ""
-    HExpr.DataType name params cons       -> "data " ++ name ++ params' ++ " = " ++ join " | " (map genExpr cons)
-                                             where params' = if null params then "" else " " ++ join " " params
+    HExpr.DataType name params cons       -> "data " ++ name ++ params' ++ " = " ++ join " | " (map genExpr cons) where
+                                             params' = if null params then "" else " " ++ join " " params
+    HExpr.NewTypeD name params con        -> "newtype " ++ name ++ params' ++ " = " ++ genExpr con where
+                                             params' = if null params then "" else " " ++ join " " params
     HExpr.Con      name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"
     HExpr.Typed    cls  expr              -> genExpr expr ++ " :: " ++ genExpr cls
     HExpr.TypedP   cls  expr              -> "(" ++ genExpr expr ++ " :: " ++ genExpr cls ++ ")"
-    HExpr.Function name signature expr    -> name ++ " " ++ join " " (map genExpr signature) ++ " = " ++ genExpr expr
+    HExpr.Function name signature expr    -> name ++ params ++ " = " ++ genExpr expr where
+                                             params = if null signature then ""
+                                                      else " " ++ join " " (map genExpr signature)
     HExpr.LetBlock exprs result           -> "let { " ++ join "; " (map genExpr exprs) ++ " } in " ++ genExpr result 
     HExpr.DoBlock  exprs                  -> "do { " ++ join "; " (map genExpr exprs) ++ " }"
     HExpr.Infix    name src dst           -> genExpr src ++ " " ++ name ++ " " ++ genExpr dst
@@ -76,8 +82,9 @@ genExpr e = case e of
     HExpr.Tuple    items                  -> "(" ++ join "," (map genExpr items) ++ ")"
     HExpr.ConE     qname                  -> join "." qname
     HExpr.ConT     name                   -> name
-    HExpr.AppT     src dst                -> genExpr src ++ " (" ++ genExpr dst ++ ")" -- for literals, e.g. Pure (1 :: Int)
+    HExpr.AppT     src dst                -> "(" ++ genExpr src ++ " (" ++ genExpr dst ++ ")" ++ ")" -- for literals, e.g. Pure (1 :: Int)
     HExpr.AppE     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
+    --HExpr.NewtypeD 
 
 
 genLit :: HLit.Lit -> String

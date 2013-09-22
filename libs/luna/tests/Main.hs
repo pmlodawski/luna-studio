@@ -69,6 +69,12 @@ example = Source.Source ["Main"]
         $ unlines [ "import Std: Console"
                   , "def main self:"
                   , "    Console.print 1"
+                  , "class Vector:"
+                  , "    x :: Int"
+                  , "    y :: Int"
+                  , "    z :: Int"
+                  , "    def test self:"
+                  , "        Console.print 1"
                   --, "from Std.Math import Vector "
                   --, "class A:"
                   --, "    a :: Std.Math.Vector Int"
@@ -91,7 +97,7 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- TxtParser --------"
     ast <- TxtParser.run source
-    logger info $ PP.ppqShow ast
+    logger info $ PP.ppqShow ast 
 
     logger info "\n-------- VarAlias --------"
     va <- VarAlias.run     ast
@@ -104,6 +110,7 @@ main_inner = Luna.run $ do
     logger info "\n-------- HASTGen --------" 
     hast <- HASTGen.run  ssa
     logger info $ PP.ppShow hast
+
 
     logger info "\n-------- HSC --------" 
     hsc <- HSC.run  hast
