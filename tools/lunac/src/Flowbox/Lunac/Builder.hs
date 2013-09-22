@@ -13,7 +13,8 @@ import           Data.Maybe                                                  (fr
 
 import           Flowbox.Prelude                                             
 import qualified Flowbox.Luna.Data.AST.Module                              as ASTModule
-import           Flowbox.Luna.Data.Source                                    (Source)
+import qualified Flowbox.Luna.Data.Source                                  as Source
+import           Flowbox.Luna.Data.Source                                    (Source(Source))
 import qualified Flowbox.Luna.Lib.Library                                  as Library
 import           Flowbox.Luna.Lib.Library                                    (Library)
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
@@ -102,15 +103,22 @@ hsExt = ".hs"
 cabalExt :: String
 cabalExt = ".cabal"
 
+launcher :: Source 
+launcher = Source  ["Launcher"]
+         $ unlines [ "import Main as M"
+                   , "main = M.main 0"]
+
+
 
 buildSources :: UniPath -> [Source] -> IO ()
 buildSources outputPath sources = either2io $ Luna.run $ do 
-    mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) sources
+    mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) $ launcher : sources 
 
 
 runCabal :: UniPath -> String -> IO ()
 runCabal path name = either2io $ Luna.run $ do 
-    let cabal = CabalDefaults.defaultConfig name [UniPath.fromUnixString srcFolder] $ UniPath.fromUnixString "Main.hs"
+    let mainIs = UniPath.setExtension hsExt $ UniPath.fromList $ Source.path launcher
+        cabal = CabalDefaults.defaultConfig name [UniPath.fromUnixString srcFolder] mainIs
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) path
     CabalBuild.run path
     

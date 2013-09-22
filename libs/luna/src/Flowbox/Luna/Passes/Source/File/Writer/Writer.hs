@@ -36,5 +36,5 @@ writeSource rootpath ext (Source m content) = do
     let path = UniPath.append (UniPath.toUnixString $ module2path m ext) rootpath
     fileName <- UniPath.expand path
     let folderName = UniPath.basePath fileName
-    liftIO $ do Directory.createDirectoryIfMissing False folderName
+    liftIO $ do Directory.createDirectoryIfMissing True folderName
                 IO.writeFile (UniPath.toUnixString fileName) content
