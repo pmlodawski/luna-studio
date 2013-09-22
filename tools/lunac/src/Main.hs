@@ -18,8 +18,8 @@ import qualified Flowbox.Lunac.Conf          as Conf
 import           Flowbox.Lunac.Conf            (Conf)
 import           Flowbox.System.Log.Logger     
 import qualified Flowbox.System.UniPath      as UniPath
-import qualified Flowbox.Lunac.Diagnostics   as Diagnostics
 import           Flowbox.Lunac.Diagnostics     (Diagnostics(Diagnostics))
+
 
 
 rootLogger :: Logger
@@ -85,8 +85,10 @@ run conf = case conf of
                                
             inputs = map UniPath.fromUnixString $ Conf.inputs conf
 
+        let outputPath = UniPath.fromUnixString "out"
         sources <- mapM (Builder.buildFile diag) inputs
-
+        Builder.buildSources outputPath $ List.concat sources
+        Builder.runCabal outputPath
         --print $ length sources
 
         -- TODO [PM] : This code does not compile

@@ -21,7 +21,7 @@ import           Control.Monad.Trans.Either
 import           System.TimeIt                                           
 
 import           Flowbox.Prelude                                         
-import qualified Flowbox.Luna.Passes.Source.FileReader.FileReader      as FileReader
+import qualified Flowbox.Luna.Passes.Source.File.Reader.Reader         as FileReader
 import qualified Flowbox.Luna.Data.HAST.Expr                           as Expr
 import qualified Flowbox.Luna.Data.HAST.Module                         as Module
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen

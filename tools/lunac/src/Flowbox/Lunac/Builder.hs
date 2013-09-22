@@ -21,20 +21,26 @@ import           Flowbox.Luna.Network.Def.Definition                         (De
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Build                   as CabalBuild
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen                     as CabalGen
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Run                     as CabalRun
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                   as CabalStore
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
+import qualified Flowbox.Luna.Passes.Pass                                  as Pass
+import           Flowbox.Luna.Passes.Pass                                    (PassMonad)
 import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
-import qualified Flowbox.Luna.Passes.Source.FileReader.FileReader          as FileReader
+import qualified Flowbox.Luna.Passes.Source.File.Reader.Reader             as FileReader
+import qualified Flowbox.Luna.Passes.Source.File.Writer.Writer             as FileWriter
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
-import qualified Flowbox.Luna.Passes.Pass                                  as Pass
-import           Flowbox.Luna.Passes.Pass                                    (PassMonad)
 import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
 import           Flowbox.Lunac.Diagnostics                                   (Diagnostics(Diagnostics))
 import           Flowbox.System.Log.Logger                                   
 import qualified Flowbox.System.UniPath                                    as UniPath
 import           Flowbox.System.UniPath                                      (UniPath)
+
 
 logger :: Logger
 logger = getLogger "Flowbox.Lunac.Builder"
@@ -68,8 +74,8 @@ buildGraph diag defManager def = either2io $ Luna.run $ do
 buildFile :: Diagnostics -> UniPath -> IO [Source]
 buildFile diag path = either2io $ Luna.run $ do 
     logger debug $ "Compiling file '" ++ UniPath.toUnixString path ++ "'"
-    -- TODO[wd]: "path" in the following line should point relatively to the main file.
-    source <- FileReader.run (UniPath.fromUnixString ".") path
+    let rootPath = UniPath.basePath path
+    source <- FileReader.run rootPath path
     ast    <- TxtParser.run source
     Diagnostics.printAST ast diag 
     buildAST diag ast
@@ -88,4 +94,12 @@ buildAST diag ast = do
     return hsc
 
 
+buildSources :: UniPath -> [Source] -> IO ()
+buildSources outputPath sources = either2io $ Luna.run $ do 
+    mapM_ (FileWriter.run outputPath ".hs") sources
 
+
+runCabal :: UniPath -> IO ()
+runCabal path = either2io $ Luna.run $ do 
+    logger warning "Generating and running cabal - not implemented"
+    
