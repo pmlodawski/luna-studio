@@ -34,15 +34,17 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                    as UniPath
 import           Flowbox.System.UniPath                                      (UniPath)
 import qualified Flowbox.Text.Show.Pretty                                  as PP
+import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
+import           Flowbox.Lunac.Diagnostics                                   (Diagnostics(Diagnostics))
 
 
 logger :: Logger
 logger = getLogger "Flowbox.Lunac.Builder"
 
 
-timeLuna :: IO (Either String t) -> IO ()
-timeLuna f = do 
-    out <- timeIt f
+hoistLuna :: IO (Either String t) -> IO ()
+hoistLuna f = do 
+    out <- f
     case out of
         Right _ -> return ()
         Left  e -> fail e
@@ -57,35 +59,27 @@ buildLibrary library = do
     
 
 buildGraph :: DefManager -> (Definition.ID, Definition) -> IO ()
-buildGraph defManager def = timeLuna $ Luna.run $ do 
+buildGraph defManager def = hoistLuna $ Luna.run $ do 
+    logger debug "Compiling graph"
     ast <- GraphParser.run defManager def
     buildAST ast
 
 
-buildFile :: UniPath -> IO ()
-buildFile path = timeLuna $ Luna.run $ do 
+buildFile :: Diagnostics -> UniPath -> IO ()
+buildFile diag path = hoistLuna $ Luna.run $ do 
+    logger debug $ "Compiling file '" ++ UniPath.toUnixString path ++ "'"
     source <- FileReader.run (UniPath.fromUnixString ".") path
     ast    <- TxtParser.run source
+    Diagnostics.printAST ast diag -- TODO[wd]: Diagnostyka powinna byc przekazywana dalej.
     buildAST ast
 
 
 buildAST :: (MonadIO m, PassMonad s m) => ASTModule.Module -> Pass.Result m ()
 buildAST ast = do
-    va <- VarAlias.run     ast
-    --logger debug $ PP.ppShow va
-
-    ssa <- SSA.run va ast
-    --logger debug $ PP.ppqShow ssa
-
-    hast <- HASTGen.run  ssa
-    --logger debug $ PP.ppShow hast
-
-    hsc <- HSC.run hast
-    --logger debug $ PP.ppShow hsc
-
-    --logger info  "Running PHSC" 
-    --phsc <- HSPrint.run hsc
-    --logger debug $ phsc
+    va   <- VarAlias.run ast
+    ssa  <- SSA.run va ast
+    hast <- HASTGen.run ssa
+    hsc  <- HSC.run hast
 
     return ()
 
