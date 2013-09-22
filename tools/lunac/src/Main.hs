@@ -86,9 +86,10 @@ run conf = case conf of
             inputs = map UniPath.fromUnixString $ Conf.inputs conf
 
         let outputPath = UniPath.fromUnixString "out"
+            projectName = "out"
         sources <- mapM (Builder.buildFile diag) inputs
         Builder.buildSources outputPath $ List.concat sources
-        Builder.runCabal outputPath
+        Builder.runCabal outputPath projectName
         --print $ length sources
 
         -- TODO [PM] : This code does not compile
