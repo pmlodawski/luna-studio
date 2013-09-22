@@ -22,7 +22,8 @@ import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState as GenState
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState   (GenState)
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
 import           Flowbox.Luna.Passes.Pass                              (PassMonad)
-import           Flowbox.System.Log.Logger                             
+import           Flowbox.System.Log.Logger           
+import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils                  
 
 import           Control.Monad.State                                   
 import           Control.Applicative                                   
@@ -56,11 +57,7 @@ genModule (LModule.Module _ cls imports classes _ methods _) = do
     GenState.getModule
 
 
-mkCFName = ("CField_" ++)
-mkFCName = ("FC_" ++)
-mkGetName = ("get" ++)
-mkTHVarName  = ("'" ++)
-mkTHTypeName = ("''" ++)
+
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
@@ -89,31 +86,23 @@ genExpr ast = case ast of
                                                        memberNames = fieldNames ++ funcNames
                                                        cfNames     = map mkCFName memberNames
                                                        fcNames     = map mkFCName memberNames
-                                                   logger error $ show (cfNames, memberNames, fcNames)
+
                                                    -- constructor function
-                                                   let fcon = HExpr.Function ("con_" ++ name) [] 
-                                                            $ HExpr.AppE (HExpr.Var $ "_mkcon" ++ show (length fields)) (HExpr.Var name)
-                                                   GenState.addFunction fcon
+                                                   GenState.addFunction $ genCon name (length fields)
 
                                                    -- CField for each class field
-                                                   let mkNt name = HExpr.NewTypeD name ["a"] (HExpr.Con name [HExpr.Typed (HExpr.Var "a") (HExpr.Var $ mkGetName name)])
-                                                   let nts = map mkNt cfNames
+                                                   let nts = map genCFDec cfNames
                                                    mapM_ GenState.addNewType nts
 
-
-                                                   --let test = HExpr.AppE (HExpr.Var "mkInstC") (HExpr.Var "b")
-                                                   --GenState.addTHExpression test
-
-                                                   -- FClass imports
-                                                   let genImport name = HExpr.Import False ["Flowbox", "Luna", "FClasses", "U_" ++ name] Nothing
-                                                   let imps = map genImport memberNames
+                                                   -- CField imports
+                                                   let imps = map genFCImport memberNames
                                                    mapM_ GenState.addImport imps
 
-
-                                                   let genTH a b c = HExpr.AppE (HExpr.Var "mkInstC") $ HExpr.AppE (HExpr.Var $ mkTHTypeName a) (HExpr.AppE (HExpr.Var $ mkTHVarName b) (HExpr.Var $ mkTHVarName c))
-                                                   let ths = zipWith3 genTH fcNames cfNames memberNames
+                                                   -- TH snippets
+                                                   let ths = zipWith3 genTHC fcNames cfNames memberNames
                                                    mapM_ GenState.addTHExpression ths
 
+                                                   -- HExpr generation
                                                    cons   <- HExpr.Con name <$> mapM genExpr fields
                                                    return  $ HExpr.DataType name params [cons] 
                                                      
@@ -124,7 +113,7 @@ genExpr ast = case ast of
     LExpr.Assignment _ pat dst                  -> HExpr.Assignment <$> genPat pat <*> genExpr dst
     LExpr.Lit        _ value                    -> genLit value
     LExpr.Tuple      _ items                    -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
-    LExpr.Field      _ name cls                 -> genTyped HExpr.Typed cls <*> pure (HExpr.Var name)
+    LExpr.Field      _ name cls                 -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
     LExpr.App        _ src args                 -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genExpr args)
     LExpr.Accessor   _ src dst                  -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
     _                                            -> fail $ show ast
