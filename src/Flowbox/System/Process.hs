@@ -18,9 +18,10 @@ import           Flowbox.System.Log.Logger
 
 runCommand :: String -> [String] -> LoggerIO -> IO ()
 runCommand command args loggerIO = do
+    loggerIO info $ "Runing '" ++ command ++ " " ++ (List.concat $ List.intersperse " " args) ++ "'"
     let noStandardInput = ""
     (errorCode, stdOut, stdErr) <- Process.readProcessWithExitCode command args noStandardInput
-    let runmsg = "Runing '" ++ command ++ " " ++ (List.concat $ List.intersperse " " args) ++ "':\n" ++ stdOut
+    let runmsg = stdOut
     if errorCode == Exit.ExitSuccess
         then loggerIO info runmsg
         else do let errmsg = "Error running command '" ++ command ++ "'\n" ++ stdErr
