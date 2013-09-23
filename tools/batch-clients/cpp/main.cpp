@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
         batch.addDefinition(fun, fun, myModule.defID, workspacelib.libID, proj.projectID);
 
         Type myclassType;
-        batch.newTypeClass(myclassType, "myclass", {}, {});
+        batch.newTypeClass(myclassType, "MyClass", {}, {});
         
         Definition myclass;
         myclass.__set_cls(myclassType);
@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
 
 
         vector<DefPtr> resolved;
-        batch.resolveDefinition(resolved, "workspace.myclass", myModule.defID, workspacelib.libID, proj.projectID);
+        batch.resolveDefinition(resolved, "Workspace.MyClass", myModule.defID, workspacelib.libID, proj.projectID);
         cout << "Resolved definition: matches: " << resolved.size() << endl;
         cout << "Resolved definition: " << resolved[0].defID << endl;
         /* Add some nodes */

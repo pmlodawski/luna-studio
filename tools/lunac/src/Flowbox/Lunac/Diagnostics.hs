@@ -4,17 +4,21 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds, FlexibleContexts, NoMonomorphismRestriction #-}
 
 module Flowbox.Lunac.Diagnostics where
 
-import           Control.Monad               (when)
-import           Flowbox.Prelude             
-import qualified Flowbox.Text.Show.Pretty  as PP
-import           Flowbox.System.Log.Logger   
-import           Flowbox.Text.Show.Hs        (hsShow)
-import qualified Flowbox.Luna.Data.Source  as Source
-import           Data.String.Utils           (join)
+import           Control.Monad                     (when)
+import           Data.String.Utils                 (join)
+
+
+import           Flowbox.Prelude                   
+import qualified Flowbox.Generics.Deriving.QShow as QShow
+import qualified Flowbox.Luna.Data.Source        as Source
+import           Flowbox.System.Log.Logger         
+import           Flowbox.Text.Show.Hs              (hsShow)
+import qualified Flowbox.Text.Show.Pretty        as PP
+
 
 data Diagnostics = Diagnostics { showAST  :: Bool 
                                , showVA   :: Bool
@@ -24,17 +28,42 @@ data Diagnostics = Diagnostics { showAST  :: Bool
                                }
 
 
+all :: Diagnostics
+all = Diagnostics True True True True True
+
+
+none :: Diagnostics
+none = Diagnostics False False False False False
+
+
 logger :: Logger
 logger = getLogger "Flowbox.Lunac.Diagnostics"
 
+
+printAST :: (QShow.QShow a, LogWriter m) => a -> Diagnostics -> m ()
 printAST  v diag = when (showAST  diag) $ logger info (PP.ppqShow v)
+
+
+printVA :: (Show a, LogWriter m) => a -> Diagnostics -> m ()
 printVA   v diag = when (showVA   diag) $ logger info (PP.ppShow  v)
+
+
+printSSA :: (QShow.QShow a, LogWriter m) => a -> Diagnostics -> m ()
 printSSA  v diag = when (showSSA  diag) $ logger info (PP.ppqShow v)
+
+
+printHAST :: (Show a, LogWriter m) => a -> Diagnostics -> m ()
 printHAST v diag = when (showHAST diag) $ logger info (PP.ppShow  v)
+
+
+printHSC :: LogWriter m => [Source.Source] -> Diagnostics -> m ()
 printHSC  v diag = when (showHSC  diag) $ logger info (showSrcs   v)
 
 
+showSrcs :: [Source.Source] -> String
 showSrcs srcs = join "\n\n" $ map showSrc srcs 
 
+
+showSrc :: Source.Source -> String
 showSrc src   = ">>> file '" ++ join "/" (Source.path src) ++ "':\n\n"
               ++ hsShow (Source.code src)

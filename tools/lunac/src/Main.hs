@@ -92,7 +92,7 @@ run conf = case conf of
             projectName = output
 
         sources <- mapM (Builder.buildFile diag) inputs
-        Builder.buildSources outputPath $ List.concat sources
+        Builder.buildSources outputPath $ Builder.launcher : (List.concat sources)
         Builder.runCabal outputPath projectName
         --print $ length sources
 

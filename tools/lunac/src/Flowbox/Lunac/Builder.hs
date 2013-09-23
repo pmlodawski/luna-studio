@@ -36,7 +36,7 @@ import qualified Flowbox.Luna.Passes.Source.File.Reader                    as Fi
 import qualified Flowbox.Luna.Passes.Source.File.Writer                    as FileWriter
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
 import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
-import           Flowbox.Lunac.Diagnostics                                   (Diagnostics(Diagnostics))
+import           Flowbox.Lunac.Diagnostics                                   (Diagnostics)
 import           Flowbox.System.Log.Logger                                   
 import qualified Flowbox.System.UniPath                                    as UniPath
 import           Flowbox.System.UniPath                                      (UniPath)
@@ -55,10 +55,9 @@ either2io f = do
         Left  e -> fail e
 
 
-buildLibrary :: Library -> IO [Source]
-buildLibrary library = do
-    let diag = Diagnostics False False False False False -- TODO[PM] : remove; added to fix compilation errors
-        defManger = Library.defs library
+buildLibrary :: Diagnostics -> Library -> IO [Source]
+buildLibrary diag library = do
+    let defManger = Library.defs library
         rootDefID = Library.rootDefID
         rootDef = fromJust $ DefManager.lab defManger rootDefID
     buildGraph diag defManger (rootDefID, rootDef)
@@ -122,7 +121,7 @@ genCabal name = let
 
 buildSources :: UniPath -> [Source] -> IO ()
 buildSources outputPath sources = either2io $ Luna.run $ do 
-    mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) $ launcher : sources 
+    mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) sources 
 
 
 runCabal :: UniPath -> String -> IO ()

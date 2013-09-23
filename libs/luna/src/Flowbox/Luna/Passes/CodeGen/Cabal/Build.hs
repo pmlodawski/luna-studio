@@ -7,6 +7,7 @@
 
 module Flowbox.Luna.Passes.CodeGen.Cabal.Build where
 
+import           Control.Applicative         
 import           Control.Monad.RWS           
 import qualified Control.Exception         as Exception
 import qualified System.Directory          as Directory
@@ -29,7 +30,8 @@ run = liftIO . build
 build :: UniPath -> IO ()
 build buildPath = do 
     workingDir <- Directory.getCurrentDirectory
-    Directory.setCurrentDirectory $ UniPath.toUnixString buildPath
+    path <- UniPath.toUnixString <$> UniPath.expand buildPath
+    Directory.setCurrentDirectory path
 
     Exception.finally (do Process.runCommand "cabal" ["configure"] loggerIO
                           Process.runCommand "cabal" ["build"] loggerIO)

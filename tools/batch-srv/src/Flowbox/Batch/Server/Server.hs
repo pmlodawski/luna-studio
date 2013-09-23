@@ -48,7 +48,7 @@ runSingleConnectionServer accepter_ hand proc_ address port = Socket.withSockets
 
     serverSocket  <- Socket.socket Socket.AF_INET Socket.Stream tcp
     --serverAddress <- Socket.inet_addr "127.0.0.1"
-    --Socket.setSocketOption serverSocket Socket.ReuseAddr 1
+    Socket.setSocketOption serverSocket Socket.ReuseAddr 1
     (Socket.AddrInfo _ _ _ _ sockAddr _):_ <- Socket.getAddrInfo Nothing (Just address) (Just $ show port)
     --let sockAddr = Socket.SockAddrInet (Socket.PortNum 30521) serverAddress --Socket.iNADDR_ANY
     Socket.bindSocket serverSocket sockAddr -- TODO [PM] pretty code doesn't work ;/

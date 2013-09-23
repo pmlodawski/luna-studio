@@ -44,9 +44,8 @@ import qualified Flowbox.Batch.Server.Server              as Server
 import           Flowbox.System.Log.Logger                  
 
 
-
-logger :: Logger
-logger = getLogger "Flowbox.Batch.Server"
+rootLogger :: Logger
+rootLogger = getLogger "Flowbox"
 
 
 loggerIO :: LoggerIO
@@ -166,7 +165,7 @@ waitForQuit quitmutex = do
 
 main :: IO ()
 main = do
-    logger setLevel DEBUG
+    rootLogger setLevel DEBUG
     quitmutex <- MVar.newEmptyMVar
     _ <- Concurrent.forkIO 
         $ Exception.handle (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e

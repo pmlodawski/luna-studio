@@ -14,6 +14,7 @@ import           Control.Applicative
 import           Control.Monad.State                                   hiding (mapM, mapM_)
 import           Data.Foldable                                           (foldlM)
 import qualified Data.List                                             as List
+import qualified Data.List.Split                                       as Split
 
 import           Flowbox.Prelude                                       hiding (id)
 import           Flowbox.Control.Error                                   ()
@@ -57,7 +58,11 @@ type ASTLit     = ASTLit.Lit
 type Graph2ASTMonad m = PassMonad IdState m
 
 
+newID :: IdState.IdStateM m => m Int
 newID = IdState.newID
+
+
+tok :: (Functor f, IdState.IdStateM f) => (Int -> b) -> f b
 
 tok a = a <$> newID
 
@@ -74,13 +79,14 @@ module2AST defManager (defID, Definition cls _ imports _ _) = case cls of
                                          <*> mapM type2Field params
                                          <*> nextDefs defManager defID methodsFilter
                                          <*> nextModules defManager defID
+    _ -> fail "Module type is not the root in definition tree"
 
 
 def2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTExpr
 def2AST defManager (defID, def) = case def of 
-    Definition _   _     _       (Flags _ True ) _ -> return $ ASTExpr.NOP defID -- Comment
-    Definition cls graph imports (Flags _ False) _ -> case cls of
-        Type.Class _ _ params       -> ASTExpr.Class defID 
+    Definition _   _     _ (Flags _ True ) _ -> return $ ASTExpr.NOP defID -- Comment
+    Definition cls graph _ (Flags _ False) _ -> case cls of
+        Type.Class _ _ params             -> ASTExpr.Class defID 
                                                  <$> (liftM snd $ type2ASTType cls)
                                                  <*> nextDefs defManager defID classesFilter
                                                  <*> (mapM type2Field params)
@@ -94,6 +100,11 @@ def2AST defManager (defID, def) = case def of
                                                                           outputsType
                                                                           graphAst
                                            -- notImplementedList
+        Type.Undefined   -> fail "Undefined type in definition tree."
+        Type.TypeName {} -> fail "TypeName type in definition tree."
+        Type.Tuple    {} -> fail "Tuple type in definition tree."
+        Type.Named    {} -> fail "Named type in definition tree."
+        Type.Module   {} -> fail "Unexpected Module in definition tree."
        
 
 nextModules :: Graph2ASTMonad m => DefManager -> Definition.ID -> Pass.Result m [ASTModule]
@@ -154,12 +165,14 @@ type2ASTType t = do
     id <- newID
     case t of 
         Type.Undefined                  -> return (""  , ASTType.Unknown id)
+        Type.Module       name _        -> return (""  , ASTType.Module id (Split.splitOn "." name))
         Type.TypeName     name          -> return (""  , ASTType.Var    id name)
         Type.Class        name params _ -> return (""  , ASTType.Class  id name params)
         Type.Tuple        items         -> do astitems <- mapM (liftM snd .type2ASTType) items
                                               return (""  , ASTType.Tuple  id astitems)
         Type.Named        name cls      -> do type_ <- liftM snd $ type2ASTType cls
                                               return (name, type_)
+
 
 
 defaultVal2ASTLit :: Graph2ASTMonad m => DefaultValue -> Pass.Result m ASTLit
