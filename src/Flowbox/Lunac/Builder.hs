@@ -12,6 +12,8 @@ import           Data.Maybe                                                  (fr
 
 import           Flowbox.Prelude                                             
 import qualified Flowbox.Luna.Data.AST.Module                              as ASTModule
+import qualified Flowbox.Luna.Data.Cabal.Config                            as CabalConfig
+import qualified Flowbox.Luna.Data.Cabal.Section                           as CabalSection
 import qualified Flowbox.Luna.Data.Source                                  as Source
 import           Flowbox.Luna.Data.Source                                    (Source(Source))
 import qualified Flowbox.Luna.Lib.Library                                  as Library
@@ -21,9 +23,8 @@ import           Flowbox.Luna.Network.Def.Definition                         (De
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Build.CabalBuild        as CabalBuild
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen.Defaults            as CabalDefaults
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store.CabalStore        as CabalStore
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Build                   as CabalBuild
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                   as CabalStore
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
@@ -39,6 +40,7 @@ import           Flowbox.Lunac.Diagnostics                                   (Di
 import           Flowbox.System.Log.Logger                                   
 import qualified Flowbox.System.UniPath                                    as UniPath
 import           Flowbox.System.UniPath                                      (UniPath)
+
 
 
 logger :: Logger
@@ -103,11 +105,19 @@ hsExt = ".hs"
 cabalExt :: String
 cabalExt = ".cabal"
 
+
 launcher :: Source 
 launcher = Source  ["Main"]
          $ unlines [ "import Main_ as M"
                    , "main = M.main 0"]
 
+
+genCabal :: String -> CabalConfig.Config
+genCabal name = let
+    exec = CabalSection.mkExecutable name -- TODO [PM] : refactor. mkExecutable silently creates project with MainIs = "Main.hs" and hsSourceDirs = "src"
+    conf = CabalConfig.addSection exec 
+         $ CabalConfig.make name
+    in conf
 
 
 buildSources :: UniPath -> [Source] -> IO ()
@@ -117,8 +127,7 @@ buildSources outputPath sources = either2io $ Luna.run $ do
 
 runCabal :: UniPath -> String -> IO ()
 runCabal path name = either2io $ Luna.run $ do 
-    let mainIs = UniPath.setExtension hsExt $ UniPath.fromList $ Source.path launcher
-        cabal = CabalDefaults.defaultConfig name [UniPath.fromUnixString srcFolder] mainIs
+    let cabal = genCabal name
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) path
     CabalBuild.run path
     

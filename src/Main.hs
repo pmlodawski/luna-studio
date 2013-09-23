@@ -25,12 +25,13 @@ import           Flowbox.Lunac.Diagnostics     (Diagnostics(Diagnostics))
 rootLogger :: Logger
 rootLogger = getLogger "Flowbox"
 
-logger :: Logger
-logger = getLogger "Flowbox.Lunac"
+
+--logger :: Logger
+--logger = getLogger "Flowbox.Lunac"
 
 
-libPathEnv :: String
-libPathEnv = "LUNAPATH"
+--libPathEnv :: String
+--libPathEnv = "LUNAPATH"
 
 
 version :: Version
