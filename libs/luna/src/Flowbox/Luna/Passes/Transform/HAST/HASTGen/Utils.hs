@@ -7,9 +7,9 @@
 
 module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils where
 
-import qualified Flowbox.Prelude                                     as Prelude
-import           Flowbox.Prelude                                     hiding (error, id)
-import qualified Flowbox.Luna.Data.HAST.Expr                         as HExpr
+import qualified Flowbox.Prelude             as Prelude
+import           Flowbox.Prelude             hiding (error, id)
+import qualified Flowbox.Luna.Data.HAST.Expr as HExpr
 
 
 mkCFName     = ("CField_" ++)

@@ -13,8 +13,8 @@ import           Control.Monad.State
 import qualified Flowbox.Luna.Data.HAST.Expr   as HExpr
 import qualified Flowbox.Luna.Data.HAST.Module as Module
 
-import           Flowbox.System.Log.Logger     
-import           Control.Applicative  
+import           Flowbox.System.Log.Logger       
+import           Control.Applicative             
 
 
 logger :: Logger

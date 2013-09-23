@@ -8,13 +8,13 @@
 
 module Flowbox.Lunac.Diagnostics where
 
-import           Control.Monad (when)
-import           Flowbox.Prelude            
-import qualified Flowbox.Text.Show.Pretty as PP
+import           Control.Monad               (when)
+import           Flowbox.Prelude             
+import qualified Flowbox.Text.Show.Pretty  as PP
 import           Flowbox.System.Log.Logger   
-import           Flowbox.Text.Show.Hs                                    (hsShow)
-import qualified Flowbox.Luna.Data.Source                              as Source
-import           Data.String.Utils                                       (join)
+import           Flowbox.Text.Show.Hs        (hsShow)
+import qualified Flowbox.Luna.Data.Source  as Source
+import           Data.String.Utils           (join)
 
 data Diagnostics = Diagnostics { showAST  :: Bool 
                                , showVA   :: Bool

@@ -22,8 +22,8 @@ import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState as GenState
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState   (GenState)
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
 import           Flowbox.Luna.Passes.Pass                              (PassMonad)
-import           Flowbox.System.Log.Logger           
-import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils                  
+import           Flowbox.System.Log.Logger                             
+import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils      
 
 import           Control.Monad.State                                   
 import           Control.Applicative                                   
