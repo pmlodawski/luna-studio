@@ -32,8 +32,8 @@ import           Flowbox.Luna.Passes.Pass                                    (Pa
 import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
-import qualified Flowbox.Luna.Passes.Source.File.Reader.Reader             as FileReader
-import qualified Flowbox.Luna.Passes.Source.File.Writer.Writer             as FileWriter
+import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
+import qualified Flowbox.Luna.Passes.Source.File.Writer                    as FileWriter
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
 import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
 import           Flowbox.Lunac.Diagnostics                                   (Diagnostics(Diagnostics))
