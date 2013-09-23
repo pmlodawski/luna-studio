@@ -12,5 +12,5 @@ import qualified Data.Char       as Char
 import           Flowbox.Prelude   
 
 
-
+toUpper :: String -> String
 toUpper n = (Char.toUpper $ head n) : (tail n)
