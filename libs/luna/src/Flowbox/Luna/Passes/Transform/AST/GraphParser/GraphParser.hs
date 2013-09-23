@@ -226,8 +226,7 @@ node2AST graph inputsNames list (nodeID, node) = do
                 maxArg = foldr (biggestPort argID) Port.All inEdges 
 
             args <- case maxArg of 
-                Port.All      -> do onlyArg <- arg inEdges maxArg 
-                                    return [onlyArg]
+                Port.All      -> (:[]) <$> arg inEdges maxArg 
                 Port.Number p -> mapM (\i -> arg inEdges $ Port.Number i) [0..p]
             
             parseID <- newID
