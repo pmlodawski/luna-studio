@@ -32,5 +32,5 @@ genFCImport name = HExpr.Import False ["Flowbox", "Luna", "FClasses", "U_" ++ na
 genCFDec name = HExpr.NewTypeD name ["a"] (HExpr.Con name [HExpr.Typed (HExpr.Var "a") (HExpr.Var $ mkGetName name)])
 
 genCon name fnum = HExpr.Function ("con_" ++ name) [] 
-                 $ HExpr.AppE (HExpr.Var $ "_mkcon" ++ show fnum) 
+                 $ HExpr.AppE (HExpr.Var $ "_mkPure" ++ show fnum) 
                  $ HExpr.Var name

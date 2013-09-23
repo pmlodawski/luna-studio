@@ -55,9 +55,9 @@ vaMod mod = do
 
 vaExpr :: VAMonad m => Expr.Expr -> Pass.Result m ()
 vaExpr ast = case ast of
-    Expr.Function   _ _ pats _ body       -> do
+    Expr.Function   _ _ inputs _ body    -> do
                                              s <- runNested $ do
-                                                  mapM_ vaPat pats
+                                                  mapM_ vaExpr inputs
                                                   vaExprMap body
                                              LocState.updateVarStat s
     Expr.Assignment _ pat dst             -> vaExpr dst <* vaPat pat

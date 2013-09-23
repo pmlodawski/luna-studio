@@ -61,62 +61,65 @@ genModule (LModule.Module _ cls imports classes _ methods _) = do
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
-    LExpr.Var      _ name                       -> pure $ HExpr.Var name
-    LExpr.Cons     _ name                       -> pure $ HExpr.Var ("con_" ++ name)
-    LExpr.Function _ name pats output body      ->     HExpr.Function name 
-                                                   <$> mapM genPat pats 
-                                                   <*> (HExpr.DoBlock <$> genFuncBody body output)
-                                                       
-    LExpr.Import _ path target rename           -> do
-                                                   let (LType.Cons _ segments) = path
-                                                   tname <- case target of
-                                                       LExpr.Cons     _ tname -> pure tname
-                                                       LExpr.Var      _ tname -> pure tname
-                                                       LExpr.Wildcard _       -> logger error ("Wildcard imports are not supported yet.") *> Pass.fail "Wildcard imports are not supported yet."
-                                                       _                      -> Pass.fail "internal error"
-                                                   case rename of
-                                                       Just _                 -> logger error ("Named imports are not supported yet.") *> Pass.fail "Named imports are not supported yet."
-                                                       _                      -> pure ()
+    LExpr.Var      _ name                  -> pure $ HExpr.Var name
+    LExpr.Cons     _ name                  -> pure $ HExpr.Var ("con_" ++ name)
+    LExpr.Function _ name inputs output 
+                     body                  ->     HExpr.Function name 
+                                              <$> mapM genExpr inputs 
+                                              <*> (HExpr.DoBlock <$> genFuncBody body output)
 
-                                                   return $ HExpr.Import False (["Flowbox", "Libs"] ++ segments ++ [tname]) Nothing where
-                                                     
-    LExpr.Class _ cls _ fields methods          -> do 
-                                                   let fieldNames  = map LExpr.name fields
-                                                       funcNames   = map LExpr.name methods 
-                                                       memberNames = fieldNames ++ funcNames
-                                                       cfNames     = map mkCFName memberNames
-                                                       fcNames     = map mkFCName memberNames
-
-                                                   -- constructor function
-                                                   GenState.addFunction $ genCon name (length fields)
-
-                                                   -- CField for each class field
-                                                   let nts = map genCFDec cfNames
-                                                   mapM_ GenState.addNewType nts
-
-                                                   -- CField imports
-                                                   let imps = map genFCImport memberNames
-                                                   mapM_ GenState.addImport imps
-
-                                                   -- TH snippets
-                                                   let ths = zipWith3 genTHC fcNames cfNames memberNames
-                                                   mapM_ GenState.addTHExpression ths
-
-                                                   -- HExpr generation
-                                                   cons   <- HExpr.Con name <$> mapM genExpr fields
-                                                   return  $ HExpr.DataType name params [cons] 
-                                                     
-                                                   where name   =  LType.name   cls
-                                                         params =  LType.params cls
-                                                   
-    LExpr.Infix _ name src dst                  -> HExpr.Infix name <$> genExpr src <*> genExpr dst
-    LExpr.Assignment _ pat dst                  -> HExpr.Assignment <$> genPat pat <*> genExpr dst
-    LExpr.Lit        _ value                    -> genLit value
-    LExpr.Tuple      _ items                    -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
-    LExpr.Field      _ name cls                 -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
-    LExpr.App        _ src args                 -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genExpr args)
-    LExpr.Accessor   _ src dst                  -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
-    _                                            -> fail $ show ast
+    LExpr.Arg _ pat value                  -> genPat pat
+                                                  
+    LExpr.Import _ path target rename      -> do
+                                              let (LType.Cons _ segments) = path
+                                              tname <- case target of
+                                                  LExpr.Cons     _ tname -> pure tname
+                                                  LExpr.Var      _ tname -> pure tname
+                                                  LExpr.Wildcard _       -> logger error ("Wildcard imports are not supported yet.") *> Pass.fail "Wildcard imports are not supported yet."
+                                                  _                      -> Pass.fail "internal error"
+                                              case rename of
+                                                  Just _                 -> logger error ("Named imports are not supported yet.") *> Pass.fail "Named imports are not supported yet."
+                                                  _                      -> pure ()
+                                              
+                                              return $ HExpr.Import False (["Flowbox", "Libs"] ++ segments ++ [tname]) Nothing where
+                                                
+    LExpr.Class _ cls _ fields methods     -> do 
+                                              let fieldNames  = map LExpr.name fields
+                                                  funcNames   = map LExpr.name methods 
+                                                  memberNames = fieldNames ++ funcNames
+                                                  cfNames     = map mkCFName memberNames
+                                                  fcNames     = map mkFCName memberNames
+                                            
+                                              -- constructor function
+                                              GenState.addFunction $ genCon name (length fields)
+                                           
+                                              -- CField for each class field
+                                              let nts = map genCFDec cfNames
+                                              mapM_ GenState.addNewType nts
+                                           
+                                              -- CField imports
+                                              let imps = map genFCImport memberNames
+                                              mapM_ GenState.addImport imps
+                                           
+                                              -- TH snippets
+                                              let ths = zipWith3 genTHC fcNames cfNames memberNames
+                                              mapM_ GenState.addTHExpression ths
+                                            
+                                              -- HExpr generation
+                                              cons   <- HExpr.Con name <$> mapM genExpr fields
+                                              return  $ HExpr.DataType name params [cons] 
+                                                
+                                              where name   =  LType.name   cls
+                                                    params =  LType.params cls
+                                              
+    LExpr.Infix _ name src dst             -> HExpr.Infix name <$> genExpr src <*> genExpr dst
+    LExpr.Assignment _ pat dst             -> HExpr.Assignment <$> genPat pat <*> genExpr dst
+    LExpr.Lit        _ value               -> genLit value
+    LExpr.Tuple      _ items               -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
+    LExpr.Field      _ name cls _          -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
+    LExpr.App        _ src args            -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genExpr args)
+    LExpr.Accessor   _ src dst             -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
+    _                                      -> fail $ show ast
     where
         getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
         get0   = getN (0::Int)

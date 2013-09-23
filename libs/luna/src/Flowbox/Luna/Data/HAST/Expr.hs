@@ -14,9 +14,7 @@ type Lit = Lit.Lit
 
 data Expr = Assignment { src       :: Expr     , dst       :: Expr                             }
           | Tuple      { items     :: [Expr]                                                   }
-          -- | Call       { name      :: String   , args      :: [Expr]   , ctx       :: Context }
           | StringLit  { val       :: String                                                   }
-          | NOP        {                                                                       }
           | Var        { name      :: String                                                   }
           | VarE       { name      :: String                                                   }
           | Typed      { cls       :: Expr     , expr      :: Expr                             }
@@ -33,20 +31,9 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Import     { qualified :: Bool     , segments  :: [String] , rename    :: Maybe String                           }
           | AppE       { src       :: Expr     , dst       :: Expr                             }
           | AppT       { src       :: Expr     , dst       :: Expr                             }
+          | Infix      { name      :: String   , src       :: Expr     , dst          :: Expr  }
+          | Lit        { lval      :: Lit                                                      }
+          | NOP
           | Undefined
-          -- | VarRef     { vid      :: Int                                                       } 
-          -- | NTuple     { items    :: [Expr]                                                    }
-          -- | Type       { name     :: String   , params    :: [String]                          }
-          -- | Default    { val      :: String                                                    }
-          -- | THExprCtx  { name     :: String                                                    }
-          -- | THTypeCtx  { name     :: String                                                    }
-          -- | At         { name     :: String   , dst       :: Expr                              }
-          -- | Any        {                                                                       }
-          -- | Block      { body     :: [Expr]   , ctx       :: Context                           }
-          -- | BlockRet   { name     :: String   , ctx       :: Context                           }
-          -- | FuncType   { items    :: [Expr]                                                    }
-           | Infix      { name     :: String   , src       :: Expr     , dst          :: Expr }
-           | Lit        { lval     :: Lit                                                     }
-          -- | Constant   { cval     :: Constant                                                  }
           deriving (Show)
 

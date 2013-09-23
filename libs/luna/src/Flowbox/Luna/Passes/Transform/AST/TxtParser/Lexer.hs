@@ -42,6 +42,7 @@ pAccessor    = symbol  '.'
 pArrow       = symbols "->"
 pTypeDecl    = symbols "::"
 pImportAll   = symbol  '*'
+pAssignment  = symbol  '='
 
 opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart

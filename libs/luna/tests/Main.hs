@@ -77,12 +77,32 @@ example = Source.Source ["Main"]
                   , "    x :: Int"
                   , "    y :: Int"
                   , "    z :: Int"
-                  , "    def test self:"
+                  , "    def test(self, x=0, y=0):"
                   , "        Console.print 1"
                   --, "from Std.Math import Vector "
                   --, "class A:"
                   --, "    a :: Std.Math.Vector Int"
                   ]
+
+--example :: Source
+--example = Source.Source ["Main"]
+--        $ unlines [ ""
+--                  , "def f (x=0):"
+--                  , "    x"
+--                  ]
+
+
+--example :: Source
+--example = Source.Source ["Main"]
+--        $ unlines [ ""
+--                  , "def f (x=0, y) -> Int :"
+--                  , "    x"
+--                  ]
+
+--{x@(a,b), y, z}
+
+
+--(x=(a,b)) = v
 
 
 main :: IO ()

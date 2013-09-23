@@ -33,7 +33,7 @@ import qualified Flowbox.Luna.Data.Source                          as Source
 -----------------------------------------------------------
 pTuple      p = L.braced (sepBy' p L.separator)
 pCallList s p = L.parensed s (sepBy p L.separator)
-pArgList  s p = try(L.parensed s (sepBy2 p L.separator)) <|> many (try p)
+pArgList  s p = try(L.parensed s (sepBy2 p L.separator)) <|> many (try p <|> L.parensed s p)
 pArgList' s p = try(L.parensed s (sepBy2 p L.separator)) <|> ((:[]) <$> p)
 pTupleBody  p = sepBy' p L.separator
 pTuplePure  p = L.braced $ pTupleBody p
@@ -75,9 +75,12 @@ pImport     s      = tok Expr.Import   <*  L.pImport
                                            )
 
 
+pArg        s i    = tok Expr.Arg      <*> pPattern s i 
+                                       <*> ((Just <$ L.pAssignment <*> pExpr s i) <|> pure Nothing)
+
 pFunc       s i    = tok Expr.Function <*  L.pDef 
                                        <*> L.pIdentVar s
-                                       <*> pArgList s (pPattern s i)
+                                       <*> pArgList s (pArg s i)
                                        <*> (try (L.pArrow *> pType s i) <|> tok Type.Unknown)
                                        <*> (pExprBlock s i <|> return [])
                                        <?> "function definition"
@@ -110,7 +113,11 @@ pModuleBody  s i    = choice [ Module.addMethod <$> pFunc s i
                              ]
 
 
-pField       s i    = tok Expr.Field <*> L.pIdent s <* L.pTypeDecl <*> pType s i
+pField       s i    =   tok Expr.Field 
+                    <*> L.pIdent s 
+                    <*  L.pTypeDecl 
+                    <*> pType s i
+                    <*> (L.pAssignment *> (Just <$> pExpr s i) <|> pure Nothing)
 
 pDeclaration s i    = choice [ pImport s 
                              , pFunc   s i

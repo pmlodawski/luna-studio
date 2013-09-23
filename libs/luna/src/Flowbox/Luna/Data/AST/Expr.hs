@@ -30,17 +30,19 @@ data Expr  = NOP        { id :: ID                                              
            | Assignment { id :: ID, pat       :: Pat      , dst       :: Expr                                              }
            | Class      { id :: ID, cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]  }
            | Cons       { id :: ID, name      :: String                                                                    }
-           | Field      { id :: ID, name      :: String   , cls       :: Type                                              }
-           | Function   { id :: ID, name      :: String   , pats      :: [Pat]  , output    :: Type   ,  body    :: [Expr] }
+           | Function   { id :: ID, name      :: String   , inputs    :: [Expr] , output    :: Type   ,  body    :: [Expr] }
            | Import     { id :: ID, path      :: Type     , target    :: Expr   , rename    :: Maybe String                }
            | Infix      { id :: ID, name      :: String   , src       :: Expr   , dst       :: Expr                        }                                                               
            | Lambda     { id :: ID, pats      :: [Pat]    , output    :: Type   , body      :: [Expr]                      }
            | List       { id :: ID, items     :: [Expr]                                                                    }
-           | Lit        { id :: ID, value     :: Lit                                                                       }
+           | Lit        { id :: ID, lvalue    :: Lit                                                                       }
            | Tuple      { id :: ID, items     :: [Expr]                                                                    }
            | Typed      { id :: ID, cls       :: Type     , expr      :: Expr                                              }
            | Var        { id :: ID, name      :: String                                                                    }
            | Wildcard   { id :: ID                                                                                         }
+           
+           | Field      { id :: ID, name      :: String   , cls       :: Type   , value     :: Maybe Expr                  }
+           | Arg        { id :: ID, pat       :: Pat      , value     :: Maybe Expr                  }
            deriving (Show, Eq, Generic)
 
 instance QShow Expr
@@ -77,8 +79,8 @@ traverseM fexp ftype fpat flit e = case e of
     Assignment id' pat' dst'                      -> Assignment id'       <$> fpat pat'  <*> fexp dst'
     Class      id' cls' classes' fields' methods' -> Class      id'       <$> ftype cls' <*> fexpMap classes' <*> fexpMap fields' <*> fexpMap methods'
     Cons       {}                                 -> pure e
-    Field      id' name' cls'                     -> Field      id' name' <$> ftype cls'
-    Function   id' name' pats' output' body'      -> Function   id' name' <$> fpatMap pats' <*> ftype output' <*> fexpMap body'
+    Field      id' name' cls' value'              -> Field      id' name' <$> ftype cls' <*> pure value' --FIXME[wd]: handle value
+    Function   id' name' inputs' output' body'    -> Function   id' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Lambda     id'       pats' output' body'      -> Lambda     id'       <$> fpatMap pats' <*> ftype output' <*> fexpMap body'
     Import     {}                                 -> pure e
     Infix      id' name' src' dst'                -> Infix      id' name' <$> fexp src'     <*> fexp dst'
@@ -90,6 +92,7 @@ traverseM fexp ftype fpat flit e = case e of
     Wildcard   {}                                 -> pure e
     NOP        {}                                 -> pure e
     AppCons_   {}                                 -> pure e
+    Arg        id' pat' value'                    -> Arg        id'       <$> fpat pat' <*> pure value' --FIXME[wd]: handle value'
     where fexpMap = mapM fexp
           fpatMap = mapM fpat
 
@@ -101,8 +104,8 @@ traverseM_ fexp ftype fpat flit e = case e of
     Assignment _  pat' dst'                       -> drop <* fpat pat'  <* fexp dst'
     Class      _  cls' classes' fields' methods'  -> drop <* ftype cls' <* fexpMap classes' <* fexpMap fields' <* fexpMap methods'
     Cons       {}                                 -> drop
-    Field      _  _ cls'                          -> drop <* ftype cls'
-    Function   _  _ pats' output' body'           -> drop <* fpatMap pats' <* ftype output' <* fexpMap body'
+    Field      _  _ cls' value'                   -> drop <* ftype cls' --FIXME[wd]: handle value
+    Function   _  _ inputs' output' body'         -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
     Lambda     _        pats' output' body'       -> drop <* fpatMap pats' <* ftype output' <* fexpMap body'
     Import     {}                                 -> drop
     Infix      _  _ src' dst'                     -> drop <* fexp src'     <* fexp dst'
@@ -114,6 +117,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     Wildcard   {}                                 -> drop
     NOP        {}                                 -> drop
     AppCons_   {}                                 -> drop
+    Arg        _ pat' value'                      -> drop <* fpat pat' --FIXME[wd]: handle value
     where drop    = pure ()
           fexpMap = mapM_ fexp
           fpatMap = fpatMap
