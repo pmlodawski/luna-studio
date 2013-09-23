@@ -24,7 +24,7 @@ logger = getLogger "Flowbox.Luna.Passes.Source.File.Writer"
 
 
 run :: PassMonadIO s m => UniPath -> String -> Source -> Pass.Result m ()
-run rootpath = (Pass.runT_ (Pass.Info "FileWriter") Pass.NoState) .: writeSource rootpath
+run = (Pass.runT_ (Pass.Info "FileWriter") Pass.NoState) .:. writeSource
 
 
 module2path :: [String] -> String -> UniPath
