@@ -65,18 +65,33 @@ genExpr ast = case ast of
     LExpr.Cons     _ name                  -> pure $ HExpr.Var ("con_" ++ name)
     LExpr.Function _ name inputs output 
                      body                  -> do
-                                              --let argvars = ["v1", "v2"]
-                                              --    vars    = "self" : argvars
-                                              --    exprArgs = map HExpr.Var argvars
-                                              --    exprVars = map HExpr.Var vars
-                                              --let cfGetterBase = HExpr.AppE (HExpr.Var "_vtest2")
-                                              --                 $ HExpr.AppE (HExpr.Var "getCField_vtest2") (HExpr.Var "self")
-                                              --    cfGetter = foldr (flip HExpr.AppE) cfGetterBase exprArgs
+                                              let genf name = test where
+                                                      arglen  = length inputs - 1
+                                                      argvars = map (("v" ++).show) [1..arglen]
+                                                      vars    = "self" : argvars
+                                                      exprArgs = map HExpr.Var argvars
+                                                      exprVars = map HExpr.Var vars
+                                                      cfGetterBase = HExpr.AppE (HExpr.Var $ "_" ++ name)
+                                                                   $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName name) (HExpr.Var "self")
+                                                      cfGetter = foldr (flip HExpr.AppE) cfGetterBase exprArgs
+                                                      
+                                                      test = HExpr.Function (mkGetNName arglen name) exprVars
+                                                           $ cfGetter
+                                                  test = genf name
 
-                                              --let test = HExpr.Function "get2_vtest2_T" exprVars 
-                                              --         $ cfGetter
+                                                  fcName = mkFCName name
+                                                  cfName = mkCFName name
 
-                                              --GenState.addFunction $ test
+                                              -- CField 
+                                              GenState.addNewType $ genCFDec cfName
+
+                                              -- CField imports
+                                              GenState.addImport $ genFCImport name
+
+                                              -- TH snippets
+                                              GenState.addTHExpression $ genTHC fcName cfName name
+
+                                              GenState.addFunction $ test
                                               HExpr.Function name  <$> mapM genExpr inputs 
                                                                    <*> (HExpr.DoBlock <$> genFuncBody body output)
 
@@ -98,9 +113,9 @@ genExpr ast = case ast of
     LExpr.Class _ cls _ fields methods     -> do 
                                               let fieldNames  = map LExpr.name fields
                                                   funcNames   = map LExpr.name methods 
-                                                  memberNames = fieldNames ++ funcNames
-                                                  cfNames     = map mkCFName memberNames
-                                                  fcNames     = map mkFCName memberNames
+                                                  --memberNames = fieldNames ++ funcNames
+                                                  cfNames     = map mkCFName fieldNames
+                                                  fcNames     = map mkFCName fieldNames
                                             
                                               -- constructor function
                                               GenState.addFunction $ genCon name (length fields)
@@ -110,11 +125,11 @@ genExpr ast = case ast of
                                               mapM_ GenState.addNewType nts
                                            
                                               -- CField imports
-                                              let imps = map genFCImport memberNames
+                                              let imps = map genFCImport fieldNames
                                               mapM_ GenState.addImport imps
                                            
                                               -- TH snippets
-                                              let ths = zipWith3 genTHC fcNames cfNames memberNames
+                                              let ths = zipWith3 genTHC fcNames cfNames fieldNames
                                               mapM_ GenState.addTHExpression ths
                                             
                                               -- Class methods

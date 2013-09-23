@@ -19,11 +19,15 @@ mkTHVarName  = ("'" ++)
 mkTHTypeName = ("''" ++)
 mkFieldName  = (++"_T")
 
-genTH f a b c = HExpr.AppE (HExpr.Var f) 
-              $ HExpr.AppE (HExpr.Var $ mkTHTypeName a) 
-              $ HExpr.AppE (HExpr.Var $ mkTHVarName  b) 
-              $ HExpr.Var $ mkTHVarName c
+mkGetNName i name = "get" ++ show i ++ "_" ++ name ++ "_T"
 
+--genTH f a b c = HExpr.AppE (HExpr.Var f) 
+--              $ HExpr.AppE (HExpr.Var $ mkTHTypeName a) 
+--              $ HExpr.AppE (HExpr.Var $ mkTHVarName  b) 
+--              $ HExpr.Var $ mkTHVarName c
+
+genTH f a b c = foldr (flip HExpr.AppE) (HExpr.Var f) vars where
+			    vars = map (HExpr.Var . mkTHTypeName) [a,b,c]
 genTHF = genTH "mkInst"
 genTHC = genTH "mkInstC"
 
