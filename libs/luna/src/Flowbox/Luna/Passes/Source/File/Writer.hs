@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Passes.Source.File.Writer.Writer where
+module Flowbox.Luna.Passes.Source.File.Writer where
 
 import           Control.Monad.RWS           
 import qualified System.IO                 as IO
