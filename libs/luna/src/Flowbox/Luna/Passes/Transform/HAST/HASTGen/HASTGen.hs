@@ -25,7 +25,7 @@ import           Flowbox.Luna.Passes.Pass                              (PassMona
 import           Flowbox.System.Log.Logger                             
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils      
 
-import           Control.Monad.State                                   
+import           Control.Monad.State                                 hiding (mapM, mapM_)
 import           Control.Applicative                                   
 
 type GenMonad m = PassMonad GenState m

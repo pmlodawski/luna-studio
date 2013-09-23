@@ -16,7 +16,7 @@ import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           Flowbox.Generics.Deriving.QShow   
 import           GHC.Generics                      (Generic)
 import           Control.Applicative               
-     
+
 
 type Lit         = Lit.Lit
 type Pat         = Pat.Pat
@@ -79,7 +79,7 @@ traverseM fexp ftype fpat flit e = case e of
     Assignment id' pat' dst'                      -> Assignment id'       <$> fpat pat'  <*> fexp dst'
     Class      id' cls' classes' fields' methods' -> Class      id'       <$> ftype cls' <*> fexpMap classes' <*> fexpMap fields' <*> fexpMap methods'
     Cons       {}                                 -> pure e
-    Field      id' name' cls' value'              -> Field      id' name' <$> ftype cls' <*> pure value' --FIXME[wd]: handle value
+    Field      id' name' cls' value'              -> Field      id' name' <$> ftype cls' <*> fexpMap value' 
     Function   id' name' inputs' output' body'    -> Function   id' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Lambda     id'       pats' output' body'      -> Lambda     id'       <$> fpatMap pats' <*> ftype output' <*> fexpMap body'
     Import     {}                                 -> pure e
@@ -92,7 +92,7 @@ traverseM fexp ftype fpat flit e = case e of
     Wildcard   {}                                 -> pure e
     NOP        {}                                 -> pure e
     AppCons_   {}                                 -> pure e
-    Arg        id' pat' value'                    -> Arg        id'       <$> fpat pat' <*> pure value' --FIXME[wd]: handle value'
+    Arg        id' pat' value'                    -> Arg        id'       <$> fpat pat' <*> fexpMap value' 
     where fexpMap = mapM fexp
           fpatMap = mapM fpat
 
@@ -104,7 +104,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     Assignment _  pat' dst'                       -> drop <* fpat pat'  <* fexp dst'
     Class      _  cls' classes' fields' methods'  -> drop <* ftype cls' <* fexpMap classes' <* fexpMap fields' <* fexpMap methods'
     Cons       {}                                 -> drop
-    Field      _  _ cls' value'                   -> drop <* ftype cls' --FIXME[wd]: handle value
+    Field      _  _ cls' value'                   -> drop <* ftype cls' <* fexpMap value' 
     Function   _  _ inputs' output' body'         -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
     Lambda     _        pats' output' body'       -> drop <* fpatMap pats' <* ftype output' <* fexpMap body'
     Import     {}                                 -> drop
@@ -117,7 +117,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     Wildcard   {}                                 -> drop
     NOP        {}                                 -> drop
     AppCons_   {}                                 -> drop
-    Arg        _ pat' value'                      -> drop <* fpat pat' --FIXME[wd]: handle value
+    Arg        _ pat' value'                      -> drop <* fpat pat' <* fexpMap value' 
     where drop    = pure ()
           fexpMap = mapM_ fexp
           fpatMap = fpatMap

@@ -11,7 +11,7 @@ module Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser (
 ) where
 
 import           Control.Applicative                                     
-import           Control.Monad.State                                     
+import           Control.Monad.State                                   hiding (mapM, mapM_)
 import           Data.Foldable                                           (foldlM)
 import qualified Data.List                                             as List
 

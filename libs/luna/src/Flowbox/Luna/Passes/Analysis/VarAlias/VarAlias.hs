@@ -21,7 +21,7 @@ import           Flowbox.Luna.Data.AliasAnalysis               (AA)
 import qualified Flowbox.Luna.Passes.Pass                    as Pass
 import           Flowbox.Luna.Passes.Pass                      (PassMonad)
 
-import           Control.Monad.State                           
+import           Control.Monad.State                         hiding (mapM, mapM_)
 import           Control.Applicative                           
 
 import           Flowbox.System.Log.Logger                     
