@@ -75,7 +75,8 @@ buildFile diag path = either2io $ Luna.run $ do
     logger debug $ "Compiling file '" ++ UniPath.toUnixString path ++ "'"
     let rootPath = UniPath.basePath path
     source <- FileReader.run rootPath path
-    ast    <- TxtParser.run source
+    let main = source{Source.path = ["Main_"]} -- TODO [PM] : remove Main_ hack
+    ast    <- TxtParser.run main
     Diagnostics.printAST ast diag 
     buildAST diag ast
 
@@ -103,8 +104,8 @@ cabalExt :: String
 cabalExt = ".cabal"
 
 launcher :: Source 
-launcher = Source  ["Launcher"]
-         $ unlines [ "import Main as M"
+launcher = Source  ["Main"]
+         $ unlines [ "import Main_ as M"
                    , "main = M.main 0"]
 
 
