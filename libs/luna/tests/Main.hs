@@ -45,10 +45,11 @@ import qualified Flowbox.Luna.Data.Cabal.Config                        as Config
 import qualified Flowbox.Luna.Data.Cabal.Section                       as Section
 
 
-genProject = let
-    exec = Section.empty Section.Executable
+genProject :: String -> Config.Config
+genProject name = let
+    exec = Section.mkExecutable name
     conf = Config.addSection exec
-         $ Config.empty
+         $ Config.make name
 
     in conf
 
@@ -143,7 +144,7 @@ main_inner = Luna.run $ do
     return ()
 
 
-
+printSrc :: Source -> [Char]
 printSrc src = ">>> file '" ++ join "/" (Source.path src) ++ "':\n\n"
              ++ hsShow (Source.code src)
 

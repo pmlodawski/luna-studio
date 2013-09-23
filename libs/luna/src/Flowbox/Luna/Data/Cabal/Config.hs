@@ -7,24 +7,23 @@
 
 module Flowbox.Luna.Data.Cabal.Config where
 
-import qualified Data.List                       as List
-
 import           Flowbox.Prelude                   
 import qualified Flowbox.Luna.Data.Cabal.Section as Section
-import           Flowbox.Luna.Data.Cabal.Section   (Section(Section))
+import           Flowbox.Luna.Data.Cabal.Section   (Section)
 import           Data.String.Utils                 (join)
 
 
-data Config = Config { name         :: String,
-                       version      :: String,
-                       cabalVersion :: String,
-                       buildType    :: String,
-                       sections     :: [Section]
+data Config = Config { name         :: String
+                     , version      :: String
+                     , cabalVersion :: String
+                     , buildType    :: String
+                     , sections     :: [Section]
                      } deriving (Show)
 
 
-empty :: Config
-empty = Config "" "1.0" ">= 1.8" "Simple" []
+make :: String -> Config
+make name' = Config name' "1.0" ">= 1.8" "Simple" []
+
 
 defaultIndent :: String
 defaultIndent = replicate 18 ' '

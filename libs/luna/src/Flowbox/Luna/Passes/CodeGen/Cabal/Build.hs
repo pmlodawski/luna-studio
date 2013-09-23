@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CodeGen.Cabal.Build.CabalBuild where
+module Flowbox.Luna.Passes.CodeGen.Cabal.Build where
 
 import           Control.Monad.RWS           
 import qualified Control.Exception         as Exception
@@ -19,15 +19,15 @@ import           Flowbox.System.Log.Logger
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.Cabal.Build.BuildCabal"
+loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.Cabal.Build"
 
 
 run :: MonadIO m => UniPath -> m ()
-run = liftIO . buildCabal
+run = liftIO . build
 
 
-buildCabal :: UniPath -> IO ()
-buildCabal buildPath = do 
+build :: UniPath -> IO ()
+build buildPath = do 
     workingDir <- Directory.getCurrentDirectory
     Directory.setCurrentDirectory $ UniPath.toUnixString buildPath
 
