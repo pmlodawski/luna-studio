@@ -38,8 +38,14 @@ instance (Typeable a, Typeable b) => Show (a -> b) where
 -- f .: g = (f .) . g
 -- (.:) f = ((f .) .)
 -- (.:) = (.) (.) (.)
-(.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
-(.:) = (.) . (.)
+(.:)  :: (x -> y) -> (a -> b -> x) -> (a -> b -> y)
+(.:)   = (.) . (.)
+
+(.:.) :: (x -> y) -> (a -> b -> c -> x) -> (a -> b -> c -> y)
+(.:.)  = (.) . (.) . (.)
+
+(.::) :: (x -> y) -> (a -> b -> c -> d -> x) -> (a -> b -> c -> d -> y)
+(.::)  = (.) . (.) . (.) . (.)
 
 mapM :: (Monad m, Traversable t) => (a -> m b) -> t a -> m (t b)
 mapM = Traversable.mapM
