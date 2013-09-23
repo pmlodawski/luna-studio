@@ -18,7 +18,6 @@ import           Control.Monad.IO.Class   (MonadIO, liftIO)
 import           Flowbox.Prelude          
 
 
-
 data PathItem = Node String 
               | Root String
               | Var String 
@@ -32,16 +31,21 @@ type UniPath = [PathItem]
 empty :: UniPath
 empty = []
 
+
 fromUnixString :: String -> UniPath
 fromUnixString []           = empty
 fromUnixString spath@(x:xs) = case x of
         '/' -> fromList $ "/" : Split.splitOn "/" xs
-        '~' -> Var "~" : fromUnixString xs
+        '~' -> case xs of 
+                  []     -> [Var "~"]
+                  '/':ys -> Var "~" : (fromUnixString ys)
+                  _      -> fromList $ Split.splitOn "/" xs
         _   -> fromList $ Split.splitOn "/" spath
 
 
 toUnixString :: UniPath -> String
 toUnixString path = join "/" $ toList path
+
 
 expand :: MonadIO m => UniPath -> m UniPath
 expand [] = return empty
@@ -55,6 +59,7 @@ expand (x:xs) = liftIO $ case x of
 fromList :: [String] -> UniPath
 fromList path = foldr prepend empty path
 
+
 toList :: UniPath -> [String]
 toList path = fmap str path where
     str item = case item of
@@ -65,8 +70,10 @@ toList path = fmap str path where
             Empty    -> ""
             Var v    -> v
 
+
 append :: String -> UniPath -> UniPath
 append snode path = path ++ [toPathItem snode]
+
 
 prepend :: String -> UniPath -> UniPath
 prepend snode path = (toPathItem snode):path 
@@ -74,6 +81,7 @@ prepend snode path = (toPathItem snode):path
 
 dirOf :: UniPath -> UniPath
 dirOf path = init path
+
 
 toPathItem :: String -> PathItem
 toPathItem snode = case snode of
@@ -83,10 +91,12 @@ toPathItem snode = case snode of
         ""   -> Empty
         txt  -> Node txt
 
+
 normalise :: UniPath -> UniPath
 normalise path = case reverse (normalise_r (reverse path) $ 0) of
         [] -> [Current]
         p  -> p
+
 
 normalise_r :: UniPath -> Int -> UniPath
 normalise_r path undo = case path of
