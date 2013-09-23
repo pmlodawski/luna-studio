@@ -7,14 +7,16 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Prelude(
-	module Flowbox.Prelude,
-	module Prelude
+    module Flowbox.Prelude,
+    module Prelude
 ) where
 
-import           Prelude                hiding (print, putStr, putStrLn)
+import           Prelude                hiding (print, putStr, putStrLn, mapM, mapM_)
 import qualified Prelude                as Prelude
 import           Control.Monad.IO.Class   (liftIO, MonadIO)
 import           Data.Typeable            
+import qualified Data.Traversable       as Traversable
+import           Data.Traversable         (Traversable)
 
 print :: (MonadIO m, Show s) => s -> m ()
 print    = liftIO . Prelude.print
@@ -38,3 +40,11 @@ instance (Typeable a, Typeable b) => Show (a -> b) where
 -- (.:) = (.) (.) (.)
 (.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 (.:) = (.) . (.)
+
+mapM :: (Monad m, Traversable t) => (a -> m b) -> t a -> m (t b)
+mapM = Traversable.mapM
+
+mapM_ :: (Monad m, Traversable t) => (a -> m b) -> t a -> m ()
+mapM_ f as = do 
+    _ <- mapM f as
+    return ()
