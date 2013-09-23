@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Passes.Source.FileReader.FileReader where
+module Flowbox.Luna.Passes.Source.File.Reader.Reader where
 
 import           Control.Applicative         
 import           Control.Monad.RWS           
@@ -22,7 +22,7 @@ type FRMonad m = PassMonadIO Pass.NoState m
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Source.FileReader.FileReader"
+logger = getLogger "Flowbox.Luna.Passes.Source.File.Reader.Reader"
 
 
 run :: PassMonadIO s m => UniPath -> UniPath -> Pass.Result m Source

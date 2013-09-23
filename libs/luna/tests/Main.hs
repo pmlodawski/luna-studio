@@ -21,7 +21,7 @@ import           Control.Monad.Trans.Either
 import           System.TimeIt                                           
 
 import           Flowbox.Prelude                                         
-import qualified Flowbox.Luna.Passes.Source.FileReader.FileReader      as FileReader
+import qualified Flowbox.Luna.Passes.Source.File.Reader.Reader         as FileReader
 import qualified Flowbox.Luna.Data.HAST.Expr                           as Expr
 import qualified Flowbox.Luna.Data.HAST.Module                         as Module
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
@@ -29,10 +29,6 @@ import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Build               as CabalBuild
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen                 as CabalGen
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Run                 as CabalRun
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store               as CabalStore
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
 import qualified Flowbox.Luna.Data.Source                              as Source
 import           Flowbox.Luna.Data.Source                                (Source)

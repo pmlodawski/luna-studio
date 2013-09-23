@@ -53,4 +53,5 @@ Executable utils
                   --either,
                   --hslogger,
                   --mtl,
-                  flowbox-utils
+                  flowbox-utils,
+                  ghc-prim

@@ -7,7 +7,7 @@
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, TupleSections #-}
 
 module Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser (
-    --run
+    run
 ) where
 
 import           Control.Applicative                                     
