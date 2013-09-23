@@ -27,7 +27,7 @@ genTH f a b c = HExpr.AppE (HExpr.Var f)
 genTHF = genTH "mkInst"
 genTHC = genTH "mkInstC"
 
-genFCImport name = HExpr.Import False ["Flowbox", "Luna", "FClasses", "U_" ++ name] Nothing
+genFCImport name = HExpr.Import False ["FlowboxM", "Luna", "FClasses", "U_" ++ name] Nothing
 
 genCFDec name = HExpr.NewTypeD name ["a"] (HExpr.Con name [HExpr.Typed (HExpr.Var "a") (HExpr.Var $ mkGetName name)])
 
