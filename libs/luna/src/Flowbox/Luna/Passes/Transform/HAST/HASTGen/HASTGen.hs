@@ -65,8 +65,7 @@ genExpr ast = case ast of
     LExpr.Cons     _ name                  -> pure $ HExpr.Var ("con_" ++ name)
     LExpr.Function _ name inputs output 
                      body                  -> do
-                                              let genf name = test where
-                                                      arglen  = length inputs - 1
+                                              let genf arglen name = test where
                                                       argvars = map (("v" ++).show) [1..arglen]
                                                       vars    = "self" : argvars
                                                       exprArgs = map HExpr.Var argvars
@@ -77,10 +76,16 @@ genExpr ast = case ast of
                                                       
                                                       test = HExpr.Function (mkGetNName arglen name) exprVars
                                                            $ cfGetter
-                                                  test = genf name
+
+                                                  arglen = length inputs - 1
+                                                  test   = genf arglen name
 
                                                   fcName = mkFCName name
                                                   cfName = mkCFName name
+
+                                                  cgetCName = mkCGetCName arglen
+                                                  cgetName  = mkCGetName  arglen
+                                                  getNName  = mkGetNName arglen name
 
                                               -- CField 
                                               GenState.addNewType $ genCFDec cfName
@@ -90,6 +95,7 @@ genExpr ast = case ast of
 
                                               -- TH snippets
                                               GenState.addTHExpression $ genTHC fcName cfName name
+                                              GenState.addTHExpression $ genTHF cgetCName getNName cgetName
 
                                               GenState.addFunction $ test
                                               HExpr.Function name  <$> mapM genExpr inputs 
