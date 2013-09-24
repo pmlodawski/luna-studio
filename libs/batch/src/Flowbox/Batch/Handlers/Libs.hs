@@ -37,12 +37,7 @@ import qualified Flowbox.Luna.Tools.Serialize.Lib     as LibSerialization
 import qualified Flowbox.Lunac.Diagnostics            as Diagnostics
 import qualified Flowbox.System.UniPath               as UniPath
 import           Flowbox.System.UniPath                 (UniPath)
-import           Flowbox.System.Log.Logger              
 
-
-
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch"
 
 
 libraries :: Project.ID -> Batch -> Either String [(Library.ID, Library)]

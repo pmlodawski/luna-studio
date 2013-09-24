@@ -32,6 +32,7 @@ import qualified Flowbox.Luna.XOLD.Type.Type         as Type
 import qualified Flowbox.Luna.Lib.NameResolver       as NameResolver
 
 
+
 defsGraph :: Library.ID -> Project.ID -> Batch -> Either String DefManager
 defsGraph libID projectID = readonly . defManagerOp libID projectID (\_ defManager -> do
     return (defManager, defManager))

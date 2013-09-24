@@ -13,14 +13,8 @@ include "attrs.thrift"
 
 typedef i32 NodeID
 
-enum DefaultValueType {
-    CharV,
-    IntV,
-    StringV
-}
 
 struct DefaultValue {
-    1: required DefaultValueType cls,
     2: optional string           value         
 }
 

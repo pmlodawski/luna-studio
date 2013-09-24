@@ -8,17 +8,17 @@
 
 module Flowbox.Luna.Passes.CodeGen.HSC.HSC where
 
-import           Flowbox.Prelude               
-import qualified Flowbox.Luna.Data.HAST.Expr as HExpr
-import qualified Flowbox.Luna.Data.HAST.Lit  as HLit
-import qualified Flowbox.Luna.Passes.Pass    as Pass
-import           Flowbox.Luna.Passes.Pass      (PassMonad)
-import           Data.String.Utils             (join)
-import qualified Flowbox.Luna.Data.Source    as Source
-import           Flowbox.Luna.Data.Source      (Source(Source))
+import           Flowbox.Prelude                    
+import qualified Flowbox.Luna.Data.HAST.Expr      as HExpr
+import qualified Flowbox.Luna.Data.HAST.Lit       as HLit
+import qualified Flowbox.Luna.Passes.Pass         as Pass
+import           Flowbox.Luna.Passes.Pass           (PassMonad)
+import           Data.String.Utils                  (join)
+import qualified Flowbox.Luna.Data.Source         as Source
+import           Flowbox.Luna.Data.Source           (Source(Source))
 import           Flowbox.Luna.Data.HAST.Extension   (Extension)
 
-import           Flowbox.System.Log.Logger     
+import           Flowbox.System.Log.Logger          
 
 
 logger :: Logger

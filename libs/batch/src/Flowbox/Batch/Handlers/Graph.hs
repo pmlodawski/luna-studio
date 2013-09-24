@@ -32,6 +32,7 @@ import qualified Flowbox.Luna.Network.Graph.Node        as Node
 import           Flowbox.Luna.Network.Graph.Node          (Node(..))
 
 
+
 nodesGraph :: Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String GraphView
 nodesGraph defID libID projectID = readonly . graphViewOp defID libID projectID (\_ graphView -> do 
     return (graphView, graphView))

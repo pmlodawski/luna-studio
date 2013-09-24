@@ -20,7 +20,6 @@ import           Flowbox.Prelude                                       hiding (i
 import           Flowbox.Control.Error                                   ()
 import qualified Flowbox.Data.List                                     as FList
 import qualified Flowbox.Luna.Data.AST.Expr                            as ASTExpr
-import qualified Flowbox.Luna.Data.AST.Lit                             as ASTLit
 import qualified Flowbox.Luna.Data.AST.Module                          as ASTModule
 import qualified Flowbox.Luna.Data.AST.Pat                             as ASTPat
 import qualified Flowbox.Luna.Data.AST.Type                            as ASTType
@@ -53,7 +52,6 @@ type ASTExpr    = ASTExpr.Expr
 type ASTPat     = ASTPat.Pat
 type ASTModule  = ASTModule.Module
 type ASTType    = ASTType.Type
-type ASTLit     = ASTLit.Lit
 
 
 type Graph2ASTMonad m = PassMonad IdState m
@@ -242,8 +240,6 @@ node2AST graph inputsNames list (nodeID, node) = do
                 Port.All      -> (:[]) <$> arg inEdges maxArg 
                 Port.Number p -> mapM (\i -> arg inEdges $ Port.Number i) [0..p]
             
-            parseID <- newID
-
             call <- case node of 
                 Node.Expr expression _ _ ->  ASTExpr.App astNodeID <$> parseExpr expression <*> pure args
                 Node.Default value _ -> defaultVal2ASTExpr value

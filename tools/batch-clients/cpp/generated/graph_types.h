@@ -17,16 +17,6 @@
 
 namespace flowbox { namespace batch { namespace graph {
 
-struct DefaultValueType {
-  enum type {
-    CharV = 0,
-    IntV = 1,
-    StringV = 2
-  };
-};
-
-extern const std::map<int, const char*> _DefaultValueType_VALUES_TO_NAMES;
-
 struct NodeType {
   enum type {
     Expr = 0,
@@ -58,22 +48,17 @@ typedef struct _DefaultValue__isset {
 class DefaultValue {
  public:
 
-  static const char* ascii_fingerprint; // = "24652790C81ECE22B629CB60A19F1E93";
-  static const uint8_t binary_fingerprint[16]; // = {0x24,0x65,0x27,0x90,0xC8,0x1E,0xCE,0x22,0xB6,0x29,0xCB,0x60,0xA1,0x9F,0x1E,0x93};
+  static const char* ascii_fingerprint; // = "E8C48C1156CEFB2CC2155B26B71AB9E0";
+  static const uint8_t binary_fingerprint[16]; // = {0xE8,0xC4,0x8C,0x11,0x56,0xCE,0xFB,0x2C,0xC2,0x15,0x5B,0x26,0xB7,0x1A,0xB9,0xE0};
 
-  DefaultValue() : cls((DefaultValueType::type)0), value() {
+  DefaultValue() : value() {
   }
 
   virtual ~DefaultValue() throw() {}
 
-  DefaultValueType::type cls;
   std::string value;
 
   _DefaultValue__isset __isset;
-
-  void __set_cls(const DefaultValueType::type val) {
-    cls = val;
-  }
 
   void __set_value(const std::string& val) {
     value = val;
@@ -82,8 +67,6 @@ class DefaultValue {
 
   bool operator == (const DefaultValue & rhs) const
   {
-    if (!(cls == rhs.cls))
-      return false;
     if (__isset.value != rhs.__isset.value)
       return false;
     else if (__isset.value && !(value == rhs.value))
@@ -116,8 +99,8 @@ typedef struct _Node__isset {
 class Node {
  public:
 
-  static const char* ascii_fingerprint; // = "1DCED677DC5D1F60042732BAED531997";
-  static const uint8_t binary_fingerprint[16]; // = {0x1D,0xCE,0xD6,0x77,0xDC,0x5D,0x1F,0x60,0x04,0x27,0x32,0xBA,0xED,0x53,0x19,0x97};
+  static const char* ascii_fingerprint; // = "32315F6108A039695C6BD4ECE22E0DF0";
+  static const uint8_t binary_fingerprint[16]; // = {0x32,0x31,0x5F,0x61,0x08,0xA0,0x39,0x69,0x5C,0x6B,0xD4,0xEC,0xE2,0x2E,0x0D,0xF0};
 
   Node() : cls((NodeType::type)0), expression(""), nodeID(-1) {
 
@@ -352,8 +335,8 @@ typedef struct _Graph__isset {
 class Graph {
  public:
 
-  static const char* ascii_fingerprint; // = "98926E8F3B907A32F4987D48F41D7D00";
-  static const uint8_t binary_fingerprint[16]; // = {0x98,0x92,0x6E,0x8F,0x3B,0x90,0x7A,0x32,0xF4,0x98,0x7D,0x48,0xF4,0x1D,0x7D,0x00};
+  static const char* ascii_fingerprint; // = "61E77B47035104B90899734D6AC145D5";
+  static const uint8_t binary_fingerprint[16]; // = {0x61,0xE7,0x7B,0x47,0x03,0x51,0x04,0xB9,0x08,0x99,0x73,0x4D,0x6A,0xC1,0x45,0xD5};
 
   Graph() {
   }

@@ -7,17 +7,22 @@
 
 module Flowbox.System.Process where
 
+import           Control.Applicative         
+import qualified Control.Exception         as Exception
 import qualified Data.List                 as List
+import qualified System.Directory          as Directory
 import qualified System.Process            as Process
 import qualified System.Exit               as Exit
 
 import           Flowbox.Prelude           hiding (error)
 import           Flowbox.System.Log.Logger   
+import qualified Flowbox.System.UniPath    as UniPath
+import           Flowbox.System.UniPath      (UniPath)
 
 
 
-runCommand :: String -> [String] -> LoggerIO -> IO ()
-runCommand command args loggerIO = do
+runCommand :: LoggerIO -> String -> [String] -> IO ()
+runCommand loggerIO command args  = do
     let commandName = command ++ " " ++ (List.concat $ List.intersperse " " args)
         noStandardInput = ""
     loggerIO info $ "Runing '" ++ commandName ++ "'"
@@ -29,3 +34,13 @@ runCommand command args loggerIO = do
                 loggerIO warning runmsg
                 loggerIO error   errmsg
                 fail errmsg
+
+
+runCommandInFolder :: LoggerIO -> UniPath -> String -> [String] -> IO ()
+runCommandInFolder loggerIO upath command args  = do
+    workingDir <- Directory.getCurrentDirectory
+    path <- UniPath.toUnixString <$> UniPath.expand upath
+    Directory.setCurrentDirectory path
+
+    Exception.finally (runCommand loggerIO command args)
+                      (Directory.setCurrentDirectory workingDir)

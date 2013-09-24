@@ -23,7 +23,7 @@ import qualified Graph_Types                                          as TGraph
 import           Flowbox.Control.Error                                  
 import           Flowbox.Luna.Network.Attributes                        (Attributes)
 import           Flowbox.Luna.Network.Flags                             (Flags(..))
-import           Flowbox.Luna.Network.Graph.DefaultValue                (DefaultValue(..))
+import           Flowbox.Luna.Network.Graph.DefaultValue                (DefaultValue(DefaultValue))
 import           Flowbox.Luna.Network.Graph.Edge                        (Edge(Edge))
 import qualified Flowbox.Luna.Network.Graph.Graph                     as Graph
 import           Flowbox.Luna.Network.Graph.Graph                       (Graph)
@@ -102,19 +102,11 @@ instance Convert Graph TGraph.Graph where
 
 
 instance Convert DefaultValue TGraph.DefaultValue where
-  encode a = case a of
-      DefaultChar   ss -> TGraph.DefaultValue (Just TGraph.StringV) (Just $ Text.pack ss)
-      DefaultInt    ss -> TGraph.DefaultValue (Just TGraph.IntV   ) (Just $ Text.pack ss)
-      DefaultString ss -> TGraph.DefaultValue (Just TGraph.StringV) (Just $ Text.pack ss)
+  encode (DefaultValue v) = TGraph.DefaultValue (Just $ Text.pack v)
 
-  decode (TGraph.DefaultValue mtcls mtvalue) = do 
+  decode (TGraph.DefaultValue mtvalue) = do 
       tvalue <- mtvalue <?> "Failed to decode DefaultValue: 'value' field is missing"
-      let value = Text.unpack tvalue
-      case mtcls of
-          Just TGraph.CharV   -> return $ DefaultChar   value
-          Just TGraph.IntV    -> return $ DefaultInt    value
-          Just TGraph.StringV -> return $ DefaultString value
-          Nothing             -> Left "Failed to decode DefaultValue: 'cls' field is missing"
+      return $ DefaultValue $ Text.unpack tvalue
 
 
 instance Convert (Int, Node) TGraph.Node where
