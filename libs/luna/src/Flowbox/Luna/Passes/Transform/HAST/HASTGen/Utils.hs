@@ -12,17 +12,22 @@ import           Flowbox.Prelude             hiding (error, id)
 import qualified Flowbox.Luna.Data.HAST.Expr as HExpr
 
 
-mkCFName cname fname = ("CF_" ++ cname ++ "_" ++ fname)
+mkCFName     = ("CF_" ++)
 mkFCName     = ("FC_" ++)
 mkGetName    = ("get" ++)
 mkTHVarName  = ("'" ++)
 mkTHTypeName = ("''" ++)
 mkFieldName  = (++"_T")
+mkFuncName   = ("f_" ++ )
 
-mkGetNName i name = "get" ++ show i ++ "_" ++ name ++ "_T"
+mangleName cname fname = cname ++ "_" ++ fname
+
+--mkTName      = (++ "_T")
+mkTName i name = mkGetNName i ++ "_" ++ name ++ "_T"
 
 mkCGetCName i = "Get" ++ show i
-mkCGetName  i = "get" ++ show i
+mkGetNName  i = "get" ++ show i
+mkCGetName  i = "_" ++ mkGetNName i
 
 --genTH f a b c = HExpr.AppE (HExpr.Var f) 
 --              $ HExpr.AppE (HExpr.Var $ mkTHTypeName a) 
@@ -43,7 +48,7 @@ genCFDec cname params cfname =
     where t = mkPure $ foldl (HExpr.AppE) (HExpr.Var cname) (map HExpr.Var params)
 
 genCon name fnum = HExpr.Function ("con_" ++ name) [] 
-                 $ HExpr.AppE (HExpr.Var $ "_mkPure" ++ show fnum) 
+                 $ HExpr.AppE (HExpr.Var $ "mkPure" ++ show fnum) 
                  $ HExpr.Var name
 
 

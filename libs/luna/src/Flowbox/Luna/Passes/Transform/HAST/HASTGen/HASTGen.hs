@@ -59,7 +59,7 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do
     GenState.getModule
 
 
-
+--mainf = LExpr.Function 0 "mainxxx" [] (LType.Unknown 0) [LExpr.App 0 (LExpr.Var 0 "getIO") [LExpr.Accessor 0 (LExpr.Cons 0 "Main") (LExpr.Var 0 "main")]]
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
@@ -67,40 +67,34 @@ genExpr ast = case ast of
     LExpr.Cons     _ name                  -> pure $ HExpr.Var ("con_" ++ name)
     LExpr.Function _ name inputs output 
                      body                  -> do
-                                              --let genf arglen name = test where
-                                              --        argvars = map (("v" ++).show) [1..arglen]
-                                              --        vars    = "self" : argvars
-                                              --        exprArgs = map HExpr.Var argvars
-                                              --        exprVars = map HExpr.Var vars
-                                              --        cfGetterBase = HExpr.AppE (HExpr.Var $ "_" ++ name)
-                                              --                     $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName name) (HExpr.Var "self")
-                                              --        cfGetter = foldr (flip HExpr.AppE) cfGetterBase exprArgs
+                                              clsName <- GenState.getClsName
+                                              let genf arglen mname = test where
+                                                      argvars = map (("v" ++).show) [1..arglen]
+                                                      vars    = "self" : argvars
+                                                      exprArgs = map HExpr.Var argvars
+                                                      exprVars = map HExpr.Var vars
+                                                      cfGetterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
+                                                                   $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName mname) (HExpr.Var "self")
+                                                      cfGetter = foldr (flip HExpr.AppE) cfGetterBase exprArgs
                                                       
-                                              --        test = HExpr.Function (mkGetNName arglen name) exprVars
-                                              --             $ cfGetter
+                                                      test = HExpr.Function (mkTName arglen mname) exprVars
+                                                           $ cfGetter
 
-                                              --    arglen = length inputs - 1
-                                              --    test   = genf arglen name
+                                                  arglen = length inputs - 1
+                                                  mname  = mangleName clsName name
+                                                  test   = genf arglen mname
 
-                                              --    fcName = mkFCName name
-                                              --    cfName = mkCFName name
+                                                  cgetCName = mkCGetCName arglen
+                                                  cgetName  = mkCGetName  arglen
+                                                  getNName  = mkTName arglen mname
+                                                  fname     = mkFuncName mname
 
-                                              --    cgetCName = mkCGetCName arglen
-                                              --    cgetName  = mkCGetName  arglen
-                                              --    getNName  = mkGetNName arglen name
+                                              -- TH snippets
+                                              GenState.addTHExpression $ genTHF cgetCName getNName cgetName
 
-                                              ------ CField 
-                                              ----GenState.addNewType $ genCFDec cfName
-
-                                              ---- CField imports
-                                              --GenState.addImport $ genFCImport name
-
-                                              ---- TH snippets
-                                              --GenState.addTHExpression $ genTHC fcName cfName name
-                                              --GenState.addTHExpression $ genTHF cgetCName getNName cgetName
-
-                                              --GenState.addFunction $ test
-                                              HExpr.Function name  <$> mapM genExpr inputs 
+                                              -- GetN functions
+                                              GenState.addFunction $ test
+                                              HExpr.Function fname <$> mapM genExpr inputs 
                                                                    <*> (HExpr.DoBlock <$> genFuncBody body output)
 
     LExpr.Arg _ pat value                  -> genPat pat
@@ -119,10 +113,11 @@ genExpr ast = case ast of
                                               return $ HExpr.Import False (["FlowboxM", "Libs"] ++ segments ++ [tname]) Nothing where
                                                 
     LExpr.Class _ cls _ fields methods     -> do 
+                                              GenState.setClsName name
                                               let fieldNames  = map LExpr.name fields
                                                   funcNames   = map LExpr.name methods 
                                                   memberNames = fieldNames ++ funcNames
-                                                  cfNames     = map (mkCFName name) memberNames
+                                                  cfNames     = map (mkCFName . mangleName name) memberNames
                                                   fcNames     = map mkFCName memberNames
                                             
                                               -- CField for each class field
@@ -162,13 +157,21 @@ genExpr ast = case ast of
         getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
         get0   = getN (0::Int)
 
+genCallExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
+genCallExpr e = case e of
+    LExpr.Accessor {} -> get0 <$> genExpr e
+    _ -> genExpr e
+    where
+        getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
+        get0   = getN (0::Int)
+
 genFuncBody :: GenMonad m => [LExpr] -> LType -> Pass.Result m [HExpr]
 genFuncBody exprs output = case exprs of
     []   -> pure []
     x:[] -> liftM (:[]) $ genTyped HExpr.Typed output <*> case x of
-            LExpr.Assignment _ _ dst -> genExpr dst 
-            _                        -> genExpr x 
-    x:xs -> (:) <$> genExpr x <*> genFuncBody xs output
+            LExpr.Assignment _ _ dst -> genCallExpr dst 
+            _                        -> genCallExpr x 
+    x:xs -> (:) <$> genCallExpr x <*> genFuncBody xs output
 
 
 genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr
