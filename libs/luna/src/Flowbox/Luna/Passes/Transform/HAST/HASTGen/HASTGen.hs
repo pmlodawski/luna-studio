@@ -47,30 +47,42 @@ run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) . genModule
 genModule :: GenMonad m => LModule -> Pass.Result m HExpr
 genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do 
     let (LType.Module _ path) = cls
-        mod = HModule.addImport ["FlowboxM", "Gen", "Core"]
-            $ HModule.mk path
-        name = last path
-        modcls = LModule.mkClass lmod
-        modclasses = modcls : classes
+        mod     = HModule.addImport ["FlowboxM", "Gen", "Core"]
+                $ HModule.mk path
+        name    = last path
+        modcls  = LModule.mkClass lmod
+        modclss = modcls : classes
 
     GenState.setModule mod
-    mapM_ (genExpr >=> GenState.addDataType) modclasses
+    when (name == "Main") $ do
+        let funcnames = map LExpr.name methods
+        if not $ "main" `elem` funcnames
+            then logger warning "No 'main' function defined."
+            else GenState.addFunction mainf
+    
+    mapM_ (genExpr >=> GenState.addDataType) modclss
     mapM_ (genExpr >=> GenState.addImport)   imports
     GenState.getModule
 
 
---mainf = LExpr.Function 0 "mainxxx" [] (LType.Unknown 0) [LExpr.App 0 (LExpr.Var 0 "getIO") [LExpr.Accessor 0 (LExpr.Cons 0 "Main") (LExpr.Var 0 "main")]]
+mainf :: HExpr
+mainf = HExpr.Function "main" [] 
+      $ HExpr.AppE (HExpr.Var "getIO") 
+      $ HExpr.AppE (HExpr.Var "get0") 
+      $ HExpr.AppE (HExpr.Var "_main") 
+      $ HExpr.Var "con_Main"
+
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
-    LExpr.Var      _ name                  -> pure $ HExpr.Var name
-    LExpr.Cons     _ name                  -> pure $ HExpr.Var ("con_" ++ name)
+    LExpr.Var      _ name                  -> pure $ HExpr.Var $ mkVarName name
+    LExpr.Cons     _ name                  -> pure $ HExpr.Var ("con" ++ mkConsName name)
     LExpr.Function _ name inputs output 
                      body                  -> do
                                               clsName <- GenState.getClsName
                                               let genf arglen mname = test where
-                                                      argvars = map (("v" ++).show) [1..arglen]
-                                                      vars    = "self" : argvars
+                                                      argvars  = map (("v" ++).show) [1..arglen]
+                                                      vars     = "self" : argvars
                                                       exprArgs = map HExpr.Var argvars
                                                       exprVars = map HExpr.Var vars
                                                       cfGetterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
@@ -81,7 +93,7 @@ genExpr ast = case ast of
                                                            $ cfGetter
 
                                                   arglen = length inputs - 1
-                                                  mname  = mangleName clsName name
+                                                  mname  = mangleName clsName $ mkVarName name
                                                   test   = genf arglen mname
 
                                                   cgetCName = mkCGetCName arglen
@@ -116,7 +128,7 @@ genExpr ast = case ast of
                                               GenState.setClsName name
                                               let fieldNames  = map LExpr.name fields
                                                   funcNames   = map LExpr.name methods 
-                                                  memberNames = fieldNames ++ funcNames
+                                                  memberNames = map mkVarName $ fieldNames ++ funcNames
                                                   cfNames     = map (mkCFName . mangleName name) memberNames
                                                   fcNames     = map mkFCName memberNames
                                             
