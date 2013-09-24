@@ -77,3 +77,5 @@ genCodeSpecific s = case s of
                ++ genFields "Exposed-modules" (exposedModules s)
     Executable {} -> "Executable " ++ (name s) ++ "\n"
                ++ genField  "Main-Is"         (mainIs s)
+
+
