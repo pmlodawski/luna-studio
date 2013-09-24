@@ -23,7 +23,10 @@ newline i = "\n" ++ replicate (indent*i) ' '
 
 _hsShow :: Int -> String -> String
 _hsShow _ []     = []
-_hsShow i (x:xs) = case x of
+_hsShow i s@(x:xs) = 
+	if (take 3 s == "{-#") || (take 3 s == "#-}") 
+		then take 3 s ++ _hsShow i (drop 3 s)
+		else case x of
 	'{' -> x : newline (i+1) ++     _hsShow (i+1) xs
 	';' -> x : newline (i)   ++     _hsShow i xs
 	',' -> x : newline (i)   ++     _hsShow i xs

@@ -16,6 +16,7 @@ import           Flowbox.Luna.Passes.Pass      (PassMonad)
 import           Data.String.Utils             (join)
 import qualified Flowbox.Luna.Data.Source    as Source
 import           Flowbox.Luna.Data.Source      (Source(Source))
+import           Flowbox.Luna.Data.HAST.Extension   (Extension)
 
 import           Flowbox.System.Log.Logger     
 
@@ -23,11 +24,12 @@ import           Flowbox.System.Log.Logger
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.HSC.HSC"
 
+type HExpr = HExpr.Expr
+
 type HSCMonad m = PassMonad Pass.NoState m
 
 
-
-run :: PassMonad s m => HExpr.Expr -> Pass.Result m [Source]
+run :: PassMonad s m => HExpr -> Pass.Result m [Source]
 run expr = (Pass.run_ (Pass.Info "HSC") Pass.NoState) (return $ genModule expr)
 
 
@@ -35,25 +37,33 @@ eol :: String
 eol = "\n"
 
 
+sectionHeader :: String -> String
+sectionHeader name = "-- " ++ name ++ " --\n"
+
 genSection :: String -> (a -> String) -> [a] -> String
 genSection header generator d = if null d 
     then ""
-    else "-- " ++ header ++ " --\n" ++ (join "\n" $ map generator d) ++ "\n\n"
+    else sectionHeader header ++ (join "\n" $ map generator d) ++ "\n\n"
 
 
-genModule :: HExpr.Expr -> [Source]
-genModule (HExpr.Module path imports newtypes datatypes methods thexpressions) = sources where
-    modcode =  header 
-            ++ genSection "imports"        genExpr imports
-            ++ genSection "datatypes"      genExpr datatypes
-            ++ genSection "newtypes"       genExpr newtypes
-            ++ genSection "functions"      genExpr methods
-            ++ genSection "TH expressions" genExpr thexpressions
+genModule :: HExpr -> [Source]
+genModule (HExpr.Module path ext imports newtypes datatypes methods thexpressions) = sources where
+    modcode =  genSection    "extensions"     genExt  ext
+            ++ sectionHeader "module"         ++ header
+            ++ genSection    "imports"        genExpr imports
+            ++ genSection    "datatypes"      genExpr datatypes
+            ++ genSection    "newtypes"       genExpr newtypes
+            ++ genSection    "functions"      genExpr methods
+            ++ genSection    "TH expressions" genExpr thexpressions
                where header = "module " ++ join "." path ++ " where" ++ eol ++ eol
     sources = [Source path modcode]
 
 
-genExpr :: HExpr.Expr -> String
+genExt :: Extension -> String
+genExt ext = "{-# LANGUAGE " ++ show ext ++ " #-}"
+
+
+genExpr :: HExpr -> String
 genExpr e = case e of
     HExpr.Var      name                   -> name
     HExpr.VarE     name                   -> name
@@ -63,8 +73,10 @@ genExpr e = case e of
                                              ++ case rename of
                                                      Just name -> " as " ++ name
                                                      Nothing   -> ""
-    HExpr.DataType name params cons       -> "data " ++ name ++ params' ++ " = " ++ join " | " (map genExpr cons) where
+    HExpr.DataD    name params cons ders  -> "data " ++ name ++ params' ++ " = " ++ cons' ++ ders' where
                                              params' = if null params then "" else " " ++ join " " params
+                                             cons'   = join " | " (map genExpr cons)
+                                             ders'   = if null ders then "" else " deriving (" ++ join ", " ders ++ ")"
     HExpr.NewTypeD name params con        -> "newtype " ++ name ++ params' ++ " = " ++ genExpr con where
                                              params' = if null params then "" else " " ++ join " " params
     HExpr.Con      name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"

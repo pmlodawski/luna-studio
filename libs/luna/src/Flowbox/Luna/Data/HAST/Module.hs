@@ -12,13 +12,17 @@ module Flowbox.Luna.Data.HAST.Module (
 
 import           Flowbox.Prelude               
 import           Flowbox.Luna.Data.HAST.Expr   
+import           Flowbox.Luna.Data.HAST.Extension   (Extension)
 
 
 empty :: Expr 
-empty = Module [] [] [] [] [] []
+empty = Module [] [] [] [] [] [] []
 
 mk :: [String] -> Expr
-mk path' = Module path' [] [] [] [] []
+mk path' = Module path' [] [] [] [] [] []
 
 addImport :: [String] -> Expr -> Expr
 addImport path' mod = mod { imports = (Import False path' Nothing) : imports mod }
+
+addExt :: Extension -> Expr -> Expr
+addExt ext' mod = mod { ext = ext':ext mod }

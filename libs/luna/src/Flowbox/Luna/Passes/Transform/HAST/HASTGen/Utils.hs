@@ -13,21 +13,24 @@ import qualified Flowbox.Luna.Data.HAST.Expr as HExpr
 
 
 mkCFName     = ("CF_" ++)
-mkFCName     = ("FC_" ++)
+mkCCName     = ("CC_" ++)
+mkFCName     = ("FC" ++)
 mkGetName    = ("get" ++)
 mkTHVarName  = ("'" ++)
 mkTHTypeName = ("''" ++)
 mkFieldName  = (++"_T")
-mkFuncName   = ("f_" ++ )
+mkFuncName   = ("f_" ++)
+mkVarName    = ("_" ++)
+mkConsName   = ("_" ++)
 
-mangleName cname fname = cname ++ "_" ++ fname
+mangleName cname fname = cname ++ fname
 
 --mkTName      = (++ "_T")
 mkTName i name = mkGetNName i ++ "_" ++ name ++ "_T"
 
 mkCGetCName i = "Get" ++ show i
 mkGetNName  i = "get" ++ show i
-mkCGetName  i = "_" ++ mkGetNName i
+mkCGetName  i = mkGetNName i
 
 --genTH f a b c = HExpr.AppE (HExpr.Var f) 
 --              $ HExpr.AppE (HExpr.Var $ mkTHTypeName a) 
@@ -39,7 +42,7 @@ genTH f a b c = foldl (HExpr.AppE) (HExpr.Var f) vars where
 genTHF = genTH "mkInst"
 genTHC = genTH "mkInstC"
 
-genFCImport name = HExpr.Import False ["FlowboxM", "Luna", "FClasses", "U_" ++ name] Nothing
+genFCImport name = HExpr.Import False ["FlowboxM", "Luna", "FClasses", "U" ++ name] Nothing
 
 genCFDec cname params cfname = 
 	HExpr.NewTypeD cfname params 
@@ -47,9 +50,14 @@ genCFDec cname params cfname =
     --where t = (HExpr.Var "a")
     where t = mkPure $ foldl (HExpr.AppE) (HExpr.Var cname) (map HExpr.Var params)
 
-genCon name fnum = HExpr.Function ("con_" ++ name) [] 
-                 $ HExpr.AppE (HExpr.Var $ "mkPure" ++ show fnum) 
-                 $ HExpr.Var name
+genCCDec name = HExpr.DataD name [] [HExpr.Con name []] []
+
+--genCon name fnum = HExpr.Function ("con" ++ mkConsName name) [] 
+--                 $ HExpr.AppE (HExpr.Var $ "mkPure" ++ show fnum) 
+--                 $ HExpr.Var name
+
+genCon name ccname = HExpr.Function ("con" ++ mkConsName name) [] 
+                   $ mkPure (HExpr.Var ccname)
 
 
 mkPure = HExpr.AppE (HExpr.Var "Pure")

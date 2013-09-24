@@ -18,6 +18,7 @@ import qualified Flowbox.Luna.Data.AST.Module                        as LModule
 import qualified Flowbox.Luna.Data.HAST.Expr                         as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit                          as HLit
 import qualified Flowbox.Luna.Data.HAST.Module                       as HModule
+import qualified Flowbox.Luna.Data.HAST.Extension                    as HExtension
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState as GenState
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState   (GenState)
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
@@ -47,30 +48,48 @@ run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) . genModule
 genModule :: GenMonad m => LModule -> Pass.Result m HExpr
 genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do 
     let (LType.Module _ path) = cls
-        mod = HModule.addImport ["FlowboxM", "Gen", "Core"]
-            $ HModule.mk path
-        name = last path
-        modcls = LModule.mkClass lmod
-        modclasses = modcls : classes
+        mod     = HModule.addImport ["FlowboxM", "Luna", "Helpers", "Core"]
+                $ HModule.addExt HExtension.TemplateHaskell
+                $ HModule.addExt HExtension.MultiParamTypeClasses
+                $ HModule.addExt HExtension.FlexibleInstances
+                $ HModule.addExt HExtension.UndecidableInstances
+                $ HModule.addExt HExtension.RebindableSyntax
+                $ HModule.mk path
+        name    = last path
+        modcls  = LModule.mkClass lmod
+        modclss = modcls : classes
 
     GenState.setModule mod
-    mapM_ (genExpr >=> GenState.addDataType) modclasses
+    when (name == "Main") $ do
+        let funcnames = map LExpr.name methods
+        if not $ "main" `elem` funcnames
+            then logger warning "No 'main' function defined."
+            else GenState.addFunction mainf
+    
+    mapM_ (genExpr >=> GenState.addDataType) modclss
     mapM_ (genExpr >=> GenState.addImport)   imports
     GenState.getModule
 
 
---mainf = LExpr.Function 0 "mainxxx" [] (LType.Unknown 0) [LExpr.App 0 (LExpr.Var 0 "getIO") [LExpr.Accessor 0 (LExpr.Cons 0 "Main") (LExpr.Var 0 "main")]]
+mainf :: HExpr
+mainf = HExpr.Function "main" [] 
+      $ HExpr.AppE (HExpr.Var "getIO") 
+      $ HExpr.AppE (HExpr.Var "get0") 
+      $ HExpr.AppE (HExpr.Var "_main") 
+      $ HExpr.AppE (HExpr.Var "get0") 
+      $ HExpr.Var "con_Main"
+
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
-    LExpr.Var      _ name                  -> pure $ HExpr.Var name
-    LExpr.Cons     _ name                  -> pure $ HExpr.Var ("con_" ++ name)
+    LExpr.Var      _ name                  -> pure $ HExpr.Var $ mkVarName name
+    LExpr.Cons     _ name                  -> pure $ HExpr.Var ("con" ++ mkConsName name)
     LExpr.Function _ name inputs output 
                      body                  -> do
                                               clsName <- GenState.getClsName
                                               let genf arglen mname = test where
-                                                      argvars = map (("v" ++).show) [1..arglen]
-                                                      vars    = "self" : argvars
+                                                      argvars  = map (("v" ++).show) [1..arglen]
+                                                      vars     = "self" : argvars
                                                       exprArgs = map HExpr.Var argvars
                                                       exprVars = map HExpr.Var vars
                                                       cfGetterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
@@ -81,7 +100,7 @@ genExpr ast = case ast of
                                                            $ cfGetter
 
                                                   arglen = length inputs - 1
-                                                  mname  = mangleName clsName name
+                                                  mname  = mangleName clsName $ mkVarName name
                                                   test   = genf arglen mname
 
                                                   cgetCName = mkCGetCName arglen
@@ -116,15 +135,16 @@ genExpr ast = case ast of
                                               GenState.setClsName name
                                               let fieldNames  = map LExpr.name fields
                                                   funcNames   = map LExpr.name methods 
-                                                  memberNames = fieldNames ++ funcNames
+                                                  memberNames = map mkVarName $ fieldNames ++ funcNames
                                                   cfNames     = map (mkCFName . mangleName name) memberNames
                                                   fcNames     = map mkFCName memberNames
+                                                  ccname      = mkCCName name
                                             
-                                              -- CField for each class field
+                                              -- CF types for each class field
                                               let nts = map (genCFDec name params) cfNames
                                               mapM_ GenState.addNewType nts
                                            
-                                              -- CField imports
+                                              -- CF imports
                                               let imps = map genFCImport memberNames
                                               mapM_ GenState.addImport imps
                                            
@@ -135,12 +155,16 @@ genExpr ast = case ast of
                                               -- Class methods
                                               mapM_ GenState.addFunction =<< mapM genExpr methods
 
+                                              -- CC type constructor
+                                              let con = genCCDec ccname
+                                              GenState.addDataType con
+
                                               -- constructor function
-                                              GenState.addFunction $ genCon name (length fields)
+                                              GenState.addFunction $ genCon name ccname
 
                                               -- DataType
                                               cons   <- HExpr.Con name <$> mapM genExpr fields
-                                              return  $ HExpr.DataType name params [cons] 
+                                              return  $ HExpr.DataD name params [cons] ["Show"]
                                                 
                                               where name   =  LType.name   cls
                                                     params =  LType.params cls
@@ -160,6 +184,8 @@ genExpr ast = case ast of
 genCallExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genCallExpr e = case e of
     LExpr.Accessor {} -> get0 <$> genExpr e
+    LExpr.Var      {} -> get0 <$> genExpr e
+    LExpr.Cons     {} -> get0 <$> genExpr e
     _ -> genExpr e
     where
         getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
@@ -176,7 +202,7 @@ genFuncBody exprs output = case exprs of
 
 genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr
 genPat p = case p of
-    LPat.Var     _ name     -> return $ HExpr.Var name
+    LPat.Var     _ name     -> return $ HExpr.Var (mkVarName name)
     LPat.Typed   _ pat cls  -> genTyped HExpr.TypedP cls <*> genPat pat
                                    
 
