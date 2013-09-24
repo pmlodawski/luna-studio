@@ -293,6 +293,6 @@ node2AST graph inputsNames list (nodeID, node) = do
 parseExpr :: Graph2ASTMonad m => String -> Pass.Result m ASTExpr
 parseExpr expression = do 
     parseID <- newID
-    case Parser.parseExpr expression parseID of 
+    case Parser.parseExpr expression (parseID*100000) of -- TODO [PM] : fixme when COMPILER-4 is done
         Left  e    -> fail $ show e
         Right expr -> return expr
