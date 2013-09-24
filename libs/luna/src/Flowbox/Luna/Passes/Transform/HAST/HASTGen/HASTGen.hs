@@ -248,6 +248,7 @@ genType t = case t of
 genLit :: GenMonad m => LLit.Lit -> Pass.Result m HExpr
 genLit lit = case lit of
     LLit.Integer _ str      -> mkLit "Int" (HLit.Integer str)
+    _ -> fail $ show lit
     where mkLit cons hast = return . mkPure $ HExpr.Typed (HExpr.ConT cons) (HExpr.Lit hast)
           mkPure = HExpr.AppT (HExpr.ConT "Pure")
 

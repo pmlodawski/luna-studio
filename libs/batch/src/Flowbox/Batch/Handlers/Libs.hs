@@ -17,19 +17,29 @@ module Flowbox.Batch.Handlers.Libs (
     libraryRootDef,
 ) where
 
-import           Flowbox.Prelude                       
-import           Flowbox.Batch.Batch                   (Batch(..))
-import           Flowbox.Batch.Handlers.Common         (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
-import qualified Flowbox.Batch.Project.Project       as Project
-import qualified Flowbox.Luna.Lib.LibManager         as LibManager
-import qualified Flowbox.Luna.Lib.Library            as Library
-import           Flowbox.Luna.Lib.Library              (Library(..))
-import qualified Flowbox.Luna.Network.Def.Definition as Definition
-import           Flowbox.Luna.Network.Def.Definition   (Definition(..))
-import qualified Flowbox.Lunac.Builder               as Builder
-import qualified Flowbox.Luna.Tools.Serialize.Lib    as LibSerialization
-import           Flowbox.System.UniPath                (UniPath)
-import           Flowbox.System.Log.Logger             
+import qualified Data.Maybe                           as Maybe
+
+import           Flowbox.Prelude                        
+import qualified Flowbox.Batch.Batch                  as Batch
+import           Flowbox.Batch.Batch                    (Batch)
+import           Flowbox.Batch.Handlers.Common          (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
+import qualified Flowbox.Batch.Project.Project        as Project
+import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
+import qualified Flowbox.Data.String                  as String
+import           Flowbox.Luna.Data.Source               (Source(Source))
+import qualified Flowbox.Luna.Lib.LibManager          as LibManager
+import qualified Flowbox.Luna.Lib.Library             as Library
+import           Flowbox.Luna.Lib.Library               (Library)
+import qualified Flowbox.Luna.Network.Def.Definition  as Definition
+import           Flowbox.Luna.Network.Def.Definition    (Definition)
+import qualified Flowbox.Lunac.Builder                as Builder
+import qualified Flowbox.Luna.Tools.Serialize.Lib     as LibSerialization
+import qualified Flowbox.Lunac.Diagnostics            as Diagnostics
+import qualified Flowbox.System.UniPath               as UniPath
+import           Flowbox.System.UniPath                 (UniPath)
+import           Flowbox.System.Log.Logger              
+
+
 
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch"
@@ -47,15 +57,15 @@ libraryByID libID projectID = readonly . libraryOp libID projectID (\_ library -
 
 
 createLibrary :: String -> UniPath -> Project.ID -> Batch -> Either String (Batch, (Library.ID, Library))
-createLibrary libName libPath projectID = libManagerOp projectID (\_ libManager -> do
-    let library                = Library.make libName libPath
+createLibrary name path projectID = libManagerOp projectID (\_ libManager -> do
+    let library                = Library.make name path
         (newLibManager, libID) = LibManager.insNewNode library libManager
     return (newLibManager, (libID, library)))
 
 
 loadLibrary :: UniPath -> Project.ID -> Batch -> IO (Batch, (Library.ID, Library))
-loadLibrary lpath projectID = libManagerOp' projectID (\_ libManager -> do
-    r <- LibManager.loadLibrary lpath libManager
+loadLibrary path projectID = libManagerOp' projectID (\_ libManager -> do
+    r <- LibManager.loadLibrary path libManager
     return r)
 
 
@@ -73,12 +83,21 @@ storeLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ librar
 
 buildLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
 buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch library -> do
-    --let aprojectManager = Batch.projectManager batch
-    --    Just proj = ProjectManager.lab aprojectManager projectID
-    --    ppath = Project.path proj
-    --    b = Builder ppath
-    Builder.buildLibrary library
-    loggerIO warning "Build library not implemented"
+    let aprojectManager = Batch.projectManager batch
+        proj = Maybe.fromJust $ ProjectManager.lab aprojectManager projectID
+        
+        diag = Diagnostics.all
+        name = Library.name library
+        
+        outputPath = UniPath.append ("build/hs/"++name) $ Project.path proj
+
+        launcher = Source  ["Main"]
+                 $ unlines [ "import " ++ (String.toUpper name) ++ " as M"
+                           , "main = M.main 0"]
+
+    sources <- Builder.buildLibrary diag library
+    Builder.buildSources outputPath $ launcher : sources
+    Builder.runCabal outputPath name
     return (library, ()))
 
 

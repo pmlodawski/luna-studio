@@ -13,25 +13,38 @@ import           Flowbox.Luna.Data.HAST.Extension   (Extension)
 import           Data.String.Utils                  (join)
 
 
-data SectionType = Library | Executable deriving(Show)
+
+data Section = Library    { exposedModules :: [String]
+                          , hsSourceDirs   :: [String]
+                          , ghcOptions     :: [String]
+                          , extensions     :: [Extension]
+                          , buildDepends   :: [String]
+                          }
+             | Executable { name           :: String
+                          , mainIs         :: String
+                          , hsSourceDirs   :: [String]
+                          , ghcOptions     :: [String]
+                          , extensions     :: [Extension]
+                          , buildDepends   :: [String]
+                          }
+                deriving (Show)
 
 
-data Section = Section { cls            :: SectionType
-                       , hsSourceDirs   :: [String]
-                       , mainIs         :: String
-                       , ghcOptions     :: [String]
-                       , extensions     :: [Extension]
-                       , exposedModules :: [String]
-                       , buildDepends   :: [String]
-                       } deriving (Show)
+mkExecutable :: String -> Section
+mkExecutable name' = mkCommon $ Executable name' "Main.hs" 
 
 
-empty :: SectionType -> Section
-empty t = Section t ["src"] "Main.hs" ["-Wall"] [] [] []
+mkLibrary :: Section
+mkLibrary = mkCommon $ Library []
+
+
+mkCommon :: ([String] -> [String] -> [Extension] -> [String] -> Section) -> Section
+mkCommon s = s ["src"] ["-Wall"] [] ["base"]
 
 
 defaultIndent :: String
 defaultIndent = replicate 18 ' '
+
 
 ident :: String
 ident = replicate 4 ' '
@@ -51,11 +64,16 @@ genField name' val = ident
 
 
 genCode :: Section -> String
-genCode s =  show (cls s) ++ "\n"
-          ++ genFields "Hs-Source-Dirs"  (hsSourceDirs s)
-          ++ genField  "Main-Is"         (mainIs s)
-          ++ genFields "GHC-Options"     (ghcOptions s)
-          ++ genFields "Extensions"      (map show $ extensions s)
-          ++ genFields "Exposed-modules" (exposedModules s)
-          ++ genFields "Build-Depends"   (buildDepends s)
+genCode s = genCodeSpecific s 
+               ++ genFields "Hs-Source-Dirs"  (hsSourceDirs s)
+               ++ genFields "GHC-Options"     (ghcOptions s)
+               ++ genFields "Extensions"      (map show $ extensions s)
+               ++ genFields "Build-Depends"   (buildDepends s)
    
+
+genCodeSpecific :: Section -> String
+genCodeSpecific s = case s of 
+    Library {}    -> "Library\n"
+               ++ genFields "Exposed-modules" (exposedModules s)
+    Executable {} -> "Executable " ++ (name s) ++ "\n"
+               ++ genField  "Main-Is"         (mainIs s)

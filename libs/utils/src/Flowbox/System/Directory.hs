@@ -30,4 +30,6 @@ getDirectoryRecursive upath = do
 
 
 createDirectoryIfMissing :: Bool -> UniPath -> IO ()
-createDirectoryIfMissing create_parents path = Directory.createDirectoryIfMissing create_parents (UniPath.toUnixString path)
+createDirectoryIfMissing create_parents upath = do
+	path <- UniPath.toUnixString <$> UniPath.expand upath
+	Directory.createDirectoryIfMissing create_parents path

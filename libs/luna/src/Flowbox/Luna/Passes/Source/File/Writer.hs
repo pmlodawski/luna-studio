@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Passes.Source.File.Writer.Writer where
+module Flowbox.Luna.Passes.Source.File.Writer where
 
 import           Control.Monad.RWS           
 import qualified System.IO                 as IO
@@ -33,7 +33,7 @@ module2path m ext = UniPath.setExtension ext $ UniPath.fromList m
 
 writeSource :: FRMonad m => UniPath -> String -> Source -> Pass.Result m ()
 writeSource rootpath ext (Source m content) = do
-    let path = UniPath.append (UniPath.toUnixString $ module2path m ext) rootpath
+    let path = UniPath.fromList $ (UniPath.toList rootpath) ++ (UniPath.toList $ module2path m ext)
     fileName <- UniPath.expand path
     let folderName = UniPath.basePath fileName
     liftIO $ do Directory.createDirectoryIfMissing True folderName

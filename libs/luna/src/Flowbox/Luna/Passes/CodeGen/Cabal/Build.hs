@@ -5,8 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CodeGen.Cabal.Run.CabalRun where
+module Flowbox.Luna.Passes.CodeGen.Cabal.Build where
 
+import           Control.Applicative         
 import           Control.Monad.RWS           
 import qualified Control.Exception         as Exception
 import qualified System.Directory          as Directory
@@ -19,18 +20,19 @@ import           Flowbox.System.Log.Logger
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.Cabal.Run.RunCabal"
+loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.Cabal.Build"
 
 
-run :: MonadIO m => UniPath -> String -> [String] -> m ()
-run projectPath name args = liftIO $ runCabal projectPath name args
+run :: MonadIO m => UniPath -> m ()
+run = liftIO . build
 
 
-runCabal :: UniPath -> String -> [String] -> IO ()
-runCabal projectPath name args = do 
+build :: UniPath -> IO ()
+build buildPath = do 
     workingDir <- Directory.getCurrentDirectory
-    let runPath = UniPath.append ("build/hs/dist/build/" ++ name) projectPath
-    Directory.setCurrentDirectory $ UniPath.toUnixString runPath
+    path <- UniPath.toUnixString <$> UniPath.expand buildPath
+    Directory.setCurrentDirectory path
 
-    Exception.finally (Process.runCommand ("./" ++ name) args loggerIO)
+    Exception.finally (do Process.runCommand "cabal" ["configure"] loggerIO
+                          Process.runCommand "cabal" ["build"] loggerIO)
                       (Directory.setCurrentDirectory workingDir)

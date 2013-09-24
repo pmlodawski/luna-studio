@@ -20,6 +20,7 @@ where
 
 import           Control.Applicative             
 import qualified Control.Exception             as Exception
+import qualified Data.List                     as List
 import qualified System.Directory              as Directory
 import qualified System.IO                     as IO
 
@@ -36,7 +37,7 @@ ls upath = do
     path <- UniPath.toUnixString <$> UniPath.expand upath
 
     paths <- Directory.getDirectoryContents path
-    let upaths = map (\u -> UniPath.append u upath) paths
+    let upaths = List.sort $ map (\u -> UniPath.append u upath) paths
     items <- mapM stat upaths
     return items
 

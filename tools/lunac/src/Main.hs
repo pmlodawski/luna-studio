@@ -25,12 +25,13 @@ import           Flowbox.Lunac.Diagnostics     (Diagnostics(Diagnostics))
 rootLogger :: Logger
 rootLogger = getLogger "Flowbox"
 
-logger :: Logger
-logger = getLogger "Flowbox.Lunac"
+
+--logger :: Logger
+--logger = getLogger "Flowbox.Lunac"
 
 
-libPathEnv :: String
-libPathEnv = "LUNAPATH"
+--libPathEnv :: String
+--libPathEnv = "LUNAPATH"
 
 
 version :: Version
@@ -91,7 +92,7 @@ run conf = case conf of
             projectName = output
 
         sources <- mapM (Builder.buildFile diag) inputs
-        Builder.buildSources outputPath $ List.concat sources
+        Builder.buildSources outputPath $ Builder.launcher : (List.concat sources)
         Builder.runCabal outputPath projectName
         --print $ length sources
 

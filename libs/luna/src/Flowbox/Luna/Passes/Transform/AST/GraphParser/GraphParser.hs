@@ -14,6 +14,7 @@ import           Control.Applicative
 import           Control.Monad.State                                   hiding (mapM, mapM_)
 import           Data.Foldable                                           (foldlM)
 import qualified Data.List                                             as List
+import qualified Data.List.Split                                       as Split
 
 import           Flowbox.Prelude                                       hiding (id)
 import           Flowbox.Control.Error                                   ()
@@ -28,9 +29,10 @@ import           Flowbox.Luna.Network.Def.DefManager                     (DefMan
 import qualified Flowbox.Luna.Network.Def.Definition                   as Definition
 import           Flowbox.Luna.Network.Def.Definition                     (Definition(Definition))
 import           Flowbox.Luna.Network.Flags                              (Flags(Flags))
+import qualified Flowbox.Luna.Network.Graph.DefaultValue               as DefaultValue
+import           Flowbox.Luna.Network.Graph.DefaultValue                 (DefaultValue)
 import qualified Flowbox.Luna.Network.Graph.Graph                      as Graph
 import           Flowbox.Luna.Network.Graph.Graph                        (Graph)
-import           Flowbox.Luna.Network.Graph.DefaultValue                 (DefaultValue(..))
 import           Flowbox.Luna.Network.Graph.Edge                         (Edge(Edge))
 import qualified Flowbox.Luna.Network.Graph.Node                       as Node
 import qualified Flowbox.Luna.Network.Graph.Port                       as Port
@@ -57,7 +59,11 @@ type ASTLit     = ASTLit.Lit
 type Graph2ASTMonad m = PassMonad IdState m
 
 
+newID :: IdState.IdStateM m => m Int
 newID = IdState.newID
+
+
+tok :: (Functor f, IdState.IdStateM f) => (Int -> b) -> f b
 
 tok a = a <$> newID
 
@@ -74,13 +80,14 @@ module2AST defManager (defID, Definition cls _ imports _ _) = case cls of
                                          <*> mapM type2Field params
                                          <*> nextDefs defManager defID methodsFilter
                                          <*> nextModules defManager defID
+    _ -> fail "Module type is not the root in definition tree"
 
 
 def2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTExpr
 def2AST defManager (defID, def) = case def of 
-    Definition _   _     _       (Flags _ True ) _ -> return $ ASTExpr.NOP defID -- Comment
-    Definition cls graph imports (Flags _ False) _ -> case cls of
-        Type.Class _ _ params       -> ASTExpr.Class defID 
+    Definition _   _     _ (Flags _ True ) _ -> return $ ASTExpr.NOP defID -- Comment
+    Definition cls graph _ (Flags _ False) _ -> case cls of
+        Type.Class _ _ params             -> ASTExpr.Class defID 
                                                  <$> (liftM snd $ type2ASTType cls)
                                                  <*> nextDefs defManager defID classesFilter
                                                  <*> (mapM type2Field params)
@@ -94,6 +101,11 @@ def2AST defManager (defID, def) = case def of
                                                                           outputsType
                                                                           graphAst
                                            -- notImplementedList
+        Type.Undefined   -> fail "Undefined type in definition tree."
+        Type.TypeName {} -> fail "TypeName type in definition tree."
+        Type.Tuple    {} -> fail "Tuple type in definition tree."
+        Type.Named    {} -> fail "Named type in definition tree."
+        Type.Module   {} -> fail "Unexpected Module in definition tree."
        
 
 nextModules :: Graph2ASTMonad m => DefManager -> Definition.ID -> Pass.Result m [ASTModule]
@@ -154,6 +166,7 @@ type2ASTType t = do
     id <- newID
     case t of 
         Type.Undefined                  -> return (""  , ASTType.Unknown id)
+        Type.Module       name _        -> return (""  , ASTType.Module id (Split.splitOn "." name))
         Type.TypeName     name          -> return (""  , ASTType.Var    id name)
         Type.Class        name params _ -> return (""  , ASTType.Class  id name params)
         Type.Tuple        items         -> do astitems <- mapM (liftM snd .type2ASTType) items
@@ -162,11 +175,11 @@ type2ASTType t = do
                                               return (name, type_)
 
 
-defaultVal2ASTLit :: Graph2ASTMonad m => DefaultValue -> Pass.Result m ASTLit
-defaultVal2ASTLit value = case value of 
-        DefaultChar   v -> tok ASTLit.Char    <*> pure v
-        DefaultInt    v -> tok ASTLit.Integer <*> pure v
-        DefaultString v -> tok ASTLit.String  <*> pure v
+
+defaultVal2ASTExpr :: Graph2ASTMonad m => DefaultValue -> Pass.Result m ASTExpr
+defaultVal2ASTExpr defaultvalue = do
+    let value = DefaultValue.value defaultvalue
+    parseExpr value
 
 
 type2Field :: Graph2ASTMonad m => Type -> Pass.Result m ASTExpr
@@ -232,10 +245,8 @@ node2AST graph inputsNames list (nodeID, node) = do
             parseID <- newID
 
             call <- case node of 
-                Node.Expr expression _ _ -> case Parser.parseExpr expression parseID of 
-                                                    Left  e    -> fail $ show e
-                                                    Right expr -> return $ ASTExpr.App astNodeID expr args
-                Node.Default value _ -> ASTExpr.Lit astNodeID <$> defaultVal2ASTLit value
+                Node.Expr expression _ _ ->  ASTExpr.App astNodeID <$> parseExpr expression <*> pure args
+                Node.Default value _ -> defaultVal2ASTExpr value
                 Node.Inputs  _     _ -> fail "Graph2AST Implementation error: Node.Inputs should be already handled"
                 Node.Outputs _     _ -> return $ ASTExpr.Tuple astNodeID args
                 Node.Tuple   _     _ -> return $ ASTExpr.Tuple astNodeID args
@@ -278,3 +289,10 @@ node2AST graph inputsNames list (nodeID, node) = do
                                     id2 <- newID 
                                     return [ASTExpr.Assignment id1 allPattern call
                                            ,ASTExpr.Assignment id2 gettersPattern allResult]
+
+parseExpr :: Graph2ASTMonad m => String -> Pass.Result m ASTExpr
+parseExpr expression = do 
+    parseID <- newID
+    case Parser.parseExpr expression (parseID*100000) of -- TODO [PM] : fixme when COMPILER-4 is done
+        Left  e    -> fail $ show e
+        Right expr -> return expr

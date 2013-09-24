@@ -103,7 +103,7 @@ instance Convert Graph TGraph.Graph where
 
 instance Convert DefaultValue TGraph.DefaultValue where
   encode a = case a of
-      DefaultChar   ss -> TGraph.DefaultValue (Just TGraph.StringV) (Just $ Text.pack [ss])
+      DefaultChar   ss -> TGraph.DefaultValue (Just TGraph.StringV) (Just $ Text.pack ss)
       DefaultInt    ss -> TGraph.DefaultValue (Just TGraph.IntV   ) (Just $ Text.pack ss)
       DefaultString ss -> TGraph.DefaultValue (Just TGraph.StringV) (Just $ Text.pack ss)
 
@@ -111,8 +111,8 @@ instance Convert DefaultValue TGraph.DefaultValue where
       tvalue <- mtvalue <?> "Failed to decode DefaultValue: 'value' field is missing"
       let value = Text.unpack tvalue
       case mtcls of
-          Just TGraph.CharV   -> return $ DefaultChar $ head value
-          Just TGraph.IntV    -> return $ DefaultInt value
+          Just TGraph.CharV   -> return $ DefaultChar   value
+          Just TGraph.IntV    -> return $ DefaultInt    value
           Just TGraph.StringV -> return $ DefaultString value
           Nothing             -> Left "Failed to decode DefaultValue: 'cls' field is missing"
 

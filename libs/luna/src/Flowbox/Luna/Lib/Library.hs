@@ -13,7 +13,9 @@ module Flowbox.Luna.Lib.Library(
     make
 ) where
 
+
 import           Flowbox.Prelude                       
+import qualified Flowbox.Data.String                 as String
 import qualified Flowbox.System.UniPath              as UniPath
 import           Flowbox.System.UniPath                (UniPath)
 import qualified Flowbox.Luna.Network.Def.DefManager as DefManager
@@ -44,6 +46,6 @@ make name' path' = empty { name = name'
                          , path = path'
                          , defs = DefManager.insNode (rootDefID, rootdef) DefManager.empty
                          } where
-    rootdef = Definition.mkModule name'
+    rootdef = Definition.mkModule $ String.toUpper name'
 
 
