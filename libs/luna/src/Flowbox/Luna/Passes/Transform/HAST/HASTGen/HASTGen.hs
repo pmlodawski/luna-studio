@@ -18,6 +18,7 @@ import qualified Flowbox.Luna.Data.AST.Module                        as LModule
 import qualified Flowbox.Luna.Data.HAST.Expr                         as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit                          as HLit
 import qualified Flowbox.Luna.Data.HAST.Module                       as HModule
+import qualified Flowbox.Luna.Data.HAST.Extension                    as HExtension
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState as GenState
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState   (GenState)
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
@@ -47,7 +48,12 @@ run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) . genModule
 genModule :: GenMonad m => LModule -> Pass.Result m HExpr
 genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do 
     let (LType.Module _ path) = cls
-        mod     = HModule.addImport ["FlowboxM", "Gen", "Core"]
+        mod     = HModule.addImport ["FlowboxM", "Luna", "Helpers", "Core"]
+                $ HModule.addExt HExtension.TemplateHaskell
+                $ HModule.addExt HExtension.MultiParamTypeClasses
+                $ HModule.addExt HExtension.FlexibleInstances
+                $ HModule.addExt HExtension.UndecidableInstances
+                $ HModule.addExt HExtension.RebindableSyntax
                 $ HModule.mk path
         name    = last path
         modcls  = LModule.mkClass lmod
@@ -70,6 +76,7 @@ mainf = HExpr.Function "main" []
       $ HExpr.AppE (HExpr.Var "getIO") 
       $ HExpr.AppE (HExpr.Var "get0") 
       $ HExpr.AppE (HExpr.Var "_main") 
+      $ HExpr.AppE (HExpr.Var "get0") 
       $ HExpr.Var "con_Main"
 
 
@@ -131,12 +138,13 @@ genExpr ast = case ast of
                                                   memberNames = map mkVarName $ fieldNames ++ funcNames
                                                   cfNames     = map (mkCFName . mangleName name) memberNames
                                                   fcNames     = map mkFCName memberNames
+                                                  ccname      = mkCCName name
                                             
-                                              -- CField for each class field
+                                              -- CF types for each class field
                                               let nts = map (genCFDec name params) cfNames
                                               mapM_ GenState.addNewType nts
                                            
-                                              -- CField imports
+                                              -- CF imports
                                               let imps = map genFCImport memberNames
                                               mapM_ GenState.addImport imps
                                            
@@ -147,12 +155,16 @@ genExpr ast = case ast of
                                               -- Class methods
                                               mapM_ GenState.addFunction =<< mapM genExpr methods
 
+                                              -- CC type constructor
+                                              let con = genCCDec ccname
+                                              GenState.addDataType con
+
                                               -- constructor function
-                                              GenState.addFunction $ genCon name (length fields)
+                                              GenState.addFunction $ genCon name ccname
 
                                               -- DataType
                                               cons   <- HExpr.Con name <$> mapM genExpr fields
-                                              return  $ HExpr.DataType name params [cons] 
+                                              return  $ HExpr.DataD name params [cons] ["Show"]
                                                 
                                               where name   =  LType.name   cls
                                                     params =  LType.params cls
@@ -172,6 +184,8 @@ genExpr ast = case ast of
 genCallExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genCallExpr e = case e of
     LExpr.Accessor {} -> get0 <$> genExpr e
+    LExpr.Var      {} -> get0 <$> genExpr e
+    LExpr.Cons     {} -> get0 <$> genExpr e
     _ -> genExpr e
     where
         getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
@@ -188,7 +202,7 @@ genFuncBody exprs output = case exprs of
 
 genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr
 genPat p = case p of
-    LPat.Var     _ name     -> return $ HExpr.Var name
+    LPat.Var     _ name     -> return $ HExpr.Var (mkVarName name)
     LPat.Typed   _ pat cls  -> genTyped HExpr.TypedP cls <*> genPat pat
                                    
 

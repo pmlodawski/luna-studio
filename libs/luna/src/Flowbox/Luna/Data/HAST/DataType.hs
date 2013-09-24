@@ -13,5 +13,5 @@ module Flowbox.Luna.Data.HAST.DataType (
 import           Flowbox.Luna.Data.HAST.Expr   
 
 empty :: Expr
-empty = DataType "" [] []
+empty = DataD "" [] [] []
 

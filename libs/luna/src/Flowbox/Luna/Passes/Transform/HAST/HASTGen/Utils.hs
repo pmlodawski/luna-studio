@@ -13,6 +13,7 @@ import qualified Flowbox.Luna.Data.HAST.Expr as HExpr
 
 
 mkCFName     = ("CF_" ++)
+mkCCName     = ("CC_" ++)
 mkFCName     = ("FC" ++)
 mkGetName    = ("get" ++)
 mkTHVarName  = ("'" ++)
@@ -29,7 +30,7 @@ mkTName i name = mkGetNName i ++ "_" ++ name ++ "_T"
 
 mkCGetCName i = "Get" ++ show i
 mkGetNName  i = "get" ++ show i
-mkCGetName  i = "_" ++ mkGetNName i
+mkCGetName  i = mkGetNName i
 
 --genTH f a b c = HExpr.AppE (HExpr.Var f) 
 --              $ HExpr.AppE (HExpr.Var $ mkTHTypeName a) 
@@ -49,9 +50,14 @@ genCFDec cname params cfname =
     --where t = (HExpr.Var "a")
     where t = mkPure $ foldl (HExpr.AppE) (HExpr.Var cname) (map HExpr.Var params)
 
-genCon name fnum = HExpr.Function ("con" ++ mkConsName name) [] 
-                 $ HExpr.AppE (HExpr.Var $ "mkPure" ++ show fnum) 
-                 $ HExpr.Var name
+genCCDec name = HExpr.DataD name [] [HExpr.Con name []] []
+
+--genCon name fnum = HExpr.Function ("con" ++ mkConsName name) [] 
+--                 $ HExpr.AppE (HExpr.Var $ "mkPure" ++ show fnum) 
+--                 $ HExpr.Var name
+
+genCon name ccname = HExpr.Function ("con" ++ mkConsName name) [] 
+                   $ mkPure (HExpr.Var ccname)
 
 
 mkPure = HExpr.AppE (HExpr.Var "Pure")
