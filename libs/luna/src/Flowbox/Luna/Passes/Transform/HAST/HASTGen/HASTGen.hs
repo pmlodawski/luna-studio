@@ -45,18 +45,17 @@ run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) . genModule
 
 
 genModule :: GenMonad m => LModule -> Pass.Result m HExpr
-genModule (LModule.Module _ cls imports classes _ methods _) = do 
+genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do 
     let (LType.Module _ path) = cls
         mod = HModule.addImport ["FlowboxM", "Gen", "Core"]
             $ HModule.mk path
         name = last path
-        modcls = HExpr.DataType name [] [HExpr.Con name []] 
+        modcls = LModule.mkClass lmod
+        modclasses = modcls : classes
 
     GenState.setModule mod
-    GenState.addDataType modcls
-    mapM_ (genExpr >=> GenState.addDataType) classes
+    mapM_ (genExpr >=> GenState.addDataType) modclasses
     mapM_ (genExpr >=> GenState.addImport)   imports
-    mapM_ (genExpr >=> GenState.addFunction) methods
     GenState.getModule
 
 
