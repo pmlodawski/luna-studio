@@ -45,15 +45,17 @@ run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) . genModule
 
 
 genModule :: GenMonad m => LModule -> Pass.Result m HExpr
-genModule (LModule.Module _ cls imports classes _ methods _) = do 
+genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do 
     let (LType.Module _ path) = cls
-        mod = HModule.addImport ["Flowbox", "Gen", "Core"]
+        mod = HModule.addImport ["FlowboxM", "Gen", "Core"]
             $ HModule.mk path
+        name = last path
+        modcls = LModule.mkClass lmod
+        modclasses = modcls : classes
 
     GenState.setModule mod
-    mapM_ (genExpr >=> GenState.addDataType) classes
+    mapM_ (genExpr >=> GenState.addDataType) modclasses
     mapM_ (genExpr >=> GenState.addImport)   imports
-    mapM_ (genExpr >=> GenState.addFunction)   methods
     GenState.getModule
 
 
@@ -64,9 +66,42 @@ genExpr ast = case ast of
     LExpr.Var      _ name                  -> pure $ HExpr.Var name
     LExpr.Cons     _ name                  -> pure $ HExpr.Var ("con_" ++ name)
     LExpr.Function _ name inputs output 
-                     body                  ->     HExpr.Function name 
-                                              <$> mapM genExpr inputs 
-                                              <*> (HExpr.DoBlock <$> genFuncBody body output)
+                     body                  -> do
+                                              --let genf arglen name = test where
+                                              --        argvars = map (("v" ++).show) [1..arglen]
+                                              --        vars    = "self" : argvars
+                                              --        exprArgs = map HExpr.Var argvars
+                                              --        exprVars = map HExpr.Var vars
+                                              --        cfGetterBase = HExpr.AppE (HExpr.Var $ "_" ++ name)
+                                              --                     $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName name) (HExpr.Var "self")
+                                              --        cfGetter = foldr (flip HExpr.AppE) cfGetterBase exprArgs
+                                                      
+                                              --        test = HExpr.Function (mkGetNName arglen name) exprVars
+                                              --             $ cfGetter
+
+                                              --    arglen = length inputs - 1
+                                              --    test   = genf arglen name
+
+                                              --    fcName = mkFCName name
+                                              --    cfName = mkCFName name
+
+                                              --    cgetCName = mkCGetCName arglen
+                                              --    cgetName  = mkCGetName  arglen
+                                              --    getNName  = mkGetNName arglen name
+
+                                              ------ CField 
+                                              ----GenState.addNewType $ genCFDec cfName
+
+                                              ---- CField imports
+                                              --GenState.addImport $ genFCImport name
+
+                                              ---- TH snippets
+                                              --GenState.addTHExpression $ genTHC fcName cfName name
+                                              --GenState.addTHExpression $ genTHF cgetCName getNName cgetName
+
+                                              --GenState.addFunction $ test
+                                              HExpr.Function name  <$> mapM genExpr inputs 
+                                                                   <*> (HExpr.DoBlock <$> genFuncBody body output)
 
     LExpr.Arg _ pat value                  -> genPat pat
                                                   
@@ -81,20 +116,17 @@ genExpr ast = case ast of
                                                   Just _                 -> logger error ("Named imports are not supported yet.") *> Pass.fail "Named imports are not supported yet."
                                                   _                      -> pure ()
                                               
-                                              return $ HExpr.Import False (["Flowbox", "Libs"] ++ segments ++ [tname]) Nothing where
+                                              return $ HExpr.Import False (["FlowboxM", "Libs"] ++ segments ++ [tname]) Nothing where
                                                 
     LExpr.Class _ cls _ fields methods     -> do 
                                               let fieldNames  = map LExpr.name fields
                                                   funcNames   = map LExpr.name methods 
                                                   memberNames = fieldNames ++ funcNames
-                                                  cfNames     = map mkCFName memberNames
+                                                  cfNames     = map (mkCFName name) memberNames
                                                   fcNames     = map mkFCName memberNames
                                             
-                                              -- constructor function
-                                              GenState.addFunction $ genCon name (length fields)
-                                           
                                               -- CField for each class field
-                                              let nts = map genCFDec cfNames
+                                              let nts = map (genCFDec name params) cfNames
                                               mapM_ GenState.addNewType nts
                                            
                                               -- CField imports
@@ -105,7 +137,13 @@ genExpr ast = case ast of
                                               let ths = zipWith3 genTHC fcNames cfNames memberNames
                                               mapM_ GenState.addTHExpression ths
                                             
-                                              -- HExpr generation
+                                              -- Class methods
+                                              mapM_ GenState.addFunction =<< mapM genExpr methods
+
+                                              -- constructor function
+                                              GenState.addFunction $ genCon name (length fields)
+
+                                              -- DataType
                                               cons   <- HExpr.Con name <$> mapM genExpr fields
                                               return  $ HExpr.DataType name params [cons] 
                                                 

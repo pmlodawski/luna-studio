@@ -12,25 +12,39 @@ import           Flowbox.Prelude             hiding (error, id)
 import qualified Flowbox.Luna.Data.HAST.Expr as HExpr
 
 
-mkCFName     = ("CField_" ++)
+mkCFName cname fname = ("CF_" ++ cname ++ "_" ++ fname)
 mkFCName     = ("FC_" ++)
 mkGetName    = ("get" ++)
 mkTHVarName  = ("'" ++)
 mkTHTypeName = ("''" ++)
 mkFieldName  = (++"_T")
 
-genTH f a b c = HExpr.AppE (HExpr.Var f) 
-              $ HExpr.AppE (HExpr.Var $ mkTHTypeName a) 
-              $ HExpr.AppE (HExpr.Var $ mkTHVarName  b) 
-              $ HExpr.Var $ mkTHVarName c
+mkGetNName i name = "get" ++ show i ++ "_" ++ name ++ "_T"
 
+mkCGetCName i = "Get" ++ show i
+mkCGetName  i = "get" ++ show i
+
+--genTH f a b c = HExpr.AppE (HExpr.Var f) 
+--              $ HExpr.AppE (HExpr.Var $ mkTHTypeName a) 
+--              $ HExpr.AppE (HExpr.Var $ mkTHVarName  b) 
+--              $ HExpr.Var $ mkTHVarName c
+
+genTH f a b c = foldl (HExpr.AppE) (HExpr.Var f) vars where
+			    vars = map HExpr.Var [mkTHTypeName a, mkTHVarName  b, mkTHVarName c]
 genTHF = genTH "mkInst"
 genTHC = genTH "mkInstC"
 
-genFCImport name = HExpr.Import False ["Flowbox", "Luna", "FClasses", "U_" ++ name] Nothing
+genFCImport name = HExpr.Import False ["FlowboxM", "Luna", "FClasses", "U_" ++ name] Nothing
 
-genCFDec name = HExpr.NewTypeD name ["a"] (HExpr.Con name [HExpr.Typed (HExpr.Var "a") (HExpr.Var $ mkGetName name)])
+genCFDec cname params cfname = 
+	HExpr.NewTypeD cfname params 
+    $ HExpr.Con cfname [HExpr.Typed t (HExpr.Var $ mkGetName cfname)]
+    --where t = (HExpr.Var "a")
+    where t = mkPure $ foldl (HExpr.AppE) (HExpr.Var cname) (map HExpr.Var params)
 
 genCon name fnum = HExpr.Function ("con_" ++ name) [] 
                  $ HExpr.AppE (HExpr.Var $ "_mkPure" ++ show fnum) 
                  $ HExpr.Var name
+
+
+mkPure = HExpr.AppE (HExpr.Var "Pure")

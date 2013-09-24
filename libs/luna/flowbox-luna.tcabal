@@ -37,12 +37,11 @@ Library
                   hashable,
                   MissingH == 1.2.0.0,
                   mtl,
-                  parsec,
+                  parsec3,
                   split,
                   text,
                   thrift >= 0.9,
                   transformers,
-                  parsec,
                   unordered-containers,
                   uu-parsinglib,
                   vector

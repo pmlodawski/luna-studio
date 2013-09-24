@@ -9,6 +9,7 @@
 module Flowbox.Luna.Data.AST.Module where
 
 import           Flowbox.Prelude                 hiding (id, drop, mod)
+import qualified Flowbox.Luna.Data.AST.Expr      as Expr
 import           Flowbox.Luna.Data.AST.Expr        (Expr)
 import qualified Flowbox.Luna.Data.AST.Type      as Type
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
@@ -37,6 +38,11 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 mk :: ID -> Type -> Module
 mk id' mod = Module id' mod [] [] [] [] []
+
+
+mkClass :: Module -> Expr
+mkClass (Module id' (Type.Module tid path) _ classes' fields' methods' _) = 
+    Expr.Class id' (Type.Class tid (last path) []) classes' fields' methods'
 
 
 addMethod :: Expr -> Module -> Module
