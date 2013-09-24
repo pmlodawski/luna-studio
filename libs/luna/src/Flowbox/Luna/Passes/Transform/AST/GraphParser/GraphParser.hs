@@ -29,9 +29,10 @@ import           Flowbox.Luna.Network.Def.DefManager                     (DefMan
 import qualified Flowbox.Luna.Network.Def.Definition                   as Definition
 import           Flowbox.Luna.Network.Def.Definition                     (Definition(Definition))
 import           Flowbox.Luna.Network.Flags                              (Flags(Flags))
+import qualified Flowbox.Luna.Network.Graph.DefaultValue               as DefaultValue
+import           Flowbox.Luna.Network.Graph.DefaultValue                 (DefaultValue)
 import qualified Flowbox.Luna.Network.Graph.Graph                      as Graph
 import           Flowbox.Luna.Network.Graph.Graph                        (Graph)
-import           Flowbox.Luna.Network.Graph.DefaultValue                 (DefaultValue(..))
 import           Flowbox.Luna.Network.Graph.Edge                         (Edge(Edge))
 import qualified Flowbox.Luna.Network.Graph.Node                       as Node
 import qualified Flowbox.Luna.Network.Graph.Port                       as Port
@@ -175,11 +176,10 @@ type2ASTType t = do
 
 
 
-defaultVal2ASTLit :: Graph2ASTMonad m => DefaultValue -> Pass.Result m ASTLit
-defaultVal2ASTLit value = case value of 
-        DefaultChar   v -> tok ASTLit.Char    <*> pure v
-        DefaultInt    v -> tok ASTLit.Integer <*> pure v
-        DefaultString v -> tok ASTLit.String  <*> pure v
+defaultVal2ASTExpr :: Graph2ASTMonad m => DefaultValue -> Pass.Result m ASTExpr
+defaultVal2ASTExpr defaultvalue = do
+    let value = DefaultValue.value defaultvalue
+    parseExpr value
 
 
 type2Field :: Graph2ASTMonad m => Type -> Pass.Result m ASTExpr
@@ -245,10 +245,8 @@ node2AST graph inputsNames list (nodeID, node) = do
             parseID <- newID
 
             call <- case node of 
-                Node.Expr expression _ _ -> case Parser.parseExpr expression parseID of 
-                                                    Left  e    -> fail $ show e
-                                                    Right expr -> return $ ASTExpr.App astNodeID expr args
-                Node.Default value _ -> ASTExpr.Lit astNodeID <$> defaultVal2ASTLit value
+                Node.Expr expression _ _ ->  ASTExpr.App astNodeID <$> parseExpr expression <*> pure args
+                Node.Default value _ -> defaultVal2ASTExpr value
                 Node.Inputs  _     _ -> fail "Graph2AST Implementation error: Node.Inputs should be already handled"
                 Node.Outputs _     _ -> return $ ASTExpr.Tuple astNodeID args
                 Node.Tuple   _     _ -> return $ ASTExpr.Tuple astNodeID args
@@ -291,3 +289,10 @@ node2AST graph inputsNames list (nodeID, node) = do
                                     id2 <- newID 
                                     return [ASTExpr.Assignment id1 allPattern call
                                            ,ASTExpr.Assignment id2 gettersPattern allResult]
+
+parseExpr :: Graph2ASTMonad m => String -> Pass.Result m ASTExpr
+parseExpr expression = do 
+    parseID <- newID
+    case Parser.parseExpr expression parseID of 
+        Left  e    -> fail $ show e
+        Right expr -> return expr

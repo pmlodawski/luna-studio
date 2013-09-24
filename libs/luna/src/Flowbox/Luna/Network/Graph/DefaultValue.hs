@@ -15,9 +15,9 @@ import           Flowbox.Prelude
 --import           Data.Serialize   (Serialize)
 --import           Data.Word        (Word8)
 
-data DefaultValue = DefaultChar   Char 
-				  | DefaultInt    String
-                  | DefaultString String 
+data DefaultValue = DefaultChar   { value :: String }
+				  | DefaultInt    { value :: String }
+                  | DefaultString { value :: String }
                   deriving (Show, Read, Ord, Eq)
 
 
