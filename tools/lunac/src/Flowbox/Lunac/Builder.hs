@@ -24,6 +24,7 @@ import qualified Flowbox.Luna.Network.Def.DefManager                       as De
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Build                   as CabalBuild
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Configure                   as CabalConfigure
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                   as CabalStore
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
@@ -128,5 +129,6 @@ runCabal :: UniPath -> String -> IO ()
 runCabal path name = either2io $ Luna.run $ do 
     let cabal = genCabal name
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) path
+    CabalConfigure.run path
     CabalBuild.run path
     
