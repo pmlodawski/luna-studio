@@ -64,20 +64,28 @@ logger :: Logger
 logger = getLogger "Flowbox"
 
 
+--example :: Source
+--example = Source.Source ["Main"]
+--        $ unlines [ "import Std: Console"
+--                  , "def main self:"
+--                  , "    Console.print 1"
+--                  , "class Vector a:"
+--                  , "    x :: a"
+--                  , "    y :: a"
+--                  , "    z :: a"
+--                  , "    def test(self, x=0, y=0):"
+--                  , "        Console.print 1"
+--                  --, "from Std.Math import Vector "
+--                  --, "class A:"
+--                  --, "    a :: Std.Math.Vector Int"
+--                  ]
+
+
 example :: Source
 example = Source.Source ["Main"]
-        $ unlines [ "import Std: Console"
+        $ unlines [ ""
                   , "def main self:"
-                  , "    Console.print 1"
-                  , "class Vector a:"
-                  , "    x :: a"
-                  , "    y :: a"
-                  , "    z :: a"
-                  , "    def test(self, x=0, y=0):"
-                  , "        Console.print 1"
-                  --, "from Std.Math import Vector "
-                  --, "class A:"
-                  --, "    a :: Std.Math.Vector Int"
+                  , "    Console.print"
                   ]
 
 --example :: Source

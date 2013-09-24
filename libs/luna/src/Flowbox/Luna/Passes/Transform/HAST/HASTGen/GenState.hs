@@ -23,14 +23,24 @@ logger = getLogger "Flowbox.Luna.Passes.HSGen.GenState"
 
 type HExpr = HExpr.Expr
 
-data GenState = GenState { mod :: HExpr
+data GenState = GenState { mod     :: HExpr
+                         , clsName :: String
                          }
 
 type GenStateM m = (MonadState GenState m, Functor m)
 
 
 empty :: GenState
-empty = GenState HExpr.Undefined
+empty = GenState HExpr.Undefined ""
+
+
+setClsName :: GenStateM m => String -> m()
+setClsName name = do
+    s <- get
+    put s { clsName = name }
+
+getClsName :: GenStateM m => m String
+getClsName = clsName <$> get
 
 
 setModule :: GenStateM m => HExpr -> m ()
