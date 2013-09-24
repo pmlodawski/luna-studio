@@ -95,9 +95,6 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
                  $ unlines [ "import " ++ (String.toUpper name) ++ " as M"
                            , "main = M.main 0"]
 
-    print $ Project.path proj
-    print $ outputPath
-    
     sources <- Builder.buildLibrary diag library
     Builder.buildSources outputPath $ launcher : sources
     Builder.runCabal outputPath name
