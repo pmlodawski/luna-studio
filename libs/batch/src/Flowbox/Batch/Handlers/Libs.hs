@@ -98,7 +98,6 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
     sources <- Builder.buildLibrary diag library
     Builder.buildSources outputPath $ launcher : sources
     Builder.runCabal outputPath name
-    loggerIO warning "Build library not implemented"
     return (library, ()))
 
 
