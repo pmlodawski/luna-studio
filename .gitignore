@@ -1,6 +1,3 @@
-
-dist
-cabal-dev
 *.o
 *.hi
 *.chi
@@ -35,5 +32,15 @@ tools/batch-clients/cpp/batch_client
 #IntelliJ IDEA
 .idea
 
-# cabal configs - they shoudl be generated from tcabal files
+# cabal configs - they should be generated from tcabal files
 *.cabal
+
+#general builds
+dist
+
+# cabal sandbox
+cabal.sandbox.config
+.cabal-sandbox
+
+### DEPRECIATED ###
+# cabal-dev
