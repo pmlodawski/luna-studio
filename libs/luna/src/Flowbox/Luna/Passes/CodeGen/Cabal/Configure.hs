@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.CodeGen.Cabal.Build where
+module Flowbox.Luna.Passes.CodeGen.Cabal.Configure where
 
 import           Control.Monad.RWS           
 
@@ -16,7 +16,7 @@ import           Flowbox.System.Log.Logger
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.Cabal.Build"
+loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.Cabal.Configure"
 
 
 run :: MonadIO m => UniPath -> m ()
@@ -25,4 +25,4 @@ run = liftIO . build
 
 build :: UniPath -> IO ()
 build buildPath = do 
-    Process.runCommandInFolder loggerIO buildPath "cabal" ["build"] 
+    Process.runCommandInFolder loggerIO buildPath "cabal" ["configure"] 

@@ -13,7 +13,7 @@ import           Flowbox.Batch.Project.Project             (Project)
 import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
 import           Flowbox.Luna.Network.Def.DefManager       (DefManager)
 import qualified Flowbox.Luna.Network.Def.Definition     as Definition
-import           Flowbox.Luna.Network.Def.Definition       (Definition(..))
+import           Flowbox.Luna.Network.Def.Definition       (Definition)
 import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
 import qualified Flowbox.Luna.Lib.LibManager             as LibManager
 import           Flowbox.Luna.Lib.LibManager               (LibManager)
@@ -24,8 +24,8 @@ import qualified Flowbox.Luna.XOLD.Type.Type             as Type
 import qualified Flowbox.Luna.Network.Attributes         as Attributes
 import qualified Flowbox.Luna.Network.Graph.Node         as Node
 import           Flowbox.Luna.Network.Graph.Node           (Node)
-import qualified Flowbox.Luna.Network.Graph.DefaultValue as DefaultValue
-import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
+import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue(DefaultValue))
+import           Flowbox.Luna.Network.Graph.Edge           (Edge(Edge))
 import qualified Flowbox.Luna.Network.Graph.Port         as Port
 import qualified Flowbox.System.UniPath                  as UniPath
 import           Flowbox.System.UniPath                    (UniPath)
@@ -126,7 +126,7 @@ func_vec_incx_graph = Graph.insEdges [
                              (2,  Node.mkNTuple             ),
                              (3,  Node.mkExpr     "x'getter"),
                              (4,  Node.mkExpr     "select0" ),
-                             (5,  Node.Default (DefaultValue.DefaultInt "1") Attributes.empty),
+                             (5,  Node.Default (DefaultValue "1") Attributes.empty),
                              (6,  Node.mkNTuple             ),
                              (7,  Node.mkExpr     "add"     ),
                              (8,  Node.mkExpr     "select0" ),

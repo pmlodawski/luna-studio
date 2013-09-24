@@ -20,37 +20,12 @@ opts_batch     = set(['@all', '@batch'])
 opts_cppclient = set(['@all', '@cppclient'])
 
 
-# class Library:
-#     def __init__(self, name, path):
-#         self.name = name
-#         self.path = path
-#         libs.append(self)
-
-
-# class Executable:
-#     def __init__(self, name, path):
-#         self.name = name
-#         self.path = path
-#         execs.append(self)
-
-
-
-# dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
-# p_luna     = os.path.join(dir, 'libs',  'luna')
-# p_batch    = os.path.join(dir, 'libs',  'batch')
-# p_batchsrv = os.path.join(dir, 'tools', 'batch-srv')
-# p_lunac    = os.path.join(dir, 'tools', 'lunac')
-
-# Library    ('lunalib' , os.path.join(dir, 'libs',  'luna'))
-# Library    ('batchlib', os.path.join(dir, 'libs',  'batch'))
-# Executable ('batchsrv', os.path.join(dir, 'tools', 'batch-srv'))
-# Executable ('lunac'   , os.path.join(dir, 'tools', 'lunac'))
-
-        
-
 def wrong_use():
     print_usage()
     sys.exit()
+
+def try_call(args):
+    if call(args): error()
 
 def error():
     print "ERROR"
@@ -84,31 +59,29 @@ def main():
 
     if cmds & (opts_utils | opts_luna | opts_batch):
         info("Compiling utils library")
-        if call(['cabal-dev', 'install', p_utils, '--force-reinstalls']): error()
+        try_call(['cabal', 'install', p_utils, '--force-reinstalls'])
 
     if cmds & (opts_lunalib | opts_luna | opts_batch):
         info("Compiling luna library")
-        if call(['cabal-dev', 'install', p_luna, '--force-reinstalls']): error()
+        try_call(['cabal', 'install', p_luna, '--force-reinstalls'])
 
     if cmds & (opts_lunac | opts_luna):
         info("Compiling lunac")
-        if call(['cabal-dev', 'install', p_lunac, '--force-reinstalls']): error()
+        try_call(['cabal', 'install', p_lunac, '--force-reinstalls'])
 
     if cmds & (opts_batchlib | opts_batch):
         info("Compiling batch library")
-        if call(['cabal-dev', 'install', p_batch, '--force-reinstalls']): error()
+        try_call(['cabal', 'install', p_batch, '--force-reinstalls'])
 
     if cmds & (opts_batchsrv | opts_batch):
         info("Compiling batchsrv")
-        if call(['cabal-dev', 'install', p_batchsrv, '--force-reinstalls']): error()
+        try_call(['cabal', 'install', p_batchsrv, '--force-reinstalls'])
 
     if cmds & (opts_cppclient):
         info("Compiling CPP-Client")
         cwd = os.getcwd()
         os.chdir(p_cppclient)
-        # if call(['make', 'clean']): error()
-        if call(['make']): error()
+        try_call(['make'])
         os.chdir(cwd)
-
 
 main()
