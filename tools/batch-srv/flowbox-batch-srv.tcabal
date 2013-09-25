@@ -18,8 +18,7 @@ Executable batch-srv
 
     GHC-Options:    -Wall -O2
 
-    Extensions:     FlexibleInstances
-                    TypeSynonymInstances
+    Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
                     bytestring,
@@ -30,6 +29,7 @@ Executable batch-srv
                     flowbox-utils,
                     hashable,
                     network,
+                    optparse-applicative,
                     text,
                     thrift >= 0.9,
                     transformers,

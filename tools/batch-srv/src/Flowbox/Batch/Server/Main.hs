@@ -14,17 +14,22 @@ import qualified Control.Concurrent.MVar                    as MVar
 import           Control.Concurrent.MVar                      (MVar)
 import qualified Control.Exception                          as Exception
 import           Data.Text.Lazy                               (pack)
+import           Options.Applicative                        hiding (info)
+import qualified Options.Applicative                        as Opt
 import qualified System.Exit                                as Exit
-
-import qualified Batch                                      as TBatch
-import           Batch_Iface                                  
 import           Thrift.Transport.Handle                      ()
 import qualified Thrift.Protocol.Binary                     as TProtocol
 import           Thrift.Protocol.Binary                       (Protocol)
 import           Thrift.Transport                             (Transport)
 
+import qualified Batch                                      as TBatch
+import           Batch_Iface                                  
+import qualified Flowbox.Batch.Server.Conf                  as Conf
+import           Flowbox.Batch.Server.Conf                    (Conf)
 import qualified Flowbox.Batch.Server.Handlers.BatchHandler as BatchHandler
 import qualified Flowbox.Batch.Server.Server                as Server
+import qualified Flowbox.Data.Version                       as Version
+import           Flowbox.Data.Version                         (Version)
 import           Flowbox.System.Log.Logger                    
 
 
@@ -37,30 +42,70 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server"
 
 
-address :: String
-address = "127.0.0.1"
+defaultAddress :: String
+defaultAddress = "127.0.0.1"
 
 
-port :: Int
-port = 30521
+defaultPort :: Int
+defaultPort = 30521
+
+
+version :: Version
+version = Version.mk { Version.minor = 1
+                     , Version.stage = Version.Alpha
+                     }
+
+
+parser :: Parser Conf
+parser = Opt.flag' Conf.Version (long "version" <> hidden)
+       <|> Conf.Serve
+           <$> strOption ( long "addres"  <> short 'a' <> value defaultAddress       <> metavar "address" <> help "Server address"       )
+           <*> strOption ( long "port"    <> short 'p' <> (value $ show defaultPort) <> metavar "port"    <> help "Server port"          )
+           <*> switch    ( long "verbose" <> short 'v'                                                    <> help "Verbose"              )
+           <*> switch    ( long "debug"   <> short 'd' <> hidden                                                                         )
+           <*> switch    ( long "no-color"                                                                <> help "Disable color output" )
+           <*> switch    ( long "shutdown-with-client" <> hidden                                                                         )
+
+
+opts :: ParserInfo Conf
+opts = Opt.info (helper <*> parser)
+           (Opt.fullDesc
+               <> Opt.header show_version
+           )
+
+
+show_version :: String
+show_version = "Batch server, version " ++ Version.str version
 
 
 main :: IO ()
-main = do
-    rootLogger setLevel DEBUG
-    quitmutex <- MVar.newEmptyMVar
-    _ <- Concurrent.forkIO $ Exception.handle 
-        (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
-                                               MVar.putMVar quitmutex True) 
-        (serve quitmutex)
-    waitForQuit quitmutex
+main = execParser opts >>= run
 
 
-serve :: MVar Bool -> IO ()
-serve quitmutex = do
+run :: Conf -> IO ()
+run conf = case conf of
+    Conf.Version {} -> putStrLn show_version
+    Conf.Serve   {} -> do
+        if Conf.verbose conf
+            then rootLogger setLevel INFO
+            else return ()
+        if Conf.debug conf
+            then rootLogger setLevel DEBUG
+            else return ()
+
+        quitmutex <- MVar.newEmptyMVar
+        _ <- Concurrent.forkIO $ Exception.handle 
+            (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
+                                                   MVar.putMVar quitmutex True) 
+            (serve conf quitmutex)
+        waitForQuit quitmutex
+
+
+serve :: Conf -> MVar Bool -> IO ()
+serve conf quitmutex = do
     handler <- BatchHandler.empty
     loggerIO info "Starting the server"
-    _ <- Server.runSingleConnectionServer Server.accepter handler (processCommand quitmutex) address port
+    _ <- Server.runSingleConnectionServer Server.accepter handler (processCommand quitmutex) conf
     return ()
 
 
@@ -76,6 +121,5 @@ processCommand quitmutex handler (iprot, oprot) = do
 waitForQuit :: MVar t -> IO b
 waitForQuit quitmutex = do
     _ <- MVar.takeMVar quitmutex
-    Concurrent.threadDelay 1000000
     loggerIO warning "shutting down..."
     Exit.exitSuccess

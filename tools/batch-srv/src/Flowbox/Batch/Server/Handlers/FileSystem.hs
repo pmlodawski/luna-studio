@@ -22,6 +22,7 @@ import           Data.Text.Lazy                                         (Text)
 import qualified Data.Vector                                          as Vector
 import           Data.Vector                                            (Vector)
 
+import           Flowbox.Prelude                                        
 import           Flowbox.Batch.Server.Handlers.Common                   (tRunScript)
 import qualified Fs_Types                                             as TFS
 import qualified Flowbox.Batch.Handlers.FileSystem                    as BatchFS

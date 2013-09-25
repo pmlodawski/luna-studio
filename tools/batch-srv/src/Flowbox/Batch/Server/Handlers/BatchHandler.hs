@@ -6,6 +6,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
 
 module Flowbox.Batch.Server.Handlers.BatchHandler where
 

@@ -18,13 +18,13 @@ module Flowbox.Batch.Server.Handlers.Defs (
 ) 
 where
 
-
 import           Data.Int                                              (Int32)
 import           Data.IORef                                            
 import qualified Data.Vector                                         as Vector
 import           Data.Vector                                           (Vector)
 import           Data.Text.Lazy                                        (Text)
 
+import           Flowbox.Prelude                                       
 import qualified Defs_Types                                          as TDefs
 import           Flowbox.Batch.Server.Handlers.Common                  (tRunScript)
 import           Flowbox.Batch.Batch                                   (Batch(..))
