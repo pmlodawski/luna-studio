@@ -25,4 +25,4 @@ run = liftIO . install
 
 install :: UniPath -> IO ()
 install buildPath = do 
-    Process.runCommandInFolder loggerIO buildPath "cabal" ["install"] 
+    Process.runCommandInFolder buildPath "cabal" ["install"] 

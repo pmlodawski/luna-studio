@@ -24,8 +24,8 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.System.Process"
 
 
-runCommand :: LoggerIO -> String -> [String] -> IO ()
-runCommand l command args  = do
+runCommand :: String -> [String] -> IO ()
+runCommand command args  = do
     let commandName = command ++ " " ++ (List.concat $ List.intersperse " " args)
         noStandardInput = ""
     loggerIO debug $ "Running command '" ++ commandName ++ "'"
@@ -38,11 +38,11 @@ runCommand l command args  = do
                 fail errmsg
 
 
-runCommandInFolder :: LoggerIO -> UniPath -> String -> [String] -> IO ()
-runCommandInFolder loggerIO upath command args  = do
+runCommandInFolder :: UniPath -> String -> [String] -> IO ()
+runCommandInFolder upath command args  = do
     workingDir <- Directory.getCurrentDirectory
     path       <- UniPath.toUnixString <$> UniPath.expand upath
     Directory.setCurrentDirectory path
 
-    Exception.finally (runCommand loggerIO command args)
+    Exception.finally (runCommand command args)
                       (Directory.setCurrentDirectory workingDir)
