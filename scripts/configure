@@ -2,7 +2,7 @@
 import os.path
 import sys
 from subprocess import call, Popen, PIPE
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 from utils.colors import print_info, print_error
 
 
@@ -28,7 +28,7 @@ def check_cabal_version():
     print_info ("Checking cabal version (>= %s)" % minv)
     (out, err) = Popen("cabal --numeric-version", stdout=PIPE, shell=True).communicate()
     out = out.lstrip().rstrip()
-    if not StrictVersion(out) >= StrictVersion(minv):
+    if not LooseVersion(out) >= LooseVersion(minv):
         print_error ("Your cabal is too old (%s)" % out)
         print_error ("Please update your cabal to version '%s' or greater." % minv)
         fatal()
