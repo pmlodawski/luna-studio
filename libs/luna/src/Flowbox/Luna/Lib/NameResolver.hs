@@ -25,6 +25,7 @@ import qualified Flowbox.Luna.Network.Path.Path      as Path
 import           Flowbox.Luna.Network.Path.Path        (Path(Path))
 
 
+
 getImports :: (Definition.ID, Definition) -> DefManager -> [Import]
 getImports (defID, def) defManager = imports ++ parentImports where
     imports       = Definition.imports def
@@ -38,10 +39,13 @@ searchDefMngr defManager path (defID, def) = do
     let name = Definition.name def
     case Path.segments path of 
         []  -> return defID
+        [h] -> if name == Just h
+                  then return defID
+                  else Nothing
         h:_ -> if name == Just h
                   then let children = DefManager.children defManager defID 
                         in case children of 
-                            [] -> return defID
+                            [] -> Nothing
                             _  -> listToMaybe $ mapMaybe (searchDefMngr defManager (Path.tail path)) children
                   else Nothing
 
