@@ -17,7 +17,7 @@ import           Flowbox.Prelude           hiding (error)
 import           Flowbox.System.Log.Logger   
 import qualified Flowbox.System.UniPath    as UniPath
 import           Flowbox.System.UniPath      (UniPath)
-import           Data.String.Utils                                       (join)
+import           Data.String.Utils           (join)
 
 
 
