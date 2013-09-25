@@ -20,26 +20,28 @@ import qualified Flowbox.System.UniPath    as UniPath
 import           Flowbox.System.UniPath      (UniPath)
 
 
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.System.Process"
+
 
 runCommand :: LoggerIO -> String -> [String] -> IO ()
-runCommand loggerIO command args  = do
+runCommand l command args  = do
     let commandName = command ++ " " ++ (List.concat $ List.intersperse " " args)
         noStandardInput = ""
-    loggerIO info $ "Runing '" ++ commandName ++ "'"
+    loggerIO debug $ "Running command '" ++ commandName ++ "'"
     (errorCode, stdOut, stdErr) <- Process.readProcessWithExitCode command args noStandardInput
-    let runmsg = stdOut
+    let runmsg   = stdOut
     if errorCode == Exit.ExitSuccess
         then loggerIO info runmsg
         else do let errmsg = "Error running command '" ++ commandName ++ "'\n" ++ stdErr
-                loggerIO warning runmsg
-                loggerIO error   errmsg
+                loggerIO error errmsg
                 fail errmsg
 
 
 runCommandInFolder :: LoggerIO -> UniPath -> String -> [String] -> IO ()
 runCommandInFolder loggerIO upath command args  = do
     workingDir <- Directory.getCurrentDirectory
-    path <- UniPath.toUnixString <$> UniPath.expand upath
+    path       <- UniPath.toUnixString <$> UniPath.expand upath
     Directory.setCurrentDirectory path
 
     Exception.finally (runCommand loggerIO command args)
