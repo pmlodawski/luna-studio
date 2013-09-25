@@ -25,8 +25,9 @@ import qualified Flowbox.Luna.Passes.Pass                            as Pass
 import           Flowbox.Luna.Passes.Pass                              (PassMonad)
 import           Flowbox.System.Log.Logger                             
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils      
+import           Data.String.Utils                  (join)
 
-import           Control.Monad.State                                 hiding (mapM, mapM_)
+import           Control.Monad.State                                 hiding (mapM, mapM_, join)
 import           Control.Applicative                                   
 
 type GenMonad m = PassMonad GenState m
@@ -200,10 +201,16 @@ genExpr ast = case ast of
     LExpr.Field      _ name cls _          -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
     LExpr.App        _ src args            -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genExpr args)
     LExpr.Accessor   _ src dst             -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
-    _                                      -> fail $ show ast
+    LExpr.Native     _ segments            -> pure $ HExpr.Native (join " " $ map genNative segments)
+    --LExpr.Native     _ segments            -> pure $ HExpr.Native code
+    --_                                      -> fail $ show ast
     where
         getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
         get0   = getN (0::Int)
+
+genNative expr = case expr of
+    LExpr.NativeCode _ code -> code
+    LExpr.NativeVar  _ name -> mkVarName name
 
 genCallExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genCallExpr e = case e of

@@ -34,7 +34,8 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | AppE       { src       :: Expr     , dst       :: Expr                                }
           | AppT       { src       :: Expr     , dst       :: Expr                                }
           | Infix      { name      :: String   , src       :: Expr        , dst          :: Expr  }
-          | Lit        { lval      :: Lit                                                      }
+          | Lit        { lval      :: Lit                                                         }
+          | Native     { code      :: String                                                      }
           | NOP
           | Undefined
           deriving (Show)

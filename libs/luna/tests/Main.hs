@@ -65,19 +65,33 @@ logger :: Logger
 logger = getLogger "Flowbox"
 
 
+--example :: Source
+--example = Source.Source ["Main"]
+--        $ unlines [ ""
+--                  , "import Std: Console"
+--                  , "def main self:"
+--                  , "    v = Vector 0 0 0"
+--                  , "    Console.print v"
+--                  --, "    v.vtest 1 2"
+--                  , "class Vector a:"
+--                  , "    x :: a"
+--                  , "    y :: a"
+--                  , "    z :: a"
+--                  --, "    def vtest(self, x=0, y=0):"
+--                  --, "        x"
+--                  --, "from Std.Math import Vector "
+--                  --, "class A:"
+--                  --, "    a :: Std.Math.Vector Int"
+--                  ]
+
+
 example :: Source
 example = Source.Source ["Main"]
         $ unlines [ ""
-                  , "import Std: Console"
-                  , "def main self:"
-                  , "    v = Vector 0 0 0"
-                  , "    Console.print v"
-                  --, "    v.vtest 1 2"
-                  , "class Vector a:"
-                  , "    x :: a"
-                  , "    y :: a"
-                  , "    z :: a"
-                  --, "    def vtest(self, x=0, y=0):"
+                  , "class Console:"
+                  , "    def print (msg):"
+                  , "        ```print #{msg}```"
+                  --, "    {}"
                   --, "        x"
                   --, "from Std.Math import Vector "
                   --, "class A:"
@@ -143,14 +157,10 @@ main_inner = Luna.run $ do
     hast <- HASTGen.run  ssa
     logger info $ PP.ppShow hast
 
-
     logger info "\n-------- HSC --------" 
     hsc <- HSC.run  hast
     logger info $ join "\n\n" (map printSrc hsc)
 
-    --putStrLn "\n-------- PHSC --------" 
-    --phsc <- HSPrint.run hsc
-    --putStrLn $ phsc
 
     return ()
 

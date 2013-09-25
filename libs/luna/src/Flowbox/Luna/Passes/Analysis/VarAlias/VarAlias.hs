@@ -67,6 +67,11 @@ vaExpr ast = case ast of
                                              case v of
                                                  Nothing    -> Pass.fail ("Not in scope '" ++ name ++ "'.")
                                                  Just vid   -> LocState.bind id vid
+    Expr.NativeVar  id name               -> do
+                                             v <- LocState.lookupVar name
+                                             case v of
+                                                 Nothing    -> Pass.fail ("Not in scope '" ++ name ++ "'.")
+                                                 Just vid   -> LocState.bind id vid
     _                                     -> Expr.traverseM_ vaExpr vaType vaPat pure ast
     where
         vaExprMap = mapM_ vaExpr

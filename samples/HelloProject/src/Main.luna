@@ -1,7 +1,7 @@
+class Console:
+	def print self msg:
+		```print #{msg}```
+
 def main self:
-    v = Vector 0 0 0
+    Console.print 5
     
-class Vector a:
-    x :: a
-    y :: a
-    z :: a

@@ -43,6 +43,7 @@ pArrow       = symbols "->"
 pTypeDecl    = symbols "::"
 pImportAll   = symbol  '*'
 pAssignment  = symbol  '='
+pNativeSym   = symbols "```"
 
 opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart
@@ -69,9 +70,9 @@ pAs         = reserved "as"
     -- Bracketing
 -----------------------------------------------------------
 
-parensed  s p   = between (parenL True) (parenR s) p
-bracketed   p   = between (bracketL)    (bracketR) p
-braced      p   = between (braceL)      (braceR)   p
+parensed  s p   = between (parenL True) (parenR s)  p
+bracketed   p   = between (bracketL)    (bracketR)  p
+braced      p   = between (braceL)      (braceR)    p
 
 
 -----------------------------------------------------------
