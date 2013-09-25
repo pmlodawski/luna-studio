@@ -1,91 +1,29 @@
 #!/usr/bin/python
-import os
+import sys
 import os.path
 import sys
 from subprocess import call, Popen, PIPE
-from utils.colors import print_info, print_error
-
-libs  = []
-execs = []
-
-options        = set(['@all', 'libs/utils', 'libs/luna', 'libs/batch', 'tools/batch-srv', 'tools/lunac', '@luna', '@batch', '@cppclient'])
-opts_all       = options
-opts_utils     = set(['@all', 'libs/utils'])
-opts_lunalib   = set(['@all', 'libs/luna'])
-opts_batchlib  = set(['@all', 'libs/batch'])
-opts_batchsrv  = set(['@all', 'tools/batch-srv'])
-opts_lunac     = set(['@all', 'tools/lunac'])
-opts_luna      = set(['@all', '@luna'])
-opts_batch     = set(['@all', '@batch'])
-opts_cppclient = set(['@all', '@cppclient'])
-
-
-def wrong_use():
-    print_usage()
-    sys.exit()
-
-def try_call(args):
-    if call(args): fatal()
-
-def fatal():
-    print_error ("ERROR")
-    sys.exit(1)
-
-def print_usage():
-    print_info ("Usage: compile {%s}" % ", ".join(options))
+from utils.colors import print_info, print_error, print_warning
+from itertools import chain
+from collections import deque
+import ConfigParser
+import os.path
 
 
 def main():
-    args = sys.argv[1:]
-    cmds = []
-    opts = []
-    mod  = cmds
-    for x in args:
-        if x[0] == '-':
-            mod = opts
-        mod.append(x)
+    cfgname = 'build.cfg'
+    if not os.path.isfile(cfgname):
+        print_error("No build configuration file found. Run 'workon' script.")
+        sys.exit(1)
+    
+    config = ConfigParser.RawConfigParser()
+    config.read(cfgname)
 
-    cmds = set(cmds)
-    if len(cmds) == 0: wrong_use()
-    if not cmds <= options:
-        diff = cmds - options
-        print_error ("Unrecognized options %s" % ", ".join(["'%s'" % opt for opt in diff]))
-        wrong_use()
-
-    dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
-    p_utils    = os.path.join(dir, 'libs',  'utils')
-    p_luna     = os.path.join(dir, 'libs',  'luna')
-    p_batch    = os.path.join(dir, 'libs',  'batch')
-    p_batchsrv = os.path.join(dir, 'tools', 'batch-srv')
-    p_lunac    = os.path.join(dir, 'tools', 'lunac')
-    p_cppclient= os.path.join(dir, 'tools', 'batch-clients', 'cpp')
-
-
-    if cmds & (opts_utils | opts_luna | opts_batch):
-        print_info("Compiling utils library")
-        try_call(['cabal', 'install', p_utils, '--force-reinstalls'] + opts)
-
-    if cmds & (opts_lunalib | opts_luna | opts_batch):
-        print_info("Compiling luna library")
-        try_call(['cabal', 'install', p_luna, '--force-reinstalls'] + opts)
-
-    if cmds & (opts_lunac | opts_luna):
-        print_info("Compiling lunac")
-        try_call(['cabal', 'install', p_lunac, '--force-reinstalls'] + opts)
-
-    if cmds & (opts_batchlib | opts_batch):
-        print_info("Compiling batch library")
-        try_call(['cabal', 'install', p_batch, '--force-reinstalls'] + opts)
-
-    if cmds & (opts_batchsrv | opts_batch):
-        print_info("Compiling batchsrv")
-        try_call(['cabal', 'install', p_batchsrv, '--force-reinstalls'] + opts)
-
-    if cmds & (opts_cppclient):
-        print_info("Compiling CPP-Client")
-        cwd = os.getcwd()
-        os.chdir(p_cppclient)
-        try_call(['make'])
-        os.chdir(cwd)
+    name = config.get('Target', 'name')
+    print_info("Compiling %s" % name)
+    pname = 'flowbox-' + name
+    call(['cabal', 'install', pname, '--reinstall'] + sys.argv[1:])
 
 main()
+
+

@@ -16,9 +16,10 @@ class bcolors:
 
 
 def print_info(s):
-    print 
-    print bcolors.INFO + "=== %s ===" % s + bcolors.ENDC
+    print bcolors.INFO + s + bcolors.ENDC
+
+def print_warning(s):
+    print bcolors.WARNING + s + bcolors.ENDC
 
 def print_error(s):
-    print
     print bcolors.ERROR + s + bcolors.ENDC
