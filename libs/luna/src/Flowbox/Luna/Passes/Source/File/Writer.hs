@@ -32,9 +32,9 @@ module2path m ext = UniPath.setExtension ext $ UniPath.fromList m
 
 
 writeSource :: FRMonad m => UniPath -> String -> Source -> Pass.Result m ()
-writeSource rootpath ext (Source m content) = do
-    let path = UniPath.fromList $ (UniPath.toList rootpath) ++ (UniPath.toList $ module2path m ext)
-    fileName <- UniPath.expand path
-    let folderName = UniPath.basePath fileName
+writeSource urootpath ext (Source m content) = do
+    rootpath <- UniPath.expand urootpath
+    let fileName   = UniPath.fromList $ (UniPath.toList rootpath) ++ (UniPath.toList $ module2path m ext)
+        folderName = UniPath.basePath fileName
     liftIO $ do Directory.createDirectoryIfMissing True folderName
                 IO.writeFile (UniPath.toUnixString fileName) content
