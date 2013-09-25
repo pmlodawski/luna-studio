@@ -3,6 +3,7 @@ import os.path
 import sys
 from subprocess import call, Popen, PIPE
 from distutils.version import StrictVersion
+from utils.colors import print_info, print_error
 
 
 dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
@@ -10,45 +11,49 @@ third_party = os.path.join(dir, 'third-party')
 p_thrift   = os.path.join(third_party,  'thrift-0.9')
 p_missingh = os.path.join(third_party,  'MissingH-1.2.0.0-winpatch')
 
-def info(s):
-    print "=== %s ===" % s
+
+def fatal():
+    print_error ("ERROR")
+    sys.exit(1)
 
 def check_install(name, args):
-    info ("Checking if '%s' is installed" % name)
+    print_info ("Checking if '%s' is installed" % name)
     (out, err) = Popen(name + " " + args, stdout=PIPE, stderr=PIPE, shell=True).communicate()
     if not out:
-        print "Please install '%s' to continue" % name
-        sys.exit()  
+        print_error ("Please install '%s' to continue" % name)
+        fatal() 
 
 def check_cabal_version():
     minv = '1.18.0'
-    info ("Checking cabal version (>= %s)" % minv)
+    print_info ("Checking cabal version (>= %s)" % minv)
     (out, err) = Popen("cabal --numeric-version", stdout=PIPE, shell=True).communicate()
     out = out.lstrip().rstrip()
     if not StrictVersion(out) >= StrictVersion(minv):
-        print "Your cabal is too old (%s)" % out
-        print "Please update your cabal to version '%s' or greater." % minv
+        print_error ("Your cabal is too old (%s)" % out)
+        print_error ("Please update your cabal to version '%s' or greater." % minv)
+        fatal()
 
 def try_call(cmds):
-    if call(cmds):
-        print "ERROR"
-        sys.exit(1)
+    if call(cmds): fatal()
 
 check_install("cabal", "-V")
 check_cabal_version()
 
-info ("Initializing cabal sandbox")
+print_info ("Generating cabal configs using gencabal")
+try_call (['scripts/gencabal'])
+
+print_info ("Initializing cabal sandbox")
 try_call (['cabal', 'sandbox', 'init'])
 
-info ("Updating cabal package cache")
+print_info ("Updating cabal package cache")
 try_call(['cabal', 'update'])
 
-info ("Registering thrift library")
+print_info ("Registering thrift library")
 try_call(['cabal', 'install', p_thrift])
     
-info ("Registering MissingH library (windows patch)")
+print_info ("Registering MissingH library (windows patch)")
 try_call(['cabal', 'install', p_missingh])
 
 
-info ("Success")
+print_info ("Success")
 sys.exit(0)
