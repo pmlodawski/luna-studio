@@ -9,18 +9,31 @@ from collections import deque
 import ConfigParser
 
 
-class Project:
+class Project(object):
     path = ''
     deps = set()
     def __init__(self, path, deps):
         self.path = path
         self.deps = set(deps)
 
-pkgs = { 'utils'     : Project('libs/utils'      , []                         )
-       , 'luna'      : Project('libs/luna'       , ['utils']                  )
-       , 'batch'     : Project('libs/batch'      , ['utils', 'luna']          )
-       , 'batch-srv' : Project('tools/batch-srv' , ['utils', 'luna', 'batch'] )
-       , 'lunac'     : Project('tools/lunac'     , ['utils', 'luna']          )
+class HProject(Project):
+    def install(self):
+        cmd = 'cabal sandbox add-source %s' % self.path
+        (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
+        if err: 
+            if not err.startswith('ghc-pkg: cannot find package'):
+                handle_error(err)
+
+class CProject(Project):
+    def install(self):
+        pass
+
+
+pkgs = { 'utils'     : HProject('libs/utils'      , []                         )
+       , 'luna'      : HProject('libs/luna'       , ['utils']                  )
+       , 'batch'     : HProject('libs/batch'      , ['utils', 'luna']          )
+       , 'batch-srv' : HProject('tools/batch-srv' , ['utils', 'luna', 'batch'] )
+       , 'lunac'     : HProject('tools/lunac'     , ['utils', 'luna']          )
        } 
 
 deptree = ['batch-srv', 'lunac', 'batch', 'luna', 'utils']
@@ -76,13 +89,12 @@ def unregister_all():
         unregister(pkg)
 
 
-def unregister(pkg):
-    pkg = 'flowbox-' + pkg
-    print_info("Unregistering %s" % pkg)
-    (out, err) = Popen('cabal sandbox hc-pkg unregister %s' % pkg, stdout=PIPE, stderr=PIPE, shell=True).communicate()
-    if err: 
-        if not err.startswith('ghc-pkg: cannot find package'):
-            handle_error(err)
+def unregister(name):
+    pname = 'flowbox-' + name
+    print_info("Unregistering %s" % name)
+    pkg = pkgs[name]
+    pkg.install()
+    
 
 main()
 
