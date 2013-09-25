@@ -14,8 +14,7 @@ import           Flowbox.Prelude
 import qualified Flowbox.Luna.Data.AST.Module                              as ASTModule
 import qualified Flowbox.Luna.Data.Cabal.Config                            as CabalConfig
 import qualified Flowbox.Luna.Data.Cabal.Section                           as CabalSection
-import qualified Flowbox.Luna.Data.Source                                  as Source
-import           Flowbox.Luna.Data.Source                                    (Source(Source))
+import           Flowbox.Luna.Data.Source                                    (Source)
 import qualified Flowbox.Luna.Lib.Library                                  as Library
 import           Flowbox.Luna.Lib.Library                                    (Library)
 import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
@@ -24,7 +23,7 @@ import qualified Flowbox.Luna.Network.Def.DefManager                       as De
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Build                   as CabalBuild
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Configure                   as CabalConfigure
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Configure               as CabalConfigure
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                   as CabalStore
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
