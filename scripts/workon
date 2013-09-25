@@ -10,9 +10,11 @@ import ConfigParser
 
 
 class Project(object):
+    name = ''
     path = ''
     deps = set()
-    def __init__(self, path, deps):
+    def __init__(self, name, path, deps):
+        self.name = name
         self.path = path
         self.deps = set(deps)
 
@@ -20,20 +22,30 @@ class HProject(Project):
     def install(self):
         cmd = 'cabal sandbox add-source %s' % self.path
         (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
+        return (out, err)
+
+    def uninstall(self):
+        pname = 'flowbox-' + self.name
+        cmd = 'cabal sandbox hc-pkg unregister %s' % pname
+        (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
         if err: 
             if not err.startswith('ghc-pkg: cannot find package'):
                 handle_error(err)
+        return (out, err)
 
 class CProject(Project):
     def install(self):
         pass
 
+    def uninstall(self):
+        pass
 
-pkgs = { 'utils'     : HProject('libs/utils'      , []                         )
-       , 'luna'      : HProject('libs/luna'       , ['utils']                  )
-       , 'batch'     : HProject('libs/batch'      , ['utils', 'luna']          )
-       , 'batch-srv' : HProject('tools/batch-srv' , ['utils', 'luna', 'batch'] )
-       , 'lunac'     : HProject('tools/lunac'     , ['utils', 'luna']          )
+
+pkgs = { 'utils'     : HProject('utils'     , 'libs/utils'      , []                         )
+       , 'luna'      : HProject('luna'      , 'libs/luna'       , ['utils']                  )
+       , 'batch'     : HProject('batch'     , 'libs/batch'      , ['utils', 'luna']          )
+       , 'batch-srv' : HProject('batch-srv' , 'tools/batch-srv' , ['utils', 'luna', 'batch'] )
+       , 'lunac'     : HProject('lunac'     , 'tools/lunac'     , ['utils', 'luna']          )
        } 
 
 deptree = ['batch-srv', 'lunac', 'batch', 'luna', 'utils']
@@ -85,7 +97,7 @@ def workon(name):
 def register(name):
     print_info("Registering %s" % name)
     pkg = pkgs[name]
-    (out, err) = Popen('cabal sandbox add-source %s' % pkg.path, stdout=PIPE, stderr=PIPE, shell=True).communicate()
+    (out, err) = pkg.install()
     handle_error(err)
 
 
@@ -98,7 +110,7 @@ def unregister(name):
     pname = 'flowbox-' + name
     print_info("Unregistering %s" % name)
     pkg = pkgs[name]
-    pkg.install()
+    pkg.uninstall()
     
 
 main()
