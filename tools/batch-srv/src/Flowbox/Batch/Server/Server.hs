@@ -27,6 +27,7 @@ import qualified Flowbox.Batch.Server.Arguments as Arguments
 import           Flowbox.System.Log.Logger        
 
 
+
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server"
 
