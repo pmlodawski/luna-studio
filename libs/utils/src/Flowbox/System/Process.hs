@@ -9,7 +9,6 @@ module Flowbox.System.Process where
 
 import           Control.Applicative         
 import qualified Control.Exception         as Exception
-import qualified Data.List                 as List
 import qualified System.Directory          as Directory
 import qualified System.Process            as Process
 import qualified System.Exit               as Exit
@@ -18,6 +17,8 @@ import           Flowbox.Prelude           hiding (error)
 import           Flowbox.System.Log.Logger   
 import qualified Flowbox.System.UniPath    as UniPath
 import           Flowbox.System.UniPath      (UniPath)
+import           Data.String.Utils                                       (join)
+
 
 
 loggerIO :: LoggerIO
@@ -26,7 +27,7 @@ loggerIO = getLoggerIO "Flowbox.System.Process"
 
 runCommand :: String -> [String] -> IO ()
 runCommand command args  = do
-    let commandName = command ++ " " ++ (List.concat $ List.intersperse " " args)
+    let commandName = command ++ " " ++ (join " " args)
         noStandardInput = ""
     loggerIO debug $ "Running command '" ++ commandName ++ "'"
     (errorCode, stdOut, stdErr) <- Process.readProcessWithExitCode command args noStandardInput

@@ -20,9 +20,6 @@ loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.Cabal.Install"
 
 
 run :: MonadIO m => UniPath -> m ()
-run = liftIO . install
+run buildPath = liftIO $ Process.runCommandInFolder buildPath "cabal" ["install"] 
 
 
-install :: UniPath -> IO ()
-install buildPath = do 
-    Process.runCommandInFolder buildPath "cabal" ["install"] 
