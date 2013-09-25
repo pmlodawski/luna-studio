@@ -77,8 +77,7 @@ buildFile diag path = either2io $ Luna.run $ do
     logger debug $ "Compiling file '" ++ UniPath.toUnixString path ++ "'"
     let rootPath = UniPath.basePath path
     source <- FileReader.run rootPath path
-    let main = source{Source.path = ["Main_"]} -- TODO [PM] : remove Main_ hack
-    ast    <- TxtParser.run main
+    ast    <- TxtParser.run source
     Diagnostics.printAST ast diag 
     buildAST diag ast
 
@@ -106,15 +105,18 @@ cabalExt :: String
 cabalExt = ".cabal"
 
 
-launcher :: Source 
-launcher = Source  ["Main"]
-         $ unlines [ "import Main_ as M"
-                   , "main = M.main 0"]
-
-
 genCabal :: String -> CabalConfig.Config
 genCabal name = let
-    exec = CabalSection.mkExecutable name -- TODO [PM] : refactor. mkExecutable silently creates project with MainIs = "Main.hs" and hsSourceDirs = "src"
+    exec_base = CabalSection.mkExecutable name 
+    exec = exec_base { CabalSection.buildDepends = ["pretty-show"
+                                                   , "random"
+                                                   , "base"
+                                                   , "OneTuple"
+                                                   , "template-haskell"
+                                                   ]
+                     }
+
+    -- TODO [PM] : refactor. mkExecutable silently creates project with MainIs = "Main.hs" and hsSourceDirs = "src"
     conf = CabalConfig.addSection exec 
          $ CabalConfig.make name
     in conf
