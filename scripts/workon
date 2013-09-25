@@ -1,0 +1,101 @@
+#!/usr/bin/python
+import sys
+import os.path
+import sys
+from subprocess import call, Popen, PIPE
+from utils.colors import print_info, print_error, print_warning
+from itertools import chain
+from collections import deque
+import ConfigParser
+
+
+class Project(object):
+    path = ''
+    deps = set()
+    def __init__(self, path, deps):
+        self.path = path
+        self.deps = set(deps)
+
+class HProject(Project):
+    def install(self):
+        cmd = 'cabal sandbox add-source %s' % self.path
+        (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
+        if err: 
+            if not err.startswith('ghc-pkg: cannot find package'):
+                handle_error(err)
+
+class CProject(Project):
+    def install(self):
+        pass
+
+
+pkgs = { 'utils'     : HProject('libs/utils'      , []                         )
+       , 'luna'      : HProject('libs/luna'       , ['utils']                  )
+       , 'batch'     : HProject('libs/batch'      , ['utils', 'luna']          )
+       , 'batch-srv' : HProject('tools/batch-srv' , ['utils', 'luna', 'batch'] )
+       , 'lunac'     : HProject('tools/lunac'     , ['utils', 'luna']          )
+       } 
+
+deptree = ['batch-srv', 'lunac', 'batch', 'luna', 'utils']
+
+def flatten(lofl):
+    return [val for subl in lofl for val in subl]
+
+def fatal():
+    print_error ("ERROR")
+    sys.exit(1)
+
+def handle_error(e):
+    if e:
+        print_error(e)
+        fatal()
+
+def main():
+    args = sys.argv[1:]
+    target = sys.argv[1]
+    workon(target)
+
+def check_deps(name):
+    pkg  = pkgs[name]
+    deps = pkg.deps
+    for dep in pkg.deps:
+        deps.union(check_deps(dep))
+    return deps
+
+
+def workon(name):
+    unregister_all()
+    pnames = check_deps(name)
+    pnames.add(name)
+    for pname in pnames:
+        register(pname)
+
+    config = ConfigParser.RawConfigParser()
+    config.add_section('Target')
+    config.set('Target', 'name', name)
+    with open('build.cfg', 'wb') as configfile:
+        config.write(configfile)
+
+
+def register(name):
+    print_info("Registering %s" % name)
+    pkg = pkgs[name]
+    (out, err) = Popen('cabal sandbox add-source %s' % pkg.path, stdout=PIPE, stderr=PIPE, shell=True).communicate()
+    handle_error(err)
+
+
+def unregister_all():
+    for pkg in deptree:
+        unregister(pkg)
+
+
+def unregister(name):
+    pname = 'flowbox-' + name
+    print_info("Unregistering %s" % name)
+    pkg = pkgs[name]
+    pkg.install()
+    
+
+main()
+
+

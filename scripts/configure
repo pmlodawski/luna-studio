@@ -2,6 +2,8 @@
 import os.path
 import sys
 from subprocess import call, Popen, PIPE
+from distutils.version import LooseVersion
+from utils.colors import print_info, print_error
 
 
 dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
@@ -9,32 +11,49 @@ third_party = os.path.join(dir, 'third-party')
 p_thrift   = os.path.join(third_party,  'thrift-0.9')
 p_missingh = os.path.join(third_party,  'MissingH-1.2.0.0-winpatch')
 
-def info(s):
-    print
-    print "=== %s ===" % s
 
-def check(name):
-    info ("Checking if '%s' is installed" % name)
-    (out, err) = Popen(name, stdout=PIPE, shell=True).communicate()
+def fatal():
+    print_error ("ERROR")
+    sys.exit(1)
+
+def check_install(name, args):
+    print_info ("Checking if '%s' is installed" % name)
+    (out, err) = Popen(name + " " + args, stdout=PIPE, stderr=PIPE, shell=True).communicate()
     if not out:
-        print "Please install '%s' to continue" % name
-        sys.exit()  
+        print_error ("Please install '%s' to continue" % name)
+        fatal() 
 
-check('cabal-dev')
+def check_cabal_version():
+    minv = '1.18.0'
+    print_info ("Checking cabal version (>= %s)" % minv)
+    (out, err) = Popen("cabal --numeric-version", stdout=PIPE, shell=True).communicate()
+    out = out.lstrip().rstrip()
+    if not LooseVersion(out) >= LooseVersion(minv):
+        print_error ("Your cabal is too old (%s)" % out)
+        print_error ("Please update your cabal to version '%s' or greater." % minv)
+        fatal()
 
-info ("Updating cabal package cache")
-if call(['cabal-dev', 'update']):
-    print "ERROR"
-    sys.exit()
+def try_call(cmds):
+    if call(cmds): fatal()
+
+check_install("cabal", "-V")
+check_cabal_version()
+
+print_info ("Generating cabal configs using gencabal")
+try_call (['scripts/gencabal'])
+
+print_info ("Initializing cabal sandbox")
+try_call (['cabal', 'sandbox', 'init'])
+
+print_info ("Updating cabal package cache")
+try_call(['cabal', 'update'])
+
+print_info ("Registering thrift library")
+try_call(['cabal', 'install', p_thrift])
+    
+print_info ("Registering MissingH library (windows patch)")
+try_call(['cabal', 'install', p_missingh])
 
 
-print "Registering thrift library"
-if call(['cabal-dev', 'install', p_thrift]):
-    print "ERROR"
-    sys.exit()
-	
-
-info ("Registering MissingH library (windows patch)")
-if call(['cabal-dev', 'install', p_missingh]):
-    print "ERROR"
-    sys.exit()
+print_info ("Success")
+sys.exit(0)
