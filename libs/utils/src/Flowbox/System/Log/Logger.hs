@@ -26,7 +26,7 @@ import           Data.DList                    (DList)
 
 import qualified Flowbox.System.Log.LogEntry as LogEntry
 
-import           Debug.Trace                   
+
 
 type LogList     = DList LogEntry.LogEntry
 type LogWriter m = MonadWriter LogList m

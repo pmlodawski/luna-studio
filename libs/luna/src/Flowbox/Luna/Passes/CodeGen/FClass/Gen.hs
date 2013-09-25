@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds, FlexibleContexts #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Flowbox.Luna.Passes.CodeGen.FClass.Gen where
 

@@ -8,7 +8,8 @@
 module Flowbox.Luna.Data.Source where
 
 import           Flowbox.Prelude     
-import           Data.String.Utils   (join)
+
+
 
 data Source = Source { path :: [String]
                      , code :: String
