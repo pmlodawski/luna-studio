@@ -36,6 +36,7 @@ Library
                     network,
                     parsec,
                     pretty-show,
+                    process,
                     text,
                     thrift,
                     timeit,

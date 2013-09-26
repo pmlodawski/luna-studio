@@ -13,6 +13,7 @@ module Flowbox.Batch.Server.Handlers.Libs (
     unloadLibrary,
     storeLibrary,
     buildLibrary,
+    runLibrary,
     libraryRootDef,
 ) 
 where
@@ -21,6 +22,7 @@ import           Data.Int                                              (Int32)
 import           Data.IORef                                            
 import qualified Data.Vector                                         as Vector
 import           Data.Vector                                           (Vector)
+import qualified Data.Text.Lazy                                      as Text
 import           Data.Text.Lazy                                        (Text)
 
 import           Flowbox.Prelude                                       
@@ -127,6 +129,17 @@ buildLibrary batchHandler mtlibID mtprojectID = tRunScript $ do
     scriptIO $ loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     scriptIO $ BatchL.buildLibrary libID projectID batch
     return ()
+
+
+runLibrary :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO Text
+runLibrary batchHandler mtlibID mtprojectID = tRunScript $ do
+    scriptIO $ loggerIO info "called runLibrary"
+    libID     <- tryGetID mtlibID "libID"
+    projectID <- tryGetID mtprojectID "projectID"
+    batch     <- tryReadIORef batchHandler
+    scriptIO $ loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
+    output <- scriptIO $ BatchL.runLibrary libID projectID batch
+    return $ Text.pack output
 
 
 libraryRootDef :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> IO TDefs.Definition

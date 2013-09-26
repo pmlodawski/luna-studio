@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,projectByID,createProject,openProject,updateProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,resolveDefinition,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeName,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump,shutdown) where
+module Batch_Client(projects,projectByID,createProject,openProject,updateProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,runLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,resolveDefinition,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeName,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump,shutdown) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -389,6 +389,32 @@ recv_buildLibrary ip = do
     Nothing -> return ()
     Just _v -> throw _v
   return ()
+runLibrary (ip,op) arg_libID arg_projectID = do
+  send_runLibrary op arg_libID arg_projectID
+  recv_runLibrary ip
+send_runLibrary op arg_libID arg_projectID = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("runLibrary", M_CALL, seqn)
+  write_RunLibrary_args op (RunLibrary_args{f_RunLibrary_args_libID=Just arg_libID,f_RunLibrary_args_projectID=Just arg_projectID})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_runLibrary ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_RunLibrary_result ip
+  readMessageEnd ip
+  case f_RunLibrary_result_success res of
+    Just v -> return v
+    Nothing -> do
+      case f_RunLibrary_result_missingFields res of
+        Nothing -> return ()
+        Just _v -> throw _v
+      throw (AppExn AE_MISSING_RESULT "runLibrary failed: unknown result")
 libraryRootDef (ip,op) arg_libID arg_projectID = do
   send_libraryRootDef op arg_libID arg_projectID
   recv_libraryRootDef ip

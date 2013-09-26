@@ -29,6 +29,7 @@ class BatchIf {
   virtual void unloadLibrary(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void storeLibrary(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void buildLibrary(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
+  virtual void runLibrary(std::string& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void defsGraph( ::flowbox::batch::defs::DefsGraph& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void defByID( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
@@ -134,6 +135,9 @@ class BatchNull : virtual public BatchIf {
     return;
   }
   void buildLibrary(const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
+    return;
+  }
+  void runLibrary(std::string& /* _return */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
     return;
   }
   void libraryRootDef( ::flowbox::batch::defs::Definition& /* _return */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
@@ -1863,6 +1867,133 @@ class Batch_buildLibrary_presult {
   ArgumentException missingFields;
 
   _Batch_buildLibrary_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _Batch_runLibrary_args__isset {
+  _Batch_runLibrary_args__isset() : libID(false), projectID(false) {}
+  bool libID;
+  bool projectID;
+} _Batch_runLibrary_args__isset;
+
+class Batch_runLibrary_args {
+ public:
+
+  Batch_runLibrary_args() : libID(0), projectID(0) {
+  }
+
+  virtual ~Batch_runLibrary_args() throw() {}
+
+   ::flowbox::batch::libs::LibID libID;
+   ::flowbox::batch::projects::ProjectID projectID;
+
+  _Batch_runLibrary_args__isset __isset;
+
+  void __set_libID(const  ::flowbox::batch::libs::LibID val) {
+    libID = val;
+  }
+
+  void __set_projectID(const  ::flowbox::batch::projects::ProjectID val) {
+    projectID = val;
+  }
+
+  bool operator == (const Batch_runLibrary_args & rhs) const
+  {
+    if (!(libID == rhs.libID))
+      return false;
+    if (!(projectID == rhs.projectID))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_runLibrary_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_runLibrary_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_runLibrary_pargs {
+ public:
+
+
+  virtual ~Batch_runLibrary_pargs() throw() {}
+
+  const  ::flowbox::batch::libs::LibID* libID;
+  const  ::flowbox::batch::projects::ProjectID* projectID;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_runLibrary_result__isset {
+  _Batch_runLibrary_result__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_runLibrary_result__isset;
+
+class Batch_runLibrary_result {
+ public:
+
+  Batch_runLibrary_result() : success() {
+  }
+
+  virtual ~Batch_runLibrary_result() throw() {}
+
+  std::string success;
+  ArgumentException missingFields;
+
+  _Batch_runLibrary_result__isset __isset;
+
+  void __set_success(const std::string& val) {
+    success = val;
+  }
+
+  void __set_missingFields(const ArgumentException& val) {
+    missingFields = val;
+  }
+
+  bool operator == (const Batch_runLibrary_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(missingFields == rhs.missingFields))
+      return false;
+    return true;
+  }
+  bool operator != (const Batch_runLibrary_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_runLibrary_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Batch_runLibrary_presult__isset {
+  _Batch_runLibrary_presult__isset() : success(false), missingFields(false) {}
+  bool success;
+  bool missingFields;
+} _Batch_runLibrary_presult__isset;
+
+class Batch_runLibrary_presult {
+ public:
+
+
+  virtual ~Batch_runLibrary_presult() throw() {}
+
+  std::string* success;
+  ArgumentException missingFields;
+
+  _Batch_runLibrary_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -6468,6 +6599,9 @@ class BatchClient : virtual public BatchIf {
   void buildLibrary(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_buildLibrary(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_buildLibrary();
+  void runLibrary(std::string& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void send_runLibrary(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void recv_runLibrary(std::string& _return);
   void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_libraryRootDef(const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_libraryRootDef( ::flowbox::batch::defs::Definition& _return);
@@ -6605,6 +6739,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_unloadLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_storeLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_buildLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_runLibrary(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_libraryRootDef(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_defsGraph(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_defByID(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -6658,6 +6793,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["unloadLibrary"] = &BatchProcessor::process_unloadLibrary;
     processMap_["storeLibrary"] = &BatchProcessor::process_storeLibrary;
     processMap_["buildLibrary"] = &BatchProcessor::process_buildLibrary;
+    processMap_["runLibrary"] = &BatchProcessor::process_runLibrary;
     processMap_["libraryRootDef"] = &BatchProcessor::process_libraryRootDef;
     processMap_["defsGraph"] = &BatchProcessor::process_defsGraph;
     processMap_["defByID"] = &BatchProcessor::process_defByID;
@@ -6854,6 +6990,16 @@ class BatchMultiface : virtual public BatchIf {
       ifaces_[i]->buildLibrary(libID, projectID);
     }
     ifaces_[i]->buildLibrary(libID, projectID);
+  }
+
+  void runLibrary(std::string& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->runLibrary(_return, libID, projectID);
+    }
+    ifaces_[i]->runLibrary(_return, libID, projectID);
+    return;
   }
 
   void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {

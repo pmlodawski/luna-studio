@@ -92,6 +92,11 @@ class BatchHandler : virtual public BatchIf {
     printf("buildLibrary\n");
   }
 
+  void runLibrary(std::string& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+    // Your implementation goes here
+    printf("runLibrary\n");
+  }
+
   void libraryRootDef( ::flowbox::batch::defs::Definition& _return, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("libraryRootDef\n");
