@@ -41,6 +41,7 @@ import qualified Flowbox.System.UniPath                                    as Un
 import           Flowbox.System.UniPath                                      (UniPath)
 import qualified Flowbox.System.Directory                                  as Directory
 import qualified Flowbox.System.Process                                    as Process
+import qualified Flowbox.Text.Show.Pretty                                  as PP
 
 
 logger :: Logger
@@ -66,6 +67,7 @@ buildLibrary diag library = do
 buildGraph :: Diagnostics -> DefManager -> (Definition.ID, Definition) -> IO [Source]
 buildGraph diag defManager def = either2io $ Luna.run $ do 
     logger debug "Compiling graph"
+    logger info (PP.ppShow  defManager)
     ast <- GraphParser.run defManager def
     Diagnostics.printAST ast diag 
     buildAST diag ast
