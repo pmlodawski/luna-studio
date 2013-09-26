@@ -204,7 +204,7 @@ genExpr ast = case ast of
                                                     params =  LType.params cls
                                               
     LExpr.Infix _ name src dst             -> HExpr.Infix name <$> genExpr src <*> genExpr dst
-    LExpr.Assignment _ pat dst             -> HExpr.Assignment <$> genPat pat <*> genExpr dst
+    LExpr.Assignment _ pat dst             -> HExpr.Assignment <$> genPat pat <*> genCallExpr dst
     LExpr.Lit        _ value               -> genLit value
     LExpr.Tuple      _ items               -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
     LExpr.Field      _ name cls _          -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
@@ -222,15 +222,14 @@ genNative expr = case expr of
     LExpr.NativeVar  _ name -> mkVarName name
 
 genCallExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
-genCallExpr e = case e of
-    LExpr.Accessor {} -> ret <$> genExpr e
-    LExpr.Var      {} -> ret <$> genExpr e
-    LExpr.Cons     {} -> ret <$> genExpr e
-    _ -> genExpr e
-    where
-        getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
-        get0   = getN (0::Int)
-        ret    = HExpr.AppE $ HExpr.Var "return"
+genCallExpr e = trans <$> genExpr e where
+    trans = case e of
+        LExpr.Accessor {} -> ret 
+        LExpr.Var      {} -> ret
+        LExpr.Cons     {} -> ret 
+        LExpr.Lit      {} -> ret
+        _                 -> Prelude.id
+    ret   = HExpr.AppE $ HExpr.Var "return"
 
 genFuncBody :: GenMonad m => [LExpr] -> LType -> Pass.Result m [HExpr]
 genFuncBody exprs output = case exprs of
