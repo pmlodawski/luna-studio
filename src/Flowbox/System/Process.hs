@@ -5,12 +5,18 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE Rank2Types #-}
 
-module Flowbox.System.Process where
+module Flowbox.System.Process (
+    module System.Process,
+
+    runCommand,
+    runCommandInFolder
+)where
 
 import           Control.Applicative         
 import qualified Control.Exception         as Exception
 import qualified System.Directory          as Directory
 import qualified System.Process            as Process
+import           System.Process            hiding (runCommand)  
 import qualified System.Exit               as Exit
 
 import           Flowbox.Prelude           hiding (error)
