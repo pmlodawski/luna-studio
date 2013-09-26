@@ -4,11 +4,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.System.Directory where
+module Flowbox.System.Directory (
+    getDirectoryRecursive,
+    createDirectoryIfMissing,
+
+    module System.Directory,
+) where
 
 import           Control.Applicative      
 import qualified Data.List              as List
 import qualified System.Directory       as Directory
+import           System.Directory       hiding (createDirectoryIfMissing)
 
 import           Flowbox.Prelude          
 import qualified Flowbox.System.UniPath as UniPath

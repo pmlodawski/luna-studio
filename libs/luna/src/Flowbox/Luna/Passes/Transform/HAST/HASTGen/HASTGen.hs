@@ -25,7 +25,7 @@ import qualified Flowbox.Luna.Passes.Pass                            as Pass
 import           Flowbox.Luna.Passes.Pass                              (PassMonad)
 import           Flowbox.System.Log.Logger                             
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils      
-import           Data.String.Utils                  (join)
+import           Data.String.Utils                                     (join)
 
 import           Control.Monad.State                                 hiding (mapM, mapM_, join)
 import           Control.Applicative                                   
