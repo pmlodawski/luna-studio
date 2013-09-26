@@ -82,7 +82,7 @@ storeLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ librar
 
 
 buildLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch library -> do
+buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ library -> do
     let diag        = Diagnostics.all
         projectName = Library.name library
         
@@ -106,8 +106,7 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
 
 runLibrary :: Library.ID -> Project.ID -> Batch -> IO String
 runLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch library -> do
-    let aprojectManager = Batch.projectManager batch
-        projectName = Library.name library
+    let projectName = Library.name library
 
         command = projectName
         noStandardInput = ""
