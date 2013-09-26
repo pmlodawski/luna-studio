@@ -5,42 +5,51 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE Rank2Types #-}
 
-module Flowbox.System.Process where
+module Flowbox.System.Process (
+    module System.Process,
+
+    runCommand,
+    runCommandInFolder
+)where
 
 import           Control.Applicative         
 import qualified Control.Exception         as Exception
-import qualified Data.List                 as List
 import qualified System.Directory          as Directory
 import qualified System.Process            as Process
+import           System.Process            hiding (runCommand)  
 import qualified System.Exit               as Exit
 
 import           Flowbox.Prelude           hiding (error)
 import           Flowbox.System.Log.Logger   
 import qualified Flowbox.System.UniPath    as UniPath
 import           Flowbox.System.UniPath      (UniPath)
+import           Data.String.Utils           (join)
 
 
 
-runCommand :: LoggerIO -> String -> [String] -> IO ()
-runCommand loggerIO command args  = do
-    let commandName = command ++ " " ++ (List.concat $ List.intersperse " " args)
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.System.Process"
+
+
+runCommand :: String -> [String] -> IO ()
+runCommand command args  = do
+    let commandName = command ++ " " ++ (join " " args)
         noStandardInput = ""
-    loggerIO info $ "Runing '" ++ commandName ++ "'"
+    loggerIO debug $ "Running command '" ++ commandName ++ "'"
     (errorCode, stdOut, stdErr) <- Process.readProcessWithExitCode command args noStandardInput
-    let runmsg = stdOut
+    let runmsg   = stdOut
     if errorCode == Exit.ExitSuccess
         then loggerIO info runmsg
         else do let errmsg = "Error running command '" ++ commandName ++ "'\n" ++ stdErr
-                loggerIO warning runmsg
-                loggerIO error   errmsg
+                loggerIO error errmsg
                 fail errmsg
 
 
-runCommandInFolder :: LoggerIO -> UniPath -> String -> [String] -> IO ()
-runCommandInFolder loggerIO upath command args  = do
+runCommandInFolder :: UniPath -> String -> [String] -> IO ()
+runCommandInFolder upath command args  = do
     workingDir <- Directory.getCurrentDirectory
-    path <- UniPath.toUnixString <$> UniPath.expand upath
+    path       <- UniPath.toUnixString <$> UniPath.expand upath
     Directory.setCurrentDirectory path
 
-    Exception.finally (runCommand loggerIO command args)
+    Exception.finally (runCommand command args)
                       (Directory.setCurrentDirectory workingDir)

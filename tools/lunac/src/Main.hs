@@ -86,14 +86,19 @@ run conf = case conf of
                                ( Conf.dump_hsc  conf || Conf.dump_all conf )
                                
             inputs = map UniPath.fromUnixString $ Conf.inputs conf
-            output = Conf.output conf
+            outputPath = UniPath.fromUnixString $ Conf.output conf
+            projectName = "project"
+            tmpName = "tmp/tmp-333"
 
-            outputPath = UniPath.fromUnixString output
-            projectName = output
+        Builder.initializeCabalDev
 
         sources <- mapM (Builder.buildFile diag) inputs
-        Builder.buildSources outputPath $ List.concat sources
-        Builder.runCabal outputPath projectName
+        Builder.buildSources tmpName $ List.concat sources
+        Builder.runCabal tmpName projectName
+        Builder.moveExecutable tmpName projectName outputPath
+        Builder.cleanUp tmpName 
+
+
         --print $ length sources
 
         -- TODO [PM] : This code does not compile

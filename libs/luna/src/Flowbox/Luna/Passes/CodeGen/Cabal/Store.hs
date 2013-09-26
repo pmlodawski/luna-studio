@@ -21,12 +21,6 @@ type CabalConfig = CabalConfig.Config
 
 
 run :: MonadIO m => CabalConfig -> UniPath -> m ()
-run config path = do
-    liftIO $ store config path
-
-
-store :: CabalConfig -> UniPath -> IO ()
-store config path = do 
-    let cabal = CabalConfig.genCode config
-        s     = Serializable path (\h -> IO.hPutStr h cabal)
-    Serializer.serialize s
+run config path = liftIO $ Serializer.serialize item where
+    cabal = CabalConfig.genCode config
+    item  = Serializable path $ flip IO.hPutStr cabal

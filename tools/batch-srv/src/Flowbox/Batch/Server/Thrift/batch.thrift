@@ -68,6 +68,9 @@ service Batch {
     void              buildLibrary(1: libs.LibID         libID,
                                    2: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
 
+    string              runLibrary(1: libs.LibID         libID,
+                                   2: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
+
     defs.Definition libraryRootDef(1: libs.LibID         libID,
                                    2: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
   

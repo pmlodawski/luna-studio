@@ -21,8 +21,8 @@ def main():
 
     name = config.get('Target', 'name')
     print_info("Compiling %s" % name)
-    pname = 'flowbox-' + name
-    call(['cabal', 'install', pname, '--reinstall'] + sys.argv[1:])
+    ret = call(['cabal', 'install', name, '--reinstall'] + sys.argv[1:])
+    sys.exit(ret)
 
 main()
 

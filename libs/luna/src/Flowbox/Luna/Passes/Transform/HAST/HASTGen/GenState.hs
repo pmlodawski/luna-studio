@@ -56,13 +56,13 @@ getModule = mod <$> get
 addDataType :: GenStateM m => HExpr -> m ()
 addDataType dt = do 
     m <- getModule
-    setModule $ m { Module.datatypes = dt : Module.datatypes m }
+    setModule $ m { Module.body = Module.body m ++ [dt]}
 
 
 addNewType :: GenStateM m => HExpr -> m ()
 addNewType dt = do 
     m <- getModule
-    setModule $ m { Module.newtypes = dt : Module.newtypes m }
+    setModule $ m { Module.body = Module.body m ++ [dt] }
 
 
 addImport :: GenStateM m => HExpr -> m ()
@@ -74,10 +74,10 @@ addImport imp = do
 addFunction :: GenStateM m => HExpr -> m ()
 addFunction fun = do 
     m <- getModule
-    setModule $ m { Module.methods = fun : Module.methods m }
+    setModule $ m { Module.body = Module.body m ++ [fun] }
 
 
 addTHExpression :: GenStateM m => HExpr -> m ()
 addTHExpression e = do 
     m <- getModule
-    setModule $ m { Module.thexpressions = e : Module.thexpressions m }
+    setModule $ m { Module.body = Module.body m ++ [e] }

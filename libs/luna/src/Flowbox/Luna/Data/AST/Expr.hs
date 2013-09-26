@@ -42,8 +42,13 @@ data Expr  = NOP        { id :: ID                                              
            | Wildcard   { id :: ID                                                                                         }
            
            | Field      { id :: ID, name      :: String   , cls       :: Type   , value     :: Maybe Expr                  }
-           | Arg        { id :: ID, pat       :: Pat      , value     :: Maybe Expr                  }
+           | Arg        { id :: ID, pat       :: Pat      , value     :: Maybe Expr                                        }
+           | Native     { id :: ID, segments  :: [Expr]                                                                   }
+           | NativeCode { id :: ID, code    :: String }
+           | NativeVar  { id :: ID, name      :: String }
+
            deriving (Show, Eq, Generic)
+
 
 instance QShow Expr
 
@@ -88,6 +93,9 @@ traverseM fexp ftype fpat flit e = case e of
     Lit        id' val'                           -> Lit        id'       <$> flit val'
     Tuple      id' items'                         -> Tuple      id'       <$> fexpMap items'
     Typed      id' cls' expr'                     -> Typed      id'       <$> ftype cls' <*> fexp expr'
+    Native     id' segments'                      -> Native     id'       <$> fexpMap segments'
+    NativeCode {}                                 -> pure e
+    NativeVar  {}                                 -> pure e
     Var        {}                                 -> pure e
     Wildcard   {}                                 -> pure e
     NOP        {}                                 -> pure e
@@ -113,6 +121,9 @@ traverseM_ fexp ftype fpat flit e = case e of
     Lit        _  val'                            -> drop <* flit val'
     Tuple      _  items'                          -> drop <* fexpMap items'
     Typed      _  cls' expr'                      -> drop <* ftype cls' <* fexp expr'
+    Native     _ segments'                        -> drop <* fexpMap segments'
+    NativeCode {}                                 -> drop
+    NativeVar  {}                                 -> drop
     Var        {}                                 -> drop
     Wildcard   {}                                 -> drop
     NOP        {}                                 -> drop

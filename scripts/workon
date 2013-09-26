@@ -10,9 +10,11 @@ import ConfigParser
 
 
 class Project(object):
+    name = ''
     path = ''
     deps = set()
-    def __init__(self, path, deps):
+    def __init__(self, name, path, deps):
+        self.name = name
         self.path = path
         self.deps = set(deps)
 
@@ -20,23 +22,33 @@ class HProject(Project):
     def install(self):
         cmd = 'cabal sandbox add-source %s' % self.path
         (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
+        return (out, err)
+
+    def uninstall(self):
+        cmd = 'cabal sandbox hc-pkg unregister %s' % self.name
+        (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
         if err: 
             if not err.startswith('ghc-pkg: cannot find package'):
                 handle_error(err)
+        return (out, err)
 
 class CProject(Project):
     def install(self):
         pass
 
+    def uninstall(self):
+        pass
 
-pkgs = { 'utils'     : HProject('libs/utils'      , []                         )
-       , 'luna'      : HProject('libs/luna'       , ['utils']                  )
-       , 'batch'     : HProject('libs/batch'      , ['utils', 'luna']          )
-       , 'batch-srv' : HProject('tools/batch-srv' , ['utils', 'luna', 'batch'] )
-       , 'lunac'     : HProject('tools/lunac'     , ['utils', 'luna']          )
+
+pkgs = { 'utils'     : HProject('flowbox-utils'      , 'libs/utils'      , []                                  )
+       , 'luna'      : HProject('flowbox-luna'       , 'libs/luna'       , ['utils']                           )
+       , 'batch'     : HProject('flowbox-batch'      , 'libs/batch'      , ['utils', 'luna', 'lunac']          )
+       , 'batch-srv' : HProject('flowbox-batch-srv'  , 'tools/batch-srv' , ['utils', 'luna', 'lunac', 'batch'] )
+       , 'lunac'     : HProject('flowbox-lunac'      , 'tools/lunac'     , ['utils', 'luna']                   )
+       , 'stdlibio'  : HProject('flowboxM-stdlib-io' , 'libs/stdlibio'   , []                                  )
        } 
 
-deptree = ['batch-srv', 'lunac', 'batch', 'luna', 'utils']
+deptree = ['batch-srv', 'batch', 'lunac', 'luna', 'utils', 'stdlibio']
 
 def flatten(lofl):
     return [val for subl in lofl for val in subl]
@@ -75,9 +87,11 @@ def workon(name):
     for pname in pnames:
         register(pname)
 
+    pkg = pkgs[name]
+
     config = ConfigParser.RawConfigParser()
     config.add_section('Target')
-    config.set('Target', 'name', name)
+    config.set('Target', 'name', pkg.name)
     with open('build.cfg', 'wb') as configfile:
         config.write(configfile)
 
@@ -85,7 +99,7 @@ def workon(name):
 def register(name):
     print_info("Registering %s" % name)
     pkg = pkgs[name]
-    (out, err) = Popen('cabal sandbox add-source %s' % pkg.path, stdout=PIPE, stderr=PIPE, shell=True).communicate()
+    (out, err) = pkg.install()
     handle_error(err)
 
 
@@ -95,10 +109,9 @@ def unregister_all():
 
 
 def unregister(name):
-    pname = 'flowbox-' + name
     print_info("Unregistering %s" % name)
     pkg = pkgs[name]
-    pkg.install()
+    pkg.uninstall()
     
 
 main()

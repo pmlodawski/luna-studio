@@ -97,7 +97,7 @@ pClass       s i    = tok Class.mk  <*  L.pClass
                                     <?> "class definition"
 
 pModule name s i    = tok Module.mk <*>   (tok Type.Module <*> pure name)
-                                    <??$> try(pSegmentBegin (pModuleBody s) i)
+                                    <??$> pSegmentBegin (pModuleBody s) i
 
 
 
@@ -128,6 +128,15 @@ pDeclaration s i    = choice [ pImport s
 -----------------------------------------------------------
 -- Expressions
 -----------------------------------------------------------
+
+pNative         = between L.pNativeSym L.pNativeSym (many pNativeElem)
+pNativeElem     = choice [ pNativeVar
+                         , pNativeCode
+                         ]
+pNativeVar      = tok Expr.NativeCode <*> many1 (noneOf "`#")
+pNativeCode     = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol '}'
+
+
 pExpr     s i   = Expr.aftermatch <$> PExpr.buildExpressionParser (optableE s i) (pTermE s i)
            <?> "expression"
 
@@ -157,9 +166,10 @@ pIdentE   s   = choice [ pVarE s
                        ]
 
 pEntBaseE s i = choice [ pIdentE s
-                       , tok Expr.Lit   <*> pLit s
-                       , tok Expr.Tuple <*> pTuple (pExpr s i)
-                       , tok Expr.List  <*> pList  (pExpr s i)
+                       , tok Expr.Lit    <*> pLit s
+                       , tok Expr.Tuple  <*> pTuple  (pExpr s i)
+                       , tok Expr.List   <*> pList   (pExpr s i)
+                       , tok Expr.Native <*> pNative
                        ]
 
 -- Function application using parenthesis notation, e.g. f(1).next <=> (f 1).next or f (1).next <=> f 1.next
