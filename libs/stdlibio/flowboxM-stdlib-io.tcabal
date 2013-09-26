@@ -9,7 +9,6 @@ Build-Type:     Simple
 
 Library
   Hs-Source-Dirs: src
-                  src/Flowbox/Luna/Tools/Serialize/Thrift/Generated
   GHC-Options:    -Wall -O2
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse
@@ -18,6 +17,8 @@ Library
                    
  
   Build-Depends:  base,
+                  ghc-prim,
+                  pretty-show,
                   template-haskell,
                   OneTuple
 

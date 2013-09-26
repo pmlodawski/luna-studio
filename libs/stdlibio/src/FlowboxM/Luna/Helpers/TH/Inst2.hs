@@ -2,13 +2,13 @@
              FlexibleInstances,
              TemplateHaskell #-}
 
-module FlowboxM.Luna.Helpers.TH.Inst where
+module FlowboxM.Luna.Helpers.TH.Inst2 where
 
 import           Control.Monad         
 import           Language.Haskell.TH   
-import           Control.Applicative
-import qualified Text.Show.Pretty     as PP
-import           Debug.Trace
+import           Control.Applicative   
+import qualified Text.Show.Pretty    as PP
+import           Debug.Trace           
 
 ppTrace  x   = trace ("\n\n----------\n" ++ PP.ppShow x)
 ppTraces s x = trace ("\n\n--- " ++ s ++ " ---\n" ++ PP.ppShow x)
@@ -49,28 +49,19 @@ mkInst tcName fromFun toFun = do
     return  $ [inst]
 
 
-mkInstC :: Name -> Name -> Name -> DecsQ
-mkInstC tcName fromFun toFun = do
-    t <- getType fromFun
-    let (src, ret) = getSignature t
-        cxt        = getContext t
-        nt         = AppT (AppT (ConT tcName) src) ret
-        funcs      = [valD (varP toFun) (normalB (conE fromFun)) []] :: [Q Dec]
-
-    inst   <- instanceD (pure cxt) (pure nt) funcs
-    return  $ [inst]
-
-
-mkInst2 :: Name -> Name -> Name -> Name -> Name -> DecsQ
-mkInst2 tcName dtIdent fromFunRef fromFun toFun = do
+mkInst2 :: Name -> Name -> Name -> Name -> Name -> Name -> DecsQ
+mkInst2 tcName dtIdent mIdent fromFunRef fromFun toFun = do
     t <- getType fromFunRef
     let (src, ret) = getSignature t
         cxt        = getContext t
         nt         = AppT(
                          AppT( 
-                             AppT
-                                 (ConT tcName)
-                                 (ConT dtIdent)
+                             AppT(
+                                 AppT
+                                     (ConT tcName)
+                                     (ConT dtIdent)
+                             )
+                             (ConT mIdent)
                          ) 
                          src
                      ) 
