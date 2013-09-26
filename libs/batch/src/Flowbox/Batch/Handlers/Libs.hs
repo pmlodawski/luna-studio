@@ -21,12 +21,9 @@ module Flowbox.Batch.Handlers.Libs (
 import qualified System.Process            as Process
 
 import           Flowbox.Prelude                       
-import qualified Flowbox.Batch.Batch                 as Batch
 import           Flowbox.Batch.Batch                   (Batch)
 import           Flowbox.Batch.Handlers.Common         (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
 import qualified Flowbox.Batch.Project.Project       as Project
-import qualified Flowbox.Data.String                 as String
-import           Flowbox.Luna.Data.Source              (Source(Source))
 import qualified Flowbox.Luna.Lib.LibManager         as LibManager
 import qualified Flowbox.Luna.Lib.Library            as Library
 import           Flowbox.Luna.Lib.Library              (Library)
@@ -89,14 +86,10 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ librar
         outputPath = UniPath.fromUnixString projectName
         tmpName    = "tmp/" ++ projectName
 
-        launcher = Source  ["Main"]
-                 $ unlines [ "import " ++ (String.toUpper projectName) ++ " as M"
-                           , "main = M.main"]
-
     Builder.initializeCabalDev
 
     sources <- Builder.buildLibrary diag library
-    Builder.buildSources tmpName (launcher : sources)
+    Builder.buildSources tmpName sources
     Builder.runCabal tmpName projectName
     Builder.moveExecutable tmpName projectName outputPath
     Builder.cleanUp tmpName 
@@ -105,7 +98,7 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ librar
 
 
 runLibrary :: Library.ID -> Project.ID -> Batch -> IO String
-runLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch library -> do
+runLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ library -> do
     let projectName = Library.name library
 
         command = projectName
