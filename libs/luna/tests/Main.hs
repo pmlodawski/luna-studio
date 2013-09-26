@@ -80,7 +80,7 @@ example = Source.Source ["Main"]
                   , "def main self:"
                   , "    x = 4"
                   , "    y = self"
-                  , "    self"
+                  , "    Console.print x"
                   --, "    v = Vector 0 0 0"
                   --, "    Console.print v"
                   --, "    Console.print v"
