@@ -65,38 +65,45 @@ logger :: Logger
 logger = getLogger "Flowbox"
 
 
+example :: Source
+example = Source.Source ["Main"]
+        $ unlines [ ""
+                  --, "import Std: Console"
+                  --, "def main self:"
+                  --, "    v = Vector 0 0 0"
+                  --, "    Console.print v"
+                  --, "    v.vtest 1 2"
+                  , "def main mod:"
+                  , "    v = Vector 0 0 0"
+                  , "    Console.print v"
+                  , "class Console:"
+                  , "    def print self msg:"
+                  , "        ```print #{msg}```"
+                  , "class Vector a:"
+                  , "    x :: a"
+                  , "    y :: a"
+                  , "    z :: a"
+                  , "    def vtest(self, x=0, y=0):"
+                  , "        x"
+                  , "        y"
+                  --, "from Std.Math import Vector "
+                  --, "class A:"
+                  --, "    a :: Std.Math.Vector Int"
+                  ]
+
+
 --example :: Source
 --example = Source.Source ["Main"]
 --        $ unlines [ ""
---                  , "import Std: Console"
---                  , "def main self:"
---                  , "    v = Vector 0 0 0"
---                  , "    Console.print v"
---                  --, "    v.vtest 1 2"
---                  , "class Vector a:"
---                  , "    x :: a"
---                  , "    y :: a"
---                  , "    z :: a"
---                  --, "    def vtest(self, x=0, y=0):"
+--                  , "class Console:"
+--                  , "    def print (msg):"
+--                  , "        ```print #{msg}```"
+--                  --, "    {}"
 --                  --, "        x"
 --                  --, "from Std.Math import Vector "
 --                  --, "class A:"
 --                  --, "    a :: Std.Math.Vector Int"
 --                  ]
-
-
-example :: Source
-example = Source.Source ["Main"]
-        $ unlines [ ""
-                  , "class Console:"
-                  , "    def print (msg):"
-                  , "        ```print #{msg}```"
-                  --, "    {}"
-                  --, "        x"
-                  --, "from Std.Math import Vector "
-                  --, "class A:"
-                  --, "    a :: Std.Math.Vector Int"
-                  ]
 
 
 --example :: Source

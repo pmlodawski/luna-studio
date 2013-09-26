@@ -86,7 +86,8 @@ genExpr e = case e of
                                              params = if null signature then ""
                                                       else " " ++ join " " (map genExpr signature)
     HExpr.LetBlock exprs result           -> "let { " ++ join "; " (map genExpr exprs) ++ " } in " ++ genExpr result 
-    HExpr.DoBlock  exprs                  -> "do { " ++ join "; " (map genExpr exprs) ++ " }"
+    HExpr.DoBlock  exprs                  -> "do { " ++ body ++ " }"
+                                             where body = if null exprs then "" else join "; " (map genExpr exprs) ++ ";"
     HExpr.Infix    name src dst           -> genExpr src ++ " " ++ name ++ " " ++ genExpr dst
     HExpr.NOP                             -> "NOP"
     HExpr.Assignment src dst              -> genExpr src ++ " <- " ++ genExpr dst
