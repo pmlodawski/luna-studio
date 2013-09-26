@@ -26,7 +26,7 @@ import qualified Flowbox.Luna.Data.AST.Class                       as Class
 import qualified Flowbox.Luna.Data.AST.Module                      as Module
 import qualified Flowbox.Luna.Data.AST.Type                        as Type
 import qualified Flowbox.Luna.Data.Source                          as Source
-
+import Control.Monad
 
 -----------------------------------------------------------
 -- Entities
@@ -102,19 +102,32 @@ pModule name s i    = tok Module.mk <*>   (tok Type.Module <*> pure name)
 
 
 pClassBody   s i    = choice [ Expr.addMethod <$> pFunc s i
-                             , Expr.addField  <$> pField s i
+                             , pCombine Expr.addField (pFields s i)
                              , Expr.addClass  <$> pClass s i
                              ]
 
 pModuleBody  s i    = choice [ Module.addMethod <$> pFunc s i
-                             , Module.addField  <$> pField s i
+                             , pCombine Module.addField (pFields s i)
+                             --, (\x y -> Module.addField (x!!0) y) <$> pFields s i
                              , Module.addClass  <$> pClass s i
                              , Module.addImport <$> pImport s 
                              ]
 
+pCombine f p = do
+    fs <- map (\x -> f <$> x) <$> p
+    foldl (liftA2 (.)) (pure Prelude.id) fs
+
 
 pField       s i    =   tok Expr.Field 
                     <*> L.pIdent s 
+                    <*  L.pTypeDecl 
+                    <*> pType s i
+                    <*> (L.pAssignment *> (Just <$> pExpr s i) <|> pure Nothing)
+
+mkField t val name id = Expr.Field id name t val
+
+pFields      s i    =   (\names t val -> map (tok . (mkField t val)) names )
+                    <$> (sepBy1 (L.pIdent s) L.separator)
                     <*  L.pTypeDecl 
                     <*> pType s i
                     <*> (L.pAssignment *> (Just <$> pExpr s i) <|> pure Nothing)

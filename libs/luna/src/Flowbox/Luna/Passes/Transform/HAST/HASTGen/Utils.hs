@@ -62,3 +62,6 @@ genCon name ccname = HExpr.Function ("con" ++ mkConsName name) []
 mkPure   = HExpr.AppE (HExpr.Var "Pure")
 mkPureIO = HExpr.AppE (HExpr.Var "pureIO")
 mkIO     = HExpr.AppE (HExpr.ConE ["IO"])
+
+
+emptyHExpr = HExpr.AppE (HExpr.Var "return") (HExpr.Var "()")

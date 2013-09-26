@@ -77,53 +77,18 @@ example = Source.Source ["Main"]
                   , "    z :: a"
                   , "    def vtest(self, x=0, y=0):"
                   , "        x"
-                  , "def main self:"
-                  , "    v = Vector 0 0 0"
-                  , "    Console.print v"
-                  , "    Console.print v"
+                  , "def main self"
+                  --, "    v = Vector 0 0 0"
+                  --, "    Console.print v"
+                  --, "    Console.print v"
                   ]
 
-
 --example :: Source
 --example = Source.Source ["Main"]
 --        $ unlines [ ""
---                  , "class Console:"
---                  , "    def print (msg):"
---                  , "        ```print #{msg}```"
---                  --, "    {}"
---                  --, "        x"
---                  --, "from Std.Math import Vector "
---                  --, "class A:"
---                  --, "    a :: Std.Math.Vector Int"
+--                  , "class Vector a:"
+--                  , "    x,y,z :: a"
 --                  ]
-
-
---example :: Source
---example = Source.Source ["Main"]
---        $ unlines [ ""
---                  , "def main self:"
---                  , "    Console.print"
---                  ]
-
---example :: Source
---example = Source.Source ["Main"]
---        $ unlines [ ""
---                  , "def f (x=0):"
---                  , "    x"
---                  ]
-
-
---example :: Source
---example = Source.Source ["Main"]
---        $ unlines [ ""
---                  , "def f (x=0, y) -> Int :"
---                  , "    x"
---                  ]
-
---{x@(a,b), y, z}
-
-
---(x=(a,b)) = v
 
 
 main :: IO ()
