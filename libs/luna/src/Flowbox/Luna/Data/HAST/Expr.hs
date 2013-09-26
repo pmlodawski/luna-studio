@@ -21,6 +21,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | VarE       { name      :: String                                                      }
           | Typed      { cls       :: Expr     , expr      :: Expr                                }
           | TypedP     { cls       :: Expr     , expr      :: Expr                                }
+          | TypedE     { cls       :: Expr     , expr      :: Expr                                }
           | Function   { name      :: String   , pats      :: [Expr]      , expr      :: Expr     }
           | LetBlock   { exprs     :: [Expr]   , result    :: Expr                                }
           | DoBlock    { exprs     :: [Expr]                                                      }
@@ -29,7 +30,8 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Con        { name      :: String   , fields    :: [Expr]                              }
           | ConE       { qname     :: [String]                                                    }
           | ConT       { name      :: String                                                      }
-          | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , newtypes  :: [Expr]       , datatypes :: [Expr]  , methods :: [Expr] , thexpressions :: [Expr] }
+          -- | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , newtypes  :: [Expr]       , datatypes :: [Expr]  , methods :: [Expr] , thexpressions :: [Expr] }
+          | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , body  :: [Expr]}
           | Import     { qualified :: Bool     , segments  :: [String]    , rename    :: Maybe String                           }
           | AppE       { src       :: Expr     , dst       :: Expr                                }
           | AppT       { src       :: Expr     , dst       :: Expr                                }

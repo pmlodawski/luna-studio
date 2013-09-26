@@ -2,6 +2,14 @@ class Console:
 	def print self msg:
 		```print #{msg}```
 
+class Vector a:
+	x :: a
+	y :: a
+	z :: a
+
 def main self:
-    Console.print 5
+	v = Vector 0 0 0
+	Console.print v
+	Console.print v
     
+

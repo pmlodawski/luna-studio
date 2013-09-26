@@ -59,23 +59,22 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do
                 $ HModule.mk path
         name    = last path
         modcls  = LModule.mkClass lmod
-        modclss = modcls : classes
+        modclss = classes ++ [modcls]
+        --modclss = classes
 
     GenState.setModule mod
+    mapM_ (genExpr ) modclss
+    mapM_ (genExpr >=> GenState.addImport)   imports
     when (name == "Main") $ do
         let funcnames = map LExpr.name methods
         if not $ "main" `elem` funcnames
             then logger warning "No 'main' function defined."
             else GenState.addFunction mainf
-    
-    mapM_ (genExpr >=> GenState.addDataType) modclss
-    mapM_ (genExpr >=> GenState.addImport)   imports
     GenState.getModule
 
 
 mainf :: HExpr
 mainf = HExpr.Function "main" [] 
-      $ HExpr.AppE (HExpr.Var "getIO") 
       $ HExpr.AppE (HExpr.Var "get0") 
       $ HExpr.AppE (HExpr.Var "_main") 
       $ HExpr.AppE (HExpr.Var "get0") 
@@ -119,14 +118,19 @@ genExpr ast = case ast of
                                                   cgetName  = mkCGetName  arglen
                                                   getNName  = mkTName arglen mname
                                                   fname     = mkFuncName mname
+                                                  f         = HExpr.Function fname <$> mapM genExpr inputs 
+                                                                                   <*> (HExpr.DoBlock <$> genFuncBody body output)
+
+                                              GenState.addFunction =<< f
+
+                                              -- GetN functions
+                                              GenState.addFunction $ test
 
                                               -- TH snippets
                                               GenState.addTHExpression $ genTHF cgetCName getNName cgetName
 
-                                              -- GetN functions
-                                              GenState.addFunction $ test
-                                              HExpr.Function fname <$> mapM genExpr inputs 
-                                                                   <*> (HExpr.DoBlock <$> genFuncBody body output)
+                                              
+                                              f
 
     LExpr.Arg _ pat value                  -> genPat pat
                                                   
@@ -153,6 +157,11 @@ genExpr ast = case ast of
                                                   fcNames     = map mkFCName memberNames
                                                   ccname      = mkCCName name
                                             
+                                              -- DataType
+                                              cons   <- HExpr.Con name <$> mapM genExpr fields
+                                              let dt = HExpr.DataD name params [cons] ["Show"]
+                                              GenState.addDataType dt
+
                                               -- CF types for each class field
                                               let nts = map (genCFDec name params) cfNames
                                               mapM_ GenState.addNewType nts
@@ -166,7 +175,8 @@ genExpr ast = case ast of
                                               mapM_ GenState.addTHExpression ths
                                             
                                               -- Class methods
-                                              mapM_ GenState.addFunction =<< mapM genExpr methods
+                                              --mapM_ GenState.addFunction =<< mapM genExpr methods
+                                              mapM_ genExpr methods
 
                                               -- CONSTRUCTORS --
 
@@ -187,10 +197,9 @@ genExpr ast = case ast of
                                                   getNName  = mkTName arglen name
                                               GenState.addTHExpression $ genTHF cgetCName getNName cgetName
 
-                                              -- DataType
-                                              cons   <- HExpr.Con name <$> mapM genExpr fields
-                                              return  $ HExpr.DataD name params [cons] ["Show"]
-                                                
+                                              
+                                              return dt
+
                                               where name   =  LType.name   cls
                                                     params =  LType.params cls
                                               
@@ -257,6 +266,6 @@ genLit :: GenMonad m => LLit.Lit -> Pass.Result m HExpr
 genLit lit = case lit of
     LLit.Integer _ str      -> mkLit "Int" (HLit.Integer str)
     _ -> fail $ show lit
-    where mkLit cons hast = return . mkPure $ HExpr.Typed (HExpr.ConT cons) (HExpr.Lit hast)
+    where mkLit cons hast = return $ HExpr.TypedE (HExpr.ConT cons) (HExpr.Lit hast)
           mkPure = HExpr.AppT (HExpr.ConT "pureIO")
 

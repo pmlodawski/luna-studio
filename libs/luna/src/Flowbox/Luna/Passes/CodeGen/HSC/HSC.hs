@@ -47,14 +47,14 @@ genSection header generator d = if null d
 
 
 genModule :: HExpr -> [Source]
-genModule (HExpr.Module path ext imports newtypes datatypes methods thexpressions) = sources where
+genModule (HExpr.Module path ext imports body) = sources where
     modcode =  genSection    "extensions"     genExt  ext
             ++ sectionHeader "module"         ++ header
             ++ genSection    "imports"        genExpr imports
-            ++ genSection    "datatypes"      genExpr datatypes
-            ++ genSection    "newtypes"       genExpr newtypes
-            ++ genSection    "functions"      genExpr methods
-            ++ genSection    "TH expressions" genExpr thexpressions
+            ++ genSection    "body"           genExpr body
+            -- ++ genSection    "newtypes"       genExpr newtypes
+            -- ++ genSection    "functions"      genExpr methods
+            -- ++ genSection    "TH expressions" genExpr thexpressions
                where header = "module " ++ join "." path ++ " where" ++ eol ++ eol
     sources = [Source path modcode]
 
@@ -82,6 +82,7 @@ genExpr e = case e of
     HExpr.Con      name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"
     HExpr.Typed    cls  expr              -> genExpr expr ++ " :: " ++ genExpr cls
     HExpr.TypedP   cls  expr              -> "(" ++ genExpr expr ++ " :: " ++ genExpr cls ++ ")"
+    HExpr.TypedE   cls  expr              -> "(" ++ genExpr expr ++ " :: " ++ genExpr cls ++ ")"
     HExpr.Function name signature expr    -> name ++ params ++ " = " ++ genExpr expr where
                                              params = if null signature then ""
                                                       else " " ++ join " " (map genExpr signature)
