@@ -112,6 +112,7 @@ genCabal name = let
                                                    , "base"
                                                    , "OneTuple"
                                                    , "template-haskell"
+                                                   , "flowboxM-stdlib-io"
                                                    ]
                      }
 
