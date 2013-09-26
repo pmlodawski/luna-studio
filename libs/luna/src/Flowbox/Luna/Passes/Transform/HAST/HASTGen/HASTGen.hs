@@ -258,13 +258,14 @@ genType t = case t of
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType items
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
     LType.Unknown _          -> logger emergency "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"
-    _                        -> fail $ show t
+    --_                        -> fail $ show t
     --HExpr.AppT <$> genType src <*> genType (args !! 0)
 
 genLit :: GenMonad m => LLit.Lit -> Pass.Result m HExpr
 genLit lit = case lit of
-    LLit.Integer _ str      -> mkLit "Int" (HLit.Integer str)
-    _ -> fail $ show lit
+    LLit.Integer _ str      -> mkLit "Int"    (HLit.Integer str)
+    LLit.String  _ str      -> mkLit "String" (HLit.String str)
+    --_ -> fail $ show lit
     where mkLit cons hast = return $ HExpr.TypedE (HExpr.ConT cons) (HExpr.Lit hast)
           mkPure = HExpr.AppT (HExpr.ConT "pureIO")
 
