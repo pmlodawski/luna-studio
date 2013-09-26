@@ -65,33 +65,30 @@ logger :: Logger
 logger = getLogger "Flowbox"
 
 
---example :: Source
---example = Source.Source ["Main"]
---        $ unlines [ ""
---                  , "class Console:"
---                  , "    def print self msg:"
---                  , "        ```print #{msg}```"
---                  , "class Vector a:"
---                  , "    x :: a"
---                  , "    y :: a"
---                  , "    z :: a"
---                  , "    def vtest(self, x=0, y=0):"
---                  , "        x"
---                  , "def main self:"
---                  , "    v = Vector 0 0 0"
---                  , "    Console.print v"
---                  , "    Console.print v"
---                  ]
-
 example :: Source
 example = Source.Source ["Main"]
         $ unlines [ ""
+                  , "class Console:"
+                  , "    def print self msg:"
+                  , "        ```print #{msg}```"
                   , "class Vector a:"
-                  --, "    x,y,z :: a"
                   , "    x :: a"
                   , "    y :: a"
                   , "    z :: a"
+                  , "    def vtest(self, x=0, y=0):"
+                  , "        x"
+                  , "def main self"
+                  --, "    v = Vector 0 0 0"
+                  --, "    Console.print v"
+                  --, "    Console.print v"
                   ]
+
+--example :: Source
+--example = Source.Source ["Main"]
+--        $ unlines [ ""
+--                  , "class Vector a:"
+--                  , "    x,y,z :: a"
+--                  ]
 
 
 main :: IO ()
@@ -112,21 +109,21 @@ main_inner = Luna.run $ do
     ast <- TxtParser.run source
     logger info $ PP.ppqShow ast 
 
-    --logger info "\n-------- VarAlias --------"
-    --va <- VarAlias.run     ast
-    --logger info $ PP.ppShow va
+    logger info "\n-------- VarAlias --------"
+    va <- VarAlias.run     ast
+    logger info $ PP.ppShow va
 
-    --logger info "\n-------- SSA --------" 
-    --ssa <- SSA.run va ast
-    --logger info $ PP.ppqShow ssa
+    logger info "\n-------- SSA --------" 
+    ssa <- SSA.run va ast
+    logger info $ PP.ppqShow ssa
 
-    --logger info "\n-------- HASTGen --------" 
-    --hast <- HASTGen.run  ssa
-    --logger info $ PP.ppShow hast
+    logger info "\n-------- HASTGen --------" 
+    hast <- HASTGen.run  ssa
+    logger info $ PP.ppShow hast
 
-    --logger info "\n-------- HSC --------" 
-    --hsc <- HSC.run  hast
-    --logger info $ join "\n\n" (map printSrc hsc)
+    logger info "\n-------- HSC --------" 
+    hsc <- HSC.run  hast
+    logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()

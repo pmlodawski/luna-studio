@@ -118,8 +118,8 @@ genExpr ast = case ast of
                                                   cgetName  = mkCGetName  arglen
                                                   getNName  = mkTName arglen mname
                                                   fname     = mkFuncName mname
-                                                  f         = HExpr.Function fname <$> mapM genExpr inputs 
-                                                                                   <*> (HExpr.DoBlock <$> genFuncBody body output)
+                                                  f         = HExpr.Function fname <$> (mapM genExpr inputs)
+                                                                                   <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
 
                                               GenState.addFunction =<< f
 
