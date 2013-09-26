@@ -88,7 +88,7 @@ genfTyped arglen name ccname params base = test where
     funcVars = selfVar : exprVars
     cfGetter = foldr (flip HExpr.AppE) base exprVars
     test = HExpr.Function (mkTName arglen name) funcVars
-         $ cfGetter 
+         $ mkPureIO cfGetter 
     t = foldl (HExpr.AppE) (HExpr.Var ccname) (map HExpr.Var params) -- mkPure
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
@@ -224,11 +224,10 @@ genNative expr = case expr of
 genCallExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genCallExpr e = trans <$> genExpr e where
     trans = case e of
-        LExpr.Accessor {} -> ret 
-        LExpr.Var      {} -> ret
-        LExpr.Cons     {} -> ret 
-        LExpr.Lit      {} -> ret
-        _                 -> Prelude.id
+        LExpr.App        {} -> Prelude.id
+        LExpr.Native     {} -> Prelude.id
+        LExpr.Assignment {} -> Prelude.id
+        _                   -> ret
     ret   = HExpr.AppE $ HExpr.Var "return"
 
 genFuncBody :: GenMonad m => [LExpr] -> LType -> Pass.Result m [HExpr]
@@ -244,6 +243,7 @@ genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr
 genPat p = case p of
     LPat.Var     _ name     -> return $ HExpr.Var (mkVarName name)
     LPat.Typed   _ pat cls  -> genTyped HExpr.TypedP cls <*> genPat pat
+    LPat.Tuple   _ items    -> HExpr.TupleP <$> mapM genPat items
                                    
 
 genTyped :: GenMonad m => (HExpr -> HExpr -> HExpr) -> LType -> Pass.Result m (HExpr -> HExpr)

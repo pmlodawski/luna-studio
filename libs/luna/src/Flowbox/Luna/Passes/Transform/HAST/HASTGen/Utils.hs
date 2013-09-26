@@ -47,7 +47,7 @@ genCFDec cname params cfname =
 	HExpr.NewTypeD cfname params 
     $ HExpr.Con cfname [HExpr.Typed t (HExpr.Var $ mkGetName cfname)]
     --where t = (HExpr.Var "a")
-    where t = foldl (HExpr.AppE) (HExpr.Var cname) (map HExpr.Var params) -- mkIO
+    where t = mkIO $ foldl (HExpr.AppE) (HExpr.Var cname) (map HExpr.Var params) -- mkIO
 
 genCCDec name = HExpr.DataD name [] [HExpr.Con name []] []
 

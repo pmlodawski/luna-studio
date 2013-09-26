@@ -94,6 +94,7 @@ genExpr e = case e of
     HExpr.Assignment src dst              -> genExpr src ++ " <- " ++ genExpr dst
     HExpr.Lit      val                    -> genLit val
     HExpr.Tuple    items                  -> "(" ++ join "," (map genExpr items) ++ ")"
+    HExpr.TupleP   items                  -> "(" ++ join "," (map genExpr items) ++ ")"
     HExpr.ConE     qname                  -> join "." qname
     HExpr.ConT     name                   -> name
     HExpr.AppT     src dst                -> "(" ++ genExpr src ++ " (" ++ genExpr dst ++ ")" ++ ")" -- for literals, e.g. Pure (1 :: Int)

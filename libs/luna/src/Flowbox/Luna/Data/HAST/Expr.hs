@@ -16,6 +16,7 @@ type Lit = Lit.Lit
 
 data Expr = Assignment { src       :: Expr     , dst       :: Expr                                }
           | Tuple      { items     :: [Expr]                                                      }
+          | TupleP     { items     :: [Expr]                                                      }
           | StringLit  { val       :: String                                                      }
           | Var        { name      :: String                                                      }
           | VarE       { name      :: String                                                      }
