@@ -81,18 +81,24 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
     let aprojectManager = Batch.projectManager batch
         proj = Maybe.fromJust $ ProjectManager.lab aprojectManager projectID
         
-        diag = Diagnostics.all
-        name = Library.name library
+        diag        = Diagnostics.all
+        projectName = Library.name library
         
-        outputPath = UniPath.append ("build/hs/"++name) $ Project.path proj
+        outputPath = UniPath.append ("build/hs/" ++ projectName) $ Project.path proj
+        tmpName    = "tmp/" ++ projectName
 
         launcher = Source  ["Main"]
-                 $ unlines [ "import " ++ (String.toUpper name) ++ " as M"
-                           , "main = M.main 0"]
+                 $ unlines [ "import " ++ (String.toUpper projectName) ++ " as M"
+                           , "main = M.main"]
+
+    Builder.initializeCabalDev
 
     sources <- Builder.buildLibrary diag library
-    Builder.buildSources outputPath $ launcher : sources
-    Builder.runCabal outputPath name
+    Builder.buildSources tmpName (launcher : sources)
+    Builder.runCabal tmpName projectName
+    Builder.moveExecutable tmpName projectName outputPath
+    Builder.cleanUp tmpName 
+
     return (library, ()))
 
 

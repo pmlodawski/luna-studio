@@ -92,7 +92,7 @@ buildAST diag ast = do
     hsc  <- HSC.run hast
     Diagnostics.printHSC hsc diag
     return hsc
-
+    
 
 srcFolder :: String
 srcFolder = "src"

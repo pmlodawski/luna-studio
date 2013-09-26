@@ -263,8 +263,10 @@ node2AST graph inputsNames list (nodeID, node) = do
 
 
             if numGetters == 0 
-                then do id <- newID 
-                        return [ASTExpr.Assignment id allPattern call]
+                then if numConnected == 0
+                    then return []
+                    else do id <- newID 
+                            return [ASTExpr.Assignment id allPattern call]
                 else do let (Port.Number maxGetter) = foldr (biggestPort resultID) Port.All outEdges 
 
                             resultID ::(a, b, Edge) -> Port
