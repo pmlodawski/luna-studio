@@ -18,7 +18,7 @@ module Flowbox.Batch.Handlers.Libs (
     libraryRootDef,
 ) where
 
-import qualified System.Process            as Process
+import qualified System.Process                      as Process
 
 import           Flowbox.Prelude                       
 import           Flowbox.Batch.Batch                   (Batch)
@@ -32,7 +32,7 @@ import           Flowbox.Luna.Network.Def.Definition   (Definition)
 import qualified Flowbox.Lunac.Builder               as Builder
 import qualified Flowbox.Luna.Tools.Serialize.Lib    as LibSerialization
 import qualified Flowbox.Lunac.Diagnostics           as Diagnostics
-import           Flowbox.System.Log.Logger                                   
+import           Flowbox.System.Log.Logger             
 import qualified Flowbox.System.UniPath              as UniPath
 import           Flowbox.System.UniPath                (UniPath)
 
