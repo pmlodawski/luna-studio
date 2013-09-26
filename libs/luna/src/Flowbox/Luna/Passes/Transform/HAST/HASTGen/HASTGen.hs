@@ -88,7 +88,7 @@ genfTyped arglen name ccname params base = test where
     funcVars = selfVar : exprVars
     cfGetter = foldr (flip HExpr.AppE) base exprVars
     test = HExpr.Function (mkTName arglen name) funcVars
-         $ mkPureIO cfGetter 
+         $ cfGetter 
     t = foldl (HExpr.AppE) (HExpr.Var ccname) (map HExpr.Var params) -- mkPure
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
