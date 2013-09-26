@@ -26,7 +26,7 @@ import qualified Flowbox.Luna.Data.AST.Class                       as Class
 import qualified Flowbox.Luna.Data.AST.Module                      as Module
 import qualified Flowbox.Luna.Data.AST.Type                        as Type
 import qualified Flowbox.Luna.Data.Source                          as Source
-
+import Control.Monad
 
 -----------------------------------------------------------
 -- Entities
@@ -103,21 +103,71 @@ pModule name s i    = tok Module.mk <*>   (tok Type.Module <*> pure name)
 
 pClassBody   s i    = choice [ Expr.addMethod <$> pFunc s i
                              , Expr.addField  <$> pField s i
+                             --, tescik s i
                              , Expr.addClass  <$> pClass s i
                              ]
 
 pModuleBody  s i    = choice [ Module.addMethod <$> pFunc s i
                              , Module.addField  <$> pField s i
+                             --, (\x y -> Module.addField (x!!0) y) <$> pFields s i
                              , Module.addClass  <$> pClass s i
                              , Module.addImport <$> pImport s 
                              ]
 
+----(\x y -> Module.addField (x!!0) $ Module.addField (x!!0) ) <$> pFields s i
+
+----tescik s i = do
+----    fields <- pFields s i
+----    let field  = (fields!!0)
+----    let field2 = (fields!!1)
+----    (\x -> Expr.addField <$> tok x) field
+
+--tescik s i = do
+--    fields <- pFields s i
+--    let fields2 = map tok fields
+--    let field1 = (fields!!0)
+--    let field2 = (fields!!1)
+--    let field3 = (fields!!2)
+--    let fieldsp = map (\x -> x 0) fields
+--    let fieldp1 = (fieldsp!!0)
+--    let fieldp2 = (fieldsp!!1)
+--    let fieldp3 = (fieldsp!!2)
+--    --let mfields = map 
+--    --(.) <$> ((\x -> Expr.addField <$> x) field1) <*> ((\x -> Expr.addField <$> x) field2) 
+--    --let test a b = (.) <$> ((\x -> Expr.addField <$> x) a) <*> ((\x -> Expr.addField <$> x) b) 
+--    --test field1 $ test field2 field3
+--    --Expr.addField <$> (tok field1)
+--    --Expr.addField <$> (tok field2)
+--    --(\x -> Expr.addField <$> (tok x)) field3
+--    --let test = 
+--        --return $ foldr (.) Prelude.id $ map Expr.addField fieldsp
+--    return $ ((.) (Expr.addField fieldp1) (Expr.addField fieldp2))
+--    --(.) <$> (Expr.addField <$> tok field1) <*> (Expr.addField <$> tok field2)
+
+--    mp (Expr.addField <$> tok field1) (Expr.addField <$> tok field2)
+
+--    foldM mp Prelude.id $ map (\x -> Expr.addField <$> tok x) fields
+
+--    --foldr (<*>) (liftM Prelude.id) $ map (\x -> Expr.addField <$> (tok x)) fields
+--    --foldr (<*>) (liftM id)
+
+mp a b = (.) <$> a <*> b
+
+mp2 a b c = foldM a c b
 
 pField       s i    =   tok Expr.Field 
                     <*> L.pIdent s 
                     <*  L.pTypeDecl 
                     <*> pType s i
                     <*> (L.pAssignment *> (Just <$> pExpr s i) <|> pure Nothing)
+
+mkField t val name id = Expr.Field id name t val
+
+--pFields      s i    =   (\names t val -> map ((mkField t val)) names )
+--                    <$> (sepBy1 (L.pIdent s) L.separator)
+--                    <*  L.pTypeDecl 
+--                    <*> pType s i
+--                    <*> (L.pAssignment *> (Just <$> pExpr s i) <|> pure Nothing)
 
 pDeclaration s i    = choice [ pImport s 
                              , pFunc   s i
