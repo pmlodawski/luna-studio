@@ -8,6 +8,7 @@
 
 module Flowbox.Lunac.Builder where
 
+import           Control.Monad.RWS                                         hiding (mapM_)
 import           Data.Maybe                                                  (fromJust)
 
 import           Flowbox.Prelude                                             
@@ -22,8 +23,6 @@ import           Flowbox.Luna.Network.Def.Definition                         (De
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Build                   as CabalBuild
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Configure               as CabalConfigure
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                   as CabalStore
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
@@ -40,7 +39,8 @@ import           Flowbox.Lunac.Diagnostics                                   (Di
 import           Flowbox.System.Log.Logger                                   
 import qualified Flowbox.System.UniPath                                    as UniPath
 import           Flowbox.System.UniPath                                      (UniPath)
-
+import qualified Flowbox.System.Directory                                  as Directory
+import qualified Flowbox.System.Process                                    as Process
 
 
 logger :: Logger
@@ -122,15 +122,39 @@ genCabal name = let
     in conf
 
 
-buildSources :: UniPath -> [Source] -> IO ()
-buildSources outputPath sources = either2io $ Luna.run $ do 
+flowboxPath :: UniPath
+flowboxPath = UniPath.fromUnixString "~/.flowbox"
+
+
+initializeCabalDev :: IO ()
+initializeCabalDev = do
+    Directory.createDirectoryIfMissing True $ flowboxPath
+    Process.runCommandInFolder flowboxPath "cabal-dev" ["update"] 
+
+
+buildSources :: String -> [Source] -> IO ()
+buildSources location sources = either2io $ Luna.run $ do 
+    let outputPath = UniPath.append location flowboxPath
     mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) sources 
 
 
-runCabal :: UniPath -> String -> IO ()
-runCabal path name = either2io $ Luna.run $ do 
-    let cabal = genCabal name
-    CabalStore.run cabal $ UniPath.append (name ++ cabalExt) path
-    CabalConfigure.run path
-    CabalBuild.run path
-    
+runCabal :: String -> String -> IO ()
+runCabal location name = either2io $ Luna.run $ do 
+    let cabal      = genCabal name
+        outputPath = UniPath.append location flowboxPath
+
+    CabalStore.run cabal $ UniPath.append (name ++ cabalExt) outputPath
+    liftIO $ Process.runCommandInFolder flowboxPath "cabal-dev" ["install", location, "--reinstall"] 
+
+
+moveExecutable :: String -> String -> UniPath -> IO ()
+moveExecutable location name outputPath = do 
+    rootPath      <- UniPath.expand $ UniPath.append location flowboxPath
+    let executable = UniPath.append ("dist/build/" ++ name ++ "/" ++ name) rootPath
+    Directory.renameFile (UniPath.toUnixString executable) (UniPath.toUnixString outputPath)
+
+
+cleanUp :: String -> IO ()
+cleanUp location = do 
+    outputPath <- UniPath.expand $ UniPath.append location flowboxPath
+    Directory.removeDirectoryRecursive $ UniPath.toUnixString outputPath
