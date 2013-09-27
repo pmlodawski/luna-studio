@@ -54,8 +54,8 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do
                 $ HModule.addExt HExtension.MultiParamTypeClasses
                 $ HModule.addExt HExtension.FlexibleInstances
                 $ HModule.addExt HExtension.UndecidableInstances
-                -- $ HModule.addExt HExtension.RebindableSyntax 
                 $ HModule.addExt HExtension.ScopedTypeVariables
+                $ HModule.addExt HExtension.RebindableSyntax 
                 $ HModule.mk path
         name    = last path
         modcls  = LModule.mkClass lmod
@@ -74,11 +74,14 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do
 
 
 mainf :: HExpr
-mainf = HExpr.Function "main" [] 
-      $ HExpr.AppE (HExpr.Var "get0") 
-      $ HExpr.AppE (HExpr.Var "_main") 
-      $ HExpr.AppE (HExpr.Var "get0") 
-      $ HExpr.Var "con_Main"
+mainf = HExpr.Function "main" [] $
+        HExpr.DoBlock [   HExpr.Assignment (HExpr.Var "m")
+                        $ HExpr.AppE (HExpr.Var "get0") 
+                        $ HExpr.Var "con_Main"
+                      ,   HExpr.AppE (HExpr.Var "get0") 
+                        $ HExpr.AppE (HExpr.Var "_main")
+                        $ HExpr.Var "m"
+                      ] 
 
 
 genfTyped arglen name ccname params base = test where
@@ -88,7 +91,7 @@ genfTyped arglen name ccname params base = test where
     funcVars = selfVar : exprVars
     cfGetter = foldr (flip HExpr.AppE) base exprVars
     test = HExpr.Function (mkTName arglen name) funcVars
-         $ mkPureIO cfGetter 
+         $ mkPureIO cfGetter
     t = foldl (HExpr.AppE) (HExpr.Var ccname) (map HExpr.Var params) -- mkPure
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
@@ -266,6 +269,5 @@ genLit lit = case lit of
     LLit.Integer _ str      -> mkLit "Int"    (HLit.Integer str)
     LLit.String  _ str      -> mkLit "String" (HLit.String str)
     --_ -> fail $ show lit
-    where mkLit cons hast = return $ HExpr.TypedE (HExpr.ConT cons) (HExpr.Lit hast)
-          mkPure = HExpr.AppT (HExpr.ConT "pureIO")
+    where mkLit cons hast = return . mkPure $ HExpr.TypedE (HExpr.ConT cons) (HExpr.Lit hast)
 

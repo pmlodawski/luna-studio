@@ -73,13 +73,14 @@ genExpr e = case e of
                                              ++ case rename of
                                                      Just name -> " as " ++ name
                                                      Nothing   -> ""
-    HExpr.DataD    name params cons ders  -> "data " ++ name ++ params' ++ " = " ++ cons' ++ ders' where
-                                             params' = if null params then "" else " " ++ join " " params
-                                             cons'   = join " | " (map genExpr cons)
-                                             ders'   = if null ders then "" else " deriving (" ++ join ", " ders ++ ")"
-    HExpr.NewTypeD name params con        -> "newtype " ++ name ++ params' ++ " = " ++ genExpr con where
-                                             params' = if null params then "" else " " ++ join " " params
-    HExpr.Con      name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"
+    HExpr.DataD    name params cons ders  -> "data " ++ name ++ params' ++ " = " ++ cons' ++ ders' 
+                                             where params' = if null params then "" else " " ++ join " " params
+                                                   cons'   = join " | " (map genExpr cons)
+                                                   ders'   = if null ders then "" else " deriving (" ++ join ", " ders ++ ")"
+    HExpr.NewTypeD name params con        -> "newtype " ++ name ++ params' ++ " = " ++ genExpr con 
+                                             where params' = if null params then "" else " " ++ join " " params
+    HExpr.Con      name fields            -> name ++ body
+                                             where body = if null fields then "" else " { " ++ join ", " (map genExpr fields) ++ " }"
     HExpr.Typed    cls  expr              -> genExpr expr ++ " :: " ++ genExpr cls
     HExpr.TypedP   cls  expr              -> "(" ++ genExpr expr ++ " :: " ++ genExpr cls ++ ")"
     HExpr.TypedE   cls  expr              -> "(" ++ genExpr expr ++ " :: " ++ genExpr cls ++ ")"
