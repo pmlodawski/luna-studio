@@ -15,6 +15,7 @@ import           Flowbox.Luna.Data.HAST.Extension   (Extension)
 type Lit = Lit.Lit
 
 data Expr = Assignment { src       :: Expr     , dst       :: Expr                                }
+          | Arrow      { src       :: Expr     , dst       :: Expr                                }
           | Tuple      { items     :: [Expr]                                                      }
           | TupleP     { items     :: [Expr]                                                      }
           | StringLit  { val       :: String                                                      }
@@ -24,6 +25,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | TypedP     { cls       :: Expr     , expr      :: Expr                                }
           | TypedE     { cls       :: Expr     , expr      :: Expr                                }
           | Function   { name      :: String   , pats      :: [Expr]      , expr      :: Expr     }
+          | Lambda     { paths     :: [Expr]   , expr      :: Expr                                }
           | LetBlock   { exprs     :: [Expr]   , result    :: Expr                                }
           | DoBlock    { exprs     :: [Expr]                                                      }
           | DataD      { name      :: String   , params    :: [String]    , cons      :: [Expr] , derivings :: [String]   }

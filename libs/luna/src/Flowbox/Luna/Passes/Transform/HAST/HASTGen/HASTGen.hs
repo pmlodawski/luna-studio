@@ -55,6 +55,7 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do
                 $ HModule.addExt HExtension.FlexibleInstances
                 $ HModule.addExt HExtension.UndecidableInstances
                 $ HModule.addExt HExtension.ScopedTypeVariables
+                $ HModule.addExt HExtension.NoMonomorphismRestriction
                 $ HModule.addExt HExtension.RebindableSyntax 
                 $ HModule.mk path
         name    = last path
@@ -75,7 +76,7 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do
 
 mainf :: HExpr
 mainf = HExpr.Function "main" [] $
-        HExpr.DoBlock [   HExpr.Assignment (HExpr.Var "m")
+        HExpr.DoBlock [   HExpr.Arrow (HExpr.Var "m")
                         $ HExpr.AppE (HExpr.Var "get0") 
                         $ HExpr.Var "con_Main"
                       ,   HExpr.AppE (HExpr.Var "get0") 
@@ -91,7 +92,7 @@ genfTyped arglen name ccname params base = test where
     funcVars = selfVar : exprVars
     cfGetter = foldr (flip HExpr.AppE) base exprVars
     test = HExpr.Function (mkTName arglen name) funcVars
-         $ mkPureIO cfGetter
+         $ mkPure cfGetter
     t = foldl (HExpr.AppE) (HExpr.Var ccname) (map HExpr.Var params) -- mkPure
 
 
@@ -122,8 +123,14 @@ genExpr ast = case ast of
                                                   cgetName  = mkCGetName  arglen
                                                   getNName  = mkTName arglen mname
                                                   fname     = mkFuncName mname
-                                                  f         = HExpr.Function fname <$> (mapM genExpr inputs)
-                                                                                   <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
+                                                  --f         = HExpr.Function fname <$> (mapM genExpr inputs)
+                                                  --                                 <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
+                                                  f         =   HExpr.Assignment (HExpr.Var fname) 
+                                                            <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show (arglen + 1))
+                                                                  <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
+                                                                                     <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
+                                                                      )
+                                                                )
 
                                               GenState.addFunction =<< f
 
@@ -216,9 +223,9 @@ genExpr ast = case ast of
                                                     params =  LType.params cls
                                               
     LExpr.Infix _ name src dst             -> HExpr.Infix name <$> genExpr src <*> genExpr dst
-    LExpr.Assignment _ pat dst             -> HExpr.Assignment <$> genPat pat <*> genCallExpr dst
+    LExpr.Assignment _ pat dst             -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
     LExpr.Lit        _ value               -> genLit value
-    LExpr.Tuple      _ items               -> HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
+    LExpr.Tuple      _ items               -> mkPure . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
     LExpr.Field      _ name cls _          -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
     LExpr.App        _ src args            -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genExpr args)
     LExpr.Accessor   _ src dst             -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))

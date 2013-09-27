@@ -84,15 +84,19 @@ genExpr e = case e of
     HExpr.Typed    cls  expr              -> genExpr expr ++ " :: " ++ genExpr cls
     HExpr.TypedP   cls  expr              -> "(" ++ genExpr expr ++ " :: " ++ genExpr cls ++ ")"
     HExpr.TypedE   cls  expr              -> "(" ++ genExpr expr ++ " :: " ++ genExpr cls ++ ")"
-    HExpr.Function name signature expr    -> name ++ params ++ " = " ++ genExpr expr where
-                                             params = if null signature then ""
-                                                      else " " ++ join " " (map genExpr signature)
+    HExpr.Function name signature expr    -> name ++ params ++ " = " ++ genExpr expr 
+                                             where params = if null signature then ""
+                                                            else " " ++ join " " (map genExpr signature)
+    HExpr.Lambda   signature expr         -> "(\\" ++ params ++ " -> " ++ genExpr expr ++ ")"
+                                             where params = if null signature then ""
+                                                            else " " ++ join " " (map genExpr signature)
     HExpr.LetBlock exprs result           -> "let { " ++ join "; " (map genExpr exprs) ++ " } in " ++ genExpr result 
     HExpr.DoBlock  exprs                  -> "do { " ++ body ++ " }"
                                              where body = if null exprs then "" else join "; " (map genExpr exprs) ++ ";"
     HExpr.Infix    name src dst           -> genExpr src ++ " " ++ name ++ " " ++ genExpr dst
     HExpr.NOP                             -> "NOP"
-    HExpr.Assignment src dst              -> genExpr src ++ " <- " ++ genExpr dst
+    HExpr.Assignment src dst              -> genExpr src ++ " = " ++ genExpr dst
+    HExpr.Arrow      src dst              -> genExpr src ++ " <- " ++ genExpr dst
     HExpr.Lit      val                    -> genLit val
     HExpr.Tuple    items                  -> "(" ++ join "," (map genExpr items) ++ ")"
     HExpr.TupleP   items                  -> "(" ++ join "," (map genExpr items) ++ ")"
