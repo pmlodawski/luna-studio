@@ -94,6 +94,19 @@ genfTyped arglen name ccname params base = test where
          $ mkPureIO cfGetter
     t = foldl (HExpr.AppE) (HExpr.Var ccname) (map HExpr.Var params) -- mkPure
 
+
+genGetN arglen mname = test where
+    argvars  = map (("v" ++).show) [1..arglen]
+    vars     = "self" : argvars
+    exprArgs = map HExpr.Var argvars
+    exprVars = map HExpr.Var vars
+    cfGetterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
+                 $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName mname) (HExpr.Var "self")
+    cfGetter = foldr (flip HExpr.AppE) cfGetterBase exprArgs
+
+    test = HExpr.Function (mkTName arglen mname) exprVars
+         $ cfGetter
+
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
     LExpr.Var      _ name                  -> pure $ HExpr.Var $ mkVarName name
@@ -101,21 +114,9 @@ genExpr ast = case ast of
     LExpr.Function _ name inputs output 
                      body                  -> do
                                               clsName <- GenState.getClsName
-                                              let genf arglen mname = test where
-                                                      argvars  = map (("v" ++).show) [1..arglen]
-                                                      vars     = "self" : argvars
-                                                      exprArgs = map HExpr.Var argvars
-                                                      exprVars = map HExpr.Var vars
-                                                      cfGetterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
-                                                                   $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName mname) (HExpr.Var "self")
-                                                      cfGetter = foldr (flip HExpr.AppE) cfGetterBase exprArgs
-                                                      
-                                                      test = HExpr.Function (mkTName arglen mname) exprVars
-                                                           $ cfGetter
-
-                                                  arglen = length inputs - 1
+                                              let arglen = length inputs - 1
                                                   mname  = mangleName clsName $ mkVarName name
-                                                  test   = genf arglen mname
+                                                  test   = genGetN arglen mname
 
                                                   cgetCName = mkCGetCName arglen
                                                   cgetName  = mkCGetName  arglen
@@ -159,6 +160,9 @@ genExpr ast = case ast of
                                                   cfNames     = map (mkCFName . mangleName name) memberNames
                                                   fcNames     = map mkFCName memberNames
                                                   ccname      = mkCCName name
+
+                                                  mnames      = map ((mangleName name) . mkVarName) fieldNames
+                                                  getters     = map (genGetN 0) mnames
                                             
                                               -- DataType
                                               cons   <- HExpr.Con name <$> mapM genExpr fields
@@ -168,6 +172,11 @@ genExpr ast = case ast of
                                               -- CF types for each class field
                                               let nts = map (genCFDec name params) cfNames
                                               mapM_ GenState.addNewType nts
+
+                                              ---- handling getters etc
+                                              ---- GetN functions
+                                              ----mapM_ GenState.addFunction getters
+                                              ----mapM_ GenState.addTHExpression $ map genTHF cgetCName getNName cgetName
                                            
                                               -- CF imports
                                               let imps = map genFCImport memberNames
@@ -213,7 +222,7 @@ genExpr ast = case ast of
     LExpr.Field      _ name cls _          -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
     LExpr.App        _ src args            -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genExpr args)
     LExpr.Accessor   _ src dst             -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
-    LExpr.Native     _ segments            -> pure $ HExpr.Native (join " " $ map genNative segments)
+    LExpr.Native     _ segments            -> pure $ HExpr.Native (join "" $ map genNative segments)
     --LExpr.Native     _ segments            -> pure $ HExpr.Native code
     --_                                      -> fail $ show ast
     where
@@ -230,8 +239,10 @@ genCallExpr e = trans <$> genExpr e where
         LExpr.App        {} -> Prelude.id
         LExpr.Native     {} -> Prelude.id
         LExpr.Assignment {} -> Prelude.id
-        _                   -> ret
-    ret   = HExpr.AppE $ HExpr.Var "return"
+        _                   -> get0
+    getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
+    get0   = getN (0::Int)
+    ret    = HExpr.AppE $ HExpr.Var "return"
 
 genFuncBody :: GenMonad m => [LExpr] -> LType -> Pass.Result m [HExpr]
 genFuncBody exprs output = case exprs of

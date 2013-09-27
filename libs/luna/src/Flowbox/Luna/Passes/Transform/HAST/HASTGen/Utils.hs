@@ -37,7 +37,7 @@ mkCGetName  i = mkGetNName i
 --              $ HExpr.Var $ mkTHVarName c
 
 genTH f a b c = foldl (HExpr.AppE) (HExpr.Var f) vars where
-			    vars = map HExpr.Var [mkTHTypeName a, mkTHVarName  b, mkTHVarName c]
+			    vars = map HExpr.Var [mkTHTypeName a, mkTHVarName b, mkTHVarName c]
 genTHF = genTH "mkInst"
 genTHC = genTH "mkInstC"
 
