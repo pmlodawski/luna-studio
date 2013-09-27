@@ -159,77 +159,77 @@ genExpr ast = case ast of
                                               
                                               return $ HExpr.Import False (["FlowboxM", "Libs"] ++ segments ++ [tname]) Nothing where
                                                 
-    LExpr.Class _ cls _ fields methods     -> do 
-                                              GenState.setClsName name
-                                              let fieldNames  = map LExpr.name fields
-                                                  fieldlen    = length fields
-                                                  funcNames   = map LExpr.name methods 
-                                                  memberNames = map mkVarName $ fieldNames ++ funcNames
-                                                  cfNames     = map (mkCFName . mangleName name) memberNames
-                                                  fcNames     = map mkFCName memberNames
-                                                  ccname      = mkCCName name
+    --LExpr.Class _ cls _ fields methods     -> do 
+    --                                          GenState.setClsName name
+    --                                          let fieldNames  = map LExpr.name fields
+    --                                              fieldlen    = length fields
+    --                                              funcNames   = map LExpr.name methods 
+    --                                              memberNames = map mkVarName $ fieldNames ++ funcNames
+    --                                              cfNames     = map (mkCFName . mangleName name) memberNames
+    --                                              fcNames     = map mkFCName memberNames
+    --                                              ccname      = mkCCName name
 
-                                                  mnames      = map ((mangleName name) . mkVarName) fieldNames
-                                                  getters     = map (genGetN 0) mnames
+    --                                              mnames      = map ((mangleName name) . mkVarName) fieldNames
+    --                                              getters     = map (genGetN 0) mnames
                                             
-                                              -- DataType
-                                              cons   <- HExpr.Con name <$> mapM genExpr fields
-                                              let dt = HExpr.DataD name params [cons] ["Show"]
-                                              GenState.addDataType dt
+    --                                          -- DataType
+    --                                          cons   <- HExpr.Con name <$> mapM genExpr fields
+    --                                          let dt = HExpr.DataD name params [cons] ["Show"]
+    --                                          GenState.addDataType dt
 
-                                              -- CF types for each class field
-                                              let nts = map (genCFDec name params) cfNames
-                                              mapM_ GenState.addNewType nts
+    --                                          -- CF types for each class field
+    --                                          let nts = map (genCFDec name params) cfNames
+    --                                          mapM_ GenState.addNewType nts
 
-                                              ---- handling getters etc
-                                              ---- GetN functions
-                                              ----mapM_ GenState.addFunction getters
-                                              ----mapM_ GenState.addTHExpression $ map genTHF cgetCName getNName cgetName
+    --                                          ---- handling getters etc
+    --                                          ---- GetN functions
+    --                                          ----mapM_ GenState.addFunction getters
+    --                                          ----mapM_ GenState.addTHExpression $ map genTHF cgetCName getNName cgetName
                                            
-                                              -- CF imports
-                                              let imps = map genFCImport memberNames
-                                              mapM_ GenState.addImport imps
+    --                                          -- CF imports
+    --                                          let imps = map genFCImport memberNames
+    --                                          mapM_ GenState.addImport imps
                                            
-                                              -- TH snippets
-                                              let ths = zipWith3 genTHC fcNames cfNames memberNames
-                                              mapM_ GenState.addTHExpression ths
+    --                                          -- TH snippets
+    --                                          let ths = zipWith3 genTHC fcNames cfNames memberNames
+    --                                          mapM_ GenState.addTHExpression ths
                                             
-                                              -- Class methods
-                                              --mapM_ GenState.addFunction =<< mapM genExpr methods
-                                              mapM_ genExpr methods
+    --                                          -- Class methods
+    --                                          --mapM_ GenState.addFunction =<< mapM genExpr methods
+    --                                          mapM_ genExpr methods
 
-                                              -- CONSTRUCTORS --
+    --                                          -- CONSTRUCTORS --
 
-                                              -- CC type constructor
-                                              let con = genCCDec ccname
-                                              GenState.addDataType con
+    --                                          -- CC type constructor
+    --                                          let con = genCCDec ccname
+    --                                          GenState.addDataType con
 
-                                              -- constructor function
-                                              GenState.addFunction $ genCon name ccname
+    --                                          -- constructor function
+    --                                          GenState.addFunction $ genCon name ccname
 
-                                              let test   = genfTyped fieldlen name ccname [] (HExpr.ConE [name])
-                                              GenState.addFunction $ test
+    --                                          let test   = genfTyped fieldlen name ccname [] (HExpr.ConE [name])
+    --                                          GenState.addFunction $ test
 
-                                              -- Constructor TH snippet
-                                              let arglen    = fieldlen
-                                                  cgetCName = mkCGetCName arglen
-                                                  cgetName  = mkCGetName  arglen
-                                                  getNName  = mkTName arglen name
-                                              GenState.addTHExpression $ genTHF cgetCName getNName cgetName
+    --                                          -- Constructor TH snippet
+    --                                          let arglen    = fieldlen
+    --                                              cgetCName = mkCGetCName arglen
+    --                                              cgetName  = mkCGetName  arglen
+    --                                              getNName  = mkTName arglen name
+    --                                          GenState.addTHExpression $ genTHF cgetCName getNName cgetName
 
                                               
-                                              return dt
+    --                                          return dt
 
-                                              where name   =  LType.name   cls
-                                                    params =  LType.params cls
+    --                                          where name   =  LType.name   cls
+    --                                                params =  LType.params cls
                                               
-    LExpr.Infix _ name src dst             -> HExpr.Infix name <$> genExpr src <*> genExpr dst
-    LExpr.Assignment _ pat dst             -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
-    LExpr.Lit        _ value               -> genLit value
-    LExpr.Tuple      _ items               -> mkPure . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
-    LExpr.Field      _ name cls _          -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
-    LExpr.App        _ src args            -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genExpr args)
-    LExpr.Accessor   _ src dst             -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
+    --LExpr.Infix _ name src dst             -> HExpr.Infix name <$> genExpr src <*> genExpr dst
+    --LExpr.Assignment _ pat dst             -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
+    --LExpr.Lit        _ value               -> genLit value
+    --LExpr.Tuple      _ items               -> mkPure . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
+    --LExpr.Field      _ name cls _          -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
+    --LExpr.App        _ src args            -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genExpr args)
+    --LExpr.Accessor   _ src dst             -> (HExpr.AppE <$> (HExpr.AppE (HExpr.Var "xxxxxxxxx") dst) <*> (get0 <$> genExpr src))
     LExpr.Native     _ segments            -> pure $ HExpr.Native (join "" $ map genNative segments)
     --LExpr.Native     _ segments            -> pure $ HExpr.Native code
     --_                                      -> fail $ show ast
