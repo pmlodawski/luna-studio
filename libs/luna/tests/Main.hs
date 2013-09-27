@@ -77,7 +77,8 @@ example = Source.Source ["Main"]
                   , "        {1,2,3}"
                   , "def main self:"
                   , "    v = Vector 1 2 3"
-                  , "    Console.print (v.vtest)"
+                  , "    Console.print ((Vector 1 2 3).vtest)"
+                  , "    Console.print \"Hello world!\""
 
                   --, "    v = Vector 0 0 0"
                   --, "    Console.print v"
