@@ -90,7 +90,7 @@ genfTyped arglen name ccname params base = test where
     exprVars = map HExpr.Var argVars
     selfVar  = HExpr.TypedP t $ HExpr.Var "self"
     funcVars = selfVar : exprVars
-    cfGetter = foldr (flip HExpr.AppE) base exprVars
+    cfGetter = foldl HExpr.AppE base exprVars
     test = HExpr.Function (mkTName arglen name) funcVars
          $ mkPure cfGetter
     t = foldl (HExpr.AppE) (HExpr.Var ccname) (map HExpr.Var params) -- mkPure
@@ -103,7 +103,8 @@ genGetN arglen mname = test where
     exprVars = map HExpr.Var vars
     cfGetterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
                  $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName mname) (HExpr.Var "self")
-    cfGetter = foldr (flip HExpr.AppE) cfGetterBase exprArgs
+    --cfGetter = foldr (flip HExpr.AppE) cfGetterBase exprArgs
+    cfGetter = foldl HExpr.AppE cfGetterBase exprArgs
 
     test = HExpr.Function (mkTName arglen mname) exprVars
          $ cfGetter
