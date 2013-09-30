@@ -26,7 +26,7 @@ import qualified Flowbox.Luna.Data.AST.Class                       as Class
 import qualified Flowbox.Luna.Data.AST.Module                      as Module
 import qualified Flowbox.Luna.Data.AST.Type                        as Type
 import qualified Flowbox.Luna.Data.Source                          as Source
-import Control.Monad
+import           Control.Monad                                       
 
 -----------------------------------------------------------
 -- Entities

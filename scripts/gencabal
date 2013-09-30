@@ -40,7 +40,7 @@ def find_regex(basepath, regex=r'.*', exclude=r'_^'):
         relpath = os.path.relpath(path,basepath)
         for filename in filenames:
             filerelpath = os.path.join(relpath,filename)
-            filerelpath.replace(os.path.sep, '/') # srindows
+            filerelpath = filerelpath.replace(os.path.sep, '/') # srindows
             if filerelpath[:2] == './':
                 filerelpath = filerelpath[2:]
             if obj.match(filerelpath) and not obj_excl.match(filerelpath):

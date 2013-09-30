@@ -16,7 +16,6 @@ module Flowbox.Batch.Server.Handlers.Graph (
 ) 
 where
 
-import           Prelude                                                   hiding (error)
 import           Data.Int                                                    (Int32)
 import           Data.IORef                                                  
 

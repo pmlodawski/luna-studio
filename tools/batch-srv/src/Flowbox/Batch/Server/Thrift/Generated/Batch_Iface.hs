@@ -59,6 +59,7 @@ class Batch_Iface a where
   unloadLibrary :: a -> Maybe Int32 -> Maybe Int32 -> IO ()
   storeLibrary :: a -> Maybe Int32 -> Maybe Int32 -> IO ()
   buildLibrary :: a -> Maybe Int32 -> Maybe Int32 -> IO ()
+  runLibrary :: a -> Maybe Int32 -> Maybe Int32 -> IO Text
   libraryRootDef :: a -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition
   defsGraph :: a -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.DefsGraph
   defByID :: a -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO Defs_Types.Definition

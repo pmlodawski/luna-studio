@@ -11,9 +11,9 @@ module Flowbox.Text.Show.Hs (
     hsShow
 ) where
 
-import           Flowbox.Prelude   
-import Control.Monad.State
-import Control.Applicative
+import           Flowbox.Prelude       
+import           Control.Monad.State   
+import           Control.Applicative   
 
 data St = Struct
            | Paren

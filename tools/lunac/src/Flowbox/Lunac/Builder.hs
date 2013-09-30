@@ -41,6 +41,7 @@ import qualified Flowbox.System.UniPath                                    as Un
 import           Flowbox.System.UniPath                                      (UniPath)
 import qualified Flowbox.System.Directory                                  as Directory
 import qualified Flowbox.System.Process                                    as Process
+import qualified Flowbox.Text.Show.Pretty                                  as PP
 
 
 logger :: Logger
@@ -66,6 +67,7 @@ buildLibrary diag library = do
 buildGraph :: Diagnostics -> DefManager -> (Definition.ID, Definition) -> IO [Source]
 buildGraph diag defManager def = either2io $ Luna.run $ do 
     logger debug "Compiling graph"
+    logger info (PP.ppShow  defManager)
     ast <- GraphParser.run defManager def
     Diagnostics.printAST ast diag 
     buildAST diag ast
@@ -92,7 +94,7 @@ buildAST diag ast = do
     hsc  <- HSC.run hast
     Diagnostics.printHSC hsc diag
     return hsc
-
+    
 
 srcFolder :: String
 srcFolder = "src"
@@ -129,7 +131,7 @@ flowboxPath = UniPath.fromUnixString "~/.flowbox"
 initializeCabalDev :: IO ()
 initializeCabalDev = do
     Directory.createDirectoryIfMissing True $ flowboxPath
-    Process.runCommandInFolder flowboxPath "cabal-dev" ["update"] 
+    Process.runProcessInFolder flowboxPath "cabal-dev" ["update"] 
 
 
 buildSources :: String -> [Source] -> IO ()
@@ -144,7 +146,7 @@ runCabal location name = either2io $ Luna.run $ do
         outputPath = UniPath.append location flowboxPath
 
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) outputPath
-    liftIO $ Process.runCommandInFolder flowboxPath "cabal-dev" ["install", location, "--reinstall"] 
+    liftIO $ Process.runProcessInFolder flowboxPath "cabal-dev" ["install", location, "--reinstall"] 
 
 
 moveExecutable :: String -> String -> UniPath -> IO ()

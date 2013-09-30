@@ -88,13 +88,11 @@ run conf = case conf of
             inputs = map UniPath.fromUnixString $ Conf.inputs conf
             outputPath = UniPath.fromUnixString $ Conf.output conf
             projectName = "project"
+            tmpName = "tmp/tmp-333"
 
         Builder.initializeCabalDev
 
         sources <- mapM (Builder.buildFile diag) inputs
-
-
-        let tmpName = "tmp/tmp-333"
         Builder.buildSources tmpName $ List.concat sources
         Builder.runCabal tmpName projectName
         Builder.moveExecutable tmpName projectName outputPath
