@@ -151,4 +151,4 @@ moveExecutable location name outputPath = do
 cleanUp :: String -> IO ()
 cleanUp location = do 
     outputPath <- UniPath.expand $ UniPath.append location Common.flowboxPath
-    Directory.removeDirectoryRecursive $ UniPath.toUnixString outputPath
+    Directory.removeDirectoryRecursive outputPath
