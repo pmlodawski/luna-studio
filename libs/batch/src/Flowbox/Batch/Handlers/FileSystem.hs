@@ -18,17 +18,17 @@ module Flowbox.Batch.Handlers.FileSystem (
 ) 
 where
 
-import           Control.Applicative             
-import qualified Control.Exception             as Exception
-import qualified Data.List                     as List
-import qualified System.Directory              as Directory
-import qualified System.IO                     as IO
+import           Control.Applicative                  
+import qualified Control.Exception                  as Exception
+import qualified Data.List                          as List
+import qualified Flowbox.System.Directory.Directory as Directory
+import qualified System.IO                          as IO
 
-import           Flowbox.Prelude                 
-import qualified Flowbox.Batch.FileSystem.Item as Item
-import           Flowbox.Batch.FileSystem.Item   (Item)
-import qualified Flowbox.System.UniPath        as UniPath
-import           Flowbox.System.UniPath          (UniPath)
+import           Flowbox.Prelude                      
+import qualified Flowbox.Batch.FileSystem.Item      as Item
+import           Flowbox.Batch.FileSystem.Item        (Item)
+import qualified Flowbox.System.UniPath             as UniPath
+import           Flowbox.System.UniPath               (UniPath)
 
 
 
@@ -44,18 +44,18 @@ ls upath = do
 
 stat :: UniPath -> IO Item
 stat upath = do
-    path <- UniPath.toUnixString <$> UniPath.expand upath
+    path <- UniPath.expand upath
 
     isDir  <- Directory.doesDirectoryExist path
     if isDir 
-        then return $ Item.Directory upath 0
+        then return $ Item.Directory path 0
         else do
             isFile <- Directory.doesFileExist path
             if isFile 
-                then Exception.handle (\(_ :: Exception.SomeException) -> return $ Item.File upath (-1))
-                     (do asize <- IO.withFile path IO.ReadMode IO.hFileSize
-                         return $ Item.File upath $ fromInteger asize)
-                else return $ Item.Other upath (-1)
+                then Exception.handle (\(_ :: Exception.SomeException) -> return $ Item.File path (-1))
+                     (do asize <- IO.withFile (UniPath.toUnixString path) IO.ReadMode IO.hFileSize
+                         return $ Item.File path $ fromInteger asize)
+                else return $ Item.Other path (-1)
 
 
 mkdir :: UniPath -> IO ()
@@ -72,7 +72,7 @@ touch upath = do
 
 rm :: UniPath -> IO ()
 rm upath = do
-    path <- UniPath.toUnixString <$> UniPath.expand upath
+    path <- UniPath.expand upath
 
     isDir  <- Directory.doesDirectoryExist path
     if isDir 
@@ -80,36 +80,24 @@ rm upath = do
         else do
             isFile <- Directory.doesFileExist path
             if isFile 
-                then Directory.removeFile path
+                then Directory.removeFile $ UniPath.toUnixString path
                 else error "Could not remove object: Unsupported type."
 
 
 cp :: UniPath -> UniPath -> IO ()
-cp usrc udst = do
-    src <- UniPath.toUnixString <$> UniPath.expand usrc
-    dst <- UniPath.toUnixString <$> UniPath.expand udst
-
-    isDir  <- Directory.doesDirectoryExist src
-    if isDir 
-        -- TODO [PM] : Implement copying of folders
-        then putStrLn "Could not copy folder: Not Implemented. Sorry."
-        else do
-            isFile <- Directory.doesFileExist src
-            if isFile 
-                then Directory.copyFile src dst
-                else error "Could not copy object: Unsupported type."
+cp = Directory.copyDirectoryRecursive
     
 
 mv :: UniPath -> UniPath -> IO ()
 mv usrc udst = do
-    src <- UniPath.toUnixString <$> UniPath.expand usrc
-    dst <- UniPath.toUnixString <$> UniPath.expand udst
+    src <- UniPath.expand usrc
+    dst <- UniPath.expand udst
 
     isDir  <- Directory.doesDirectoryExist src
     if isDir 
-        then Directory.renameDirectory src dst
+        then Directory.renameDirectory (UniPath.toUnixString src) (UniPath.toUnixString dst)
         else do
             isFile <- Directory.doesFileExist src
             if isFile 
-                then Directory.renameFile src dst
+                then Directory.renameFile (UniPath.toUnixString src) (UniPath.toUnixString dst)
                 else error "Could not move object: Unsupported type."
