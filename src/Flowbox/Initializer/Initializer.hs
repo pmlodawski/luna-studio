@@ -41,5 +41,9 @@ checkedInitialize = do
 initialize :: IO ()
 initialize = do
     loggerIO info "Configuring Flowbox for the first use."
-    Directory.createDirectoryIfMissing True $ Common.flowboxPath
+    Directory.createDirectoryIfMissing True $ UniPath.append "tmp" Common.flowboxPath
     Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["update"] 
+    loggerIO debug "Copying std library."
+    Directory.copyDirectoryRecursive (UniPath.fromUnixString "libs/stdlibio/") (UniPath.append "tmp" Common.flowboxPath)
+    loggerIO debug "Intalling std library."    
+    Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["install", "tmp/stdlibio"] 
