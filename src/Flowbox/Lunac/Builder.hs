@@ -131,7 +131,7 @@ flowboxPath = UniPath.fromUnixString "~/.flowbox"
 initializeCabalDev :: IO ()
 initializeCabalDev = do
     Directory.createDirectoryIfMissing True $ flowboxPath
-    Process.runCommandInFolder flowboxPath "cabal-dev" ["update"] 
+    Process.runProcessInFolder flowboxPath "cabal-dev" ["update"] 
 
 
 buildSources :: String -> [Source] -> IO ()
@@ -146,7 +146,7 @@ runCabal location name = either2io $ Luna.run $ do
         outputPath = UniPath.append location flowboxPath
 
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) outputPath
-    liftIO $ Process.runCommandInFolder flowboxPath "cabal-dev" ["install", location, "--reinstall"] 
+    liftIO $ Process.runProcessInFolder flowboxPath "cabal-dev" ["install", location, "--reinstall"] 
 
 
 moveExecutable :: String -> String -> UniPath -> IO ()
