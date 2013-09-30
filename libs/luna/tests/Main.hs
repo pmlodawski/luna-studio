@@ -74,11 +74,12 @@ example = Source.Source ["Main"]
                   , "class Vector a:"
                   , "    x,y,z :: a"
                   , "    def vtest self a b:"
+                  , "        x = a"
                   , "        {a,b} = {b,a}"
                   , "        {b,b,a,a}"
                   , "def main self:"
                   , "    v = Vector 1 2 3"
-                  , "    v.vtest 1 2"
+                  , "    Console.print (v.vtest 1 2)"
 
                   --, "    v = Vector 0 0 0"
                   --, "    Console.print v"

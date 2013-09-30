@@ -256,8 +256,9 @@ genFuncBody :: GenMonad m => [LExpr] -> LType -> Pass.Result m [HExpr]
 genFuncBody exprs output = case exprs of
     []   -> pure []
     x:[] -> liftM (:[]) $ genTyped HExpr.Typed output <*> case x of
-            LExpr.Assignment _ _ dst -> genCallExpr dst 
-            _                        -> genCallExpr x 
+            LExpr.Assignment _ _ dst -> mkGetIO <$> genCallExpr dst 
+            LExpr.Native     {}      -> genCallExpr x
+            _                        -> mkGetIO <$> genCallExpr x 
     x:xs -> (:) <$> genCallExpr x <*> genFuncBody xs output
 
 
@@ -265,7 +266,7 @@ genPat :: GenMonad m => LPat.Pat -> Pass.Result m HExpr
 genPat p = case p of
     LPat.Var     _ name     -> return $ HExpr.Var (mkVarName name)
     LPat.Typed   _ pat cls  -> genTyped HExpr.TypedP cls <*> genPat pat
-    LPat.Tuple   _ items    -> HExpr.TupleP <$> mapM genPat items
+    LPat.Tuple   _ items    -> mkPure . HExpr.TupleP <$> mapM genPat items
                                    
 
 genTyped :: GenMonad m => (HExpr -> HExpr -> HExpr) -> LType -> Pass.Result m (HExpr -> HExpr)
