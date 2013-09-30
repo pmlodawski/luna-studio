@@ -73,27 +73,33 @@ genExpr e = case e of
                                              ++ case rename of
                                                      Just name -> " as " ++ name
                                                      Nothing   -> ""
-    HExpr.DataD    name params cons ders  -> "data " ++ name ++ params' ++ " = " ++ cons' ++ ders' where
-                                             params' = if null params then "" else " " ++ join " " params
-                                             cons'   = join " | " (map genExpr cons)
-                                             ders'   = if null ders then "" else " deriving (" ++ join ", " ders ++ ")"
-    HExpr.NewTypeD name params con        -> "newtype " ++ name ++ params' ++ " = " ++ genExpr con where
-                                             params' = if null params then "" else " " ++ join " " params
-    HExpr.Con      name fields            -> name ++ " { " ++ join ", " (map genExpr fields) ++ " }"
+    HExpr.DataD    name params cons ders  -> "data " ++ name ++ params' ++ " = " ++ cons' ++ ders' 
+                                             where params' = if null params then "" else " " ++ join " " params
+                                                   cons'   = join " | " (map genExpr cons)
+                                                   ders'   = if null ders then "" else " deriving (" ++ join ", " ders ++ ")"
+    HExpr.NewTypeD name params con        -> "newtype " ++ name ++ params' ++ " = " ++ genExpr con 
+                                             where params' = if null params then "" else " " ++ join " " params
+    HExpr.Con      name fields            -> name ++ body
+                                             where body = if null fields then "" else " { " ++ join ", " (map genExpr fields) ++ " }"
     HExpr.Typed    cls  expr              -> genExpr expr ++ " :: " ++ genExpr cls
     HExpr.TypedP   cls  expr              -> "(" ++ genExpr expr ++ " :: " ++ genExpr cls ++ ")"
     HExpr.TypedE   cls  expr              -> "(" ++ genExpr expr ++ " :: " ++ genExpr cls ++ ")"
-    HExpr.Function name signature expr    -> name ++ params ++ " = " ++ genExpr expr where
-                                             params = if null signature then ""
-                                                      else " " ++ join " " (map genExpr signature)
+    HExpr.Function name signature expr    -> name ++ params ++ " = " ++ genExpr expr 
+                                             where params = if null signature then ""
+                                                            else " " ++ join " " (map genExpr signature)
+    HExpr.Lambda   signature expr         -> "(\\" ++ params ++ " -> " ++ genExpr expr ++ ")"
+                                             where params = if null signature then ""
+                                                            else " " ++ join " " (map genExpr signature)
     HExpr.LetBlock exprs result           -> "let { " ++ join "; " (map genExpr exprs) ++ " } in " ++ genExpr result 
     HExpr.DoBlock  exprs                  -> "do { " ++ body ++ " }"
                                              where body = if null exprs then "" else join "; " (map genExpr exprs) ++ ";"
     HExpr.Infix    name src dst           -> genExpr src ++ " " ++ name ++ " " ++ genExpr dst
     HExpr.NOP                             -> "NOP"
-    HExpr.Assignment src dst              -> genExpr src ++ " <- " ++ genExpr dst
+    HExpr.Assignment src dst              -> genExpr src ++ " = " ++ genExpr dst
+    HExpr.Arrow      src dst              -> genExpr src ++ " <- " ++ genExpr dst
     HExpr.Lit      val                    -> genLit val
     HExpr.Tuple    items                  -> "(" ++ join "," (map genExpr items) ++ ")"
+    HExpr.TupleP   items                  -> "(" ++ join "," (map genExpr items) ++ ")"
     HExpr.ConE     qname                  -> join "." qname
     HExpr.ConT     name                   -> name
     HExpr.AppT     src dst                -> "(" ++ genExpr src ++ " (" ++ genExpr dst ++ ")" ++ ")" -- for literals, e.g. Pure (1 :: Int)

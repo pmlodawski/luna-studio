@@ -37,7 +37,7 @@ mkCGetName  i = mkGetNName i
 --              $ HExpr.Var $ mkTHVarName c
 
 genTH f a b c = foldl (HExpr.AppE) (HExpr.Var f) vars where
-			    vars = map HExpr.Var [mkTHTypeName a, mkTHVarName  b, mkTHVarName c]
+			    vars = map HExpr.Var [mkTHTypeName a, mkTHVarName b, mkTHVarName c]
 genTHF = genTH "mkInst"
 genTHC = genTH "mkInstC"
 
@@ -47,7 +47,7 @@ genCFDec cname params cfname =
 	HExpr.NewTypeD cfname params 
     $ HExpr.Con cfname [HExpr.Typed t (HExpr.Var $ mkGetName cfname)]
     --where t = (HExpr.Var "a")
-    where t = foldl (HExpr.AppE) (HExpr.Var cname) (map HExpr.Var params) -- mkIO
+    where t = mkPure $ foldl (HExpr.AppE) (HExpr.Var cname) (map HExpr.Var params) -- mkIO
 
 genCCDec name = HExpr.DataD name [] [HExpr.Con name []] []
 
@@ -64,4 +64,4 @@ mkPureIO = HExpr.AppE (HExpr.Var "pureIO")
 mkIO     = HExpr.AppE (HExpr.ConE ["IO"])
 
 
-emptyHExpr = HExpr.AppE (HExpr.Var "return") (HExpr.Var "()")
+emptyHExpr = mkPure (HExpr.Var "()")
