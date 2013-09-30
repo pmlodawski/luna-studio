@@ -15,16 +15,17 @@ module FlowboxM.Luna.Helpers.Core (
 )
 where
 
-import           Prelude                       hiding ((>>), (>>=), fail)
-import           FlowboxM.Luna.Helpers.TH.Inst   
-import           FlowboxM.Luna.Helpers.StdLib    
-import           Control.Applicative             
+import           Prelude hiding((>>), (>>=), fail, return)
+import qualified Prelude as Prelude
+import           FlowboxM.Luna.Helpers.TH.Inst       
+import           FlowboxM.Luna.Helpers.StdLib        
+import Control.Applicative
 
 
 --import           Flowbox.Luna.Libs.Std.Data.NTuple.Select   
 --import           Flowbox.Luna.Libs.Std.Base     
 
---import           GHC.TypeLits                    
+import GHC.TypeLits            
 
 (.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 -- f .: g = \x y->f (g x y)
@@ -34,7 +35,7 @@ import           Control.Applicative
 (.:) = (.) . (.)
 
 
---class Failure (a :: Symbol)
+class Failure (a :: Symbol)
 
 --class Get0 a b c | a -> b, a b -> c, a c -> b, a->c where
 --    get0 :: a b -> c
@@ -63,7 +64,12 @@ class Get3 m f |  m -> f where
 --	get0 = id
 
 instance Get0 (IO a) (IO a) where
-	get0 = id
+    get0 = id
+
+instance Get0 (Pure a) (Pure a) where
+    get0 = id
+
+
 
 --class Get0 a b | a -> b where
 --    get0 :: a -> b
@@ -90,9 +96,47 @@ mkPure10 a v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 = Pure $ a v1 v2 v3 v4 v5 v6 v7 v8 v9 
 
 
 pureIO :: a -> IO a
-pureIO = return
+pureIO = Prelude.return
 
 
 
 
 tuple2 a b = (,) <$> a <*> b
+
+(>>=) = bind
+(>>)  = bind_
+fail = ()
+return a = a
+
+
+defFunction0 f = f
+
+defFunction1 f v1 = do
+    v1' <- getIO v1
+    f v1'
+
+defFunction2 f v1 v2 = do
+    v1' <- getIO v1
+    v2' <- getIO v2
+    f v1' v2'
+
+defFunction3 f v1 v2 v3 = do
+    v1' <- getIO v1
+    v2' <- getIO v2
+    v3' <- getIO v3
+    f v1' v2' v3'
+
+defFunction4 f v1 v2 v3 v4 = do
+    v1' <- getIO v1
+    v2' <- getIO v2
+    v3' <- getIO v3
+    v4' <- getIO v4
+    f v1' v2' v3' v4'
+
+defFunction5 f v1 v2 v3 v4 v5 = do
+    v1' <- getIO v1
+    v2' <- getIO v2
+    v3' <- getIO v3
+    v4' <- getIO v4
+    v5' <- getIO v5
+    f v1' v2' v3' v4' v5'
