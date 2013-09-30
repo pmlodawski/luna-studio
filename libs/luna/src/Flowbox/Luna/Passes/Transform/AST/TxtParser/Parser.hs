@@ -187,14 +187,14 @@ pEntBaseE s i = choice [ pIdentE s
                        ]
 
 -- Function application using parenthesis notation, e.g. f(1).next <=> (f 1).next or f (1).next <=> f 1.next
-pAppE     s i = (\expr ops -> foldr ($) expr $ reverse ops)
+pEntE     s i = (\expr ops -> foldr ($) expr $ reverse ops)
              <$> pEntBaseE False i 
              <*> choice [ try $ many1 ( flip <$> (Expr.App <$> genID) <*> pCallList False (pTermE s i))
                         ,       [] <$ L.pSpaces
                         ]
 
--- Implicit tuples support
-pEntE s i = try(tok Expr.Tuple <*> pImplTuple (pAppE s i)) <|> (pAppE s i)
+---- Implicit tuples support
+--pEntE s i = try(tok Expr.Tuple <*> pImplTuple (pAppE s i)) <|> (pAppE s i)
 
 pExprBlock     s i = pBlockBegin (pExpr s) i
 
@@ -252,15 +252,15 @@ pWildcardP      = tok Pat.Wildcard <*  L.pWildcard
 pConsP      s   = tok Pat.Cons     <*> pCons s
 pConsAppP   s i = tok Pat.App      <*> (tok Pat.Cons <*> pCons s) <*> many1 (pTermP s i) 
 
-pEntBaseP   s i = choice [ pVarP      s
+pEntP   s i = choice [ pVarP      s
                          , pLitP      s
                          , pTupleP    s i
                          , pWildcardP
                          , pConsP     s
                          ]
 
--- Implicit tuples support
-pEntP s i = try(tok Pat.Tuple <*> pImplTuple (pEntBaseP s i)) <|> (pEntBaseP s i)
+---- Implicit tuples support
+--pEntP s i = try(tok Pat.Tuple <*> pImplTuple (pEntBaseP s i)) <|> (pEntBaseP s i)
 
 -----------------------------------------------------------
 -- Nested Segments

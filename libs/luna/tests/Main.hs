@@ -81,7 +81,7 @@ example = Source.Source ["Main"]
                   --, "    v = Vector 1 2 3"
                   --, "    Console.print (v.vtest 1 2)"
                   , "def test a b:"
-                  , "    a,b = b,a"
+                  , "    {a,b} = {b,a}"
 
                   --, "    v = Vector 0 0 0"
                   --, "    Console.print v"
