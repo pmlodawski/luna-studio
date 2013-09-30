@@ -12,6 +12,7 @@ import           Control.Monad.RWS                                         hidin
 import           Data.Maybe                                                  (fromJust)
 
 import           Flowbox.Prelude                                             
+import qualified Flowbox.Initializer.Common                                as Common
 import qualified Flowbox.Luna.Data.AST.Module                              as ASTModule
 import qualified Flowbox.Luna.Data.Cabal.Config                            as CabalConfig
 import qualified Flowbox.Luna.Data.Cabal.Section                           as CabalSection
@@ -28,20 +29,21 @@ import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HS
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
 import           Flowbox.Luna.Passes.Pass                                    (PassMonadIO)
+import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
+import qualified Flowbox.Luna.Passes.Source.File.Writer                    as FileWriter
 import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
-import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
-import qualified Flowbox.Luna.Passes.Source.File.Writer                    as FileWriter
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
 import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
 import           Flowbox.Lunac.Diagnostics                                   (Diagnostics)
+import qualified Flowbox.System.Directory.Directory                        as Directory
 import           Flowbox.System.Log.Logger                                   
+import qualified Flowbox.System.Process                                    as Process
 import qualified Flowbox.System.UniPath                                    as UniPath
 import           Flowbox.System.UniPath                                      (UniPath)
-import qualified Flowbox.System.Directory                                  as Directory
-import qualified Flowbox.System.Process                                    as Process
 import qualified Flowbox.Text.Show.Pretty                                  as PP
+
 
 
 logger :: Logger
@@ -124,39 +126,29 @@ genCabal name = let
     in conf
 
 
-flowboxPath :: UniPath
-flowboxPath = UniPath.fromUnixString "~/.flowbox"
-
-
-initializeCabalDev :: IO ()
-initializeCabalDev = do
-    Directory.createDirectoryIfMissing True $ flowboxPath
-    Process.runProcessInFolder flowboxPath "cabal-dev" ["update"] 
-
-
 buildSources :: String -> [Source] -> IO ()
 buildSources location sources = either2io $ Luna.run $ do 
-    let outputPath = UniPath.append location flowboxPath
+    let outputPath = UniPath.append location Common.flowboxPath
     mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) sources 
 
 
 runCabal :: String -> String -> IO ()
 runCabal location name = either2io $ Luna.run $ do 
     let cabal      = genCabal name
-        outputPath = UniPath.append location flowboxPath
+        outputPath = UniPath.append location Common.flowboxPath
 
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) outputPath
-    liftIO $ Process.runProcessInFolder flowboxPath "cabal-dev" ["install", location, "--reinstall"] 
+    liftIO $ Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["install", location, "--reinstall"] 
 
 
 moveExecutable :: String -> String -> UniPath -> IO ()
 moveExecutable location name outputPath = do 
-    rootPath      <- UniPath.expand $ UniPath.append location flowboxPath
+    rootPath      <- UniPath.expand $ UniPath.append location Common.flowboxPath
     let executable = UniPath.append ("dist/build/" ++ name ++ "/" ++ name) rootPath
     Directory.renameFile (UniPath.toUnixString executable) (UniPath.toUnixString outputPath)
 
 
 cleanUp :: String -> IO ()
 cleanUp location = do 
-    outputPath <- UniPath.expand $ UniPath.append location flowboxPath
+    outputPath <- UniPath.expand $ UniPath.append location Common.flowboxPath
     Directory.removeDirectoryRecursive $ UniPath.toUnixString outputPath

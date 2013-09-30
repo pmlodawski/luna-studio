@@ -23,6 +23,7 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*Main\.hs)')`
                    
  Build-Depends:   base,
+                  flowbox-initializer,
                   flowbox-luna,
                   flowbox-utils,
                   MissingH,
@@ -44,6 +45,7 @@ Executable lunac
                   MultiParamTypeClasses
                   NoImplicitPrelude
   Build-Depends:  base,
+                  flowbox-initializer,
                   flowbox-luna,
                   flowbox-utils,
                   MissingH,
