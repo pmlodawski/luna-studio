@@ -236,9 +236,11 @@ node2AST graph inputsNames list (nodeID, node) = do
 
                 maxArg = foldr (biggestPort argID) Port.All inEdges 
 
-            args <- case maxArg of 
-                Port.All      -> (:[]) <$> arg inEdges maxArg 
-                Port.Number p -> mapM (\i -> arg inEdges $ Port.Number i) [0..p]
+            args <- case length inEdges of 
+                0 -> return []
+                _ -> case maxArg of 
+                    Port.All      -> (:[]) <$> arg inEdges maxArg 
+                    Port.Number p -> mapM (\i -> arg inEdges $ Port.Number i) [0..p]
             
             call <- case node of 
                 Node.Expr expression _ _ ->  ASTExpr.App astNodeID <$> parseExpr expression <*> pure args
@@ -264,7 +266,7 @@ node2AST graph inputsNames list (nodeID, node) = do
 
             if numGetters == 0 
                 then if numConnected == 0
-                    then return []
+                    then return [call]
                     else do id <- newID 
                             return [ASTExpr.Assignment id allPattern call]
                 else do let (Port.Number maxGetter) = foldr (biggestPort resultID) Port.All outEdges 
