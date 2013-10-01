@@ -94,6 +94,7 @@ run conf = case conf of
             then rootLogger setLevel DEBUG
             else return ()
 
+        loggerIO info "Starting the server"
         quitmutex <- MVar.newEmptyMVar
         _ <- Concurrent.forkIO $ Exception.handle 
             (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
@@ -106,7 +107,6 @@ run conf = case conf of
 serve :: Conf -> MVar Bool -> IO ()
 serve conf quitmutex = do
     handler <- BatchHandler.empty
-    loggerIO info "Starting the server"
     _ <- Server.runSingleConnectionServer Server.accepter handler (processCommand quitmutex) conf
     return ()
 
