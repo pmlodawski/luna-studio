@@ -11,6 +11,8 @@ import           Flowbox.Prelude
 
 
 
-data Conf = Initialization { verbose :: Bool }
+data Conf = Initialization { verbose :: Bool
+                           , force   :: Bool
+                           }
           | Version
           deriving Show

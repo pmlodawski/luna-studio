@@ -35,18 +35,22 @@ copyDirectoryRecursive usrc udst = do
                 dname = UniPath.append name d
             isDir <- doesDirectoryExist sname
             if isDir 
-                then do createDirectory $ UniPath.toUnixString dname 
-                        copyDirectoryRecursive sname dname
+                then do createDirectory $ UniPath.toUnixString dname
+                        contents <- filter (`notElem` [".", ".."]) <$> Directory.getDirectoryContents (UniPath.toUnixString sname)
+                        mapM_ (copyContent sname dname) contents  
                 else do
-                    isFile <- Directory.doesFileExist $ UniPath.toUnixString sname
+                    isFile <- doesFileExist sname
                     if isFile 
                         then Directory.copyFile (UniPath.toUnixString sname) (UniPath.toUnixString dname)
                         else fail $ "Failed to copy '" ++ (UniPath.toUnixString sname) ++  "' not implmented record type."
 
     src <- UniPath.expand usrc
     dst <- UniPath.expand udst
-    contents <- filter (`notElem` [".", ".."]) <$> Directory.getDirectoryContents (UniPath.toUnixString src)
-    mapM_ (copyContent src dst) contents 
+
+    let base     = UniPath.basePath src
+        fileName = UniPath.fileName src
+    copyContent base dst fileName
+    
 
 
 createDirectoryIfMissing :: Bool -> UniPath -> IO ()

@@ -47,3 +47,12 @@ initialize = do
     Directory.copyDirectoryRecursive (UniPath.fromUnixString "libs/stdlibio/") (UniPath.append "tmp" Common.flowboxPath)
     loggerIO debug "Intalling std library."    
     Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["install", "tmp/stdlibio"] 
+
+
+clear :: IO ()
+clear = do 
+    loggerIO info "Cleaning Flowbox configuration."
+    exists <- Directory.doesDirectoryExist Common.flowboxPath
+    if exists
+        then Directory.removeDirectoryRecursive Common.flowboxPath
+        else return ()

@@ -20,9 +20,9 @@ Library
   
   Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*Main\.hs)')`
                    
- Build-Depends:   base,
-                  flowbox-utils,
-                  optparse-applicative
+  Build-Depends:    base,
+                    flowbox-utils,
+                    optparse-applicative
 
 
 Executable initializer 

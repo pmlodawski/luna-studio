@@ -25,7 +25,7 @@ import           Control.Applicative
 --import           Flowbox.Luna.Libs.Std.Data.NTuple.Select   
 --import           Flowbox.Luna.Libs.Std.Base     
 
-import           GHC.TypeLits                    
+--import           GHC.TypeLits                    
 
 (.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 -- f .: g = \x y->f (g x y)
@@ -35,7 +35,7 @@ import           GHC.TypeLits
 (.:) = (.) . (.)
 
 
-class Failure (a :: Symbol)
+--class Failure (a :: Symbol)
 
 --class Get0 a b c | a -> b, a b -> c, a c -> b, a->c where
 --    get0 :: a b -> c
