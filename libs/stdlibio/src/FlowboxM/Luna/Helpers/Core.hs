@@ -98,14 +98,15 @@ mkPure10 a v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 = Pure $ a v1 v2 v3 v4 v5 v6 v7 v8 v9 
 pureIO :: a -> IO a
 pureIO = Prelude.return
 
-
+failIO :: String -> IO a
+failIO = Prelude.fail
 
 
 tuple2 a b = (,) <$> a <*> b
 
 (>>=) = bind
 (>>)  = bind_
-fail = ()
+fail  = failIO
 return a = a
 
 
@@ -113,25 +114,25 @@ defFunction0 f = f
 
 defFunction1 f v1 = do
     v1' <- getIO v1
-    f v1'
+    f (Pure v1')
 
 defFunction2 f v1 v2 = do
     v1' <- getIO v1
     v2' <- getIO v2
-    f v1' v2'
+    f (Pure v1') (Pure v2')
 
 defFunction3 f v1 v2 v3 = do
     v1' <- getIO v1
     v2' <- getIO v2
     v3' <- getIO v3
-    f v1' v2' v3'
+    f (Pure v1') (Pure v2') (Pure v3')
 
 defFunction4 f v1 v2 v3 v4 = do
     v1' <- getIO v1
     v2' <- getIO v2
     v3' <- getIO v3
     v4' <- getIO v4
-    f v1' v2' v3' v4'
+    f (Pure v1') (Pure v2') (Pure v3') (Pure v4')
 
 defFunction5 f v1 v2 v3 v4 v5 = do
     v1' <- getIO v1
@@ -139,4 +140,4 @@ defFunction5 f v1 v2 v3 v4 v5 = do
     v3' <- getIO v3
     v4' <- getIO v4
     v5' <- getIO v5
-    f v1' v2' v3' v4' v5'
+    f (Pure v1') (Pure v2') (Pure v3') (Pure v4') (Pure v5')

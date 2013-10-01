@@ -37,7 +37,9 @@ p <**$> q = p <**> (flip (foldr ($)) <$> q)
 p <??$> q = p <**> ((flip (foldr ($)) <$> q) <|> return id)
 
 
-sepBy2  p sep = (:) <$> p <*> try(sep *> sepBy1 p sep)
+sepBy2 p sep = (:) <$> p <* sep <*> sepBy1 p sep
+
+--sepBy2  p sep = (:) <$> p <*> try(sep *> sepBy1 p sep)
 
 sepBy'  p sep = sepBy1' p sep <|> return []
 sepBy1' p sep = (:) <$> p <*> many (try(sep *> p)) <* optional sep
