@@ -59,15 +59,11 @@ stat upath = do
 
 
 mkdir :: UniPath -> IO ()
-mkdir upath = do
-     path <- UniPath.toUnixString <$> UniPath.expand upath
-     Directory.createDirectory path
+mkdir = Directory.createDirectory
 
 
 touch :: UniPath -> IO ()
-touch upath = do 
-    path <- UniPath.toUnixString <$> UniPath.expand upath
-    IO.writeFile path ""
+touch = Directory.touchFile
 
 
 rm :: UniPath -> IO ()
@@ -80,7 +76,7 @@ rm upath = do
         else do
             isFile <- Directory.doesFileExist path
             if isFile 
-                then Directory.removeFile $ UniPath.toUnixString path
+                then Directory.removeFile path
                 else error "Could not remove object: Unsupported type."
 
 
@@ -95,9 +91,9 @@ mv usrc udst = do
 
     isDir  <- Directory.doesDirectoryExist src
     if isDir 
-        then Directory.renameDirectory (UniPath.toUnixString src) (UniPath.toUnixString dst)
+        then Directory.renameDirectory src dst
         else do
             isFile <- Directory.doesFileExist src
             if isFile 
-                then Directory.renameFile (UniPath.toUnixString src) (UniPath.toUnixString dst)
+                then Directory.renameFile src dst
                 else error "Could not move object: Unsupported type."

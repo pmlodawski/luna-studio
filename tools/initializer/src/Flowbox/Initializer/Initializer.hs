@@ -15,6 +15,7 @@ import qualified Flowbox.System.Directory.Directory as Directory
 import qualified Flowbox.Initializer.Common         as Common
 import qualified Flowbox.System.Process             as Process
 import qualified Flowbox.System.UniPath             as UniPath
+import           Flowbox.System.UniPath               (UniPath)
 
 
 
@@ -22,20 +23,27 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Initializer.Initializer"
 
 
+installedFile :: UniPath
+installedFile = UniPath.append "installed" Common.flowboxPath
+
+
 isAlreadyInitilized :: IO Bool
 isAlreadyInitilized = do 
-    exists <- Directory.doesDirectoryExist $ UniPath.append "cabal-dev" Common.flowboxPath
     loggerIO debug "Checking for Flowbox configuration." 
+    exists_cabalDev  <- Directory.doesDirectoryExist $ UniPath.append "cabal-dev" Common.flowboxPath
+    exists_installed <- Directory.doesFileExist installedFile
+    let exists = exists_cabalDev && exists_installed
     if exists
         then loggerIO debug "Configuration already exists."
-        else loggerIO debug "Configuration does not exist."
+        else loggerIO debug "Configuration does not exist or is broken."
     return exists
 
 
 checkedInitialize :: IO ()
 checkedInitialize = do
     initialized <- isAlreadyInitilized
-    when (not initialized) initialize
+    when (not initialized) (do clear
+                               initialize)
 
 
 initialize :: IO ()
@@ -47,6 +55,7 @@ initialize = do
     Directory.copyDirectoryRecursive (UniPath.fromUnixString "libs/stdlibio/") (UniPath.append "tmp" Common.flowboxPath)
     loggerIO debug "Intalling std library."    
     Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["install", "tmp/stdlibio"] 
+    Directory.touchFile installedFile
 
 
 clear :: IO ()
