@@ -145,7 +145,7 @@ moveExecutable :: String -> String -> UniPath -> IO ()
 moveExecutable location name outputPath = do 
     rootPath      <- UniPath.expand $ UniPath.append location Common.flowboxPath
     let executable = UniPath.append ("dist/build/" ++ name ++ "/" ++ name) rootPath
-    Directory.renameFile (UniPath.toUnixString executable) (UniPath.toUnixString outputPath)
+    Directory.renameFile executable outputPath
 
 
 cleanUp :: String -> IO ()
