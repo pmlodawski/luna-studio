@@ -31,6 +31,7 @@ parser :: Parser Conf
 parser = Opt.flag' Conf.Version (long "version" <> hidden)
        <|> Conf.Initialization
            <$> switch (long "verbose" <> short 'v' <> help "Verbose level")
+           <*> switch (long "force"   <> short 'f' <> help "Force reinitialization")
 
 
 
@@ -56,5 +57,7 @@ run conf = case conf of
         if Conf.verbose conf
             then rootLogger setLevel DEBUG
             else rootLogger setLevel INFO
-
-        Initializer.checkedInitialize
+        if Conf.force conf
+            then do Initializer.clear
+                    Initializer.initialize
+            else Initializer.checkedInitialize
