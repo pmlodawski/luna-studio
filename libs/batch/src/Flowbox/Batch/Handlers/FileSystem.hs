@@ -59,7 +59,7 @@ stat upath = do
 
 
 mkdir :: UniPath -> IO ()
-mkdir = Directory.createDirectory
+mkdir = Directory.createDirectoryIfMissing True
 
 
 touch :: UniPath -> IO ()

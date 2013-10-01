@@ -24,7 +24,6 @@ import           Flowbox.Prelude
 import           Flowbox.Batch.Batch                   (Batch)
 import           Flowbox.Batch.Handlers.Common         (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
 import qualified Flowbox.Batch.Project.Project       as Project
-import qualified Flowbox.Initializer.Initializer     as Initializer
 import qualified Flowbox.Luna.Lib.LibManager         as LibManager
 import qualified Flowbox.Luna.Lib.Library            as Library
 import           Flowbox.Luna.Lib.Library              (Library)
@@ -85,8 +84,6 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ librar
         
         outputPath = UniPath.fromUnixString projectName
         tmpName    = "tmp/" ++ projectName
-
-    Initializer.checkedInitialize
 
     sources <- Builder.buildLibrary diag library
     Builder.buildSources tmpName sources

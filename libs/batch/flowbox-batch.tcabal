@@ -29,7 +29,6 @@ Library
                     bytestring,
                     containers,
                     directory,
-                    flowbox-initializer,
                     flowbox-luna,
                     flowbox-lunac,
                     flowbox-utils,
