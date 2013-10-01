@@ -5,12 +5,18 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.System.Directory.Directory (
+    copyDirectoryRecursive,
+    copyFile,
+    createDirectory,
     createDirectoryIfMissing,
     doesFileExist,
     doesDirectoryExist,
-    copyDirectoryRecursive,
     getDirectoryRecursive,
     removeDirectoryRecursive,
+    removeFile,
+    renameDirectory,
+    renameFile,
+    touchFile,
 
     module System.Directory,
 ) where
@@ -18,7 +24,8 @@ module Flowbox.System.Directory.Directory (
 import           Control.Applicative      
 import qualified Data.List              as List
 import qualified System.Directory       as Directory
-import           System.Directory       hiding (createDirectoryIfMissing, doesDirectoryExist, doesFileExist, removeDirectoryRecursive)
+import           System.Directory       hiding (copyFile, createDirectory, createDirectoryIfMissing, doesDirectoryExist, doesFileExist, renameDirectory, renameFile, removeDirectoryRecursive, removeFile)
+import qualified System.IO              as IO
 
 import           Flowbox.Prelude          
 import qualified Flowbox.System.UniPath as UniPath
@@ -35,22 +42,33 @@ copyDirectoryRecursive usrc udst = do
                 dname = UniPath.append name d
             isDir <- doesDirectoryExist sname
             if isDir 
-                then do createDirectory $ UniPath.toUnixString dname
+                then do createDirectory dname
                         contents <- filter (`notElem` [".", ".."]) <$> Directory.getDirectoryContents (UniPath.toUnixString sname)
                         mapM_ (copyContent sname dname) contents  
                 else do
                     isFile <- doesFileExist sname
                     if isFile 
-                        then Directory.copyFile (UniPath.toUnixString sname) (UniPath.toUnixString dname)
+                        then copyFile sname dname
                         else fail $ "Failed to copy '" ++ (UniPath.toUnixString sname) ++  "' not implmented record type."
 
     src <- UniPath.expand usrc
     dst <- UniPath.expand udst
-
     let base     = UniPath.basePath src
         fileName = UniPath.fileName src
     copyContent base dst fileName
     
+
+copyFile :: UniPath -> UniPath -> IO ()
+copyFile usrc udst = do
+    src <- UniPath.toUnixString <$> UniPath.expand usrc
+    dst <- UniPath.toUnixString <$> UniPath.expand udst
+    Directory.copyFile src dst
+
+
+createDirectory :: UniPath -> IO()
+createDirectory upath = do
+    path <- UniPath.toUnixString <$> UniPath.expand upath
+    Directory.createDirectory path
 
 
 createDirectoryIfMissing :: Bool -> UniPath -> IO ()
@@ -89,3 +107,28 @@ removeDirectoryRecursive upath = do
     path <- UniPath.toUnixString <$> UniPath.expand upath
     Directory.removeDirectoryRecursive path
 
+
+removeFile :: UniPath -> IO ()
+removeFile upath = do
+    path <- UniPath.toUnixString <$> UniPath.expand upath
+    Directory.removeFile path
+
+
+renameDirectory :: UniPath -> UniPath -> IO ()
+renameDirectory usrc udst = do
+    src <- UniPath.toUnixString <$> UniPath.expand usrc
+    dst <- UniPath.toUnixString <$> UniPath.expand udst
+    Directory.renameDirectory src dst
+
+
+renameFile :: UniPath -> UniPath -> IO ()
+renameFile usrc udst = do
+    src <- UniPath.toUnixString <$> UniPath.expand usrc
+    dst <- UniPath.toUnixString <$> UniPath.expand udst
+    Directory.renameFile src dst
+
+
+touchFile :: UniPath -> IO ()
+touchFile upath = do
+    path <- UniPath.toUnixString <$> UniPath.expand upath
+    IO.writeFile path ""
