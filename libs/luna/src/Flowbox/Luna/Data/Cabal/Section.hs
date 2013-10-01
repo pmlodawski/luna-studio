@@ -39,7 +39,7 @@ mkLibrary = mkCommon $ Library []
 
 
 mkCommon :: ([String] -> [String] -> [Extension] -> [String] -> Section) -> Section
-mkCommon s = s ["src"] ["-Wall"] [] ["base"]
+mkCommon s = s ["src"] ["-O2"] [] ["base"]
 
 
 defaultIndent :: String

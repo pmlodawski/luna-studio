@@ -98,7 +98,7 @@ runLibrary :: Library.ID -> Project.ID -> Batch -> IO String
 runLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ library -> do
     let projectName = Library.name library
 
-        command = projectName
+        command = "./" ++ projectName
         noStandardInput = ""
         noArguments     = [] --TODO [PM] : reimplement all this method to support real programs
 
