@@ -5,21 +5,21 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import           Data.List                   as List
-import           Options.Applicative         hiding (info)
-import qualified Options.Applicative         as Opt
+import           Data.List                       as List
+import           Options.Applicative             hiding (info)
+import qualified Options.Applicative             as Opt
 
-import           Flowbox.Prelude             hiding (error)
-import           Flowbox.Control.Applicative   
-import qualified Flowbox.Data.Version        as Version
-import           Flowbox.Data.Version          (Version)
-import qualified Flowbox.Lunac.Builder       as Builder
-import qualified Flowbox.Lunac.Conf          as Conf
-import           Flowbox.Lunac.Conf            (Conf)
-import           Flowbox.System.Log.Logger     
-import qualified Flowbox.System.UniPath      as UniPath
-import           Flowbox.Lunac.Diagnostics     (Diagnostics(Diagnostics))
-
+import           Flowbox.Prelude                 hiding (error)
+import           Flowbox.Control.Applicative       
+import qualified Flowbox.Data.Version            as Version
+import           Flowbox.Data.Version              (Version)
+import qualified Flowbox.Initializer.Initializer as Initializer
+import qualified Flowbox.Lunac.Builder           as Builder
+import qualified Flowbox.Lunac.Conf              as Conf
+import           Flowbox.Lunac.Conf                (Conf)
+import           Flowbox.Lunac.Diagnostics         (Diagnostics(Diagnostics))
+import           Flowbox.System.Log.Logger         
+import qualified Flowbox.System.UniPath          as UniPath
 
 
 rootLogger :: Logger
@@ -90,7 +90,7 @@ run conf = case conf of
             projectName = "project"
             tmpName = "tmp/tmp-333"
 
-        Builder.initializeCabalDev
+        Initializer.checkedInitialize
 
         sources <- mapM (Builder.buildFile diag) inputs
         Builder.buildSources tmpName $ List.concat sources

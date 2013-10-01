@@ -37,7 +37,6 @@ import qualified Flowbox.System.UniPath              as UniPath
 import           Flowbox.System.UniPath                (UniPath)
 
 
-
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Handlers.Libs"
 
@@ -85,8 +84,6 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ librar
         
         outputPath = UniPath.fromUnixString projectName
         tmpName    = "tmp/" ++ projectName
-
-    Builder.initializeCabalDev
 
     sources <- Builder.buildLibrary diag library
     Builder.buildSources tmpName sources

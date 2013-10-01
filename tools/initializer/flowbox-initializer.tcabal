@@ -1,4 +1,4 @@
-Name:           flowbox-lunac
+Name:           flowbox-initializer
 Version:        0.1
 Cabal-Version:  >= 1.8
 --License-file:   LICENSE
@@ -15,25 +15,17 @@ Library
   if flag(debug)
     GHC-Options:  -csacc
   GHC-Options:    -Wall -O2
-                  -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
-                  NoImplicitPrelude,
-                  TemplateHaskell
+                  NoImplicitPrelude
   
   Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*Main\.hs)')`
                    
- Build-Depends:   base,
-                  flowbox-initializer,
-                  flowbox-luna,
-                  flowbox-utils,
-                  MissingH,
-                  mtl,
-                  pretty-show,
-                  timeit
+  Build-Depends:    base,
+                    flowbox-utils,
+                    optparse-applicative
 
 
-
-Executable lunac 
+Executable initializer 
   Main-Is:        Main.hs
   Hs-Source-Dirs: src
 
@@ -42,13 +34,7 @@ Executable lunac
   GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse
-                  MultiParamTypeClasses
                   NoImplicitPrelude
   Build-Depends:  base,
-                  flowbox-initializer,
-                  flowbox-luna,
                   flowbox-utils,
-                  MissingH,
-                  mtl,
-                  optparse-applicative,
-                  timeit
+                  optparse-applicative

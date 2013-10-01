@@ -6,8 +6,11 @@ class Vector a:
     x,y,z :: a
     def vtest self:
         {1,2,3}
+
+class Pawel
         
 def main self:
     v = Vector 1 2 3
     Console.print ((Vector 1 2 3).vtest)
     Console.print "Hello world!"
+    Console.print v

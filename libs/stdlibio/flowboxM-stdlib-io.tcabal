@@ -9,11 +9,12 @@ Build-Type:     Simple
 
 Library
   Hs-Source-Dirs: src
-  GHC-Options:    -Wall -O2
+  GHC-Options:    -O2 
+                  -- -Wall
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse
   
-  Exposed-modules: `findmodules('src', '.*\.hs')`
+  Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*FlowboxM/Luna/FClasses/__generator\.hs)')`
                    
  
   Build-Depends:  base,
