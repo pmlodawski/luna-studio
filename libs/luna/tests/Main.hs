@@ -61,6 +61,8 @@ genProject name = let
 --    return ()
 
 
+
+
 logger :: Logger
 logger = getLogger "Flowbox"
 
@@ -71,19 +73,20 @@ example = Source.Source ["Main"]
                   --, "def Int.add a b:"
                   --, "    ```pureIO $ a+b```"
                   
-                  , "def Int.add a b:"
-                  , "    ```getIO $ #{a}+#{b}```"
+                  --, "def Int.add a b:"
+                  --, "    ```getIO $ #{a}+#{b}```"
                   
                   , "class Console:"
                   , "    def print self msg:"
                   , "        ```print #{msg}```"
-                  --, "class Vector a:"
-                  --, "    x,y,z :: a"
-                  --, "    def vtest self a b:"
-                  --, "        {a,b}"
+                  , "class Vector a:"
+                  , "    x,y,z :: a"
+                  , "def Vector.vtest self a b:"
+                  , "    {a,b}"
                   , "def main self:"
-                  --, "    v = Vector 1 2 3"
-                  , "    Console.print (1.add 2)"
+                  , "    v = Vector 1 2 3"
+                  , "    Console.print (v.vtest 1 2)"
+                  --, "    Console.print (1.add 2)"
 
                   --, "def main self:"
                   --, "    Console.print (1.add 2)"

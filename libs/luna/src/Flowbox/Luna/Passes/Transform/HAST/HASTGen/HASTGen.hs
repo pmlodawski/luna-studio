@@ -110,13 +110,13 @@ genGetN arglen mname = test where
          $ cfGetter
 
 
-testx clsname params name = do
+testx clsname name = do
     let vname  = mkVarName name
         cfName = mkCFName $ mangleName clsname vname
         fcName = mkFCName vname
 
     -- CF types for each class field
-    let nt = (genCFDec clsname params) cfName
+    let nt = (genCFDec clsname) cfName
     GenState.addNewType nt
 
     let imp = genFCImport vname
@@ -155,7 +155,7 @@ genExpr ast = case ast of
                                                                 )
 
                                               if (null path) then return ()
-                                                  else testx (path!!0) [] name
+                                                  else testx (path!!0) name
 
                                               GenState.addFunction =<< f
 
@@ -200,7 +200,7 @@ genExpr ast = case ast of
                                               let dt = HExpr.DataD name params [cons] ["Show"]
                                               GenState.addDataType dt
 
-                                              mapM_ (testx name params) memberNames
+                                              mapM_ (testx name) memberNames
                                               -- CF types for each class field
                                                   --let nts = map (genCFDec name params) cfNames
                                                   --mapM_ GenState.addNewType nts

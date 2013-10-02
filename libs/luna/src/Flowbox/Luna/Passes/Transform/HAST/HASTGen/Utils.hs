@@ -9,6 +9,7 @@ module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils where
 
 import           Flowbox.Prelude             hiding (error, id)
 import qualified Flowbox.Luna.Data.HAST.Expr as HExpr
+import qualified Flowbox.Luna.Data.HAST.Lit  as HLit
 
 
 mkCFName     = ("CF_" ++)
@@ -43,11 +44,11 @@ genTHC = genTH "mkInstC"
 
 genFCImport name = HExpr.Import False ["FlowboxM", "Luna", "FClasses", "U" ++ name] Nothing
 
-genCFDec cname params cfname = 
-	HExpr.NewTypeD cfname params 
-    $ HExpr.Con cfname [HExpr.Typed t (HExpr.Var $ mkGetName cfname)]
-    --where t = (HExpr.Var "a")
-    where t = mkPure $ foldl (HExpr.AppE) (HExpr.Var cname) (map HExpr.Var params) -- mkIO
+
+genCFDec cname cfname = foldl HExpr.AppE (HExpr.Var "mkNTWrapper") [ HExpr.Lit $ HLit.String cfname
+                                                                   , HExpr.Var $ mkTHTypeName cname
+                                                                   ]
+
 
 genCCDec name = HExpr.DataD name [] [HExpr.Con name []] []
 
