@@ -7,7 +7,6 @@
 
 module Flowbox.Initializer.Common where
 
-import           Flowbox.Prelude          
 import qualified Flowbox.System.UniPath as UniPath
 import           Flowbox.System.UniPath   (UniPath)
 
