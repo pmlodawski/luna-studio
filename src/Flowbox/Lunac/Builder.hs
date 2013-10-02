@@ -24,6 +24,7 @@ import           Flowbox.Luna.Network.Def.Definition                         (De
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install                 as CabalInstall
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                   as CabalStore
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
@@ -39,7 +40,6 @@ import qualified Flowbox.Lunac.Diagnostics                                 as Di
 import           Flowbox.Lunac.Diagnostics                                   (Diagnostics)
 import qualified Flowbox.System.Directory.Directory                        as Directory
 import           Flowbox.System.Log.Logger                                   
-import qualified Flowbox.System.Process                                    as Process
 import qualified Flowbox.System.UniPath                                    as UniPath
 import           Flowbox.System.UniPath                                      (UniPath)
 import qualified Flowbox.Text.Show.Pretty                                  as PP
@@ -138,7 +138,7 @@ runCabal location name = either2io $ Luna.run $ do
         outputPath = UniPath.append location Common.flowboxPath
 
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) outputPath
-    liftIO $ Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["install", location, "--reinstall"] 
+    CabalInstall.run Common.flowboxPath location
 
 
 moveExecutable :: String -> String -> UniPath -> IO ()
