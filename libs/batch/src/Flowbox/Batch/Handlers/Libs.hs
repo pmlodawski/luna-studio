@@ -104,10 +104,12 @@ runLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ library 
 
     loggerIO debug $ "Running command '" ++ command ++ "'"
     (errorCode, stdOut, stdErr) <- Process.readProcessWithExitCode command noArguments noStandardInput
-    loggerIO debug $ "Command exited with " ++ (show errorCode) ++ " code"
+
+    let exitMsg = "Program exited with " ++ (show errorCode) ++ " code"
+    loggerIO debug exitMsg
     
 
-    return (library, stdOut))
+    return (library, stdOut ++ "\n" ++ "Program exited with " ++ (show errorCode) ++ " code"))
 
 
 libraryRootDef :: Library.ID -> Project.ID -> Batch -> Either String (Definition.ID, Definition)
