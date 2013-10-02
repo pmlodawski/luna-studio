@@ -68,22 +68,25 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source ["Main"]
         $ unlines [ ""
+                  --, "def Int.add a b:"
+                  --, "    ```pureIO $ a+b```"
+                  
                   , "def Int.add a b:"
-                  , "    ```pureIO $ a+b```"
+                  , "    ```getIO $ #{a}+#{b}```"
+                  
                   , "class Console:"
                   , "    def print self msg:"
                   , "        ```print #{msg}```"
                   --, "class Vector a:"
                   --, "    x,y,z :: a"
                   --, "    def vtest self a b:"
-                  --, "        x = a"
-                  --, "        {a,b} = b,a"
-                  --, "        {a,a,b,b}"
-                  --, "def main self:"
-                  --, "    v = Vector 1 2 3"
-                  --, "    Console.print (v.vtest 1 2)"
+                  --, "        {a,b}"
                   , "def main self:"
+                  --, "    v = Vector 1 2 3"
                   , "    Console.print (1.add 2)"
+
+                  --, "def main self:"
+                  --, "    Console.print (1.add 2)"
 
                   --, "    v = Vector 0 0 0"
                   --, "    Console.print v"
@@ -92,7 +95,8 @@ example = Source.Source ["Main"]
 
 --example :: Source
 --example = Source.Source ["Main"]
---        $ unlines [ ""
+--        $ unlines [ "" 
+
 --                  , "class Vector a:"
 --                  , "    x,y,z :: a"
 --                  ]
