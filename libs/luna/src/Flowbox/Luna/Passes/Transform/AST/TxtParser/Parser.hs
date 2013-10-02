@@ -235,29 +235,33 @@ pEntT       s i   = choice [ pVarT   s
 -----------------------------------------------------------
 -- Patterns
 -----------------------------------------------------------
-pPattern    s i = choice [ try(pConsAppP s i)
+pPattern    s i = choice [ try $ tok Pat.Tuple <*> sepBy2 (pPatCon s i) L.separator
+                         , pPatCon s i
+                         ]
+
+pPatCon     s i = choice [ try(pConsAppP s i)
                          , pTermP s i 
                          ]
 
-pTermP      s i = choice[ try $ L.parensed s (pPattern s i)
-                        , try (tok Pat.Typed <*> pEntP s i <* L.pTypeDecl <*> pType s i)
-                        , pEntP s i
-                        ]
+pTermP      s i = choice [ try $ L.parensed s (pPatCon s i)
+                         , try (tok Pat.Typed <*> pEntP s i <* L.pTypeDecl <*> pType s i)
+                         , pEntP s i
+                         ]
               <?> "pattern term"
 
 pVarP       s   = tok Pat.Var      <*> L.pIdentVar s
 pLitP       s   = tok Pat.Lit      <*> pLit s
-pTupleP     s i = tok Pat.Tuple    <*> pTuple (pTermP s i)
+pTupleP     s i = tok Pat.Tuple    <*> pTuple (pPatCon s i)
 pWildcardP      = tok Pat.Wildcard <*  L.pWildcard
-pConsP      s   = tok Pat.Cons     <*> pCons s
-pConsAppP   s i = tok Pat.App      <*> (tok Pat.Cons <*> pCons s) <*> many1 (pTermP s i) 
+pConP       s   = tok Pat.Cons     <*> pCons s
+pConsAppP   s i = tok Pat.App      <*> pConP s <*> many1 (pTermP s i) 
 
 pEntP   s i = choice [ pVarP      s
-                         , pLitP      s
-                         , pTupleP    s i
-                         , pWildcardP
-                         , pConsP     s
-                         ]
+                     , pLitP      s
+                     , pTupleP    s i
+                     , pWildcardP
+                     , pConP      s
+                     ]
 
 ---- Implicit tuples support
 --pEntP s i = try(tok Pat.Tuple <*> pImplTuple (pEntBaseP s i)) <|> (pEntBaseP s i)

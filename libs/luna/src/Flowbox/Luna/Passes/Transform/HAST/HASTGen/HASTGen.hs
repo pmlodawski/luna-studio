@@ -277,7 +277,7 @@ genTyped cls t = case t of
 genType :: GenMonad m => LType -> Pass.Result m HExpr
 genType t = case t of
     LType.Var     _ name     -> return $ HExpr.Var (name)
-    LType.Cons    _ segments -> return $ HExpr.ConE segments
+    LType.Cons    _ segments -> return $ HExpr.AppT (HExpr.ConT "Pure") (HExpr.ConE segments)
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType items
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
     LType.Unknown _          -> logger emergency "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"

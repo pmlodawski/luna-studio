@@ -80,9 +80,9 @@ example = Source.Source ["Main"]
                   --, "def main self:"
                   --, "    v = Vector 1 2 3"
                   --, "    Console.print (v.vtest 1 2)"
-                  , "def test a b:"
-                  , "    {a,b} = {b,a}"
-
+                  --, "def test a:"
+                  --, "    {Vector x y z, A b} = a"
+                  , "def main (self, a :: Int)"
                   --, "    v = Vector 0 0 0"
                   --, "    Console.print v"
                   --, "    Console.print v"
@@ -114,21 +114,21 @@ main_inner = Luna.run $ do
     ast <- TxtParser.run source
     logger info $ PP.ppqShow ast 
 
-    --logger info "\n-------- VarAlias --------"
-    --va <- VarAlias.run     ast
-    --logger info $ PP.ppShow va
+    logger info "\n-------- VarAlias --------"
+    va <- VarAlias.run     ast
+    logger info $ PP.ppShow va
 
-    --logger info "\n-------- SSA --------" 
-    --ssa <- SSA.run va ast
-    --logger info $ PP.ppqShow ssa
+    logger info "\n-------- SSA --------" 
+    ssa <- SSA.run va ast
+    logger info $ PP.ppqShow ssa
 
-    --logger info "\n-------- HASTGen --------" 
-    --hast <- HASTGen.run  ssa
-    --logger info $ PP.ppShow hast
+    logger info "\n-------- HASTGen --------" 
+    hast <- HASTGen.run  ssa
+    logger info $ PP.ppShow hast
 
-    --logger info "\n-------- HSC --------" 
-    --hsc <- HSC.run  hast
-    --logger info $ join "\n\n" (map printSrc hsc)
+    logger info "\n-------- HSC --------" 
+    hsc <- HSC.run  hast
+    logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()
