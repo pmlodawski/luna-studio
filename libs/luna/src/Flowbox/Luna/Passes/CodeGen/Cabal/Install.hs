@@ -21,7 +21,7 @@ loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.Cabal.Install"
 
 run :: MonadIO m => UniPath -> String -> m ()
 run buildPath location = liftIO $ 
-	Process.runProcessInFolder buildPath "cabal-dev" ["install", location, "--reinstall"] 
+	Process.runProcessInFolder buildPath "cabal-dev" ["install", location] --, "--reinstall"] 
 
 
 
