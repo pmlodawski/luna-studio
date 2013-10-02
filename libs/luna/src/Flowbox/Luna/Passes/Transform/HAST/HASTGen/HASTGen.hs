@@ -230,6 +230,7 @@ genExpr ast = case ast of
     LExpr.Field      _ name cls _          -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
     LExpr.App        _ src args            -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
     LExpr.Accessor   _ src dst             -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
+    LExpr.List       _ items               -> mkPure . HExpr.ListE <$> mapM genExpr items
     LExpr.Native     _ segments            -> pure $ HExpr.Native (join "" $ map genNative segments)
     --LExpr.Native     _ segments            -> pure $ HExpr.Native code
     --_                                      -> fail $ show ast

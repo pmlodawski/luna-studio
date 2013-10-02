@@ -161,7 +161,7 @@ pTermE    s i   = choice[ pDeclaration s i
            <?> "expression term"
 
 optableE  s i  = [ [ binaryM  "."  (tok Expr.Accessor)             PExpr.AssocLeft ]
-                 , [ postfixM "::" (tok Expr.Typed <*> pType s i)                    ]
+                 , [ postfixM "::" (tok Expr.Typed <*> pType s i)                  ]
                  , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
                  , [ binaryM  "*"  (binaryMatchE <$> (tok Expr.Infix <*> pure "*")) PExpr.AssocLeft ]
                  , [ binaryM  "+"  (binaryMatchE <$> (tok Expr.Infix <*> pure "+")) PExpr.AssocLeft ]
@@ -203,9 +203,9 @@ pExprBlock     s i = pBlockBegin (pExpr s) i
 -- Types
 -----------------------------------------------------------
 pType       s i   = choice [ try $ pLambdaT s i
-                         , try $ pConsAppT s i
-                         , pTermT s i 
-                         ]
+                           , try $ pConsAppT s i
+                           , pTermT s i 
+                           ]
               <?> "type"
 
 pTermT      s i   = choice[ try $ L.parensed s (pType s i)
