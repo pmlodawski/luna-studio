@@ -30,7 +30,7 @@ import qualified Flowbox.Batch.Server.Handlers.BatchHandler as BatchHandler
 import qualified Flowbox.Batch.Server.Server                as Server
 import qualified Flowbox.Data.Version                       as Version
 import           Flowbox.Data.Version                         (Version)
-import qualified Flowbox.Initializer.Initializer     as Initializer
+import qualified Flowbox.Initializer.Initializer            as Initializer
 import           Flowbox.System.Log.Logger                    
 
 

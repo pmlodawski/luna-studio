@@ -17,7 +17,6 @@ import           Flowbox.Prelude                           hiding (error)
 import qualified Flowbox.Luna.Data.Cabal.Config            as CabalConfig
 import qualified Flowbox.Luna.Data.Cabal.Section           as CabalSection
 import           Flowbox.Luna.Data.Source                    (Source(Source))
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Build   as CabalBuild
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install as CabalInstall
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store   as CabalStore
 import qualified Flowbox.Luna.Passes.Pass                  as Pass
@@ -61,14 +60,15 @@ genC name = (header ++ nl ++ fhead ++ cls) where
 
 
 genAndInstall :: PassMonadIO s m  => String -> UniPath -> Pass.Result m ()
-genAndInstall name path = do
-    let fcname = fprefix ++ name
-        source = Source (Split.splitOn "." modprefix ++ [fcname]) $ genC name
-        lib    = CabalSection.mkLibrary { CabalSection.exposedModules = [modprefix ++ "." ++ fcname]}
-        cabal  = CabalConfig.addSection lib 
-               $ CabalConfig.make name
+genAndInstall name cabalDevPath = do
+    let location = "tmp/" ++ name
+        path     = UniPath.append location cabalDevPath
+        fcname   = fprefix ++ name
+        source   = Source (Split.splitOn "." modprefix ++ [fcname]) $ genC name
+        lib      = CabalSection.mkLibrary { CabalSection.exposedModules = [modprefix ++ "." ++ fcname]}
+        cabal    = CabalConfig.addSection lib 
+                 $ CabalConfig.make name
     FileWriter.run (UniPath.append ("src") path) ".hs" source
     CabalStore.run cabal $ UniPath.append (name ++ ".cabal") path
-    CabalBuild.run path
-    CabalInstall.run path
+    CabalInstall.run cabalDevPath location
     liftIO $ Directory.removeDirectoryRecursive $ UniPath.toUnixString path
