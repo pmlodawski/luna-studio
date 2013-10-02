@@ -80,8 +80,8 @@ example = Source.Source ["Main"]
                   --, "def main self:"
                   --, "    v = Vector 1 2 3"
                   --, "    Console.print (v.vtest 1 2)"
-                  , "def test a b:"
-                  , "    {a,b} = {b,a}"
+                  , "def test a:"
+                  , "    {Vector x y z, A b} = a"
 
                   --, "    v = Vector 0 0 0"
                   --, "    Console.print v"
