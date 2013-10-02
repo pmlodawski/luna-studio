@@ -94,9 +94,10 @@ def2AST defManager (defID, def) = case def of
                                                 graphAst    <- graph2AST graph inputsNames
                                                 signature   <- function2signature cls
                                                 outputsType <- (liftM snd $ type2ASTType outputs)
+                                                outputsTypeMock <- tok ASTType.Unknown
                                                 return $ ASTExpr.Function defID name 
                                                                           signature
-                                                                          outputsType
+                                                                          outputsTypeMock
                                                                           graphAst
                                            -- notImplementedList
         Type.Undefined   -> fail "Undefined type in definition tree."
