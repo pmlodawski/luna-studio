@@ -55,7 +55,7 @@ vaMod mod = do
 
 vaExpr :: VAMonad m => Expr.Expr -> Pass.Result m ()
 vaExpr ast = case ast of
-    Expr.Function   _ _ inputs _ body    -> do
+    Expr.Function   _ _ _ inputs _ body   -> do
                                              s <- runNested $ do
                                                   mapM_ vaExpr inputs
                                                   vaExprMap body

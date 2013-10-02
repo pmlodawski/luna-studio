@@ -112,9 +112,9 @@ genGetN arglen mname = test where
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
     LExpr.Var      _ name                  -> pure $ HExpr.Var $ mkVarName name
-    LExpr.Cons     _ name                  -> pure $ HExpr.Var ("con" ++ mkConsName name)
-    LExpr.Function _ name inputs output 
-                     body                  -> do
+    LExpr.Con      _ name                  -> pure $ HExpr.Var ("con" ++ mkConsName name)
+    LExpr.Function _ path name  
+                     inputs output body    -> do
                                               clsName <- GenState.getClsName
                                               let arglen = length inputs - 1
                                                   mname  = mangleName clsName $ mkVarName name
@@ -147,9 +147,8 @@ genExpr ast = case ast of
     LExpr.Arg _ pat value                  -> genPat pat
                                                   
     LExpr.Import _ path target rename      -> do
-                                              let (LType.Cons _ segments) = path
                                               tname <- case target of
-                                                  LExpr.Cons     _ tname -> pure tname
+                                                  LExpr.Con      _ tname -> pure tname
                                                   LExpr.Var      _ tname -> pure tname
                                                   LExpr.Wildcard _       -> logger error ("Wildcard imports are not supported yet.") *> Pass.fail "Wildcard imports are not supported yet."
                                                   _                      -> Pass.fail "internal error"
@@ -157,7 +156,7 @@ genExpr ast = case ast of
                                                   Just _                 -> logger error ("Named imports are not supported yet.") *> Pass.fail "Named imports are not supported yet."
                                                   _                      -> pure ()
                                               
-                                              return $ HExpr.Import False (["FlowboxM", "Libs"] ++ segments ++ [tname]) Nothing where
+                                              return $ HExpr.Import False (["FlowboxM", "Libs"] ++ path ++ [tname]) Nothing where
                                                 
     LExpr.Class _ cls _ fields methods     -> do 
                                               GenState.setClsName name
@@ -278,7 +277,7 @@ genTyped cls t = case t of
 genType :: GenMonad m => LType -> Pass.Result m HExpr
 genType t = case t of
     LType.Var     _ name     -> return $ HExpr.Var (name)
-    LType.Cons    _ segments -> return $ HExpr.AppT (HExpr.ConT "Pure") (HExpr.ConE segments)
+    LType.Con     _ segments -> return $ HExpr.AppT (HExpr.ConT "Pure") (HExpr.ConE segments)
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType items
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
     LType.Unknown _          -> logger emergency "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"

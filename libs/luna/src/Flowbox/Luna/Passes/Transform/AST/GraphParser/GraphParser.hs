@@ -69,6 +69,10 @@ run :: PassMonad s m => DefManager -> (Definition.ID, Definition) -> Pass.Result
 run defManager (defID, def) = (Pass.run_ (Pass.Info "GraphParser") IdState.empty) $ module2AST defManager (defID, def)
 
 
+_NOT_IMPLEMENTED :: (Alternative m) => m a -- TODO [PM] : remove
+_NOT_IMPLEMENTED = empty
+
+
 module2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTModule
 module2AST defManager (defID, Definition cls _ imports _ _) = case cls of 
     Type.Module _ params -> ASTModule.Module defID 
@@ -94,11 +98,11 @@ def2AST defManager (defID, def) = case def of
                                                 graphAst    <- graph2AST graph inputsNames
                                                 signature   <- function2signature cls
                                                 outputsType <- (liftM snd $ type2ASTType outputs)
-                                                return $ ASTExpr.Function defID name 
+                                                return $ ASTExpr.Function defID _NOT_IMPLEMENTED name 
                                                                           signature
                                                                           outputsType
                                                                           graphAst
-                                           -- notImplementedList
+                                           -- _NOT_IMPLEMENTED
         Type.Undefined   -> fail "Undefined type in definition tree."
         Type.TypeName {} -> fail "TypeName type in definition tree."
         Type.Tuple    {} -> fail "Tuple type in definition tree."
@@ -154,8 +158,8 @@ function2signature funcls = mapM input2signature i where
     input2signature :: Graph2ASTMonad m => Type -> Pass.Result m ASTExpr
     input2signature input = do 
         (name, ASTType.Var _ cls) <- type2ASTType input
-        pat <- tok ASTPat.Typed <*> (tok ASTPat.Var   <*> pure name) 
-                                <*> (tok ASTType.Cons <*> pure [cls]) 
+        pat <- tok ASTPat.Typed <*> (tok ASTPat.Var  <*> pure name) 
+                                <*> (tok ASTType.Con <*> pure [cls]) 
         tok ASTExpr.Arg <*> pure pat <*> pure Nothing
         
 
@@ -189,8 +193,8 @@ type2Field t = do
 
 import2ASTimport :: Graph2ASTMonad m => Import -> Pass.Result m ASTExpr
 import2ASTimport (Import (Path path) name) =  
-    tok ASTExpr.Import <*> (tok ASTType.Cons <*> pure path) 
-                       <*> (tok ASTExpr.Cons <*> pure name) 
+    tok ASTExpr.Import <*> pure path
+                       <*> (tok ASTExpr.Con <*> pure name) 
                        <*> pure Nothing
 
 

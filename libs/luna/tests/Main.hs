@@ -68,6 +68,8 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source ["Main"]
         $ unlines [ ""
+                  , "def Int.add a b:"
+                  , "    ```pureIO $ a+b```"
                   , "class Console:"
                   , "    def print self msg:"
                   , "        ```print #{msg}```"
@@ -81,8 +83,7 @@ example = Source.Source ["Main"]
                   --, "    v = Vector 1 2 3"
                   --, "    Console.print (v.vtest 1 2)"
                   , "def main self:"
-                  , "    a = [1,2,3]"
-                  , "    Console.print a"
+                  , "    Console.print (1.add 2)"
 
                   --, "    v = Vector 0 0 0"
                   --, "    Console.print v"
