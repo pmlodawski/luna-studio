@@ -30,3 +30,4 @@ register :: FPStateM m => String -> m ()
 register name = do
     s <- get
     put $ s { names = Set.insert name $ names s }
+

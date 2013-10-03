@@ -138,14 +138,3 @@ instance FShow Int    where fshowsPrec = (\i _ -> showsPrec i)
 --instance FShow String where fshowsPrec = (\_ -> showsPrec)
 --instance FShow Bool   where fshowsPrec = (\_ -> showsPrec)
 
-intersperse :: a -> [a] -> [a]
-intersperse _ []    = []
-intersperse _ [h]   = [h]
-intersperse x (h:t) = h : x : (intersperse x t)
-
---instance (FShow a) => FShow [a] where
---  fshowsPrec _ _ l =   showChar '['
---                   . foldr (.) id
---                      (intersperse (showChar ',') (map (fshowsPrec 0) l))
---                   . showChar ']'
-

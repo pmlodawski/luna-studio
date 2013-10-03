@@ -34,23 +34,21 @@ loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.FClass.Gen"
 
 indent    = replicate 4 ' '
 nl        = "\n"
-mpostfix  = "''M"
 header    = "{-# LANGUAGE FunctionalDependencies, FlexibleInstances #-}\n"
 modprefix = "FlowboxM.Luna.FClasses"
-cprefix   = "C''"
+cprefix   = "FC_"
 fprefix   = "U_"
 pprefix   = "flowboxM-FClasses-"
 
 genCode :: String -> String
 genCode name = (header ++ nl ++ fhead ++ cls) where
-    fname     = name ++ "'"
+    fname     = "_" ++ name
     cname     = fprefix ++ name
     cfname    = cprefix ++ fname
     fhead     = "module " ++ modprefix ++ "." ++ cname ++ " where\n\n"
     cls       = clsheader ++ clsbody
     clsheader = "class "  ++ cfname ++ " a b | a -> b where\n"
     clsbody   =  indent ++ fname ++          "    :: a -> b\n"
-              ++ indent ++ fname ++ mpostfix ++ " :: a -> IO b\n"
 
 
 -----------------------------------

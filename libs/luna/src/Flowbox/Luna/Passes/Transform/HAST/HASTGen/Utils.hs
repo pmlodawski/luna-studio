@@ -42,7 +42,7 @@ genTH f a b c = foldl (HExpr.AppE) (HExpr.Var f) vars where
 genTHInst  = genTH "mkInst"
 genTHInstC = genTH "mkInstC"
 
-genFCImport name = HExpr.Import False ["FlowboxM", "Luna", "FClasses", "U" ++ name] Nothing
+genFCImport name = HExpr.Import False ["FlowboxM", "Luna", "FClasses", "U" ++ mkVarName name] Nothing
 
 
 genCFDec cname cfname = foldl HExpr.AppE (HExpr.Var "mkNTWrapper") [ HExpr.Lit $ HLit.String cfname

@@ -96,10 +96,20 @@ buildFile conf diag paths = either2io $ Luna.run $ do
 
 buildAST :: PassMonadIO s m => Diagnostics -> UniPath -> String -> String -> ASTModule.Module -> Pass.Result m ()
 buildAST diag outputPath projectName tmpName ast = do 
-    sources <- compileAST diag ast
-    pool    <- prepareFClasses diag ast
-    writeSources tmpName sources
-    runCabal tmpName projectName pool
+    va   <- VarAlias.run ast
+    Diagnostics.printVA va diag 
+    fp <- FuncPool.run ast
+    Diagnostics.printFP fp diag
+    ssa  <- SSA.run va ast
+    Diagnostics.printSSA ssa diag
+    hast <- HASTGen.run ssa fp
+    Diagnostics.printHAST hast diag
+    hsc  <- HSC.run hast
+    Diagnostics.printHSC hsc diag
+    
+    FClassInstall.run Common.flowboxPath fp
+    writeSources tmpName hsc
+    runCabal tmpName projectName fp
     moveExecutable tmpName projectName outputPath
     cleanUp tmpName
 
@@ -121,27 +131,6 @@ parseFile diag path = do
     ast    <- TxtParser.run source
     Diagnostics.printAST ast diag 
     return ast
-
-
-compileAST :: PassMonadIO s m => Diagnostics -> ASTModule.Module -> Pass.Result m [Source]
-compileAST diag ast = do
-    va   <- VarAlias.run ast
-    Diagnostics.printVA va diag 
-    ssa  <- SSA.run va ast
-    Diagnostics.printSSA ssa diag
-    hast <- HASTGen.run ssa
-    Diagnostics.printHAST hast diag
-    hsc  <- HSC.run hast
-    Diagnostics.printHSC hsc diag
-    return hsc
-
-
-prepareFClasses :: PassMonadIO s m => Diagnostics -> ASTModule.Module -> Pass.Result m Pool
-prepareFClasses diag ast = do
-    fp <- FuncPool.run ast
-    Diagnostics.printFP fp diag
-    FClassInstall.run Common.flowboxPath fp
-    return fp
 
 
 genCabal :: String -> Pool -> CabalConfig.Config

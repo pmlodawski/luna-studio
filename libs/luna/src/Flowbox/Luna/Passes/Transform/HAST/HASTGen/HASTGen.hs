@@ -9,7 +9,7 @@
 module Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen where
 
 import qualified Flowbox.Prelude                                     as Prelude
-import           Flowbox.Prelude                                     hiding (error, id)
+import           Flowbox.Prelude                                     hiding (error, id, mod)
 import qualified Flowbox.Luna.Data.AST.Expr                          as LExpr
 import qualified Flowbox.Luna.Data.AST.Type                          as LType
 import qualified Flowbox.Luna.Data.AST.Pat                           as LPat
@@ -21,11 +21,14 @@ import qualified Flowbox.Luna.Data.HAST.Module                       as HModule
 import qualified Flowbox.Luna.Data.HAST.Extension                    as HExtension
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState as GenState
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState   (GenState)
+import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool            (Pool)
+import qualified Flowbox.Luna.Passes.Analysis.FuncPool.Pool          as Pool
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
 import           Flowbox.Luna.Passes.Pass                              (PassMonad)
 import           Flowbox.System.Log.Logger                             
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils      
 import           Data.String.Utils                                     (join)
+import qualified Data.Set                                            as Set
 
 import           Control.Monad.State                                 hiding (mapM, mapM_, join)
 import           Control.Applicative                                   
@@ -42,13 +45,14 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen"
 
 
-run :: PassMonad s m => LModule -> Pass.Result m HExpr
-run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) . genModule
+run :: PassMonad s m => LModule -> Pool -> Pass.Result m HExpr
+run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) .: genModule
 
 
-genModule :: GenMonad m => LModule -> Pass.Result m HExpr
-genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do 
+genModule :: GenMonad m => LModule -> Pool -> Pass.Result m HExpr
+genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do 
     let (LType.Module _ path) = cls
+        fnames  = Set.toList $ Pool.names fpool
         mod     = HModule.addImport ["FlowboxM", "Luna", "Helpers", "Core"]
                 $ HModule.addExt HExtension.TemplateHaskell
                 $ HModule.addExt HExtension.MultiParamTypeClasses
@@ -61,11 +65,14 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) = do
         name    = last path
         modcls  = LModule.mkClass lmod
         modclss = classes ++ [modcls]
-        --modclss = classes
 
     GenState.setModule mod
-    mapM_ (genExpr ) modclss
-    mapM_ (genExpr >=> GenState.addImport)   imports
+
+    -- add all FC imports
+    mapM_ (GenState.addImport . genFCImport) fnames
+
+    mapM_ genExpr modclss
+    mapM_ (genExpr >=> GenState.addImport) imports
     when (name == "Main") $ do
         let funcnames = map LExpr.name methods
         if not $ "main" `elem` funcnames
@@ -111,7 +118,7 @@ genFuncDecl clsname name = do
         cfName = mkCFName $ mangleName clsname vname
         fcName = mkFCName vname
 
-    GenState.addImport       $ genFCImport vname
+    --GenState.addImport       $ genFCImport vname
     GenState.addNewType      $ genCFDec clsname cfName
     GenState.addTHExpression $ genTHInstC fcName cfName vname
 
@@ -139,7 +146,9 @@ genExpr ast = case ast of
                                                                                     <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
                                                                      )
                                                                )
-                                          
+
+                                            when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
+
                                             if (null path) then return ()
                                                 else genFuncDecl (path!!0) name
                                            
@@ -154,7 +163,7 @@ genExpr ast = case ast of
                                              
                                             f
 
-    LExpr.Arg _ pat value                -> genPat pat
+    LExpr.Arg _ pat _                    -> genPat pat
                                                   
     LExpr.Import _ path target rename    -> do
                                             tname <- case target of
@@ -175,11 +184,7 @@ genExpr ast = case ast of
                                                 fieldlen    = length fields
                                                 funcNames   = map LExpr.name methods 
                                                 memberNames = fieldNames ++ funcNames
-                                                cfNames     = map (mkCFName . mangleName name) memberNames
-                                                fcNames     = map mkFCName memberNames
                                                 ccname      = mkCCName name
-                                                mnames      = map ((mangleName name) . mkVarName) fieldNames
-                                                getters     = map (genVArgGetter 0) mnames
                                             
                                             GenState.setClsName name
                                             

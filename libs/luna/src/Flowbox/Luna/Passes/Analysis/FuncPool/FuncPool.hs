@@ -48,12 +48,11 @@ fpExpr :: FPMonad m => Expr.Expr -> Pass.Result m ()
 fpExpr ast = case ast of
     Expr.Function {}                      -> register
     Expr.Var      {}                      -> register
+    Expr.Field    {}                      -> register
     _                                     -> continue
     where
         register  = Pool.register (Expr.name ast) *> continue
         continue  = Expr.traverseM_ fpExpr fpType fpPat pure ast
-        fpExprMap = mapM_ fpExpr
-
 
 
 fpPat :: FPMonad m => Pat -> Pass.Result m ()

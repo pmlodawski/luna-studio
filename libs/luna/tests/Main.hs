@@ -68,6 +68,14 @@ logger :: Logger
 logger = getLogger "Flowbox"
 
 
+--example :: Source
+--example = Source.Source ["Std", "Console"]
+--        $ unlines [ ""
+--                  , "class Console:"
+--                  , "    def print self msg:"
+--                  , "        ```print #{msg}```"
+--                  ]
+
 example :: Source
 example = Source.Source ["Main"]
         $ unlines [ ""
@@ -79,13 +87,15 @@ example = Source.Source ["Main"]
                   , "class Console:"
                   , "    def print self msg:"
                   , "        ```print #{msg}```"
+
+
                   , "class Vector a:"
                   , "    x,y,z :: a"
                   , "def Vector.vtest self a b:"
                   , "    {a,b}"                  
                   , "def main self:"
                   , "    v = Vector 1 2 3"
-                  , "    Console.print (1.add 2)"
+                  , "    Console.print ([1,2,3])"
                   --, "    Console.print (1.add 2)"
 
                   --, "def main self:"
@@ -136,7 +146,7 @@ main_inner = Luna.run $ do
     --logger info $ PP.ppqShow ssa
 
     logger info "\n-------- HASTGen --------" 
-    hast <- HASTGen.run ssa
+    hast <- HASTGen.run ssa fp
     --logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------" 

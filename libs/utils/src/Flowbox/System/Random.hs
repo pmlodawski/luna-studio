@@ -7,7 +7,6 @@
 
 module Flowbox.System.Random where
 
-import           Control.Applicative   
 import qualified Data.Time.LocalTime as LocalTime
 import qualified Data.Hash.MD5       as MD5
 

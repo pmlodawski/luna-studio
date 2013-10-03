@@ -38,12 +38,12 @@ pushState st = do
 
 popState :: MonadState [b] m => m ()
 popState = do
-    (s:sx) <- get
+    (_:sx) <- get
     put $ sx
 
 topState :: MonadState [b] m => m b
 topState = do
-    (s:sx) <- get
+    (s:_) <- get
     return s
 
 _hsShow :: (Applicative m, MonadState [St] m) => Int -> String -> m String
