@@ -27,7 +27,6 @@ import qualified Flowbox.System.UniPath                    as UniPath
 import           Flowbox.System.UniPath                      (UniPath)
 
 
-
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.FClass.Gen"
 
@@ -43,6 +42,7 @@ cprefix   = "FC_"
 iprefix   = "_"
 csaprefix = "Arg_"
 isaprefix = "setArg_"
+
 
 genCode :: String -> String
 genCode name = (header ++ nl ++ fhead ++ cls ++ sacls) where

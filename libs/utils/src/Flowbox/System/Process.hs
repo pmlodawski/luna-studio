@@ -8,13 +8,16 @@
 module Flowbox.System.Process (
     module System.Process,
 
-    runProcessInFolder
+    readProcessInFolder,
+    runProcessInFolder,
 )where
 
 import           Control.Applicative         
+import qualified Control.Exception         as Exception
 import qualified Data.Maybe                as Maybe
 import qualified System.IO                 as IO
 import qualified System.Exit               as Exit
+import qualified System.Directory          as Directory
 import qualified System.Process            as Process
 import           System.Process              
 
@@ -64,3 +67,13 @@ runProcessInFolder upath command args  = do
     if exitCode /= Just Exit.ExitSuccess
         then fail $ "'" ++ commandName ++ "' returned with exit code: " ++ (show $ Maybe.fromJust exitCode) ++ "\n" ++ e
         else return ()
+
+
+readProcessInFolder :: UniPath -> String -> [String] -> String -> IO String
+readProcessInFolder upath command args input = do
+    workingDir <- Directory.getCurrentDirectory
+    path       <- UniPath.toUnixString <$> UniPath.expand upath
+    Directory.setCurrentDirectory path
+
+    Exception.finally (Process.readProcess command args input)
+                      (Directory.setCurrentDirectory workingDir)
