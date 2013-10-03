@@ -10,8 +10,8 @@ module Flowbox.Luna.Passes.CodeGen.FClass.Filter where
 
 import           Control.Monad.RWS                            
 import qualified Data.List.Split                            as Split
+import qualified Data.Map                                   as Map
 import qualified Data.Set                                   as Set
-import           Data.Set                                     ((\\))
 
 import           Flowbox.Prelude                            hiding (error)
 import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool   (Pool(Pool))
@@ -31,5 +31,7 @@ run :: PassMonadIO s m  => UniPath -> Pool -> Pass.Result m Pool
 run cabalDevPath (Pool names) = liftIO $ do
     output <- Process.readProcessInFolder cabalDevPath "cabal-dev" ["ghc-pkg", "list", "--simple-output", "--names-only"] ""
     let installed = Set.fromList $ Split.splitOn " " output
-        toInstall = (Set.map FClassGen.packageName names) \\ installed
-    return $ Pool toInstall
+        namesList = Set.toList names
+        namesMap  = Map.fromList $ zip (map FClassGen.packageName $ namesList) namesList
+        toInstallMap = Map.filterWithKey (\k _ -> Set.notMember k installed) namesMap
+    return $ Pool $ Set.fromList $ Map.elems toInstallMap
