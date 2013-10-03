@@ -44,5 +44,6 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Native     { code      :: String                                                      }
           | NOP
           | Undefined
+          | Bang Expr
           deriving (Show)
 

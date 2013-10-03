@@ -39,8 +39,8 @@ mkCGetName  i = mkGetNName i
 
 genTH f a b c = foldl (HExpr.AppE) (HExpr.Var f) vars where
 			    vars = map HExpr.Var [mkTHTypeName a, mkTHVarName b, mkTHVarName c]
-genTHF = genTH "mkInst"
-genTHC = genTH "mkInstC"
+genTHInst  = genTH "mkInst"
+genTHInstC = genTH "mkInstC"
 
 genFCImport name = HExpr.Import False ["FlowboxM", "Luna", "FClasses", "U" ++ name] Nothing
 

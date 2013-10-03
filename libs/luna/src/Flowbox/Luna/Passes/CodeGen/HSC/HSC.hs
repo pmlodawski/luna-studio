@@ -106,6 +106,7 @@ genExpr e = case e of
     HExpr.AppE     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
     HExpr.Native   code                   -> code
     HExpr.ListE    items                  -> "[" ++ sepjoin (fexpMap items) ++ "]"
+    HExpr.Bang     expr                   -> "--->>>   " ++ genExpr expr
     where sepjoin = join ", "
           fexpMap = map genExpr
     --HExpr.NewtypeD 

@@ -73,19 +73,19 @@ example = Source.Source ["Main"]
                   --, "def Int.add a b:"
                   --, "    ```pureIO $ a+b```"
                   
-                  --, "def Int.add a b:"
-                  --, "    ```getIO $ #{a}+#{b}```"
-                  
+                  , "def Int.add a b:"
+                  , "    ```getIO $ #{a}+#{b}```"
+                  , "def Vector.vtest self a b:"
+                  , "    {a,b}"
                   , "class Console:"
                   , "    def print self msg:"
                   , "        ```print #{msg}```"
                   , "class Vector a:"
                   , "    x,y,z :: a"
-                  , "def Vector.vtest self a b:"
-                  , "    {a,b}"
+                  
                   , "def main self:"
                   , "    v = Vector 1 2 3"
-                  , "    Console.print (v.vtest 1 2)"
+                  , "    Console.print (1.add 2)"
                   --, "    Console.print (1.add 2)"
 
                   --, "def main self:"
@@ -129,11 +129,11 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- SSA --------" 
     ssa <- SSA.run va ast
-    logger info $ PP.ppqShow ssa
+    --logger info $ PP.ppqShow ssa
 
     logger info "\n-------- HASTGen --------" 
     hast <- HASTGen.run ssa
-    logger info $ PP.ppShow hast
+    --logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------" 
     hsc <- HSC.run  hast
