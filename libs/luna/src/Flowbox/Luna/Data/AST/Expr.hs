@@ -29,9 +29,9 @@ data Expr  = NOP        { id :: ID                                              
            | AppCons_   { id :: ID, args      :: [Expr]                                                                    }
            | Assignment { id :: ID, pat       :: Pat      , dst       :: Expr                                              }
            | Class      { id :: ID, cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]  }
-           | Cons       { id :: ID, name      :: String                                                                    }
-           | Function   { id :: ID, name      :: String   , inputs    :: [Expr] , output    :: Type   ,  body    :: [Expr] }
-           | Import     { id :: ID, path      :: Type     , target    :: Expr   , rename    :: Maybe String                }
+           | Con        { id :: ID, name      :: String                                                                    }
+           | Function   { id :: ID, path      :: [String] , name      :: String   , inputs    :: [Expr] , output    :: Type   ,  body    :: [Expr] }
+           | Import     { id :: ID, path      :: [String] , target    :: Expr   , rename    :: Maybe String                }
            | Infix      { id :: ID, name      :: String   , src       :: Expr   , dst       :: Expr                        }                                                               
            | Lambda     { id :: ID, pats      :: [Pat]    , output    :: Type   , body      :: [Expr]                      }
            | List       { id :: ID, items     :: [Expr]                                                                    }
@@ -44,7 +44,7 @@ data Expr  = NOP        { id :: ID                                              
            | Field      { id :: ID, name      :: String   , cls       :: Type   , value     :: Maybe Expr                  }
            | Arg        { id :: ID, pat       :: Pat      , value     :: Maybe Expr                                        }
            | Native     { id :: ID, segments  :: [Expr]                                                                   }
-           | NativeCode { id :: ID, code    :: String }
+           | NativeCode { id :: ID, code      :: String }
            | NativeVar  { id :: ID, name      :: String }
 
            deriving (Show, Eq, Generic)
@@ -83,9 +83,10 @@ traverseM fexp ftype fpat flit e = case e of
     App        id' src' args'                     -> App        id'       <$> fexp src'  <*> fexpMap args'
     Assignment id' pat' dst'                      -> Assignment id'       <$> fpat pat'  <*> fexp dst'
     Class      id' cls' classes' fields' methods' -> Class      id'       <$> ftype cls' <*> fexpMap classes' <*> fexpMap fields' <*> fexpMap methods'
-    Cons       {}                                 -> pure e
+    Con        {}                                 -> pure e
     Field      id' name' cls' value'              -> Field      id' name' <$> ftype cls' <*> fexpMap value' 
-    Function   id' name' inputs' output' body'    -> Function   id' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
+    Function   id' path' name' inputs' output' 
+               body'                              -> Function   id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Lambda     id'       pats' output' body'      -> Lambda     id'       <$> fpatMap pats' <*> ftype output' <*> fexpMap body'
     Import     {}                                 -> pure e
     Infix      id' name' src' dst'                -> Infix      id' name' <$> fexp src'     <*> fexp dst'
@@ -111,9 +112,9 @@ traverseM_ fexp ftype fpat flit e = case e of
     App        _  src' args'                      -> drop <* fexp src'  <* fexpMap args'
     Assignment _  pat' dst'                       -> drop <* fpat pat'  <* fexp dst'
     Class      _  cls' classes' fields' methods'  -> drop <* ftype cls' <* fexpMap classes' <* fexpMap fields' <* fexpMap methods'
-    Cons       {}                                 -> drop
-    Field      _  _ cls' value'                   -> drop <* ftype cls' <* fexpMap value' 
-    Function   _  _ inputs' output' body'         -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
+    Con        {}                                 -> drop
+    Field      _ _ cls' value'                    -> drop <* ftype cls' <* fexpMap value' 
+    Function   _ _ _ inputs' output' body'        -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
     Lambda     _        pats' output' body'       -> drop <* fpatMap pats' <* ftype output' <* fexpMap body'
     Import     {}                                 -> drop
     Infix      _  _ src' dst'                     -> drop <* fexp src'     <* fexp dst'

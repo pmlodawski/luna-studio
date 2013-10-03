@@ -85,154 +85,147 @@ mainf = HExpr.Function "main" [] $
                       ] 
 
 
-genfTyped arglen name ccname params base = test where
-    argVars  = map (("v" ++).show) [1..arglen]
-    exprVars = map HExpr.Var argVars
-    selfVar  = HExpr.TypedP t $ HExpr.Var "self"
-    funcVars = selfVar : exprVars
-    cfGetter = foldl HExpr.AppE base exprVars
-    test = HExpr.Function (mkTName arglen name) funcVars
-         $ mkPure cfGetter
-    t = foldl (HExpr.AppE) (HExpr.Var ccname) (map HExpr.Var params) -- mkPure
+genVArgCon arglen name ccname params base = getter where
+    argVars    = map (("v" ++).show) [1..arglen]
+    exprArgs   = map HExpr.Var argVars
+    t          = foldl HExpr.AppE (HExpr.Var ccname) (map HExpr.Var params)
+    selfVar    = HExpr.TypedP t $ HExpr.Var "self"
+    exprVars   = selfVar : exprArgs
+    getter     = HExpr.Function (mkTName arglen name) exprVars
+               $ mkPure (foldl HExpr.AppE base exprArgs)
 
 
-genGetN arglen mname = test where
-    argvars  = map (("v" ++).show) [1..arglen]
-    vars     = "self" : argvars
-    exprArgs = map HExpr.Var argvars
-    exprVars = map HExpr.Var vars
-    cfGetterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
-                 $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName mname) (HExpr.Var "self")
-    --cfGetter = foldr (flip HExpr.AppE) cfGetterBase exprArgs
-    cfGetter = foldl HExpr.AppE cfGetterBase exprArgs
+genVArgGetter arglen mname = getter where
+    argVars    = map (("v" ++).show) [1..arglen]
+    exprArgs   = map HExpr.Var argVars
+    exprVars   = HExpr.Var "self" : exprArgs
+    getterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
+               $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName mname) (HExpr.Var "self")
+    getter     = HExpr.Function (mkTName arglen mname) exprVars
+               $ foldl HExpr.AppE getterBase exprArgs
 
-    test = HExpr.Function (mkTName arglen mname) exprVars
-         $ cfGetter
+
+-- generate declarations (imports, CF newtypes, THInstC)
+genFuncDecl clsname name = do
+    let vname  = mkVarName name
+        cfName = mkCFName $ mangleName clsname vname
+        fcName = mkFCName vname
+
+    GenState.addImport       $ genFCImport vname
+    GenState.addNewType      $ genCFDec clsname cfName
+    GenState.addTHExpression $ genTHInstC fcName cfName vname
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
-    LExpr.Var      _ name                  -> pure $ HExpr.Var $ mkVarName name
-    LExpr.Cons     _ name                  -> pure $ HExpr.Var ("con" ++ mkConsName name)
-    LExpr.Function _ name inputs output 
-                     body                  -> do
-                                              clsName <- GenState.getClsName
-                                              let arglen = length inputs - 1
-                                                  mname  = mangleName clsName $ mkVarName name
-                                                  test   = genGetN arglen mname
+    LExpr.Var      _ name                -> pure $ HExpr.Var $ mkVarName name
+    LExpr.Con      _ name                -> pure $ HExpr.Var ("con" ++ mkConsName name)
+    LExpr.Function _ path name  
+                     inputs output body  -> do
+                                            clsName <- GenState.getClsName
+                                            let clsName2 = if (null path) 
+                                                    then clsName
+                                                    else (path!!0)
+                                                arglen     = length inputs - 1
+                                                mname      = mangleName clsName2 $ mkVarName name
+                                                vargGetter = genVArgGetter arglen mname
+                                
+                                                cgetCName  = mkCGetCName arglen
+                                                cgetName   = mkCGetName  arglen
+                                                getNName   = mkTName arglen mname
+                                                fname      = mkFuncName mname
+                                                f          =   HExpr.Assignment (HExpr.Var fname) 
+                                                           <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show (arglen + 1))
+                                                                 <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
+                                                                                    <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
+                                                                     )
+                                                               )
+                                          
+                                            if (null path) then return ()
+                                                else genFuncDecl (path!!0) name
+                                           
+                                            GenState.addFunction =<< f
+                                           
+                                            -- GetN functions
+                                            GenState.addFunction $ vargGetter
+                                            
+                                            -- TH snippets
+                                            GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
+                                             
+                                             
+                                            f
 
-                                                  cgetCName = mkCGetCName arglen
-                                                  cgetName  = mkCGetName  arglen
-                                                  getNName  = mkTName arglen mname
-                                                  fname     = mkFuncName mname
-                                                  --f         = HExpr.Function fname <$> (mapM genExpr inputs)
-                                                  --                                 <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
-                                                  f         =   HExpr.Assignment (HExpr.Var fname) 
-                                                            <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show (arglen + 1))
-                                                                  <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
-                                                                                     <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
-                                                                      )
-                                                                )
-
-                                              GenState.addFunction =<< f
-
-                                              -- GetN functions
-                                              GenState.addFunction $ test
-
-                                              -- TH snippets
-                                              GenState.addTHExpression $ genTHF cgetCName getNName cgetName
-
-                                              
-                                              f
-
-    LExpr.Arg _ pat value                  -> genPat pat
+    LExpr.Arg _ pat value                -> genPat pat
                                                   
-    LExpr.Import _ path target rename      -> do
-                                              let (LType.Cons _ segments) = path
-                                              tname <- case target of
-                                                  LExpr.Cons     _ tname -> pure tname
-                                                  LExpr.Var      _ tname -> pure tname
-                                                  LExpr.Wildcard _       -> logger error ("Wildcard imports are not supported yet.") *> Pass.fail "Wildcard imports are not supported yet."
-                                                  _                      -> Pass.fail "internal error"
-                                              case rename of
-                                                  Just _                 -> logger error ("Named imports are not supported yet.") *> Pass.fail "Named imports are not supported yet."
-                                                  _                      -> pure ()
-                                              
-                                              return $ HExpr.Import False (["FlowboxM", "Libs"] ++ segments ++ [tname]) Nothing where
-                                                
-    LExpr.Class _ cls _ fields methods     -> do 
-                                              GenState.setClsName name
-                                              let fieldNames  = map LExpr.name fields
-                                                  fieldlen    = length fields
-                                                  funcNames   = map LExpr.name methods 
-                                                  memberNames = map mkVarName $ fieldNames ++ funcNames
-                                                  cfNames     = map (mkCFName . mangleName name) memberNames
-                                                  fcNames     = map mkFCName memberNames
-                                                  ccname      = mkCCName name
-
-                                                  mnames      = map ((mangleName name) . mkVarName) fieldNames
-                                                  getters     = map (genGetN 0) mnames
+    LExpr.Import _ path target rename    -> do
+                                            tname <- case target of
+                                                LExpr.Con      _ tname -> pure tname
+                                                LExpr.Var      _ tname -> pure tname
+                                                LExpr.Wildcard _       -> Pass.fail "Wildcard imports are not supported yet."
+                                                _                      -> Pass.fail "Internal error."
+                                            case rename of
+                                                Just _                 -> Pass.fail "Named imports are not supported yet."
+                                                _                      -> pure ()
                                             
-                                              -- DataType
-                                              cons   <- HExpr.Con name <$> mapM genExpr fields
-                                              let dt = HExpr.DataD name params [cons] ["Show"]
-                                              GenState.addDataType dt
-
-                                              -- CF types for each class field
-                                              let nts = map (genCFDec name params) cfNames
-                                              mapM_ GenState.addNewType nts
-
-                                              ---- handling getters etc
-                                              ---- GetN functions
-                                              ----mapM_ GenState.addFunction getters
-                                              ----mapM_ GenState.addTHExpression $ map genTHF cgetCName getNName cgetName
-                                           
-                                              -- CF imports
-                                              let imps = map genFCImport memberNames
-                                              mapM_ GenState.addImport imps
-                                           
-                                              -- TH snippets
-                                              let ths = zipWith3 genTHC fcNames cfNames memberNames
-                                              mapM_ GenState.addTHExpression ths
+                                            return $ HExpr.Import False (["FlowboxM", "Libs"] ++ path ++ [tname]) Nothing where
+                                              
+    LExpr.Class _ cls _ fields methods   -> do 
+                                            let name        = LType.name   cls
+                                                params      = LType.params cls
+                                                fieldNames  = map LExpr.name fields
+                                                fieldlen    = length fields
+                                                funcNames   = map LExpr.name methods 
+                                                memberNames = fieldNames ++ funcNames
+                                                cfNames     = map (mkCFName . mangleName name) memberNames
+                                                fcNames     = map mkFCName memberNames
+                                                ccname      = mkCCName name
+                                                mnames      = map ((mangleName name) . mkVarName) fieldNames
+                                                getters     = map (genVArgGetter 0) mnames
                                             
-                                              -- Class methods
-                                              --mapM_ GenState.addFunction =<< mapM genExpr methods
-                                              mapM_ genExpr methods
+                                            GenState.setClsName name
+                                            
+                                            -- DataType
+                                            cons   <- HExpr.Con name <$> mapM genExpr fields
+                                            let dt = HExpr.DataD name params [cons] ["Show"]
+                                            GenState.addDataType dt
 
-                                              -- CONSTRUCTORS --
 
-                                              -- CC type constructor
-                                              let con = genCCDec ccname
-                                              GenState.addDataType con
+                                            mapM_ (genFuncDecl name) memberNames
 
-                                              -- constructor function
-                                              GenState.addFunction $ genCon name ccname
+                                            mapM_ genExpr methods
 
-                                              let test   = genfTyped fieldlen name ccname [] (HExpr.ConE [name])
-                                              GenState.addFunction $ test
+                                            -- CONSTRUCTORS --
 
-                                              -- Constructor TH snippet
-                                              let arglen    = fieldlen
-                                                  cgetCName = mkCGetCName arglen
-                                                  cgetName  = mkCGetName  arglen
-                                                  getNName  = mkTName arglen name
-                                              GenState.addTHExpression $ genTHF cgetCName getNName cgetName
+                                            -- CC type constructor
+                                            let con = genCCDec ccname
+                                            GenState.addDataType con
+
+                                            -- constructor function
+                                            GenState.addFunction $ genCon name ccname
+
+                                            let test   = genVArgCon fieldlen name ccname [] (HExpr.ConE [name])
+                                            GenState.addFunction $ test
+
+                                            -- Constructor TH snippet
+                                            let arglen    = fieldlen
+                                                cgetCName = mkCGetCName arglen
+                                                cgetName  = mkCGetName  arglen
+                                                getNName  = mkTName arglen name
+                                            GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
 
                                               
-                                              return dt
+                                            return dt
 
-                                              where name   =  LType.name   cls
-                                                    params =  LType.params cls
-                                              
-    LExpr.Infix _ name src dst             -> HExpr.Infix name <$> genExpr src <*> genExpr dst
-    LExpr.Assignment _ pat dst             -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
-    LExpr.Lit        _ value               -> genLit value
-    LExpr.Tuple      _ items               -> mkPure . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
-    LExpr.Field      _ name cls _          -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
-    LExpr.App        _ src args            -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
-    LExpr.Accessor   _ src dst             -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
-    LExpr.Native     _ segments            -> pure $ HExpr.Native (join "" $ map genNative segments)
-    --LExpr.Native     _ segments            -> pure $ HExpr.Native code
-    --_                                      -> fail $ show ast
+    LExpr.Infix      _ name src dst      -> HExpr.Infix name <$> genExpr src <*> genExpr dst
+    LExpr.Assignment _ pat dst           -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
+    LExpr.Lit        _ value             -> genLit value
+    LExpr.Tuple      _ items             -> mkPure . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
+    LExpr.Field      _ name cls _        -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
+    LExpr.App        _ src args          -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
+    LExpr.Accessor   _ src dst           -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
+    LExpr.List       _ items             -> mkPure . HExpr.ListE <$> mapM genExpr items
+    LExpr.Native     _ segments          -> pure $ HExpr.Native (join "" $ map genNative segments)
+    --LExpr.Native     _ segments          -> pure $ HExpr.Native code
+    --_                                    -> fail $ show ast
     where
         getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
         get0   = getN (0::Int)
@@ -277,7 +270,7 @@ genTyped cls t = case t of
 genType :: GenMonad m => LType -> Pass.Result m HExpr
 genType t = case t of
     LType.Var     _ name     -> return $ HExpr.Var (name)
-    LType.Cons    _ segments -> return $ HExpr.AppT (HExpr.ConT "Pure") (HExpr.ConE segments)
+    LType.Con     _ segments -> return $ HExpr.AppT (HExpr.ConT "Pure") (HExpr.ConE segments)
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType items
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
     LType.Unknown _          -> logger emergency "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"

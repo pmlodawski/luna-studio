@@ -31,16 +31,18 @@ import           Control.Monad
 -----------------------------------------------------------
 -- Entities
 -----------------------------------------------------------
-pTuple      p = L.braced (sepBy' p L.separator)
+pTuple      p = L.braced (sepBy p L.separator)
 pImplTuple  p = sepBy2 p L.separator
 pCallList s p = L.parensed s (sepBy p L.separator)
 pArgList  s p = try(L.parensed s (sepBy2 p L.separator)) <|> many (try p <|> L.parensed s p)
 pArgList' s p = try(L.parensed s (sepBy2 p L.separator)) <|> ((:[]) <$> p)
-pTupleBody  p = sepBy' p L.separator
-pTuplePure  p = L.braced $ pTupleBody p
-pList p       = L.bracketed (sepBy' p L.separator)
-pCons s       = L.pIdentType s
+pList       p = L.bracketed (sepBy p L.separator)
+pPath1      p = sepBy1' p L.pAccessor
+pCon      s   = L.pIdentType s
+pVar      s   = L.pIdentVar s
+pIdent    s   = choice [ pCon s, pVar s ]
 
+pExtPath  s   = (pPath1 (pCon s) <* L.pAccessor) <|> pure []
 
 -----------------------------------------------------------
 -- Literals
@@ -68,7 +70,7 @@ genID = do
 -- Declarations
 -----------------------------------------------------------
 pImport     s      = tok Expr.Import   <*  L.pImport 
-                                       <*> pConsT s 
+                                       <*> pPath1 (pIdent s)
                                        <*  L.pBlockBegin
                                        <*> (try (tok Expr.Wildcard <* L.pImportAll) <|> pIdentE s)
                                        <*> (     try (Just <$ L.pAs <*> (L.pIdent s <?> "import name")) 
@@ -80,17 +82,17 @@ pArg        s i    = tok Expr.Arg      <*> pPattern s i
                                        <*> ((Just <$ L.pAssignment <*> pExpr s i) <|> pure Nothing)
 
 pFunc       s i    = tok Expr.Function <*  L.pDef 
-                                       <*> L.pIdentVar s
+                                       <*> pExtPath s
+                                       <*> (pVar s)
                                        <*> pArgList s (pArg s i)
                                        <*> (try (L.pArrow *> pType s i) <|> tok Type.Unknown)
                                        <*> (pExprBlock s i <|> return [])
                                        <?> "function definition"
 
+--pExtMethod  s i    = tok Expr.ExtMethod <* L.pDef
+--                                        <*> 
 
 
---pLambda i         = Expr.Lambda   <$> (pTuplePure (pExpr i) <|> liftList pIdent)
---                                 <*> pExprBlock i
---                                 <?> "lambda definition"
 
 pClass       s i    = tok Class.mk  <*  L.pClass
                                     <*> (tok Type.Class <*> L.pIdentType s <*> many (L.pIdentTypeVar s))
@@ -161,7 +163,7 @@ pTermE    s i   = choice[ pDeclaration s i
            <?> "expression term"
 
 optableE  s i  = [ [ binaryM  "."  (tok Expr.Accessor)             PExpr.AssocLeft ]
-                 , [ postfixM "::" (tok Expr.Typed <*> pType s i)                    ]
+                 , [ postfixM "::" (tok Expr.Typed <*> pType s i)                  ]
                  , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
                  , [ binaryM  "*"  (binaryMatchE <$> (tok Expr.Infix <*> pure "*")) PExpr.AssocLeft ]
                  , [ binaryM  "+"  (binaryMatchE <$> (tok Expr.Infix <*> pure "+")) PExpr.AssocLeft ]
@@ -172,8 +174,8 @@ binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 binaryMatchE2 f p q = f p (Expr.aftermatch q)
 
 
-pVarE     s   = tok Expr.Var   <*> L.pIdentVar s
-pConE     s   = tok Expr.Cons  <*> pCons s
+pVarE     s   = tok Expr.Var <*> pVar s
+pConE     s   = tok Expr.Con <*> pCon s
 
 pIdentE   s   = choice [ pVarE s
                        , pConE s
@@ -203,9 +205,9 @@ pExprBlock     s i = pBlockBegin (pExpr s) i
 -- Types
 -----------------------------------------------------------
 pType       s i   = choice [ try $ pLambdaT s i
-                         , try $ pConsAppT s i
-                         , pTermT s i 
-                         ]
+                           , try $ pConAppT s i
+                           , pTermT s i 
+                           ]
               <?> "type"
 
 pTermT      s i   = choice[ try $ L.parensed s (pType s i)
@@ -213,20 +215,20 @@ pTermT      s i   = choice[ try $ L.parensed s (pType s i)
                         ]
               <?> "type term"
 
-pConsAppT   s i   = tok Type.App     <*> pAppBaseT s <*> many1 (pTermT s i) 
+pConAppT    s i   = tok Type.App     <*> pAppBaseT s <*> many1 (pTermT s i) 
 pLambdaT    s i   = tok Type.Lambda  <*> pArgList' s (pTermT s i) <* L.pArrow <*> pTermT s i
-pVarT       s     = tok Type.Var     <*> L.pIdentVar s
-pConsT      s     = tok Type.Cons    <*> sepBy1 (pCons s) L.pAccessor
+pVarT       s     = tok Type.Var     <*> pVar s
+pConT       s     = tok Type.Con     <*> pPath1 (pCon s)
 pTupleT     s i   = tok Type.Tuple   <*> pTuple (pType s i)
 pWildcardT        = tok Type.Unknown <*  L.pWildcard
 --pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
 
 pAppBaseT   s     = choice [ pVarT   s 
-                           , pConsT  s  
+                           , pConT  s  
                            ]
 
 pEntT       s i   = choice [ pVarT   s 
-                           , pConsT  s 
+                           , pConT  s 
                            , pTupleT s i
                            , pWildcardT
                            ]
@@ -239,7 +241,7 @@ pPattern    s i = choice [ try $ tok Pat.Tuple <*> sepBy2 (pPatCon s i) L.separa
                          , pPatCon s i
                          ]
 
-pPatCon     s i = choice [ try(pConsAppP s i)
+pPatCon     s i = choice [ try(pConAppP s i)
                          , pTermP s i 
                          ]
 
@@ -249,12 +251,12 @@ pTermP      s i = choice [ try $ L.parensed s (pPatCon s i)
                          ]
               <?> "pattern term"
 
-pVarP       s   = tok Pat.Var      <*> L.pIdentVar s
+pVarP       s   = tok Pat.Var      <*> pVar s
 pLitP       s   = tok Pat.Lit      <*> pLit s
 pTupleP     s i = tok Pat.Tuple    <*> pTuple (pPatCon s i)
 pWildcardP      = tok Pat.Wildcard <*  L.pWildcard
-pConP       s   = tok Pat.Cons     <*> pCons s
-pConsAppP   s i = tok Pat.App      <*> pConP s <*> many1 (pTermP s i) 
+pConP       s   = tok Pat.Con     <*> pCon s
+pConAppP   s i = tok Pat.App      <*> pConP s <*> many1 (pTermP s i) 
 
 pEntP   s i = choice [ pVarP      s
                      , pLitP      s

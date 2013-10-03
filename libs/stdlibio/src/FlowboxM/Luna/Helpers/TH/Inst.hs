@@ -13,6 +13,28 @@ import           Debug.Trace
 ppTrace  x   = trace ("\n\n----------\n" ++ PP.ppShow x)
 ppTraces s x = trace ("\n\n--- " ++ s ++ " ---\n" ++ PP.ppShow x)
 
+
+mkNTWrapper ntname basename = do
+    r <- reify basename
+    let dec = case r of
+              TyConI d -> d
+              _        -> error "This function works only with data types!"
+        DataD ctx name tyVarBndr cons names = dec
+        tyNames = map (VarT . getTyVarBndrName) tyVarBndr
+        ntTypeName = mkName ntname
+        ntConName  = mkName ntname
+        ntGetter   = mkName $ "get" ++ ntname
+        pureCon    = ConT $ mkName "Pure"
+        tbase      = AppT pureCon $ foldl AppT (ConT name) tyNames
+        out = NewtypeD [] ntTypeName tyVarBndr (RecC ntConName [(ntGetter, NotStrict, tbase)]) []
+    return $ [out]
+
+
+getTyVarBndrName t = case t of
+    PlainTV name    -> name
+    KindedTV name _ -> name
+    
+
 pprint_me :: Ppr a => Q a -> Q String
 pprint_me = liftM pprint
 

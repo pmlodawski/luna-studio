@@ -21,7 +21,7 @@ type Lit = Lit.Lit
 data Pat = Var             { id :: ID, name      :: String                         }
          | Lit             { id :: ID, value     :: Lit                            }
          | Tuple           { id :: ID, items     :: [Pat]                          }
-         | Cons            { id :: ID, name      :: String                         }
+         | Con             { id :: ID, name      :: String                         }
          | App             { id :: ID, src       :: Pat       , args      :: [Pat] }
          | Typed           { id :: ID, pat       :: Pat       , cls       :: Type  }
          | Wildcard        { id :: ID                                              }
@@ -39,7 +39,7 @@ traverseM fpat ftype flit p = case p of
     App        id' src' args'                -> App   id' <$> fpat src' <*> fpatMap args'
     Typed      id' pat' cls'                 -> Typed id' <$> fpat pat' <*> ftype cls'
     Var        {}                            -> pure p
-    Cons       {}                            -> pure p
+    Con        {}                            -> pure p
     Wildcard   {}                            -> pure p
     where fpatMap = mapM fpat
 
@@ -50,7 +50,7 @@ traverseM_ fpat ftype flit p = case p of
     App        _  src' args'                 -> drop <* fpat src' <* fpatMap args'
     Typed      _  pat' cls'                  -> drop <* fpat pat' <* ftype cls'
     Var        {}                            -> drop
-    Cons       {}                            -> drop
+    Con        {}                            -> drop
     Wildcard   {}                            -> drop
     where drop    = pure ()
           fpatMap = mapM_ fpat

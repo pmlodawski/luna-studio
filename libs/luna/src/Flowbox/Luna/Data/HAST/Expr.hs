@@ -18,6 +18,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Arrow      { src       :: Expr     , dst       :: Expr                                }
           | Tuple      { items     :: [Expr]                                                      }
           | TupleP     { items     :: [Expr]                                                      }
+          | ListE      { items     :: [Expr]                                                      }
           | StringLit  { val       :: String                                                      }
           | Var        { name      :: String                                                      }
           | VarE       { name      :: String                                                      }
@@ -43,5 +44,6 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Native     { code      :: String                                                      }
           | NOP
           | Undefined
+          | Bang Expr
           deriving (Show)
 

@@ -61,6 +61,8 @@ genProject name = let
 --    return ()
 
 
+
+
 logger :: Logger
 logger = getLogger "Flowbox"
 
@@ -68,21 +70,26 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source ["Main"]
         $ unlines [ ""
-                  --, "class Console:"
-                  --, "    def print self msg:"
-                  --, "        ```print #{msg}```"
-                  --, "class Vector a:"
-                  --, "    x,y,z :: a"
-                  --, "    def vtest self a b:"
-                  --, "        x = a"
-                  --, "        {a,b} = b,a"
-                  --, "        {a,a,b,b}"
+                  --, "def Int.add a b:"
+                  --, "    ```pureIO $ a+b```"
+                  
+                  , "def Int.add a b:"
+                  , "    ```getIO $ #{a}+#{b}```"
+                  , "class Console:"
+                  , "    def print self msg:"
+                  , "        ```print #{msg}```"
+                  , "class Vector a:"
+                  , "    x,y,z :: a"
+                  , "def Vector.vtest self a b:"
+                  , "    {a,b}"                  
+                  , "def main self:"
+                  , "    v = Vector 1 2 3"
+                  , "    Console.print (1.add 2)"
+                  --, "    Console.print (1.add 2)"
+
                   --, "def main self:"
-                  --, "    v = Vector 1 2 3"
-                  --, "    Console.print (v.vtest 1 2)"
-                  --, "def test a:"
-                  --, "    {Vector x y z, A b} = a"
-                  , "def main (self, a :: Int)"
+                  --, "    Console.print (1.add 2)"
+
                   --, "    v = Vector 0 0 0"
                   --, "    Console.print v"
                   --, "    Console.print v"
@@ -90,7 +97,8 @@ example = Source.Source ["Main"]
 
 --example :: Source
 --example = Source.Source ["Main"]
---        $ unlines [ ""
+--        $ unlines [ "" 
+
 --                  , "class Vector a:"
 --                  , "    x,y,z :: a"
 --                  ]
@@ -120,11 +128,11 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- SSA --------" 
     ssa <- SSA.run va ast
-    logger info $ PP.ppqShow ssa
+    --logger info $ PP.ppqShow ssa
 
     logger info "\n-------- HASTGen --------" 
-    hast <- HASTGen.run  ssa
-    logger info $ PP.ppShow hast
+    hast <- HASTGen.run ssa
+    --logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------" 
     hsc <- HSC.run  hast
