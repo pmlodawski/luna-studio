@@ -141,3 +141,21 @@ defFunction5 f v1 v2 v3 v4 v5 = do
     v4' <- getIO v4
     v5' <- getIO v5
     f (Pure v1') (Pure v2') (Pure v3') (Pure v4') (Pure v5')
+
+
+
+liftFPure1  f (Pure a) = Pure $ f a
+liftFPure2  f (Pure a) = liftFPure1 (f a)
+liftFPure3  f (Pure a) = liftFPure2 (f a)
+liftFPure4  f (Pure a) = liftFPure3 (f a)
+liftFPure5  f (Pure a) = liftFPure4 (f a)
+liftFPure6  f (Pure a) = liftFPure5 (f a)
+liftFPure7  f (Pure a) = liftFPure6 (f a)
+liftFPure8  f (Pure a) = liftFPure7 (f a)
+liftFPure9  f (Pure a) = liftFPure8 (f a)
+liftFPure10 f (Pure a) = liftFPure9 (f a)
+
+
+concatPure a                  = concat $ map getPure a
+rangeFromTo (Pure a) (Pure b) = Pure $ map Pure $ if a < b then [a..b] else [a,a-1..b]
+rangeFrom   (Pure a)          = Pure $ map Pure $ [a..]

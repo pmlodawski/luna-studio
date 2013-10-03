@@ -19,7 +19,10 @@ mkNTWrapper ntname basename = do
     let dec = case r of
               TyConI d -> d
               _        -> error "This function works only with data types!"
-        DataD ctx name tyVarBndr cons names = dec
+
+        (name, tyVarBndr) = case dec of
+            DataD _ name' tyVarBndr' _ _ -> (name', tyVarBndr')
+            TySynD  name' tyVarBndr' _   -> (name', tyVarBndr')
         tyNames = map (VarT . getTyVarBndrName) tyVarBndr
         ntTypeName = mkName ntname
         ntConName  = mkName ntname
