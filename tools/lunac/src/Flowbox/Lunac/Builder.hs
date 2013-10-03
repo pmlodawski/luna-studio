@@ -29,6 +29,7 @@ import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool                  (Po
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install                 as CabalInstall
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                   as CabalStore
+import qualified Flowbox.Luna.Passes.CodeGen.FClass.Gen                    as FClassGen
 import qualified Flowbox.Luna.Passes.CodeGen.FClass.Install                as FClassInstall
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
@@ -152,7 +153,7 @@ genCabal name (Pool names) = let
                                                    , "OneTuple"
                                                    , "template-haskell"
                                                    , "flowboxM-stdlib-io"
-                                                   ] ++ (Set.toList names)
+                                                   ] ++ (map FClassGen.packageName $ Set.toList names)
                      }
 
     -- TODO [PM] : refactor. mkExecutable silently creates project with MainIs = "Main.hs" and hsSourceDirs = "src"
