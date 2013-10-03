@@ -17,7 +17,6 @@ import qualified Flowbox.Luna.Data.AST.Module                as Module
 import           Flowbox.Luna.Data.AST.Module                  (Module)
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.State as Pool
 import           Flowbox.Luna.Passes.Analysis.FuncPool.State   (Pool)
-import           Flowbox.Luna.Data.AliasAnalysis               (AA)
 import qualified Flowbox.Luna.Passes.Pass                    as Pass
 import           Flowbox.Luna.Passes.Pass                      (PassMonad)
 
@@ -27,7 +26,6 @@ import           Control.Applicative
 import           Flowbox.System.Log.Logger                     
 
 import           Flowbox.Prelude                             hiding (error, id, mod)
-
 
 
 logger :: Logger
@@ -55,8 +53,6 @@ fpExpr ast = case ast of
     where
         register  = Pool.register (Expr.name ast) *> continue
         continue  = Expr.traverseM_ fpExpr fpType fpPat pure ast
-        fpExprMap = mapM_ fpExpr
-
 
 
 fpPat :: FPMonad m => Pat -> Pass.Result m ()

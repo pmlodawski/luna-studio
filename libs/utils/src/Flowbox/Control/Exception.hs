@@ -13,9 +13,9 @@ import qualified Control.Exception as Exc
 import           Flowbox.Prelude     
 
 
-
+try :: IO a -> IO (Either Exc.SomeException a)
 try a = do
     r <- Exc.try a
     return $ case r of
         Right _                     -> r
-        Left (e::Exc.SomeException) -> r
+        Left (_::Exc.SomeException) -> r

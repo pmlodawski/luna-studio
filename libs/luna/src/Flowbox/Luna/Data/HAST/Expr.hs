@@ -9,7 +9,6 @@ module Flowbox.Luna.Data.HAST.Expr where
 
 import           Flowbox.Prelude                    
 import qualified Flowbox.Luna.Data.HAST.Lit       as Lit
-import qualified Flowbox.Luna.Data.HAST.Extension as Extension
 import           Flowbox.Luna.Data.HAST.Extension   (Extension)
 
 type Lit = Lit.Lit

@@ -9,7 +9,7 @@
 module Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen where
 
 import qualified Flowbox.Prelude                                     as Prelude
-import           Flowbox.Prelude                                     hiding (error, id)
+import           Flowbox.Prelude                                     hiding (error, id, mod)
 import qualified Flowbox.Luna.Data.AST.Expr                          as LExpr
 import qualified Flowbox.Luna.Data.AST.Type                          as LType
 import qualified Flowbox.Luna.Data.AST.Pat                           as LPat
@@ -154,7 +154,7 @@ genExpr ast = case ast of
                                              
                                             f
 
-    LExpr.Arg _ pat value                -> genPat pat
+    LExpr.Arg _ pat _                    -> genPat pat
                                                   
     LExpr.Import _ path target rename    -> do
                                             tname <- case target of
@@ -175,11 +175,7 @@ genExpr ast = case ast of
                                                 fieldlen    = length fields
                                                 funcNames   = map LExpr.name methods 
                                                 memberNames = fieldNames ++ funcNames
-                                                cfNames     = map (mkCFName . mangleName name) memberNames
-                                                fcNames     = map mkFCName memberNames
                                                 ccname      = mkCCName name
-                                                mnames      = map ((mangleName name) . mkVarName) fieldNames
-                                                getters     = map (genVArgGetter 0) mnames
                                             
                                             GenState.setClsName name
                                             
