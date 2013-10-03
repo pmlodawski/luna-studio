@@ -95,7 +95,8 @@ example = Source.Source ["Main"]
                   , "    {a,b}"                  
                   , "def main self:"
                   , "    v = Vector 1 2 3"
-                  , "    Console.print ([1,2,3])"
+                  , "    Console.print ([1,2,30..0])"
+
                   --, "    Console.print (1.add 2)"
 
                   --, "def main self:"

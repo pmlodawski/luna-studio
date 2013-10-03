@@ -44,6 +44,7 @@ pTypeDecl    = symbols "::"
 pImportAll   = symbol  '*'
 pAssignment  = symbol  '='
 pNativeSym   = symbols "```"
+pRange       = symbols ".."
 
 opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
 opLetter     = opStart
