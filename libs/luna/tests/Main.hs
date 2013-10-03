@@ -81,9 +81,10 @@ example = Source.Source ["Main"]
         $ unlines [ ""
                   --, "def Int.add a b:"
                   --, "    ```pureIO $ a+b```"
-                  
+                  , "def List.length self:"
+                  , "    ```getIO $ liftFPure1 length #{self}```"
                   , "def Int.add a b:"
-                  , "    ```getIO $ #{a}+#{b}```"
+                  , "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
                   , "class Console:"
                   , "    def print self msg:"
                   , "        ```print #{msg}```"
@@ -95,7 +96,7 @@ example = Source.Source ["Main"]
                   , "    {a,b}"                  
                   , "def main self:"
                   , "    v = Vector 1 2 3"
-                  , "    Console.print ([1,2,30..0])"
+                  , "    Console.print ([1,2,30..0].length)"
 
                   --, "    Console.print (1.add 2)"
 
