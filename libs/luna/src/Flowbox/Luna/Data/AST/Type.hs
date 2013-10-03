@@ -39,7 +39,7 @@ traverseM ftype t = case t of
     Class      {}                            -> pure t
     Module     {}                            -> pure t
     Con        {}                            -> pure t
-    _                                        -> fail "Unexpected type"
+    Unknown    {}                            -> pure t
     where ftypeMap = mapM ftype
 
 traverseM_ :: Traversal m => (Type -> m b) -> Type -> m ()
@@ -51,7 +51,7 @@ traverseM_ ftype t = case t of
     Class      {}                            -> drop
     Module     {}                            -> drop
     Con        {}                            -> drop
-    _                                        -> fail "Unexpected type"
+    Unknown    {}                            -> drop
     where drop     = pure ()
           ftypeMap = mapM_ ftype
 
