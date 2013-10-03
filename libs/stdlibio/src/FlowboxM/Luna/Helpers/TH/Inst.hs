@@ -6,9 +6,9 @@ module FlowboxM.Luna.Helpers.TH.Inst where
 
 import           Control.Monad         
 import           Language.Haskell.TH   
-import           Control.Applicative
-import qualified Text.Show.Pretty     as PP
-import           Debug.Trace
+import           Control.Applicative   
+import qualified Text.Show.Pretty    as PP
+import           Debug.Trace           
 
 ppTrace  x   = trace ("\n\n----------\n" ++ PP.ppShow x)
 ppTraces s x = trace ("\n\n--- " ++ s ++ " ---\n" ++ PP.ppShow x)

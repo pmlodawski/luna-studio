@@ -30,7 +30,6 @@ import qualified Flowbox.Batch.Server.Handlers.BatchHandler as BatchHandler
 import qualified Flowbox.Batch.Server.Server                as Server
 import qualified Flowbox.Data.Version                       as Version
 import           Flowbox.Data.Version                         (Version)
-import qualified Flowbox.Initializer.Initializer            as Initializer
 import           Flowbox.System.Log.Logger                    
 
 
@@ -94,18 +93,17 @@ run conf = case conf of
             then rootLogger setLevel DEBUG
             else return ()
 
-        loggerIO info "Starting the server"
         quitmutex <- MVar.newEmptyMVar
         _ <- Concurrent.forkIO $ Exception.handle 
             (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
                                                    MVar.putMVar quitmutex True) 
             (serve conf quitmutex)
-        _ <- Concurrent.forkIO $ Initializer.checkedInitialize
         waitForQuit quitmutex
 
 
 serve :: Conf -> MVar Bool -> IO ()
 serve conf quitmutex = do
+    loggerIO info "Starting the server"
     handler <- BatchHandler.empty
     _ <- Server.runSingleConnectionServer Server.accepter handler (processCommand quitmutex) conf
     return ()

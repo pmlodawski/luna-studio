@@ -29,7 +29,9 @@ import qualified Flowbox.Batch.Server.Handlers.Libs       as HLibs
 import qualified Flowbox.Batch.Server.Handlers.Projects   as HProjects
 import qualified Flowbox.Batch.Server.Handlers.Types      as HTypes
 import qualified Flowbox.Batch.Server.Handlers.FileSystem as HFileSystem
+import qualified Flowbox.Initializer.Initializer          as Initializer
 import           Flowbox.System.Log.Logger                  
+
 
 
 loggerIO :: LoggerIO
@@ -108,3 +110,4 @@ instance Batch_Iface BatchHandler where
     dump batchHandler   = runScript $ do batch <- tryReadIORef batchHandler
                                          scriptIO $ print batch
     shutdown _          = loggerIO info "shutdown"
+    initialize _        = Initializer.checkedInitialize

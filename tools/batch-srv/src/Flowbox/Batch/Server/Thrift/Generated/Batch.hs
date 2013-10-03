@@ -3886,6 +3886,46 @@ read_FS_mv_result iprot = do
   record <- read_FS_mv_result_fields iprot (FS_mv_result{f_FS_mv_result_missingFields=Nothing})
   readStructEnd iprot
   return record
+data Initialize_args = Initialize_args deriving (Show,Eq,Typeable)
+instance Hashable Initialize_args where
+  hashWithSalt salt record = salt  
+write_Initialize_args oprot record = do
+  writeStructBegin oprot "Initialize_args"
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_Initialize_args_fields iprot record = do
+  (_,_t591,_id592) <- readFieldBegin iprot
+  if _t591 == T_STOP then return record else
+    case _id592 of 
+      _ -> do
+        skip iprot _t591
+        readFieldEnd iprot
+        read_Initialize_args_fields iprot record
+read_Initialize_args iprot = do
+  _ <- readStructBegin iprot
+  record <- read_Initialize_args_fields iprot (Initialize_args{})
+  readStructEnd iprot
+  return record
+data Initialize_result = Initialize_result deriving (Show,Eq,Typeable)
+instance Hashable Initialize_result where
+  hashWithSalt salt record = salt  
+write_Initialize_result oprot record = do
+  writeStructBegin oprot "Initialize_result"
+  writeFieldStop oprot
+  writeStructEnd oprot
+read_Initialize_result_fields iprot record = do
+  (_,_t596,_id597) <- readFieldBegin iprot
+  if _t596 == T_STOP then return record else
+    case _id597 of 
+      _ -> do
+        skip iprot _t596
+        readFieldEnd iprot
+        read_Initialize_result_fields iprot record
+read_Initialize_result iprot = do
+  _ <- readStructBegin iprot
+  record <- read_Initialize_result_fields iprot (Initialize_result{})
+  readStructEnd iprot
+  return record
 data Ping_args = Ping_args deriving (Show,Eq,Typeable)
 instance Hashable Ping_args where
   hashWithSalt salt record = salt  
@@ -3894,11 +3934,11 @@ write_Ping_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Ping_args_fields iprot record = do
-  (_,_t591,_id592) <- readFieldBegin iprot
-  if _t591 == T_STOP then return record else
-    case _id592 of 
+  (_,_t601,_id602) <- readFieldBegin iprot
+  if _t601 == T_STOP then return record else
+    case _id602 of 
       _ -> do
-        skip iprot _t591
+        skip iprot _t601
         readFieldEnd iprot
         read_Ping_args_fields iprot record
 read_Ping_args iprot = do
@@ -3914,11 +3954,11 @@ write_Ping_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Ping_result_fields iprot record = do
-  (_,_t596,_id597) <- readFieldBegin iprot
-  if _t596 == T_STOP then return record else
-    case _id597 of 
+  (_,_t606,_id607) <- readFieldBegin iprot
+  if _t606 == T_STOP then return record else
+    case _id607 of 
       _ -> do
-        skip iprot _t596
+        skip iprot _t606
         readFieldEnd iprot
         read_Ping_result_fields iprot record
 read_Ping_result iprot = do
@@ -3934,11 +3974,11 @@ write_Dump_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Dump_args_fields iprot record = do
-  (_,_t601,_id602) <- readFieldBegin iprot
-  if _t601 == T_STOP then return record else
-    case _id602 of 
+  (_,_t611,_id612) <- readFieldBegin iprot
+  if _t611 == T_STOP then return record else
+    case _id612 of 
       _ -> do
-        skip iprot _t601
+        skip iprot _t611
         readFieldEnd iprot
         read_Dump_args_fields iprot record
 read_Dump_args iprot = do
@@ -3954,11 +3994,11 @@ write_Dump_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Dump_result_fields iprot record = do
-  (_,_t606,_id607) <- readFieldBegin iprot
-  if _t606 == T_STOP then return record else
-    case _id607 of 
+  (_,_t616,_id617) <- readFieldBegin iprot
+  if _t616 == T_STOP then return record else
+    case _id617 of 
       _ -> do
-        skip iprot _t606
+        skip iprot _t616
         readFieldEnd iprot
         read_Dump_result_fields iprot record
 read_Dump_result iprot = do
@@ -3974,11 +4014,11 @@ write_Shutdown_args oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Shutdown_args_fields iprot record = do
-  (_,_t611,_id612) <- readFieldBegin iprot
-  if _t611 == T_STOP then return record else
-    case _id612 of 
+  (_,_t621,_id622) <- readFieldBegin iprot
+  if _t621 == T_STOP then return record else
+    case _id622 of 
       _ -> do
-        skip iprot _t611
+        skip iprot _t621
         readFieldEnd iprot
         read_Shutdown_args_fields iprot record
 read_Shutdown_args iprot = do
@@ -3994,11 +4034,11 @@ write_Shutdown_result oprot record = do
   writeFieldStop oprot
   writeStructEnd oprot
 read_Shutdown_result_fields iprot record = do
-  (_,_t616,_id617) <- readFieldBegin iprot
-  if _t616 == T_STOP then return record else
-    case _id617 of 
+  (_,_t626,_id627) <- readFieldBegin iprot
+  if _t626 == T_STOP then return record else
+    case _id627 of 
       _ -> do
-        skip iprot _t616
+        skip iprot _t626
         readFieldEnd iprot
         read_Shutdown_result_fields iprot record
 read_Shutdown_result iprot = do
@@ -4672,6 +4712,17 @@ process_fS_mv (seqid, iprot, oprot, handler) = do
   write_FS_mv_result oprot res
   writeMessageEnd oprot
   tFlush (getTransport oprot)
+process_initialize (seqid, iprot, oprot, handler) = do
+  args <- read_Initialize_args iprot
+  readMessageEnd iprot
+  rs <- return (Initialize_result)
+  res <- (do
+    Iface.initialize handler
+    return rs)
+  writeMessageBegin oprot ("initialize", M_REPLY, seqid);
+  write_Initialize_result oprot res
+  writeMessageEnd oprot
+  tFlush (getTransport oprot)
 process_ping (seqid, iprot, oprot, handler) = do
   args <- read_Ping_args iprot
   readMessageEnd iprot
@@ -4754,6 +4805,7 @@ proc_ handler (iprot,oprot) (name,typ,seqid) = case name of
   "FS_rm" -> process_fS_rm (seqid,iprot,oprot,handler)
   "FS_cp" -> process_fS_cp (seqid,iprot,oprot,handler)
   "FS_mv" -> process_fS_mv (seqid,iprot,oprot,handler)
+  "initialize" -> process_initialize (seqid,iprot,oprot,handler)
   "ping" -> process_ping (seqid,iprot,oprot,handler)
   "dump" -> process_dump (seqid,iprot,oprot,handler)
   "shutdown" -> process_shutdown (seqid,iprot,oprot,handler)
