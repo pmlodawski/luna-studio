@@ -108,6 +108,7 @@ buildAST diag outputPath projectName tmpName ast = do
     Diagnostics.printHSC hsc diag
     
     FClassInstall.run Common.flowboxPath fp
+
     writeSources tmpName hsc
     runCabal tmpName projectName fp
     moveExecutable tmpName projectName outputPath
