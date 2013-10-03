@@ -44,7 +44,7 @@ genCode :: String -> String
 genCode name = (header ++ nl ++ fhead ++ cls) where
     fname     = "_" ++ name
     cname     = fprefix ++ name
-    cfname    = cprefix ++ fname
+    cfname    = cprefix ++ name
     fhead     = "module " ++ modprefix ++ "." ++ cname ++ " where\n\n"
     cls       = clsheader ++ clsbody
     clsheader = "class "  ++ cfname ++ " a b | a -> b where\n"
