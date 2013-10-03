@@ -139,7 +139,9 @@ genExpr ast = case ast of
                                                                                     <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
                                                                      )
                                                                )
-                                          
+
+                                            when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
+
                                             if (null path) then return ()
                                                 else genFuncDecl (path!!0) name
                                            
