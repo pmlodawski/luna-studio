@@ -19,6 +19,7 @@ data Conf = Compilation { inputs    :: [String]
                         , dump_all  :: Bool
                         , dump_ast  :: Bool
                         , dump_va   :: Bool
+                        , dump_fp   :: Bool
                         , dump_ssa  :: Bool
                         , dump_hast :: Bool
                         , dump_hsc  :: Bool

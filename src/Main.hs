@@ -19,7 +19,6 @@ import qualified Flowbox.Lunac.Conf              as Conf
 import           Flowbox.Lunac.Conf                (Conf)
 import           Flowbox.Lunac.Diagnostics         (Diagnostics(Diagnostics))
 import           Flowbox.System.Log.Logger         
-import qualified Flowbox.System.Random           as Random
 import qualified Flowbox.System.UniPath          as UniPath
 
 
@@ -53,6 +52,7 @@ parser = Opt.flag' Conf.Version (long "version" <> hidden)
            <*> switch    ( long "dump-all"              <> hidden                                                        )
            <*> switch    ( long "dump-ast"              <> hidden                                                        )
            <*> switch    ( long "dump-va"               <> hidden                                                        )
+           <*> switch    ( long "dump-fp"               <> hidden                                                        )
            <*> switch    ( long "dump-ssa"              <> hidden                                                        )
            <*> switch    ( long "dump-hast"             <> hidden                                                        )
            <*> switch    ( long "dump-hsc"              <> hidden                                                        )
@@ -83,22 +83,23 @@ run conf = case conf of
 
         let diag = Diagnostics ( Conf.dump_ast  conf || Conf.dump_all conf )
                                ( Conf.dump_va   conf || Conf.dump_all conf )
+                               ( Conf.dump_fp   conf || Conf.dump_all conf )
                                ( Conf.dump_ssa  conf || Conf.dump_all conf )
                                ( Conf.dump_hast conf || Conf.dump_all conf )
                                ( Conf.dump_hsc  conf || Conf.dump_all conf )
                                
             inputs = map UniPath.fromUnixString $ Conf.inputs conf
-            outputPath  = UniPath.fromUnixString $ Conf.output conf
-            projectName = Conf.project conf
-            tmpName     = "tmp/" ++ projectName
+
 
         Initializer.checkedInitialize
 
-        sources <- mapM (Builder.buildFile diag) inputs
-        Builder.buildSources tmpName $ List.concat sources
-        Builder.runCabal tmpName projectName
-        Builder.moveExecutable tmpName projectName outputPath
-        Builder.cleanUp tmpName 
+        mapM_ (Builder.buildFile conf diag) inputs
+        --sources <- mapM (Builder.buildFile diag) inputs
+        --Builder.buildSources tmpName $ List.concat sources
+        --Builder.prepareFClasses 
+        --Builder.runCabal tmpName projectName
+        --Builder.moveExecutable tmpName projectName outputPath
+        --Builder.cleanUp tmpName 
 
 
         --print $ length sources
