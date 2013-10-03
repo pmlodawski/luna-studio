@@ -13,9 +13,7 @@ import qualified Flowbox.Data.Version            as Version
 import           GHC.Generics                      
 import           Flowbox.Generics.Deriving.FShow   
 
-data Test = Test { x :: Int
-                 , y :: Int
-                 } deriving(Show, Generic)
+data Test = Test Int Int deriving(Show, Generic)
 
 instance FShow Test
        
@@ -54,4 +52,5 @@ main = do
                         }
     print v1
     print $ Version.str v1
+    print v2
     loggerIO error "IO error"
