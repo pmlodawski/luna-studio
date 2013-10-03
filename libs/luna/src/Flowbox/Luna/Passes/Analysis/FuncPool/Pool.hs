@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Passes.Analysis.FuncPool.State where
+module Flowbox.Luna.Passes.Analysis.FuncPool.Pool where
 
 import           Flowbox.Prelude                   
 import           Control.Monad.State    
@@ -28,3 +28,4 @@ register :: FPStateM m => String -> m ()
 register name = do
     s <- get
     put $ s { names = Set.insert name $ names s }
+

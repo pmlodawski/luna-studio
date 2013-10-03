@@ -15,8 +15,8 @@ import qualified Flowbox.Luna.Data.AST.Pat                   as Pat
 import           Flowbox.Luna.Data.AST.Pat                     (Pat)
 import qualified Flowbox.Luna.Data.AST.Module                as Module
 import           Flowbox.Luna.Data.AST.Module                  (Module)
-import qualified Flowbox.Luna.Passes.Analysis.FuncPool.State as Pool
-import           Flowbox.Luna.Passes.Analysis.FuncPool.State   (Pool)
+import qualified Flowbox.Luna.Passes.Analysis.FuncPool.Pool  as Pool
+import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool    (Pool)
 import qualified Flowbox.Luna.Passes.Pass                    as Pass
 import           Flowbox.Luna.Passes.Pass                      (PassMonad)
 
@@ -49,6 +49,7 @@ fpExpr :: FPMonad m => Expr.Expr -> Pass.Result m ()
 fpExpr ast = case ast of
     Expr.Function {}                      -> register
     Expr.Var      {}                      -> register
+    Expr.Field    {}                      -> register
     _                                     -> continue
     where
         register  = Pool.register (Expr.name ast) *> continue

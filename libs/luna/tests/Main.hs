@@ -136,7 +136,7 @@ main_inner = Luna.run $ do
     --logger info $ PP.ppqShow ssa
 
     logger info "\n-------- HASTGen --------" 
-    hast <- HASTGen.run ssa
+    hast <- HASTGen.run ssa fp
     --logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------" 
