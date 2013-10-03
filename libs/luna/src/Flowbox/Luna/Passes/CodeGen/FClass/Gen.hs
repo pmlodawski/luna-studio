@@ -21,7 +21,7 @@ import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store   as CabalStore
 import qualified Flowbox.Luna.Passes.Pass                  as Pass
 import           Flowbox.Luna.Passes.Pass                    (PassMonadIO)
 import qualified Flowbox.Luna.Passes.Source.File.Writer    as FileWriter
-import qualified Flowbox.System.Directory.Directory                          as Directory
+import qualified Flowbox.System.Directory.Directory        as Directory
 import           Flowbox.System.Log.Logger                   
 import qualified Flowbox.System.UniPath                    as UniPath
 import           Flowbox.System.UniPath                      (UniPath)

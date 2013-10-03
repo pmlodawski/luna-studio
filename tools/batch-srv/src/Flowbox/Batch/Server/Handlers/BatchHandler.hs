@@ -20,8 +20,8 @@ import           Thrift.Transport.Handle                    ()
 import           Flowbox.Control.Error                      
 import qualified Flowbox.Batch.Batch                      as Batch
 import           Flowbox.Batch.Batch                        (Batch(..))
-import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
-import qualified Flowbox.Batch.Samples.Std as Sample
+import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
+import qualified Flowbox.Batch.Samples.Std                as Sample
 import qualified Flowbox.Batch.Server.Handlers.Defs       as HDefs
 import qualified Flowbox.Batch.Server.Handlers.Defaults   as HDefaults
 import qualified Flowbox.Batch.Server.Handlers.Graph      as HGraph
