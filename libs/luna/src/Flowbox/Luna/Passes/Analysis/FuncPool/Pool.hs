@@ -6,18 +6,20 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
 
-module Flowbox.Luna.Passes.Analysis.FuncPool.State where
+module Flowbox.Luna.Passes.Analysis.FuncPool.Pool where
 
-import           Flowbox.Prelude                   
-import           Control.Monad.State    
+import           Control.Monad.State   
 import qualified Data.Set            as Set
 import           Data.Set              (Set)
 
+import           Flowbox.Prelude       
+
+
+
+type FPStateM m = MonadState Pool m
 
 data Pool    = Pool { names :: Set String
                     } deriving (Show)
-
-type FPStateM m = MonadState Pool m
 
 
 empty :: Pool

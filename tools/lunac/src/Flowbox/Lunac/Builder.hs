@@ -9,7 +9,8 @@
 module Flowbox.Lunac.Builder where
 
 import           Control.Monad.RWS                                         hiding (mapM_)
-import           Data.Maybe                                                  (fromJust)
+import           Data.Maybe                                                as Maybe
+import qualified Data.Set                                                  as Set
 
 import           Flowbox.Prelude                                             
 import qualified Flowbox.Initializer.Common                                as Common
@@ -23,19 +24,24 @@ import qualified Flowbox.Luna.Network.Def.Definition                       as De
 import           Flowbox.Luna.Network.Def.Definition                         (Definition)
 import qualified Flowbox.Luna.Network.Def.DefManager                       as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
+import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool            as FuncPool
+import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool                  (Pool(Pool))
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install                 as CabalInstall
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                   as CabalStore
+import qualified Flowbox.Luna.Passes.CodeGen.FClass.Install                as FClassInstall
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
-import           Flowbox.Luna.Passes.Pass                                    (PassMonadIO)
+import           Flowbox.Luna.Passes.Pass                                    (PassMonad, PassMonadIO)
 import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
 import qualified Flowbox.Luna.Passes.Source.File.Writer                    as FileWriter
 import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
+import qualified Flowbox.Lunac.Conf                                        as Conf
+import           Flowbox.Lunac.Conf                                          (Conf)
 import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
 import           Flowbox.Lunac.Diagnostics                                   (Diagnostics)
 import qualified Flowbox.System.Directory.Directory                        as Directory
@@ -45,58 +51,11 @@ import           Flowbox.System.UniPath                                      (Un
 import qualified Flowbox.Text.Show.Pretty                                  as PP
 
 
+-- TODO [PM] Split into multiple files: there are too many responsibilities in this file
 
 logger :: Logger
 logger = getLogger "Flowbox.Lunac.Builder"
 
-
-either2io :: IO (Either String a) -> IO a
-either2io f = do 
-    out <- f
-    case out of
-        Right r -> return r
-        Left  e -> fail e
-
-
-buildLibrary :: Diagnostics -> Library -> IO [Source]
-buildLibrary diag library = do
-    let defManger = Library.defs library
-        rootDefID = Library.rootDefID
-        rootDef = fromJust $ DefManager.lab defManger rootDefID
-    buildGraph diag defManger (rootDefID, rootDef)
-    
-
-buildGraph :: Diagnostics -> DefManager -> (Definition.ID, Definition) -> IO [Source]
-buildGraph diag defManager def = either2io $ Luna.run $ do 
-    logger debug "Compiling graph"
-    logger info (PP.ppShow  defManager)
-    ast <- GraphParser.run defManager def
-    Diagnostics.printAST ast diag 
-    buildAST diag ast
-
-
-buildFile :: Diagnostics -> UniPath -> IO [Source]
-buildFile diag path = either2io $ Luna.run $ do 
-    logger debug $ "Compiling file '" ++ UniPath.toUnixString path ++ "'"
-    let rootPath = UniPath.basePath path
-    source <- FileReader.run rootPath path
-    ast    <- TxtParser.run source
-    Diagnostics.printAST ast diag 
-    buildAST diag ast
-
-
-buildAST :: PassMonadIO s m => Diagnostics -> ASTModule.Module -> Pass.Result m [Source]
-buildAST diag ast = do
-    va   <- VarAlias.run ast
-    Diagnostics.printVA va diag 
-    ssa  <- SSA.run va ast
-    Diagnostics.printSSA ssa diag
-    hast <- HASTGen.run ssa
-    Diagnostics.printHAST hast diag
-    hsc  <- HSC.run hast
-    Diagnostics.printHSC hsc diag
-    return hsc
-    
 
 srcFolder :: String
 srcFolder = "src"
@@ -108,8 +67,84 @@ cabalExt :: String
 cabalExt = ".cabal"
 
 
-genCabal :: String -> CabalConfig.Config
-genCabal name = let
+either2io :: IO (Either String a) -> IO a
+either2io f = do 
+    out <- f
+    case out of
+        Right r -> return r
+        Left  e -> fail e
+
+
+buildLibrary :: Diagnostics -> Library -> UniPath -> String -> String -> IO ()
+buildLibrary diag library outputPath projectName tmpName = either2io $ Luna.run $ do
+    let defManger = Library.defs library
+        rootDefID = Library.rootDefID
+        rootDef = fromJust $ DefManager.lab defManger rootDefID
+    ast <- parseGraph diag defManger (rootDefID, rootDef)
+    buildAST diag outputPath projectName tmpName ast
+
+
+buildFile :: Conf -> Diagnostics -> UniPath -> IO ()
+buildFile conf diag paths = either2io $ Luna.run $ do 
+    let outputPath  = UniPath.fromUnixString $ Conf.output conf
+        projectName = Conf.project conf
+        tmpName     = "tmp/" ++ projectName
+    ast  <- parseFile diag paths
+    buildAST diag outputPath projectName tmpName ast
+
+
+buildAST :: PassMonadIO s m => Diagnostics -> UniPath -> String -> String -> ASTModule.Module -> Pass.Result m ()
+buildAST diag outputPath projectName tmpName ast = do 
+    sources <- compileAST diag ast
+    pool    <- prepareFClasses diag ast
+    writeSources tmpName sources
+    runCabal tmpName projectName pool
+    moveExecutable tmpName projectName outputPath
+    cleanUp tmpName
+
+
+parseGraph :: PassMonad s m => Diagnostics -> DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTModule.Module
+parseGraph diag defManager def = do 
+    logger debug "Compiling graph"
+    logger info (PP.ppShow  defManager)
+    ast <- GraphParser.run defManager def
+    Diagnostics.printAST ast diag 
+    return ast
+
+
+parseFile :: PassMonadIO s m => Diagnostics -> UniPath -> Pass.Result m ASTModule.Module
+parseFile diag path = do 
+    logger debug $ "Compiling file '" ++ UniPath.toUnixString path ++ "'"
+    let rootPath = UniPath.basePath path
+    source <- FileReader.run rootPath path
+    ast    <- TxtParser.run source
+    Diagnostics.printAST ast diag 
+    return ast
+
+
+compileAST :: PassMonadIO s m => Diagnostics -> ASTModule.Module -> Pass.Result m [Source]
+compileAST diag ast = do
+    va   <- VarAlias.run ast
+    Diagnostics.printVA va diag 
+    ssa  <- SSA.run va ast
+    Diagnostics.printSSA ssa diag
+    hast <- HASTGen.run ssa
+    Diagnostics.printHAST hast diag
+    hsc  <- HSC.run hast
+    Diagnostics.printHSC hsc diag
+    return hsc
+
+
+prepareFClasses :: PassMonadIO s m => Diagnostics -> ASTModule.Module -> Pass.Result m Pool
+prepareFClasses diag ast = do
+    fp <- FuncPool.run ast
+    Diagnostics.printFP fp diag
+    FClassInstall.run Common.flowboxPath fp
+    return fp
+
+
+genCabal :: String -> Pool -> CabalConfig.Config
+genCabal name (Pool names) = let
     exec_base = CabalSection.mkExecutable name 
     exec = exec_base { CabalSection.buildDepends = ["pretty-show"
                                                    , "random"
@@ -117,7 +152,7 @@ genCabal name = let
                                                    , "OneTuple"
                                                    , "template-haskell"
                                                    , "flowboxM-stdlib-io"
-                                                   ]
+                                                   ] ++ (Set.toList names)
                      }
 
     -- TODO [PM] : refactor. mkExecutable silently creates project with MainIs = "Main.hs" and hsSourceDirs = "src"
@@ -126,29 +161,28 @@ genCabal name = let
     in conf
 
 
-buildSources :: String -> [Source] -> IO ()
-buildSources location sources = either2io $ Luna.run $ do 
+writeSources :: PassMonadIO s m => String -> [Source] -> Pass.Result m ()
+writeSources location sources = do 
     let outputPath = UniPath.append location Common.flowboxPath
     mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) sources 
 
 
-runCabal :: String -> String -> IO ()
-runCabal location name = either2io $ Luna.run $ do 
-    let cabal      = genCabal name
+runCabal :: PassMonadIO s m => String -> String -> Pool -> Pass.Result m ()
+runCabal location name pool = do 
+    let cabal      = genCabal name pool
         outputPath = UniPath.append location Common.flowboxPath
-
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) outputPath
     CabalInstall.run Common.flowboxPath location
 
 
-moveExecutable :: String -> String -> UniPath -> IO ()
-moveExecutable location name outputPath = do 
+moveExecutable :: PassMonadIO s m => String -> String -> UniPath -> Pass.Result m ()
+moveExecutable location name outputPath = liftIO $ do 
     rootPath      <- UniPath.expand $ UniPath.append location Common.flowboxPath
     let executable = UniPath.append ("dist/build/" ++ name ++ "/" ++ name) rootPath
     Directory.renameFile executable outputPath
 
 
-cleanUp :: String -> IO ()
-cleanUp location = do 
+cleanUp :: PassMonadIO s m => String -> Pass.Result m ()
+cleanUp location = liftIO $ do 
     outputPath <- UniPath.expand $ UniPath.append location Common.flowboxPath
     Directory.removeDirectoryRecursive outputPath

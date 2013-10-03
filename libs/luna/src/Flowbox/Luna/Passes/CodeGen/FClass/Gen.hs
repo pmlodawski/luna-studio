@@ -36,9 +36,9 @@ indent    = replicate 4 ' '
 nl        = "\n"
 mpostfix  = "''M"
 header    = "{-# LANGUAGE FunctionalDependencies, FlexibleInstances #-}\n"
-modprefix = "Flowbox.Luna.FClasses"
+modprefix = "FlowboxM.Luna.FClasses"
 cprefix   = "C''"
-fprefix   = "U'"
+fprefix   = "U_"
 
 
 genC :: String -> String
@@ -59,15 +59,16 @@ genC name = (header ++ nl ++ fhead ++ cls) where
 --run = genAndInstall
 
 
-genAndInstall :: PassMonadIO s m  => String -> UniPath -> Pass.Result m ()
-genAndInstall name cabalDevPath = do
+genAndInstall :: PassMonadIO s m  => UniPath -> String -> Pass.Result m ()
+genAndInstall cabalDevPath name  = do
     let location = "tmp/" ++ name
-        path     = UniPath.append location cabalDevPath
         fcname   = fprefix ++ name
         source   = Source (Split.splitOn "." modprefix ++ [fcname]) $ genC name
         lib      = CabalSection.mkLibrary { CabalSection.exposedModules = [modprefix ++ "." ++ fcname]}
         cabal    = CabalConfig.addSection lib 
                  $ CabalConfig.make name
+
+        path     = UniPath.append location cabalDevPath
     FileWriter.run (UniPath.append ("src") path) ".hs" source
     CabalStore.run cabal $ UniPath.append (name ++ ".cabal") path
     CabalInstall.run cabalDevPath location

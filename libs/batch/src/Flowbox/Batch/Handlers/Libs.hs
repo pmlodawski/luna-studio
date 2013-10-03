@@ -81,34 +81,22 @@ buildLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
 buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ library -> do
     let diag        = Diagnostics.all
         projectName = Library.name library
-        
         outputPath = UniPath.fromUnixString projectName
         tmpName    = "tmp/" ++ projectName
-
-    sources <- Builder.buildLibrary diag library
-    Builder.buildSources tmpName sources
-    Builder.runCabal tmpName projectName
-    Builder.moveExecutable tmpName projectName outputPath
-    Builder.cleanUp tmpName 
-
+    Builder.buildLibrary diag library outputPath projectName tmpName
     return (library, ()))
 
 
 runLibrary :: Library.ID -> Project.ID -> Batch -> IO String
 runLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ library -> do
     let projectName = Library.name library
-
         command = "./" ++ projectName
         noStandardInput = ""
         noArguments     = [] --TODO [PM] : reimplement all this method to support real programs
-
     loggerIO debug $ "Running command '" ++ command ++ "'"
     (errorCode, stdOut, stdErr) <- Process.readProcessWithExitCode command noArguments noStandardInput
-
     let exitMsg = "Program exited with " ++ (show errorCode) ++ " code"
     loggerIO debug exitMsg
-    
-
     return (library, stdOut ++ "\n" ++ "Program exited with " ++ (show errorCode) ++ " code"))
 
 

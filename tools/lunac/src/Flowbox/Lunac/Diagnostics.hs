@@ -22,6 +22,7 @@ import qualified Flowbox.Text.Show.Pretty        as PP
 
 data Diagnostics = Diagnostics { showAST  :: Bool 
                                , showVA   :: Bool
+                               , showFP   :: Bool
                                , showSSA  :: Bool
                                , showHAST :: Bool
                                , showHSC  :: Bool
@@ -29,11 +30,11 @@ data Diagnostics = Diagnostics { showAST  :: Bool
 
 
 all :: Diagnostics
-all = Diagnostics True True True True True
+all = Diagnostics True True True True True True
 
 
 none :: Diagnostics
-none = Diagnostics False False False False False
+none = Diagnostics False False False False False False
 
 
 logger :: Logger
@@ -46,6 +47,10 @@ printAST  v diag = when (showAST  diag) $ logger info (PP.ppqShow v)
 
 printVA :: (Show a, LogWriter m) => a -> Diagnostics -> m ()
 printVA   v diag = when (showVA   diag) $ logger info (PP.ppShow  v)
+
+
+printFP :: (Show a, LogWriter m) => a -> Diagnostics -> m ()
+printFP   v diag = when (showFP   diag) $ logger info (PP.ppShow  v)
 
 
 printSSA :: (QShow.QShow a, LogWriter m) => a -> Diagnostics -> m ()
