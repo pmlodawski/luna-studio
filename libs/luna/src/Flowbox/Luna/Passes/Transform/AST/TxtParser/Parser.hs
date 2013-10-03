@@ -150,7 +150,7 @@ pNativeElem     = choice [ pNativeVar
                          , pNativeCode
                          ]
 pNativeVar      = tok Expr.NativeCode <*> many1 (noneOf "`#")
-pNativeCode     = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol '}'
+pNativeCode     = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol2 False '}'
 
 
 pExpr     s i   = Expr.aftermatch <$> PExpr.buildExpressionParser (optableE s i) (pTermE s i)
@@ -181,10 +181,15 @@ pIdentE   s   = choice [ pVarE s
                        , pConE s
                        ]
 
+pListExpr s i = choice [ try $ tok Expr.RangeFromTo <*> pExpr s i <* L.pRange <*> pExpr s i
+                       , try $ tok Expr.RangeFrom   <*> pExpr s i <* L.pRange
+                       , pExpr s i
+                       ]
+
 pEntBaseE s i = choice [ pIdentE s
                        , tok Expr.Lit    <*> pLit s
                        , tok Expr.Tuple  <*> pTuple  (pExpr s i)
-                       , tok Expr.List   <*> pList   (pExpr s i)
+                       , tok Expr.List   <*> pList   (pListExpr s i)
                        , tok Expr.Native <*> pNative
                        ]
 
