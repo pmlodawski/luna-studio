@@ -29,6 +29,7 @@ import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool                  (Po
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install                 as CabalInstall
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                   as CabalStore
+import qualified Flowbox.Luna.Passes.CodeGen.FClass.Filter                 as FClassFliter
 import qualified Flowbox.Luna.Passes.CodeGen.FClass.Gen                    as FClassGen
 import qualified Flowbox.Luna.Passes.CodeGen.FClass.Install                as FClassInstall
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
@@ -50,7 +51,6 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath                                    as UniPath
 import           Flowbox.System.UniPath                                      (UniPath)
 import qualified Flowbox.Text.Show.Pretty                                  as PP
-
 
 -- TODO [PM] Split into multiple files: there are too many responsibilities in this file
 
@@ -107,7 +107,8 @@ buildAST diag outputPath projectName tmpName ast = do
     hsc  <- HSC.run hast
     Diagnostics.printHSC hsc diag
     
-    FClassInstall.run Common.flowboxPath fp
+    newfp <- FClassFliter.run Common.flowboxPath fp
+    FClassInstall.run Common.flowboxPath newfp
 
     writeSources tmpName hsc
     runCabal tmpName projectName fp
