@@ -75,14 +75,13 @@ example = Source.Source ["Main"]
                   
                   , "def Int.add a b:"
                   , "    ```getIO $ #{a}+#{b}```"
-                  , "def Vector.vtest self a b:"
-                  , "    {a,b}"
                   , "class Console:"
                   , "    def print self msg:"
                   , "        ```print #{msg}```"
                   , "class Vector a:"
                   , "    x,y,z :: a"
-                  
+                  , "def Vector.vtest self a b:"
+                  , "    {a,b}"                  
                   , "def main self:"
                   , "    v = Vector 1 2 3"
                   , "    Console.print (1.add 2)"

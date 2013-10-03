@@ -1,17 +1,12 @@
+def Int.add a b:
+    ```getIO $ #{a}+#{b}```
 class Console:
     def print self msg:
         ```print #{msg}```
-
 class Vector a:
     x,y,z :: a
-    def vtest self:
-        {1,2,3}
-
-class Pawel
-        
+def Vector.vtest self a b:
+    {a,b}"                 
 def main self:
     v = Vector 1 2 3
-    Console.print ((Vector 1 2 3).vtest)
-    Console.print "Hello world!"
-    Console.print v
-    
+    Console.print (1.add 2)

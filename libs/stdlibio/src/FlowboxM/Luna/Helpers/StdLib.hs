@@ -58,3 +58,12 @@ instance GetIO IO where
 
 -----------------
 
+instance Num (Pure Int) where
+    (Pure a) + (Pure b) = Pure $ a + b
+    (Pure a) - (Pure b) = Pure $ a - b
+    (Pure a) * (Pure b) = Pure $ a * b
+    negate (Pure a)     = Pure $ negate a
+    abs (Pure a)        = Pure $ abs a
+    signum (Pure a)     = Pure $ signum a
+    fromInteger a       = Pure $ fromInteger a
+

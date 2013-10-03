@@ -202,7 +202,7 @@ genExpr ast = case ast of
                                             -- constructor function
                                             GenState.addFunction $ genCon name ccname
 
-                                            let test   = HExpr.Bang $ genVArgCon fieldlen name ccname [] (HExpr.ConE [name])
+                                            let test   = genVArgCon fieldlen name ccname [] (HExpr.ConE [name])
                                             GenState.addFunction $ test
 
                                             -- Constructor TH snippet
