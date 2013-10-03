@@ -32,23 +32,27 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.FClass.Gen"
 
 
+pprefix   = "flowboxM-FClasses-"
 indent    = replicate 4 ' '
 nl        = "\n"
 header    = "{-# LANGUAGE FunctionalDependencies, FlexibleInstances #-}\n"
 modprefix = "FlowboxM.Luna.FClasses"
+
+mprefix   = "U_"
 cprefix   = "FC_"
-fprefix   = "U_"
-pprefix   = "flowboxM-FClasses-"
+iprefix   = "_"
+csaprefix = "Arg_"
+isaprefix = "setArg_"
 
 genCode :: String -> String
-genCode name = (header ++ nl ++ fhead ++ cls) where
-    fname     = "_" ++ name
-    cname     = fprefix ++ name
-    cfname    = cprefix ++ name
-    fhead     = "module " ++ modprefix ++ "." ++ cname ++ " where\n\n"
-    cls       = clsheader ++ clsbody
-    clsheader = "class "  ++ cfname ++ " a b | a -> b where\n"
-    clsbody   =  indent ++ fname ++          "    :: a -> b\n"
+genCode name = (header ++ nl ++ fhead ++ cls ++ sacls) where
+    fhead        = "module " ++ modprefix ++ "." ++ mprefix ++ name ++ " where\n\n"
+    cls          = cls_header ++ cls_body
+    cls_header   = "class " ++ cprefix ++ name ++ " a b | a -> b where\n"
+    cls_body     = indent   ++ iprefix ++ name ++ " :: a -> b\n"
+    sacls        = sacls_header ++ sacls_body
+    sacls_header = "class " ++ csaprefix ++ name ++ " m a b | m -> a, m a -> b where\n"
+    sacls_body   = indent   ++ isaprefix ++ name ++ " :: m a -> b\n"
 
 
 -----------------------------------
@@ -63,7 +67,7 @@ packageName = (++) pprefix
 genAndInstall :: PassMonadIO s m  => UniPath -> String -> Pass.Result m ()
 genAndInstall cabalDevPath name  = do
     let location = "tmp/" ++ name
-        fcname   = fprefix ++ name
+        fcname   = mprefix ++ name
         source   = Source (Split.splitOn "." modprefix ++ [fcname]) $ genCode name
         lib      = CabalSection.mkLibrary { CabalSection.exposedModules = [modprefix ++ "." ++ fcname]}
         cabal    = CabalConfig.addSection lib 
