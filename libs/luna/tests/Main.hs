@@ -30,6 +30,7 @@ import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
+import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPool
 import qualified Flowbox.Luna.Data.Source                              as Source
 import           Flowbox.Luna.Data.Source                                (Source)
 import           Flowbox.System.Log.Logger                               
@@ -125,6 +126,10 @@ main_inner = Luna.run $ do
     logger info "\n-------- VarAlias --------"
     va <- VarAlias.run     ast
     logger info $ PP.ppShow va
+
+    logger info "\n-------- FuncPool --------"
+    fp <- FuncPool.run ast
+    logger info $ PP.ppShow fp
 
     logger info "\n-------- SSA --------" 
     ssa <- SSA.run va ast
