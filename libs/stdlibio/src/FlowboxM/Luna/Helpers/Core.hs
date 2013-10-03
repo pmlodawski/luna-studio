@@ -15,17 +15,17 @@ module FlowboxM.Luna.Helpers.Core (
 )
 where
 
-import           Prelude                       hiding ((>>), (>>=), fail, return)
-import qualified Prelude                       as Prelude
-import           FlowboxM.Luna.Helpers.TH.Inst   
-import           FlowboxM.Luna.Helpers.StdLib    
-import           Control.Applicative             
+import           Prelude hiding((>>), (>>=), fail, return)
+import qualified Prelude as Prelude
+import           FlowboxM.Luna.Helpers.TH.Inst       
+import           FlowboxM.Luna.Helpers.StdLib        
+import Control.Applicative
 
 
 --import           Flowbox.Luna.Libs.Std.Data.NTuple.Select   
 --import           Flowbox.Luna.Libs.Std.Base     
 
---import           GHC.TypeLits                    
+import GHC.TypeLits            
 
 (.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 -- f .: g = \x y->f (g x y)
@@ -35,7 +35,7 @@ import           Control.Applicative
 (.:) = (.) . (.)
 
 
---class Failure (a :: Symbol)
+class Failure (a :: Symbol)
 
 --class Get0 a b c | a -> b, a b -> c, a c -> b, a->c where
 --    get0 :: a b -> c
@@ -141,6 +141,7 @@ defFunction5 f v1 v2 v3 v4 v5 = do
     v4' <- getIO v4
     v5' <- getIO v5
     f (Pure v1') (Pure v2') (Pure v3') (Pure v4') (Pure v5')
+
 
 
 liftFPure1  f (Pure a) = Pure $ f a
