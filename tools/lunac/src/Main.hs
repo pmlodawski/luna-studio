@@ -46,7 +46,8 @@ parser = Opt.flag' Conf.Version (long "version" <> hidden)
        <|> Conf.Compilation
            <$> many1     ( argument str ( metavar "inputs" ))
            -- <*> strOption ( long "verbose"  <> short 'v' <> value "0" <> help "Verbose level" )
-           <*> strOption ( long "output"  <> short 'o' <> value "out" <> metavar "output" <> help "Output folder"        )
+           <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "output"  <> help "Output folder"   )
+           <*> strOption ( long "project" <> short 'p' <> value "project" <> metavar "project" <> help "Project name"    )
            <*> switch    ( long "verbose" <> short 'v'                                    <> help "Verbose level"        )
            <*> switch    ( long "no-color"                                                <> help "Disable color output" )
            <*> switch    ( long "dump-all"              <> hidden                                                        )
@@ -87,9 +88,9 @@ run conf = case conf of
                                ( Conf.dump_hsc  conf || Conf.dump_all conf )
                                
             inputs = map UniPath.fromUnixString $ Conf.inputs conf
-            outputPath = UniPath.fromUnixString $ Conf.output conf
-            projectName = "project"
-        tmpName <- (++) "tmp/" <$> Random.newGUID
+            outputPath  = UniPath.fromUnixString $ Conf.output conf
+            projectName = Conf.project conf
+            tmpName     = "tmp/" ++ projectName
 
         Initializer.checkedInitialize
 
