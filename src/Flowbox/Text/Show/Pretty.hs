@@ -25,6 +25,6 @@ ppqShow = show . ppqDoc
 --   just use its standard 'Show' instance.
 ppqDoc :: QShow a => a -> Doc
 ppqDoc a = case parseValue txt of
-            Just v  -> ppValue v
+            Just v  -> valToDoc v
             Nothing -> text txt
   where txt = qshow a
