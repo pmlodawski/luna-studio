@@ -19,6 +19,7 @@ import qualified Flowbox.Lunac.Conf              as Conf
 import           Flowbox.Lunac.Conf                (Conf)
 import           Flowbox.Lunac.Diagnostics         (Diagnostics(Diagnostics))
 import           Flowbox.System.Log.Logger         
+import qualified Flowbox.System.Random           as Random
 import qualified Flowbox.System.UniPath          as UniPath
 
 
@@ -88,7 +89,7 @@ run conf = case conf of
             inputs = map UniPath.fromUnixString $ Conf.inputs conf
             outputPath = UniPath.fromUnixString $ Conf.output conf
             projectName = "project"
-            tmpName = "tmp/tmp-333"
+        tmpName <- (++) "tmp/" <$> Random.newGUID
 
         Initializer.checkedInitialize
 
