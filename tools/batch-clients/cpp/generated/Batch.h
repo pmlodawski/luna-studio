@@ -63,6 +63,7 @@ class BatchIf {
   virtual void FS_rm(const std::string& path) = 0;
   virtual void FS_cp(const std::string& src, const std::string& dst) = 0;
   virtual void FS_mv(const std::string& src, const std::string& dst) = 0;
+  virtual void initialize() = 0;
   virtual void ping() = 0;
   virtual void dump() = 0;
   virtual void shutdown() = 0;
@@ -237,6 +238,9 @@ class BatchNull : virtual public BatchIf {
     return;
   }
   void FS_mv(const std::string& /* src */, const std::string& /* dst */) {
+    return;
+  }
+  void initialize() {
     return;
   }
   void ping() {
@@ -6316,6 +6320,80 @@ class Batch_FS_mv_presult {
 };
 
 
+class Batch_initialize_args {
+ public:
+
+  Batch_initialize_args() {
+  }
+
+  virtual ~Batch_initialize_args() throw() {}
+
+
+  bool operator == (const Batch_initialize_args & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_initialize_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_initialize_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_initialize_pargs {
+ public:
+
+
+  virtual ~Batch_initialize_pargs() throw() {}
+
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_initialize_result {
+ public:
+
+  Batch_initialize_result() {
+  }
+
+  virtual ~Batch_initialize_result() throw() {}
+
+
+  bool operator == (const Batch_initialize_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const Batch_initialize_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Batch_initialize_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Batch_initialize_presult {
+ public:
+
+
+  virtual ~Batch_initialize_presult() throw() {}
+
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+
 class Batch_ping_args {
  public:
 
@@ -6701,6 +6779,9 @@ class BatchClient : virtual public BatchIf {
   void FS_mv(const std::string& src, const std::string& dst);
   void send_FS_mv(const std::string& src, const std::string& dst);
   void recv_FS_mv();
+  void initialize();
+  void send_initialize();
+  void recv_initialize();
   void ping();
   void send_ping();
   void recv_ping();
@@ -6773,6 +6854,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_FS_rm(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_FS_cp(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_FS_mv(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_initialize(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_ping(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_dump(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_shutdown(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -6827,6 +6909,7 @@ class BatchProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["FS_rm"] = &BatchProcessor::process_FS_rm;
     processMap_["FS_cp"] = &BatchProcessor::process_FS_cp;
     processMap_["FS_mv"] = &BatchProcessor::process_FS_mv;
+    processMap_["initialize"] = &BatchProcessor::process_initialize;
     processMap_["ping"] = &BatchProcessor::process_ping;
     processMap_["dump"] = &BatchProcessor::process_dump;
     processMap_["shutdown"] = &BatchProcessor::process_shutdown;
@@ -7317,6 +7400,15 @@ class BatchMultiface : virtual public BatchIf {
       ifaces_[i]->FS_mv(src, dst);
     }
     ifaces_[i]->FS_mv(src, dst);
+  }
+
+  void initialize() {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->initialize();
+    }
+    ifaces_[i]->initialize();
   }
 
   void ping() {

@@ -209,6 +209,7 @@ service Batch {
      * Other
      */
 
+    void initialize()
     void ping()
     void dump()
     void shutdown()

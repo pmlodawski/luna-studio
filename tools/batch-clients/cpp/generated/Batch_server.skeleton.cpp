@@ -262,6 +262,11 @@ class BatchHandler : virtual public BatchIf {
     printf("FS_mv\n");
   }
 
+  void initialize() {
+    // Your implementation goes here
+    printf("initialize\n");
+  }
+
   void ping() {
     // Your implementation goes here
     printf("ping\n");

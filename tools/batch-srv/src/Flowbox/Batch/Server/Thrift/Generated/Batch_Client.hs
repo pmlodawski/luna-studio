@@ -12,7 +12,7 @@
 -- DO NOT EDIT UNLESS YOU ARE SURE YOU KNOW WHAT YOU ARE DOING --
 -----------------------------------------------------------------
 
-module Batch_Client(projects,projectByID,createProject,openProject,updateProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,runLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,resolveDefinition,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeName,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,ping,dump,shutdown) where
+module Batch_Client(projects,projectByID,createProject,openProject,updateProject,closeProject,storeProject,libraries,libraryByID,createLibrary,loadLibrary,unloadLibrary,storeLibrary,buildLibrary,runLibrary,libraryRootDef,defsGraph,defByID,addDefinition,updateDefinition,removeDefinition,definitionChildren,definitionParent,resolveDefinition,newTypeModule,newTypeClass,newTypeFunction,newTypeUdefined,newTypeNamed,newTypeName,newTypeTuple,nodesGraph,nodeByID,addNode,updateNode,removeNode,connect,disconnect,nodeDefaults,setNodeDefault,removeNodeDefault,fS_ls,fS_stat,fS_mkdir,fS_touch,fS_rm,fS_cp,fS_mv,initialize,ping,dump,shutdown) where
 import           Data.IORef             
 import Prelude ( Bool(..), Enum, Double, String, Maybe(..),
                  Eq, Show, Ord,
@@ -1230,6 +1230,26 @@ recv_FS_mv ip = do
   case f_FS_mv_result_missingFields res of
     Nothing -> return ()
     Just _v -> throw _v
+  return ()
+initialize (ip,op) = do
+  send_initialize op
+  recv_initialize ip
+send_initialize op = do
+  seq <- seqid
+  seqn <- readIORef seq
+  writeMessageBegin op ("initialize", M_CALL, seqn)
+  write_Initialize_args op (Initialize_args{})
+  writeMessageEnd op
+  tFlush (getTransport op)
+recv_initialize ip = do
+  (fname, mtype, rseqid) <- readMessageBegin ip
+  if mtype == M_EXCEPTION then do
+    x <- readAppExn ip
+    readMessageEnd ip
+    throw x
+    else return ()
+  res <- read_Initialize_result ip
+  readMessageEnd ip
   return ()
 ping (ip,op) = do
   send_ping op
