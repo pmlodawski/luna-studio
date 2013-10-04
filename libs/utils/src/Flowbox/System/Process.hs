@@ -45,7 +45,7 @@ readOutput hout herr = do
                 else do errEOF <- IO.hIsEOF err
                         if not errEOF
                         then do latestErr <- IO.hGetLine err
-                                loggerIO error latestErr
+                                loggerIO debug latestErr
                                 readOutput1 out err allOut (allErr ++ "\n" ++ latestErr)
                         else return (allOut, allErr)
 
