@@ -48,7 +48,7 @@ checkedInitialize = do
 
 initialize :: IO ()
 initialize = do
-    loggerIO info "Configuring Flowbox for the first use."
+    loggerIO info "Configuring Flowbox for the first use. Please wait..."
     let location = "tmp/stdlibio"
     Directory.createDirectoryIfMissing True $ UniPath.append "tmp" Common.flowboxPath
     Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["update"] 
@@ -58,6 +58,7 @@ initialize = do
     Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["install", location] 
     Directory.removeDirectoryRecursive $ UniPath.append location Common.flowboxPath
     Directory.touchFile installedFile
+    loggerIO info "Flowbox configured successfully."
 
 
 clear :: IO ()

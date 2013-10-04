@@ -13,4 +13,4 @@ import           Flowbox.System.UniPath   (UniPath)
 
 
 flowboxPath :: UniPath
-flowboxPath = UniPath.fromUnixString "~/.flowbox"
+flowboxPath = UniPath.fromUnixString "$APPDATA"
