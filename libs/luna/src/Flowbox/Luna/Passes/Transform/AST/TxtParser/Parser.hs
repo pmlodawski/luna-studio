@@ -34,6 +34,7 @@ import           Control.Monad
 pTuple      p = L.braced (sepBy p L.separator)
 pImplTuple  p = sepBy2 p L.separator
 pCallList s p = L.parensed s (sepBy p L.separator)
+pArgListL s p = try(L.parensed s (sepBy2 p L.separator)) <|> ((:[]) <$> (try p <|> L.parensed s p))
 pArgList  s p = try(L.parensed s (sepBy2 p L.separator)) <|> many (try p <|> L.parensed s p)
 pArgList' s p = try(L.parensed s (sepBy2 p L.separator)) <|> ((:[]) <$> p)
 pList       p = L.bracketed (sepBy p L.separator)
@@ -89,18 +90,20 @@ pFunc       s i    = tok Expr.Function <*  L.pDef
                                        <*> (pExprBlock s i <|> return [])
                                        <?> "function definition"
 
---pExtMethod  s i    = tok Expr.ExtMethod <* L.pDef
---                                        <*> 
+
+pLambda      s i    = tok Expr.Lambda  <*> pArgListL s (pArg s i)
+                                       <*> (try (L.pArrow *> pType s i) <|> tok Type.Unknown)
+                                       <*> pExprBlock s i
+                                       <?> "lambda definition"
 
 
+pClass       s i    = tok Class.mk     <*  L.pClass
+                                       <*> (tok Type.Class <*> L.pIdentType s <*> many (L.pIdentTypeVar s))
+                                       <??$> pBlockBegin (pClassBody s) i 
+                                       <?> "class definition"
 
-pClass       s i    = tok Class.mk  <*  L.pClass
-                                    <*> (tok Type.Class <*> L.pIdentType s <*> many (L.pIdentTypeVar s))
-                                    <??$> pBlockBegin (pClassBody s) i 
-                                    <?> "class definition"
-
-pModule name s i    = tok Module.mk <*>   (tok Type.Module <*> pure name)
-                                    <??$> pSegmentBegin (pModuleBody s) i
+pModule name s i    = tok Module.mk    <*>   (tok Type.Module <*> pure name)
+                                       <??$> pSegmentBegin (pModuleBody s) i
 
 
 
@@ -111,7 +114,6 @@ pClassBody   s i    = choice [ Expr.addMethod <$> pFunc s i
 
 pModuleBody  s i    = choice [ Module.addMethod <$> pFunc s i
                              , pCombine Module.addField (pFields s i)
-                             --, (\x y -> Module.addField (x!!0) y) <$> pFields s i
                              , Module.addClass  <$> pClass s i
                              , Module.addImport <$> pImport s 
                              ]
@@ -138,6 +140,7 @@ pFields      s i    =   (\names t val -> map (tok . (mkField t val)) names )
 pDeclaration s i    = choice [ pImport s 
                              , pFunc   s i
                              , pClass  s i
+                             , try $ pLambda s i
                              ]
 
 

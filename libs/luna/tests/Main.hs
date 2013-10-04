@@ -79,8 +79,6 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source ["Main"]
         $ unlines [ ""
-                  --, "def Int.add a b:"
-                  --, "    ```pureIO $ a+b```"
                   , "def List.length self:"
                   , "    ```getIO $ liftFPure1 length #{self}```"
                   , "def Int.add a b:"
@@ -90,22 +88,28 @@ example = Source.Source ["Main"]
                   , "        ```print #{msg}```"
 
 
-                  , "class Vector a:"
-                  , "    x,y,z :: a"
-                  , "def Vector.vtest self a b:"
-                  , "    {a,b}"                  
+                  --, "class Vector a:"
+                  --, "    x,y,z :: a"
+                  --, "def Vector.vtest self a b:"
+                  --, "    {a,b}"       
+                  --, "def test self a b:"
+                  --, "    a + b"           
+                  --, "    a = x: x.add 5"
+                  --, "    v = Vector 1 2 3"
+                  --, "    Console.print ([1,2,30..0].length)"
+
+                  --, "    Console.print (1.add 2)"
+
                   , "def main self:"
-                  , "    v = Vector 1 2 3"
-                  , "    Console.print ([1,2,30..0].length)"
-
-                  --, "    Console.print (1.add 2)"
-
-                  --, "def main self:"
-                  --, "    Console.print (1.add 2)"
+                  , "    Console.print (1.add 2)"
 
                   --, "    v = Vector 0 0 0"
                   --, "    Console.print v"
                   --, "    Console.print v"
+                    --, "def main self:"
+                    --, "    a = x:x"
+                    ----, "    a = {a,a,a}"
+                    --, "    a 5"
                   ]
 
 --example :: Source

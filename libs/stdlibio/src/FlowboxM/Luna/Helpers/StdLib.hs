@@ -28,6 +28,7 @@ instance (Typeable a, Typeable b) => Show (a -> b) where
 newtype Pure a = Pure { getPure :: a } deriving(Typeable)
 
 instance Show a => Show (Pure a) where
+    --show (Pure a) = show a
     show (Pure a) = "Pure " ++ show a
 
 newtype Func a = Func a deriving(Show, Typeable)
