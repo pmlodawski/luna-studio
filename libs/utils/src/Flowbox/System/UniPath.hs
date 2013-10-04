@@ -34,13 +34,19 @@ empty = []
 
 fromUnixString :: String -> UniPath
 fromUnixString []           = empty
-fromUnixString spath@(x:xs) = case x of
-        '/' -> fromList $ "/" : Split.splitOn "/" xs
+fromUnixString spath@(x:xs) = let 
+    split = Split.splitOn "/"
+    in case x of
+        '/' -> fromList $ "/" : split xs
         '~' -> case xs of 
                   []     -> [Var "~"]
                   '/':ys -> Var "~" : (fromUnixString ys)
-                  _      -> fromList $ Split.splitOn "/" xs
-        _   -> fromList $ Split.splitOn "/" spath
+                  _      -> fromList $ split xs
+        '$' -> var : rest where
+               splitted = split spath
+               var  = Var $ head splitted
+               rest = fromList $ tail splitted
+        _   -> fromList $ split spath
 
 
 toUnixString :: UniPath -> String
@@ -50,9 +56,12 @@ toUnixString path = join "/" $ toList path
 expand :: MonadIO m => UniPath -> m UniPath
 expand [] = return empty
 expand (x:xs) = liftIO $ case x of
-        Var "~" -> do home <- Directory.getHomeDirectory
-                      rest <- expand xs
-                      return $ (fromUnixString home) ++ rest
+        Var "~"        -> do home <- Directory.getHomeDirectory
+                             rest <- expand xs
+                             return $ (fromUnixString home) ++ rest
+        Var "$APPDATA" -> do home <- Directory.getAppUserDataDirectory "flowbox"
+                             rest <- expand xs
+                             return $ (fromUnixString home) ++ rest
         _       -> (:) x <$> expand xs
 
 
