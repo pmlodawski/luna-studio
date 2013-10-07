@@ -9,7 +9,8 @@
 module Flowbox.Lunac.Builder where
 
 import           Control.Monad.RWS                                         hiding (mapM_)
-import           Data.Maybe                                                as Maybe
+import qualified Data.Maybe                                                as Maybe
+import qualified Data.List                                                 as List
 import qualified Data.Set                                                  as Set
 
 import           Flowbox.Prelude                                             
@@ -17,6 +18,7 @@ import qualified Flowbox.Initializer.Common                                as Co
 import qualified Flowbox.Luna.Data.AST.Module                              as ASTModule
 import qualified Flowbox.Luna.Data.Cabal.Config                            as CabalConfig
 import qualified Flowbox.Luna.Data.Cabal.Section                           as CabalSection
+import qualified Flowbox.Luna.Data.Source                                  as Source
 import           Flowbox.Luna.Data.Source                                    (Source)
 import qualified Flowbox.Luna.Lib.Library                                  as Library
 import           Flowbox.Luna.Lib.Library                                    (Library)
@@ -80,9 +82,9 @@ buildLibrary :: Diagnostics -> Library -> UniPath -> String -> String -> IO ()
 buildLibrary diag library outputPath projectName tmpName = either2io $ Luna.run $ do
     let defManger = Library.defs library
         rootDefID = Library.rootDefID
-        rootDef = fromJust $ DefManager.lab defManger rootDefID
+        rootDef = Maybe.fromJust $ DefManager.lab defManger rootDefID
     ast <- parseGraph diag defManger (rootDefID, rootDef)
-    buildAST diag outputPath projectName tmpName ast
+    buildAST diag outputPath projectName tmpName False ast
 
 
 buildFile :: Conf -> Diagnostics -> UniPath -> IO ()
@@ -96,11 +98,11 @@ buildFile conf diag path = either2io $ Luna.run $ do
                         a  -> UniPath.fromUnixString a
 
     ast  <- parseFile diag rootPath path
-    buildAST diag outputPath projectName tmpName ast
+    buildAST diag outputPath projectName tmpName (Conf.library conf) ast
 
 
-buildAST :: PassMonadIO s m => Diagnostics -> UniPath -> String -> String -> ASTModule.Module -> Pass.Result m ()
-buildAST diag outputPath projectName tmpName ast = do 
+buildAST :: PassMonadIO s m => Diagnostics -> UniPath -> String -> String -> Bool -> ASTModule.Module -> Pass.Result m ()
+buildAST diag outputPath projectName tmpName isLibrary ast = do 
     va   <- VarAlias.run ast
     Diagnostics.printVA va diag 
     fp <- FuncPool.run ast
@@ -115,10 +117,13 @@ buildAST diag outputPath projectName tmpName ast = do
     newfp <- FClassFliter.run Common.flowboxPath fp
     FClassInstall.run Common.flowboxPath newfp
 
-    writeSources tmpName hsc
-    runCabal tmpName projectName fp
-    moveExecutable tmpName projectName outputPath
-    cleanUp tmpName
+    let cabal    = genCabal projectName isLibrary fp hsc
+    writeSources   tmpName hsc
+    runCabal       tmpName projectName cabal
+    if isLibrary
+        then return ()
+        else moveExecutable tmpName projectName outputPath
+    cleanUp        tmpName
 
 
 parseGraph :: PassMonad s m => Diagnostics -> DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTModule.Module
@@ -139,20 +144,26 @@ parseFile diag rootPath path = do
     return ast
 
 
-genCabal :: String -> Pool -> CabalConfig.Config
-genCabal name (Pool names) = let
-    exec_base = CabalSection.mkExecutable name 
-    exec = exec_base { CabalSection.buildDepends = ["pretty-show"
-                                                   , "random"
-                                                   , "base"
-                                                   , "OneTuple"
-                                                   , "template-haskell"
-                                                   , "flowboxM-stdlib-io"
-                                                   ] ++ (map FClassGen.packageName $ Set.toList names)
-                     }
+genCabal :: String -> Bool -> Pool -> [Source] -> CabalConfig.Config
+genCabal name isLibrary (Pool names) sources = let
 
-    -- TODO [PM] : refactor. mkExecutable silently creates project with MainIs = "Main.hs" and hsSourceDirs = "src"
-    conf = CabalConfig.addSection exec 
+    getModuleName :: Source -> String
+    getModuleName source = List.intercalate "." $ Source.path source
+
+    section_base = if isLibrary 
+                     then CabalSection.mkLibrary { CabalSection.exposedModules = map getModuleName sources
+                                                 }
+                     else CabalSection.mkExecutable name 
+    section = section_base { CabalSection.buildDepends = ["pretty-show"
+                                                         , "random"
+                                                         , "base"
+                                                         , "OneTuple"
+                                                         , "template-haskell"
+                                                         , "flowboxM-stdlib-io"
+                                                         ] ++ (map FClassGen.packageName $ Set.toList names)
+                           }
+
+    conf = CabalConfig.addSection section 
          $ CabalConfig.make name
     in conf
 
@@ -163,10 +174,9 @@ writeSources location sources = do
     mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) sources 
 
 
-runCabal :: PassMonadIO s m => String -> String -> Pool -> Pass.Result m ()
-runCabal location name pool = do 
-    let cabal      = genCabal name pool
-        outputPath = UniPath.append location Common.flowboxPath
+runCabal :: PassMonadIO s m => String -> String -> CabalConfig.Config -> Pass.Result m ()
+runCabal location name cabal = do 
+    let outputPath = UniPath.append location Common.flowboxPath
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) outputPath
     CabalInstall.run Common.flowboxPath location
 
