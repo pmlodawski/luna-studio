@@ -45,17 +45,20 @@ parser = Opt.flag' Conf.Version (long "version" <> hidden)
        <|> Conf.Compilation
            <$> many1     ( argument str ( metavar "inputs" ))
            -- <*> strOption ( long "verbose"  <> short 'v' <> value "0" <> help "Verbose level" )
-           <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "output"  <> help "Output folder"   )
-           <*> strOption ( long "project" <> short 'p' <> value "project" <> metavar "project" <> help "Project name"    )
-           <*> switch    ( long "verbose" <> short 'v'                                    <> help "Verbose level"        )
-           <*> switch    ( long "no-color"                                                <> help "Disable color output" )
-           <*> switch    ( long "dump-all"              <> hidden                                                        )
-           <*> switch    ( long "dump-ast"              <> hidden                                                        )
-           <*> switch    ( long "dump-va"               <> hidden                                                        )
-           <*> switch    ( long "dump-fp"               <> hidden                                                        )
-           <*> switch    ( long "dump-ssa"              <> hidden                                                        )
-           <*> switch    ( long "dump-hast"             <> hidden                                                        )
-           <*> switch    ( long "dump-hsc"              <> hidden                                                        )
+           <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "output"  <> help "Output folder" )
+           <*> strOption ( long "project" <> short 'p' <> value "project" <> metavar "project" <> help "Project name"  )
+           <*> strOption ( long "root-path"            <> value ""        <> hidden                                    )
+           <*> switch    ( long "global"                                  <> help "Compile to global cabal repository" )
+           <*> switch    ( long "libary"                                  <> help "Compile library project"            )
+           <*> switch    ( long "verbose" <> short 'v'                    <> help "Verbose level"                      )
+           <*> switch    ( long "no-color"                                <> help "Disable color output"               )
+           <*> switch    ( long "dump-all"              <> hidden                                                      )
+           <*> switch    ( long "dump-ast"              <> hidden                                                      )
+           <*> switch    ( long "dump-va"               <> hidden                                                      )
+           <*> switch    ( long "dump-fp"               <> hidden                                                      )
+           <*> switch    ( long "dump-ssa"              <> hidden                                                      )
+           <*> switch    ( long "dump-hast"             <> hidden                                                      )
+           <*> switch    ( long "dump-hsc"              <> hidden                                                      )
 
 
 opts :: ParserInfo Conf
@@ -94,32 +97,4 @@ run conf = case conf of
         Initializer.checkedInitialize
 
         mapM_ (Builder.buildFile conf diag) inputs
-        --sources <- mapM (Builder.buildFile diag) inputs
-        --Builder.buildSources tmpName $ List.concat sources
-        --Builder.prepareFClasses 
-        --Builder.runCabal tmpName projectName
-        --Builder.moveExecutable tmpName projectName outputPath
-        --Builder.cleanUp tmpName 
-
-
-        --print $ length sources
-
-        -- TODO [PM] : This code does not compile
-
-        --case noColor conf of
-        --    True   -> Logger.enableColorOutput False logger
-        --    False  -> Logger.enableColorOutput True  logger
-
-        --logger.debug $ "Searching for environment variable '" ++ libPathEnv ++ "'"
-
-        --pushLogGroup logger 
-        --lunapath <- try $ Env.getEnv libPathEnv
-        --case lunapath of
-        --    Left _    -> logger.debug $ "Not defined"
-        --    Right var -> logger.debug $ "Found: '" ++ var ++ "'"
-        --popLogGroup logger 
-
-        --let inputs' = inputs conf
-        --logger.debug $ "Reading input files: " ++ show inputs'
-
-        return ()
+      

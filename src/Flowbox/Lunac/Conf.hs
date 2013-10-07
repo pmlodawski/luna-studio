@@ -14,8 +14,14 @@ import           Flowbox.Prelude
 data Conf = Compilation { inputs    :: [String]
                         , output    :: String
                         , project   :: String
+                        , rootPath  :: String
+
+                        , global    :: Bool
+                        , library   :: Bool
+                        
                         , verbose   :: Bool
                         , noColor   :: Bool
+                        
                         , dump_all  :: Bool
                         , dump_ast  :: Bool
                         , dump_va   :: Bool

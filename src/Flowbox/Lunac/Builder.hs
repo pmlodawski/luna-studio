@@ -86,11 +86,16 @@ buildLibrary diag library outputPath projectName tmpName = either2io $ Luna.run 
 
 
 buildFile :: Conf -> Diagnostics -> UniPath -> IO ()
-buildFile conf diag paths = either2io $ Luna.run $ do 
+buildFile conf diag path = either2io $ Luna.run $ do 
     let outputPath  = UniPath.fromUnixString $ Conf.output conf
         projectName = Conf.project conf
         tmpName     = "tmp/" ++ projectName
-    ast  <- parseFile diag paths
+        
+        rootPath = case Conf.rootPath conf of 
+                        "" -> UniPath.basePath path
+                        a  -> UniPath.fromUnixString a
+
+    ast  <- parseFile diag rootPath path
     buildAST diag outputPath projectName tmpName ast
 
 
@@ -125,10 +130,9 @@ parseGraph diag defManager def = do
     return ast
 
 
-parseFile :: PassMonadIO s m => Diagnostics -> UniPath -> Pass.Result m ASTModule.Module
-parseFile diag path = do 
+parseFile :: PassMonadIO s m => Diagnostics -> UniPath -> UniPath -> Pass.Result m ASTModule.Module
+parseFile diag rootPath path = do 
     logger debug $ "Compiling file '" ++ UniPath.toUnixString path ++ "'"
-    let rootPath = UniPath.basePath path
     source <- FileReader.run rootPath path
     ast    <- TxtParser.run source
     Diagnostics.printAST ast diag 
