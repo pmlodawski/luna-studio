@@ -30,10 +30,10 @@ data Expr  = NOP         { id :: ID                                             
            | Assignment  { id :: ID, pat       :: Pat      , dst       :: Expr                                              }
            | Class       { id :: ID, cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]  }
            | Con         { id :: ID, name      :: String                                                                    }
-           | Function    { id :: ID, path      :: [String] , name      :: String   , inputs    :: [Expr] , output    :: Type   ,  body    :: [Expr] }
+           | Function    { id :: ID, path      :: [String] , name      :: String , inputs    :: [Expr] , output    :: Type   ,  body    :: [Expr] }
+           | Lambda      { id :: ID, inputs    :: [Expr]   , output    :: Type   , body      :: [Expr]                      }
            | Import      { id :: ID, path      :: [String] , target    :: Expr   , rename    :: Maybe String                }
            | Infix       { id :: ID, name      :: String   , src       :: Expr   , dst       :: Expr                        }                                                               
-           | Lambda      { id :: ID, pats      :: [Pat]    , output    :: Type   , body      :: [Expr]                      }
            | List        { id :: ID, items     :: [Expr]                                                                    }
            | Lit         { id :: ID, lvalue    :: Lit                                                                       }
            | Tuple       { id :: ID, items     :: [Expr]                                                                    }
@@ -90,7 +90,7 @@ traverseM fexp ftype fpat flit e = case e of
     Field       id' name' cls' value'              -> Field       id' name' <$> ftype cls' <*> fexpMap value' 
     Function    id' path' name' inputs' output'                    
                 body'                              -> Function    id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
-    Lambda      id'       pats' output' body'      -> Lambda      id'       <$> fpatMap pats' <*> ftype output' <*> fexpMap body'
+    Lambda      id' inputs' output' body'          -> Lambda      id'             <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Import      {}                                 -> pure e      
     Infix       id' name' src' dst'                -> Infix       id' name' <$> fexp src'     <*> fexp dst'
     List        id' items'                         -> List        id'       <$> fexpMap items'
@@ -120,7 +120,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     Con         {}                                 -> drop
     Field       _ _ cls' value'                    -> drop <* ftype cls' <* fexpMap value' 
     Function    _ _ _ inputs' output' body'        -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
-    Lambda      _        pats' output' body'       -> drop <* fpatMap pats' <* ftype output' <* fexpMap body'
+    Lambda      _ inputs' output' body'            -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
     Import      {}                                 -> drop
     Infix       _  _ src' dst'                     -> drop <* fexp src'     <* fexp dst'
     List        _  items'                          -> drop <* fexpMap items'

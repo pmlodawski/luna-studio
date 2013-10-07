@@ -13,6 +13,7 @@ import qualified Flowbox.Luna.Data.HAST.Lit  as HLit
 
 
 mkCFName     = ("CF_" ++)
+mkCFLName    = ("CF_" ++)
 mkCCName     = ("CC_" ++)
 mkFCName     = ("FC" ++)
 mkGetName    = ("get" ++)
@@ -22,6 +23,7 @@ mkFieldName  = (++"_T")
 mkFuncName   = ("f_" ++)
 mkVarName    = ("_" ++)
 mkConsName   = ("_" ++)
+mkLamName    = ("Lambda_" ++)
 
 mangleName cname fname = cname ++ fname
 
