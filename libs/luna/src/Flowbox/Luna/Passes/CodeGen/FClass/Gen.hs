@@ -11,6 +11,7 @@ module Flowbox.Luna.Passes.CodeGen.FClass.Gen where
 
 import           Control.Monad.RWS                           
 import qualified Data.List.Split                           as Split
+import qualified Data.String.Utils                         as StringUtils
 
 import           Flowbox.Prelude                           hiding (error)
 import qualified Flowbox.Luna.Data.Cabal.Config            as CabalConfig
@@ -25,7 +26,6 @@ import qualified Flowbox.System.Directory.Directory        as Directory
 import           Flowbox.System.Log.Logger                   
 import qualified Flowbox.System.UniPath                    as UniPath
 import           Flowbox.System.UniPath                      (UniPath)
-
 
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.FClass.Gen"
@@ -61,7 +61,11 @@ genCode name = (header ++ nl ++ fhead ++ cls ++ sacls) where
 --run = genAndInstall
 
 packageName :: String -> String
-packageName = (++) pprefix
+packageName name = pprefix ++ clearedname where
+    clearedname = StringUtils.replace "_" ("-"++safePrefix)
+                $ StringUtils.replace "-" ("-"++safePrefix)
+                $ StringUtils.replace safePrefix (safePrefix++safePrefix) name
+    safePrefix  = "SAFEPREFIX"
 
 
 genAndInstall :: PassMonadIO s m  => UniPath -> String -> Pass.Result m ()

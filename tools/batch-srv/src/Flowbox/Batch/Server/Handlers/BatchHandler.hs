@@ -110,5 +110,6 @@ instance Batch_Iface BatchHandler where
     ping _              = loggerIO info "ping"
     dump batchHandler   = Common.tRunScript $ do batch <- tryReadIORef batchHandler
                                                  scriptIO $ print batch
-    shutdown _          = loggerIO info "shutdown"
-    initialize _        = Common.tRunScript $ scriptIO $ Initializer.checkedInitialize
+    shutdown _          = loggerIO info "called shutdown"
+    initialize _        = do loggerIO info "called initialize"
+                             Common.tRunScript $ scriptIO $ Initializer.checkedInitialize

@@ -14,7 +14,6 @@ module Flowbox.System.Process (
 
 import           Control.Applicative         
 import qualified Control.Exception         as Exception
-import qualified Data.Maybe                as Maybe
 import qualified System.IO                 as IO
 import qualified System.Exit               as Exit
 import qualified System.Directory          as Directory
@@ -64,9 +63,10 @@ runProcessInFolder upath command args  = do
     
     (_, e)   <- readOutput out err
     exitCode <- Process.getProcessExitCode pid
-    if exitCode /= Just Exit.ExitSuccess
-        then fail $ "'" ++ commandName ++ "' returned with exit code: " ++ (show $ Maybe.fromJust exitCode) ++ "\n" ++ e
-        else return ()
+    case exitCode of
+        Nothing               -> loggerIO alert "Could not get exit code! (bug in ghc)"
+        Just Exit.ExitSuccess -> return ()
+        Just a                -> fail $ "'" ++ commandName ++ "' returned with exit code: " ++ (show a) ++ "\n" ++ e
 
 
 readProcessInFolder :: UniPath -> String -> [String] -> String -> IO String
