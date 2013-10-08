@@ -11,7 +11,7 @@ import os.path
 
 
 def main():
-    cfgname = 'build.cfg'
+    cfgname = '.build.cfg'
     if not os.path.isfile(cfgname):
         print_error("No build configuration file found. Run 'workon' script.")
         sys.exit(1)

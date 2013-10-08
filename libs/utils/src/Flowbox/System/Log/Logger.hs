@@ -23,6 +23,7 @@ import           System.Log.Logger           hiding (getLogger, setLevel, Logger
 import           Prelude                     hiding (log, fail)
 import qualified Data.DList                  as DList
 import           Data.DList                    (DList)
+import           Control.Monad.IO.Class
 
 import qualified Flowbox.System.Log.LogEntry as LogEntry
 
@@ -33,7 +34,7 @@ type LogWriter m = MonadWriter LogList m
 
 type LogAction b = LogWriter m => String -> String -> m b
 type Logger      = forall t t1. (t1 -> String -> t) -> t1 -> t
-type LoggerIO    = forall t. (t -> String -> Writer LogList ()) -> t -> IO ()
+type LoggerIO    = MonadIO m => forall t. (t -> String -> Writer LogList ()) -> t -> m ()
 
 getLogger :: String -> Logger
 getLogger name = \action msg -> action msg name
@@ -41,7 +42,7 @@ getLogger name = \action msg -> action msg name
 getLoggerIO :: String -> LoggerIO
 getLoggerIO name = \action msg -> runLogger $ action msg name
 
-runLogger :: Writer LogList a -> IO a
+runLogger :: MonadIO m => Writer LogList a -> m a
 runLogger m = do
     let (out, entries) = runWriter m
     mapM_ logIO $ DList.toList entries
@@ -56,8 +57,8 @@ append = tell
 logsIO :: LogList -> IO ()
 logsIO entries = mapM_ logIO $ DList.toList entries
 
-logIO :: LogEntry.LogEntry -> IO ()
-logIO entry = do
+logIO :: MonadIO m => LogEntry.LogEntry -> m ()
+logIO entry = liftIO $ do
     --conf <- Conf.read name
     let name  = LogEntry.name     entry
         msg   = LogEntry.msg      entry

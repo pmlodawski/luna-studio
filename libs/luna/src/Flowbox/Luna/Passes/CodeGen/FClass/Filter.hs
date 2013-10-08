@@ -4,6 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+
+-- CR[wd]: Czemu te funkcje sa w osobnych plikach? Sadze ze nie ma potrzeby rozdizelania Filer, gen i intall do roznych plikow.
+
 {-# LANGUAGE ConstraintKinds, FlexibleContexts #-}
 
 module Flowbox.Luna.Passes.CodeGen.FClass.Filter where

@@ -121,11 +121,13 @@ buildAST diag outputPath projectName tmpName isLibrary libs ast = do
     FClassInstall.run Common.flowboxPath newfp
 
     let cabal    = genCabal projectName isLibrary hsc fp libs 
+    -- CR[wd] czemu funkcja o nazwie buildAST to w ogole robi:
     writeSources   tmpName hsc
     runCabal       tmpName projectName cabal
     if isLibrary
         then return ()
         else moveExecutable tmpName projectName outputPath
+    -- CR[wd] czemu funkcja niszczy swoj argument???
     cleanUp        tmpName
 
 
@@ -149,14 +151,12 @@ parseFile diag rootPath path = do
 
 -- TODO [PM] Refactor needed 
 genCabal :: String -> Bool -> [Source] -> Pool -> [String] -> CabalConfig.Config
-genCabal name isLibrary sources (Pool names) libs  = let
-
+genCabal name isLibrary sources (Pool names) libs  = conf where
     getModuleName :: Source -> String
     getModuleName source = List.intercalate "." $ Source.path source
 
     section_base = if isLibrary 
-                     then CabalSection.mkLibrary { CabalSection.exposedModules = map getModuleName sources
-                                                 }
+                     then CabalSection.mkLibrary { CabalSection.exposedModules = map getModuleName sources }
                      else CabalSection.mkExecutable name 
     section = section_base { CabalSection.buildDepends = "pretty-show"
                                                        : "random"
@@ -167,16 +167,21 @@ genCabal name isLibrary sources (Pool names) libs  = let
                                                        :  (map FClassGen.packageName $ Set.toList names)
                                                        ++ libs
                            }
-
     conf = CabalConfig.addSection section 
          $ CabalConfig.make name
-    in conf
+
 
 
 writeSources :: PassMonadIO s m => String -> [Source] -> Pass.Result m ()
 writeSources location sources = do 
     let outputPath = UniPath.append location Common.flowboxPath
-    mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) sources 
+
+        writeSource :: PassMonadIO s m => Source -> Pass.Result m ()
+        writeSource source = do 
+            let path = UniPath.append srcFolder outputPath
+            FileWriter.run path hsExt source
+
+    mapM_ writeSource sources
 
 
 runCabal :: PassMonadIO s m => String -> String -> CabalConfig.Config -> Pass.Result m ()
