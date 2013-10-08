@@ -10,19 +10,38 @@ import ConfigParser
 
 
 class Project(object):
-    name = ''
-    path = ''
-    deps = set()
-    def __init__(self, name, path, deps):
-        self.name = name
-        self.path = path
-        self.deps = set(deps)
+    def __init__(self, name='', path='', binpath='', deps=None):
+        if deps == None: deps = []
+        self.name    = name
+        self.path    = path
+        self.binpath = binpath
+        self.deps    = set(deps)
+
+    def install(self):   pass
+
+    def uninstall(self): pass
+
+    def targets(self):
+        return [self]
+
+    def target_binpaths(self):
+        paths = []
+        for target in self.targets():
+            paths.append(target.binpath)
+        return paths
+
+    def target_names(self):
+        names = []
+        for target in self.targets():
+            names.append(target.name)
+        return names
 
 class HProject(Project):
     def install(self):
         cmd = 'cabal sandbox add-source %s' % self.path
         (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
-        return (out, err)
+        handle_error(err)
+        return out
 
     def uninstall(self):
         cmd = 'cabal sandbox hc-pkg unregister %s' % self.name
@@ -30,27 +49,32 @@ class HProject(Project):
         if err: 
             if not err.startswith('ghc-pkg: cannot find package'):
                 handle_error(err)
-        return (out, err)
-
-class CProject(Project):
-    def install(self):
-        pass
-
-    def uninstall(self):
-        pass
+        return out
 
 
-pkgs = { 'utils'       : HProject('flowbox-utils'      , 'libs/utils'       , []                                                 )
-       , 'config'      : HProject('flowbox-config'     , 'libs/config'      , ['utils']                                          )
-       , 'stdlibio'    : HProject('flowboxM-stdlib-io' , 'libs/stdlibio'    , []                                                 )
-       , 'initializer' : HProject('flowbox-initializer', 'tools/initializer', ['utils']                                          )
-       , 'luna'        : HProject('flowbox-luna'       , 'libs/luna'        , ['utils']                                          )
-       , 'batch'       : HProject('flowbox-batch'      , 'libs/batch'       , ['utils', 'luna', 'lunac']          )
-       , 'batch-srv'   : HProject('flowbox-batch-srv'  , 'tools/batch-srv'  , ['utils', 'initializer', 'luna', 'lunac', 'batch'] )
-       , 'lunac'       : HProject('flowbox-lunac'      , 'tools/lunac'      , ['utils', 'initializer', 'luna']                   )
+
+class AllProject(Project):
+    def targets(self):
+        tgts = []
+        for pname in reversed(deptree):
+            tgts.append(pkgs[pname])
+        return tgts
+
+
+deptree = ['batch-srv','batch', 'lunac', 'initializer', 'wrappers',  'luna', 'config', 'utils', 'stdlibio']
+
+pkgs = { '@all'        : AllProject (deps = deptree)
+       , 'stdlibio'    : HProject   ('flowboxM-stdlib-io'  , 'libs/stdlibio'    , 'libs'     ,[]                                                 )
+       , 'utils'       : HProject   ('flowbox-utils'       , 'libs/utils'       , 'libs'     ,[]                                                 )
+       , 'config'      : HProject   ('flowbox-config'      , 'libs/config'      , 'libs'     ,['utils']                                          )
+       , 'luna'        : HProject   ('flowbox-luna'        , 'libs/luna'        , 'libs'     ,['utils']                                          )
+       , 'batch'       : HProject   ('flowbox-batch'       , 'libs/batch'       , 'libs'     ,['utils', 'luna', 'lunac']                         )
+       , 'wrappers'    : HProject   ('flowbox-wrappers'    , 'tools/wrappers'   , 'wrappers' ,['config']                                         )
+       , 'initializer' : HProject   ('flowbox-initializer' , 'tools/initializer', 'tools'    ,['utils', 'config']                                )
+       , 'lunac'       : HProject   ('flowbox-lunac'       , 'tools/lunac'      , 'tools'    ,['utils', 'config', 'initializer', 'luna']         )
+       , 'batch-srv'   : HProject   ('flowbox-batch-srv'   , 'tools/batch-srv'  , 'tools'    ,['utils', 'config', 'initializer', 'luna', 'lunac', 'batch'] )
        } 
 
-deptree = ['batch-srv', 'batch', 'lunac', 'luna', 'initializer', 'config', 'utils', 'stdlibio']
 
 def flatten(lofl):
     return [val for subl in lofl for val in subl]
@@ -65,13 +89,16 @@ def handle_error(e):
         fatal()
 
 def print_usage():
-    print_info ("Usage: workon {%s} [ARGS]" % ", ".join(pkgs.keys()))
+    print_info ("Usage: workon {%s} [ARGS]" % ", ".join(sorted(pkgs.keys())))
     sys.exit(0)
 
 def main():
     args = sys.argv
     if len(args) < 2 : print_usage()
     target = sys.argv[1]
+    if not target in pkgs:
+        print_error ("Unrecognized target '%s'" % target)
+        print_usage ()
     workon(target)
 
 def check_deps(name):
@@ -93,16 +120,16 @@ def workon(name):
 
     config = ConfigParser.RawConfigParser()
     config.add_section('Target')
-    config.set('Target', 'name', pkg.name)
-    with open('.build.cfg', 'wb') as configfile:
+    config.set('Target', 'names'   , ','.join(pkg.target_names()))
+    config.set('Target', 'binpaths', ','.join(pkg.target_binpaths()))
+    with open('.build.config', 'wb') as configfile:
         config.write(configfile)
 
 
 def register(name):
     print_info("Registering %s" % name)
     pkg = pkgs[name]
-    (out, err) = pkg.install()
-    handle_error(err)
+    pkg.install()
 
 
 def unregister_all():
