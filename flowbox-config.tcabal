@@ -24,7 +24,7 @@ Library
                   transformers
 
 
-Executable config
+Executable config.dbg
   Main-Is:        Main.hs
   Hs-Source-Dirs: tests
 
