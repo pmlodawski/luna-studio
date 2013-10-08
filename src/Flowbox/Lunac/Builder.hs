@@ -110,9 +110,12 @@ buildAST diag outputPath projectName tmpName ast = do
     newfp <- FClassFliter.run Common.flowboxPath fp
     FClassInstall.run Common.flowboxPath newfp
 
+    -- CR[wd] czemu funkcja o nazwie buildAST to w ogole robi:
     writeSources tmpName hsc
     runCabal tmpName projectName fp
     moveExecutable tmpName projectName outputPath
+
+    -- CR[wd] czemu funkcja niszczy swoj argument???
     cleanUp tmpName
 
 
@@ -156,7 +159,7 @@ genCabal name (Pool names) = let
 writeSources :: PassMonadIO s m => String -> [Source] -> Pass.Result m ()
 writeSources location sources = do 
     let outputPath = UniPath.append location Common.flowboxPath
-    mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) sources 
+    mapM_ (FileWriter.run (UniPath.append srcFolder outputPath) hsExt) sources -- CR[wd]: ta linijka jest niezrozumiala
 
 
 runCabal :: PassMonadIO s m => String -> String -> Pool -> Pass.Result m ()
