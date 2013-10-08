@@ -42,7 +42,7 @@ dist
 # cabal sandbox
 cabal.sandbox.config
 .cabal-sandbox
-build.cfg
+.build.cfg
 
 ### DEPRECATED ###
 # cabal-dev
