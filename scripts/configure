@@ -43,7 +43,7 @@ print_info ("Generating cabal configs using gencabal")
 try_call (['scripts/gencabal'])
 
 print_info ("Initializing cabal sandbox")
-try_call (['cabal', 'sandbox', 'init'])
+try_call (['cabal', 'sandbox', 'init', '--sandbox=dist'])
 
 print_info ("Updating cabal package cache")
 try_call(['cabal', 'update'])

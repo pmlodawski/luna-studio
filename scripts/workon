@@ -41,15 +41,16 @@ class CProject(Project):
 
 
 pkgs = { 'utils'       : HProject('flowbox-utils'      , 'libs/utils'       , []                                                 )
+       , 'config'      : HProject('flowbox-config'     , 'libs/config'      , ['utils']                                          )
+       , 'stdlibio'    : HProject('flowboxM-stdlib-io' , 'libs/stdlibio'    , []                                                 )
        , 'initializer' : HProject('flowbox-initializer', 'tools/initializer', ['utils']                                          )
        , 'luna'        : HProject('flowbox-luna'       , 'libs/luna'        , ['utils']                                          )
-       , 'batch'       : HProject('flowbox-batch'      , 'libs/batch'       , ['utils', 'initializer', 'luna', 'lunac']          )
+       , 'batch'       : HProject('flowbox-batch'      , 'libs/batch'       , ['utils', 'luna', 'lunac']          )
        , 'batch-srv'   : HProject('flowbox-batch-srv'  , 'tools/batch-srv'  , ['utils', 'initializer', 'luna', 'lunac', 'batch'] )
        , 'lunac'       : HProject('flowbox-lunac'      , 'tools/lunac'      , ['utils', 'initializer', 'luna']                   )
-       , 'stdlibio'    : HProject('flowboxM-stdlib-io' , 'libs/stdlibio'    , []                                                 )
        } 
 
-deptree = ['batch-srv', 'batch', 'lunac', 'luna', 'initializer', 'utils', 'stdlibio']
+deptree = ['batch-srv', 'batch', 'lunac', 'luna', 'initializer', 'config', 'utils', 'stdlibio']
 
 def flatten(lofl):
     return [val for subl in lofl for val in subl]
@@ -93,7 +94,7 @@ def workon(name):
     config = ConfigParser.RawConfigParser()
     config.add_section('Target')
     config.set('Target', 'name', pkg.name)
-    with open('build.cfg', 'wb') as configfile:
+    with open('.build.cfg', 'wb') as configfile:
         config.write(configfile)
 
 

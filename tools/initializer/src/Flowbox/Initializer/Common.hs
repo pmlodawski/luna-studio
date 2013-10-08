@@ -5,6 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+-- CR[wd] Common nie jest adekwatna nazwa do trzymania konfiguracji.
+
 module Flowbox.Initializer.Common where
 
 import qualified Flowbox.System.UniPath as UniPath
