@@ -7,6 +7,7 @@
 
 module Flowbox.Initializer.Initializer where
 
+import           Control.Applicative
 import           Control.Monad                        
 
 import           Flowbox.Prelude                    hiding (error)
@@ -19,54 +20,52 @@ import           Flowbox.System.UniPath               (UniPath)
 
 
 
-loggerIO :: LoggerIO -- CR[wd] czemu to sie nazywa loggerIO :: ... a nie logger :: ... ?
-loggerIO = getLoggerIO "Flowbox.Initializer.Initializer"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Initializer.Initializer"
 
--- CR[wd] co oznacza nazwa tej funkcji?
-installedFile :: UniPath
-installedFile = UniPath.append "installed" Common.flowboxPath
+
+successfullInstallFileName :: UniPath
+successfullInstallFileName = UniPath.append "installed" Common.flowboxPath
 
 
 isAlreadyInitilized :: IO Bool
 isAlreadyInitilized = do 
-    loggerIO debug "Checking for Flowbox configuration." -- CR[wd] chodizło o słowo "looking" ?
+    logger debug "Checking for Flowbox configuration."
     exists_cabalDev  <- Directory.doesDirectoryExist $ UniPath.append "cabal-dev" Common.flowboxPath
-    exists_installed <- Directory.doesFileExist installedFile
+    exists_installed <- Directory.doesFileExist successfullInstallFileName
     let exists = exists_cabalDev && exists_installed 
-    if exists -- CR[wd] redundancja kodu
-        then loggerIO debug "Configuration already exists."
-        else loggerIO debug "Configuration does not exist or is broken."
+    if exists
+        then logger debug "Configuration already exists."
+        else logger debug "Configuration does not exist or is broken."
     return exists 
 
 
--- CR[wd] Co oznacza ta nazwa?
-checkedInitialize :: IO ()
-checkedInitialize = do
+initializeIfNeeded :: IO ()
+initializeIfNeeded = do
     initialized <- isAlreadyInitilized
-    when (not initialized) (do clear
-                               initialize) -- CR[wd] w takich przypadkach uzywamy >>=
+    when (not initialized) (clear *> initialize)
 
 
 initialize :: IO ()
 initialize = do
-    loggerIO info "Configuring Flowbox for the first use. Please wait..."
+    logger info "Configuring Flowbox for the first use. Please wait..."
     Directory.createDirectoryIfMissing True $ UniPath.append "tmp" Common.flowboxPath
     Process.runProcessInFolder Common.flowboxPath "cabal" ["update"] 
     Process.runProcessInFolder Common.flowboxPath "cabal" ["install", "cabal-dev"] 
     Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["update"] 
-    loggerIO debug "Copying std library."
+    logger debug "Copying std library."
     Directory.copyDirectoryRecursive (UniPath.fromUnixString "libs/stdlibio/") (UniPath.append "tmp" Common.flowboxPath)
-    loggerIO debug "Intalling std library."
-    let location = "tmp/stdlibio" -- CR[wd] location czego?
-    Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["install", location] 
-    Directory.removeDirectoryRecursive $ UniPath.append location Common.flowboxPath
-    Directory.touchFile installedFile
-    loggerIO info "Flowbox configured successfully."
+    logger debug "Intalling std library."
+    let stdlibLocation = "tmp/stdlibio"
+    Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["install", stdlibLocation] 
+    Directory.removeDirectoryRecursive $ UniPath.append stdlibLocation Common.flowboxPath
+    Directory.touchFile successfullInstallFileName
+    logger info "Flowbox configured successfully."
 
 
 clear :: IO ()
 clear = do 
-    loggerIO info "Cleaning Flowbox configuration."
+    logger info "Cleaning Flowbox configuration."
     exists <- Directory.doesDirectoryExist Common.flowboxPath
     if exists
         then Directory.removeDirectoryRecursive Common.flowboxPath
