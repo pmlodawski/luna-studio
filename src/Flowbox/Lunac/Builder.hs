@@ -80,32 +80,32 @@ either2io f = do
 
 -- TODO [PM] Refactor needed 
 buildLibrary :: Diagnostics -> Library -> UniPath -> String -> String -> IO ()
-buildLibrary diag library outputPath projectName tmpName = either2io $ Luna.run $ do
+buildLibrary diag library outputPath name tmpName = either2io $ Luna.run $ do
     let defManger = Library.defs library
         rootDefID = Library.rootDefID
         rootDef = Maybe.fromJust $ DefManager.lab defManger rootDefID
     ast <- parseGraph diag defManger (rootDefID, rootDef)
-    buildAST diag outputPath projectName tmpName False [] ast
+    buildAST diag outputPath name tmpName False [] ast
 
 
 -- TODO [PM] Refactor needed 
 buildFile :: Conf -> Diagnostics -> UniPath -> IO ()
 buildFile conf diag path = either2io $ Luna.run $ do 
-    let outputPath  = UniPath.fromUnixString $ Conf.output conf
-        projectName = Conf.project conf
-        tmpName     = "tmp/" ++ projectName
+    let outputPath = UniPath.fromUnixString $ Conf.output conf
+        name       = Conf.name conf
+        tmpName    = "tmp/" ++ name
         
         rootPath = case Conf.rootPath conf of 
                         "" -> UniPath.basePath path
                         a  -> UniPath.fromUnixString a
 
     ast  <- parseFile diag rootPath path
-    buildAST diag outputPath projectName tmpName (Conf.library conf) (Conf.link conf) ast
+    buildAST diag outputPath name tmpName (Conf.library conf) (Conf.link conf) ast
 
 
 -- TODO [PM] Refactor needed 
 buildAST :: PassMonadIO s m => Diagnostics -> UniPath -> String -> String -> Bool -> [String] -> ASTModule.Module -> Pass.Result m ()
-buildAST diag outputPath projectName tmpName isLibrary libs ast = do 
+buildAST diag outputPath name tmpName isLibrary libs ast = do 
     va   <- VarAlias.run ast
     Diagnostics.printVA va diag 
     fp <- FuncPool.run ast
@@ -120,13 +120,13 @@ buildAST diag outputPath projectName tmpName isLibrary libs ast = do
     newfp <- FClassFliter.run Common.flowboxPath fp
     FClassInstall.run Common.flowboxPath newfp
 
-    let cabal    = genCabal projectName isLibrary hsc fp libs 
+    let cabal    = genCabal name isLibrary hsc fp libs 
     -- CR[wd] czemu funkcja o nazwie buildAST to w ogole robi:
     writeSources   tmpName hsc
-    runCabal       tmpName projectName cabal
+    runCabal       tmpName name cabal
     if isLibrary
         then return ()
-        else moveExecutable tmpName projectName outputPath
+        else moveExecutable tmpName name outputPath
     -- CR[wd] czemu funkcja niszczy swoj argument???
     cleanUp        tmpName
 

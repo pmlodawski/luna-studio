@@ -14,7 +14,7 @@ import           Flowbox.Prelude
 data Conf = Compilation { inputs    :: [String]
                         , link      :: [String]
                         , output    :: String
-                        , project   :: String
+                        , name      :: String
                         , rootPath  :: String
                         
                         , global    :: Bool
