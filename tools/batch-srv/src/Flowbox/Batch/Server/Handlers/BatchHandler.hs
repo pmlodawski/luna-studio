@@ -112,4 +112,4 @@ instance Batch_Iface BatchHandler where
                                                  scriptIO $ print batch
     shutdown _          = loggerIO info "called shutdown"
     initialize _        = do loggerIO info "called initialize"
-                             Common.tRunScript $ scriptIO $ Initializer.checkedInitialize
+                             Common.tRunScript $ scriptIO $ Initializer.initializeIfNeeded

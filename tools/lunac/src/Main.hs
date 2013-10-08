@@ -43,15 +43,17 @@ parser :: Parser Conf
 parser = Opt.flag' Conf.Version (long "version" <> hidden)
        <|> Conf.Compilation
            <$> many1     ( argument str ( metavar "inputs" ))
-           <*> many      ( strOption ( short 'l' <> metavar "library" <> help "Library to link with.")                 )
-           -- <*> strOption ( long "verbose"  <> short 'v' <> value "0" <> help "Verbose level" )
-           <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "output"  <> help "Output folder" )
-           <*> strOption ( long "project" <> short 'p' <> value "project" <> metavar "project" <> help "Project name"  )
+           <*> many      ( strOption ( short 'l' <> metavar "LIBRARY" <> help "Library to link with.")                 )
+           <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "OUTPUT"  <> help "Output folder" )
+           <*> strOption ( long "name"    <> short 'n' <> value "name"    <> metavar "NAME"    <> help "Project name"  )
            <*> strOption ( long "root-path"            <> value ""        <> hidden                                    )
-           <*> switch    ( long "global"                                  <> help "Compile to global cabal repository" )
-           <*> switch    ( long "library"                                 <> help "Compile library project"            )
-           <*> switch    ( long "verbose" <> short 'v'                    <> help "Verbose level"                      )
-           <*> switch    ( long "no-color"                                <> help "Disable color output"               )
+       
+           <*> switch    ( long "global"                         <> help "Enable to compile to global cabal repository")
+           <*> switch    ( long "library"                        <> help "Enable to compile as a library"              )
+       
+           <*> switch    ( long "verbose" <> short 'v'           <> help "Verbose level"                               )
+           <*> switch    ( long "no-color"                       <> help "Disable color output"                        )
+
            <*> switch    ( long "dump-all"              <> hidden                                                      )
            <*> switch    ( long "dump-ast"              <> hidden                                                      )
            <*> switch    ( long "dump-va"               <> hidden                                                      )
@@ -93,7 +95,7 @@ run conf = case conf of
                                
             inputs = map UniPath.fromUnixString $ Conf.inputs conf
 
-        Initializer.checkedInitialize
+        Initializer.initializeIfNeeded
 
         mapM_ (Builder.buildFile conf diag) inputs
       

@@ -60,4 +60,4 @@ run conf = case conf of
         if Conf.force conf
             then do Initializer.clear
                     Initializer.initialize
-            else Initializer.checkedInitialize
+            else Initializer.initializeIfNeeded

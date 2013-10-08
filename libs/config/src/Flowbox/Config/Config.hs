@@ -57,10 +57,9 @@ load = runEitherT $ do
     when (isLeft env) $ logger debug $ "Environment variable '" ++ ffs ++ "' not defined."
     cpath <- hoistEither env
     cfgf  <- liftIO $ Cfg.load [Cfg.Required $ cpath ++ "/config/flowbox.config"]
-    let read name = do
-        field <- (liftIO . try) (fromJust <$> Cfg.lookup cfgf name :: IO String)
-        when (isLeft field) $ logger debug $ "Environment variable '" ++ ffs ++ "' not defined."
-        hoistEither =<< 
+    let read name = do field <- (liftIO . try) (fromJust <$> Cfg.lookup cfgf name :: IO String)
+                       when (isLeft field) $ logger debug $ "Environment variable '" ++ ffs ++ "' not defined."
+                       hoistEither =<< field
     Config <$> ( FS <$> read "fs.global"
                     <*> read "fs.usr"
                )
