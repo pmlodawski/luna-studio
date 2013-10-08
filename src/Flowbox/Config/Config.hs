@@ -3,17 +3,15 @@
 
 module Flowbox.Config.Config where
 
-import           Flowbox.Prelude            hiding (read, error)
-import qualified Data.Configurator          as Cfg
-import qualified System.Environment         as Env
-import           Data.Maybe                   (fromJust)
-import           Control.Applicative          
-import           Flowbox.System.Log.Logger    
-import           Control.Exception            
-import           Control.Monad                
-import           Control.Monad.Trans.Either   
-import           Control.Monad.IO.Class       
+import           Control.Applicative         
+import           Control.Monad.IO.Class      
+import qualified Control.Exception         as Exception
+import qualified Data.Configurator         as Cfg
+import qualified Data.Maybe                as Maybe
+import qualified System.Environment        as Env
 
+import           Flowbox.Prelude           hiding (read, error)
+import           Flowbox.System.Log.Logger   
 
 
 logger :: LoggerIO
@@ -49,19 +47,19 @@ data Config = Config { fs         :: Config
 
 
 ffs :: String
-ffs = "FLOWBOX_FS"
+ffs = "FFS"
 
 
-load :: MonadIO m => m (Either IOException Config)
-load = runEitherT $ do
+load :: MonadIO m => m Config
+load = liftIO $ do
     logger debug "Loading Flowbox configuration"
-    env   <- liftIO.try $ Env.getEnv ffs
-    when (isLeft env) $ logger debug $ "Environment variable '" ++ ffs ++ "' not defined."
-    cpath <- hoistEither env
-    cfgf  <- liftIO $ Cfg.load [Cfg.Required $ cpath ++ "/config/flowbox.config"]
-    let read name = do field <- (liftIO . try) (fromJust <$> Cfg.lookup cfgf name :: IO String)
-                       when (isLeft field) $ logger debug $ "Environment variable '" ++ ffs ++ "' not defined."
-                       hoistEither field
+    cpath <- Exception.onException (Env.getEnv ffs)
+           $ logger debug ("Environment variable '" ++ ffs ++ "' not defined.")
+
+    cfgFile <- Cfg.load [Cfg.Required $ cpath ++ "/config/flowbox.config"]
+    let read name = Exception.onException (Maybe.fromJust <$> Cfg.lookup cfgFile name :: IO String)
+                  $ logger debug $ "Environment variable '" ++ ffs ++ "' not defined."
+
     Config <$> ( FS <$> read "fs.global"
                     <*> read "fs.usr"
                )
@@ -78,6 +76,5 @@ load = runEitherT $ do
            <*> ( Cabal <$> read "cabal.path"
                        <*> read "cabal.bin"
                )
-
 
 -- TODO[wd]: (?) Lunac powinien czytac config i jezli nie da sie go odczytac (np zmienna srodowiskowa nie istnieje, powinien zalozyc, ze zyje w $HOME/.flowbox - defaultowy config?)
