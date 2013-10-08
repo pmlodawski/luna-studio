@@ -61,7 +61,7 @@ initialize config = do
         cabalg     = fsUsr ++ "/cabal.config"
 
     Directory.createDirectoryIfMissing True $ UniPath.fromUnixString fsUsrGhc
-    Process.runProcess Nothing "ghc-pkg" ["recache", "--pkg-db=" ++ fsUsrGhc] 
+    Process.runProcess Nothing "ghc-pkg" ["recache", "--package-db=" ++ fsUsrGhc] 
     cabalConfigTemplate <- IO.readFile cabalt
     let cabal = StringUtils.replace "${FB_INSTALL}"    fsGlobal
               $ StringUtils.replace "${FB_HOME_CABAL}" fsUsrCabal cabalConfigTemplate
