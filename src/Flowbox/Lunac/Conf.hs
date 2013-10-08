@@ -12,10 +12,11 @@ import           Flowbox.Prelude
 
 
 data Conf = Compilation { inputs    :: [String]
+                        , link      :: [String]
                         , output    :: String
                         , project   :: String
                         , rootPath  :: String
-
+                        
                         , global    :: Bool
                         , library   :: Bool
                         

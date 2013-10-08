@@ -8,7 +8,6 @@
 import           Data.List                       as List
 import           Options.Applicative             hiding (info)
 import qualified Options.Applicative             as Opt
-
 import           Flowbox.Prelude                 hiding (error)
 import           Flowbox.Control.Applicative       
 import qualified Flowbox.Data.Version            as Version
@@ -44,6 +43,7 @@ parser :: Parser Conf
 parser = Opt.flag' Conf.Version (long "version" <> hidden)
        <|> Conf.Compilation
            <$> many1     ( argument str ( metavar "inputs" ))
+           <*> many      ( strOption ( short 'l' <> metavar "library" <> help "Library to link with.")                 )
            -- <*> strOption ( long "verbose"  <> short 'v' <> value "0" <> help "Verbose level" )
            <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "output"  <> help "Output folder" )
            <*> strOption ( long "project" <> short 'p' <> value "project" <> metavar "project" <> help "Project name"  )
@@ -92,7 +92,6 @@ run conf = case conf of
                                ( Conf.dump_hsc  conf || Conf.dump_all conf )
                                
             inputs = map UniPath.fromUnixString $ Conf.inputs conf
-
 
         Initializer.checkedInitialize
 
