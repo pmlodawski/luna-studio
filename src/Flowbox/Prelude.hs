@@ -54,3 +54,11 @@ mapM_ :: (Monad m, Traversable t) => (a -> m b) -> t a -> m ()
 mapM_ f as = do 
     _ <- mapM f as
     return ()
+
+isLeft :: Either a b -> Bool
+isLeft (Left _) = True
+isLeft _        = False
+
+isRight :: Either a b -> Bool
+isRight (Right _) = True
+isRight _         = False
