@@ -3,16 +3,18 @@
 
 module Flowbox.Config.Config where
 
-import           Flowbox.Prelude           hiding (read, error)
-import qualified Data.Configurator         as Cfg
-import qualified System.Environment        as Env
-import           Data.Maybe                  (fromJust)
-import           Control.Applicative         
-import           Flowbox.System.Log.Logger  
-import           Control.Exception 
-import           Control.Monad
-import           Control.Monad.Trans.Either
-import           Control.Monad.IO.Class
+import           Flowbox.Prelude            hiding (read, error)
+import qualified Data.Configurator          as Cfg
+import qualified System.Environment         as Env
+import           Data.Maybe                   (fromJust)
+import           Control.Applicative          
+import           Flowbox.System.Log.Logger    
+import           Control.Exception            
+import           Control.Monad                
+import           Control.Monad.Trans.Either   
+import           Control.Monad.IO.Class       
+
+
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Config.Config"
@@ -59,7 +61,7 @@ load = runEitherT $ do
     cfgf  <- liftIO $ Cfg.load [Cfg.Required $ cpath ++ "/config/flowbox.config"]
     let read name = do field <- (liftIO . try) (fromJust <$> Cfg.lookup cfgf name :: IO String)
                        when (isLeft field) $ logger debug $ "Environment variable '" ++ ffs ++ "' not defined."
-                       hoistEither =<< field
+                       hoistEither field
     Config <$> ( FS <$> read "fs.global"
                     <*> read "fs.usr"
                )
