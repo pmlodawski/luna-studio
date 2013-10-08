@@ -14,7 +14,6 @@ import qualified Data.List                                                 as Li
 import qualified Data.Set                                                  as Set
 
 import           Flowbox.Prelude                                             
-import qualified Flowbox.Initializer.Common                                as Common
 import qualified Flowbox.Luna.Data.AST.Module                              as ASTModule
 import qualified Flowbox.Luna.Data.Cabal.Config                            as CabalConfig
 import qualified Flowbox.Luna.Data.Cabal.Section                           as CabalSection
@@ -63,8 +62,10 @@ logger = getLogger "Flowbox.Lunac.Builder"
 srcFolder :: String
 srcFolder = "src"
 
+
 hsExt :: String
 hsExt = ".hs"
+
 
 cabalExt :: String
 cabalExt = ".cabal"
@@ -169,7 +170,6 @@ genCabal name isLibrary sources (Pool names) libs  = conf where
                            }
     conf = CabalConfig.addSection section 
          $ CabalConfig.make name
-
 
 
 writeSources :: PassMonadIO s m => String -> [Source] -> Pass.Result m ()
