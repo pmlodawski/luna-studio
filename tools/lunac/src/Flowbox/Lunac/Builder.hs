@@ -78,15 +78,17 @@ either2io f = do
         Left  e -> fail e
 
 
+-- TODO [PM] Refactor needed 
 buildLibrary :: Diagnostics -> Library -> UniPath -> String -> String -> IO ()
 buildLibrary diag library outputPath projectName tmpName = either2io $ Luna.run $ do
     let defManger = Library.defs library
         rootDefID = Library.rootDefID
         rootDef = Maybe.fromJust $ DefManager.lab defManger rootDefID
     ast <- parseGraph diag defManger (rootDefID, rootDef)
-    buildAST diag outputPath projectName tmpName False ast
+    buildAST diag outputPath projectName tmpName False [] ast
 
 
+-- TODO [PM] Refactor needed 
 buildFile :: Conf -> Diagnostics -> UniPath -> IO ()
 buildFile conf diag path = either2io $ Luna.run $ do 
     let outputPath  = UniPath.fromUnixString $ Conf.output conf
@@ -98,11 +100,12 @@ buildFile conf diag path = either2io $ Luna.run $ do
                         a  -> UniPath.fromUnixString a
 
     ast  <- parseFile diag rootPath path
-    buildAST diag outputPath projectName tmpName (Conf.library conf) ast
+    buildAST diag outputPath projectName tmpName (Conf.library conf) (Conf.link conf) ast
 
 
-buildAST :: PassMonadIO s m => Diagnostics -> UniPath -> String -> String -> Bool -> ASTModule.Module -> Pass.Result m ()
-buildAST diag outputPath projectName tmpName isLibrary ast = do 
+-- TODO [PM] Refactor needed 
+buildAST :: PassMonadIO s m => Diagnostics -> UniPath -> String -> String -> Bool -> [String] -> ASTModule.Module -> Pass.Result m ()
+buildAST diag outputPath projectName tmpName isLibrary libs ast = do 
     va   <- VarAlias.run ast
     Diagnostics.printVA va diag 
     fp <- FuncPool.run ast
@@ -117,7 +120,7 @@ buildAST diag outputPath projectName tmpName isLibrary ast = do
     newfp <- FClassFliter.run Common.flowboxPath fp
     FClassInstall.run Common.flowboxPath newfp
 
-    let cabal    = genCabal projectName isLibrary fp hsc
+    let cabal    = genCabal projectName isLibrary hsc fp libs 
     writeSources   tmpName hsc
     runCabal       tmpName projectName cabal
     if isLibrary
@@ -144,8 +147,9 @@ parseFile diag rootPath path = do
     return ast
 
 
-genCabal :: String -> Bool -> Pool -> [Source] -> CabalConfig.Config
-genCabal name isLibrary (Pool names) sources = let
+-- TODO [PM] Refactor needed 
+genCabal :: String -> Bool -> [Source] -> Pool -> [String] -> CabalConfig.Config
+genCabal name isLibrary sources (Pool names) libs  = let
 
     getModuleName :: Source -> String
     getModuleName source = List.intercalate "." $ Source.path source
@@ -154,13 +158,14 @@ genCabal name isLibrary (Pool names) sources = let
                      then CabalSection.mkLibrary { CabalSection.exposedModules = map getModuleName sources
                                                  }
                      else CabalSection.mkExecutable name 
-    section = section_base { CabalSection.buildDepends = ["pretty-show"
-                                                         , "random"
-                                                         , "base"
-                                                         , "OneTuple"
-                                                         , "template-haskell"
-                                                         , "flowboxM-stdlib-io"
-                                                         ] ++ (map FClassGen.packageName $ Set.toList names)
+    section = section_base { CabalSection.buildDepends = "pretty-show"
+                                                       : "random"
+                                                       : "base"
+                                                       : "OneTuple"
+                                                       : "template-haskell"
+                                                       : "flowboxM-stdlib-io"
+                                                       :  (map FClassGen.packageName $ Set.toList names)
+                                                       ++ libs
                            }
 
     conf = CabalConfig.addSection section 
