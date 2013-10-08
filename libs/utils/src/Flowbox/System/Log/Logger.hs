@@ -23,7 +23,7 @@ import           System.Log.Logger           hiding (getLogger, setLevel, Logger
 import           Prelude                     hiding (log, fail)
 import qualified Data.DList                  as DList
 import           Data.DList                    (DList)
-import           Control.Monad.IO.Class
+import           Control.Monad.IO.Class        
 
 import qualified Flowbox.System.Log.LogEntry as LogEntry
 

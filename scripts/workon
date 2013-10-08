@@ -40,17 +40,17 @@ class CProject(Project):
         pass
 
 
-pkgs = { 'utils'       : HProject('flowbox-utils'      , 'libs/utils'       , []                                                 )
+pkgs = { 'stdlibio'    : HProject('flowboxM-stdlib-io' , 'libs/stdlibio'    , []                                                 )
+       , 'utils'       : HProject('flowbox-utils'      , 'libs/utils'       , []                                                 )
        , 'config'      : HProject('flowbox-config'     , 'libs/config'      , ['utils']                                          )
-       , 'stdlibio'    : HProject('flowboxM-stdlib-io' , 'libs/stdlibio'    , []                                                 )
-       , 'initializer' : HProject('flowbox-initializer', 'tools/initializer', ['utils']                                          )
        , 'luna'        : HProject('flowbox-luna'       , 'libs/luna'        , ['utils']                                          )
+       , 'initializer' : HProject('flowbox-initializer', 'tools/initializer', ['utils', 'config']                                          )
+       , 'lunac'       : HProject('flowbox-lunac'      , 'tools/lunac'      , ['utils', 'config', 'initializer', 'luna']                   )
        , 'batch'       : HProject('flowbox-batch'      , 'libs/batch'       , ['utils', 'luna', 'lunac']          )
-       , 'batch-srv'   : HProject('flowbox-batch-srv'  , 'tools/batch-srv'  , ['utils', 'initializer', 'luna', 'lunac', 'batch'] )
-       , 'lunac'       : HProject('flowbox-lunac'      , 'tools/lunac'      , ['utils', 'initializer', 'luna']                   )
+       , 'batch-srv'   : HProject('flowbox-batch-srv'  , 'tools/batch-srv'  , ['utils', 'config', 'initializer', 'luna', 'lunac', 'batch'] )
        } 
 
-deptree = ['batch-srv', 'batch', 'lunac', 'luna', 'initializer', 'config', 'utils', 'stdlibio']
+deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'luna', 'config', 'utils', 'stdlibio']
 
 def flatten(lofl):
     return [val for subl in lofl for val in subl]
