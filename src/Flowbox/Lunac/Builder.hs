@@ -43,8 +43,8 @@ import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as Gr
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
-import qualified Flowbox.Lunac.Conf                                        as Conf
-import           Flowbox.Lunac.Conf                                          (Conf)
+import qualified Flowbox.Lunac.CmdArgs                                     as CmdArgs
+import           Flowbox.Lunac.CmdArgs                                       (CmdArgs)
 import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
 import           Flowbox.Lunac.Diagnostics                                   (Diagnostics)
 import qualified Flowbox.System.Directory.Directory                        as Directory
@@ -90,18 +90,18 @@ buildLibrary diag library outputPath name tmpName = either2io $ Luna.run $ do
 
 
 -- TODO [PM] Refactor needed 
-buildFile :: Conf -> Diagnostics -> UniPath -> IO ()
+buildFile :: CmdArgs -> Diagnostics -> UniPath -> IO ()
 buildFile conf diag path = either2io $ Luna.run $ do 
-    let outputPath = UniPath.fromUnixString $ Conf.output conf
-        name       = Conf.name conf
+    let outputPath = UniPath.fromUnixString $ CmdArgs.output conf
+        name       = CmdArgs.name conf
         tmpName    = "tmp/" ++ name
         
-        rootPath = case Conf.rootPath conf of 
+        rootPath = case CmdArgs.rootPath conf of 
                         "" -> UniPath.basePath path
                         a  -> UniPath.fromUnixString a
 
     ast  <- parseFile diag rootPath path
-    buildAST diag outputPath name tmpName (Conf.library conf) (Conf.link conf) ast
+    buildAST diag outputPath name tmpName (CmdArgs.library conf) (CmdArgs.link conf) ast
 
 
 -- TODO [PM] Refactor needed 

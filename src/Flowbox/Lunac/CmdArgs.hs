@@ -5,13 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Lunac.Conf where
+module Flowbox.Lunac.CmdArgs where
 
 import           Flowbox.Prelude   
 
 
 
-data Conf = Compilation { inputs    :: [String]
+data CmdArgs = Compilation { inputs    :: [String]
                         , link      :: [String]
                         , output    :: String
                         , name      :: String

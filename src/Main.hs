@@ -14,8 +14,8 @@ import qualified Flowbox.Data.Version            as Version
 import           Flowbox.Data.Version              (Version)
 import qualified Flowbox.Initializer.Initializer as Initializer
 import qualified Flowbox.Lunac.Builder           as Builder
-import qualified Flowbox.Lunac.Conf              as Conf
-import           Flowbox.Lunac.Conf                (Conf)
+import qualified Flowbox.Lunac.CmdArgs           as CmdArgs
+import           Flowbox.Lunac.CmdArgs             (CmdArgs)
 import           Flowbox.Lunac.Diagnostics         (Diagnostics(Diagnostics))
 import           Flowbox.System.Log.Logger         
 import qualified Flowbox.System.UniPath          as UniPath
@@ -39,9 +39,9 @@ version = Version.mk { Version.minor = 1
                      }
 
 
-parser :: Parser Conf
-parser = Opt.flag' Conf.Version (long "version" <> hidden)
-       <|> Conf.Compilation
+parser :: Parser CmdArgs
+parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
+       <|> CmdArgs.Compilation
            <$> many1     ( argument str ( metavar "inputs" ))
            <*> many      ( strOption ( short 'l' <> metavar "LIBRARY" <> help "Library to link with.")                 )
            <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "OUTPUT"  <> help "Output folder" )
@@ -63,7 +63,7 @@ parser = Opt.flag' Conf.Version (long "version" <> hidden)
            <*> switch    ( long "dump-hsc"              <> hidden                                                      )
 
 
-opts :: ParserInfo Conf
+opts :: ParserInfo CmdArgs
 opts = Opt.info (helper <*> parser)
            (Opt.fullDesc
                <> Opt.header show_version
@@ -78,22 +78,22 @@ main :: IO ()
 main = execParser opts >>= run
 
 
-run :: Conf -> IO ()
+run :: CmdArgs -> IO ()
 run conf = case conf of
-    Conf.Version     {} -> putStrLn show_version
-    Conf.Compilation {} -> do
-        if Conf.verbose conf
+    CmdArgs.Version     {} -> putStrLn show_version
+    CmdArgs.Compilation {} -> do
+        if CmdArgs.verbose conf
             then rootLogger setLevel DEBUG
             else rootLogger setLevel INFO
 
-        let diag = Diagnostics ( Conf.dump_ast  conf || Conf.dump_all conf )
-                               ( Conf.dump_va   conf || Conf.dump_all conf )
-                               ( Conf.dump_fp   conf || Conf.dump_all conf )
-                               ( Conf.dump_ssa  conf || Conf.dump_all conf )
-                               ( Conf.dump_hast conf || Conf.dump_all conf )
-                               ( Conf.dump_hsc  conf || Conf.dump_all conf )
+        let diag = Diagnostics ( CmdArgs.dump_ast  conf || CmdArgs.dump_all conf )
+                               ( CmdArgs.dump_va   conf || CmdArgs.dump_all conf )
+                               ( CmdArgs.dump_fp   conf || CmdArgs.dump_all conf )
+                               ( CmdArgs.dump_ssa  conf || CmdArgs.dump_all conf )
+                               ( CmdArgs.dump_hast conf || CmdArgs.dump_all conf )
+                               ( CmdArgs.dump_hsc  conf || CmdArgs.dump_all conf )
                                
-            inputs = map UniPath.fromUnixString $ Conf.inputs conf
+            inputs = map UniPath.fromUnixString $ CmdArgs.inputs conf
 
         Initializer.initializeIfNeeded
 
