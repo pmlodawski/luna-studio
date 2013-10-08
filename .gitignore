@@ -6,6 +6,7 @@
 *~
 *.imports
 tools/batch-clients/cpp/batch_client
+out
 
 # luna library files
 *.node
@@ -43,5 +44,5 @@ cabal.sandbox.config
 .cabal-sandbox
 build.cfg
 
-### DEPRECIATED ###
+### DEPRECATED ###
 # cabal-dev
