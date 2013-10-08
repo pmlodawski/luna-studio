@@ -19,31 +19,32 @@ import           Flowbox.System.UniPath               (UniPath)
 
 
 
-loggerIO :: LoggerIO
+loggerIO :: LoggerIO -- CR[wd] czemu to sie nazywa loggerIO :: ... a nie logger :: ... ?
 loggerIO = getLoggerIO "Flowbox.Initializer.Initializer"
 
-
+-- CR[wd] co oznacza nazwa tej funkcji?
 installedFile :: UniPath
 installedFile = UniPath.append "installed" Common.flowboxPath
 
 
 isAlreadyInitilized :: IO Bool
 isAlreadyInitilized = do 
-    loggerIO debug "Checking for Flowbox configuration." 
+    loggerIO debug "Checking for Flowbox configuration." -- CR[wd] chodizło o słowo "looking" ?
     exists_cabalDev  <- Directory.doesDirectoryExist $ UniPath.append "cabal-dev" Common.flowboxPath
     exists_installed <- Directory.doesFileExist installedFile
-    let exists = exists_cabalDev && exists_installed
-    if exists
+    let exists = exists_cabalDev && exists_installed 
+    if exists -- CR[wd] redundancja kodu
         then loggerIO debug "Configuration already exists."
         else loggerIO debug "Configuration does not exist or is broken."
-    return exists
+    return exists 
 
 
+-- CR[wd] Co oznacza ta nazwa?
 checkedInitialize :: IO ()
 checkedInitialize = do
     initialized <- isAlreadyInitilized
     when (not initialized) (do clear
-                               initialize)
+                               initialize) -- CR[wd] w takich przypadkach uzywamy >>=
 
 
 initialize :: IO ()
@@ -56,7 +57,7 @@ initialize = do
     loggerIO debug "Copying std library."
     Directory.copyDirectoryRecursive (UniPath.fromUnixString "libs/stdlibio/") (UniPath.append "tmp" Common.flowboxPath)
     loggerIO debug "Intalling std library."
-    let location = "tmp/stdlibio"
+    let location = "tmp/stdlibio" -- CR[wd] location czego?
     Process.runProcessInFolder Common.flowboxPath "cabal-dev" ["install", location] 
     Directory.removeDirectoryRecursive $ UniPath.append location Common.flowboxPath
     Directory.touchFile installedFile
