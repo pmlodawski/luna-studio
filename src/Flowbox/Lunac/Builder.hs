@@ -82,7 +82,7 @@ either2io f = do
 
 -- TODO [PM] : Refactor needed
 getBuildPath :: Config -> UniPath
-getBuildPath = UniPath.fromUnixString . Config.path . Config.usr 
+getBuildPath = UniPath.fromUnixString . Config.path . Config.local 
 
 
 -- TODO [PM] Refactor needed 
