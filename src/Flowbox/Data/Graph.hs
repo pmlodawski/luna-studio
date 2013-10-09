@@ -30,7 +30,7 @@ module Flowbox.Data.Graph (
     topsortl,
 ) where
 
-import           Flowbox.Prelude      hiding (fromJust)  
+import           Flowbox.Prelude      hiding (fromJust)
 
 import           Data.Functor           ((<$>))
 import           Data.Maybe             (fromJust)
