@@ -78,13 +78,15 @@ storeLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ librar
 
 
 buildLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ library -> do
-    let diag        = Diagnostics.all
-        projectName = Library.name library
-        outputPath = UniPath.fromUnixString projectName
-        tmpName    = "tmp/" ++ projectName
-    Builder.buildLibrary diag library outputPath projectName tmpName
-    return (library, ()))
+buildLibrary libID projectID = (\_ -> print "FIXME")
+    --readonly' . libraryOp' libID projectID (\_ library -> do
+    --let diag        = Diagnostics.all
+    --    projectName = Library.name library
+    --    outputPath = UniPath.fromUnixString projectName
+    --    tmpName    = "tmp/" ++ projectName
+    --Builder.buildLibrary diag library outputPath projectName tmpName
+    --return (library, ()))
+    
 
 
 runLibrary :: Library.ID -> Project.ID -> Batch -> IO String

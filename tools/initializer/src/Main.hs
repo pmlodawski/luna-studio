@@ -9,12 +9,14 @@ import           Options.Applicative             hiding (info)
 import qualified Options.Applicative             as Opt
 
 import           Flowbox.Prelude                 hiding (error)
+import qualified Flowbox.Config.Config           as Config
 import qualified Flowbox.Data.Version            as Version
 import           Flowbox.Data.Version              (Version)
 import qualified Flowbox.Initializer.Conf        as Conf
 import           Flowbox.Initializer.Conf          (Conf)
 import qualified Flowbox.Initializer.Initializer as Initializer
 import           Flowbox.System.Log.Logger         
+
 
 
 rootLogger :: Logger
@@ -57,7 +59,9 @@ run conf = case conf of
         if Conf.verbose conf
             then rootLogger setLevel DEBUG
             else rootLogger setLevel INFO
+
+        config <- Config.load
         if Conf.force conf
-            then do Initializer.clear
-                    Initializer.initialize
-            else Initializer.initializeIfNeeded
+            then do Initializer.clear      config
+                    Initializer.initialize config
+            else Initializer.initializeIfNeeded config

@@ -3,79 +3,110 @@
 
 module Flowbox.Config.Config where
 
-import           Flowbox.Prelude           hiding (read, error)
-import qualified Data.Configurator         as Cfg
-import qualified System.Environment        as Env
-import           Data.Maybe                  (fromJust)
 import           Control.Applicative         
-import           Flowbox.System.Log.Logger  
-import           Control.Exception 
-import           Control.Monad
-import           Control.Monad.Trans.Either
-import           Control.Monad.IO.Class
+import           Control.Monad.IO.Class      
+import qualified Control.Exception         as Exception
+import qualified Data.Configurator         as Cfg
+import qualified Data.Maybe                as Maybe
+import qualified System.Environment        as Env
+
+import           Flowbox.Prelude           hiding (read, error)
+import           Flowbox.System.Log.Logger   
+
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Config.Config"
 
 
-data Config = Config { fs         :: Config
-                     , wrappers   :: String
-                     , thirdparty :: String
-                     , config     :: Config
-                     , ghc        :: Config
-                     , cabalInst  :: Config
-                     }
-
-            | FS     { global     :: String
-                     , usr        :: String
-                     }
-
-            | Conf   { path       :: String
-                     , cabal      :: String
-                     }
-
-            | GHC    { path       :: String
-                     , version    :: String
-                     , topDir     :: String
-                     , pkgConf    :: String
-                     }
-
-            | Cabal  { path       :: String
-                     , bin        :: String
-                     }
-            deriving (Show)
+data Config = Config   { global     :: Config
+                       , usr        :: Config
+                       , ghc        :: Config
+                       , ghcPkg     :: Config
+                       , hsc2hs     :: Config
+                       , cabal      :: Config
+                       }
+    
+              | Global { path       :: String
+                       , conf       :: String
+                       , confDir    :: String
+                       , binDir     :: String
+                       , wrappers   :: String
+                       , tools      :: String
+                       , thirdparty :: String
+                       }
+             
+              | Usr    { path       :: String
+                       , pkgDb      :: String
+                       }
+             
+              | GHC    { version    :: String
+                       , path       :: String
+                       , topDir     :: String
+                       , exec       :: String
+                       , rawExec    :: String
+                       , pkgConf    :: String
+                       }
+    
+              | GhcPkg { rawExec    :: String
+                       }
+    
+              | Hsc2Hs { rawExec    :: String
+                       }
+             
+              | Cabal  { path       :: String
+                       , exec       :: String
+                       , rawExec    :: String
+                       , binDir     :: String
+                       , usrDir     :: String
+                       , confT      :: String
+                       , conf       :: String
+                       }
+              deriving (Show)
 
 
 ffs :: String
-ffs = "FLOWBOX_FS"
+ffs = "FFS"
 
 
-load :: MonadIO m => m (Either IOException Config)
-load = runEitherT $ do
+load :: MonadIO m => m Config
+load = liftIO $ do
     logger debug "Loading Flowbox configuration"
-    env   <- liftIO.try $ Env.getEnv ffs
-    when (isLeft env) $ logger debug $ "Environment variable '" ++ ffs ++ "' not defined."
-    cpath <- hoistEither env
-    cfgf  <- liftIO $ Cfg.load [Cfg.Required $ cpath ++ "/config/flowbox.config"]
-    let read name = do field <- (liftIO . try) (fromJust <$> Cfg.lookup cfgf name :: IO String)
-                       when (isLeft field) $ logger debug $ "Environment variable '" ++ ffs ++ "' not defined."
-                       hoistEither field
-    Config <$> ( FS <$> read "fs.global"
-                    <*> read "fs.usr"
-               )
-           <*> read "wrappers"
-           <*> read "thirdparty"
-           <*> ( Conf  <$> read "config.path"
-                       <*> read "config.cabal"
-               )
-           <*> ( GHC   <$> read "ghc.path"
-                       <*> read "ghc.version"
-                       <*> read "ghc.topDir"
-                       <*> read "ghc.pkgConf"
-               )
-           <*> ( Cabal <$> read "cabal.path"
-                       <*> read "cabal.bin"
-               )
+    cpath <- Exception.onException (Env.getEnv ffs)
+           $ logger error ("Environment variable '" ++ ffs ++ "' not defined.")
 
+    cfgFile <- Cfg.load [Cfg.Required $ cpath ++ "/config/flowbox.config"]
+    let read name = Exception.onException (Maybe.fromJust <$> Cfg.lookup cfgFile name :: IO String)
+                  $ logger error $ "Environment variable '" ++ ffs ++ "' not defined."
+
+    Config <$> ( Global <$> read "global.path"
+                        <*> read "global.conf"
+                        <*> read "global.confDir"
+                        <*> read "global.binDir"
+                        <*> read "global.wrappers"
+                        <*> read "global.tools"
+                        <*> read "global.thirdparty"
+               )
+           <*> ( Usr    <$> read "usr.path"
+                        <*> read "usr.pkgDb"
+               )
+           <*> ( GHC    <$> read "ghc.version"
+                        <*> read "ghc.path"
+                        <*> read "ghc.topDir"
+                        <*> read "ghc.exec"
+                        <*> read "ghc.rawExec"
+                        <*> read "ghc.pkgConf"
+               ) 
+           <*> ( GhcPkg <$> read "ghcPkg.rawExec"
+               )
+           <*> ( Hsc2Hs <$> read "hsc2hs.rawExec"
+               )
+           <*> ( Cabal  <$> read "cabal.path"
+                        <*> read "cabal.exec"
+                        <*> read "cabal.rawExec"
+                        <*> read "cabal.binDir"
+                        <*> read "cabal.usrDir"
+                        <*> read "cabal.confT"
+                        <*> read "cabal.conf"
+               )
 
 -- TODO[wd]: (?) Lunac powinien czytac config i jezli nie da sie go odczytac (np zmienna srodowiskowa nie istnieje, powinien zalozyc, ze zyje w $HOME/.flowbox - defaultowy config?)

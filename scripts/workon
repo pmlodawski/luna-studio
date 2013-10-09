@@ -61,7 +61,8 @@ class AllProject(Project):
         return tgts
 
 
-deptree = ['batch-srv','batch', 'lunac', 'initializer', 'wrappers',  'luna', 'config', 'utils', 'stdlibio']
+deptree = ['batch', 'lunac', 'initializer', 'wrappers',  'luna', 'config', 'utils', 'stdlibio']
+# deptree = ['batch-srv','batch', 'lunac', 'initializer', 'wrappers',  'luna', 'config', 'utils', 'stdlibio']
 
 pkgs = { '@all'        : AllProject (deps = deptree)
        , 'stdlibio'    : HProject   ('flowboxM-stdlib-io'  , 'libs/stdlibio'    , 'libs'     ,[]                                                 )
@@ -72,7 +73,7 @@ pkgs = { '@all'        : AllProject (deps = deptree)
        , 'wrappers'    : HProject   ('flowbox-wrappers'    , 'tools/wrappers'   , 'wrappers' ,['config']                                         )
        , 'initializer' : HProject   ('flowbox-initializer' , 'tools/initializer', 'tools'    ,['utils', 'config']                                )
        , 'lunac'       : HProject   ('flowbox-lunac'       , 'tools/lunac'      , 'tools'    ,['utils', 'config', 'initializer', 'luna']         )
-       , 'batch-srv'   : HProject   ('flowbox-batch-srv'   , 'tools/batch-srv'  , 'tools'    ,['utils', 'config', 'initializer', 'luna', 'lunac', 'batch'] )
+       # , 'batch-srv'   : HProject   ('flowbox-batch-srv'   , 'tools/batch-srv'  , 'tools'    ,['utils', 'config', 'initializer', 'luna', 'lunac', 'batch'] )
        } 
 
 

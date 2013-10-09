@@ -2,27 +2,25 @@
 
 module Hsc2Hs where
 
-import System.Environment
-import qualified Filesystem.Path.CurrentOS as Path
+import qualified System.Environment        as Env
 import qualified System.Cmd                as Cmd
-import qualified Data.Text                 as T
-import qualified Config.Config             as Config
+import qualified Flowbox.Config.Config     as Cfg
 
-pathToString p = T.unpack ptxt where
-    Right ptxt = Path.toText p
 
 main = do
-    config  <- Config.get
-    args    <- getArgs
-    let topDir = (Config.ghcTopDir config)
-        exec   = Path.append topDir "hsc2hs"
-        tflag  = "--template=" ++ pathToString topDir ++ "/template-hsc.h"
-        iflag  = "-I" ++ pathToString topDir ++ "/include/"
+    cfg     <- Cfg.load
+    args    <- Env.getArgs
+    let topDir = (Cfg.topDir . Cfg.ghc) cfg
+        tflag  = "--template=" ++ topDir ++ "/template-hsc.h"
+        iflag  = "-I" ++ topDir ++ "/include/"
+        exec   = (Cfg.rawExec . Cfg.hsc2hs) cfg
 
     -- FIXME: handle Darwin
 
-    Cmd.rawSystem (pathToString exec) $ (tflag
-                                        : "--cflag=-fno-stack-protector"
-                                        : args
-                                        ) ++ [iflag]
+    Cmd.rawSystem exec $ (tflag
+                       : "--cflag=-fno-stack-protector"
+                       : args
+                       ) ++ [iflag]
+
+
 
