@@ -18,50 +18,50 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Config.Config"
 
 
-data Config = Config   { global     :: Config
-                       , usr        :: Config
-                       , ghc        :: Config
-                       , ghcPkg     :: Config
-                       , hsc2hs     :: Config
-                       , cabal      :: Config
-                       }
-    
-              | Global { path       :: String
-                       , conf       :: String
-                       , confDir    :: String
-                       , binDir     :: String
-                       , wrappers   :: String
-                       , tools      :: String
-                       , thirdparty :: String
-                       }
-             
-              | Usr    { path       :: String
-                       , pkgDb      :: String
-                       }
-             
-              | GHC    { version    :: String
-                       , path       :: String
-                       , topDir     :: String
-                       , exec       :: String
-                       , rawExec    :: String
-                       , pkgConf    :: String
-                       }
-    
-              | GhcPkg { rawExec    :: String
-                       }
-    
-              | Hsc2Hs { rawExec    :: String
-                       }
-             
-              | Cabal  { path       :: String
-                       , exec       :: String
-                       , rawExec    :: String
-                       , binDir     :: String
-                       , usrDir     :: String
-                       , confT      :: String
-                       , conf       :: String
-                       }
-              deriving (Show)
+data Config = Config { global     :: Config
+                     , usr        :: Config
+                     , ghc        :: Config
+                     , ghcPkg     :: Config
+                     , hsc2hs     :: Config
+                     , cabal      :: Config
+                     }
+  
+            | Global { path       :: String
+                     , conf       :: String
+                     , confDir    :: String
+                     , binDir     :: String
+                     , wrappers   :: String
+                     , tools      :: String
+                     , thirdparty :: String
+                     }
+           
+            | Usr    { path       :: String
+                     , pkgDb      :: String
+                     }
+           
+            | GHC    { version    :: String
+                     , path       :: String
+                     , topDir     :: String
+                     , exec       :: String
+                     , rawExec    :: String
+                     , pkgConf    :: String
+                     }
+  
+            | GhcPkg { rawExec    :: String
+                     }
+  
+            | Hsc2Hs { rawExec    :: String
+                     }
+           
+            | Cabal  { path       :: String
+                     , exec       :: String
+                     , rawExec    :: String
+                     , binDir     :: String
+                     , usrDir     :: String
+                     , confT      :: String
+                     , conf       :: String
+                     }
+            deriving (Show)
 
 
 ffs :: String
