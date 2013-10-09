@@ -2,9 +2,9 @@
 
 module Ghci where
 
-import qualified System.Environment        as Env
-import qualified System.Cmd                as Cmd
-import qualified Flowbox.Config.Config     as Cfg
+import qualified System.Environment    as Env
+import qualified System.Cmd            as Cmd
+import qualified Flowbox.Config.Config as Cfg
 
 
 main = do

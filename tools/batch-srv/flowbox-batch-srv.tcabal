@@ -25,6 +25,7 @@ Executable batch-srv
                     containers,
                     errors,
                     flowbox-batch,
+                    flowbox-config,
                     flowbox-initializer,
                     flowbox-luna,
                     flowbox-utils,
@@ -36,4 +37,3 @@ Executable batch-srv
                     transformers,
                     unordered-containers,
                     vector
-

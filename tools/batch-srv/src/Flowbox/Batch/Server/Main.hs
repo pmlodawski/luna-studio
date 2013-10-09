@@ -24,8 +24,8 @@ import           Thrift.Transport                             (Transport)
 
 import qualified Batch                                      as TBatch
 import           Batch_Iface                                  
-import qualified Flowbox.Batch.Server.Conf                  as Conf
-import           Flowbox.Batch.Server.Conf                    (Conf)
+import qualified Flowbox.Batch.Server.CmdArgs               as CmdArgs
+import           Flowbox.Batch.Server.CmdArgs                 (CmdArgs)
 import qualified Flowbox.Batch.Server.Handlers.BatchHandler as BatchHandler
 import qualified Flowbox.Batch.Server.Server                as Server
 import qualified Flowbox.Data.Version                       as Version
@@ -56,9 +56,9 @@ version = Version.mk { Version.minor = 1
                      }
 
 
-parser :: Parser Conf
-parser = Opt.flag' Conf.Version (long "version" <> hidden)
-       <|> Conf.Serve
+parser :: Parser CmdArgs
+parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
+       <|> CmdArgs.Serve
            <$> strOption ( long "addres"  <> short 'a' <> value defaultAddress       <> metavar "address" <> help "Server address"       )
            <*> strOption ( long "port"    <> short 'p' <> (value $ show defaultPort) <> metavar "port"    <> help "Server port"          )
            <*> switch    ( long "verbose" <> short 'v'                                                    <> help "Verbose"              )
@@ -67,7 +67,7 @@ parser = Opt.flag' Conf.Version (long "version" <> hidden)
            <*> switch    ( long "shutdown-with-client" <> hidden                                                                         )
 
 
-opts :: ParserInfo Conf
+opts :: ParserInfo CmdArgs
 opts = Opt.info (helper <*> parser)
            (Opt.fullDesc
                <> Opt.header show_version
@@ -82,14 +82,14 @@ main :: IO ()
 main = execParser opts >>= run
 
 
-run :: Conf -> IO ()
-run conf = case conf of
-    Conf.Version {} -> putStrLn show_version
-    Conf.Serve   {} -> do
-        if Conf.verbose conf
+run :: CmdArgs -> IO ()
+run cmd = case cmd of
+    CmdArgs.Version {} -> putStrLn show_version
+    CmdArgs.Serve   {} -> do
+        if CmdArgs.verbose cmd
             then rootLogger setLevel INFO
             else return ()
-        if Conf.debug conf
+        if CmdArgs.debug cmd
             then rootLogger setLevel DEBUG
             else return ()
 
@@ -97,15 +97,15 @@ run conf = case conf of
         _ <- Concurrent.forkIO $ Exception.handle 
             (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
                                                    MVar.putMVar quitmutex True) 
-            (serve conf quitmutex)
+            (serve cmd quitmutex)
         waitForQuit quitmutex
 
 
-serve :: Conf -> MVar Bool -> IO ()
-serve conf quitmutex = do
+serve :: CmdArgs -> MVar Bool -> IO ()
+serve cmd quitmutex = do
     loggerIO info "Starting the server"
     handler <- BatchHandler.empty
-    _ <- Server.runSingleConnectionServer Server.accepter handler (processCommand quitmutex) conf
+    _ <- Server.runSingleConnectionServer Server.accepter handler (processCommand quitmutex) cmd
     return ()
 
 

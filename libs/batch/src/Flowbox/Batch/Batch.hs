@@ -7,22 +7,25 @@
 
 module Flowbox.Batch.Batch (
     Batch(..),
-    empty,
+    make,
 
-	attributeKey,
+    attributeKey,
 ) where
 
 import           Flowbox.Prelude                        
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
 import           Flowbox.Batch.Project.ProjectManager   (ProjectManager)
+import           Flowbox.Config.Config                  (Config)
 
 
 
-data Batch = Batch { projectManager :: ProjectManager } deriving (Show)
+data Batch = Batch { config         :: Config
+                   , projectManager :: ProjectManager
+                   } deriving (Show)
 
 
-empty :: Batch
-empty = Batch ProjectManager.empty
+make :: Config -> Batch
+make config = Batch config ProjectManager.empty
 
 
 attributeKey :: String

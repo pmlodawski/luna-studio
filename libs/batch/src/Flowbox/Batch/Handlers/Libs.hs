@@ -21,9 +21,11 @@ module Flowbox.Batch.Handlers.Libs (
 import qualified System.Process                      as Process
 
 import           Flowbox.Prelude                       
+import qualified Flowbox.Batch.Batch                 as Batch
 import           Flowbox.Batch.Batch                   (Batch)
 import           Flowbox.Batch.Handlers.Common         (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
 import qualified Flowbox.Batch.Project.Project       as Project
+import           Flowbox.Config.Config                 (Config)
 import qualified Flowbox.Luna.Lib.LibManager         as LibManager
 import qualified Flowbox.Luna.Lib.Library            as Library
 import           Flowbox.Luna.Lib.Library              (Library)
@@ -35,6 +37,7 @@ import qualified Flowbox.Lunac.Diagnostics           as Diagnostics
 import           Flowbox.System.Log.Logger             
 import qualified Flowbox.System.UniPath              as UniPath
 import           Flowbox.System.UniPath                (UniPath)
+
 
 
 loggerIO :: LoggerIO
@@ -78,18 +81,18 @@ storeLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ librar
 
 
 buildLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-buildLibrary libID projectID = (\_ -> print "FIXME")
-    --readonly' . libraryOp' libID projectID (\_ library -> do
-    --let diag        = Diagnostics.all
-    --    projectName = Library.name library
-    --    outputPath = UniPath.fromUnixString projectName
-    --    tmpName    = "tmp/" ++ projectName
-    --Builder.buildLibrary diag library outputPath projectName tmpName
-    --return (library, ()))
+buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch library -> do
+    let config      = Batch.config batch
+        diag        = Diagnostics.all
+        projectName = Library.name library
+        outputPath  = UniPath.fromUnixString projectName
+        tmpName     = "tmp/" ++ projectName
+    Builder.buildLibrary config diag library outputPath projectName tmpName
+    return (library, ()))
     
 
 
-runLibrary :: Library.ID -> Project.ID -> Batch -> IO String
+runLibrary ::  Library.ID -> Project.ID -> Batch -> IO String
 runLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ library -> do
     let projectName = Library.name library
         command = "./" ++ projectName

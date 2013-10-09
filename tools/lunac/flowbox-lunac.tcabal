@@ -24,6 +24,7 @@ Library
                    
  Build-Depends:   base,
                   containers,
+                  flowbox-config,
                   flowbox-initializer,
                   flowbox-luna,
                   flowbox-utils,
@@ -47,6 +48,7 @@ Executable lunac
                   NoImplicitPrelude
   Build-Depends:  base,
                   containers,
+                  flowbox-config,
                   flowbox-initializer,
                   flowbox-luna,
                   flowbox-utils,

@@ -2,10 +2,10 @@
 
 module Config.Config where
 
-import Prelude                             hiding (FilePath)
-import System.Environment
-import Control.Applicative
-import System.Directory
+import           Prelude                   hiding (FilePath)
+import           System.Environment          
+import           Control.Applicative         
+import           System.Directory            
 import qualified Filesystem.Path.CurrentOS as Path
 import           Filesystem.Path.CurrentOS   (FilePath)
 import qualified Data.Text                 as T

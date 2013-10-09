@@ -10,13 +10,14 @@
 
 module Flowbox.Batch.Server.Handlers.BatchHandler where
 
-import           Prelude                                  hiding (error)
+import           Control.Applicative
 import qualified Data.IORef                               as IORef
 import           Data.IORef                                 (IORef)
-
-import           Batch_Iface                                
 import           Thrift.Transport.Handle                    ()
 
+import           Flowbox.Prelude
+import           Batch_Iface                                
+import qualified Flowbox.Config.Config                    as Config
 import           Flowbox.Control.Error                      
 import qualified Flowbox.Batch.Batch                      as Batch
 import           Flowbox.Batch.Batch                        (Batch(..))
@@ -43,12 +44,8 @@ type BatchHandler = IORef Batch
 
 
 empty :: IO BatchHandler
---empty = IORef.newIORef Batch.empty
-empty = IORef.newIORef $ Batch.empty { Batch.projectManager = ProjectManager.mkGraph [
-                                                                             (0, Sample.project) 
-                                                                             --(0, Project.empty)
-                                                                                                ] []
-                                     }
+empty = do emptyBatch <- Batch.make <$> Config.load
+           IORef.newIORef $ emptyBatch { Batch.projectManager = ProjectManager.mkGraph [(0, Sample.project)] [] }
 
 
 instance Batch_Iface BatchHandler where
@@ -111,5 +108,6 @@ instance Batch_Iface BatchHandler where
     dump batchHandler   = Common.tRunScript $ do batch <- tryReadIORef batchHandler
                                                  scriptIO $ print batch
     shutdown _          = loggerIO info "called shutdown"
-    initialize _        = do loggerIO info "called initialize"
-                             Common.tRunScript $ scriptIO $ Initializer.initializeIfNeeded
+    initialize batchH   = Common.tRunScript $ do scriptIO $ loggerIO info "called initialize"
+                                                 batch <- tryReadIORef batchH
+                                                 scriptIO $ Initializer.initializeIfNeeded $ Batch.config batch
