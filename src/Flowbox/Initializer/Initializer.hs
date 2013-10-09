@@ -52,20 +52,20 @@ initializeIfNeeded config = do
 initialize :: Config -> IO ()
 initialize config = do
     logger info "Configuring Flowbox for the first use. Please wait..."
-    --let fs         = Config.fs config
-    --    fsGlobal   = Config.global fs 
-    --    fsUsr      = Config.usr    fs
-    --    fsUsrCabal = fsUsr ++ "/cabal"
-    --    fsUsrGhc   = fsUsr ++ "/ghc"
-    --    cabalt     = fsGlobal ++ "/config/cabal.tconfig"
-    --    cabalg     = fsUsr ++ "/cabal.config"
+    let global     = Config.global config
+        usr        = Config.usr    config 
+        globalConf = Config.conf   global
 
-    --Directory.createDirectoryIfMissing True $ UniPath.fromUnixString fsUsrGhc
-    --Process.runProcess Nothing "ghc-pkg" ["recache", "--package-db=" ++ fsUsrGhc] 
-    --cabalConfigTemplate <- IO.readFile cabalt
-    --let cabal = StringUtils.replace "${FB_INSTALL}"    fsGlobal
-    --          $ StringUtils.replace "${FB_HOME_CABAL}" fsUsrCabal cabalConfigTemplate
-    --IO.writeFile cabalg cabal
+        usrPkgDb   = Config.pkgDb usr
+        usrCabal   = (Config.path usr) ++ "/cabal"
+        cabalg     = usrCabal ++ "/cabal.config"
+
+    Directory.createDirectoryIfMissing True $ UniPath.fromUnixString usrPkgDb
+    Process.runProcess Nothing "ghc-pkg" ["recache", "--package-db=" ++ usrPkgDb] 
+    cabalConfTemplate <- IO.readFile globalConf
+    let cabalConf = StringUtils.replace "${FB_INSTALL}"    (Config.path global)
+                  $ StringUtils.replace "${FB_HOME_CABAL}" usrCabal cabalConfTemplate
+    IO.writeFile cabalg cabalConf
     
     ----Directory.touchFile successfullInstallFileName
     --logger info "Flowbox configured successfully."

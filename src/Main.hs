@@ -12,11 +12,10 @@ import           Flowbox.Prelude                 hiding (error)
 import qualified Flowbox.Config.Config           as Config
 import qualified Flowbox.Data.Version            as Version
 import           Flowbox.Data.Version              (Version)
-import qualified Flowbox.Initializer.Conf        as Conf
-import           Flowbox.Initializer.Conf          (Conf)
+import qualified Flowbox.Initializer.CmdArgs     as CmdArgs
+import           Flowbox.Initializer.CmdArgs       (CmdArgs)
 import qualified Flowbox.Initializer.Initializer as Initializer
 import           Flowbox.System.Log.Logger         
-
 
 
 rootLogger :: Logger
@@ -29,15 +28,15 @@ version = Version.mk { Version.minor = 1
                      }
 
 
-parser :: Parser Conf
-parser = Opt.flag' Conf.Version (long "version" <> hidden)
-       <|> Conf.Initialization
+parser :: Parser CmdArgs
+parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
+       <|> CmdArgs.Initialization
            <$> switch (long "verbose" <> short 'v' <> help "Verbose level")
            <*> switch (long "force"   <> short 'f' <> help "Force reinitialization")
 
 
 
-opts :: ParserInfo Conf
+opts :: ParserInfo CmdArgs
 opts = Opt.info (helper <*> parser)
            (Opt.fullDesc
                <> Opt.header show_version
@@ -52,16 +51,16 @@ main :: IO ()
 main = execParser opts >>= run
 
 
-run :: Conf -> IO ()
-run conf = case conf of
-    Conf.Version     {} -> putStrLn show_version
-    Conf.Initialization {} -> do
-        if Conf.verbose conf
+run :: CmdArgs -> IO ()
+run args = case args of
+    CmdArgs.Version     {} -> putStrLn show_version
+    CmdArgs.Initialization {} -> do
+        if CmdArgs.verbose args
             then rootLogger setLevel DEBUG
             else rootLogger setLevel INFO
 
         config <- Config.load
-        if Conf.force conf
+        if CmdArgs.force args
             then do Initializer.clear      config
                     Initializer.initialize config
             else Initializer.initializeIfNeeded config

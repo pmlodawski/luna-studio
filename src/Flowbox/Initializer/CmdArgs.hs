@@ -5,14 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Initializer.Conf where
+module Flowbox.Initializer.CmdArgs where
 
 import           Flowbox.Prelude   
 
 
 
-data Conf = Initialization { verbose :: Bool
-                           , force   :: Bool
-                           }
-          | Version
-          deriving Show
+data CmdArgs = Initialization { verbose :: Bool
+	                          , force   :: Bool
+	                          }
+	         | Version
+	         deriving Show
