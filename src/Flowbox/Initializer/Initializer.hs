@@ -21,6 +21,8 @@ import qualified Flowbox.System.Process             as Process
 import qualified Flowbox.System.UniPath             as UniPath
 import           Flowbox.System.UniPath               (UniPath)
 
+-- TODO[PM] : Finish implementation
+
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Initializer.Initializer"
@@ -55,10 +57,12 @@ initialize config = do
     let global     = Config.global config
         local      = Config.local  config 
         localPkgDb = Config.pkgDb local
+        localCabal = Config.cabal local
         ghcPkgBin  = Config.ghcPkg . Config.wrappers $ config
         cabalConfT = Config.cabal . Config.templates $ config
         cabalConf  = Config.cabal . Config.config $ config
 
+    Directory.createDirectoryIfMissing True $ UniPath.fromUnixString localCabal
     Directory.createDirectoryIfMissing True $ UniPath.fromUnixString localPkgDb
     Process.runProcess Nothing ghcPkgBin ["recache", "--package-db=" ++ localPkgDb] 
 
@@ -67,6 +71,8 @@ initialize config = do
                          $ StringUtils.replace "${FB_HOME_CABAL}" (Config.cabal local) cabalConfTContent
     IO.writeFile cabalConf cabalConfContent
     
+    --TODO[pm]: add cabal update
+
     ----Directory.touchFile successfullInstallFileName
     --logger info "Flowbox configured successfully."
 
