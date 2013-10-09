@@ -18,7 +18,7 @@ module Flowbox.Luna.Network.Def.DefManager(
     empty
 ) where
 
-import           Flowbox.Prelude                     hiding(fromJust)  
+import           Flowbox.Prelude                     hiding (fromJust)
 import           Data.Maybe                            (fromJust)
 
 import qualified Flowbox.Luna.XOLD.Type.Type         as Type

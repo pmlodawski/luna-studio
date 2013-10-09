@@ -17,7 +17,7 @@ import           Control.Monad.IO.Class   (liftIO, MonadIO)
 import           Data.Typeable            
 import qualified Data.Traversable       as Traversable
 import           Data.Traversable         (Traversable)
-import qualified Control.Exception         as Exception
+import qualified Control.Exception      as Exception
 
 
 print :: (MonadIO m, Show s) => s -> m ()
