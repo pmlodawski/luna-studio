@@ -11,7 +11,7 @@ module Flowbox.Prelude(
     module Prelude
 ) where
 
-import           Prelude                hiding (print, putStr, putStrLn, mapM, mapM_, fromJust)
+import           Prelude                hiding (print, putStr, putStrLn, mapM, mapM_)
 import qualified Prelude                as Prelude
 import           Control.Monad.IO.Class   (liftIO, MonadIO)
 import           Data.Typeable            
