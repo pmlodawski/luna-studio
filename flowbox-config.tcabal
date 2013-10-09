@@ -24,18 +24,18 @@ Library
                   transformers
 
 
-Executable config.dbg
-  Main-Is:        Main.hs
-  Hs-Source-Dirs: tests
-
-  GHC-Options:    -Wall -O2
-
-  Extensions:     DoAndIfThenElse
-                  MultiParamTypeClasses
-                  NoImplicitPrelude
-
-  Build-Depends:  base,
-                  configurator,
-                  flowbox-config,
-                  flowbox-utils
+-- Executable config
+--   Main-Is:        Main.hs
+--   Hs-Source-Dirs: tests
+-- 
+--   GHC-Options:    -Wall -O2
+-- 
+--   Extensions:     DoAndIfThenElse
+--                   MultiParamTypeClasses
+--                   NoImplicitPrelude
+-- 
+--   Build-Depends:  base,
+--                   configurator,
+--                   flowbox-config,
+--                   flowbox-utils
 
