@@ -10,10 +10,10 @@ import qualified Flowbox.Config.Config as Cfg
 main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
-    let topDir = (Cfg.topDir . Cfg.ghc) cfg
+    let topDir = (Cfg.topDir . Cfg.ghcTP . Cfg.thirdparty) cfg
         tflag  = "--template=" ++ topDir ++ "/template-hsc.h"
         iflag  = "-I" ++ topDir ++ "/include/"
-        exec   = (Cfg.rawExec . Cfg.hsc2hs) cfg
+        exec   = (Cfg.hsc2hsBin . Cfg.ghcTP . Cfg.thirdparty) cfg
 
     -- FIXME: handle Darwin
 

@@ -39,20 +39,20 @@ Library
                   transformers
 
 
-Executable utils 
-  Main-Is:        Main.hs
-  Hs-Source-Dirs: tests
-
-  GHC-Options:    -Wall -O2
-
-  Extensions:     DoAndIfThenElse
-                  MultiParamTypeClasses
-                  NoImplicitPrelude
-  Build-Depends:  base,
-                  --dlist,
-                  --ansi-terminal,
-                  --either,
-                  --hslogger,
-                  --mtl,
-                  flowbox-utils,
-                  ghc-prim
+-- Executable utils 
+--   Main-Is:        Main.hs
+--   Hs-Source-Dirs: tests
+-- 
+--   GHC-Options:    -Wall -O2
+-- 
+--   Extensions:     DoAndIfThenElse
+--                   MultiParamTypeClasses
+--                   NoImplicitPrelude
+--   Build-Depends:  base,
+--                   --dlist,
+--                   --ansi-terminal,
+--                   --either,
+--                   --hslogger,
+--                   --mtl,
+--                   flowbox-utils,
+--                   ghc-prim

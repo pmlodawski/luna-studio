@@ -10,5 +10,5 @@ import qualified Flowbox.Config.Config as Cfg
 main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
-    let exec = (Cfg.exec . Cfg.ghc) cfg
+    let exec = (Cfg.ghc . Cfg.wrappers) cfg
     Cmd.rawSystem exec ("--interactive" : args)
