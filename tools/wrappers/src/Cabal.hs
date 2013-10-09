@@ -11,7 +11,6 @@ main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
     let exec = (Cfg.cabalBin . Cfg.cabalTP . Cfg.thirdparty) cfg
-    print exec
     if "install" `elem` args
         then Cmd.rawSystem exec $ ("--config-file=" ++ (Cfg.cabal . Cfg.config) cfg)
                                 : "--package-db=clear"
