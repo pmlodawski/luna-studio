@@ -12,7 +12,7 @@ import qualified System.Environment        as Env
 
 import           Flowbox.Prelude           hiding (read, error)
 import           Flowbox.System.Log.Logger   
-import qualified Prelude as Prelude
+import qualified Prelude                   as Prelude
 
 
 logger :: LoggerIO
