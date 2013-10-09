@@ -53,19 +53,19 @@ initialize :: Config -> IO ()
 initialize config = do
     logger info "Configuring Flowbox for the first use. Please wait..."
     let global     = Config.global config
-        usr        = Config.usr    config 
-        globalConf = Config.conf   global
+        local      = Config.local  config 
+        localPkgDb = Config.pkgDb local
+        ghcPkgBin  = Config.ghcPkg . Config.wrappers $ config
+        cabalConfT = Config.cabal . Config.templates $ config
+        cabalConf  = Config.cabal . Config.config $ config
 
-        usrPkgDb   = Config.pkgDb usr
-        usrCabal   = (Config.path usr) ++ "/cabal"
-        cabalg     = usrCabal ++ "/cabal.config"
+    Directory.createDirectoryIfMissing True $ UniPath.fromUnixString localPkgDb
+    Process.runProcess Nothing ghcPkgBin ["recache", "--package-db=" ++ localPkgDb] 
 
-    Directory.createDirectoryIfMissing True $ UniPath.fromUnixString usrPkgDb
-    Process.runProcess Nothing "ghc-pkg" ["recache", "--package-db=" ++ usrPkgDb] 
-    cabalConfTemplate <- IO.readFile globalConf
-    let cabalConf = StringUtils.replace "${FB_INSTALL}"    (Config.path global)
-                  $ StringUtils.replace "${FB_HOME_CABAL}" usrCabal cabalConfTemplate
-    IO.writeFile cabalg cabalConf
+    cabalConfTContent <- IO.readFile cabalConfT
+    let cabalConfContent = StringUtils.replace "${FB_INSTALL}"    (Config.path global)
+                         $ StringUtils.replace "${FB_HOME_CABAL}" (Config.cabal local) cabalConfTContent
+    IO.writeFile cabalConf cabalConfContent
     
     ----Directory.touchFile successfullInstallFileName
     --logger info "Flowbox configured successfully."
