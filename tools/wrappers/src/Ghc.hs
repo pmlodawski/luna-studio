@@ -10,8 +10,8 @@ import qualified Flowbox.Config.Config     as Cfg
 main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
-    let exec = (Cfg.rawExec . Cfg.ghc) cfg
-    Cmd.rawSystem exec $ ("-B" ++ (Cfg.topDir . Cfg.ghc) cfg)
+    let exec = (Cfg.ghcBin . Cfg.ghcTP . Cfg.thirdparty) cfg
+    Cmd.rawSystem exec $ ("-B" ++ (Cfg.topDir . Cfg.ghcTP . Cfg.thirdparty) cfg)
                        : "-no-user-package-db" 
-                       : ("-package-db=" ++ (Cfg.pkgDb . Cfg.usr) cfg)
+                       : ("-package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
                        : args

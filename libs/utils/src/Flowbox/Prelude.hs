@@ -11,12 +11,14 @@ module Flowbox.Prelude(
     module Prelude
 ) where
 
-import           Prelude                hiding (print, putStr, putStrLn, mapM, mapM_)
+import           Prelude                hiding (print, putStr, putStrLn, mapM, mapM_, fromJust)
 import qualified Prelude                as Prelude
 import           Control.Monad.IO.Class   (liftIO, MonadIO)
 import           Data.Typeable            
 import qualified Data.Traversable       as Traversable
 import           Data.Traversable         (Traversable)
+import qualified Control.Exception         as Exception
+
 
 print :: (MonadIO m, Show s) => s -> m ()
 print    = liftIO . Prelude.print
@@ -62,3 +64,7 @@ isLeft _        = False
 isRight :: Either a b -> Bool
 isRight (Right _) = True
 isRight _         = False
+
+
+fromJust Nothing  = Exception.throwIO $ Exception.ErrorCall ("Maybe.fromJust: Nothing" :: String)
+fromJust (Just x) = return x

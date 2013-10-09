@@ -10,9 +10,9 @@ import qualified Flowbox.Config.Config     as Cfg
 main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
-    let exec = (Cfg.rawExec . Cfg.ghcPkg) cfg
+    let exec = (Cfg.ghcPkgBin . Cfg.ghcTP . Cfg.thirdparty) cfg
     Cmd.rawSystem exec $ "--global-package-db"
-                       : (Cfg.pkgConf . Cfg.ghc) cfg
+                       : (Cfg.pkgConf . Cfg.ghcTP . Cfg.thirdparty) cfg
                        : "--global"
-                       : ("--package-db=" ++ (Cfg.pkgDb . Cfg.usr) cfg)
+                       : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
                        : args
