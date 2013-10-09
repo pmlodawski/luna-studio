@@ -37,6 +37,7 @@ data Section = Global     { path      :: String
                           , path      :: String
                           , conf      :: String
                           , pkgDb     :: String
+                          , cabal     :: String
                           }
              | Templates  { path      :: String
                           , cabal     :: String
@@ -97,6 +98,7 @@ load = do
                         <*> read "local.path"
                         <*> read "local.conf"
                         <*> read "local.pkgDb"
+                        <*> read "local.cabal"
                )
            <*> ( Templates <$> read "templates.path"
                            <*> read "templates.cabal"
