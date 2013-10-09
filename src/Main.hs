@@ -21,81 +21,83 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath          as UniPath
 
 
-rootLogger :: Logger
-rootLogger = getLogger "Flowbox"
+--rootLogger :: Logger
+--rootLogger = getLogger "Flowbox"
 
 
---logger :: Logger
---logger = getLogger "Flowbox.Lunac"
+----logger :: Logger
+----logger = getLogger "Flowbox.Lunac"
 
 
---libPathEnv :: String
---libPathEnv = "LUNAPATH"
+----libPathEnv :: String
+----libPathEnv = "LUNAPATH"
 
 
-version :: Version
-version = Version.mk { Version.minor = 1
-                     , Version.stage = Version.Alpha
-                     }
+--version :: Version
+--version = Version.mk { Version.minor = 1
+--                     , Version.stage = Version.Alpha
+--                     }
 
 
-parser :: Parser CmdArgs
-parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
-       <|> CmdArgs.Compilation
-           <$> many1     ( argument str ( metavar "inputs" ))
-           <*> many      ( strOption ( short 'l' <> metavar "LIBRARY" <> help "Library to link with.")                 )
-           <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "OUTPUT"  <> help "Output folder" )
-           <*> strOption ( long "name"    <> short 'n' <> value "name"    <> metavar "NAME"    <> help "Project name"  )
-           <*> strOption ( long "root-path"            <> value ""        <> hidden                                    )
+--parser :: Parser CmdArgs
+--parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
+--       <|> CmdArgs.Compilation
+--           <$> many1     ( argument str ( metavar "inputs" ))
+--           <*> many      ( strOption ( short 'l' <> metavar "LIBRARY" <> help "Library to link with.")                 )
+--           <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "OUTPUT"  <> help "Output folder" )
+--           <*> strOption ( long "name"    <> short 'n' <> value "name"    <> metavar "NAME"    <> help "Project name"  )
+--           <*> strOption ( long "root-path"            <> value ""        <> hidden                                    )
        
-           <*> switch    ( long "global"                         <> help "Enable to compile to global cabal repository")
-           <*> switch    ( long "library"                        <> help "Enable to compile as a library"              )
+--           <*> switch    ( long "global"                         <> help "Enable to compile to global cabal repository")
+--           <*> switch    ( long "library"                        <> help "Enable to compile as a library"              )
        
-           <*> switch    ( long "verbose" <> short 'v'           <> help "Verbose level"                               )
-           <*> switch    ( long "no-color"                       <> help "Disable color output"                        )
+--           <*> switch    ( long "verbose" <> short 'v'           <> help "Verbose level"                               )
+--           <*> switch    ( long "no-color"                       <> help "Disable color output"                        )
 
-           <*> switch    ( long "dump-all"              <> hidden                                                      )
-           <*> switch    ( long "dump-ast"              <> hidden                                                      )
-           <*> switch    ( long "dump-va"               <> hidden                                                      )
-           <*> switch    ( long "dump-fp"               <> hidden                                                      )
-           <*> switch    ( long "dump-ssa"              <> hidden                                                      )
-           <*> switch    ( long "dump-hast"             <> hidden                                                      )
-           <*> switch    ( long "dump-hsc"              <> hidden                                                      )
-
-
-opts :: ParserInfo CmdArgs
-opts = Opt.info (helper <*> parser)
-           (Opt.fullDesc
-               <> Opt.header show_version
-           )
+--           <*> switch    ( long "dump-all"              <> hidden                                                      )
+--           <*> switch    ( long "dump-ast"              <> hidden                                                      )
+--           <*> switch    ( long "dump-va"               <> hidden                                                      )
+--           <*> switch    ( long "dump-fp"               <> hidden                                                      )
+--           <*> switch    ( long "dump-ssa"              <> hidden                                                      )
+--           <*> switch    ( long "dump-hast"             <> hidden                                                      )
+--           <*> switch    ( long "dump-hsc"              <> hidden                                                      )
 
 
-show_version :: String
-show_version = "Luna compiler, version " ++ Version.str version
+--opts :: ParserInfo CmdArgs
+--opts = Opt.info (helper <*> parser)
+--           (Opt.fullDesc
+--               <> Opt.header show_version
+--           )
 
 
-main :: IO ()
-main = execParser opts >>= run
+--show_version :: String
+--show_version = "Luna compiler, version " ++ Version.str version
 
 
-run :: CmdArgs -> IO ()
-run conf = case conf of
-    CmdArgs.Version     {} -> putStrLn show_version
-    CmdArgs.Compilation {} -> do
-        if CmdArgs.verbose conf
-            then rootLogger setLevel DEBUG
-            else rootLogger setLevel INFO
+--main :: IO ()
+--main = execParser opts >>= run
 
-        let diag = Diagnostics ( CmdArgs.dump_ast  conf || CmdArgs.dump_all conf )
-                               ( CmdArgs.dump_va   conf || CmdArgs.dump_all conf )
-                               ( CmdArgs.dump_fp   conf || CmdArgs.dump_all conf )
-                               ( CmdArgs.dump_ssa  conf || CmdArgs.dump_all conf )
-                               ( CmdArgs.dump_hast conf || CmdArgs.dump_all conf )
-                               ( CmdArgs.dump_hsc  conf || CmdArgs.dump_all conf )
+
+--run :: CmdArgs -> IO ()
+--run conf = case conf of
+--    CmdArgs.Version     {} -> putStrLn show_version
+--    CmdArgs.Compilation {} -> do
+--        if CmdArgs.verbose conf
+--            then rootLogger setLevel DEBUG
+--            else rootLogger setLevel INFO
+
+--        let diag = Diagnostics ( CmdArgs.dump_ast  conf || CmdArgs.dump_all conf )
+--                               ( CmdArgs.dump_va   conf || CmdArgs.dump_all conf )
+--                               ( CmdArgs.dump_fp   conf || CmdArgs.dump_all conf )
+--                               ( CmdArgs.dump_ssa  conf || CmdArgs.dump_all conf )
+--                               ( CmdArgs.dump_hast conf || CmdArgs.dump_all conf )
+--                               ( CmdArgs.dump_hsc  conf || CmdArgs.dump_all conf )
                                
-            inputs = map UniPath.fromUnixString $ CmdArgs.inputs conf
+--            inputs = map UniPath.fromUnixString $ CmdArgs.inputs conf
 
-        Initializer.initializeIfNeeded
+--        Initializer.initializeIfNeeded
 
-        mapM_ (Builder.buildFile conf diag) inputs
-      
+--        mapM_ (Builder.buildFile conf diag) inputs
+--      
+
+main = return ()
