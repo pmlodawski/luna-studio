@@ -10,13 +10,13 @@ import qualified Flowbox.Config.Config as Cfg
 main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
-    let exec = (Cfg.rawExec . Cfg.cabal) cfg
+    let exec = (Cfg.cabalBin . Cfg.cabalTP . Cfg.thirdparty) cfg
     if "install" `elem` args
-        then Cmd.rawSystem exec $ ("--config-file=" ++ (Cfg.conf . Cfg.cabal) cfg)
+        then Cmd.rawSystem exec $ ("--config-file=" ++ (Cfg.cabal . Cfg.config) cfg)
                                 : "--package-db=clear"
                                 : "--package-db=global"
-                                : ("--package-db=" ++ (Cfg.pkgDb . Cfg.usr) cfg)
+                                : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
                                 : args
-        else Cmd.rawSystem exec $ ("--config-file=" ++ (Cfg.conf . Cfg.cabal) cfg)
+        else Cmd.rawSystem exec $ ("--config-file=" ++ (Cfg.cabal . Cfg.config) cfg)
                                 : args
 
