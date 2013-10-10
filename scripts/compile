@@ -14,18 +14,17 @@ def handle_ret(ret):
     if ret != 0:
         sys.exit(ret)
 
-def inc_build_num():
+def refresh_build():
     cfgname = "build.info"
     section = 'Info'
     param   = 'build'
-    config = ConfigParser.RawConfigParser()
+    config  = ConfigParser.RawConfigParser()
     config.read(cfgname)
-    try:    build = int(config.get(section, param))
-    except: build = 0
     if not config.has_section(section):
         config.add_section(section)
-    build += 1
-    config.set(section, param, str(build))
+    (build, _) = Popen(['git', 'rev-parse', 'HEAD'], stdout=PIPE).communicate()
+    build = build[:10]
+    config.set(section, param, build)
     with open(cfgname, 'wb') as configfile:
         config.write(configfile)
 
@@ -53,7 +52,7 @@ def main():
         ret = call(['cabal', 'install', '--reinstall', '--bindir=%s'%inst_path, name] + sys.argv[1:])
         handle_ret(ret)
 
-    inc_build_num()
+    refresh_build()
     sys.exit(0)
 
 main()
