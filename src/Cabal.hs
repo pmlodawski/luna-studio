@@ -13,9 +13,9 @@ main = do
     let exec = (Cfg.cabalBin . Cfg.cabalTP . Cfg.thirdparty) cfg
     if "install" `elem` args
         then Cmd.rawSystem exec $ ("--config-file=" ++ (Cfg.cabal . Cfg.config) cfg)
-                                : "--package-db=clear"
-                                : "--package-db=global"
-                                : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
+                                -- : "--package-db=clear"
+                                -- : "--package-db=global"
+                                -- : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
                                 : args
         else Cmd.rawSystem exec $ ("--config-file=" ++ (Cfg.cabal . Cfg.config) cfg)
                                 : args
