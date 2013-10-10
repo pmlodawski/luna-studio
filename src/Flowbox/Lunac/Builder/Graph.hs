@@ -37,13 +37,13 @@ logger :: Logger
 logger = getLogger "Flowbox.Lunac.Builder.Graph"
 
 
-build :: Config -> Diagnostics -> Library -> String -> UniPath -> IO ()
-build cfg diag library name outputPath = Luna.runIO $ do
+build :: Config -> Diagnostics -> Library -> String -> String -> UniPath -> IO ()
+build cfg diag library name version outputPath = Luna.runIO $ do
     let defManger = Library.defs library
         rootDefID = Library.rootDefID
         rootDef   = Maybe.fromJust $ DefManager.lab defManger rootDefID
-    ast     <- parseGraph diag defManger (rootDefID, rootDef)
-    Builder.build cfg diag outputPath name False [] [] ast
+    ast <- parseGraph diag defManger (rootDefID, rootDef)
+    Builder.build cfg diag outputPath name version False [] [] ast
 
 
 

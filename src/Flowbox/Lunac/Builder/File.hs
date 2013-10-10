@@ -36,7 +36,8 @@ logger = getLogger "Flowbox.Lunac.Builder.File"
 build :: Config -> CmdArgs -> Diagnostics -> UniPath -> IO ()
 build cfg cmd diag filePath = Luna.runIO $ do 
     let outputPath = UniPath.fromUnixString $ CmdArgs.output cmd
-        name       = CmdArgs.name cmd
+        name       = CmdArgs.libName    cmd
+        version    = CmdArgs.libVersion cmd
         rootPath = case CmdArgs.rootPath cmd of 
                         "" -> UniPath.basePath filePath
                         rp -> UniPath.fromUnixString rp
@@ -44,7 +45,7 @@ build cfg cmd diag filePath = Luna.runIO $ do
                         True  -> ["--global"]
                         False -> []
     ast  <- parseFile diag rootPath filePath
-    Builder.build cfg diag outputPath name (CmdArgs.library cmd) (CmdArgs.link cmd) flags ast
+    Builder.build cfg diag outputPath name version (CmdArgs.library cmd) (CmdArgs.link cmd) flags ast
 
 
 parseFile :: PassMonadIO s m => Diagnostics -> UniPath -> UniPath -> Pass.Result m ASTModule.Module

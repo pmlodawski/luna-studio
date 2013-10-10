@@ -34,11 +34,12 @@ parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
            <$> many1     ( argument str ( metavar "inputs" ))
            <*> many      ( strOption ( short 'l' <> metavar "LIBRARY" <> help "Library to link with.")                 )
            <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "OUTPUT"  <> help "Output folder" )
-           <*> strOption ( long "name"    <> short 'n' <> value "name"    <> metavar "NAME"    <> help "Project name"  )
-           <*> strOption ( long "root-path"            <> value ""        <> hidden                                    )
-       
            <*> switch    ( long "global"                         <> help "Enable to compile to global cabal repository")
+       
            <*> switch    ( long "library"                        <> help "Enable to compile as a library"              )
+           <*> strOption ( long "lib-name"    <> short 'n' <> value "name" <> metavar "NAME"    <> help "Library name"    )
+           <*> strOption ( long "lib-version" <> short 'n' <> value "1.0"  <> metavar "VERSION" <> help "Library version" )
+           <*> strOption ( long "root-path"                <> value ""     <> hidden                                      )
        
            <*> switch    ( long "verbose" <> short 'v'           <> help "Verbose level"                               )
            <*> switch    ( long "no-color"                       <> help "Disable color output"                        )
