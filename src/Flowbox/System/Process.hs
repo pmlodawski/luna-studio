@@ -8,9 +8,10 @@
 module Flowbox.System.Process (
     module System.Process,
 
+    readProcess,
+    readProcess', -- original one from System.Process
     runProcess,
     runProcess', -- original one from System.Process
-    readProcessInFolder,
 )where
 
 import           Control.Applicative         
@@ -19,7 +20,7 @@ import qualified System.IO                 as IO
 import qualified System.Exit               as Exit
 import qualified System.Directory          as Directory
 import qualified System.Process            as Process
-import           System.Process            hiding (runProcess)
+import           System.Process            hiding (readProcess, runProcess)
 
 import           Flowbox.Prelude           hiding (error)
 import           Flowbox.System.Log.Logger   
@@ -54,12 +55,17 @@ runProcess upath command args = do
         Just a                -> fail $ "'" ++ commandName ++ "' returned with exit code: " ++ (show a) ++ "\n" ++ e
 
 
-readProcessInFolder :: UniPath -> String -> [String] -> String -> IO String
-readProcessInFolder upath command args input = do
-    workingDir <- Directory.getCurrentDirectory
-    path       <- UniPath.toUnixString <$> UniPath.expand upath
-    Directory.setCurrentDirectory path
+readProcess' :: FilePath -> [String] -> String -> IO String
+readProcess' = Process.readProcess
 
+
+readProcess :: Maybe UniPath -> String -> [String] -> String -> IO String
+readProcess mpath command args input = do
+    workingDir <- Directory.getCurrentDirectory
+    case mpath of 
+        Nothing    -> return ()
+        Just upath -> do path <- UniPath.toUnixString <$> UniPath.expand upath
+                         Directory.setCurrentDirectory path
     Exception.finally (Process.readProcess command args input)
                       (Directory.setCurrentDirectory workingDir)
 
