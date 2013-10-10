@@ -61,18 +61,18 @@ class AllProject(Project):
         return tgts
 
 
-deptree = ['batch-srv','batch', 'lunac', 'initializer', 'wrappers',  'luna', 'config', 'utils', 'stdlibio']
+deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'utils', 'stdlibio']
 
 pkgs = { '@all'        : AllProject (deps = deptree)
-       , 'stdlibio'    : HProject   ('flowboxM-stdlib-io'  , 'libs/stdlibio'    , 'libs'     ,[]                                                 )
-       , 'utils'       : HProject   ('flowbox-utils'       , 'libs/utils'       , 'libs'     ,[]                                                 )
-       , 'config'      : HProject   ('flowbox-config'      , 'libs/config'      , 'libs'     ,['utils']                                          )
-       , 'luna'        : HProject   ('flowbox-luna'        , 'libs/luna'        , 'libs'     ,['utils']                                          )
-       , 'wrappers'    : HProject   ('flowbox-wrappers'    , 'tools/wrappers'   , 'wrappers' ,['config']                                         )
-       , 'initializer' : HProject   ('flowbox-initializer' , 'tools/initializer', 'tools'    ,['utils', 'config']                                )
-       , 'lunac'       : HProject   ('flowbox-lunac'       , 'tools/lunac'      , 'tools'    ,['utils', 'config', 'initializer', 'luna']         )
-       , 'batch'       : HProject   ('flowbox-batch'       , 'libs/batch'       , 'libs'     ,['utils', 'config', 'luna', 'lunac']                         )
-       , 'batch-srv'   : HProject   ('flowbox-batch-srv'   , 'tools/batch-srv'  , 'tools'    ,['utils', 'config', 'initializer', 'luna', 'lunac', 'batch'] )
+       , 'stdlibio'    : HProject   ('flowboxM-stdlib-io'  , 'libs/stdlibio'    , 'libs'    , []                                                 )
+       , 'utils'       : HProject   ('flowbox-utils'       , 'libs/utils'       , 'libs'    , []                                                 )
+       , 'config'      : HProject   ('flowbox-config'      , 'libs/config'      , 'libs'    , ['utils']                                          )
+       , 'wrappers'    : HProject   ('flowbox-wrappers'    , 'tools/wrappers'   , 'wrappers', ['config']                                         )
+       , 'luna'        : HProject   ('flowbox-luna'        , 'libs/luna'        , 'libs'    , ['utils', 'config']                                          )
+       , 'initializer' : HProject   ('flowbox-initializer' , 'tools/initializer', 'tools'   , ['utils', 'config']                                )
+       , 'lunac'       : HProject   ('flowbox-lunac'       , 'tools/lunac'      , 'tools'   , ['utils', 'config', 'initializer', 'luna']         )
+       , 'batch'       : HProject   ('flowbox-batch'       , 'libs/batch'       , 'libs'    , ['utils', 'config', 'luna', 'lunac']                         )
+       , 'batch-srv'   : HProject   ('flowbox-batch-srv'   , 'tools/batch-srv'  , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'lunac', 'batch'] )
        } 
 
 

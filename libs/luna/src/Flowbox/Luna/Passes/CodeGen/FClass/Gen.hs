@@ -14,11 +14,12 @@ import qualified Data.List.Split                           as Split
 import qualified Data.String.Utils                         as StringUtils
 
 import           Flowbox.Prelude                           hiding (error)
-import qualified Flowbox.Luna.Data.Cabal.Config            as CabalConfig
-import qualified Flowbox.Luna.Data.Cabal.Section           as CabalSection
+import           Flowbox.Config.Config                       (Config)
 import           Flowbox.Luna.Data.Source                    (Source(Source))
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen     as CabalGen
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install as CabalInstall
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store   as CabalStore
+import qualified Flowbox.Luna.Passes.General.Luna.Luna     as Luna
 import qualified Flowbox.Luna.Passes.Pass                  as Pass
 import           Flowbox.Luna.Passes.Pass                    (PassMonadIO)
 import qualified Flowbox.Luna.Passes.Source.File.Writer    as FileWriter
@@ -26,6 +27,8 @@ import qualified Flowbox.System.Directory.Directory        as Directory
 import           Flowbox.System.Log.Logger                   
 import qualified Flowbox.System.UniPath                    as UniPath
 import           Flowbox.System.UniPath                      (UniPath)
+
+
 
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.FClass.Gen"
@@ -68,17 +71,15 @@ packageName name = pprefix ++ clearedname where
     safePrefix  = "SAFEPREFIX"
 
 
-genAndInstall :: PassMonadIO s m  => UniPath -> String -> Pass.Result m ()
-genAndInstall cabalDevPath name  = do
+genAndInstall :: PassMonadIO s m  => Config -> String -> [String] -> Pass.Result m ()
+genAndInstall config name flags = do
     let location = "tmp/" ++ name
         fcname   = mprefix ++ name
         source   = Source (Split.splitOn "." modprefix ++ [fcname]) $ genCode name
-        lib      = CabalSection.mkLibrary { CabalSection.exposedModules = [modprefix ++ "." ++ fcname]}
-        cabal    = CabalConfig.addSection lib 
-                 $ CabalConfig.make $ packageName name
+        cabal    = CabalGen.genLibrary [source] (packageName name) []
 
-        path     = UniPath.append location cabalDevPath
-    FileWriter.run (UniPath.append ("src") path) ".hs" source
-    CabalStore.run cabal $ UniPath.append (name ++ ".cabal") path
-    CabalInstall.run cabalDevPath location
-    liftIO $ Directory.removeDirectoryRecursive path
+    Directory.withTmpDirectory "luna" (\tmpDir -> do
+        FileWriter.run (UniPath.append ("src") tmpDir) ".hs" source
+        CabalStore.run cabal $ UniPath.append (name ++ ".cabal") tmpDir
+        CabalInstall.run config tmpDir flags)
+

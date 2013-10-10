@@ -11,12 +11,12 @@
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser where
 
 import           Control.Applicative                                 
-
-import qualified Flowbox.Prelude                                   as Prelude
-import           Flowbox.Prelude                                   hiding (id, mod)
 import           Text.Parsec                                       hiding (parse, many, optional, (<|>))
 import qualified Text.Parsec                                       as Parsec
 import qualified Text.Parsec.Expr                                  as PExpr
+
+import qualified Flowbox.Prelude                                   as Prelude
+import           Flowbox.Prelude                                   hiding (id, mod)
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils   
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer as L
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
@@ -26,7 +26,8 @@ import qualified Flowbox.Luna.Data.AST.Class                       as Class
 import qualified Flowbox.Luna.Data.AST.Module                      as Module
 import qualified Flowbox.Luna.Data.AST.Type                        as Type
 import qualified Flowbox.Luna.Data.Source                          as Source
-import           Control.Monad                                       
+
+
 
 -----------------------------------------------------------
 -- Entities

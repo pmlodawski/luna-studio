@@ -25,7 +25,6 @@ import qualified Flowbox.Batch.Batch                 as Batch
 import           Flowbox.Batch.Batch                   (Batch)
 import           Flowbox.Batch.Handlers.Common         (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
 import qualified Flowbox.Batch.Project.Project       as Project
-import           Flowbox.Config.Config                 (Config)
 import qualified Flowbox.Luna.Lib.LibManager         as LibManager
 import qualified Flowbox.Luna.Lib.Library            as Library
 import           Flowbox.Luna.Lib.Library              (Library)
@@ -86,11 +85,9 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
         diag        = Diagnostics.all
         projectName = Library.name library
         outputPath  = UniPath.fromUnixString projectName
-        tmpName     = "tmp/" ++ projectName
-    Builder.buildLibrary config diag library outputPath projectName tmpName
+    Builder.buildLibrary config diag library projectName outputPath
     return (library, ()))
     
-
 
 runLibrary ::  Library.ID -> Project.ID -> Batch -> IO String
 runLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ library -> do

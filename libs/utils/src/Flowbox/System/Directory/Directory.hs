@@ -12,22 +12,35 @@ module Flowbox.System.Directory.Directory (
     doesFileExist,
     doesDirectoryExist,
     getDirectoryRecursive,
+    getTemporaryDirectory,
+    getTmpDirectoryWithPrefix,
     removeDirectoryRecursive,
     removeFile,
     renameDirectory,
     renameFile,
     touchFile,
-
+    withTmpDirectory,
     module System.Directory,
 ) where
 
 import           Control.Applicative      
+import           Control.Monad.IO.Class   (MonadIO, liftIO)
 import qualified Data.List              as List
 import qualified System.Directory       as Directory
-import           System.Directory       hiding (copyFile, createDirectory, createDirectoryIfMissing, doesDirectoryExist, doesFileExist, renameDirectory, renameFile, removeDirectoryRecursive, removeFile)
+import           System.Directory       hiding (copyFile,
+                                                createDirectory, 
+                                                createDirectoryIfMissing, 
+                                                doesDirectoryExist, 
+                                                doesFileExist, 
+                                                getTemporaryDirectory,
+                                                renameDirectory, 
+                                                renameFile, 
+                                                removeDirectoryRecursive, 
+                                                removeFile)
 import qualified System.IO              as IO
 
 import           Flowbox.Prelude          
+import qualified Flowbox.System.Random  as Random
 import qualified Flowbox.System.UniPath as UniPath
 import           Flowbox.System.UniPath   (UniPath)
 
@@ -102,6 +115,17 @@ getDirectoryRecursive upath = do
         else return [path]
 
 
+getTemporaryDirectory :: IO UniPath
+getTemporaryDirectory = UniPath.fromUnixString <$> Directory.getTemporaryDirectory
+
+
+getTmpDirectoryWithPrefix :: String -> IO UniPath
+getTmpDirectoryWithPrefix prefix = do 
+    systemTmp <- getTemporaryDirectory
+    guid      <- Random.newGUID
+    return $ UniPath.append guid $ UniPath.append prefix systemTmp
+
+
 removeDirectoryRecursive :: UniPath -> IO ()
 removeDirectoryRecursive upath = do
     path <- UniPath.toUnixString <$> UniPath.expand upath
@@ -132,3 +156,11 @@ touchFile :: UniPath -> IO ()
 touchFile upath = do
     path <- UniPath.toUnixString <$> UniPath.expand upath
     IO.writeFile path ""
+
+
+withTmpDirectory :: MonadIO m => String -> (UniPath -> m a) -> m a
+withTmpDirectory prefix operation = do 
+    tmpDir <- liftIO $ getTmpDirectoryWithPrefix prefix
+    result <- operation tmpDir
+    liftIO $ removeDirectoryRecursive tmpDir
+    return result

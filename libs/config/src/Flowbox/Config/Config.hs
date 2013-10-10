@@ -4,10 +4,8 @@
 module Flowbox.Config.Config where
 
 import           Control.Applicative         
-import           Control.Monad.IO.Class      
 import qualified Control.Exception         as Exception
 import qualified Data.Configurator         as Configurator
-import qualified Data.Maybe                as Maybe
 import qualified System.Environment        as Env
 
 import           Flowbox.Prelude           hiding (read, error)
@@ -19,8 +17,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Config.Config"
 
 
-data Config = Config      { info       :: Section
-                          , global     :: Section
+data Config = Config      { global     :: Section
                           , local      :: Section
                           , templates  :: Section
                           , config     :: Section
@@ -30,12 +27,7 @@ data Config = Config      { info       :: Section
                           }
             deriving (Show)
                           
-data Section = Info       { major     :: String
-                          , minor     :: String
-                          , patch     :: String
-                          , build     :: String
-                          }
-             | Global     { path      :: String
+data Section = Global     { path      :: String
                           , conf      :: String
                           , bin       :: String
                           }
@@ -96,12 +88,7 @@ load = do
     let read name = Exception.onException (fromJust =<< (Configurator.lookup cfgFile name :: IO (Maybe String)))
                   $ logger error ("Error reading config variable '" ++ show name)
 
-    Config <$> ( Info   <$> read "info.major"
-                        <*> read "info.minor"
-                        <*> read "info.patch"
-                        <*> read "info.build"
-               )
-           <*> ( Global <$> read "global.path"
+    Config <$> ( Global <$> read "global.path"
                         <*> read "global.conf"
                         <*> read "global.bin"
                )

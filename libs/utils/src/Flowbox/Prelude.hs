@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Prelude(
@@ -66,5 +67,12 @@ isRight (Right _) = True
 isRight _         = False
 
 
+fromJust :: Maybe a -> IO a
 fromJust Nothing  = Exception.throwIO $ Exception.ErrorCall ("Maybe.fromJust: Nothing" :: String)
 fromJust (Just x) = return x
+
+
+either2io :: Either String b -> IO b
+either2io f = case f of
+        Right r -> return r
+        Left  e -> fail e

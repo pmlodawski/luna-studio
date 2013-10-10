@@ -13,10 +13,15 @@ import qualified Flowbox.System.Log.Logger as Logger
 import           Flowbox.Prelude           hiding (error)
 
 
+-- CR [PM] Nie uzywajmy IO i Either jednoczesnie
 run :: Pass.TransformerT Pass.NoState String IO b -> IO (Either Pass.PassError b)
 run f = do
 	(result, _, logs) <- Pass.runTRaw (Pass.Info "Luna") Pass.NoState f
 	Logger.logsIO logs
 	return result
+
+
+runIO :: Pass.TransformerT Pass.NoState String IO b -> IO b
+runIO f = either2io =<< run f
 
 

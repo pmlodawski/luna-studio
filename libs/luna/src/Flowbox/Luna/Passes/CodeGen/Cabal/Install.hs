@@ -13,15 +13,19 @@ import           Flowbox.Prelude           hiding (error)
 import qualified Flowbox.System.Process    as Process
 import           Flowbox.System.UniPath      (UniPath)
 import           Flowbox.System.Log.Logger   
+import qualified Flowbox.Config.Config     as Config
+import           Flowbox.Config.Config       (Config)
+
 
 
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.Cabal.Install"
 
 
-run :: MonadIO m => UniPath -> String -> m ()
-run buildPath location = liftIO $ 
-	Process.runProcess (Just buildPath) "cabal-dev" ["install", location] --, "--reinstall"] 
+run :: MonadIO m => Config -> UniPath -> [String] -> m ()
+run config location flags = liftIO $ Process.runProcess (Just location) command args where
+    command = Config.cabal $ Config.wrappers config
+    args    = "install" : flags
 
 
 

@@ -10,12 +10,12 @@
 
 module Flowbox.Batch.Server.Handlers.BatchHandler where
 
-import           Control.Applicative
+import           Control.Applicative                        
 import qualified Data.IORef                               as IORef
 import           Data.IORef                                 (IORef)
 import           Thrift.Transport.Handle                    ()
 
-import           Flowbox.Prelude
+import           Flowbox.Prelude                            
 import           Batch_Iface                                
 import qualified Flowbox.Config.Config                    as Config
 import           Flowbox.Control.Error                      

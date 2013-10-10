@@ -19,9 +19,7 @@ import qualified Flowbox.System.Directory.Directory as Directory
 import           Flowbox.System.Log.Logger            
 import qualified Flowbox.System.Process             as Process
 import qualified Flowbox.System.UniPath             as UniPath
-import           Flowbox.System.UniPath               (UniPath)
 
--- TODO[PM] : Finish implementation
 
 
 logger :: LoggerIO
@@ -34,11 +32,14 @@ logger = getLoggerIO "Flowbox.Initializer.Initializer"
 
 isAlreadyInitilized :: Config -> IO Bool
 isAlreadyInitilized config = do 
+    let local      = Config.local  config 
+        localCabal = Config.cabal local
+        localPkgDb = Config.pkgDb local
     logger debug "Checking for Flowbox configuration."
-    --exists_cabalDev  <- Directory.doesDirectoryExist $ UniPath.append "cabal-dev" Common.flowboxPath
+    exists_localCabal  <- Directory.doesDirectoryExist $ UniPath.fromUnixString localCabal
+    exists_localPkgDb  <- Directory.doesDirectoryExist $ UniPath.fromUnixString localPkgDb
     --exists_installed <- Directory.doesFileExist successfullInstallFileName
-    --let exists = exists_cabalDev && exists_installed 
-    let exists = False
+    let exists = exists_localCabal && exists_localPkgDb 
     if exists
         then logger debug "Configuration already exists."
         else logger debug "Configuration does not exist or is broken."
@@ -56,11 +57,12 @@ initialize config = do
     logger info "Configuring Flowbox for the first use. Please wait..."
     let global     = Config.global config
         local      = Config.local  config 
-        localPkgDb = Config.pkgDb local
         localCabal = Config.cabal local
-        ghcPkgBin  = Config.ghcPkg . Config.wrappers $ config
-        cabalConfT = Config.cabal . Config.templates $ config
-        cabalConf  = Config.cabal . Config.config $ config
+        localPkgDb = Config.pkgDb local
+        ghcPkgBin  = Config.ghcPkg . Config.wrappers  $ config
+        cabalConfT = Config.cabal  . Config.templates $ config
+        cabalConf  = Config.cabal  . Config.config    $ config
+        cabalBin   = Config.cabal  . Config.wrappers  $ config
 
     Directory.createDirectoryIfMissing True $ UniPath.fromUnixString localCabal
     Directory.createDirectoryIfMissing True $ UniPath.fromUnixString localPkgDb
@@ -70,17 +72,17 @@ initialize config = do
     let cabalConfContent = StringUtils.replace "${FB_INSTALL}"    (Config.path global)
                          $ StringUtils.replace "${FB_HOME_CABAL}" (Config.cabal local) cabalConfTContent
     IO.writeFile cabalConf cabalConfContent
+    Process.runProcess Nothing cabalBin ["update"] 
     
-    --TODO[pm]: add cabal update
-
     ----Directory.touchFile successfullInstallFileName
-    --logger info "Flowbox configured successfully."
+    logger info "Flowbox configured successfully."
 
 
 clear :: Config -> IO ()
 clear config = do 
     logger info "Cleaning Flowbox configuration."
-    --exists <- Directory.doesDirectoryExist Common.flowboxPath
-    --if exists
-    --    then Directory.removeDirectoryRecursive Common.flowboxPath
-    --    else return ()
+    let localPath = UniPath.fromUnixString $ Config.path $ Config.local config 
+    exists <- Directory.doesDirectoryExist localPath
+    if exists
+        then Directory.removeDirectoryRecursive localPath
+        else return ()

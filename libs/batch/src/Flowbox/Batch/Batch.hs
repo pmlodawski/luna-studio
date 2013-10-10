@@ -25,7 +25,7 @@ data Batch = Batch { config         :: Config
 
 
 make :: Config -> Batch
-make config = Batch config ProjectManager.empty
+make config' = Batch config' ProjectManager.empty
 
 
 attributeKey :: String
