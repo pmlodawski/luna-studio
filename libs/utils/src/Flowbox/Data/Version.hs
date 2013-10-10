@@ -13,18 +13,19 @@ import           Flowbox.Prelude
 data Version = Version { major :: Int
                        , minor :: Int
                        , patch :: Int
-                       , stage :: VersionStage
+                       , build :: String
+                       , stage :: Stage
                        } deriving (Show, Eq, Ord)
 
-data VersionStage = Alpha
-                  | Beta
-                  | Release
-                  | Final
-                  deriving (Show, Eq, Ord)
+data Stage = Alpha
+           | Beta
+           | Release
+           | Final
+           deriving (Show, Eq, Ord, Read)
 
 
 mk :: Version
-mk = Version 0 0 0 Final
+mk = Version 0 0 0 "" Final
 
 str :: Version -> String
 str v  = show(major v) ++ "." 
@@ -32,4 +33,4 @@ str v  = show(major v) ++ "."
       ++ show(patch v)
       ++ case stage v of
               Final -> ""
-              _     -> "-" ++ show (stage v)
+              _     -> " " ++ show (stage v)
