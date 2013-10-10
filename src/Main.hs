@@ -11,6 +11,7 @@ import qualified Options.Applicative             as Opt
 
 import           Flowbox.Prelude                 hiding (error)
 import qualified Flowbox.Config.Config           as Config
+import           Flowbox.Config.Config             (Config)
 import           Flowbox.Control.Applicative       
 import qualified Flowbox.Data.Version            as Version
 import           Flowbox.Data.Version              (Version)
@@ -34,12 +35,6 @@ rootLogger = getLogger "Flowbox"
 
 --libPathEnv :: String
 --libPathEnv = "LUNAPATH"
-
-
-version :: Version
-version = Version.mk { Version.minor = 1
-                     , Version.stage = Version.Alpha
-                     }
 
 
 parser :: Parser CmdArgs
@@ -66,42 +61,44 @@ parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
            <*> switch    ( long "dump-hsc"              <> hidden                                                      )
 
 
-opts :: ParserInfo CmdArgs
-opts = Opt.info (helper <*> parser)
-           (Opt.fullDesc
-               <> Opt.header show_version
-           )
+opts :: Config -> ParserInfo CmdArgs
+opts cfg = Opt.info (helper <*> parser)
+              (Opt.fullDesc
+                  <> Opt.header (show_version cfg)
+              )
 
 
-show_version :: String
-show_version = "Luna compiler, version " ++ Version.str version
+show_version :: Config -> String
+show_version cfg = "Luna compiler, version " ++ Version.str (Config.version cfg)
 
 
 main :: IO ()
-main = execParser opts >>= run
+main = do
+    cfg <- Config.load
+    execParser (opts cfg) >>= (run cfg)
 
 
-run :: CmdArgs -> IO ()
-run cmd = case cmd of
-    CmdArgs.Version     {} -> putStrLn show_version
-    CmdArgs.Compilation {} -> do
-        if CmdArgs.verbose cmd
-            then rootLogger setLevel DEBUG
-            else rootLogger setLevel INFO
+run :: Config -> CmdArgs -> IO ()
+run cfg cmd = do
+    case cmd of
+        CmdArgs.Version     {} -> putStrLn $ show_version cfg
+        CmdArgs.Compilation {} -> do
+            if CmdArgs.verbose cmd
+                then rootLogger setLevel DEBUG
+                else rootLogger setLevel INFO
 
-        let diag = Diagnostics ( CmdArgs.dump_ast  cmd || CmdArgs.dump_all cmd )
-                               ( CmdArgs.dump_va   cmd || CmdArgs.dump_all cmd )
-                               ( CmdArgs.dump_fp   cmd || CmdArgs.dump_all cmd )
-                               ( CmdArgs.dump_ssa  cmd || CmdArgs.dump_all cmd )
-                               ( CmdArgs.dump_hast cmd || CmdArgs.dump_all cmd )
-                               ( CmdArgs.dump_hsc  cmd || CmdArgs.dump_all cmd )
+            let diag = Diagnostics ( CmdArgs.dump_ast  cmd || CmdArgs.dump_all cmd )
+                                   ( CmdArgs.dump_va   cmd || CmdArgs.dump_all cmd )
+                                   ( CmdArgs.dump_fp   cmd || CmdArgs.dump_all cmd )
+                                   ( CmdArgs.dump_ssa  cmd || CmdArgs.dump_all cmd )
+                                   ( CmdArgs.dump_hast cmd || CmdArgs.dump_all cmd )
+                                   ( CmdArgs.dump_hsc  cmd || CmdArgs.dump_all cmd )
 
-            inputs = map UniPath.fromUnixString $ CmdArgs.inputs cmd
+                inputs = map UniPath.fromUnixString $ CmdArgs.inputs cmd
 
-        config <- Config.load
 
-        Initializer.initializeIfNeeded config
+            Initializer.initializeIfNeeded cfg
 
-        mapM_ (Builder.buildFile config cmd diag) inputs
+            mapM_ (Builder.buildFile cfg cmd diag) inputs
       
 
