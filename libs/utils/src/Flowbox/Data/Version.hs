@@ -27,11 +27,17 @@ data Stage = Alpha
 mk :: Version
 mk = Version 0 0 0 "" Final
 
+
 str :: Version -> String
-str v  = show(major v) ++ "." 
-      ++ show(minor v) ++ "." 
-      ++ show(patch v)
+str v  = numStr v
       ++ case stage v of
               Final -> ""
               _     -> " " ++ show (stage v)
       ++ " (build " ++ build v ++ ")"
+
+
+numStr :: Version -> String
+numStr v  = show(major v) ++ "." 
+         ++ show(minor v) ++ "." 
+         ++ show(patch v)
+         
