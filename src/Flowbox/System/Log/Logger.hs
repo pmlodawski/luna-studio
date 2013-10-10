@@ -12,18 +12,15 @@ module Flowbox.System.Log.Logger (
     Priority(..)
 )where
 
-import qualified System.Log.Logger           as HSLogger
-import           System.IO                     (stderr)
-import           System.Console.ANSI         as ANSI
-
-
+import           Prelude                     hiding (log, fail)
 import           Control.Monad.State           
 import           Control.Monad.Writer          
-import           System.Log.Logger           hiding (getLogger, setLevel, Logger)
-import           Prelude                     hiding (log, fail)
 import qualified Data.DList                  as DList
 import           Data.DList                    (DList)
-import           Control.Monad.IO.Class        
+import           System.Console.ANSI         as ANSI
+import           System.IO                     (stderr)
+import qualified System.Log.Logger           as HSLogger
+import           System.Log.Logger           hiding (getLogger, setLevel, Logger)
 
 import qualified Flowbox.System.Log.LogEntry as LogEntry
 
