@@ -29,8 +29,8 @@ import           Flowbox.System.UniPath      (UniPath)
 import           Data.String.Utils           (join)
 
 
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.System.Process"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.System.Process"
 
 
 runProcess' :: FilePath -> [String] -> Maybe FilePath -> Maybe [(String, String)] -> Maybe IO.Handle -> Maybe IO.Handle -> Maybe IO.Handle -> IO ProcessHandle
@@ -44,15 +44,14 @@ runProcess upath command args = do
         Nothing -> pure Nothing
         Just p  -> Just . UniPath.toUnixString <$> UniPath.expand p
 
-    loggerIO debug $ "Running command '" ++ commandName ++ "'"
+    logger debug $ "Running command '" ++ commandName ++ "'"
     (_, out, err, pid) <- Process.runInteractiveProcess command args workingDir Nothing
 
     (_, e)   <- readOutput out err
-    exitCode <- Process.getProcessExitCode pid
-    case exitCode of
-        Nothing               -> loggerIO alert "Could not get exit code! (bug in ghc)"
-        Just Exit.ExitSuccess -> pure ()
-        Just a                -> fail $ "'" ++ commandName ++ "' returned with exit code: " ++ (show a) ++ "\n" ++ e
+    exitCode <- Process.waitForProcess pid
+    if exitCode /= Exit.ExitSuccess 
+        then fail $ "'" ++ commandName ++ "' returned with exit code: " ++ (show exitCode) ++ "\n" ++ e
+        else pure ()
 
 
 readProcess' :: FilePath -> [String] -> String -> IO String
@@ -78,12 +77,12 @@ readOutput hout herr = do
             outEOF <- IO.hIsEOF out
             if not outEOF
                 then do latestOut <- IO.hGetLine out
-                        loggerIO debug latestOut
+                        logger debug latestOut
                         readOutput1 out err (allOut ++ "\n" ++ latestOut) allErr
                 else do errEOF <- IO.hIsEOF err
                         if not errEOF
                         then do latestErr <- IO.hGetLine err
-                                loggerIO debug latestErr
+                                logger debug latestErr
                                 readOutput1 out err allOut (allErr ++ "\n" ++ latestErr)
                         else pure (allOut, allErr)
 

@@ -2,11 +2,14 @@
 
 module Hsc2Hs where
 
-import qualified System.Environment    as Env
 import qualified System.Cmd            as Cmd
+import qualified System.Environment    as Env
+import qualified System.Exit           as Exit
+
 import qualified Flowbox.Config.Config as Cfg
 
 
+main :: IO ()
 main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
@@ -17,10 +20,8 @@ main = do
 
     -- FIXME: handle Darwin
 
-    Cmd.rawSystem exec $ (tflag
+    exitCode <- Cmd.rawSystem exec $ (tflag
                        : "--cflag=-fno-stack-protector"
                        : args
                        ) ++ [iflag]
-
-
-
+    Exit.exitWith exitCode
