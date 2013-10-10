@@ -12,18 +12,19 @@ import           Flowbox.Prelude
 
 
 data CmdArgs = Compilation { inputs          :: [String]
-                           , link            :: [String]
-                           , output          :: String
-                           , name            :: String
-                           , rootPath        :: String
-                                              
-                           , global          :: Bool
-                           , library         :: Bool
-                                              
-                           , verbose         :: Int
-                           , noColor         :: Bool
+                           
                            , version_tmp     :: Bool -- used only to generate help msg
                            , version_num_tmp :: Bool -- used only to generate help msg
+                           , verbose         :: Int
+                           , noColor         :: Bool
+
+                           , output          :: String
+                           , link            :: [String]
+
+                           , name            :: String
+                           , global          :: Bool
+                           , library         :: Bool
+                           , rootPath        :: String
                                               
                            , dump_all        :: Bool
                            , dump_ast        :: Bool
