@@ -15,7 +15,7 @@ import           Flowbox.Control.Applicative
 import qualified Flowbox.Data.Version            as Version
 import           Flowbox.Data.Version              (Version)
 import qualified Flowbox.Initializer.Initializer as Initializer
-import qualified Flowbox.Lunac.Builder           as Builder
+import qualified Flowbox.Lunac.Builder.File      as FileBuilder
 import qualified Flowbox.Lunac.CmdArgs           as CmdArgs
 import           Flowbox.Lunac.CmdArgs             (CmdArgs)
 import           Flowbox.Lunac.Diagnostics         (Diagnostics(Diagnostics))
@@ -102,6 +102,6 @@ run cmd = case cmd of
 
         Initializer.initializeIfNeeded config
 
-        mapM_ (Builder.buildFile config cmd diag) inputs
+        mapM_ (FileBuilder.build config cmd diag) inputs
       
 
