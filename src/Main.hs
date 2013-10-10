@@ -36,7 +36,7 @@ parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
            <*> strOption ( long "name"    <> short 'n' <> value "name"    <> metavar "NAME"    <> help "Project name"  )
            <*> strOption ( long "root-path"            <> value ""        <> hidden                                    )
        
-           <*> switch    ( long "global"                         <> help "Compile to global cabal repository"          )
+           <*> switch    ( long "global"                         <> help "Compile to global library"                   )
            <*> switch    ( long "library"                        <> help "Compile as a library"                        )
        
            <*> optIntFlag "verbose" 'v' 0 3 "Verbose level (level range is 0-5, default level is 3)"
