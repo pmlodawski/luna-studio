@@ -9,7 +9,6 @@
 
 module Flowbox.Luna.Passes.CodeGen.FClass.Gen where
 
-import           Control.Monad.RWS                           
 import qualified Data.List.Split                           as Split
 import qualified Data.String.Utils                         as StringUtils
 
@@ -19,14 +18,12 @@ import           Flowbox.Luna.Data.Source                    (Source(Source))
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen     as CabalGen
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install as CabalInstall
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store   as CabalStore
-import qualified Flowbox.Luna.Passes.General.Luna.Luna     as Luna
 import qualified Flowbox.Luna.Passes.Pass                  as Pass
 import           Flowbox.Luna.Passes.Pass                    (PassMonadIO)
 import qualified Flowbox.Luna.Passes.Source.File.Writer    as FileWriter
 import qualified Flowbox.System.Directory.Directory        as Directory
 import           Flowbox.System.Log.Logger                   
 import qualified Flowbox.System.UniPath                    as UniPath
-import           Flowbox.System.UniPath                      (UniPath)
 
 
 
@@ -73,8 +70,7 @@ packageName name = pprefix ++ clearedname where
 
 genAndInstall :: PassMonadIO s m  => Config -> String -> [String] -> Pass.Result m ()
 genAndInstall config name flags = do
-    let location = "tmp/" ++ name
-        fcname   = mprefix ++ name
+    let fcname   = mprefix ++ name
         source   = Source (Split.splitOn "." modprefix ++ [fcname]) $ genCode name
         cabal    = CabalGen.genLibrary [source] (packageName name) []
 

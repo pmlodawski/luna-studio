@@ -22,7 +22,8 @@ import qualified Flowbox.Luna.Passes.Pass                   as Pass
 import           Flowbox.Luna.Passes.Pass                     (PassMonadIO)
 import           Flowbox.System.Log.Logger                    
 import qualified Flowbox.System.Process                     as Process
-import           Flowbox.System.UniPath                       (UniPath)
+
+
 
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Luna.Passes.CodeGen.FClass.Filter"

@@ -30,7 +30,7 @@ import qualified Flowbox.Luna.Lib.Library            as Library
 import           Flowbox.Luna.Lib.Library              (Library)
 import qualified Flowbox.Luna.Network.Def.Definition as Definition
 import           Flowbox.Luna.Network.Def.Definition   (Definition)
-import qualified Flowbox.Lunac.Builder               as Builder
+import qualified Flowbox.Lunac.Builder.Graph         as GraphBuilder
 import qualified Flowbox.Luna.Tools.Serialize.Lib    as LibSerialization
 import qualified Flowbox.Lunac.Diagnostics           as Diagnostics
 import           Flowbox.System.Log.Logger             
@@ -85,7 +85,7 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
         diag        = Diagnostics.all
         projectName = Library.name library
         outputPath  = UniPath.fromUnixString projectName
-    Builder.buildLibrary config diag library projectName outputPath
+    GraphBuilder.build config diag library projectName outputPath
     return (library, ()))
     
 
