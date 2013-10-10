@@ -23,7 +23,6 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.UniPath          as UniPath
 
 
-
 rootLogger :: Logger
 rootLogger = getLogger "Flowbox"
 
@@ -31,26 +30,36 @@ rootLogger = getLogger "Flowbox"
 parser :: Parser CmdArgs
 parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
        <|> CmdArgs.Compilation
-           <$> many1     ( argument str ( metavar "inputs" ))
+           <$> many1     ( argument str ( metavar "INPUTS" ))
            <*> many      ( strOption ( short 'l' <> metavar "LIBRARY" <> help "Library to link with.")                 )
            <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "OUTPUT"  <> help "Output folder" )
            <*> strOption ( long "name"    <> short 'n' <> value "name"    <> metavar "NAME"    <> help "Project name"  )
            <*> strOption ( long "root-path"            <> value ""        <> hidden                                    )
        
-           <*> switch    ( long "global"                         <> help "Enable to compile to global cabal repository")
-           <*> switch    ( long "library"                        <> help "Enable to compile as a library"              )
+           <*> switch    ( long "global"                         <> help "Compile to global cabal repository"          )
+           <*> switch    ( long "library"                        <> help "Compile as a library"                        )
        
-           <*> switch    ( long "verbose" <> short 'v'           <> help "Verbose level"                               )
-           <*> switch    ( long "no-color"                       <> help "Disable color output"                        )
+           <*> optIntFlag "verbose" 'v' 0 3 "Verbose level (level range is 0-5, default level is 3)"
+           <*> switch    ( long "no-color"                       <> help "Disable color output"                       )
 
-           <*> switch    ( long "dump-all"              <> hidden                                                      )
-           <*> switch    ( long "dump-ast"              <> hidden                                                      )
-           <*> switch    ( long "dump-va"               <> hidden                                                      )
-           <*> switch    ( long "dump-fp"               <> hidden                                                      )
-           <*> switch    ( long "dump-ssa"              <> hidden                                                      )
-           <*> switch    ( long "dump-hast"             <> hidden                                                      )
-           <*> switch    ( long "dump-hsc"              <> hidden                                                      )
+           <*> switch    ( long "dump-all"             <> hidden                                                      )
+           <*> switch    ( long "dump-ast"             <> hidden                                                      )
+           <*> switch    ( long "dump-va"              <> hidden                                                      )
+           <*> switch    ( long "dump-fp"              <> hidden                                                      )
+           <*> switch    ( long "dump-ssa"             <> hidden                                                      )
+           <*> switch    ( long "dump-hast"            <> hidden                                                      )
+           <*> switch    ( long "dump-hsc"             <> hidden                                                      )
 
+-- TODO[WD] : Ponizsza funkcja powinna byc przeniesiona do "utilsow" parsowania argumentow
+--            natomiast samo parsowanie powinno byc przeniesione w miejsce niezalezne od toola
+optIntFlag longName shortName baseval defval helpmsg = 
+    (\flag f -> let baselvl = if flag then defval else baseval
+                    explvl  = read f :: Int
+                    lvl     = if explvl < 0 then baselvl else explvl
+                 in lvl
+    )
+    <$> switch    ( long longName <> short shortName <> help helpmsg         )
+    <*> strOption (                  short shortName <> value "-1" <> hidden )
 
 opts :: Config -> ParserInfo CmdArgs
 opts cfg = Opt.info (helper <*> parser)
@@ -74,7 +83,7 @@ run cfg cmd = do
     case cmd of
         CmdArgs.Version     {} -> putStrLn $ show_version cfg
         CmdArgs.Compilation {} -> do
-            if CmdArgs.verbose cmd
+            if CmdArgs.verbose cmd > 0
                 then rootLogger setLevel DEBUG
                 else rootLogger setLevel INFO
 
