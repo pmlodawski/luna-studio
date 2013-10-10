@@ -8,7 +8,9 @@ import qualified Control.Exception         as Exception
 import qualified Data.Configurator         as Configurator
 import qualified System.Environment        as Env
 
-import           Flowbox.Prelude           hiding (read, error)
+import           Flowbox.Prelude           hiding (error)
+import qualified Flowbox.Data.Version      as Version
+import           Flowbox.Data.Version        (Version)
 import           Flowbox.System.Log.Logger   
 import qualified Prelude                   as Prelude
 
@@ -17,7 +19,8 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Config.Config"
 
 
-data Config = Config      { global     :: Section
+data Config = Config      { version    :: Version
+                          , global     :: Section
                           , local      :: Section
                           , templates  :: Section
                           , config     :: Section
@@ -58,7 +61,7 @@ data Section = Global     { path      :: String
                           , ghcTP     :: Section
                           , cabalTP   :: Section
                           }
-             | Ghc        { version   :: String
+             | Ghc        { version_  :: String
                           , path      :: String
                           , topDir    :: String
                           , pkgConf   :: String
@@ -81,51 +84,61 @@ load :: IO Config
 load = do
     logger debug "Loading Flowbox configuration"
     cpath <- Exception.onException (Env.getEnv ffs)
-           $ logger error ("Environment variable '" ++ ffs ++ "' not defined.")
+           $ logger error ("Flowbox environment not initialized.")
+          *> logger error ("Environment variable '" ++ ffs ++ "' not defined.")
+          *> logger error ("Please run 'source <FLOWBOX_INSTALL_PATH>/setup' and try again.")
 
     cfgFile <- Configurator.load [Configurator.Required $ cpath ++ "/config/flowbox.config"]
 
-    let read name = Exception.onException (fromJust =<< (Configurator.lookup cfgFile name :: IO (Maybe String)))
-                  $ logger error ("Error reading config variable '" ++ show name)
+    let readConf name = Exception.onException (fromJust =<< (Configurator.lookup cfgFile name :: IO (Maybe String)))
+                      $ logger error ("Error reading config variable '" ++ show name)
 
-    Config <$> ( Global <$> read "global.path"
-                        <*> read "global.conf"
-                        <*> read "global.bin"
+    --let readConfDefault val name = Configurator.lookupDefault val cfgFile name
+
+    Config <$> ( Version.Version <$> (read <$> readConf "info.major")
+                                 <*> (read <$> readConf "info.minor")
+                                 <*> (read <$> readConf "info.patch")
+                                 <*> readConf "info.build"
+                                 <*> pure Version.Alpha --readConf "info.stage"
                )
-           <*> ( Local  <$> read "local.home"
-                        <*> read "local.path"
-                        <*> read "local.conf"
-                        <*> read "local.pkgDb"
-                        <*> read "local.cabal"
+           <*> ( Global <$> readConf "global.path"
+                        <*> readConf "global.conf"
+                        <*> readConf "global.bin"
                )
-           <*> ( Templates <$> read "templates.path"
-                           <*> read "templates.cabal"
+           <*> ( Local  <$> readConf "local.home"
+                        <*> readConf "local.path"
+                        <*> readConf "local.conf"
+                        <*> readConf "local.pkgDb"
+                        <*> readConf "local.cabal"
                )
-           <*> ( Cfg <$> read "config.flowbox"
-                     <*> read "config.cabal"
+           <*> ( Templates <$> readConf "templates.path"
+                           <*> readConf "templates.cabal"
                )
-           <*> ( Tools <$> read "tools.path"
-                       <*> read "tools.lunac"
-                       <*> read "tools.batchSrv"
+           <*> ( Cfg <$> readConf "config.flowbox"
+                     <*> readConf "config.cabal"
                )
-           <*> ( Wrappers <$> read "wrappers.path"
-                          <*> read "wrappers.ghc"
-                          <*> read "wrappers.ghcPkg"
-                          <*> read "wrappers.hsc2hs"
-                          <*> read "wrappers.cabal"
+           <*> ( Tools <$> readConf "tools.path"
+                       <*> readConf "tools.lunac"
+                       <*> readConf "tools.batchSrv"
                )
-           <*> ( ThirdParty <$> read "thirdparty.path"
-                            <*> ( Ghc <$> read "thirdparty.ghc.version"
-                                      <*> read "thirdparty.ghc.path"
-                                      <*> read "thirdparty.ghc.topDir"
-                                      <*> read "thirdparty.ghc.pkgConf"
-                                      <*> read "thirdparty.ghc.ghcBin"
-                                      <*> read "thirdparty.ghc.ghcPkgBin"
-                                      <*> read "thirdparty.ghc.hsc2hsBin"
+           <*> ( Wrappers <$> readConf "wrappers.path"
+                          <*> readConf "wrappers.ghc"
+                          <*> readConf "wrappers.ghcPkg"
+                          <*> readConf "wrappers.hsc2hs"
+                          <*> readConf "wrappers.cabal"
+               )
+           <*> ( ThirdParty <$> readConf "thirdparty.path"
+                            <*> ( Ghc <$> readConf "thirdparty.ghc.version"
+                                      <*> readConf "thirdparty.ghc.path"
+                                      <*> readConf "thirdparty.ghc.topDir"
+                                      <*> readConf "thirdparty.ghc.pkgConf"
+                                      <*> readConf "thirdparty.ghc.ghcBin"
+                                      <*> readConf "thirdparty.ghc.ghcPkgBin"
+                                      <*> readConf "thirdparty.ghc.hsc2hsBin"
                                 )
-                            <*> ( Cabal <$> read "thirdparty.cabal.path"
-                                        <*> read "thirdparty.cabal.binDir"
-                                        <*> read "thirdparty.cabal.cabalBin"
+                            <*> ( Cabal <$> readConf "thirdparty.cabal.path"
+                                        <*> readConf "thirdparty.cabal.binDir"
+                                        <*> readConf "thirdparty.cabal.cabalBin"
                                 )
                )
 
