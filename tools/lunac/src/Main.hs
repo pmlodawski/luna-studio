@@ -28,14 +28,6 @@ rootLogger :: Logger
 rootLogger = getLogger "Flowbox"
 
 
---logger :: Logger
---logger = getLogger "Flowbox.Lunac"
-
-
---libPathEnv :: String
---libPathEnv = "LUNAPATH"
-
-
 parser :: Parser CmdArgs
 parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
        <|> CmdArgs.Compilation
