@@ -21,8 +21,8 @@ data Config = Config { name         :: String
                      } deriving (Show)
 
 
-make :: String -> Config
-make name' = Config name' "1.0" ">= 1.8" "Simple" []
+make :: String -> String -> Config
+make name' version' = Config name' version' ">= 1.8" "Simple" []
 
 
 defaultIndent :: String

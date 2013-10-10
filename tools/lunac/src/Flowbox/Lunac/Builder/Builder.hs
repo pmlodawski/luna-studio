@@ -55,8 +55,10 @@ tmpDirPrefix :: String
 tmpDirPrefix = "lunac"
 
 
-build :: PassMonadIO s m => Config -> Diagnostics -> UniPath -> String -> Bool -> [String] -> [String] -> ASTModule.Module -> Pass.Result m ()
-build cfg diag outputPath name isLibrary libs flags ast = do 
+--TODO [PM] : Refactor needed - too many arguments in function
+build :: PassMonadIO s m => Config -> Diagnostics -> UniPath -> String -> String -> Bool
+      -> [String] -> [String] -> ASTModule.Module -> Pass.Result m ()
+build cfg diag outputPath name version isLibrary libs flags ast = do 
     va   <- VarAlias.run ast
     Diagnostics.printVA va diag 
     fp <- FuncPool.run ast
@@ -75,8 +77,8 @@ build cfg diag outputPath name isLibrary libs flags ast = do
     Directory.withTmpDirectory tmpDirPrefix (\tmpDir -> do
         writeSources tmpDir hsc
         let cabal = if isLibrary 
-                        then CabalGen.genLibrary hsc name allLibs         
-                        else CabalGen.genExecutable  name allLibs 
+                        then CabalGen.genLibrary hsc name version allLibs         
+                        else CabalGen.genExecutable  name version allLibs 
         CabalStore.run cabal $ UniPath.append (name ++ cabalExt) tmpDir
         CabalInstall.run cfg tmpDir flags
         if isLibrary

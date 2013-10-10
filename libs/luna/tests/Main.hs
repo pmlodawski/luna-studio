@@ -50,7 +50,7 @@ genProject :: String -> Config.Config
 genProject name = let
     exec = Section.mkExecutable name
     conf = Config.addSection exec
-         $ Config.make name
+         $ Config.make name "1.0"
 
     in conf
 

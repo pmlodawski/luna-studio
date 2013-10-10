@@ -43,6 +43,7 @@ iprefix   = "_"
 csaprefix = "Arg_"
 isaprefix = "setArg_"
 
+version = "0.0"
 
 genCode :: String -> String
 genCode name = (header ++ nl ++ fhead ++ cls ++ sacls) where
@@ -72,7 +73,7 @@ genAndInstall :: PassMonadIO s m  => Config -> String -> [String] -> Pass.Result
 genAndInstall config name flags = do
     let fcname   = mprefix ++ name
         source   = Source (Split.splitOn "." modprefix ++ [fcname]) $ genCode name
-        cabal    = CabalGen.genLibrary [source] (packageName name) []
+        cabal    = CabalGen.genLibrary [source] (packageName name) version []
 
     Directory.withTmpDirectory "luna" (\tmpDir -> do
         FileWriter.run (UniPath.append ("src") tmpDir) ".hs" source

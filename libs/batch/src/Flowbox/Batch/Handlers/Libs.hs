@@ -85,7 +85,7 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
         diag        = Diagnostics.all
         projectName = Library.name library
         outputPath  = UniPath.fromUnixString projectName
-    GraphBuilder.build config diag library projectName outputPath
+    GraphBuilder.build config diag library projectName "1.0" outputPath --TODO [PM] : hardcoded version
     return (library, ()))
     
 

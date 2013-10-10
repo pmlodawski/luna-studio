@@ -23,18 +23,18 @@ getModuleName :: Source -> String
 getModuleName source = List.intercalate "." $ Source.path source
 
 
-genLibrary :: [Source] -> String -> [String] -> Config
+genLibrary :: [Source] -> String -> String -> [String] -> Config
 genLibrary sources =
     genCommon (Section.mkLibrary { Section.exposedModules = map getModuleName sources })
 
 
-genExecutable :: String -> [String] -> Config
+genExecutable :: String -> String -> [String] -> Config
 genExecutable name = 
     genCommon (Section.mkExecutable name) name
 
 
-genCommon :: Section -> String -> [String] -> Config
-genCommon section_base name libs = conf where
+genCommon :: Section -> String -> String -> [String] -> Config
+genCommon section_base name version libs = conf where
     section = section_base { Section.buildDepends = "pretty-show"
                                                   : "random"
                                                   : "base"
@@ -44,4 +44,4 @@ genCommon section_base name libs = conf where
                                                   : libs
                            }
     conf = Config.addSection section 
-         $ Config.make name
+         $ Config.make name version
