@@ -33,33 +33,33 @@ parser =   Opt.flag' CmdArgs.Version    (long "version" <> short 'V' <> hidden)
        <|> Opt.flag' CmdArgs.Hello      (long "hello"                <> hidden)
        <|> CmdArgs.Compilation
            <$> many1     ( argument str ( metavar "INPUTS" ))
-           <*> many      ( strOption ( short 'l' <> metavar "LIBRARY" <> help "Library to link with.")                 )
-           <*> strOption ( long "output"  <> short 'o' <> value "out"     <> metavar "OUTPUT"  <> help "Output folder" )
-           <*> strOption ( long "name"    <> short 'n' <> value "name"    <> metavar "NAME"    <> help "Project name"  )
-           <*> strOption ( long "root-path"            <> value ""        <> hidden                                    )
-       
-           <*> switch    ( long "global"                         <> help "Compile to global library"                   )
-           <*> switch    ( long "library"                        <> help "Compile as a library"                        )
-       
-           <*> optIntFlag "verbose" 'v' 0 3 "Verbose level (level range is 0-5, default level is 3)"
-           <*> switch    ( long "no-color"                       <> help "Disable color output"                       )
-           <*> switch    ( long "version" <> short 'V'           <> help "Print version information"                  )
-           <*> switch    ( long "numeric-version"                <> help "Print just the version number"              )
+           <*> switch    ( long "version" <> short 'V'                                      <> help "Print version information" )
+           <*> switch    ( long "numeric-version"                                           <> help "Print just the version number" )
+           <*> optIntFlag       "verbose" 'v' 0 3                                                         "Verbose level (level range is 0-5, default level is 3)"
+           <*> switch    ( long "no-color"                                                  <> help "Disable color output" )
 
-           <*> switch    ( long "dump-all"             <> hidden                                                      )
-           <*> switch    ( long "dump-ast"             <> hidden                                                      )
-           <*> switch    ( long "dump-va"              <> hidden                                                      )
-           <*> switch    ( long "dump-fp"              <> hidden                                                      )
-           <*> switch    ( long "dump-ssa"             <> hidden                                                      )
-           <*> switch    ( long "dump-hast"            <> hidden                                                      )
-           <*> switch    ( long "dump-hsc"             <> hidden                                                      )
+           <*> strOption ( long "output"  <> short 'o' <> value "out"  <> metavar "OUTPUT"  <> help "Output folder" )
+           <*> many      ( strOption (       short 'l'                 <> metavar "LIBRARY" <> help "Library to link with."))
+           
+           <*> strOption ( long "name"    <> short 'n' <> value "name" <> metavar "NAME"    <> help "Project name" )
+           <*> switch    ( long "global"                                                    <> help "Compile to global library" )
+           <*> switch    ( long "library"                                                   <> help "Compile as a library" )
+           <*> strOption ( long "root-path"  <> value "" <> hidden )
+
+           <*> switch    ( long "dump-all"               <> hidden                                                      )
+           <*> switch    ( long "dump-ast"               <> hidden                                                      )
+           <*> switch    ( long "dump-va"                <> hidden                                                      )
+           <*> switch    ( long "dump-fp"                <> hidden                                                      )
+           <*> switch    ( long "dump-ssa"               <> hidden                                                      )
+           <*> switch    ( long "dump-hast"              <> hidden                                                      )
+           <*> switch    ( long "dump-hsc"               <> hidden                                                      )
 
 -- TODO[WD] : Ponizsza funkcja powinna byc przeniesiona do "utilsow" parsowania argumentow
 --            natomiast samo parsowanie powinno byc przeniesione w miejsce niezalezne od toola
 optIntFlag longName shortName baseval defval helpmsg = 
-    (\flag f -> let baselvl = if flag then defval else baseval
-                    explvl  = read f :: Int
-                    lvl     = if explvl < 0 then baselvl else explvl
+    (\sflag f -> let baselvl = if sflag then defval else baseval
+                     explvl  = read f :: Int
+                     lvl     = if explvl < 0 then baselvl else explvl
                  in lvl
     )
     <$> switch    ( long longName <> short shortName <> help helpmsg         )
