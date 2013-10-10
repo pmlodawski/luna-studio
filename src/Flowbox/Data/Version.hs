@@ -34,3 +34,4 @@ str v  = show(major v) ++ "."
       ++ case stage v of
               Final -> ""
               _     -> " " ++ show (stage v)
+      ++ " (build " ++ build v ++ ")"
