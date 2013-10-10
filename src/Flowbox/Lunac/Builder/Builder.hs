@@ -42,25 +42,21 @@ import           Flowbox.System.UniPath                               (UniPath)
 logger :: Logger
 logger = getLogger "Flowbox.Lunac.Builder.Builder"
 
-
 srcFolder :: String
 srcFolder = "src"
-
 
 hsExt :: String
 hsExt = ".hs"
 
-
 cabalExt :: String
 cabalExt = ".cabal"
 
+tmpDirPrefix :: String
+tmpDirPrefix = "lunac"
 
-notImplementedList = []
 
-
-build :: PassMonadIO s m => Config -> Diagnostics -> UniPath -> String -> Bool -> [String] -> ASTModule.Module -> Pass.Result m ()
-build config diag outputPath name isLibrary libs ast = do 
-    let flags = notImplementedList
+build :: PassMonadIO s m => Config -> Diagnostics -> UniPath -> String -> Bool -> [String] -> [String] -> ASTModule.Module -> Pass.Result m ()
+build cfg diag outputPath name isLibrary libs flags ast = do 
     va   <- VarAlias.run ast
     Diagnostics.printVA va diag 
     fp <- FuncPool.run ast
@@ -71,18 +67,18 @@ build config diag outputPath name isLibrary libs ast = do
     Diagnostics.printHAST hast diag
     hsc  <- HSC.run hast
     Diagnostics.printHSC hsc diag
-    newfp <- FClassFliter.run config fp
-    FClassInstall.run config newfp flags
+    newfp <- FClassFliter.run cfg fp
+    FClassInstall.run cfg newfp ["--global"]
 
     let allLibs = libs ++ (map FClassGen.packageName $ Set.toList $ Pool.names fp)
 
-    Directory.withTmpDirectory "lunac" (\tmpDir -> do
+    Directory.withTmpDirectory tmpDirPrefix (\tmpDir -> do
         writeSources tmpDir hsc
         let cabal = if isLibrary 
                         then CabalGen.genLibrary hsc name allLibs         
                         else CabalGen.genExecutable  name allLibs 
         CabalStore.run cabal $ UniPath.append (name ++ cabalExt) tmpDir
-        CabalInstall.run config tmpDir flags
+        CabalInstall.run cfg tmpDir flags
         if isLibrary
             then return ()
             else copyExecutable tmpDir name outputPath
