@@ -28,7 +28,9 @@ rootLogger = getLogger "Flowbox"
 
 
 parser :: Parser CmdArgs
-parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
+parser =   Opt.flag' CmdArgs.Version    (long "version" <> short 'V' <> hidden)
+       <|> Opt.flag' CmdArgs.NumVersion (long "numeric-version"      <> hidden)
+       <|> Opt.flag' CmdArgs.Hello      (long "hello"                <> hidden)
        <|> CmdArgs.Compilation
            <$> many1     ( argument str ( metavar "INPUTS" ))
            <*> many      ( strOption ( short 'l' <> metavar "LIBRARY" <> help "Library to link with.")                 )
@@ -41,6 +43,8 @@ parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
        
            <*> optIntFlag "verbose" 'v' 0 3 "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"                       <> help "Disable color output"                       )
+           <*> switch    ( long "version" <> short 'V'           <> help "Print version information"                  )
+           <*> switch    ( long "numeric-version"                <> help "Print just the version number"              )
 
            <*> switch    ( long "dump-all"             <> hidden                                                      )
            <*> switch    ( long "dump-ast"             <> hidden                                                      )
@@ -71,6 +75,9 @@ opts cfg = Opt.info (helper <*> parser)
 show_version :: Config -> String
 show_version cfg = "Luna compiler, version " ++ Version.str (Config.version cfg)
 
+show_num_version :: Config -> String
+show_num_version cfg = Version.numStr (Config.version cfg)
+
 
 main :: IO ()
 main = do
@@ -82,6 +89,8 @@ run :: Config -> CmdArgs -> IO ()
 run cfg cmd = do
     case cmd of
         CmdArgs.Version     {} -> putStrLn $ show_version cfg
+        CmdArgs.NumVersion  {} -> putStrLn $ show_num_version cfg
+        CmdArgs.Hello       {} -> putStrLn $ "Hello, my name is John le Box. Nice to meet you :)"
         CmdArgs.Compilation {} -> do
             if CmdArgs.verbose cmd > 0
                 then rootLogger setLevel DEBUG
