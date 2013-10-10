@@ -19,7 +19,8 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Config.Config"
 
 
-data Config = Config      { global     :: Section
+data Config = Config      { info       :: Section
+                          , global     :: Section
                           , local      :: Section
                           , templates  :: Section
                           , config     :: Section
@@ -29,7 +30,12 @@ data Config = Config      { global     :: Section
                           }
             deriving (Show)
                           
-data Section = Global     { path      :: String
+data Section = Info       { major     :: String
+                          , minor     :: String
+                          , patch     :: String
+                          , build     :: String
+                          }
+             | Global     { path      :: String
                           , conf      :: String
                           , bin       :: String
                           }
@@ -90,7 +96,12 @@ load = do
     let read name = Exception.onException (fromJust =<< (Configurator.lookup cfgFile name :: IO (Maybe String)))
                   $ logger error ("Error reading config variable '" ++ show name)
 
-    Config <$> ( Global <$> read "global.path"
+    Config <$> ( Info   <$> read "info.major"
+                        <*> read "info.minor"
+                        <*> read "info.patch"
+                        <*> read "info.build"
+               )
+           <*> ( Global <$> read "global.path"
                         <*> read "global.conf"
                         <*> read "global.bin"
                )
