@@ -23,9 +23,10 @@ rootLogger = getLogger "Flowbox"
 
 
 version :: Version
-version = Version.mk { Version.minor = 1
-                     , Version.stage = Version.Alpha
-                     }
+version = Version.mk 
+--{ Version.minor = 1
+--                     , Version.stage = Version.Alpha
+--                     }
 
 
 parser :: Parser CmdArgs
