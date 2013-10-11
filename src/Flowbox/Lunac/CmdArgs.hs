@@ -23,8 +23,8 @@ data CmdArgs = Compilation { inputs          :: [String]
                            , link            :: [String]
 
                            , library         :: Bool
-                           , libName    :: String
-                           , libVersion :: String -- TODO [PM] : version should be a separate type
+                           , libName         :: String
+                           , libVersion      :: String -- TODO [PM] : version should be a separate type
                            , rootPath        :: String
                            , global          :: Bool
                                               
