@@ -152,8 +152,9 @@ genExpr ast = case ast of
                                                 fname      = mkFuncName mname
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
-                                            if (null path) then return ()
-                                                else genFuncDecl (path!!0) name
+                                            --if (null path) then return ()
+                                            --    else genFuncDecl (path!!0) name
+                                            genFuncDecl clsName2 name
 
                                             f  <-   HExpr.Assignment (HExpr.Var fname) 
                                                     <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show (arglen + 1))
@@ -227,7 +228,7 @@ genExpr ast = case ast of
                                             GenState.addDataType dt
 
 
-                                            mapM_ (genFuncDecl name) memberNames
+                                            --mapM_ (genFuncDecl name) memberNames
 
                                             mapM_ genExpr methods
 

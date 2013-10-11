@@ -86,6 +86,8 @@ example = Source.Source ["Main"]
                   , "    ```getIO $ mymap (get1 _v_13) _v_11```"
                   , "def Int.add a b:"
                   , "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
+                  , "def List.add self:"
+                  , "    ```getIO $ #{self}```"
                   , "class Console:"
                   , "    def print self msg:"
                   , "        ```print #{msg}```"
@@ -104,6 +106,7 @@ example = Source.Source ["Main"]
                   --, "    Console.print (1.add 2)"
 
                   , "def main self:"
+                  --, "    1"
                   , "    x = [1,2..30]"
                   , "    y = x.each el:"
                   , "        Console.print el"
