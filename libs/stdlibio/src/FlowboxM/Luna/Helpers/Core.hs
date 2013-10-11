@@ -1,9 +1,11 @@
-{-# LANGUAGE MultiParamTypeClasses, 
-             FunctionalDependencies, 
-             KindSignatures, 
-             DataKinds,
-             FlexibleInstances,
-             NoMonomorphismRestriction #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+
+{-# LANGUAGE OverlappingInstances #-} -- CAREFULLY! Used only by get0 tuples instances
 
 module FlowboxM.Luna.Helpers.Core (
     module Prelude,
@@ -69,12 +71,22 @@ class Get3 m f |  m -> f where
 --instance Get0 (Pure a) (Pure a) where
 --    get0 = id
 
+
+
 instance Get0 (Pure Int) (Pure Int) where
     get0 = id
 
 instance Get0 (Pure [a]) (Pure [a]) where
     get0 = id
 
+instance Tuple t => Get0 (Pure t) (Pure t) where
+    get0 = id
+
+class Tuple t
+instance Tuple (v1,v2)
+instance Tuple (v1,v2,v3)
+instance Tuple (v1,v2,v3,v4)
+instance Tuple (v1,v2,v3,v4,v5)
 
 
 --class Get0 a b | a -> b where

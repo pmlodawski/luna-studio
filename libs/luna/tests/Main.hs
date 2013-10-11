@@ -108,7 +108,7 @@ example = Source.Source ["Main"]
                   , "    y = x.each el:"
                   , "        Console.print el"
                   , "        el.add 1"
-                  , "    Console.print (y)"
+                  , "    Console.print \"hello\""
 
 
 
