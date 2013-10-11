@@ -10,6 +10,7 @@ module FlowboxM.Luna.Helpers.Core (
 	module FlowboxM.Luna.Helpers.Core,
     module FlowboxM.Luna.Helpers.TH.Inst,
     module FlowboxM.Luna.Helpers.StdLib,
+    module FlowboxM.Luna.Helpers.Imports
     --module Flowbox.Luna.Libs.Std.Data.NTuple.Select,
     --module Flowbox.Luna.Libs.Std.Base
 )
@@ -19,8 +20,9 @@ import           Prelude                       hiding ((>>), (>>=), fail, return
 import qualified Prelude                       as Prelude
 import           FlowboxM.Luna.Helpers.TH.Inst   
 import           FlowboxM.Luna.Helpers.StdLib    
-import           Control.Applicative             
+import           Control.Applicative           
 
+import           FlowboxM.Luna.Helpers.Imports
 
 --import           Flowbox.Luna.Libs.Std.Data.NTuple.Select   
 --import           Flowbox.Luna.Libs.Std.Base     
@@ -154,6 +156,17 @@ liftFPure7  f (Pure a) = liftFPure6 (f a)
 liftFPure8  f (Pure a) = liftFPure7 (f a)
 liftFPure9  f (Pure a) = liftFPure8 (f a)
 liftFPure10 f (Pure a) = liftFPure9 (f a)
+
+liftFIO1  f (Pure a) = f a
+liftFIO2  f (Pure a) = liftFIO1 (f a)
+liftFIO3  f (Pure a) = liftFIO2 (f a)
+liftFIO4  f (Pure a) = liftFIO3 (f a)
+liftFIO5  f (Pure a) = liftFIO4 (f a)
+liftFIO6  f (Pure a) = liftFIO5 (f a)
+liftFIO7  f (Pure a) = liftFIO6 (f a)
+liftFIO8  f (Pure a) = liftFIO7 (f a)
+liftFIO9  f (Pure a) = liftFIO8 (f a)
+liftFIO10 f (Pure a) = liftFIO9 (f a)
 
 
 concatPure a                  = concat $ map getPure a

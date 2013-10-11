@@ -35,12 +35,7 @@ genExecutable name =
 
 genCommon :: Section -> String -> String -> [String] -> Config
 genCommon section_base name version libs = conf where
-    section = section_base { Section.buildDepends = "pretty-show"
-                                                  : "random"
-                                                  : "base"
-                                                  : "OneTuple"
-                                                  : "template-haskell"
-                                                  : "flowboxM-stdlib-io"
+    section = section_base { Section.buildDepends = "base"
                                                   : libs
                            }
     conf = Config.addSection section 

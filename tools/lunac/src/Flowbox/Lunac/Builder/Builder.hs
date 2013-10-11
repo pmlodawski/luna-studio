@@ -72,7 +72,10 @@ build cfg diag outputPath name version isLibrary libs flags ast = do
     newfp <- FClassFliter.run cfg fp
     FClassInstall.run cfg newfp ["--global"]
 
-    let allLibs = libs ++ (map FClassGen.packageName $ Set.toList $ Pool.names fp)
+    let allLibs = "flowboxM-stdlib-io"
+                : "template-haskell"
+                : libs
+               ++ (map FClassGen.packageName $ Set.toList $ Pool.names fp)
 
     Directory.withTmpDirectory tmpDirPrefix (\tmpDir -> do
         writeSources tmpDir hsc

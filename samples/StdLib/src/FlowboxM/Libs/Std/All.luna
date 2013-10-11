@@ -1,0 +1,43 @@
+
+###### File ###################################
+
+class File:
+    def readFile self name:
+        ```getIO $ liftFIO1 hsLib_System_IO_readFile #{name}```
+
+    def writeFile self name content:
+        ```getIO $ liftFIO2 hsLib_System_IO_writeFile #{name} #{content}```
+
+
+###### Console ################################
+
+class Console:
+    def print self msg:
+        ```print #{msg}```
+
+###### List ###################################
+
+def List.length self:
+    ```getIO $ liftFPure1 length #{self}```
+
+def List.concat self l2:
+    ```getIO $ liftFPure2 (++) #{self} #{l2}```
+
+def List.at self index:
+    ```getIO $ liftFPure2 (!!) #{self} #{index}```
+
+def List.contains self el:
+    ```getIO $ liftFPure2 (elem) #{self} #{el}```
+
+###### Int ####################################
+
+def Int.add a b:
+    ```getIO $ liftFPure2 (+) #{a} #{b}```
+
+def Int.sub a b:
+    ```getIO $ liftFPure2 (-) #{a} #{b}```
+
+def Int.mul a b:
+    ```getIO $ liftFPure2 (*) #{a} #{b}```
+
+###############################################
