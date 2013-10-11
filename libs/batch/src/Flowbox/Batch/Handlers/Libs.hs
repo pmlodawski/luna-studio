@@ -79,13 +79,16 @@ storeLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ librar
     return (library, ()))
 
 
+-- TODO [PM] : More remote arguments needed
 buildLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
 buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch library -> do
     let config      = Batch.config batch
         diag        = Diagnostics.all
         projectName = Library.name library
         outputPath  = UniPath.fromUnixString projectName
-    GraphBuilder.build config diag library projectName "1.0" outputPath --TODO [PM] : hardcoded version
+        libs        = ["flowbox-stdlib"] -- TODO [PM] : hardoded libs and flags
+        flags       = []
+    GraphBuilder.build config diag library projectName "1.0" outputPath libs flags--TODO [PM] : hardcoded version
     return (library, ()))
     
 

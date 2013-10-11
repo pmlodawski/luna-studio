@@ -39,39 +39,13 @@ mkClass :: String -> Definition
 mkClass name  = mkDefinition (Type.mkClass name)
 
 
-mkFunction :: String -> Definition
-mkFunction name = mkDefinition (Type.Function name ( Type.Tuple [ Type.Tuple [ Type.Class "a" [] [Type.Class "g" [] []]
-                                                                , Type.Class "b" [] []
-                                                                , Type.Named "n" $ Type.Class "f" [] []
-                                                                ]
-                                                   , Type.Class "c" [] []
-                                                   , Type.Function "d" ( Type.Tuple [ Type.Class "e" [] []
-                                                                                    ]
-                                                                       ) 
-                                                                       ( Type.Tuple []
-                                                                       )
-                                                                ]
-                                                   ) 
-                                                   ( Type.Tuple [ Type.Class "o1" [] []
-                                                                , Type.Class "o2" [] []
-                                                                , Type.Class "o3" [] []
-                                                                ]
-                                                   )
-                               )
+mkFunction :: String -> [Type] -> [Type] -> Definition
+mkFunction name inputs outputs = mkDefinition $ Type.Function name (Type.Tuple inputs) (Type.Tuple outputs)
 
 
 listToDefs :: [String] -> Definition.ID -> Definition.ID -> (String -> Definition)
            -> [(Definition.ID, Definition.ID, Definition)]
 listToDefs l start parentID mk = map (\(i, n)-> (parentID, i, mk n)) $ zip [start..] l
-
-
-
-wladcyPolski :: [String]
-wladcyPolski = ["BronislawKomorowski", "DonaldTusk", "LechKaczynski", "JaroslawKaczynski", "LeszekMiller", "JerzyBuzek", "WlodzimierzCimoszewicz", "JozefOleksy", "WaldemarPawlak", "JanKrzysztofBielecki", "HannaSuchocka", "AleksanderKwasniewski", "LechWalesa", "TadeuszMazowiecki", "WojciechJaruzelski", "MieczyslawFRakowski", "ZbigniewMessner", "HenrykJablonski", "StanislawKania", "EdwardGierek", "WladyslawGomulka", "EdwardOchab", "JozefCyrankiewicz", "PiotrJaroszewicz", "BoleslawBierut", "IgnacyMoscicki", "JozefPilsudski", "StanislawWojciechowski", "FranciszekJozef", "Wanda", "Piast", "Siemomysl", "KazimierzWielki", "ProfAndrzejMSkulimowski", "WladyslawLokietek", "MieszkoI", "Krak", "Popiel", "FryderykAugust"]
-
-
-atrybuty :: [String]
-atrybuty = ["berlo", "konstytucja3maja", "iPad", "jablko", "korona", "frontJednosciNarodu", "listaWyborcza", "cenzura", "wstazka", "dwieWstazki", "orderPracyZeWstazka", "orderPracyBezWstazki", "partia", "narod", "komitetWyborczy", "wyborcy", "lud", "elity", "reputacja", "media", "stronniczeMedia", "obiektywneMedia", "praworzadnosc", "promiennyUsmiech", "usmiechDoZlejGry", "kabel", "bOR", "garnitur", "mundur"]
 
 
 types :: [String]
@@ -85,15 +59,10 @@ cls_console = Definition.empty { Definition.cls   = Type.Class "Console" [] []
 
 
 addSomeDefs :: DefManager -> DefManager
-addSomeDefs defs = DefManager.addToParentMany (listToDefs types 1000 2 mkClass)
-                 $ DefManager.addToParent (0, 2 , mkModule "Types")
-                 $ DefManager.addToParent (0, 1 , mkModule "Math")
+addSomeDefs defs = DefManager.addToParent (1, 2 , mkFunction "print" [Type.Named "self" $ Type.TypeName "a"] [])
+                 $ DefManager.addToParent (0, 1 , mkClass "Console")
+                 -- $ DefManager.addToParentMany (listToDefs types 1000 0 mkClass)
                  $ defs
-
-
-func_vec_incx_inputs :: Type
-func_vec_incx_inputs = Type.Tuple [Type.Named "self" $ Type.TypeName "a", 
-                                   Type.Named "in2"  $ Type.TypeName "a"]
 
 
 emptyStdLibrary :: UniPath -> Library
@@ -117,8 +86,8 @@ libManager rootpath = LibManager.insNode (1, userLibrary rootpath)
 
 project :: Project
 project = addDefaultLibraries 
-        $ Project.empty { Project.name = "wladczy projekt"
-                        , Project.path = UniPath.fromUnixString "sample-projects/wladcy"
+        $ Project.empty { Project.name = "test project"
+                        , Project.path = UniPath.fromUnixString "luna"
                         , Project.libs = LibManager.empty
                         } where
 

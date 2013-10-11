@@ -48,27 +48,27 @@ Library
                   vector
 
 
-Executable luna
-  Main-Is:        Main.hs
-  Hs-Source-Dirs: tests
+--Executable luna
+--  Main-Is:        Main.hs
+--  Hs-Source-Dirs: tests
 
-  if flag(debug)
-    GHC-Options:  -csacc
-  GHC-Options:    -Wall -O2
+--  if flag(debug)
+--    GHC-Options:  -csacc
+--  GHC-Options:    -Wall -O2
 
-  Extensions:     DoAndIfThenElse
-                  MultiParamTypeClasses
-                  NoImplicitPrelude
+--  Extensions:     DoAndIfThenElse
+--                  MultiParamTypeClasses
+--                  NoImplicitPrelude
 
-  Build-Depends:  base,
-                  dlist,
-                  either,
-                  flowbox-luna,
-                  flowbox-utils,
-                  MissingH,
-                  mtl,
-                  timeit,
-                  transformers
+--  Build-Depends:  base,
+--                  dlist,
+--                  either,
+--                  flowbox-luna,
+--                  flowbox-utils,
+--                  MissingH,
+--                  mtl,
+--                  timeit,
+--                  transformers
 
 
 Test-Suite tests
