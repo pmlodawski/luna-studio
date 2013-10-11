@@ -15,17 +15,17 @@ module FlowboxM.Luna.Helpers.Core (
 )
 where
 
-import           Prelude                       hiding ((>>), (>>=), fail, return)
-import qualified Prelude                       as Prelude
-import           FlowboxM.Luna.Helpers.TH.Inst   
-import           FlowboxM.Luna.Helpers.StdLib    
-import           Control.Applicative             
+import           Prelude hiding((>>), (>>=), fail, return)
+import qualified Prelude as Prelude
+import           FlowboxM.Luna.Helpers.TH.Inst       
+import           FlowboxM.Luna.Helpers.StdLib        
+import Control.Applicative
 
 
 --import           Flowbox.Luna.Libs.Std.Data.NTuple.Select   
 --import           Flowbox.Luna.Libs.Std.Base     
 
---import GHC.TypeLits            
+import GHC.TypeLits            
 
 (.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 -- f .: g = \x y->f (g x y)
@@ -35,7 +35,7 @@ import           Control.Applicative
 (.:) = (.) . (.)
 
 
---class Failure (a :: Symbol)
+class Failure (a :: Symbol)
 
 --class Get0 a b c | a -> b, a b -> c, a c -> b, a->c where
 --    get0 :: a b -> c
@@ -63,10 +63,16 @@ class Get3 m f |  m -> f where
 --instance Get0 (Pure Int) (Pure Int) where
 --	get0 = id
 
-instance Get0 (IO a) (IO a) where
+--instance Get0 (IO a) (IO a) where
+--    get0 = id
+
+--instance Get0 (Pure a) (Pure a) where
+--    get0 = id
+
+instance Get0 (Pure Int) (Pure Int) where
     get0 = id
 
-instance Get0 (Pure a) (Pure a) where
+instance Get0 (Pure [a]) (Pure [a]) where
     get0 = id
 
 

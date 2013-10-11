@@ -115,7 +115,7 @@ genVArgGetter arglen mname = getter where
 genVArgGetterL arglen mname cfname = getter where
     argVars    = map (("v" ++).show) [1..arglen]
     exprArgs   = map HExpr.Var argVars
-    t          = foldl HExpr.AppE (HExpr.Var cfname) (map HExpr.Var [])
+    t          = mkPure $ foldl HExpr.AppE (HExpr.Var cfname) (map HExpr.Var [])
     selfVar    = HExpr.TypedP t $ HExpr.Var "self"
     exprVars   = selfVar : exprArgs
     getterBase = (HExpr.Var $ mkFuncName mname)
@@ -176,7 +176,7 @@ genExpr ast = case ast of
                                             let mname      = mkLamName $ show id
                                                 fname      = mkFuncName mname
                                                 cfName     = mkCFLName mname
-                                                arglen     = length inputs - 1
+                                                arglen     = length inputs
                                                 cgetCName  = mkCGetCName arglen
                                                 cgetName   = mkCGetName  arglen
                                                 getNName   = mkTName arglen mname
@@ -185,7 +185,7 @@ genExpr ast = case ast of
                                             GenState.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] ["Show"]
 
                                             f  <-   HExpr.Assignment (HExpr.Var fname) 
-                                                    <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show (arglen + 1))
+                                                    <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show arglen)
                                                           <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
                                                                              <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
                                                               )
