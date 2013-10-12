@@ -232,6 +232,10 @@ genExpr ast = case ast of
 
                                             mapM_ genExpr methods
 
+                                            -- get0 value instance
+                                            let xxx = HExpr.InstanceD (HExpr.AppT (HExpr.ConT "Get0") (HExpr.ConT "Vector")) [HExpr.Function "get0" [] $ HExpr.VarE "id"]
+                                            GenState.addInstance $ genDTGet0 name params
+
                                             -- CONSTRUCTORS --
 
                                             -- CC type constructor

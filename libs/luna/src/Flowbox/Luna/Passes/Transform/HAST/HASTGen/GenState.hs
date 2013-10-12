@@ -59,6 +59,12 @@ addDataType dt = do
     setModule $ m { Module.body = Module.body m ++ [dt]}
 
 
+addInstance :: GenStateM m => HExpr -> m ()
+addInstance inst = do 
+    m <- getModule
+    setModule $ m { Module.body = Module.body m ++ [inst]}
+
+
 addNewType :: GenStateM m => HExpr -> m ()
 addNewType dt = do 
     m <- getModule

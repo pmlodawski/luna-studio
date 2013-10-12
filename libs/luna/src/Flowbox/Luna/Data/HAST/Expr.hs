@@ -30,6 +30,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | DoBlock    { exprs     :: [Expr]                                                      }
           | DataD      { name      :: String   , params    :: [String]    , cons      :: [Expr] , derivings :: [String]   }
           | NewTypeD   { name      :: String   , params    :: [String]    , con       :: Expr     }
+          | InstanceD  { tp        :: Expr     , decs      :: [Expr]                              }
           | Con        { name      :: String   , fields    :: [Expr]                              }
           | ConE       { qname     :: [String]                                                    }
           | ConT       { name      :: String                                                      }

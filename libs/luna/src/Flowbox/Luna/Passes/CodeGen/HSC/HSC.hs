@@ -76,6 +76,7 @@ genExpr e = case e of
                                              where params' = if null params then "" else " " ++ join " " params
                                                    cons'   = join " | " (fexpMap cons)
                                                    ders'   = if null ders then "" else " deriving (" ++ sepjoin ders ++ ")"
+    HExpr.InstanceD tp decs               -> "instance " ++ genExpr tp ++ " where { " ++ join "; " (map genExpr decs) ++ " }"
     HExpr.NewTypeD name params con        -> "newtype " ++ name ++ params' ++ " = " ++ genExpr con 
                                              where params' = if null params then "" else " " ++ join " " params
     HExpr.Con      name fields            -> name ++ body

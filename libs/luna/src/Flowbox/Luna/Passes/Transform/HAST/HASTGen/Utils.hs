@@ -54,6 +54,10 @@ genCFDec cname cfname = foldl HExpr.AppE (HExpr.Var "mkNTWrapper") [ HExpr.Lit $
 
 genCCDec name = HExpr.DataD name [] [HExpr.Con name []] []
 
+genDTGet0 name params = HExpr.InstanceD (foldl (HExpr.AppE) (HExpr.ConT "Get0") [baseType, baseType]) 
+                      $ [HExpr.Function "get0" [] $ HExpr.VarE "id"]
+						where baseType = mkPure $ foldl (HExpr.AppE) (HExpr.ConT name) $ map HExpr.VarE params
+
 --genCon name fnum = HExpr.Function ("con" ++ mkConsName name) [] 
 --                 $ HExpr.AppE (HExpr.Var $ "mkPure" ++ show fnum) 
 --                 $ HExpr.Var name
