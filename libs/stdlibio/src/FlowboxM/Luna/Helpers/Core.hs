@@ -4,6 +4,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE PolyKinds #-} -- Used by proxy DataType declaration
 
 {-# LANGUAGE OverlappingInstances #-} -- CAREFULLY! Used only by get0 tuples instances
 
@@ -177,3 +178,11 @@ liftFPure10 f (Pure a) = liftFPure9 (f a)
 concatPure a                  = concat $ map getPure a
 rangeFromTo (Pure a) (Pure b) = Pure $ map Pure $ if a < b then [a..b] else [a,a-1..b]
 rangeFrom   (Pure a)          = Pure $ map Pure $ [a..]
+
+
+
+class Member (name :: Symbol) cls func | name cls -> func where 
+    member :: proxy name -> cls -> func
+
+
+data Proxy a = Proxy

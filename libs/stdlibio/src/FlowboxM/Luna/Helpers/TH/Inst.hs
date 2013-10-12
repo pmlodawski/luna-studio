@@ -74,6 +74,17 @@ mkInst tcName fromFun toFun = do
     return  $ [inst]
 
 
+mkInstMem :: Name -> String -> Name -> Name -> DecsQ
+mkInstMem tcName mName funcSrc funcDst = do
+    t <- getType funcSrc
+    let (src, ret) = getSignature t
+        cxt        = getContext t
+        nt         = foldl AppT (ConT tcName) [LitT (StrTyLit mName), src, ret]
+        funcs      = [funD funcDst [clause [wildP] (normalB (conE funcSrc)) []]] :: [Q Dec]
+
+    inst   <- instanceD (pure cxt) (pure nt) funcs
+    return  $ [inst]
+
 mkInstC :: Name -> Name -> Name -> DecsQ
 mkInstC tcName fromFun toFun = do
     t <- getType fromFun
