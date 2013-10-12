@@ -21,6 +21,8 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | StringLit  { val       :: String                                                      }
           | Var        { name      :: String                                                      }
           | VarE       { name      :: String                                                      }
+          | VarT       { name      :: String                                                      }
+          | LitT       { lval      :: Lit                                                         }
           | Typed      { cls       :: Expr     , expr      :: Expr                                }
           | TypedP     { cls       :: Expr     , expr      :: Expr                                }
           | TypedE     { cls       :: Expr     , expr      :: Expr                                }

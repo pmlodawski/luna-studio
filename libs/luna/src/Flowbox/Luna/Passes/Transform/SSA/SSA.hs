@@ -49,7 +49,7 @@ ssaModule vs mod = Module.traverseM (ssaModule vs) (ssaExpr vs) pure ssaPat pure
 
 ssaExpr :: SSAMonad m => AA -> Expr.Expr -> Pass.Result m Expr.Expr
 ssaExpr vs ast = case ast of
-    Expr.Accessor   id src dst            -> Expr.Accessor id <$> ssaExpr vs src <*> pure dst
+    Expr.Accessor   id name dst           -> Expr.Accessor id name <$> ssaExpr vs dst
     Expr.Var        id name               -> case IntMap.lookup id (AA.varmap vs) of
                                                   Just nid -> return $ Expr.Var id (mkVar nid)
                                                   Nothing  -> Pass.fail ("Not in scope '" ++ name ++ "'.")

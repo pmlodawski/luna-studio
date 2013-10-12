@@ -55,11 +55,12 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
         fnames  = Set.toList $ Pool.names fpool
         mod     = HModule.addImport ["FlowboxM", "Luna", "Helpers", "Core"]
                 $ HModule.addExt HExtension.TemplateHaskell
-                $ HModule.addExt HExtension.MultiParamTypeClasses
+                $ HModule.addExt HExtension.NoMonomorphismRestriction
+                $ HModule.addExt HExtension.FunctionalDependencies
                 $ HModule.addExt HExtension.FlexibleInstances
                 $ HModule.addExt HExtension.UndecidableInstances
                 $ HModule.addExt HExtension.ScopedTypeVariables
-                $ HModule.addExt HExtension.NoMonomorphismRestriction
+                $ HModule.addExt HExtension.DataKinds
                 $ HModule.addExt HExtension.RebindableSyntax 
                 $ HModule.mk path
         name    = last path
@@ -67,9 +68,6 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
         modclss = classes ++ [modcls]
 
     GenState.setModule mod
-
-    -- add all FC imports
-    mapM_ (GenState.addImport . genFCImport) fnames
 
     mapM_ genExpr modclss
     mapM_ (genExpr >=> GenState.addImport) imports
@@ -87,7 +85,7 @@ mainf = HExpr.Function "main" [] $
                         $ HExpr.AppE (HExpr.Var "get0") 
                         $ HExpr.Var "con_Main"
                       ,   HExpr.AppE (HExpr.Var "get0") 
-                        $ HExpr.AppE (HExpr.Var "_main")
+                        $ HExpr.AppE (mkMemberGetter "main")
                         $ HExpr.Var "m"
                       ] 
 
@@ -127,11 +125,9 @@ genVArgGetterL arglen mname cfname = getter where
 genFuncDecl clsname name = do
     let vname  = mkVarName name
         cfName = mkCFName $ mangleName clsname vname
-        fcName = mkFCName vname
 
-    --GenState.addImport       $ genFCImport vname
     GenState.addNewType      $ genCFDec clsname cfName
-    GenState.addTHExpression $ genTHInstC fcName cfName vname
+    GenState.addTHExpression $ genTHInstMem name cfName
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
@@ -233,7 +229,6 @@ genExpr ast = case ast of
                                             mapM_ genExpr methods
 
                                             -- get0 value instance
-                                            let xxx = HExpr.InstanceD (HExpr.AppT (HExpr.ConT "Get0") (HExpr.ConT "Vector")) [HExpr.Function "get0" [] $ HExpr.VarE "id"]
                                             GenState.addInstance $ genDTGet0 name params
 
                                             -- CONSTRUCTORS --
@@ -264,7 +259,7 @@ genExpr ast = case ast of
     LExpr.Tuple       _ items             -> mkPure . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
     LExpr.Field       _ name cls _        -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
     LExpr.App         _ src args          -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
-    LExpr.Accessor    _ src dst           -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
+    LExpr.Accessor    _ name dst          -> (HExpr.AppE <$> (pure $ mkMemberGetter name) <*> (get0 <$> genExpr dst))
     LExpr.List        _ items             -> do
                                              let liftEl el = case el of
                                                      LExpr.RangeFromTo {} -> el

@@ -66,6 +66,7 @@ genExpr :: HExpr -> String
 genExpr e = case e of
     HExpr.Var      name                   -> name
     HExpr.VarE     name                   -> name
+    HExpr.VarT     name                   -> name
     HExpr.Import   q segments rename      -> "import " 
                                              ++ if q then "qualified " else ""
                                              ++ join "." segments 
@@ -98,6 +99,7 @@ genExpr e = case e of
     HExpr.Assignment src dst              -> genExpr src ++ " = " ++ genExpr dst
     HExpr.Arrow      src dst              -> genExpr src ++ " <- " ++ genExpr dst
     HExpr.Lit      val                    -> genLit val
+    HExpr.LitT     val                    -> genLit val
     HExpr.Tuple    items                  -> "(" ++ sepjoin (fexpMap items) ++ ")"
     HExpr.TupleP   items                  -> "(" ++ sepjoin (fexpMap items) ++ ")"
     HExpr.ConE     qname                  -> join "." qname
