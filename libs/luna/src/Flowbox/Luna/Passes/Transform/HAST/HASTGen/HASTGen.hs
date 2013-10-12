@@ -148,8 +148,7 @@ genExpr ast = case ast of
                                                 fname      = mkFuncName mname
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
-                                            --if (null path) then return ()
-                                            --    else genFuncDecl (path!!0) name
+
                                             genFuncDecl clsName2 name
 
                                             f  <-   HExpr.Assignment (HExpr.Var fname) 
@@ -224,8 +223,6 @@ genExpr ast = case ast of
                                             GenState.addDataType dt
 
 
-                                            --mapM_ (genFuncDecl name) memberNames
-
                                             mapM_ genExpr methods
 
                                             -- get0 value instance
@@ -273,8 +270,6 @@ genExpr ast = case ast of
     LExpr.RangeFromTo _ start end         -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
     LExpr.RangeFrom   _ start             -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start 
     LExpr.Native      _ segments          -> pure $ HExpr.Native (join "" $ map genNative segments)
-    --LExpr.Native     _ segments          -> pure $ HExpr.Native code
-    --_                                    -> fail $ show ast
     where
         getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
         get0   = getN (0::Int)
@@ -332,7 +327,6 @@ genType t = case t of
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
     LType.Unknown _          -> logger emergency "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"
     --_                        -> fail $ show t
-    --HExpr.AppT <$> genType src <*> genType (args !! 0)
 
 genLit :: GenMonad m => LLit.Lit -> Pass.Result m HExpr
 genLit lit = case lit of

@@ -44,10 +44,8 @@ genTHInst  = genTH "mkInst"
 
 
 genTHInstMem name func = foldl (HExpr.AppE) (HExpr.Var "mkInstMem") vars where
-			    vars = [ HExpr.Var $ mkTHTypeName "Member"
-			           , HExpr.Lit $ HLit.String name
+			    vars = [ HExpr.Lit $ HLit.String name
 			           , HExpr.Var $ mkTHVarName func
-			           , HExpr.Var $ mkTHVarName "member" 
 			           ]
 
 
