@@ -6,9 +6,9 @@ module FlowboxM.Luna.Helpers.TH.Inst where
 
 import           Control.Monad         
 import           Language.Haskell.TH   
-import           Control.Applicative   
-import qualified Text.Show.Pretty    as PP
-import           Debug.Trace           
+import           Control.Applicative
+import qualified Text.Show.Pretty     as PP
+import           Debug.Trace
 
 ppTrace  x   = trace ("\n\n----------\n" ++ PP.ppShow x)
 ppTraces s x = trace ("\n\n--- " ++ s ++ " ---\n" ++ PP.ppShow x)
@@ -73,6 +73,19 @@ mkInst tcName fromFun toFun = do
     inst   <- instanceD (pure cxt) (pure nt) funcs
     return  $ [inst]
 
+
+mkInstMem :: String -> Name -> DecsQ
+mkInstMem mName funcSrc = do
+    t <- getType funcSrc
+    let (src, ret) = getSignature t
+        cxt        = getContext t
+        tcName2    = mkName "Member"
+        funcDst2   = mkName "member"
+        nt         = foldl AppT (ConT tcName2) [LitT (StrTyLit mName), src, ret]
+        funcs      = [funD funcDst2 [clause [wildP] (normalB (conE funcSrc)) []]] :: [Q Dec]
+
+    inst   <- instanceD (pure cxt) (pure nt) funcs
+    return  $ [inst]
 
 mkInstC :: Name -> Name -> Name -> DecsQ
 mkInstC tcName fromFun toFun = do

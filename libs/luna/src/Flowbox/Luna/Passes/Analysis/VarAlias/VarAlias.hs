@@ -61,7 +61,6 @@ vaExpr ast = case ast of
                                                   vaExprMap body
                                              LocState.updateVarStat s
     Expr.Assignment _ pat dst             -> vaExpr dst <* vaPat pat
-    Expr.Accessor   _ src _               -> vaExpr src -- we cannot determine if dst exists.
     Expr.Var        id name               -> do
                                              v <- LocState.lookupVar name
                                              case v of

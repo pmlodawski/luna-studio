@@ -166,7 +166,7 @@ pTermE    s i   = choice[ pDeclaration s i
                         ]
            <?> "expression term"
 
-optableE  s i  = [ [ binaryM  "."  (tok Expr.Accessor)             PExpr.AssocLeft ]
+optableE  s i  = [ [ postfixM "."  (tok Expr.Accessor <*> pIdent s)                ]
                  , [ postfixM "::" (tok Expr.Typed <*> pType s i)                  ]
                  , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
                  , [ binaryM  "*"  (binaryMatchE <$> (tok Expr.Infix <*> pure "*")) PExpr.AssocLeft ]

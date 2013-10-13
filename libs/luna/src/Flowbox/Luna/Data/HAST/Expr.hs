@@ -21,6 +21,8 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | StringLit  { val       :: String                                                      }
           | Var        { name      :: String                                                      }
           | VarE       { name      :: String                                                      }
+          | VarT       { name      :: String                                                      }
+          | LitT       { lval      :: Lit                                                         }
           | Typed      { cls       :: Expr     , expr      :: Expr                                }
           | TypedP     { cls       :: Expr     , expr      :: Expr                                }
           | TypedE     { cls       :: Expr     , expr      :: Expr                                }
@@ -30,6 +32,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | DoBlock    { exprs     :: [Expr]                                                      }
           | DataD      { name      :: String   , params    :: [String]    , cons      :: [Expr] , derivings :: [String]   }
           | NewTypeD   { name      :: String   , params    :: [String]    , con       :: Expr     }
+          | InstanceD  { tp        :: Expr     , decs      :: [Expr]                              }
           | Con        { name      :: String   , fields    :: [Expr]                              }
           | ConE       { qname     :: [String]                                                    }
           | ConT       { name      :: String                                                      }

@@ -81,8 +81,13 @@ example = Source.Source ["Main"]
         $ unlines [ ""
                   , "def List.length self:"
                   , "    ```getIO $ liftFPure1 length #{self}```"
+                  , "def List.each self f:"
+                  , "    ```let {mymap x (Pure y) = mapM x y}```"
+                  , "    ```getIO $ mymap (get1 _v_13) _v_11```"
                   , "def Int.add a b:"
                   , "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
+                  , "def List.add self:"
+                  , "    ```getIO $ #{self}```"
                   , "class Console:"
                   , "    def print self msg:"
                   , "        ```print #{msg}```"
@@ -101,7 +106,13 @@ example = Source.Source ["Main"]
                   --, "    Console.print (1.add 2)"
 
                   , "def main self:"
-                  , "    Console.print (1.add 2)"
+                  , "    x = [1,2..30]"
+                  , "    y = x.each el:"
+                  , "        Console.print el"
+                  , "        el.add 1"
+                  , "    Console.print \"hello\""
+
+
 
                   --, "    v = Vector 0 0 0"
                   --, "    Console.print v"

@@ -24,7 +24,7 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 
 data Expr  = NOP         { id :: ID                                                                                         }
-           | Accessor    { id :: ID, src       :: Expr     , dst       :: Expr                                              }
+           | Accessor    { id :: ID, name      :: String   , dst       :: Expr                                              }
            | App         { id :: ID, src       :: Expr     , args      :: [Expr]                                            }
            | AppCons_    { id :: ID, args      :: [Expr]                                                                    }
            | Assignment  { id :: ID, pat       :: Pat      , dst       :: Expr                                              }
@@ -82,7 +82,7 @@ addClass ncls e = e { classes = ncls : classes e }
 
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
 traverseM fexp ftype fpat flit e = case e of
-    Accessor    id' src' dst'                      -> Accessor    id'       <$> fexp src'  <*> fexp dst'
+    Accessor    id' name' dst'                     -> Accessor    id' name' <$> fexp dst'
     App         id' src' args'                     -> App         id'       <$> fexp src'  <*> fexpMap args'
     Assignment  id' pat' dst'                      -> Assignment  id'       <$> fpat pat'  <*> fexp dst'
     Class       id' cls' classes' fields' methods' -> Class       id'       <$> ftype cls' <*> fexpMap classes' <*> fexpMap fields' <*> fexpMap methods'
@@ -113,7 +113,7 @@ traverseM fexp ftype fpat flit e = case e of
 
 traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Expr -> m ()
 traverseM_ fexp ftype fpat flit e = case e of
-    Accessor    _  src' dst'                       -> drop <* fexp src'  <* fexp dst'
+    Accessor    _  name' dst'                      -> drop <* fexp dst'
     App         _  src' args'                      -> drop <* fexp src'  <* fexpMap args'
     Assignment  _  pat' dst'                       -> drop <* fpat pat'  <* fexp dst'
     Class       _  cls' classes' fields' methods'  -> drop <* ftype cls' <* fexpMap classes' <* fexpMap fields' <* fexpMap methods'

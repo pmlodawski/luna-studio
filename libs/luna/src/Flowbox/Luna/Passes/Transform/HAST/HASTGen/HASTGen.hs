@@ -55,11 +55,12 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
         fnames  = Set.toList $ Pool.names fpool
         mod     = HModule.addImport ["FlowboxM", "Luna", "Helpers", "Core"]
                 $ HModule.addExt HExtension.TemplateHaskell
-                $ HModule.addExt HExtension.MultiParamTypeClasses
+                $ HModule.addExt HExtension.NoMonomorphismRestriction
+                $ HModule.addExt HExtension.FunctionalDependencies
                 $ HModule.addExt HExtension.FlexibleInstances
                 $ HModule.addExt HExtension.UndecidableInstances
                 $ HModule.addExt HExtension.ScopedTypeVariables
-                $ HModule.addExt HExtension.NoMonomorphismRestriction
+                $ HModule.addExt HExtension.DataKinds
                 $ HModule.addExt HExtension.RebindableSyntax 
                 $ HModule.mk path
         name    = last path
@@ -67,9 +68,6 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
         modclss = classes ++ [modcls]
 
     GenState.setModule mod
-
-    -- add all FC imports
-    mapM_ (GenState.addImport . genFCImport) fnames
 
     mapM_ genExpr modclss
     mapM_ (genExpr >=> GenState.addImport) imports
@@ -87,7 +85,7 @@ mainf = HExpr.Function "main" [] $
                         $ HExpr.AppE (HExpr.Var "get0") 
                         $ HExpr.Var "con_Main"
                       ,   HExpr.AppE (HExpr.Var "get0") 
-                        $ HExpr.AppE (HExpr.Var "_main")
+                        $ HExpr.AppE (mkMemberGetter "main")
                         $ HExpr.Var "m"
                       ] 
 
@@ -115,7 +113,7 @@ genVArgGetter arglen mname = getter where
 genVArgGetterL arglen mname cfname = getter where
     argVars    = map (("v" ++).show) [1..arglen]
     exprArgs   = map HExpr.Var argVars
-    t          = foldl HExpr.AppE (HExpr.Var cfname) (map HExpr.Var [])
+    t          = mkPure $ foldl HExpr.AppE (HExpr.Var cfname) (map HExpr.Var [])
     selfVar    = HExpr.TypedP t $ HExpr.Var "self"
     exprVars   = selfVar : exprArgs
     getterBase = (HExpr.Var $ mkFuncName mname)
@@ -127,11 +125,9 @@ genVArgGetterL arglen mname cfname = getter where
 genFuncDecl clsname name = do
     let vname  = mkVarName name
         cfName = mkCFName $ mangleName clsname vname
-        fcName = mkFCName vname
 
-    --GenState.addImport       $ genFCImport vname
     GenState.addNewType      $ genCFDec clsname cfName
-    GenState.addTHExpression $ genTHInstC fcName cfName vname
+    GenState.addTHExpression $ genTHInstMem name cfName
 
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
@@ -152,8 +148,8 @@ genExpr ast = case ast of
                                                 fname      = mkFuncName mname
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
-                                            if (null path) then return ()
-                                                else genFuncDecl (path!!0) name
+
+                                            genFuncDecl clsName2 name
 
                                             f  <-   HExpr.Assignment (HExpr.Var fname) 
                                                     <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show (arglen + 1))
@@ -176,7 +172,7 @@ genExpr ast = case ast of
                                             let mname      = mkLamName $ show id
                                                 fname      = mkFuncName mname
                                                 cfName     = mkCFLName mname
-                                                arglen     = length inputs - 1
+                                                arglen     = length inputs
                                                 cgetCName  = mkCGetCName arglen
                                                 cgetName   = mkCGetName  arglen
                                                 getNName   = mkTName arglen mname
@@ -185,7 +181,7 @@ genExpr ast = case ast of
                                             GenState.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] ["Show"]
 
                                             f  <-   HExpr.Assignment (HExpr.Var fname) 
-                                                    <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show (arglen + 1))
+                                                    <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show arglen)
                                                           <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
                                                                              <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
                                                               )
@@ -227,9 +223,10 @@ genExpr ast = case ast of
                                             GenState.addDataType dt
 
 
-                                            mapM_ (genFuncDecl name) memberNames
-
                                             mapM_ genExpr methods
+
+                                            -- get0 value instance
+                                            GenState.addInstance $ genDTGet0 name params
 
                                             -- CONSTRUCTORS --
 
@@ -259,7 +256,7 @@ genExpr ast = case ast of
     LExpr.Tuple       _ items             -> mkPure . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
     LExpr.Field       _ name cls _        -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
     LExpr.App         _ src args          -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
-    LExpr.Accessor    _ src dst           -> (HExpr.AppE <$> (genExpr dst) <*> (get0 <$> genExpr src))
+    LExpr.Accessor    _ name dst          -> (HExpr.AppE <$> (pure $ mkMemberGetter name) <*> (get0 <$> genExpr dst))
     LExpr.List        _ items             -> do
                                              let liftEl el = case el of
                                                      LExpr.RangeFromTo {} -> el
@@ -273,8 +270,6 @@ genExpr ast = case ast of
     LExpr.RangeFromTo _ start end         -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
     LExpr.RangeFrom   _ start             -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start 
     LExpr.Native      _ segments          -> pure $ HExpr.Native (join "" $ map genNative segments)
-    --LExpr.Native     _ segments          -> pure $ HExpr.Native code
-    --_                                    -> fail $ show ast
     where
         getN n = HExpr.AppE (HExpr.Var $ "get" ++ show n)
         get0   = getN (0::Int)
@@ -332,7 +327,6 @@ genType t = case t of
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
     LType.Unknown _          -> logger emergency "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"
     --_                        -> fail $ show t
-    --HExpr.AppT <$> genType src <*> genType (args !! 0)
 
 genLit :: GenMonad m => LLit.Lit -> Pass.Result m HExpr
 genLit lit = case lit of

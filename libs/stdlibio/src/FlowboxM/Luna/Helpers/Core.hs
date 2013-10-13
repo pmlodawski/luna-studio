@@ -1,9 +1,12 @@
-{-# LANGUAGE MultiParamTypeClasses, 
-             FunctionalDependencies, 
-             KindSignatures, 
-             DataKinds,
-             FlexibleInstances,
-             NoMonomorphismRestriction #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE PolyKinds #-} -- Used by proxy DataType declaration
+
+{-# LANGUAGE OverlappingInstances #-} -- CAREFULLY! Used only by get0 tuples instances
 
 module FlowboxM.Luna.Helpers.Core (
     module Prelude,
@@ -27,7 +30,7 @@ import           FlowboxM.Luna.Helpers.Imports
 --import           Flowbox.Luna.Libs.Std.Data.NTuple.Select   
 --import           Flowbox.Luna.Libs.Std.Base     
 
---import GHC.TypeLits            
+import GHC.TypeLits            
 
 (.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 -- f .: g = \x y->f (g x y)
@@ -37,7 +40,7 @@ import           FlowboxM.Luna.Helpers.Imports
 (.:) = (.) . (.)
 
 
---class Failure (a :: Symbol)
+class Failure (a :: Symbol)
 
 --class Get0 a b c | a -> b, a b -> c, a c -> b, a->c where
 --    get0 :: a b -> c
@@ -65,12 +68,28 @@ class Get3 m f |  m -> f where
 --instance Get0 (Pure Int) (Pure Int) where
 --	get0 = id
 
-instance Get0 (IO a) (IO a) where
+--instance Get0 (IO a) (IO a) where
+--    get0 = id
+
+--instance Get0 (Pure a) (Pure a) where
+--    get0 = id
+
+
+
+instance Get0 (Pure Int) (Pure Int) where
     get0 = id
 
-instance Get0 (Pure a) (Pure a) where
+instance Get0 (Pure [a]) (Pure [a]) where
     get0 = id
 
+instance Tuple t => Get0 (Pure t) (Pure t) where
+    get0 = id
+
+class Tuple t
+instance Tuple (v1,v2)
+instance Tuple (v1,v2,v3)
+instance Tuple (v1,v2,v3,v4)
+instance Tuple (v1,v2,v3,v4,v5)
 
 
 --class Get0 a b | a -> b where
@@ -172,3 +191,11 @@ liftFIO10 f (Pure a) = liftFIO9 (f a)
 concatPure a                  = concat $ map getPure a
 rangeFromTo (Pure a) (Pure b) = Pure $ map Pure $ if a < b then [a..b] else [a,a-1..b]
 rangeFrom   (Pure a)          = Pure $ map Pure $ [a..]
+
+
+
+class Member (name :: Symbol) cls func | name cls -> func where 
+    member :: proxy name -> cls -> func
+
+
+data Proxy a = Proxy

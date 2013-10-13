@@ -11,12 +11,12 @@
 
 module FlowboxM.Luna.Helpers.StdLib where
 
-import           Control.Applicative   
-import           Data.Tuple.OneTuple   
-import           Data.Typeable         
+import           Control.Applicative
+import           Data.Tuple.OneTuple
+import           Data.Typeable
 
 
-import           Debug.Trace           
+import Debug.Trace
 
 instance (Typeable a) => Show (IO a) where
     show e = '(' : (show . typeOf) e ++ ")"
@@ -25,10 +25,10 @@ instance (Typeable a, Typeable b) => Show (a -> b) where
     show e = '(' : (show . typeOf) e ++ ")"
 
 
-newtype Pure a = Pure { getPure :: a } deriving(Typeable)
+newtype Pure a    = Pure    { getPure :: a } deriving(Typeable)
+--newtype FuncRef a = FuncRef { getFunc :: a } deriving(Typeable)
 
 instance Show a => Show (Pure a) where
-    --show (Pure a) = show a
     show (Pure a) = "Pure " ++ show a
 
 newtype Func a = Func a deriving(Show, Typeable)
@@ -54,8 +54,13 @@ class GetIO f where
 instance GetIO Pure where
     getIO (Pure a) = return a
 
+--instance GetIO FuncRef where
+--    getIO a = return a
+
 instance GetIO IO where
     getIO = id
+
+
 
 -----------------
 

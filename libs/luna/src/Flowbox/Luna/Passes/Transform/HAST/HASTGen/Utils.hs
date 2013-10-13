@@ -15,7 +15,6 @@ import qualified Flowbox.Luna.Data.HAST.Lit  as HLit
 mkCFName     = ("CF_" ++)
 mkCFLName    = ("CF_" ++)
 mkCCName     = ("CC_" ++)
-mkFCName     = ("FC" ++)
 mkGetName    = ("get" ++)
 mkTHVarName  = ("'" ++)
 mkTHTypeName = ("''" ++)
@@ -42,9 +41,12 @@ mkCGetName  i = mkGetNName i
 genTH f a b c = foldl (HExpr.AppE) (HExpr.Var f) vars where
 			    vars = map HExpr.Var [mkTHTypeName a, mkTHVarName b, mkTHVarName c]
 genTHInst  = genTH "mkInst"
-genTHInstC = genTH "mkInstC"
 
-genFCImport name = HExpr.Import False ["FlowboxM", "Luna", "FClasses", "U" ++ mkVarName name] Nothing
+
+genTHInstMem name func = foldl (HExpr.AppE) (HExpr.Var "mkInstMem") vars where
+			    vars = [ HExpr.Lit $ HLit.String name
+			           , HExpr.Var $ mkTHVarName func
+			           ]
 
 
 genCFDec cname cfname = foldl HExpr.AppE (HExpr.Var "mkNTWrapper") [ HExpr.Lit $ HLit.String cfname
@@ -53,6 +55,10 @@ genCFDec cname cfname = foldl HExpr.AppE (HExpr.Var "mkNTWrapper") [ HExpr.Lit $
 
 
 genCCDec name = HExpr.DataD name [] [HExpr.Con name []] []
+
+genDTGet0 name params = HExpr.InstanceD (foldl (HExpr.AppE) (HExpr.ConT "Get0") [baseType, baseType]) 
+                      $ [HExpr.Function "get0" [] $ HExpr.VarE "id"]
+						where baseType = mkPure $ foldl (HExpr.AppE) (HExpr.ConT name) $ map HExpr.VarE params
 
 --genCon name fnum = HExpr.Function ("con" ++ mkConsName name) [] 
 --                 $ HExpr.AppE (HExpr.Var $ "mkPure" ++ show fnum) 
@@ -69,3 +75,6 @@ mkIO     = HExpr.AppE (HExpr.ConE ["IO"])
 
 
 emptyHExpr = mkPureIO (HExpr.Var "()")
+
+
+mkMemberGetter name = HExpr.AppE (HExpr.VarE "member") (HExpr.TypedE (HExpr.AppT (HExpr.ConT "Proxy") (HExpr.LitT $ HLit.String name)) (HExpr.ConE ["Proxy"]) )

@@ -66,6 +66,7 @@ genExpr :: HExpr -> String
 genExpr e = case e of
     HExpr.Var      name                   -> name
     HExpr.VarE     name                   -> name
+    HExpr.VarT     name                   -> name
     HExpr.Import   q segments rename      -> "import " 
                                              ++ if q then "qualified " else ""
                                              ++ join "." segments 
@@ -76,6 +77,7 @@ genExpr e = case e of
                                              where params' = if null params then "" else " " ++ join " " params
                                                    cons'   = join " | " (fexpMap cons)
                                                    ders'   = if null ders then "" else " deriving (" ++ sepjoin ders ++ ")"
+    HExpr.InstanceD tp decs               -> "instance " ++ genExpr tp ++ " where { " ++ join "; " (map genExpr decs) ++ " }"
     HExpr.NewTypeD name params con        -> "newtype " ++ name ++ params' ++ " = " ++ genExpr con 
                                              where params' = if null params then "" else " " ++ join " " params
     HExpr.Con      name fields            -> name ++ body
@@ -97,6 +99,7 @@ genExpr e = case e of
     HExpr.Assignment src dst              -> genExpr src ++ " = " ++ genExpr dst
     HExpr.Arrow      src dst              -> genExpr src ++ " <- " ++ genExpr dst
     HExpr.Lit      val                    -> genLit val
+    HExpr.LitT     val                    -> genLit val
     HExpr.Tuple    items                  -> "(" ++ sepjoin (fexpMap items) ++ ")"
     HExpr.TupleP   items                  -> "(" ++ sepjoin (fexpMap items) ++ ")"
     HExpr.ConE     qname                  -> join "." qname
