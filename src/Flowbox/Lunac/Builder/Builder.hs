@@ -9,21 +9,16 @@
 module Flowbox.Lunac.Builder.Builder where
 
 import           Control.Monad.RWS                                  hiding (mapM_)
-import qualified Data.Set                                           as Set
 
 import           Flowbox.Prelude                                      
 import           Flowbox.Config.Config                                (Config)
 import qualified Flowbox.Luna.Data.AST.Module                       as ASTModule
 import           Flowbox.Luna.Data.Source                             (Source)
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool     as FuncPool
-import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool         as Pool
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias     as VarAlias
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen              as CabalGen
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install          as CabalInstall
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store            as CabalStore
-import qualified Flowbox.Luna.Passes.CodeGen.FClass.Filter          as FClassFliter
-import qualified Flowbox.Luna.Passes.CodeGen.FClass.Gen             as FClassGen
-import qualified Flowbox.Luna.Passes.CodeGen.FClass.Install         as FClassInstall
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                as HSC
 import qualified Flowbox.Luna.Passes.Pass                           as Pass
 import           Flowbox.Luna.Passes.Pass                             (PassMonadIO)
@@ -69,13 +64,10 @@ build cfg diag outputPath name version isLibrary libs flags ast = do
     Diagnostics.printHAST hast diag
     hsc  <- HSC.run hast
     Diagnostics.printHSC hsc diag
-    newfp <- FClassFliter.run cfg fp
-    FClassInstall.run cfg newfp ["--global"]
 
     let allLibs = "flowboxM-stdlib-io"
                 : "template-haskell"
                 : libs
-               ++ (map FClassGen.packageName $ Set.toList $ Pool.names fp)
 
     Directory.withTmpDirectory tmpDirPrefix (\tmpDir -> do
         writeSources tmpDir hsc
