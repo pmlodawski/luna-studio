@@ -19,6 +19,7 @@ import qualified Flowbox.System.Directory.Directory as Directory
 import           Flowbox.System.Log.Logger            
 import qualified Flowbox.System.Process             as Process
 import qualified Flowbox.System.UniPath             as UniPath
+import           Flowbox.System.UniPath               (UniPath)
 
 
 
@@ -26,8 +27,9 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Initializer.Initializer"
 
 
---successfullInstallFileName :: UniPath
---successfullInstallFileName = UniPath.append "installed" Common.flowboxPath
+successfullInstallFilePath :: Config -> UniPath
+successfullInstallFilePath config = UniPath.append "installed" localPath where
+    localPath = UniPath.fromUnixString $ Config.path $ Config.local config 
 
 
 isAlreadyInitilized :: Config -> IO Bool
@@ -36,10 +38,10 @@ isAlreadyInitilized config = do
         localCabal = Config.cabal local
         localPkgDb = Config.pkgDb local
     logger debug "Checking for Flowbox configuration."
-    exists_localCabal  <- Directory.doesDirectoryExist $ UniPath.fromUnixString localCabal
-    exists_localPkgDb  <- Directory.doesDirectoryExist $ UniPath.fromUnixString localPkgDb
-    --exists_installed <- Directory.doesFileExist successfullInstallFileName
-    let exists = exists_localCabal && exists_localPkgDb 
+    exists_localCabal <- Directory.doesDirectoryExist $ UniPath.fromUnixString localCabal
+    exists_localPkgDb <- Directory.doesDirectoryExist $ UniPath.fromUnixString localPkgDb
+    exists_installed  <- Directory.doesFileExist $ successfullInstallFilePath config
+    let exists = exists_localCabal && exists_localPkgDb && exists_installed
     if exists
         then logger debug "Configuration already exists."
         else logger debug "Configuration does not exist or is broken."
@@ -73,8 +75,7 @@ initialize config = do
                          $ StringUtils.replace "${FB_HOME_CABAL}" (Config.cabal local) cabalConfTContent
     IO.writeFile cabalConf cabalConfContent
     Process.runProcess Nothing cabalBin ["update"] 
-    
-    ----Directory.touchFile successfullInstallFileName
+    Directory.touchFile $ successfullInstallFilePath config
     logger info "Flowbox configured successfully."
 
 
