@@ -20,7 +20,7 @@ class Console:
 def List.length self:
     ```getIO $ liftFPure1 length #{self}```
 
-def List.concat self l2:
+def List.add self l2:
     ```getIO $ liftFPure2 (++) #{self} #{l2}```
 
 def List.at self index:

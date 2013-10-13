@@ -1,0 +1,18 @@
+import Std:All
+
+class Vector a:
+    x,y,z :: a
+
+def main self:
+    v = Vector 1 2 3
+    x = 1
+    #x = x + 1
+    Console.print x
+    Console.print ("bla".at 2)
+    Console.print (2.add 7)
+    #f = File.open("test.txt", ).read
+
+    f = File.readFile "test.txt"
+    f = f.add "bbbb"
+    File.writeFile "output.txt" f 
+    Console.print f
