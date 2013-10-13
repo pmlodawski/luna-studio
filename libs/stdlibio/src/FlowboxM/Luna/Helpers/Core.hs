@@ -23,14 +23,14 @@ import           Prelude                       hiding ((>>), (>>=), fail, return
 import qualified Prelude                       as Prelude
 import           FlowboxM.Luna.Helpers.TH.Inst   
 import           FlowboxM.Luna.Helpers.StdLib    
-import           Control.Applicative           
+import           Control.Applicative             
 
-import           FlowboxM.Luna.Helpers.Imports
+import           FlowboxM.Luna.Helpers.Imports   
 
 --import           Flowbox.Luna.Libs.Std.Data.NTuple.Select   
 --import           Flowbox.Luna.Libs.Std.Base     
 
-import GHC.TypeLits            
+import           GHC.TypeLits                    
 
 (.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 -- f .: g = \x y->f (g x y)
