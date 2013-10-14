@@ -61,10 +61,10 @@ class AllProject(Project):
         return tgts
 
 
-deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'utils', 'stdlibio']
+deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'utils', 'core']
 
 pkgs = { '@all'        : AllProject (deps = deptree)
-       , 'stdlibio'    : HProject   ('flowboxM-stdlib-io'  , 'libs/stdlibio'    , 'libs'    , []                                                 )
+       , 'core'        : HProject   ('flowboxM-core'       , 'libs/core'        , 'libs'    , []                                                 )
        , 'utils'       : HProject   ('flowbox-utils'       , 'libs/utils'       , 'libs'    , []                                                 )
        , 'config'      : HProject   ('flowbox-config'      , 'libs/config'      , 'libs'    , ['utils']                                          )
        , 'wrappers'    : HProject   ('flowbox-wrappers'    , 'tools/wrappers'   , 'wrappers', ['config']                                         )
