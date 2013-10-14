@@ -39,6 +39,7 @@ data Section = FFS        { path      :: String
                           , bin       :: String
                           , lib       :: String
                           , share     :: String
+                          , pkgDb     :: String
                           }
              | Local      { home      :: String
                           , path      :: String
@@ -116,6 +117,7 @@ load = do
                         <*> readConf "global.bin"
                         <*> readConf "global.lib"
                         <*> readConf "global.share"
+                        <*> readConf "global.pkgDb"
                )
            <*> ( Local  <$> readConf "local.home"
                         <*> readConf "local.path"
