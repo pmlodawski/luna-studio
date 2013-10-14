@@ -16,9 +16,9 @@ module Flowbox.Luna.Network.Graph.Graph(
 
 import           Flowbox.Prelude                   
 
-import           Flowbox.Luna.Network.Graph.Edge   (Edge(..))
+import           Flowbox.Luna.Network.Graph.Edge   (Edge)
 import qualified Flowbox.Luna.Network.Graph.Node as Node
-import           Flowbox.Luna.Network.Graph.Node   (Node(..))
+import           Flowbox.Luna.Network.Graph.Node   (Node)
 
 import           Flowbox.Data.Graph              hiding (Graph, Edge, empty)
 import qualified Flowbox.Data.Graph              as DG

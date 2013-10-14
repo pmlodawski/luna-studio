@@ -86,6 +86,7 @@ instance Tuple t => Get0 (Pure t) (Pure t) where
     get0 = id
 
 class Tuple t
+instance Tuple ()
 instance Tuple (v1,v2)
 instance Tuple (v1,v2,v3)
 instance Tuple (v1,v2,v3,v4)

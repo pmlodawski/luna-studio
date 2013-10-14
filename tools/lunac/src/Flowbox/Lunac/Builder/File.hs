@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds, FlexibleContexts, NoMonomorphismRestriction, ScopedTypeVariables #-}
+{-# LANGUAGE ConstraintKinds, FlexibleContexts #-}
 
 module Flowbox.Lunac.Builder.File where
 

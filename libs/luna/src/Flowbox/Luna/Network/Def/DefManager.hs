@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Network.Def.DefManager(
+module Flowbox.Luna.Network.Def.DefManager (
     module Flowbox.Data.Graph,
     DefManager,
     addToParent,
@@ -29,6 +29,8 @@ import           Flowbox.Luna.Network.Def.Edge         (Edge(Edge))
 import           Flowbox.Data.Graph                  hiding (Graph, Edge, empty)
 import qualified Flowbox.Data.Graph                  as DG
 import           Flowbox.Data.List                     (foldri)
+
+
 
 type DefManager = DG.Graph Definition Edge
 

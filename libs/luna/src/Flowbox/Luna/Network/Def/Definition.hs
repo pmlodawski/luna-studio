@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Network.Def.Definition(
+module Flowbox.Luna.Network.Def.Definition (
     Definition(..),
     ID,
     empty,
@@ -17,13 +17,14 @@ module Flowbox.Luna.Network.Def.Definition(
 import           Flowbox.Prelude                    
 import qualified Flowbox.Luna.XOLD.Type.Type      as Type
 import           Flowbox.Luna.XOLD.Type.Type        (Type)
-import           Flowbox.Luna.Network.Graph.Graph   (Graph)
 import qualified Flowbox.Luna.Network.Graph.Graph as Graph
+import           Flowbox.Luna.Network.Graph.Graph   (Graph)
 import qualified Flowbox.Luna.Network.Flags       as Flags
 import           Flowbox.Luna.Network.Flags         (Flags)
 import qualified Flowbox.Luna.Network.Attributes  as Attributes
 import           Flowbox.Luna.Network.Attributes    (Attributes)
 import           Flowbox.Luna.Network.Path.Import   (Import)
+
 
 
 data Definition = Definition { cls        :: Type
