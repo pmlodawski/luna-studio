@@ -7,7 +7,7 @@
 
 module Flowbox.Luna.Passes.Tmp.StdRemove where
 
-import qualified Data.List as List
+import qualified Data.List                           as List
 
 import           Flowbox.Prelude                       
 import qualified Flowbox.Luna.Network.Def.Definition as Definition

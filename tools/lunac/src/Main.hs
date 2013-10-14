@@ -6,8 +6,6 @@
 ---------------------------------------------------------------------------
 
 import           Data.List                       as List
-import           Options.Applicative             hiding (info)
-import qualified Options.Applicative             as Opt
 
 import           Flowbox.Prelude                 hiding (error)
 import qualified Flowbox.Config.Config           as Config
@@ -19,6 +17,8 @@ import qualified Flowbox.Lunac.Builder.File      as FileBuilder
 import qualified Flowbox.Lunac.CmdArgs           as CmdArgs
 import           Flowbox.Lunac.CmdArgs             (CmdArgs)
 import           Flowbox.Lunac.Diagnostics         (Diagnostics(Diagnostics))
+import qualified Flowbox.Options.Applicative     as Opt
+import           Flowbox.Options.Applicative     hiding (info)
 import           Flowbox.System.Log.Logger         
 import qualified Flowbox.System.UniPath          as UniPath
 
@@ -35,7 +35,7 @@ parser =   Opt.flag' CmdArgs.Version    (long "version" <> short 'V' <> hidden)
            <$> many1     ( argument str ( metavar "INPUTS" ))
            <*> switch    ( long "version" <> short 'V'                                      <> help "Print version information" )
            <*> switch    ( long "numeric-version"                                           <> help "Print just the version number" )
-           <*> optIntFlag       "verbose" 'v' 0 3                                                         "Verbose level (level range is 0-5, default level is 3)"
+           <*> optIntFlag       "verbose" 'v' 2 3                                                   "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"                                                  <> help "Disable color output" )
 
            <*> strOption ( long "output"  <> short 'o' <> value "out"  <> metavar "OUTPUT"  <> help "Output folder" )
@@ -54,18 +54,6 @@ parser =   Opt.flag' CmdArgs.Version    (long "version" <> short 'V' <> hidden)
            <*> switch    ( long "dump-ssa"               <> hidden                                                      )
            <*> switch    ( long "dump-hast"              <> hidden                                                      )
            <*> switch    ( long "dump-hsc"               <> hidden                                                      )
-
--- TODO[WD] : Ponizsza funkcja powinna byc przeniesiona do "utilsow" parsowania argumentow
---            natomiast samo parsowanie powinno byc przeniesione w miejsce niezalezne od toola
-optIntFlag :: String -> Char -> Int -> Int -> String -> Parser Int
-optIntFlag longName shortName baseval defval helpmsg = 
-    (\sflag f -> let baselvl = if sflag then defval else baseval
-                     explvl  = read f :: Int
-                     lvl     = if explvl < 0 then baselvl else explvl
-                 in lvl
-    )
-    <$> switch    ( long longName <> short shortName <> help helpmsg         )
-    <*> strOption (                  short shortName <> value "-1" <> hidden )
 
 
 opts :: Config -> ParserInfo CmdArgs
@@ -95,9 +83,8 @@ run cfg cmd = do
         CmdArgs.NumVersion  {} -> putStrLn $ show_num_version cfg
         CmdArgs.Hello       {} -> putStrLn $ "Hello, my name is John le Box. Nice to meet you :)"
         CmdArgs.Compilation {} -> do
-            if CmdArgs.verbose cmd > 0
-                then rootLogger setLevel DEBUG
-                else rootLogger setLevel INFO
+
+            rootLogger setIntLevel $ CmdArgs.verbose cmd
 
             let diag = Diagnostics ( CmdArgs.dump_ast  cmd || CmdArgs.dump_all cmd )
                                    ( CmdArgs.dump_va   cmd || CmdArgs.dump_all cmd )

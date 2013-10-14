@@ -23,7 +23,7 @@ import           Flowbox.Luna.Network.Def.DefManager                         (De
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
 import           Flowbox.Luna.Passes.Pass                                    (PassMonad)
-import qualified Flowbox.Luna.Passes.Tmp.StdRemove as StdRemove
+import qualified Flowbox.Luna.Passes.Tmp.StdRemove                         as StdRemove
 import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
 import qualified Flowbox.Lunac.Builder.Builder                             as Builder
 import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
