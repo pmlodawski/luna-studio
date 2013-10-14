@@ -17,6 +17,7 @@ main = do
     let exec = (Cfg.ghcBin . Cfg.ghcTP . Cfg.thirdparty) cfg
     exitCode <- Cmd.rawSystem exec $ ("-B" ++ (Cfg.topDir . Cfg.ghcTP . Cfg.thirdparty) cfg)
                        : "-no-user-package-db" 
-                       : ("-package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
+                       : ("-package-db=" ++ (Cfg.pkgDb . Cfg.global) cfg)
+                       : ("-package-db=" ++ (Cfg.pkgDb . Cfg.local)  cfg)
                        : args
     Exit.exitWith exitCode
