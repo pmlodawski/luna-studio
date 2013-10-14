@@ -29,9 +29,9 @@ import qualified Flowbox.Lunac.Diagnostics                          as Diagnosti
 import           Flowbox.Lunac.Diagnostics                            (Diagnostics)
 import qualified Flowbox.System.Directory.Directory                 as Directory
 import           Flowbox.System.Log.Logger                            
+import qualified Flowbox.System.Platform                            as Platform
 import qualified Flowbox.System.UniPath                             as UniPath
 import           Flowbox.System.UniPath                               (UniPath)
-
 
 
 logger :: Logger
@@ -93,6 +93,7 @@ writeSource outputPath source = FileWriter.run path hsExt source where
     
 copyExecutable :: PassMonadIO s m => UniPath -> String -> UniPath -> Pass.Result m ()
 copyExecutable location name outputPath = liftIO $ do 
-    let executable = UniPath.append ("dist/build/" ++ name ++ "/" ++ name) location
+    let execName   = Platform.dependent name (name ++ ".exe") name
+        executable = UniPath.append ("dist/build/" ++ name ++ "/" ++ execName) location
     Directory.copyFile executable outputPath
 
