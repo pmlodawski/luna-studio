@@ -17,32 +17,44 @@ main :: IO ()
 main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
-    
-    --appendFile "/tmp/test.txt" "-----------\n\n"
-    --appendFile "/tmp/test.txt" $ "args: " ++ show args ++ "\n"
-
-    stdinTxt <- if "-" `elem` args
-                then do 
-                     inTxt <- hGetContents stdin
-                     out <- return $ if "update" `elem` args 
-                        then replace ((Cfg.path . Cfg.ffs) cfg) "${pkgroot}/../../../.." inTxt
-                        else inTxt
-                     --appendFile "/tmp/test.txt" out
-                     return out
-                else return ""
-
-    
     let exec = (Cfg.ghcPkgBin . Cfg.ghcTP . Cfg.thirdparty) cfg
-
-    (exitCode, outResult, errResult) <- Process.readProcessWithExitCode 
-                                        exec ( "--global-package-db"
-                                        : (Cfg.pkgConf . Cfg.ghcTP . Cfg.thirdparty) cfg
-                                        : "--global"
-                                        : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
-                                        : args
-                                        )
-                                        stdinTxt
-    hPutStr stderr errResult 
-    putStr outResult
+    exitCode <- Cmd.rawSystem exec $ "--global-package-db"
+                       : (Cfg.pkgConf . Cfg.ghcTP . Cfg.thirdparty) cfg
+                       : "--global"
+                       : ("--package-db=" ++ (Cfg.pkgDb . Cfg.global) cfg)
+                       : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
+                       : args
     Exit.exitWith exitCode
+
+
+--main :: IO ()
+--main = do
+--    cfg     <- Cfg.load
+--    args    <- Env.getArgs
+    
+--    stdinTxt <- if "-" `elem` args
+--                then do 
+--                     inTxt <- hGetContents stdin
+--                     out <- return $ if "update" `elem` args && "--global" `elem` args
+--                        then replace ((Cfg.path . Cfg.ffs) cfg) "${pkgroot}/../../../.." inTxt
+--                        else inTxt
+--                     --appendFile "/tmp/test.txt" out
+--                     return out
+--                else return ""
+
+    
+--    let exec = (Cfg.ghcPkgBin . Cfg.ghcTP . Cfg.thirdparty) cfg
+--    print exec
+
+--    (exitCode, outResult, errResult) <- Process.readProcessWithExitCode 
+--                                        exec ( "--global-package-db"
+--                                        : (Cfg.pkgConf . Cfg.ghcTP . Cfg.thirdparty) cfg
+--                                        : "--global"
+--                                        : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
+--                                        : args
+--                                        )
+--                                        stdinTxt
+--    hPutStr stderr errResult 
+--    putStr outResult
+--    Exit.exitWith exitCode
     
