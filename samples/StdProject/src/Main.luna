@@ -14,6 +14,7 @@ class File:
 class Console:
     def print self msg:
         ```print #{msg}```
+        ```return #{self}```
 
 ###### List ###################################
 
@@ -49,6 +50,9 @@ def main self:
     v = Vector 1 2 3
     x = 1
     #x = x + 1
+    c = Console
+    d = c.print x
+    d.print x
     Console.print x
     Console.print ("bla".at 2)
     Console.print (2.add 7)

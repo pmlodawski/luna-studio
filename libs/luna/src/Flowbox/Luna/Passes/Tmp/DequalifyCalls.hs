@@ -5,9 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Tmp.StdRemove where
+module Flowbox.Luna.Passes.Tmp.DequalifyCalls where
 
-import qualified Data.List                           as List
+import qualified Data.List.Split                     as Split
 
 import           Flowbox.Prelude                       
 import qualified Flowbox.Luna.Network.Def.Definition as Definition
@@ -20,29 +20,24 @@ import qualified Flowbox.Luna.Network.Graph.Node     as Node
 import           Flowbox.Luna.Network.Graph.Node       (Node(Expr))
 
 
-stdPrexix :: String
-stdPrexix = "Std."
-
 
 run :: DefManager -> DefManager
-run = DefManager.nmap removeFromDef
+run = DefManager.nmap dequalifyDef
 
 
-removeFromDef :: Definition -> Definition
-removeFromDef def = def{ Definition.graph = removeFromGraph $ Definition.graph def }
+dequalifyDef :: Definition -> Definition
+dequalifyDef def = def{ Definition.graph = dequalifyGraph $ Definition.graph def }
 
 
-removeFromGraph :: Graph -> Graph
-removeFromGraph = Graph.nmap removeFromNode
+dequalifyGraph :: Graph -> Graph
+dequalifyGraph = Graph.nmap dequalifyNode
 
 
-removeFromNode :: Node -> Node
-removeFromNode node = case node of 
-    Expr {} -> node{ Node.expression = removeFromExpression $ Node.expression node }
+dequalifyNode :: Node -> Node
+dequalifyNode node = case node of 
+    Expr {} -> node{ Node.expression = dequalifyExpression $ Node.expression node }
     _       -> node
 
 
-removeFromExpression :: String -> String
-removeFromExpression expr = case List.stripPrefix stdPrexix expr of 
-    Just stripped -> stripped
-    Nothing       -> expr
+dequalifyExpression :: String -> String
+dequalifyExpression = last . (Split.splitOn ".")
