@@ -85,7 +85,6 @@ run cmd = case cmd of
     CmdArgs.Version {} -> putStrLn show_version
     CmdArgs.Serve   {} -> do
         rootLogger setIntLevel $ CmdArgs.verbose cmd
-        print $ CmdArgs.verbose cmd
         quitmutex <- MVar.newEmptyMVar
         _ <- Concurrent.forkIO $ Exception.handle 
             (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
