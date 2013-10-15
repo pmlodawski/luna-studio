@@ -6,31 +6,30 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE PolyKinds #-} -- Used by proxy DataType declaration
 
-{-# LANGUAGE OverlappingInstances #-} -- CAREFULLY! Used only by get0 tuples instances
 
 module FlowboxM.Luna.Helpers.Core (
     module Prelude,
 	module FlowboxM.Luna.Helpers.Core,
     module FlowboxM.Luna.Helpers.TH.Inst,
     module FlowboxM.Luna.Helpers.StdLib,
-    module FlowboxM.Luna.Helpers.Imports
+    OneTuple(..)
     --module Flowbox.Luna.Libs.Std.Data.NTuple.Select,
     --module Flowbox.Luna.Libs.Std.Base
 )
 where
 
-import           Prelude                       hiding ((>>), (>>=), fail, return)
-import qualified Prelude                       as Prelude
-import           FlowboxM.Luna.Helpers.TH.Inst   
-import           FlowboxM.Luna.Helpers.StdLib    
-import           Control.Applicative             
+import           Prelude hiding((>>), (>>=), fail, return)
+import qualified Prelude as Prelude
+import           FlowboxM.Luna.Helpers.TH.Inst       
+import           FlowboxM.Luna.Helpers.StdLib        
+import           Control.Applicative
+import           Data.Tuple.OneTuple
 
-import           FlowboxM.Luna.Helpers.Imports   
 
 --import           Flowbox.Luna.Libs.Std.Data.NTuple.Select   
 --import           Flowbox.Luna.Libs.Std.Base     
 
-import           GHC.TypeLits                    
+import GHC.TypeLits            
 
 (.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 -- f .: g = \x y->f (g x y)
@@ -82,14 +81,13 @@ instance Get0 (Pure Int) (Pure Int) where
 instance Get0 (Pure [a]) (Pure [a]) where
     get0 = id
 
-instance Tuple t => Get0 (Pure t) (Pure t) where
-    get0 = id
 
-class Tuple t
-instance Tuple (v1,v2)
-instance Tuple (v1,v2,v3)
-instance Tuple (v1,v2,v3,v4)
-instance Tuple (v1,v2,v3,v4,v5)
+instance Get0 (Pure ()) (Pure ()) where get0 = id
+instance Get0 (Pure (OneTuple a)) (Pure (OneTuple a)) where get0 = id
+instance Get0 (Pure (v1,v2)) (Pure (v1,v2)) where get0 = id
+instance Get0 (Pure (v1,v2,v3)) (Pure (v1,v2,v3)) where get0 = id
+instance Get0 (Pure (v1,v2,v3,v4)) (Pure (v1,v2,v3,v4)) where get0 = id
+instance Get0 (Pure (v1,v2,v3,v4,v5)) (Pure (v1,v2,v3,v4,v5)) where get0 = id
 
 
 --class Get0 a b | a -> b where
@@ -175,17 +173,6 @@ liftFPure7  f (Pure a) = liftFPure6 (f a)
 liftFPure8  f (Pure a) = liftFPure7 (f a)
 liftFPure9  f (Pure a) = liftFPure8 (f a)
 liftFPure10 f (Pure a) = liftFPure9 (f a)
-
-liftFIO1  f (Pure a) = f a
-liftFIO2  f (Pure a) = liftFIO1 (f a)
-liftFIO3  f (Pure a) = liftFIO2 (f a)
-liftFIO4  f (Pure a) = liftFIO3 (f a)
-liftFIO5  f (Pure a) = liftFIO4 (f a)
-liftFIO6  f (Pure a) = liftFIO5 (f a)
-liftFIO7  f (Pure a) = liftFIO6 (f a)
-liftFIO8  f (Pure a) = liftFIO7 (f a)
-liftFIO9  f (Pure a) = liftFIO8 (f a)
-liftFIO10 f (Pure a) = liftFIO9 (f a)
 
 
 concatPure a                  = concat $ map getPure a

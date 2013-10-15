@@ -106,6 +106,7 @@ example = Source.Source ["Main"]
                   --, "    Console.print (1.add 2)"
 
                   , "def main self:"
+                  --, "    Console.print {1}"
                   , "    x = [1,2..30]"
                   , "    y = x.each el:"
                   , "        Console.print el"
