@@ -13,9 +13,8 @@ import           Flowbox.Prelude
 
 data CmdArgs = Serve { address            :: String
                      , port               :: String
-
-                     , verbose            :: Bool
-                     , debug              :: Bool
+                     
+                     , verbose            :: Int
                      , noColor            :: Bool
                    
                      , shutdownWithClient :: Bool

@@ -11,8 +11,7 @@ import           Flowbox.Prelude
 
 
 
-
-data CmdArgs = Compilation { inputs          :: String
+data CmdArgs = Compilation { inputs          :: [String]
                            
                            , version_tmp     :: Bool -- used only to generate help msg
                            , version_num_tmp :: Bool -- used only to generate help msg

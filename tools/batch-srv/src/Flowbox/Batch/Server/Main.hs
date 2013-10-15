@@ -13,11 +13,8 @@ import qualified Control.Concurrent                         as Concurrent
 import qualified Control.Concurrent.MVar                    as MVar
 import           Control.Concurrent.MVar                      (MVar)
 import qualified Control.Exception                          as Exception
-import           Data.Text.Lazy                               (pack)
-import           Options.Applicative                        hiding (info)
-import qualified Options.Applicative                        as Opt
+import qualified Data.Text.Lazy                             as Text
 import qualified System.Exit                                as Exit
-import           Thrift.Transport.Handle                      ()
 import qualified Thrift.Protocol.Binary                     as TProtocol
 import           Thrift.Protocol.Binary                       (Protocol)
 import           Thrift.Transport                             (Transport)
@@ -30,6 +27,8 @@ import qualified Flowbox.Batch.Server.Handlers.BatchHandler as BatchHandler
 import qualified Flowbox.Batch.Server.Server                as Server
 import qualified Flowbox.Data.Version                       as Version
 import           Flowbox.Data.Version                         (Version)
+import qualified Flowbox.Options.Applicative                as Opt
+import           Flowbox.Options.Applicative                hiding (info)
 import           Flowbox.System.Log.Logger                    
 
 
@@ -61,8 +60,7 @@ parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
        <|> CmdArgs.Serve
            <$> strOption ( long "addres"  <> short 'a' <> value defaultAddress       <> metavar "address" <> help "Server address"       )
            <*> strOption ( long "port"    <> short 'p' <> (value $ show defaultPort) <> metavar "port"    <> help "Server port"          )
-           <*> switch    ( long "verbose" <> short 'v'                                                    <> help "Verbose"              )
-           <*> switch    ( long "debug"   <> short 'd' <> hidden                                                                         )
+           <*> optIntFlag       "verbose" 'v' 2 3                                 "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"                                                                <> help "Disable color output" )
            <*> switch    ( long "shutdown-with-client" <> hidden                                                                         )
 
@@ -86,13 +84,8 @@ run :: CmdArgs -> IO ()
 run cmd = case cmd of
     CmdArgs.Version {} -> putStrLn show_version
     CmdArgs.Serve   {} -> do
-        if CmdArgs.verbose cmd
-            then rootLogger setLevel INFO
-            else return ()
-        if CmdArgs.debug cmd
-            then rootLogger setLevel DEBUG
-            else return ()
-
+        rootLogger setIntLevel $ CmdArgs.verbose cmd
+        print $ CmdArgs.verbose cmd
         quitmutex <- MVar.newEmptyMVar
         _ <- Concurrent.forkIO $ Exception.handle 
             (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
@@ -110,11 +103,11 @@ serve cmd quitmutex = do
 
 
 processCommand :: (Protocol iprot, Protocol oprot, Transport itransp, Transport otransp, Batch_Iface batch)
-         => MVar Bool -> batch -> (iprot itransp, oprot otransp) -> IO Bool
+               => MVar Bool -> batch -> (iprot itransp, oprot otransp) -> IO Bool
 processCommand quitmutex handler (iprot, oprot) = do
     (name, typ, seqid) <- TProtocol.readMessageBegin iprot
     TBatch.proc_ handler (iprot,oprot) (name,typ,seqid)
-    when (name == pack "shutdown") (MVar.putMVar quitmutex True)
+    when (name == Text.pack "shutdown") (MVar.putMVar quitmutex True)
     return True
 
 

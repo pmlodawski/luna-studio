@@ -34,6 +34,7 @@ import qualified Flowbox.Lunac.Builder.Graph         as GraphBuilder
 import qualified Flowbox.Luna.Tools.Serialize.Lib    as LibSerialization
 import qualified Flowbox.Lunac.Diagnostics           as Diagnostics
 import           Flowbox.System.Log.Logger             
+import qualified Flowbox.System.Platform             as Platform
 import qualified Flowbox.System.UniPath              as UniPath
 import           Flowbox.System.UniPath                (UniPath)
 
@@ -92,10 +93,11 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
     return (library, ()))
     
 
+-- TODO [PM] : Needs architecture change
 runLibrary ::  Library.ID -> Project.ID -> Batch -> IO String
 runLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ library -> do
     let projectName = Library.name library
-        command = "./" ++ projectName
+        command = Platform.dependent ("./" ++ projectName) (projectName ++ ".exe") ("./" ++ projectName)
         noStandardInput = ""
         noArguments     = [] --TODO [PM] : reimplement all this method to support real programs
     loggerIO debug $ "Running command '" ++ command ++ "'"

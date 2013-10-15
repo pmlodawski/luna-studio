@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Network.Graph.Node(
+module Flowbox.Luna.Network.Graph.Node (
     Node(..),
     ID,
     mkExpr,

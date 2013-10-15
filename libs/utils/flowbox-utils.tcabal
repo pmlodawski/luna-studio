@@ -30,6 +30,7 @@ Library
                   hslogger,
                   MissingH == 1.2.0.0,
                   mtl,
+                  optparse-applicative == 0.5.2.1,
                   pretty,
                   pretty-show,
                   process,
