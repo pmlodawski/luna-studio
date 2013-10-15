@@ -8,11 +8,13 @@
 
 module Flowbox.Lunac.Builder.Builder where
 
-import           Control.Monad.RWS                                  hiding (mapM_)
+import Control.Applicative
+import           Control.Monad.RWS                                  hiding (mapM_, mapM)
 
 import           Flowbox.Prelude                                      
 import           Flowbox.Config.Config                                (Config)
 import qualified Flowbox.Luna.Data.AST.Module                       as ASTModule
+import qualified Flowbox.Luna.Data.Source as Source
 import           Flowbox.Luna.Data.Source                             (Source)
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool     as FuncPool
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias     as VarAlias
@@ -32,6 +34,7 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform                            as Platform
 import qualified Flowbox.System.UniPath                             as UniPath
 import           Flowbox.System.UniPath                               (UniPath)
+import qualified Flowbox.Text.Show.Hs                               as ShowHs
 
 
 logger :: Logger
@@ -62,7 +65,7 @@ build cfg diag outputPath name version isLibrary libs flags ast = do
     Diagnostics.printSSA ssa diag
     hast <- HASTGen.run ssa fp
     Diagnostics.printHAST hast diag
-    hsc  <- HSC.run hast
+    hsc  <- map (Source.transCode ShowHs.hsShow) <$> HSC.run hast
     Diagnostics.printHSC hsc diag
 
     let allLibs = "flowboxM-stdlib-io"
