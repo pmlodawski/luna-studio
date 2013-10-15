@@ -11,7 +11,7 @@ import           Flowbox.Prelude
 
 
 
-data CmdArgs = Initialization { verbose :: Bool
+data CmdArgs = Initialization { verbose :: Int
 	                          , force   :: Bool
 	                          }
 	         | Version
