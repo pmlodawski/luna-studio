@@ -18,6 +18,7 @@ Library
                    
  
   Build-Depends:  base,
+                  generic-deriving,
                   ghc-prim,
                   pretty-show,
                   template-haskell,
