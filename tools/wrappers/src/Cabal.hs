@@ -9,18 +9,20 @@ import qualified System.Exit           as Exit
 import qualified Flowbox.Config.Config as Cfg
 
 
-
 main :: IO ()
 main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
     let exec = (Cfg.cabalBin . Cfg.cabalTP . Cfg.thirdparty) cfg
-    exitCode <- if "install" `elem` args
-                    then Cmd.rawSystem exec $ ("--config-file=" ++ (Cfg.cabal . Cfg.config) cfg)
-                                            -- : "--package-db=clear"
-                                            -- : "--package-db=global"
-                                            -- : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
-                                            : args
+    let flags = if "--global" `elem` args
+                then ["--package-db=clear", "--package-db=global", "--package-db=" ++ (Cfg.pkgDb . Cfg.local)  cfg, "--package-db=" ++ (Cfg.pkgDb . Cfg.global) cfg]
+                else ["--package-db=clear", "--package-db=global", "--package-db=" ++ (Cfg.pkgDb . Cfg.global) cfg, "--package-db=" ++ (Cfg.pkgDb . Cfg.local)  cfg]
+
+    let xargs = args
+    exitCode <- if "install" `elem` xargs
+                    then Cmd.rawSystem exec $ ["--config-file=" ++ (Cfg.cabal . Cfg.config) cfg]
+                                            ++ flags
+                                            ++ xargs
                     else Cmd.rawSystem exec $ ("--config-file=" ++ (Cfg.cabal . Cfg.config) cfg)
-                                            : args
+                                            : xargs
     Exit.exitWith exitCode

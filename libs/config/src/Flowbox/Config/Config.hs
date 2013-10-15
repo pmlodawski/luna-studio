@@ -20,6 +20,7 @@ logger = getLoggerIO "Flowbox.Config.Config"
 
 
 data Config = Config      { version    :: Version
+                          , ffs        :: Section
                           , global     :: Section
                           , local      :: Section
                           , templates  :: Section
@@ -30,9 +31,15 @@ data Config = Config      { version    :: Version
                           }
             deriving (Show)
                           
-data Section = Global     { path      :: String
+data Section = FFS        { path      :: String
                           , conf      :: String
                           , bin       :: String
+                          }
+             | Global     { path      :: String
+                          , bin       :: String
+                          , lib       :: String
+                          , share     :: String
+                          , pkgDb     :: String
                           }
              | Local      { home      :: String
                           , path      :: String
@@ -63,6 +70,7 @@ data Section = Global     { path      :: String
                           }
              | Ghc        { version_  :: String
                           , path      :: String
+                          , libDir    :: String
                           , topDir    :: String
                           , pkgConf   :: String
                           , ghcBin    :: String
@@ -76,16 +84,16 @@ data Section = Global     { path      :: String
              deriving (Show)
 
 
-ffs :: String
-ffs = "FFS"
+ffsEnv :: String
+ffsEnv = "FFS"
 
 
 load :: IO Config
 load = do
     logger debug "Loading Flowbox configuration"
-    cpath <- Exception.onException (Env.getEnv ffs)
+    cpath <- Exception.onException (Env.getEnv ffsEnv)
            $ logger error ("Flowbox environment not initialized.")
-          *> logger error ("Environment variable '" ++ ffs ++ "' not defined.")
+          *> logger error ("Environment variable '" ++ ffsEnv ++ "' not defined.")
           *> logger error ("Please run 'source <FLOWBOX_INSTALL_PATH>/setup' and try again.")
 
     cfgFile <- Configurator.load [Configurator.Required $ cpath ++ "/config/flowbox.config"]
@@ -101,9 +109,15 @@ load = do
                                  <*> readConf "info.build"
                                  <*> pure Version.Alpha --readConf "info.stage"
                )
+           <*> ( FFS <$> readConf "ffs.path"
+                     <*> readConf "ffs.conf"
+                     <*> readConf "ffs.bin"
+               )
            <*> ( Global <$> readConf "global.path"
-                        <*> readConf "global.conf"
                         <*> readConf "global.bin"
+                        <*> readConf "global.lib"
+                        <*> readConf "global.share"
+                        <*> readConf "global.pkgDb"
                )
            <*> ( Local  <$> readConf "local.home"
                         <*> readConf "local.path"
@@ -130,6 +144,7 @@ load = do
            <*> ( ThirdParty <$> readConf "thirdparty.path"
                             <*> ( Ghc <$> readConf "thirdparty.ghc.version"
                                       <*> readConf "thirdparty.ghc.path"
+                                      <*> readConf "thirdparty.ghc.libDir"
                                       <*> readConf "thirdparty.ghc.topDir"
                                       <*> readConf "thirdparty.ghc.pkgConf"
                                       <*> readConf "thirdparty.ghc.ghcBin"

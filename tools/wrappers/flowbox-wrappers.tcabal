@@ -44,6 +44,7 @@ executable ghc-pkg
   build-depends:    base,
                     directory,
                     flowbox-config,
+                    MissingH,
                     process,
                     system-filepath,
                     text

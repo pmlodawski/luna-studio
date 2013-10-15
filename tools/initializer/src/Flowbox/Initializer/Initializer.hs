@@ -57,7 +57,7 @@ initializeIfNeeded config = do
 initialize :: Config -> IO ()
 initialize config = do
     logger info "Configuring Flowbox for the first use. Please wait..."
-    let global     = Config.global config
+    let ffs        = Config.ffs config
         local      = Config.local  config 
         localCabal = Config.cabal local
         localPkgDb = Config.pkgDb local
@@ -71,7 +71,7 @@ initialize config = do
     Process.runProcess Nothing ghcPkgBin ["recache", "--package-db=" ++ localPkgDb] 
 
     cabalConfTContent <- IO.readFile cabalConfT
-    let cabalConfContent = StringUtils.replace "${FB_INSTALL}"    (Config.path global)
+    let cabalConfContent = StringUtils.replace "${FB_INSTALL}"    (Config.path ffs)
                          $ StringUtils.replace "${FB_HOME_CABAL}" (Config.cabal local) cabalConfTContent
     IO.writeFile cabalConf cabalConfContent
     Process.runProcess Nothing cabalBin ["update"] 
