@@ -11,7 +11,6 @@ import           Flowbox.Prelude
 
 
 
-
 data CmdArgs = Compilation { inputs          :: [String]
                            
                            , version_tmp     :: Bool -- used only to generate help msg

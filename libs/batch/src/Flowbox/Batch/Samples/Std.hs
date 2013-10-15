@@ -59,7 +59,7 @@ cls_console = Definition.empty { Definition.cls   = Type.Class "Console" [] []
 
 
 addSomeDefs :: DefManager -> DefManager
-addSomeDefs defs = DefManager.addToParent (1, 2 , mkFunction "print" [Type.Named "self" $ Type.TypeName "a"] [])
+addSomeDefs defs = DefManager.addToParent (1, 2 , mkFunction "print" [Type.Named "self" $ Type.TypeName "String"] [])
                  $ DefManager.addToParent (0, 1 , mkClass "Console")
                  -- $ DefManager.addToParentMany (listToDefs types 1000 0 mkClass)
                  $ defs

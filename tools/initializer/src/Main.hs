@@ -5,9 +5,6 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import           Options.Applicative             hiding (info)
-import qualified Options.Applicative             as Opt
-
 import           Flowbox.Prelude                 hiding (error)
 import qualified Flowbox.Config.Config           as Config
 import qualified Flowbox.Data.Version            as Version
@@ -15,7 +12,10 @@ import           Flowbox.Data.Version              (Version)
 import qualified Flowbox.Initializer.CmdArgs     as CmdArgs
 import           Flowbox.Initializer.CmdArgs       (CmdArgs)
 import qualified Flowbox.Initializer.Initializer as Initializer
+import qualified Flowbox.Options.Applicative     as Opt
+import           Flowbox.Options.Applicative     hiding (info)
 import           Flowbox.System.Log.Logger         
+
 
 
 rootLogger :: Logger
@@ -32,8 +32,8 @@ version = Version.mk
 parser :: Parser CmdArgs
 parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
        <|> CmdArgs.Initialization
-           <$> switch (long "verbose" <> short 'v' <> help "Verbose level")
-           <*> switch (long "force"   <> short 'f' <> help "Force reinitialization")
+           <$> optIntFlag   "verbose" 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
+           <*> switch (long "force"   <> short 'f'                    <> help "Force reinitialization")
 
 
 
@@ -53,15 +53,12 @@ main = execParser opts >>= run
 
 
 run :: CmdArgs -> IO ()
-run args = case args of
+run cmd = case cmd of
     CmdArgs.Version     {} -> putStrLn show_version
     CmdArgs.Initialization {} -> do
-        if CmdArgs.verbose args
-            then rootLogger setLevel DEBUG
-            else rootLogger setLevel INFO
-
+        rootLogger setIntLevel $ CmdArgs.verbose cmd
         config <- Config.load
-        if CmdArgs.force args
+        if CmdArgs.force cmd
             then do Initializer.clear      config
                     Initializer.initialize config
             else Initializer.initializeIfNeeded config

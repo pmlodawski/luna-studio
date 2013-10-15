@@ -107,3 +107,11 @@ criticalFail msg name = do
 
 setLevel :: Priority -> String -> IO ()
 setLevel lvl name = updateGlobalLogger name (HSLogger.setLevel lvl)
+
+
+setIntLevel :: Int -> String -> IO ()
+setIntLevel lvl name = case lvl of 
+    0 -> setLevel EMERGENCY name
+    1 -> setLevel WARNING   name
+    2 -> setLevel INFO      name
+    _ -> setLevel DEBUG     name

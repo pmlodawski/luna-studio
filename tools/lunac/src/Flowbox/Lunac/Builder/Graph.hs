@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds, FlexibleContexts, NoMonomorphismRestriction, ScopedTypeVariables #-}
+{-# LANGUAGE ConstraintKinds, FlexibleContexts #-}
 
 module Flowbox.Lunac.Builder.Graph where
 
@@ -23,6 +23,7 @@ import           Flowbox.Luna.Network.Def.DefManager                         (De
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
 import           Flowbox.Luna.Passes.Pass                                    (PassMonad)
+import qualified Flowbox.Luna.Passes.Tmp.StdRemove                         as StdRemove
 import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
 import qualified Flowbox.Lunac.Builder.Builder                             as Builder
 import qualified Flowbox.Lunac.Diagnostics                                 as Diagnostics
@@ -50,7 +51,8 @@ build cfg diag library name version outputPath libs flags = Luna.runIO $ do
 parseGraph :: PassMonad s m => Diagnostics -> DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTModule.Module
 parseGraph diag defManager def = do 
     logger debug "Compiling graph"
-    logger info (PP.ppShow  defManager)
-    ast <- GraphParser.run defManager def
+    let tmpFixed_defManager = StdRemove.run defManager
+    logger info (PP.ppShow tmpFixed_defManager)
+    ast <- GraphParser.run tmpFixed_defManager def
     Diagnostics.printAST ast diag 
     return ast
