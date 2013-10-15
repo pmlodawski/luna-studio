@@ -59,10 +59,41 @@ cls_console = Definition.empty { Definition.cls   = Type.Class "Console" [] []
 
 
 addSomeDefs :: DefManager -> DefManager
-addSomeDefs defs = DefManager.addToParent (1, 2 , mkFunction "print" [ Type.Named "self" $ Type.TypeName "Console"
-                                                                     , Type.Named "str"  $ Type.TypeName "String"] 
-                                                                     [ Type.Named "console" $ Type.TypeName "Console" ])
-                 $ DefManager.addToParent (0, 1 , mkClass "Console")
+addSomeDefs defs = DefManager.addToParent (10, 14, mkFunction "add"      [ Type.Named "self"    $ Type.TypeName "Float"
+                                                                         , Type.Named "value"   $ Type.TypeName "Float" ] 
+                                                                         [ Type.Named "result"  $ Type.TypeName "Float"])
+                 $ DefManager.addToParent (10, 13, mkFunction "sub"      [ Type.Named "self"    $ Type.TypeName "Float"
+                                                                         , Type.Named "value"   $ Type.TypeName "Float" ] 
+                                                                         [ Type.Named "result"  $ Type.TypeName "Float"])
+                 $ DefManager.addToParent (10, 12, mkFunction "mul"      [ Type.Named "self"    $ Type.TypeName "Float"
+                                                                         , Type.Named "value"   $ Type.TypeName "Float" ] 
+                                                                         [ Type.Named "result"  $ Type.TypeName "Float"])
+                 $ DefManager.addToParent (10, 11, mkFunction "div"      [ Type.Named "self"    $ Type.TypeName "Float"
+                                                                         , Type.Named "value"   $ Type.TypeName "Float" ] 
+                                                                         [ Type.Named "result"  $ Type.TypeName "Float"])
+                 $ DefManager.addToParent (0, 10, mkClass    "Float")
+                 $ DefManager.addToParent (6, 9 , mkFunction "add"       [ Type.Named "self"    $ Type.TypeName "Int"
+                                                                         , Type.Named "value"   $ Type.TypeName "Int" ] 
+                                                                         [ Type.Named "result"  $ Type.TypeName "Int"])
+                 $ DefManager.addToParent (6, 8 , mkFunction "sub"       [ Type.Named "self"    $ Type.TypeName "Int"
+                                                                         , Type.Named "value"   $ Type.TypeName "Int" ] 
+                                                                         [ Type.Named "result"  $ Type.TypeName "Int"])
+                 $ DefManager.addToParent (6, 7 , mkFunction "mul"       [ Type.Named "self"    $ Type.TypeName "Int"
+                                                                         , Type.Named "value"   $ Type.TypeName "Int" ] 
+                                                                         [ Type.Named "result"  $ Type.TypeName "Int"])
+                 $ DefManager.addToParent (0, 6 , mkClass    "Int")
+                 $ DefManager.addToParent (4, 5 , mkFunction "print"     [ Type.Named "self"    $ Type.TypeName "Console"
+                                                                         , Type.Named "str"     $ Type.TypeName "String" ] 
+                                                                         [ Type.Named "console" $ Type.TypeName "Console"])
+                 $ DefManager.addToParent (0, 4 , mkClass    "Console")
+                 $ DefManager.addToParent (1, 3 , mkFunction "writeFile" [ Type.Named "self"    $ Type.TypeName "File"
+                                                                         , Type.Named "name"    $ Type.TypeName "String" 
+                                                                         , Type.Named "content" $ Type.TypeName "String" ]
+                                                                         [ ])
+                 $ DefManager.addToParent (1, 2 , mkFunction "readFile"  [ Type.Named "self"    $ Type.TypeName "File"
+                                                                         , Type.Named "name"    $ Type.TypeName "String" ]
+                                                                         [ Type.Named "content" $ Type.TypeName "String" ])
+                 $ DefManager.addToParent (0, 1 , mkClass    "File")
                  -- $ DefManager.addToParentMany (listToDefs types 1000 0 mkClass)
                  $ defs
 
