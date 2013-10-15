@@ -12,8 +12,9 @@ class File:
 ###### Console ################################
 
 class Console:
-    def print self msg:
-        ```print #{msg}```
+    def print self obj:
+        s = obj.toString
+        ```liftFIO1 putStrLn #{s}```
         ```return #{self}```
 
 ###### List ###################################
@@ -41,6 +42,9 @@ def Int.sub a b:
 def Int.mul a b:
     ```getIO $ liftFPure2 (*) #{a} #{b}```
 
+def Int.toString a:
+    ```getIO $ liftFPure1 show #{a}```
+
 ###### Float ##################################
 
 def Float.add a b:
@@ -54,5 +58,13 @@ def Float.mul a b:
 
 def Float.div a b:
     ```getIO $ liftFPure2 (/) #{a} #{b}```
+
+def Float.toString a:
+    ```getIO $ liftFPure1 show #{a}```
+
+###### String #################################
+
+def String.toString a:
+    ```getIO $ liftFPure1 id #{a}```
 
 ###############################################

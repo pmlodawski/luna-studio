@@ -83,7 +83,7 @@ addSomeDefs defs = DefManager.addToParent (10, 14, mkFunction "add"      [ Type.
                                                                          [ Type.Named "result"  $ Type.TypeName "Int"])
                  $ DefManager.addToParent (0, 6 , mkClass    "Int")
                  $ DefManager.addToParent (4, 5 , mkFunction "print"     [ Type.Named "self"    $ Type.TypeName "Console"
-                                                                         , Type.Named "str"     $ Type.TypeName "String" ] 
+                                                                         , Type.Named "obj"     $ Type.TypeName "String" ] 
                                                                          [ Type.Named "console" $ Type.TypeName "Console"])
                  $ DefManager.addToParent (0, 4 , mkClass    "Console")
                  $ DefManager.addToParent (1, 3 , mkFunction "writeFile" [ Type.Named "self"    $ Type.TypeName "File"
