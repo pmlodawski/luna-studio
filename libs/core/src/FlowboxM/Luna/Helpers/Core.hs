@@ -12,6 +12,7 @@ module FlowboxM.Luna.Helpers.Core (
 	module FlowboxM.Luna.Helpers.Core,
     module FlowboxM.Luna.Helpers.TH.Inst,
     module FlowboxM.Luna.Helpers.StdLib,
+    module FlowboxM.Luna.Helpers.Imports,
     OneTuple(..)
 )
 where
@@ -25,6 +26,7 @@ import           Data.Tuple.OneTuple
 import           GHC.Generics                      (Generic)
 
 import           FlowboxM.Utils.Generics.Show
+import           FlowboxM.Luna.Helpers.Imports
 
 import GHC.TypeLits            
 
