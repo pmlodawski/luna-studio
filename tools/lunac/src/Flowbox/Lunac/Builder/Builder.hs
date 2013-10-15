@@ -65,7 +65,7 @@ build cfg diag outputPath name version isLibrary libs flags ast = do
     hsc  <- HSC.run hast
     Diagnostics.printHSC hsc diag
 
-    let allLibs = "flowboxM-stdlib-io"
+    let allLibs = "flowboxM-core"
                 : "template-haskell"
                 : libs
 
