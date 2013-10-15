@@ -13,8 +13,6 @@ module FlowboxM.Luna.Helpers.Core (
     module FlowboxM.Luna.Helpers.TH.Inst,
     module FlowboxM.Luna.Helpers.StdLib,
     OneTuple(..)
-    --module Flowbox.Luna.Libs.Std.Data.NTuple.Select,
-    --module Flowbox.Luna.Libs.Std.Base
 )
 where
 
@@ -24,10 +22,9 @@ import           FlowboxM.Luna.Helpers.TH.Inst
 import           FlowboxM.Luna.Helpers.StdLib        
 import           Control.Applicative
 import           Data.Tuple.OneTuple
+import           GHC.Generics                      (Generic)
 
-
---import           Flowbox.Luna.Libs.Std.Data.NTuple.Select   
---import           Flowbox.Luna.Libs.Std.Base     
+import           FlowboxM.Utils.Generics.Show
 
 import GHC.TypeLits            
 
@@ -41,16 +38,6 @@ import GHC.TypeLits
 
 class Failure (a :: Symbol)
 
---class Get0 a b c | a -> b, a b -> c, a c -> b, a->c where
---    get0 :: a b -> c
-
---class Get1 a b c | a -> b, a b -> c, a c -> b, a->c where
---    get1 :: a b -> c
-
---class Get2 a b c | a b -> c, a c -> b where
---    get2 :: a b -> c
-
-
 class Get0 m f |  m -> f where
     get0 :: m -> f
 
@@ -62,17 +49,6 @@ class Get2 m f |  m -> f where
 
 class Get3 m f |  m -> f where
     get3 :: m -> f
-
-
---instance Get0 (Pure Int) (Pure Int) where
---	get0 = id
-
---instance Get0 (IO a) (IO a) where
---    get0 = id
-
---instance Get0 (Pure a) (Pure a) where
---    get0 = id
-
 
 
 instance Get0 (Pure Int) (Pure Int) where
@@ -88,16 +64,6 @@ instance Get0 (Pure (v1,v2)) (Pure (v1,v2)) where get0 = id
 instance Get0 (Pure (v1,v2,v3)) (Pure (v1,v2,v3)) where get0 = id
 instance Get0 (Pure (v1,v2,v3,v4)) (Pure (v1,v2,v3,v4)) where get0 = id
 instance Get0 (Pure (v1,v2,v3,v4,v5)) (Pure (v1,v2,v3,v4,v5)) where get0 = id
-
-
---class Get0 a b | a -> b where
---    get0 :: a -> b
-
---class Get1 a b | a -> b where
---    get1 :: a -> b
-
---class Get2 a b | a -> b where
---    get2 :: a -> b
 
 
 mkPure0  a = Pure $ a
@@ -173,6 +139,18 @@ liftFPure7  f (Pure a) = liftFPure6 (f a)
 liftFPure8  f (Pure a) = liftFPure7 (f a)
 liftFPure9  f (Pure a) = liftFPure8 (f a)
 liftFPure10 f (Pure a) = liftFPure9 (f a)
+
+
+liftFIO1  f (Pure a) = f a
+liftFIO2  f (Pure a) = liftFIO1 (f a)
+liftFIO3  f (Pure a) = liftFIO2 (f a)
+liftFIO4  f (Pure a) = liftFIO3 (f a)
+liftFIO5  f (Pure a) = liftFIO4 (f a)
+liftFIO6  f (Pure a) = liftFIO5 (f a)
+liftFIO7  f (Pure a) = liftFIO6 (f a)
+liftFIO8  f (Pure a) = liftFIO7 (f a)
+liftFIO9  f (Pure a) = liftFIO8 (f a)
+liftFIO10 f (Pure a) = liftFIO9 (f a)
 
 
 concatPure a                  = concat $ map getPure a
