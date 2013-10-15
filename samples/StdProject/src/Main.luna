@@ -41,6 +41,20 @@ def Int.sub a b:
 def Int.mul a b:
     ```getIO $ liftFPure2 (*) #{a} #{b}```
 
+###### Float ##################################
+
+def Float.add a b:
+    ```getIO $ liftFPure2 (+) #{a} #{b}```
+
+def Float.sub a b:
+    ```getIO $ liftFPure2 (-) #{a} #{b}```
+
+def Float.mul a b:
+    ```getIO $ liftFPure2 (*) #{a} #{b}```
+
+def Float.div a b:
+    ```getIO $ liftFPure2 (/) #{a} #{b}```
+
 ###############################################
 
 class Vector a:
