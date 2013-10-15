@@ -100,7 +100,8 @@ genExpr e = case e of
     HExpr.Arrow      src dst              -> genExpr src ++ " <- " ++ genExpr dst
     HExpr.Lit      val                    -> genLit val
     HExpr.LitT     val                    -> genLit val
-    HExpr.Tuple    items                  -> "(" ++ sepjoin (fexpMap items) ++ ")"
+    HExpr.Tuple    items                  -> "(" ++ (if length items == 1 then "OneTuple" else "")
+                                             ++ sepjoin (fexpMap items) ++ ")"
     HExpr.TupleP   items                  -> "(" ++ sepjoin (fexpMap items) ++ ")"
     HExpr.ConE     qname                  -> join "." qname
     HExpr.ConT     name                   -> name

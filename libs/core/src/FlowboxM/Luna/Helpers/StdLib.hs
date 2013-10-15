@@ -11,12 +11,12 @@
 
 module FlowboxM.Luna.Helpers.StdLib where
 
-import           Control.Applicative   
-import           Data.Tuple.OneTuple   
-import           Data.Typeable         
+import           Control.Applicative
+import           Data.Tuple.OneTuple
+import           Data.Typeable
 
 
-import           Debug.Trace           
+import Debug.Trace
 
 instance (Typeable a) => Show (IO a) where
     show e = '(' : (show . typeOf) e ++ ")"
