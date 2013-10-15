@@ -205,9 +205,7 @@ graph2AST graph inputsNames = foldlM (node2AST graph inputsNames) [] $ Graph.top
 
 node2AST :: Graph2ASTMonad m => Graph -> [String] -> [ASTExpr] -> (Node.ID, Node.Node) -> Pass.Result m [ASTExpr] 
 node2AST graph inputsNames list (nodeID, node) = do
-
     astNodeID <- newID
-
     (++) list <$> case node of 
         Node.Expr    _ (Flags _ True) _ -> return [ASTExpr.NOP astNodeID] -- Comment
         Node.Inputs    _              _ -> return []
@@ -236,10 +234,8 @@ node2AST graph inputsNames list (nodeID, node) = do
                                                 Port.All      -> "result_" ++ show nID
                                                 Port.Number p -> "result_" ++ show nID ++ "_" ++ show p
 
-
                 inEdges = Graph.lprel graph nodeID
-
-                maxArg = foldr (biggestPort argID) Port.All inEdges 
+                maxArg  = foldr (biggestPort argID) Port.All inEdges 
 
             args <- case length inEdges of 
                 0 -> return []
@@ -248,16 +244,20 @@ node2AST graph inputsNames list (nodeID, node) = do
                     Port.Number p -> mapM (\i -> arg inEdges $ Port.Number i) [0..p]
             
             call <- case node of 
-                Node.Expr expression _ _ ->  ASTExpr.App astNodeID <$> parseExpr expression <*> pure args
+                Node.Expr expression _ _ -> case length args of
+                                            0 -> tok ASTExpr.App <*> parseExpr expression <*> pure args
+                                            _ -> do let callOn   = head args 
+                                                        callArgs = tail args
+                                                    accesor <- tok ASTExpr.Accessor <*> pure expression <*> pure callOn
+                                                    tok ASTExpr.App <*> pure accesor <*> pure callArgs
                 Node.Default value _ -> defaultVal2ASTExpr value
                 Node.Inputs  _     _ -> fail "Graph2AST Implementation error: Node.Inputs should be already handled"
-                Node.Outputs _     _ -> return $ ASTExpr.Tuple astNodeID args
-                Node.Tuple   _     _ -> return $ ASTExpr.Tuple astNodeID args
+                Node.Outputs _     _ -> tok ASTExpr.Tuple <*> pure args
+                Node.Tuple   _     _ -> tok ASTExpr.Tuple <*> pure args
 
-
-            let outEdges          = Graph.out graph nodeID 
-                numConnected     = length outEdges
-                numGetters = FList.count isGetter outEdges
+            let outEdges     = Graph.out graph nodeID 
+                numConnected = length outEdges
+                numGetters   = FList.count isGetter outEdges
 
                 isGetter :: (Node.ID, Node.ID, Edge) -> Bool
                 isGetter (_, _, Edge (Port.Number _) _) = True
@@ -267,7 +267,6 @@ node2AST graph inputsNames list (nodeID, node) = do
 
             allResult  <- ASTExpr.Var <$> newID <*> pure allResultName
             allPattern <- ASTPat.Var  <$> newID <*> pure allResultName
-
 
             if numGetters == 0 
                 then if numConnected == 0
@@ -288,7 +287,7 @@ node2AST graph inputsNames list (nodeID, node) = do
                         gettersPattern <- ASTPat.Tuple <$> newID 
                                                        <*> mapM (\i -> res outEdges $ Port.Number i) [0..maxGetter]
                         if numGetters == numConnected
-                            then do id <- newID 
+                            then do id  <- newID 
                                     return [ASTExpr.Assignment id gettersPattern call]
                             else do id1 <- newID 
                                     id2 <- newID 
