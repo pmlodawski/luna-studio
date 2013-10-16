@@ -51,6 +51,6 @@ build cfg cmd diag filePath = Luna.runIO $ do
                         then BuildConfig.Library 
                         else BuildConfig.Executable outputPath 
         bldCfg = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag
-    ast  <- Build.parseFile diag rootPath filePath
+    ast  <- Build.parseFile rootPath filePath
     Build.run bldCfg ast 
 

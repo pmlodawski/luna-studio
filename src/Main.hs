@@ -87,12 +87,13 @@ run cfg cmd = do
 
             rootLogger setIntLevel $ CmdArgs.verbose cmd
 
-            let diag = Diagnostics ( CmdArgs.dump_ast  cmd || CmdArgs.dump_all cmd )
-                                   ( CmdArgs.dump_va   cmd || CmdArgs.dump_all cmd )
-                                   ( CmdArgs.dump_fp   cmd || CmdArgs.dump_all cmd )
-                                   ( CmdArgs.dump_ssa  cmd || CmdArgs.dump_all cmd )
-                                   ( CmdArgs.dump_hast cmd || CmdArgs.dump_all cmd )
-                                   ( CmdArgs.dump_hsc  cmd || CmdArgs.dump_all cmd )
+            let diag = Diagnostics False
+                                 ( CmdArgs.dump_ast  cmd || CmdArgs.dump_all cmd )
+                                 ( CmdArgs.dump_va   cmd || CmdArgs.dump_all cmd )
+                                 ( CmdArgs.dump_fp   cmd || CmdArgs.dump_all cmd )
+                                 ( CmdArgs.dump_ssa  cmd || CmdArgs.dump_all cmd )
+                                 ( CmdArgs.dump_hast cmd || CmdArgs.dump_all cmd )
+                                 ( CmdArgs.dump_hsc  cmd || CmdArgs.dump_all cmd )
 
                 inputs = map UniPath.fromUnixString $ CmdArgs.inputs cmd
 
