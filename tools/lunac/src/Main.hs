@@ -38,6 +38,7 @@ parser =   Opt.flag' CmdArgs.Version    (long "version" <> short 'V' <> hidden)
            <*> optIntFlag (Just "verbose") 'v' 2 3                                                  "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"                                                  <> help "Disable color output" )
 
+           <*> optIntFlag Nothing 'O' 0 2                                                           "Optimisation level (level range is 0-2, default level is 2)"
            <*> strOption ( long "output"  <> short 'o' <> value "out"  <> metavar "OUTPUT"  <> help "Output folder" )
            <*> many      ( strOption (       short 'l'                 <> metavar "LIBRARY" <> help "Library to link with."))
            

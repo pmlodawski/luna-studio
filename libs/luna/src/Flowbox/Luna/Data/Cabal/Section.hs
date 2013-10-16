@@ -15,23 +15,23 @@ import           Data.String.Utils                  (join)
 
 
 data Section = Library    { exposedModules :: [String]
-                          , hsSourceDirs   :: [String]
                           , ghcOptions     :: [String]
-                          , extensions     :: [Extension]
                           , buildDepends   :: [String]
+                          , extensions     :: [Extension]
+                          , hsSourceDirs   :: [String]
                           }
              | Executable { name           :: String
                           , mainIs         :: String
-                          , hsSourceDirs   :: [String]
                           , ghcOptions     :: [String]
-                          , extensions     :: [Extension]
                           , buildDepends   :: [String]
+                          , extensions     :: [Extension]
+                          , hsSourceDirs   :: [String]
                           }
                 deriving (Show)
 
 
 mkExecutable :: String -> Section
-mkExecutable name' = mkCommon $ Executable name' "Main.hs" 
+mkExecutable name' = mkCommon $ Executable name' "Main.hs"
 
 
 mkLibrary :: Section
@@ -39,7 +39,7 @@ mkLibrary = mkCommon $ Library []
 
 
 mkCommon :: ([String] -> [String] -> [Extension] -> [String] -> Section) -> Section
-mkCommon s = s ["src"] ["-O2"] [] ["base"]
+mkCommon s = s [] [] [] ["src"]
 
 
 defaultIndent :: String

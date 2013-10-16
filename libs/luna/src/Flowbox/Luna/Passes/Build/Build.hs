@@ -68,7 +68,7 @@ tmpDirPrefix = "lunac"
 
 
 run :: PassMonadIO s m => BuildConfig -> ASTModule.Module -> Pass.Result m ()
-run (BuildConfig name version libs flags buildType cfg diag) ast = do
+run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast = do
     va   <- VarAlias.run ast
     Diagnostics.printVA va diag 
     fp <- FuncPool.run ast
@@ -80,17 +80,18 @@ run (BuildConfig name version libs flags buildType cfg diag) ast = do
     hsc  <- map (Source.transCode ShowHs.hsShow) <$> HSC.run hast
     Diagnostics.printHSC hsc diag
 
-    let allLibs = "flowboxM-core"
+    let allLibs = "base"
+                : "flowboxM-core"
                 : "template-haskell"
                 : libs
 
     Directory.withTmpDirectory tmpDirPrefix (\tmpDir -> do
         writeSources tmpDir hsc
         let cabal = case buildType of
-                BuildConfig.Library      -> CabalGen.genLibrary hsc name version allLibs
-                BuildConfig.Executable {}-> CabalGen.genExecutable  name version allLibs 
+                BuildConfig.Library      -> CabalGen.genLibrary    name version ghcOptions allLibs hsc
+                BuildConfig.Executable {}-> CabalGen.genExecutable name version ghcOptions allLibs 
         CabalStore.run cabal $ UniPath.append (name ++ cabalExt) tmpDir
-        CabalInstall.run cfg tmpDir flags
+        CabalInstall.run cfg tmpDir cabalFlags
         case buildType of
             BuildConfig.Executable outputPath -> copyExecutable tmpDir name outputPath
             BuildConfig.Library               -> return ()

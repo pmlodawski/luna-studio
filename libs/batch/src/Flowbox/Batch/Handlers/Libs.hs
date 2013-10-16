@@ -95,11 +95,12 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
         cfg        = Batch.config batch
         diag       = Diagnostics.all
         outputPath = UniPath.fromUnixString name
-        libs       = ["flowbox-stdlib"] -- TODO [PM] : hardoded libs and flags
-        flags      = []
+        libs       = ["flowbox-stdlib"] -- TODO [PM] : hardoded libs
+        ghcFlags   = ["-O2"]            -- TODO [PM] : hardoded ghc flags
+        cabalFlags = []                 -- TODO [PM] : hardoded cabal flags
         
         buildType  = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
-        bldCfg     = BuildConfig name version libs flags buildType cfg diag
+        bldCfg     = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag
 
     Luna.runIO $ do ast <- Build.parseGraph diag defManger (rootDefID, rootDef)
                     Build.run bldCfg ast

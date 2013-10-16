@@ -14,13 +14,14 @@ import           Flowbox.System.UniPath                  (UniPath)
 
 
 
-data BuildConfig = BuildConfig { name      :: String
-                               , version   :: String 
-                               , libs      :: [String]
-                               , flags     :: [String]
-                               , buildType :: BuildType
-                               , config    :: Config
-                               , diag      :: Diagnostics
+data BuildConfig = BuildConfig { name       :: String
+                               , version    :: String 
+                               , libs       :: [String]
+                               , ghcflags   :: [String]
+                               , cabalflags :: [String]
+                               , buildType  :: BuildType
+                               , config     :: Config
+                               , diag       :: Diagnostics
                                }
 
 data BuildType   = Executable  { outputPath :: UniPath }
