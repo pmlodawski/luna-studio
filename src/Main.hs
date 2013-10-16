@@ -35,7 +35,7 @@ parser =   Opt.flag' CmdArgs.Version    (long "version" <> short 'V' <> hidden)
            <$> many1     ( argument str ( metavar "INPUTS" ))
            <*> switch    ( long "version" <> short 'V'                                      <> help "Print version information" )
            <*> switch    ( long "numeric-version"                                           <> help "Print just the version number" )
-           <*> optIntFlag       "verbose" 'v' 2 3                                                   "Verbose level (level range is 0-5, default level is 3)"
+           <*> optIntFlag (Just "verbose") 'v' 2 3                                                  "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"                                                  <> help "Disable color output" )
 
            <*> strOption ( long "output"  <> short 'o' <> value "out"  <> metavar "OUTPUT"  <> help "Output folder" )
