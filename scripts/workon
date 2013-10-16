@@ -65,15 +65,15 @@ class AllProject(Project):
 deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'utils', 'core']
 
 pkgs = { '@all'        : AllProject (deps = deptree)
-       , 'core'        : HProject   ('flowboxM-core'       , os.path.join ('libs'  , 'core')        , 'libs'    , []                                                 )
-       , 'utils'       : HProject   ('flowbox-utils'       , os.path.join ('libs'  , 'utils')       , 'libs'    , []                                                 )
-       , 'config'      : HProject   ('flowbox-config'      , os.path.join ('libs'  , 'config')      , 'libs'    , ['utils']                                          )
-       , 'wrappers'    : HProject   ('flowbox-wrappers'    , os.path.join ('tools' , 'wrappers')    , 'wrappers', ['config']                                         )
-       , 'luna'        : HProject   ('flowbox-luna'        , os.path.join ('libs'  , 'luna')        , 'libs'    , ['utils', 'config']                                          )
-       , 'initializer' : HProject   ('flowbox-initializer' , os.path.join ('tools' , 'initializer') , 'tools'   , ['utils', 'config']                                )
-       , 'lunac'       : HProject   ('flowbox-lunac'       , os.path.join ('tools' , 'lunac')       , 'tools'   , ['utils', 'config', 'initializer', 'luna']         )
-       , 'batch'       : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')       , 'libs'    , ['utils', 'config', 'luna', 'lunac']                         )
-       , 'batch-srv'   : HProject   ('flowbox-batch-srv'   , os.path.join ('tools' , 'batch-srv')   , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'lunac', 'batch'] )
+       , 'core'        : HProject   ('flowboxM-core'       , os.path.join ('libs'  , 'core')        , 'libs'    , []                                                  )
+       , 'utils'       : HProject   ('flowbox-utils'       , os.path.join ('libs'  , 'utils')       , 'libs'    , []                                                  )
+       , 'config'      : HProject   ('flowbox-config'      , os.path.join ('libs'  , 'config')      , 'libs'    , ['utils']                                           )
+       , 'wrappers'    : HProject   ('flowbox-wrappers'    , os.path.join ('tools' , 'wrappers')    , 'wrappers', ['config']                                          )
+       , 'luna'        : HProject   ('flowbox-luna'        , os.path.join ('libs'  , 'luna')        , 'libs'    , ['utils', 'config']                                 )
+       , 'initializer' : HProject   ('flowbox-initializer' , os.path.join ('tools' , 'initializer') , 'tools'   , ['utils', 'config']                                 )
+       , 'lunac'       : HProject   ('flowbox-lunac'       , os.path.join ('tools' , 'lunac')       , 'tools'   , ['utils', 'config', 'initializer', 'luna']          )
+       , 'batch'       : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')       , 'libs'    , ['utils', 'config', 'luna']                         )
+       , 'batch-srv'   : HProject   ('flowbox-batch-srv'   , os.path.join ('tools' , 'batch-srv')   , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
        } 
 
 

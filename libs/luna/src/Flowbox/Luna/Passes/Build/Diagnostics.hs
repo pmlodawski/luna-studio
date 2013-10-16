@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds, FlexibleContexts, NoMonomorphismRestriction #-}
 
-module Flowbox.Lunac.Diagnostics where
+module Flowbox.Luna.Passes.Build.Diagnostics where
 
 import           Control.Monad                     (when)
 import           Data.String.Utils                 (join)
@@ -38,7 +38,7 @@ none = Diagnostics False False False False False False
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Lunac.Diagnostics"
+logger = getLogger "Flowbox.Luna.Passes.Build.Diagnostics"
 
 
 printAST :: (QShow.QShow a, LogWriter m) => a -> Diagnostics -> m ()

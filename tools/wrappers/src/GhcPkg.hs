@@ -9,8 +9,8 @@ import qualified System.Exit           as Exit
 
 import qualified Flowbox.Config.Config as Cfg
 import           Data.String.Utils       (replace)
-import System.IO
-import Control.Monad
+import           System.IO               
+import           Control.Monad           
 
 
 main :: IO ()
