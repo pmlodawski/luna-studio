@@ -91,13 +91,13 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
         rootDef    = Maybe.fromJust $ DefManager.lab defManger rootDefID
        
         name       = Library.name library
-        version    = "1.0" --TODO [PM] : hardcoded version
+        version    = "1.0"              -- TODO [PM] : hardcoded version
         cfg        = Batch.config batch
-        diag       = Diagnostics.all
+        diag       = Diagnostics.none   -- TODO [PM] : hardcoded diagnostics
         outputPath = UniPath.fromUnixString name
-        libs       = ["flowbox-stdlib"] -- TODO [PM] : hardoded libs
-        ghcFlags   = ["-O2"]            -- TODO [PM] : hardoded ghc flags
-        cabalFlags = []                 -- TODO [PM] : hardoded cabal flags
+        libs       = ["flowbox-stdlib"] -- TODO [PM] : hardcoded libs
+        ghcFlags   = ["-O2"]            -- TODO [PM] : hardcoded ghc flags
+        cabalFlags = []                 -- TODO [PM] : hardcoded cabal flags
         
         buildType  = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
         bldCfg     = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag

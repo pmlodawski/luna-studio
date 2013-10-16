@@ -43,7 +43,6 @@ import           Flowbox.System.UniPath                                      (Un
 import qualified Flowbox.Text.Show.Hs                                      as ShowHs
 import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
 import           Flowbox.Luna.Passes.Build.Diagnostics                       (Diagnostics)
-import qualified Flowbox.Text.Show.Pretty                                  as PP
 
 
 
@@ -69,6 +68,7 @@ tmpDirPrefix = "lunac"
 
 run :: PassMonadIO s m => BuildConfig -> ASTModule.Module -> Pass.Result m ()
 run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast = do
+    Diagnostics.printAST ast diag 
     va   <- VarAlias.run ast
     Diagnostics.printVA va diag 
     fp <- FuncPool.run ast
@@ -114,12 +114,11 @@ copyExecutable location name outputPath = liftIO $ do
     Directory.copyFile executable outputPath
 
 
-parseFile :: PassMonadIO s m => Diagnostics -> UniPath -> UniPath -> Pass.Result m ASTModule.Module
-parseFile diag rootPath filePath = do 
+parseFile :: PassMonadIO s m => UniPath -> UniPath -> Pass.Result m ASTModule.Module
+parseFile rootPath filePath = do 
     logger debug $ "Compiling file '" ++ UniPath.toUnixString filePath ++ "'"
     source <- FileReader.run rootPath filePath
     ast    <- TxtParser.run source
-    Diagnostics.printAST ast diag 
     return ast
 
 
@@ -127,7 +126,6 @@ parseGraph :: PassMonad s m => Diagnostics -> DefManager -> (Definition.ID, Defi
 parseGraph diag defManager def = do 
     logger debug "Compiling graph"
     let tmpFixed_defManager = DequalifyCalls.run defManager
-    logger info (PP.ppShow tmpFixed_defManager)
+    Diagnostics.printDM tmpFixed_defManager diag
     ast <- GraphParser.run tmpFixed_defManager def
-    Diagnostics.printAST ast diag 
     return ast
