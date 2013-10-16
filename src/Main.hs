@@ -5,22 +5,22 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import           Data.List                       as List
+import           Data.List                             as List
 
-import           Flowbox.Prelude                 hiding (error)
-import qualified Flowbox.Config.Config           as Config
-import           Flowbox.Config.Config             (Config)
-import           Flowbox.Control.Applicative       
-import qualified Flowbox.Data.Version            as Version
-import qualified Flowbox.Initializer.Initializer as Initializer
-import qualified Flowbox.Lunac.Builder.File      as FileBuilder
-import qualified Flowbox.Lunac.CmdArgs           as CmdArgs
-import           Flowbox.Lunac.CmdArgs             (CmdArgs)
-import           Flowbox.Lunac.Diagnostics         (Diagnostics(Diagnostics))
-import qualified Flowbox.Options.Applicative     as Opt
-import           Flowbox.Options.Applicative     hiding (info)
-import           Flowbox.System.Log.Logger         
-import qualified Flowbox.System.UniPath          as UniPath
+import           Flowbox.Prelude                       hiding (error)
+import qualified Flowbox.Config.Config                 as Config
+import           Flowbox.Config.Config                   (Config)
+import           Flowbox.Control.Applicative             
+import qualified Flowbox.Data.Version                  as Version
+import qualified Flowbox.Initializer.Initializer       as Initializer
+import qualified Flowbox.Lunac.Builder                 as Builder
+import qualified Flowbox.Lunac.CmdArgs                 as CmdArgs
+import           Flowbox.Lunac.CmdArgs                   (CmdArgs)
+import           Flowbox.Luna.Passes.Build.Diagnostics   (Diagnostics(Diagnostics))
+import qualified Flowbox.Options.Applicative           as Opt
+import           Flowbox.Options.Applicative           hiding (info)
+import           Flowbox.System.Log.Logger               
+import qualified Flowbox.System.UniPath                as UniPath
 
 
 rootLogger :: Logger
@@ -98,6 +98,6 @@ run cfg cmd = do
 
             Initializer.initializeIfNeeded cfg
 
-            mapM_ (FileBuilder.build cfg cmd diag) inputs
+            mapM_ (Builder.build cfg cmd diag) inputs
       
 
