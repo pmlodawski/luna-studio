@@ -15,14 +15,17 @@ import           Flowbox.Prelude
 
 
 
-optIntFlag :: String -> Char -> Int -> Int -> String -> Parser Int
-optIntFlag longName shortName baseval defval helpmsg = 
+optIntFlag :: Maybe String -> Char -> Int -> Int -> String -> Parser Int
+optIntFlag mlongName shortName baseval defval helpmsg = 
     (\sflag f -> let baselvl = if sflag then defval else baseval
                      explvl  = read f :: Int
                      lvl     = if explvl < 0 then baselvl else explvl
                  in lvl
     )
-    <$> switch    ( long longName <> short shortName <> help helpmsg         )
-    <*> strOption (                  short shortName <> value "-1" <> hidden )
+    <$> switch    ( longName <> short shortName <> help helpmsg )
+    <*> strOption ( short shortName <> value "-1" <> hidden     ) where
+    longName = case mlongName of
+        Just n  -> long n
+        Nothing -> idm
 
 

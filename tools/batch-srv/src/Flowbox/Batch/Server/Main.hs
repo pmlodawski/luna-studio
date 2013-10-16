@@ -60,7 +60,7 @@ parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
        <|> CmdArgs.Serve
            <$> strOption ( long "addres"  <> short 'a' <> value defaultAddress       <> metavar "address" <> help "Server address"       )
            <*> strOption ( long "port"    <> short 'p' <> (value $ show defaultPort) <> metavar "port"    <> help "Server port"          )
-           <*> optIntFlag       "verbose" 'v' 2 3                                 "Verbose level (level range is 0-5, default level is 3)"
+           <*> optIntFlag (Just "verbose") 'v' 2 3                                 "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"                                                                <> help "Disable color output" )
            <*> switch    ( long "shutdown-with-client" <> hidden                                                                         )
 
