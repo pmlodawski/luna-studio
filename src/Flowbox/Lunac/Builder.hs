@@ -8,6 +8,8 @@
 
 module Flowbox.Lunac.Builder where
 
+import           Control.Applicative                     
+
 import           Flowbox.Prelude                         
 import           Flowbox.Config.Config                   (Config)
 import qualified Flowbox.Luna.Passes.General.Luna.Luna as Luna
@@ -36,14 +38,19 @@ build cfg cmd diag filePath = Luna.runIO $ do
                         "" -> UniPath.basePath filePath
                         rp -> UniPath.fromUnixString rp
         libs       = CmdArgs.link cmd
-        flags      = case CmdArgs.global cmd of 
+    ghcFlags <- case CmdArgs.optimisation cmd of
+                    0 -> pure ["-O0"]
+                    1 -> pure ["-O1"]
+                    2 -> pure ["-O2"]
+                    _ -> fail "Unsupported optimisation level"
+    let cabalFlags = case CmdArgs.global cmd of 
                         True  -> ["--global"]
                         False -> []
         outputPath = UniPath.fromUnixString $ CmdArgs.output cmd
         buildType  = if CmdArgs.library cmd 
                         then BuildConfig.Library 
                         else BuildConfig.Executable outputPath 
-        bldCfg = BuildConfig name version libs flags buildType cfg diag
+        bldCfg = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag
     ast  <- Build.parseFile diag rootPath filePath
     Build.run bldCfg ast 
 
