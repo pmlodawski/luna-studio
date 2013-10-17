@@ -8,7 +8,9 @@ def main self:
     x = 1
     #x = x + 1
     Console.print x
-    Console.print ("bla".at 2)
+    Console.print "Ala haz a cat"
+    Console.print [1..15]
+    #Console.print ("bla".at 2)
     Console.print (2.add 7)
     #f = File.open("test.txt", ).read
 

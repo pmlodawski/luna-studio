@@ -31,6 +31,9 @@ def List.at self index:
 def List.contains self el:
     ```getIO $ liftFPure2 (elem) #{self} #{el}```
 
+def List.toString self:
+    ```getIO $ liftFPure1 show #{self}```
+
 ###### Int ####################################
 
 def Int.add a b:
@@ -64,7 +67,7 @@ def Float.toString a:
 
 ###### String #################################
 
-def String.toString a:
-    ```getIO $ liftFPure1 id #{a}```
+#def String.toString a:
+#    ```getIO $ liftFPure1 id #{a}```
 
 ###############################################

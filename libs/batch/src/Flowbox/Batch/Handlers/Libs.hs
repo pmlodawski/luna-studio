@@ -95,7 +95,7 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
         cfg        = Batch.config batch
         diag       = Diagnostics.none   -- TODO [PM] : hardcoded diagnostics
         outputPath = UniPath.fromUnixString name
-        libs       = ["flowboxM-stdlib"] -- TODO [PM] : hardcoded libs
+        libs       = []                 -- TODO [PM] : hardcoded libs
         ghcFlags   = ["-O2"]            -- TODO [PM] : hardcoded ghc flags
         cabalFlags = []                 -- TODO [PM] : hardcoded cabal flags
         

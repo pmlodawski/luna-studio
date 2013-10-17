@@ -84,6 +84,9 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
                 : "flowboxM-core"
                 : "template-haskell"
                 : libs
+                ++ if name /= "flowboxM-stdlib"
+                      then ["flowboxM-stdlib"]
+                      else []
 
     Directory.withTmpDirectory tmpDirPrefix (\tmpDir -> do
         writeSources tmpDir hsc
