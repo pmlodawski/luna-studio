@@ -15,12 +15,12 @@
 {-# LANGUAGE DeriveGeneric #-}
 #endif
 
-module FlowboxM.Utils.Generics.Show (
+module FlowboxM.Utils.Generics.Repr (
   -- * Generic show class
-    LShow(..)
+    LRepr(..)
 
   -- * Default definition
-  , lshowsPrecdefault
+  , lreprsPrecdefault
 
   ) where
 
@@ -33,7 +33,7 @@ import Debug.Trace
 --import           Flowbox.Prelude          
 
 --------------------------------------------------------------------------------
--- Generic show
+-- Generic value representation
 --------------------------------------------------------------------------------
 
 appPrec :: Int
@@ -45,29 +45,29 @@ isTup t = case t of
     Tup -> True
     _   -> False
 
-class LShow' f where
-  lshowsPrec' :: Type -> Int -> f a -> ShowS
+class LRepr' f where
+  lreprsPrec' :: Type -> Int -> f a -> ShowS
   isNullary   :: f a -> Bool
   isNullary = error "generic show (isNullary): unnecessary case"
 
-instance LShow' U1 where
-  lshowsPrec' _ _ U1 = id
+instance LRepr' U1 where
+  lreprsPrec' _ _ U1 = id
   isNullary _ = True
 
-instance (LShow c) => LShow' (K1 i c) where
-  lshowsPrec' _ n (K1 a) = lshowsPrec n a
+instance (LRepr c) => LRepr' (K1 i c) where
+  lreprsPrec' _ n (K1 a) = lreprsPrec n a
   isNullary _ = False
 
--- No instances for P or Rec because lshow is only applicable to types of kind *
+-- No instances for P or Rec because lrepr is only applicable to types of kind *
 
-instance (LShow' a, Constructor c) => LShow' (M1 C c a) where
-  lshowsPrec' _ n c@(M1 x) = 
+instance (LRepr' a, Constructor c) => LRepr' (M1 C c a) where
+  lreprsPrec' _ n c@(M1 x) = 
     case fixity of
       Prefix    -> showParen (n > appPrec && not (isNullary x)) 
                     ( showCon c
                     . (if (isNullary x || isTup t) then id else showChar ' ')
-                    . showBraces t (lshowsPrec' t appPrec x))
-      Infix _ m -> showParen (n > m) (showBraces t (lshowsPrec' t m x))
+                    . showBraces t (lreprsPrec' t appPrec x))
+      Infix _ m -> showParen (n > m) (showBraces t (lreprsPrec' t m x))
       where fixity = conFixity c
             t = if (conIsRecord c) then Rec else
                   case (conIsTuple c) of
@@ -90,75 +90,75 @@ instance (LShow' a, Constructor c) => LShow' (M1 C c a) where
               tupleName ('(':',':_) = True
               tupleName _           = False
 
-instance (Selector s, LShow' a) => LShow' (M1 S s a) where
-  lshowsPrec' t n s@(M1 x) | selName s == "" = --showParen (n > appPrec)
-                                                 (lshowsPrec' t n x)
+instance (Selector s, LRepr' a) => LRepr' (M1 S s a) where
+  lreprsPrec' t n s@(M1 x) | selName s == "" = --showParen (n > appPrec)
+                                                 (lreprsPrec' t n x)
                            | otherwise       =   showString (selName s)
                                                . showString " = "
-                                               . lshowsPrec' t 0 x
+                                               . lreprsPrec' t 0 x
   isNullary (M1 x) = isNullary x
 
-instance (LShow' a, Datatype d) => LShow' (M1 D d a) where
-  lshowsPrec' t n d@(M1 x) = lshowsPrec' t n x
+instance (LRepr' a, Datatype d) => LRepr' (M1 D d a) where
+  lreprsPrec' t n d@(M1 x) = lreprsPrec' t n x
 
-instance (LShow' a, LShow' b) => LShow' (a :+: b) where
-  lshowsPrec' t n (L1 x) = lshowsPrec' t n x
-  lshowsPrec' t n (R1 x) = lshowsPrec' t n x
+instance (LRepr' a, LRepr' b) => LRepr' (a :+: b) where
+  lreprsPrec' t n (L1 x) = lreprsPrec' t n x
+  lreprsPrec' t n (R1 x) = lreprsPrec' t n x
 
-instance (LShow' a, LShow' b) => LShow' (a :*: b) where
-  lshowsPrec' t@Rec     n (a :*: b) =
-    lshowsPrec' t n     a . showString ", " . lshowsPrec' t n     b
-  lshowsPrec' t@(Inf s) n (a :*: b) =
-    lshowsPrec' t n     a . showString s    . lshowsPrec' t n     b
-  lshowsPrec' t@Tup     n (a :*: b) =
-    lshowsPrec' t n     a . showChar ','    . lshowsPrec' t n     b
-  lshowsPrec' t@Pref    n (a :*: b) =
-    lshowsPrec' t (n+1) a . showChar ' '    . lshowsPrec' t (n+1) b
+instance (LRepr' a, LRepr' b) => LRepr' (a :*: b) where
+  lreprsPrec' t@Rec     n (a :*: b) =
+    lreprsPrec' t n     a . showString ", " . lreprsPrec' t n     b
+  lreprsPrec' t@(Inf s) n (a :*: b) =
+    lreprsPrec' t n     a . showString s    . lreprsPrec' t n     b
+  lreprsPrec' t@Tup     n (a :*: b) =
+    lreprsPrec' t n     a . showChar ','    . lreprsPrec' t n     b
+  lreprsPrec' t@Pref    n (a :*: b) =
+    lreprsPrec' t (n+1) a . showChar ' '    . lreprsPrec' t (n+1) b
   
   -- If we have a product then it is not a nullary constructor
   isNullary _ = False
 
 
-class LShow a where 
-  lshowsPrec :: Int -> a -> ShowS
-  lshows :: a -> ShowS
-  lshows = lshowsPrec 0
-  lshow :: a -> String
-  lshow x = lshows x ""
+class LRepr a where 
+  lreprsPrec :: Int -> a -> ShowS
+  lreprs :: a -> ShowS
+  lreprs = lreprsPrec 0
+  lrepr :: a -> String
+  lrepr x = lreprs x ""
 #if __GLASGOW_HASKELL__ >= 701
-  default lshowsPrec :: (Generic a, LShow' (Rep a))
+  default lreprsPrec :: (Generic a, LRepr' (Rep a))
                      => Int -> a -> ShowS
-  lshowsPrec = lshowsPrecdefault
+  lreprsPrec = lreprsPrecdefault
 
-instance (LShow a) => LShow (Maybe a)
+instance (LRepr a) => LRepr (Maybe a)
 
 #else
 
-instance (LShow a) => LShow (Maybe a) where
-  lshowsPrec = lshowsPrecdefault
+instance (LRepr a) => LRepr (Maybe a) where
+  lreprsPrec = lreprsPrecdefault
 
 #endif
 
-lshowsPrecdefault :: (Generic a, LShow' (Rep a))
+lreprsPrecdefault :: (Generic a, LRepr' (Rep a))
                   => Int -> a -> ShowS
-lshowsPrecdefault n = lshowsPrec' Pref n . from
+lreprsPrecdefault n = lreprsPrec' Pref n . from
 
 
 -- Base types instances
-instance LShow Char   where lshowsPrec = showsPrec
-instance LShow Int    where lshowsPrec = showsPrec
-instance LShow Float  where lshowsPrec = showsPrec
-instance LShow String where lshowsPrec = showsPrec
-instance LShow Bool   where lshowsPrec = showsPrec
+instance LRepr Char   where lreprsPrec = showsPrec
+instance LRepr Int    where lreprsPrec = showsPrec
+instance LRepr Float  where lreprsPrec = showsPrec
+instance LRepr Bool   where lreprsPrec = showsPrec
+instance LRepr String where lrepr      = id
 
 intersperse :: a -> [a] -> [a]
 intersperse _ []    = []
 intersperse _ [h]   = [h]
 intersperse x (h:t) = h : x : (intersperse x t)
 
-instance (LShow a) => LShow [a] where
-  lshowsPrec _ l =   showChar '['
+instance (LRepr a) => LRepr [a] where
+  lreprsPrec _ l =   showChar '['
                    . foldr (.) id
-                      (intersperse (showChar ',') (map (lshowsPrec 0) l))
+                      (intersperse (showChar ',') (map (lreprsPrec 0) l))
                    . showChar ']'
 

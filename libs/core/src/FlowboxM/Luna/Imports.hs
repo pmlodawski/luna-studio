@@ -1,4 +1,4 @@
-module FlowboxM.Luna.Helpers.Imports where
+module FlowboxM.Luna.Imports where
 
 import qualified Data.List as List
 import qualified System.IO as IO

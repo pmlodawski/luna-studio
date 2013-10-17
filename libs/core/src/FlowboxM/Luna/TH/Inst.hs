@@ -2,7 +2,7 @@
              FlexibleInstances,
              TemplateHaskell #-}
 
-module FlowboxM.Luna.Helpers.TH.Inst where
+module FlowboxM.Luna.TH.Inst where
 
 import           Control.Monad         
 import           Language.Haskell.TH   

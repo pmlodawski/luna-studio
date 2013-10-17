@@ -53,7 +53,7 @@ genModule :: GenMonad m => LModule -> Pool -> Pass.Result m HExpr
 genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do 
     let (LType.Module _ path) = cls
         fnames  = Set.toList $ Pool.names fpool
-        mod     = HModule.addImport ["FlowboxM", "Luna", "Helpers", "Core"]
+        mod     = HModule.addImport ["FlowboxM", "Luna", "Core"]
                 $ HModule.addExt HExtension.TemplateHaskell
                 $ HModule.addExt HExtension.NoMonomorphismRestriction
                 $ HModule.addExt HExtension.FunctionalDependencies
@@ -62,6 +62,7 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
                 $ HModule.addExt HExtension.ScopedTypeVariables
                 $ HModule.addExt HExtension.DataKinds
                 $ HModule.addExt HExtension.RebindableSyntax 
+                $ HModule.addExt HExtension.DeriveGeneric 
                 $ HModule.mk path
         name    = last path
         modcls  = LModule.mkClass lmod
@@ -219,7 +220,7 @@ genExpr ast = case ast of
                                             
                                             -- DataType
                                             cons   <- HExpr.Con name <$> mapM genExpr fields
-                                            let dt = HExpr.DataD name params [cons] ["Show"]
+                                            let dt = HExpr.DataD name params [cons] ["Show", "Generic"]
                                             GenState.addDataType dt
 
 

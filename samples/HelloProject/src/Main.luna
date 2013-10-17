@@ -17,5 +17,3 @@ def Vector.vtest self a b:
 def main self:
     v = Vector 1 2 3
     Console.print ([1,2, 30..])
-
-    # temporal.pl@gmail.com
