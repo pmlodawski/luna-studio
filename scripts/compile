@@ -34,7 +34,8 @@ def main():
     for (name, path) in zip(names, binpaths):
         inst_path = os.path.join(bin_dir, path)
         print_info("Compiling %s [-> %s]" % (name, path))
-        ret = call(['cabal', 'install', '--reinstall', '--bindir=%s'%inst_path, name] + sys.argv[1:])
+        #ret = call(['cabal', 'install', '--reinstall', '--bindir=%s'%inst_path, name] + sys.argv[1:])
+        ret = call('cabal install --reinstall --bindir=%s %s %s' % (inst_path, name, ' '.join(sys.argv[1:])), shell=True)
         handle_ret(ret)
 
     sys.exit(0)

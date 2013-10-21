@@ -10,7 +10,7 @@ module Flowbox.System.UniPath where
 import           Control.Applicative    hiding (empty)
 import qualified Data.List.Split        as Split
 import qualified Data.List              as List
-import           Data.String.Utils        (join)
+import qualified Data.String.Utils      as StringUtils
 import qualified System.Directory       as Directory
 import qualified System.FilePath        as FilePath
 import           Control.Monad.IO.Class   (MonadIO, liftIO)
@@ -50,7 +50,7 @@ fromUnixString spath@(x:xs) = let
 
 
 toUnixString :: UniPath -> String
-toUnixString path = join "/" $ toList path
+toUnixString path = StringUtils.join "/" $ toList path
 
 
 expand :: MonadIO m => UniPath -> m UniPath

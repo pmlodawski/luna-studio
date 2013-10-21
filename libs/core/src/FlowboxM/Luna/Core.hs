@@ -10,12 +10,12 @@ module FlowboxM.Luna.Core (
     module FlowboxM.Luna.Imports
 ) where
 
-import Prelude            hiding((>>), (>>=), fail, return)
-import FlowboxM.Luna.Bind
-import FlowboxM.Luna.Data
-import FlowboxM.Luna.Std
-import FlowboxM.Luna.Show
-import FlowboxM.Luna.Utils
-import FlowboxM.Luna.TH.Inst
+import           Prelude               hiding ((>>), (>>=), fail, return)
+import           FlowboxM.Luna.Bind      
+import           FlowboxM.Luna.Data      
+import           FlowboxM.Luna.Std       
+import           FlowboxM.Luna.Show      
+import           FlowboxM.Luna.Utils     
+import           FlowboxM.Luna.TH.Inst   
 
-import FlowboxM.Luna.Imports
+import           FlowboxM.Luna.Imports   

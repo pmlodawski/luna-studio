@@ -17,7 +17,8 @@ module Flowbox.Batch.Server.Handlers.Projects (
 
 
 import           Data.Int                                                   (Int32)
-import           Data.IORef                                                 
+import qualified Data.IORef                                               as IORef
+import           Data.IORef                                                 (IORef)
 import qualified Data.Vector                                              as Vector
 import           Data.Vector                                                (Vector)
 import           Data.Text.Lazy                                             (Text)
@@ -45,7 +46,7 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Projects"
 projects :: IORef Batch -> IO (Vector TProjects.Project)
 projects batchHandler = do
     loggerIO info "called projects"
-    batch <- readIORef batchHandler
+    batch <- IORef.readIORef batchHandler
     let aprojects       = BatchP.projects batch
         tprojects       = map (fst . encode) aprojects
         tprojectsVector = Vector.fromList tprojects

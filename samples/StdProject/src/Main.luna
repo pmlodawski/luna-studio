@@ -12,8 +12,10 @@ class File:
 ###### Console ################################
 
 class Console:
-    def print self msg:
-        ```print #{msg}```
+    def print self obj:
+        s = obj.toString
+        ```liftFIO1 putStrLn #{s}```
+        ```return #{self}```
 
 ###### List ###################################
 
@@ -40,6 +42,31 @@ def Int.sub a b:
 def Int.mul a b:
     ```getIO $ liftFPure2 (*) #{a} #{b}```
 
+def Int.toString a:
+    ```getIO $ liftFPure1 show #{a}```
+
+###### Float ##################################
+
+def Float.add a b:
+    ```getIO $ liftFPure2 (+) #{a} #{b}```
+
+def Float.sub a b:
+    ```getIO $ liftFPure2 (-) #{a} #{b}```
+
+def Float.mul a b:
+    ```getIO $ liftFPure2 (*) #{a} #{b}```
+
+def Float.div a b:
+    ```getIO $ liftFPure2 (/) #{a} #{b}```
+
+def Float.toString a:
+    ```getIO $ liftFPure1 show #{a}```
+
+###### String #################################
+
+def String.toString a:
+    ```getIO $ liftFPure1 id #{a}```
+
 ###############################################
 
 class Vector a:
@@ -48,11 +75,14 @@ class Vector a:
 def main self:
     v = Vector 1 2 3
     x = 1
-    #x = x + 1
+    # x = x + 1
+    c = Console
+    d = c.print x
+    d.print x
     Console.print x
-    Console.print ("bla".at 2)
+    # Console.print ("bla".at 2)
     Console.print (2.add 7)
-    #f = File.open("test.txt", ).read
+    # #f = File.open("test.txt", ).read
 
     f = File.readFile "test.txt"
     f = f.add "bbbb"

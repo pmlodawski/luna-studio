@@ -7,23 +7,27 @@
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
-
-
-import           Debug.Trace                                             
+import           Control.Applicative                                     
+import           Control.Monad.RWS                                     hiding (join)
+import           Control.Monad.State                                   hiding (join)
+import           Control.Monad.Trans.Either                              
+import           Control.Monad.Trans.Maybe                               
+import           Control.Monad.Writer                                  hiding (join)
 import           Data.Either.Utils                                       (forceEither)
 import qualified Data.DList                                            as DList
-import           Control.Applicative                                     
-import           Control.Monad.State                                   hiding (join)
-import           Control.Monad.Writer                                  hiding (join)
-import           Control.Monad.RWS                                     hiding (join)
-import           Control.Monad.Trans.Maybe                               
-import           Control.Monad.Trans.Either                              
+import           Data.String.Utils                                       (join)
+import           Debug.Trace                                             
 import           System.TimeIt                                           
 
 import           Flowbox.Prelude                                         
 import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
+import           Flowbox.Luna.Data.Cabal.Version                         (Version(Version))
+import qualified Flowbox.Luna.Data.Cabal.Config                        as Config
+import qualified Flowbox.Luna.Data.Cabal.Section                       as Section
 import qualified Flowbox.Luna.Data.HAST.Expr                           as Expr
 import qualified Flowbox.Luna.Data.HAST.Module                         as Module
+import qualified Flowbox.Luna.Data.Source                              as Source
+import           Flowbox.Luna.Data.Source                                (Source)
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
@@ -31,26 +35,20 @@ import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPool
-import qualified Flowbox.Luna.Data.Source                              as Source
-import           Flowbox.Luna.Data.Source                                (Source)
 import           Flowbox.System.Log.Logger                               
 import qualified Flowbox.System.Log.Logger                             as Logger
 import qualified Flowbox.System.Log.LogEntry                           as LogEntry
 import qualified Flowbox.System.UniPath                                as UniPath
-import qualified Flowbox.Text.Show.Pretty                              as PP
-import           Data.String.Utils                                       (join)
 import           Flowbox.Text.Show.Hs                                    (hsShow)
+import qualified Flowbox.Text.Show.Pretty                              as PP
 
-
-import qualified Flowbox.Luna.Data.Cabal.Config                        as Config
-import qualified Flowbox.Luna.Data.Cabal.Section                       as Section
 
 
 genProject :: String -> Config.Config
 genProject name = let
     exec = Section.mkExecutable name
     conf = Config.addSection exec
-         $ Config.make name "1.0"
+         $ Config.make name (Version 1 0 0)
 
     in conf
 

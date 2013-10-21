@@ -46,6 +46,7 @@ import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser    as Parser
 import qualified Flowbox.Luna.XOLD.Type.Type                           as Type
 import           Flowbox.Luna.XOLD.Type.Type                             (Type)
 
+-- TODO [PM] : refactor needed
 
 
 type ASTExpr    = ASTExpr.Expr
@@ -87,7 +88,7 @@ module2AST defManager (defID, Definition cls _ imports _ _) = case cls of
 
 def2AST :: Graph2ASTMonad m => DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTExpr
 def2AST defManager (defID, def) = case def of 
-    Definition _   _     _ (Flags _ True ) _ -> return $ ASTExpr.NOP defID -- Comment
+    Definition _   _     _ (Flags _ True ) _ -> pure $ ASTExpr.NOP defID -- Comment
     Definition cls graph _ (Flags _ False) _ -> case cls of
         Type.Class _ _ params             -> ASTExpr.Class defID 
                                                  <$> (liftM snd $ type2ASTType cls)
@@ -99,7 +100,7 @@ def2AST defManager (defID, def) = case def of
                                                 signature   <- function2signature cls
                                                 outputsType <- (liftM snd $ type2ASTType outputs)
                                                 outputsTypeMock <- tok ASTType.Unknown
-                                                return $ ASTExpr.Function defID _NOT_IMPLEMENTED name 
+                                                pure $ ASTExpr.Function defID _NOT_IMPLEMENTED name 
                                                                           signature
                                                                           outputsTypeMock
                                                                           graphAst
@@ -145,11 +146,11 @@ getInputsNames _                  = fail "Inputs is not a tuple"
 --        module2ASTPath' :: Graph2ASTMonad m => Definition.ID -> Pass.Result m [String]
 --        module2ASTPath' dID = case DefManager.prel defManager dID of
 --            [(preID, Definition cls _ _ _ _)] -> do prev <- (module2ASTPath' preID)
---                                                    return $ prev ++ [Type.name cls]
---            []                                -> return []
+--                                                    pure $ prev ++ [Type.name cls]
+--            []                                -> pure []
 --            _                                 -> fail "Definition has multiple parents"
 --    prev <- module2ASTPath' defID
---    return $ ASTExpr.Path $ prev ++ [name]
+--    pure $ ASTExpr.Path $ prev ++ [name]
 
 
 function2signature :: Graph2ASTMonad m => Type -> Pass.Result m [ASTExpr]
@@ -168,14 +169,14 @@ type2ASTType :: Graph2ASTMonad m => Type -> Pass.Result m (String, ASTType)
 type2ASTType t = do 
     id <- newID
     case t of 
-        Type.Undefined                  -> return (""  , ASTType.Unknown id)
-        Type.Module       name _        -> return (""  , ASTType.Module id (Split.splitOn "." name))
-        Type.TypeName     name          -> return (""  , ASTType.Var    id name)
-        Type.Class        name params _ -> return (""  , ASTType.Class  id name params)
+        Type.Undefined                  -> pure (""  , ASTType.Unknown id)
+        Type.Module       name _        -> pure (""  , ASTType.Module id (Split.splitOn "." name))
+        Type.TypeName     name          -> pure (""  , ASTType.Var    id name)
+        Type.Class        name params _ -> pure (""  , ASTType.Class  id name params)
         Type.Tuple        items         -> do astitems <- mapM (liftM snd .type2ASTType) items
-                                              return (""  , ASTType.Tuple  id astitems)
+                                              pure (""  , ASTType.Tuple  id astitems)
         Type.Named        name cls      -> do type_ <- liftM snd $ type2ASTType cls
-                                              return (name, type_)
+                                              pure (name, type_)
 
 
 
@@ -189,7 +190,7 @@ type2Field :: Graph2ASTMonad m => Type -> Pass.Result m ASTExpr
 type2Field t = do
     id <- newID
     (name, cls) <- type2ASTType t
-    return $ ASTExpr.Field id name cls Nothing
+    pure $ ASTExpr.Field id name cls Nothing
 
 
 import2ASTimport :: Graph2ASTMonad m => Import -> Pass.Result m ASTExpr
@@ -203,16 +204,15 @@ graph2AST :: Graph2ASTMonad m => Graph -> [String] -> Pass.Result m [ASTExpr]
 graph2AST graph inputsNames = foldlM (node2AST graph inputsNames) [] $ Graph.topsortl graph
 
 
+-- TODO [PM] : refactor needed
 node2AST :: Graph2ASTMonad m => Graph -> [String] -> [ASTExpr] -> (Node.ID, Node.Node) -> Pass.Result m [ASTExpr] 
 node2AST graph inputsNames list (nodeID, node) = do
-
     astNodeID <- newID
-
     (++) list <$> case node of 
-        Node.Expr    _ (Flags _ True) _ -> return [ASTExpr.NOP astNodeID] -- Comment
-        Node.Inputs    _              _ -> return []
-        Node.Outputs   (Flags _ True) _ -> return [ASTExpr.NOP astNodeID] -- Comment
-        Node.Tuple     (Flags _ True) _ -> return [ASTExpr.NOP astNodeID] -- Comment
+        Node.Expr    _ (Flags _ True) _ -> pure [ASTExpr.NOP astNodeID] -- Comment
+        Node.Inputs    _              _ -> pure []
+        Node.Outputs   (Flags _ True) _ -> pure [ASTExpr.NOP astNodeID] -- Comment
+        Node.Tuple     (Flags _ True) _ -> pure [ASTExpr.NOP astNodeID] -- Comment
         _                               -> do
             let 
                 biggestPort :: ((a, b, Edge) -> Port) -> (a, b, Edge) -> Port -> Port
@@ -228,7 +228,7 @@ node2AST graph inputsNames list (nodeID, node) = do
 
                 resultName :: Node.ID -> Port -> String
                 resultName nID port = case Graph.lab graph nID of 
-                    Just (Node.Outputs {}) -> "return"
+                    Just (Node.Outputs {}) -> "pure"
                     Just (Node.Inputs {} ) -> case port of 
                                                 Port.All      -> "arguments"
                                                 Port.Number p -> inputsNames !! p
@@ -236,44 +236,47 @@ node2AST graph inputsNames list (nodeID, node) = do
                                                 Port.All      -> "result_" ++ show nID
                                                 Port.Number p -> "result_" ++ show nID ++ "_" ++ show p
 
-
                 inEdges = Graph.lprel graph nodeID
-
-                maxArg = foldr (biggestPort argID) Port.All inEdges 
+                maxArg  = foldr (biggestPort argID) Port.All inEdges 
 
             args <- case length inEdges of 
-                0 -> return []
+                0 -> pure []
                 _ -> case maxArg of 
                     Port.All      -> (:[]) <$> arg inEdges maxArg 
                     Port.Number p -> mapM (\i -> arg inEdges $ Port.Number i) [0..p]
             
             call <- case node of 
-                Node.Expr expression _ _ ->  ASTExpr.App astNodeID <$> parseExpr expression <*> pure args
+                Node.Expr expression _ _ -> case length args of
+                                            0 -> tok ASTExpr.App <*> parseExpr expression <*> pure args
+                                            _ -> do let callOn   = head args 
+                                                        callArgs = tail args
+                                                    accesor <- tok ASTExpr.Accessor <*> pure expression <*> pure callOn
+                                                    tok ASTExpr.App <*> pure accesor <*> pure callArgs
                 Node.Default value _ -> defaultVal2ASTExpr value
                 Node.Inputs  _     _ -> fail "Graph2AST Implementation error: Node.Inputs should be already handled"
-                Node.Outputs _     _ -> return $ ASTExpr.Tuple astNodeID args
-                Node.Tuple   _     _ -> return $ ASTExpr.Tuple astNodeID args
+                Node.Outputs _     _ -> if length args == 1
+                                            then pure $ head args
+                                            else tok ASTExpr.Tuple <*> pure args
+                Node.Tuple   _     _ -> tok ASTExpr.Tuple <*> pure args
 
-
-            let outEdges          = Graph.out graph nodeID 
-                numConnected     = length outEdges
-                numGetters = FList.count isGetter outEdges
+            let outEdges     = Graph.out graph nodeID 
+                numConnected = length outEdges
+                numGetters   = FList.count isGetter outEdges
 
                 isGetter :: (Node.ID, Node.ID, Edge) -> Bool
                 isGetter (_, _, Edge (Port.Number _) _) = True
                 isGetter _                              = False
                 
-                allResultName  = resultName nodeID Port.All
+                allResultName = resultName nodeID Port.All
 
-            allResult  <- ASTExpr.Var <$> newID <*> pure allResultName
-            allPattern <- ASTPat.Var  <$> newID <*> pure allResultName
-
+            allResult  <- tok ASTExpr.Var <*> pure allResultName
+            allPattern <- tok ASTPat.Var  <*> pure allResultName
 
             if numGetters == 0 
                 then if numConnected == 0
-                    then return [call]
+                    then pure [call]
                     else do id <- newID 
-                            return [ASTExpr.Assignment id allPattern call]
+                            pure [ASTExpr.Assignment id allPattern call]
                 else do let (Port.Number maxGetter) = foldr (biggestPort resultID) Port.All outEdges 
 
                             resultID ::(a, b, Edge) -> Port
@@ -281,23 +284,24 @@ node2AST graph inputsNames list (nodeID, node) = do
 
                             res :: Graph2ASTMonad m => [(Node.ID, b, Edge)] -> Port -> Pass.Result m ASTPat
                             res iedges port = case List.find (\a -> (resultID a) == port) iedges of
-                                Nothing                  -> ASTPat.Wildcard <$> newID 
-                                Just (nID, _, Edge p _)  -> ASTPat.Var <$> newID 
-                                                                       <*> (pure $ resultName nID p)
+                                Nothing                  -> tok ASTPat.Wildcard
+                                Just (nID, _, Edge p _)  -> tok ASTPat.Var <*> (pure $ resultName nID p)
 
-                        gettersPattern <- ASTPat.Tuple <$> newID 
-                                                       <*> mapM (\i -> res outEdges $ Port.Number i) [0..maxGetter]
+                        results <- mapM (\i -> res outEdges $ Port.Number i) [0..maxGetter]
+                        gettersPattern <- if length results == 1
+                                                then pure $ head results
+                                                else tok ASTPat.Tuple <*> pure results
                         if numGetters == numConnected
-                            then do id <- newID 
-                                    return [ASTExpr.Assignment id gettersPattern call]
+                            then do id  <- newID 
+                                    pure [ASTExpr.Assignment id gettersPattern call]
                             else do id1 <- newID 
                                     id2 <- newID 
-                                    return [ASTExpr.Assignment id1 allPattern call
-                                           ,ASTExpr.Assignment id2 gettersPattern allResult]
+                                    pure [ASTExpr.Assignment id1 allPattern call
+                                         ,ASTExpr.Assignment id2 gettersPattern allResult]
 
 parseExpr :: Graph2ASTMonad m => String -> Pass.Result m ASTExpr
 parseExpr expression = do 
     parseID <- newID
     case Parser.parseExpr expression (parseID*100000) of -- TODO [PM] : fixme when COMPILER-4 is done
         Left  e             -> fail $ show e
-        Right (expr, outID) -> return expr
+        Right (expr, outID) -> pure expr

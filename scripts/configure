@@ -33,26 +33,27 @@ def check_cabal_version():
         print_error ("Please update your cabal to version '%s' or greater." % minv)
         fatal()
 
-def try_call(cmds):
-    if call(cmds): fatal()
+def try_call(cmd):
+    if call(cmd, shell=True): fatal()
 
 check_install("cabal", "-V")
 check_cabal_version()
 
 print_info ("Generating cabal configs using gencabal")
-try_call (['scripts/gencabal'])
+path = os.path.join('scripts', 'gencabal')
+try_call ('python %s' % path)
 
 print_info ("Initializing cabal sandbox")
-try_call (['cabal', 'sandbox', 'init', '--sandbox=dist'])
+try_call('cabal sandbox init --sandbox=dist')
 
 print_info ("Updating cabal package cache")
-try_call(['cabal', 'update'])
+try_call('cabal update')
 
 print_info ("Registering thrift library")
-try_call(['cabal', 'install', p_thrift])
+try_call('cabal install %s' % p_thrift)
     
 print_info ("Registering MissingH library (windows patch)")
-try_call(['cabal', 'install', p_missingh])
+try_call('cabal install %s' % p_missingh)
 
 
 print_info ("Success")

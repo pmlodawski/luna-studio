@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds, FlexibleContexts, NoMonomorphismRestriction #-}
 
-module Flowbox.Lunac.Diagnostics where
+module Flowbox.Luna.Passes.Build.Diagnostics where
 
 import           Control.Monad                     (when)
 import           Data.String.Utils                 (join)
@@ -20,7 +20,8 @@ import           Flowbox.Text.Show.Hs              (hsShow)
 import qualified Flowbox.Text.Show.Pretty        as PP
 
 
-data Diagnostics = Diagnostics { showAST  :: Bool 
+data Diagnostics = Diagnostics { showDM   :: Bool 
+                               , showAST  :: Bool
                                , showVA   :: Bool
                                , showFP   :: Bool
                                , showSSA  :: Bool
@@ -30,15 +31,19 @@ data Diagnostics = Diagnostics { showAST  :: Bool
 
 
 all :: Diagnostics
-all = Diagnostics True True True True True True
+all = Diagnostics True True True True True True True
 
 
 none :: Diagnostics
-none = Diagnostics False False False False False False
+none = Diagnostics False False False False False False False
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Lunac.Diagnostics"
+logger = getLogger "Flowbox.Luna.Passes.Build.Diagnostics"
+
+
+printDM :: (Show a, LogWriter m) => a -> Diagnostics -> m ()
+printDM   v diag = when (showDM   diag) $ logger info (PP.ppShow  v)
 
 
 printAST :: (QShow.QShow a, LogWriter m) => a -> Diagnostics -> m ()

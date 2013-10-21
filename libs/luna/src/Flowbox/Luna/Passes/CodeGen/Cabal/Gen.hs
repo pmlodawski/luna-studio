@@ -14,6 +14,7 @@ import qualified Flowbox.Luna.Data.Cabal.Config  as Config
 import           Flowbox.Luna.Data.Cabal.Config    (Config)
 import qualified Flowbox.Luna.Data.Cabal.Section as Section
 import           Flowbox.Luna.Data.Cabal.Section   (Section)
+import           Flowbox.Luna.Data.Cabal.Version   (Version)
 import qualified Flowbox.Luna.Data.Source        as Source
 import           Flowbox.Luna.Data.Source          (Source)
 
@@ -23,20 +24,20 @@ getModuleName :: Source -> String
 getModuleName source = List.intercalate "." $ Source.path source
 
 
-genLibrary :: [Source] -> String -> String -> [String] -> Config
-genLibrary sources =
-    genCommon (Section.mkLibrary { Section.exposedModules = map getModuleName sources })
+genLibrary :: String -> Version -> [String] -> [String] -> [Source] -> Config
+genLibrary name version ghcOptions libs sources = genCommon sectionBase name version ghcOptions libs where
+    sectionBase = Section.mkLibrary { Section.exposedModules = map getModuleName sources }
 
 
-genExecutable :: String -> String -> [String] -> Config
-genExecutable name = 
-    genCommon (Section.mkExecutable name) name
+genExecutable :: String -> Version -> [String] -> [String] -> Config
+genExecutable name version ghcOptions libs = genCommon sectionBase name version ghcOptions libs where
+    sectionBase = Section.mkExecutable name
 
 
-genCommon :: Section -> String -> String -> [String] -> Config
-genCommon section_base name version libs = conf where
-    section = section_base { Section.buildDepends = "base"
-                                                  : libs
-                           }
+genCommon :: Section -> String -> Version -> [String] -> [String] -> Config
+genCommon sectionBase name version ghcOptions libs = conf where
+    section = sectionBase { Section.buildDepends = libs
+                          , Section.ghcOptions   = ghcOptions
+                          }
     conf = Config.addSection section 
          $ Config.make name version

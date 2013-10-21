@@ -12,7 +12,7 @@ module Flowbox.Batch.Server.Handlers.Defaults (
 where
 
 import           Data.Int                                                    (Int32)
-import           Data.IORef                                                  
+import           Data.IORef                                                  (IORef)
 import qualified Data.HashMap.Strict                                       as HashMap
 import           Data.HashMap.Strict                                         (HashMap)
 import qualified Data.Map                                                  as Map
@@ -20,7 +20,7 @@ import qualified Data.Vector                                               as Ve
 import           Data.Vector                                                 (Vector)
 
 import           Flowbox.Prelude                                             
-import           Flowbox.Batch.Batch                                         (Batch(..))
+import           Flowbox.Batch.Batch                                         (Batch)
 import qualified Flowbox.Batch.Handlers.Defaults                           as BatchD
 import           Flowbox.Batch.Server.Handlers.Common                        (tRunScript, vector2List)
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView   ()

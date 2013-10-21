@@ -7,7 +7,8 @@
 
 module Flowbox.Lunac.CmdArgs where
 
-import           Flowbox.Prelude   
+import           Flowbox.Prelude                   
+import           Flowbox.Luna.Data.Cabal.Version   (Version)
 
 
 
@@ -18,12 +19,13 @@ data CmdArgs = Compilation { inputs          :: [String]
                            , verbose         :: Int
                            , noColor         :: Bool
 
+                           , optimisation    :: Int
                            , output          :: String
                            , link            :: [String]
 
                            , library         :: Bool
                            , libName         :: String
-                           , libVersion      :: String -- TODO [PM] : version should be a separate type
+                           , libVersion      :: Version
                            , rootPath        :: String
                            , global          :: Bool
                                               
