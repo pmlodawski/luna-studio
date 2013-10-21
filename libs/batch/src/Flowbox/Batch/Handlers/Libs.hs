@@ -26,6 +26,7 @@ import qualified Flowbox.Batch.Batch                   as Batch
 import           Flowbox.Batch.Batch                     (Batch)
 import           Flowbox.Batch.Handlers.Common           (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
 import qualified Flowbox.Batch.Project.Project         as Project
+import           Flowbox.Luna.Data.Cabal.Version         (Version(Version))
 import qualified Flowbox.Luna.Lib.LibManager           as LibManager
 import qualified Flowbox.Luna.Lib.Library              as Library
 import           Flowbox.Luna.Lib.Library                (Library)
@@ -42,6 +43,8 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform               as Platform
 import qualified Flowbox.System.UniPath                as UniPath
 import           Flowbox.System.UniPath                  (UniPath)
+
+
 
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Handlers.Libs"
@@ -91,7 +94,7 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
         rootDef    = Maybe.fromJust $ DefManager.lab defManger rootDefID
        
         name       = Library.name library
-        version    = "1.0"              -- TODO [PM] : hardcoded version
+        version    = Version 1 0 0      -- TODO [PM] : hardcoded version
         cfg        = Batch.config batch
         diag       = Diagnostics.none   -- TODO [PM] : hardcoded diagnostics
         outputPath = UniPath.fromUnixString name

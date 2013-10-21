@@ -1,6 +1,6 @@
 module FlowboxM.Luna.Utils where
 
-import FlowboxM.Luna.Data
+import           FlowboxM.Luna.Data   
 
 (.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 -- f .: g = \x y->f (g x y)

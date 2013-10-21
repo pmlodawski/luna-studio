@@ -16,11 +16,13 @@ import qualified Flowbox.Initializer.Initializer       as Initializer
 import qualified Flowbox.Lunac.Builder                 as Builder
 import qualified Flowbox.Lunac.CmdArgs                 as CmdArgs
 import           Flowbox.Lunac.CmdArgs                   (CmdArgs)
+import           Flowbox.Luna.Data.Cabal.Version         (Version(Version))
 import           Flowbox.Luna.Passes.Build.Diagnostics   (Diagnostics(Diagnostics))
 import qualified Flowbox.Options.Applicative           as Opt
 import           Flowbox.Options.Applicative           hiding (info)
 import           Flowbox.System.Log.Logger               
 import qualified Flowbox.System.UniPath                as UniPath
+
 
 
 rootLogger :: Logger
@@ -44,7 +46,7 @@ parser =   Opt.flag' CmdArgs.Version    (long "version" <> short 'V' <> hidden)
            
            <*> switch    ( long "library"                                                   <> help "Compile as a library" )
            <*> strOption ( long "lib-name"    <> short 'n' <> value "name" <> metavar "NAME"    <> help "Library name"    )
-           <*> strOption ( long "lib-version" <> short 'n' <> value "1.0"  <> metavar "VERSION" <> help "Library version" )
+           <*> option    ( long "lib-version" <> short 'n' <> value (Version 1 0 0)  <> metavar "VERSION" <> help "Library version in X.Y.Z format" )
            <*> strOption ( long "root-path"  <> value "" <> hidden )
            <*> switch    ( long "global"                                                    <> help "Compile to global library" )
 

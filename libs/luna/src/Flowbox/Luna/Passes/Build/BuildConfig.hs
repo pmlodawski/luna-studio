@@ -9,13 +9,14 @@ module Flowbox.Luna.Passes.Build.BuildConfig where
 
 import           Flowbox.Prelude                         
 import           Flowbox.Config.Config                   (Config)
+import           Flowbox.Luna.Data.Cabal.Version         (Version)
 import           Flowbox.Luna.Passes.Build.Diagnostics   (Diagnostics)
 import           Flowbox.System.UniPath                  (UniPath)
 
 
 
 data BuildConfig = BuildConfig { name       :: String
-                               , version    :: String 
+                               , version    :: Version 
                                , libs       :: [String]
                                , ghcflags   :: [String]
                                , cabalflags :: [String]

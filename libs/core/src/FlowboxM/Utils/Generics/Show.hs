@@ -28,7 +28,7 @@ module FlowboxM.Utils.Generics.Show (
 import           Generics.Deriving.Base        
 import           Generics.Deriving.Instances   ()
 
-import Debug.Trace
+import           Debug.Trace                   
 
 --import           Flowbox.Prelude          
 
