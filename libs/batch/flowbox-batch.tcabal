@@ -31,7 +31,6 @@ Library
                     directory,
                     flowbox-config,
                     flowbox-luna,
-                    flowbox-lunac,
                     flowbox-utils,
                     hashable,
                     network,

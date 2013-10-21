@@ -16,3 +16,5 @@ data Source = Source { path :: [String]
                      } deriving (Show)
 
 
+transCode :: (String -> String) -> Source -> Source
+transCode f src = src { code = f $ code src }

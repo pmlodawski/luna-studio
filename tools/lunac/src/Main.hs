@@ -5,22 +5,22 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import           Data.List                       as List
+import           Data.List                             as List
 
-import           Flowbox.Prelude                 hiding (error)
-import qualified Flowbox.Config.Config           as Config
-import           Flowbox.Config.Config             (Config)
-import           Flowbox.Control.Applicative       
-import qualified Flowbox.Data.Version            as Version
-import qualified Flowbox.Initializer.Initializer as Initializer
-import qualified Flowbox.Lunac.Builder.File      as FileBuilder
-import qualified Flowbox.Lunac.CmdArgs           as CmdArgs
-import           Flowbox.Lunac.CmdArgs             (CmdArgs)
-import           Flowbox.Lunac.Diagnostics         (Diagnostics(Diagnostics))
-import qualified Flowbox.Options.Applicative     as Opt
-import           Flowbox.Options.Applicative     hiding (info)
-import           Flowbox.System.Log.Logger         
-import qualified Flowbox.System.UniPath          as UniPath
+import           Flowbox.Prelude                       hiding (error)
+import qualified Flowbox.Config.Config                 as Config
+import           Flowbox.Config.Config                   (Config)
+import           Flowbox.Control.Applicative             
+import qualified Flowbox.Data.Version                  as Version
+import qualified Flowbox.Initializer.Initializer       as Initializer
+import qualified Flowbox.Lunac.Builder                 as Builder
+import qualified Flowbox.Lunac.CmdArgs                 as CmdArgs
+import           Flowbox.Lunac.CmdArgs                   (CmdArgs)
+import           Flowbox.Luna.Passes.Build.Diagnostics   (Diagnostics(Diagnostics))
+import qualified Flowbox.Options.Applicative           as Opt
+import           Flowbox.Options.Applicative           hiding (info)
+import           Flowbox.System.Log.Logger               
+import qualified Flowbox.System.UniPath                as UniPath
 
 
 rootLogger :: Logger
@@ -35,9 +35,10 @@ parser =   Opt.flag' CmdArgs.Version    (long "version" <> short 'V' <> hidden)
            <$> many1     ( argument str ( metavar "INPUTS" ))
            <*> switch    ( long "version" <> short 'V'                                      <> help "Print version information" )
            <*> switch    ( long "numeric-version"                                           <> help "Print just the version number" )
-           <*> optIntFlag       "verbose" 'v' 2 3                                                   "Verbose level (level range is 0-5, default level is 3)"
+           <*> optIntFlag (Just "verbose") 'v' 2 3                                                  "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"                                                  <> help "Disable color output" )
 
+           <*> optIntFlag Nothing 'O' 0 2                                                           "Optimisation level (level range is 0-2, default level is 2)"
            <*> strOption ( long "output"  <> short 'o' <> value "out"  <> metavar "OUTPUT"  <> help "Output folder" )
            <*> many      ( strOption (       short 'l'                 <> metavar "LIBRARY" <> help "Library to link with."))
            
@@ -86,18 +87,19 @@ run cfg cmd = do
 
             rootLogger setIntLevel $ CmdArgs.verbose cmd
 
-            let diag = Diagnostics ( CmdArgs.dump_ast  cmd || CmdArgs.dump_all cmd )
-                                   ( CmdArgs.dump_va   cmd || CmdArgs.dump_all cmd )
-                                   ( CmdArgs.dump_fp   cmd || CmdArgs.dump_all cmd )
-                                   ( CmdArgs.dump_ssa  cmd || CmdArgs.dump_all cmd )
-                                   ( CmdArgs.dump_hast cmd || CmdArgs.dump_all cmd )
-                                   ( CmdArgs.dump_hsc  cmd || CmdArgs.dump_all cmd )
+            let diag = Diagnostics False
+                                 ( CmdArgs.dump_ast  cmd || CmdArgs.dump_all cmd )
+                                 ( CmdArgs.dump_va   cmd || CmdArgs.dump_all cmd )
+                                 ( CmdArgs.dump_fp   cmd || CmdArgs.dump_all cmd )
+                                 ( CmdArgs.dump_ssa  cmd || CmdArgs.dump_all cmd )
+                                 ( CmdArgs.dump_hast cmd || CmdArgs.dump_all cmd )
+                                 ( CmdArgs.dump_hsc  cmd || CmdArgs.dump_all cmd )
 
                 inputs = map UniPath.fromUnixString $ CmdArgs.inputs cmd
 
 
             Initializer.initializeIfNeeded cfg
 
-            mapM_ (FileBuilder.build cfg cmd diag) inputs
+            mapM_ (Builder.build cfg cmd diag) inputs
       
 

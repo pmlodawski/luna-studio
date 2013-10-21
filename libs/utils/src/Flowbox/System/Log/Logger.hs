@@ -17,16 +17,19 @@ import           Control.Monad.State
 import           Control.Monad.Writer          
 import qualified Data.DList                  as DList
 import           Data.DList                    (DList)
-import           System.Console.ANSI         as ANSI
+import qualified Data.Maybe                  as Maybe
+import qualified Data.String.Utils           as StringUtils
+import qualified System.Console.ANSI         as ANSI
 import           System.IO                     (stderr)
 import qualified System.Log.Logger           as HSLogger
 import           System.Log.Logger           hiding (getLogger, setLevel, Logger)
 
 import qualified Flowbox.System.Log.LogEntry as LogEntry
+import           Flowbox.System.Log.LogEntry   (LogEntry(LogEntry))
 
 
 
-type LogList     = DList LogEntry.LogEntry
+type LogList     = DList LogEntry
 type LogWriter m = MonadWriter LogList m
 
 type LogAction b = LogWriter m => String -> String -> m b
@@ -46,7 +49,7 @@ runLogger m = do
     return out
 
 log :: LogWriter m => Priority -> String -> String -> m()
-log pri msg name = tell $ DList.singleton (LogEntry.LogEntry name pri msg)
+log pri msg name = tell $ DList.singleton (LogEntry name pri msg)
 
 append :: MonadWriter w m => w -> m ()
 append = tell
@@ -56,25 +59,61 @@ logsIO entries = mapM_ logIO $ DList.toList entries
 
 logIO :: MonadIO m => LogEntry.LogEntry -> m ()
 logIO entry = liftIO $ do
-    --conf <- Conf.read name
     let name  = LogEntry.name     entry
         msg   = LogEntry.msg      entry
         pri   = LogEntry.priority entry
         sgr   = case pri of
-                   DEBUG       -> [SetColor Foreground Vivid Magenta]
-                   INFO        -> [SetColor Foreground Vivid Green  ]
-                   NOTICE      -> [SetColor Foreground Vivid Cyan   ]
-                   WARNING     -> [SetColor Foreground Vivid Yellow ]
-                   ERROR       -> [SetColor Foreground Vivid Red    ]
-                   CRITICAL    -> [SetColor Foreground Vivid Red    ]
-                   ALERT       -> [SetColor Foreground Vivid Red    ]
-                   EMERGENCY   -> [SetColor Foreground Vivid Red    ]
-        --prefix = mkIndent $ Conf.indent conf 
-    hSetSGR stderr sgr
-    --if Conf.colored conf then hSetSGR stderr sgr else return ()
+                   DEBUG       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Magenta]
+                   INFO        -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Green  ]
+                   NOTICE      -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Cyan   ]
+                   WARNING     -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Yellow ]
+                   ERROR       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Red    ]
+                   CRITICAL    -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Red    ]
+                   ALERT       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Red    ]
+                   EMERGENCY   -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Red    ]
+
+        -- TODO [PM] : find better solution than copying private functions from library
+        rootLoggerName :: String  -- [PM] copied from System.Log.Logger
+        rootLoggerName = ""
+
+        componentsOfName :: String -> [String] -- [PM] copied from System.Log.Logger
+        componentsOfName n =
+          let joinComp [] _ = []
+              joinComp (x:xs) [] = x : joinComp xs x
+              joinComp (x:xs) accum =
+                  let newlevel = accum ++ "." ++ x in
+                      newlevel : joinComp xs newlevel
+              in
+              rootLoggerName : joinComp (StringUtils.split "." n) []
+
+        --parentLoggers :: String -> IO [Logger] -- [PM] copied from System.Log.Logger
+        parentLoggers [] = return []
+        parentLoggers n = 
+            let pname = (head . drop 1 . reverse . componentsOfName) n
+                in 
+                do parent <- HSLogger.getLogger pname
+                   next <- parentLoggers pname
+                   return (parent : next)
+
+        getLoggerPriority :: String -> IO Priority -- [PM] copied from System.Log.Logger
+        getLoggerPriority n =
+            do l <- HSLogger.getLogger n
+               pl <- parentLoggers n
+               case Maybe.catMaybes . map HSLogger.getLevel $ (l : pl) of
+                 [] -> return DEBUG
+                 (x:_) -> return x
+
+    lpri <- getLoggerPriority name
+    if pri >= lpri
+        then ANSI.hSetSGR stderr sgr
+        else return ()
+
     logM name pri (msg)
-    hSetSGR stderr []
-    --if Conf.colored conf then hSetSGR stderr []  else return ()
+
+    if pri >= lpri
+        then ANSI.hSetSGR stderr []
+        else return ()
+
 
 debug :: LogAction ()
 debug = log DEBUG
@@ -107,7 +146,6 @@ criticalFail msg name = do
 
 setLevel :: Priority -> String -> IO ()
 setLevel lvl name = updateGlobalLogger name (HSLogger.setLevel lvl)
-
 
 setIntLevel :: Int -> String -> IO ()
 setIntLevel lvl name = case lvl of 

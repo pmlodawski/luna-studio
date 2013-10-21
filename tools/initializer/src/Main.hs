@@ -32,8 +32,8 @@ version = Version.mk
 parser :: Parser CmdArgs
 parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
        <|> CmdArgs.Initialization
-           <$> optIntFlag   "verbose" 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
-           <*> switch (long "force"   <> short 'f'                    <> help "Force reinitialization")
+           <$> optIntFlag   (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
+           <*> switch (long "force"   <> short 'f'                          <> help "Force reinitialization")
 
 
 

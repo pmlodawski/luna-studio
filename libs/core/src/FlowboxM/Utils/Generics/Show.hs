@@ -25,8 +25,8 @@ module FlowboxM.Utils.Generics.Show (
   ) where
 
 
-import Generics.Deriving.Base
-import Generics.Deriving.Instances ()
+import           Generics.Deriving.Base        
+import           Generics.Deriving.Instances   ()
 
 import Debug.Trace
 

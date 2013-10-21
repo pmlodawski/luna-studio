@@ -18,6 +18,7 @@ data CmdArgs = Compilation { inputs          :: [String]
                            , verbose         :: Int
                            , noColor         :: Bool
 
+                           , optimisation    :: Int
                            , output          :: String
                            , link            :: [String]
 
