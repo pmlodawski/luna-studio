@@ -115,7 +115,7 @@ example = Source.Source ["Main"]
 
                   , "def add self x y:"
                   , "   x.add y"
-                  , "def addInts(self, x, y):"
+                  , "def addInts(self, x, y) -> Int:"
                   , "   x.add y"
                   , "def main self:"
                   , "   Console.print (self.add 4 5)"

@@ -317,10 +317,14 @@ genCallExpr e = trans <$> genExpr e where
 genFuncBody :: GenMonad m => [LExpr] -> LType -> Pass.Result m [HExpr]
 genFuncBody exprs output = case exprs of
     []   -> pure []
-    x:[] -> liftM (:[]) $ genTyped HExpr.Typed output <*> case x of
-            LExpr.Assignment _ _ dst -> mkGetIO <$> genCallExpr dst 
+    --x:[] -> liftM (:[]) $ genTyped HExpr.Typed output <*> case x of
+    --        LExpr.Assignment _ _ dst -> mkGetIO <$> genCallExpr dst 
+    --        LExpr.Native     {}      -> genCallExpr x
+    --        _                        -> mkGetIO <$> genCallExpr x 
+    x:[] -> (:[]) <$> case x of
+            LExpr.Assignment _ _ dst -> mkGetIO <$> (genTyped HExpr.TypedE output <*> genCallExpr dst)
             LExpr.Native     {}      -> genCallExpr x
-            _                        -> mkGetIO <$> genCallExpr x 
+            _                        -> mkGetIO <$> (genTyped HExpr.TypedE output <*> genCallExpr x)
     x:xs -> (:) <$> genCallExpr x <*> genFuncBody xs output
 
 
