@@ -8,7 +8,7 @@
 
 module FlowboxM.Luna.Bind where
 
-import           FlowboxM.Luna.Data   
+import FlowboxM.Luna.Data
 
 -- redefinition of do notation
 

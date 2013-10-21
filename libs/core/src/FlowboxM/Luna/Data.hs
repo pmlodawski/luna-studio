@@ -15,12 +15,12 @@ module FlowboxM.Luna.Data (
 ) where
 
 
-import           FlowboxM.Luna.TH.Inst   
-import           Control.Applicative     
-import           Data.Tuple.OneTuple     
-import           GHC.Generics            (Generic)
-import           Data.Typeable           (Typeable)
-import           GHC.TypeLits            
+import FlowboxM.Luna.TH.Inst       
+import Control.Applicative
+import Data.Tuple.OneTuple
+import GHC.Generics          (Generic)
+import Data.Typeable         (Typeable)
+import GHC.TypeLits            
 
 -- basic datatypes
 
@@ -48,7 +48,9 @@ class Get7 m f |  m -> f where get7 :: m -> f
 class Get8 m f |  m -> f where get8 :: m -> f
 class Get9 m f |  m -> f where get9 :: m -> f
 
-instance Get0 (Pure Int) (Pure Int) where get0 = id
+instance Get0 (Pure Int)    (Pure Int)    where get0 = id
+instance Get0 (Pure Double) (Pure Double) where get0 = id
+instance Get0 (Pure Float)  (Pure Float)  where get0 = id
 instance Get0 (Pure [a]) (Pure [a]) where get0 = id
 instance Get0 (Pure ()) (Pure ()) where get0 = id
 instance Get0 (Pure (OneTuple a)) (Pure (OneTuple a)) where get0 = id
