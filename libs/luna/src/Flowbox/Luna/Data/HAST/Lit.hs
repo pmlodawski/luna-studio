@@ -13,5 +13,6 @@ import           Flowbox.Prelude hiding (String, Char, Integer)
 data Lit = Char    Prelude.Char
          | String  Prelude.String
          | Integer Prelude.String
+         | Float   Prelude.String
          deriving (Show, Eq)
 

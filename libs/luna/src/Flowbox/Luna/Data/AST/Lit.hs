@@ -17,6 +17,7 @@ import           GHC.Generics
 data Lit = Char    { id :: ID, char :: Prelude.Char   }
          | String  { id :: ID, str  :: Prelude.String }
          | Integer { id :: ID, str  :: Prelude.String }
+         | Float   { id :: ID, str  :: Prelude.String }
          deriving (Show, Eq, Generic)
 
 instance QShow Lit

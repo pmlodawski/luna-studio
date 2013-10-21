@@ -120,7 +120,7 @@ example = Source.Source ["Main"]
                   , "def main self:"
                   , "   # test"
                   , "   # test"
-                  , "   Console.print (self.add 4 5)"
+                  , "   Console.print (5.0e+10)"
 
                   --, "def main self:"
                   --, "    Console.print (self.add 3 4)"

@@ -117,6 +117,7 @@ genExpr e = case e of
 
 genLit :: HLit.Lit -> String
 genLit lit = case lit of
-	HLit.Integer val -> val
-	HLit.String  val -> "\"" ++ val   ++ "\""
-	HLit.Char    val -> "'"  ++ [val] ++ "'"
+    HLit.Integer val -> val
+    HLit.Float   val -> val
+    HLit.String  val -> "\"" ++ val   ++ "\""
+    HLit.Char    val -> "'"  ++ [val] ++ "'"

@@ -50,9 +50,11 @@ pExtPath  s   = (pPath1 (pCon s) <* L.pAccessor) <|> pure []
 -- Literals
 -----------------------------------------------------------
 pIntL    s = tok Lit.Integer <*> L.integerStr s
+pFloatL  s = tok Lit.Float   <*> L.floatStr s
 pCharL   s = tok Lit.Char    <*> L.charLiteral s
 pStringL s = tok Lit.String  <*> L.stringLiteral s
-pLit     s = choice [ pIntL    s
+pLit     s = choice [ try $ pFloatL  s
+                    , pIntL s
                     , pCharL   s
                     , pStringL s
                     ]

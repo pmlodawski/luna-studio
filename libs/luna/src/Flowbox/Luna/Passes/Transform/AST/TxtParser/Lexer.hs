@@ -102,9 +102,9 @@ stringChar      =   Just <$> stringLetter
 stringLetter    = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
 
 stringEscape    = char '\\' *> (    Nothing <$  escapeGap
-	                            <|> Nothing <$  escapeEmpty
-	                            <|> Just    <$> escapeCode
-	                           )
+                              <|> Nothing <$  escapeEmpty
+                              <|> Just    <$> escapeCode
+                             )
 
 escapeEmpty     = char '&'
 escapeGap       = many1 space *> (char '\\' <?> "end of string gap")
@@ -115,9 +115,9 @@ escapeCode      = charEsc <|> charNum <|> charAscii <|> charControl <?> "escape 
 charControl     = (\code -> toEnum (fromEnum code - fromEnum 'A')) <$ char '^' <*> upper
 
 charNum         = (toEnum.fromInteger) <$> (    decimal
-	                                        <|> char 'o' *> number 8 octDigit
-	                                        <|> char 'x' *> number 16 hexDigit
-	                                       )
+                                          <|> char 'o' *> number 8 octDigit
+                                          <|> char 'x' *> number 16 hexDigit
+                                         )
 
 
 charEsc         = choice (map parseEsc escMap) where
@@ -155,6 +155,8 @@ natural         = lexeme nat        <?> "natural"
 
 integerStr    s = lexeme2 s intStr     <?> "integer"
 
+floatStr      s = lexeme2 s floatStr'  <?> "float"
+
 -- floats
 floating        = fractExponent <$*> decimal
 
@@ -176,13 +178,21 @@ fractExponent n =   (\fract expo -> (fromInteger n + fract)*expo) <$> fraction <
 
 
 fraction        = (foldr op 0.0) <$ char '.' <*> (many1 digit <?> "fraction") <?> "fraction" where
-	op d f      = (f + fromIntegral (digitToInt d))/10.0
+  op d f      = (f + fromIntegral (digitToInt d))/10.0
 
 
 exponent'       = (\f e -> power (f e)) <$ oneOf "eE" <*> sign <*> (decimal <?> "exponent") <?> "exponent" where
-	power e  | e < 0      = 1.0/power(-e)
+    power e  | e < 0      = 1.0/power(-e)
              | otherwise  = fromInteger (10^e)
 
+
+floatStr'       = (++) <$> decimalStr <*> fractExponentStr
+
+fractExponentStr = (++) <$> fractionStr <*> option "" exponentStr'
+
+fractionStr     = (:) <$> char '.' <*> (many1 digit <|> pure "0" <?> "fraction") <?> "fraction"
+
+exponentStr'    = (\a b c -> a:b:c) <$> oneOf "eE" <*> signStr <*> (decimalStr <?> "exponent") <?> "exponent" 
 
 -- integers and naturals
 intStr          = ((:) <$> lexeme signStr <*> natStr) <|> natStr
@@ -290,7 +300,7 @@ inComment =   try (string commentEnd)            *> return ""
           <|> oneOf startEnd                     *> inComment
           <?> "end of comment"
           where
-          	startEnd   = nub (commentEnd ++ commentStart)
+            startEnd   = nub (commentEnd ++ commentStart)
 
 
 eol = (char '\n' <|> (char '\r' >> option '\n' (char '\n'))) >> return () <?> ""
