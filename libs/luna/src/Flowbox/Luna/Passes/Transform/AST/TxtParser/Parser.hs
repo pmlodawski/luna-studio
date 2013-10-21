@@ -80,7 +80,7 @@ pImport     s      = tok Expr.Import   <*  L.pImport
                                            )
 
 
-pArg        s i    = tok Expr.Arg      <*> pPattern s i 
+pArg        s i    = tok Expr.Arg      <*> pPatCon s i 
                                        <*> ((Just <$ L.pAssignment <*> pExpr s i) <|> pure Nothing)
 
 pFunc       s i    = tok Expr.Function <*  L.pDef 

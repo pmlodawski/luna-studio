@@ -1,19 +1,10 @@
-class Console:
-    def print self msg:
-        ```print #{msg}```
+import Std:All
 
-def List.length self:
-    ```getIO $ liftFPure1 length #{self}```
-
-def List.add self l2:
-    ```getIO $ liftFPure2 (++) #{self} #{l2}```
-
-class Vector a:
-    x,y,z :: a
-
-def Vector.vtest self a b:
-    {a,b}        
+def add self x y:
+    x.add y
+    
+def addInts (self, x, y):
+    x.add y
 
 def main self:
-    v = Vector 1 2 3
-    Console.print ([1,2, 30..])
+    Console.print (self.add 4 5)

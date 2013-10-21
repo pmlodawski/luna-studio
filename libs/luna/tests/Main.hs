@@ -77,11 +77,11 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source ["Main"]
         $ unlines [ ""
-                  --, "def List.length self:"
-                  --, "    ```getIO $ liftFPure1 length #{self}```"
-                  --, "def List.each self f:"
-                  --, "    ```let {mymap x (Pure y) = mapM x y}```"
-                  --, "    ```getIO $ mymap (get1 _v_13) _v_11```"
+                  , "def List.length self:"
+                  , "    ```getIO $ liftFPure1 length #{self}```"
+                  , "def List.each self f:"
+                  , "    ```let {mymap x (Pure y) = mapM x y}```"
+                  , "    ```getIO $ mymap (get1 _v_13) _v_11```"
                   , "def Int.add a b:"
                   , "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
                   , "def List.add self x:"
@@ -112,12 +112,17 @@ example = Source.Source ["Main"]
                   --, "    Console.print \"hello\""
 
 
+
                   , "def add self x y:"
                   , "   x.add y"
-
+                  , "def addInts(self, x, y):"
+                  , "   x.add y"
                   , "def main self:"
-                  , "    Console.print (self.add 3 4)"
-                  , "    Console.print (self.add \"Hello\" \" world!\")"
+                  , "   Console.print (self.add 4 5)"
+
+                  --, "def main self:"
+                  --, "    Console.print (self.add 3 4)"
+                  --, "    Console.print (self.add \"Hello\" \" world!\")"
 
 
                   --, "    v = Vector 0 0 0"
