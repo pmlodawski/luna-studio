@@ -6,6 +6,7 @@ class File:
         ```getIO $ liftFIO1 hsLib_System_IO_readFile #{name}```
 
     def writeFile self name content:
+        content = content.toString
         ```getIO $ liftFIO2 hsLib_System_IO_writeFile #{name} #{content}```
 
 
@@ -13,8 +14,8 @@ class File:
 
 class Console:
     def print self obj:
-        s = obj.toString
-        ```liftFIO1 putStrLn #{s}```
+        obj = obj.toString
+        ```liftFIO1 putStrLn #{obj}```
         ```return #{self}```
 
 ###### List ###################################
@@ -32,7 +33,7 @@ def List.contains self el:
     ```getIO $ liftFPure2 (elem) #{self} #{el}```
 
 def List.toString self:
-    ```getIO $ liftFPure1 show #{self}```
+    ```getIO $ liftFPure1 lrepr #{self}```
 
 ###### Int ####################################
 
@@ -46,7 +47,7 @@ def Int.mul a b:
     ```getIO $ liftFPure2 (*) #{a} #{b}```
 
 def Int.toString a:
-    ```getIO $ liftFPure1 show #{a}```
+    ```getIO $ liftFPure1 lrepr #{a}```
 
 ###### Float ##################################
 
@@ -63,11 +64,11 @@ def Float.div a b:
     ```getIO $ liftFPure2 (/) #{a} #{b}```
 
 def Float.toString a:
-    ```getIO $ liftFPure1 show #{a}```
+    ```getIO $ liftFPure1 lrepr #{a}```
 
 ###### String #################################
 
-#def String.toString a:
+# def String.toString a:
 #    ```getIO $ liftFPure1 id #{a}```
 
 ###############################################
