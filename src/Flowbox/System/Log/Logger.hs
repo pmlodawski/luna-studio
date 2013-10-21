@@ -73,9 +73,6 @@ logIO entry = liftIO $ do
                    EMERGENCY   -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Red    ]
 
         -- TODO [PM] : find better solution than copying private functions from library
-        rootLoggerName :: String  -- [PM] copied from System.Log.Logger
-        rootLoggerName = ""
-
         componentsOfName :: String -> [String] -- [PM] copied from System.Log.Logger
         componentsOfName n =
           let joinComp [] _ = []
