@@ -17,10 +17,10 @@ module Flowbox.Batch.Server.Handlers.Graph (
 where
 
 import           Data.Int                                                    (Int32)
-import           Data.IORef                                                  
+import           Data.IORef                                                  (IORef)
 
 import           Flowbox.Prelude                                             
-import           Flowbox.Batch.Batch                                         (Batch(..))
+import           Flowbox.Batch.Batch                                         (Batch)
 import qualified Flowbox.Batch.Handlers.Graph                              as BatchG
 import           Flowbox.Batch.Server.Handlers.Common                        (tRunScript, vector2List)
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.GraphView   ()

@@ -30,6 +30,7 @@ Library
                     containers,
                     directory,
                     flowbox-config,
+                    flowbox-initializer,
                     flowbox-luna,
                     flowbox-utils,
                     hashable,

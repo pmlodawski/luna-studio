@@ -7,7 +7,7 @@
 
 module Flowbox.Luna.Data.Cabal.Version where
 
-import           Numeric
+import           Numeric           
 import           Flowbox.Prelude   
 
 

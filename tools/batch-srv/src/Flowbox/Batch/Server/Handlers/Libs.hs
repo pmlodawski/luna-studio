@@ -19,7 +19,7 @@ module Flowbox.Batch.Server.Handlers.Libs (
 where
 
 import           Data.Int                                              (Int32)
-import           Data.IORef                                            
+import           Data.IORef                                            (IORef)
 import qualified Data.Vector                                         as Vector
 import           Data.Vector                                           (Vector)
 import qualified Data.Text.Lazy                                      as Text
@@ -27,12 +27,12 @@ import           Data.Text.Lazy                                        (Text)
 
 import           Flowbox.Prelude                                       
 import qualified Defs_Types                                          as TDefs
-import           Flowbox.Batch.Batch                                   (Batch(..))
+import           Flowbox.Batch.Batch                                   (Batch)
 import qualified Flowbox.Batch.Handlers.Libs                         as BatchL
 import           Flowbox.Batch.Server.Handlers.Common                  (tRunScript)
 import           Flowbox.Control.Error                                 
 import qualified Flowbox.Luna.Lib.Library                            as Library
-import           Flowbox.Luna.Lib.Library                              (Library(..))
+import           Flowbox.Luna.Lib.Library                              (Library)
 import qualified Flowbox.Luna.Network.Def.DefManager                 as DefManager
 import           Flowbox.Luna.Network.Def.DefManager                   (DefManager)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()

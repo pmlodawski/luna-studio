@@ -10,29 +10,26 @@
 
 module Flowbox.Batch.Server.Handlers.BatchHandler where
 
-import           Control.Applicative                        
-import qualified Data.IORef                               as IORef
-import           Data.IORef                                 (IORef)
-import           Thrift.Transport.Handle                    ()
+import           Control.Applicative                         
+import qualified Data.IORef                                as IORef
+import           Data.IORef                                  (IORef)
 
-import           Flowbox.Prelude                            
-import           Batch_Iface                                
-import qualified Flowbox.Config.Config                    as Config
-import           Flowbox.Control.Error                      
-import qualified Flowbox.Batch.Batch                      as Batch
-import           Flowbox.Batch.Batch                        (Batch(..))
-import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
-import qualified Flowbox.Batch.Samples.Std                as Sample
-import qualified Flowbox.Batch.Server.Handlers.Common     as Common
-import qualified Flowbox.Batch.Server.Handlers.Defs       as HDefs
-import qualified Flowbox.Batch.Server.Handlers.Defaults   as HDefaults
-import qualified Flowbox.Batch.Server.Handlers.Graph      as HGraph
-import qualified Flowbox.Batch.Server.Handlers.Libs       as HLibs
-import qualified Flowbox.Batch.Server.Handlers.Projects   as HProjects
-import qualified Flowbox.Batch.Server.Handlers.Types      as HTypes
-import qualified Flowbox.Batch.Server.Handlers.FileSystem as HFileSystem
-import qualified Flowbox.Initializer.Initializer          as Initializer
-import           Flowbox.System.Log.Logger                  
+import           Flowbox.Prelude                             
+import           Batch_Iface                                 
+import qualified Flowbox.Config.Config                     as Config
+import qualified Flowbox.Batch.Batch                       as Batch
+import           Flowbox.Batch.Batch                         (Batch)
+import qualified Flowbox.Batch.Project.ProjectManager      as ProjectManager
+import qualified Flowbox.Batch.Samples.Std                 as Sample
+import qualified Flowbox.Batch.Server.Handlers.Defs        as HDefs
+import qualified Flowbox.Batch.Server.Handlers.Defaults    as HDefaults
+import qualified Flowbox.Batch.Server.Handlers.Graph       as HGraph
+import qualified Flowbox.Batch.Server.Handlers.Libs        as HLibs
+import qualified Flowbox.Batch.Server.Handlers.Maintenance as HMaintenance
+import qualified Flowbox.Batch.Server.Handlers.Projects    as HProjects
+import qualified Flowbox.Batch.Server.Handlers.Types       as HTypes
+import qualified Flowbox.Batch.Server.Handlers.FileSystem  as HFileSystem
+import           Flowbox.System.Log.Logger                   
 
 
 
@@ -104,10 +101,7 @@ instance Batch_Iface BatchHandler where
     fS_cp               = HFileSystem.cp
     fS_mv               = HFileSystem.mv
 
-    ping _              = loggerIO info "ping"
-    dump batchHandler   = Common.tRunScript $ do batch <- tryReadIORef batchHandler
-                                                 scriptIO $ print batch
-    shutdown _          = loggerIO info "called shutdown"
-    initialize batchH   = Common.tRunScript $ do scriptIO $ loggerIO info "called initialize"
-                                                 batch <- tryReadIORef batchH
-                                                 scriptIO $ Initializer.initializeIfNeeded $ Batch.config batch
+    ping                = HMaintenance.ping 
+    dump                = HMaintenance.dump
+    shutdown            = HMaintenance.shutdown
+    initialize          = HMaintenance.initialize

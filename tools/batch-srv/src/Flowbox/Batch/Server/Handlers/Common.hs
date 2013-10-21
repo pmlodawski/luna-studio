@@ -18,7 +18,7 @@ import           Data.Text.Lazy              (pack)
 import qualified Data.Vector               as Vector
 import           Data.Vector                 (Vector)
                                     
-import           Batch_Types                 (ArgumentException(..))
+import           Batch_Types                 (ArgumentException(ArgumentException))
 import           Flowbox.Control.Error       
 import           Flowbox.Tools.Conversion    
 import           Flowbox.System.Log.Logger   

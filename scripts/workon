@@ -72,7 +72,7 @@ pkgs = { '@all'        : AllProject (deps = deptree)
        , 'luna'        : HProject   ('flowbox-luna'        , os.path.join ('libs'  , 'luna')        , 'libs'    , ['utils', 'config']                                 )
        , 'initializer' : HProject   ('flowbox-initializer' , os.path.join ('tools' , 'initializer') , 'tools'   , ['utils', 'config']                                 )
        , 'lunac'       : HProject   ('flowbox-lunac'       , os.path.join ('tools' , 'lunac')       , 'tools'   , ['utils', 'config', 'initializer', 'luna']          )
-       , 'batch'       : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')       , 'libs'    , ['utils', 'config', 'luna']                         )
+       , 'batch'       : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')       , 'libs'    , ['utils', 'config', 'initializer', 'luna']          )
        , 'batch-srv'   : HProject   ('flowbox-batch-srv'   , os.path.join ('tools' , 'batch-srv')   , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
        } 
 
