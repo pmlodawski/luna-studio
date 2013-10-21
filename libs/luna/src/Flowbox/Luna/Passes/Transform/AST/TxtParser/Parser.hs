@@ -282,7 +282,7 @@ pEntP   s i = choice [ pVarP      s
 -----------------------------------------------------------
 pEmptyLines         = many1 pEmptyLine
 
-pEmptyLine          = try(L.eol *> L.pSpaces1 *> L.eol) <|> L.eol
+pEmptyLine          = try(L.pSpaces *> L.eol)
 
 pIndentExact      i = i <$ count i (char ' ')
 
@@ -295,7 +295,7 @@ pIdentAtLast      i = do
 pSegments       p i = many $ try $ (pEmptyLines *> pSegment p i)
 
 pSegmentBegin   p i = do
-                      j <- many pEmptyLines *> pIdentAtLast i
+                      j <- many pEmptyLine *> pIdentAtLast i
                       (:) <$> p i <*> pSegments p j
 
 pSegment        p i = try (Prelude.id <$ pIndentExact i <*> p i)

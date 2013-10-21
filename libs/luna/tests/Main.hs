@@ -118,6 +118,8 @@ example = Source.Source ["Main"]
                   , "def addInts(self, x, y) -> Int:"
                   , "   x.add y"
                   , "def main self:"
+                  , "   # test"
+                  , "   # test"
                   , "   Console.print (self.add 4 5)"
 
                   --, "def main self:"
