@@ -11,6 +11,8 @@ module Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState where
 import           Flowbox.Prelude               hiding (mod)
 import           Control.Monad.State             
 import qualified Flowbox.Luna.Data.HAST.Expr   as HExpr
+import qualified Flowbox.Luna.Data.AST.Expr    as LExpr
+import qualified Flowbox.Luna.Data.AST.Type    as LType
 import qualified Flowbox.Luna.Data.HAST.Module as Module
 
 import           Flowbox.System.Log.Logger       
@@ -22,25 +24,27 @@ logger = getLogger "Flowbox.Luna.Passes.HSGen.GenState"
 
 
 type HExpr = HExpr.Expr
+type LExpr = LExpr.Expr
+type LType = LType.Type
 
-data GenState = GenState { mod     :: HExpr
-                         , clsName :: String
+data GenState = GenState { mod :: HExpr
+                         , cls :: LType
                          }
 
 type GenStateM m = (MonadState GenState m, Functor m)
 
 
 empty :: GenState
-empty = GenState HExpr.Undefined ""
+empty = GenState HExpr.Undefined (LType.Unknown 0)
 
 
-setClsName :: GenStateM m => String -> m()
-setClsName name = do
+setCls :: GenStateM m => LType -> m()
+setCls c = do
     s <- get
-    put s { clsName = name }
+    put s { cls = c }
 
-getClsName :: GenStateM m => m String
-getClsName = clsName <$> get
+getCls :: GenStateM m => m LType
+getCls = cls <$> get
 
 
 setModule :: GenStateM m => HExpr -> m ()

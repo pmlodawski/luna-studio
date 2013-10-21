@@ -130,18 +130,34 @@ genFuncDecl clsname name = do
     GenState.addNewType      $ genCFDec clsname cfName
     GenState.addTHExpression $ genTHInstMem name cfName
 
+
+typeMethodSelf cls inputs = nargs
+    where (self:args) = inputs
+          nparams     = map (LType.Var 0) (LType.params cls)
+          patbase     = LType.App 0 (LType.Con 0 [LType.name cls]) nparams
+          nself       = self { LExpr.pat = LPat.Typed 0 (LExpr.pat self) patbase }
+          nargs       = nself:args
+
+
 genExpr :: GenMonad m => LExpr -> Pass.Result m HExpr
 genExpr ast = case ast of
     LExpr.Var      _ name                -> pure $ HExpr.Var $ mkVarName name
     LExpr.Con      _ name                -> pure $ HExpr.Var ("con" ++ mkConsName name)
     LExpr.Function _ path name  
                      inputs output body  -> do
-                                            clsName <- GenState.getClsName
-                                            let clsName2 = if (null path) 
-                                                    then clsName
+                                            cls <- GenState.getCls
+                                            let 
+                                                clsName = if (null path) 
+                                                    then LType.name cls
                                                     else (path!!0)
-                                                arglen     = length inputs - 1
-                                                mname      = mangleName clsName2 $ mkVarName name
+                                                -- type "self" in not extension methods
+                                                -- see: COMPILER-42
+                                                -- TODO: We should type self in extension methods also, but it needs TH to read type params
+                                                ninputs    = if (null path)
+                                                    then (typeMethodSelf cls) inputs
+                                                    else inputs
+                                                arglen     = length ninputs - 1
+                                                mname      = mangleName clsName $ mkVarName name
                                                 vargGetter = genVArgGetter arglen mname
                                                 cgetCName  = mkCGetCName arglen
                                                 cgetName   = mkCGetName  arglen
@@ -150,11 +166,11 @@ genExpr ast = case ast of
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
 
-                                            genFuncDecl clsName2 name
+                                            genFuncDecl clsName name
 
                                             f  <-   HExpr.Assignment (HExpr.Var fname) 
                                                     <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show (arglen + 1))
-                                                          <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
+                                                          <$> ( HExpr.Lambda <$> (mapM genExpr ninputs)
                                                                              <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
                                                               )
                                                         )
@@ -212,22 +228,22 @@ genExpr ast = case ast of
                                                 params      = LType.params cls
                                                 fieldNames  = map LExpr.name fields
                                                 fieldlen    = length fields
+                                                --tmethods    = map (typeMethodSelf name) methods
                                                 funcNames   = map LExpr.name methods 
                                                 memberNames = fieldNames ++ funcNames
                                                 ccname      = mkCCName name
                                             
-                                            GenState.setClsName name
+                                            GenState.setCls cls
                                             
                                             -- DataType
                                             cons   <- HExpr.Con name <$> mapM genExpr fields
                                             let dt = HExpr.DataD name params [cons] ["Show", "Generic"]
                                             GenState.addDataType dt
 
-
-                                            mapM_ genExpr methods
-
                                             -- get0 value instance
                                             GenState.addInstance $ genDTGet0 name params
+
+                                            mapM_ genExpr methods
 
                                             -- CONSTRUCTORS --
 
