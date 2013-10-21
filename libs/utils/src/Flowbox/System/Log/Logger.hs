@@ -77,42 +77,43 @@ logIO entry = liftIO $ do
         rootLoggerName = ""
 
         componentsOfName :: String -> [String] -- [PM] copied from System.Log.Logger
-        componentsOfName name =
+        componentsOfName n =
           let joinComp [] _ = []
               joinComp (x:xs) [] = x : joinComp xs x
               joinComp (x:xs) accum =
                   let newlevel = accum ++ "." ++ x in
                       newlevel : joinComp xs newlevel
               in
-              rootLoggerName : joinComp (StringUtils.split "." name) []
+              rootLoggerName : joinComp (StringUtils.split "." n) []
 
         --parentLoggers :: String -> IO [Logger] -- [PM] copied from System.Log.Logger
         parentLoggers [] = return []
-        parentLoggers name = 
-            let pname = (head . drop 1 . reverse . componentsOfName) name
+        parentLoggers n = 
+            let pname = (head . drop 1 . reverse . componentsOfName) n
                 in 
                 do parent <- HSLogger.getLogger pname
                    next <- parentLoggers pname
                    return (parent : next)
 
         getLoggerPriority :: String -> IO Priority -- [PM] copied from System.Log.Logger
-        getLoggerPriority name =
-            do l <- HSLogger.getLogger name
-               pl <- parentLoggers name
+        getLoggerPriority n =
+            do l <- HSLogger.getLogger n
+               pl <- parentLoggers n
                case Maybe.catMaybes . map HSLogger.getLevel $ (l : pl) of
                  [] -> return DEBUG
                  (x:_) -> return x
 
-    --lpri <- getLoggerPriority name
-    --if pri >= lpri
-    --    then ANSI.hSetSGR stderr sgr
-    --    else return ()
+    lpri <- getLoggerPriority name
+    if pri >= lpri
+        then ANSI.hSetSGR stderr sgr
+        else return ()
 
     logM name pri (msg)
 
-    --if pri >= lpri
-    --    then ANSI.hSetSGR stderr []
-    --    else return ()
+    if pri >= lpri
+        then ANSI.hSetSGR stderr []
+        else return ()
+
 
 debug :: LogAction ()
 debug = log DEBUG
