@@ -23,8 +23,7 @@ Library
   Build-Depends:  base,
                   flowbox-config,
                   flowbox-utils,
-                  MissingH,
-                  optparse-applicative
+                  MissingH
 
 
 Executable initializer 
@@ -41,4 +40,4 @@ Executable initializer
                   flowbox-config,
                   flowbox-utils,
                   MissingH,
-                  optparse-applicative
+                  optparse-applicative == 0.5.2.1

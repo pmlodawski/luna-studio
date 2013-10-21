@@ -54,5 +54,5 @@ Executable lunac
                   flowbox-utils,
                   MissingH,
                   mtl,
-                  optparse-applicative,
+                  optparse-applicative == 0.5.2.1,
                   timeit
