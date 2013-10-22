@@ -190,7 +190,7 @@ floatStr'       = (++) <$> decimalStr <*> fractExponentStr
 
 fractExponentStr = (++) <$> fractionStr <*> option "" exponentStr'
 
-fractionStr     = (:) <$> char '.' <*> (many1 digit <|> pure "0" <?> "fraction") <?> "fraction"
+fractionStr     = (:) <$> char '.' <*> (many1 digit <|> ("0" <$ pSpaces1) <?> "fraction") <?> "fraction"
 
 exponentStr'    = (\a b c -> a:b:c) <$> oneOf "eE" <*> signStr <*> (decimalStr <?> "exponent") <?> "exponent" 
 
