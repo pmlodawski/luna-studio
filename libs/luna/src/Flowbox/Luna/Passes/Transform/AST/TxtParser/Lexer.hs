@@ -43,7 +43,7 @@ pArrow       = symbols "->"
 pTypeDecl    = symbols "::"
 pImportAll   = symbol  '*'
 pAssignment  = symbol  '='
-pNativeSym   = symbols "```"
+pNativeSym s = symbols2 s "```"
 pRange       = symbols ".."
 
 opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
@@ -278,11 +278,12 @@ isReservedName name = isReserved (sort reservedNames) name
 -- White space & symbols
 -----------------------------------------------------------
 lexeme p    = p <* skipMany pSpaces1 
-lexeme2 s p = p <* do if s then skipMany pSpaces1 else return ()
+lexeme2 s p = p <* if s then skipMany pSpaces1 else return ()
 
-symbols   name = try $ lexeme (string name)
-symbol    name = lexeme (char name)
-symbol2 s name = lexeme2 s (char name)
+symbols    name = try $ lexeme (string name)
+symbols2 s name = try $ lexeme2 s (string name)
+symbol     name = lexeme (char name)
+symbol2  s name = lexeme2 s (char name)
 
 pSpace      = satisfy (`elem` "\t\f\v ") <?> ""
 pSpacesBase = many1 pSpace <|> try(multiLineComment) <|> oneLineComment <?> ""

@@ -151,7 +151,7 @@ pDeclaration s i    = choice [ pImport s
 -- Expressions
 -----------------------------------------------------------
 
-pNative         = between L.pNativeSym L.pNativeSym (many pNativeElem)
+pNative         = between (L.pNativeSym False) (L.pNativeSym True) (many pNativeElem)
 pNativeElem     = choice [ pNativeVar
                          , pNativeCode
                          ]
