@@ -119,7 +119,8 @@ example = Source.Source ["Main"]
                   , "   x.add y"
                   , "def main self:"
                   , "   tuple = {1,2,3}"
-                  , "   a = False"
+                  , "   a = 'a'"
+                  , "   Console.print a"
 
                   --, "def main self:"
                   --, "    Console.print (self.add 3 4)"

@@ -11,3 +11,5 @@ instance Get0 (Pure [a]) (Pure [a]) where get0 = id
 con_True  = Pure True
 con_False = Pure False
 instance Get0 (Pure Bool) (Pure Bool) where get0 = id
+
+instance Get0 (Pure Char) (Pure Char) where get0 = id
