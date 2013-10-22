@@ -98,6 +98,7 @@ findMatchingTuple nodeID port graph = mt where
                               _               -> False
     matching _ = False
 
+
 getOrCreateTuple :: Node.ID -> Int -> Graph -> Either String (Node.ID, Graph)
 getOrCreateTuple nodeID port graph = case findMatchingTuple nodeID port graph of 
     Nothing                      -> do let [newTupleID] = Graph.newNodes 1 graph
@@ -141,9 +142,9 @@ connectG (srcNodeID, dstNodeID, EdgeView srcPorts dstPorts) graph = case srcPort
                 newEdge  = Edge (Port.Number (head srcPorts)) Port.All
                 newGraph = Graph.insEdge (srcNodeID, firstSelectID, newEdge) graphWithSelects
 
+
 addNodeDefaults :: GraphView -> (Node.ID, Node) -> Graph -> Either String Graph
 addNodeDefaults graphview (nodeID, node) graph = do
-
     let 
         addNodeDefault :: (PortDescriptor, DefaultValue) -> Graph -> Either String Graph
         addNodeDefault (adstPort, defaultValue) g = do

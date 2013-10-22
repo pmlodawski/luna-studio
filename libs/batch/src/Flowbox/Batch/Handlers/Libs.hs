@@ -41,7 +41,7 @@ import qualified Flowbox.Luna.Passes.Build.Diagnostics as Diagnostics
 import qualified Flowbox.Luna.Passes.General.Luna.Luna as Luna
 import           Flowbox.System.Log.Logger               
 import qualified Flowbox.System.Platform               as Platform
-import qualified Flowbox.System.Process                        as Process
+import qualified Flowbox.System.Process                as Process
 import qualified Flowbox.System.UniPath                as UniPath
 import           Flowbox.System.UniPath                  (UniPath)
 
