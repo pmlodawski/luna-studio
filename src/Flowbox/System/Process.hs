@@ -16,19 +16,19 @@ module Flowbox.System.Process (
     readProcessWithExitCode', -- original one from System.Process
 ) where
 
-import           Control.Applicative         
-import qualified Control.Exception         as Exception
-import qualified System.IO                 as IO
-import qualified System.Exit               as Exit
-import qualified System.Directory          as Directory
-import qualified System.Process            as Process
-import           System.Process            hiding (readProcess, runProcess, readProcessWithExitCode)
+import           Control.Applicative                  
+import qualified Control.Exception                  as Exception
+import qualified System.IO                          as IO
+import qualified System.Exit                        as Exit
+import qualified System.Process                     as Process
+import           System.Process                     hiding (readProcess, runProcess, readProcessWithExitCode)
 
-import           Flowbox.Prelude           hiding (error)
-import           Flowbox.System.Log.Logger   
-import qualified Flowbox.System.UniPath    as UniPath
-import           Flowbox.System.UniPath      (UniPath)
-import           Data.String.Utils           (join)
+import           Flowbox.Prelude                    hiding (error)
+import qualified Flowbox.System.Directory.Directory as Directory
+import           Flowbox.System.Log.Logger            
+import qualified Flowbox.System.UniPath             as UniPath
+import           Flowbox.System.UniPath               (UniPath)
+import           Data.String.Utils                    (join)
 
 
 
@@ -84,10 +84,8 @@ readProcessWithExitCode mpath command args input = do
 
 conditionalChDir :: Maybe UniPath -> IO ()
 conditionalChDir mpath = case mpath of 
-    Nothing    -> return ()
-    Just upath -> do path <- UniPath.toUnixString <$> UniPath.expand upath
-                     Directory.setCurrentDirectory path
-
+    Nothing   -> return ()
+    Just path -> Directory.setCurrentDirectory path
 
 
 readOutput :: IO.Handle -> IO.Handle -> IO (String, String)

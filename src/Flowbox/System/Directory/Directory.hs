@@ -11,6 +11,7 @@ module Flowbox.System.Directory.Directory (
     createDirectoryIfMissing,
     doesFileExist,
     doesDirectoryExist,
+    getCurrentDirectory,
     getDirectoryRecursive,
     getTemporaryDirectory,
     getTmpDirectoryWithPrefix,
@@ -18,6 +19,7 @@ module Flowbox.System.Directory.Directory (
     removeFile,
     renameDirectory,
     renameFile,
+    setCurrentDirectory,
     touchFile,
     withTmpDirectory,
     module System.Directory,
@@ -32,11 +34,13 @@ import           System.Directory       hiding (copyFile,
                                                 createDirectoryIfMissing, 
                                                 doesDirectoryExist, 
                                                 doesFileExist, 
+                                                getCurrentDirectory,
                                                 getTemporaryDirectory,
                                                 renameDirectory, 
                                                 renameFile, 
                                                 removeDirectoryRecursive, 
-                                                removeFile)
+                                                removeFile,
+                                                setCurrentDirectory)
 import qualified System.IO              as IO
 
 import           Flowbox.Prelude          
@@ -102,6 +106,10 @@ doesFileExist upath = do
     Directory.doesFileExist path
 
 
+getCurrentDirectory :: IO UniPath
+getCurrentDirectory = UniPath.fromUnixString <$> Directory.getCurrentDirectory
+
+
 getDirectoryRecursive :: UniPath -> IO [UniPath]
 getDirectoryRecursive upath = do
     path  <- UniPath.expand upath
@@ -150,6 +158,12 @@ renameFile usrc udst = do
     src <- UniPath.toUnixString <$> UniPath.expand usrc
     dst <- UniPath.toUnixString <$> UniPath.expand udst
     Directory.renameFile src dst
+
+
+setCurrentDirectory :: UniPath -> IO ()
+setCurrentDirectory upath = do
+    path <- UniPath.toUnixString <$> UniPath.expand upath
+    Directory.setCurrentDirectory path
 
 
 touchFile :: UniPath -> IO ()
