@@ -171,10 +171,15 @@ pTermE    s i   = choice[ pDeclaration s i
 optableE  s i  = [ [ postfixM "."  (tok Expr.Accessor <*> pIdent s)                ]
                  , [ postfixM "::" (tok Expr.Typed <*> pType s i)                  ]
                  , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
-                 , [ binaryM  "*"  (binaryMatchE <$> (tok Expr.Infix <*> pure "*")) PExpr.AssocLeft ]
-                 , [ binaryM  "+"  (binaryMatchE <$> (tok Expr.Infix <*> pure "+")) PExpr.AssocLeft ]
+                 , [ operator "^"                                  PExpr.AssocLeft ]
+                 , [ operator "*"                                  PExpr.AssocLeft ]
+                 , [ operator "/"                                  PExpr.AssocLeft ]
+                 , [ operator "+"                                  PExpr.AssocLeft ]
+                 , [ operator "-"                                  PExpr.AssocLeft ]
                  , [ prefixfM      (try(binaryMatchE2 <$> tok Expr.Assignment <*> (pPattern s i) <* (L.reservedOp "=" <?> "pattern match")))]
                  ]
+                 where
+                    operator s = binaryM  s (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':s)))
 
 binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 binaryMatchE2 f p q = f p (Expr.aftermatch q)
