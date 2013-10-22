@@ -114,7 +114,7 @@ libManager rootpath = LibManager.insNode (1, userLibrary rootpath)
 project :: Project
 project = addDefaultLibraries 
         $ Project.empty { Project.name = "test project"
-                        , Project.path = UniPath.fromUnixString "luna"
+                        , Project.path = UniPath.fromUnixString "~/.flowbox/visual"
                         , Project.libs = LibManager.empty
                         } where
 
