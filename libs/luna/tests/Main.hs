@@ -118,9 +118,8 @@ example = Source.Source ["Main"]
                   , "def addInts(self, x, y) -> Int:"
                   , "   x.add y"
                   , "def main self:"
-                  , "   # test"
-                  , "   # test"
-                  , "   Console.print (5.0e+10)"
+                  , "   tuple = {1,2,3}"
+                  , "   a = False"
 
                   --, "def main self:"
                   --, "    Console.print (self.add 3 4)"

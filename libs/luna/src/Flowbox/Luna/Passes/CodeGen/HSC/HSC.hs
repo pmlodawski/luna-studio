@@ -64,6 +64,7 @@ genExt ext = "{-# LANGUAGE " ++ show ext ++ " #-}"
 
 genExpr :: HExpr -> String
 genExpr e = case e of
+    HExpr.WildP                           -> "_"
     HExpr.Var      name                   -> name
     HExpr.VarE     name                   -> name
     HExpr.VarT     name                   -> name

@@ -51,7 +51,6 @@ class Get9 m f |  m -> f where get9 :: m -> f
 instance Get0 (Pure Int)    (Pure Int)    where get0 = id
 instance Get0 (Pure Double) (Pure Double) where get0 = id
 instance Get0 (Pure Float)  (Pure Float)  where get0 = id
-instance Get0 (Pure [a]) (Pure [a]) where get0 = id
 instance Get0 (Pure ()) (Pure ()) where get0 = id
 instance Get0 (Pure (OneTuple a)) (Pure (OneTuple a)) where get0 = id
 instance Get0 (Pure (v1,v2)) (Pure (v1,v2)) where get0 = id
