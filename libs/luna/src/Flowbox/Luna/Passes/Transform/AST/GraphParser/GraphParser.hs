@@ -28,8 +28,8 @@ import           Flowbox.Luna.Network.Def.DefManager                     (DefMan
 import qualified Flowbox.Luna.Network.Def.Definition                   as Definition
 import           Flowbox.Luna.Network.Def.Definition                     (Definition(Definition))
 import           Flowbox.Luna.Network.Flags                              (Flags(Flags))
-import qualified Flowbox.Luna.Network.Graph.DefaultValue               as DefaultValue
-import           Flowbox.Luna.Network.Graph.DefaultValue                 (DefaultValue)
+import qualified Flowbox.Luna.Network.Graph.Value                      as Value
+import           Flowbox.Luna.Network.Graph.Value                        (Value)
 import qualified Flowbox.Luna.Network.Graph.Graph                      as Graph
 import           Flowbox.Luna.Network.Graph.Graph                        (Graph)
 import           Flowbox.Luna.Network.Graph.Edge                         (Edge(Edge))
@@ -180,9 +180,9 @@ type2ASTType t = do
 
 
 
-defaultVal2ASTExpr :: Graph2ASTMonad m => DefaultValue -> Pass.Result m ASTExpr
+defaultVal2ASTExpr :: Graph2ASTMonad m => Value -> Pass.Result m ASTExpr
 defaultVal2ASTExpr defaultvalue = do
-    let value = DefaultValue.value defaultvalue
+    let value = Value.value defaultvalue
     parseExpr value
 
 

@@ -13,20 +13,20 @@ module Flowbox.Batch.GraphView.Defaults (
     setDefaults,
 ) where
 
-import           Data.Map                                  (Map)
-import qualified Data.Map                                as Map
+import           Data.Map                                 (Map)
+import qualified Data.Map                               as Map
 
-import           Flowbox.Prelude                           
-import qualified Flowbox.Batch.Batch                     as Batch
-import           Flowbox.Batch.GraphView.PortDescriptor    (PortDescriptor)
-import qualified Flowbox.Luna.Network.Attributes         as Attributes
-import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue)
-import qualified Flowbox.Luna.Network.Graph.Node         as Node
-import           Flowbox.Luna.Network.Graph.Node           (Node)
+import           Flowbox.Prelude                          
+import qualified Flowbox.Batch.Batch                    as Batch
+import           Flowbox.Batch.GraphView.PortDescriptor   (PortDescriptor)
+import qualified Flowbox.Luna.Network.Attributes        as Attributes
+import           Flowbox.Luna.Network.Graph.Value         (Value)
+import qualified Flowbox.Luna.Network.Graph.Node        as Node
+import           Flowbox.Luna.Network.Graph.Node          (Node)
 
 
 
-type DefaultsMap = Map PortDescriptor DefaultValue
+type DefaultsMap = Map PortDescriptor Value
 
 
 defaultsMapKey :: String

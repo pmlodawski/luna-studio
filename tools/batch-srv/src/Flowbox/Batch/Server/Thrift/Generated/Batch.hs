@@ -3176,14 +3176,14 @@ read_NodeDefaults_args iprot = do
   record <- read_NodeDefaults_args_fields iprot (NodeDefaults_args{f_NodeDefaults_args_nodeID=Nothing,f_NodeDefaults_args_defID=Nothing,f_NodeDefaults_args_libID=Nothing,f_NodeDefaults_args_projectID=Nothing})
   readStructEnd iprot
   return record
-data NodeDefaults_result = NodeDefaults_result{f_NodeDefaults_result_success :: Maybe (Map.HashMap (Vector.Vector Int32) Graph_Types.DefaultValue),f_NodeDefaults_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
+data NodeDefaults_result = NodeDefaults_result{f_NodeDefaults_result_success :: Maybe (Map.HashMap (Vector.Vector Int32) Graph_Types.Value),f_NodeDefaults_result_missingFields :: Maybe ArgumentException} deriving (Show,Eq,Typeable)
 instance Hashable NodeDefaults_result where
   hashWithSalt salt record = salt   `hashWithSalt` f_NodeDefaults_result_success record   `hashWithSalt` f_NodeDefaults_result_missingFields record  
 write_NodeDefaults_result oprot record = do
   writeStructBegin oprot "NodeDefaults_result"
   case f_NodeDefaults_result_success record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("success",T_MAP,0)
-    (let {f [] = return (); f ((_kiter464,_viter465):t) = do {do {(let f = Vector.mapM_ (\_viter466 -> writeI32 oprot _viter466) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _kiter464); f _kiter464;writeListEnd oprot});Graph_Types.write_DefaultValue oprot _viter465};f t}} in do {writeMapBegin oprot (T_LIST,T_STRUCT,fromIntegral $ Map.size _v); f (Map.toList _v);writeMapEnd oprot})
+    (let {f [] = return (); f ((_kiter464,_viter465):t) = do {do {(let f = Vector.mapM_ (\_viter466 -> writeI32 oprot _viter466) in do {writeListBegin oprot (T_I32,fromIntegral $ Vector.length _kiter464); f _kiter464;writeListEnd oprot});Graph_Types.write_Value oprot _viter465};f t}} in do {writeMapBegin oprot (T_LIST,T_STRUCT,fromIntegral $ Map.size _v); f (Map.toList _v);writeMapEnd oprot})
     writeFieldEnd oprot}
   case f_NodeDefaults_result_missingFields record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("missingFields",T_STRUCT,1)
@@ -3196,7 +3196,7 @@ read_NodeDefaults_result_fields iprot record = do
   if _t468 == T_STOP then return record else
     case _id469 of 
       0 -> if _t468 == T_MAP then do
-        s <- (let {f 0 = return []; f n = do {k <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype478,_size475) <- readListBegin iprot; f _size475}); v <- (read_DefaultValue iprot);r <- f (n-1); return $ (k,v):r}} in do {(_ktype471,_vtype472,_size470) <- readMapBegin iprot; l <- f _size470; return $ Map.fromList l})
+        s <- (let {f 0 = return []; f n = do {k <- (let f n = Vector.replicateM (fromIntegral n) (readI32 iprot) in do {(_etype478,_size475) <- readListBegin iprot; f _size475}); v <- (read_Value iprot);r <- f (n-1); return $ (k,v):r}} in do {(_ktype471,_vtype472,_size470) <- readMapBegin iprot; l <- f _size470; return $ Map.fromList l})
         read_NodeDefaults_result_fields iprot record{f_NodeDefaults_result_success=Just s}
         else do
           skip iprot _t468
@@ -3216,7 +3216,7 @@ read_NodeDefaults_result iprot = do
   record <- read_NodeDefaults_result_fields iprot (NodeDefaults_result{f_NodeDefaults_result_success=Nothing,f_NodeDefaults_result_missingFields=Nothing})
   readStructEnd iprot
   return record
-data SetNodeDefault_args = SetNodeDefault_args{f_SetNodeDefault_args_dst :: Maybe (Vector.Vector Int32),f_SetNodeDefault_args_value :: Maybe Graph_Types.DefaultValue,f_SetNodeDefault_args_nodeID :: Maybe Int32,f_SetNodeDefault_args_defID :: Maybe Int32,f_SetNodeDefault_args_libID :: Maybe Int32,f_SetNodeDefault_args_projectID :: Maybe Int32} deriving (Show,Eq,Typeable)
+data SetNodeDefault_args = SetNodeDefault_args{f_SetNodeDefault_args_dst :: Maybe (Vector.Vector Int32),f_SetNodeDefault_args_value :: Maybe Graph_Types.Value,f_SetNodeDefault_args_nodeID :: Maybe Int32,f_SetNodeDefault_args_defID :: Maybe Int32,f_SetNodeDefault_args_libID :: Maybe Int32,f_SetNodeDefault_args_projectID :: Maybe Int32} deriving (Show,Eq,Typeable)
 instance Hashable SetNodeDefault_args where
   hashWithSalt salt record = salt   `hashWithSalt` f_SetNodeDefault_args_dst record   `hashWithSalt` f_SetNodeDefault_args_value record   `hashWithSalt` f_SetNodeDefault_args_nodeID record   `hashWithSalt` f_SetNodeDefault_args_defID record   `hashWithSalt` f_SetNodeDefault_args_libID record   `hashWithSalt` f_SetNodeDefault_args_projectID record  
 write_SetNodeDefault_args oprot record = do
@@ -3227,7 +3227,7 @@ write_SetNodeDefault_args oprot record = do
     writeFieldEnd oprot}
   case f_SetNodeDefault_args_value record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("value",T_STRUCT,2)
-    Graph_Types.write_DefaultValue oprot _v
+    Graph_Types.write_Value oprot _v
     writeFieldEnd oprot}
   case f_SetNodeDefault_args_nodeID record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("nodeID",T_I32,3)
@@ -3258,7 +3258,7 @@ read_SetNodeDefault_args_fields iprot record = do
           skip iprot _t484
           read_SetNodeDefault_args_fields iprot record
       2 -> if _t484 == T_STRUCT then do
-        s <- (read_DefaultValue iprot)
+        s <- (read_Value iprot)
         read_SetNodeDefault_args_fields iprot record{f_SetNodeDefault_args_value=Just s}
         else do
           skip iprot _t484

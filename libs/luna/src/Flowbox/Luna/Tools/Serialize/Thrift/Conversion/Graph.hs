@@ -22,8 +22,8 @@ import qualified Attrs_Types                                          as TAttrs
 import qualified Graph_Types                                          as TGraph
 import           Flowbox.Control.Error                                  
 import           Flowbox.Luna.Network.Attributes                        (Attributes)
-import           Flowbox.Luna.Network.Flags                             (Flags(..))
-import           Flowbox.Luna.Network.Graph.DefaultValue                (DefaultValue(DefaultValue))
+import           Flowbox.Luna.Network.Flags                             (Flags)
+import           Flowbox.Luna.Network.Graph.Value                       (Value(Value))
 import           Flowbox.Luna.Network.Graph.Edge                        (Edge(Edge))
 import qualified Flowbox.Luna.Network.Graph.Graph                     as Graph
 import           Flowbox.Luna.Network.Graph.Graph                       (Graph)
@@ -101,12 +101,12 @@ instance Convert Graph TGraph.Graph where
     decode (TGraph.Graph mtnodes mtedges) = decodeGraph (mtnodes, mtedges)
 
 
-instance Convert DefaultValue TGraph.DefaultValue where
-  encode (DefaultValue v) = TGraph.DefaultValue (Just $ Text.pack v)
+instance Convert Value TGraph.Value where
+  encode (Value v) = TGraph.Value (Just $ Text.pack v)
 
-  decode (TGraph.DefaultValue mtvalue) = do 
-      tvalue <- mtvalue <?> "Failed to decode DefaultValue: 'value' field is missing"
-      return $ DefaultValue $ Text.unpack tvalue
+  decode (TGraph.Value mtvalue) = do 
+      tvalue <- mtvalue <?> "Failed to decode Value: 'value' field is missing"
+      return $ Value $ Text.unpack tvalue
 
 
 instance Convert (Int, Node) TGraph.Node where
@@ -139,7 +139,7 @@ instance Convert (Int, Node) TGraph.Node where
       nodeAttrs :: TAttrs.Attributes
       nodeAttrs = encode $ Node.attributes a
 
-      defValue :: Maybe TGraph.DefaultValue
+      defValue :: Maybe TGraph.Value
       defValue = fmap encode $ case a of
                    Node.Default val _ -> Just val
                    _                  -> Nothing
@@ -165,8 +165,8 @@ instance Convert (Int, Node) TGraph.Node where
                 Just nattrs -> decode nattrs
                 Nothing     -> Left "Node attributes not defined"
 
-      gdefval :: Either String DefaultValue
-      gdefval = case TGraph.f_Node_defVal b of
+      gdefval :: Either String Value
+      gdefval = case TGraph.f_Node_value b of
                  Just ndefval -> decode ndefval
                  Nothing      -> Left "Default value not defined"
 

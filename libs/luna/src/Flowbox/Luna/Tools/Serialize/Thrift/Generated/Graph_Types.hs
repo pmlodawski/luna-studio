@@ -65,39 +65,39 @@ instance Hashable PortType where
   hashWithSalt salt = hashWithSalt salt . fromEnum
 type NodeID = Int32
 
-data DefaultValue = DefaultValue{f_DefaultValue_value :: Maybe Text} deriving (Show,Eq,Typeable)
-instance Hashable DefaultValue where
-  hashWithSalt salt record = salt   `hashWithSalt` f_DefaultValue_value record  
-write_DefaultValue oprot record = do
-  writeStructBegin oprot "DefaultValue"
-  case f_DefaultValue_value record of {Nothing -> return (); Just _v -> do
+data Value = Value{f_Value_value :: Maybe Text} deriving (Show,Eq,Typeable)
+instance Hashable Value where
+  hashWithSalt salt record = salt   `hashWithSalt` f_Value_value record  
+write_Value oprot record = do
+  writeStructBegin oprot "Value"
+  case f_Value_value record of {Nothing -> return (); Just _v -> do
     writeFieldBegin oprot ("value",T_STRING,2)
     writeString oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
-read_DefaultValue_fields iprot record = do
+read_Value_fields iprot record = do
   (_,_t3,_id4) <- readFieldBegin iprot
   if _t3 == T_STOP then return record else
     case _id4 of 
       2 -> if _t3 == T_STRING then do
         s <- readString iprot
-        read_DefaultValue_fields iprot record{f_DefaultValue_value=Just s}
+        read_Value_fields iprot record{f_Value_value=Just s}
         else do
           skip iprot _t3
-          read_DefaultValue_fields iprot record
+          read_Value_fields iprot record
       _ -> do
         skip iprot _t3
         readFieldEnd iprot
-        read_DefaultValue_fields iprot record
-read_DefaultValue iprot = do
+        read_Value_fields iprot record
+read_Value iprot = do
   _ <- readStructBegin iprot
-  record <- read_DefaultValue_fields iprot (DefaultValue{f_DefaultValue_value=Nothing})
+  record <- read_Value_fields iprot (Value{f_Value_value=Nothing})
   readStructEnd iprot
   return record
-data Node = Node{f_Node_cls :: Maybe NodeType,f_Node_expression :: Maybe Text,f_Node_nodeID :: Maybe Int32,f_Node_flags :: Maybe Attrs_Types.Flags,f_Node_attrs :: Maybe Attrs_Types.Attributes,f_Node_defVal :: Maybe DefaultValue} deriving (Show,Eq,Typeable)
+data Node = Node{f_Node_cls :: Maybe NodeType,f_Node_expression :: Maybe Text,f_Node_nodeID :: Maybe Int32,f_Node_flags :: Maybe Attrs_Types.Flags,f_Node_attrs :: Maybe Attrs_Types.Attributes,f_Node_value :: Maybe Value} deriving (Show,Eq,Typeable)
 instance Hashable Node where
-  hashWithSalt salt record = salt   `hashWithSalt` f_Node_cls record   `hashWithSalt` f_Node_expression record   `hashWithSalt` f_Node_nodeID record   `hashWithSalt` f_Node_flags record   `hashWithSalt` f_Node_attrs record   `hashWithSalt` f_Node_defVal record  
+  hashWithSalt salt record = salt   `hashWithSalt` f_Node_cls record   `hashWithSalt` f_Node_expression record   `hashWithSalt` f_Node_nodeID record   `hashWithSalt` f_Node_flags record   `hashWithSalt` f_Node_attrs record   `hashWithSalt` f_Node_value record  
 write_Node oprot record = do
   writeStructBegin oprot "Node"
   case f_Node_cls record of {Nothing -> return (); Just _v -> do
@@ -120,9 +120,9 @@ write_Node oprot record = do
     writeFieldBegin oprot ("attrs",T_STRUCT,5)
     Attrs_Types.write_Attributes oprot _v
     writeFieldEnd oprot}
-  case f_Node_defVal record of {Nothing -> return (); Just _v -> do
-    writeFieldBegin oprot ("defVal",T_STRUCT,6)
-    write_DefaultValue oprot _v
+  case f_Node_value record of {Nothing -> return (); Just _v -> do
+    writeFieldBegin oprot ("value",T_STRUCT,6)
+    write_Value oprot _v
     writeFieldEnd oprot}
   writeFieldStop oprot
   writeStructEnd oprot
@@ -161,8 +161,8 @@ read_Node_fields iprot record = do
           skip iprot _t8
           read_Node_fields iprot record
       6 -> if _t8 == T_STRUCT then do
-        s <- (read_DefaultValue iprot)
-        read_Node_fields iprot record{f_Node_defVal=Just s}
+        s <- (read_Value iprot)
+        read_Node_fields iprot record{f_Node_value=Just s}
         else do
           skip iprot _t8
           read_Node_fields iprot record
@@ -172,7 +172,7 @@ read_Node_fields iprot record = do
         read_Node_fields iprot record
 read_Node iprot = do
   _ <- readStructBegin iprot
-  record <- read_Node_fields iprot (Node{f_Node_cls=Nothing,f_Node_expression=Nothing,f_Node_nodeID=Nothing,f_Node_flags=Nothing,f_Node_attrs=Nothing,f_Node_defVal=Nothing})
+  record <- read_Node_fields iprot (Node{f_Node_cls=Nothing,f_Node_expression=Nothing,f_Node_nodeID=Nothing,f_Node_flags=Nothing,f_Node_attrs=Nothing,f_Node_value=Nothing})
   readStructEnd iprot
   return record
 data Port = Port{f_Port_cls :: Maybe PortType,f_Port_number :: Maybe Int32} deriving (Show,Eq,Typeable)
