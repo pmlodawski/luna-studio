@@ -8025,7 +8025,7 @@ uint32_t Batch_nodeDefaults_result::read(::apache::thrift::protocol::TProtocol* 
                 }
                 xfer += iprot->readListEnd();
               }
-               ::flowbox::batch::graph::DefaultValue& _val106 = this->success[_key105];
+               ::flowbox::batch::graph::Value& _val106 = this->success[_key105];
               xfer += _val106.read(iprot);
             }
             xfer += iprot->readMapEnd();
@@ -8065,7 +8065,7 @@ uint32_t Batch_nodeDefaults_result::write(::apache::thrift::protocol::TProtocol*
     xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_MAP, 0);
     {
       xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_LIST, ::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->success.size()));
-      std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> ::const_iterator _iter112;
+      std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value> ::const_iterator _iter112;
       for (_iter112 = this->success.begin(); _iter112 != this->success.end(); ++_iter112)
       {
         {
@@ -8137,7 +8137,7 @@ uint32_t Batch_nodeDefaults_presult::read(::apache::thrift::protocol::TProtocol*
                 }
                 xfer += iprot->readListEnd();
               }
-               ::flowbox::batch::graph::DefaultValue& _val120 = (*(this->success))[_key119];
+               ::flowbox::batch::graph::Value& _val120 = (*(this->success))[_key119];
               xfer += _val120.read(iprot);
             }
             xfer += iprot->readMapEnd();
@@ -12676,7 +12676,7 @@ void BatchClient::recv_disconnect()
   return;
 }
 
-void BatchClient::nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID)
+void BatchClient::nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID)
 {
   send_nodeDefaults(nodeID, defID, libID, projectID);
   recv_nodeDefaults(_return);
@@ -12699,7 +12699,7 @@ void BatchClient::send_nodeDefaults(const  ::flowbox::batch::graph::NodeID nodeI
   oprot_->getTransport()->flush();
 }
 
-void BatchClient::recv_nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return)
+void BatchClient::recv_nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value> & _return)
 {
 
   int32_t rseqid = 0;
@@ -12740,13 +12740,13 @@ void BatchClient::recv_nodeDefaults(std::map< ::flowbox::batch::graph::PortDescr
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "nodeDefaults failed: unknown result");
 }
 
-void BatchClient::setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID)
+void BatchClient::setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::Value& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID)
 {
   send_setNodeDefault(dst, value, nodeID, defID, libID, projectID);
   recv_setNodeDefault();
 }
 
-void BatchClient::send_setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID)
+void BatchClient::send_setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::Value& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("setNodeDefault", ::apache::thrift::protocol::T_CALL, cseqid);

@@ -212,12 +212,12 @@ class BatchHandler : virtual public BatchIf {
     printf("disconnect\n");
   }
 
-  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("nodeDefaults\n");
   }
 
-  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::Value& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     // Your implementation goes here
     printf("setNodeDefault\n");
   }

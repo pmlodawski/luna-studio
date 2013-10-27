@@ -53,8 +53,8 @@ class BatchIf {
   virtual void removeNode(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void connect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
-  virtual void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
-  virtual void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
+  virtual void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
+  virtual void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::Value& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void removeNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) = 0;
   virtual void FS_ls(std::vector< ::flowbox::batch::fs::FSItem> & _return, const std::string& path) = 0;
   virtual void FS_stat( ::flowbox::batch::fs::FSItem& _return, const std::string& path) = 0;
@@ -210,10 +210,10 @@ class BatchNull : virtual public BatchIf {
   void disconnect(const  ::flowbox::batch::graph::NodeID /* srcNodeID */, const  ::flowbox::batch::graph::PortDescriptor& /* srcPort */, const  ::flowbox::batch::graph::NodeID /* dstNodeID */, const  ::flowbox::batch::graph::PortDescriptor& /* dstPort */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
     return;
   }
-  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & /* _return */, const  ::flowbox::batch::graph::NodeID /* nodeID */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
+  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value> & /* _return */, const  ::flowbox::batch::graph::NodeID /* nodeID */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
     return;
   }
-  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& /* dst */, const  ::flowbox::batch::graph::DefaultValue& /* value */, const  ::flowbox::batch::graph::NodeID /* nodeID */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
+  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& /* dst */, const  ::flowbox::batch::graph::Value& /* value */, const  ::flowbox::batch::graph::NodeID /* nodeID */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
     return;
   }
   void removeNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& /* dst */, const  ::flowbox::batch::graph::NodeID /* nodeID */, const  ::flowbox::batch::defs::DefID /* defID */, const  ::flowbox::batch::libs::LibID /* libID */, const  ::flowbox::batch::projects::ProjectID /* projectID */) {
@@ -5175,12 +5175,12 @@ class Batch_nodeDefaults_result {
 
   virtual ~Batch_nodeDefaults_result() throw() {}
 
-  std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue>  success;
+  std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value>  success;
   ArgumentException missingFields;
 
   _Batch_nodeDefaults_result__isset __isset;
 
-  void __set_success(const std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & val) {
+  void __set_success(const std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value> & val) {
     success = val;
   }
 
@@ -5219,7 +5219,7 @@ class Batch_nodeDefaults_presult {
 
   virtual ~Batch_nodeDefaults_presult() throw() {}
 
-  std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> * success;
+  std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value> * success;
   ArgumentException missingFields;
 
   _Batch_nodeDefaults_presult__isset __isset;
@@ -5247,7 +5247,7 @@ class Batch_setNodeDefault_args {
   virtual ~Batch_setNodeDefault_args() throw() {}
 
    ::flowbox::batch::graph::PortDescriptor dst;
-   ::flowbox::batch::graph::DefaultValue value;
+   ::flowbox::batch::graph::Value value;
    ::flowbox::batch::graph::NodeID nodeID;
    ::flowbox::batch::defs::DefID defID;
    ::flowbox::batch::libs::LibID libID;
@@ -5259,7 +5259,7 @@ class Batch_setNodeDefault_args {
     dst = val;
   }
 
-  void __set_value(const  ::flowbox::batch::graph::DefaultValue& val) {
+  void __set_value(const  ::flowbox::batch::graph::Value& val) {
     value = val;
   }
 
@@ -5314,7 +5314,7 @@ class Batch_setNodeDefault_pargs {
   virtual ~Batch_setNodeDefault_pargs() throw() {}
 
   const  ::flowbox::batch::graph::PortDescriptor* dst;
-  const  ::flowbox::batch::graph::DefaultValue* value;
+  const  ::flowbox::batch::graph::Value* value;
   const  ::flowbox::batch::graph::NodeID* nodeID;
   const  ::flowbox::batch::defs::DefID* defID;
   const  ::flowbox::batch::libs::LibID* libID;
@@ -6749,11 +6749,11 @@ class BatchClient : virtual public BatchIf {
   void disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_disconnect(const  ::flowbox::batch::graph::NodeID srcNodeID, const  ::flowbox::batch::graph::PortDescriptor& srcPort, const  ::flowbox::batch::graph::NodeID dstNodeID, const  ::flowbox::batch::graph::PortDescriptor& dstPort, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_disconnect();
-  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_nodeDefaults(const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
-  void recv_nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return);
-  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
-  void send_setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void recv_nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value> & _return);
+  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::Value& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
+  void send_setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::Value& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void recv_setNodeDefault();
   void removeNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
   void send_removeNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID);
@@ -7309,7 +7309,7 @@ class BatchMultiface : virtual public BatchIf {
     ifaces_[i]->disconnect(srcNodeID, srcPort, dstNodeID, dstPort, defID, libID, projectID);
   }
 
-  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::DefaultValue> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+  void nodeDefaults(std::map< ::flowbox::batch::graph::PortDescriptor,  ::flowbox::batch::graph::Value> & _return, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -7319,7 +7319,7 @@ class BatchMultiface : virtual public BatchIf {
     return;
   }
 
-  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::DefaultValue& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
+  void setNodeDefault(const  ::flowbox::batch::graph::PortDescriptor& dst, const  ::flowbox::batch::graph::Value& value, const  ::flowbox::batch::graph::NodeID nodeID, const  ::flowbox::batch::defs::DefID defID, const  ::flowbox::batch::libs::LibID libID, const  ::flowbox::batch::projects::ProjectID projectID) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {

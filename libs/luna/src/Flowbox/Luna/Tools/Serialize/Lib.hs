@@ -52,9 +52,8 @@ getLib h = do
 
 storeLibrary :: Library -> IO ()
 storeLibrary lib = do 
-    let 
-        libpath      = Library.path lib
-        slib  = Serializable libpath (saveLib lib)
+    let libpath = Library.path lib
+        slib    = Serializable libpath (saveLib lib)
 
     Serializer.serialize slib
 
@@ -62,9 +61,7 @@ storeLibrary lib = do
 restoreLibrary :: UniPath -> IO Library
 restoreLibrary path = do
     let dlib = Deserializable path getLib
-
     library <- Serializer.deserialize dlib
-    
     return $ library{Library.path = path}
 
 

@@ -14,18 +14,18 @@ module Flowbox.Luna.Network.Graph.Node (
     mkNTuple,
 ) where
 
-import           Flowbox.Prelude                           
+import           Flowbox.Prelude                    
 
-import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue)
-import qualified Flowbox.Luna.Network.Flags              as Flags
-import           Flowbox.Luna.Network.Flags                (Flags)
-import qualified Flowbox.Luna.Network.Attributes         as Attributes
-import           Flowbox.Luna.Network.Attributes           (Attributes)
+import           Flowbox.Luna.Network.Graph.Value   (Value)
+import qualified Flowbox.Luna.Network.Flags       as Flags
+import           Flowbox.Luna.Network.Flags         (Flags)
+import qualified Flowbox.Luna.Network.Attributes  as Attributes
+import           Flowbox.Luna.Network.Attributes    (Attributes)
 
 --type NodeDefID = Int
 
 data Node = Expr     { expression :: String, flags :: Flags, attributes :: Attributes }
-          | Default  { value :: DefaultValue, attributes :: Attributes}
+          | Default  { value :: Value, attributes :: Attributes}
           | Inputs   { flags :: Flags, attributes :: Attributes }
           | Outputs  { flags :: Flags, attributes :: Attributes }
           | Tuple    { flags :: Flags, attributes :: Attributes }

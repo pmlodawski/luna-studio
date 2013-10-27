@@ -40,32 +40,32 @@ extern const std::map<int, const char*> _PortType_VALUES_TO_NAMES;
 
 typedef int32_t NodeID;
 
-typedef struct _DefaultValue__isset {
-  _DefaultValue__isset() : value(false) {}
+typedef struct _Value__isset {
+  _Value__isset() : value(false) {}
   bool value;
-} _DefaultValue__isset;
+} _Value__isset;
 
-class DefaultValue {
+class Value {
  public:
 
   static const char* ascii_fingerprint; // = "E8C48C1156CEFB2CC2155B26B71AB9E0";
   static const uint8_t binary_fingerprint[16]; // = {0xE8,0xC4,0x8C,0x11,0x56,0xCE,0xFB,0x2C,0xC2,0x15,0x5B,0x26,0xB7,0x1A,0xB9,0xE0};
 
-  DefaultValue() : value() {
+  Value() : value() {
   }
 
-  virtual ~DefaultValue() throw() {}
+  virtual ~Value() throw() {}
 
   std::string value;
 
-  _DefaultValue__isset __isset;
+  _Value__isset __isset;
 
   void __set_value(const std::string& val) {
     value = val;
     __isset.value = true;
   }
 
-  bool operator == (const DefaultValue & rhs) const
+  bool operator == (const Value & rhs) const
   {
     if (__isset.value != rhs.__isset.value)
       return false;
@@ -73,27 +73,27 @@ class DefaultValue {
       return false;
     return true;
   }
-  bool operator != (const DefaultValue &rhs) const {
+  bool operator != (const Value &rhs) const {
     return !(*this == rhs);
   }
 
-  bool operator < (const DefaultValue & ) const;
+  bool operator < (const Value & ) const;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
 };
 
-void swap(DefaultValue &a, DefaultValue &b);
+void swap(Value &a, Value &b);
 
 typedef struct _Node__isset {
-  _Node__isset() : cls(false), expression(true), nodeID(true), flags(true), attrs(true), defVal(true) {}
+  _Node__isset() : cls(false), expression(true), nodeID(true), flags(true), attrs(true), value(true) {}
   bool cls;
   bool expression;
   bool nodeID;
   bool flags;
   bool attrs;
-  bool defVal;
+  bool value;
 } _Node__isset;
 
 class Node {
@@ -115,7 +115,7 @@ class Node {
   NodeID nodeID;
    ::flowbox::batch::attrs::Flags flags;
    ::flowbox::batch::attrs::Attributes attrs;
-  DefaultValue defVal;
+  Value value;
 
   _Node__isset __isset;
 
@@ -144,9 +144,9 @@ class Node {
     __isset.attrs = true;
   }
 
-  void __set_defVal(const DefaultValue& val) {
-    defVal = val;
-    __isset.defVal = true;
+  void __set_value(const Value& val) {
+    value = val;
+    __isset.value = true;
   }
 
   bool operator == (const Node & rhs) const
@@ -171,9 +171,9 @@ class Node {
       return false;
     else if (__isset.attrs && !(attrs == rhs.attrs))
       return false;
-    if (__isset.defVal != rhs.__isset.defVal)
+    if (__isset.value != rhs.__isset.value)
       return false;
-    else if (__isset.defVal && !(defVal == rhs.defVal))
+    else if (__isset.value && !(value == rhs.value))
       return false;
     return true;
   }

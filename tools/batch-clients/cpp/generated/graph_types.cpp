@@ -36,10 +36,10 @@ const char* _kPortTypeNames[] = {
 };
 const std::map<int, const char*> _PortType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(2, _kPortTypeValues, _kPortTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
-const char* DefaultValue::ascii_fingerprint = "E8C48C1156CEFB2CC2155B26B71AB9E0";
-const uint8_t DefaultValue::binary_fingerprint[16] = {0xE8,0xC4,0x8C,0x11,0x56,0xCE,0xFB,0x2C,0xC2,0x15,0x5B,0x26,0xB7,0x1A,0xB9,0xE0};
+const char* Value::ascii_fingerprint = "E8C48C1156CEFB2CC2155B26B71AB9E0";
+const uint8_t Value::binary_fingerprint[16] = {0xE8,0xC4,0x8C,0x11,0x56,0xCE,0xFB,0x2C,0xC2,0x15,0x5B,0x26,0xB7,0x1A,0xB9,0xE0};
 
-uint32_t DefaultValue::read(::apache::thrift::protocol::TProtocol* iprot) {
+uint32_t Value::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   uint32_t xfer = 0;
   std::string fname;
@@ -79,9 +79,9 @@ uint32_t DefaultValue::read(::apache::thrift::protocol::TProtocol* iprot) {
   return xfer;
 }
 
-uint32_t DefaultValue::write(::apache::thrift::protocol::TProtocol* oprot) const {
+uint32_t Value::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
-  xfer += oprot->writeStructBegin("DefaultValue");
+  xfer += oprot->writeStructBegin("Value");
 
   if (this->__isset.value) {
     xfer += oprot->writeFieldBegin("value", ::apache::thrift::protocol::T_STRING, 2);
@@ -93,7 +93,7 @@ uint32_t DefaultValue::write(::apache::thrift::protocol::TProtocol* oprot) const
   return xfer;
 }
 
-void swap(DefaultValue &a, DefaultValue &b) {
+void swap(Value &a, Value &b) {
   using ::std::swap;
   swap(a.value, b.value);
   swap(a.__isset, b.__isset);
@@ -166,8 +166,8 @@ uint32_t Node::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 6:
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
-          xfer += this->defVal.read(iprot);
-          this->__isset.defVal = true;
+          xfer += this->value.read(iprot);
+          this->__isset.value = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -213,9 +213,9 @@ uint32_t Node::write(::apache::thrift::protocol::TProtocol* oprot) const {
     xfer += this->attrs.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
-  if (this->__isset.defVal) {
-    xfer += oprot->writeFieldBegin("defVal", ::apache::thrift::protocol::T_STRUCT, 6);
-    xfer += this->defVal.write(oprot);
+  if (this->__isset.value) {
+    xfer += oprot->writeFieldBegin("value", ::apache::thrift::protocol::T_STRUCT, 6);
+    xfer += this->value.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -230,7 +230,7 @@ void swap(Node &a, Node &b) {
   swap(a.nodeID, b.nodeID);
   swap(a.flags, b.flags);
   swap(a.attrs, b.attrs);
-  swap(a.defVal, b.defVal);
+  swap(a.value, b.value);
   swap(a.__isset, b.__isset);
 }
 

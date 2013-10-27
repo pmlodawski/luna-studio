@@ -16,31 +16,31 @@ module Flowbox.Batch.GraphView.GraphView(
     toGraph
 ) where
 
-import qualified Data.List                               as List
-import           Data.Map                                  (Map)
-import qualified Data.Map                                as Map
-import           Data.Foldable                             (foldrM)
+import qualified Data.List                              as List
+import           Data.Map                                 (Map)
+import qualified Data.Map                               as Map
+import           Data.Foldable                            (foldrM)
 
-import           Flowbox.Prelude                           
-import qualified Flowbox.Batch.Batch                     as Batch
-import qualified Flowbox.Batch.GraphView.Defaults        as Defaults
-import qualified Flowbox.Batch.GraphView.EdgeView        as EdgeView
-import           Flowbox.Batch.GraphView.EdgeView          (EdgeView(EdgeView))
-import           Flowbox.Batch.GraphView.PortDescriptor    (PortDescriptor)
-import           Flowbox.Control.Error                     ()
-import qualified Flowbox.Data.Graph                      as DG
-import           Flowbox.Data.Graph                      hiding (Graph, Edge, empty, fromGraph, sp)
-import           Flowbox.Luna.Network.Graph.DefaultValue   (DefaultValue)
-import qualified Flowbox.Luna.Network.Graph.Graph        as Graph
-import           Flowbox.Luna.Network.Graph.Graph          (Graph)
-import           Flowbox.Luna.Network.Graph.Edge           (Edge(..))
-import qualified Flowbox.Luna.Network.Graph.Node         as Node
-import           Flowbox.Luna.Network.Graph.Node           (Node(..))
-import qualified Flowbox.Luna.Network.Graph.Port         as Port
-import           Flowbox.Luna.Network.Graph.Port           (Port)
-import qualified Flowbox.Luna.Network.Attributes         as Attributes
-import           Flowbox.Luna.Network.Attributes           (Attributes)
-import qualified Flowbox.Luna.Network.Flags              as Flags
+import           Flowbox.Prelude                          
+import qualified Flowbox.Batch.Batch                    as Batch
+import qualified Flowbox.Batch.GraphView.Defaults       as Defaults
+import qualified Flowbox.Batch.GraphView.EdgeView       as EdgeView
+import           Flowbox.Batch.GraphView.EdgeView         (EdgeView(EdgeView))
+import           Flowbox.Batch.GraphView.PortDescriptor   (PortDescriptor)
+import           Flowbox.Control.Error                    ()
+import qualified Flowbox.Data.Graph                     as DG
+import           Flowbox.Data.Graph                     hiding (Graph, Edge, empty, fromGraph, sp)
+import qualified Flowbox.Luna.Network.Graph.Graph       as Graph
+import           Flowbox.Luna.Network.Graph.Graph         (Graph)
+import           Flowbox.Luna.Network.Graph.Edge          (Edge(..))
+import qualified Flowbox.Luna.Network.Graph.Node        as Node
+import           Flowbox.Luna.Network.Graph.Node          (Node(..))
+import qualified Flowbox.Luna.Network.Graph.Port        as Port
+import           Flowbox.Luna.Network.Graph.Port          (Port)
+import           Flowbox.Luna.Network.Graph.Value         (Value)
+import qualified Flowbox.Luna.Network.Attributes        as Attributes
+import           Flowbox.Luna.Network.Attributes          (Attributes)
+import qualified Flowbox.Luna.Network.Flags             as Flags
 
 
 
@@ -98,6 +98,7 @@ findMatchingTuple nodeID port graph = mt where
                               _               -> False
     matching _ = False
 
+
 getOrCreateTuple :: Node.ID -> Int -> Graph -> Either String (Node.ID, Graph)
 getOrCreateTuple nodeID port graph = case findMatchingTuple nodeID port graph of 
     Nothing                      -> do let [newTupleID] = Graph.newNodes 1 graph
@@ -141,11 +142,11 @@ connectG (srcNodeID, dstNodeID, EdgeView srcPorts dstPorts) graph = case srcPort
                 newEdge  = Edge (Port.Number (head srcPorts)) Port.All
                 newGraph = Graph.insEdge (srcNodeID, firstSelectID, newEdge) graphWithSelects
 
+
 addNodeDefaults :: GraphView -> (Node.ID, Node) -> Graph -> Either String Graph
 addNodeDefaults graphview (nodeID, node) graph = do
-
     let 
-        addNodeDefault :: (PortDescriptor, DefaultValue) -> Graph -> Either String Graph
+        addNodeDefault :: (PortDescriptor, Value) -> Graph -> Either String Graph
         addNodeDefault (adstPort, defaultValue) g = do
             if isNotAlreadyConnected graphview nodeID adstPort
                 then do let (newG1, defaultNodeID) = Graph.insNewNode (Default defaultValue generatedAttrs) g

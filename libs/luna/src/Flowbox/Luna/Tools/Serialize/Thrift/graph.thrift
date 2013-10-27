@@ -14,7 +14,7 @@ include "attrs.thrift"
 typedef i32 NodeID
 
 
-struct DefaultValue {
+struct Value {
     2: optional string           value         
 }
 
@@ -32,7 +32,7 @@ struct Node {
     3: optional NodeID           nodeID     = -1
     4: optional attrs.Flags      flags      = {}
     5: optional attrs.Attributes attrs      = {}
-    6: optional DefaultValue     defVal     = {}
+    6: optional Value            value      = {}
 }
 
 

@@ -173,14 +173,14 @@ service Batch {
                           6: libs.LibID               libID,
                           7: projects.ProjectID       projectID) throws (1: ArgumentException missingFields)
 
-    map<graphview.PortDescriptor, graph.DefaultValue> 
+    map<graphview.PortDescriptor, graph.Value> 
               nodeDefaults(1: graph.NodeID       nodeID,
                            2: defs.DefID         defID, 
                            3: libs.LibID         libID,
                            4: projects.ProjectID projectID) throws (1: ArgumentException missingFields)
 
     void    setNodeDefault(1: graphview.PortDescriptor dst, 
-                           2: graph.DefaultValue       value, 
+                           2: graph.Value              value, 
                            3: graph.NodeID             nodeID,
                            4: defs.DefID               defID, 
                            5: libs.LibID               libID,

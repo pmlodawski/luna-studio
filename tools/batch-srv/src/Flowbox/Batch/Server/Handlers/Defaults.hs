@@ -39,7 +39,7 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Defaults"
 
 
 nodeDefaults :: IORef Batch -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32
-             -> IO (HashMap (Vector Int32) TGraph.DefaultValue)
+             -> IO (HashMap (Vector Int32) TGraph.Value)
 nodeDefaults batchHandler mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
     scriptIO $ loggerIO info "called nodeDefaults"
     nodeID    <- tryGetID mtnodeID    "nodeID"
@@ -54,7 +54,7 @@ nodeDefaults batchHandler mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
     return tdefaults
 
 
-setNodeDefault :: IORef Batch -> Maybe (Vector Int32) -> Maybe TGraph.DefaultValue
+setNodeDefault :: IORef Batch -> Maybe (Vector Int32) -> Maybe TGraph.Value
                -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> Maybe Int32 -> IO ()
 setNodeDefault batchHandler mtdstPort mtvalue mtnodeID mtdefID mtlibID mtprojectID = tRunScript $ do
     scriptIO $ loggerIO info "called setNodeDefault"
