@@ -35,6 +35,10 @@ def List.length self:
 def List.toString self:
     ```getIO $ liftFPure1 lrepr #{self}```
 
+def List.each self callback:
+     ```let {mymap x (Pure y) = mapM x y}```
+     ```getIO $ mymap (get1 #{callback}) #{self}```
+
 ###### Int ####################################
 
 def Int.add a b:

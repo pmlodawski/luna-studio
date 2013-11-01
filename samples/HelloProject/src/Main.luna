@@ -7,4 +7,6 @@ def addInts (self, x, y):
     x.add y
 
 def main self:
-    Console.print (self.add 4 5)
+    a = [1..]
+    a.each x:
+        Console.print x
