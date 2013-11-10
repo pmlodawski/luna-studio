@@ -18,12 +18,35 @@ main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
     let exec = (Cfg.ghcPkgBin . Cfg.ghcTP . Cfg.thirdparty) cfg
+
+    appendFile "C:\\test.txt" "ghc-pkg\n"
+    appendFile "C:\\test.txt" (show args)
+    appendFile "C:\\test.txt" "\n---\n"
+
+    --stdinTxt <- if "-" `elem` args
+    --        then do 
+    --             inTxt <- hGetContents stdin
+    --             appendFile "C:/test.txt" inTxt
+    --             return inTxt
+    --        else return ""
+
     exitCode <- Cmd.rawSystem exec $ "--global-package-db"
                        : (Cfg.pkgConf . Cfg.ghcTP . Cfg.thirdparty) cfg
                        : "--global"
                        : ("--package-db=" ++ (Cfg.pkgDb . Cfg.global) cfg)
                        : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
                        : args
+
+    --(exitCode, outResult, errResult) <- Process.readProcessWithExitCode 
+    --                                    exec ( "--global-package-db"
+    --                                    : (Cfg.pkgConf . Cfg.ghcTP . Cfg.thirdparty) cfg
+    --                                    : "--global"
+    --                                    : ("--package-db=" ++ (Cfg.pkgDb . Cfg.global) cfg)
+    --                                    : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
+    --                                    : args
+    --                                    )
+    --                                    stdinTxt
+
     Exit.exitWith exitCode
 
 

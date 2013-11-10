@@ -1,25 +1,24 @@
+from utils.colorama import Fore, init
+init()
+
 class bcolors:
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
-    INFO = '\033[92m'
-    WARNING = '\033[93m'
-    ERROR = '\033[91m'
-    ENDC = '\033[0m'
+    INFO    = Fore.GREEN
+    WARNING = Fore.YELLOW
+    ERROR   = Fore.RED 
+    RESET   = Fore.RESET
 
     def disable(self):
-        self.HEADER = ''
-        self.BLUE = ''
         self.INFO = ''
         self.WARNING = ''
         self.ERROR = ''
-        self.ENDC = ''
+        self.RESET = ''
 
 
 def print_info(s):
-    print bcolors.INFO + s + bcolors.ENDC
+    print bcolors.INFO + s + bcolors.RESET
 
 def print_warning(s):
-    print bcolors.WARNING + s + bcolors.ENDC
+    print bcolors.WARNING + s + bcolors.RESET
 
 def print_error(s):
-    print bcolors.ERROR + s + bcolors.ENDC
+    print bcolors.ERROR + s + bcolors.RESET
