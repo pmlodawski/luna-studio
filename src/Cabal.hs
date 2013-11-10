@@ -19,6 +19,11 @@ main = do
                 else ["--package-db=clear", "--package-db=global", "--package-db=" ++ (Cfg.pkgDb . Cfg.global) cfg, "--package-db=" ++ (Cfg.pkgDb . Cfg.local)  cfg]
 
     let xargs = args
+    appendFile "C:\\test.txt" "cabal\n"
+    appendFile "C:\\test.txt" (show args)
+    appendFile "C:\\test.txt" "\n---\n"
+    --print "!!!"
+    --print (show flags)
     exitCode <- if "install" `elem` xargs
                     then Cmd.rawSystem exec $ ["--config-file=" ++ (Cfg.cabal . Cfg.config) cfg]
                                             ++ flags
