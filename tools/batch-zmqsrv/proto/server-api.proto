@@ -1,0 +1,8 @@
+
+message Ping_Request {
+    optional int32 val = 1;
+}
+
+message Ping_Response {
+    optional string resp = 1;
+}

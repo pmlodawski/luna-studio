@@ -1,0 +1,20 @@
+#!/usr/bin/python
+import os.path
+import os
+from utils.glob2 import glob
+from subprocess import call
+
+def main():
+    proto_paths = glob("**/*.proto")
+    for path in proto_paths:
+        run_hprotoc(path)
+
+def run_hprotoc(proto_path):
+    run_dir = os.path.dirname(proto_path)
+    gen_dir = "../gen"
+    proto_name = os.path.basename(proto_path)
+
+    os.chdir(run_dir)
+    call("hprotoc -d " + gen_dir + " -p Generated " + proto_name, shell=True)
+
+main()

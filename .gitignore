@@ -8,6 +8,9 @@
 tools/batch-clients/cpp/batch_client
 out
 
+#generated files
+gen
+
 # luna library files
 *.node
 *.graph
