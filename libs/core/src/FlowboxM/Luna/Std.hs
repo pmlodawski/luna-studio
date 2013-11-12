@@ -5,8 +5,8 @@
 
 module FlowboxM.Luna.Std where
 
-import FlowboxM.Luna.Data
-import FlowboxM.Luna.Utils
+import           FlowboxM.Luna.Data    
+import           FlowboxM.Luna.Utils   
 
 type List a = [a]
 instance Get0 (Pure [a]) (Pure [a]) where get0 = id

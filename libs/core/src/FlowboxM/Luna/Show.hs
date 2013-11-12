@@ -7,11 +7,11 @@ module FlowboxM.Luna.Show (
 	LRepr
 ) where
 
-import FlowboxM.Luna.Data
-import FlowboxM.Utils.Generics.Show
-import FlowboxM.Utils.Generics.Repr
-import Data.Tuple.OneTuple
-import Data.Typeable (Typeable, typeOf)
+import           FlowboxM.Luna.Data             
+import           FlowboxM.Utils.Generics.Show   
+import           FlowboxM.Utils.Generics.Repr   
+import           Data.Tuple.OneTuple            
+import           Data.Typeable                  (Typeable, typeOf)
 
 instance (Typeable a) => Show (IO a) where
     show e = '(' : (show . typeOf) e ++ ")"

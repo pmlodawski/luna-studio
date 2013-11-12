@@ -15,12 +15,12 @@ module FlowboxM.Luna.Data (
 ) where
 
 
-import FlowboxM.Luna.TH.Inst       
-import Control.Applicative
-import Data.Tuple.OneTuple
-import GHC.Generics          (Generic)
-import Data.Typeable         (Typeable)
-import GHC.TypeLits            
+import           FlowboxM.Luna.TH.Inst   
+import           Control.Applicative     
+import           Data.Tuple.OneTuple     
+import           GHC.Generics            (Generic)
+import           Data.Typeable           (Typeable)
+import           GHC.TypeLits            
 
 -- basic datatypes
 
