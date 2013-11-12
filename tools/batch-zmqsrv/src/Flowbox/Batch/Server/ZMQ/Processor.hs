@@ -41,14 +41,14 @@ call handler encoded_args method = case Proto.messageGet $ ByteStringL.fromStric
 
 process :: (Handler h, ZMQ3.Receiver t, ZMQ3.Sender t) => ZMQ3.Socket z t -> h -> ZMQ3.ZMQ z ()
 process socket handler = do
-    method       <- ZMQ3.receive socket
-    encoded_args <- ZMQ3.receive socket
+    method <- ZMQ3.receive socket
+    args   <- ZMQ3.receive socket
 
-    --let call_ = call handler encoded_args 
+    --let call_ = call handler args 
 
     result <- case Char8.unpack method of 
-                   "ping"  -> call handler encoded_args Handler.ping 
-                   "ping2" -> call handler encoded_args Handler.ping2
+                   "ping"  -> call handler args Handler.ping 
+                   "ping2" -> call handler args Handler.ping2
                    _       -> fail $ "Unsupported method: " ++ show method
     
     ZMQ3.send socket [] result
