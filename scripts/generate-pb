@@ -3,6 +3,7 @@ import os.path
 import os
 from utils.glob2 import glob
 from subprocess import call
+import shutil
 
 def main():
     proto_paths = glob("**/*.proto")
@@ -15,6 +16,7 @@ def run_hprotoc(proto_path):
     proto_name = os.path.basename(proto_path)
 
     os.chdir(run_dir)
+    shutil.rmtree(gen_dir, True)
     call("hprotoc -d " + gen_dir + " -p Generated " + proto_name, shell=True)
 
 main()

@@ -8,19 +8,15 @@
 
 module Flowbox.Batch.Server.ZMQ.Handler where
 
+import qualified System.ZMQ3.Monadic                             as ZMQ3
 
-import           Control.Monad                 (forever)
-import qualified Data.ByteString.Char8       as Char8
-import qualified System.ZMQ3.Monadic         as ZMQ3
-
-import           Flowbox.Prelude             hiding (error)
-import qualified Flowbox.Options.Applicative as Opt
-import           Flowbox.Options.Applicative hiding (info)
-import           Flowbox.System.Log.Logger     
-import           Generated.ServerApi.Ping_Request
-import           Generated.ServerApi.Ping_Response
+import           Generated.ServerApi.Server.Ping.Ping_Request      
+import           Generated.ServerApi.Server.Ping.Ping_Response     
+import           Generated.ServerApi.Server.Ping2.Ping2_Request    
+import           Generated.ServerApi.Server.Ping2.Ping2_Response   
 
 
 
 class Handler h where
     ping :: h -> Ping_Request -> ZMQ3.ZMQ z Ping_Response
+    ping2 :: h -> Ping2_Request -> ZMQ3.ZMQ z Ping2_Response

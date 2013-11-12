@@ -6,16 +6,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import           Prelude                          hiding (error)
+import           Prelude                                       hiding (error)
 
-import qualified Flowbox.Options.Applicative      as Opt
-import           Flowbox.Options.Applicative      hiding (info)
-import           Flowbox.System.Log.Logger          
-import qualified Flowbox.Batch.Server.ZMQ.Server  as Server
-import           Flowbox.Batch.Server.ZMQ.Handler   (Handler)
-import qualified Flowbox.Batch.Server.ZMQ.Handler as Handler
-import           Generated.ServerApi.Ping_Request
-import           Generated.ServerApi.Ping_Response
+import qualified Flowbox.Options.Applicative                   as Opt
+import           Flowbox.Options.Applicative                   hiding (info)
+import           Flowbox.System.Log.Logger                       
+import qualified Flowbox.Batch.Server.ZMQ.Server               as Server
+import           Flowbox.Batch.Server.ZMQ.Handler                (Handler)
+import qualified Flowbox.Batch.Server.ZMQ.Handler              as Handler
+import           Generated.ServerApi.Server.Ping.Ping_Request    
+import           Generated.ServerApi.Server.Ping.Ping_Response   
+
 
 
 rootLogger :: Logger

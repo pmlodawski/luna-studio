@@ -1,8 +1,21 @@
 
-message Ping_Request {
-    optional int32 val = 1;
-}
+message Server {
+    message Ping {
+        message Ping_Request {
+            optional int32 val = 1;
+        }
 
-message Ping_Response {
-    optional string resp = 1;
+        message Ping_Response {
+            optional string resp = 1;
+        }
+    }
+    message Ping2 {
+        message Ping2_Request {
+            optional int32 val = 1;
+        }
+
+        message Ping2_Response {
+            optional string resp = 1;
+        }
+    }
 }
