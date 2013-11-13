@@ -5,7 +5,7 @@
 .virthualenv
 *~
 *.imports
-tools/batch-clients/cpp/batch_client
+tools/batch-clients/thrift-cpp/batch_client
 out
 
 #generated files
