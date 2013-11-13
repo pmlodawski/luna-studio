@@ -10,6 +10,7 @@ out
 
 #generated files
 gen
+tools/batch-clients/zmq-cpp/generated
 
 # luna library files
 *.node

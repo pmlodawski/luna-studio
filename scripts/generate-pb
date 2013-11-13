@@ -6,17 +6,24 @@ from subprocess import call
 import shutil
 
 def main():
-    proto_paths = glob("**/*.proto")
+    proto_paths = glob('**/*.proto')
     for path in proto_paths:
         run_hprotoc(path)
 
 def run_hprotoc(proto_path):
-    run_dir = os.path.dirname(proto_path)
-    gen_dir = "../gen"
-    proto_name = os.path.basename(proto_path)
+    cwd         = os.getcwd()
+    hs_run_dir  = os.path.dirname(proto_path)
+    hs_gen_dir  = '../gen'
+    cpp_gen_dir = os.path.join(cwd, 'tools/batch-clients/zmq-cpp/generated')
+    proto_name  = os.path.basename(proto_path)
 
-    os.chdir(run_dir)
-    shutil.rmtree(gen_dir, True)
-    call("hprotoc -d " + gen_dir + " -p Generated " + proto_name, shell=True)
+    os.chdir(hs_run_dir)
+
+    shutil.rmtree(hs_gen_dir, True)
+    call('hprotoc -d ' + hs_gen_dir + ' -p Generated ' + proto_name, shell=True)
+
+    shutil.rmtree(cpp_gen_dir, True)
+    os.makedirs(cpp_gen_dir)
+    call('protoc --cpp_out=' + cpp_gen_dir + ' ' + proto_name, shell=True)
 
 main()
