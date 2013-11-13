@@ -8,15 +8,14 @@
 
 module Flowbox.Batch.Server.ZMQ.Handler where
 
-import qualified System.ZMQ3.Monadic                             as ZMQ3
+import qualified System.ZMQ3.Monadic                     as ZMQ3
 
-import           Generated.ServerApi.Server.Ping.Ping_Request      
-import           Generated.ServerApi.Server.Ping.Ping_Response     
-import           Generated.ServerApi.Server.Ping2.Ping2_Request    
-import           Generated.ServerApi.Server.Ping2.Ping2_Response   
-
+import qualified Generated.ServerApi.Server.Ping.Call    as PingCall
+import qualified Generated.ServerApi.Server.Ping.Result  as PingResult
+import qualified Generated.ServerApi.Server.Ping2.Call   as Ping2Call
+import qualified Generated.ServerApi.Server.Ping2.Result as Ping2Result
 
 
 class Handler h where
-    ping :: h -> Ping_Request -> ZMQ3.ZMQ z Ping_Response
-    ping2 :: h -> Ping2_Request -> ZMQ3.ZMQ z Ping2_Response
+    ping :: h -> PingCall.Call -> ZMQ3.ZMQ z PingResult.Result
+    ping2 :: h -> Ping2Call.Call -> ZMQ3.ZMQ z Ping2Result.Result

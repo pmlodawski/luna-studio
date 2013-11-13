@@ -25,6 +25,6 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Server"
 
 serve :: Handler h => String -> h -> IO ()
 serve address handler = ZMQ3.runZMQ $ do  
-    repSocket <- ZMQ3.socket ZMQ3.Rep
-    ZMQ3.bind repSocket address
-    forever $ Processor.process repSocket handler
+    socket <- ZMQ3.socket ZMQ3.Rep
+    ZMQ3.bind socket address
+    forever $ Processor.process socket handler

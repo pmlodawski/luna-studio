@@ -1,20 +1,39 @@
+message Request {
+    extensions 100 to max;
+
+    enum Method
+    {
+        Ping  = 1;
+        Ping2 = 2;
+    }
+
+    required Method method = 1;
+}
 
 message Server {
     message Ping {
-        message Ping_Request {
+        message Call {
+            extend Request
+            {
+                optional Call request = 100;
+            }
             optional int32 val = 1;
         }
 
-        message Ping_Response {
+        message Result {
             optional string resp = 1;
         }
     }
     message Ping2 {
-        message Ping2_Request {
+        message Call {
+            extend Request
+            {
+                optional Call request = 101;
+            }
             optional int32 val = 1;
         }
 
-        message Ping2_Response {
+        message Result {
             optional string resp = 1;
         }
     }

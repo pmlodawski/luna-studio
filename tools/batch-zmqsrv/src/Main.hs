@@ -6,16 +6,16 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import           Prelude                                       hiding (error)
+import           Prelude                                hiding (error)
 
-import qualified Flowbox.Options.Applicative                   as Opt
-import           Flowbox.Options.Applicative                   hiding (info)
-import           Flowbox.System.Log.Logger                       
-import qualified Flowbox.Batch.Server.ZMQ.Server               as Server
-import           Flowbox.Batch.Server.ZMQ.Handler                (Handler)
-import qualified Flowbox.Batch.Server.ZMQ.Handler              as Handler
-import           Generated.ServerApi.Server.Ping.Ping_Request    
-import           Generated.ServerApi.Server.Ping.Ping_Response   
+import qualified Flowbox.Options.Applicative            as Opt
+import           Flowbox.Options.Applicative            hiding (info)
+import           Flowbox.System.Log.Logger                
+import qualified Flowbox.Batch.Server.ZMQ.Server        as Server
+import           Flowbox.Batch.Server.ZMQ.Handler         (Handler)
+import qualified Flowbox.Batch.Server.ZMQ.Handler       as Handler
+import qualified Generated.ServerApi.Server.Ping.Call   as PingCall
+import qualified Generated.ServerApi.Server.Ping.Result as PingResult
 
 
 
@@ -34,10 +34,11 @@ defaultAddress = "tcp://*:30521"
 data BatchHandler = BatchHandler
 
 instance Handler BatchHandler where
-    ping h i = return $ Ping_Response Nothing
+    ping h i = return $ PingResult.Result Nothing
 
 
 main :: IO()
 main = do 
     let batchHandler = BatchHandler
+    rootLogger setIntLevel 5
     Server.serve defaultAddress batchHandler

@@ -19,11 +19,11 @@ def run_hprotoc(proto_path):
 
     os.chdir(hs_run_dir)
 
-    shutil.rmtree(hs_gen_dir, True)
-    call('hprotoc -d ' + hs_gen_dir + ' -p Generated ' + proto_name, shell=True)
-
     shutil.rmtree(cpp_gen_dir, True)
     os.makedirs(cpp_gen_dir)
     call('protoc --cpp_out=' + cpp_gen_dir + ' ' + proto_name, shell=True)
+
+    shutil.rmtree(hs_gen_dir, True)
+    call('hprotoc -d ' + hs_gen_dir + ' -p Generated ' + proto_name, shell=True)
 
 main()
