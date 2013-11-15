@@ -9,13 +9,13 @@
 module Flowbox.Batch.Server.ZMQ.Server where
 
 
-import           Control.Monad                        (forever)
-import qualified System.ZMQ3.Monadic                as ZMQ3
+import           Control.Monad                               (forever)
+import qualified System.ZMQ3.Monadic                       as ZMQ3
 
-import           Flowbox.Prelude                    hiding (error)
-import qualified Flowbox.Batch.Server.ZMQ.Processor as Processor
-import           Flowbox.Batch.Server.ZMQ.Handler     (Handler)
-import           Flowbox.System.Log.Logger            
+import           Flowbox.Prelude                           hiding (error)
+import qualified Flowbox.Batch.Server.ZMQ.Processor        as Processor
+import           Flowbox.Batch.Server.ZMQ.Handlers.Handler   (Handler)
+import           Flowbox.System.Log.Logger                   
 
 
 

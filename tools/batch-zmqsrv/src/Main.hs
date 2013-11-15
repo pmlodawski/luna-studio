@@ -7,28 +7,23 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 
-import           Prelude                                 hiding (error)
+import qualified Control.Concurrent                             as Concurrent
+import qualified Control.Concurrent.MVar                        as MVar
+import           Control.Concurrent.MVar                          (MVar)
+import qualified Control.Exception                              as Exception
+import qualified System.Exit                                    as Exit
 
-import qualified Control.Concurrent                      as Concurrent
-import qualified Control.Concurrent.MVar                 as MVar
-import           Control.Concurrent.MVar                   (MVar)
-import qualified Control.Exception                       as Exception
-import qualified System.Exit                             as Exit
-import qualified System.ZMQ3.Monadic                     as ZMQ3
-import qualified Text.ProtocolBuffers.Basic              as Proto
+import           Flowbox.Prelude                                hiding (error)
+import qualified Flowbox.Data.Version                           as Version
+import           Flowbox.Data.Version                             (Version)
+import qualified Flowbox.Batch.Server.CmdArgs                   as CmdArgs
+import           Flowbox.Batch.Server.CmdArgs                     (CmdArgs)
+import qualified Flowbox.Batch.Server.ZMQ.Server                as Server
+import qualified Flowbox.Options.Applicative                    as Opt
+import           Flowbox.Options.Applicative                    hiding (info)
+import           Flowbox.System.Log.Logger                        
+import qualified Flowbox.Batch.Server.ZMQ.Handlers.BatchHandler as BatchHandler
 
-import qualified Flowbox.Data.Version                    as Version
-import           Flowbox.Data.Version                      (Version)
-import qualified Flowbox.Batch.Server.CmdArgs            as CmdArgs
-import           Flowbox.Batch.Server.CmdArgs              (CmdArgs)
-import           Flowbox.Batch.Server.ZMQ.Handler          (Handler)
-import qualified Flowbox.Batch.Server.ZMQ.Handler        as Handler
-import qualified Flowbox.Batch.Server.ZMQ.Server         as Server
-import qualified Flowbox.Options.Applicative             as Opt
-import           Flowbox.Options.Applicative             hiding (info)
-import           Flowbox.System.Log.Logger                 
-import qualified Generated.ServerApi.Server.Ping.Result  as PingResult
-import qualified Generated.ServerApi.Server.Ping2.Result as Ping2Result
 
 
 rootLogger :: Logger
@@ -38,14 +33,6 @@ rootLogger = getLogger "Flowbox"
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ"
 
-
-data BatchHandler = BatchHandler
-
-instance Handler BatchHandler where
-    ping h i  = do ZMQ3.liftIO $ loggerIO info $ "Called ping: " ++ show i
-                   return $ PingResult.Result $ Just $ Proto.uFromString "ping2"
-    ping2 h i = do ZMQ3.liftIO $ loggerIO info $ "Called ping2: " ++ show i
-                   return $ Ping2Result.Result $ Just $ Proto.uFromString "ping2"
 
 defaultAddress :: String
 defaultAddress = "tcp://*"
@@ -101,7 +88,7 @@ run cmd = case cmd of
 
 serve :: CmdArgs -> MVar Bool -> IO ()
 serve cmd quitmutex = do
-    let batchHandler = BatchHandler
+    let batchHandler = BatchHandler.empty
     rootLogger setIntLevel 0
     Server.serve (CmdArgs.address cmd) (CmdArgs.port cmd) batchHandler
 

@@ -6,7 +6,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Server.ZMQ.Handler where
+module Flowbox.Batch.Server.ZMQ.Handlers.Handler where
 
 import qualified System.ZMQ3.Monadic                     as ZMQ3
 

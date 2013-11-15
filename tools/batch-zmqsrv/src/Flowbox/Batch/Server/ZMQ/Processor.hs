@@ -9,22 +9,22 @@
 
 module Flowbox.Batch.Server.ZMQ.Processor where
 
-import           Control.Applicative                      
-import qualified Data.ByteString.Lazy                   as ByteString
-import           Data.ByteString.Lazy                     (ByteString)
-import qualified System.ZMQ3.Monadic                    as ZMQ3
-import qualified Text.ProtocolBuffers                   as Proto
+import           Control.Applicative                         
+import qualified Data.ByteString.Lazy                      as ByteString
+import           Data.ByteString.Lazy                        (ByteString)
+import qualified System.ZMQ3.Monadic                       as ZMQ3
+import qualified Text.ProtocolBuffers                      as Proto
 
-import qualified Text.ProtocolBuffers.Reflections       as Reflections
-import qualified Text.ProtocolBuffers.WireMessage       as WireMessage
+import qualified Text.ProtocolBuffers.Reflections          as Reflections
+import qualified Text.ProtocolBuffers.WireMessage          as WireMessage
 
-import           Flowbox.Prelude                        hiding (error)
-import qualified Flowbox.Batch.Server.ZMQ.Handler       as Handler
-import           Flowbox.Batch.Server.ZMQ.Handler         (Handler)
-import           Flowbox.System.Log.Logger                
-import qualified Generated.ServerApi.Server.Method      as Method
-import           Generated.ServerApi.Server.Method        (Method(Method))
-import qualified Generated.ServerApi.Server.Method.Name as MethodName
+import           Flowbox.Prelude                           hiding (error)
+import qualified Flowbox.Batch.Server.ZMQ.Handlers.Handler as Handler
+import           Flowbox.Batch.Server.ZMQ.Handlers.Handler   (Handler)
+import           Flowbox.System.Log.Logger                   
+import qualified Generated.ServerApi.Server.Method         as Method
+import           Generated.ServerApi.Server.Method           (Method(Method))
+import qualified Generated.ServerApi.Server.Method.Name    as MethodName
 
 
 
