@@ -23,8 +23,8 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Server"
 
 
-serve :: Handler h => String -> h -> IO ()
-serve address handler = ZMQ3.runZMQ $ do  
+serve :: Handler h => String -> Int -> h -> IO ()
+serve address port handler = ZMQ3.runZMQ $ do  
     socket <- ZMQ3.socket ZMQ3.Rep
-    ZMQ3.bind socket address
+    ZMQ3.bind socket (address ++ ":" ++ show port)
     forever $ Processor.process socket handler
