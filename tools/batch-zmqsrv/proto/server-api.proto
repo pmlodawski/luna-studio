@@ -1,22 +1,13 @@
-message Request {
-    extensions 100 to max;
-
-    enum Method
-    {
-        Ping  = 1;
-        Ping2 = 2;
-    }
-
-    required Method method = 1;
-}
-
 message Server {
+    message Method {
+        required Name name = 1;
+        enum Name {
+            PING = 0;
+            PING2 = 1;
+        }
+    }
     message Ping {
         message Call {
-            extend Request
-            {
-                optional Call request = 100;
-            }
             optional int32 val = 1;
         }
 
@@ -26,10 +17,6 @@ message Server {
     }
     message Ping2 {
         message Call {
-            extend Request
-            {
-                optional Call request = 101;
-            }
             optional int32 val = 1;
         }
 

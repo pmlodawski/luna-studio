@@ -10,24 +10,21 @@
 module Flowbox.Batch.Server.ZMQ.Processor where
 
 
-import           Control.Applicative                  
-import qualified Data.ByteString.Char8              as Char8
-import           Data.ByteString                      (ByteString)
-import qualified Data.ByteString.Lazy               as ByteStringL
-import qualified System.ZMQ3.Monadic                as ZMQ3
-import qualified Text.ProtocolBuffers               as Proto
+import           Control.Applicative                      
+import qualified Data.ByteString.Lazy                   as ByteString
+import           Data.ByteString.Lazy                     (ByteString)
+import qualified System.ZMQ3.Monadic                    as ZMQ3
+import qualified Text.ProtocolBuffers                   as Proto
 
-import qualified Text.ProtocolBuffers.Extensions as Extensions
-import qualified Text.ProtocolBuffers.Reflections   as Reflections
-import qualified Text.ProtocolBuffers.WireMessage   as WireMessage
+import qualified Text.ProtocolBuffers.Reflections       as Reflections
+import qualified Text.ProtocolBuffers.WireMessage       as WireMessage
 
-import           Flowbox.Prelude                    hiding (error)
-import qualified Flowbox.Batch.Server.ZMQ.Handler   as Handler
-import           Flowbox.Batch.Server.ZMQ.Handler     (Handler)
-import           Flowbox.System.Log.Logger            
-import qualified Generated.ServerApi.Request        as Request
-import qualified Generated.ServerApi.Request.Method as Method
-import qualified Generated.ServerApi.Server.Ping.Call   as PingCall
+import           Flowbox.Prelude                        hiding (error)
+import qualified Flowbox.Batch.Server.ZMQ.Handler       as Handler
+import           Flowbox.Batch.Server.ZMQ.Handler         (Handler)
+import           Flowbox.System.Log.Logger                
+import qualified Generated.ServerApi.Server.Method      as Method
+import qualified Generated.ServerApi.Server.Method.Name as MethodName
 
 
 
@@ -35,27 +32,25 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Processor"
 
 
---call :: Handler h => h -> ByteString -> ZMQ3.ZMQ z ByteString
---call handler encoded_request  = case Proto.messageGet $ ByteStringL.fromStrict encoded_request of
---    Left   err         -> fail $ "Error while decoding request: " ++ err
---    Right (request, _) -> do let x :: PingCall.Call
---                                 x = Extensions.getVal encoded_request (Request.ext'field request)
---                             return undefined 
+call :: (Reflections.ReflectDescriptor a,   WireMessage.Wire a,
+         Reflections.ReflectDescriptor msg, WireMessage.Wire msg) 
+     => h -> ByteString -> (h -> msg -> ZMQ3.ZMQ z a) -> ZMQ3.ZMQ z ByteString
+call handler encoded_args method = case Proto.messageGet encoded_args of
+    Left   err      -> fail $ "Error while decoding arguments from request: " ++ err
+    Right (args, _) -> Proto.messagePut <$> method handler args
 
 
-call :: Handler h => h -> ByteString -> ZMQ3.ZMQ z ByteString
-call handler encoded_request  = case Proto.messageGet $ ByteStringL.fromStrict encoded_request of
-    Left   err         -> fail $ "Error while decoding request: " ++ err
-    Right (request, _) -> case Extensions.getExt PingCall.request request of 
-        Left   e          -> fail $ "Missing extension field: "++ e
-        Right (Just args) -> do result <- case Request.method request of 
-                                            Method.Ping -> Handler.ping handler args
-                                return $ ByteStringL.toStrict $ Proto.messagePut result
+selectCall :: Handler h => h -> ByteString -> ZMQ3.ZMQ z ByteString
+selectCall handler encoded_request = case Proto.messageGet encoded_request of
+    Left   err         -> fail $ "Error while decoding method from request: " ++ err
+    Right (method, encoded_args) -> case Method.name method of 
+            MethodName.PING  -> call handler encoded_args Handler.ping 
+            MethodName.PING2 -> call handler encoded_args Handler.ping2
 
 
 process :: (Handler h, ZMQ3.Receiver t, ZMQ3.Sender t) => ZMQ3.Socket z t -> h -> ZMQ3.ZMQ z ()
 process socket handler = do
     ZMQ3.liftIO $ loggerIO debug "method processing started"
-    encoded_request  <- ZMQ3.receive socket
-    encoded_response <- call handler encoded_request
+    encoded_request  <- ByteString.fromStrict <$> ZMQ3.receive socket
+    encoded_response <- ByteString.toStrict   <$> selectCall handler encoded_request
     ZMQ3.send socket [] encoded_response
