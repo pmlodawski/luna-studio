@@ -7,7 +7,7 @@ message Server {
         }
     }
     message Ping {
-        message Call {
+        message Args {
             optional int32 val = 1;
         }
 
@@ -16,7 +16,7 @@ message Server {
         }
     }
     message Ping2 {
-        message Call {
+        message Args {
             optional int32 val = 1;
         }
 

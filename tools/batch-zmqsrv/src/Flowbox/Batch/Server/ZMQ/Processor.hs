@@ -9,7 +9,6 @@
 
 module Flowbox.Batch.Server.ZMQ.Processor where
 
-
 import           Control.Applicative                      
 import qualified Data.ByteString.Lazy                   as ByteString
 import           Data.ByteString.Lazy                     (ByteString)
@@ -24,6 +23,7 @@ import qualified Flowbox.Batch.Server.ZMQ.Handler       as Handler
 import           Flowbox.Batch.Server.ZMQ.Handler         (Handler)
 import           Flowbox.System.Log.Logger                
 import qualified Generated.ServerApi.Server.Method      as Method
+import           Generated.ServerApi.Server.Method        (Method(Method))
 import qualified Generated.ServerApi.Server.Method.Name as MethodName
 
 
@@ -41,12 +41,16 @@ call handler encoded_args method = case Proto.messageGet encoded_args of
 
 
 selectCall :: Handler h => h -> ByteString -> ZMQ3.ZMQ z ByteString
-selectCall handler encoded_request = case Proto.messageGet encoded_request of
-    Left   err         -> fail $ "Error while decoding method from request: " ++ err
-    Right (method, encoded_args) -> case Method.name method of 
+selectCall handler encoded_request = let 
+    (encoded_method, encoded_args) = ByteString.splitAt methodSize encoded_request 
+    in case Proto.messageGet encoded_method of
+        Left   err         -> fail $ "Error while decoding method from request: " ++ err
+        Right (method, _) -> case Method.name method of 
             MethodName.PING  -> call handler encoded_args Handler.ping 
             MethodName.PING2 -> call handler encoded_args Handler.ping2
 
+methodSize :: Proto.Int64
+methodSize = Proto.messageSize $ Method MethodName.PING
 
 process :: (Handler h, ZMQ3.Receiver t, ZMQ3.Sender t) => ZMQ3.Socket z t -> h -> ZMQ3.ZMQ z ()
 process socket handler = do
