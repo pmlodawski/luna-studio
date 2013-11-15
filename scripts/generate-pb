@@ -5,25 +5,29 @@ from utils.glob2 import glob
 from subprocess import call
 import shutil
 
+cwd         = os.getcwd()
+cpp_gen_dir = os.path.join(cwd, 'tools/batch-clients/zmq-cpp/generated')
+
 def main():
     proto_paths = glob('**/*.proto')
+    prepare_cpp_dir()
     for path in proto_paths:
         run_hprotoc(path)
 
 def run_hprotoc(proto_path):
-    cwd         = os.getcwd()
     hs_run_dir  = os.path.dirname(proto_path)
     hs_gen_dir  = '../gen'
-    cpp_gen_dir = os.path.join(cwd, 'tools/batch-clients/zmq-cpp/generated')
     proto_name  = os.path.basename(proto_path)
 
     os.chdir(hs_run_dir)
-
-    shutil.rmtree(cpp_gen_dir, True)
-    os.makedirs(cpp_gen_dir)
     call('protoc --cpp_out=' + cpp_gen_dir + ' ' + proto_name, shell=True)
 
     shutil.rmtree(hs_gen_dir, True)
-    call('hprotoc -d ' + hs_gen_dir + ' -p Generated ' + proto_name, shell=True)
+    call('hprotoc -d ' + hs_gen_dir + ' -p Generated.Proto ' + proto_name, shell=True)
+    os.chdir(cwd)
+
+def prepare_cpp_dir():
+    shutil.rmtree(cpp_gen_dir, True)
+    os.makedirs(cpp_gen_dir)
 
 main()

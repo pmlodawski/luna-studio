@@ -12,7 +12,8 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: src
+  Hs-Source-Dirs: gen,
+                  src,
                   src/Flowbox/Luna/Tools/Serialize/Thrift/Generated
   if flag(debug)
     GHC-Options:  -csacc
@@ -22,7 +23,8 @@ Library
                   NoImplicitPrelude,
                   TemplateHaskell
   
-  Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*Flowbox/Luna/Tools/Serialize/Thrift/Generated/.*')`,
+  Exposed-modules: `findmodules('gen', '.*\.hs')`, 
+                   `findmodules('src', '.*\.hs', exclude='.*Flowbox/Luna/Tools/Serialize/Thrift/Generated/.*')`,
                    `findmodules('src/Flowbox/Luna/Tools/Serialize/Thrift/Generated', '.*\.hs')`
 
   
@@ -39,6 +41,8 @@ Library
                   MissingH == 1.2.0.0,
                   mtl,
                   parsec3,
+                  protocol-buffers,
+                  protocol-buffers-descriptor,
                   split,
                   text,
                   thrift >= 0.9,

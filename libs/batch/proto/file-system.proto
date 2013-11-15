@@ -1,0 +1,20 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2013
+///////////////////////////////////////////////////////////////////////////
+
+
+
+message FSItem {
+    enum Type {
+        Directory = 0;
+        File      = 1;
+        Other     = 2;
+    }
+
+    optional Type   type = 1;
+    optional string path = 2;
+    optional int32  size = 3;
+}

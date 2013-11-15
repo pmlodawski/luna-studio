@@ -11,25 +11,25 @@ module Flowbox.Batch.Server.ZMQ.Handlers.Maintenance (
     initialize,
 ) where
 
-import qualified Control.Concurrent.MVar                                  as MVar
-import           Control.Concurrent.MVar                                    (MVar)
-import           Data.IORef                                                 (IORef)
-import qualified System.ZMQ3.Monadic                                      as ZMQ3
+import qualified Control.Concurrent.MVar                                        as MVar
+import           Control.Concurrent.MVar                                          (MVar)
+import           Data.IORef                                                       (IORef)
+import qualified System.ZMQ3.Monadic                                            as ZMQ3
 
-import           Flowbox.Prelude                                            
-import           Flowbox.Batch.Batch                                        (Batch)
-import qualified Flowbox.Batch.Handlers.Maintenance                       as BatchM
-import           Flowbox.Batch.Server.ZMQ.Handlers.Common                   (zmqRunScript)
-import           Flowbox.Control.Error                                      
-import           Flowbox.System.Log.Logger                                  
-import qualified Generated.ServerApi.Server.Maintenance.Initialize.Args   as Initialize
-import qualified Generated.ServerApi.Server.Maintenance.Initialize.Result as Initialize
-import qualified Generated.ServerApi.Server.Maintenance.Ping.Args         as Ping
-import qualified Generated.ServerApi.Server.Maintenance.Ping.Result       as Ping
-import qualified Generated.ServerApi.Server.Maintenance.Dump.Args         as Dump
-import qualified Generated.ServerApi.Server.Maintenance.Dump.Result       as Dump
-import qualified Generated.ServerApi.Server.Maintenance.Shutdown.Args     as Shutdown
-import qualified Generated.ServerApi.Server.Maintenance.Shutdown.Result   as Shutdown
+import           Flowbox.Prelude                                                  
+import           Flowbox.Batch.Batch                                              (Batch)
+import qualified Flowbox.Batch.Handlers.Maintenance                             as BatchM
+import           Flowbox.Batch.Server.ZMQ.Handlers.Common                         (zmqRunScript)
+import           Flowbox.Control.Error                                            
+import           Flowbox.System.Log.Logger                                        
+import qualified Generated.Proto.ServerApi.Server.Maintenance.Initialize.Args   as Initialize
+import qualified Generated.Proto.ServerApi.Server.Maintenance.Initialize.Result as Initialize
+import qualified Generated.Proto.ServerApi.Server.Maintenance.Ping.Args         as Ping
+import qualified Generated.Proto.ServerApi.Server.Maintenance.Ping.Result       as Ping
+import qualified Generated.Proto.ServerApi.Server.Maintenance.Dump.Args         as Dump
+import qualified Generated.Proto.ServerApi.Server.Maintenance.Dump.Result       as Dump
+import qualified Generated.Proto.ServerApi.Server.Maintenance.Shutdown.Args     as Shutdown
+import qualified Generated.Proto.ServerApi.Server.Maintenance.Shutdown.Result   as Shutdown
 
 
 
