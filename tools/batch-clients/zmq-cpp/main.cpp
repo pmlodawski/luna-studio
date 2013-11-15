@@ -4,13 +4,6 @@
 
 #include "generated/server-api.pb.h"
 
-#define call(socket, name, args) {\
-        auto size = name.size(); \
-        zmq::message_t request_method(size); \
-        memcpy ((void*) request_method.data(), name, size); \
-        socket.send(request_method); \
-    }
-
 
 int main ()
 {
@@ -21,7 +14,7 @@ int main ()
     std::cout << "Connecting to server..." << std::endl;
     socket.connect ("tcp://localhost:30521");
 
-    for(int i = 0 ; i < 100000 ; ++i)
+    for(int i = 0 ; i < 10000 ; ++i)
     {
         Server_Method method;
         method.set_name(Server_Method_Name_PING);

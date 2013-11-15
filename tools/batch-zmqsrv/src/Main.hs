@@ -88,9 +88,8 @@ run cmd = case cmd of
 
 serve :: CmdArgs -> MVar Bool -> IO ()
 serve cmd quitmutex = do
-    let batchHandler = BatchHandler.empty
-    rootLogger setIntLevel 0
-    Server.serve (CmdArgs.address cmd) (CmdArgs.port cmd) batchHandler
+    handler <- BatchHandler.empty
+    Server.serve (CmdArgs.address cmd) (CmdArgs.port cmd) handler
 
 
 waitForQuit :: MVar t -> IO b
