@@ -9,7 +9,6 @@
 
 import qualified Control.Concurrent                             as Concurrent
 import qualified Control.Concurrent.MVar                        as MVar
-import           Control.Concurrent.MVar                          (MVar)
 import qualified Control.Exception                              as Exception
 import qualified System.Exit                                    as Exit
 
@@ -23,6 +22,7 @@ import qualified Flowbox.Options.Applicative                    as Opt
 import           Flowbox.Options.Applicative                    hiding (info)
 import           Flowbox.System.Log.Logger                        
 import qualified Flowbox.Batch.Server.ZMQ.Handlers.BatchHandler as BatchHandler
+import           Flowbox.Batch.Server.ZMQ.Handlers.BatchHandler   (BatchHandler)
 
 
 
@@ -78,22 +78,21 @@ run cmd = case cmd of
     CmdArgs.Version {} -> putStrLn show_version
     CmdArgs.Serve   {} -> do
         rootLogger setIntLevel $ CmdArgs.verbose cmd
-        quitmutex <- MVar.newEmptyMVar
+        handler <- BatchHandler.empty
         _ <- Concurrent.forkIO $ Exception.handle 
             (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
-                                                   MVar.putMVar quitmutex True) 
-            (serve cmd quitmutex)
-        waitForQuit quitmutex
+                                                   MVar.putMVar (BatchHandler.quitMutex handler) True)
+            (serve cmd handler)
+        waitForQuit handler
 
 
-serve :: CmdArgs -> MVar Bool -> IO ()
-serve cmd quitmutex = do
-    handler <- BatchHandler.empty
+serve :: CmdArgs -> BatchHandler -> IO ()
+serve cmd handler = do
     Server.serve (CmdArgs.address cmd) (CmdArgs.port cmd) handler
 
 
-waitForQuit :: MVar t -> IO b
-waitForQuit quitmutex = do
-    _ <- MVar.takeMVar quitmutex
+waitForQuit :: BatchHandler -> IO b
+waitForQuit handler = do
+    _ <- MVar.takeMVar $ BatchHandler.quitMutex handler
     loggerIO warning "shutting down..."
     Exit.exitSuccess

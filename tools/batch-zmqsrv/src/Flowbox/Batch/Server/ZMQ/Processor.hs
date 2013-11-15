@@ -46,11 +46,15 @@ selectCall handler encoded_request = let
     in case Proto.messageGet encoded_method of
         Left   err         -> fail $ "Error while decoding method from request: " ++ err
         Right (method, _) -> case Method.name method of 
-            MethodName.PING  -> call handler encoded_args Handler.ping 
-            MethodName.PING2 -> call handler encoded_args Handler.ping2
+            MethodName.Initialize -> call handler encoded_args Handler.initialize 
+            MethodName.Ping       -> call handler encoded_args Handler.ping 
+            MethodName.Dump       -> call handler encoded_args Handler.dump 
+            MethodName.Shutdown   -> call handler encoded_args Handler.shutdown 
+
 
 methodSize :: Proto.Int64
-methodSize = Proto.messageSize $ Method MethodName.PING
+methodSize = Proto.messageSize $ Method MethodName.Ping
+
 
 process :: (Handler h, ZMQ3.Receiver t, ZMQ3.Sender t) => ZMQ3.Socket z t -> h -> ZMQ3.ZMQ z ()
 process socket handler = do

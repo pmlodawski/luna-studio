@@ -8,14 +8,20 @@
 
 module Flowbox.Batch.Server.ZMQ.Handlers.Handler where
 
-import qualified System.ZMQ3.Monadic                     as ZMQ3
+import qualified System.ZMQ3.Monadic                                      as ZMQ3
 
-import qualified Generated.ServerApi.Server.Ping.Args    as PingArgs
-import qualified Generated.ServerApi.Server.Ping.Result  as PingResult
-import qualified Generated.ServerApi.Server.Ping2.Args   as Ping2Args
-import qualified Generated.ServerApi.Server.Ping2.Result as Ping2Result
+import qualified Generated.ServerApi.Server.Maintenance.Initialize.Args   as Initialize
+import qualified Generated.ServerApi.Server.Maintenance.Initialize.Result as Initialize
+import qualified Generated.ServerApi.Server.Maintenance.Ping.Args         as Ping
+import qualified Generated.ServerApi.Server.Maintenance.Ping.Result       as Ping
+import qualified Generated.ServerApi.Server.Maintenance.Dump.Args         as Dump
+import qualified Generated.ServerApi.Server.Maintenance.Dump.Result       as Dump
+import qualified Generated.ServerApi.Server.Maintenance.Shutdown.Args     as Shutdown
+import qualified Generated.ServerApi.Server.Maintenance.Shutdown.Result   as Shutdown
 
 
 class Handler h where
-    ping :: h -> PingArgs.Args -> ZMQ3.ZMQ z PingResult.Result
-    ping2 :: h -> Ping2Args.Args -> ZMQ3.ZMQ z Ping2Result.Result
+    initialize :: h -> Initialize.Args -> ZMQ3.ZMQ z Initialize.Result
+    ping       :: h -> Ping.Args       -> ZMQ3.ZMQ z Ping.Result
+    dump       :: h -> Dump.Args       -> ZMQ3.ZMQ z Dump.Result
+    shutdown   :: h -> Shutdown.Args   -> ZMQ3.ZMQ z Shutdown.Result
