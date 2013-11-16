@@ -5,7 +5,9 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto.batch;
+package generated.proto;
+
+import "file-system.proto";
 
 
 
@@ -16,6 +18,14 @@ message Method {
         Ping       = 1;
         Dump       = 2;
         Shutdown   = 3;
+
+        LS    = 4;
+        Stat  = 5;
+        MkDir = 6;
+        Touch = 7;
+        RM    = 8;
+        CP    = 9;
+        MV    = 10;
     }
 }
 
@@ -51,3 +61,58 @@ message Maintenance {
     }
 }
 
+message FileSystem {
+    message LS {
+        message Args {
+            required string path = 1;
+        }
+        message Result {
+            repeated FSItem items = 1;
+        }
+    }
+    message Stat {
+        message Args {
+            required string path = 1;
+        }
+        message Result {
+            optional FSItem item = 1;
+        }
+    }
+    message MkDir {
+        message Args {
+            required string path = 1;
+        }
+        message Result {
+        }
+    }
+    message Touch {
+        message Args {
+            required string path = 1;
+        }
+        message Result {
+        }
+    }
+    message RM {
+        message Args {
+            required string path = 1;
+        }
+        message Result {
+        }
+    }
+    message CP {
+        message Args {
+            required string src = 1;
+            required string dst = 2;
+        }
+        message Result {
+        }
+    }
+    message MV {
+        message Args {
+            required string src = 1;
+            required string dst = 2;
+        }
+        message Result {
+        }
+    }
+}

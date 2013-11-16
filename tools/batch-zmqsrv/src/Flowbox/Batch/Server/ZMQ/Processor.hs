@@ -23,12 +23,12 @@ import qualified Flowbox.Batch.Server.ZMQ.Handlers.Handler as Handler
 import           Flowbox.Batch.Server.ZMQ.Handlers.Handler   (Handler)
 import           Flowbox.Control.Error                       
 import           Flowbox.System.Log.Logger                   
-import           Generated.Proto.Batch.Exception             (Exception(Exception))
-import qualified Generated.Proto.Batch.Method              as Method
-import           Generated.Proto.Batch.Method                (Method(Method))
-import qualified Generated.Proto.Batch.Method.Name         as MethodName
-import           Generated.Proto.Batch.Response              (Response(Response))
-import qualified Generated.Proto.Batch.Response.Type       as ResponseType
+import           Generated.Proto.Exception             (Exception(Exception))
+import qualified Generated.Proto.Method              as Method
+import           Generated.Proto.Method                (Method(Method))
+import qualified Generated.Proto.Method.Name         as MethodName
+import           Generated.Proto.Response              (Response(Response))
+import qualified Generated.Proto.Response.Type       as ResponseType
 
 
 loggerIO :: LoggerIO

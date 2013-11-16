@@ -23,10 +23,10 @@ def run_protoc(proto_path):
     hs_gen_dir  = '../gen'
     proto_name  = os.path.basename(proto_path)
 
-    call('protoc --cpp_out=' + cpp_gen_dir + ' -I libs/luna/proto -I ' + proto_dir + ' ' + proto_path, shell=True)
+    call('protoc --cpp_out=' + cpp_gen_dir + ' -I libs/batch/proto -I libs/luna/proto -I ' + proto_dir + ' ' + proto_path, shell=True)
     
     os.chdir(proto_dir)
-    call('hprotoc -d ' + hs_gen_dir + ' -I ../../../libs/luna/proto ' + proto_name, shell=True)
+    call('hprotoc -d ' + hs_gen_dir + ' -I ../../../libs/batch/proto -I ../../../libs/luna/proto ' + proto_name, shell=True)
     os.chdir(cwd)
 
 def prepare_hs_dir(proto_path):

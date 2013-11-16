@@ -4,7 +4,7 @@
 #include "zmq.hpp"
 #include "generated/server-api.pb.h"
 
-using namespace generated::proto::batch;
+using namespace generated::proto;
 
 
 
