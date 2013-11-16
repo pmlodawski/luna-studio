@@ -18,7 +18,7 @@ import           Flowbox.Batch.GraphView.GraphView                      (GraphVi
 import           Flowbox.Control.Error                                  
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs    ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph   
-import           Flowbox.Tools.Conversion                               
+import           Flowbox.Tools.Conversion.Thrift                        
 import qualified Graphview_Types                                      as TGraphView
 
 

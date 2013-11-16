@@ -6,6 +6,7 @@
 *~
 *.imports
 tools/batch-clients/thrift-cpp/batch_client
+tools/batch-clients/zmq-cpp/main
 out
 
 #generated files

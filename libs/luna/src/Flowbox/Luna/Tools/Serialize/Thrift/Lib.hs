@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Luna.Tools.Serialize.Lib(
+module Flowbox.Luna.Tools.Serialize.Thrift.Lib(
     storeLibrary,
     restoreLibrary,
 ) where
@@ -25,7 +25,7 @@ import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs    ()
 import qualified Flowbox.System.IO.Serializer                         as Serializer
 import           Flowbox.System.IO.Serializer                           (Serializable(Serializable), Deserializable(Deserializable))
 import           Flowbox.System.UniPath                                 (UniPath)
-import           Flowbox.Tools.Conversion                               
+import           Flowbox.Tools.Conversion.Thrift                        
 
 
 saveLib :: Library -> Handle -> IO ()

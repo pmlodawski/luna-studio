@@ -7,20 +7,14 @@
 
 package generated.proto;
 
-message Flags {
-    optional bool io   = 1 [default = false];
-    optional bool omit = 2 [default = false];
-}
+import "attributes.proto";
 
-message Attributes {
-	message Space {
-		message KeyValue {
-			required string key   = 1;
-			required string value = 2;
-		}
-		required string   name  = 1;
-		repeated KeyValue items = 2;
-	}
-    repeated Space spaces = 1;
-}
 
+
+message Project {
+    optional string     name       = 1;
+    optional string     path       = 2;
+    repeated string     libPaths   = 3;
+    optional Attributes attributes = 4;
+    optional int32      projectID  = 5;
+}

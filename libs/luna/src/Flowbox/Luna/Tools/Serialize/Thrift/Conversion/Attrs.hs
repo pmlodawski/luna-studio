@@ -20,7 +20,7 @@ import           Flowbox.Control.Error
 import           Flowbox.Luna.Network.Flags        (Flags(Flags))
 import qualified Flowbox.Luna.Network.Attributes as Attributes
 import           Flowbox.Luna.Network.Attributes   (Attributes)
-import           Flowbox.Tools.Conversion          
+import           Flowbox.Tools.Conversion.Thrift   
 
 
 instance Convert Flags TAttrs.Flags where

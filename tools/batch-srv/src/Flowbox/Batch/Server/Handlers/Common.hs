@@ -11,17 +11,17 @@ module Flowbox.Batch.Server.Handlers.Common (
 ) where
 
 
-import           Data.Int                    (Int32)
-import           Prelude                   hiding (error)
-import           Control.Exception           (throw)
-import           Data.Text.Lazy              (pack)
-import qualified Data.Vector               as Vector
-import           Data.Vector                 (Vector)
+import           Data.Int                          (Int32)
+import           Prelude                         hiding (error)
+import           Control.Exception                 (throw)
+import           Data.Text.Lazy                    (pack)
+import qualified Data.Vector                     as Vector
+import           Data.Vector                       (Vector)
                                     
-import           Batch_Types                 (ArgumentException(ArgumentException))
-import           Flowbox.Control.Error       
-import           Flowbox.Tools.Conversion    
-import           Flowbox.System.Log.Logger   
+import           Batch_Types                       (ArgumentException(ArgumentException))
+import           Flowbox.Control.Error             
+import           Flowbox.Tools.Conversion.Thrift   
+import           Flowbox.System.Log.Logger         
 
 
 loggerIO :: LoggerIO

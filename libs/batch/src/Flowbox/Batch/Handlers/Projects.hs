@@ -17,14 +17,14 @@ module Flowbox.Batch.Handlers.Projects (
 ) where
 
 
-import           Flowbox.Prelude                         
-import           Flowbox.Batch.Batch                     (Batch(..))
-import           Flowbox.Batch.Handlers.Common           (noresult, readonly, readonly', projectOp, projectOp')
-import qualified Flowbox.Batch.Project.Project         as Project
-import           Flowbox.Batch.Project.Project           (Project(..))
-import qualified Flowbox.Batch.Project.ProjectManager  as ProjectManager
-import qualified Flowbox.Batch.Tools.Serialize.Project as ProjectSerialization
-import           Flowbox.System.UniPath                  (UniPath)
+import           Flowbox.Prelude                                
+import           Flowbox.Batch.Batch                            (Batch(..))
+import           Flowbox.Batch.Handlers.Common                  (noresult, readonly, readonly', projectOp, projectOp')
+import qualified Flowbox.Batch.Project.Project                as Project
+import           Flowbox.Batch.Project.Project                  (Project(..))
+import qualified Flowbox.Batch.Project.ProjectManager         as ProjectManager
+import qualified Flowbox.Batch.Tools.Serialize.Thrift.Project as ProjectSerialization
+import           Flowbox.System.UniPath                         (UniPath)
 
 
 

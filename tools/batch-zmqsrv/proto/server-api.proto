@@ -5,35 +5,36 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
+package generated.proto.batch;
 
 
-message Server {
-    message Method {
-        required Name name = 1;
-        enum Name {
-            Initialize = 0;
-            Ping       = 1;
-            Dump       = 2;
-            Shutdown   = 3;
-        }
+
+message Method {
+    required Name name = 1;
+    enum Name {
+        Initialize = 0;
+        Ping       = 1;
+        Dump       = 2;
+        Shutdown   = 3;
     }
-    message Maintenance {
-        message Initialize {
-            message Args   { }
-            message Result { }   
-        }
-        message Ping {
-            message Args   { }
-            message Result { }
-        }
-        message Dump {
-            message Args   { }
-            message Result { }
-        }
-        message Shutdown {
-            message Args   { }
-            message Result { }   
-        }
-    }
-
 }
+
+message Maintenance {
+    message Initialize {
+        message Args   { }
+        message Result { }   
+    }
+    message Ping {
+        message Args   { }
+        message Result { }
+    }
+    message Dump {
+        message Args   { }
+        message Result { }
+    }
+    message Shutdown {
+        message Args   { }
+        message Result { }   
+    }
+}
+

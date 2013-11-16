@@ -19,7 +19,7 @@ import qualified Flowbox.Luna.Lib.Library            as Library
 import           Flowbox.Luna.Lib.Library              (Library(Library))
 import           Flowbox.Luna.Network.Def.DefManager   (DefManager)
 import qualified Flowbox.System.UniPath              as UniPath
-import           Flowbox.Tools.Conversion              
+import           Flowbox.Tools.Conversion.Thrift       
 
 
 instance Convert (Int, Library) (TLibs.Library, DefManager) where

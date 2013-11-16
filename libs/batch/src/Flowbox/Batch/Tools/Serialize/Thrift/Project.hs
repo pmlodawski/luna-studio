@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Batch.Tools.Serialize.Project(
+module Flowbox.Batch.Tools.Serialize.Thrift.Project(
     storeProject,
     restoreProject,
 ) where
@@ -23,7 +23,7 @@ import qualified Flowbox.System.IO.Serializer                             as Ser
 import           Flowbox.System.IO.Serializer                               (Serializable(..), Deserializable(..))
 import qualified Flowbox.System.UniPath                                   as UniPath
 import           Flowbox.System.UniPath                                     (UniPath)
-import           Flowbox.Tools.Conversion                                   
+import           Flowbox.Tools.Conversion.Thrift                            
 import qualified Projects_Types                                           as TProject
 
 

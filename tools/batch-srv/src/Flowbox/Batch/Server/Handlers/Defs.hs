@@ -36,7 +36,7 @@ import qualified Flowbox.Luna.Network.Graph.Graph                    as Graph
 import           Flowbox.Luna.Network.Graph.Graph                      (Graph)
 import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs as CDefs
 import           Flowbox.System.Log.Logger                             
-import           Flowbox.Tools.Conversion                              
+import           Flowbox.Tools.Conversion.Thrift                       
 
 
 

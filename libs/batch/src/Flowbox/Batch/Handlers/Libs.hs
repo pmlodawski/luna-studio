@@ -18,32 +18,32 @@ module Flowbox.Batch.Handlers.Libs (
     libraryRootDef,
 ) where
 
-import qualified Data.Maybe                            as Maybe
+import qualified Data.Maybe                              as Maybe
 
-import           Flowbox.Prelude                         
-import qualified Flowbox.Batch.Batch                   as Batch
-import           Flowbox.Batch.Batch                     (Batch)
-import           Flowbox.Batch.Handlers.Common           (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
-import qualified Flowbox.Batch.Project.Project         as Project
-import qualified Flowbox.Batch.Project.ProjectManager  as ProjectManager
-import           Flowbox.Luna.Data.Cabal.Version         (Version(Version))
-import qualified Flowbox.Luna.Lib.LibManager           as LibManager
-import qualified Flowbox.Luna.Lib.Library              as Library
-import           Flowbox.Luna.Lib.Library                (Library)
-import qualified Flowbox.Luna.Network.Def.Definition   as Definition
-import           Flowbox.Luna.Network.Def.Definition     (Definition)
-import qualified Flowbox.Luna.Network.Def.DefManager   as DefManager
-import qualified Flowbox.Luna.Tools.Serialize.Lib      as LibSerialization
-import qualified Flowbox.Luna.Passes.Build.Build       as Build
-import qualified Flowbox.Luna.Passes.Build.BuildConfig as BuildConfig
-import           Flowbox.Luna.Passes.Build.BuildConfig   (BuildConfig(BuildConfig))
-import qualified Flowbox.Luna.Passes.Build.Diagnostics as Diagnostics
-import qualified Flowbox.Luna.Passes.General.Luna.Luna as Luna
-import           Flowbox.System.Log.Logger               
-import qualified Flowbox.System.Platform               as Platform
-import qualified Flowbox.System.Process                as Process
-import qualified Flowbox.System.UniPath                as UniPath
-import           Flowbox.System.UniPath                  (UniPath)
+import           Flowbox.Prelude                           
+import qualified Flowbox.Batch.Batch                     as Batch
+import           Flowbox.Batch.Batch                       (Batch)
+import           Flowbox.Batch.Handlers.Common             (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
+import qualified Flowbox.Batch.Project.Project           as Project
+import qualified Flowbox.Batch.Project.ProjectManager    as ProjectManager
+import           Flowbox.Luna.Data.Cabal.Version           (Version(Version))
+import qualified Flowbox.Luna.Lib.LibManager             as LibManager
+import qualified Flowbox.Luna.Lib.Library                as Library
+import           Flowbox.Luna.Lib.Library                  (Library)
+import qualified Flowbox.Luna.Network.Def.Definition     as Definition
+import           Flowbox.Luna.Network.Def.Definition       (Definition)
+import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
+import qualified Flowbox.Luna.Tools.Serialize.Thrift.Lib as LibSerialization
+import qualified Flowbox.Luna.Passes.Build.Build         as Build
+import qualified Flowbox.Luna.Passes.Build.BuildConfig   as BuildConfig
+import           Flowbox.Luna.Passes.Build.BuildConfig     (BuildConfig(BuildConfig))
+import qualified Flowbox.Luna.Passes.Build.Diagnostics   as Diagnostics
+import qualified Flowbox.Luna.Passes.General.Luna.Luna   as Luna
+import           Flowbox.System.Log.Logger                 
+import qualified Flowbox.System.Platform                 as Platform
+import qualified Flowbox.System.Process                  as Process
+import qualified Flowbox.System.UniPath                  as UniPath
+import           Flowbox.System.UniPath                    (UniPath)
 
 
 

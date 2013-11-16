@@ -20,7 +20,7 @@ import           Flowbox.Control.Error
 import           Flowbox.Luna.Lib.LibManager                           (LibManager)
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
 import qualified Flowbox.System.UniPath                              as UniPath
-import           Flowbox.Tools.Conversion                              
+import           Flowbox.Tools.Conversion.Thrift                       
 import qualified Projects_Types                                      as TProjects
 
 

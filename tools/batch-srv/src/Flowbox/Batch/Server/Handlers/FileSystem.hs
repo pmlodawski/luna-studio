@@ -30,7 +30,7 @@ import           Flowbox.Batch.Batch                                    (Batch)
 import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Item   ()
 import           Flowbox.Control.Error                                  
 import           Flowbox.System.Log.Logger                              
-import           Flowbox.Tools.Conversion                               
+import           Flowbox.Tools.Conversion.Thrift                        
 
 
 

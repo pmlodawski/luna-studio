@@ -33,7 +33,7 @@ import           Flowbox.Batch.Tools.Serialize.Thrift.Conversion.Projects   ()
 import           Flowbox.Control.Error                                      
 import qualified Flowbox.Luna.Lib.LibManager                              as LibManager
 import           Flowbox.System.Log.Logger                                  
-import           Flowbox.Tools.Conversion                                   
+import           Flowbox.Tools.Conversion.Thrift                            
 import qualified Projects_Types                                           as TProjects
 
 

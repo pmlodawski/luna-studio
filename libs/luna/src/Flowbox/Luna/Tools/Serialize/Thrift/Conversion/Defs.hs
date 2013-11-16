@@ -31,7 +31,7 @@ import qualified Flowbox.Luna.Network.Path.Path                       as Path
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Attrs   ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph   ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types   ()
-import           Flowbox.Tools.Conversion                               
+import           Flowbox.Tools.Conversion.Thrift                        
 
 
 encodeLabNode :: (Definition.ID, Definition) -> (Int32, TDefs.Definition)

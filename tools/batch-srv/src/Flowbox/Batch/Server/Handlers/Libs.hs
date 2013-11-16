@@ -38,7 +38,7 @@ import           Flowbox.Luna.Network.Def.DefManager                   (DefManag
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs   ()
 import           Flowbox.System.Log.Logger                             
-import           Flowbox.Tools.Conversion                              
+import           Flowbox.Tools.Conversion.Thrift                       
 import qualified Libs_Types                                          as TLibs
 
 

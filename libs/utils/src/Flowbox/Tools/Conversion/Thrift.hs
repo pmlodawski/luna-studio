@@ -7,22 +7,16 @@
 
 {-# LANGUAGE FunctionalDependencies, MultiParamTypeClasses #-}
 
-module Flowbox.Tools.Conversion where
+module Flowbox.Tools.Conversion.Thrift (
+    module Flowbox.Tools.Conversion.Common,
+    Convert(..)
+) where
 
-import           Data.Int          
-
-import           Flowbox.Prelude   
+import           Flowbox.Prelude                   
+import           Flowbox.Tools.Conversion.Common   
 
 
 
 class Convert a b | a -> b, b -> a where
   encode :: a -> b
   decode :: b -> Either String a 
-
-
-i32toi :: Int32 -> Int
-i32toi = fromIntegral
-
-
-itoi32 :: Int -> Int32
-itoi32 = fromIntegral

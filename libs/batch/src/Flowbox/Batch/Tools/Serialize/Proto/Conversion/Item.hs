@@ -10,34 +10,35 @@
 
 module Flowbox.Batch.Tools.Serialize.Proto.Conversion.Item where
 
-import qualified Text.ProtocolBuffers.Basic             as Proto
+import qualified Text.ProtocolBuffers.Basic     as Proto
 
-import           Flowbox.Prelude                          
-import qualified Flowbox.Batch.FileSystem.Item          as Item
-import           Flowbox.Batch.FileSystem.Item            (Item(..))
-import           Flowbox.Control.Error                    
-import qualified Flowbox.System.UniPath                 as UniPath
-import           Flowbox.Tools.Conversion                 
-import qualified Generated.Proto.FileSystem.FSItem      as PFS
-import qualified Generated.Proto.FileSystem.FSItem.Type as PFS
+import           Flowbox.Prelude                  
+import qualified Flowbox.Batch.FileSystem.Item  as Item
+import           Flowbox.Batch.FileSystem.Item    (Item(..))
+import           Flowbox.Control.Error            
+import qualified Flowbox.System.UniPath         as UniPath
+import           Flowbox.Tools.Conversion.Proto   
+import qualified Generated.Proto.FSItem         as Gen
+import qualified Generated.Proto.FSItem.Type    as Gen
 
 
-instance Convert Item PFS.FSItem where
-    encode item = PFS.FSItem (Just titemType) (Just tpath) (Just tsize) where 
-        titemType :: PFS.Type
+
+instance Convert Item Gen.FSItem where
+    encode item = Gen.FSItem (Just titemType) (Just tpath) (Just tsize) where 
+        titemType :: Gen.Type
         titemType = case item of
-            Directory {} -> PFS.Directory
-            File      {} -> PFS.File
-            Other     {} -> PFS.Other
+            Directory {} -> Gen.Directory
+            File      {} -> Gen.File
+            Other     {} -> Gen.Other
         tpath = Proto.uFromString $ UniPath.toUnixString $ Item.path item
         tsize = itoi32 $ Item.size item
-    decode (PFS.FSItem mtitemType mtpath mtsize) = do 
+    decode (Gen.FSItem mtitemType mtpath mtsize) = do 
         titemType <- mtitemType <?> "Failed to decode Item: 'itemType' field is missing"
         tpath     <- mtpath     <?> "Failed to decode Item: 'path' field is missing"
         tsize     <- mtsize     <?> "Failed to decode Item: 'size' field is missing"
         let apath = UniPath.fromUnixString $ Proto.uToString tpath
             asize = i32toi tsize
         case titemType of 
-            PFS.Directory -> return $ Directory apath asize
-            PFS.File      -> return $ File      apath asize
-            PFS.Other     -> return $ Other     apath asize
+            Gen.Directory -> return $ Directory apath asize
+            Gen.File      -> return $ File      apath asize
+            Gen.Other     -> return $ Other     apath asize

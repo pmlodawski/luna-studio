@@ -10,14 +10,14 @@
 
 module Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Types () where
 
-import           Flowbox.Prelude               
-import           Data.Text.Lazy                (pack, unpack)
-import qualified Data.Vector                 as Vector
-import qualified Types_Types                 as TTypes
-import           Flowbox.Control.Error         
-import qualified Flowbox.Luna.XOLD.Type.Type as Type
-import           Flowbox.Luna.XOLD.Type.Type   (Type)
-import           Flowbox.Tools.Conversion      
+import           Flowbox.Prelude                   
+import           Data.Text.Lazy                    (pack, unpack)
+import qualified Data.Vector                     as Vector
+import qualified Types_Types                     as TTypes
+import           Flowbox.Control.Error             
+import qualified Flowbox.Luna.XOLD.Type.Type     as Type
+import           Flowbox.Luna.XOLD.Type.Type       (Type)
+import           Flowbox.Tools.Conversion.Thrift   
 
 
 typeList2typeProtoList :: Int -> [Type] -> ([Int], [TTypes.TypeProto])

@@ -25,7 +25,7 @@ import           Flowbox.Control.Error
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
 import qualified Flowbox.Luna.XOLD.Type.Type                         as Type
 import           Flowbox.System.Log.Logger                             
-import           Flowbox.Tools.Conversion                              
+import           Flowbox.Tools.Conversion.Thrift                       
 import qualified Types_Types                                         as TTypes
 
 

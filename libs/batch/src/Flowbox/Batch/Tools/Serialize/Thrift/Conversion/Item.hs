@@ -18,7 +18,7 @@ import           Flowbox.Batch.FileSystem.Item                         (Item(..)
 import           Flowbox.Control.Error                                 
 import           Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs   ()
 import qualified Flowbox.System.UniPath                              as UniPath
-import           Flowbox.Tools.Conversion                              
+import           Flowbox.Tools.Conversion.Thrift                       
 import qualified Fs_Types                                            as TFS
 
 
