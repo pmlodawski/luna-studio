@@ -16,16 +16,16 @@ def main():
     for path in proto_paths:
         prepare_hs_dir(path)
     for path in proto_paths:
-        run_hprotoc(path)
+        run_protoc(path)
 
-def run_hprotoc(proto_path):
+def run_protoc(proto_path):
     proto_dir  = os.path.dirname(proto_path)
     hs_gen_dir  = '../gen'
     proto_name  = os.path.basename(proto_path)
 
+    call('protoc --cpp_out=' + cpp_gen_dir + ' -I libs/luna/proto -I ' + proto_dir + ' ' + proto_path, shell=True)
+    
     os.chdir(proto_dir)
-    call('protoc --cpp_out=' + cpp_gen_dir + ' ' + proto_name, shell=True)
-
     call('hprotoc -d ' + hs_gen_dir + ' -I ../../../libs/luna/proto ' + proto_name, shell=True)
     os.chdir(cwd)
 
@@ -34,7 +34,6 @@ def prepare_hs_dir(proto_path):
     hs_gen_dir  = '../gen'
 
     shutil.rmtree(os.path.join(proto_dir, hs_gen_dir), True)
-
 
 def prepare_cpp_dir():
     shutil.rmtree(cpp_gen_dir, True)

@@ -1,8 +1,10 @@
-#include "zmq.hpp"
 #include <string>
 #include <iostream>
 
+#include "zmq.hpp"
 #include "generated/server-api.pb.h"
+
+using namespace generated::proto::batch;
 
 
 
@@ -16,10 +18,10 @@ int main ()
     socket.connect ("tcp://localhost:30521");
 
     {
-        Server_Method method;
-        method.set_name(Server_Method_Name_Initialize);
+        Method method;
+        method.set_name(Method_Name_Initialize);
 
-        Server_Maintenance_Initialize_Args args;
+        Maintenance_Initialize_Args args;
 
         std::string buffer = method.SerializeAsString();
         args.AppendToString(&buffer);
@@ -34,27 +36,10 @@ int main ()
 
     for(int i = 0 ; i < 10 ; ++i)
     {
-        Server_Method method;
-        method.set_name(Server_Method_Name_Ping);
+        Method method;
+        method.set_name(Method_Name_Ping);
 
-        Server_Maintenance_Ping_Args args;
-
-        std::string buffer = method.SerializeAsString();
-        args.AppendToString(&buffer);
-        zmq::message_t request(buffer.size());
-
-        memcpy ((void *) request.data(), buffer.data(), buffer.size());
-        socket.send (request);
-        
-        zmq::message_t reply;
-        socket.recv (&reply);
-    }
-
-    {
-        Server_Method method;
-        method.set_name(Server_Method_Name_Dump);
-
-        Server_Maintenance_Dump_Args args;
+        Maintenance_Ping_Args args;
 
         std::string buffer = method.SerializeAsString();
         args.AppendToString(&buffer);
@@ -68,10 +53,27 @@ int main ()
     }
 
     {
-        Server_Method method;
-        method.set_name(Server_Method_Name_Shutdown);
+        Method method;
+        method.set_name(Method_Name_Dump);
 
-        Server_Maintenance_Shutdown_Args args;
+        Maintenance_Dump_Args args;
+
+        std::string buffer = method.SerializeAsString();
+        args.AppendToString(&buffer);
+        zmq::message_t request(buffer.size());
+
+        memcpy ((void *) request.data(), buffer.data(), buffer.size());
+        socket.send (request);
+        
+        zmq::message_t reply;
+        socket.recv (&reply);
+    }
+
+    {
+        Method method;
+        method.set_name(Method_Name_Shutdown);
+
+        Maintenance_Shutdown_Args args;
 
         std::string buffer = method.SerializeAsString();
         args.AppendToString(&buffer);

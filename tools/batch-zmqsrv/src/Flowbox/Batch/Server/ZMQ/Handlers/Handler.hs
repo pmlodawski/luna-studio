@@ -8,8 +8,7 @@
 
 module Flowbox.Batch.Server.ZMQ.Handlers.Handler where
 
-import qualified System.ZMQ3.Monadic                                 as ZMQ3
-
+import           Flowbox.Control.Error                                 
 import qualified Generated.Proto.Batch.Maintenance.Initialize.Args   as Initialize
 import qualified Generated.Proto.Batch.Maintenance.Initialize.Result as Initialize
 import qualified Generated.Proto.Batch.Maintenance.Ping.Args         as Ping
@@ -21,7 +20,7 @@ import qualified Generated.Proto.Batch.Maintenance.Shutdown.Result   as Shutdown
 
 
 class Handler h where
-    initialize :: h -> Initialize.Args -> ZMQ3.ZMQ z Initialize.Result
-    ping       :: h -> Ping.Args       -> ZMQ3.ZMQ z Ping.Result
-    dump       :: h -> Dump.Args       -> ZMQ3.ZMQ z Dump.Result
-    shutdown   :: h -> Shutdown.Args   -> ZMQ3.ZMQ z Shutdown.Result
+    initialize :: h -> Initialize.Args -> Script Initialize.Result
+    ping       :: h -> Ping.Args       -> Script Ping.Result
+    dump       :: h -> Dump.Args       -> Script Dump.Result
+    shutdown   :: h -> Shutdown.Args   -> Script Shutdown.Result
