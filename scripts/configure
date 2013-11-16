@@ -52,8 +52,8 @@ try_call('cabal update')
 print_info ("Registering thrift library")
 try_call('cabal install %s' % p_thrift)
     
-print_info ("Registering MissingH library (windows patch)")
-try_call('cabal install %s' % p_missingh)
+# print_info ("Registering MissingH library (windows patch)")
+# try_call('cabal install %s' % p_missingh)
 
 
 print_info ("Success")

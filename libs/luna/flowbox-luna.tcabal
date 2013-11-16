@@ -36,7 +36,7 @@ Library
                   flowbox-utils,
                   ghc-prim,
                   hashable,
-                  MissingH == 1.2.0.0,
+                  MissingH,
                   mtl,
                   parsec3,
                   split,
