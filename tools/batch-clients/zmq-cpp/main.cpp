@@ -21,7 +21,7 @@ int main ()
         Method method;
         method.set_name(Method_Name_Initialize);
 
-        Maintenance_Initialize_Args args;
+        MaintenanceAPI_Initialize_Args args;
 
         std::string buffer = method.SerializeAsString();
         args.AppendToString(&buffer);
@@ -39,7 +39,7 @@ int main ()
         Method method;
         method.set_name(Method_Name_Ping);
 
-        Maintenance_Ping_Args args;
+        MaintenanceAPI_Ping_Args args;
 
         std::string buffer = method.SerializeAsString();
         args.AppendToString(&buffer);
@@ -56,7 +56,7 @@ int main ()
         Method method;
         method.set_name(Method_Name_Dump);
 
-        Maintenance_Dump_Args args;
+        MaintenanceAPI_Dump_Args args;
 
         std::string buffer = method.SerializeAsString();
         args.AppendToString(&buffer);
@@ -73,7 +73,7 @@ int main ()
         Method method;
         method.set_name(Method_Name_Shutdown);
 
-        Maintenance_Shutdown_Args args;
+        MaintenanceAPI_Shutdown_Args args;
 
         std::string buffer = method.SerializeAsString();
         args.AppendToString(&buffer);

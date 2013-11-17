@@ -1,4 +1,4 @@
-GEN_SRC := generated/server-api.pb.cc generated/file-system.pb.cc
+GEN_SRC := generated/attributes.pb.cc generated/file-system.pb.cc generated/project.pb.cc generated/server-api.pb.cc
 GEN_OBJ := $(patsubst %.cc,%.o, $(GEN_SRC))
 
 .PHONY: all clean hs gen
