@@ -11,8 +11,6 @@
 module Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project where
 
 import qualified Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes   ()
-import qualified Data.Foldable                                            as Foldable
-import qualified Data.Sequence                                            as Sequence
 import qualified Text.ProtocolBuffers.Basic                               as Proto
 
 import           Flowbox.Prelude                                            
@@ -20,18 +18,18 @@ import qualified Flowbox.Batch.Project.Project                            as Pro
 import           Flowbox.Batch.Project.Project                              (Project(..))
 import           Flowbox.Control.Error                                      
 import           Flowbox.Luna.Lib.LibManager                                (LibManager)
-import qualified Flowbox.System.UniPath                                   as UniPath
 import           Flowbox.Tools.Conversion.Proto                             
+import qualified Flowbox.Tools.Serialize.Proto.Conversion.List            as Conv
+import           Flowbox.Tools.Serialize.Proto.Conversion.UniPath           ()
 import qualified Generated.Proto.Project                                  as Gen
-
 
 
 instance Convert (Project.ID, Project) (Gen.Project, LibManager) where
     encode (projectID, project) = (tproject, alibs) where
         Project aname apath alibPaths alibs aattrs = project
         tname      = Proto.uFromString aname
-        tpath      = Proto.uFromString $ UniPath.toUnixString apath
-        tlibPaths  = Sequence.fromList $ map (Proto.uFromString . UniPath.toUnixString) alibPaths
+        tpath      = encode apath
+        tlibPaths  = Conv.encodeList alibPaths
         tattrs     = encode aattrs
         tprojectID = itoi32 projectID
         tproject   = Gen.Project (Just tname) (Just tpath) tlibPaths (Just tattrs) (Just tprojectID)
@@ -42,9 +40,9 @@ instance Convert (Project.ID, Project) (Gen.Project, LibManager) where
         tprojectID  <- mtprojectID <?> "Failed to decode Project: 'projectID' field is missing"
         aattrs      <- decode tattrs
         let aname     = Proto.uToString tname
-            apath     = UniPath.fromUnixString $ Proto.uToString tpath
-            alibPaths = map (UniPath.fromUnixString . Proto.uToString) $ Foldable.toList tlibPaths
-            projectID = i32toi tprojectID
+        apath       <- decode tpath
+        alibPaths   <- Conv.decodeList tlibPaths
+        let projectID = i32toi tprojectID
             project   = Project aname apath alibPaths alibs aattrs
         return (projectID, project)
 

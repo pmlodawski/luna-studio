@@ -23,12 +23,12 @@ import qualified Flowbox.Batch.Server.ZMQ.Handlers.Handler as Handler
 import           Flowbox.Batch.Server.ZMQ.Handlers.Handler   (Handler)
 import           Flowbox.Control.Error                       
 import           Flowbox.System.Log.Logger                   
-import           Generated.Proto.Exception             (Exception(Exception))
-import qualified Generated.Proto.Method              as Method
-import           Generated.Proto.Method                (Method(Method))
-import qualified Generated.Proto.Method.Name         as MethodName
-import           Generated.Proto.Response              (Response(Response))
-import qualified Generated.Proto.Response.Type       as ResponseType
+import           Generated.Proto.Exception                   (Exception(Exception))
+import qualified Generated.Proto.Method                    as Method
+import           Generated.Proto.Method                      (Method(Method))
+import qualified Generated.Proto.Method.Name               as MethodName
+import           Generated.Proto.Response                    (Response(Response))
+import qualified Generated.Proto.Response.Type             as ResponseType
 
 
 loggerIO :: LoggerIO
@@ -63,6 +63,14 @@ selectCall handler encoded_request = let
     in case Proto.messageGet encoded_method of
         Left   e          -> fail $ "Error while decoding method from request: " ++ e
         Right (method, _) -> case Method.name method of 
+            MethodName.LS         -> call handler encoded_args Handler.ls 
+            MethodName.Stat       -> call handler encoded_args Handler.stat
+            MethodName.MkDir      -> call handler encoded_args Handler.mkdir
+            MethodName.Touch      -> call handler encoded_args Handler.touch
+            MethodName.RM         -> call handler encoded_args Handler.rm 
+            MethodName.CP         -> call handler encoded_args Handler.cp 
+            MethodName.MV         -> call handler encoded_args Handler.mv 
+            
             MethodName.Initialize -> call handler encoded_args Handler.initialize 
             MethodName.Ping       -> call handler encoded_args Handler.ping 
             MethodName.Dump       -> call handler encoded_args Handler.dump 

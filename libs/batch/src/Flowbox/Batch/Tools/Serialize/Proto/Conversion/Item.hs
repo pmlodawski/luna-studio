@@ -10,16 +10,14 @@
 
 module Flowbox.Batch.Tools.Serialize.Proto.Conversion.Item where
 
-import qualified Text.ProtocolBuffers.Basic     as Proto
-
-import           Flowbox.Prelude                  
-import qualified Flowbox.Batch.FileSystem.Item  as Item
-import           Flowbox.Batch.FileSystem.Item    (Item(..))
-import           Flowbox.Control.Error            
-import qualified Flowbox.System.UniPath         as UniPath
-import           Flowbox.Tools.Conversion.Proto   
-import qualified Generated.Proto.FSItem         as Gen
-import qualified Generated.Proto.FSItem.Type    as Gen
+import           Flowbox.Prelude                                    
+import qualified Flowbox.Batch.FileSystem.Item                    as Item
+import           Flowbox.Batch.FileSystem.Item                      (Item(..))
+import           Flowbox.Control.Error                              
+import           Flowbox.Tools.Conversion.Proto                     
+import           Flowbox.Tools.Serialize.Proto.Conversion.UniPath   ()
+import qualified Generated.Proto.FSItem                           as Gen
+import qualified Generated.Proto.FSItem.Type                      as Gen
 
 
 
@@ -30,14 +28,14 @@ instance Convert Item Gen.FSItem where
             Directory {} -> Gen.Directory
             File      {} -> Gen.File
             Other     {} -> Gen.Other
-        tpath = Proto.uFromString $ UniPath.toUnixString $ Item.path item
+        tpath = encode $ Item.path item
         tsize = itoi32 $ Item.size item
     decode (Gen.FSItem mtitemType mtpath mtsize) = do 
         titemType <- mtitemType <?> "Failed to decode Item: 'itemType' field is missing"
         tpath     <- mtpath     <?> "Failed to decode Item: 'path' field is missing"
         tsize     <- mtsize     <?> "Failed to decode Item: 'size' field is missing"
-        let apath = UniPath.fromUnixString $ Proto.uToString tpath
-            asize = i32toi tsize
+        apath     <- decode tpath
+        let asize = i32toi tsize
         case titemType of 
             Gen.Directory -> return $ Directory apath asize
             Gen.File      -> return $ File      apath asize

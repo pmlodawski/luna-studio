@@ -11,15 +11,15 @@ module Flowbox.Batch.Server.ZMQ.Handlers.Maintenance (
     initialize,
 ) where
 
-import qualified Control.Concurrent.MVar                             as MVar
-import           Control.Concurrent.MVar                               (MVar)
-import           Data.IORef                                            (IORef)
+import qualified Control.Concurrent.MVar                       as MVar
+import           Control.Concurrent.MVar                         (MVar)
+import           Data.IORef                                      (IORef)
 
-import           Flowbox.Prelude                                       
-import           Flowbox.Batch.Batch                                   (Batch)
-import qualified Flowbox.Batch.Handlers.Maintenance                  as BatchM
-import           Flowbox.Control.Error                                 
-import           Flowbox.System.Log.Logger                             
+import           Flowbox.Prelude                                 
+import           Flowbox.Batch.Batch                             (Batch)
+import qualified Flowbox.Batch.Handlers.Maintenance            as BatchM
+import           Flowbox.Control.Error                           
+import           Flowbox.System.Log.Logger                       
 import qualified Generated.Proto.Maintenance.Initialize.Args   as Initialize
 import qualified Generated.Proto.Maintenance.Initialize.Result as Initialize
 import qualified Generated.Proto.Maintenance.Ping.Args         as Ping

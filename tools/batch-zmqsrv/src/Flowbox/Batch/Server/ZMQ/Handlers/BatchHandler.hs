@@ -21,6 +21,7 @@ import qualified Flowbox.Batch.Project.ProjectManager          as ProjectManager
 import qualified Flowbox.Batch.Samples.Std                     as Sample
 import qualified Flowbox.Batch.Server.ZMQ.Handlers.Handler     as Handler
 import           Flowbox.Batch.Server.ZMQ.Handlers.Handler       (Handler)
+import qualified Flowbox.Batch.Server.ZMQ.Handlers.FileSystem  as HFileSystem
 import qualified Flowbox.Batch.Server.ZMQ.Handlers.Maintenance as HMaintenance
 import qualified Flowbox.Config.Config                         as Config
 import           Flowbox.System.Log.Logger                       
@@ -43,6 +44,14 @@ empty = do emptyBatch <- Batch.make <$> Config.load
 
 
 instance Handler BatchHandler where
+    ls         h = HFileSystem.ls    (batchRef h)
+    stat       h = HFileSystem.stat  (batchRef h)
+    mkdir      h = HFileSystem.mkdir (batchRef h)
+    touch      h = HFileSystem.touch (batchRef h)
+    rm         h = HFileSystem.rm    (batchRef h)
+    cp         h = HFileSystem.cp    (batchRef h)
+    mv         h = HFileSystem.mv    (batchRef h)
+    
     initialize h = HMaintenance.initialize (batchRef h)
     ping       h = HMaintenance.ping       (batchRef h) 
     dump       h = HMaintenance.dump       (batchRef h)
