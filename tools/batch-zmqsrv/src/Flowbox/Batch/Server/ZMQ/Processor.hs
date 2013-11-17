@@ -70,7 +70,15 @@ selectCall handler encoded_request = let
             MethodName.RM         -> call handler encoded_args Handler.rm 
             MethodName.CP         -> call handler encoded_args Handler.cp 
             MethodName.MV         -> call handler encoded_args Handler.mv 
-            
+
+            MethodName.Projects      -> call handler encoded_args Handler.projects 
+            MethodName.ProjectByID   -> call handler encoded_args Handler.projectByID 
+            MethodName.CreateProject -> call handler encoded_args Handler.createProject 
+            MethodName.OpenProject   -> call handler encoded_args Handler.openProject 
+            MethodName.UpdateProject -> call handler encoded_args Handler.updateProject 
+            MethodName.CloseProject  -> call handler encoded_args Handler.closeProject 
+            MethodName.StoreProject  -> call handler encoded_args Handler.storeProject 
+
             MethodName.Initialize -> call handler encoded_args Handler.initialize 
             MethodName.Ping       -> call handler encoded_args Handler.ping 
             MethodName.Dump       -> call handler encoded_args Handler.dump 

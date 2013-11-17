@@ -8,24 +8,33 @@
 package generated.proto;
 
 import "file-system.proto";
+import "project.proto";
 
 
 
 message Method {
     required Name name = 1;
     enum Name {
-        Initialize = 0;
-        Ping       = 1;
-        Dump       = 2;
-        Shutdown   = 3;
+        LS    = 1;
+        Stat  = 2;
+        MkDir = 3;
+        Touch = 4;
+        RM    = 5;
+        CP    = 6;
+        MV    = 7;
 
-        LS    = 4;
-        Stat  = 5;
-        MkDir = 6;
-        Touch = 7;
-        RM    = 8;
-        CP    = 9;
-        MV    = 10;
+        Projects      = 8;
+        ProjectByID   = 9;
+        CreateProject = 10;
+        OpenProject   = 11;
+        UpdateProject = 12;
+        CloseProject  = 13;
+        StoreProject  = 14;
+
+        Initialize = 15;
+        Ping       = 16;
+        Dump       = 17;
+        Shutdown   = 18;
     }
 }
 
@@ -42,26 +51,8 @@ message Exception {
     optional string message = 1;
 }
 
-message Maintenance {
-    message Initialize {
-        message Args   { }
-        message Result { }   
-    }
-    message Ping {
-        message Args   { }
-        message Result { }
-    }
-    message Dump {
-        message Args   { }
-        message Result { }
-    }
-    message Shutdown {
-        message Args   { }
-        message Result { }   
-    }
-}
 
-message FileSystem {
+message FileSystemAPI {
     message LS {
         message Args {
             required string path = 1;
@@ -114,5 +105,77 @@ message FileSystem {
         }
         message Result {
         }
+    }
+}
+
+message ProjectAPI {
+    message Projects {
+        message Args   { 
+            required int32 projectID = 1;
+        }
+        message Result { 
+            repeated Project project = 1;
+        }   
+    }
+    message ProjectByID {
+        message Args   { 
+            required int32 projectID = 1;
+        }
+        message Result { 
+            required Project project = 1;
+        }   
+    }
+    message CreateProject {
+        message Args   { 
+            required Project project = 1;
+        }
+        message Result { 
+            required Project project = 1;
+        }   
+    }
+    message OpenProject {
+        message Args   { 
+            required string path = 1;
+        }
+        message Result { 
+            required Project project = 1;
+        }   
+    }
+    message UpdateProject {
+        message Args   { 
+            required Project project = 1;
+        }
+        message Result { }   
+    }    
+    message CloseProject {
+        message Args   {
+            required int32 projectID = 1;
+        }
+        message Result { }   
+    }
+    message StoreProject {
+        message Args   { 
+            required int32 projectID = 1;
+        }
+        message Result { }   
+    }
+}
+
+message MaintenanceAPI {
+    message Initialize {
+        message Args   { }
+        message Result { }   
+    }
+    message Ping {
+        message Args   { }
+        message Result { }
+    }
+    message Dump {
+        message Args   { }
+        message Result { }
+    }
+    message Shutdown {
+        message Args   { }
+        message Result { }   
     }
 }

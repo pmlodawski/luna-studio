@@ -22,6 +22,7 @@ import qualified Flowbox.Batch.Samples.Std                     as Sample
 import qualified Flowbox.Batch.Server.ZMQ.Handlers.Handler     as Handler
 import           Flowbox.Batch.Server.ZMQ.Handlers.Handler       (Handler)
 import qualified Flowbox.Batch.Server.ZMQ.Handlers.FileSystem  as HFileSystem
+import qualified Flowbox.Batch.Server.ZMQ.Handlers.Project     as HProject
 import qualified Flowbox.Batch.Server.ZMQ.Handlers.Maintenance as HMaintenance
 import qualified Flowbox.Config.Config                         as Config
 import           Flowbox.System.Log.Logger                       
@@ -52,6 +53,14 @@ instance Handler BatchHandler where
     cp         h = HFileSystem.cp    (batchRef h)
     mv         h = HFileSystem.mv    (batchRef h)
     
+    projects      h = HProject.projects      (batchRef h)
+    projectByID   h = HProject.projectByID   (batchRef h)
+    createProject h = HProject.createProject (batchRef h)
+    openProject   h = HProject.openProject   (batchRef h)
+    updateProject h = HProject.updateProject (batchRef h)
+    closeProject  h = HProject.closeProject  (batchRef h)
+    storeProject  h = HProject.storeProject  (batchRef h)
+
     initialize h = HMaintenance.initialize (batchRef h)
     ping       h = HMaintenance.ping       (batchRef h) 
     dump       h = HMaintenance.dump       (batchRef h)
