@@ -20,6 +20,10 @@ main = do
 
     -- FIXME: handle Darwin
 
+    appendFile "C:\\test.txt" "hsc2hs\n"
+    appendFile "C:\\test.txt" (show args)
+    appendFile "C:\\test.txt" "\n---\n"
+
     exitCode <- Cmd.rawSystem exec $ (tflag
                        : "--cflag=-fno-stack-protector"
                        : args
