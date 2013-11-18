@@ -18,69 +18,57 @@ int main ()
     socket.connect ("tcp://localhost:30521");
 
     {
-        Method method;
-        method.set_name(Method_Name_Initialize);
+        Request request;
+        request.set_method(Request_Method_Initialize);
+        MaintenanceAPI_Initialize_Args* args = request.MutableExtension(MaintenanceAPI_Initialize_Args::req);
 
-        MaintenanceAPI_Initialize_Args args;
-
-        std::string buffer = method.SerializeAsString();
-        args.AppendToString(&buffer);
-        zmq::message_t request(buffer.size());
-
-        memcpy ((void *) request.data(), buffer.data(), buffer.size());
-        socket.send (request);
+        std::string buffer = request.SerializeAsString();
+        zmq::message_t zmq_req(buffer.size());
+        memcpy ((void *) zmq_req.data(), buffer.data(), buffer.size());
+        socket.send (zmq_req);
         
         zmq::message_t reply;
         socket.recv (&reply);
     }
 
-    for(int i = 0 ; i < 10 ; ++i)
+    for(int i = 0 ; i < 10000 ; ++i)
     {
-        Method method;
-        method.set_name(Method_Name_Ping);
+        Request request;
+        request.set_method(Request_Method_Ping);
+        MaintenanceAPI_Ping_Args* args = request.MutableExtension(MaintenanceAPI_Ping_Args::req);
 
-        MaintenanceAPI_Ping_Args args;
-
-        std::string buffer = method.SerializeAsString();
-        args.AppendToString(&buffer);
-        zmq::message_t request(buffer.size());
-
-        memcpy ((void *) request.data(), buffer.data(), buffer.size());
-        socket.send (request);
+        std::string buffer = request.SerializeAsString();
+        zmq::message_t zmq_req(buffer.size());
+        memcpy ((void *) zmq_req.data(), buffer.data(), buffer.size());
+        socket.send (zmq_req);
         
         zmq::message_t reply;
         socket.recv (&reply);
     }
 
     {
-        Method method;
-        method.set_name(Method_Name_Dump);
+        Request request;
+        request.set_method(Request_Method_Dump);
+        MaintenanceAPI_Dump_Args* args = request.MutableExtension(MaintenanceAPI_Dump_Args::req);
 
-        MaintenanceAPI_Dump_Args args;
-
-        std::string buffer = method.SerializeAsString();
-        args.AppendToString(&buffer);
-        zmq::message_t request(buffer.size());
-
-        memcpy ((void *) request.data(), buffer.data(), buffer.size());
-        socket.send (request);
+        std::string buffer = request.SerializeAsString();
+        zmq::message_t zmq_req(buffer.size());
+        memcpy ((void *) zmq_req.data(), buffer.data(), buffer.size());
+        socket.send (zmq_req);
         
         zmq::message_t reply;
         socket.recv (&reply);
     }
 
     {
-        Method method;
-        method.set_name(Method_Name_Shutdown);
+        Request request;
+        request.set_method(Request_Method_Shutdown);
+        MaintenanceAPI_Shutdown_Args* args = request.MutableExtension(MaintenanceAPI_Shutdown_Args::req);
 
-        MaintenanceAPI_Shutdown_Args args;
-
-        std::string buffer = method.SerializeAsString();
-        args.AppendToString(&buffer);
-        zmq::message_t request(buffer.size());
-
-        memcpy ((void *) request.data(), buffer.data(), buffer.size());
-        socket.send (request);
+        std::string buffer = request.SerializeAsString();
+        zmq::message_t zmq_req(buffer.size());
+        memcpy ((void *) zmq_req.data(), buffer.data(), buffer.size());
+        socket.send (zmq_req);
         
         zmq::message_t reply;
         socket.recv (&reply);

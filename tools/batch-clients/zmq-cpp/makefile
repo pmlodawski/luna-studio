@@ -9,7 +9,7 @@ all: main
 	$(CXX) --std=c++11 -Wall -c $< -o $@
 
 main: main.o $(GEN_OBJ) 
-	$(CXX) $^ -o $@ -lprotobuf -lzmq
+	$(CXX) --std=c++11 $^ -o $@ -lprotobuf -lzmq
 
 clean:
 	$(RM) -r *.o generated/*.o main
