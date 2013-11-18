@@ -12,6 +12,7 @@ module Flowbox.Batch.Server.ZMQ.Processor where
 import           Control.Applicative                                
 import qualified Data.ByteString.Lazy                             as ByteString
 import           Data.ByteString.Lazy                               (ByteString)
+import qualified Data.Map                                         as Map
 import qualified System.ZMQ3.Monadic                              as ZMQ3
 import qualified Text.ProtocolBuffers                             as Proto
 import qualified Text.ProtocolBuffers.Basic                       as Proto
@@ -25,8 +26,9 @@ import           Flowbox.Batch.Server.ZMQ.Handlers.Handler          (Handler)
 import           Flowbox.Control.Error                              
 import           Flowbox.System.Log.Logger                          
 import           Generated.Proto.Exception                          (Exception(Exception))
+import qualified Generated.Proto.Exception                        as Exception
 import qualified Generated.Proto.Request                          as Request
-import           Generated.Proto.Request                            (Request(Request))
+import           Generated.Proto.Request                            (Request)
 import qualified Generated.Proto.Request.Method                   as Method
 import           Generated.Proto.Response                           (Response(Response))
 import qualified Generated.Proto.Response.Type                    as ResponseType
@@ -73,24 +75,25 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Processor"
 
 
-zmqRunScript :: (Reflections.ReflectDescriptor a, WireMessage.Wire a)
-             => Script a -> ZMQ3.ZMQ z ByteString
-zmqRunScript s = do
+zmqRunScript :: (Reflections.ReflectDescriptor r, WireMessage.Wire r)
+             => Extensions.Key Maybe Response r -> Script r -> ZMQ3.ZMQ z ByteString
+zmqRunScript rspkey s = do
     e <- ZMQ3.liftIO $ runEitherT s
-    case e of
+    let r = Response ResponseType.Exception $ Extensions.ExtField Map.empty
+    Proto.messagePut <$> case e of
         Left  m -> do loggerIO error m
-                      let t  = Proto.messagePut $ Response ResponseType.Exception
-                          ex = Proto.messagePut $ Exception $ Just $ Proto.uFromString m
-                      return $ ByteString.append t ex
-        Right a -> do let t = Proto.messagePut $ Response ResponseType.Result
-                          r = Proto.messagePut a
-                      return $ ByteString.append t r
+                      let exc = Exception $ Just $ Proto.uFromString m
+                      return $ Extensions.putExt Exception.rsp (Just exc) r
+        Right a ->    return $ Extensions.putExt rspkey        (Just a  ) r
 
 
-call :: (WireMessage.Wire a, Reflections.ReflectDescriptor a)
-     => Request -> h -> Extensions.Key Maybe Request v -> (h -> v -> Script a) -> ZMQ3.ZMQ z ByteString
-call request handler key method = case Extensions.getExt key request of 
-    Right (Just args) -> zmqRunScript $ method handler args
+call :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
+     => Request -> h ->  (h -> arg -> Script r)
+     -> Extensions.Key Maybe Request arg 
+     -> Extensions.Key Maybe Response r 
+     -> ZMQ3.ZMQ z ByteString
+call request handler method reqkey rspkey = case Extensions.getExt reqkey request of 
+    Right (Just args) -> zmqRunScript rspkey $ method handler args
     Left   e'         -> fail $ "Error while getting extension: " ++ e'
     _                 -> fail $ "Error while getting extension"
 
@@ -99,26 +102,26 @@ selectCall :: Handler h => h -> ByteString -> ZMQ3.ZMQ z ByteString
 selectCall handler encoded_request = case Proto.messageGet encoded_request of
     Left   e           -> fail $ "Error while decoding request: " ++ e
     Right (request, _) -> case Request.method request of 
-        Method.LS    -> call request handler LS.ext    Handler.ls
-        Method.Stat  -> call request handler Stat.ext  Handler.stat
-        Method.MkDir -> call request handler MkDir.ext Handler.mkdir
-        Method.Touch -> call request handler Touch.ext Handler.touch
-        Method.RM    -> call request handler RM.ext    Handler.rm
-        Method.CP    -> call request handler CP.ext    Handler.cp
-        Method.MV    -> call request handler MV.ext    Handler.mv
+        Method.LS    -> call request handler Handler.ls    LS.req    LS.rsp    
+        Method.Stat  -> call request handler Handler.stat  Stat.req  Stat.rsp  
+        Method.MkDir -> call request handler Handler.mkdir MkDir.req MkDir.rsp 
+        Method.Touch -> call request handler Handler.touch Touch.req Touch.rsp 
+        Method.RM    -> call request handler Handler.rm    RM.req    RM.rsp    
+        Method.CP    -> call request handler Handler.cp    CP.req    CP.rsp    
+        Method.MV    -> call request handler Handler.mv    MV.req    MV.rsp    
 
-        Method.Projects      -> call request handler Projects.ext      Handler.projects
-        Method.ProjectByID   -> call request handler ProjectByID.ext   Handler.projectByID
-        Method.CreateProject -> call request handler CreateProject.ext Handler.createProject
-        Method.OpenProject   -> call request handler OpenProject.ext   Handler.openProject
-        Method.UpdateProject -> call request handler UpdateProject.ext Handler.updateProject
-        Method.CloseProject  -> call request handler CloseProject.ext  Handler.closeProject
-        Method.StoreProject  -> call request handler StoreProject.ext  Handler.storeProject
+        Method.Projects      -> call request handler Handler.projects      Projects.req      Projects.rsp      
+        Method.ProjectByID   -> call request handler Handler.projectByID   ProjectByID.req   ProjectByID.rsp   
+        Method.CreateProject -> call request handler Handler.createProject CreateProject.req CreateProject.rsp 
+        Method.OpenProject   -> call request handler Handler.openProject   OpenProject.req   OpenProject.rsp   
+        Method.UpdateProject -> call request handler Handler.updateProject UpdateProject.req UpdateProject.rsp
+        Method.CloseProject  -> call request handler Handler.closeProject  CloseProject.req  CloseProject.rsp  
+        Method.StoreProject  -> call request handler Handler.storeProject  StoreProject.req  StoreProject.rsp  
 
-        Method.Initialize -> call request handler Initialize.ext Handler.initialize
-        Method.Ping       -> call request handler Ping.ext       Handler.ping
-        Method.Dump       -> call request handler Dump.ext       Handler.dump
-        Method.Shutdown   -> call request handler Shutdown.ext   Handler.shutdown
+        Method.Initialize -> call request handler Handler.initialize Initialize.req Initialize.rsp
+        Method.Ping       -> call request handler Handler.ping       Ping.req       Ping.rsp      
+        Method.Dump       -> call request handler Handler.dump       Dump.req       Dump.rsp      
+        Method.Shutdown   -> call request handler Handler.shutdown   Shutdown.req   Shutdown.rsp  
 
 
 process :: (Handler h, ZMQ3.Receiver t, ZMQ3.Sender t) => ZMQ3.Socket z t -> h -> ZMQ3.ZMQ z ()

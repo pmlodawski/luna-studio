@@ -47,137 +47,138 @@ message Response {
         Result    = 0;
         Exception = 1;
     }
+    extensions 1000 to max;
 }
 
-message Exception {
+message Exception { extend Response { optional Exception rsp = 1000; }
     optional string message = 1;
 }
 
 
 message FileSystemAPI {
     message LS {
-        message Args   { extend Request { optional Args ext = 1000; }
+        message Args   { extend Request  { optional Args   req = 1001; }
             required string path = 1;
         }
-        message Result {
+        message Result { extend Response { optional Result rsp = 1001; }
             repeated FSItem items = 1;
         }
     }
     message Stat {
-        message Args   { extend Request { optional Args ext = 1001; }
+        message Args   { extend Request  { optional Args   req = 1002; }
             required string path = 1;
         }
-        message Result {
+        message Result { extend Response { optional Result rsp = 1002; }
             optional FSItem item = 1;
         }
     }
     message MkDir {
-        message Args   { extend Request { optional Args ext = 1002; }
+        message Args   { extend Request  { optional Args   req = 1003; }
             required string path = 1;
         }
-        message Result {
+        message Result { extend Response { optional Result rsp = 1003; }
         }
     }
     message Touch {
-        message Args   { extend Request { optional Args ext = 1003; }
+        message Args   { extend Request  { optional Args   req = 1004; }
             required string path = 1;
         }
-        message Result {
+        message Result { extend Response { optional Result rsp = 1004; }
         }
     }
     message RM {
-        message Args   { extend Request { optional Args ext = 1004; }
+        message Args   { extend Request  { optional Args   req = 1005; }
             required string path = 1;
         }
-        message Result {
+        message Result { extend Response { optional Result rsp = 1005; }
         }
     }
     message CP {
-        message Args   { extend Request { optional Args ext = 1005; }
+        message Args   { extend Request  { optional Args   req = 1006; }
             required string src = 1;
             required string dst = 2;
         }
-        message Result {
+        message Result { extend Response { optional Result rsp = 1006; }
         }
     }
     message MV {
-        message Args   { extend Request { optional Args ext = 1006; }
+        message Args   { extend Request  { optional Args   req = 1007; }
             required string src = 1;
             required string dst = 2;
         }
-        message Result {
+        message Result { extend Response { optional Result rsp = 1007; }
         }
     }
 }
 
 message ProjectAPI {
     message Projects {
-        message Args   { extend Request { optional Args ext = 1007; }
+        message Args   { extend Request  { optional Args   req = 1008; }
             required int32 projectID = 1;
         }
-        message Result { 
+        message Result { extend Response { optional Result rsp = 1008; }
             repeated Project project = 1;
         }   
     }
     message ProjectByID {
-        message Args   { extend Request { optional Args ext = 1008; }
+        message Args   { extend Request  { optional Args   req = 1009; }
             required int32 projectID = 1;
         }
-        message Result { 
+        message Result { extend Response { optional Result rsp = 1009; }
             required Project project = 1;
         }   
     }
     message CreateProject {
-        message Args   { extend Request { optional Args ext = 1009; }
+        message Args   { extend Request  { optional Args   req = 1010; }
             required Project project = 1;
         }
-        message Result { 
+        message Result { extend Response { optional Result rsp = 1010; }
             required Project project = 1;
         }   
     }
     message OpenProject {
-        message Args   { extend Request { optional Args ext = 1010; }
+        message Args   { extend Request  { optional Args   req = 1011; }
             required string path = 1;
         }
-        message Result { 
+        message Result { extend Response { optional Result rsp = 1011; }
             required Project project = 1;
         }   
     }
     message UpdateProject {
-        message Args   { extend Request { optional Args ext = 1011; }
+        message Args   { extend Request  { optional Args   req = 1012; }
             required Project project = 1;
         }
-        message Result { }   
+        message Result { extend Response { optional Result rsp = 1012; } }   
     }    
     message CloseProject {
-        message Args   { extend Request { optional Args ext = 1012; }
+        message Args   { extend Request  { optional Args   req = 1013; }
             required int32 projectID = 1;
         }
-        message Result { }   
+        message Result { extend Response { optional Result rsp = 1013; } }   
     }
     message StoreProject {
-        message Args   { extend Request { optional Args ext = 1013; }
+        message Args   { extend Request  { optional Args   req = 1014; }
             required int32 projectID = 1;
         }
-        message Result { }   
+        message Result { extend Response { optional Result rsp = 1014; } }   
     }
 }
 
 message MaintenanceAPI {
     message Initialize {
-        message Args   { extend Request { optional Args ext = 1014; } }
-        message Result { }   
+        message Args   { extend Request  { optional Args   req = 1015; } }
+        message Result { extend Response { optional Result rsp = 1015; } }   
     }
     message Ping {
-        message Args   { extend Request { optional Args ext = 1015; } }
-        message Result { }
+        message Args   { extend Request  { optional Args   req = 1016; } }
+        message Result { extend Response { optional Result rsp = 1016; } }
     }
     message Dump {
-        message Args   { extend Request { optional Args ext = 1016; } }
-        message Result { }
+        message Args   { extend Request  { optional Args   req = 1017; } }
+        message Result { extend Response { optional Result rsp = 1017; } }
     }
     message Shutdown {
-        message Args   { extend Request { optional Args ext = 1017; } }
-        message Result { }   
+        message Args   { extend Request  { optional Args   req = 1018; } }
+        message Result { extend Response { optional Result rsp = 1018; } }
     }
 }
