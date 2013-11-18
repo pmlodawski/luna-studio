@@ -5,14 +5,15 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto;
+package generated.proto.expr;
 
-//import "lit.proto";
-//import "type.proto";
+import "pat.proto";
+import "lit.proto";
+import "type.proto";
 
-/*
+
 message Expr {
-    enum Class {
+    enum Cls {
         NOP         = 1;
         Accessor    = 2;
         App         = 3;
@@ -39,47 +40,170 @@ message Expr {
         NativeCode  = 23;
         NativeVar   = 24;
     }
-    required Class  dtype   = 1;
-    optional int32  id      = 2;
-    optional string name    = 3;
-    optional Expr   src     = 4;
-    optional Expr   dst     = 5;
-    repeated Expr   args    = 6;
-    optional Pat    pat     = 7;
-    optional Type   cls     = 8;
-    repeated Expr   classes = 9;
-    repeated Expr   fields  = 10;
-    repeated Expr   methods = 11;
-    repeated string path    = 12;
-    repeated Expr   inputs  = 13;
-    optional Type   output  = 8;
+    required Cls cls = 1;
 
+    extensions 100 to max;
 }
-*/
-/*
-data Expr  = NOP         { id :: ID                                                                                         }
-           | Accessor    { id :: ID, name      :: String   , dst       :: Expr                                              }
-           | App         { id :: ID, src       :: Expr     , args      :: [Expr]                                            }
-           | AppCons_    { id :: ID, args      :: [Expr]                                                                    }
-           | Assignment  { id :: ID, pat       :: Pat      , dst       :: Expr                                              }
-           | Class       { id :: ID, cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]  }
-           | Con         { id :: ID, name      :: String                                                                    }
-           | Function    { id :: ID, path      :: [String] , name      :: String , inputs    :: [Expr] , output    :: Type   ,  body    :: [Expr] }
-           | Lambda      { id :: ID, inputs    :: [Expr]   , output    :: Type   , body      :: [Expr]                      }
-           | Import      { id :: ID, path      :: [String] , target    :: Expr   , rename    :: Maybe String                }
-           | Infix       { id :: ID, name      :: String   , src       :: Expr   , dst       :: Expr                        }                                                               
-           | List        { id :: ID, items     :: [Expr]                                                                    }
-           | Lit         { id :: ID, lvalue    :: Lit                                                                       }
-           | Tuple       { id :: ID, items     :: [Expr]                                                                    }
-           | Typed       { id :: ID, cls       :: Type     , expr      :: Expr                                              }
-           | Var         { id :: ID, name      :: String                                                                    }
-           | Wildcard    { id :: ID                                                                                         }
-                         
-           | RangeFromTo { id :: ID, start     :: Expr     , end       :: Expr                                              }
-           | RangeFrom   { id :: ID, start     :: Expr                                                                      }
-           | Field       { id :: ID, name      :: String   , cls       :: Type   , value     :: Maybe Expr                  }
-           | Arg         { id :: ID, pat       :: Pat      , value     :: Maybe Expr                                        }
-           | Native      { id :: ID, segments  :: [Expr]                                                                    }
-           | NativeCode  { id :: ID, code      :: String }
-           | NativeVar   { id :: ID, name      :: String }
-*/
+
+message NOP {
+    extend Expr { optional NOP ext = 100; }
+    optional int32 id = 1;
+}
+
+message Accessor {
+    extend Expr { optional Accessor ext = 101; }
+    optional int32  id   = 1;
+    optional string name = 2;
+    optional Expr   dst  = 3;
+}
+
+message App {
+    extend Expr { optional App ext = 102; }
+    optional int32 id   = 1;
+    optional Expr  src  = 2;
+    repeated Expr  args = 3;
+}
+
+message AppCons_ {
+    extend Expr { optional App ext = 103; }
+    optional int32 id   = 1;
+    repeated Expr  args = 2;
+}
+
+message Assignment {
+    extend Expr { optional Assignment ext = 104; }
+    optional int32 id  = 1;
+    optional generated.proto.pat.Pat pat = 2;
+    optional Expr  dst = 3;
+}
+
+message Class {
+    extend Expr { optional Class ext = 105; }
+    optional int32 id      = 1;
+    optional generated.proto.type.Type cls = 2;
+    repeated Expr  classes = 3;
+    repeated Expr  fields  = 4;
+    repeated Expr  methods = 5;
+}
+
+message Con {
+    extend Expr { optional Con ext = 106; }
+    optional int32  id   = 1;
+    optional string name = 2;
+}
+
+message Function {
+    extend Expr { optional Function ext = 107; }
+    optional int32  id     = 1;
+    repeated string path   = 2;
+    optional string name   = 3;
+    repeated Expr   inputs = 4;
+    optional generated.proto.type.Type output = 5;
+    repeated Expr   body   = 6;
+}
+
+message Lambda {
+    extend Expr { optional Lambda ext = 108; }
+    optional int32  id     = 1;
+    repeated Expr   inputs = 2;
+    optional generated.proto.type.Type output = 3;
+    repeated Expr   body   = 4;
+}
+
+message Import {
+    extend Expr { optional Import ext = 109; }
+    optional int32  id     = 1;
+    repeated string path   = 2;
+    optional Expr   target = 3;
+    optional string rename = 4;
+}
+
+message Infix {
+    extend Expr { optional Infix ext = 110; }
+    optional int32  id   = 1;
+    optional string name = 2;
+    optional Expr   src  = 3;
+    optional Expr   dst  = 4;
+}
+
+message List {
+    extend Expr { optional List ext = 111; }
+    optional int32 id    = 1;
+    repeated Expr  items = 2;
+}
+
+message Lit {
+    extend Expr { optional Lit ext = 112; }
+    optional int32 id    = 1;
+    optional Lit  lvalue = 2;
+}
+
+message Tuple {
+    extend Expr { optional Tuple ext = 113; }
+    optional int32 id    = 1;
+    repeated Expr  items = 2;
+}
+
+message Typed {
+    extend Expr { optional Typed ext = 114; }
+    optional int32 id   = 1;
+    optional generated.proto.type.Type  cls  = 2;
+    optional Expr  expr = 3;
+}
+
+message Var {
+    extend Expr { optional Var ext = 115; }
+    optional int32  id   = 1;
+    optional string name = 2;
+}
+
+message Wildcard {
+    extend Expr { optional Wildcard ext = 116; }
+    optional int32 id = 1;
+}
+
+message RangeFromTo {
+    extend Expr { optional RangeFromTo ext = 117; }
+    optional int32 id    = 1;
+    optional Expr  start = 2;
+    optional Expr  end   = 3;
+}
+
+message RangeFrom {
+    extend Expr { optional RangeFrom ext = 118; }
+    optional int32 id    = 1;
+    optional Expr  start = 2;
+}
+
+message Field {
+    extend Expr { optional Field ext = 119; }
+    optional int32  id    = 1;
+    optional string name  = 2;
+    optional generated.proto.type.Type cls = 3;
+    optional Expr   value = 4;
+}
+
+message Arg {
+    extend Expr { optional Arg ext = 120; }
+    optional int32 id    = 1;
+    optional generated.proto.pat.Pat pat = 2;
+    optional Expr  value = 3;
+}
+
+message Native {
+    extend Expr { optional Native ext = 121; }
+    optional int32 id       = 1;
+    repeated Expr  segments = 2;
+}
+
+message NativeCode {
+    extend Expr { optional NativeCode ext = 122; }
+    optional int32 id    = 1;
+    optional string code = 2;
+}
+
+message NativeVar {
+    extend Expr { optional NativeCode ext = 123; }
+    optional int32 id    = 1;
+    optional string name = 2;
+}

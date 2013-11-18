@@ -1,0 +1,43 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2013
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.pat;
+
+import "lit.proto";
+import "type.proto";
+
+
+message Pat {
+    enum Cls {
+        Pat      = 1;
+        Lit      = 2;
+        Tuple    = 3;
+        Con      = 4;
+        App      = 5;
+        Typed    = 6;
+        Wildcard = 7;
+    }
+    required Cls cls = 1;
+
+    extensions 100 to max;
+}
+
+message Var {
+    extend Pat { optional Var expr = 100; }
+    optional int32  id   = 1;
+    optional string name = 2;
+}
+/*
+
+data Pat = Var             { id :: ID, name      :: String                         }
+         | Lit             { id :: ID, value     :: Lit                            }
+         | Tuple           { id :: ID, items     :: [Pat]                          }
+         | Con             { id :: ID, name      :: String                         }
+         | App             { id :: ID, src       :: Pat       , args      :: [Pat] }
+         | Typed           { id :: ID, pat       :: Pat       , cls       :: Type  }
+         | Wildcard        { id :: ID                                              }
+*/
