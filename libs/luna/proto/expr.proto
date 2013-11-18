@@ -1,0 +1,85 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2013
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto;
+
+//import "lit.proto";
+//import "type.proto";
+
+/*
+message Expr {
+    enum Class {
+        NOP         = 1;
+        Accessor    = 2;
+        App         = 3;
+        AppCons_    = 4;
+        Assignment  = 5;
+        Class       = 6;
+        Con         = 7;
+        Function    = 8;
+        Lambda      = 9;
+        Import      = 10;
+        Infix       = 11;
+        List        = 12;
+        Lit         = 13;
+        Tuple       = 14;
+        Typed       = 15;
+        Var         = 16;
+        Wildcard    = 17;
+
+        RangeFromTo = 18;
+        RangeFrom   = 19;
+        Field       = 20;
+        Arg         = 21;
+        Native      = 22;
+        NativeCode  = 23;
+        NativeVar   = 24;
+    }
+    required Class  dtype   = 1;
+    optional int32  id      = 2;
+    optional string name    = 3;
+    optional Expr   src     = 4;
+    optional Expr   dst     = 5;
+    repeated Expr   args    = 6;
+    optional Pat    pat     = 7;
+    optional Type   cls     = 8;
+    repeated Expr   classes = 9;
+    repeated Expr   fields  = 10;
+    repeated Expr   methods = 11;
+    repeated string path    = 12;
+    repeated Expr   inputs  = 13;
+    optional Type   output  = 8;
+
+}
+*/
+/*
+data Expr  = NOP         { id :: ID                                                                                         }
+           | Accessor    { id :: ID, name      :: String   , dst       :: Expr                                              }
+           | App         { id :: ID, src       :: Expr     , args      :: [Expr]                                            }
+           | AppCons_    { id :: ID, args      :: [Expr]                                                                    }
+           | Assignment  { id :: ID, pat       :: Pat      , dst       :: Expr                                              }
+           | Class       { id :: ID, cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]  }
+           | Con         { id :: ID, name      :: String                                                                    }
+           | Function    { id :: ID, path      :: [String] , name      :: String , inputs    :: [Expr] , output    :: Type   ,  body    :: [Expr] }
+           | Lambda      { id :: ID, inputs    :: [Expr]   , output    :: Type   , body      :: [Expr]                      }
+           | Import      { id :: ID, path      :: [String] , target    :: Expr   , rename    :: Maybe String                }
+           | Infix       { id :: ID, name      :: String   , src       :: Expr   , dst       :: Expr                        }                                                               
+           | List        { id :: ID, items     :: [Expr]                                                                    }
+           | Lit         { id :: ID, lvalue    :: Lit                                                                       }
+           | Tuple       { id :: ID, items     :: [Expr]                                                                    }
+           | Typed       { id :: ID, cls       :: Type     , expr      :: Expr                                              }
+           | Var         { id :: ID, name      :: String                                                                    }
+           | Wildcard    { id :: ID                                                                                         }
+                         
+           | RangeFromTo { id :: ID, start     :: Expr     , end       :: Expr                                              }
+           | RangeFrom   { id :: ID, start     :: Expr                                                                      }
+           | Field       { id :: ID, name      :: String   , cls       :: Type   , value     :: Maybe Expr                  }
+           | Arg         { id :: ID, pat       :: Pat      , value     :: Maybe Expr                                        }
+           | Native      { id :: ID, segments  :: [Expr]                                                                    }
+           | NativeCode  { id :: ID, code      :: String }
+           | NativeVar   { id :: ID, name      :: String }
+*/

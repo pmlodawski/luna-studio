@@ -9,20 +9,14 @@ package generated.proto;
 
 
 
-message Flags {
-    optional bool io   = 1 [default = false];
-    optional bool omit = 2 [default = false];
-}
-
-message Attributes {
-    message Space {
-        message KeyValue {
-            required string key   = 1;
-            required string value = 2;
-        }
-        required string   name  = 1;
-        repeated KeyValue items = 2;
+message Lit {
+    enum Cls {
+        Char    = 1;
+        String  = 2;
+        Integer = 3;
+        Float   = 4;
     }
-    repeated Space spaces = 1;
+    required Cls  dtype = 1;
+    optional int32  id    = 2;
+    optional string str   = 3;
 }
-

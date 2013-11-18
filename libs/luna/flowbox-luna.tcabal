@@ -23,7 +23,7 @@ Library
                   NoImplicitPrelude,
                   TemplateHaskell
   
-  Exposed-modules: `findmodules('gen', '.*\.hs')`, 
+  Exposed-modules: `findmodules('gen', '.*\.hs', exclude='.*hs-boot.*')`, 
                    `findmodules('src', '.*\.hs', exclude='.*Flowbox/Luna/Tools/Serialize/Thrift/Generated/.*')`,
                    `findmodules('src/Flowbox/Luna/Tools/Serialize/Thrift/Generated', '.*\.hs')`
 
