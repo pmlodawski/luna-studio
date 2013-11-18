@@ -16,7 +16,7 @@ module Flowbox.Batch.Server.ZMQ.Handlers.Project (
 ) where
 
 import           Data.IORef                                               (IORef)
-import qualified Data.Sequence as Sequence
+import qualified Data.Sequence                                          as Sequence
 import           Flowbox.Prelude                                          
 import           Flowbox.Batch.Batch                                      (Batch(..))
 import qualified Flowbox.Batch.Handlers.Projects                        as BatchP
@@ -27,7 +27,7 @@ import           Flowbox.Control.Error
 import qualified Flowbox.Luna.Lib.LibManager                            as LibManager
 import           Flowbox.System.Log.Logger                                
 import           Flowbox.Tools.Conversion.Proto                           
-import           Flowbox.Tools.Serialize.Proto.Conversion.UniPath      ()
+import           Flowbox.Tools.Serialize.Proto.Conversion.UniPath         ()
 import qualified Generated.Proto.ProjectAPI.Projects.Args               as Projects
 import qualified Generated.Proto.ProjectAPI.Projects.Result             as Projects
 import qualified Generated.Proto.ProjectAPI.ProjectByID.Args            as ProjectByID

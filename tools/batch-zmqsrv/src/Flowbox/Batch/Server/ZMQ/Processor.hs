@@ -9,26 +9,64 @@
 
 module Flowbox.Batch.Server.ZMQ.Processor where
 
-import           Control.Applicative                         
-import qualified Data.ByteString.Lazy                      as ByteString
-import           Data.ByteString.Lazy                        (ByteString)
-import qualified System.ZMQ3.Monadic                       as ZMQ3
-import qualified Text.ProtocolBuffers                      as Proto
-import qualified Text.ProtocolBuffers.Basic                as Proto
-import qualified Text.ProtocolBuffers.Reflections          as Reflections
-import qualified Text.ProtocolBuffers.WireMessage          as WireMessage
+import           Control.Applicative                                
+import qualified Data.ByteString.Lazy                             as ByteString
+import           Data.ByteString.Lazy                               (ByteString)
+import qualified System.ZMQ3.Monadic                              as ZMQ3
+import qualified Text.ProtocolBuffers                             as Proto
+import qualified Text.ProtocolBuffers.Basic                       as Proto
+import qualified Text.ProtocolBuffers.Extensions                  as Extensions
+import qualified Text.ProtocolBuffers.Reflections                 as Reflections
+import qualified Text.ProtocolBuffers.WireMessage                 as WireMessage
 
-import           Flowbox.Prelude                           hiding (error)
-import qualified Flowbox.Batch.Server.ZMQ.Handlers.Handler as Handler
-import           Flowbox.Batch.Server.ZMQ.Handlers.Handler   (Handler)
-import           Flowbox.Control.Error                       
-import           Flowbox.System.Log.Logger                   
-import           Generated.Proto.Exception                   (Exception(Exception))
-import qualified Generated.Proto.Method                    as Method
-import           Generated.Proto.Method                      (Method(Method))
-import qualified Generated.Proto.Method.Name               as MethodName
-import           Generated.Proto.Response                    (Response(Response))
-import qualified Generated.Proto.Response.Type             as ResponseType
+import           Flowbox.Prelude                                  hiding (error)
+import qualified Flowbox.Batch.Server.ZMQ.Handlers.Handler        as Handler
+import           Flowbox.Batch.Server.ZMQ.Handlers.Handler          (Handler)
+import           Flowbox.Control.Error                              
+import           Flowbox.System.Log.Logger                          
+import           Generated.Proto.Exception                          (Exception(Exception))
+import qualified Generated.Proto.Request                          as Request
+import           Generated.Proto.Request                            (Request(Request))
+import qualified Generated.Proto.Request.Method                   as Method
+import           Generated.Proto.Response                           (Response(Response))
+import qualified Generated.Proto.Response.Type                    as ResponseType
+import qualified Generated.Proto.FileSystemAPI.LS.Args            as LS
+import qualified Generated.Proto.FileSystemAPI.LS.Result          as LS
+import qualified Generated.Proto.FileSystemAPI.Stat.Args          as Stat
+import qualified Generated.Proto.FileSystemAPI.Stat.Result        as Stat
+import qualified Generated.Proto.FileSystemAPI.MkDir.Args         as MkDir
+import qualified Generated.Proto.FileSystemAPI.MkDir.Result       as MkDir
+import qualified Generated.Proto.FileSystemAPI.Touch.Args         as Touch
+import qualified Generated.Proto.FileSystemAPI.Touch.Result       as Touch
+import qualified Generated.Proto.FileSystemAPI.RM.Args            as RM
+import qualified Generated.Proto.FileSystemAPI.RM.Result          as RM
+import qualified Generated.Proto.FileSystemAPI.CP.Args            as CP
+import qualified Generated.Proto.FileSystemAPI.CP.Result          as CP
+import qualified Generated.Proto.FileSystemAPI.MV.Args            as MV
+import qualified Generated.Proto.FileSystemAPI.MV.Result          as MV
+import qualified Generated.Proto.ProjectAPI.Projects.Args         as Projects
+import qualified Generated.Proto.ProjectAPI.Projects.Result       as Projects
+import qualified Generated.Proto.ProjectAPI.ProjectByID.Args      as ProjectByID
+import qualified Generated.Proto.ProjectAPI.ProjectByID.Result    as ProjectByID
+import qualified Generated.Proto.ProjectAPI.CreateProject.Args    as CreateProject
+import qualified Generated.Proto.ProjectAPI.CreateProject.Result  as CreateProject
+import qualified Generated.Proto.ProjectAPI.OpenProject.Args      as OpenProject
+import qualified Generated.Proto.ProjectAPI.OpenProject.Result    as OpenProject
+import qualified Generated.Proto.ProjectAPI.UpdateProject.Args    as UpdateProject
+import qualified Generated.Proto.ProjectAPI.UpdateProject.Result  as UpdateProject
+import qualified Generated.Proto.ProjectAPI.CloseProject.Args     as CloseProject
+import qualified Generated.Proto.ProjectAPI.CloseProject.Result   as CloseProject
+import qualified Generated.Proto.ProjectAPI.StoreProject.Args     as StoreProject
+import qualified Generated.Proto.ProjectAPI.StoreProject.Result   as StoreProject
+import qualified Generated.Proto.MaintenanceAPI.Initialize.Args   as Initialize
+import qualified Generated.Proto.MaintenanceAPI.Initialize.Result as Initialize
+import qualified Generated.Proto.MaintenanceAPI.Ping.Args         as Ping
+import qualified Generated.Proto.MaintenanceAPI.Ping.Result       as Ping
+import qualified Generated.Proto.MaintenanceAPI.Dump.Args         as Dump
+import qualified Generated.Proto.MaintenanceAPI.Dump.Result       as Dump
+import qualified Generated.Proto.MaintenanceAPI.Shutdown.Args     as Shutdown
+import qualified Generated.Proto.MaintenanceAPI.Shutdown.Result   as Shutdown
+
 
 
 loggerIO :: LoggerIO
@@ -49,44 +87,38 @@ zmqRunScript s = do
                       return $ ByteString.append t r
 
 
-call :: (Reflections.ReflectDescriptor a,   WireMessage.Wire a,
-         Reflections.ReflectDescriptor msg, WireMessage.Wire msg) 
-     => h -> ByteString -> (h -> msg -> Script a) -> ZMQ3.ZMQ z ByteString
-call handler encoded_args method = case Proto.messageGet encoded_args of
-    Left   e        -> fail $ "Error while decoding arguments from request: " ++ e
-    Right (args, _) -> zmqRunScript $ method handler args
+call :: (WireMessage.Wire a, Reflections.ReflectDescriptor a)
+     => Request -> h -> Extensions.Key Maybe Request v -> (h -> v -> Script a) -> ZMQ3.ZMQ z ByteString
+call request handler key method = case Extensions.getExt key request of 
+    Right (Just args) -> zmqRunScript $ method handler args
+    Left   e'         -> fail $ "Error while getting extension: " ++ e'
+    _                 -> fail $ "Error while getting extension"
 
 
 selectCall :: Handler h => h -> ByteString -> ZMQ3.ZMQ z ByteString
-selectCall handler encoded_request = let 
-    (encoded_method, encoded_args) = ByteString.splitAt methodSize encoded_request 
-    in case Proto.messageGet encoded_method of
-        Left   e          -> fail $ "Error while decoding method from request: " ++ e
-        Right (method, _) -> case Method.name method of 
-            MethodName.LS         -> call handler encoded_args Handler.ls 
-            MethodName.Stat       -> call handler encoded_args Handler.stat
-            MethodName.MkDir      -> call handler encoded_args Handler.mkdir
-            MethodName.Touch      -> call handler encoded_args Handler.touch
-            MethodName.RM         -> call handler encoded_args Handler.rm 
-            MethodName.CP         -> call handler encoded_args Handler.cp 
-            MethodName.MV         -> call handler encoded_args Handler.mv 
+selectCall handler encoded_request = case Proto.messageGet encoded_request of
+    Left   e           -> fail $ "Error while decoding request: " ++ e
+    Right (request, _) -> case Request.method request of 
+        Method.LS    -> call request handler LS.ext    Handler.ls
+        Method.Stat  -> call request handler Stat.ext  Handler.stat
+        Method.MkDir -> call request handler MkDir.ext Handler.mkdir
+        Method.Touch -> call request handler Touch.ext Handler.touch
+        Method.RM    -> call request handler RM.ext    Handler.rm
+        Method.CP    -> call request handler CP.ext    Handler.cp
+        Method.MV    -> call request handler MV.ext    Handler.mv
 
-            MethodName.Projects      -> call handler encoded_args Handler.projects 
-            MethodName.ProjectByID   -> call handler encoded_args Handler.projectByID 
-            MethodName.CreateProject -> call handler encoded_args Handler.createProject 
-            MethodName.OpenProject   -> call handler encoded_args Handler.openProject 
-            MethodName.UpdateProject -> call handler encoded_args Handler.updateProject 
-            MethodName.CloseProject  -> call handler encoded_args Handler.closeProject 
-            MethodName.StoreProject  -> call handler encoded_args Handler.storeProject 
+        Method.Projects      -> call request handler Projects.ext      Handler.projects
+        Method.ProjectByID   -> call request handler ProjectByID.ext   Handler.projectByID
+        Method.CreateProject -> call request handler CreateProject.ext Handler.createProject
+        Method.OpenProject   -> call request handler OpenProject.ext   Handler.openProject
+        Method.UpdateProject -> call request handler UpdateProject.ext Handler.updateProject
+        Method.CloseProject  -> call request handler CloseProject.ext  Handler.closeProject
+        Method.StoreProject  -> call request handler StoreProject.ext  Handler.storeProject
 
-            MethodName.Initialize -> call handler encoded_args Handler.initialize 
-            MethodName.Ping       -> call handler encoded_args Handler.ping 
-            MethodName.Dump       -> call handler encoded_args Handler.dump 
-            MethodName.Shutdown   -> call handler encoded_args Handler.shutdown 
-
-
-methodSize :: Proto.Int64
-methodSize = Proto.messageSize $ Method MethodName.Ping
+        Method.Initialize -> call request handler Initialize.ext Handler.initialize
+        Method.Ping       -> call request handler Ping.ext       Handler.ping
+        Method.Dump       -> call request handler Dump.ext       Handler.dump
+        Method.Shutdown   -> call request handler Shutdown.ext   Handler.shutdown
 
 
 process :: (Handler h, ZMQ3.Receiver t, ZMQ3.Sender t) => ZMQ3.Socket z t -> h -> ZMQ3.ZMQ z ()

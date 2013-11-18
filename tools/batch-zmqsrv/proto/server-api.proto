@@ -12,9 +12,9 @@ import "project.proto";
 
 
 
-message Method {
-    required Name name = 1;
-    enum Name {
+message Request {
+    required Method method = 1;
+    enum Method {
         LS    = 1;
         Stat  = 2;
         MkDir = 3;
@@ -36,6 +36,8 @@ message Method {
         Dump       = 17;
         Shutdown   = 18;
     }
+
+    extensions 1000 to max;
 }
 
 message Response {
@@ -54,7 +56,7 @@ message Exception {
 
 message FileSystemAPI {
     message LS {
-        message Args {
+        message Args   { extend Request { optional Args ext = 1000; }
             required string path = 1;
         }
         message Result {
@@ -62,7 +64,7 @@ message FileSystemAPI {
         }
     }
     message Stat {
-        message Args {
+        message Args   { extend Request { optional Args ext = 1001; }
             required string path = 1;
         }
         message Result {
@@ -70,28 +72,28 @@ message FileSystemAPI {
         }
     }
     message MkDir {
-        message Args {
+        message Args   { extend Request { optional Args ext = 1002; }
             required string path = 1;
         }
         message Result {
         }
     }
     message Touch {
-        message Args {
+        message Args   { extend Request { optional Args ext = 1003; }
             required string path = 1;
         }
         message Result {
         }
     }
     message RM {
-        message Args {
+        message Args   { extend Request { optional Args ext = 1004; }
             required string path = 1;
         }
         message Result {
         }
     }
     message CP {
-        message Args {
+        message Args   { extend Request { optional Args ext = 1005; }
             required string src = 1;
             required string dst = 2;
         }
@@ -99,7 +101,7 @@ message FileSystemAPI {
         }
     }
     message MV {
-        message Args {
+        message Args   { extend Request { optional Args ext = 1006; }
             required string src = 1;
             required string dst = 2;
         }
@@ -110,7 +112,7 @@ message FileSystemAPI {
 
 message ProjectAPI {
     message Projects {
-        message Args   { 
+        message Args   { extend Request { optional Args ext = 1007; }
             required int32 projectID = 1;
         }
         message Result { 
@@ -118,7 +120,7 @@ message ProjectAPI {
         }   
     }
     message ProjectByID {
-        message Args   { 
+        message Args   { extend Request { optional Args ext = 1008; }
             required int32 projectID = 1;
         }
         message Result { 
@@ -126,7 +128,7 @@ message ProjectAPI {
         }   
     }
     message CreateProject {
-        message Args   { 
+        message Args   { extend Request { optional Args ext = 1009; }
             required Project project = 1;
         }
         message Result { 
@@ -134,7 +136,7 @@ message ProjectAPI {
         }   
     }
     message OpenProject {
-        message Args   { 
+        message Args   { extend Request { optional Args ext = 1010; }
             required string path = 1;
         }
         message Result { 
@@ -142,19 +144,19 @@ message ProjectAPI {
         }   
     }
     message UpdateProject {
-        message Args   { 
+        message Args   { extend Request { optional Args ext = 1011; }
             required Project project = 1;
         }
         message Result { }   
     }    
     message CloseProject {
-        message Args   {
+        message Args   { extend Request { optional Args ext = 1012; }
             required int32 projectID = 1;
         }
         message Result { }   
     }
     message StoreProject {
-        message Args   { 
+        message Args   { extend Request { optional Args ext = 1013; }
             required int32 projectID = 1;
         }
         message Result { }   
@@ -163,19 +165,19 @@ message ProjectAPI {
 
 message MaintenanceAPI {
     message Initialize {
-        message Args   { }
+        message Args   { extend Request { optional Args ext = 1014; } }
         message Result { }   
     }
     message Ping {
-        message Args   { }
+        message Args   { extend Request { optional Args ext = 1015; } }
         message Result { }
     }
     message Dump {
-        message Args   { }
+        message Args   { extend Request { optional Args ext = 1016; } }
         message Result { }
     }
     message Shutdown {
-        message Args   { }
+        message Args   { extend Request { optional Args ext = 1017; } }
         message Result { }   
     }
 }
