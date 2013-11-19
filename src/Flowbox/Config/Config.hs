@@ -21,13 +21,15 @@ logger = getLoggerIO "Flowbox.Config.Config"
 
 data Config = Config      { version    :: Version
                           , ffs        :: Section
+                          , base       :: Section
                           , global     :: Section
                           , local      :: Section
                           , templates  :: Section
                           , config     :: Section
                           , tools      :: Section
                           , wrappers   :: Section
-                          , thirdparty :: Section
+                          , bins       :: Section
+                          , ghcS       :: Section
                           }
             deriving (Show)
                           
@@ -35,6 +37,12 @@ data Section = FFS        { path      :: String
                           , conf      :: String
                           , bin       :: String
                           }
+             | Base       { path      :: String
+                          , bin       :: String
+                          , lib       :: String
+                          , share     :: String
+                          , pkgDb     :: String
+                          } 
              | Global     { path      :: String
                           , bin       :: String
                           , lib       :: String
@@ -64,22 +72,13 @@ data Section = FFS        { path      :: String
                           , hsc2hs    :: String
                           , cabal     :: String
                           }
-             | ThirdParty { path      :: String
-                          , ghcTP     :: Section
-                          , cabalTP   :: Section
+             | Bins       { ghc       :: String
+                          , ghcPkg    :: String
+                          , hsc2hs    :: String
+                          , cabal     :: String
                           }
-             | Ghc        { version_  :: String
-                          , path      :: String
-                          , libDir    :: String
+             | GHC        { ver       :: String
                           , topDir    :: String
-                          , pkgConf   :: String
-                          , ghcBin    :: String
-                          , ghcPkgBin :: String
-                          , hsc2hsBin :: String
-                          }
-             | Cabal      { path      :: String
-                          , binDir    :: String
-                          , cabalBin  :: String
                           }
              deriving (Show)
 
@@ -113,6 +112,12 @@ load = do
                      <*> readConf "ffs.conf"
                      <*> readConf "ffs.bin"
                )
+           <*> ( Base   <$> readConf "base.path"
+                        <*> readConf "base.bin"
+                        <*> readConf "base.lib"
+                        <*> readConf "base.share"
+                        <*> readConf "base.pkgDb"
+               )
            <*> ( Global <$> readConf "global.path"
                         <*> readConf "global.bin"
                         <*> readConf "global.lib"
@@ -141,20 +146,20 @@ load = do
                           <*> readConf "wrappers.hsc2hs"
                           <*> readConf "wrappers.cabal"
                )
-           <*> ( ThirdParty <$> readConf "thirdparty.path"
-                            <*> ( Ghc <$> readConf "thirdparty.ghc.version"
-                                      <*> readConf "thirdparty.ghc.path"
-                                      <*> readConf "thirdparty.ghc.libDir"
-                                      <*> readConf "thirdparty.ghc.topDir"
-                                      <*> readConf "thirdparty.ghc.pkgConf"
-                                      <*> readConf "thirdparty.ghc.ghcBin"
-                                      <*> readConf "thirdparty.ghc.ghcPkgBin"
-                                      <*> readConf "thirdparty.ghc.hsc2hsBin"
-                                )
-                            <*> ( Cabal <$> readConf "thirdparty.cabal.path"
-                                        <*> readConf "thirdparty.cabal.binDir"
-                                        <*> readConf "thirdparty.cabal.cabalBin"
-                                )
+           <*> ( Bins     <$> readConf "bins.ghc"
+                          <*> readConf "bins.ghcPkg"
+                          <*> readConf "bins.hsc2hs"
+                          <*> readConf "bins.cabal"
                )
+           <*> ( GHC      <$> readConf "ghc.version"
+                          <*> readConf "ghc.topDir"
+               )
+           
 
 -- TODO[wd]: (?) Lunac powinien czytac config i jezli nie da sie go odczytac (np zmienna srodowiskowa nie istnieje, powinien zalozyc, ze zyje w $HOME/.flowbox - defaultowy config?)
+
+
+
+
+
+
