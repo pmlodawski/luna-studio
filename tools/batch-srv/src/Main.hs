@@ -21,12 +21,11 @@ import           Thrift.Transport                             (Transport)
 
 import qualified Batch                                      as TBatch
 import           Batch_Iface                                  
-import qualified Flowbox.Batch.Server.CmdArgs               as CmdArgs
-import           Flowbox.Batch.Server.CmdArgs                 (CmdArgs)
+import qualified Flowbox.Batch.Server.Cmd                   as Cmd
+import           Flowbox.Batch.Server.Cmd                     (Cmd)
 import qualified Flowbox.Batch.Server.Handlers.BatchHandler as BatchHandler
 import qualified Flowbox.Batch.Server.Server                as Server
-import qualified Flowbox.Data.Version                       as Version
-import           Flowbox.Data.Version                         (Version)
+import qualified Flowbox.Batch.Server.Version               as Version
 import qualified Flowbox.Options.Applicative                as Opt
 import           Flowbox.Options.Applicative                hiding (info)
 import           Flowbox.System.Log.Logger                    
@@ -49,15 +48,9 @@ defaultPort :: Int
 defaultPort = 30521
 
 
-version :: Version
-version = Version.mk { Version.minor = 1
-                     , Version.stage = Version.Alpha
-                     }
-
-
-parser :: Parser CmdArgs
-parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
-       <|> CmdArgs.Serve
+parser :: Parser Cmd
+parser = Opt.flag' Cmd.Version (long "version" <> hidden)
+       <|> Cmd.Serve
            <$> strOption ( long "addres"  <> short 'a' <> value defaultAddress       <> metavar "address" <> help "Server address"       )
            <*> strOption ( long "port"    <> short 'p' <> (value $ show defaultPort) <> metavar "port"    <> help "Server port"          )
            <*> optIntFlag (Just "verbose") 'v' 2 3                                 "Verbose level (level range is 0-5, default level is 3)"
@@ -65,26 +58,20 @@ parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
            <*> switch    ( long "shutdown-with-client" <> hidden                                                                         )
 
 
-opts :: ParserInfo CmdArgs
+opts :: ParserInfo Cmd
 opts = Opt.info (helper <*> parser)
-           (Opt.fullDesc
-               <> Opt.header show_version
-           )
-
-
-show_version :: String
-show_version = "Batch server, version " ++ Version.str version
+                (Opt.fullDesc <> Opt.header (Version.full False))
 
 
 main :: IO ()
 main = execParser opts >>= run
 
 
-run :: CmdArgs -> IO ()
+run :: Cmd -> IO ()
 run cmd = case cmd of
-    CmdArgs.Version {} -> putStrLn show_version
-    CmdArgs.Serve   {} -> do
-        rootLogger setIntLevel $ CmdArgs.verbose cmd
+    Cmd.Version  -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
+    Cmd.Serve {} -> do
+        rootLogger setIntLevel $ Cmd.verbose cmd
         quitmutex <- MVar.newEmptyMVar
         _ <- Concurrent.forkIO $ Exception.handle 
             (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
@@ -93,7 +80,7 @@ run cmd = case cmd of
         waitForQuit quitmutex
 
 
-serve :: CmdArgs -> MVar Bool -> IO ()
+serve :: Cmd -> MVar Bool -> IO ()
 serve cmd quitmutex = do
     loggerIO info "Starting the server"
     handler <- BatchHandler.empty

@@ -13,10 +13,9 @@ import qualified Control.Exception                              as Exception
 import qualified System.Exit                                    as Exit
 
 import           Flowbox.Prelude                                hiding (error)
-import qualified Flowbox.Data.Version                           as Version
-import           Flowbox.Data.Version                             (Version)
-import qualified Flowbox.Batch.Server.CmdArgs                   as CmdArgs
-import           Flowbox.Batch.Server.CmdArgs                     (CmdArgs)
+import qualified Flowbox.Batch.Server.ZMQ.Version               as Version
+import qualified Flowbox.Batch.Server.ZMQ.Cmd                   as Cmd
+import           Flowbox.Batch.Server.ZMQ.Cmd                     (Cmd)
 import qualified Flowbox.Batch.Server.ZMQ.Server                as Server
 import qualified Flowbox.Options.Applicative                    as Opt
 import           Flowbox.Options.Applicative                    hiding (info)
@@ -42,42 +41,30 @@ defaultPort :: Int
 defaultPort = 30521
 
 
-version :: Version
-version = Version.mk { Version.minor = 1
-                     , Version.stage = Version.Alpha
-                     }
-
-
-parser :: Parser CmdArgs
-parser = Opt.flag' CmdArgs.Version (long "version" <> hidden)
-       <|> CmdArgs.Serve
+parser :: Parser Cmd
+parser = Opt.flag' Cmd.Version (long "version" <> hidden)
+       <|> Cmd.Serve
            <$> strOption ( long "addres"  <> short 'a' <> value defaultAddress <> metavar "address" <> help "Server address"       )
            <*> option    ( long "port"    <> short 'p' <> (value defaultPort)  <> metavar "port"    <> help "Server port"          )
-           <*> optIntFlag (Just "verbose") 'v' 2 3                           "Verbose level (level range is 0-5, default level is 3)"
-           <*> switch    ( long "no-color"                                                          <> help "Disable color output" )
+           <*> optIntFlag (Just "verbose") 'v' 2 3          "Verbose level (level range is 0-5, default level is 3)"
+           <*> switch    ( long "no-color"          <> help "Disable color output" )
            <*> switch    ( long "shutdown-with-client" <> hidden                                                                   )
 
 
-opts :: ParserInfo CmdArgs
+opts :: ParserInfo Cmd
 opts = Opt.info (helper <*> parser)
-           (Opt.fullDesc
-               <> Opt.header show_version
-           )
-
-
-show_version :: String
-show_version = "Batch server, version " ++ Version.str version
+                (Opt.fullDesc <> Opt.header (Version.full False))
 
 
 main :: IO ()
 main = execParser opts >>= run
 
 
-run :: CmdArgs -> IO ()
+run :: Cmd -> IO ()
 run cmd = case cmd of
-    CmdArgs.Version {} -> putStrLn show_version
-    CmdArgs.Serve   {} -> do
-        rootLogger setIntLevel $ CmdArgs.verbose cmd
+    Cmd.Version  -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
+    Cmd.Serve {} -> do
+        rootLogger setIntLevel $ Cmd.verbose cmd
         handler <- BatchHandler.empty
         _ <- Concurrent.forkIO $ Exception.handle 
             (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
@@ -86,9 +73,8 @@ run cmd = case cmd of
         waitForQuit handler
 
 
-serve :: CmdArgs -> BatchHandler -> IO ()
-serve cmd handler = do
-    Server.serve (CmdArgs.address cmd) (CmdArgs.port cmd) handler
+serve :: Cmd -> BatchHandler -> IO ()
+serve cmd = Server.serve (Cmd.address cmd) (Cmd.port cmd)
 
 
 waitForQuit :: BatchHandler -> IO b

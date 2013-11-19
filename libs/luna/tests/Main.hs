@@ -21,7 +21,7 @@ import           System.TimeIt
 
 import           Flowbox.Prelude                                         
 import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
-import           Flowbox.Luna.Data.Cabal.Version                         (Version(Version))
+import           Data.Version                                            (Version(Version))
 import qualified Flowbox.Luna.Data.Cabal.Config                        as Config
 import qualified Flowbox.Luna.Data.Cabal.Section                       as Section
 import qualified Flowbox.Luna.Data.HAST.Expr                           as Expr
@@ -48,7 +48,7 @@ genProject :: String -> Config.Config
 genProject name = let
     exec = Section.mkExecutable name
     conf = Config.addSection exec
-         $ Config.make name (Version 1 0 0)
+         $ Config.make name (Version [1] [])
 
     in conf
 

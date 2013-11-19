@@ -14,6 +14,7 @@ Flag Debug
 Executable batch-srv
     Hs-Source-Dirs: src
                     src/Flowbox/Batch/Server/Thrift/Generated
+    Other-Modules:  Paths_flowbox_batch_srv
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2
@@ -31,7 +32,7 @@ Executable batch-srv
                     flowbox-utils,
                     hashable,
                     network,
-                    optparse-applicative == 0.5.2.1,
+                    optparse-applicative,
                     text,
                     thrift >= 0.9,
                     transformers,

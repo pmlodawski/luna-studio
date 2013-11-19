@@ -5,19 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Server.CmdArgs where
+module Flowbox.Batch.Server.Cmd where
 
 import           Flowbox.Prelude   
 
 
 
-data CmdArgs = Serve { address            :: String
-                     , port               :: String
+data Cmd = Serve { address            :: String
+                 , port               :: String
                      
-                     , verbose            :: Int
-                     , noColor            :: Bool
+                 , verbose            :: Int
+                 , noColor            :: Bool
                    
-                     , shutdownWithClient :: Bool
-                     }
-             | Version
-             deriving Show
+                 , shutdownWithClient :: Bool
+                 }
+         | Version
+         deriving Show

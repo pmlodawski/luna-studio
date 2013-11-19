@@ -12,20 +12,20 @@ module Flowbox.Batch.Server.Server (
     runSingleConnectionServer,
 ) where
 
-import           Control.Monad                  (forever, when)
-import qualified Control.Exception            as Exception
-import qualified Network                      as Network
-import qualified Network.Socket               as Socket
-import qualified System.IO                    as IO
-import           Thrift.Transport.Handle        ()
-import qualified Thrift.Protocol.Binary       as TProtocol
-import           Thrift.Protocol.Binary         (Protocol)
-import           Thrift.Transport               (Transport)
+import           Control.Monad               (forever, when)
+import qualified Control.Exception         as Exception
+import qualified Network                   as Network
+import qualified Network.Socket            as Socket
+import qualified System.IO                 as IO
+import           Thrift.Transport.Handle     ()
+import qualified Thrift.Protocol.Binary    as TProtocol
+import           Thrift.Protocol.Binary      (Protocol)
+import           Thrift.Transport            (Transport)
 
-import           Flowbox.Prelude                
-import qualified Flowbox.Batch.Server.CmdArgs as CmdArgs
-import           Flowbox.Batch.Server.CmdArgs   (CmdArgs)
-import           Flowbox.System.Log.Logger      
+import           Flowbox.Prelude             
+import qualified Flowbox.Batch.Server.Cmd  as Cmd
+import           Flowbox.Batch.Server.Cmd    (Cmd)
+import           Flowbox.System.Log.Logger   
 
 
 
@@ -43,7 +43,7 @@ accepter s = do
 
 runSingleConnectionServer :: (Transport t, Protocol i, Protocol o)
                   => (Network.Socket -> IO (i t, o t))
-                  -> h -> (h -> (i t, o t) -> IO Bool) -> CmdArgs -> IO ()
+                  -> h -> (h -> (i t, o t) -> IO Bool) -> Cmd -> IO ()
 runSingleConnectionServer accepter_ hand proc_ cmd = Socket.withSocketsDo $ do
     let tcp = 6
         maxConnections = 1
@@ -51,11 +51,11 @@ runSingleConnectionServer accepter_ hand proc_ cmd = Socket.withSocketsDo $ do
     serverSocket  <- Socket.socket Socket.AF_INET Socket.Stream tcp
     --serverAddress <- Socket.inet_addr "127.0.0.1"
     Socket.setSocketOption serverSocket Socket.ReuseAddr 1
-    (Socket.AddrInfo _ _ _ _ sockAddr _):_ <- Socket.getAddrInfo Nothing (Just $ CmdArgs.address cmd) (Just $ CmdArgs.port cmd)
+    (Socket.AddrInfo _ _ _ _ sockAddr _):_ <- Socket.getAddrInfo Nothing (Just $ Cmd.address cmd) (Just $ Cmd.port cmd)
     --let sockAddr = Socket.SockAddrInet (Socket.PortNum 30521) serverAddress --Socket.iNADDR_ANY
     Socket.bindSocket serverSocket sockAddr -- TODO [PM] pretty code doesn't work ;/
     Socket.listen serverSocket maxConnections
-    if CmdArgs.shutdownWithClient cmd
+    if Cmd.shutdownWithClient cmd
         then singleAccept (accepter_ serverSocket) (proc_ hand)
         else singleAcceptLoop (accepter_ serverSocket) (proc_ hand)
 

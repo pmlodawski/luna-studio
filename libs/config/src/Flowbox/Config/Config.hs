@@ -9,32 +9,38 @@ import qualified Data.Configurator         as Configurator
 import qualified System.Environment        as Env
 
 import           Flowbox.Prelude           hiding (error)
-import qualified Flowbox.Data.Version      as Version
-import           Flowbox.Data.Version        (Version)
 import           Flowbox.System.Log.Logger   
 import qualified Prelude                   as Prelude
+
 
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Config.Config"
 
 
-data Config = Config      { version    :: Version
-                          , ffs        :: Section
+data Config = Config      { root       :: Section
+                          , base       :: Section
                           , global     :: Section
                           , local      :: Section
                           , templates  :: Section
                           , config     :: Section
                           , tools      :: Section
                           , wrappers   :: Section
-                          , thirdparty :: Section
+                          , bins       :: Section
+                          , ghcS       :: Section
                           }
             deriving (Show)
                           
-data Section = FFS        { path      :: String
+data Section = Root       { path      :: String
                           , conf      :: String
                           , bin       :: String
                           }
+             | Base       { path      :: String
+                          , bin       :: String
+                          , lib       :: String
+                          , share     :: String
+                          , pkgDb     :: String
+                          } 
              | Global     { path      :: String
                           , bin       :: String
                           , lib       :: String
@@ -64,37 +70,28 @@ data Section = FFS        { path      :: String
                           , hsc2hs    :: String
                           , cabal     :: String
                           }
-             | ThirdParty { path      :: String
-                          , ghcTP     :: Section
-                          , cabalTP   :: Section
+             | Bins       { ghc       :: String
+                          , ghcPkg    :: String
+                          , hsc2hs    :: String
+                          , cabal     :: String
                           }
-             | Ghc        { version_  :: String
-                          , path      :: String
-                          , libDir    :: String
+             | GHC        { ver       :: String
                           , topDir    :: String
-                          , pkgConf   :: String
-                          , ghcBin    :: String
-                          , ghcPkgBin :: String
-                          , hsc2hsBin :: String
-                          }
-             | Cabal      { path      :: String
-                          , binDir    :: String
-                          , cabalBin  :: String
                           }
              deriving (Show)
 
 
 ffsEnv :: String
-ffsEnv = "FFS"
+ffsEnv = "LUNAROOT"
 
 
 load :: IO Config
 load = do
-    logger debug "Loading Flowbox configuration"
+    logger debug "Loading Luna configuration"
     cpath <- Exception.onException (Env.getEnv ffsEnv)
-           $ logger error ("Flowbox environment not initialized.")
+           $ logger error ("Luna environment not initialized.")
           *> logger error ("Environment variable '" ++ ffsEnv ++ "' not defined.")
-          *> logger error ("Please run 'source <FLOWBOX_INSTALL_PATH>/setup' and try again.")
+          *> logger error ("Please run 'source <LUNA_INSTALL_PATH>/setup' and try again.")
 
     cfgFile <- Configurator.load [Configurator.Required $ cpath ++ "/config/flowbox.config"]
 
@@ -103,15 +100,15 @@ load = do
 
     --let readConfDefault val name = Configurator.lookupDefault val cfgFile name
 
-    Config <$> ( Version.Version <$> (read <$> readConf "info.major")
-                                 <*> (read <$> readConf "info.minor")
-                                 <*> (read <$> readConf "info.patch")
-                                 <*> readConf "info.build"
-                                 <*> pure Version.Alpha --readConf "info.stage"
+    Config <$> ( Root <$> readConf "root.path"
+                      <*> readConf "root.conf"
+                      <*> readConf "root.bin"
                )
-           <*> ( FFS <$> readConf "ffs.path"
-                     <*> readConf "ffs.conf"
-                     <*> readConf "ffs.bin"
+           <*> ( Base   <$> readConf "base.path"
+                        <*> readConf "base.bin"
+                        <*> readConf "base.lib"
+                        <*> readConf "base.share"
+                        <*> readConf "base.pkgDb"
                )
            <*> ( Global <$> readConf "global.path"
                         <*> readConf "global.bin"
@@ -141,20 +138,20 @@ load = do
                           <*> readConf "wrappers.hsc2hs"
                           <*> readConf "wrappers.cabal"
                )
-           <*> ( ThirdParty <$> readConf "thirdparty.path"
-                            <*> ( Ghc <$> readConf "thirdparty.ghc.version"
-                                      <*> readConf "thirdparty.ghc.path"
-                                      <*> readConf "thirdparty.ghc.libDir"
-                                      <*> readConf "thirdparty.ghc.topDir"
-                                      <*> readConf "thirdparty.ghc.pkgConf"
-                                      <*> readConf "thirdparty.ghc.ghcBin"
-                                      <*> readConf "thirdparty.ghc.ghcPkgBin"
-                                      <*> readConf "thirdparty.ghc.hsc2hsBin"
-                                )
-                            <*> ( Cabal <$> readConf "thirdparty.cabal.path"
-                                        <*> readConf "thirdparty.cabal.binDir"
-                                        <*> readConf "thirdparty.cabal.cabalBin"
-                                )
+           <*> ( Bins     <$> readConf "bins.ghc"
+                          <*> readConf "bins.ghcPkg"
+                          <*> readConf "bins.hsc2hs"
+                          <*> readConf "bins.cabal"
                )
+           <*> ( GHC      <$> readConf "ghc.version"
+                          <*> readConf "ghc.topDir"
+               )
+           
 
 -- TODO[wd]: (?) Lunac powinien czytac config i jezli nie da sie go odczytac (np zmienna srodowiskowa nie istnieje, powinien zalozyc, ze zyje w $HOME/.flowbox - defaultowy config?)
+
+
+
+
+
+

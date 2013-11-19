@@ -7,10 +7,12 @@
 
 module Flowbox.Luna.Data.Cabal.Config where
 
+import           Data.Version                      (Version)
+import qualified Data.Version                    as Version
+
 import           Flowbox.Prelude                   
 import qualified Flowbox.Luna.Data.Cabal.Section as Section
 import           Flowbox.Luna.Data.Cabal.Section   (Section)
-import           Flowbox.Luna.Data.Cabal.Version   (Version)
 import           Data.String.Utils                 (join)
 
 
@@ -37,7 +39,7 @@ genField name' value = name' ++ ":" ++ replicate (18 - length name') ' ' ++ valu
 
 genCode :: Config -> String
 genCode conf =  genField "Name"          (name conf)
-             ++ genField "Version"       (show $ version conf)
+             ++ genField "Version"       (Version.showVersion $ version conf)
              ++ genField "Cabal-Version" (cabalVersion conf)
              ++ genField "Build-Type"    (buildType conf)
              ++ "\n" ++  join "\n\n" (map Section.genCode $ sections conf)

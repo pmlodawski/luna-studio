@@ -52,7 +52,8 @@ class HProject(Project):
                 handle_error(err)
         return out
 
-
+def try_call(cmd):
+    if call(cmd, shell=True): fatal()
 
 class AllProject(Project):
     def targets(self):
@@ -112,6 +113,11 @@ def check_deps(name):
 
 
 def workon(name):
+    if not os.path.exists("cabal.sandbox.config"):
+        print_info ("It seems that sandbox is not initialized. Running scripts/configure first.")
+        try_call("python scripts/configure")
+
+
     unregister_all()
     pnames = check_deps(name)
     pnames.add(name)

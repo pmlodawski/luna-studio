@@ -15,7 +15,7 @@ Library
     Hs-Source-Dirs: gen,
                     src,
                     src/Flowbox/Batch/Tools/Serialize/Thrift/Generated
-                    
+    Other-Modules:  Paths_flowbox_batch
 
     GHC-Options:    -Wall -O2
 

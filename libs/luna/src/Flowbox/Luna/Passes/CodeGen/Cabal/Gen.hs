@@ -8,13 +8,13 @@
 module Flowbox.Luna.Passes.CodeGen.Cabal.Gen where
 
 import qualified Data.List                       as List
+import           Data.Version                      (Version)
 
 import           Flowbox.Prelude                   
 import qualified Flowbox.Luna.Data.Cabal.Config  as Config
 import           Flowbox.Luna.Data.Cabal.Config    (Config)
 import qualified Flowbox.Luna.Data.Cabal.Section as Section
 import           Flowbox.Luna.Data.Cabal.Section   (Section)
-import           Flowbox.Luna.Data.Cabal.Version   (Version)
 import qualified Flowbox.Luna.Data.Source        as Source
 import           Flowbox.Luna.Data.Source          (Source)
 

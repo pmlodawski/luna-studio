@@ -17,11 +17,11 @@ main :: IO ()
 main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
-    let exec = (Cfg.ghcPkgBin . Cfg.ghcTP . Cfg.thirdparty) cfg
+    let exec = (Cfg.ghcPkg . Cfg.bins) cfg
 
-    appendFile "C:\\test.txt" "ghc-pkg\n"
-    appendFile "C:\\test.txt" (show args)
-    appendFile "C:\\test.txt" "\n---\n"
+    --appendFile "C:\\test.txt" "ghc-pkg\n"
+    --appendFile "C:\\test.txt" (show args)
+    --appendFile "C:\\test.txt" "\n---\n"
 
     --stdinTxt <- if "-" `elem` args
     --        then do 
@@ -31,7 +31,7 @@ main = do
     --        else return ""
 
     exitCode <- Cmd.rawSystem exec $ "--global-package-db"
-                       : (Cfg.pkgConf . Cfg.ghcTP . Cfg.thirdparty) cfg
+                       : (Cfg.pkgDb . Cfg.base) cfg
                        : "--global"
                        : ("--package-db=" ++ (Cfg.pkgDb . Cfg.global) cfg)
                        : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
