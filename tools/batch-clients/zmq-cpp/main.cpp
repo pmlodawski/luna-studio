@@ -5,6 +5,7 @@
 #include "generated/server-api.pb.h"
 
 using namespace generated::proto;
+using namespace generated::proto::batch;
 
 
 
@@ -14,13 +15,15 @@ int main ()
     zmq::context_t context (1);
     zmq::socket_t socket (context, ZMQ_REQ);
 
-    std::cout << "Connecting to server..." << std::endl;
+    std::cout << "Connecting to server..." << std::flush;
     socket.connect ("tcp://localhost:30521");
+    std::cout << "done" << std::endl;
 
+    std::cout << "Processing requests..." << std::flush;
     {
         Request request;
         request.set_method(Request_Method_Initialize);
-        MaintenanceAPI_Initialize_Args* args = request.MutableExtension(MaintenanceAPI_Initialize_Args::req);
+        Maintenance_Initialize_Args* args = request.MutableExtension(Maintenance_Initialize_Args::req);
 
         std::string buffer = request.SerializeAsString();
         zmq::message_t zmq_req(buffer.size());
@@ -35,7 +38,7 @@ int main ()
     {
         Request request;
         request.set_method(Request_Method_Ping);
-        MaintenanceAPI_Ping_Args* args = request.MutableExtension(MaintenanceAPI_Ping_Args::req);
+        Maintenance_Ping_Args* args = request.MutableExtension(Maintenance_Ping_Args::req);
 
         std::string buffer = request.SerializeAsString();
         zmq::message_t zmq_req(buffer.size());
@@ -49,7 +52,7 @@ int main ()
     {
         Request request;
         request.set_method(Request_Method_Dump);
-        MaintenanceAPI_Dump_Args* args = request.MutableExtension(MaintenanceAPI_Dump_Args::req);
+        Maintenance_Dump_Args* args = request.MutableExtension(Maintenance_Dump_Args::req);
 
         std::string buffer = request.SerializeAsString();
         zmq::message_t zmq_req(buffer.size());
@@ -63,7 +66,7 @@ int main ()
     {
         Request request;
         request.set_method(Request_Method_Shutdown);
-        MaintenanceAPI_Shutdown_Args* args = request.MutableExtension(MaintenanceAPI_Shutdown_Args::req);
+        Maintenance_Shutdown_Args* args = request.MutableExtension(Maintenance_Shutdown_Args::req);
 
         std::string buffer = request.SerializeAsString();
         zmq::message_t zmq_req(buffer.size());
