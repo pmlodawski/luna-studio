@@ -5,39 +5,57 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import qualified Options.Applicative                   as Opt 
-import           Options.Applicative                   ( (<>), Parser, ParserInfo, ParseError(ShowHelpText)
-                                                       , argument, str, metavar, switch ,fullDesc, header
-                                                       , long, help, strOption, value, hidden, subparser
-                                                       , short, command, progDesc, command, execParser, abortOption)
+import           Data.Version                  (Version(Version))
+import qualified Options.Applicative         as Opt
+import           Options.Applicative           ( (<>), argument, fullDesc, header, hidden, metavar
+                                               , option, str, subparser, switch
+                                               , long, help, strOption, value
+                                               , short, command, progDesc, command)
 
-import           Flowbox.Prelude 
-import           Flowbox.Control.Applicative       
-import qualified Flowbox.Lunac.Cmd                     as Cmd
-import           Flowbox.Lunac.Cmd                     (Command, Prog)
-import qualified Flowbox.Lunac.Version as Version
-import           Flowbox.Options.Applicative           (optIntFlag)
-import           Flowbox.System.Log.Logger 
+import           Flowbox.Prelude               
+import qualified Flowbox.Config.Config       as Config
+import           Flowbox.Control.Applicative   
+import qualified Flowbox.Lunac.Build         as Build
+import qualified Flowbox.Lunac.Cmd           as Cmd
+import qualified Flowbox.Lunac.Version       as Version
+import           Flowbox.Options.Applicative   (optIntFlag)
+import           Flowbox.System.Log.Logger     
+                 
 
-                                                       
 
 rootLogger :: Logger
-rootLogger = getLogger "Flowbox.Lunac"
+rootLogger = getLogger "Flowbox"
 
 
-versionParser :: Parser Command
+versionParser :: Opt.Parser Cmd.Command
 versionParser = Cmd.Version <$> (Cmd.VersionOptions <$> switch ( long "compiler" <> help "Print only the Luna compiler version" )
                                                     <*> switch ( long "library"  <> help "Print only the Luna library version" )
                                                     <*> switch ( long "numeric"  <> help "Print only numeric version" )
                                 )
 
-buildParser :: Parser Command
-buildParser = Cmd.Build <$> ( Cmd.BuildOptions <$> strOption ( long "output"  <> short 'o' <> value "out"  <> metavar "OUTPUT"  <> help "output file name" )
+buildParser :: Opt.Parser Cmd.Command
+buildParser = Cmd.Build <$> ( Cmd.BuildOptions <$> argument str ( metavar "INPUTS" )
+                                               <*> strOption ( long "output"  <> short 'o' <> value "out"  <> metavar "OUTPUT"  <> help "output file name" )
                                                <*> optIntFlag Nothing 'O' 0 2 "optimisation level [0-2], default 2"
-                                               <*> strOption ( hidden <> long "dump" <> value "" <> metavar "DUMP")
+                                               <*> many      ( strOption ( short 'l' <> metavar "LIBRARY" <> help "Library to link with."))
+                                              
+                                               <*> switch    ( long "library"                                                    <> help "Compile as a library" )
+                                               <*> strOption ( long "lib-name"    <> short 'n' <> value "name" <> metavar "NAME" <> help "Library name"    )
+                                               -- TODO [PM] : implement reading versions
+                                               <*> option    ( long "lib-version" <> value (Version [1] []) <> metavar "VERSION" <> help "Library version in X.Y.Z format" )
+                                               <*> strOption ( long "root-path"                <> value "" <> hidden )
+                                               <*> switch    ( long "global"  <> help "Compile to global library" )
+                                             
+                                               <*> switch ( long "dump-all"  <> hidden )
+                                               <*> switch ( long "dump-ast"  <> hidden )
+                                               <*> switch ( long "dump-va"   <> hidden )
+                                               <*> switch ( long "dump-fp"   <> hidden )
+                                               <*> switch ( long "dump-ssa"  <> hidden )
+                                               <*> switch ( long "dump-hast" <> hidden )
+                                               <*> switch ( long "dump-hsc"  <> hidden ) 
                             )
 
-parser :: Parser Prog
+parser :: Opt.Parser Cmd.Prog
 parser = Cmd.Prog <$> subparser ( command "build"   (Opt.info buildParser      (progDesc "compile packages and dependencies"))
                                <> command "clean"   (Opt.info (pure Cmd.Doc)   (progDesc "remove object files"))
                                <> command "doc"     (Opt.info (pure Cmd.Doc)   (progDesc "run lunadoc on package sources"))
@@ -51,21 +69,26 @@ parser = Cmd.Prog <$> subparser ( command "build"   (Opt.info buildParser      (
                   <*> optIntFlag Nothing 'v' 0 2 "verbose level [0-5], default 3"
 
 
-opts :: ParserInfo Prog
+opts :: Opt.ParserInfo Cmd.Prog
 opts = Opt.info (parser <**> helper) (fullDesc <> header (Version.full False)) --idm 
 
 
-helper :: Parser (a -> a)
-helper = abortOption ShowHelpText $ (long "help" <> short 'h' <> help "show this help text")
+helper :: Opt.Parser (a -> a)
+helper = Opt.abortOption Opt.ShowHelpText $ (long "help" <> short 'h' <> help "show this help text")
 
 
 main :: IO ()
-main = execParser opts >>= run
+main = Opt.execParser opts >>= run
 
-run :: Prog -> IO ()
+
+run :: Cmd.Prog -> IO ()
 run prog = case Cmd.cmd prog of
     Cmd.Version op -> putStrLn (Version.full $ Cmd.numeric op)
-    Cmd.Build   op -> print $ Cmd.optimisation op
+    Cmd.Build   op -> do rootLogger setIntLevel $ Cmd.verbose prog 
+                         cfg <- Config.load
+                         Build.run cfg op
+
+
 
 ----parser :: Parser CmdArgs
 --parser =  subparser ( command "add"    (info addOptions  ( progDesc "Add a file to the repository" ))
@@ -88,64 +111,3 @@ run prog = case Cmd.cmd prog of
 --    --       <*> strOption ( long "output"  <> short 'o' <> value "out"  <> metavar "OUTPUT"  <> help "Output folder" )
 --    --       <*> many      ( strOption (       short 'l'                 <> metavar "LIBRARY" <> help "Library to link with."))
            
---    --       <*> switch    ( long "library"                                                   <> help "Compile as a library" )
---    --       <*> strOption ( long "lib-name"    <> short 'n' <> value "name" <> metavar "NAME"    <> help "Library name"    )
---    --       <*> option    ( long "lib-version" <> short 'n' <> value (Version [1,0,0] [])  <> metavar "VERSION" <> help "Library version in X.Y.Z format" )
---    --       <*> strOption ( long "root-path"  <> value "" <> hidden )
---    --       <*> switch    ( long "global"                                                    <> help "Compile to global library" )
-
---    --       <*> switch    ( long "dump-all"               <> hidden                                                      )
---    --       <*> switch    ( long "dump-ast"               <> hidden                                                      )
---    --       <*> switch    ( long "dump-va"                <> hidden                                                      )
---    --       <*> switch    ( long "dump-fp"                <> hidden                                                      )
---    --       <*> switch    ( long "dump-ssa"               <> hidden                                                      )
---    --       <*> switch    ( long "dump-hast"              <> hidden                                                      )
---    --       <*> switch    ( long "dump-hsc"               <> hidden                                                      )
-
-
---opts :: ParserInfo CmdArgs
---opts = Opt.info (helper <*> parser)
---              (Opt.fullDesc
---                  <> Opt.header (show_version)
---              )
-
-
---show_version :: String
---show_version = "Luna compiler, version " ++ Version.showVersion Config.version
-
---show_num_version :: String
---show_num_version = Version.showVersion Config.version
-
-
---main :: IO ()
---main = do
---    execParser opts >>= run
-
-
---run :: CmdArgs -> IO ()
---run cmd = do
---    case cmd of
---        CmdArgs.Version     {} -> putStrLn $ show_version
---        CmdArgs.NumVersion  {} -> putStrLn $ show_num_version
---        CmdArgs.Hello       {} -> putStrLn $ "Hello, my name is John le Box. Nice to meet you :)"
---        CmdArgs.Compilation {} -> do
-
---            rootLogger setIntLevel $ CmdArgs.verbose cmd
-
---            let diag = Diagnostics False
---                                 ( CmdArgs.dump_ast  cmd || CmdArgs.dump_all cmd )
---                                 ( CmdArgs.dump_va   cmd || CmdArgs.dump_all cmd )
---                                 ( CmdArgs.dump_fp   cmd || CmdArgs.dump_all cmd )
---                                 ( CmdArgs.dump_ssa  cmd || CmdArgs.dump_all cmd )
---                                 ( CmdArgs.dump_hast cmd || CmdArgs.dump_all cmd )
---                                 ( CmdArgs.dump_hsc  cmd || CmdArgs.dump_all cmd )
-
---                inputs = map UniPath.fromUnixString $ CmdArgs.inputs cmd
-
-
---            --Initializer.initializeIfNeeded cfg
-
---            --mapM_ (Builder.build cfg cmd diag) inputs
---            return ()
-      
-
