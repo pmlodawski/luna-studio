@@ -5,7 +5,7 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto;
+package generated.proto.project;
 
 import "attributes.proto";
 
@@ -15,6 +15,6 @@ message Project {
     optional string     name       = 1;
     optional string     path       = 2;
     repeated string     libPaths   = 3;
-    optional Attributes attributes = 4;
+    optional generated.proto.attributes.Attributes attributes = 4;
     optional int32      projectID  = 5;
 }

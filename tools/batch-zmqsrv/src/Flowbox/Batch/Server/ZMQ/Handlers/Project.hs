@@ -28,20 +28,20 @@ import qualified Flowbox.Luna.Lib.LibManager                            as LibMa
 import           Flowbox.System.Log.Logger                                
 import           Flowbox.Tools.Conversion.Proto                           
 import           Flowbox.Tools.Serialize.Proto.Conversion.UniPath         ()
-import qualified Generated.Proto.ProjectAPI.Projects.Args               as Projects
-import qualified Generated.Proto.ProjectAPI.Projects.Result             as Projects
-import qualified Generated.Proto.ProjectAPI.ProjectByID.Args            as ProjectByID
-import qualified Generated.Proto.ProjectAPI.ProjectByID.Result          as ProjectByID
-import qualified Generated.Proto.ProjectAPI.CreateProject.Args          as CreateProject
-import qualified Generated.Proto.ProjectAPI.CreateProject.Result        as CreateProject
-import qualified Generated.Proto.ProjectAPI.OpenProject.Args            as OpenProject
-import qualified Generated.Proto.ProjectAPI.OpenProject.Result          as OpenProject
-import qualified Generated.Proto.ProjectAPI.UpdateProject.Args          as UpdateProject
-import qualified Generated.Proto.ProjectAPI.UpdateProject.Result        as UpdateProject
-import qualified Generated.Proto.ProjectAPI.CloseProject.Args           as CloseProject
-import qualified Generated.Proto.ProjectAPI.CloseProject.Result         as CloseProject
-import qualified Generated.Proto.ProjectAPI.StoreProject.Args           as StoreProject
-import qualified Generated.Proto.ProjectAPI.StoreProject.Result         as StoreProject
+import qualified Generated.Proto.Batch.Project.Projects.Args            as Projects
+import qualified Generated.Proto.Batch.Project.Projects.Result          as Projects
+import qualified Generated.Proto.Batch.Project.ProjectByID.Args         as ProjectByID
+import qualified Generated.Proto.Batch.Project.ProjectByID.Result       as ProjectByID
+import qualified Generated.Proto.Batch.Project.CreateProject.Args       as CreateProject
+import qualified Generated.Proto.Batch.Project.CreateProject.Result     as CreateProject
+import qualified Generated.Proto.Batch.Project.OpenProject.Args         as OpenProject
+import qualified Generated.Proto.Batch.Project.OpenProject.Result       as OpenProject
+import qualified Generated.Proto.Batch.Project.UpdateProject.Args       as UpdateProject
+import qualified Generated.Proto.Batch.Project.UpdateProject.Result     as UpdateProject
+import qualified Generated.Proto.Batch.Project.CloseProject.Args        as CloseProject
+import qualified Generated.Proto.Batch.Project.CloseProject.Result      as CloseProject
+import qualified Generated.Proto.Batch.Project.StoreProject.Args        as StoreProject
+import qualified Generated.Proto.Batch.Project.StoreProject.Result      as StoreProject
 
 
 

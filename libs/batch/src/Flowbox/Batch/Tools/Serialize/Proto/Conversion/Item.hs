@@ -16,13 +16,13 @@ import           Flowbox.Batch.FileSystem.Item                      (Item(..))
 import           Flowbox.Control.Error                              
 import           Flowbox.Tools.Conversion.Proto                     
 import           Flowbox.Tools.Serialize.Proto.Conversion.UniPath   ()
-import qualified Generated.Proto.FSItem                           as Gen
-import qualified Generated.Proto.FSItem.Type                      as Gen
+import qualified Generated.Proto.Filesystem.Item                  as Gen
+import qualified Generated.Proto.Filesystem.Item.Type             as Gen
 
 
 
-instance Convert Item Gen.FSItem where
-    encode item = Gen.FSItem (Just titemType) (Just tpath) (Just tsize) where 
+instance Convert Item Gen.Item where
+    encode item = Gen.Item (Just titemType) (Just tpath) (Just tsize) where 
         titemType :: Gen.Type
         titemType = case item of
             Directory {} -> Gen.Directory
@@ -30,7 +30,7 @@ instance Convert Item Gen.FSItem where
             Other     {} -> Gen.Other
         tpath = encode $ Item.path item
         tsize = itoi32 $ Item.size item
-    decode (Gen.FSItem mtitemType mtpath mtsize) = do 
+    decode (Gen.Item mtitemType mtpath mtsize) = do 
         titemType <- mtitemType <?> "Failed to decode Item: 'itemType' field is missing"
         tpath     <- mtpath     <?> "Failed to decode Item: 'path' field is missing"
         tsize     <- mtsize     <?> "Failed to decode Item: 'size' field is missing"

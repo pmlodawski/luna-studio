@@ -21,7 +21,8 @@ import           Flowbox.Luna.Lib.LibManager                                (Lib
 import           Flowbox.Tools.Conversion.Proto                             
 import qualified Flowbox.Tools.Serialize.Proto.Conversion.List            as Conv
 import           Flowbox.Tools.Serialize.Proto.Conversion.UniPath           ()
-import qualified Generated.Proto.Project                                  as Gen
+import qualified Generated.Proto.Project.Project                          as Gen
+
 
 
 instance Convert (Project.ID, Project) (Gen.Project, LibManager) where

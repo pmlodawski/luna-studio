@@ -10,21 +10,21 @@
 
 module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes where
 
-import           Control.Applicative                         
-import qualified Data.Foldable                             as Foldable
-import qualified Data.Map                                  as Map
-import qualified Data.Sequence                             as Sequence
-import qualified Text.ProtocolBuffers.Basic                as Proto
+import           Control.Applicative                                    
+import qualified Data.Foldable                                        as Foldable
+import qualified Data.Map                                             as Map
+import qualified Data.Sequence                                        as Sequence
+import qualified Text.ProtocolBuffers.Basic                           as Proto
 
-import           Flowbox.Prelude                             
-import           Flowbox.Luna.Network.Flags                  (Flags(Flags))
-import qualified Flowbox.Luna.Network.Attributes           as Attributes
-import           Flowbox.Luna.Network.Attributes             (Attributes)
-import           Flowbox.Tools.Conversion.Proto              
-import qualified Generated.Proto.Attributes                as Gen
-import qualified Generated.Proto.Attributes.Space          as Gen
-import qualified Generated.Proto.Attributes.Space.KeyValue as Gen
-import qualified Generated.Proto.Flags                     as Gen
+import           Flowbox.Prelude                                        
+import           Flowbox.Luna.Network.Flags                             (Flags(Flags))
+import qualified Flowbox.Luna.Network.Attributes                      as Attributes
+import           Flowbox.Luna.Network.Attributes                        (Attributes)
+import           Flowbox.Tools.Conversion.Proto                         
+import qualified Generated.Proto.Attributes.Attributes                as Gen
+import qualified Generated.Proto.Attributes.Attributes.Space          as Gen
+import qualified Generated.Proto.Attributes.Attributes.Space.KeyValue as Gen
+import qualified Generated.Proto.Attributes.Flags                     as Gen
 
 
 

@@ -11,23 +11,23 @@ module Flowbox.Batch.Server.ZMQ.Handlers.Maintenance (
     initialize,
 ) where
 
-import qualified Control.Concurrent.MVar                          as MVar
-import           Control.Concurrent.MVar                            (MVar)
-import           Data.IORef                                         (IORef)
+import qualified Control.Concurrent.MVar                             as MVar
+import           Control.Concurrent.MVar                               (MVar)
+import           Data.IORef                                            (IORef)
 
-import           Flowbox.Prelude                                    
-import           Flowbox.Batch.Batch                                (Batch)
-import qualified Flowbox.Batch.Handlers.Maintenance               as BatchM
-import           Flowbox.Control.Error                              
-import           Flowbox.System.Log.Logger                          
-import qualified Generated.Proto.MaintenanceAPI.Initialize.Args   as Initialize
-import qualified Generated.Proto.MaintenanceAPI.Initialize.Result as Initialize
-import qualified Generated.Proto.MaintenanceAPI.Ping.Args         as Ping
-import qualified Generated.Proto.MaintenanceAPI.Ping.Result       as Ping
-import qualified Generated.Proto.MaintenanceAPI.Dump.Args         as Dump
-import qualified Generated.Proto.MaintenanceAPI.Dump.Result       as Dump
-import qualified Generated.Proto.MaintenanceAPI.Shutdown.Args     as Shutdown
-import qualified Generated.Proto.MaintenanceAPI.Shutdown.Result   as Shutdown
+import           Flowbox.Prelude                                       
+import           Flowbox.Batch.Batch                                   (Batch)
+import qualified Flowbox.Batch.Handlers.Maintenance                  as BatchM
+import           Flowbox.Control.Error                                 
+import           Flowbox.System.Log.Logger                             
+import qualified Generated.Proto.Batch.Maintenance.Initialize.Args   as Initialize
+import qualified Generated.Proto.Batch.Maintenance.Initialize.Result as Initialize
+import qualified Generated.Proto.Batch.Maintenance.Ping.Args         as Ping
+import qualified Generated.Proto.Batch.Maintenance.Ping.Result       as Ping
+import qualified Generated.Proto.Batch.Maintenance.Dump.Args         as Dump
+import qualified Generated.Proto.Batch.Maintenance.Dump.Result       as Dump
+import qualified Generated.Proto.Batch.Maintenance.Shutdown.Args     as Shutdown
+import qualified Generated.Proto.Batch.Maintenance.Shutdown.Result   as Shutdown
 
 
 

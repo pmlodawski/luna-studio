@@ -5,10 +5,10 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto;
+package generated.proto.filesystem;
 
 
-message FSItem {
+message Item {
     enum Type {
         Directory = 0;
         File      = 1;

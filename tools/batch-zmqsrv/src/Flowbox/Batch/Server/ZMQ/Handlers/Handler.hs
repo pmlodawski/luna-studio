@@ -8,43 +8,43 @@
 
 module Flowbox.Batch.Server.ZMQ.Handlers.Handler where
 
-import           Flowbox.Control.Error                              
-import qualified Generated.Proto.FileSystemAPI.LS.Args            as LS
-import qualified Generated.Proto.FileSystemAPI.LS.Result          as LS
-import qualified Generated.Proto.FileSystemAPI.Stat.Args          as Stat
-import qualified Generated.Proto.FileSystemAPI.Stat.Result        as Stat
-import qualified Generated.Proto.FileSystemAPI.MkDir.Args         as MkDir
-import qualified Generated.Proto.FileSystemAPI.MkDir.Result       as MkDir
-import qualified Generated.Proto.FileSystemAPI.Touch.Args         as Touch
-import qualified Generated.Proto.FileSystemAPI.Touch.Result       as Touch
-import qualified Generated.Proto.FileSystemAPI.RM.Args            as RM
-import qualified Generated.Proto.FileSystemAPI.RM.Result          as RM
-import qualified Generated.Proto.FileSystemAPI.CP.Args            as CP
-import qualified Generated.Proto.FileSystemAPI.CP.Result          as CP
-import qualified Generated.Proto.FileSystemAPI.MV.Args            as MV
-import qualified Generated.Proto.FileSystemAPI.MV.Result          as MV
-import qualified Generated.Proto.ProjectAPI.Projects.Args         as Projects
-import qualified Generated.Proto.ProjectAPI.Projects.Result       as Projects
-import qualified Generated.Proto.ProjectAPI.ProjectByID.Args      as ProjectByID
-import qualified Generated.Proto.ProjectAPI.ProjectByID.Result    as ProjectByID
-import qualified Generated.Proto.ProjectAPI.CreateProject.Args    as CreateProject
-import qualified Generated.Proto.ProjectAPI.CreateProject.Result  as CreateProject
-import qualified Generated.Proto.ProjectAPI.OpenProject.Args      as OpenProject
-import qualified Generated.Proto.ProjectAPI.OpenProject.Result    as OpenProject
-import qualified Generated.Proto.ProjectAPI.UpdateProject.Args    as UpdateProject
-import qualified Generated.Proto.ProjectAPI.UpdateProject.Result  as UpdateProject
-import qualified Generated.Proto.ProjectAPI.CloseProject.Args     as CloseProject
-import qualified Generated.Proto.ProjectAPI.CloseProject.Result   as CloseProject
-import qualified Generated.Proto.ProjectAPI.StoreProject.Args     as StoreProject
-import qualified Generated.Proto.ProjectAPI.StoreProject.Result   as StoreProject
-import qualified Generated.Proto.MaintenanceAPI.Initialize.Args   as Initialize
-import qualified Generated.Proto.MaintenanceAPI.Initialize.Result as Initialize
-import qualified Generated.Proto.MaintenanceAPI.Ping.Args         as Ping
-import qualified Generated.Proto.MaintenanceAPI.Ping.Result       as Ping
-import qualified Generated.Proto.MaintenanceAPI.Dump.Args         as Dump
-import qualified Generated.Proto.MaintenanceAPI.Dump.Result       as Dump
-import qualified Generated.Proto.MaintenanceAPI.Shutdown.Args     as Shutdown
-import qualified Generated.Proto.MaintenanceAPI.Shutdown.Result   as Shutdown
+import           Flowbox.Control.Error                                 
+import qualified Generated.Proto.Batch.FileSystem.LS.Args            as LS
+import qualified Generated.Proto.Batch.FileSystem.LS.Result          as LS
+import qualified Generated.Proto.Batch.FileSystem.Stat.Args          as Stat
+import qualified Generated.Proto.Batch.FileSystem.Stat.Result        as Stat
+import qualified Generated.Proto.Batch.FileSystem.MkDir.Args         as MkDir
+import qualified Generated.Proto.Batch.FileSystem.MkDir.Result       as MkDir
+import qualified Generated.Proto.Batch.FileSystem.Touch.Args         as Touch
+import qualified Generated.Proto.Batch.FileSystem.Touch.Result       as Touch
+import qualified Generated.Proto.Batch.FileSystem.RM.Args            as RM
+import qualified Generated.Proto.Batch.FileSystem.RM.Result          as RM
+import qualified Generated.Proto.Batch.FileSystem.CP.Args            as CP
+import qualified Generated.Proto.Batch.FileSystem.CP.Result          as CP
+import qualified Generated.Proto.Batch.FileSystem.MV.Args            as MV
+import qualified Generated.Proto.Batch.FileSystem.MV.Result          as MV
+import qualified Generated.Proto.Batch.Project.Projects.Args         as Projects
+import qualified Generated.Proto.Batch.Project.Projects.Result       as Projects
+import qualified Generated.Proto.Batch.Project.ProjectByID.Args      as ProjectByID
+import qualified Generated.Proto.Batch.Project.ProjectByID.Result    as ProjectByID
+import qualified Generated.Proto.Batch.Project.CreateProject.Args    as CreateProject
+import qualified Generated.Proto.Batch.Project.CreateProject.Result  as CreateProject
+import qualified Generated.Proto.Batch.Project.OpenProject.Args      as OpenProject
+import qualified Generated.Proto.Batch.Project.OpenProject.Result    as OpenProject
+import qualified Generated.Proto.Batch.Project.UpdateProject.Args    as UpdateProject
+import qualified Generated.Proto.Batch.Project.UpdateProject.Result  as UpdateProject
+import qualified Generated.Proto.Batch.Project.CloseProject.Args     as CloseProject
+import qualified Generated.Proto.Batch.Project.CloseProject.Result   as CloseProject
+import qualified Generated.Proto.Batch.Project.StoreProject.Args     as StoreProject
+import qualified Generated.Proto.Batch.Project.StoreProject.Result   as StoreProject
+import qualified Generated.Proto.Batch.Maintenance.Initialize.Args   as Initialize
+import qualified Generated.Proto.Batch.Maintenance.Initialize.Result as Initialize
+import qualified Generated.Proto.Batch.Maintenance.Ping.Args         as Ping
+import qualified Generated.Proto.Batch.Maintenance.Ping.Result       as Ping
+import qualified Generated.Proto.Batch.Maintenance.Dump.Args         as Dump
+import qualified Generated.Proto.Batch.Maintenance.Dump.Result       as Dump
+import qualified Generated.Proto.Batch.Maintenance.Shutdown.Args     as Shutdown
+import qualified Generated.Proto.Batch.Maintenance.Shutdown.Result   as Shutdown
 
 
 class Handler h where

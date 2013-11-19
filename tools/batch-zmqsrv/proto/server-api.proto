@@ -5,7 +5,7 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto;
+package generated.proto.batch;
 
 import "file-system.proto";
 import "project.proto";
@@ -55,13 +55,13 @@ message Exception { extend Response { optional Exception rsp = 1000; }
 }
 
 
-message FileSystemAPI {
+message FileSystem {
     message LS {
         message Args   { extend Request  { optional Args   req = 1001; }
             required string path = 1;
         }
         message Result { extend Response { optional Result rsp = 1001; }
-            repeated FSItem items = 1;
+            repeated generated.proto.filesystem.Item items = 1;
         }
     }
     message Stat {
@@ -69,7 +69,7 @@ message FileSystemAPI {
             required string path = 1;
         }
         message Result { extend Response { optional Result rsp = 1002; }
-            optional FSItem item = 1;
+            optional generated.proto.filesystem.Item item = 1;
         }
     }
     message MkDir {
@@ -111,13 +111,13 @@ message FileSystemAPI {
     }
 }
 
-message ProjectAPI {
+message Project {
     message Projects {
         message Args   { extend Request  { optional Args   req = 1008; }
             required int32 projectID = 1;
         }
         message Result { extend Response { optional Result rsp = 1008; }
-            repeated Project project = 1;
+            repeated generated.proto.project.Project project = 1;
         }   
     }
     message ProjectByID {
@@ -125,15 +125,15 @@ message ProjectAPI {
             required int32 projectID = 1;
         }
         message Result { extend Response { optional Result rsp = 1009; }
-            required Project project = 1;
+            required generated.proto.project.Project project = 1;
         }   
     }
     message CreateProject {
         message Args   { extend Request  { optional Args   req = 1010; }
-            required Project project = 1;
+            required generated.proto.project.Project project = 1;
         }
         message Result { extend Response { optional Result rsp = 1010; }
-            required Project project = 1;
+            required generated.proto.project.Project project = 1;
         }   
     }
     message OpenProject {
@@ -141,12 +141,12 @@ message ProjectAPI {
             required string path = 1;
         }
         message Result { extend Response { optional Result rsp = 1011; }
-            required Project project = 1;
+            required generated.proto.project.Project project = 1;
         }   
     }
     message UpdateProject {
         message Args   { extend Request  { optional Args   req = 1012; }
-            required Project project = 1;
+            required generated.proto.project.Project project = 1;
         }
         message Result { extend Response { optional Result rsp = 1012; } }   
     }    
@@ -164,7 +164,7 @@ message ProjectAPI {
     }
 }
 
-message MaintenanceAPI {
+message Maintenance {
     message Initialize {
         message Args   { extend Request  { optional Args   req = 1015; } }
         message Result { extend Response { optional Result rsp = 1015; } }   

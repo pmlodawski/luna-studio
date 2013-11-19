@@ -26,20 +26,20 @@ import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Item   ()
 import           Flowbox.Control.Error                                 
 import           Flowbox.System.Log.Logger                             
 import           Flowbox.Tools.Conversion.Proto                        
-import qualified Generated.Proto.FileSystemAPI.LS.Args               as LS
-import qualified Generated.Proto.FileSystemAPI.LS.Result             as LS
-import qualified Generated.Proto.FileSystemAPI.Stat.Args             as Stat
-import qualified Generated.Proto.FileSystemAPI.Stat.Result           as Stat
-import qualified Generated.Proto.FileSystemAPI.MkDir.Args            as MkDir
-import qualified Generated.Proto.FileSystemAPI.MkDir.Result          as MkDir
-import qualified Generated.Proto.FileSystemAPI.Touch.Args            as Touch
-import qualified Generated.Proto.FileSystemAPI.Touch.Result          as Touch
-import qualified Generated.Proto.FileSystemAPI.RM.Args               as RM
-import qualified Generated.Proto.FileSystemAPI.RM.Result             as RM
-import qualified Generated.Proto.FileSystemAPI.CP.Args               as CP
-import qualified Generated.Proto.FileSystemAPI.CP.Result             as CP
-import qualified Generated.Proto.FileSystemAPI.MV.Args               as MV
-import qualified Generated.Proto.FileSystemAPI.MV.Result             as MV
+import qualified Generated.Proto.Batch.FileSystem.LS.Args            as LS
+import qualified Generated.Proto.Batch.FileSystem.LS.Result          as LS
+import qualified Generated.Proto.Batch.FileSystem.Stat.Args          as Stat
+import qualified Generated.Proto.Batch.FileSystem.Stat.Result        as Stat
+import qualified Generated.Proto.Batch.FileSystem.MkDir.Args         as MkDir
+import qualified Generated.Proto.Batch.FileSystem.MkDir.Result       as MkDir
+import qualified Generated.Proto.Batch.FileSystem.Touch.Args         as Touch
+import qualified Generated.Proto.Batch.FileSystem.Touch.Result       as Touch
+import qualified Generated.Proto.Batch.FileSystem.RM.Args            as RM
+import qualified Generated.Proto.Batch.FileSystem.RM.Result          as RM
+import qualified Generated.Proto.Batch.FileSystem.CP.Args            as CP
+import qualified Generated.Proto.Batch.FileSystem.CP.Result          as CP
+import qualified Generated.Proto.Batch.FileSystem.MV.Args            as MV
+import qualified Generated.Proto.Batch.FileSystem.MV.Result          as MV
 import qualified Flowbox.Tools.Serialize.Proto.Conversion.List       as Conv
 import           Flowbox.Tools.Serialize.Proto.Conversion.UniPath      ()
 
