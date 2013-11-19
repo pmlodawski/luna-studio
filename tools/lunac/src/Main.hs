@@ -55,7 +55,7 @@ parser = Cmd.Prog <$> subparser ( command "build"   (Opt.info buildParser      (
 
 run :: Prog -> IO ()
 run prog = case Cmd.cmd prog of
-    Cmd.Version opts -> putStrLn (fullVersion . not $ Cmd.numeric opts)
+    Cmd.Version opts -> putStrLn (fullVersion $ Cmd.numeric opts)
     Cmd.Build   opts -> print $ Cmd.optimisation opts
 
 opts :: ParserInfo Prog
@@ -68,10 +68,10 @@ fullVersion :: Bool -> String
 fullVersion numeric = compVersion numeric ++ "\n" ++ libVersion numeric
 
 compVersion :: Bool -> String
-compVersion numeric = (if numeric then "Luna compiler version " else "") ++ Version.showVersion Config.version
+compVersion numeric = (if numeric then "" else "Luna compiler version ") ++ Version.showVersion Config.version
 
 libVersion :: Bool -> String
-libVersion numeric = (if numeric then "Luna library version " else "") ++ Version.showVersion LibConfig.version
+libVersion numeric = (if numeric then "" else "Luna library version ") ++ Version.showVersion LibConfig.version
 
 main :: IO ()
 main = execParser opts >>= run

@@ -1,39 +1,32 @@
 
 module Flowbox.Config.Config2 where 
-
 import           Flowbox.Prelude           hiding (error)
 
-data Version = Version { major :: Int
-                       , minor :: Int
-                       , patch :: Int
-                       , build :: String
-                       , stage :: Stage
-                       } deriving (Show, Eq, Ord)
-
-data Stage = Alpha
-           | Beta
-           | Release
-           | Final
-           deriving (Show, Eq, Ord, Read)
 
 
-data Config = Config { version :: Version
+data Config = Config { root    :: String
                      , base    :: Section
                      } deriving(Show)
 
-data Section = Base { path :: String 
-                    , bin  :: String
+data Section = Base { path  :: String 
+                    , bin   :: String
+                    , lib   :: String
+                    , share :: String
+                    , pkgDb :: String
                     } deriving(Show)
 
-cfg = Config { version = Version 1 0 0 "xxx" Alpha
-             , base    = Base { path  = "base"
-                              , bin   = (path.base) cfg ++ "/bin"
-                              --, lib   = (path.base) cfg ++ "/lib"
-                              --, share = (path.base) cfg ++ "/share"
-                              --, pkgDb = (path.base) cfg ++ "/pkgDb"
-                              }
-}
+mkcfg lroot = Config { root    = lroot
+                     , base    = Base { path  = root        cfg ++ "/base"
+                                      , bin   = (path.base) cfg ++ "/bin"
+                                      , lib   = (path.base) cfg ++ "/lib"
+                                      , share = (path.base) cfg ++ "/share"
+                                      , pkgDb = (path.base) cfg ++ "/pkgDb"
+                                      }
+                     }
+            where cfg = mkcfg lroot
 
 main :: IO ()
 main = do 
-	print cfg
+    let c = mkcfg "xxx"
+    print c
+    print "hello"

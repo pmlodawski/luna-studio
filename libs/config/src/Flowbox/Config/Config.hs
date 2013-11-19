@@ -19,8 +19,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Config.Config"
 
 
-data Config = Config      { version    :: Version
-                          , ffs        :: Section
+data Config = Config      { root       :: Section
                           , base       :: Section
                           , global     :: Section
                           , local      :: Section
@@ -33,7 +32,7 @@ data Config = Config      { version    :: Version
                           }
             deriving (Show)
                           
-data Section = FFS        { path      :: String
+data Section = Root       { path      :: String
                           , conf      :: String
                           , bin       :: String
                           }
@@ -84,16 +83,16 @@ data Section = FFS        { path      :: String
 
 
 ffsEnv :: String
-ffsEnv = "FFS"
+ffsEnv = "LUNAROOT"
 
 
 load :: IO Config
 load = do
-    logger debug "Loading Flowbox configuration"
+    logger debug "Loading Luna configuration"
     cpath <- Exception.onException (Env.getEnv ffsEnv)
-           $ logger error ("Flowbox environment not initialized.")
+           $ logger error ("Luna environment not initialized.")
           *> logger error ("Environment variable '" ++ ffsEnv ++ "' not defined.")
-          *> logger error ("Please run 'source <FLOWBOX_INSTALL_PATH>/setup' and try again.")
+          *> logger error ("Please run 'source <LUNA_INSTALL_PATH>/setup' and try again.")
 
     cfgFile <- Configurator.load [Configurator.Required $ cpath ++ "/config/flowbox.config"]
 
@@ -102,15 +101,9 @@ load = do
 
     --let readConfDefault val name = Configurator.lookupDefault val cfgFile name
 
-    Config <$> ( Version.Version <$> (read <$> readConf "info.major")
-                                 <*> (read <$> readConf "info.minor")
-                                 <*> (read <$> readConf "info.patch")
-                                 <*> readConf "info.build"
-                                 <*> pure Version.Alpha --readConf "info.stage"
-               )
-           <*> ( FFS <$> readConf "ffs.path"
-                     <*> readConf "ffs.conf"
-                     <*> readConf "ffs.bin"
+    Config <$> ( Root <$> readConf "root.path"
+                      <*> readConf "root.conf"
+                      <*> readConf "root.bin"
                )
            <*> ( Base   <$> readConf "base.path"
                         <*> readConf "base.bin"
