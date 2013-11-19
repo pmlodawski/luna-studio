@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds, FlexibleContexts #-}
 
-module Flowbox.Lunac.Builder where
+module Flowbox.Lunac.Build where
 
 import           Control.Applicative                     
 
@@ -27,7 +27,7 @@ import           Flowbox.System.UniPath                  (UniPath)
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Lunac.Builder"
+logger = getLogger "Flowbox.Lunac.Build"
 
 
 --build :: Config -> CmdArgs -> Diagnostics -> UniPath -> IO ()
