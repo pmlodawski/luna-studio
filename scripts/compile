@@ -35,6 +35,7 @@ def getHaskellPlatformRoot():
     return path
 
 def main():
+    # We have to put Haskells mingw on the beginning of the Path not to use system one
     if platform.system() == "Windows":
         root = getHaskellPlatformRoot()
         mingwPath = os.path.join(root, "mingw", "bin")
