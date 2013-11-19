@@ -13,16 +13,16 @@ main :: IO ()
 main = do
     cfg     <- Cfg.load
     args    <- Env.getArgs
-    let topDir = (Cfg.topDir . Cfg.ghcTP . Cfg.thirdparty) cfg
+    let topDir = (Cfg.topDir . Cfg.ghcS) cfg
         tflag  = "--template=" ++ topDir ++ "/template-hsc.h"
         iflag  = "-I" ++ topDir ++ "/include/"
-        exec   = (Cfg.hsc2hsBin . Cfg.ghcTP . Cfg.thirdparty) cfg
+        exec   = (Cfg.hsc2hs . Cfg.bins) cfg
 
     -- FIXME: handle Darwin
 
-    appendFile "C:\\test.txt" "hsc2hs\n"
-    appendFile "C:\\test.txt" (show args)
-    appendFile "C:\\test.txt" "\n---\n"
+    --appendFile "C:\\test.txt" "hsc2hs\n"
+    --appendFile "C:\\test.txt" (show args)
+    --appendFile "C:\\test.txt" "\n---\n"
 
     exitCode <- Cmd.rawSystem exec $ (tflag
                        : "--cflag=-fno-stack-protector"
