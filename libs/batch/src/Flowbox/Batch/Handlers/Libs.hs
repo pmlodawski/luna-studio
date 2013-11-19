@@ -19,6 +19,7 @@ module Flowbox.Batch.Handlers.Libs (
 ) where
 
 import qualified Data.Maybe                            as Maybe
+import           Data.Version                            (Version(Version))
 
 import           Flowbox.Prelude                         
 import qualified Flowbox.Batch.Batch                   as Batch
@@ -26,7 +27,6 @@ import           Flowbox.Batch.Batch                     (Batch)
 import           Flowbox.Batch.Handlers.Common           (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
 import qualified Flowbox.Batch.Project.Project         as Project
 import qualified Flowbox.Batch.Project.ProjectManager  as ProjectManager
-import           Flowbox.Luna.Data.Cabal.Version         (Version(Version))
 import qualified Flowbox.Luna.Lib.LibManager           as LibManager
 import qualified Flowbox.Luna.Lib.Library              as Library
 import           Flowbox.Luna.Lib.Library                (Library)
@@ -99,7 +99,7 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
         rootDef     = Maybe.fromJust $ DefManager.lab defManger rootDefID
        
         name        = Library.name library
-        version     = Version 1 0 0      -- TODO [PM] : hardcoded version
+        version     = Version [1][]      -- TODO [PM] : hardcoded version
         cfg         = Batch.config batch
         diag        = Diagnostics.none   -- TODO [PM] : hardcoded diagnostics
         outputPath  = UniPath.append name projectPath 

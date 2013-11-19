@@ -8,7 +8,7 @@
 module Flowbox.Luna.Data.Cabal.Config where
 
 import           Data.Version                      (Version)
-import qualified           Data.Version                      as Version
+import qualified Data.Version                    as Version
 
 import           Flowbox.Prelude                   
 import qualified Flowbox.Luna.Data.Cabal.Section as Section
