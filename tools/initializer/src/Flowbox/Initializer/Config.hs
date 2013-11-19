@@ -5,14 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Initializer.CmdArgs where
+module Flowbox.Initializer.Config (
+    module Paths_flowbox_initializer
+) where
 
-import           Flowbox.Prelude   
-
-
-
-data CmdArgs = Initialization { verbose :: Int
-	                          , force   :: Bool
-	                          }
-	         | Version
-	         deriving Show
+import           Paths_flowbox_initializer   (version)

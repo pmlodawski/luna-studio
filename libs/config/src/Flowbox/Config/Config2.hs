@@ -1,6 +1,6 @@
 
 module Flowbox.Config.Config2 where 
-import           Flowbox.Prelude           hiding (error)
+import           Flowbox.Prelude hiding (error)
 
 
 
@@ -15,6 +15,7 @@ data Section = Base { path  :: String
                     , pkgDb :: String
                     } deriving(Show)
 
+mkcfg :: String -> Config
 mkcfg lroot = Config { root    = lroot
                      , base    = Base { path  = root        cfg ++ "/base"
                                       , bin   = (path.base) cfg ++ "/bin"

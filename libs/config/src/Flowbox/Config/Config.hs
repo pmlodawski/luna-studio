@@ -9,10 +9,9 @@ import qualified Data.Configurator         as Configurator
 import qualified System.Environment        as Env
 
 import           Flowbox.Prelude           hiding (error)
-import qualified Flowbox.Data.Version      as Version
-import           Flowbox.Data.Version        (Version)
 import           Flowbox.System.Log.Logger   
 import qualified Prelude                   as Prelude
+
 
 
 logger :: LoggerIO

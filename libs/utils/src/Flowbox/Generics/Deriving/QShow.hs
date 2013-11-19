@@ -25,10 +25,10 @@ module Flowbox.Generics.Deriving.QShow (
   ) where
 
 
-import Generics.Deriving.Base
-import Generics.Deriving.Instances ()
+import           Generics.Deriving.Base        
+import           Generics.Deriving.Instances   ()
 
-import           Flowbox.Prelude          
+import           Flowbox.Prelude               
 
 --------------------------------------------------------------------------------
 -- Generic show

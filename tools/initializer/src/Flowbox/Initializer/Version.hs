@@ -5,23 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Lunac.Version  where
+module Flowbox.Initializer.Version where
 
 import qualified Data.Version               as Version
 
 import           Flowbox.Prelude              
-import qualified Flowbox.Luna.Config.Config as LibConfig
-import qualified Flowbox.Lunac.Config       as Config
+import qualified Flowbox.Initializer.Config as Config
 
 
 
 full :: Bool -> String
-full numeric = compiler numeric ++ "\n" ++ library numeric
+full = initializer 
 
 
-compiler :: Bool -> String
-compiler numeric = (if numeric then "" else "Luna compiler version ") ++ Version.showVersion Config.version
-
-
-library :: Bool -> String
-library numeric = (if numeric then "" else "Luna library version ") ++ Version.showVersion LibConfig.version
+initializer :: Bool -> String
+initializer numeric = (if numeric then "" else "Luna initializer version ") ++ Version.showVersion Config.version

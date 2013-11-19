@@ -7,7 +7,10 @@
 
 module Flowbox.Lunac.Cmd where
 
-import           Flowbox.Prelude 
+import           Data.Version      (Version)
+
+import           Flowbox.Prelude   
+
 
 
 data Prog    = Prog { cmd      :: Command 
@@ -15,6 +18,7 @@ data Prog    = Prog { cmd      :: Command
                     , verbose  :: Int
                     }
              deriving Show
+
 
 data Command = Hello
              | Build Options
@@ -27,6 +31,29 @@ data Command = Hello
              | Version Options
              deriving Show
 
-data Options = VersionOptions { compiler :: Bool, library :: Bool, numeric :: Bool }
-             | BuildOptions   { output :: String, optimisation :: Int, dump :: String }
+
+data Options = VersionOptions { compiler :: Bool
+                              , library  :: Bool
+                              , numeric  :: Bool 
+                              }
+             | BuildOptions   { input        :: String
+                              , output       :: String
+                              , optimisation :: Int
+                              , link         :: [String]
+
+                              , library      :: Bool
+                              , libName      :: String
+                              , libVersion   :: Version
+                              , rootPath     :: String
+                              , global       :: Bool
+
+                              , dump_all     :: Bool 
+                              , dump_ast     :: Bool
+                              , dump_va      :: Bool 
+                              , dump_fp      :: Bool 
+                              , dump_ssa     :: Bool 
+                              , dump_hast    :: Bool 
+                              , dump_hsc     :: Bool 
+                              }
              deriving Show
+

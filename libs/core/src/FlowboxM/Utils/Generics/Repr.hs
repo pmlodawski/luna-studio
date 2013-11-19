@@ -25,10 +25,10 @@ module FlowboxM.Utils.Generics.Repr (
   ) where
 
 
-import Generics.Deriving.Base
-import Generics.Deriving.Instances ()
+import           Generics.Deriving.Base        
+import           Generics.Deriving.Instances   ()
 
-import Debug.Trace
+import           Debug.Trace                   
 
 --import           Flowbox.Prelude          
 

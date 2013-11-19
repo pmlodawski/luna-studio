@@ -5,8 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Config.Config (
-	module Paths_flowbox_luna
-) where
+module Flowbox.Initializer.Cmd where
 
-import           Paths_flowbox_luna   (version)
+import           Flowbox.Prelude   
+
+
+
+data Cmd = Initialization { verbose :: Int
+                          , force   :: Bool
+                          }
+         | Version        
+         deriving Show

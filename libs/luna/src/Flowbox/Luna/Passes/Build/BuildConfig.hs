@@ -7,9 +7,10 @@
 
 module Flowbox.Luna.Passes.Build.BuildConfig where
 
+import           Data.Version                            (Version)
+
 import           Flowbox.Prelude                         
 import           Flowbox.Config.Config                   (Config)
-import           Flowbox.Luna.Data.Cabal.Version         (Version)
 import           Flowbox.Luna.Passes.Build.Diagnostics   (Diagnostics)
 import           Flowbox.System.UniPath                  (UniPath)
 
