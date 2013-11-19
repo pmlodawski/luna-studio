@@ -5,23 +5,20 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import qualified Flowbox.Luna.Config.Config            as LibConfig
-import qualified Flowbox.Lunac.Config                  as Config
-import qualified Data.Version                          as Version
-import           Data.Version                            (Version(Version))
-import           Flowbox.Options.Applicative           (optIntFlag)
-import qualified Flowbox.Lunac.Cmd                     as Cmd
-import           Flowbox.Lunac.Cmd                     (Command, Prog)
-import           Flowbox.System.Log.Logger 
-
-import           Data.List
-import           Flowbox.Control.Applicative       
-import           Flowbox.Prelude 
 import qualified Options.Applicative                   as Opt 
 import           Options.Applicative                   ( (<>), Parser, ParserInfo, ParseError(ShowHelpText)
                                                        , argument, str, metavar, switch ,fullDesc, header
                                                        , long, help, strOption, value, hidden, subparser
                                                        , short, command, progDesc, command, execParser, abortOption)
+
+import           Flowbox.Prelude 
+import           Flowbox.Control.Applicative       
+import qualified Flowbox.Lunac.Cmd                     as Cmd
+import           Flowbox.Lunac.Cmd                     (Command, Prog)
+import qualified Flowbox.Lunac.Version as Version
+import           Flowbox.Options.Applicative           (optIntFlag)
+import           Flowbox.System.Log.Logger 
+
                                                        
 
 rootLogger :: Logger
@@ -53,28 +50,22 @@ parser = Cmd.Prog <$> subparser ( command "build"   (Opt.info buildParser      (
                   <*> switch    ( long "no-color" <> hidden <> help "disable color output" )
                   <*> optIntFlag Nothing 'v' 0 2 "verbose level [0-5], default 3"
 
-run :: Prog -> IO ()
-run prog = case Cmd.cmd prog of
-    Cmd.Version opts -> putStrLn (fullVersion $ Cmd.numeric opts)
-    Cmd.Build   opts -> print $ Cmd.optimisation opts
 
 opts :: ParserInfo Prog
-opts = Opt.info (parser <**> helper) (fullDesc <> header (fullVersion False)) --idm 
+opts = Opt.info (parser <**> helper) (fullDesc <> header (Version.full False)) --idm 
+
 
 helper :: Parser (a -> a)
 helper = abortOption ShowHelpText $ (long "help" <> short 'h' <> help "show this help text")
 
-fullVersion :: Bool -> String
-fullVersion numeric = compVersion numeric ++ "\n" ++ libVersion numeric
-
-compVersion :: Bool -> String
-compVersion numeric = (if numeric then "" else "Luna compiler version ") ++ Version.showVersion Config.version
-
-libVersion :: Bool -> String
-libVersion numeric = (if numeric then "" else "Luna library version ") ++ Version.showVersion LibConfig.version
 
 main :: IO ()
 main = execParser opts >>= run
+
+run :: Prog -> IO ()
+run prog = case Cmd.cmd prog of
+    Cmd.Version op -> putStrLn (Version.full $ Cmd.numeric op)
+    Cmd.Build   op -> print $ Cmd.optimisation op
 
 ----parser :: Parser CmdArgs
 --parser =  subparser ( command "add"    (info addOptions  ( progDesc "Add a file to the repository" ))

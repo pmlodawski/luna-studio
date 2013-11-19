@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Lunac.Config (
-	module Flowbox.Lunac.Config,
-	module Paths_flowbox_lunac
+    module Flowbox.Lunac.Config,
+    module Paths_flowbox_lunac
 ) where
 
 import Paths_flowbox_lunac (version)
