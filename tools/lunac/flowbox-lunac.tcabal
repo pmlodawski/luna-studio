@@ -1,5 +1,6 @@
 Name:           flowbox-lunac
 Version:        0.1
+Stability:      Alpha
 Cabal-Version:  >= 1.8
 --License-file:   LICENSE
 Author:         Flowbox <contact@flowbox.io>
@@ -38,6 +39,7 @@ Library
 Executable lunac 
   Main-Is:        Main.hs
   Hs-Source-Dirs: src
+  Other-Modules:  Paths_flowbox_lunac
 
   if flag(debug)
     GHC-Options:  -csacc
@@ -54,5 +56,5 @@ Executable lunac
                   flowbox-utils,
                   MissingH,
                   mtl,
-                  optparse-applicative == 0.5.2.1,
+                  optparse-applicative,
                   timeit
