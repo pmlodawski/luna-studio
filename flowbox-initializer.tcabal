@@ -40,4 +40,4 @@ Executable initializer
                   flowbox-config,
                   flowbox-utils,
                   MissingH,
-                  optparse-applicative == 0.5.2.1
+                  optparse-applicative
