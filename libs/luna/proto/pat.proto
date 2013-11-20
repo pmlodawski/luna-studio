@@ -14,7 +14,7 @@ import "type.proto";
 
 message Pat {
     enum Cls {
-        Pat      = 1;
+        Var      = 1;
         Lit      = 2;
         Tuple    = 3;
         Con      = 4;
@@ -28,44 +28,44 @@ message Pat {
 }
 
 message Var {
-    extend Pat { optional Var expr = 100; }
+    extend Pat { optional Var ext = 100; }
     optional int32  id   = 1;
     optional string name = 2;
 }
 
 message Lit {
-    extend Pat { optional Lit expr = 101; }
+    extend Pat { optional Lit ext = 101; }
     optional int32 id = 1;
     optional generated.proto.lit.Lit value = 2;
 }
 
 message Tuple {
-    extend Pat { optional Tuple expr = 102; }
+    extend Pat { optional Tuple ext = 102; }
     optional int32 id    = 1;
-    required Pat   items = 2;
+    repeated Pat   items = 2;
 }
 
 message Con {
-    extend Pat { optional Con expr = 103; }
+    extend Pat { optional Con ext = 103; }
     optional int32  id   = 1;
-    repeated string name = 2;
+    optional string name = 2;
 }
 
 message App {
-    extend Pat { optional App expr = 104; }
+    extend Pat { optional App ext = 104; }
     optional int32 id   = 1;
     optional Pat   src  = 2;
     repeated Pat   args = 3;
 }
 
 message Typed {
-    extend Pat { optional Typed expr = 105; }
+    extend Pat { optional Typed ext = 105; }
     optional int32 id  = 1;
     optional Pat   pat = 2;
     optional generated.proto.type.Type cls = 3;
 }
 
 message Wildcard {
-    extend Pat { optional Typed expr = 106; }
+    extend Pat { optional Wildcard ext = 106; }
     optional int32 id  = 1;
 }
