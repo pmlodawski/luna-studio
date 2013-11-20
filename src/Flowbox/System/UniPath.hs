@@ -8,7 +8,6 @@
 module Flowbox.System.UniPath where
 
 import           Control.Applicative    hiding (empty)
-import qualified Data.List.Split        as Split
 import qualified Data.List              as List
 import qualified Data.String.Utils      as StringUtils
 import qualified System.Directory       as Directory
@@ -35,7 +34,7 @@ empty = []
 fromUnixString :: String -> UniPath
 fromUnixString []           = empty
 fromUnixString spath@(x:xs) = let 
-    split = Split.splitOn "/"
+    split a = StringUtils.split "/" $ StringUtils.replace "\\" "/" a
     in case x of
         '/' -> fromList $ "/" : split xs
         '~' -> case xs of 
@@ -122,7 +121,7 @@ normalise_r path undo = case path of
 
 fileName :: UniPath -> String
 fileName path = case last $ normalise path of
-                  Node fname -> List.intercalate "." $ Split.splitOn "." fname
+                  Node fname -> List.intercalate "." $ StringUtils.split "." fname
                   _          -> error "something is wrong with the path " ++ toUnixString path
 
 --removes the name of a file, if present
