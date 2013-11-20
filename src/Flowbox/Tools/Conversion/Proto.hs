@@ -18,10 +18,16 @@ import           Flowbox.Prelude
 
 
 class Convert a b | a -> b where
-  encode :: a -> b
-  decode :: b -> Either String a 
+    encode :: a -> b
+    decode :: b -> Either String a 
+
+    encodeJ :: a -> Maybe b
+    encodeJ a = Just $ encode a
 
 
 class ConvertPure a b | a -> b where
-  encodeP :: a -> b
-  decodeP :: b -> a 
+    encodeP :: a -> b
+    decodeP :: b -> a 
+
+    encodePJ :: a -> Maybe b 
+    encodePJ a = Just $ encodeP a
