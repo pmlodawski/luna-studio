@@ -9,15 +9,17 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Flowbox.Tools.Serialize.Proto.Conversion.UniPath where
 
-import qualified Text.ProtocolBuffers.Basic     as Proto
+import qualified Text.ProtocolBuffers.Basic                      as Proto
 
-import           Flowbox.Prelude                  
-import qualified Flowbox.System.UniPath         as UniPath
-import           Flowbox.System.UniPath           (UniPath)
-import           Flowbox.Tools.Conversion.Proto   
+import           Flowbox.Prelude                                   
+import qualified Flowbox.System.UniPath                          as UniPath
+import           Flowbox.System.UniPath                            (UniPath)
+import           Flowbox.Tools.Conversion.Proto                    
+import           Flowbox.Tools.Serialize.Proto.Conversion.String   ()
 
 
-instance Convert UniPath Proto.Utf8 where
-    encode = Proto.uFromString . UniPath.toUnixString
-    decode = return . UniPath.fromUnixString . Proto.uToString
+
+instance ConvertPure UniPath Proto.Utf8 where
+    encodeP = encodeP . UniPath.toUnixString
+    decodeP = UniPath.fromUnixString . decodeP
 

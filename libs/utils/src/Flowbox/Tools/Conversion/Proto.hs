@@ -5,20 +5,23 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FunctionalDependencies, MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-} 
+{-# LANGUAGE MultiParamTypeClasses  #-}
 
 module Flowbox.Tools.Conversion.Proto (
-    module Flowbox.Tools.Conversion.Common,
-    Convert(..)
+    Convert(..),
+    ConvertPure(..),
 ) where
 
-import           Flowbox.Prelude                   
-import           Flowbox.Tools.Conversion.Common   
+import           Flowbox.Prelude   
 
 
 
-class Convert a b | a -> b, b -> a where
+class Convert a b | a -> b where
   encode :: a -> b
   decode :: b -> Either String a 
 
 
+class ConvertPure a b | a -> b where
+  encodeP :: a -> b
+  decodeP :: b -> a 

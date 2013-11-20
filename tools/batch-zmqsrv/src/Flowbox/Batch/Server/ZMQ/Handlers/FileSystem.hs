@@ -25,7 +25,7 @@ import           Flowbox.Batch.Batch                                   (Batch)
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Item   ()
 import           Flowbox.Control.Error                                 
 import           Flowbox.System.Log.Logger                             
-import           Flowbox.Tools.Conversion.Proto                        
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic        
 import qualified Generated.Proto.Batch.FileSystem.LS.Args            as LS
 import qualified Generated.Proto.Batch.FileSystem.LS.Result          as LS
 import qualified Generated.Proto.Batch.FileSystem.Stat.Args          as Stat
@@ -40,8 +40,6 @@ import qualified Generated.Proto.Batch.FileSystem.CP.Args            as CP
 import qualified Generated.Proto.Batch.FileSystem.CP.Result          as CP
 import qualified Generated.Proto.Batch.FileSystem.MV.Args            as MV
 import qualified Generated.Proto.Batch.FileSystem.MV.Result          as MV
-import qualified Flowbox.Tools.Serialize.Proto.Conversion.List       as Conv
-import           Flowbox.Tools.Serialize.Proto.Conversion.UniPath      ()
 
 
 
@@ -53,16 +51,15 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Handlers.FileSystem"
 ls :: IORef Batch -> LS.Args -> Script LS.Result
 ls _ (LS.Args tpath) = do
     scriptIO $ loggerIO info "called ls"
-    upath <- tryRight $ decode tpath
-    scriptIO $ loggerIO debug $ "path: " ++ (show upath)
+    let upath = decodeP tpath
     items <- scriptIO $ BatchFS.ls upath
-    return $ LS.Result $ Conv.encodeList items
+    return $ LS.Result $ encodeList items
 
 
 stat :: IORef Batch -> Stat.Args -> Script Stat.Result
 stat _ (Stat.Args tpath) = do
     scriptIO $ loggerIO info "called stat"
-    upath <- tryRight $ decode tpath
+    let upath = decodeP tpath
     scriptIO $ loggerIO debug $ "path: " ++ (show upath)
     item  <- scriptIO $ BatchFS.stat upath
     return $ Stat.Result $ Just $ encode item
@@ -71,7 +68,7 @@ stat _ (Stat.Args tpath) = do
 mkdir :: IORef Batch -> MkDir.Args -> Script MkDir.Result
 mkdir _ (MkDir.Args tpath) = do
     scriptIO $ loggerIO info "called mkdir"
-    upath <- tryRight $ decode tpath
+    let upath = decodeP tpath
     scriptIO $ loggerIO debug $ "path: " ++ (show upath)
     scriptIO $ BatchFS.mkdir upath
     return $ MkDir.Result
@@ -80,7 +77,7 @@ mkdir _ (MkDir.Args tpath) = do
 touch :: IORef Batch -> Touch.Args -> Script Touch.Result
 touch _ (Touch.Args tpath) = do
     scriptIO $ loggerIO info "called touch"
-    upath <- tryRight $ decode tpath
+    let upath = decodeP tpath
     scriptIO $ loggerIO debug $ "path: " ++ (show upath)
     scriptIO $ BatchFS.touch upath
     return $ Touch.Result
@@ -89,7 +86,7 @@ touch _ (Touch.Args tpath) = do
 rm :: IORef Batch -> RM.Args -> Script RM.Result
 rm _ (RM.Args tpath) = do
     scriptIO $ loggerIO info "called rm"
-    upath <- tryRight $ decode tpath
+    let upath = decodeP tpath
     scriptIO $ loggerIO debug $ "path: " ++ (show upath)
     scriptIO $ BatchFS.rm upath
     return $ RM.Result
@@ -98,8 +95,8 @@ rm _ (RM.Args tpath) = do
 cp :: IORef Batch -> CP.Args -> Script CP.Result
 cp _ (CP.Args tsrc tdst) = do
     scriptIO $ loggerIO info "called cp"
-    usrc <- tryRight $ decode tsrc
-    udst <- tryRight $ decode tdst
+    let usrc = decodeP tsrc
+    let udst = decodeP tdst
     scriptIO $ loggerIO debug $ "src: " ++ (show usrc) ++ " dst: " ++ (show udst)
     scriptIO $ BatchFS.cp usrc udst
     return $ CP.Result
@@ -108,8 +105,8 @@ cp _ (CP.Args tsrc tdst) = do
 mv :: IORef Batch -> MV.Args -> Script MV.Result
 mv _ (MV.Args tsrc tdst) = do
     scriptIO $ loggerIO info "called mv"
-    usrc <- tryRight $ decode tsrc
-    udst <- tryRight $ decode tdst
+    let usrc = decodeP tsrc
+    let udst = decodeP tdst
     scriptIO $ loggerIO debug $ "src: " ++ (show usrc) ++ " dst: " ++ (show udst)
     scriptIO $ BatchFS.mv usrc udst
     return $ MV.Result

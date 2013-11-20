@@ -26,8 +26,7 @@ import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project   ()
 import           Flowbox.Control.Error                                    
 import qualified Flowbox.Luna.Lib.LibManager                            as LibManager
 import           Flowbox.System.Log.Logger                                
-import           Flowbox.Tools.Conversion.Proto                           
-import           Flowbox.Tools.Serialize.Proto.Conversion.UniPath         ()
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic           
 import qualified Generated.Proto.Batch.Project.Projects.Args            as Projects
 import qualified Generated.Proto.Batch.Project.Projects.Result          as Projects
 import qualified Generated.Proto.Batch.Project.ProjectByID.Args         as ProjectByID
@@ -64,7 +63,7 @@ projects batchHandler _ = do
 projectByID :: IORef Batch -> ProjectByID.Args -> Script ProjectByID.Result
 projectByID batchHandler (ProjectByID.Args tprojectID) = do
     scriptIO $ loggerIO info "called projectByID"
-    let projectID = i32toi tprojectID
+    let projectID = decodeP tprojectID
     scriptIO $ loggerIO debug $ "projectID: " ++ (show projectID)
     batch     <- tryReadIORef batchHandler
     project   <- tryRight $ BatchP.projectByID projectID batch
@@ -85,7 +84,7 @@ createProject batchHandler (CreateProject.Args tproject) = do
 openProject :: IORef Batch -> OpenProject.Args -> Script OpenProject.Result
 openProject batchHandler (OpenProject.Args tpath) = do
     scriptIO $ loggerIO info "called openProject"
-    upath <- tryRight $ decode tpath
+    let upath = decodeP tpath
     batch <- tryReadIORef batchHandler
     scriptIO $ loggerIO debug $ "path: " ++ (show upath)
     (newBatch, (projectID, aproject)) <- scriptIO $ BatchP.openProject upath batch
@@ -97,7 +96,7 @@ updateProject :: IORef Batch -> UpdateProject.Args -> Script UpdateProject.Resul
 updateProject batchHandler  (UpdateProject.Args tproject) = do
     scriptIO $ loggerIO info "called updateProject"
     project <- tryRight (decode (tproject, LibManager.empty) :: Either String (Project.ID, Project))
-    batch    <- tryReadIORef batchHandler
+    batch   <- tryReadIORef batchHandler
     scriptIO $ loggerIO debug $ "project: " ++ (show project)
     newBatch <- tryRight $  BatchP.updateProject project batch
     tryWriteIORef batchHandler newBatch
@@ -107,8 +106,8 @@ updateProject batchHandler  (UpdateProject.Args tproject) = do
 closeProject :: IORef Batch -> CloseProject.Args -> Script CloseProject.Result
 closeProject batchHandler (CloseProject.Args tprojectID) = do
     scriptIO $ loggerIO info "called closeProject"
-    let projectID = i32toi tprojectID
-    batch     <- tryReadIORef batchHandler
+    let projectID = decodeP tprojectID
+    batch <- tryReadIORef batchHandler
     scriptIO $ loggerIO debug $ "projectID: " ++ (show projectID)
     let newBatch = BatchP.closeProject projectID batch
     tryWriteIORef batchHandler newBatch
@@ -118,8 +117,8 @@ closeProject batchHandler (CloseProject.Args tprojectID) = do
 storeProject :: IORef Batch -> StoreProject.Args -> Script StoreProject.Result
 storeProject batchHandler (StoreProject.Args tprojectID) = do
     scriptIO $ loggerIO info "called storeProject"
-    let projectID = i32toi tprojectID
-    batch     <- tryReadIORef batchHandler
+    let projectID = decodeP tprojectID
+    batch <- tryReadIORef batchHandler
     scriptIO $ loggerIO debug $ "projectID: " ++ (show projectID)
     scriptIO $ BatchP.storeProject projectID batch
     return StoreProject.Result

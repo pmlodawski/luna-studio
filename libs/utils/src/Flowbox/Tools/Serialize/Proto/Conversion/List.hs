@@ -15,9 +15,18 @@ import           Flowbox.Prelude
 import           Flowbox.Tools.Conversion.Proto   
 
 
+
 encodeList :: Convert a b => [a] -> Seq b
 encodeList = Sequence.fromList . map encode
 
 
 decodeList :: Convert a b => Seq b -> Either String [a]
 decodeList = sequence . map decode . Foldable.toList
+
+
+encodeListP :: ConvertPure a b => [a] -> Seq b
+encodeListP = Sequence.fromList . map encodeP
+
+
+decodeListP :: ConvertPure a b => Seq b -> [a]
+decodeListP = map decodeP . Foldable.toList

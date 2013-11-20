@@ -10,14 +10,13 @@
 
 module Flowbox.Batch.Tools.Serialize.Proto.Conversion.Item where
 
-import           Flowbox.Prelude                                    
-import qualified Flowbox.Batch.FileSystem.Item                    as Item
-import           Flowbox.Batch.FileSystem.Item                      (Item(..))
-import           Flowbox.Control.Error                              
-import           Flowbox.Tools.Conversion.Proto                     
-import           Flowbox.Tools.Serialize.Proto.Conversion.UniPath   ()
-import qualified Generated.Proto.Filesystem.Item                  as Gen
-import qualified Generated.Proto.Filesystem.Item.Type             as Gen
+import           Flowbox.Prelude                                  
+import qualified Flowbox.Batch.FileSystem.Item                  as Item
+import           Flowbox.Batch.FileSystem.Item                    (Item(..))
+import           Flowbox.Control.Error                            
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic   
+import qualified Generated.Proto.Filesystem.Item                as Gen
+import qualified Generated.Proto.Filesystem.Item.Type           as Gen
 
 
 
@@ -28,14 +27,14 @@ instance Convert Item Gen.Item where
             Directory {} -> Gen.Directory
             File      {} -> Gen.File
             Other     {} -> Gen.Other
-        tpath = encode $ Item.path item
-        tsize = itoi32 $ Item.size item
+        tpath = encodeP $ Item.path item
+        tsize = encodeP $ Item.size item
     decode (Gen.Item mtitemType mtpath mtsize) = do 
         titemType <- mtitemType <?> "Failed to decode Item: 'itemType' field is missing"
         tpath     <- mtpath     <?> "Failed to decode Item: 'path' field is missing"
         tsize     <- mtsize     <?> "Failed to decode Item: 'size' field is missing"
-        apath     <- decode tpath
-        let asize = i32toi tsize
+        let apath = decodeP tpath
+            asize = decodeP tsize
         case titemType of 
             Gen.Directory -> return $ Directory apath asize
             Gen.File      -> return $ File      apath asize
