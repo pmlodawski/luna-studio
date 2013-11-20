@@ -24,10 +24,10 @@ import qualified Generated.Proto.Lit.Lit.Cls                    as Gen
 
 instance Convert Lit Gen.Lit where
     encode lit = case lit of 
-        Lit.Char    i char -> Gen.Lit Gen.Char    (Just $ encodeP i) (Just $ encodeP [char])
-        Lit.String  i str  -> Gen.Lit Gen.String  (Just $ encodeP i) (Just $ encodeP str)
-        Lit.Integer i str  -> Gen.Lit Gen.Integer (Just $ encodeP i) (Just $ encodeP str)
-        Lit.Float   i str  -> Gen.Lit Gen.Float   (Just $ encodeP i) (Just $ encodeP str)
+        Lit.Char    i char -> Gen.Lit Gen.Char    (encodePJ i) (encodePJ [char])
+        Lit.String  i str  -> Gen.Lit Gen.String  (encodePJ i) (encodePJ str)
+        Lit.Integer i str  -> Gen.Lit Gen.Integer (encodePJ i) (encodePJ str)
+        Lit.Float   i str  -> Gen.Lit Gen.Float   (encodePJ i) (encodePJ str)
     decode (Gen.Lit dtype mtid mtstr) = do 
         tid  <- mtid  <?> "Failed to decode Lit: 'id' field is missing"
         tstr <- mtstr <?> "Failed to decode Lit: 'str' field is missing"

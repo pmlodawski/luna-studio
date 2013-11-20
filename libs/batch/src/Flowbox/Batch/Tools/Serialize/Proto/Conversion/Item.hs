@@ -21,14 +21,13 @@ import qualified Generated.Proto.Filesystem.Item.Type           as Gen
 
 
 instance Convert Item Gen.Item where
-    encode item = Gen.Item (Just titemType) (Just tpath) (Just tsize) where 
-        titemType :: Gen.Type
-        titemType = case item of
+    encode item = Gen.Item titemType tpath tsize where 
+        titemType = Just $ case item of
             Directory {} -> Gen.Directory
             File      {} -> Gen.File
             Other     {} -> Gen.Other
-        tpath = encodeP $ Item.path item
-        tsize = encodeP $ Item.size item
+        tpath = encodePJ $ Item.path item
+        tsize = encodePJ $ Item.size item
     decode (Gen.Item mtitemType mtpath mtsize) = do 
         titemType <- mtitemType <?> "Failed to decode Item: 'itemType' field is missing"
         tpath     <- mtpath     <?> "Failed to decode Item: 'path' field is missing"

@@ -23,24 +23,24 @@ import qualified Generated.Proto.Project.Project                          as Gen
 
 
 instance Convert (Project.ID, Project) (Gen.Project, LibManager) where
-    encode (projectID, project) = (tproject, alibs) where
-        Project aname apath alibPaths alibs aattrs = project
-        tname      = encodeP aname
-        tpath      = encodeP apath
-        tlibPaths  = encodeListP alibPaths
-        tattrs     = encode  aattrs
-        tprojectID = encodeP projectID
-        tproject   = Gen.Project (Just tname) (Just tpath) tlibPaths (Just tattrs) (Just tprojectID)
-    decode (Gen.Project mtname mtpath tlibPaths mtattrs mtprojectID, alibs) = do
+    encode (projectID, project) = (tproject, libs) where
+        Project name path libPaths libs attrs = project
+        tname      = encodePJ name
+        tpath      = encodePJ path
+        tlibPaths  = encodeListP libPaths
+        tattrs     = encodePJ attrs
+        tprojectID = encodePJ projectID
+        tproject   = Gen.Project tname tpath tlibPaths tattrs tprojectID
+    decode (Gen.Project mtname mtpath tlibPaths mtattrs mtprojectID, libs) = do
         tname       <- mtname      <?> "Failed to decode Project: 'name' field is missing"
         tpath       <- mtpath      <?> "Failed to decode Project: 'path' field is missing"
         tattrs      <- mtattrs     <?> "Failed to decode Project: 'attrs' field is missing"
         tprojectID  <- mtprojectID <?> "Failed to decode Project: 'projectID' field is missing"
-        aattrs      <- decode tattrs
-        let aname     = decodeP tname
-            apath     = decodeP tpath
-            alibPaths = decodeListP tlibPaths
+        let name      = decodeP tname
+            path      = decodeP tpath
+            libPaths  = decodeListP tlibPaths
+            attrs     = decodeP tattrs
             projectID = decodeP tprojectID
-            project   = Project aname apath alibPaths alibs aattrs
+            project   = Project name path libPaths libs attrs
         return (projectID, project)
 

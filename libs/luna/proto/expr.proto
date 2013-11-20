@@ -65,7 +65,7 @@ message App {
 }
 
 message AppCons_ {
-    extend Expr { optional App ext = 103; }
+    extend Expr { optional AppCons_ ext = 103; }
     optional int32 id   = 1;
     repeated Expr  args = 2;
 }

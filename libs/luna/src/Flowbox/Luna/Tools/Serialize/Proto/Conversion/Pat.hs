@@ -42,13 +42,13 @@ genPat cls key ext = Extensions.putExt key (Just ext)
 
 instance Convert Pat Gen.Pat where
     encode p = case p of 
-        Pat.Var   i name     -> genPat GenCls.Var   GenVar.ext   $ GenVar.Var     (Just $ encodeP i) (Just $ encodeP name)
-        Pat.Lit   i value    -> genPat GenCls.Lit   GenLit.ext   $ GenLit.Lit     (Just $ encodeP i) (Just $ encode value)
-        Pat.Tuple i items    -> genPat GenCls.Tuple GenTuple.ext $ GenTuple.Tuple (Just $ encodeP i) (encodeList items)
-        Pat.Con   i name     -> genPat GenCls.Con   GenCon.ext   $ GenCon.Con     (Just $ encodeP i) (Just $ encodeP name)
-        Pat.App   i src args -> genPat GenCls.App   GenApp.ext   $ GenApp.App     (Just $ encodeP i) (Just $ encode src) (encodeList args)
-        Pat.Typed i pat cls  -> genPat GenCls.Typed GenTyped.ext $ GenTyped.Typed (Just $ encodeP i) (Just $ encode pat) (Just $ encode cls)
-        Pat.Wildcard i       -> genPat GenCls.Wildcard GenWildcard.ext $ GenWildcard.Wildcard (Just $ encodeP i)
+        Pat.Var   i name     -> genPat GenCls.Var   GenVar.ext   $ GenVar.Var     (encodePJ i) (encodePJ name)
+        Pat.Lit   i value    -> genPat GenCls.Lit   GenLit.ext   $ GenLit.Lit     (encodePJ i) (encodeJ value)
+        Pat.Tuple i items    -> genPat GenCls.Tuple GenTuple.ext $ GenTuple.Tuple (encodePJ i) (encodeList items)
+        Pat.Con   i name     -> genPat GenCls.Con   GenCon.ext   $ GenCon.Con     (encodePJ i) (encodePJ name)
+        Pat.App   i src args -> genPat GenCls.App   GenApp.ext   $ GenApp.App     (encodePJ i) (encodeJ src) (encodeList args)
+        Pat.Typed i pat cls  -> genPat GenCls.Typed GenTyped.ext $ GenTyped.Typed (encodePJ i) (encodeJ pat) (encodeJ cls)
+        Pat.Wildcard i       -> genPat GenCls.Wildcard GenWildcard.ext $ GenWildcard.Wildcard (encodePJ i)
     decode p@(Gen.Pat cls _) = case cls of 
        GenCls.Var      -> do ext <- Extensions.getExt GenVar.ext p
                              (GenVar.Var mtid mtname) <- ext <?> "Failed to decode Pat.Var: extension is missing"
