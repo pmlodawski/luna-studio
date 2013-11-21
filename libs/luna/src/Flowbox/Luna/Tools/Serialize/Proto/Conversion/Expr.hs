@@ -81,21 +81,38 @@ instance Convert Expr Gen.Expr where
         Expr.Import     i path target rename 
                                    -> genExpr GenCls.Import GenImport.ext $ GenImport.Import 
                                       (encodePJ i) (encodeListP path) (encodeJ target) (fmap encodeP rename)
-
---           | Infix       { id :: ID, name      :: String   , src       :: Expr   , dst       :: Expr                        }
---           | List        { id :: ID, items     :: [Expr]                                                                    }
---           | Lit         { id :: ID, lvalue    :: Lit                                                                       }
---           | Tuple       { id :: ID, items     :: [Expr]                                                                    }
---           | Typed       { id :: ID, cls       :: Type     , expr      :: Expr                                              }
---           | Var         { id :: ID, name      :: String                                                                    }
---           | Wildcard    { id :: ID                                                                                         }
---           | RangeFromTo { id :: ID, start     :: Expr     , end       :: Expr                                              }
---           | RangeFrom   { id :: ID, start     :: Expr                                                                      }
---           | Field       { id :: ID, name      :: String   , cls       :: Type   , value     :: Maybe Expr                  }
---           | Arg         { id :: ID, pat       :: Pat      , value     :: Maybe Expr                                        }
---           | Native      { id :: ID, segments  :: [Expr]                                                                    }
---           | NativeCode  { id :: ID, code      :: String }
---           | NativeVar   { id :: ID, name      :: String }
+        Expr.Infix      i name src dst 
+                                   -> genExpr GenCls.Infix GenInfix.ext $ GenInfix.Infix 
+                                      (encodePJ i) (encodePJ name) (encodeJ src) (encodeJ dst)
+        Expr.List       i items    -> genExpr GenCls.List GenList.ext $ GenList.List 
+                                      (encodePJ i) (encodeList items)
+        Expr.Lit        i lvalue   -> genExpr GenCls.Lit GenLit.ext $ GenLit.Lit 
+                                      (encodePJ i) (encodeJ lvalue)
+        Expr.Tuple      i items    -> genExpr GenCls.Tuple GenTuple.ext $ GenTuple.Tuple 
+                                      (encodePJ i) (encodeList items)
+        Expr.Typed      i cls expr -> genExpr GenCls.Typed GenTyped.ext $ GenTyped.Typed 
+                                      (encodePJ i) (encodeJ cls) (encodeJ expr)
+        Expr.Var        i name     -> genExpr GenCls.Var GenVar.ext $ GenVar.Var 
+                                      (encodePJ i) (encodePJ name)
+        Expr.Wildcard   i          -> genExpr GenCls.Wildcard GenWildcard.ext $ GenWildcard.Wildcard 
+                                      (encodePJ i)
+        Expr.RangeFromTo i start end 
+                                   -> genExpr GenCls.RangeFromTo GenRangeFromTo.ext $ GenRangeFromTo.RangeFromTo 
+                                      (encodePJ i) (encodeJ start) (encodeJ end)
+        Expr.RangeFrom  i start    -> genExpr GenCls.RangeFrom GenRangeFrom.ext $ GenRangeFrom.RangeFrom 
+                                      (encodePJ i) (encodeJ start)
+        Expr.Field      i name cls value 
+                                   -> genExpr GenCls.Field GenField.ext $ GenField.Field 
+                                      (encodePJ i) (encodePJ name) (encodeJ cls) (fmap encode value)
+        Expr.Arg        i pat value
+                                   -> genExpr GenCls.Arg GenArg.ext $ GenArg.Arg 
+                                      (encodePJ i) (encodeJ pat) (fmap encode value)
+        Expr.Native     i segments -> genExpr GenCls.Native GenNative.ext $ GenNative.Native 
+                                      (encodePJ i) (encodeList segments)
+        Expr.NativeCode i code     -> genExpr GenCls.NativeCode GenNativeCode.ext $ GenNativeCode.NativeCode 
+                                      (encodePJ i) (encodePJ code)
+        Expr.NativeVar  i name     -> genExpr GenCls.NativeVar GenNativeVar.ext $ GenNativeVar.NativeVar 
+                                      (encodePJ i) (encodePJ name)
 
     decode t@(Gen.Expr cls _) = case cls of 
         GenCls.NOP -> do 
@@ -202,23 +219,50 @@ instance Convert Expr Gen.Expr where
             (GenWildcard.Wildcard mtid) <- ext <?> "Failed to decode Expr.Wildcard: extension is missing"
             tid <- mtid <?> "Failed to decode Expr.Wildcard: 'id' field is missing"
             pure $ Expr.Wildcard (decodeP tid)
-
+        GenCls.RangeFromTo -> do 
+            ext <- Extensions.getExt GenRangeFromTo.ext t
+            (GenRangeFromTo.RangeFromTo mtid mtstart mtend) <- ext <?> "Failed to decode Expr.RangeFromTo: extension is missing"
+            tid    <- mtid    <?> "Failed to decode Expr.RangeFromTo: 'id' field is missing"
+            tstart <- mtstart <?> "Failed to decode Expr.RangeFromTo: 'start' field is missing"
+            tend   <- mtend   <?> "Failed to decode Expr.RangeFromTo: 'end' field is missing"
+            Expr.RangeFromTo (decodeP tid) <$> decode tstart <*> decode tend
+        GenCls.RangeFrom -> do 
+            ext <- Extensions.getExt GenRangeFrom.ext t
+            (GenRangeFrom.RangeFrom mtid mtstart) <- ext <?> "Failed to decode Expr.RangeFrom: extension is missing"
+            tid    <- mtid    <?> "Failed to decode Expr.RangeFrom: 'id' field is missing"
+            tstart <- mtstart <?> "Failed to decode Expr.RangeFrom: 'start' field is missing"
+            Expr.RangeFrom (decodeP tid) <$> decode tstart
         GenCls.Field -> do 
             ext <- Extensions.getExt GenField.ext t
             (GenField.Field mtid mtname mtcls mtvalue) <- ext <?> "Failed to decode Expr.Field: extension is missing"
             tid   <- mtid   <?> "Failed to decode Expr.Field: 'id' field is missing"
             tname <- mtname <?> "Failed to decode Expr.Field: 'name' field is missing"
             tcls  <- mtcls  <?> "Failed to decode Expr.Field: 'cls' field is missing"
-            Expr.Field (decodeP tid) (decodeP tname) <$> decode tcls
-                                                     <*> case mtvalue of 
-                                                             Nothing     -> pure Nothing
-                                                             Just tvalue -> Just <$> decode tvalue
-
-
---           | RangeFromTo { id :: ID, start     :: Expr     , end       :: Expr                                              }
---           | RangeFrom   { id :: ID, start     :: Expr                                                                      }
---           | Field       { id :: ID, name      :: String   , cls       :: Type   , value     :: Maybe Expr                  }
---           | Arg         { id :: ID, pat       :: Pat      , value     :: Maybe Expr                                        }
---           | Native      { id :: ID, segments  :: [Expr]                                                                    }
---           | NativeCode  { id :: ID, code      :: String }
---           | NativeVar   { id :: ID, name      :: String }
+            Expr.Field (decodeP tid) (decodeP tname) <$> decode tcls  <*> case mtvalue of 
+                                                            Nothing     -> pure Nothing
+                                                            Just tvalue -> Just <$> decode tvalue
+        GenCls.Arg -> do 
+            ext <- Extensions.getExt GenArg.ext t
+            (GenArg.Arg mtid mtpat mtvalue) <- ext <?> "Failed to decode Expr.Arg: extension is missing"
+            tid  <- mtid  <?> "Failed to decode Expr.Arg: 'id' field is missing"
+            tpat <- mtpat <?> "Failed to decode Expr.Arg: 'pat' field is missing"
+            Expr.Arg (decodeP tid) <$> (decode tpat) <*> case mtvalue of 
+                                                            Nothing     -> pure Nothing
+                                                            Just tvalue -> Just <$> decode tvalue
+        GenCls.Native -> do 
+            ext <- Extensions.getExt GenNative.ext t
+            (GenNative.Native mtid tsegments) <- ext <?> "Failed to decode Expr.Native: extension is missing"
+            tid <- mtid <?> "Failed to decode Expr.Native: 'id' field is missing"
+            Expr.Native (decodeP tid) <$> decodeList tsegments
+        GenCls.NativeCode -> do 
+            ext <- Extensions.getExt GenNativeCode.ext t
+            (GenNativeCode.NativeCode mtid mtcode) <- ext <?> "Failed to decode Expr.NativeCode: extension is missing"
+            tid   <- mtid   <?> "Failed to decode Expr.NativeCode: 'id' field is missing"
+            tcode <- mtcode <?> "Failed to decode Expr.NativeCode: 'code' field is missing"
+            pure $ Expr.NativeCode (decodeP tid) (decodeP tcode)
+        GenCls.NativeVar -> do 
+            ext <- Extensions.getExt GenNativeVar.ext t
+            (GenNativeVar.NativeVar mtid mtname) <- ext <?> "Failed to decode Expr.NativeVar: extension is missing"
+            tid   <- mtid   <?> "Failed to decode Expr.NativeVar: 'id' field is missing"
+            tname <- mtname <?> "Failed to decode Expr.NativeVar: 'name' field is missing"
+            pure $ Expr.NativeVar (decodeP tid) (decodeP tname)

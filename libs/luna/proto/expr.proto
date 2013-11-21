@@ -203,7 +203,7 @@ message NativeCode {
 }
 
 message NativeVar {
-    extend Expr { optional NativeCode ext = 123; }
+    extend Expr { optional NativeVar ext = 123; }
     optional int32 id    = 1;
     optional string name = 2;
 }
