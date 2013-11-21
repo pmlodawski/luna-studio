@@ -50,11 +50,6 @@ import qualified Generated.Proto.Expr.Wildcard                     as GenWildcar
 
 
 
-genExpr :: GenCls.Cls -> Extensions.Key Maybe Gen.Expr v -> v -> Gen.Expr
-genExpr cls key ext = Extensions.putExt key (Just ext)
-                    $ Gen.Expr cls $ Extensions.ExtField Map.empty
-
-
 instance Convert Expr Gen.Expr where
     encode t = case t of 
         Expr.NOP        i          -> genExpr GenCls.NOP GenNOP.ext $ GenNOP.NOP 
@@ -113,28 +108,32 @@ instance Convert Expr Gen.Expr where
                                       (encodePJ i) (encodePJ code)
         Expr.NativeVar  i name     -> genExpr GenCls.NativeVar GenNativeVar.ext $ GenNativeVar.NativeVar 
                                       (encodePJ i) (encodePJ name)
+        where
+            genExpr :: GenCls.Cls -> Extensions.Key Maybe Gen.Expr v -> v -> Gen.Expr
+            genExpr cls key ext = Extensions.putExt key (Just ext)
+                                $ Gen.Expr cls $ Extensions.ExtField Map.empty
 
     decode t@(Gen.Expr cls _) = case cls of 
         GenCls.NOP -> do 
-            ext <- Extensions.getExt GenNOP.ext t
+            ext <- getExt GenNOP.ext
             (GenNOP.NOP mtid) <- ext <?> "Failed to decode Expr.NOP: extension is missing"
             tid <- mtid <?> "Failed to decode Expr.NOP: 'id' field is missing"
             pure $ Expr.NOP (decodeP tid)
         GenCls.Accessor -> do 
-            ext <- Extensions.getExt GenAccessor.ext t
+            ext <- getExt GenAccessor.ext
             (GenAccessor.Accessor mtid mtname mtdst) <- ext <?> "Failed to decode Expr.Accessor: extension is missing"
             tid   <- mtid   <?> "Failed to decode Expr.Accessor: 'id' field is missing"
             tname <- mtname <?> "Failed to decode Expr.Accessor: 'name' field is missing"
             tdst  <- mtdst  <?> "Failed to decode Expr.Accessor: 'dst' field is missing"
             Expr.Accessor (decodeP tid) (decodeP tname) <$> (decode tdst)
         GenCls.App -> do 
-            ext <- Extensions.getExt GenApp.ext t
+            ext <- getExt GenApp.ext
             (GenApp.App mtid mtsrc targs) <- ext <?> "Failed to decode Expr.App: extension is missing"
             tid  <- mtid  <?> "Failed to decode Expr.App: 'id' field is missing"
             tsrc <- mtsrc <?> "Failed to decode Expr.App: 'src' field is missing"
             Expr.App (decodeP tid) <$> decode tsrc <*> decodeList targs        
         GenCls.AppCons_ -> do 
-            ext <- Extensions.getExt GenAppCons_.ext t
+            ext <- getExt GenAppCons_.ext
             (GenAppCons_.AppCons_ mtid targs) <- ext <?> "Failed to decode Expr.AppCons_: extension is missing"
             tid <- mtid  <?> "Failed to decode Expr.AppCons_: 'id' field is missing"
             Expr.AppCons_ (decodeP tid) <$> decodeList targs
@@ -146,39 +145,39 @@ instance Convert Expr Gen.Expr where
             tdst <- mtdst <?> "Failed to decode Expr.Assignment: 'dst' field is missing"
             Expr.Assignment (decodeP tid) <$> decode tpat <*> decode tdst
         GenCls.Class -> do 
-            ext <- Extensions.getExt GenClass.ext t
+            ext <- getExt GenClass.ext
             (GenClass.Class mtid mtcls tclasses tfields tmethods) <- ext <?> "Failed to decode Expr.Class: extension is missing"
             tid  <- mtid  <?> "Failed to decode Expr.Class: 'id' field is missing"
             tcls <- mtcls <?> "Failed to decode Expr.Class: 'cls' field is missing"
             Expr.Class (decodeP tid) <$> decode tcls <*> decodeList tclasses <*> decodeList tfields <*> decodeList tmethods
         GenCls.Con -> do 
-            ext <- Extensions.getExt GenCon.ext t
+            ext <- getExt GenCon.ext
             (GenCon.Con mtid mtname) <- ext <?> "Failed to decode Expr.Con: extension is missing"
             tid   <- mtid  <?> "Failed to decode Expr.Con: 'id' field is missing"
             tname <- mtname <?> "Failed to decode Expr.Con: 'name' field is missing"
             pure $ Expr.Con (decodeP tid) (decodeP tname)
         GenCls.Function -> do 
-            ext <- Extensions.getExt GenFunction.ext t
+            ext <- getExt GenFunction.ext
             (GenFunction.Function mtid tpath mtname tinputs mtoutput tbody) <- ext <?> "Failed to decode Expr.Function: extension is missing"
             tid     <- mtid     <?> "Failed to decode Expr.Function: 'id' field is missing"
             tname   <- mtname   <?> "Failed to decode Expr.Function: 'name' field is missing"
             toutput <- mtoutput <?> "Failed to decode Expr.Function: 'output' field is missing"
             Expr.Function (decodeP tid) (decodeListP tpath) (decodeP tname) <$> decodeList tinputs <*> decode toutput <*> decodeList tbody
         GenCls.Lambda -> do 
-            ext <- Extensions.getExt GenLambda.ext t
+            ext <- getExt GenLambda.ext
             (GenLambda.Lambda mtid tinputs mtoutput tbody) <- ext <?> "Failed to decode Expr.Lambda: extension is missing"
             tid     <- mtid     <?> "Failed to decode Expr.Lambda: 'id' field is missing"
             toutput <- mtoutput <?> "Failed to decode Expr.Lambda: 'output' field is missing"
             Expr.Lambda (decodeP tid) <$> decodeList tinputs <*> decode toutput <*> decodeList tbody
         GenCls.Import -> do 
-            ext <- Extensions.getExt GenImport.ext t
+            ext <- getExt GenImport.ext
             (GenImport.Import mtid tpath mttarget mtrename) <- ext <?> "Failed to decode Expr.Import: extension is missing"
             tid     <- mtid     <?> "Failed to decode Expr.Import: 'id' field is missing"
             ttarget <- mttarget <?> "Failed to decode Expr.Import: 'target' field is missing"
             Expr.Import (decodeP tid) (decodeListP tpath) <$> decode ttarget
                                                           <*> (pure $ fmap decodeP mtrename)
         GenCls.Infix -> do 
-            ext <- Extensions.getExt GenInfix.ext t
+            ext <- getExt GenInfix.ext
             (GenInfix.Infix mtid mtname mtsrc mtdst) <- ext <?> "Failed to decode Expr.Infix: extension is missing"
             tid   <- mtid   <?> "Failed to decode Expr.Infix: 'id' field is missing"
             tname <- mtname <?> "Failed to decode Expr.Infix: 'name' field is missing"
@@ -186,54 +185,54 @@ instance Convert Expr Gen.Expr where
             tdst  <- mtdst  <?> "Failed to decode Expr.Infix: 'dst' field is missing"
             Expr.Infix (decodeP tid) (decodeP tname) <$> decode tsrc <*> decode tdst
         GenCls.List -> do 
-            ext <- Extensions.getExt GenList.ext t
+            ext <- getExt GenList.ext
             (GenList.List mtid titems) <- ext <?> "Failed to decode Expr.List: extension is missing"
             tid <- mtid   <?> "Failed to decode Expr.List: 'id' field is missing"
             Expr.List (decodeP tid) <$> decodeList titems
         GenCls.Lit -> do 
-            ext <- Extensions.getExt GenLit.ext t
+            ext <- getExt GenLit.ext
             (GenLit.Lit mtid mtlit) <- ext <?> "Failed to decode Expr.Lit: extension is missing"
             tid  <- mtid  <?> "Failed to decode Expr.Lit: 'id' field is missing"
             tlit <- mtlit <?> "Failed to decode Expr.Lit: 'lit' field is missing"
             Expr.Lit (decodeP tid) <$> decode tlit
         GenCls.Tuple -> do 
-            ext <- Extensions.getExt GenTuple.ext t
+            ext <- getExt GenTuple.ext
             (GenTuple.Tuple mtid titems) <- ext <?> "Failed to decode Expr.Tuple: extension is missing"
             tid <- mtid <?> "Failed to decode Expr.Tuple: 'id' field is missing"
             Expr.Tuple (decodeP tid) <$> decodeList titems
         GenCls.Typed -> do 
-            ext <- Extensions.getExt GenTyped.ext t
+            ext <- getExt GenTyped.ext
             (GenTyped.Typed mtid mtcls mtexpr) <- ext <?> "Failed to decode Expr.Typed: extension is missing"
             tid   <- mtid   <?> "Failed to decode Expr.Typed: 'id' field is missing"
             tcls  <- mtcls  <?> "Failed to decode Expr.Typed: 'cls' field is missing"
             texpr <- mtexpr <?> "Failed to decode Expr.Typed: 'expr' field is missing"
             Expr.Typed (decodeP tid) <$> decode tcls <*> decode texpr
         GenCls.Var -> do 
-            ext <- Extensions.getExt GenVar.ext t
+            ext <- getExt GenVar.ext
             (GenVar.Var mtid mtname) <- ext <?> "Failed to decode Expr.Var: extension is missing"
             tid   <- mtid   <?> "Failed to decode Expr.Var: 'id' field is missing"
             tname <- mtname <?> "Failed to decode Expr.Var: 'name' field is missing"
             pure $ Expr.Var (decodeP tid) (decodeP tname)
         GenCls.Wildcard -> do 
-            ext <- Extensions.getExt GenWildcard.ext t
+            ext <- getExt GenWildcard.ext
             (GenWildcard.Wildcard mtid) <- ext <?> "Failed to decode Expr.Wildcard: extension is missing"
             tid <- mtid <?> "Failed to decode Expr.Wildcard: 'id' field is missing"
             pure $ Expr.Wildcard (decodeP tid)
         GenCls.RangeFromTo -> do 
-            ext <- Extensions.getExt GenRangeFromTo.ext t
+            ext <- getExt GenRangeFromTo.ext
             (GenRangeFromTo.RangeFromTo mtid mtstart mtend) <- ext <?> "Failed to decode Expr.RangeFromTo: extension is missing"
             tid    <- mtid    <?> "Failed to decode Expr.RangeFromTo: 'id' field is missing"
             tstart <- mtstart <?> "Failed to decode Expr.RangeFromTo: 'start' field is missing"
             tend   <- mtend   <?> "Failed to decode Expr.RangeFromTo: 'end' field is missing"
             Expr.RangeFromTo (decodeP tid) <$> decode tstart <*> decode tend
         GenCls.RangeFrom -> do 
-            ext <- Extensions.getExt GenRangeFrom.ext t
+            ext <- getExt GenRangeFrom.ext
             (GenRangeFrom.RangeFrom mtid mtstart) <- ext <?> "Failed to decode Expr.RangeFrom: extension is missing"
             tid    <- mtid    <?> "Failed to decode Expr.RangeFrom: 'id' field is missing"
             tstart <- mtstart <?> "Failed to decode Expr.RangeFrom: 'start' field is missing"
             Expr.RangeFrom (decodeP tid) <$> decode tstart
         GenCls.Field -> do 
-            ext <- Extensions.getExt GenField.ext t
+            ext <- getExt GenField.ext
             (GenField.Field mtid mtname mtcls mtvalue) <- ext <?> "Failed to decode Expr.Field: extension is missing"
             tid   <- mtid   <?> "Failed to decode Expr.Field: 'id' field is missing"
             tname <- mtname <?> "Failed to decode Expr.Field: 'name' field is missing"
@@ -242,7 +241,7 @@ instance Convert Expr Gen.Expr where
                                                             Nothing     -> pure Nothing
                                                             Just tvalue -> Just <$> decode tvalue
         GenCls.Arg -> do 
-            ext <- Extensions.getExt GenArg.ext t
+            ext <- getExt GenArg.ext
             (GenArg.Arg mtid mtpat mtvalue) <- ext <?> "Failed to decode Expr.Arg: extension is missing"
             tid  <- mtid  <?> "Failed to decode Expr.Arg: 'id' field is missing"
             tpat <- mtpat <?> "Failed to decode Expr.Arg: 'pat' field is missing"
@@ -250,19 +249,21 @@ instance Convert Expr Gen.Expr where
                                                             Nothing     -> pure Nothing
                                                             Just tvalue -> Just <$> decode tvalue
         GenCls.Native -> do 
-            ext <- Extensions.getExt GenNative.ext t
+            ext <- getExt GenNative.ext
             (GenNative.Native mtid tsegments) <- ext <?> "Failed to decode Expr.Native: extension is missing"
             tid <- mtid <?> "Failed to decode Expr.Native: 'id' field is missing"
             Expr.Native (decodeP tid) <$> decodeList tsegments
         GenCls.NativeCode -> do 
-            ext <- Extensions.getExt GenNativeCode.ext t
+            ext <- getExt GenNativeCode.ext
             (GenNativeCode.NativeCode mtid mtcode) <- ext <?> "Failed to decode Expr.NativeCode: extension is missing"
             tid   <- mtid   <?> "Failed to decode Expr.NativeCode: 'id' field is missing"
             tcode <- mtcode <?> "Failed to decode Expr.NativeCode: 'code' field is missing"
             pure $ Expr.NativeCode (decodeP tid) (decodeP tcode)
         GenCls.NativeVar -> do 
-            ext <- Extensions.getExt GenNativeVar.ext t
+            ext <- getExt GenNativeVar.ext
             (GenNativeVar.NativeVar mtid mtname) <- ext <?> "Failed to decode Expr.NativeVar: extension is missing"
             tid   <- mtid   <?> "Failed to decode Expr.NativeVar: 'id' field is missing"
             tname <- mtname <?> "Failed to decode Expr.NativeVar: 'name' field is missing"
             pure $ Expr.NativeVar (decodeP tid) (decodeP tname)
+        where 
+            getExt = flip Extensions.getExt t

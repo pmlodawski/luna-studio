@@ -33,11 +33,6 @@ import qualified Generated.Proto.Type.Var                       as GenVar
 
 
 
-genType :: GenCls.Cls -> Extensions.Key Maybe Gen.Type v -> v -> Gen.Type
-genType cls key ext = Extensions.putExt key (Just ext)
-                    $ Gen.Type cls $ Extensions.ExtField Map.empty
-
-
 instance Convert Type Gen.Type where
     encode t = case t of 
         Type.Unknown i               -> genType GenCls.Unknown GenUnknown.ext $ GenUnknown.Unknown (Just $ encodeP i)
@@ -48,40 +43,46 @@ instance Convert Type Gen.Type where
         Type.Lambda  i inputs output -> genType GenCls.Lambda  GenLambda.ext  $ GenLambda.Lambda   (Just $ encodeP i) (encodeList inputs) (Just $ encode output)
         Type.Con     i segments      -> genType GenCls.Con     GenCon.ext     $ GenCon.Con         (Just $ encodeP i) (encodeListP segments)
         Type.App     i src args      -> genType GenCls.App     GenApp.ext     $ GenApp.App         (Just $ encodeP i) (Just $ encode src) (encodeList args)
+        where
+            genType :: GenCls.Cls -> Extensions.Key Maybe Gen.Type v -> v -> Gen.Type
+            genType cls key ext = Extensions.putExt key (Just ext)
+                                $ Gen.Type cls $ Extensions.ExtField Map.empty
+
     decode t@(Gen.Type cls _) = case cls of 
-        GenCls.Unknown -> do ext <- Extensions.getExt GenUnknown.ext t
+        GenCls.Unknown -> do ext <- getExt GenUnknown.ext
                              (GenUnknown.Unknown mtid) <- ext <?> "Failed to decode Type.Unknown: extension is missing"
                              tid <- mtid <?> "Failed to decode Type.Unknown: 'id' field is missing"
                              pure $ Type.Unknown (decodeP tid)
-        GenCls.Var     -> do ext <- Extensions.getExt GenVar.ext t
+        GenCls.Var     -> do ext <- getExt GenVar.ext
                              (GenVar.Var mtid mtname) <- ext <?> "Failed to decode Type.Var: extension is missing"
                              tid   <- mtid   <?> "Failed to decode Type.Var: 'id' field is missing"
                              tname <- mtname <?> "Failed to decode Type.Var: 'name' field is missing"
                              pure $ Type.Var (decodeP tid) (decodeP tname)
-        GenCls.Tuple   -> do ext <- Extensions.getExt GenTuple.ext t
+        GenCls.Tuple   -> do ext <- getExt GenTuple.ext
                              (GenTuple.Tuple mtid titems) <- ext <?> "Failed to decode Type.Tuple: extension is missing"
                              tid <- mtid <?> "Failed to decode Type.Tuple: 'id' field is missing"
                              Type.Tuple (decodeP tid) <$> decodeList titems
-        GenCls.Class   -> do ext <- Extensions.getExt GenClass.ext t
+        GenCls.Class   -> do ext <- getExt GenClass.ext
                              (GenClass.Class mtid mtname tparams) <- ext <?> "Failed to decode Type.Class: extension is missing"
                              tid   <- mtid   <?> "Failed to decode Type.Class: 'id' field is missing"
                              tname <- mtname <?> "Failed to decode Type.Class: 'name' field is missing"
                              pure $ Type.Class (decodeP tid) (decodeP tname) (decodeListP tparams)
-        GenCls.Module  -> do ext <- Extensions.getExt GenModule.ext t
+        GenCls.Module  -> do ext <- getExt GenModule.ext
                              (GenModule.Module mtid tpath) <- ext <?> "Failed to decode Type.Module: extension is missing"
                              tid <- mtid <?> "Failed to decode Type.Module: 'id' field is missing"
                              pure $ Type.Module (decodeP tid) (decodeListP tpath)
-        GenCls.Lambda  -> do ext <- Extensions.getExt GenLambda.ext t
+        GenCls.Lambda  -> do ext <- getExt GenLambda.ext
                              (GenLambda.Lambda mtid tinputs mtoutput) <- ext <?> "Failed to decode Type.Lambda: extension is missing"
                              tid     <- mtid     <?> "Failed to decode Type.Lambda: 'id' field is missing"
                              toutput <- mtoutput <?> "Failed to decode Type.Lambda: 'output' field is missing"
                              Type.Lambda (decodeP tid) <$> (decodeList tinputs) <*> decode toutput
-        GenCls.Con     -> do ext <- Extensions.getExt GenCon.ext t
+        GenCls.Con     -> do ext <- getExt GenCon.ext
                              (GenCon.Con mtid tsegments) <- ext <?> "Failed to decode Type.Con: extension is missing"
                              tid <- mtid <?> "Failed to decode Type.Con: 'id' field is missing"
                              pure $ Type.Con (decodeP tid) (decodeListP tsegments)
-        GenCls.App     -> do ext <- Extensions.getExt GenApp.ext t
+        GenCls.App     -> do ext <- getExt GenApp.ext
                              (GenApp.App mtid mtsrc targs) <- ext <?> "Failed to decode Type.App: extension is missing"
                              tid  <- mtid  <?> "Failed to decode Type.App: 'id' field is missing"
                              tsrc <- mtsrc <?> "Failed to decode Type.App: 'src' field is missing"
                              Type.App (decodeP tid) <$> (decode tsrc) <*> (decodeList targs)
+        where getExt = flip Extensions.getExt t
