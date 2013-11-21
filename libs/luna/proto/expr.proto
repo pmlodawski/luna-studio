@@ -135,7 +135,7 @@ message List {
 message Lit {
     extend Expr { optional Lit ext = 112; }
     optional int32 id    = 1;
-    optional Lit  lvalue = 2;
+    optional generated.proto.lit.Lit  lvalue = 2;
 }
 
 message Tuple {

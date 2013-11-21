@@ -17,7 +17,7 @@ import qualified Data.Map                                             as Map
 import qualified Data.Sequence                                        as Sequence
 
 import           Flowbox.Prelude                                        
-import           Flowbox.Control.Error
+import           Flowbox.Control.Error                                  
 import           Flowbox.Luna.Network.Flags                             (Flags(Flags))
 import qualified Flowbox.Luna.Network.Attributes                      as Attributes
 import           Flowbox.Luna.Network.Attributes                        (Attributes)
