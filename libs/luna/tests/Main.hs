@@ -42,6 +42,8 @@ import qualified Flowbox.System.UniPath                                as UniPat
 import           Flowbox.Text.Show.Hs                                    (hsShow)
 import qualified Flowbox.Text.Show.Pretty                              as PP
 
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                     as ASTCrumb
+import qualified Flowbox.Luna.Data.AST.Zipper.Expr                     as Zipper
 
 
 genProject :: String -> Config.Config
@@ -77,22 +79,22 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source ["Main"]
         $ unlines [ ""
-                  , "def List.length self:"
-                  , "    ```getIO $ liftFPure1 length #{self}```"
-                  , "def List.each self callback:"
-                  , "    ```let {mymap x (Pure y) = mapM x y}```"
-                  , "    ```getIO $ mymap (get1 #{callback}) #{self}```"
-                  , "def Int.add a b:"
-                  , "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
-                  , "def Int.sub a b:"
-                  , "    ```getIO $ liftFPure2 (-) #{a} #{b}```"
-                  , "def Int.mul a b:"
-                  , "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
-                  , "def List.add self x:"
-                  , "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
-                  , "class Console:"
-                  , "    def print self msg:"
-                  , "        ```print #{msg}```"
+                  --, "def List.length self:"
+                  --, "    ```getIO $ liftFPure1 length #{self}```"
+                  --, "def List.each self callback:"
+                  --, "    ```let {mymap x (Pure y) = mapM x y}```"
+                  --, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
+                  --, "def Int.add a b:"
+                  --, "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
+                  --, "def Int.sub a b:"
+                  --, "    ```getIO $ liftFPure2 (-) #{a} #{b}```"
+                  --, "def Int.mul a b:"
+                  --, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
+                  --, "def List.add self x:"
+                  --, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
+                  --, "class Console:"
+                  --, "    def print self msg:"
+                  --, "        ```print #{msg}```"
 
 
                   --, "class Vector a:"
@@ -119,11 +121,14 @@ example = Source.Source ["Main"]
 
                   , "def add self x y:"
                   , "   x.add y"
-                  , "def addInts(self, x, y) -> Int:"
+
+                  , "def add2 self x y:"
                   , "   x.add y"
-                  , "def main self:"
-                  , "   [1..10].each x:"
-                  , "       Console.print x"
+                  --, "def addInts(self, x, y) -> Int:"
+                  --, "   x.add y"
+                  --, "def main self:"
+                  --, "   [1..10].each x:"
+                  --, "       Console.print x"
 
                   --, "def main self:"
                   --, "    Console.print (self.add 3 4)"
@@ -166,25 +171,33 @@ main_inner = Luna.run $ do
     ast <- TxtParser.run source
     logger info $ PP.ppqShow ast 
 
-    logger info "\n-------- VarAlias --------"
-    va <- VarAlias.run     ast
-    logger info $ PP.ppShow va
+    let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]
 
-    logger info "\n-------- FuncPool --------"
-    fp <- FuncPool.run ast
-    logger info $ PP.ppShow fp
+    let zipper =   Zipper.mk ast
+               >>= Zipper.focusFunction "add"
+               >>= Zipper.focusFunction "add"
 
-    logger info "\n-------- SSA --------" 
-    ssa <- SSA.run va ast
-    --logger info $ PP.ppqShow ssa
+    putStrLn $ PP.ppShow zipper
 
-    logger info "\n-------- HASTGen --------" 
-    hast <- HASTGen.run ssa fp
+    --logger info "\n-------- VarAlias --------"
+    --va <- VarAlias.run     ast
+    --logger info $ PP.ppShow va
+
+    --logger info "\n-------- FuncPool --------"
+    --fp <- FuncPool.run ast
+    --logger info $ PP.ppShow fp
+
+    --logger info "\n-------- SSA --------" 
+    --ssa <- SSA.run va ast
+    ----logger info $ PP.ppqShow ssa
+
+    --logger info "\n-------- HASTGen --------" 
+    --hast <- HASTGen.run ssa fp
     --logger info $ PP.ppShow hast
 
-    logger info "\n-------- HSC --------" 
-    hsc <- HSC.run  hast
-    logger info $ join "\n\n" (map printSrc hsc)
+    --logger info "\n-------- HSC --------" 
+    --hsc <- HSC.run  hast
+    --logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()

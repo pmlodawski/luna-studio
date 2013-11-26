@@ -4,7 +4,11 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleInstances, DeriveGeneric, NoMonomorphismRestriction, ConstraintKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Luna.Data.AST.Expr where
 
@@ -15,7 +19,8 @@ import qualified Flowbox.Luna.Data.AST.Pat       as Pat
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           Flowbox.Generics.Deriving.QShow   
 import           GHC.Generics                      (Generic)
-import           Control.Applicative               
+import           Control.Applicative   
+import           Control.Lens                      (makeLenses)
 
 
 type Lit         = Lit.Lit
@@ -51,9 +56,8 @@ data Expr  = NOP         { id :: ID                                             
 
            deriving (Show, Eq, Generic)
 
-
-
 instance QShow Expr
+makeLenses (''Expr)
 
 
 callConstructor :: ID -> Expr -> Expr -> Expr
