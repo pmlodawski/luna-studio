@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+
 module Flowbox.Control.Applicative (
 	module Control.Applicative,
 	many1,
