@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Server.ZMQ.Cmd where
+module Flowbox.Batch.Server.Cmd where
 
 import           Flowbox.Prelude   
 

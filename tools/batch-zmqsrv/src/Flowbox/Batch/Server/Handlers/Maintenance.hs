@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Batch.Server.ZMQ.Handlers.Maintenance (
+module Flowbox.Batch.Server.Handlers.Maintenance (
     ping,
     dump,
     shutdown,
@@ -32,7 +32,7 @@ import qualified Generated.Proto.Batch.Maintenance.Shutdown.Result   as Shutdown
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Handlers.Maintenance"
+loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Maintenance"
 
 
 ------ public api -------------------------------------------------

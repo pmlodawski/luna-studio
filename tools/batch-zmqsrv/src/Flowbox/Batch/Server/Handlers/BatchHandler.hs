@@ -6,31 +6,31 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Server.ZMQ.Handlers.BatchHandler where
+module Flowbox.Batch.Server.Handlers.BatchHandler where
 
-import           Control.Applicative                             
-import qualified Control.Concurrent.MVar                       as MVar
-import           Control.Concurrent.MVar                         (MVar)
-import qualified Data.IORef                                    as IORef
-import           Data.IORef                                      (IORef)
+import           Control.Applicative                         
+import qualified Control.Concurrent.MVar                   as MVar
+import           Control.Concurrent.MVar                     (MVar)
+import qualified Data.IORef                                as IORef
+import           Data.IORef                                  (IORef)
 
-import           Flowbox.Prelude                                 
-import qualified Flowbox.Batch.Batch                           as Batch
-import           Flowbox.Batch.Batch                             (Batch)
-import qualified Flowbox.Batch.Project.ProjectManager          as ProjectManager
-import qualified Flowbox.Batch.Samples.Std                     as Sample
-import qualified Flowbox.Batch.Server.ZMQ.Handlers.Handler     as Handler
-import           Flowbox.Batch.Server.ZMQ.Handlers.Handler       (Handler)
-import qualified Flowbox.Batch.Server.ZMQ.Handlers.FileSystem  as HFileSystem
-import qualified Flowbox.Batch.Server.ZMQ.Handlers.Project     as HProject
-import qualified Flowbox.Batch.Server.ZMQ.Handlers.Maintenance as HMaintenance
-import qualified Flowbox.Config.Config                         as Config
-import           Flowbox.System.Log.Logger                       
+import           Flowbox.Prelude                             
+import qualified Flowbox.Batch.Batch                       as Batch
+import           Flowbox.Batch.Batch                         (Batch)
+import qualified Flowbox.Batch.Project.ProjectManager      as ProjectManager
+import qualified Flowbox.Batch.Samples.Std                 as Sample
+import qualified Flowbox.Batch.Server.Handlers.Handler     as Handler
+import           Flowbox.Batch.Server.Handlers.Handler       (Handler)
+import qualified Flowbox.Batch.Server.Handlers.FileSystem  as HFileSystem
+import qualified Flowbox.Batch.Server.Handlers.Project     as HProject
+import qualified Flowbox.Batch.Server.Handlers.Maintenance as HMaintenance
+import qualified Flowbox.Config.Config                     as Config
+import           Flowbox.System.Log.Logger                   
 
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Handlers.BatchHandler"
+loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.BatchHandler"
 
 
 data BatchHandler = BatchHandler { quitMutex :: MVar Bool

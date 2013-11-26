@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Batch.Server.ZMQ.Handlers.FileSystem (
+module Flowbox.Batch.Server.Handlers.FileSystem (
     ls,
     stat,
 
@@ -44,7 +44,7 @@ import qualified Generated.Proto.Batch.FileSystem.MV.Result          as MV
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Handlers.FileSystem"
+loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.FileSystem"
 
 ------ public api -------------------------------------------------
 

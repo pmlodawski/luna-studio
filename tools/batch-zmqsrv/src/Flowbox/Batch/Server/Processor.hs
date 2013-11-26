@@ -7,13 +7,11 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Batch.Server.ZMQ.Processor where
+module Flowbox.Batch.Server.Processor where
 
 import           Control.Applicative                                   
-import qualified Data.ByteString.Lazy                                as ByteString
 import           Data.ByteString.Lazy                                  (ByteString)
 import qualified Data.Map                                            as Map
-import qualified System.ZMQ3.Monadic                                 as ZMQ3
 import qualified Text.ProtocolBuffers                                as Proto
 import qualified Text.ProtocolBuffers.Basic                          as Proto
 import qualified Text.ProtocolBuffers.Extensions                     as Extensions
@@ -21,8 +19,8 @@ import qualified Text.ProtocolBuffers.Reflections                    as Reflecti
 import qualified Text.ProtocolBuffers.WireMessage                    as WireMessage
 
 import           Flowbox.Prelude                                     hiding (error)
-import qualified Flowbox.Batch.Server.ZMQ.Handlers.Handler           as Handler
-import           Flowbox.Batch.Server.ZMQ.Handlers.Handler             (Handler)
+import qualified Flowbox.Batch.Server.Handlers.Handler               as Handler
+import           Flowbox.Batch.Server.Handlers.Handler                 (Handler)
 import           Flowbox.Control.Error                                 
 import           Flowbox.System.Log.Logger                             
 import           Generated.Proto.Batch.Exception                       (Exception(Exception))
@@ -75,10 +73,10 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Processor"
 
 
-zmqRunScript :: (Reflections.ReflectDescriptor r, WireMessage.Wire r)
-             => Extensions.Key Maybe Response r -> Script r -> ZMQ3.ZMQ z ByteString
-zmqRunScript rspkey s = do
-    e <- ZMQ3.liftIO $ runEitherT s
+rpcRunScript :: (Reflections.ReflectDescriptor r, WireMessage.Wire r)
+             => Extensions.Key Maybe Response r -> Script r -> IO ByteString
+rpcRunScript rspkey s = do
+    e <- runEitherT s
     let r = Response ResponseType.Exception $ Extensions.ExtField Map.empty
     Proto.messagePut <$> case e of
         Left  m -> do loggerIO error m
@@ -91,15 +89,15 @@ call :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
      => Request -> h ->  (h -> arg -> Script r)
      -> Extensions.Key Maybe Request arg 
      -> Extensions.Key Maybe Response r 
-     -> ZMQ3.ZMQ z ByteString
+     -> IO ByteString
 call request handler method reqkey rspkey = case Extensions.getExt reqkey request of 
-    Right (Just args) -> zmqRunScript rspkey $ method handler args
+    Right (Just args) -> rpcRunScript rspkey $ method handler args
     Left   e'         -> fail $ "Error while getting extension: " ++ e'
     _                 -> fail $ "Error while getting extension"
 
 
-selectCall :: Handler h => h -> ByteString -> ZMQ3.ZMQ z ByteString
-selectCall handler encoded_request = case Proto.messageGet encoded_request of
+process :: Handler h => h -> ByteString -> IO ByteString
+process handler encoded_request = case Proto.messageGet encoded_request of
     Left   e           -> fail $ "Error while decoding request: " ++ e
     Right (request, _) -> case Request.method request of 
         Method.LS    -> call request handler Handler.ls    LS.req    LS.rsp    
@@ -122,11 +120,3 @@ selectCall handler encoded_request = case Proto.messageGet encoded_request of
         Method.Ping       -> call request handler Handler.ping       Ping.req       Ping.rsp      
         Method.Dump       -> call request handler Handler.dump       Dump.req       Dump.rsp      
         Method.Shutdown   -> call request handler Handler.shutdown   Shutdown.req   Shutdown.rsp  
-
-
-process :: (Handler h, ZMQ3.Receiver t, ZMQ3.Sender t) => ZMQ3.Socket z t -> h -> ZMQ3.ZMQ z ()
-process socket handler = do
-    ZMQ3.liftIO $ loggerIO debug "method processing started"
-    encoded_request  <- ByteString.fromStrict <$> ZMQ3.receive socket
-    encoded_response <- ByteString.toStrict   <$> selectCall handler encoded_request
-    ZMQ3.send socket [] encoded_response

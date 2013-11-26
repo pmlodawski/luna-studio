@@ -6,7 +6,7 @@
 -- Flowbox Team <contact@flowbox.Script>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Server.ZMQ.Handlers.Handler where
+module Flowbox.Batch.Server.Handlers.Handler where
 
 import           Flowbox.Control.Error                                 
 import qualified Generated.Proto.Batch.FileSystem.LS.Args            as LS

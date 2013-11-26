@@ -5,14 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Server.ZMQ.Version where
+module Flowbox.Batch.Server.Version where
 
-import qualified Data.Version                    as Version
+import qualified Data.Version                as Version
 
-import           Flowbox.Prelude                   
-import qualified Flowbox.Batch.Config            as BatchConfig
-import qualified Flowbox.Batch.Server.ZMQ.Config as Config
-import qualified Flowbox.Luna.Config.Config      as LibConfig
+import           Flowbox.Prelude               
+import qualified Flowbox.Batch.Config        as BatchConfig
+import qualified Flowbox.Batch.Server.Config as Config
+import qualified Flowbox.Luna.Config.Config  as LibConfig
 
 
 

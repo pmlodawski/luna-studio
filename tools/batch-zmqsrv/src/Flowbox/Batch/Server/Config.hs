@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Server.ZMQ.Config (
+module Flowbox.Batch.Server.Config (
     module Paths_flowbox_batch_zmqsrv
 ) where
 

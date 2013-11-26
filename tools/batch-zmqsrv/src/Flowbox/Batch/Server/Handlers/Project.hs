@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Batch.Server.ZMQ.Handlers.Project (
+module Flowbox.Batch.Server.Handlers.Project (
     projects,
 
     projectByID,
