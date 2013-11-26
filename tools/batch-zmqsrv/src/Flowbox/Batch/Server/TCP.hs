@@ -66,8 +66,8 @@ handleCall handle handler = do
     encoded_request  <- ByteString.hGetContents handle
     loggerIO debug $ "handleCall: received request "-- ++ (show $ ByteString.length encoded_request)
     --let (x :: Either String (Request, ByteString.ByteString) ) = Proto.messageGet encoded_request
-    let Right (x :: Request, _) = Proto.messageGet encoded_request
-    print x
+    --let Right (x :: Request, _) = Proto.messageGet encoded_request
+    --print x
     encoded_response <- Processor.process handler encoded_request
     loggerIO debug "handleCall: processing done"
     ByteString.hPut handle encoded_response

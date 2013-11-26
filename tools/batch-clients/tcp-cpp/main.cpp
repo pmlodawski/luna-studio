@@ -55,8 +55,8 @@ int main ()
 
     std::cout << "done" << std::endl;
 
-    FileInputStream*  input  = new FileInputStream(sockfd);
-    FileOutputStream* output = new FileOutputStream(sockfd);
+    // FileInputStream*  input  = new FileInputStream(sockfd);
+    // FileOutputStream* output = new FileOutputStream(sockfd);
 
     std::cout << "Processing requests..." << std::flush;
     {
@@ -64,11 +64,12 @@ int main ()
         request.set_method(Request_Method_Initialize);
         Maintenance_Initialize_Args* args = request.MutableExtension(Maintenance_Initialize_Args::req);
 
-        request.SerializeToZeroCopyStream(output);
+        request.SerializeToFileDescriptor(sockfd);
+        // request.SerializeToZeroCopyStream(output);
+        // output->Flush();
 
-        output->Flush();
         // std::string buffer = request.SerializeAsString();
-        // int l = send(sockfd, buffer.c_str(), (size_t) buffer.size(), 0);
+        // int l = send(sockfd, buffer.c_str(), (size_t) buffer.size() + 5, 0);
         // std::cout << "sent " << l << std::flush;
         // if (-1 == l) {
         //     perror("send");
@@ -77,7 +78,9 @@ int main ()
         std::cout << "sent" << std::flush;
 
         Response response;
-        response.ParseFromZeroCopyStream(input);
+        // response.ParseFromZeroCopyStream(input);
+        response.ParseFromFileDescriptor(sockfd);
+        std::cout << "received" << std::flush;
 
         // char b[1000];
         // int r = recv(sockfd, b, 1000, 0);
