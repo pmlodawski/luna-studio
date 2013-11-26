@@ -4,65 +4,66 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Luna.Tools.Serialize.Thrift.Lib(
+module Flowbox.Luna.Tools.Serialize.Proto.Lib (
     storeLibrary,
     restoreLibrary,
 ) where
 
-import           Flowbox.Prelude                                        
-import           System.IO                                              
+import           Flowbox.Prelude                
+import           System.IO                      
 
-import           Thrift.Protocol.Binary                                 
-import           Thrift.Transport.Handle                                ()
-
-import qualified Defs_Types                                           as TDefs
-import qualified Libs_Types                                           as TLibs
-import qualified Flowbox.Luna.Lib.Library                             as Library
-import           Flowbox.Luna.Lib.Library                               (Library)
-import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Defs    ()
-import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Graph   ()
-import qualified Flowbox.Luna.Tools.Serialize.Thrift.Conversion.Libs    ()
-import qualified Flowbox.System.IO.Serializer                         as Serializer
-import           Flowbox.System.IO.Serializer                           (Serializable(Serializable), Deserializable(Deserializable))
-import           Flowbox.System.UniPath                                 (UniPath)
-import           Flowbox.Tools.Conversion.Thrift                        
+import qualified Flowbox.Luna.Lib.Library     as Library
+import           Flowbox.Luna.Lib.Library       (Library)
+import qualified Flowbox.System.IO.Serializer as Serializer
+import           Flowbox.System.IO.Serializer   (Serializable(Serializable), Deserializable(Deserializable))
+import           Flowbox.System.UniPath         (UniPath)
+import           Flowbox.System.Log.Logger      
 
 
-saveLib :: Library -> Handle -> IO ()
-saveLib library h = do 
-    let (tlibrary, defManager) = encode (-1, library)
-        tdefManager            = encode defManager
-        protocol = BinaryProtocol h
 
-    TLibs.write_Library    protocol tlibrary
-    TDefs.write_DefManager protocol tdefManager
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.Luna.Tools.Serialize.Proto.Lib"
 
 
-getLib :: Handle -> IO Library
-getLib h = do 
-    let protocol = BinaryProtocol h
-    tlibrary    <- TLibs.read_Library    protocol
-    tdefManager <- TDefs.read_DefManager protocol
-    case decode tdefManager of 
-        Left msg               -> error msg
-        Right adefManager      -> case decode (tlibrary, adefManager) of
-            Left m             -> error m
-            Right (_, library) -> return library
+--saveLib :: Library -> Handle -> IO ()
+--saveLib library h = do 
+--    let (tlibrary, defManager) = encode (-1, library)
+--        tdefManager            = encode defManager
+--        protocol = BinaryProtocol h
+
+--    TLibs.write_Library    protocol tlibrary
+--    TDefs.write_DefManager protocol tdefManager
+
+
+--getLib :: Handle -> IO Library
+--getLib h = do 
+--    let protocol = BinaryProtocol h
+--    tlibrary    <- TLibs.read_Library    protocol
+--    tdefManager <- TDefs.read_DefManager protocol
+--    case decode tdefManager of 
+--        Left msg               -> error msg
+--        Right adefManager      -> case decode (tlibrary, adefManager) of
+--            Left m             -> error m
+--            Right (_, library) -> return library
 
 
 storeLibrary :: Library -> IO ()
 storeLibrary lib = do 
-    let libpath = Library.path lib
-        slib    = Serializable libpath (saveLib lib)
+    loggerIO critical "Not implemented - storeLibrary"
+    --let libpath = Library.path lib
+    --    slib    = Serializable libpath (saveLib lib)
 
-    Serializer.serialize slib
+    --Serializer.serialize slib
 
 
 restoreLibrary :: UniPath -> IO Library
 restoreLibrary path = do
-    let dlib = Deserializable path getLib
-    library <- Serializer.deserialize dlib
-    return $ library{Library.path = path}
+    loggerIO critical "Not implemented - restoreLibrary"
+    undefined
+    --let dlib = Deserializable path getLib
+    --let dlib = Deserializable path getLib
+    --library <- Serializer.deserialize dlib
+    --return $ library{Library.path = path}
 
 
 

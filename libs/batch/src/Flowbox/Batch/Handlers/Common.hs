@@ -17,11 +17,11 @@ module Flowbox.Batch.Handlers.Common (
     projectOp,
     libManagerOp,
     libraryOp,
-    defManagerOp,
-    definitionOp,
-    graphOp,
-    graphViewOp,
-    nodeOp,
+    --defManagerOp,
+    --definitionOp,
+    --graphOp,
+    --graphViewOp,
+    --nodeOp,
 ) where
 
 import           Flowbox.Prelude                        
@@ -38,14 +38,14 @@ import qualified Flowbox.Luna.Lib.LibManager          as LibManager
 import           Flowbox.Luna.Lib.LibManager            (LibManager)
 import qualified Flowbox.Luna.Lib.Library             as Library
 import           Flowbox.Luna.Lib.Library               (Library(..))
-import qualified Flowbox.Luna.Network.Def.DefManager  as DefManager
-import           Flowbox.Luna.Network.Def.DefManager    (DefManager)
-import qualified Flowbox.Luna.Network.Def.Definition  as Definition
-import           Flowbox.Luna.Network.Def.Definition    (Definition(..))
-import qualified Flowbox.Luna.Network.Graph.Graph     as Graph
-import           Flowbox.Luna.Network.Graph.Graph       (Graph)
-import qualified Flowbox.Luna.Network.Graph.Node      as Node
-import           Flowbox.Luna.Network.Graph.Node        (Node)
+--import qualified Flowbox.Luna.Network.Def.DefManager  as DefManager
+--import           Flowbox.Luna.Network.Def.DefManager    (DefManager)
+--import qualified Flowbox.Luna.Network.Def.Definition  as Definition
+--import           Flowbox.Luna.Network.Def.Definition    (Definition(..))
+--import qualified Flowbox.Luna.Network.Graph.Graph     as Graph
+--import           Flowbox.Luna.Network.Graph.Graph       (Graph)
+--import qualified Flowbox.Luna.Network.Graph.Node      as Node
+--import           Flowbox.Luna.Network.Graph.Node        (Node)
 
 
 
@@ -102,7 +102,7 @@ projectOp' :: Project.ID
            -> (Batch -> Project -> IO (Project, r)) 
            -> Batch
            -> IO (Batch, r)
-projectOp' projectID operation = projectManagerOp' (\batch aprojectManager -> eRunScript $ do
+projectOp' projectID operation = projectManagerOp' (\batch aprojectManager -> runScript $ do
     project         <- ProjectManager.lab aprojectManager projectID <??> ("Wrong 'projectID' = " ++ show projectID)
     (newProject, r) <- scriptIO $ operation batch project
     let newProjectManager = ProjectManager.updateNode (projectID, newProject) aprojectManager
@@ -148,75 +148,75 @@ libraryOp' :: Library.ID
            -> (Batch -> Library -> IO (Library, r))
            -> Batch
            -> IO (Batch, r)
-libraryOp' libID projectID operation = libManagerOp' projectID (\batch libManager -> eRunScript $ do
+libraryOp' libID projectID operation = libManagerOp' projectID (\batch libManager -> runScript $ do
     library        <- LibManager.lab libManager libID <??> ("Wrong 'libID' = " ++ show libID)
     (newLibary, r) <- scriptIO $ operation batch library 
     let newLibManager = LibManager.updateNode (libID, newLibary) libManager
     return (newLibManager, r))
 
 
-defManagerOp :: Library.ID
-             -> Project.ID
-             -> (Batch -> DefManager -> Either String (DefManager, r))
-             -> Batch 
-             -> Either String (Batch, r)
-defManagerOp libID projectID operation = libraryOp libID projectID (\batch library -> do
-    let defManager = Library.defs library
-    (newDefManager, r) <- operation batch defManager
-    let newLibrary = library { Library.defs = newDefManager }
-    return (newLibrary, r))
+--defManagerOp :: Library.ID
+--             -> Project.ID
+--             -> (Batch -> DefManager -> Either String (DefManager, r))
+--             -> Batch 
+--             -> Either String (Batch, r)
+--defManagerOp libID projectID operation = libraryOp libID projectID (\batch library -> do
+--    let defManager = Library.defs library
+--    (newDefManager, r) <- operation batch defManager
+--    let newLibrary = library { Library.defs = newDefManager }
+--    return (newLibrary, r))
 
 
-definitionOp :: Definition.ID
-             -> Library.ID 
-             -> Project.ID
-             -> (Batch -> Definition -> Either String (Definition, r))
-             -> Batch 
-             -> Either String (Batch, r)
-definitionOp defID libID projectID operation = defManagerOp libID projectID (\batch defManager -> do
-    definition <- DefManager.lab defManager defID <?> ("Wrong 'defID' = " ++ show defID)
-    (newDefinition, r) <- operation batch definition
-    let newDefManager = DefManager.updateNode (defID, newDefinition) defManager
-    return (newDefManager, r))
+--definitionOp :: Definition.ID
+--             -> Library.ID 
+--             -> Project.ID
+--             -> (Batch -> Definition -> Either String (Definition, r))
+--             -> Batch 
+--             -> Either String (Batch, r)
+--definitionOp defID libID projectID operation = defManagerOp libID projectID (\batch defManager -> do
+--    definition <- DefManager.lab defManager defID <?> ("Wrong 'defID' = " ++ show defID)
+--    (newDefinition, r) <- operation batch definition
+--    let newDefManager = DefManager.updateNode (defID, newDefinition) defManager
+--    return (newDefManager, r))
 
 
-graphOp :: Definition.ID
-        -> Library.ID 
-        -> Project.ID
-        -> (Batch -> Graph -> Either String (Graph, r))
-        -> Batch 
-        -> Either String (Batch, r)
-graphOp defID libID projectID operation = definitionOp defID libID projectID (\batch definition -> do
-    let agraph = Definition.graph definition
-    (newGraph, r) <- operation batch agraph
-    let newDefinition = definition {Definition.graph =  newGraph}
-    return (newDefinition, r))
+--graphOp :: Definition.ID
+--        -> Library.ID 
+--        -> Project.ID
+--        -> (Batch -> Graph -> Either String (Graph, r))
+--        -> Batch 
+--        -> Either String (Batch, r)
+--graphOp defID libID projectID operation = definitionOp defID libID projectID (\batch definition -> do
+--    let agraph = Definition.graph definition
+--    (newGraph, r) <- operation batch agraph
+--    let newDefinition = definition {Definition.graph =  newGraph}
+--    return (newDefinition, r))
 
 
-graphViewOp :: Definition.ID
-        -> Library.ID 
-        -> Project.ID
-        -> (Batch -> GraphView -> Either String (GraphView, r))
-        -> Batch 
-        -> Either String (Batch, r)
-graphViewOp defID libID projectID operation = definitionOp defID libID projectID (\batch definition -> do
-    let agraph = Definition.graph definition
-    graphView <- GraphView.fromGraph agraph
-    (newGraphView, r) <- operation batch graphView
-    newGraph <- GraphView.toGraph newGraphView
-    let newDefinition = definition {Definition.graph = newGraph}
-    return (newDefinition, r))
+--graphViewOp :: Definition.ID
+--        -> Library.ID 
+--        -> Project.ID
+--        -> (Batch -> GraphView -> Either String (GraphView, r))
+--        -> Batch 
+--        -> Either String (Batch, r)
+--graphViewOp defID libID projectID operation = definitionOp defID libID projectID (\batch definition -> do
+--    let agraph = Definition.graph definition
+--    graphView <- GraphView.fromGraph agraph
+--    (newGraphView, r) <- operation batch graphView
+--    newGraph <- GraphView.toGraph newGraphView
+--    let newDefinition = definition {Definition.graph = newGraph}
+--    return (newDefinition, r))
 
 
-nodeOp :: Node.ID
-       -> Definition.ID
-       -> Library.ID 
-       -> Project.ID
-       -> (Batch -> Node -> Either String (Node, r))
-       -> Batch 
-       -> Either String (Batch, r)
-nodeOp nodeID defID libID projectID operation = graphOp defID libID projectID (\batch agraph -> do 
-    node <- Graph.lab agraph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
-    (newNode, r) <- operation batch node
-    let newGraph = Graph.updateNode (nodeID, newNode) agraph
-    return (newGraph, r))
+--nodeOp :: Node.ID
+--       -> Definition.ID
+--       -> Library.ID 
+--       -> Project.ID
+--       -> (Batch -> Node -> Either String (Node, r))
+--       -> Batch 
+--       -> Either String (Batch, r)
+--nodeOp nodeID defID libID projectID operation = graphOp defID libID projectID (\batch agraph -> do 
+--    node <- Graph.lab agraph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
+--    (newNode, r) <- operation batch node
+--    let newGraph = Graph.updateNode (nodeID, newNode) agraph
+--    return (newGraph, r))

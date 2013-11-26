@@ -13,8 +13,7 @@ Flag Debug
 
 Library
     Hs-Source-Dirs: gen,
-                    src,
-                    src/Flowbox/Batch/Tools/Serialize/Thrift/Generated
+                    src
     Other-Modules:  Paths_flowbox_batch
 
     GHC-Options:    -Wall -O2
@@ -24,9 +23,8 @@ Library
                     TypeSynonymInstances
  
     Exposed-modules: `findmodules('gen', '.*\.hs')`, 
-                     `findmodules('src', '.*\.hs', exclude='(.*Flowbox/Batch/Tools/Serialize/Thrift/Generated/.*)|(.*Flowbox/Batch/Main\.hs)')`,
-                     `findmodules('src/Flowbox/Batch/Tools/Serialize/Thrift/Generated', '.*\.hs')`
-
+                     `findmodules('src', '.*\.hs', exclude='(.*Flowbox/Batch/Main\.hs)')`
+                     
     Build-Depends:  base,
                     bytestring,
                     containers,
@@ -35,7 +33,6 @@ Library
                     flowbox-initializer,
                     flowbox-luna,
                     flowbox-utils,
-                    hashable,
                     network,
                     parsec,
                     pretty-show,
@@ -43,10 +40,7 @@ Library
                     protocol-buffers,
                     protocol-buffers-descriptor,
                     text,
-                    thrift,
-                    timeit,
-                    unordered-containers,
-                    vector
+                    timeit
 
 
 -- Executable batch 

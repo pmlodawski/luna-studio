@@ -15,35 +15,31 @@ module Flowbox.Batch.Handlers.Libs (
     storeLibrary,
     buildLibrary,
     runLibrary,
-    libraryRootDef,
 ) where
 
-import qualified Data.Maybe                              as Maybe
-import           Data.Version                              (Version(Version))
+import qualified Data.Maybe                             as Maybe
+import           Data.Version                             (Version(Version))
 
-import           Flowbox.Prelude                           
-import qualified Flowbox.Batch.Batch                     as Batch
-import           Flowbox.Batch.Batch                       (Batch)
-import           Flowbox.Batch.Handlers.Common             (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp', definitionOp)
-import qualified Flowbox.Batch.Project.Project           as Project
-import qualified Flowbox.Batch.Project.ProjectManager    as ProjectManager
-import qualified Flowbox.Luna.Lib.LibManager             as LibManager
-import qualified Flowbox.Luna.Lib.Library                as Library
-import           Flowbox.Luna.Lib.Library                  (Library)
-import qualified Flowbox.Luna.Network.Def.Definition     as Definition
-import           Flowbox.Luna.Network.Def.Definition       (Definition)
-import qualified Flowbox.Luna.Network.Def.DefManager     as DefManager
-import qualified Flowbox.Luna.Tools.Serialize.Thrift.Lib as LibSerialization
-import qualified Flowbox.Luna.Passes.Build.Build         as Build
-import qualified Flowbox.Luna.Passes.Build.BuildConfig   as BuildConfig
-import           Flowbox.Luna.Passes.Build.BuildConfig     (BuildConfig(BuildConfig))
-import qualified Flowbox.Luna.Passes.Build.Diagnostics   as Diagnostics
-import qualified Flowbox.Luna.Passes.General.Luna.Luna   as Luna
-import           Flowbox.System.Log.Logger                 
-import qualified Flowbox.System.Platform                 as Platform
-import qualified Flowbox.System.Process                  as Process
-import qualified Flowbox.System.UniPath                  as UniPath
-import           Flowbox.System.UniPath                    (UniPath)
+import           Flowbox.Prelude                          
+import qualified Flowbox.Batch.Batch                    as Batch
+import           Flowbox.Batch.Batch                      (Batch)
+import           Flowbox.Batch.Handlers.Common            (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp')
+import qualified Flowbox.Batch.Project.Project          as Project
+import qualified Flowbox.Batch.Project.ProjectManager   as ProjectManager
+import qualified Flowbox.Luna.Lib.LibManager            as LibManager
+import qualified Flowbox.Luna.Lib.Library               as Library
+import           Flowbox.Luna.Lib.Library                 (Library)
+import qualified Flowbox.Luna.Tools.Serialize.Proto.Lib as LibSerialization
+import qualified Flowbox.Luna.Passes.Build.Build        as Build
+import qualified Flowbox.Luna.Passes.Build.BuildConfig  as BuildConfig
+import           Flowbox.Luna.Passes.Build.BuildConfig    (BuildConfig(BuildConfig))
+import qualified Flowbox.Luna.Passes.Build.Diagnostics  as Diagnostics
+import qualified Flowbox.Luna.Passes.General.Luna.Luna  as Luna
+import           Flowbox.System.Log.Logger                
+import qualified Flowbox.System.Platform                as Platform
+import qualified Flowbox.System.Process                 as Process
+import qualified Flowbox.System.UniPath                 as UniPath
+import           Flowbox.System.UniPath                   (UniPath)
 
 
 
@@ -64,7 +60,7 @@ libraryByID libID projectID = readonly . libraryOp libID projectID (\_ library -
 
 createLibrary :: String -> UniPath -> Project.ID -> Batch -> Either String (Batch, (Library.ID, Library))
 createLibrary name path projectID = libManagerOp projectID (\_ libManager -> do
-    let library                = Library.make name path
+    let library                = Library.make name path [name]
         (newLibManager, libID) = LibManager.insNewNode library libManager
     return (newLibManager, (libID, library)))
 
@@ -90,28 +86,29 @@ storeLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ librar
 -- TODO [PM] : More remote arguments needed
 buildLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
 buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch library -> do
-    let projManager = Batch.projectManager batch
-        (Just proj) = ProjectManager.lab projManager projectID
-        projectPath = Project.path proj
+    loggerIO critical "Not implemented - buildLibrary"
+    --let projManager = Batch.projectManager batch
+    --    (Just proj) = ProjectManager.lab projManager projectID
+    --    projectPath = Project.path proj
 
-        defManger   = Library.defs library
-        rootDefID   = Library.rootDefID
-        rootDef     = Maybe.fromJust $ DefManager.lab defManger rootDefID
+    --    defManger   = Library.defs library
+    --    rootDefID   = Library.rootDefID
+    --    rootDef     = Maybe.fromJust $ DefManager.lab defManger rootDefID
        
-        name        = Library.name library
-        version     = Version [1][]      -- TODO [PM] : hardcoded version
-        cfg         = Batch.config batch
-        diag        = Diagnostics.none   -- TODO [PM] : hardcoded diagnostics
-        outputPath  = UniPath.append name projectPath 
-        libs        = []                 -- TODO [PM] : hardcoded libs
-        ghcFlags    = ["-O2"]            -- TODO [PM] : hardcoded ghc flags
-        cabalFlags  = []                 -- TODO [PM] : hardcoded cabal flags
+    --    name        = Library.name library
+    --    version     = Version [1][]      -- TODO [PM] : hardcoded version
+    --    cfg         = Batch.config batch
+    --    diag        = Diagnostics.none   -- TODO [PM] : hardcoded diagnostics
+    --    outputPath  = UniPath.append name projectPath 
+    --    libs        = []                 -- TODO [PM] : hardcoded libs
+    --    ghcFlags    = ["-O2"]            -- TODO [PM] : hardcoded ghc flags
+    --    cabalFlags  = []                 -- TODO [PM] : hardcoded cabal flags
         
-        buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
-        bldCfg      = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag
+    --    buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
+    --    bldCfg      = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag
 
-    Luna.runIO $ do ast <- Build.parseGraph diag defManger (rootDefID, rootDef)
-                    Build.run bldCfg ast
+    --Luna.runIO $ do ast <- Build.parseGraph diag defManger (rootDefID, rootDef)
+    --                Build.run bldCfg ast
     return (library, ()))
     
 
@@ -131,8 +128,3 @@ runLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch libr
     let exitMsg = "Program exited with " ++ (show errorCode) ++ " code"
     loggerIO debug exitMsg
     return (library, stdOut ++ stdErr ++ "\n" ++ "Program exited with " ++ (show errorCode) ++ " code"))
-
-
-libraryRootDef :: Library.ID -> Project.ID -> Batch -> Either String (Definition.ID, Definition)
-libraryRootDef libID projectID = readonly . definitionOp Library.rootDefID libID projectID (\_ definition ->  
-    Right (definition, (Library.rootDefID, definition)))
