@@ -16,7 +16,7 @@ import           Flowbox.Prelude                            hiding (error)
 import qualified Flowbox.Batch.Server.Version               as Version
 import qualified Flowbox.Batch.Server.Cmd                   as Cmd
 import           Flowbox.Batch.Server.Cmd                     (Cmd)
-import qualified Flowbox.Batch.Server.ZMQ                   as Server
+import qualified Flowbox.Batch.Server.TCP                   as Server
 import qualified Flowbox.Options.Applicative                as Opt
 import           Flowbox.Options.Applicative                hiding (info)
 import           Flowbox.System.Log.Logger                    
@@ -34,7 +34,7 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server"
 
 
 defaultAddress :: String
-defaultAddress = "tcp://*"
+defaultAddress = "127.0.0.1"
 
 
 defaultPort :: Int
