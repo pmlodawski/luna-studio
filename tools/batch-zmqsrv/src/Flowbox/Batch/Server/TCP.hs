@@ -5,7 +5,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-
+{-# LANGUAGE ScopedTypeVariables #-}
 module Flowbox.Batch.Server.TCP where
 
 import           Control.Applicative                     
@@ -20,6 +20,10 @@ import           Flowbox.System.Log.Logger
 import qualified Network                               as Network
 import qualified Network.Socket                        as Socket
 import qualified System.IO                             as IO
+import qualified Text.ProtocolBuffers                                as Proto
+import qualified Text.ProtocolBuffers.Basic                          as Proto
+import qualified Generated.Proto.Batch.Request                       as Request
+import           Generated.Proto.Batch.Request                         (Request)
 
 
 
@@ -56,13 +60,14 @@ serve address port handler = Socket.withSocketsDo $ do
 --runSingleConnectionServer hand proc_ cmd = S
 
 
-
-
 handleCall :: (Handler handler) => IO.Handle -> handler -> IO ()
 handleCall handle handler = do
     loggerIO debug "handleCall: started"
     encoded_request  <- ByteString.hGetContents handle
-    loggerIO debug "handleCall: received request"
+    loggerIO debug $ "handleCall: received request "-- ++ (show $ ByteString.length encoded_request)
+    --let (x :: Either String (Request, ByteString.ByteString) ) = Proto.messageGet encoded_request
+    let Right (x :: Request, _) = Proto.messageGet encoded_request
+    print x
     encoded_response <- Processor.process handler encoded_request
     loggerIO debug "handleCall: processing done"
     ByteString.hPut handle encoded_response
