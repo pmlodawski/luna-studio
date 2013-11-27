@@ -6,7 +6,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Server.ZMQ where
+module Flowbox.Batch.Server.Transport.ZMQ where
 
 import           Control.Applicative                     
 import           Control.Monad                           (forever)

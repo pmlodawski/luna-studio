@@ -5,31 +5,22 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE ScopedTypeVariables #-}
-module Flowbox.Batch.Server.TCP where
 
-import           Control.Applicative                     
+module Flowbox.Batch.Server.Transport.TCP where
+
 import           Control.Monad                           (forever)
-import qualified Data.ByteString.Lazy                  as ByteString
-import qualified System.ZMQ3.Monadic                   as ZMQ3
+import qualified Network.Socket                        as Socket
+import qualified Network.Socket.ByteString.Lazy        as SByteString
 
 import           Flowbox.Prelude                       hiding (error)
 import qualified Flowbox.Batch.Server.Processor        as Processor
 import           Flowbox.Batch.Server.Handlers.Handler   (Handler)
 import           Flowbox.System.Log.Logger               
---import qualified Network                               as Network
-import qualified Network.Socket                        as Socket
-import qualified System.IO                             as IO
-import qualified Text.ProtocolBuffers                                as Proto
-import qualified Text.ProtocolBuffers.Basic                          as Proto
-import qualified Generated.Proto.Batch.Request                       as Request
-import           Generated.Proto.Batch.Request                         (Request)
-import qualified Network.Socket.ByteString.Lazy as SByteString
+
 
 
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.TCP"
-
 
 
 --TODO [PM] : Refactor needed
@@ -61,12 +52,6 @@ serve address port handler = Socket.withSocketsDo $ do
     --runSingleConnectionServer accepter 
 
 
---runSingleConnectionServer :: (Transport t, Protocol i, Protocol o)
---                  => (Network.Socket -> IO (i t, o t))
---                  -> h -> (h -> (i t, o t) -> IO Bool) -> Cmd -> IO ()
---runSingleConnectionServer hand proc_ cmd = S
-
-
 handleCall :: (Handler handler) => Socket.Socket -> handler -> IO ()
 handleCall socket handler = do
     loggerIO debug "handleCall: started"
@@ -82,9 +67,3 @@ handleCall socket handler = do
     SByteString.sendAll socket encoded_response
     loggerIO debug "handleCall: reply sent"
 
-
---handleCall :: (Handler h, ZMQ3.Receiver t, ZMQ3.Sender t) => ZMQ3.Socket z t -> h -> ZMQ3.ZMQ z ()
---handleCall socket handler = do
---    encoded_request  <- ByteString.fromStrict <$> ZMQ3.receive socket
---    encoded_response <- ZMQ3.liftIO $ ByteString.toStrict <$> Processor.process handler encoded_request
---    ZMQ3.send socket [] $ encoded_response

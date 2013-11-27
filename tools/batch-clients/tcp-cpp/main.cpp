@@ -102,7 +102,7 @@ int main ()
     // CodedInputStream  input(&finput);
     // CodedOutputStream output(&foutput);
 
-    std::cout << "Processing requests..." << std::flush;
+    std::cout << "Processing requests.." << std::flush;
     {
         Request request;
         request.set_method(Request_Method_Initialize);
@@ -139,6 +139,8 @@ int main ()
         // zmq::message_t reply;
         // socket.recv (&reply);
     }
+    std::cout << "." << std::flush;
+
     for(int i = 0 ; i < 10000 ; ++i)
     {
         Request request;
@@ -147,7 +149,6 @@ int main ()
 
         Response response = call(sockfd, request);
     }
-
     {
         Request request;
         request.set_method(Request_Method_Dump);
@@ -155,7 +156,6 @@ int main ()
 
         Response response = call(sockfd, request);
     }
-
     {
         Request request;
         request.set_method(Request_Method_Shutdown);
