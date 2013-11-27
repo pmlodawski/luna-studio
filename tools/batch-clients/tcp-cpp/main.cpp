@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/io/coded_stream.h>
 // zero_copy_stream_impl.h>
 #include "generated/server-api.pb.h"
 
@@ -19,7 +20,48 @@ using namespace google::protobuf::io;
 using namespace generated::proto;
 using namespace generated::proto::batch;
 
+const int BUFFER_SIZE = 100000;
+char buffer[BUFFER_SIZE];
 
+
+void sendRequest(int sockfd, const Request& request) {
+    int  ackSize = request.ByteSize()+4;
+    char* ackBuf = new char[ackSize];
+             
+    //write varint delimiter to buffer
+    ArrayOutputStream arrayOut(ackBuf, ackSize);
+    CodedOutputStream codedOut(&arrayOut);
+    codedOut.WriteVarint32(request.ByteSize());
+     
+    //write protobuf ack to buffer
+    request.SerializeToCodedStream(&codedOut);
+     
+    //send buffer to client
+    send(sockfd, ackBuf, ackSize, 0);
+    delete(ackBuf);
+}
+
+Response receiveResponse(int sockfd) {
+    Response response;
+
+    int received=recv(sockfd, buffer, BUFFER_SIZE, 0);
+             
+    //read varint delimited protobuf object in to buffer
+    //there's no method to do this in the C++ library so here's the workaround
+    ArrayInputStream arrayIn(buffer, received);
+    CodedInputStream codedIn(&arrayIn);
+    google::protobuf::uint32 size;
+    codedIn.ReadVarint32(&size);
+    CodedInputStream::Limit msgLimit = codedIn.PushLimit(size);
+    response.ParseFromCodedStream(&codedIn);
+    codedIn.PopLimit(msgLimit);
+    return response;
+}
+
+Response call(int sockfd, const Request& request) {
+    sendRequest(sockfd, request);
+    return receiveResponse(sockfd);
+}
 
 int main ()
 {
@@ -55,8 +97,10 @@ int main ()
 
     std::cout << "done" << std::endl;
 
-    // FileInputStream*  input  = new FileInputStream(sockfd);
-    // FileOutputStream* output = new FileOutputStream(sockfd);
+    // FileInputStream  finput(sockfd);
+    // FileOutputStream foutput(sockfd);
+    // CodedInputStream  input(&finput);
+    // CodedOutputStream output(&foutput);
 
     std::cout << "Processing requests..." << std::flush;
     {
@@ -64,9 +108,13 @@ int main ()
         request.set_method(Request_Method_Initialize);
         Maintenance_Initialize_Args* args = request.MutableExtension(Maintenance_Initialize_Args::req);
 
-        request.SerializeToFileDescriptor(sockfd);
-        // request.SerializeToZeroCopyStream(output);
-        // output->Flush();
+          
+
+        // request.SerializeToFileDescriptor(sockfd);
+        // output.WriteVarint32(request.ByteSize());
+        // request.SerializeToZeroCopyStream(&foutput);
+        // request.SerializeToCodedStream(&output);
+        // foutput.Flush();
 
         // std::string buffer = request.SerializeAsString();
         // int l = send(sockfd, buffer.c_str(), (size_t) buffer.size() + 5, 0);
@@ -75,12 +123,15 @@ int main ()
         //     perror("send");
         //     return 1;
         // }
-        std::cout << "sent" << std::flush;
+        // std::cout << "sent" << std::flush;
 
-        Response response;
+        Response response = call(sockfd, request);
+
+          
+
         // response.ParseFromZeroCopyStream(input);
-        response.ParseFromFileDescriptor(sockfd);
-        std::cout << "received" << std::flush;
+        // response.ParseFromFileDescriptor(sockfd);
+        // std::cout << "received" << std::flush;
 
         // char b[1000];
         // int r = recv(sockfd, b, 1000, 0);
@@ -88,48 +139,30 @@ int main ()
         // zmq::message_t reply;
         // socket.recv (&reply);
     }
-    // for(int i = 0 ; i < 10000 ; ++i)
-    // {
-    //     Request request;
-    //     request.set_method(Request_Method_Ping);
-    //     Maintenance_Ping_Args* args = request.MutableExtension(Maintenance_Ping_Args::req);
+    for(int i = 0 ; i < 10000 ; ++i)
+    {
+        Request request;
+        request.set_method(Request_Method_Ping);
+        Maintenance_Ping_Args* args = request.MutableExtension(Maintenance_Ping_Args::req);
 
-    //     std::string buffer = request.SerializeAsString();
-    //     zmq::message_t zmq_req(buffer.size());
-    //     memcpy ((void *) zmq_req.data(), buffer.data(), buffer.size());
-    //     socket.send (zmq_req);
-        
-    //     zmq::message_t reply;
-    //     socket.recv (&reply);
-    // }
+        Response response = call(sockfd, request);
+    }
 
-    // {
-    //     Request request;
-    //     request.set_method(Request_Method_Dump);
-    //     Maintenance_Dump_Args* args = request.MutableExtension(Maintenance_Dump_Args::req);
+    {
+        Request request;
+        request.set_method(Request_Method_Dump);
+        Maintenance_Dump_Args* args = request.MutableExtension(Maintenance_Dump_Args::req);
 
-    //     std::string buffer = request.SerializeAsString();
-    //     zmq::message_t zmq_req(buffer.size());
-    //     memcpy ((void *) zmq_req.data(), buffer.data(), buffer.size());
-    //     socket.send (zmq_req);
-        
-    //     zmq::message_t reply;
-    //     socket.recv (&reply);
-    // }
+        Response response = call(sockfd, request);
+    }
 
-    // {
-    //     Request request;
-    //     request.set_method(Request_Method_Shutdown);
-    //     Maintenance_Shutdown_Args* args = request.MutableExtension(Maintenance_Shutdown_Args::req);
+    {
+        Request request;
+        request.set_method(Request_Method_Shutdown);
+        Maintenance_Shutdown_Args* args = request.MutableExtension(Maintenance_Shutdown_Args::req);
 
-    //     std::string buffer = request.SerializeAsString();
-    //     zmq::message_t zmq_req(buffer.size());
-    //     memcpy ((void *) zmq_req.data(), buffer.data(), buffer.size());
-    //     socket.send (zmq_req);
-        
-    //     zmq::message_t reply;
-    //     socket.recv (&reply);
-    // }
+        Response response = call(sockfd, request);
+    }
     std::cout << "done" << std::endl;
 
     return 0;

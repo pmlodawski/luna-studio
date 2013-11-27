@@ -78,7 +78,8 @@ rpcRunScript :: (Reflections.ReflectDescriptor r, WireMessage.Wire r)
 rpcRunScript rspkey s = do
     e <- runEitherT s
     let r = Response ResponseType.Exception $ Extensions.ExtField Map.empty
-    Proto.messagePut <$> case e of
+    Proto.messageWithLengthPut <$> case e of 
+    -- TODO [PM] : move messageWithLengthPut from here
         Left  m -> do loggerIO error m
                       let exc = Exception $ Just $ Proto.uFromString m
                       return $ Extensions.putExt Exception.rsp (Just exc) r
@@ -97,7 +98,8 @@ call request handler method reqkey rspkey = case Extensions.getExt reqkey reques
 
 
 process :: Handler h => h -> ByteString -> IO ByteString
-process handler encoded_request = case Proto.messageGet encoded_request of
+process handler encoded_request = case Proto.messageWithLengthGet encoded_request of
+                                     -- TODO [PM] : move messageWithLengthGet from here
     Left   e           -> fail $ "Error while decoding request: " ++ e
     Right (request, _) -> case Request.method request of 
         Method.LS    -> call request handler Handler.ls    LS.req    LS.rsp    
