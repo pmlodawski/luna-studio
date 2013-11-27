@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.Data.AST.Zipper.Expr where
 
@@ -36,6 +37,7 @@ mk :: Module -> Maybe Zipper
 mk rootmod = Just (ModuleEnv rootmod, [])
 
 
+
 focusFunction :: String -> Zipper -> Maybe Zipper
 focusFunction name zipper@(env, path) = case env of
     ModuleEnv mod -> focusListElem Module.methods Expr.name 
@@ -43,11 +45,11 @@ focusFunction name zipper@(env, path) = case env of
     _             -> Nothing
 
 
-focusListElem :: Lens' a [b] -> (b -> String) -> (b -> Focus) -> (a -> Focus) -> a -> String -> Zipper -> Maybe Zipper
+focusListElem :: Lens' a [b] -> Traversal' b String -> (b -> Focus) -> (a -> Focus) -> a -> String -> Zipper -> Maybe Zipper
 focusListElem lens nameLens elemFocus crumbFocus elem name (env, path) = runMaybe $ do
     let funcs    = view lens elem
-        mfunc    = find (\f -> nameLens f == name) funcs
-        newfuncs = [ f | f <- funcs, nameLens f /= name ]
+        mfunc    = find (\f -> view nameLens f == name) funcs
+        newfuncs = [ f | f <- funcs, view nameLens f /= name ]
         newelem  = set lens newfuncs elem
     func <- hoistMaybe mfunc
     return $ (elemFocus func, (crumbFocus newelem) : path)

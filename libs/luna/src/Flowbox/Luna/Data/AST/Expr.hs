@@ -20,7 +20,7 @@ import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           Flowbox.Generics.Deriving.QShow   
 import           GHC.Generics                      (Generic)
 import           Control.Applicative   
-import           Control.Lens                      (makeLenses)
+import           Control.Lens                    hiding (Traversal, Accessor)
 
 
 type Lit         = Lit.Lit
@@ -28,32 +28,30 @@ type Pat         = Pat.Pat
 type Traversal m = (Functor m, Applicative m, Monad m)
 
 
-data Expr  = NOP         { id :: ID                                                                                         }
-           | Accessor    { id :: ID, name      :: String   , dst       :: Expr                                              }
-           | App         { id :: ID, src       :: Expr     , args      :: [Expr]                                            }
-           | AppCons_    { id :: ID, args      :: [Expr]                                                                    }
-           | Assignment  { id :: ID, pat       :: Pat      , dst       :: Expr                                              }
-           | Class       { id :: ID, cls       :: Type     , classes   :: [Expr] , fields    :: [Expr] , methods :: [Expr]  }
-           | Con         { id :: ID, name      :: String                                                                    }
-           | Function    { id :: ID, path      :: [String] , name      :: String , inputs    :: [Expr] , output    :: Type   ,  body    :: [Expr] }
-           | Lambda      { id :: ID, inputs    :: [Expr]   , output    :: Type   , body      :: [Expr]                      }
-           | Import      { id :: ID, path      :: [String] , target    :: Expr   , rename    :: Maybe String                }
-           | Infix       { id :: ID, name      :: String   , src       :: Expr   , dst       :: Expr                        }                                                               
-           | List        { id :: ID, items     :: [Expr]                                                                    }
-           | Lit         { id :: ID, lvalue    :: Lit                                                                       }
-           | Tuple       { id :: ID, items     :: [Expr]                                                                    }
-           | Typed       { id :: ID, cls       :: Type     , expr      :: Expr                                              }
-           | Var         { id :: ID, name      :: String                                                                    }
-           | Wildcard    { id :: ID                                                                                         }
-                         
-           | RangeFromTo { id :: ID, start     :: Expr     , end       :: Expr                                              }
-           | RangeFrom   { id :: ID, start     :: Expr                                                                      }
-           | Field       { id :: ID, name      :: String   , cls       :: Type   , value     :: Maybe Expr                  }
-           | Arg         { id :: ID, pat       :: Pat      , value     :: Maybe Expr                                        }
-           | Native      { id :: ID, segments  :: [Expr]                                                                    }
-           | NativeCode  { id :: ID, code      :: String }
-           | NativeVar   { id :: ID, name      :: String }
-
+data Expr  = NOP         { _id :: ID                                                                                            }
+           | Accessor    { _id :: ID, _name      :: String   , _dst       :: Expr                                               }
+           | App         { _id :: ID, _src       :: Expr     , _args      :: [Expr]                                             }
+           | AppCons_    { _id :: ID, _args      :: [Expr]                                                                      }
+           | Assignment  { _id :: ID, _pat       :: Pat      , _dst       :: Expr                                               }
+           | Class       { _id :: ID, _cls       :: Type     , _classes   :: [Expr] , _fields    :: [Expr] , _methods :: [Expr] }
+           | Con         { _id :: ID, _name      :: String                                                                      }
+           | Function    { _id :: ID, _path      :: [String] , _name      :: String , _inputs    :: [Expr] , _output    :: Type   ,  _body    :: [Expr] }
+           | Lambda      { _id :: ID, _inputs    :: [Expr]   , _output    :: Type   , _body      :: [Expr]                      }
+           | Import      { _id :: ID, _path      :: [String] , _target    :: Expr   , _rename    :: Maybe String                }
+           | Infix       { _id :: ID, _name      :: String   , _src       :: Expr   , _dst       :: Expr                        }                                                               
+           | List        { _id :: ID, _items     :: [Expr]                                                                      }
+           | Lit         { _id :: ID, _lvalue    :: Lit                                                                         }
+           | Tuple       { _id :: ID, _items     :: [Expr]                                                                      }
+           | Typed       { _id :: ID, _cls       :: Type     , _expr      :: Expr                                               }
+           | Var         { _id :: ID, _name      :: String                                                                      }
+           | Wildcard    { _id :: ID                                                                                            }
+           | RangeFromTo { _id :: ID, _start     :: Expr     , _end       :: Expr                                               }
+           | RangeFrom   { _id :: ID, _start     :: Expr                                                                        }
+           | Field       { _id :: ID, _name      :: String   , _cls       :: Type   , _value     :: Maybe Expr                  }
+           | Arg         { _id :: ID, _pat       :: Pat      , _value     :: Maybe Expr                                         }
+           | Native      { _id :: ID, _segments  :: [Expr]                                                                      }
+           | NativeCode  { _id :: ID, _code      :: String }
+           | NativeVar   { _id :: ID, _name      :: String }
            deriving (Show, Eq, Generic)
 
 instance QShow Expr
@@ -73,15 +71,15 @@ aftermatch x = case x of
 
 
 addMethod :: Expr -> Expr -> Expr
-addMethod method e = e { methods = method : methods e }
+addMethod method e = e & methods %~ (method:)
 
 
 addField :: Expr -> Expr -> Expr
-addField field e = e { fields = field : fields e }
+addField field e = e & fields %~ (field:)
 
 
 addClass :: Expr -> Expr -> Expr
-addClass ncls e = e { classes = ncls : classes e }
+addClass ncls e = e & classes %~ (ncls:)
 
 
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
@@ -100,7 +98,7 @@ traverseM fexp ftype fpat flit e = case e of
     List        id' items'                         -> List        id'       <$> fexpMap items'
     Lit         id' val'                           -> Lit         id'       <$> flit val'
     Tuple       id' items'                         -> Tuple       id'       <$> fexpMap items'
-    Typed       id' cls' expr'                     -> Typed       id'       <$> ftype cls' <*> fexp expr'
+    Typed       id' cls' _expr'                    -> Typed       id'       <$> ftype cls' <*> fexp _expr'
     Native      id' segments'                      -> Native      id'       <$> fexpMap segments'
     RangeFromTo id' start' end'                    -> RangeFromTo id'       <$> fexp start' <*> fexp end'
     RangeFrom   id' start'                         -> RangeFrom   id'       <$> fexp start' 
@@ -130,7 +128,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     List        _  items'                          -> drop <* fexpMap items'
     Lit         _  val'                            -> drop <* flit val'
     Tuple       _  items'                          -> drop <* fexpMap items'
-    Typed       _  cls' expr'                      -> drop <* ftype cls' <* fexp expr'
+    Typed       _  cls' _expr'                      -> drop <* ftype cls' <* fexp _expr'
     Native      _ segments'                        -> drop <* fexpMap segments'
     RangeFromTo _ start' end'                      -> drop <* fexp start' <* fexp end'
     RangeFrom   _ start'                           -> drop <* fexp start'
