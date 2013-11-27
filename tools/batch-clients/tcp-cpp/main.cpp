@@ -20,7 +20,7 @@ using namespace google::protobuf::io;
 using namespace generated::proto;
 using namespace generated::proto::batch;
 
-const int BUFFER_SIZE = 100000;
+const int BUFFER_SIZE = 100000; // TODO [PM] : magic constant
 char buffer[BUFFER_SIZE];
 
 
@@ -44,7 +44,7 @@ void sendRequest(int sockfd, const Request& request) {
 Response receiveResponse(int sockfd) {
     Response response;
 
-    int received=recv(sockfd, buffer, BUFFER_SIZE, 0);
+    int received=recv(sockfd, buffer, BUFFER_SIZE, 0); // TODO [PM] : recv in loop while size != received
              
     //read varint delimited protobuf object in to buffer
     //there's no method to do this in the C++ library so here's the workaround
