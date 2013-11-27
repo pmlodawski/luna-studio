@@ -79,7 +79,7 @@ handleCall socket handler = do
     --print x
     encoded_response <- Processor.process handler encoded_request
     loggerIO debug "handleCall: processing done"
-    SByteString.send socket encoded_response
+    SByteString.sendAll socket encoded_response
     loggerIO debug "handleCall: reply sent"
 
 
