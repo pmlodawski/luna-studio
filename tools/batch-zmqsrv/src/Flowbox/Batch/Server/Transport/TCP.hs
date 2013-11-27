@@ -11,6 +11,7 @@ module Flowbox.Batch.Server.Transport.TCP where
 import           Control.Monad                           (forever)
 import qualified Network.Socket                        as Socket
 import qualified Network.Socket.ByteString.Lazy        as SByteString
+import qualified Data.ByteString.Lazy        as ByteString
 
 import           Flowbox.Prelude                       hiding (error)
 import qualified Flowbox.Batch.Server.Processor        as Processor
@@ -54,9 +55,15 @@ serve address port handler = Socket.withSocketsDo $ do
 
 handleCall :: (Handler handler) => Socket.Socket -> handler -> IO ()
 handleCall socket handler = do
-    loggerIO debug "handleCall: started"
+    loggerIO debug "handleCall: started"       
     encoded_request <- SByteString.recv socket 10000000
-    loggerIO debug $ "handleCall: received request "-- ++ (show $ ByteString.length encoded_request)
+    loggerIO debug $ "handleCall: received request " ++ (show $ ByteString.length encoded_request)
+    encoded_request2 <- SByteString.recv socket 10000000
+    loggerIO debug $ "handleCall: received request " ++ (show $ ByteString.length encoded_request2)
+    encoded_request3 <- SByteString.recv socket 10000000
+    loggerIO debug $ "handleCall: received request " ++ (show $ ByteString.length encoded_request3)
+    encoded_request4 <- SByteString.recv socket 10000000
+    loggerIO debug $ "handleCall: received request " ++ (show $ ByteString.length encoded_request4)
     --let (x :: Either String (Request, ByteString.ByteString) ) = Proto.messageGet encoded_request
     --let x = case Proto.messageWithLengthGet encoded_request of
     --            Left m -> Left m
