@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Control.Error (
     module Control.Error,
-    eRunScript,
+    runScript,
     (<?>),
     (<??>),
     ifnot,
@@ -17,22 +17,22 @@ module Flowbox.Control.Error (
     tryGetUniPath,
 ) where
 
-import           Control.Error              
-import           Data.Int                   
-import           Data.IORef                 
-import           Data.Text.Lazy             (Text, unpack)
-import qualified Control.Monad.IO.Class     
+import           Control.Error                   hiding (runScript)
+import           Data.Int                          
+import           Data.IORef                        
+import           Data.Text.Lazy                    (Text, unpack)
+import qualified Control.Monad.IO.Class            
 
-import           Flowbox.Prelude            
-import qualified Flowbox.System.UniPath   as UniPath
-import           Flowbox.Tools.Conversion   
+import           Flowbox.Prelude                   
+import qualified Flowbox.System.UniPath          as UniPath
+import           Flowbox.Tools.Conversion.Common   
 
 
-eRunScript :: Script a -> IO a
-eRunScript s = do
+runScript :: Script a -> IO a
+runScript s = do
     e <- runEitherT s
     case e of
-        Left  m -> error m
+        Left  m -> fail m
         Right a -> return a
 
 

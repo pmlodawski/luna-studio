@@ -36,6 +36,21 @@ type Zipper = (Focus, FocusPath)
 mk :: Module -> Maybe Zipper
 mk rootmod = Just (ModuleEnv rootmod, [])
 
+defocus :: Zipper -> Zipper
+defocus zipper@(env, [])   = zipper
+defocus (env, parent:path) = (newenv, path) where
+    newenv = case parent of
+        ModuleEnv pmod -> ModuleEnv $ case env of
+            FunctionFocus func -> Module.addMethod func pmod
+
+
+modify :: (Focus -> Focus) -> Zipper -> Maybe Zipper
+modify f (env, path) = Just (f env, path)
+
+
+close :: Zipper -> Maybe Module
+close zipper@(env, []) = Just mod where ModuleEnv mod = env
+close zipper           = close $ defocus zipper
 
 
 focusFunction :: String -> Zipper -> Maybe Zipper
@@ -47,9 +62,12 @@ focusFunction name zipper@(env, path) = case env of
 
 focusListElem :: Lens' a [b] -> Traversal' b String -> (b -> Focus) -> (a -> Focus) -> a -> String -> Zipper -> Maybe Zipper
 focusListElem lens nameLens elemFocus crumbFocus elem name (env, path) = runMaybe $ do
-    let funcs    = view lens elem
-        mfunc    = find (\f -> view nameLens f == name) funcs
-        newfuncs = [ f | f <- funcs, view nameLens f /= name ]
-        newelem  = set lens newfuncs elem
+    let funcs    = elem ^. lens
+        mfunc    = find (\f -> f ^. nameLens == name) funcs
+        newfuncs = [ f | f <- funcs, f ^. nameLens /= name ]
+        newelem  = elem & lens .~ newfuncs 
     func <- hoistMaybe mfunc
     return $ (elemFocus func, (crumbFocus newelem) : path)
+
+
+

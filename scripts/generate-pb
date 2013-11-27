@@ -1,0 +1,49 @@
+#!/usr/bin/python
+import os.path
+import os
+from utils.glob2 import glob
+from subprocess import call
+import shutil
+
+
+
+cwd         = os.getcwd()
+cpp_gen_dir = os.path.join(cwd, 'tools/batch-clients/zmq-cpp/generated')
+cpp_gen_dir2 = os.path.join(cwd, 'tools/batch-clients/tcp-cpp/generated')
+
+def main():
+    proto_paths = glob('**/*.proto')
+    prepare_cpp_dir()
+    for path in proto_paths:
+        prepare_hs_dir(path)
+    for path in proto_paths:
+        run_protoc(path)
+
+def run_protoc(proto_path):
+    proto_dir  = os.path.dirname(proto_path)
+    hs_gen_dir  = '../gen'
+    proto_name  = os.path.basename(proto_path)
+
+    try_call('protoc --cpp_out=' + cpp_gen_dir + ' -I libs/batch/proto -I libs/luna/proto -I ' + proto_dir + ' ' + proto_path)
+    try_call('protoc --cpp_out=' + cpp_gen_dir2 + ' -I libs/batch/proto -I libs/luna/proto -I ' + proto_dir + ' ' + proto_path)
+    
+    os.chdir(proto_dir)
+    try_call('hprotoc -d ' + hs_gen_dir + ' -I ../../../libs/batch/proto -I ../../../libs/luna/proto ' + proto_name)
+    os.chdir(cwd)
+
+def prepare_hs_dir(proto_path):
+    proto_dir  = os.path.dirname(proto_path)
+    hs_gen_dir  = '../gen'
+
+    shutil.rmtree(os.path.join(proto_dir, hs_gen_dir), True)
+
+def prepare_cpp_dir():
+    shutil.rmtree(cpp_gen_dir, True)
+    os.makedirs(cpp_gen_dir)
+    shutil.rmtree(cpp_gen_dir2, True)
+    os.makedirs(cpp_gen_dir2)
+
+def try_call(cmd):
+    if call(cmd, shell=True): fatal()
+
+main()

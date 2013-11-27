@@ -12,8 +12,8 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: src
-                  src/Flowbox/Luna/Tools/Serialize/Thrift/Generated
+  Hs-Source-Dirs: gen,
+                  src
   Other-Modules:  Paths_flowbox_luna
   if flag(debug)
     GHC-Options:  -csacc
@@ -23,9 +23,8 @@ Library
                   NoImplicitPrelude,
                   TemplateHaskell
   
-  Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*Flowbox/Luna/Tools/Serialize/Thrift/Generated/.*')`,
-                   `findmodules('src/Flowbox/Luna/Tools/Serialize/Thrift/Generated', '.*\.hs')`
-
+  Exposed-modules: `findmodules('gen', '.*\.hs', exclude='.*hs-boot.*')`, 
+                   `findmodules('src', '.*\.hs')`
   
   Build-Depends:  base,
                   bytestring,
@@ -42,13 +41,12 @@ Library
                   MissingH,
                   mtl,
                   parsec3,
+                  protocol-buffers,
+                  protocol-buffers-descriptor,
                   split,
                   text,
-                  thrift >= 0.9,
                   transformers,
-                  unordered-containers,
-                  uu-parsinglib,
-                  vector
+                  uu-parsinglib
 
 
 Executable luna
@@ -68,6 +66,7 @@ Executable luna
                   either,
                   flowbox-luna,
                   flowbox-utils,
+                  lens,
                   MissingH,
                   mtl,
                   timeit,

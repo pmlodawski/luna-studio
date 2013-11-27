@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Lib.LibManager(
+module Flowbox.Luna.Lib.LibManager (
     module Flowbox.Data.Graph,
     LibManager,
     empty,
@@ -13,14 +13,15 @@ module Flowbox.Luna.Lib.LibManager(
     loadLibrary,
 ) where
 
-import           Flowbox.Prelude                    
-import qualified Flowbox.Luna.Tools.Serialize.Lib as LibSerialization
-import qualified Flowbox.Data.Graph               as DG
-import           Flowbox.Data.Graph               hiding (Graph, Edge, empty)
-import qualified Flowbox.Luna.Lib.Library         as Library
-import           Flowbox.Luna.Lib.Library           (Library)
-import           Flowbox.Luna.Lib.Edge              (Edge)
-import           Flowbox.System.UniPath             (UniPath)
+import           Flowbox.Prelude                          
+import qualified Flowbox.Luna.Tools.Serialize.Proto.Lib as LibSerialization
+import qualified Flowbox.Data.Graph                     as DG
+import           Flowbox.Data.Graph                     hiding (Graph, Edge, empty)
+import qualified Flowbox.Luna.Lib.Library               as Library
+import           Flowbox.Luna.Lib.Library                 (Library)
+import           Flowbox.Luna.Lib.Edge                    (Edge)
+import           Flowbox.System.UniPath                   (UniPath)
+
 
 
 type LibManager = DG.Graph Library Edge

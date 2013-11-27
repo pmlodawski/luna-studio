@@ -1,0 +1,184 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2013
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.batch;
+
+import "file-system.proto";
+import "project.proto";
+
+
+
+message Request {
+    required Method method = 1;
+    enum Method {
+        LS    = 1;
+        Stat  = 2;
+        MkDir = 3;
+        Touch = 4;
+        RM    = 5;
+        CP    = 6;
+        MV    = 7;
+
+        Projects      = 8;
+        ProjectByID   = 9;
+        CreateProject = 10;
+        OpenProject   = 11;
+        UpdateProject = 12;
+        CloseProject  = 13;
+        StoreProject  = 14;
+
+        Initialize = 15;
+        Ping       = 16;
+        Dump       = 17;
+        Shutdown   = 18;
+    }
+
+    extensions 1000 to max;
+}
+
+message Response {
+    required Type type = 1;
+
+    enum Type {
+        Result    = 0;
+        Exception = 1;
+    }
+    extensions 1000 to max;
+}
+
+message Exception { extend Response { optional Exception rsp = 1000; }
+    optional string message = 1;
+}
+
+
+message FileSystem {
+    message LS {
+        message Args   { extend Request  { optional Args   req = 1001; }
+            required string path = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1001; }
+            repeated generated.proto.filesystem.Item items = 1;
+        }
+    }
+    message Stat {
+        message Args   { extend Request  { optional Args   req = 1002; }
+            required string path = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1002; }
+            optional generated.proto.filesystem.Item item = 1;
+        }
+    }
+    message MkDir {
+        message Args   { extend Request  { optional Args   req = 1003; }
+            required string path = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1003; }
+        }
+    }
+    message Touch {
+        message Args   { extend Request  { optional Args   req = 1004; }
+            required string path = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1004; }
+        }
+    }
+    message RM {
+        message Args   { extend Request  { optional Args   req = 1005; }
+            required string path = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1005; }
+        }
+    }
+    message CP {
+        message Args   { extend Request  { optional Args   req = 1006; }
+            required string src = 1;
+            required string dst = 2;
+        }
+        message Result { extend Response { optional Result rsp = 1006; }
+        }
+    }
+    message MV {
+        message Args   { extend Request  { optional Args   req = 1007; }
+            required string src = 1;
+            required string dst = 2;
+        }
+        message Result { extend Response { optional Result rsp = 1007; }
+        }
+    }
+}
+
+message Project {
+    message Projects {
+        message Args   { extend Request  { optional Args   req = 1008; }
+            required int32 projectID = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1008; }
+            repeated generated.proto.project.Project project = 1;
+        }   
+    }
+    message ProjectByID {
+        message Args   { extend Request  { optional Args   req = 1009; }
+            required int32 projectID = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1009; }
+            required generated.proto.project.Project project = 1;
+        }   
+    }
+    message CreateProject {
+        message Args   { extend Request  { optional Args   req = 1010; }
+            required generated.proto.project.Project project = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1010; }
+            required generated.proto.project.Project project = 1;
+        }   
+    }
+    message OpenProject {
+        message Args   { extend Request  { optional Args   req = 1011; }
+            required string path = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1011; }
+            required generated.proto.project.Project project = 1;
+        }   
+    }
+    message UpdateProject {
+        message Args   { extend Request  { optional Args   req = 1012; }
+            required generated.proto.project.Project project = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1012; } }   
+    }    
+    message CloseProject {
+        message Args   { extend Request  { optional Args   req = 1013; }
+            required int32 projectID = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1013; } }   
+    }
+    message StoreProject {
+        message Args   { extend Request  { optional Args   req = 1014; }
+            required int32 projectID = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1014; } }   
+    }
+}
+
+message Maintenance {
+    message Initialize {
+        message Args   { extend Request  { optional Args   req = 1015; } }
+        message Result { extend Response { optional Result rsp = 1015; } }   
+    }
+    message Ping {
+        message Args   { extend Request  { optional Args   req = 1016; } }
+        message Result { extend Response { optional Result rsp = 1016; } }
+    }
+    message Dump {
+        message Args   { extend Request  { optional Args   req = 1017; } }
+        message Result { extend Response { optional Result rsp = 1017; } }
+    }
+    message Shutdown {
+        message Args   { extend Request  { optional Args   req = 1018; } }
+        message Result { extend Response { optional Result rsp = 1018; } }
+    }
+}

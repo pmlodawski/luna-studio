@@ -5,8 +5,15 @@
 .virthualenv
 *~
 *.imports
-tools/batch-clients/cpp/batch_client
+tools/batch-clients/thrift-cpp/batch_client
+tools/batch-clients/tcp-cpp/main
+tools/batch-clients/zmq-cpp/main
 out
+
+#generated files
+gen
+tools/batch-clients/tcp-cpp/generated
+tools/batch-clients/zmq-cpp/generated
 
 # luna library files
 *.node

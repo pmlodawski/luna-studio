@@ -24,7 +24,8 @@ import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileRe
 import           Data.Version                                            (Version(Version))
 import qualified Flowbox.Luna.Data.Cabal.Config                        as Config
 import qualified Flowbox.Luna.Data.Cabal.Section                       as Section
-import qualified Flowbox.Luna.Data.HAST.Expr                           as Expr
+import qualified Flowbox.Luna.Data.HAST.Expr                           as HExpr
+import qualified Flowbox.Luna.Data.AST.Expr                            as LExpr
 import qualified Flowbox.Luna.Data.HAST.Module                         as Module
 import qualified Flowbox.Luna.Data.Source                              as Source
 import           Flowbox.Luna.Data.Source                                (Source)
@@ -45,6 +46,7 @@ import qualified Flowbox.Text.Show.Pretty                              as PP
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                     as ASTCrumb
 import qualified Flowbox.Luna.Data.AST.Zipper.Expr                     as Zipper
 
+import           Control.Lens                                          hiding (Zipper)  
 
 genProject :: String -> Config.Config
 genProject name = let
@@ -173,11 +175,14 @@ main_inner = Luna.run $ do
 
     let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]
 
-    let zipper =   Zipper.mk ast
+    let ast2 =     Zipper.mk ast
                >>= Zipper.focusFunction "add"
-               >>= Zipper.focusFunction "add"
+               >>= Zipper.modify (\(Zipper.FunctionFocus func) -> Zipper.FunctionFocus (func & LExpr.name .~ "dupa"))
+               >>= Zipper.close
 
-    putStrLn $ PP.ppShow zipper
+    logger info $ PP.ppqShow ast2
+
+    --putStrLn $ PP.ppShow zipper
 
     --logger info "\n-------- VarAlias --------"
     --va <- VarAlias.run     ast
