@@ -160,7 +160,7 @@ int main ()
     }
     std::cout << "." << std::flush;
 
-    // for(int i = 0 ; i < 10000 ; ++i)
+    for(int i = 0 ; i < 10000 ; ++i)
     {
         Request request;
         request.set_method(Request_Method_Ping);
