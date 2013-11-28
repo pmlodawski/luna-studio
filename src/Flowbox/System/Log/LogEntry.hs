@@ -7,7 +7,7 @@
 
 module Flowbox.System.Log.LogEntry where
 
-import           System.Log.Logger   (Priority)
+import           Flowbox.System.Log.Priority (Priority)
 
 import           Flowbox.Prelude     
 

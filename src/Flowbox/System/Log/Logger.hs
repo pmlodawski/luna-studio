@@ -22,11 +22,14 @@ import qualified Data.String.Utils           as StringUtils
 import qualified System.Console.ANSI         as ANSI
 import           System.IO                     (stderr)
 import qualified System.Log.Logger           as HSLogger
-import           System.Log.Logger           hiding (getLogger, setLevel, Logger)
+import           Flowbox.System.Log.Priority
+--import           System.Log.Logger           hiding (getLogger, setLevel, Logger)
 
 import qualified Flowbox.System.Log.LogEntry as LogEntry
 import           Flowbox.System.Log.LogEntry   (LogEntry(LogEntry))
+import           Control.Applicative
 
+  
 
 
 type LogList     = DList LogEntry
@@ -63,14 +66,12 @@ logIO entry = liftIO $ do
         msg   = LogEntry.msg      entry
         pri   = LogEntry.priority entry
         sgr   = case pri of
+                   TRACE       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Magenta]
                    DEBUG       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Magenta]
                    INFO        -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Green  ]
-                   NOTICE      -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Cyan   ]
                    WARNING     -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Yellow ]
                    ERROR       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Red    ]
                    CRITICAL    -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Red    ]
-                   ALERT       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Red    ]
-                   EMERGENCY   -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Red    ]
 
         -- TODO [PM] : find better solution than copying private functions from library
         componentsOfName :: String -> [String] -- [PM] copied from System.Log.Logger
@@ -81,7 +82,7 @@ logIO entry = liftIO $ do
                   let newlevel = accum ++ "." ++ x in
                       newlevel : joinComp xs newlevel
               in
-              rootLoggerName : joinComp (StringUtils.split "." n) []
+              HSLogger.rootLoggerName : joinComp (StringUtils.split "." n) []
 
         --parentLoggers :: String -> IO [Logger] -- [PM] copied from System.Log.Logger
         parentLoggers [] = return []
@@ -92,34 +93,34 @@ logIO entry = liftIO $ do
                    next <- parentLoggers pname
                    return (parent : next)
 
-        getLoggerPriority :: String -> IO Priority -- [PM] copied from System.Log.Logger
+        getLoggerPriority :: String -> IO HSLogger.Priority -- [PM] copied from System.Log.Logger
         getLoggerPriority n =
             do l <- HSLogger.getLogger n
                pl <- parentLoggers n
                case Maybe.catMaybes . map HSLogger.getLevel $ (l : pl) of
-                 [] -> return DEBUG
+                 [] -> return HSLogger.DEBUG
                  (x:_) -> return x
 
-    lpri <- getLoggerPriority name
+    lpri <- hspri2pri <$> getLoggerPriority name
+    
     if pri >= lpri
         then ANSI.hSetSGR stderr sgr
         else return ()
 
-    logM name pri (msg)
+    HSLogger.logM name (pri2hspri pri) (msg)
 
     if pri >= lpri
         then ANSI.hSetSGR stderr []
         else return ()
 
+trace :: LogAction ()
+trace = log TRACE
 
 debug :: LogAction ()
 debug = log DEBUG
 
 info :: LogAction ()
 info = log INFO
-
-notice :: LogAction ()
-notice = log NOTICE
 
 warning :: LogAction ()
 warning = log WARNING
@@ -130,23 +131,20 @@ error = log ERROR
 critical :: LogAction ()
 critical = log CRITICAL
 
-alert :: LogAction ()
-alert = log ALERT
-
-emergency :: LogAction ()
-emergency = log EMERGENCY 
-
 criticalFail :: LogAction b
 criticalFail msg name = do
     log CRITICAL msg name
     fail msg
 
 setLevel :: Priority -> String -> IO ()
-setLevel lvl name = updateGlobalLogger name (HSLogger.setLevel lvl)
+setLevel lvl name = HSLogger.updateGlobalLogger name (HSLogger.setLevel $ pri2hspri lvl)
 
 setIntLevel :: Int -> String -> IO ()
-setIntLevel lvl name = case lvl of 
-    0 -> setLevel EMERGENCY name
-    1 -> setLevel WARNING   name
-    2 -> setLevel INFO      name
-    _ -> setLevel DEBUG     name
+setIntLevel lvl name = setLevel nlvl name where 
+    nlvl = case lvl of
+        0 -> CRITICAL 
+        1 -> ERROR
+        2 -> WARNING   
+        3 -> INFO      
+        4 -> DEBUG     
+        5 -> TRACE
