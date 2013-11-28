@@ -21,16 +21,24 @@ using namespace google::protobuf::io;
 using namespace generated::proto;
 using namespace generated::proto::batch;
 
-const long BUFFER_SIZE = 100000; // TODO [PM] : magic constant
+const int BUFFER_SIZE = 10000000; // TODO [PM] : magic constant
 char buffer[BUFFER_SIZE];
 
 
+void sendAll(int sockfd, const char* buffer, const int size, const int flags) {
+    int sent   = 0;
+    while(sent != size) {
+        sent += send(sockfd, buffer + sent, size - sent, flags);
+    }
+}
+
+
 void sendRequest(int sockfd, const Request& request) {
-    int  ackSize = request.ByteSize()+4;
-    char* ackBuf = new char[ackSize];
+    int  requestSize = request.ByteSize()+4;
+    char* requestBuf = new char[requestSize];
              
     //write varint delimiter to buffer
-    ArrayOutputStream arrayOut(ackBuf, ackSize);
+    ArrayOutputStream arrayOut(requestBuf, requestSize);
     CodedOutputStream codedOut(&arrayOut);
     codedOut.WriteVarint32(request.ByteSize());
      
@@ -38,23 +46,31 @@ void sendRequest(int sockfd, const Request& request) {
     request.SerializeToCodedStream(&codedOut);
      
     //send buffer to client
-    size_t sent = send(sockfd, ackBuf, ackSize, 0);
-    std::cout << "Sent: " << sent << std::flush;
+    sendAll(sockfd, requestBuf, requestSize, 0);
+    // std::cout << "Sent: " << sent << std::flush;
 
-    delete(ackBuf);
+    delete(requestBuf);
 }
 
 Response receiveResponse(int sockfd) {
     Response response;
-
-    int received=recv(sockfd, buffer, BUFFER_SIZE, 0); // TODO [PM] : recv in loop while size != received
+    int flags = 0;
+    int received=recv(sockfd, buffer, BUFFER_SIZE, flags); 
              
     //read varint delimited protobuf object in to buffer
     //there's no method to do this in the C++ library so here's the workaround
-    ArrayInputStream arrayIn(buffer, received);
-    CodedInputStream codedIn(&arrayIn);
+    ArrayInputStream headerArrayIn(buffer, received);
+    CodedInputStream headerCodedIn(&headerArrayIn);
     google::protobuf::uint32 size;
-    codedIn.ReadVarint32(&size);
+    headerCodedIn.ReadVarint32(&size);
+
+    
+    while(received != size + headerCodedIn.CurrentPosition()) {
+        received += recv(sockfd, buffer + received, BUFFER_SIZE - received, flags);
+    }
+    
+    ArrayInputStream arrayIn(buffer + headerCodedIn.CurrentPosition(), size);
+    CodedInputStream codedIn(&arrayIn);
     CodedInputStream::Limit msgLimit = codedIn.PushLimit(size);
     response.ParseFromCodedStream(&codedIn);
     codedIn.PopLimit(msgLimit);
@@ -105,71 +121,71 @@ int main ()
     // CodedInputStream  input(&finput);
     // CodedOutputStream output(&foutput);
 
-    // std::cout << "Processing requests.." << std::flush;
-    // {
-    //     Request request;
-    //     request.set_method(Request_Method_Initialize);
-    //     Maintenance_Initialize_Args* args = request.MutableExtension(Maintenance_Initialize_Args::req);
+    std::cout << "Processing requests.." << std::flush;
+    {
+        Request request;
+        request.set_method(Request_Method_Initialize);
+        Maintenance_Initialize_Args* args = request.MutableExtension(Maintenance_Initialize_Args::req);
 
           
 
-    //     // request.SerializeToFileDescriptor(sockfd);
-    //     // output.WriteVarint32(request.ByteSize());
-    //     // request.SerializeToZeroCopyStream(&foutput);
-    //     // request.SerializeToCodedStream(&output);
-    //     // foutput.Flush();
+        // request.SerializeToFileDescriptor(sockfd);
+        // output.WriteVarint32(request.ByteSize());
+        // request.SerializeToZeroCopyStream(&foutput);
+        // request.SerializeToCodedStream(&output);
+        // foutput.Flush();
 
-    //     // std::string buffer = request.SerializeAsString();
-    //     // int l = send(sockfd, buffer.c_str(), (size_t) buffer.size() + 5, 0);
-    //     // std::cout << "sent " << l << std::flush;
-    //     // if (-1 == l) {
-    //     //     perror("send");
-    //     //     return 1;
-    //     // }
-    //     // std::cout << "sent" << std::flush;
+        // std::string buffer = request.SerializeAsString();
+        // int l = send(sockfd, buffer.c_str(), (size_t) buffer.size() + 5, 0);
+        // std::cout << "sent " << l << std::flush;
+        // if (-1 == l) {
+        //     perror("send");
+        //     return 1;
+        // }
+        // std::cout << "sent" << std::flush;
 
-    //     Response response = call(sockfd, request);
+        Response response = call(sockfd, request);
 
           
 
-    //     // response.ParseFromZeroCopyStream(input);
-    //     // response.ParseFromFileDescriptor(sockfd);
-    //     // std::cout << "received" << std::flush;
+        // response.ParseFromZeroCopyStream(input);
+        // response.ParseFromFileDescriptor(sockfd);
+        // std::cout << "received" << std::flush;
 
-    //     // char b[1000];
-    //     // int r = recv(sockfd, b, 1000, 0);
-    //     // std::cout << "received " << r << std::flush;
-    //     // zmq::message_t reply;
-    //     // socket.recv (&reply);
-    // }
-    // std::cout << "." << std::flush;
+        // char b[1000];
+        // int r = recv(sockfd, b, 1000, 0);
+        // std::cout << "received " << r << std::flush;
+        // zmq::message_t reply;
+        // socket.recv (&reply);
+    }
+    std::cout << "." << std::flush;
 
-    // // for(int i = 0 ; i < 10000 ; ++i)
-    // // {
-    // //     Request request;
-    // //     request.set_method(Request_Method_Ping);
-    // //     Maintenance_Ping_Args* args = request.MutableExtension(Maintenance_Ping_Args::req);
+    // for(int i = 0 ; i < 10000 ; ++i)
+    {
+        Request request;
+        request.set_method(Request_Method_Ping);
+        Maintenance_Ping_Args* args = request.MutableExtension(Maintenance_Ping_Args::req);
 
-    // //     Response response = call(sockfd, request);
-    // // }
-    // {
-    //     Request request;
-    //     request.set_method(Request_Method_Dump);
-    //     Maintenance_Dump_Args* args = request.MutableExtension(Maintenance_Dump_Args::req);
+        Response response = call(sockfd, request);
+    }
+    {
+        Request request;
+        request.set_method(Request_Method_Dump);
+        Maintenance_Dump_Args* args = request.MutableExtension(Maintenance_Dump_Args::req);
 
-    //     Response response = call(sockfd, request);
-    // }
+        Response response = call(sockfd, request);
+    }
     {
         Request request;
         request.set_method(Request_Method_LS);
         FileSystem_LS_Args* args = request.MutableExtension(FileSystem_LS_Args::req);
         
-        const int ps = 65000;
-        char p[ps];
+        const int ps = 100000000;
+        char* p = new char[ps];
         std::fill(p, p+ps-1, 65);
         p[ps-1] =0;
         args->set_path(p);
-
+        delete p;
         Response response = call(sockfd, request);
     }
     {

@@ -11,12 +11,14 @@ module Flowbox.Batch.Server.Transport.TCP where
 import           Control.Monad                           (forever)
 import qualified Network.Socket                        as Socket
 import qualified Network.Socket.ByteString.Lazy        as SByteString
-import qualified Data.ByteString.Lazy        as ByteString
-
+import qualified Data.ByteString.Lazy                  as ByteString
+import           Data.ByteString.Lazy                    (ByteString)
+import Data.Int (Int64)
 import           Flowbox.Prelude                       hiding (error)
 import qualified Flowbox.Batch.Server.Processor        as Processor
 import           Flowbox.Batch.Server.Handlers.Handler   (Handler)
 import           Flowbox.System.Log.Logger               
+import qualified Text.ProtocolBuffers.WireMessage      as WireMessage
 
 
 
@@ -56,14 +58,8 @@ serve address port handler = Socket.withSocketsDo $ do
 handleCall :: (Handler handler) => Socket.Socket -> handler -> IO ()
 handleCall socket handler = do
     loggerIO debug "handleCall: started"       
-    encoded_request <- SByteString.recv socket 10000000
-    loggerIO debug $ "handleCall: received request " ++ (show $ ByteString.length encoded_request)
-    encoded_request2 <- SByteString.recv socket 10000000
-    loggerIO debug $ "handleCall: received request " ++ (show $ ByteString.length encoded_request2)
-    encoded_request3 <- SByteString.recv socket 10000000
-    loggerIO debug $ "handleCall: received request " ++ (show $ ByteString.length encoded_request3)
-    encoded_request4 <- SByteString.recv socket 10000000
-    loggerIO debug $ "handleCall: received request " ++ (show $ ByteString.length encoded_request4)
+   
+    encoded_request <- readData socket 
     --let (x :: Either String (Request, ByteString.ByteString) ) = Proto.messageGet encoded_request
     --let x = case Proto.messageWithLengthGet encoded_request of
     --            Left m -> Left m
@@ -74,3 +70,24 @@ handleCall socket handler = do
     SByteString.sendAll socket encoded_response
     loggerIO debug "handleCall: reply sent"
 
+
+readData :: Socket.Socket -> IO ByteString
+readData socket = do
+    header <- SByteString.recv socket 1024
+    (size, _) <- case WireMessage.runGetOnLazy WireMessage.getVarInt header of
+                    Left   m     -> fail m
+                    Right (s, r) -> return (s, r)
+    let toRead = size + 4 - (ByteString.length header)
+    if toRead > 0
+        then readRest header toRead
+        else return header
+    where
+        readRest :: ByteString -> Int64 -> IO ByteString
+        readRest begin l = do
+            print l 
+            n <- SByteString.recv socket l
+            let stillToRead = l - ByteString.length n
+                d = ByteString.append begin n
+            if stillToRead == 0
+                then return d
+                else readRest d stillToRead        
