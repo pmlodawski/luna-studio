@@ -1,20 +1,24 @@
 
+#ifdef _WIN32
+	#pragma comment(lib, "libprotobuf.lib")
+	#define _WIN32_WINNT 0x501 //Needs to come before asio.hpp
+#endif
 
-#include <arpa/inet.h>
+
+#include <chrono>
 #include <iostream>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <stdio.h>
 #include <string>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
 #include <algorithm>
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
 // zero_copy_stream_impl.h>
 #include "generated/server-api.pb.h"
+
+
+#include <boost/asio.hpp>
+using boost::asio::ip::tcp;
+using Socket = tcp::socket;
 
 using namespace google::protobuf::io;
 
@@ -24,177 +28,179 @@ using namespace generated::proto::batch;
 const int BUFFER_SIZE = 10000000; // TODO [PM] : magic constant
 char buffer[BUFFER_SIZE];
 
-
-void sendAll(int sockfd, const char* buffer, const int size, const int flags) {
-    int sent   = 0;
-    while(sent != size) {
-        sent += send(sockfd, buffer + sent, size - sent, flags);
-    }
-}
-
-
-void sendRequest(int sockfd, const Request& request) {
-    int  requestSize = request.ByteSize()+4;
-    char* requestBuf = new char[requestSize];
-             
-    //write varint delimiter to buffer
-    ArrayOutputStream arrayOut(requestBuf, requestSize);
-    CodedOutputStream codedOut(&arrayOut);
-    codedOut.WriteVarint32(request.ByteSize());
-     
-    //write protobuf ack to buffer
-    request.SerializeToCodedStream(&codedOut);
-     
-    //send buffer to client
-    sendAll(sockfd, requestBuf, requestSize, 0);
-    // std::cout << "Sent: " << sent << std::flush;
-
-    delete(requestBuf);
-}
-
-Response receiveResponse(int sockfd) {
-    Response response;
-    int flags = 0;
-    int received=recv(sockfd, buffer, BUFFER_SIZE, flags); 
-             
-    //read varint delimited protobuf object in to buffer
-    //there's no method to do this in the C++ library so here's the workaround
-    ArrayInputStream headerArrayIn(buffer, received);
-    CodedInputStream headerCodedIn(&headerArrayIn);
-    google::protobuf::uint32 size;
-    headerCodedIn.ReadVarint32(&size);
-
-    
-    while(received != size + headerCodedIn.CurrentPosition()) {
-        received += recv(sockfd, buffer + received, BUFFER_SIZE - received, flags);
-    }
-    
-    ArrayInputStream arrayIn(buffer + headerCodedIn.CurrentPosition(), size);
-    CodedInputStream codedIn(&arrayIn);
-    CodedInputStream::Limit msgLimit = codedIn.PushLimit(size);
-    response.ParseFromCodedStream(&codedIn);
-    codedIn.PopLimit(msgLimit);
-    return response;
-}
-
-Response call(int sockfd, const Request& request) {
-    sendRequest(sockfd, request);
-    return receiveResponse(sockfd);
-}
-
-int main ()
+class StopWatch
 {
-    //  Prepare our context and socket
-    int sockfd;
-    struct sockaddr_in server;
-    struct addrinfo *serverinfo;
-    ssize_t bytesreceived = 0;
+	typedef std::chrono::high_resolution_clock clock;
+	typedef std::chrono::microseconds microseconds;
+	typedef std::chrono::milliseconds milliseconds;
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (-1 == sockfd) {
-        perror("socket");
-        return 1;
-    }
+	milliseconds intervalMs(const clock::time_point& t1, const clock::time_point& t0)
+	{
+		return std::chrono::duration_cast<milliseconds>(t1 - t0);
+	}
 
-    if (0 != getaddrinfo("localhost", NULL, NULL, &serverinfo)) {
-        perror("getaddrinfo");
-        return 1;
-    }
+	clock::time_point start_;
+public:
+	StopWatch() : start_(clock::now()) {}
+	clock::time_point restart() { start_ = clock::now(); return start_; }
+	milliseconds elapsedMs()
+	{
+		return std::chrono::duration_cast<milliseconds>(clock::now() - start_);
+	}
+};
 
-    /*Copy size of sockaddr_in b/c res->ai_addr to big for this example*/
-    memcpy(&server, serverinfo->ai_addr, sizeof(struct sockaddr_in));
-    server.sin_family = AF_INET;
-    server.sin_port = htons(30521);
-    freeaddrinfo(serverinfo);
+size_t sendAll(Socket &socket, void *data, size_t size)
+{
+	int sent = boost::asio::write(socket, boost::asio::buffer(data, size));
+	assert(sent == size);
+	return sent;
+}
 
-    std::cout << "Connecting to server..." << std::flush;
-    if (-1 == connect(sockfd, (const struct sockaddr *) &server,
-            sizeof(struct sockaddr_in))) {
-        perror("connect");
-        return 1;
-    }
 
-    std::cout << "done" << std::endl;
+void sendRequest(Socket &socket, const Request& request)
+{
+	int  requestSize = request.ByteSize() + 4;
+	char* requestBuf = new char[requestSize];
 
-    // FileInputStream  finput(sockfd);
-    // FileOutputStream foutput(sockfd);
-    // CodedInputStream  input(&finput);
-    // CodedOutputStream output(&foutput);
+	//write varint delimiter to buffer
+	ArrayOutputStream arrayOut(requestBuf, requestSize);
+	CodedOutputStream codedOut(&arrayOut);
+	codedOut.WriteVarint32(request.ByteSize());
 
-    std::cout << "Processing requests.." << std::flush;
-    {
-        Request request;
-        request.set_method(Request_Method_Initialize);
-        Maintenance_Initialize_Args* args = request.MutableExtension(Maintenance_Initialize_Args::req);
+	//write protobuf ack to buffer
+	request.SerializeToCodedStream(&codedOut);
 
-          
+	//send buffer to client
+	sendAll(socket, requestBuf, requestSize);
+	// std::cout << "Sent: " << sent << std::flush;
 
-        // request.SerializeToFileDescriptor(sockfd);
-        // output.WriteVarint32(request.ByteSize());
-        // request.SerializeToZeroCopyStream(&foutput);
-        // request.SerializeToCodedStream(&output);
-        // foutput.Flush();
+	delete(requestBuf);
+}
 
-        // std::string buffer = request.SerializeAsString();
-        // int l = send(sockfd, buffer.c_str(), (size_t) buffer.size() + 5, 0);
-        // std::cout << "sent " << l << std::flush;
-        // if (-1 == l) {
-        //     perror("send");
-        //     return 1;
-        // }
-        // std::cout << "sent" << std::flush;
+Response receiveResponse(Socket &socket)
+{
+	Response response;
+	int received = boost::asio::read(socket, boost::asio::buffer(buffer, 4));
 
-        Response response = call(sockfd, request);
+	//read varint delimited protobuf object in to buffer
+	//there's no method to do this in the C++ library so here's the workaround
+	ArrayInputStream headerArrayIn(buffer, received);
+	CodedInputStream headerCodedIn(&headerArrayIn);
+	google::protobuf::uint32 packetSize;
+	headerCodedIn.ReadVarint32(&packetSize);
+	const int sizeinfoLength = headerCodedIn.CurrentPosition();
+	const int remainingToRead = packetSize + sizeinfoLength - received;
 
-          
+	received = boost::asio::read(socket, boost::asio::buffer(buffer + received, remainingToRead));
 
-        // response.ParseFromZeroCopyStream(input);
-        // response.ParseFromFileDescriptor(sockfd);
-        // std::cout << "received" << std::flush;
+	ArrayInputStream arrayIn(buffer + sizeinfoLength, packetSize);
+	CodedInputStream codedIn(&arrayIn);
+	CodedInputStream::Limit msgLimit = codedIn.PushLimit(packetSize);
+	response.ParseFromCodedStream(&codedIn);
+	codedIn.PopLimit(msgLimit);
+	return response;
+}
 
-        // char b[1000];
-        // int r = recv(sockfd, b, 1000, 0);
-        // std::cout << "received " << r << std::flush;
-        // zmq::message_t reply;
-        // socket.recv (&reply);
-    }
-    std::cout << "." << std::flush;
+Response call(Socket &socket, const Request& request)
+{
+	sendRequest(socket, request);
+	return receiveResponse(socket);
+}
 
-    for(int i = 0 ; i < 10000 ; ++i)
-    {
-        Request request;
-        request.set_method(Request_Method_Ping);
-        Maintenance_Ping_Args* args = request.MutableExtension(Maintenance_Ping_Args::req);
+int main()
+{
+	try
+	{
+		//Prepare Boost.Asio
+		boost::asio::io_service io_service;
+		tcp::socket socket(io_service);
+		tcp::resolver resolver(io_service);
+		//Connect
+		boost::asio::connect(socket, resolver.resolve({ "localhost", "30521" }));
 
-        Response response = call(sockfd, request);
-    }
-    {
-        Request request;
-        request.set_method(Request_Method_Dump);
-        Maintenance_Dump_Args* args = request.MutableExtension(Maintenance_Dump_Args::req);
+		StopWatch sw;
+		std::cout << "Processing requests.." << std::flush;
+		{
+			Request request;
+			request.set_method(Request_Method_Initialize);
+			Maintenance_Initialize_Args* args = request.MutableExtension(Maintenance_Initialize_Args::req);
 
-        Response response = call(sockfd, request);
-    }
-    {
-        Request request;
-        request.set_method(Request_Method_LS);
-        FileSystem_LS_Args* args = request.MutableExtension(FileSystem_LS_Args::req);
-        
-        const int ps = 100000000;
-        char* p = new char[ps];
-        std::fill(p, p+ps-1, 65);
-        p[ps-1] =0;
-        args->set_path(p);
-        delete p;
-        Response response = call(sockfd, request);
-    }
-    {
-        Request request;
-        request.set_method(Request_Method_Shutdown);
-        Maintenance_Shutdown_Args* args = request.MutableExtension(Maintenance_Shutdown_Args::req);
-        Response response = call(sockfd, request);
-    }
-    std::cout << "done" << std::endl;
+			// request.SerializeToFileDescriptor(sockfd);
+			// output.WriteVarint32(request.ByteSize());
+			// request.SerializeToZeroCopyStream(&foutput);
+			// request.SerializeToCodedStream(&output);
+			// foutput.Flush();
 
-    return 0;
+			// std::string buffer = request.SerializeAsString();
+			// int l = send(sockfd, buffer.c_str(), (size_t) buffer.size() + 5, 0);
+			// std::cout << "sent " << l << std::flush;
+			// if (-1 == l) {
+			//     perror("send");
+			//     return 1;
+			// }
+			// std::cout << "sent" << std::flush;
+
+			Response response = call(socket, request);
+
+			// response.ParseFromZeroCopyStream(input);
+			// response.ParseFromFileDescriptor(sockfd);
+			// std::cout << "received" << std::flush;
+
+			// char b[1000];
+			// int r = recv(sockfd, b, 1000, 0);
+			// std::cout << "received " << r << std::flush;
+			// zmq::message_t reply;
+			// socket.recv (&reply);
+		}
+
+		std::cout << "." << std::endl;
+		std::cout << "Request-response: " << sw.elapsedMs().count() << "ms\n";
+		const int pingCount = 10000;
+		for(int i = 0; i < pingCount; ++i)
+		{
+			Request request;
+			request.set_method(Request_Method_Ping);
+			Maintenance_Ping_Args* args = request.MutableExtension(Maintenance_Ping_Args::req);
+
+			Response response = call(socket, request);
+		}
+		{
+			Request request;
+			request.set_method(Request_Method_Dump);
+			Maintenance_Dump_Args* args = request.MutableExtension(Maintenance_Dump_Args::req);
+
+			Response response = call(socket, request);
+		}
+
+		std::cout << pingCount << " pings " << sw.elapsedMs().count() << "ms\n";
+
+		const int ps = 100000000;
+		{
+			Request request;
+			request.set_method(Request_Method_LS);
+			FileSystem_LS_Args* args = request.MutableExtension(FileSystem_LS_Args::req);
+
+			char* p = new char[ps];
+			std::fill(p, p + ps - 1, 65);
+			p[ps - 1] = 0;
+			args->set_path(p);
+			delete [] p;
+			Response response = call(socket, request);
+		}
+		{
+			Request request;
+			request.set_method(Request_Method_Shutdown);
+			Maintenance_Shutdown_Args* args = request.MutableExtension(Maintenance_Shutdown_Args::req);
+			Response response = call(socket, request);
+		}
+		std::cout << "Sending " << ps << " bytes " << sw.elapsedMs().count() << "ms\n";
+		std::cout << "done" << std::endl;
+
+		return 0;
+	}
+	catch(std::exception &e)
+	{
+		std::cout << "Encountered an exception: " << e.what() << std::endl;
+		return 1;
+	}
 }
