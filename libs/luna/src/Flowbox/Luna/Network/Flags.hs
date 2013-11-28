@@ -5,16 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Network.Flags(
-    Flags(..),
-    empty
-) where
+module Flowbox.Luna.Network.Flags where
 
 import           Flowbox.Prelude   
 
-data Flags = Flags {io :: Bool, omit :: Bool } deriving (Show)
 
---type Flags = [Flag]
+
+data Flags = Flags {io :: Bool, omit :: Bool } deriving (Show)
 
 empty :: Flags
 empty = Flags False False

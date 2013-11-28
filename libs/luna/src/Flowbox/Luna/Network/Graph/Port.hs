@@ -5,11 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Network.Graph.Port(
-    Port(..),
-) where
+module Flowbox.Luna.Network.Graph.Port where
 
 import           Flowbox.Prelude   
+
+
 
 data Port = All
           | Number Int

@@ -11,6 +11,8 @@ import           Flowbox.Prelude
 import qualified Data.IntMap     as IntMap
 import           Data.IntMap       (IntMap)
 
+
+
 data AA     = AA  { varmap :: IntMap Int } 
                   deriving (Show)
 
