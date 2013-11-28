@@ -24,7 +24,7 @@ import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Lit    ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Type   ()
 import qualified Generated.Proto.Pat.App                            as GenApp
-import qualified Generated.Proto.Pat.Con                            as GenCon
+import qualified Generated.Proto.Pat.Con_                           as GenCon_
 import qualified Generated.Proto.Pat.Lit                            as GenLit
 import qualified Generated.Proto.Pat.Pat                            as Gen
 import qualified Generated.Proto.Pat.Pat.Cls                        as GenCls
@@ -40,7 +40,7 @@ instance Convert Pat Gen.Pat where
         Pat.Var   i name     -> genPat GenCls.Var   GenVar.ext   $ GenVar.Var     (encodePJ i) (encodePJ name)
         Pat.Lit   i value    -> genPat GenCls.Lit   GenLit.ext   $ GenLit.Lit     (encodePJ i) (encodeJ value)
         Pat.Tuple i items    -> genPat GenCls.Tuple GenTuple.ext $ GenTuple.Tuple (encodePJ i) (encodeList items)
-        Pat.Con   i name     -> genPat GenCls.Con   GenCon.ext   $ GenCon.Con     (encodePJ i) (encodePJ name)
+        Pat.Con   i name     -> genPat GenCls.Con_  GenCon_.ext  $ GenCon_.Con_   (encodePJ i) (encodePJ name)
         Pat.App   i src args -> genPat GenCls.App   GenApp.ext   $ GenApp.App     (encodePJ i) (encodeJ src) (encodeList args)
         Pat.Typed i pat cls  -> genPat GenCls.Typed GenTyped.ext $ GenTyped.Typed (encodePJ i) (encodeJ pat) (encodeJ cls)
         Pat.Wildcard i       -> genPat GenCls.Wildcard GenWildcard.ext $ GenWildcard.Wildcard (encodePJ i)
@@ -64,8 +64,8 @@ instance Convert Pat Gen.Pat where
                              (GenTuple.Tuple mtid titems) <- ext <?> "Failed to decode Pat.Tuple: extension is missing"
                              tid    <- mtid    <?> "Failed to decode Pat.Tuple: 'id' field is missing"
                              Pat.Tuple (decodeP tid) <$> (decodeList titems)
-       GenCls.Con      -> do ext <- getExt GenCon.ext
-                             (GenCon.Con mtid mtname) <- ext <?> "Failed to decode Pat.Con: extension is missing"
+       GenCls.Con_     -> do ext <- getExt GenCon_.ext
+                             (GenCon_.Con_ mtid mtname) <- ext <?> "Failed to decode Pat.Con: extension is missing"
                              tid   <- mtid   <?> "Failed to decode Pat.Con: 'id' field is missing"
                              tname <- mtname <?> "Failed to decode Pat.Con: 'name' field is missing"
                              pure $ Pat.Con (decodeP tid) (decodeP tname)

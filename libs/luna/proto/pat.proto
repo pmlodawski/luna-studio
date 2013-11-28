@@ -17,7 +17,7 @@ message Pat {
         Var      = 1;
         Lit      = 2;
         Tuple    = 3;
-        Con      = 4;
+        Con_     = 4;
         App      = 5;
         Typed    = 6;
         Wildcard = 7;
@@ -45,8 +45,8 @@ message Tuple {
     repeated Pat   items = 2;
 }
 
-message Con {
-    extend Pat { optional Con ext = 103; }
+message Con_ {
+    extend Pat { optional Con_ ext = 103; }
     optional int32  id   = 1;
     optional string name = 2;
 }

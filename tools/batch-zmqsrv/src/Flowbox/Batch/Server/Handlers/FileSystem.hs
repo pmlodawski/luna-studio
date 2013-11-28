@@ -40,7 +40,7 @@ import qualified Generated.Proto.Batch.FileSystem.CP.Args            as CP
 import qualified Generated.Proto.Batch.FileSystem.CP.Result          as CP
 import qualified Generated.Proto.Batch.FileSystem.MV.Args            as MV
 import qualified Generated.Proto.Batch.FileSystem.MV.Result          as MV
-import Flowbox.Batch.FileSystem.Item
+import           Flowbox.Batch.FileSystem.Item                         
 
 
 loggerIO :: LoggerIO

@@ -13,7 +13,7 @@ import qualified Network.Socket                        as Socket
 import qualified Network.Socket.ByteString.Lazy        as SByteString
 import qualified Data.ByteString.Lazy                  as ByteString
 import           Data.ByteString.Lazy                    (ByteString)
-import Data.Int (Int64)
+import           Data.Int                                (Int64)
 import           Flowbox.Prelude                       hiding (error)
 import qualified Flowbox.Batch.Server.Processor        as Processor
 import           Flowbox.Batch.Server.Handlers.Handler   (Handler)
@@ -84,7 +84,6 @@ readData socket = do
     where
         readRest :: ByteString -> Int64 -> IO ByteString
         readRest begin l = do
-            print l 
             n <- SByteString.recv socket l
             let stillToRead = l - ByteString.length n
                 d = ByteString.append begin n

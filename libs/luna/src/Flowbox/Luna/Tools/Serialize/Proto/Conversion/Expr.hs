@@ -27,7 +27,7 @@ import qualified Generated.Proto.Expr.AppCons_                     as GenAppCons
 import qualified Generated.Proto.Expr.Arg                          as GenArg
 import qualified Generated.Proto.Expr.Assignment                   as GenAssignment
 import qualified Generated.Proto.Expr.Class                        as GenClass
-import qualified Generated.Proto.Expr.Con                          as GenCon
+import qualified Generated.Proto.Expr.Con_                         as GenCon_
 import qualified Generated.Proto.Expr.Expr                         as Gen
 import qualified Generated.Proto.Expr.Expr.Cls                     as GenCls
 import qualified Generated.Proto.Expr.Field                        as GenField
@@ -65,7 +65,7 @@ instance Convert Expr Gen.Expr where
         Expr.Class      i cls classes fields methods 
                                    -> genExpr GenCls.Class GenClass.ext $ GenClass.Class 
                                       (encodePJ i) (encodeJ cls) (encodeList classes) (encodeList fields) (encodeList methods)
-        Expr.Con        i name     -> genExpr GenCls.Con GenCon.ext $ GenCon.Con 
+        Expr.Con        i name     -> genExpr GenCls.Con_ GenCon_.ext $ GenCon_.Con_ 
                                       (encodePJ i) (encodePJ name)
         Expr.Function   i path name inputs output body   
                                    -> genExpr GenCls.Function GenFunction.ext $ GenFunction.Function 
@@ -150,9 +150,9 @@ instance Convert Expr Gen.Expr where
             tid  <- mtid  <?> "Failed to decode Expr.Class: 'id' field is missing"
             tcls <- mtcls <?> "Failed to decode Expr.Class: 'cls' field is missing"
             Expr.Class (decodeP tid) <$> decode tcls <*> decodeList tclasses <*> decodeList tfields <*> decodeList tmethods
-        GenCls.Con -> do 
-            ext <- getExt GenCon.ext
-            (GenCon.Con mtid mtname) <- ext <?> "Failed to decode Expr.Con: extension is missing"
+        GenCls.Con_ -> do 
+            ext <- getExt GenCon_.ext
+            (GenCon_.Con_ mtid mtname) <- ext <?> "Failed to decode Expr.Con: extension is missing"
             tid   <- mtid  <?> "Failed to decode Expr.Con: 'id' field is missing"
             tname <- mtname <?> "Failed to decode Expr.Con: 'name' field is missing"
             pure $ Expr.Con (decodeP tid) (decodeP tname)

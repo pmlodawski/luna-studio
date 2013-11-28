@@ -22,7 +22,7 @@ import           Flowbox.Luna.Data.AST.Type                       (Type)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic   
 import qualified Generated.Proto.Type.App                       as GenApp
 import qualified Generated.Proto.Type.Class                     as GenClass
-import qualified Generated.Proto.Type.Con                       as GenCon
+import qualified Generated.Proto.Type.Con_                      as GenCon_
 import qualified Generated.Proto.Type.Lambda                    as GenLambda
 import qualified Generated.Proto.Type.Module                    as GenModule
 import qualified Generated.Proto.Type.Tuple                     as GenTuple
@@ -41,7 +41,7 @@ instance Convert Type Gen.Type where
         Type.Class   i name params   -> genType GenCls.Class   GenClass.ext   $ GenClass.Class     (Just $ encodeP i) (Just $ encodeP name) (encodeListP params)
         Type.Module  i path          -> genType GenCls.Module  GenModule.ext  $ GenModule.Module   (Just $ encodeP i) (encodeListP path)
         Type.Lambda  i inputs output -> genType GenCls.Lambda  GenLambda.ext  $ GenLambda.Lambda   (Just $ encodeP i) (encodeList inputs) (Just $ encode output)
-        Type.Con     i segments      -> genType GenCls.Con     GenCon.ext     $ GenCon.Con         (Just $ encodeP i) (encodeListP segments)
+        Type.Con     i segments      -> genType GenCls.Con_    GenCon_.ext    $ GenCon_.Con_       (Just $ encodeP i) (encodeListP segments)
         Type.App     i src args      -> genType GenCls.App     GenApp.ext     $ GenApp.App         (Just $ encodeP i) (Just $ encode src) (encodeList args)
         where
             genType :: GenCls.Cls -> Extensions.Key Maybe Gen.Type v -> v -> Gen.Type
@@ -76,8 +76,8 @@ instance Convert Type Gen.Type where
                              tid     <- mtid     <?> "Failed to decode Type.Lambda: 'id' field is missing"
                              toutput <- mtoutput <?> "Failed to decode Type.Lambda: 'output' field is missing"
                              Type.Lambda (decodeP tid) <$> (decodeList tinputs) <*> decode toutput
-        GenCls.Con     -> do ext <- getExt GenCon.ext
-                             (GenCon.Con mtid tsegments) <- ext <?> "Failed to decode Type.Con: extension is missing"
+        GenCls.Con_    -> do ext <- getExt GenCon_.ext
+                             (GenCon_.Con_ mtid tsegments) <- ext <?> "Failed to decode Type.Con: extension is missing"
                              tid <- mtid <?> "Failed to decode Type.Con: 'id' field is missing"
                              pure $ Type.Con (decodeP tid) (decodeListP tsegments)
         GenCls.App     -> do ext <- getExt GenApp.ext

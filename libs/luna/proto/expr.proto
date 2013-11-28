@@ -20,7 +20,7 @@ message Expr {
         AppCons_    = 4;
         Assignment  = 5;
         Class       = 6;
-        Con         = 7;
+        Con_        = 7;
         Function    = 8;
         Lambda      = 9;
         Import      = 10;
@@ -86,8 +86,8 @@ message Class {
     repeated Expr  methods = 5;
 }
 
-message Con {
-    extend Expr { optional Con ext = 106; }
+message Con_ {
+    extend Expr { optional Con_ ext = 106; }
     optional int32  id   = 1;
     optional string name = 2;
 }
