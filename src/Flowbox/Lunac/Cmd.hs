@@ -20,10 +20,6 @@ data Prog    = Prog { cmd      :: Command
              deriving Show
 
 
-data Repo    = Repo { cmd      :: Command
-                    }
-
-
 data Command = Hello
              | Build Options
              | Clean
@@ -33,6 +29,8 @@ data Command = Hello
              | Install 
              | Run 
              | Version Options
+             | Repo { c :: Command
+             }
              deriving Show
 
 
