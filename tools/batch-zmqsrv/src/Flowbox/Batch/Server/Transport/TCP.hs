@@ -10,7 +10,7 @@ module Flowbox.Batch.Server.Transport.TCP where
 
 import           Control.Monad                           (forever)
 import qualified Network.Socket                        as Socket
-import qualified Network.Socket.ByteString.Lazy        as SByteString
+import qualified Network.Socket.ByteString.Lazy        as SLByteString
 import qualified Data.ByteString.Lazy                  as ByteString
 import           Data.ByteString.Lazy                    (ByteString)
 import           Data.Int                                (Int64)
@@ -19,7 +19,7 @@ import qualified Flowbox.Batch.Server.Processor        as Processor
 import           Flowbox.Batch.Server.Handlers.Handler   (Handler)
 import           Flowbox.System.Log.Logger               
 import qualified Text.ProtocolBuffers.WireMessage      as WireMessage
-
+import qualified Network.Socket.ByteString as SByteString
 
 
 loggerIO :: LoggerIO
@@ -67,13 +67,13 @@ handleCall socket handler = do
     --print x
     encoded_response <- Processor.process handler encoded_request
     loggerIO debug "handleCall: processing done"
-    SByteString.sendAll socket encoded_response
+    SByteString.sendAll socket $ ByteString.toStrict encoded_response
     loggerIO debug "handleCall: reply sent"
 
 
 readData :: Socket.Socket -> IO ByteString
 readData socket = do
-    header <- SByteString.recv socket 1024
+    header <- SLByteString.recv socket 1024
     (size, _) <- case WireMessage.runGetOnLazy WireMessage.getVarInt header of
                     Left   m     -> fail m
                     Right (s, r) -> return (s, r)
@@ -84,7 +84,7 @@ readData socket = do
     where
         readRest :: ByteString -> Int64 -> IO ByteString
         readRest begin l = do
-            n <- SByteString.recv socket l
+            n <- SLByteString.recv socket l
             let stillToRead = l - ByteString.length n
                 d = ByteString.append begin n
             if stillToRead == 0
