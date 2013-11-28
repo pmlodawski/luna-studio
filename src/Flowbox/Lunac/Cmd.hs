@@ -29,8 +29,8 @@ data Command = Hello
              | Install 
              | Run 
              | Version Options
-             | Repo { c :: Command
-             }
+             | Repo { c :: Command }
+             | List Options
              deriving Show
 
 
@@ -56,6 +56,9 @@ data Options = VersionOptions { compiler :: Bool
                               , dump_ssa     :: Bool 
                               , dump_hast    :: Bool 
                               , dump_hsc     :: Bool 
+                              }
+              | ListOptions   { installed    :: Bool
+                              , simple       :: Bool 
                               }
               | RepoOptions   { 
 
