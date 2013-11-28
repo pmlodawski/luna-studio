@@ -347,7 +347,7 @@ genType t = case t of
     LType.Con     _ segments -> return $ HExpr.AppT (HExpr.ConT "Pure") (HExpr.ConE segments)
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType items
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
-    LType.Unknown _          -> logger emergency "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"
+    LType.Unknown _          -> logger critical "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"
     --_                        -> fail $ show t
 
 genLit :: GenMonad m => LLit.Lit -> Pass.Result m HExpr
