@@ -1,0 +1,46 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2013
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.graph;
+
+import "attributes.proto";
+
+
+
+message Node {
+    enum Cls {
+        Expr    = 1;
+        Inputs  = 2;
+        Outputs = 3;
+    }
+    required Cls    cls    = 1;
+    optional int32  nodeID = 2;
+    optional string name   = 3;
+	optional generated.proto.attributes.Flags      flags = 4;
+    optional generated.proto.attributes.Attributes attrs = 5;
+}
+
+message Port {
+    enum Cls {
+        Number = 1;
+        All    = 2;
+    }
+    required Cls   cls = 1;
+    optional int32 num = 2;
+}
+
+message Edge {
+	optional int32 nodeSrc = 1;
+	optional int32 nodeDst = 2;
+	optional Port  portDst = 3;
+}
+
+message Graph {
+	repeated Node nodes = 1;
+	repeated Edge edges = 2;
+}
+
