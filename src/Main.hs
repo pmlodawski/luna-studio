@@ -55,6 +55,10 @@ buildParser = Cmd.Build <$> ( Cmd.BuildOptions <$> argument str ( metavar "INPUT
                                                <*> switch ( long "dump-hsc"  <> hidden ) 
                             )
 
+repoParser :: Opt.Parser Cmd.Command
+repoParser = Cmd.Repo <$> subparser ( command "clean"   (Opt.info (pure Cmd.Doc)   (progDesc "remove object files"))
+                                    )
+
 parser :: Opt.Parser Cmd.Prog
 parser = Cmd.Prog <$> subparser ( command "build"   (Opt.info buildParser      (progDesc "compile packages and dependencies"))
                                <> command "clean"   (Opt.info (pure Cmd.Doc)   (progDesc "remove object files"))

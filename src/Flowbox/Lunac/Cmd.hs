@@ -20,6 +20,10 @@ data Prog    = Prog { cmd      :: Command
              deriving Show
 
 
+data Repo    = Repo { cmd      :: Command
+                    }
+
+
 data Command = Hello
              | Build Options
              | Clean
@@ -54,6 +58,9 @@ data Options = VersionOptions { compiler :: Bool
                               , dump_ssa     :: Bool 
                               , dump_hast    :: Bool 
                               , dump_hsc     :: Bool 
+                              }
+              | RepoOptions   { 
+
                               }
              deriving Show
 
