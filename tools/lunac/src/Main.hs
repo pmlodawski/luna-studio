@@ -56,15 +56,20 @@ buildParser = Cmd.Build <$> ( Cmd.BuildOptions <$> argument str ( metavar "INPUT
                             )
 
 repoParser :: Opt.Parser Cmd.Command
-repoParser = Cmd.Repo <$> subparser ( command "clean"   (Opt.info (pure Cmd.Doc)   (progDesc "remove object files"))
+repoParser = Cmd.Repo <$> subparser ( command "install"   (Opt.info (pure Cmd.Doc)   (progDesc "compile and install packages and dependencies"))
+                                   <> command "info"      (Opt.info (pure Cmd.Doc)   (progDesc "display detailed information about particular package"))
+                                   <> command "list"      (Opt.info (pure Cmd.Doc)   (progDesc "list packages matching a search string"))
+                                   <> command "uninstall" (Opt.info (pure Cmd.Doc)   (progDesc "uninstall selected packages"))
+                                   <> command "upload"    (Opt.info (pure Cmd.Doc)   (progDesc "upload packages to remote repository"))
                                     )
+                      <**> helper
 
 parser :: Opt.Parser Cmd.Prog
 parser = Cmd.Prog <$> subparser ( command "build"   (Opt.info buildParser      (progDesc "compile packages and dependencies"))
                                <> command "clean"   (Opt.info (pure Cmd.Doc)   (progDesc "remove object files"))
                                <> command "doc"     (Opt.info (pure Cmd.Doc)   (progDesc "run lunadoc on package sources"))
                                <> command "env"     (Opt.info (pure Cmd.Doc)   (progDesc "print Luna environment information"))
-                               <> command "repo"    (Opt.info (pure Cmd.Doc)   (progDesc "manage Luna library repository"))
+                               <> command "repo"    (Opt.info repoParser       (progDesc "manage Luna library repository"))
                                -- <> command "get"     (Opt.info (pure Cmd.Doc)   (progDesc "download and install packages and dependencies"))
                                -- <> command "install" (Opt.info (pure Cmd.Doc)   (progDesc "compile and install packages and dependencies"))
                                <> command "run"     (Opt.info (pure Cmd.Doc)   (progDesc "compile and run Luna program"))
@@ -72,10 +77,11 @@ parser = Cmd.Prog <$> subparser ( command "build"   (Opt.info buildParser      (
                                 )
                   <*> switch    ( long "no-color" <> hidden <> help "disable color output" )
                   <*> optIntFlag Nothing 'v' 0 2 "verbose level [0-5], default 3"
+                  <**> helper
 
 
 opts :: Opt.ParserInfo Cmd.Prog
-opts = Opt.info (parser <**> helper) (fullDesc <> header (Version.full False)) --idm 
+opts = Opt.info parser (fullDesc <> header (Version.full False)) --idm 
 
 
 helper :: Opt.Parser (a -> a)
