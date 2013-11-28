@@ -16,7 +16,6 @@ module Flowbox.Batch.Server.Handlers.FileSystem (
 ) 
 where
 
-
 import           Data.IORef                                            (IORef)
 
 import           Flowbox.Prelude                                       
@@ -40,7 +39,7 @@ import qualified Generated.Proto.Batch.FileSystem.CP.Args            as CP
 import qualified Generated.Proto.Batch.FileSystem.CP.Result          as CP
 import qualified Generated.Proto.Batch.FileSystem.MV.Args            as MV
 import qualified Generated.Proto.Batch.FileSystem.MV.Result          as MV
-import           Flowbox.Batch.FileSystem.Item                         
+
 
 
 loggerIO :: LoggerIO
@@ -51,9 +50,9 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.FileSystem"
 ls :: IORef Batch -> LS.Args -> Script LS.Result
 ls _ (LS.Args tpath) = do
     scriptIO $ loggerIO info "called ls"
-    --let upath = decodeP tpath
-    --items <- scriptIO $ BatchFS.ls upath
-    return $ LS.Result $ encodeList ([] :: [Item])
+    let upath = decodeP tpath
+    items <- scriptIO $ BatchFS.ls upath
+    return $ LS.Result $ encodeList items
 
 
 stat :: IORef Batch -> Stat.Args -> Script Stat.Result
