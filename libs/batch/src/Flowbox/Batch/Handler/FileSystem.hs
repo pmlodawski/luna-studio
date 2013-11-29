@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Batch.Handlers.FileSystem (
+module Flowbox.Batch.Handler.FileSystem (
     ls,
     stat,
 

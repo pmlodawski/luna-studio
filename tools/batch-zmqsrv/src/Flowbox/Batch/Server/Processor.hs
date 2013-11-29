@@ -19,8 +19,8 @@ import qualified Text.ProtocolBuffers.Reflections                    as Reflecti
 import qualified Text.ProtocolBuffers.WireMessage                    as WireMessage
 
 import           Flowbox.Prelude                                     hiding (error)
-import qualified Flowbox.Batch.Server.Handlers.Handler               as Handler
-import           Flowbox.Batch.Server.Handlers.Handler                 (Handler)
+import qualified Flowbox.Batch.Server.Handler.Handler                as Handler
+import           Flowbox.Batch.Server.Handler.Handler                  (Handler)
 import           Flowbox.Control.Error                                 
 import           Flowbox.System.Log.Logger                             
 import           Generated.Proto.Batch.Exception                       (Exception(Exception))

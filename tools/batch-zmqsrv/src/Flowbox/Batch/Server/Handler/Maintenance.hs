@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Batch.Server.Handlers.Maintenance (
+module Flowbox.Batch.Server.Handler.Maintenance (
     ping,
     dump,
     shutdown,
@@ -17,7 +17,7 @@ import           Data.IORef                                            (IORef)
 
 import           Flowbox.Prelude                                       
 import           Flowbox.Batch.Batch                                   (Batch)
-import qualified Flowbox.Batch.Handlers.Maintenance                  as BatchM
+import qualified Flowbox.Batch.Handler.Maintenance                   as BatchM
 import           Flowbox.Control.Error                                 
 import           Flowbox.System.Log.Logger                             
 import qualified Generated.Proto.Batch.Maintenance.Initialize.Args   as Initialize
@@ -32,7 +32,7 @@ import qualified Generated.Proto.Batch.Maintenance.Shutdown.Result   as Shutdown
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Maintenance"
+loggerIO = getLoggerIO "Flowbox.Batch.Server.Handler.Maintenance"
 
 
 ------ public api -------------------------------------------------

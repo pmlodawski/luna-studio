@@ -6,7 +6,7 @@
 -- Flowbox Team <contact@flowbox.Script>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Server.Handlers.Handler where
+module Flowbox.Batch.Server.Handler.Handler where
 
 import           Flowbox.Control.Error                                 
 import qualified Generated.Proto.Batch.FileSystem.LS.Args            as LS
@@ -45,6 +45,7 @@ import qualified Generated.Proto.Batch.Maintenance.Dump.Args         as Dump
 import qualified Generated.Proto.Batch.Maintenance.Dump.Result       as Dump
 import qualified Generated.Proto.Batch.Maintenance.Shutdown.Args     as Shutdown
 import qualified Generated.Proto.Batch.Maintenance.Shutdown.Result   as Shutdown
+
 
 
 class Handler h where

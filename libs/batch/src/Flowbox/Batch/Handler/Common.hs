@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Handlers.Common (
+module Flowbox.Batch.Handler.Common (
     readonly,
     readonly',
     noresult,
@@ -27,8 +27,8 @@ module Flowbox.Batch.Handlers.Common (
 import           Flowbox.Prelude                        
 import qualified Flowbox.Batch.Batch                  as Batch
 import           Flowbox.Batch.Batch                    (Batch(..))
-import qualified Flowbox.Batch.GraphView.GraphView    as GraphView
-import           Flowbox.Batch.GraphView.GraphView      (GraphView)
+--import qualified Flowbox.Batch.GraphView.GraphView    as GraphView
+--import           Flowbox.Batch.GraphView.GraphView      (GraphView)
 import qualified Flowbox.Batch.Project.Project        as Project
 import           Flowbox.Batch.Project.Project          (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager

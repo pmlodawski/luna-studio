@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Luna.Tools.Serialize.Proto.Lib (
+module Flowbox.Luna.Tools.Serialize.Proto.Library (
     storeLibrary,
     restoreLibrary,
 ) where
@@ -24,7 +24,9 @@ import           Flowbox.System.IO.Serializer                            (Serial
 import           Flowbox.System.UniPath                                  (UniPath)
 import           Flowbox.System.Log.Logger                               
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic          
+import           Flowbox.Control.Error                                   
 import qualified Generated.Proto.Library.Library                       as Gen
+
 
 
 loggerIO :: LoggerIO
@@ -38,28 +40,27 @@ saveLib library h = do
 
 
 getLib :: IO.Handle -> IO Library
-getLib h = do 
-    binary <- ByteString.hGetContents h
-    case Proto.messageGet binary of
-        Left  m -> fail m
-        Right (tlibrary, _) -> case decode tlibrary of
-            Left m -> fail m
-            Right (_ :: Int, library) -> return library
+getLib h = runScript $ do 
+    binary              <- scriptIO $ ByteString.hGetContents h
+    (tlibrary, _)       <- tryRight $ Proto.messageGet binary
+    (_ :: Int, library) <- tryRight$ decode tlibrary
+    return library
 
 
 storeLibrary :: Library -> IO ()
 storeLibrary lib = do 
     let libpath = Library.path lib
         slib    = Serializable libpath (saveLib lib)
-
     Serializer.serialize slib
+    loggerIO debug "Library saved succesfully"
+
 
 
 restoreLibrary :: UniPath -> IO Library
 restoreLibrary path = do
-    loggerIO critical "Not implemented - restoreLibrary"
     let dlib = Deserializable path getLib
     library <- Serializer.deserialize dlib
+    loggerIO debug "Library restored succesfully"
     return $ library{Library.path = path}
 
 

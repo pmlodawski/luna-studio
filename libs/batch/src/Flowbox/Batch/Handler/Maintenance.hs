@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Handlers.Maintenance where
+module Flowbox.Batch.Handler.Maintenance where
 
 
 import           Flowbox.Prelude                   

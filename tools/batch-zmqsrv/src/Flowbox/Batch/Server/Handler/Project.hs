@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Batch.Server.Handlers.Project (
+module Flowbox.Batch.Server.Handler.Project (
     projects,
 
     projectByID,
@@ -19,7 +19,7 @@ import           Data.IORef                                               (IORef
 import qualified Data.Sequence                                          as Sequence
 import           Flowbox.Prelude                                          
 import           Flowbox.Batch.Batch                                      (Batch(..))
-import qualified Flowbox.Batch.Handlers.Projects                        as BatchP
+import qualified Flowbox.Batch.Handler.Project                          as BatchP
 import qualified Flowbox.Batch.Project.Project                          as Project
 import           Flowbox.Batch.Project.Project                            (Project(..))
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project   ()
@@ -45,7 +45,7 @@ import qualified Generated.Proto.Batch.Project.StoreProject.Result      as Store
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Projects"
+loggerIO = getLoggerIO "Flowbox.Batch.Server.Handler.Project"
 
 ------ public api -------------------------------------------------
 

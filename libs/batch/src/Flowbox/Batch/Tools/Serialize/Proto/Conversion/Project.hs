@@ -14,7 +14,7 @@ import qualified Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes   ()
 
 import           Flowbox.Prelude                                            
 import qualified Flowbox.Batch.Project.Project                            as Project
-import           Flowbox.Batch.Project.Project                              (Project(..))
+import           Flowbox.Batch.Project.Project                              (Project(Project))
 import           Flowbox.Control.Error                                      
 import           Flowbox.Luna.Lib.LibManager                                (LibManager)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic             

@@ -7,21 +7,21 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 
-import qualified Control.Concurrent                         as Concurrent
-import qualified Control.Concurrent.MVar                    as MVar
-import qualified Control.Exception                          as Exception
-import qualified System.Exit                                as Exit
+import qualified Control.Concurrent                        as Concurrent
+import qualified Control.Concurrent.MVar                   as MVar
+import qualified Control.Exception                         as Exception
+import qualified System.Exit                               as Exit
 
-import           Flowbox.Prelude                            hiding (error)
-import qualified Flowbox.Batch.Server.Version               as Version
-import qualified Flowbox.Batch.Server.Cmd                   as Cmd
-import           Flowbox.Batch.Server.Cmd                     (Cmd)
-import qualified Flowbox.Batch.Server.Transport.TCP         as Server
-import qualified Flowbox.Options.Applicative                as Opt
-import           Flowbox.Options.Applicative                hiding (info)
-import           Flowbox.System.Log.Logger                    
-import qualified Flowbox.Batch.Server.Handlers.BatchHandler as BatchHandler
-import           Flowbox.Batch.Server.Handlers.BatchHandler   (BatchHandler)
+import           Flowbox.Prelude                           hiding (error)
+import qualified Flowbox.Batch.Server.Version              as Version
+import qualified Flowbox.Batch.Server.Cmd                  as Cmd
+import           Flowbox.Batch.Server.Cmd                    (Cmd)
+import qualified Flowbox.Batch.Server.Transport.TCP        as Server
+import qualified Flowbox.Options.Applicative               as Opt
+import           Flowbox.Options.Applicative               hiding (info)
+import           Flowbox.System.Log.Logger                   
+import qualified Flowbox.Batch.Server.Handler.BatchHandler as BatchHandler
+import           Flowbox.Batch.Server.Handler.BatchHandler   (BatchHandler)
 
 
 

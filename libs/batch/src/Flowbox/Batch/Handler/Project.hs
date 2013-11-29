@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Handlers.Projects (
+module Flowbox.Batch.Handler.Project (
     projects,
 
     projectByID,
@@ -18,7 +18,7 @@ module Flowbox.Batch.Handlers.Projects (
 
 import           Flowbox.Prelude                               
 import           Flowbox.Batch.Batch                           (Batch(..))
-import           Flowbox.Batch.Handlers.Common                 (noresult, readonly, readonly', projectOp, projectOp')
+import           Flowbox.Batch.Handler.Common                  (noresult, readonly, readonly', projectOp, projectOp')
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Batch.Project.Project                 (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager        as ProjectManager

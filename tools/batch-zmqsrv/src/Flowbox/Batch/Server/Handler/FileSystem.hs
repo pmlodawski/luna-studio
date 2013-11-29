@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-module Flowbox.Batch.Server.Handlers.FileSystem (
+module Flowbox.Batch.Server.Handler.FileSystem (
     ls,
     stat,
 
@@ -19,7 +19,7 @@ where
 import           Data.IORef                                            (IORef)
 
 import           Flowbox.Prelude                                       
-import qualified Flowbox.Batch.Handlers.FileSystem                   as BatchFS
+import qualified Flowbox.Batch.Handler.FileSystem                    as BatchFS
 import           Flowbox.Batch.Batch                                   (Batch)
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Item   ()
 import           Flowbox.Control.Error                                 
@@ -43,7 +43,7 @@ import qualified Generated.Proto.Batch.FileSystem.MV.Result          as MV
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.FileSystem"
+loggerIO = getLoggerIO "Flowbox.Batch.Server.Handler.FileSystem"
 
 ------ public api -------------------------------------------------
 
