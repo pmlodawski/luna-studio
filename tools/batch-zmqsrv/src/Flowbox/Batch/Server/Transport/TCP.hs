@@ -19,7 +19,7 @@ import qualified Flowbox.Batch.Server.Processor        as Processor
 import           Flowbox.Batch.Server.Handlers.Handler   (Handler)
 import           Flowbox.System.Log.Logger               
 import qualified Text.ProtocolBuffers.WireMessage      as WireMessage
-import qualified Network.Socket.ByteString as SByteString
+import qualified Network.Socket.ByteString             as SByteString
 
 
 loggerIO :: LoggerIO
