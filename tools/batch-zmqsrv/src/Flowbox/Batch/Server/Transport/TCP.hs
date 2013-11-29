@@ -9,17 +9,19 @@
 module Flowbox.Batch.Server.Transport.TCP where
 
 import           Control.Monad                          (forever)
-import qualified Network.Socket                       as Socket
-import qualified Network.Socket.ByteString.Lazy       as SLByteString
 import qualified Data.ByteString.Lazy                 as ByteString
 import           Data.ByteString.Lazy                   (ByteString)
 import           Data.Int                               (Int64)
+import qualified Network.Socket                       as Socket
+import qualified Network.Socket.ByteString            as SByteString
+import qualified Network.Socket.ByteString.Lazy       as SLByteString
+import qualified Text.ProtocolBuffers.WireMessage     as WireMessage
+
 import           Flowbox.Prelude                      hiding (error)
 import qualified Flowbox.Batch.Server.Processor       as Processor
 import           Flowbox.Batch.Server.Handler.Handler   (Handler)
 import           Flowbox.System.Log.Logger              
-import qualified Text.ProtocolBuffers.WireMessage     as WireMessage
-import qualified Network.Socket.ByteString            as SByteString
+
 
 
 loggerIO :: LoggerIO

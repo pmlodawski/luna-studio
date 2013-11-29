@@ -14,6 +14,7 @@ module Flowbox.Batch.Server.Handler.Maintenance (
 import qualified Control.Concurrent.MVar                             as MVar
 import           Control.Concurrent.MVar                               (MVar)
 import           Data.IORef                                            (IORef)
+import qualified Data.ByteString.Lazy                                as ByteString
 
 import           Flowbox.Prelude                                       
 import           Flowbox.Batch.Batch                                   (Batch)
@@ -45,9 +46,12 @@ initialize batchHandler _ = do
 
 
 ping :: IORef Batch -> Ping.Args -> Script Ping.Result
-ping _ _ = do
+ping _ (Ping.Args mdata) = do
     loggerIO info "called ping"
-    return Ping.Result
+    case mdata of
+        Nothing -> return ()
+        Just d  -> loggerIO info $ "Received " ++ (show $ ByteString.length d) ++ " bytes"
+    return $ Ping.Result Nothing
 
 
 dump :: IORef Batch -> Dump.Args -> Script Dump.Result

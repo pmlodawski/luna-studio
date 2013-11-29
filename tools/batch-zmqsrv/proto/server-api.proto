@@ -196,8 +196,12 @@ message Maintenance {
         message Result { extend Response { optional Result rsp = 1018; } }   
     }
     message Ping {
-        message Args   { extend Request  { optional Args   req = 1019; } }
-        message Result { extend Response { optional Result rsp = 1019; } }
+        message Args   { extend Request  { optional Args   req = 1019; }
+            optional bytes data = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1019; } 
+            optional bytes data = 1;
+        }
     }
     message Dump {
         message Args   { extend Request  { optional Args   req = 1020; } }
