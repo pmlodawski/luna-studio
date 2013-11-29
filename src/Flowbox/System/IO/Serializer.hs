@@ -22,6 +22,7 @@ import qualified Flowbox.System.UniPath as UniPath
 import           Flowbox.System.UniPath   (UniPath)
 
 
+
 data Serializable = Serializable UniPath (IO.Handle -> IO())
 
 data Deserializable a = Deserializable UniPath (IO.Handle -> IO a)
