@@ -31,7 +31,8 @@ import           Data.String.Utils                                     (join)
 import qualified Data.Set                                            as Set
 
 import           Control.Monad.State                                 hiding (mapM, mapM_, join)
-import           Control.Applicative                                   
+import           Control.Applicative         
+import           Control.Lens                                                
 
 type GenMonad m = PassMonad GenState m
 
@@ -73,7 +74,7 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
     mapM_ genExpr modclss
     mapM_ (genExpr >=> GenState.addImport) imports
     when (name == "Main") $ do
-        let funcnames = map LExpr.name methods
+        let funcnames = map (view LExpr.name) methods
         if not $ "main" `elem` funcnames
             then logger warning "No 'main' function defined."
             else GenState.addFunction mainf
@@ -133,9 +134,9 @@ genFuncDecl clsname name = do
 
 typeMethodSelf cls inputs = nargs
     where (self:args) = inputs
-          nparams     = map (LType.Var 0) (LType.params cls)
-          patbase     = LType.App 0 (LType.Con 0 [LType.name cls]) nparams
-          nself       = self { LExpr.pat = LPat.Typed 0 (LExpr.pat self) patbase }
+          nparams     = map (LType.Var 0) (view LType.params cls)
+          patbase     = LType.App 0 (LType.Con 0 [view LType.name cls]) nparams
+          nself       = self & over LExpr.pat (\p -> LPat.Typed 0 p patbase)
           nargs       = nself:args
 
 
@@ -148,11 +149,11 @@ genExpr ast = case ast of
                                             cls <- GenState.getCls
                                             let 
                                                 clsName = if (null path) 
-                                                    then LType.name cls
+                                                    then view LType.name cls
                                                     else (path!!0)
-                                                -- type "self" in not extension methods
-                                                -- see: COMPILER-42
-                                                -- TODO: We should type self in extension methods also, but it needs TH to read type params
+                                                -- FIXME[wd]: type "self" in not extension methods
+                                                --            We should type self in extension methods also, but it needs TH to read type params
+                                                -- RELATED: COMPILER-42
                                                 ninputs    = if (null path)
                                                     then (typeMethodSelf cls) inputs
                                                     else inputs
@@ -224,12 +225,12 @@ genExpr ast = case ast of
                                             return $ HExpr.Import False (["FlowboxM", "Libs"] ++ path ++ [tname]) Nothing where
                                               
     LExpr.Class _ cls _ fields methods   -> do 
-                                            let name        = LType.name   cls
-                                                params      = LType.params cls
-                                                fieldNames  = map LExpr.name fields
+                                            let name        = view LType.name   cls
+                                                params      = view LType.params cls
+                                                fieldNames  = map (view LExpr.name) fields
                                                 fieldlen    = length fields
                                                 --tmethods    = map (typeMethodSelf name) methods
-                                                funcNames   = map LExpr.name methods 
+                                                funcNames   = map (view LExpr.name) methods 
                                                 memberNames = fieldNames ++ funcNames
                                                 ccname      = mkCCName name
                                             

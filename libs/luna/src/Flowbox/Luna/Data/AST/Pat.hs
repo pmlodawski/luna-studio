@@ -4,7 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric, ConstraintKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Luna.Data.AST.Pat where
 
@@ -14,20 +16,22 @@ import           Flowbox.Luna.Data.AST.Type        (Type)
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           Flowbox.Generics.Deriving.QShow   
 import           GHC.Generics                      
-import           Control.Applicative               
+import           Control.Applicative     
+import           Control.Lens                    hiding(Traversal)
 
 type Lit = Lit.Lit
 
-data Pat = Var             { id :: ID, name      :: String                         }
-         | Lit             { id :: ID, value     :: Lit                            }
-         | Tuple           { id :: ID, items     :: [Pat]                          }
-         | Con             { id :: ID, name      :: String                         }
-         | App             { id :: ID, src       :: Pat       , args      :: [Pat] }
-         | Typed           { id :: ID, pat       :: Pat       , cls       :: Type  }
-         | Wildcard        { id :: ID                                              }
+data Pat = Var             { _id :: ID, _name      :: String                          }
+         | Lit             { _id :: ID, _value     :: Lit                             }
+         | Tuple           { _id :: ID, _items     :: [Pat]                           }
+         | Con             { _id :: ID, _name      :: String                          }
+         | App             { _id :: ID, _src       :: Pat       , _args      :: [Pat] }
+         | Typed           { _id :: ID, _pat       :: Pat       , _cls       :: Type  }
+         | Wildcard        { _id :: ID                                                }
          deriving (Show, Eq, Generic)
 
 instance QShow Pat
+makeLenses (''Pat)
 
 
 type Traversal m = (Functor m, Applicative m, Monad m)
