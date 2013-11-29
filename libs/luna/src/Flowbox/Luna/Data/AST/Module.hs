@@ -22,8 +22,8 @@ import           Flowbox.Luna.Data.AST.Pat         (Pat)
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           GHC.Generics                      (Generic)
 import           Flowbox.Generics.Deriving.QShow   
-import           Control.Applicative           
-import           Control.Lens                      hiding (Traversal)    
+import           Control.Applicative               
+import           Control.Lens                    hiding (Traversal)
 
 type Traversal m = (Functor m, Applicative m, Monad m)
 

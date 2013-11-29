@@ -31,8 +31,8 @@ import           Data.String.Utils                                     (join)
 import qualified Data.Set                                            as Set
 
 import           Control.Monad.State                                 hiding (mapM, mapM_, join)
-import           Control.Applicative         
-import           Control.Lens                                                
+import           Control.Applicative                                   
+import           Control.Lens                                          
 
 type GenMonad m = PassMonad GenState m
 

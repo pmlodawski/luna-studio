@@ -13,7 +13,7 @@ import           Flowbox.Prelude                   (Show, Eq)
 import           Flowbox.Generics.Deriving.QShow   
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           GHC.Generics                      
-import           Control.Lens                 
+import           Control.Lens                      
 
 data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
          | String  { _id :: ID, _str  :: Prelude.String }

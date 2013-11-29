@@ -14,11 +14,11 @@ import qualified Flowbox.Luna.Data.AST.Expr        as Expr
 import           Flowbox.Luna.Data.AST.Expr          (Expr)
 import qualified Flowbox.Luna.Data.AST.Module      as Module
 import           Flowbox.Luna.Data.AST.Module        (Module)
-import           Flowbox.Control.Monad.Trans.Maybe
+import           Flowbox.Control.Monad.Trans.Maybe   
 
-import           Data.List                         (find)
-import           Control.Error.Util                (hoistMaybe)
-import           Control.Lens                      hiding (Zipper)  
+import           Data.List                           (find)
+import           Control.Error.Util                  (hoistMaybe)
+import           Control.Lens                      hiding (Zipper)
 
 --data Focus = FunctionFocus { expr :: Expr   , env :: FocusEnv }
 --           | ClassFocus    { expr :: Expr   , env :: FocusEnv }

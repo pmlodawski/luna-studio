@@ -24,7 +24,7 @@ import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool   (Pool)
 import qualified Flowbox.Luna.Passes.Pass                   as Pass
 import           Flowbox.Luna.Passes.Pass                     (PassMonad)
 import           Flowbox.System.Log.Logger                    
-import           Control.Lens                      
+import           Control.Lens                                 
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.FuncPool.FuncPool"

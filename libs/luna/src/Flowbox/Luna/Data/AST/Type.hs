@@ -12,8 +12,8 @@ import           Flowbox.Prelude                 hiding (id, drop)
 import           Flowbox.Generics.Deriving.QShow   
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           GHC.Generics                      
-import           Control.Applicative  
-import           Control.Lens                    hiding (Traversal)             
+import           Control.Applicative               
+import           Control.Lens                    hiding (Traversal)
 
 data Type = Unknown { _id :: ID                                               }
           | Var     { _id :: ID, _name     :: String                          }

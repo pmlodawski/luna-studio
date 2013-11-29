@@ -19,7 +19,7 @@ import qualified Flowbox.Luna.Data.AST.Type   as Type
 
 
 
-data Library =  Library{ name :: String
+data Library = Library { name :: String
                        , path :: UniPath
                        , ast  :: Module
                        } deriving (Show)

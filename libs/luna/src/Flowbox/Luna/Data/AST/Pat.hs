@@ -16,8 +16,8 @@ import           Flowbox.Luna.Data.AST.Type        (Type)
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           Flowbox.Generics.Deriving.QShow   
 import           GHC.Generics                      
-import           Control.Applicative     
-import           Control.Lens                    hiding(Traversal)
+import           Control.Applicative               
+import           Control.Lens                    hiding (Traversal)
 
 type Lit = Lit.Lit
 

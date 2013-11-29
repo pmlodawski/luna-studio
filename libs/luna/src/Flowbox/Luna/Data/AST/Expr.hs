@@ -19,7 +19,7 @@ import qualified Flowbox.Luna.Data.AST.Pat       as Pat
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           Flowbox.Generics.Deriving.QShow   
 import           GHC.Generics                      (Generic)
-import           Control.Applicative   
+import           Control.Applicative               
 import           Control.Lens                    hiding (Traversal, Accessor)
 
 

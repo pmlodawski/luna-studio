@@ -46,7 +46,7 @@ import qualified Flowbox.Text.Show.Pretty                              as PP
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                     as ASTCrumb
 import qualified Flowbox.Luna.Data.AST.Zipper.Expr                     as Zipper
 
-import           Control.Lens                                          hiding (Zipper)  
+import           Control.Lens                                          hiding (Zipper)
 
 genProject :: String -> Config.Config
 genProject name = let

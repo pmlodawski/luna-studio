@@ -36,7 +36,6 @@ Library
                   flowbox-config,
                   flowbox-utils,
                   ghc-prim,
-                  hashable,
                   lens,
                   MissingH,
                   mtl,
