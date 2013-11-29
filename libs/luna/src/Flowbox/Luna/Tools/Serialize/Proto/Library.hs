@@ -43,7 +43,7 @@ getLib :: IO.Handle -> IO Library
 getLib h = runScript $ do 
     binary              <- scriptIO $ ByteString.hGetContents h
     (tlibrary, _)       <- tryRight $ Proto.messageGet binary
-    (_ :: Int, library) <- tryRight$ decode tlibrary
+    (_ :: Int, library) <- tryRight $ decode tlibrary
     return library
 
 

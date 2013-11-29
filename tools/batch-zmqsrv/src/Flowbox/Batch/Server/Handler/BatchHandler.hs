@@ -22,8 +22,9 @@ import qualified Flowbox.Batch.Samples.Std                as Sample
 import qualified Flowbox.Batch.Server.Handler.Handler     as Handler
 import           Flowbox.Batch.Server.Handler.Handler       (Handler)
 import qualified Flowbox.Batch.Server.Handler.FileSystem  as HFileSystem
-import qualified Flowbox.Batch.Server.Handler.Project     as HProject
+import qualified Flowbox.Batch.Server.Handler.Library     as HLibrary
 import qualified Flowbox.Batch.Server.Handler.Maintenance as HMaintenance
+import qualified Flowbox.Batch.Server.Handler.Project     as HProject
 import qualified Flowbox.Config.Config                    as Config
 import           Flowbox.System.Log.Logger                  
 
@@ -53,6 +54,20 @@ instance Handler BatchHandler where
     cp         h = HFileSystem.cp    (batchRef h)
     mv         h = HFileSystem.mv    (batchRef h)
     
+    libraries     h = HLibrary.libraries     (batchRef h)
+    libraryByID   h = HLibrary.libraryByID   (batchRef h)
+    createLibrary h = HLibrary.createLibrary (batchRef h)
+    loadLibrary   h = HLibrary.loadLibrary   (batchRef h)
+    unloadLibrary h = HLibrary.unloadLibrary (batchRef h)
+    storeLibrary  h = HLibrary.storeLibrary  (batchRef h)
+    buildLibrary  h = HLibrary.buildLibrary  (batchRef h)
+    runLibrary    h = HLibrary.runLibrary    (batchRef h)
+    
+    initialize h = HMaintenance.initialize (batchRef h)
+    ping       h = HMaintenance.ping       (batchRef h) 
+    dump       h = HMaintenance.dump       (batchRef h)
+    shutdown   h = HMaintenance.shutdown   (quitMutex h)
+
     projects      h = HProject.projects      (batchRef h)
     projectByID   h = HProject.projectByID   (batchRef h)
     createProject h = HProject.createProject (batchRef h)
@@ -61,7 +76,3 @@ instance Handler BatchHandler where
     closeProject  h = HProject.closeProject  (batchRef h)
     storeProject  h = HProject.storeProject  (batchRef h)
 
-    initialize h = HMaintenance.initialize (batchRef h)
-    ping       h = HMaintenance.ping       (batchRef h) 
-    dump       h = HMaintenance.dump       (batchRef h)
-    shutdown   h = HMaintenance.shutdown   (quitMutex h)

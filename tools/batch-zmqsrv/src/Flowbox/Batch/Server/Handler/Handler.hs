@@ -23,6 +23,22 @@ import qualified Generated.Proto.Batch.FileSystem.CP.Args            as CP
 import qualified Generated.Proto.Batch.FileSystem.CP.Result          as CP
 import qualified Generated.Proto.Batch.FileSystem.MV.Args            as MV
 import qualified Generated.Proto.Batch.FileSystem.MV.Result          as MV
+import qualified Generated.Proto.Batch.Library.Libraries.Args        as Libraries
+import qualified Generated.Proto.Batch.Library.Libraries.Result      as Libraries
+import qualified Generated.Proto.Batch.Library.LibraryByID.Args      as LibraryByID
+import qualified Generated.Proto.Batch.Library.LibraryByID.Result    as LibraryByID
+import qualified Generated.Proto.Batch.Library.CreateLibrary.Args    as CreateLibrary
+import qualified Generated.Proto.Batch.Library.CreateLibrary.Result  as CreateLibrary
+import qualified Generated.Proto.Batch.Library.LoadLibrary.Args      as LoadLibrary
+import qualified Generated.Proto.Batch.Library.LoadLibrary.Result    as LoadLibrary
+import qualified Generated.Proto.Batch.Library.UnloadLibrary.Args    as UnloadLibrary
+import qualified Generated.Proto.Batch.Library.UnloadLibrary.Result  as UnloadLibrary
+import qualified Generated.Proto.Batch.Library.StoreLibrary.Args     as StoreLibrary
+import qualified Generated.Proto.Batch.Library.StoreLibrary.Result   as StoreLibrary
+import qualified Generated.Proto.Batch.Library.BuildLibrary.Args     as BuildLibrary
+import qualified Generated.Proto.Batch.Library.BuildLibrary.Result   as BuildLibrary
+import qualified Generated.Proto.Batch.Library.RunLibrary.Args       as RunLibrary
+import qualified Generated.Proto.Batch.Library.RunLibrary.Result     as RunLibrary
 import qualified Generated.Proto.Batch.Project.Projects.Args         as Projects
 import qualified Generated.Proto.Batch.Project.Projects.Result       as Projects
 import qualified Generated.Proto.Batch.Project.ProjectByID.Args      as ProjectByID
@@ -47,7 +63,6 @@ import qualified Generated.Proto.Batch.Maintenance.Shutdown.Args     as Shutdown
 import qualified Generated.Proto.Batch.Maintenance.Shutdown.Result   as Shutdown
 
 
-
 class Handler h where
     ls         :: h -> LS.Args    -> Script LS.Result
     stat       :: h -> Stat.Args  -> Script Stat.Result
@@ -57,6 +72,20 @@ class Handler h where
     cp         :: h -> CP.Args    -> Script CP.Result
     mv         :: h -> MV.Args    -> Script MV.Result
     
+    libraries     :: h -> Libraries.Args     -> Script Libraries.Result
+    libraryByID   :: h -> LibraryByID.Args   -> Script LibraryByID.Result
+    createLibrary :: h -> CreateLibrary.Args -> Script CreateLibrary.Result
+    loadLibrary   :: h -> LoadLibrary.Args   -> Script LoadLibrary.Result
+    unloadLibrary :: h -> UnloadLibrary.Args -> Script UnloadLibrary.Result
+    storeLibrary  :: h -> StoreLibrary.Args  -> Script StoreLibrary.Result
+    buildLibrary  :: h -> BuildLibrary.Args  -> Script BuildLibrary.Result
+    runLibrary    :: h -> RunLibrary.Args    -> Script RunLibrary.Result
+    
+    initialize :: h -> Initialize.Args -> Script Initialize.Result
+    ping       :: h -> Ping.Args       -> Script Ping.Result
+    dump       :: h -> Dump.Args       -> Script Dump.Result
+    shutdown   :: h -> Shutdown.Args   -> Script Shutdown.Result
+
     projects      :: h -> Projects.Args      -> Script Projects.Result
     projectByID   :: h -> ProjectByID.Args   -> Script ProjectByID.Result
     createProject :: h -> CreateProject.Args -> Script CreateProject.Result
@@ -64,8 +93,3 @@ class Handler h where
     updateProject :: h -> UpdateProject.Args -> Script UpdateProject.Result
     closeProject  :: h -> CloseProject.Args  -> Script CloseProject.Result
     storeProject  :: h -> StoreProject.Args  -> Script StoreProject.Result
-    
-    initialize :: h -> Initialize.Args -> Script Initialize.Result
-    ping       :: h -> Ping.Args       -> Script Ping.Result
-    dump       :: h -> Dump.Args       -> Script Dump.Result
-    shutdown   :: h -> Shutdown.Args   -> Script Shutdown.Result

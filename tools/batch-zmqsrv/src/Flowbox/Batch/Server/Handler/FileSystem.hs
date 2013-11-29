@@ -61,7 +61,7 @@ stat _ (Stat.Args tpath) = do
     let upath = decodeP tpath
     scriptIO $ loggerIO debug $ "path: " ++ (show upath)
     item  <- scriptIO $ BatchFS.stat upath
-    return $ Stat.Result $ Just $ encode item
+    return $ Stat.Result $ encode item
 
 
 mkdir :: IORef Batch -> MkDir.Args -> Script MkDir.Result
@@ -70,7 +70,7 @@ mkdir _ (MkDir.Args tpath) = do
     let upath = decodeP tpath
     scriptIO $ loggerIO debug $ "path: " ++ (show upath)
     scriptIO $ BatchFS.mkdir upath
-    return $ MkDir.Result
+    return MkDir.Result
 
 
 touch :: IORef Batch -> Touch.Args -> Script Touch.Result
@@ -79,7 +79,7 @@ touch _ (Touch.Args tpath) = do
     let upath = decodeP tpath
     scriptIO $ loggerIO debug $ "path: " ++ (show upath)
     scriptIO $ BatchFS.touch upath
-    return $ Touch.Result
+    return Touch.Result
 
 
 rm :: IORef Batch -> RM.Args -> Script RM.Result
@@ -88,7 +88,7 @@ rm _ (RM.Args tpath) = do
     let upath = decodeP tpath
     scriptIO $ loggerIO debug $ "path: " ++ (show upath)
     scriptIO $ BatchFS.rm upath
-    return $ RM.Result
+    return RM.Result
 
 
 cp :: IORef Batch -> CP.Args -> Script CP.Result
@@ -98,7 +98,7 @@ cp _ (CP.Args tsrc tdst) = do
     let udst = decodeP tdst
     scriptIO $ loggerIO debug $ "src: " ++ (show usrc) ++ " dst: " ++ (show udst)
     scriptIO $ BatchFS.cp usrc udst
-    return $ CP.Result
+    return CP.Result
 
 
 mv :: IORef Batch -> MV.Args -> Script MV.Result
@@ -108,4 +108,4 @@ mv _ (MV.Args tsrc tdst) = do
     let udst = decodeP tdst
     scriptIO $ loggerIO debug $ "src: " ++ (show usrc) ++ " dst: " ++ (show udst)
     scriptIO $ BatchFS.mv usrc udst
-    return $ MV.Result
+    return MV.Result

@@ -44,6 +44,22 @@ import qualified Generated.Proto.Batch.FileSystem.CP.Args            as CP
 import qualified Generated.Proto.Batch.FileSystem.CP.Result          as CP
 import qualified Generated.Proto.Batch.FileSystem.MV.Args            as MV
 import qualified Generated.Proto.Batch.FileSystem.MV.Result          as MV
+import qualified Generated.Proto.Batch.Library.Libraries.Args        as Libraries
+import qualified Generated.Proto.Batch.Library.Libraries.Result      as Libraries
+import qualified Generated.Proto.Batch.Library.LibraryByID.Args      as LibraryByID
+import qualified Generated.Proto.Batch.Library.LibraryByID.Result    as LibraryByID
+import qualified Generated.Proto.Batch.Library.CreateLibrary.Args    as CreateLibrary
+import qualified Generated.Proto.Batch.Library.CreateLibrary.Result  as CreateLibrary
+import qualified Generated.Proto.Batch.Library.LoadLibrary.Args      as LoadLibrary
+import qualified Generated.Proto.Batch.Library.LoadLibrary.Result    as LoadLibrary
+import qualified Generated.Proto.Batch.Library.UnloadLibrary.Args    as UnloadLibrary
+import qualified Generated.Proto.Batch.Library.UnloadLibrary.Result  as UnloadLibrary
+import qualified Generated.Proto.Batch.Library.StoreLibrary.Args     as StoreLibrary
+import qualified Generated.Proto.Batch.Library.StoreLibrary.Result   as StoreLibrary
+import qualified Generated.Proto.Batch.Library.BuildLibrary.Args     as BuildLibrary
+import qualified Generated.Proto.Batch.Library.BuildLibrary.Result   as BuildLibrary
+import qualified Generated.Proto.Batch.Library.RunLibrary.Args       as RunLibrary
+import qualified Generated.Proto.Batch.Library.RunLibrary.Result     as RunLibrary
 import qualified Generated.Proto.Batch.Project.Projects.Args         as Projects
 import qualified Generated.Proto.Batch.Project.Projects.Result       as Projects
 import qualified Generated.Proto.Batch.Project.ProjectByID.Args      as ProjectByID
@@ -66,7 +82,6 @@ import qualified Generated.Proto.Batch.Maintenance.Dump.Args         as Dump
 import qualified Generated.Proto.Batch.Maintenance.Dump.Result       as Dump
 import qualified Generated.Proto.Batch.Maintenance.Shutdown.Args     as Shutdown
 import qualified Generated.Proto.Batch.Maintenance.Shutdown.Result   as Shutdown
-
 
 
 loggerIO :: LoggerIO
@@ -109,6 +124,15 @@ process handler encoded_request = case Proto.messageWithLengthGet encoded_reques
         Method.RM    -> call request handler Handler.rm    RM.req    RM.rsp    
         Method.CP    -> call request handler Handler.cp    CP.req    CP.rsp    
         Method.MV    -> call request handler Handler.mv    MV.req    MV.rsp    
+
+        Method.Libraries     -> call request handler Handler.libraries     Libraries.req     Libraries.rsp
+        Method.LibraryByID   -> call request handler Handler.libraryByID   LibraryByID.req   LibraryByID.rsp
+        Method.CreateLibrary -> call request handler Handler.createLibrary CreateLibrary.req CreateLibrary.rsp
+        Method.LoadLibrary   -> call request handler Handler.loadLibrary   LoadLibrary.req   LoadLibrary.rsp
+        Method.UnloadLibrary -> call request handler Handler.unloadLibrary UnloadLibrary.req UnloadLibrary.rsp
+        Method.StoreLibrary  -> call request handler Handler.storeLibrary  StoreLibrary.req  StoreLibrary.rsp
+        Method.BuildLibrary  -> call request handler Handler.buildLibrary  BuildLibrary.req  BuildLibrary.rsp
+        Method.RunLibrary    -> call request handler Handler.runLibrary    RunLibrary.req    RunLibrary.rsp
 
         Method.Projects      -> call request handler Handler.projects      Projects.req      Projects.rsp      
         Method.ProjectByID   -> call request handler Handler.projectByID   ProjectByID.req   ProjectByID.rsp   

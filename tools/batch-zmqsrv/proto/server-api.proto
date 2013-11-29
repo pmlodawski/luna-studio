@@ -9,6 +9,7 @@ package generated.proto.batch;
 
 import "file-system.proto";
 import "project.proto";
+import "library.proto";
 
 
 
@@ -23,18 +24,27 @@ message Request {
         CP    = 6;
         MV    = 7;
 
-        Projects      = 8;
-        ProjectByID   = 9;
-        CreateProject = 10;
-        OpenProject   = 11;
-        UpdateProject = 12;
-        CloseProject  = 13;
-        StoreProject  = 14;
+        Libraries     = 8;
+        LibraryByID   = 9;
+        CreateLibrary = 10;
+        LoadLibrary   = 11;
+        UnloadLibrary = 12;
+        StoreLibrary  = 13;
+        BuildLibrary  = 14;
+        RunLibrary    = 15;
 
-        Initialize = 15;
-        Ping       = 16;
-        Dump       = 17;
-        Shutdown   = 18;
+        Initialize = 16;
+        Ping       = 17;
+        Dump       = 18;
+        Shutdown   = 19;
+
+        Projects      = 20;
+        ProjectByID   = 21;
+        CreateProject = 22;
+        OpenProject   = 23;
+        UpdateProject = 24;
+        CloseProject  = 25;
+        StoreProject  = 26;
     }
 
     extensions 1000 to max;
@@ -69,7 +79,7 @@ message FileSystem {
             required string path = 1;
         }
         message Result { extend Response { optional Result rsp = 1002; }
-            optional generated.proto.filesystem.Item item = 1;
+            required generated.proto.filesystem.Item item = 1;
         }
     }
     message MkDir {
@@ -111,74 +121,143 @@ message FileSystem {
     }
 }
 
-message Project {
-    message Projects {
-        message Args   { extend Request  { optional Args   req = 1008; }
+message Library {
+    message Libraries {
+        message Args   { extend Request  { optional Args   req = 1008; } 
             required int32 projectID = 1;
         }
-        message Result { extend Response { optional Result rsp = 1008; }
-            repeated generated.proto.project.Project project = 1;
-        }   
+        message Result { extend Response { optional Result rsp = 1009; } 
+            repeated generated.proto.library.Library liraries = 1;
+        }
     }
-    message ProjectByID {
-        message Args   { extend Request  { optional Args   req = 1009; }
+    message LibraryByID {
+        message Args   { extend Request  { optional Args   req = 1011; } 
             required int32 projectID = 1;
+            required int32 libraryID = 2;
         }
-        message Result { extend Response { optional Result rsp = 1009; }
-            required generated.proto.project.Project project = 1;
-        }   
+        message Result { extend Response { optional Result rsp = 1011; } 
+            required generated.proto.library.Library library = 1;
+        }
     }
-    message CreateProject {
-        message Args   { extend Request  { optional Args   req = 1010; }
-            required generated.proto.project.Project project = 1;
+    message CreateLibrary {
+        message Args   { extend Request  { optional Args   req = 1012; } 
+            required string name      = 1;
+            required string path      = 2;
+            required int32  projectID = 3;
         }
-        message Result { extend Response { optional Result rsp = 1010; }
-            required generated.proto.project.Project project = 1;
-        }   
+        message Result { extend Response { optional Result rsp = 1012; } 
+            required generated.proto.library.Library library = 1;
+        }
     }
-    message OpenProject {
-        message Args   { extend Request  { optional Args   req = 1011; }
-            required string path = 1;
+    message LoadLibrary {
+        message Args   { extend Request  { optional Args   req = 1013; } 
+            required string path      = 1;
+            required int32  projectID = 2;
         }
-        message Result { extend Response { optional Result rsp = 1011; }
-            required generated.proto.project.Project project = 1;
-        }   
+        message Result { extend Response { optional Result rsp = 1013; } 
+            required generated.proto.library.Library library = 1;
+        }
     }
-    message UpdateProject {
-        message Args   { extend Request  { optional Args   req = 1012; }
-            required generated.proto.project.Project project = 1;
+    message UnloadLibrary {
+        message Args   { extend Request  { optional Args   req = 1014; } 
+            required int32 libraryID = 1;
+            required int32 projectID = 2;
         }
-        message Result { extend Response { optional Result rsp = 1012; } }   
-    }    
-    message CloseProject {
-        message Args   { extend Request  { optional Args   req = 1013; }
-            required int32 projectID = 1;
-        }
-        message Result { extend Response { optional Result rsp = 1013; } }   
+        message Result { extend Response { optional Result rsp = 1014; } }
     }
-    message StoreProject {
-        message Args   { extend Request  { optional Args   req = 1014; }
-            required int32 projectID = 1;
+    message StoreLibrary {
+        message Args   { extend Request  { optional Args   req = 1015; } 
+            required int32 libraryID = 1;
+            required int32 projectID = 2;
         }
-        message Result { extend Response { optional Result rsp = 1014; } }   
+        message Result { extend Response { optional Result rsp = 1015; } }
+    }
+    message BuildLibrary {
+        message Args   { extend Request  { optional Args   req = 1016; } 
+            required int32 libraryID = 1;
+            required int32 projectID = 2;
+        }
+        message Result { extend Response { optional Result rsp = 1016; } }
+    }
+    message RunLibrary {
+        message Args   { extend Request  { optional Args   req = 1017; } 
+            required int32 libraryID = 1;
+            required int32 projectID = 2;
+        }
+        message Result { extend Response { optional Result rsp = 1017; } 
+            required string output = 1;
+        }
     }
 }
 
 message Maintenance {
     message Initialize {
-        message Args   { extend Request  { optional Args   req = 1015; } }
-        message Result { extend Response { optional Result rsp = 1015; } }   
+        message Args   { extend Request  { optional Args   req = 1018; } }
+        message Result { extend Response { optional Result rsp = 1018; } }   
     }
     message Ping {
-        message Args   { extend Request  { optional Args   req = 1016; } }
-        message Result { extend Response { optional Result rsp = 1016; } }
+        message Args   { extend Request  { optional Args   req = 1019; } }
+        message Result { extend Response { optional Result rsp = 1019; } }
     }
     message Dump {
-        message Args   { extend Request  { optional Args   req = 1017; } }
-        message Result { extend Response { optional Result rsp = 1017; } }
+        message Args   { extend Request  { optional Args   req = 1020; } }
+        message Result { extend Response { optional Result rsp = 1020; } }
     }
     message Shutdown {
-        message Args   { extend Request  { optional Args   req = 1018; } }
-        message Result { extend Response { optional Result rsp = 1018; } }
+        message Args   { extend Request  { optional Args   req = 1021; } }
+        message Result { extend Response { optional Result rsp = 1021; } }
+    }
+}
+
+message Project {
+    message Projects {
+        message Args   { extend Request  { optional Args   req = 1022; }
+            required int32 projectID = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1022; }
+            repeated generated.proto.project.Project project = 1;
+        }   
+    }
+    message ProjectByID {
+        message Args   { extend Request  { optional Args   req = 1023; }
+            required int32 projectID = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1023; }
+            required generated.proto.project.Project project = 1;
+        }   
+    }
+    message CreateProject {
+        message Args   { extend Request  { optional Args   req = 1024; }
+            required generated.proto.project.Project project = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1024; }
+            required generated.proto.project.Project project = 1;
+        }   
+    }
+    message OpenProject {
+        message Args   { extend Request  { optional Args   req = 1025; }
+            required string path = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1025; }
+            required generated.proto.project.Project project = 1;
+        }   
+    }
+    message UpdateProject {
+        message Args   { extend Request  { optional Args   req = 1026; }
+            required generated.proto.project.Project project = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1026; } }   
+    }    
+    message CloseProject {
+        message Args   { extend Request  { optional Args   req = 1027; }
+            required int32 projectID = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1027; } }   
+    }
+    message StoreProject {
+        message Args   { extend Request  { optional Args   req = 1028; }
+            required int32 projectID = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1028; } }   
     }
 }
