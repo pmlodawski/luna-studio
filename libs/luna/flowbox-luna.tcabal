@@ -12,7 +12,7 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: gen,
+  Hs-Source-Dirs: dist/gen,
                   src
   Other-Modules:  Paths_flowbox_luna
   if flag(debug)

@@ -21,7 +21,7 @@ def main():
 
 def run_protoc(proto_path):
     proto_dir  = os.path.dirname(proto_path)
-    hs_gen_dir  = '../gen'
+    hs_gen_dir  = '../dist/gen'
     proto_name  = os.path.basename(proto_path)
 
     try_call('protoc --cpp_out=' + cpp_gen_dir + ' -I libs/batch/proto -I libs/luna/proto -I ' + proto_dir + ' ' + proto_path)
