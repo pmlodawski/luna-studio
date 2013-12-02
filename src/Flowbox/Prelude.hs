@@ -9,6 +9,7 @@
 
 module Flowbox.Prelude(
     module Flowbox.Prelude,
+    module Control.Lens,
     module Prelude
 ) where
 
@@ -19,6 +20,7 @@ import           Data.Typeable
 import qualified Data.Traversable       as Traversable
 import           Data.Traversable         (Traversable)
 import qualified Control.Exception      as Exception
+import           Control.Lens             
 
 
 print :: (MonadIO m, Show s) => s -> m ()

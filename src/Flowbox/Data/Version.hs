@@ -11,20 +11,20 @@ module Flowbox.Data.Version where
 import           Flowbox.Prelude   
 import           GHC.Generics      
 import           Data.Aeson        
-import           Data.Monoid       (Monoid, mempty)
+import           Data.Default                              (Default, def)
 
 data Version = Version { branch :: [Int]
                        , tags   :: [String]
-                       } deriving (Show, Eq, Generic)
+                       } deriving (Read, Show, Eq, Generic)
 
 -------------------------------------------------
 -- INSTANCES
 -------------------------------------------------
 
-instance Monoid Version where
-    mempty = Version { branch = [0,1,0]
-                     , tags   = mempty
-                     }
+instance Default Version where
+    def = Version { branch = [0,1,0]
+                  , tags   = def
+                  }
 
 instance ToJSON Version
 instance FromJSON Version
