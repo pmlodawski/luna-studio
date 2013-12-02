@@ -5,19 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FunctionalDependencies, MultiParamTypeClasses #-}
-
-module Flowbox.Tools.Conversion where
+module Flowbox.Tools.Conversion.Common where
 
 import           Data.Int          
-
 import           Flowbox.Prelude   
 
-
-
-class Convert a b | a -> b, b -> a where
-  encode :: a -> b
-  decode :: b -> Either String a 
 
 
 i32toi :: Int32 -> Int
