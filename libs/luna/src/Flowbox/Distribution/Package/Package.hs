@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Distribution.Package.Package where
 
@@ -13,23 +14,25 @@ import qualified Flowbox.Data.Version                    as Version
 import           Flowbox.Data.Version                      (Version)
 import qualified Flowbox.Distribution.Package.Dependency as Dependency
 import           Flowbox.Distribution.Package.Dependency   (Dependency)
+import           Flowbox.Distribution.License              (License)
+
 
 import           GHC.Generics                              
 import           Data.Aeson                                
-import           Data.Monoid                               (Monoid, mempty)
+import           Data.Default                              (Default, def)
 
 data Package = Package { id           :: PackageIdentifier
-                       --, synopsis     :: String
-                       --, description  :: String
-                       --, homepage     :: String
-                       --, bugReports   :: String
-                       --, license      :: String
-                       --, licenseFile  :: String
-                       --, authors      :: [String]
-                       --, maintainers  :: [String]
-                       --, copyright    :: String
-                       --, tags         :: [String]
-                       --, dependencies :: [Dependency]
+                       , synopsis     :: String
+                       , description  :: String
+                       , homepage     :: String
+                       , bugReports   :: String
+                       , license      :: License
+                       , licenseFile  :: Maybe String
+                       , authors      :: [String]
+                       , maintainers  :: [String]
+                       , copyright    :: String
+                       , tags         :: [String]
+                       , dependencies :: [Dependency]
                        } deriving (Show, Generic)
 
 data PackageIdentifier = PackageIdentifier { name    :: String
@@ -37,19 +40,29 @@ data PackageIdentifier = PackageIdentifier { name    :: String
                                            } deriving (Show, Generic)
 
 
-
 -------------------------------------------------
 -- INSTANCES
 -------------------------------------------------
 
-instance Monoid Package where
-    mempty = Package { id = mempty
-                     }
+instance Default Package where
+    def = Package { id           = def
+                  , synopsis     = def
+                  , description  = def
+                  , homepage     = def
+                  , bugReports   = def
+                  , license      = def
+                  , licenseFile  = def
+                  , authors      = def
+                  , maintainers  = def
+                  , copyright    = def
+                  , tags         = def
+                  , dependencies = def
+                  }
 
-instance Monoid PackageIdentifier where
-    mempty = PackageIdentifier { name    = "unnamed"
-                               , version = mempty
-                               }
+instance Default PackageIdentifier where
+    def = PackageIdentifier { name    = "unnamed"
+                            , version = def
+                            }
 
 instance ToJSON Package
 instance FromJSON Package

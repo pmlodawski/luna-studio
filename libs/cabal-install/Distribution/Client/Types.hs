@@ -41,7 +41,7 @@ newtype Password = Password { unPassword :: String }
 data SourcePackageDb = SourcePackageDb {
   packageIndex       :: PackageIndex SourcePackage,
   packagePreferences :: Map PackageName VersionRange
-}
+} deriving (Show)
 
 -- ------------------------------------------------------------
 -- * Various kinds of information about packages

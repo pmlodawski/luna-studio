@@ -15,7 +15,7 @@ module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Import (
     genCode
 )where
 
-import           Flowbox.Prelude                                   
+import           Flowbox.Prelude                                 hiding(simple)
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.Path as Path
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Path   (Path(..))
 

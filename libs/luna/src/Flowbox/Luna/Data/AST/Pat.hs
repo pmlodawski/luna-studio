@@ -10,14 +10,13 @@
 
 module Flowbox.Luna.Data.AST.Pat where
 
-import           Flowbox.Prelude                 hiding (id, drop)
+import           Flowbox.Prelude                 hiding (id, drop, Traversal)
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
 import           Flowbox.Luna.Data.AST.Type        (Type)
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           Flowbox.Generics.Deriving.QShow   
 import           GHC.Generics                      
 import           Control.Applicative               
-import           Control.Lens                    hiding (Traversal)
 
 type Lit = Lit.Lit
 

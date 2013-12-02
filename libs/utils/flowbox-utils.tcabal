@@ -21,6 +21,7 @@ Library
                   base,
                   ansi-terminal,
                   containers,
+                  data-default,
                   directory,
                   dlist,
                   --either,

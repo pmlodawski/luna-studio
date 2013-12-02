@@ -9,7 +9,7 @@
 module Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen where
 
 import qualified Flowbox.Prelude                                     as Prelude
-import           Flowbox.Prelude                                     hiding (error, id, mod)
+import           Flowbox.Prelude                                     hiding (error, id, mod, simple)
 import qualified Flowbox.Luna.Data.AST.Expr                          as LExpr
 import qualified Flowbox.Luna.Data.AST.Type                          as LType
 import qualified Flowbox.Luna.Data.AST.Pat                           as LPat

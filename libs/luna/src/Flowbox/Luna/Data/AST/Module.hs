@@ -10,7 +10,7 @@
 
 module Flowbox.Luna.Data.AST.Module where
 
-import           Flowbox.Prelude                 hiding (id, drop, mod)
+import           Flowbox.Prelude                 hiding (id, drop, mod, Traversal)
 import qualified Flowbox.Luna.Data.AST.Expr      as Expr
 import           Flowbox.Luna.Data.AST.Expr        (Expr)
 import qualified Flowbox.Luna.Data.AST.Type      as Type
@@ -23,7 +23,6 @@ import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           GHC.Generics                      (Generic)
 import           Flowbox.Generics.Deriving.QShow   
 import           Control.Applicative               
-import           Control.Lens                    hiding (Traversal)
 
 type Traversal m = (Functor m, Applicative m, Monad m)
 

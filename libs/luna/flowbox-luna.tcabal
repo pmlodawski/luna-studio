@@ -32,6 +32,7 @@ Library
                   Cabal,
                   cabal-install,
                   containers,
+                  data-default,
                   directory,
                   either,
                   errors,

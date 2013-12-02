@@ -12,7 +12,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 module Distribution.Client.List (
-  getPkgList, list, info, PackageDisplayInfo(..)
+  getPkgList, list, info, PackageDisplayInfo(..), latestWithPref
   ) where
 
 import Distribution.Package

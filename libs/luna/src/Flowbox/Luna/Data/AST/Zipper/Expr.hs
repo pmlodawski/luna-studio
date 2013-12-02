@@ -9,7 +9,7 @@
 
 module Flowbox.Luna.Data.AST.Zipper.Expr where
 
-import           Flowbox.Prelude                   hiding (id, drop)
+import           Flowbox.Prelude                   hiding (id, drop, Zipper)
 import qualified Flowbox.Luna.Data.AST.Expr        as Expr
 import           Flowbox.Luna.Data.AST.Expr          (Expr)
 import qualified Flowbox.Luna.Data.AST.Module      as Module
@@ -18,7 +18,6 @@ import           Flowbox.Control.Monad.Trans.Maybe
 
 import           Data.List                           (find)
 import           Control.Error.Util                  (hoistMaybe)
-import           Control.Lens                      hiding (Zipper)
 
 --data Focus = FunctionFocus { expr :: Expr   , env :: FocusEnv }
 --           | ClassFocus    { expr :: Expr   , env :: FocusEnv }

@@ -18,19 +18,32 @@ import qualified Distribution.Client.List             as List
 import qualified Distribution.Client.Config           as CabalConf
 
 import qualified Distribution.ModuleName              as ModuleName
---import           Distribution.ModuleName        (ModuleName)
+import qualified Distribution.Client.IndexUtils       as IndexUtils
 
 import qualified Flowbox.Distribution.Package.Package as Package
 import           Flowbox.Distribution.Package.Package   (Package(Package))
+
+import qualified Distribution.Package                 as DistPackage
+
+import qualified Distribution.Client.Types            as CliTypes
+import qualified Distribution.Client.PackageIndex     as PackageIndex
+
+import qualified Distribution.PackageDescription      as DistPkgDesc
+import           Distribution.PackageDescription        (GenericPackageDescription, PackageDescription)
+import qualified Distribution.PackageDescription.Configuration as DistConfig
 
 import           Data.Aeson                             
 import           Data.Aeson.TH                          
 import           Data.Char                              (toLower)
 
 import           GHC.Generics                           
+import           Data.Default                           (Default, def)
+import           Data.Maybe                             ( listToMaybe, fromJust, fromMaybe, isJust )
+import qualified Distribution.Version                as DistVersion
 
 
-import qualified Flowbox.Data.Version                 as Version
+import qualified Flowbox.Data.Version                as Version
+import qualified Data.Map                            as Map
 
 
 localPkgDB :: Config -> PackageDB
@@ -64,18 +77,49 @@ main = do
     let
         configFlags  = CabalConf.savedConfigureFlags cabalCfg
         globalFlags' = CabalConf.savedGlobalFlags    cabalCfg `mappend` globalFlags
+        repos        = Setup.globalRepos globalFlags'
+        pats         = ["lhae"]
     (comp, _, conf) <- configCompilerAux' configFlags
     pkgs            <- List.getPkgList verbosity
                                        (configPackageDB' configFlags)
-                                       (Setup.globalRepos globalFlags')
+                                       repos
                                        comp
                                        conf
                                        mempty
-                                       ["xxx"]
+                                       pats
 
     return ()
 
-    --print $ encode (Package "ala" (Version.Version [0,0,0] Version.Alpha))
+    -- Distribution.Client.Types.SourcePackageDb
+    sourcePkgDb       <- IndexUtils.getSourcePackages verbosity repos
+    let matchingPackages search index = [ pkg | pat <- pats, pkg <- search index pat ]
+        sourcePkgIndex = CliTypes.packageIndex sourcePkgDb
+        -- sourcePkgs ?
+        sourcePkgs     = matchingPackages (\ idx n -> concatMap snd (PackageIndex.searchByNameSubstring idx n)) sourcePkgIndex
+        
+        prefs name     = fromMaybe DistVersion.anyVersion (Map.lookup name (CliTypes.packagePreferences sourcePkgDb))
+        pkgname        = DistPackage.PackageName "lhae" -- fix me
+        pref           = prefs pkgname
+
+        selectedPkg :: Maybe CliTypes.SourcePackage
+        selectedPkg    = List.latestWithPref pref sourcePkgs
+        
+        sourceSelected = selectedPkg
+
+        sourceGeneric :: Maybe GenericPackageDescription
+        sourceGeneric  = fmap CliTypes.packageDescription sourceSelected
+
+        source :: Maybe PackageDescription
+        source         = fmap DistConfig.flattenPackageDescription sourceGeneric
+
+    print sourceGeneric
+    print "---------------"
+    --print source
+    print $ encode (def :: Package)
+
+
+convertPackage :: PackageDescription -> Package
+convertPackage desc = def
 
 
 --data Package = Package { name :: String 
