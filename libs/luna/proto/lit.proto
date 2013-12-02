@@ -1,0 +1,22 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2013
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.lit;
+
+
+
+message Lit {
+    enum Cls {
+        Char    = 1;
+        String  = 2;
+        Integer = 3;
+        Float   = 4;
+    }
+    required Cls  dtype = 1;
+    optional int32  id    = 2;
+    optional string str   = 3;
+}

@@ -13,12 +13,13 @@ import           Flowbox.Prelude                   (Show, Eq)
 import           Flowbox.Generics.Deriving.QShow   
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           GHC.Generics                      
+import           Control.Lens                      
 
-data Lit = Char    { id :: ID, char :: Prelude.Char   }
-         | String  { id :: ID, str  :: Prelude.String }
-         | Integer { id :: ID, str  :: Prelude.String }
-         | Float   { id :: ID, str  :: Prelude.String }
+data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
+         | String  { _id :: ID, _str  :: Prelude.String }
+         | Integer { _id :: ID, _str  :: Prelude.String }
+         | Float   { _id :: ID, _str  :: Prelude.String }
          deriving (Show, Eq, Generic)
 
 instance QShow Lit
-
+makeLenses (''Lit)

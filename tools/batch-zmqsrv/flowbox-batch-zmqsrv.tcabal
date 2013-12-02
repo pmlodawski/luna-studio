@@ -1,0 +1,38 @@
+Name:               flowbox-batch-zmqsrv
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Simple
+
+Flag Debug
+    Description:    Enable debug support
+    Default:        False
+
+
+Executable batch-zmqsrv
+    Hs-Source-Dirs: src
+                    gen
+    Other-Modules:  Paths_flowbox_batch_zmqsrv
+    Main-Is:        Main.hs
+
+    GHC-Options:    -Wall -O2
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  base,
+                    bytestring,
+                    containers,
+                    errors,
+                    flowbox-batch,
+                    flowbox-config,
+                    flowbox-initializer,
+                    flowbox-luna,
+                    flowbox-utils,
+                    network,
+                    optparse-applicative == 0.5.2.1,
+                    protocol-buffers,
+                    text,
+                    transformers,
+                    zeromq3-haskell

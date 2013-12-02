@@ -24,8 +24,7 @@ import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool   (Pool)
 import qualified Flowbox.Luna.Passes.Pass                   as Pass
 import           Flowbox.Luna.Passes.Pass                     (PassMonad)
 import           Flowbox.System.Log.Logger                    
-
-
+import           Control.Lens                                 
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.FuncPool.FuncPool"
@@ -51,7 +50,7 @@ fpExpr ast = case ast of
     Expr.Field    {}                      -> register
     _                                     -> continue
     where
-        register  = Pool.register (Expr.name ast) *> continue
+        register  = Pool.register (ast ^. Expr.name) *> continue
         continue  = Expr.traverseM_ fpExpr fpType fpPat pure ast
 
 

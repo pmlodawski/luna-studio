@@ -8,41 +8,36 @@
 
 module Flowbox.Luna.Passes.Build.Build where
 
-import           Control.Applicative                                         
-import           Control.Monad.RWS                                         hiding (mapM_, mapM)
+import           Control.Applicative                                     
+import           Control.Monad.RWS                                     hiding (mapM_, mapM)
 
-import           Flowbox.Prelude                                             
-import qualified Flowbox.Luna.Data.AST.Module                              as ASTModule
-import qualified Flowbox.Luna.Data.Source                                  as Source
-import           Flowbox.Luna.Data.Source                                    (Source)
-import qualified Flowbox.Luna.Network.Def.Definition                       as Definition
-import           Flowbox.Luna.Network.Def.Definition                         (Definition)
-import           Flowbox.Luna.Network.Def.DefManager                         (DefManager)
-import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool            as FuncPool
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
-import qualified Flowbox.Luna.Passes.Build.BuildConfig                     as BuildConfig
-import           Flowbox.Luna.Passes.Build.BuildConfig                       (BuildConfig(BuildConfig))
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen                     as CabalGen
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install                 as CabalInstall
-import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store                   as CabalStore
-import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
-import qualified Flowbox.Luna.Passes.Pass                                  as Pass
-import           Flowbox.Luna.Passes.Pass                                    (PassMonad, PassMonadIO)
-import qualified Flowbox.Luna.Passes.Source.File.Writer                    as FileWriter
-import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
-import qualified Flowbox.Luna.Passes.Tmp.DequalifyCalls                    as DequalifyCalls
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
-import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
-import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
-import qualified Flowbox.Luna.Passes.Build.Diagnostics                     as Diagnostics
-import qualified Flowbox.System.Directory.Directory                        as Directory
-import           Flowbox.System.Log.Logger                                   
-import qualified Flowbox.System.Platform                                   as Platform
-import qualified Flowbox.System.UniPath                                    as UniPath
-import           Flowbox.System.UniPath                                      (UniPath)
-import qualified Flowbox.Text.Show.Hs                                      as ShowHs
-import qualified Flowbox.Luna.Passes.Transform.AST.GraphParser.GraphParser as GraphParser
-import           Flowbox.Luna.Passes.Build.Diagnostics                       (Diagnostics)
+import           Flowbox.Prelude                                         
+import qualified Flowbox.Luna.Data.AST.Module                          as ASTModule
+import qualified Flowbox.Luna.Data.Source                              as Source
+import           Flowbox.Luna.Data.Source                                (Source)
+import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPool
+import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
+import qualified Flowbox.Luna.Passes.Build.BuildConfig                 as BuildConfig
+import           Flowbox.Luna.Passes.Build.BuildConfig                   (BuildConfig(BuildConfig))
+import           Flowbox.Luna.Passes.Build.Diagnostics                   (Diagnostics)
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen                 as CabalGen
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install             as CabalInstall
+import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store               as CabalStore
+import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
+import qualified Flowbox.Luna.Passes.Pass                              as Pass
+import           Flowbox.Luna.Passes.Pass                                (PassMonad, PassMonadIO)
+import qualified Flowbox.Luna.Passes.Source.File.Writer                as FileWriter
+import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
+import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
+import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
+import qualified Flowbox.Luna.Passes.Build.Diagnostics                 as Diagnostics
+import qualified Flowbox.System.Directory.Directory                    as Directory
+import           Flowbox.System.Log.Logger                               
+import qualified Flowbox.System.Platform                               as Platform
+import qualified Flowbox.System.UniPath                                as UniPath
+import           Flowbox.System.UniPath                                  (UniPath)
+import qualified Flowbox.Text.Show.Hs                                  as ShowHs
 
 
 
@@ -125,10 +120,10 @@ parseFile rootPath filePath = do
     return ast
 
 
-parseGraph :: PassMonad s m => Diagnostics -> DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTModule.Module
-parseGraph diag defManager def = do 
-    logger debug "Compiling graph"
-    let tmpFixed_defManager = DequalifyCalls.run defManager
-    Diagnostics.printDM tmpFixed_defManager diag
-    ast <- GraphParser.run tmpFixed_defManager def
-    return ast
+--parseGraph :: PassMonad s m => Diagnostics -> DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTModule.Module
+--parseGraph diag defManager def = do 
+--    logger debug "Compiling graph"
+--    let tmpFixed_defManager = DequalifyCalls.run defManager
+--    Diagnostics.printDM tmpFixed_defManager diag
+--    ast <- GraphParser.run tmpFixed_defManager def
+--    return ast

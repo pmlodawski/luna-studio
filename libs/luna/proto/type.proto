@@ -1,0 +1,76 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2013
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.type;
+
+
+
+message Type {
+    enum Cls {
+        Unknown = 1;
+        Var     = 2;
+        Tuple   = 3;
+        Class   = 4;
+        Module  = 5;
+        Lambda  = 6;
+        Con_    = 7;
+        App     = 8;
+    }
+    required Cls cls = 1;
+
+    extensions 100 to max;
+}
+
+message Unknown {
+    extend Type { optional Unknown ext = 100; }
+    optional int32  id       = 1;
+}
+
+message Var {
+    extend Type { optional Var ext = 101; }
+    optional int32  id       = 1;
+    optional string name     = 2;
+}
+
+message Tuple {
+    extend Type { optional Tuple ext = 102; }
+    optional int32  id       = 1;
+    repeated Type   items    = 2;
+}
+
+message Class {
+    extend Type { optional Class ext = 103; }
+    optional int32  id       = 1;
+    optional string name     = 2;
+    repeated string params   = 3;
+}
+
+message Module {
+    extend Type { optional Module ext = 104; }
+    optional int32  id       = 1;
+    repeated string path     = 2;
+}
+
+message Lambda {
+    extend Type { optional Lambda ext = 105; }
+    optional int32  id       = 1;
+    repeated Type   inputs   = 2;
+    optional Type   outputs  = 3;
+}
+
+message Con_ {
+    extend Type { optional Con_ ext = 106; }
+    optional int32  id       = 1;
+    repeated string segments = 2;
+}
+
+message App {
+    extend Type { optional App ext = 107; }
+    optional int32  id       = 1;
+    optional Type   src      = 2;
+    repeated Type   args     = 3;
+}

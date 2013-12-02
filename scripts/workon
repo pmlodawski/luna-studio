@@ -63,7 +63,7 @@ class AllProject(Project):
         return tgts
 
 
-deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'utils', 'core']
+deptree = ['batch-zmqsrv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'utils', 'core']
 
 pkgs = { '@all'        : AllProject (deps = deptree)
        , 'core'        : HProject   ('flowboxM-core'       , os.path.join ('libs'  , 'core')        , 'libs'    , []                                                  )
@@ -74,7 +74,7 @@ pkgs = { '@all'        : AllProject (deps = deptree)
        , 'initializer' : HProject   ('flowbox-initializer' , os.path.join ('tools' , 'initializer') , 'tools'   , ['utils', 'config']                                 )
        , 'lunac'       : HProject   ('flowbox-lunac'       , os.path.join ('tools' , 'lunac')       , 'tools'   , ['utils', 'config', 'initializer', 'luna']          )
        , 'batch'       : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')       , 'libs'    , ['utils', 'config', 'initializer', 'luna']          )
-       , 'batch-srv'   : HProject   ('flowbox-batch-srv'   , os.path.join ('tools' , 'batch-srv')   , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
+       , 'batch-zmqsrv': HProject   ('flowbox-batch-zmqsrv', os.path.join ('tools' , 'batch-zmqsrv'), 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
        } 
 
 

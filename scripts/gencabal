@@ -6,11 +6,11 @@ import re
 from utils.glob2 import glob
 
 header = '''\
---------------------------------------------------
--- This is a generated cabal configuration file --
--- DO NOT EDIT!                                 --
--- Use gencabal instead                         --
---------------------------------------------------
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
 
 '''
 

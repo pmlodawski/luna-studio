@@ -1,0 +1,71 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2013
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.pat;
+
+import "lit.proto";
+import "type.proto";
+
+
+
+message Pat {
+    enum Cls {
+        Var      = 1;
+        Lit      = 2;
+        Tuple    = 3;
+        Con_     = 4;
+        App      = 5;
+        Typed    = 6;
+        Wildcard = 7;
+    }
+    required Cls cls = 1;
+
+    extensions 100 to max;
+}
+
+message Var {
+    extend Pat { optional Var ext = 100; }
+    optional int32  id   = 1;
+    optional string name = 2;
+}
+
+message Lit {
+    extend Pat { optional Lit ext = 101; }
+    optional int32 id = 1;
+    optional generated.proto.lit.Lit value = 2;
+}
+
+message Tuple {
+    extend Pat { optional Tuple ext = 102; }
+    optional int32 id    = 1;
+    repeated Pat   items = 2;
+}
+
+message Con_ {
+    extend Pat { optional Con_ ext = 103; }
+    optional int32  id   = 1;
+    optional string name = 2;
+}
+
+message App {
+    extend Pat { optional App ext = 104; }
+    optional int32 id   = 1;
+    optional Pat   src  = 2;
+    repeated Pat   args = 3;
+}
+
+message Typed {
+    extend Pat { optional Typed ext = 105; }
+    optional int32 id  = 1;
+    optional Pat   pat = 2;
+    optional generated.proto.type.Type cls = 3;
+}
+
+message Wildcard {
+    extend Pat { optional Wildcard ext = 106; }
+    optional int32 id  = 1;
+}

@@ -5,47 +5,27 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Lib.Library(
+module Flowbox.Luna.Lib.Library (
     Library(..),
     ID,
-    empty,
-    rootDefID,
     make
 ) where
 
-
-import           Flowbox.Prelude                       
-import qualified Flowbox.Data.String                 as String
-import qualified Flowbox.System.UniPath              as UniPath
-import           Flowbox.System.UniPath                (UniPath)
-import qualified Flowbox.Luna.Network.Def.DefManager as DefManager
-import           Flowbox.Luna.Network.Def.DefManager   (DefManager)
-import qualified Flowbox.Luna.Network.Def.Definition as Definition
+import           Flowbox.Prelude                
+import           Flowbox.System.UniPath         (UniPath)
+import qualified Flowbox.Luna.Data.AST.Module as Module
+import           Flowbox.Luna.Data.AST.Module   (Module)
+import qualified Flowbox.Luna.Data.AST.Type   as Type
 
 
 
-
-data Library =  Library{ name :: String
+data Library = Library { name :: String
                        , path :: UniPath
-                       , defs :: DefManager
+                       , ast  :: Module
                        } deriving (Show)
 
 type ID  = Int
 
 
-empty :: Library
-empty = Library "" UniPath.empty DefManager.empty
-
-
-rootDefID :: ID
-rootDefID = 0
-
-
-make :: String -> UniPath -> Library
-make name' path' = empty { name = name'
-                         , path = path'
-                         , defs = DefManager.insNode (rootDefID, rootdef) DefManager.empty
-                         } where
-    rootdef = Definition.mkModule $ String.toUpper name'
-
-
+make :: String -> UniPath -> [String] -> Library
+make name' path' moduleName = Library name' path' $ Module.mk 0 $ Type.Module 1 moduleName

@@ -9,17 +9,17 @@ BATCH_SRV_FILES=$BATCH_SRV_FILES_BASE/*.thrift
 for f in $COMMON_FILES
 do
  thrift -gen hs  -out $COMMON_FILES_BASE/Generated $f
- thrift -gen cpp -out tools/batch-clients/cpp/generated $f
+ thrift -gen cpp -out tools/batch-clients/thrift-cpp/generated $f
 done
 
 for f in $BATCH_SRV_FILES
 do
  thrift -gen hs  -out $BATCH_SRV_FILES_BASE/Generated $f
- thrift -gen cpp -out tools/batch-clients/cpp/generated $f
+ thrift -gen cpp -out tools/batch-clients/thrift-cpp/generated $f
 done
 
 for f in $BATCH_FILES
 do
  thrift -gen hs  -out $BATCH_FILES_BASE/Generated $f
- thrift -gen cpp -out tools/batch-clients/cpp/generated $f
+ thrift -gen cpp -out tools/batch-clients/thrift-cpp/generated $f
 done
