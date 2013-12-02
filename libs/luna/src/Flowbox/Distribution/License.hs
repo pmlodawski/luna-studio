@@ -6,26 +6,29 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveGeneric #-}
 
-module Flowbox.Data.Version where
+module Flowbox.Distribution.License where
 
 import           Flowbox.Prelude   
+import           Flowbox.Data.Version (Version)
+
 import           GHC.Generics      
 import           Data.Aeson        
-import           Data.Monoid       (Monoid, mempty)
 
-data Version = Version { branch :: [Int]
-                       , tags   :: [String]
-                       } deriving (Show, Eq, Generic)
+data License = GPL (Maybe Version)
+             | AGPL (Maybe Version)
+             | LGPL (Maybe Version)
+             | BSD3
+             | MIT
+             | Apache (Maybe Version)
+             | PublicDomain
+             | AllRightsReserved
+             | OtherLicense
+             | UnknownLicense String
+             deriving (Show, Generic)
 
 -------------------------------------------------
 -- INSTANCES
 -------------------------------------------------
 
-instance Monoid Version where
-    mempty = Version { branch = [0,1,0]
-                     , tags   = mempty
-                     }
-
-instance ToJSON Version
-instance FromJSON Version
-
+instance ToJSON License
+instance FromJSON License

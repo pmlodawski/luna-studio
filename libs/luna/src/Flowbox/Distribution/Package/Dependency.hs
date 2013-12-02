@@ -9,9 +9,9 @@
 module Flowbox.Distribution.Package.Dependency where
 
 import           Flowbox.Prelude   
-import           Data.Version           (Version)
-import qualified Data.Version         as Version
-import           GHC.Generics
+import           Data.Version      (Version)
+import qualified Data.Version    as Version
+import           GHC.Generics      
 
 data Dependency = Dependency { name    :: String
                              --, version :: CVersion

@@ -8,17 +8,17 @@
 
 module Flowbox.Distribution.Package.Package where
 
-import           Flowbox.Prelude   
+import           Flowbox.Prelude                         hiding (id)          
 import qualified Flowbox.Data.Version                    as Version
 import           Flowbox.Data.Version                      (Version)
 import qualified Flowbox.Distribution.Package.Dependency as Dependency
 import           Flowbox.Distribution.Package.Dependency   (Dependency)
 
-import           GHC.Generics
-import           Data.Aeson
+import           GHC.Generics                              
+import           Data.Aeson                                
+import           Data.Monoid                               (Monoid, mempty)
 
-data Package = Package { name         :: String
-                       --, version      :: Version
+data Package = Package { id           :: PackageIdentifier
                        --, synopsis     :: String
                        --, description  :: String
                        --, homepage     :: String
@@ -32,4 +32,28 @@ data Package = Package { name         :: String
                        --, dependencies :: [Dependency]
                        } deriving (Show, Generic)
 
+data PackageIdentifier = PackageIdentifier { name    :: String
+                                           , version :: Version
+                                           } deriving (Show, Generic)
+
+
+
+-------------------------------------------------
+-- INSTANCES
+-------------------------------------------------
+
+instance Monoid Package where
+    mempty = Package { id = mempty
+                     }
+
+instance Monoid PackageIdentifier where
+    mempty = PackageIdentifier { name    = "unnamed"
+                               , version = mempty
+                               }
+
+instance ToJSON Package
+instance FromJSON Package
+
+instance ToJSON PackageIdentifier
+instance FromJSON PackageIdentifier
 
