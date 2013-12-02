@@ -7,9 +7,9 @@
 
 module Flowbox.System.Log.LogEntry where
 
-import           Flowbox.System.Log.Priority (Priority)
+import           Flowbox.System.Log.Priority   (Priority)
 
-import           Flowbox.Prelude     
+import           Flowbox.Prelude               
 
 
 

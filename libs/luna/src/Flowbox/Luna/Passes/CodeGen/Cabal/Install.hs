@@ -16,7 +16,7 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.Config.Config     as Config
 import           Flowbox.Config.Config       (Config)
 
-import Control.Applicative
+import           Control.Applicative         
 
 
 

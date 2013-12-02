@@ -8,6 +8,7 @@ from utils.colors import print_info, print_error
 
 dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 third_party = os.path.join(dir, 'third-party')
+p_cabal    = os.path.join(third_party,  'Cabal-1.19.1')
 p_thrift   = os.path.join(third_party,  'thrift-0.9')
 p_missingh = os.path.join(third_party,  'MissingH-1.2.0.0-winpatch')
 
@@ -39,8 +40,8 @@ def try_call(cmd):
 check_install("cabal", "-V")
 check_cabal_version()
 
-print_info ("Generating Protocol Buffers files using generate-pb")
-path = os.path.join('scripts', 'generate-pb')
+print_info ("Generating Protocol Buffers files using generate-proto")
+path = os.path.join('scripts', 'generate-proto')
 try_call ('python %s' % path)
 
 print_info ("Generating cabal configs using gencabal")
@@ -55,6 +56,9 @@ try_call('cabal update')
 
 print_info ("Registering thrift library")
 try_call('cabal install %s' % p_thrift)
+
+print_info ("Registering Cabal-1.19.1 library")
+try_call('cabal install %s' % p_cabal)
     
 # print_info ("Registering MissingH library (windows patch)")
 # try_call('cabal install %s' % p_missingh)

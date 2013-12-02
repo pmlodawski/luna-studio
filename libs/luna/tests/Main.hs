@@ -48,6 +48,8 @@ import qualified Flowbox.Luna.Data.AST.Zipper.Expr                     as Zipper
 
 import           Control.Lens                                          hiding (Zipper)
 
+import qualified Flowbox.Distribution.M                                as DistMain
+
 genProject :: String -> Config.Config
 genProject name = let
     exec = Section.mkExecutable name
@@ -157,12 +159,15 @@ example = Source.Source ["Main"]
 
 main :: IO ()
 main = do
-    logger setLevel DEBUG
+    DistMain.main
+    --logger setLevel DEBUG
     
-    out <- timeIt main_inner
-    case out of
-        Right _ -> return ()
-        Left  e -> putStrLn e
+    --out <- timeIt main_inner
+    --case out of
+    --    Right _ -> return ()
+    --    Left  e -> putStrLn e
+
+
 
 
 main_inner :: IO (Either String ())

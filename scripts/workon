@@ -63,18 +63,19 @@ class AllProject(Project):
         return tgts
 
 
-deptree = ['batch-zmqsrv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'utils', 'core']
+deptree = ['batch-zmqsrv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'utils', 'core', 'cabal-install']
 
-pkgs = { '@all'        : AllProject (deps = deptree)
-       , 'core'        : HProject   ('flowboxM-core'       , os.path.join ('libs'  , 'core')        , 'libs'    , []                                                  )
-       , 'utils'       : HProject   ('flowbox-utils'       , os.path.join ('libs'  , 'utils')       , 'libs'    , []                                                  )
-       , 'config'      : HProject   ('flowbox-config'      , os.path.join ('libs'  , 'config')      , 'libs'    , ['utils']                                           )
-       , 'wrappers'    : HProject   ('flowbox-wrappers'    , os.path.join ('tools' , 'wrappers')    , 'wrappers', ['config']                                          )
-       , 'luna'        : HProject   ('flowbox-luna'        , os.path.join ('libs'  , 'luna')        , 'libs'    , ['utils', 'config']                                 )
-       , 'initializer' : HProject   ('flowbox-initializer' , os.path.join ('tools' , 'initializer') , 'tools'   , ['utils', 'config']                                 )
-       , 'lunac'       : HProject   ('flowbox-lunac'       , os.path.join ('tools' , 'lunac')       , 'tools'   , ['utils', 'config', 'initializer', 'luna']          )
-       , 'batch'       : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')       , 'libs'    , ['utils', 'config', 'initializer', 'luna']          )
-       , 'batch-zmqsrv': HProject   ('flowbox-batch-zmqsrv', os.path.join ('tools' , 'batch-zmqsrv'), 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
+pkgs = { '@all'          : AllProject (deps = deptree)
+       , 'cabal-install' : HProject   ('cabal-install'       , os.path.join ('libs'  , 'cabal-install') , 'libs'    , []                                                  )
+       , 'core'          : HProject   ('flowboxM-core'       , os.path.join ('libs'  , 'core')          , 'libs'    , []                                                  )
+       , 'utils'         : HProject   ('flowbox-utils'       , os.path.join ('libs'  , 'utils')         , 'libs'    , []                                                  )
+       , 'config'        : HProject   ('flowbox-config'      , os.path.join ('libs'  , 'config')        , 'libs'    , ['utils']                                           )
+       , 'wrappers'      : HProject   ('flowbox-wrappers'    , os.path.join ('tools' , 'wrappers')      , 'wrappers', ['config']                                          )
+       , 'luna'          : HProject   ('flowbox-luna'        , os.path.join ('libs'  , 'luna')          , 'libs'    , ['utils', 'config', 'cabal-install']                )
+       , 'initializer'   : HProject   ('flowbox-initializer' , os.path.join ('tools' , 'initializer')   , 'tools'   , ['utils', 'config']                                 )
+       , 'lunac'         : HProject   ('flowbox-lunac'       , os.path.join ('tools' , 'lunac')         , 'tools'   , ['utils', 'config', 'initializer', 'luna']          )
+       , 'batch'         : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')         , 'libs'    , ['utils', 'config', 'initializer', 'luna']          )
+       , 'batch-zmqsrv'  : HProject   ('flowbox-batch-zmqsrv', os.path.join ('tools' , 'batch-zmqsrv')  , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
        } 
 
 

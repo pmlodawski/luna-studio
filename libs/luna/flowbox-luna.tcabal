@@ -23,11 +23,13 @@ Library
                   NoImplicitPrelude,
                   TemplateHaskell
   
-  Exposed-modules: `findmodules('gen', '.*\.hs', exclude='.*hs-boot.*')`, 
+  Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
                    `findmodules('src', '.*\.hs')`
   
   Build-Depends:  base,
                   bytestring,
+                  Cabal,
+                  cabal-install,
                   containers,
                   directory,
                   either,
