@@ -9,15 +9,23 @@
 module Flowbox.Data.Version where
 
 import           Flowbox.Prelude   
-import           GHC.Generics
+import           GHC.Generics      
+import           Data.Aeson        
+import           Data.Monoid       (Monoid, mempty)
 
 data Version = Version { branch :: [Int]
-                       , stage  :: Stage
+                       , tags   :: [String]
                        } deriving (Show, Eq, Generic)
 
-data Stage = PreAlpha
-           | Alpha
-           | Beta
-           | RC Int
-           | Final
-           deriving (Show, Eq, Generic)
+-------------------------------------------------
+-- INSTANCES
+-------------------------------------------------
+
+instance Monoid Version where
+    mempty = Version { branch = [0,1,0]
+                     , tags   = mempty
+                     }
+
+instance ToJSON Version
+instance FromJSON Version
+
