@@ -7,8 +7,8 @@
 
 module Flowbox.System.Log.Priority where
 
-import qualified System.Log.Logger           as HSLogger
-import           Flowbox.Prelude  
+import qualified System.Log.Logger as HSLogger
+import           Flowbox.Prelude     
 
 
 data Priority = TRACE

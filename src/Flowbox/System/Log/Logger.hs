@@ -22,12 +22,12 @@ import qualified Data.String.Utils           as StringUtils
 import qualified System.Console.ANSI         as ANSI
 import           System.IO                     (stderr)
 import qualified System.Log.Logger           as HSLogger
-import           Flowbox.System.Log.Priority
+import           Flowbox.System.Log.Priority   
 --import           System.Log.Logger           hiding (getLogger, setLevel, Logger)
 
 import qualified Flowbox.System.Log.LogEntry as LogEntry
 import           Flowbox.System.Log.LogEntry   (LogEntry(LogEntry))
-import           Control.Applicative
+import           Control.Applicative           
 
   
 
