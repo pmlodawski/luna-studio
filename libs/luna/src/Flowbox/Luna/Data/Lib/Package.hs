@@ -8,8 +8,8 @@
 module Flowbox.Luna.Data.Lib.Package where
 
 import           Flowbox.Prelude   
-import           Distribution.Version   (Version)
-import qualified Distribution.Version as Version
+import           Data.Version           (Version)
+import qualified Data.Version         as Version
 
 data Package = Package { name         :: String
                        , version      :: Version
