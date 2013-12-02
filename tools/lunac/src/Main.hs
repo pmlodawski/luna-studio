@@ -86,7 +86,7 @@ parser = Cmd.Prog <$> subparser ( command "build"   (Opt.info buildParser      (
 
 
 opts :: Opt.ParserInfo Cmd.Prog
-opts = Opt.info parser (fullDesc <> header (Version.full False)) --idm 
+opts = Opt.info parser (fullDesc <> header (Version.full False True True)) --idm 
 
 
 helper :: Opt.Parser (a -> a)
@@ -99,7 +99,7 @@ main = Opt.execParser opts >>= run
 
 run :: Cmd.Prog -> IO ()
 run prog = case Cmd.cmd prog of
-    Cmd.Version op -> putStrLn (Version.full $ Cmd.numeric op)
+    Cmd.Version op -> putStrLn $ Version.full (Cmd.numeric op) (Cmd.compiler op) (Cmd.library op) 
     Cmd.Build   op -> do rootLogger setIntLevel $ Cmd.verbose prog 
                          cfg <- Config.load
                          Build.run cfg op

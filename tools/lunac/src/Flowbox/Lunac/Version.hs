@@ -15,8 +15,9 @@ import qualified Flowbox.Lunac.Config       as Config
 
 
 
-full :: Bool -> String
-full numeric = compiler numeric ++ "\n" ++ library numeric
+full :: Bool -> Bool -> Bool -> String
+full numeric comp lib =  (if (not comp && lib) then "" else (compiler numeric ++ "\n")) 
+                      ++ (if (not lib && comp) then "" else (library numeric ++ "\n")) 
 
 
 compiler :: Bool -> String
