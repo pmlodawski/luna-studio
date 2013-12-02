@@ -18,26 +18,35 @@ import           Flowbox.Distribution.License              (License)
 
 
 import           GHC.Generics                              
-import           Data.Aeson                                
+import           Data.Aeson                    
+import qualified Data.Aeson.TH                           as JSON        
 import           Data.Default                              (Default, def)
 
-data Package = Package { id           :: PackageIdentifier
-                       , synopsis     :: String
-                       , description  :: String
-                       , homepage     :: String
-                       , bugReports   :: String
-                       , license      :: License
-                       , licenseFile  :: Maybe String
-                       , authors      :: [String]
-                       , maintainers  :: [String]
-                       , copyright    :: String
-                       , tags         :: [String]
-                       , dependencies :: [Dependency]
+
+data PackageIdentifier = PackageIdentifier { _name    :: String
+                                           , _version :: Version
+                                           } deriving (Show, Generic)
+makeLenses (''PackageIdentifier)
+
+
+data Package = Package { _id           :: PackageIdentifier
+                       , _synopsis     :: String
+                       , _description  :: String
+                       , _homepage     :: String
+                       , _url          :: String
+                       , _bugReports   :: String
+                       , _license      :: License
+                       , _licenseFile  :: Maybe String
+                       , _authors      :: [String]
+                       , _maintainers  :: [String]
+                       , _copyright    :: String
+                       , _tags         :: [String]
+                       , _dependencies :: [Dependency]
                        } deriving (Show, Generic)
 
-data PackageIdentifier = PackageIdentifier { name    :: String
-                                           , version :: Version
-                                           } deriving (Show, Generic)
+makeLenses (''Package)
+
+
 
 
 -------------------------------------------------
@@ -45,28 +54,26 @@ data PackageIdentifier = PackageIdentifier { name    :: String
 -------------------------------------------------
 
 instance Default Package where
-    def = Package { id           = def
-                  , synopsis     = def
-                  , description  = def
-                  , homepage     = def
-                  , bugReports   = def
-                  , license      = def
-                  , licenseFile  = def
-                  , authors      = def
-                  , maintainers  = def
-                  , copyright    = def
-                  , tags         = def
-                  , dependencies = def
+    def = Package { _id           = def
+                  , _synopsis     = def
+                  , _description  = def
+                  , _homepage     = def
+                  , _bugReports   = def
+                  , _license      = def
+                  , _licenseFile  = def
+                  , _authors      = def
+                  , _maintainers  = def
+                  , _copyright    = def
+                  , _tags         = def
+                  , _dependencies = def
                   }
 
 instance Default PackageIdentifier where
-    def = PackageIdentifier { name    = "unnamed"
-                            , version = def
+    def = PackageIdentifier { _name    = "unnamed"
+                            , _version = def
                             }
 
-instance ToJSON Package
-instance FromJSON Package
+JSON.deriveJSON JSON.defaultOptions{JSON.fieldLabelModifier = drop 1} ''Package
+JSON.deriveJSON JSON.defaultOptions{JSON.fieldLabelModifier = drop 1} ''PackageIdentifier
 
-instance ToJSON PackageIdentifier
-instance FromJSON PackageIdentifier
 

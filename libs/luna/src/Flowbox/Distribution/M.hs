@@ -44,6 +44,7 @@ import qualified Distribution.Version                as DistVersion
 
 import qualified Flowbox.Data.Version                as Version
 import qualified Data.Map                            as Map
+import           Data.List.Split                        (splitOn)
 
 
 localPkgDB :: Config -> PackageDB
@@ -112,14 +113,22 @@ main = do
         source :: Maybe PackageDescription
         source         = fmap DistConfig.flattenPackageDescription sourceGeneric
 
-    print sourceGeneric
+    --print sourceGeneric
     print "---------------"
     --print source
-    print $ encode (def :: Package)
+    print $ encode (fmap convertPackage source)
 
 
 convertPackage :: PackageDescription -> Package
-convertPackage desc = def
+convertPackage desc = def & Package.authors     .~ (splitOn "," $ DistPkgDesc.author desc)
+                          & Package.bugReports  .~ (DistPkgDesc.bugReports desc)
+                          & Package.copyright   .~ (DistPkgDesc.copyright desc)
+                          & Package.description .~ (DistPkgDesc.description desc)
+                          & Package.homepage    .~ (DistPkgDesc.homepage desc)
+                          & Package.maintainers .~ (splitOn "," $ DistPkgDesc.maintainer desc)
+                          & Package.synopsis    .~ (DistPkgDesc.synopsis desc)
+                          & Package.tags        .~ (splitOn "," $ DistPkgDesc.category desc)
+                          & Package.url         .~ (DistPkgDesc.pkgUrl desc)
 
 
 --data Package = Package { name :: String 
