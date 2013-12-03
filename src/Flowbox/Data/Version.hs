@@ -11,15 +11,15 @@ module Flowbox.Data.Version where
 import           Flowbox.Prelude   
 import           GHC.Generics      
 import           Data.Aeson        
-import           Data.Default                              (Default, def)
+import           Data.Default      (Default, def)
 
 data Version = Version { branch :: [Int]
                        , tags   :: [String]
-                       } deriving (Read, Show, Eq, Generic)
+                       } deriving (Read, Show, Eq, Generic, Ord)
 
--------------------------------------------------
+------------------------------------------------------------------------
 -- INSTANCES
--------------------------------------------------
+------------------------------------------------------------------------
 
 instance Default Version where
     def = Version { branch = [0,1,0]

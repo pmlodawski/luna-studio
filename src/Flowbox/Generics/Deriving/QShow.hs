@@ -28,7 +28,7 @@ module Flowbox.Generics.Deriving.QShow (
 import           Generics.Deriving.Base        
 import           Generics.Deriving.Instances   ()
 
-import           Flowbox.Prelude               hiding(from)    
+import           Flowbox.Prelude             hiding (from)
 
 --------------------------------------------------------------------------------
 -- Generic show
