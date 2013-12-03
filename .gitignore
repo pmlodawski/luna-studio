@@ -41,7 +41,8 @@ tools/batch-clients/zmq-cpp/generated
 .idea
 
 # cabal configs - they should be generated from tcabal files
-*.cabal
+libs/*/*.cabal
+tools/*/*.cabal
 
 #general builds
 dist
