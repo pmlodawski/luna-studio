@@ -1,16 +1,16 @@
 module Distribution.Client.Dependency.Modular.Tree where
 
-import Control.Applicative
-import Control.Monad hiding (mapM)
-import Data.Foldable
-import Data.Traversable
-import Prelude hiding (foldr, mapM)
+import           Control.Applicative                                 
+import           Control.Monad                                     hiding (mapM)
+import           Data.Foldable                                       
+import           Data.Traversable                                    
+import           Prelude                                           hiding (foldr, mapM)
 
-import Distribution.Client.Dependency.Modular.Dependency
-import Distribution.Client.Dependency.Modular.Flag
-import Distribution.Client.Dependency.Modular.Package
-import Distribution.Client.Dependency.Modular.PSQ as P
-import Distribution.Client.Dependency.Modular.Version
+import           Distribution.Client.Dependency.Modular.Dependency   
+import           Distribution.Client.Dependency.Modular.Flag         
+import           Distribution.Client.Dependency.Modular.Package      
+import           Distribution.Client.Dependency.Modular.PSQ        as P
+import           Distribution.Client.Dependency.Modular.Version      
 
 -- | Type of the search tree. Inlining the choice nodes for now.
 data Tree a =

@@ -15,35 +15,35 @@ module Distribution.Client.Fetch (
     fetch,
   ) where
 
-import Distribution.Client.Types
-import Distribution.Client.Targets
-import Distribution.Client.FetchUtils hiding (fetchPackage)
-import Distribution.Client.Dependency
-import Distribution.Client.IndexUtils as IndexUtils
+import           Distribution.Client.Types          
+import           Distribution.Client.Targets        
+import           Distribution.Client.FetchUtils   hiding (fetchPackage)
+import           Distribution.Client.Dependency     
+import           Distribution.Client.IndexUtils   as IndexUtils
          ( getSourcePackages, getInstalledPackages )
-import qualified Distribution.Client.InstallPlan as InstallPlan
-import Distribution.Client.Setup
+import qualified Distribution.Client.InstallPlan  as InstallPlan
+import           Distribution.Client.Setup          
          ( GlobalFlags(..), FetchFlags(..) )
 
-import Distribution.Package
+import           Distribution.Package               
          ( packageId )
-import Distribution.Simple.Compiler
+import           Distribution.Simple.Compiler       
          ( Compiler(compilerId), PackageDBStack )
-import Distribution.Simple.PackageIndex (PackageIndex)
-import Distribution.Simple.Program
+import           Distribution.Simple.PackageIndex   (PackageIndex)
+import           Distribution.Simple.Program        
          ( ProgramConfiguration )
-import Distribution.Simple.Setup
+import           Distribution.Simple.Setup          
          ( fromFlag )
-import Distribution.Simple.Utils
+import           Distribution.Simple.Utils          
          ( die, notice, debug )
-import Distribution.System
+import           Distribution.System                
          ( Platform )
-import Distribution.Text
+import           Distribution.Text                  
          ( display )
-import Distribution.Verbosity
+import           Distribution.Verbosity             
          ( Verbosity )
 
-import Control.Monad
+import           Control.Monad                      
          ( filterM )
 
 -- ------------------------------------------------------------

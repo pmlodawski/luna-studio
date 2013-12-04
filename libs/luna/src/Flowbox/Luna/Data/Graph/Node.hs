@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Network.Graph.Node (
+module Flowbox.Luna.Data.Graph.Node (
     Node(..),
     ID,
     mkExpr,
@@ -13,13 +13,13 @@ module Flowbox.Luna.Network.Graph.Node (
     mkOutputs,
 ) where
 
-import           Flowbox.Prelude                   
+import           Flowbox.Prelude                 
 
-import qualified Flowbox.Luna.Network.Flags      as Flags
-import           Flowbox.Luna.Network.Flags        (Flags)
-import qualified Flowbox.Luna.Network.Attributes as Attributes
-import           Flowbox.Luna.Network.Attributes   (Attributes)
-import           Flowbox.Luna.Data.AST.Expr        (Expr)
+import qualified Flowbox.Luna.Data.Graph.Flags as Flags
+import           Flowbox.Luna.Data.Graph.Flags   (Flags)
+import qualified Flowbox.Luna.Data.Attributes  as Attributes
+import           Flowbox.Luna.Data.Attributes    (Attributes)
+import           Flowbox.Luna.Data.AST.Expr      (Expr)
 
 
 

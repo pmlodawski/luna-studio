@@ -1,25 +1,25 @@
 module Distribution.Client.Dependency.Modular.IndexConversion where
 
-import Data.List as L
-import Data.Map as M
-import Data.Maybe
-import Prelude hiding (pi)
+import           Data.List                                         as L
+import           Data.Map                                          as M
+import           Data.Maybe                                          
+import           Prelude                                           hiding (pi)
 
-import qualified Distribution.Client.PackageIndex as CI
-import Distribution.Client.Types
-import Distribution.Compiler
-import Distribution.InstalledPackageInfo as IPI
+import qualified Distribution.Client.PackageIndex                  as CI
+import           Distribution.Client.Types                           
+import           Distribution.Compiler                               
+import           Distribution.InstalledPackageInfo                 as IPI
 import Distribution.Package                          -- from Cabal
 import Distribution.PackageDescription as PD         -- from Cabal
-import qualified Distribution.Simple.PackageIndex as SI
-import Distribution.System
+import qualified Distribution.Simple.PackageIndex                  as SI
+import           Distribution.System                                 
 
-import Distribution.Client.Dependency.Modular.Dependency as D
-import Distribution.Client.Dependency.Modular.Flag as F
-import Distribution.Client.Dependency.Modular.Index
-import Distribution.Client.Dependency.Modular.Package
-import Distribution.Client.Dependency.Modular.Tree
-import Distribution.Client.Dependency.Modular.Version
+import           Distribution.Client.Dependency.Modular.Dependency as D
+import           Distribution.Client.Dependency.Modular.Flag       as F
+import           Distribution.Client.Dependency.Modular.Index        
+import           Distribution.Client.Dependency.Modular.Package      
+import           Distribution.Client.Dependency.Modular.Tree         
+import           Distribution.Client.Dependency.Modular.Version      
 
 -- | Convert both the installed package index and the source package
 -- index into one uniform solver index.

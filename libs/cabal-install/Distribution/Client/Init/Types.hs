@@ -13,21 +13,21 @@
 -----------------------------------------------------------------------------
 module Distribution.Client.Init.Types where
 
-import Distribution.Simple.Setup
+import           Distribution.Simple.Setup    
   ( Flag(..) )
 
-import Distribution.Version
-import Distribution.Verbosity
-import qualified Distribution.Package as P
-import Distribution.License
-import Distribution.ModuleName
-import Language.Haskell.Extension ( Language(..), Extension )
+import           Distribution.Version         
+import           Distribution.Verbosity       
+import qualified Distribution.Package       as P
+import           Distribution.License         
+import           Distribution.ModuleName      
+import           Language.Haskell.Extension   ( Language(..), Extension )
 
-import qualified Text.PrettyPrint as Disp
-import qualified Distribution.Compat.ReadP as Parse
-import Distribution.Text
+import qualified Text.PrettyPrint           as Disp
+import qualified Distribution.Compat.ReadP  as Parse
+import           Distribution.Text            
 
-import Data.Monoid
+import           Data.Monoid                  
 
 -- | InitFlags is really just a simple type to represent certain
 --   portions of a .cabal file.  Rather than have a flag for EVERY

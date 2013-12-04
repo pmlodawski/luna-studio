@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Network.Path.Path(
+module Flowbox.Luna.Data.Path.Path(
     Path(..),
     empty,
     append,

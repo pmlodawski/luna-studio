@@ -15,60 +15,60 @@ module Distribution.Client.List (
   getPkgList, list, info, PackageDisplayInfo(..), latestWithPref
   ) where
 
-import Distribution.Package
+import           Distribution.Package                            
          ( PackageName(..), Package(..), packageName, packageVersion
          , Dependency(..), simplifyDependency )
-import Distribution.ModuleName (ModuleName)
-import Distribution.License (License)
-import qualified Distribution.InstalledPackageInfo as Installed
-import qualified Distribution.PackageDescription   as Source
-import Distribution.PackageDescription
+import           Distribution.ModuleName                         (ModuleName)
+import           Distribution.License                            (License)
+import qualified Distribution.InstalledPackageInfo             as Installed
+import qualified Distribution.PackageDescription               as Source
+import           Distribution.PackageDescription                 
          ( Flag(..), FlagName(..) )
-import Distribution.PackageDescription.Configuration
+import           Distribution.PackageDescription.Configuration   
          ( flattenPackageDescription )
 
-import Distribution.Simple.Compiler
+import           Distribution.Simple.Compiler                    
         ( Compiler, PackageDBStack )
-import Distribution.Simple.Program (ProgramConfiguration)
-import Distribution.Simple.Utils
+import           Distribution.Simple.Program                     (ProgramConfiguration)
+import           Distribution.Simple.Utils                       
         ( equating, comparing, die, notice )
-import Distribution.Simple.Setup (fromFlag)
-import qualified Distribution.Simple.PackageIndex as InstalledPackageIndex
-import qualified Distribution.Client.PackageIndex as PackageIndex
-import Distribution.Version
+import           Distribution.Simple.Setup                       (fromFlag)
+import qualified Distribution.Simple.PackageIndex              as InstalledPackageIndex
+import qualified Distribution.Client.PackageIndex              as PackageIndex
+import           Distribution.Version                            
          ( Version(..), VersionRange, withinRange, anyVersion
          , intersectVersionRanges, simplifyVersionRange )
-import Distribution.Verbosity (Verbosity)
-import Distribution.Text
+import           Distribution.Verbosity                          (Verbosity)
+import           Distribution.Text                               
          ( Text(disp), display )
 
-import Distribution.Client.Types
+import           Distribution.Client.Types                       
          ( SourcePackage(..), Repo, SourcePackageDb(..) )
-import Distribution.Client.Dependency.Types
+import           Distribution.Client.Dependency.Types            
          ( PackageConstraint(..), ExtDependency(..) )
-import Distribution.Client.Targets
+import           Distribution.Client.Targets                     
          ( UserTarget, resolveUserTargets, PackageSpecifier(..) )
-import Distribution.Client.Setup
+import           Distribution.Client.Setup                       
          ( GlobalFlags(..), ListFlags(..), InfoFlags(..) )
-import Distribution.Client.Utils
+import           Distribution.Client.Utils                       
          ( mergeBy, MergeResult(..) )
-import Distribution.Client.IndexUtils as IndexUtils
+import           Distribution.Client.IndexUtils                as IndexUtils
          ( getSourcePackages, getInstalledPackages )
-import Distribution.Client.FetchUtils
+import           Distribution.Client.FetchUtils                  
          ( isFetched )
 
-import Data.List
+import           Data.List                                       
          ( sortBy, groupBy, sort, nub, intersperse, maximumBy, partition )
-import Data.Maybe
+import           Data.Maybe                                      
          ( listToMaybe, fromJust, fromMaybe, isJust )
-import qualified Data.Map as Map
-import Data.Tree as Tree
-import Control.Monad
+import qualified Data.Map                                      as Map
+import           Data.Tree                                     as Tree
+import           Control.Monad                                   
          ( MonadPlus(mplus), join )
-import Control.Exception
+import           Control.Exception                               
          ( assert )
-import Text.PrettyPrint as Disp
-import System.Directory
+import           Text.PrettyPrint                              as Disp
+import           System.Directory                                
          ( doesDirectoryExist )
 
 

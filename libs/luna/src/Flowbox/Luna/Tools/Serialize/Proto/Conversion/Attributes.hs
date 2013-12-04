@@ -18,9 +18,9 @@ import qualified Data.Sequence                                        as Sequenc
 
 import           Flowbox.Prelude                                        
 import           Flowbox.Control.Error                                  
-import           Flowbox.Luna.Network.Flags                             (Flags(Flags))
-import qualified Flowbox.Luna.Network.Attributes                      as Attributes
-import           Flowbox.Luna.Network.Attributes                        (Attributes)
+import           Flowbox.Luna.Data.Graph.Flags                          (Flags(Flags))
+import qualified Flowbox.Luna.Data.Attributes                         as Attributes
+import           Flowbox.Luna.Data.Attributes                           (Attributes)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic         
 import qualified Generated.Proto.Attributes.Attributes                as Gen
 import qualified Generated.Proto.Attributes.Attributes.Space          as Gen

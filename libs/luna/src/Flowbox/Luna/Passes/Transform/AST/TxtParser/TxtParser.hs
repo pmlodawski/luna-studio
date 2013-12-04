@@ -20,7 +20,8 @@ import           Flowbox.Prelude                                    hiding (erro
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Parser.Parser"
+logger = getLogger "Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser"
+
 
 type ParserMonad m = PassMonad Pass.NoState m
 

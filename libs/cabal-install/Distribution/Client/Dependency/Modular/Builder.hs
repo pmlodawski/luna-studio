@@ -15,17 +15,17 @@ module Distribution.Client.Dependency.Modular.Builder where
 -- flag-guarded dependencies, we cannot introduce them immediately. Instead, we
 -- store the entire dependency.
 
-import Control.Monad.Reader hiding (sequence, mapM)
-import Data.List as L
-import Data.Map as M
-import Prelude hiding (sequence, mapM)
+import           Control.Monad.Reader                              hiding (sequence, mapM)
+import           Data.List                                         as L
+import           Data.Map                                          as M
+import           Prelude                                           hiding (sequence, mapM)
 
-import Distribution.Client.Dependency.Modular.Dependency
-import Distribution.Client.Dependency.Modular.Flag
-import Distribution.Client.Dependency.Modular.Index
-import Distribution.Client.Dependency.Modular.Package
-import Distribution.Client.Dependency.Modular.PSQ as P
-import Distribution.Client.Dependency.Modular.Tree
+import           Distribution.Client.Dependency.Modular.Dependency   
+import           Distribution.Client.Dependency.Modular.Flag         
+import           Distribution.Client.Dependency.Modular.Index        
+import           Distribution.Client.Dependency.Modular.Package      
+import           Distribution.Client.Dependency.Modular.PSQ        as P
+import           Distribution.Client.Dependency.Modular.Tree         
 
 -- | The state needed during the build phase of the search tree.
 data BuildState = BS {

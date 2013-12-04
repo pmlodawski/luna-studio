@@ -12,7 +12,7 @@ Flag Debug
 
 
 Library
-    Hs-Source-Dirs: gen,
+    Hs-Source-Dirs: dist/gen,
                     src
     Other-Modules:  Paths_flowbox_batch
 
@@ -22,7 +22,7 @@ Library
                     NoImplicitPrelude,
                     TypeSynonymInstances
  
-    Exposed-modules: `findmodules('gen', '.*\.hs')`, 
+    Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
                      `findmodules('src', '.*\.hs', exclude='(.*Flowbox/Batch/Main\.hs)')`
                      
     Build-Depends:  base,
@@ -41,30 +41,3 @@ Library
                     protocol-buffers-descriptor,
                     text,
                     timeit
-
-
--- Executable batch 
---   Main-Is:        Flowbox/Batch/Main.hs
---   Hs-Source-Dirs: src
--- 
---   GHC-Options:    -Wall -O2
--- 
---   Extensions:     DoAndIfThenElse,
---                   NoImplicitPrelude
--- 
---   Build-Depends:    base,
---                     bytestring,
---                     containers,
---                     directory,
---                     flowbox-batch,
---                     flowbox-luna,
---                     flowbox-utils,
---                     hashable,
---                     network,
---                     parsec,
---                     pretty-show,
---                     text,
---                     thrift,
---                     timeit,
---                     unordered-containers,
---                     vector

@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Path (
-    module Flowbox.Luna.Network.Path.Path,
+    module Flowbox.Luna.Data.Path.Path,
     toModulePath,
     toModuleName,
     toFilePath,
@@ -27,11 +27,13 @@ module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Path (
     mkFuncName
 )where
 
-import           Flowbox.Prelude                hiding (last, init, tail, last)
-import           Data.String.Utils                (join)
+import           Data.Char                     (isLower)
+import           Data.String.Utils             (join)
 
-import           Flowbox.Luna.Network.Path.Path   
-import           Data.Char                        (isLower)
+import           Flowbox.Prelude             hiding (last, init, tail, last)
+import           Flowbox.Luna.Data.Path.Path   
+
+
 
 toModulePath :: Path -> Path
 toModulePath path = Path $ map toModuleName (segments path)

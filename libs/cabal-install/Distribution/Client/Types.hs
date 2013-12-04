@@ -13,24 +13,24 @@
 -----------------------------------------------------------------------------
 module Distribution.Client.Types where
 
-import Distribution.Package
+import           Distribution.Package                            
          ( PackageName, PackageId, Package(..), PackageFixedDeps(..) )
-import Distribution.InstalledPackageInfo
+import           Distribution.InstalledPackageInfo               
          ( InstalledPackageInfo )
-import Distribution.PackageDescription
+import           Distribution.PackageDescription                 
          ( Benchmark(..), GenericPackageDescription(..), FlagAssignment
          , TestSuite(..) )
-import Distribution.PackageDescription.Configuration
+import           Distribution.PackageDescription.Configuration   
          ( mapTreeData )
-import Distribution.Client.PackageIndex
+import           Distribution.Client.PackageIndex                
          ( PackageIndex )
-import Distribution.Version
+import           Distribution.Version                            
          ( VersionRange )
 
-import Data.Map (Map)
-import Network.URI (URI)
-import Data.ByteString.Lazy (ByteString)
-import Control.Exception
+import           Data.Map                                        (Map)
+import           Network.URI                                     (URI)
+import           Data.ByteString.Lazy                            (ByteString)
+import           Control.Exception                               
          ( SomeException )
 
 newtype Username = Username { unUsername :: String }

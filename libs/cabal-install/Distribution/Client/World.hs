@@ -29,32 +29,32 @@ module Distribution.Client.World (
     getContents,
   ) where
 
-import Distribution.Package
+import           Distribution.Package              
          ( Dependency(..) )
-import Distribution.PackageDescription
+import           Distribution.PackageDescription   
          ( FlagAssignment, FlagName(FlagName) )
-import Distribution.Verbosity
+import           Distribution.Verbosity            
          ( Verbosity )
-import Distribution.Simple.Utils
+import           Distribution.Simple.Utils         
          ( die, info, chattyTry, writeFileAtomic )
-import Distribution.Text
+import           Distribution.Text                 
          ( Text(..), display, simpleParse )
-import qualified Distribution.Compat.ReadP as Parse
-import Distribution.Compat.Exception ( catchIO )
-import qualified Text.PrettyPrint as Disp
-import Text.PrettyPrint ( (<>), (<+>) )
+import qualified Distribution.Compat.ReadP       as Parse
+import           Distribution.Compat.Exception     ( catchIO )
+import qualified Text.PrettyPrint                as Disp
+import           Text.PrettyPrint                  ( (<>), (<+>) )
 
 
-import Data.Char as Char
+import           Data.Char                       as Char
 
-import Data.List
+import           Data.List                         
          ( unionBy, deleteFirstsBy, nubBy )
-import Data.Maybe
+import           Data.Maybe                        
          ( isJust, fromJust )
-import System.IO.Error
+import           System.IO.Error                   
          ( isDoesNotExistError )
-import qualified Data.ByteString.Lazy.Char8 as B
-import Prelude hiding (getContents)
+import qualified Data.ByteString.Lazy.Char8      as B
+import           Prelude                         hiding (getContents)
 
 
 data WorldPkgInfo = WorldPkgInfo Dependency FlagAssignment

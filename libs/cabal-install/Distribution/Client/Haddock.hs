@@ -16,25 +16,25 @@ module Distribution.Client.Haddock
     )
     where
 
-import Data.Maybe (listToMaybe)
-import Data.List (maximumBy)
-import Control.Monad (guard)
+import           Data.Maybe                          (listToMaybe)
+import           Data.List                           (maximumBy)
+import           Control.Monad                       (guard)
 import System.Directory (createDirectoryIfMissing, doesFileExist,
                          renameFile)
-import System.FilePath ((</>), splitFileName, isAbsolute)
-import Distribution.Package
+import           System.FilePath                     ((</>), splitFileName, isAbsolute)
+import           Distribution.Package                
          ( Package(..), packageVersion )
 import Distribution.Simple.Program (haddockProgram, ProgramConfiguration
                                    , rawSystemProgram, requireProgramVersion)
-import Distribution.Version (Version(Version), orLaterVersion)
-import Distribution.Verbosity (Verbosity)
-import Distribution.Text (display)
-import Distribution.Simple.PackageIndex
+import           Distribution.Version                (Version(Version), orLaterVersion)
+import           Distribution.Verbosity              (Verbosity)
+import           Distribution.Text                   (display)
+import           Distribution.Simple.PackageIndex    
          ( PackageIndex, allPackagesByName )
-import Distribution.Simple.Utils
+import           Distribution.Simple.Utils           
          ( comparing, intercalate, debug
          , installDirectoryContents, withTempDirectory )
-import Distribution.InstalledPackageInfo as InstalledPackageInfo
+import           Distribution.InstalledPackageInfo as InstalledPackageInfo
          ( InstalledPackageInfo
          , InstalledPackageInfo_(haddockHTMLs, haddockInterfaces, exposed) )
 

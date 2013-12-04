@@ -3,36 +3,36 @@
 
 module Distribution.Client.Upload (check, upload, report) where
 
-import Distribution.Client.Types (Username(..), Password(..),Repo(..),RemoteRepo(..))
-import Distribution.Client.HttpUtils (isOldHackageURI, cabalBrowse)
+import           Distribution.Client.Types                    (Username(..), Password(..),Repo(..),RemoteRepo(..))
+import           Distribution.Client.HttpUtils                (isOldHackageURI, cabalBrowse)
 
-import Distribution.Simple.Utils (debug, notice, warn, info)
-import Distribution.Verbosity (Verbosity)
-import Distribution.Text (display)
-import Distribution.Client.Config
+import           Distribution.Simple.Utils                    (debug, notice, warn, info)
+import           Distribution.Verbosity                       (Verbosity)
+import           Distribution.Text                            (display)
+import           Distribution.Client.Config                   
 
 import qualified Distribution.Client.BuildReports.Anonymous as BuildReport
-import qualified Distribution.Client.BuildReports.Upload as BuildReport
+import qualified Distribution.Client.BuildReports.Upload    as BuildReport
 
-import Network.Browser
+import           Network.Browser                              
          ( BrowserAction, request
          , Authority(..), addAuthority )
-import Network.HTTP
+import           Network.HTTP                                 
          ( Header(..), HeaderName(..), findHeader
          , Request(..), RequestMethod(..), Response(..) )
-import Network.TCP (HandleStream)
-import Network.URI (URI(uriPath), parseURI)
+import           Network.TCP                                  (HandleStream)
+import           Network.URI                                  (URI(uriPath), parseURI)
 
-import Data.Char        (intToDigit)
-import Numeric          (showHex)
+import           Data.Char                                    (intToDigit)
+import           Numeric                                      (showHex)
 import System.IO        (hFlush, stdin, stdout, hGetEcho, hSetEcho
                         ,openBinaryFile, IOMode(ReadMode), hGetContents)
-import Control.Exception (bracket)
-import System.Random    (randomRIO)
-import System.FilePath  ((</>), takeExtension, takeFileName)
+import           Control.Exception                            (bracket)
+import           System.Random                                (randomRIO)
+import           System.FilePath                              ((</>), takeExtension, takeFileName)
 import qualified System.FilePath.Posix as FilePath.Posix (combine)
-import System.Directory
-import Control.Monad (forM_, when)
+import           System.Directory                             
+import           Control.Monad                                (forM_, when)
 
 
 --FIXME: how do we find this path for an arbitrary hackage server?

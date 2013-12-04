@@ -22,6 +22,7 @@ import           GHC.Generics                      (Generic)
 import           Control.Applicative               
 
 
+
 type Lit         = Lit.Lit
 type Pat         = Pat.Pat
 type Traversal m = (Functor m, Applicative m, Monad m)
@@ -34,7 +35,7 @@ data Expr  = NOP         { _id :: ID                                            
            | Assignment  { _id :: ID, _pat       :: Pat      , _dst       :: Expr                                               }
            | Class       { _id :: ID, _cls       :: Type     , _classes   :: [Expr] , _fields    :: [Expr] , _methods :: [Expr] }
            | Con         { _id :: ID, _name      :: String                                                                      }
-           | Function    { _id :: ID, _path      :: [String] , _name      :: String , _inputs    :: [Expr] , _output    :: Type   ,  _body    :: [Expr] }
+           | Function    { _id :: ID, _path      :: [String] , _name      :: String , _inputs    :: [Expr] , _output  :: Type   , _body    :: [Expr] }
            | Lambda      { _id :: ID, _inputs    :: [Expr]   , _output    :: Type   , _body      :: [Expr]                      }
            | Import      { _id :: ID, _path      :: [String] , _target    :: Expr   , _rename    :: Maybe String                }
            | Infix       { _id :: ID, _name      :: String   , _src       :: Expr   , _dst       :: Expr                        }                                                               
@@ -52,6 +53,7 @@ data Expr  = NOP         { _id :: ID                                            
            | NativeCode  { _id :: ID, _code      :: String }
            | NativeVar   { _id :: ID, _name      :: String }
            deriving (Show, Eq, Generic)
+
 
 instance QShow Expr
 makeLenses (''Expr)

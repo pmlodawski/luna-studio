@@ -5,12 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Network.Path.Import(
-    Import(..),
+module Flowbox.Luna.Data.Graph.Edge(
+    Edge(..),
+    noEdges,
 ) where
 
-import           Flowbox.Prelude                  
-import           Flowbox.Luna.Network.Path.Path   (Path)
+import           Flowbox.Prelude                
+import           Flowbox.Luna.Data.Graph.Port   (Port)
 
-data Import = Import {path :: Path, name :: String} deriving (Show)
+
+data Edge = Edge { dst :: Port
+                 } deriving (Show, Read, Ord, Eq)
+
+
+noEdges :: [Edge]
+noEdges = [] 
 

@@ -14,33 +14,33 @@ module Distribution.Client.Update
     ( update
     ) where
 
-import Distribution.Client.Types
+import           Distribution.Client.Types          
          ( Repo(..), RemoteRepo(..), LocalRepo(..), SourcePackageDb(..) )
-import Distribution.Client.HttpUtils
+import           Distribution.Client.HttpUtils      
          ( DownloadResult(..) )
-import Distribution.Client.FetchUtils
+import           Distribution.Client.FetchUtils     
          ( downloadIndex )
 import qualified Distribution.Client.PackageIndex as PackageIndex
-import Distribution.Client.IndexUtils
+import           Distribution.Client.IndexUtils     
          ( getSourcePackages, updateRepoIndexCache )
-import qualified Paths_cabal_install
+import qualified Paths_cabal_install                
          ( version )
 
-import Distribution.Package
+import           Distribution.Package               
          ( PackageName(..), packageVersion )
-import Distribution.Version
+import           Distribution.Version               
          ( anyVersion, withinRange )
-import Distribution.Simple.Utils
+import           Distribution.Simple.Utils          
          ( writeFileAtomic, warn, notice )
-import Distribution.Verbosity
+import           Distribution.Verbosity             
          ( Verbosity )
 
-import qualified Data.ByteString.Lazy       as BS
-import Distribution.Client.GZipUtils (maybeDecompress)
-import qualified Data.Map as Map
-import System.FilePath (dropExtension)
-import Data.Maybe      (fromMaybe)
-import Control.Monad   (unless)
+import qualified Data.ByteString.Lazy             as BS
+import           Distribution.Client.GZipUtils      (maybeDecompress)
+import qualified Data.Map                         as Map
+import           System.FilePath                    (dropExtension)
+import           Data.Maybe                         (fromMaybe)
+import           Control.Monad                      (unless)
 
 -- | 'update' downloads the package list from all known servers
 update :: Verbosity -> [Repo] -> IO ()
