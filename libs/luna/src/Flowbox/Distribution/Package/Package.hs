@@ -8,7 +8,7 @@
 
 module Flowbox.Distribution.Package.Package where
 
-import           Flowbox.Prelude                         hiding (id)          
+import           Flowbox.Prelude                         hiding (id)
 import qualified Flowbox.Data.Version                    as Version
 import           Flowbox.Data.Version                      (Version)
 import qualified Flowbox.Distribution.Package.Dependency as Dependency

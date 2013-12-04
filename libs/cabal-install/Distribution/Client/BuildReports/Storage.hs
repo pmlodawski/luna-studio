@@ -23,30 +23,30 @@ module Distribution.Client.BuildReports.Storage (
   ) where
 
 import qualified Distribution.Client.BuildReports.Anonymous as BuildReport
-import Distribution.Client.BuildReports.Anonymous (BuildReport)
+import           Distribution.Client.BuildReports.Anonymous   (BuildReport)
 
-import Distribution.Client.Types
-import qualified Distribution.Client.InstallPlan as InstallPlan
-import Distribution.Client.InstallPlan
+import           Distribution.Client.Types                    
+import qualified Distribution.Client.InstallPlan            as InstallPlan
+import           Distribution.Client.InstallPlan              
          ( InstallPlan )
 
-import Distribution.Simple.InstallDirs
+import           Distribution.Simple.InstallDirs              
          ( PathTemplate, fromPathTemplate
          , initialPathTemplateEnv, substPathTemplate )
-import Distribution.System
+import           Distribution.System                          
          ( Platform(Platform) )
-import Distribution.Compiler
+import           Distribution.Compiler                        
          ( CompilerId )
-import Distribution.Simple.Utils
+import           Distribution.Simple.Utils                    
          ( comparing, equating )
 
-import Data.List
+import           Data.List                                    
          ( groupBy, sortBy )
-import Data.Maybe
+import           Data.Maybe                                   
          ( catMaybes )
-import System.FilePath
+import           System.FilePath                              
          ( (</>), takeDirectory )
-import System.Directory
+import           System.Directory                             
          ( createDirectoryIfMissing )
 
 storeAnonymous :: [(BuildReport, Repo)] -> IO ()

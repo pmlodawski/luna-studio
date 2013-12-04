@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Network.Graph.Graph(
+module Flowbox.Luna.Data.Graph.Graph(
     module Flowbox.Data.Graph,
     Graph,
     empty,
@@ -13,13 +13,13 @@ module Flowbox.Luna.Network.Graph.Graph(
     make,
 ) where
 
-import           Flowbox.Prelude                   
+import           Flowbox.Prelude                
 
-import           Flowbox.Data.Graph              hiding (Graph, Edge, empty)
-import qualified Flowbox.Data.Graph              as DG
-import           Flowbox.Luna.Network.Graph.Edge   (Edge)
-import qualified Flowbox.Luna.Network.Graph.Node as Node
-import           Flowbox.Luna.Network.Graph.Node   (Node)
+import           Flowbox.Data.Graph           hiding (Graph, Edge, empty)
+import qualified Flowbox.Data.Graph           as DG
+import           Flowbox.Luna.Data.Graph.Edge   (Edge)
+import qualified Flowbox.Luna.Data.Graph.Node as Node
+import           Flowbox.Luna.Data.Graph.Node   (Node)
 
 
 

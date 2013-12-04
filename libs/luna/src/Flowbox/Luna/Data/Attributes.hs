@@ -5,13 +5,16 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Network.Flags where
+module Flowbox.Luna.Data.Attributes (
+    Attributes,
+    module Data.Map
+) where
 
 import           Flowbox.Prelude   
+import           Data.Map          
 
 
 
-data Flags = Flags {io :: Bool, omit :: Bool } deriving (Show)
+type Attributes = Map String (Map String String)
 
-empty :: Flags
-empty = Flags False False
+

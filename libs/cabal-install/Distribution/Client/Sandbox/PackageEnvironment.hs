@@ -31,39 +31,39 @@ module Distribution.Client.Sandbox.PackageEnvironment (
 import Distribution.Client.Config      ( SavedConfig(..), commentSavedConfig,
                                          loadConfig, configFieldDescriptions,
                                          installDirsFields, defaultCompiler )
-import Distribution.Client.ParseUtils  ( parseFields, ppFields, ppSection )
-import Distribution.Client.Setup       ( GlobalFlags(..), ConfigExFlags(..)
+import           Distribution.Client.ParseUtils   ( parseFields, ppFields, ppSection )
+import           Distribution.Client.Setup        ( GlobalFlags(..), ConfigExFlags(..)
                                        , InstallFlags(..)
                                        , defaultSandboxLocation )
-import Distribution.Simple.Compiler    ( Compiler, PackageDB(..)
+import           Distribution.Simple.Compiler     ( Compiler, PackageDB(..)
                                        , compilerFlavor, showCompilerId )
 import Distribution.Simple.InstallDirs ( InstallDirs(..), PathTemplate
                                        , defaultInstallDirs, combineInstallDirs
                                        , fromPathTemplate, toPathTemplate )
 import Distribution.Simple.Setup       ( Flag(..), ConfigFlags(..),
                                          fromFlagOrDefault, toFlag )
-import Distribution.Simple.Utils       ( die, info, notice, warn, lowercase )
+import           Distribution.Simple.Utils        ( die, info, notice, warn, lowercase )
 import Distribution.ParseUtils         ( FieldDescr(..), ParseResult(..),
                                          commaListField,
                                          liftField, lineNo, locatedErrorMsg,
                                          parseFilePathQ, readFields,
                                          showPWarning, simpleField, syntaxError )
-import Distribution.System             ( Platform )
-import Distribution.Verbosity          ( Verbosity, normal )
-import Control.Monad                   ( foldM, when, unless )
-import Data.List                       ( partition )
-import Data.Monoid                     ( Monoid(..) )
-import Distribution.Compat.Exception   ( catchIO )
+import           Distribution.System              ( Platform )
+import           Distribution.Verbosity           ( Verbosity, normal )
+import           Control.Monad                    ( foldM, when, unless )
+import           Data.List                        ( partition )
+import           Data.Monoid                      ( Monoid(..) )
+import           Distribution.Compat.Exception    ( catchIO )
 import System.Directory                ( doesDirectoryExist, doesFileExist,
                                          renameFile )
-import System.FilePath                 ( (<.>), (</>), takeDirectory )
-import System.IO.Error                 ( isDoesNotExistError )
-import Text.PrettyPrint                ( ($+$) )
+import           System.FilePath                  ( (<.>), (</>), takeDirectory )
+import           System.IO.Error                  ( isDoesNotExistError )
+import           Text.PrettyPrint                 ( ($+$) )
 
-import qualified Text.PrettyPrint          as Disp
-import qualified Distribution.Compat.ReadP as Parse
+import qualified Text.PrettyPrint               as Disp
+import qualified Distribution.Compat.ReadP      as Parse
 import qualified Distribution.ParseUtils   as ParseUtils ( Field(..) )
-import qualified Distribution.Text         as Text
+import qualified Distribution.Text              as Text
 
 
 --

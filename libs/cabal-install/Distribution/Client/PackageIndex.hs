@@ -53,25 +53,25 @@ module Distribution.Client.PackageIndex (
   dependencyGraph,
   ) where
 
-import Prelude hiding (lookup)
-import Control.Exception (assert)
-import qualified Data.Map as Map
-import Data.Map (Map)
-import qualified Data.Tree  as Tree
-import qualified Data.Graph as Graph
-import qualified Data.Array as Array
-import Data.Array ((!))
-import Data.List (groupBy, sortBy, nub, isInfixOf)
-import Data.Monoid (Monoid(..))
-import Data.Maybe (isJust, isNothing, fromMaybe, catMaybes)
+import           Prelude                   hiding (lookup)
+import           Control.Exception           (assert)
+import qualified Data.Map                  as Map
+import           Data.Map                    (Map)
+import qualified Data.Tree                 as Tree
+import qualified Data.Graph                as Graph
+import qualified Data.Array                as Array
+import           Data.Array                  ((!))
+import           Data.List                   (groupBy, sortBy, nub, isInfixOf)
+import           Data.Monoid                 (Monoid(..))
+import           Data.Maybe                  (isJust, isNothing, fromMaybe, catMaybes)
 
-import Distribution.Package
+import           Distribution.Package        
          ( PackageName(..), PackageIdentifier(..)
          , Package(..), packageName, packageVersion
          , Dependency(Dependency), PackageFixedDeps(..) )
-import Distribution.Version
+import           Distribution.Version        
          ( Version, withinRange )
-import Distribution.Simple.Utils (lowercase, equating, comparing)
+import           Distribution.Simple.Utils   (lowercase, equating, comparing)
 
 
 -- | The collection of information about packages from one or more 'PackageDB's.

@@ -17,51 +17,51 @@ module Distribution.Client.Get (
     get
   ) where
 
-import Distribution.Package
+import           Distribution.Package              
          ( PackageId, packageId, packageName )
-import Distribution.Simple.Setup
+import           Distribution.Simple.Setup         
          ( Flag(..), fromFlag, fromFlagOrDefault )
-import Distribution.Simple.Utils
+import           Distribution.Simple.Utils         
          ( notice, die, info, writeFileAtomic )
-import Distribution.Verbosity
+import           Distribution.Verbosity            
          ( Verbosity )
-import Distribution.Text(display)
+import           Distribution.Text(display)        
 import qualified Distribution.PackageDescription as PD
 
-import Distribution.Client.Setup
+import           Distribution.Client.Setup         
          ( GlobalFlags(..), GetFlags(..) )
-import Distribution.Client.Types
-import Distribution.Client.Targets
-import Distribution.Client.Dependency
-import Distribution.Client.FetchUtils
+import           Distribution.Client.Types         
+import           Distribution.Client.Targets       
+import           Distribution.Client.Dependency    
+import           Distribution.Client.FetchUtils    
 import qualified Distribution.Client.Tar as Tar (extractTarGzFile)
-import Distribution.Client.IndexUtils as IndexUtils
+import           Distribution.Client.IndexUtils  as IndexUtils
         ( getSourcePackages )
-import Distribution.Compat.Exception
+import           Distribution.Compat.Exception     
         ( catchIO )
 
-import Control.Exception
+import           Control.Exception                 
          ( finally )
-import Control.Monad
+import           Control.Monad                     
          ( filterM, forM_, unless, when )
-import Data.List
+import           Data.List                         
          ( sortBy )
-import qualified Data.Map
-import Data.Maybe
+import qualified Data.Map                          
+import           Data.Maybe                        
          ( listToMaybe, mapMaybe )
-import Data.Monoid
+import           Data.Monoid                       
          ( mempty )
-import Data.Ord
+import           Data.Ord                          
          ( comparing )
-import System.Directory
+import           System.Directory                  
          ( createDirectoryIfMissing, doesDirectoryExist, doesFileExist
          , getCurrentDirectory, setCurrentDirectory
          )
-import System.Exit
+import           System.Exit                       
          ( ExitCode(..) )
-import System.FilePath
+import           System.FilePath                   
          ( (</>), (<.>), addTrailingPathSeparator )
-import System.Process
+import           System.Process                    
          ( rawSystem, readProcessWithExitCode )
 
 

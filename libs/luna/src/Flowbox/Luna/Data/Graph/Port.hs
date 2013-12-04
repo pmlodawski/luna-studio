@@ -5,16 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Network.Attributes (
-    Attributes,
-    module Data.Map
-) where
+module Flowbox.Luna.Data.Graph.Port where
 
 import           Flowbox.Prelude   
-import           Data.Map          
 
 
 
-type Attributes = Map String (Map String String)
-
-
+data Port = All
+          | Number Int
+          deriving (Show, Read, Ord, Eq)

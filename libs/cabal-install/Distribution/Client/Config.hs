@@ -34,11 +34,11 @@ module Distribution.Client.Config (
   ) where
 
 
-import Distribution.Client.Types
+import           Distribution.Client.Types                
          ( RemoteRepo(..), Username(..), Password(..) )
-import Distribution.Client.BuildReports.Types
+import           Distribution.Client.BuildReports.Types   
          ( ReportLevel(..) )
-import Distribution.Client.Setup
+import           Distribution.Client.Setup                
          ( GlobalFlags(..), globalCommand
          , ConfigExFlags(..), configureExOptions, defaultConfigExFlags
          , InstallFlags(..), installOptions, defaultInstallFlags
@@ -46,65 +46,65 @@ import Distribution.Client.Setup
          , ReportFlags(..), reportCommand
          , showRepo, parseRepo )
 
-import Distribution.Simple.Compiler
+import           Distribution.Simple.Compiler             
          ( OptimisationLevel(..) )
-import Distribution.Simple.Setup
+import           Distribution.Simple.Setup                
          ( ConfigFlags(..), configureOptions, defaultConfigFlags
          , installDirsOptions
          , programConfigurationPaths', programConfigurationOptions
          , Flag(..), toFlag, flagToMaybe, fromFlagOrDefault )
-import Distribution.Simple.InstallDirs
+import           Distribution.Simple.InstallDirs          
          ( InstallDirs(..), defaultInstallDirs
          , PathTemplate, toPathTemplate )
-import Distribution.ParseUtils
+import           Distribution.ParseUtils                  
          ( FieldDescr(..), liftField
          , ParseResult(..), PError(..), PWarning(..)
          , locatedErrorMsg, showPWarning
          , readFields, warning, lineNo
          , simpleField, listField, parseFilePathQ, parseTokenQ )
-import Distribution.Client.ParseUtils
+import           Distribution.Client.ParseUtils           
          ( parseFields, ppFields, ppSection )
-import qualified Distribution.ParseUtils as ParseUtils
+import qualified Distribution.ParseUtils                as ParseUtils
          ( Field(..) )
-import qualified Distribution.Text as Text
+import qualified Distribution.Text                      as Text
          ( Text(..) )
-import Distribution.Simple.Command
+import           Distribution.Simple.Command              
          ( CommandUI(commandOptions), commandDefaultFlags, ShowOrParseArgs(..)
          , viewAsFieldDescr )
-import Distribution.Simple.Program
+import           Distribution.Simple.Program              
          ( defaultProgramConfiguration )
-import Distribution.Simple.Utils
+import           Distribution.Simple.Utils                
          ( notice, warn, lowercase )
-import Distribution.Compiler
+import           Distribution.Compiler                    
          ( CompilerFlavor(..), defaultCompilerFlavor )
-import Distribution.Verbosity
+import           Distribution.Verbosity                   
          ( Verbosity, normal )
 
-import Data.List
+import           Data.List                                
          ( partition, find )
-import Data.Maybe
+import           Data.Maybe                               
          ( fromMaybe )
-import Data.Monoid
+import           Data.Monoid                              
          ( Monoid(..) )
-import Control.Monad
+import           Control.Monad                            
          ( unless, foldM, liftM )
-import qualified Distribution.Compat.ReadP as Parse
+import qualified Distribution.Compat.ReadP              as Parse
          ( option )
-import qualified Text.PrettyPrint as Disp
+import qualified Text.PrettyPrint                       as Disp
          ( render, text, empty )
-import Text.PrettyPrint
+import           Text.PrettyPrint                         
          ( ($+$) )
-import System.Directory
+import           System.Directory                         
          ( createDirectoryIfMissing, getAppUserDataDirectory, renameFile )
-import Network.URI
+import           Network.URI                              
          ( URI(..), URIAuth(..) )
-import System.FilePath
+import           System.FilePath                          
          ( (<.>), (</>), takeDirectory )
-import System.IO.Error
+import           System.IO.Error                          
          ( isDoesNotExistError )
-import Distribution.Compat.Environment
+import           Distribution.Compat.Environment          
          ( getEnvironment )
-import Distribution.Compat.Exception
+import           Distribution.Compat.Exception            
          ( catchIO )
 
 --

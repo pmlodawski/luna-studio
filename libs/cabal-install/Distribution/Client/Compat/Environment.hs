@@ -19,22 +19,22 @@ module Distribution.Client.Compat.Environment (
 ) where
 
 #ifdef mingw32_HOST_OS
-import GHC.Windows
-import Foreign.Safe
-import Foreign.C
-import Control.Monad
+import           GHC.Windows                     
+import           Foreign.Safe                    
+import           Foreign.C                       
+import           Control.Monad                   
 #else
-import Foreign.C.Types
-import Foreign.C.String
-import Foreign.C.Error (throwErrnoIfMinus1_)
-import System.Posix.Internals ( withFilePath )
+import           Foreign.C.Types                 
+import           Foreign.C.String                
+import           Foreign.C.Error                 (throwErrnoIfMinus1_)
+import           System.Posix.Internals          ( withFilePath )
 #endif /* mingw32_HOST_OS */
 
 #if MIN_VERSION_base(4,6,0)
-import System.Environment (lookupEnv)
+import           System.Environment              (lookupEnv)
 #else
-import System.Environment (getEnv)
-import Distribution.Compat.Exception (catchIO)
+import           System.Environment              (getEnv)
+import           Distribution.Compat.Exception   (catchIO)
 #endif
 
 #if !MIN_VERSION_base(4,6,0)

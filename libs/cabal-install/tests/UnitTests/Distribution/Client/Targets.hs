@@ -2,17 +2,17 @@ module UnitTests.Distribution.Client.Targets (
   tests
   ) where
 
-import Distribution.Client.Targets     (UserConstraint (..), readUserConstraint)
-import Distribution.Compat.ReadP       (ReadP, readP_to_S)
-import Distribution.Package            (PackageName (..))
-import Distribution.ParseUtils         (parseCommaList)
-import Distribution.Text               (parse)
+import           Distribution.Client.Targets      (UserConstraint (..), readUserConstraint)
+import           Distribution.Compat.ReadP        (ReadP, readP_to_S)
+import           Distribution.Package             (PackageName (..))
+import           Distribution.ParseUtils          (parseCommaList)
+import           Distribution.Text                (parse)
 
 import Test.Framework                  as TF (Test)
-import Test.Framework.Providers.HUnit  (testCase)
-import Test.HUnit                      (Assertion, assertEqual)
+import           Test.Framework.Providers.HUnit   (testCase)
+import           Test.HUnit                       (Assertion, assertEqual)
 
-import Data.Char                       (isSpace)
+import           Data.Char                        (isSpace)
 
 tests :: [TF.Test]
 tests = [ testCase "readUserConstraint" readUserConstraintTest

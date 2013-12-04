@@ -1,18 +1,18 @@
 module Distribution.Client.Dependency.Modular.Explore where
 
-import Control.Applicative as A
-import Data.Foldable
-import Data.List as L
-import Data.Map as M
-import Data.Set as S
+import           Control.Applicative                               as A
+import           Data.Foldable                                       
+import           Data.List                                         as L
+import           Data.Map                                          as M
+import           Data.Set                                          as S
 
-import Distribution.Client.Dependency.Modular.Assignment
-import Distribution.Client.Dependency.Modular.Dependency
-import Distribution.Client.Dependency.Modular.Log
-import Distribution.Client.Dependency.Modular.Message
-import Distribution.Client.Dependency.Modular.Package
-import Distribution.Client.Dependency.Modular.PSQ as P
-import Distribution.Client.Dependency.Modular.Tree
+import           Distribution.Client.Dependency.Modular.Assignment   
+import           Distribution.Client.Dependency.Modular.Dependency   
+import           Distribution.Client.Dependency.Modular.Log          
+import           Distribution.Client.Dependency.Modular.Message      
+import           Distribution.Client.Dependency.Modular.Package      
+import           Distribution.Client.Dependency.Modular.PSQ        as P
+import           Distribution.Client.Dependency.Modular.Tree         
 
 -- | Backjumping.
 --

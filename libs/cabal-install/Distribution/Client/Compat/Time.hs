@@ -3,12 +3,12 @@ module Distribution.Client.Compat.Time
        (EpochTime, getModTime, getFileAge, getCurTime)
        where
 
-import Data.Int (Int64)
-import System.Directory (getModificationTime)
+import           Data.Int                (Int64)
+import           System.Directory        (getModificationTime)
 
 #if MIN_VERSION_directory(1,2,0)
-import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds, posixDayLength)
-import Data.Time (getCurrentTime, diffUTCTime)
+import           Data.Time.Clock.POSIX   (utcTimeToPOSIXSeconds, posixDayLength)
+import           Data.Time               (getCurrentTime, diffUTCTime)
 #else
 import System.Time (ClockTime(..), getClockTime
                    ,diffClockTimes, normalizeTimeDiff, tdDay)
@@ -16,12 +16,12 @@ import System.Time (ClockTime(..), getClockTime
 
 #if defined mingw32_HOST_OS
 
-import Data.Bits          ((.|.), bitSize, unsafeShiftL)
-import Data.Int           (Int32)
-import Data.Word          (Word64)
-import Foreign            (allocaBytes, peekByteOff)
-import System.IO.Error    (mkIOError, doesNotExistErrorType)
-import System.Win32.Types (BOOL, DWORD, LPCTSTR, LPVOID, withTString)
+import           Data.Bits               ((.|.), bitSize, unsafeShiftL)
+import           Data.Int                (Int32)
+import           Data.Word               (Word64)
+import           Foreign                 (allocaBytes, peekByteOff)
+import           System.IO.Error         (mkIOError, doesNotExistErrorType)
+import           System.Win32.Types      (BOOL, DWORD, LPCTSTR, LPVOID, withTString)
 
 
 foreign import stdcall "windows.h GetFileAttributesExW"
@@ -47,11 +47,11 @@ index_WIN32_FILE_ATTRIBUTE_DATA_ftLastWriteTime_dwHighDateTime = 24
 #else
 
 #if MIN_VERSION_base(4,5,0)
-import Foreign.C.Types    (CTime(..))
+import           Foreign.C.Types         (CTime(..))
 #else
-import Foreign.C.Types    (CTime)
+import           Foreign.C.Types         (CTime)
 #endif
-import System.Posix.Files (getFileStatus, modificationTime)
+import           System.Posix.Files      (getFileStatus, modificationTime)
 
 #endif
 

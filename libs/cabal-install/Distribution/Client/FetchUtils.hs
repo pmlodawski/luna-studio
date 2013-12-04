@@ -25,29 +25,29 @@ module Distribution.Client.FetchUtils (
     downloadIndex,
   ) where
 
-import Distribution.Client.Types
-import Distribution.Client.HttpUtils
+import           Distribution.Client.Types       
+import           Distribution.Client.HttpUtils   
          ( downloadURI, isOldHackageURI, DownloadResult(..) )
 
-import Distribution.Package
+import           Distribution.Package            
          ( PackageId, packageName, packageVersion )
-import Distribution.Simple.Utils
+import           Distribution.Simple.Utils       
          ( notice, info, setupMessage )
-import Distribution.Text
+import           Distribution.Text               
          ( display )
-import Distribution.Verbosity
+import           Distribution.Verbosity          
          ( Verbosity )
 
-import Data.Maybe
-import System.Directory
+import           Data.Maybe                      
+import           System.Directory                
          ( doesFileExist, createDirectoryIfMissing, getTemporaryDirectory )
-import System.IO
+import           System.IO                       
          ( openTempFile, hClose )
-import System.FilePath
+import           System.FilePath                 
          ( (</>), (<.>) )
-import qualified System.FilePath.Posix as FilePath.Posix
+import qualified System.FilePath.Posix         as FilePath.Posix
          ( combine, joinPath )
-import Network.URI
+import           Network.URI                     
          ( URI(uriPath) )
 
 -- ------------------------------------------------------------

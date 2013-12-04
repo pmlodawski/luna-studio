@@ -8,11 +8,11 @@
 
 module Flowbox.Distribution.License where
 
-import           Flowbox.Prelude   
-import           Flowbox.Data.Version (Version)
+import           Flowbox.Prelude        
+import           Flowbox.Data.Version   (Version)
 
-import           GHC.Generics      
-import           Data.Aeson        
+import           GHC.Generics           
+import           Data.Aeson             
 
 data License = GPL (Maybe Version)
              | AGPL (Maybe Version)

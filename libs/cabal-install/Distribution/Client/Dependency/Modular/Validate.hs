@@ -6,20 +6,20 @@ module Distribution.Client.Dependency.Modular.Validate where
 -- assignment returned by exploration of the tree should be a complete valid
 -- assignment, i.e., actually constitute a solution.
 
-import Control.Applicative
-import Control.Monad.Reader hiding (sequence)
-import Data.List as L
-import Data.Map as M
-import Data.Traversable
-import Prelude hiding (sequence)
+import           Control.Applicative                                 
+import           Control.Monad.Reader                              hiding (sequence)
+import           Data.List                                         as L
+import           Data.Map                                          as M
+import           Data.Traversable                                    
+import           Prelude                                           hiding (sequence)
 
-import Distribution.Client.Dependency.Modular.Assignment
-import Distribution.Client.Dependency.Modular.Dependency
-import Distribution.Client.Dependency.Modular.Flag
-import Distribution.Client.Dependency.Modular.Index
-import Distribution.Client.Dependency.Modular.Package
-import Distribution.Client.Dependency.Modular.PSQ as P
-import Distribution.Client.Dependency.Modular.Tree
+import           Distribution.Client.Dependency.Modular.Assignment   
+import           Distribution.Client.Dependency.Modular.Dependency   
+import           Distribution.Client.Dependency.Modular.Flag         
+import           Distribution.Client.Dependency.Modular.Index        
+import           Distribution.Client.Dependency.Modular.Package      
+import           Distribution.Client.Dependency.Modular.PSQ        as P
+import           Distribution.Client.Dependency.Modular.Tree         
 
 -- In practice, most constraints are implication constraints (IF we have made
 -- a number of choices, THEN we also have to ensure that). We call constraints

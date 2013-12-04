@@ -45,44 +45,44 @@ module Distribution.Client.InstallPlan (
   configuredPackageProblems
   ) where
 
-import Distribution.Client.Types
+import           Distribution.Client.Types                       
          ( SourcePackage(packageDescription), ConfiguredPackage(..)
          , InstalledPackage, BuildFailure, BuildSuccess(..), enableStanzas,
            InstalledPackage (..) )
-import Distribution.Package
+import           Distribution.Package                            
          ( PackageIdentifier(..), PackageName(..), Package(..), packageName
          , PackageFixedDeps(..), Dependency(..) )
-import Distribution.Version
+import           Distribution.Version                            
          ( Version, withinRange )
-import Distribution.PackageDescription
+import           Distribution.PackageDescription                 
          ( GenericPackageDescription(genPackageFlags)
          , Flag(flagName), FlagName(..) )
-import Distribution.Client.PackageUtils
+import           Distribution.Client.PackageUtils                
          ( externalBuildDepends )
-import Distribution.PackageDescription.Configuration
+import           Distribution.PackageDescription.Configuration   
          ( finalizePackageDescription )
-import Distribution.Client.PackageIndex
+import           Distribution.Client.PackageIndex                
          ( PackageIndex )
-import qualified Distribution.Client.PackageIndex as PackageIndex
-import Distribution.Text
+import qualified Distribution.Client.PackageIndex              as PackageIndex
+import           Distribution.Text                               
          ( display )
-import Distribution.System
+import           Distribution.System                             
          ( Platform )
-import Distribution.Compiler
+import           Distribution.Compiler                           
          ( CompilerId(..) )
-import Distribution.Client.Utils
+import           Distribution.Client.Utils                       
          ( duplicates, duplicatesBy, mergeBy, MergeResult(..) )
-import Distribution.Simple.Utils
+import           Distribution.Simple.Utils                       
          ( comparing, intercalate )
-import qualified Distribution.InstalledPackageInfo as Installed
+import qualified Distribution.InstalledPackageInfo             as Installed
 
-import Data.List
+import           Data.List                                       
          ( sort, sortBy )
-import Data.Maybe
+import           Data.Maybe                                      
          ( fromMaybe, maybeToList )
-import qualified Data.Graph as Graph
-import Data.Graph (Graph)
-import Control.Exception
+import qualified Data.Graph                                    as Graph
+import           Data.Graph                                      (Graph)
+import           Control.Exception                               
          ( assert )
 
 -- When cabal tries to install a number of packages, including all their
