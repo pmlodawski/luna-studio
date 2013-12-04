@@ -12,8 +12,8 @@ Flag Debug
 
 
 Executable batch-zmqsrv
-    Hs-Source-Dirs: src
-                    gen
+    Hs-Source-Dirs: dist/gen
+                    src
     Other-Modules:  Paths_flowbox_batch_zmqsrv
     Main-Is:        Main.hs
 

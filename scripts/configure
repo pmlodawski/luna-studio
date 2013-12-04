@@ -9,7 +9,6 @@ from utils.colors import print_info, print_error
 dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 third_party = os.path.join(dir, 'third-party')
 p_cabal    = os.path.join(third_party,  'Cabal-1.19.1')
-p_thrift   = os.path.join(third_party,  'thrift-0.9')
 p_missingh = os.path.join(third_party,  'MissingH-1.2.0.0-winpatch')
 
 
@@ -53,9 +52,6 @@ try_call('cabal sandbox init --sandbox=dist')
 
 print_info ("Updating cabal package cache")
 try_call('cabal update')
-
-print_info ("Registering thrift library")
-try_call('cabal install %s' % p_thrift)
 
 print_info ("Registering Cabal-1.19.1 library")
 try_call('cabal install %s' % p_cabal)

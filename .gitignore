@@ -5,7 +5,6 @@
 .virthualenv
 *~
 *.imports
-tools/batch-clients/thrift-cpp/batch_client
 tools/batch-clients/tcp-cpp/main
 tools/batch-clients/zmq-cpp/main
 out
