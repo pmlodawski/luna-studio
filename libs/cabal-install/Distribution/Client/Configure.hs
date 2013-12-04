@@ -14,44 +14,44 @@ module Distribution.Client.Configure (
     configure,
   ) where
 
-import           Distribution.Client.Dependency                  
-import qualified Distribution.Client.InstallPlan               as InstallPlan
-import           Distribution.Client.InstallPlan                 (InstallPlan)
-import           Distribution.Client.IndexUtils                as IndexUtils
+import Distribution.Client.Dependency
+import qualified Distribution.Client.InstallPlan as InstallPlan
+import Distribution.Client.InstallPlan (InstallPlan)
+import Distribution.Client.IndexUtils as IndexUtils
          ( getSourcePackages, getInstalledPackages )
-import           Distribution.Client.Setup                       
+import Distribution.Client.Setup
          ( ConfigExFlags(..), configureCommand, filterConfigureFlags )
-import           Distribution.Client.Types                     as Source
-import           Distribution.Client.SetupWrapper                
+import Distribution.Client.Types as Source
+import Distribution.Client.SetupWrapper
          ( setupWrapper, SetupScriptOptions(..), defaultSetupScriptOptions )
-import           Distribution.Client.Targets                     
+import Distribution.Client.Targets
          ( userToPackageConstraint )
 
-import           Distribution.Simple.Compiler                    
+import Distribution.Simple.Compiler
          ( CompilerId(..), Compiler(compilerId)
          , PackageDB(..), PackageDBStack )
-import           Distribution.Simple.Program                     (ProgramConfiguration )
-import           Distribution.Simple.Setup                       
+import Distribution.Simple.Program (ProgramConfiguration )
+import Distribution.Simple.Setup
          ( ConfigFlags(..), fromFlag, toFlag, flagToMaybe, fromFlagOrDefault )
-import           Distribution.Simple.PackageIndex                (PackageIndex)
-import           Distribution.Simple.Utils                       
+import Distribution.Simple.PackageIndex (PackageIndex)
+import Distribution.Simple.Utils
          ( defaultPackageDesc )
-import           Distribution.Package                            
+import Distribution.Package
          ( Package(..), packageName, Dependency(..), thisPackageVersion )
-import           Distribution.PackageDescription.Parse           
+import Distribution.PackageDescription.Parse
          ( readPackageDescription )
-import           Distribution.PackageDescription.Configuration   
+import Distribution.PackageDescription.Configuration
          ( finalizePackageDescription )
-import           Distribution.Version                            
+import Distribution.Version
          ( anyVersion, thisVersion )
-import           Distribution.Simple.Utils                     as Utils
+import Distribution.Simple.Utils as Utils
          ( notice, debug, die )
-import           Distribution.System                             
+import Distribution.System
          ( Platform )
-import           Distribution.Verbosity                        as Verbosity
+import Distribution.Verbosity as Verbosity
          ( Verbosity )
 
-import           Data.Monoid                                     (Monoid(..))
+import Data.Monoid (Monoid(..))
 
 -- | Configure the package found in the local directory
 configure :: Verbosity

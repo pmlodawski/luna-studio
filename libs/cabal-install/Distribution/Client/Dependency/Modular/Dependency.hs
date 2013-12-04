@@ -1,14 +1,14 @@
 module Distribution.Client.Dependency.Modular.Dependency where
 
-import           Prelude                                        hiding (pi)
+import Prelude hiding (pi)
 
-import           Data.List                                      as L
-import           Data.Map                                       as M
-import           Data.Set                                       as S
+import Data.List as L
+import Data.Map as M
+import Data.Set as S
 
-import           Distribution.Client.Dependency.Modular.Flag      
-import           Distribution.Client.Dependency.Modular.Package   
-import           Distribution.Client.Dependency.Modular.Version   
+import Distribution.Client.Dependency.Modular.Flag
+import Distribution.Client.Dependency.Modular.Package
+import Distribution.Client.Dependency.Modular.Version
 
 -- | The type of variables that play a role in the solver.
 -- Note that the tree currently does not use this type directly,

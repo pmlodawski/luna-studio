@@ -1,12 +1,12 @@
 module Distribution.Client.Dependency.Modular.Flag where
 
-import           Data.Map                                       as M
-import           Prelude                                        hiding (pi)
+import Data.Map as M
+import Prelude hiding (pi)
 
 import Distribution.PackageDescription hiding (Flag) -- from Cabal
 
-import           Distribution.Client.Dependency.Modular.Package   
-import           Distribution.Client.Types                        (OptionalStanza(..))
+import Distribution.Client.Dependency.Modular.Package
+import Distribution.Client.Types (OptionalStanza(..))
 
 -- | Flag name. Consists of a package instance and the flag identifier itself.
 data FN qpn = FN (PI qpn) Flag

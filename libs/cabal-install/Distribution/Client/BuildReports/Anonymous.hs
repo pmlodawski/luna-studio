@@ -26,47 +26,47 @@ module Distribution.Client.BuildReports.Anonymous (
 --    showList,
   ) where
 
-import           Distribution.Client.Types         
+import Distribution.Client.Types
          ( ConfiguredPackage(..) )
-import qualified Distribution.Client.Types       as BR
+import qualified Distribution.Client.Types as BR
          ( BuildResult, BuildFailure(..), BuildSuccess(..)
          , DocsResult(..), TestsResult(..) )
-import           Distribution.Client.Utils         
+import Distribution.Client.Utils
          ( mergeBy, MergeResult(..) )
-import qualified Paths_cabal_install               (version)
+import qualified Paths_cabal_install (version)
 
-import           Distribution.Package              
+import Distribution.Package
          ( PackageIdentifier(..), PackageName(..), Package(packageId) )
-import           Distribution.PackageDescription   
+import Distribution.PackageDescription
          ( FlagName(..), FlagAssignment )
 --import Distribution.Version
 --         ( Version )
-import           Distribution.System               
+import Distribution.System
          ( OS, Arch )
-import           Distribution.Compiler             
+import Distribution.Compiler
          ( CompilerId )
-import qualified Distribution.Text               as Text
+import qualified Distribution.Text as Text
          ( Text(disp, parse) )
-import           Distribution.ParseUtils           
+import Distribution.ParseUtils
          ( FieldDescr(..), ParseResult(..), Field(..)
          , simpleField, listField, ppFields, readFields
          , syntaxError, locatedErrorMsg )
-import           Distribution.Simple.Utils         
+import Distribution.Simple.Utils
          ( comparing )
 
-import qualified Distribution.Compat.ReadP       as Parse
+import qualified Distribution.Compat.ReadP as Parse
          ( ReadP, pfail, munch1, skipSpaces )
-import qualified Text.PrettyPrint                as Disp
+import qualified Text.PrettyPrint as Disp
          ( Doc, render, char, text )
-import           Text.PrettyPrint                  
+import Text.PrettyPrint
          ( (<+>), (<>) )
 
-import           Data.List                         
+import Data.List
          ( unfoldr, sortBy )
-import           Data.Char                       as Char
+import Data.Char as Char
          ( isAlpha, isAlphaNum )
 
-import           Prelude                         hiding (show)
+import Prelude hiding (show)
 
 data BuildReport
    = BuildReport {

@@ -18,32 +18,32 @@ module Distribution.Client.Sandbox.Index (
     defaultIndexFileName
   ) where
 
-import qualified Distribution.Client.Tar          as Tar
-import           Distribution.Client.IndexUtils     ( BuildTreeRefType(..)
+import qualified Distribution.Client.Tar as Tar
+import Distribution.Client.IndexUtils ( BuildTreeRefType(..)
                                       , refTypeFromTypeCode
                                       , typeCodeFromRefType
                                       , getSourcePackagesStrict )
-import           Distribution.Client.PackageIndex   ( allPackages )
-import           Distribution.Client.Types          ( Repo(..), LocalRepo(..)
+import Distribution.Client.PackageIndex ( allPackages )
+import Distribution.Client.Types ( Repo(..), LocalRepo(..)
                                  , SourcePackageDb(..)
                                  , SourcePackage(..), PackageLocation(..) )
 import Distribution.Client.Utils ( byteStringToFilePath, filePathToByteString
                                  , makeAbsoluteToCwd, tryCanonicalizePath
                                  , canonicalizePathNoThrow )
 
-import           Distribution.Simple.Utils          ( die, debug, findPackageDesc )
-import           Distribution.Verbosity             ( Verbosity )
+import Distribution.Simple.Utils ( die, debug, findPackageDesc )
+import Distribution.Verbosity    ( Verbosity )
 
-import qualified Data.ByteString.Lazy             as BS
-import           Control.Exception                  ( evaluate )
-import           Control.Monad                      ( liftM, unless )
-import           Data.List                          ( (\\), intersect, nub )
-import           Data.Maybe                         ( catMaybes )
+import qualified Data.ByteString.Lazy as BS
+import Control.Exception         ( evaluate )
+import Control.Monad             ( liftM, unless )
+import Data.List                 ( (\\), intersect, nub )
+import Data.Maybe                ( catMaybes )
 import System.Directory          ( createDirectoryIfMissing,
                                    doesDirectoryExist, doesFileExist,
                                    renameFile )
-import           System.FilePath                    ( (</>), (<.>), takeDirectory, takeExtension )
-import           System.IO                          ( IOMode(..), SeekMode(..)
+import System.FilePath           ( (</>), (<.>), takeDirectory, takeExtension )
+import System.IO                 ( IOMode(..), SeekMode(..)
                                  , hSeek, withBinaryFile )
 
 -- | A reference to a local build tree.

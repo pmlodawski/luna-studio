@@ -1,13 +1,13 @@
 module Distribution.Client.Dependency.Modular.Index where
 
-import           Data.List                                         as L
-import           Data.Map                                          as M
-import           Prelude                                           hiding (pi)
+import Data.List as L
+import Data.Map as M
+import Prelude hiding (pi)
 
-import           Distribution.Client.Dependency.Modular.Dependency   
-import           Distribution.Client.Dependency.Modular.Flag         
-import           Distribution.Client.Dependency.Modular.Package      
-import           Distribution.Client.Dependency.Modular.Tree         
+import Distribution.Client.Dependency.Modular.Dependency
+import Distribution.Client.Dependency.Modular.Flag
+import Distribution.Client.Dependency.Modular.Package
+import Distribution.Client.Dependency.Modular.Tree
 
 -- | An index contains information about package instances. This is a nested
 -- dictionary. Package names are mapped to instances, which in turn is mapped

@@ -1,6 +1,11 @@
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Flowbox.Distribution.M where
 
-import           Flowbox.Prelude                
+import           Flowbox.Prelude       
+import qualified Distribution.Client.Setup    as Setup
 import           Distribution.Client.Setup      (GlobalFlags)
 import           Data.Monoid                    
 import           Distribution.Simple.Compiler   (PackageDB(GlobalPackageDB, SpecificPackageDB))
@@ -8,6 +13,21 @@ import qualified Flowbox.Config.Config        as Config
 import           Flowbox.Config.Config          (Config)
 import           Distribution.Verbosity       as Verbosity
 import           Distribution.Client.Sandbox  as Sandbox
+import           Distribution.Simple.Setup      (Flag(Flag))
+import qualified Distribution.Client.List     as List
+import qualified Distribution.Client.Config   as CabalConf
+
+import qualified Distribution.ModuleName      as ModuleName
+--import           Distribution.ModuleName        (ModuleName)
+
+import qualified Flowbox.Distribution.Package.Package as Package
+import           Flowbox.Distribution.Package.Package   (Package(Package))
+
+import Data.Aeson
+import Data.Aeson.TH
+import Data.Char (toLower)
+
+import GHC.Generics
 
 
 localPkgDB :: Config -> PackageDB
@@ -28,12 +48,35 @@ globalPkgStack cfg = [ GlobalPackageDB
                      , localPkgDB  cfg
                      ]
 
+defaultGlobalFlags :: Config -> GlobalFlags
+defaultGlobalFlags cfg = mempty { Setup.globalConfigFile = Flag $ (Config.cabal . Config.config) cfg }
+
 main :: IO ()
 main = do
-    let flags :: GlobalFlags
-        flags = mempty
     cfg <- Config.load
-    let pkgDBs = localPkgStack cfg
-    (_, cabalCfg) <- Sandbox.loadConfigOrSandboxConfig Verbosity.normal mempty mempty
-    --print cabalCfg
-    print pkgDBs
+    let verbosity   = Verbosity.normal
+        pkgDBs      = localPkgStack cfg
+        globalFlags = defaultGlobalFlags cfg
+    (_, cabalCfg) <- Sandbox.loadConfigOrSandboxConfig verbosity globalFlags mempty
+    let
+        configFlags  = CabalConf.savedConfigureFlags cabalCfg
+        globalFlags' = CabalConf.savedGlobalFlags    cabalCfg `mappend` globalFlags
+    (comp, _, conf) <- configCompilerAux' configFlags
+    pkgs            <- List.getPkgList verbosity
+                                       (configPackageDB' configFlags)
+                                       (Setup.globalRepos globalFlags')
+                                       comp
+                                       conf
+                                       mempty
+                                       ["xxx"]
+
+    return ()
+
+    print $ encode (Package "ala")
+
+
+--data Package = Package { name :: String 
+--                       } deriving (Show, Generic)
+
+
+

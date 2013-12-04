@@ -44,18 +44,18 @@ module Distribution.Client.Win32SelfUpgrade (
 
 #if mingw32_HOST_OS || mingw32_TARGET_OS
 
-import qualified System.Win32              as Win32
-import qualified System.Win32.DLL          as Win32
-import           System.Win32                (DWORD, BOOL, HANDLE, LPCTSTR)
-import           Foreign.Ptr                 (Ptr, nullPtr)
-import           System.Process              (runProcess)
-import           System.Directory            (canonicalizePath)
-import           System.FilePath             (takeBaseName, replaceBaseName, equalFilePath)
+import qualified System.Win32 as Win32
+import qualified System.Win32.DLL as Win32
+import System.Win32 (DWORD, BOOL, HANDLE, LPCTSTR)
+import Foreign.Ptr (Ptr, nullPtr)
+import System.Process (runProcess)
+import System.Directory (canonicalizePath)
+import System.FilePath (takeBaseName, replaceBaseName, equalFilePath)
 
 import Distribution.Verbosity as Verbosity (Verbosity, showForCabal)
-import           Distribution.Simple.Utils   (debug, info)
+import Distribution.Simple.Utils (debug, info)
 
-import           Prelude                   hiding (log)
+import Prelude hiding (log)
 
 -- | If one of the given files is our own exe file then we arrange things such
 -- that the nested action can replace our own exe file.
@@ -206,8 +206,8 @@ setEvent handle =
 
 #else
 
-import           Distribution.Verbosity      (Verbosity)
-import           Distribution.Simple.Utils   (die)
+import Distribution.Verbosity (Verbosity)
+import Distribution.Simple.Utils (die)
 
 possibleSelfUpgrade :: Verbosity
                     -> [FilePath]

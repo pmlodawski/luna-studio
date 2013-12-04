@@ -644,7 +644,7 @@ emptyConfigFlags = mempty
 
 instance Monoid ConfigFlags where
   mempty = ConfigFlags {
-    configPrograms      = error "FIXME: remove configPrograms",
+    configPrograms      = emptyProgramConfiguration, -- error "FIXME: remove configPrograms",
     configProgramPaths  = mempty,
     configProgramArgs   = mempty,
     configProgramPathExtra = mempty,

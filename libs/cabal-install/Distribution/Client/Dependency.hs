@@ -57,48 +57,48 @@ module Distribution.Client.Dependency (
     hideInstalledPackagesAllVersions,
   ) where
 
-import           Distribution.Client.Dependency.TopDown   
+import Distribution.Client.Dependency.TopDown
          ( topDownResolver )
-import           Distribution.Client.Dependency.Modular   
+import Distribution.Client.Dependency.Modular
          ( modularResolver, SolverConfig(..) )
-import qualified Distribution.Client.PackageIndex       as PackageIndex
-import qualified Distribution.Simple.PackageIndex       as InstalledPackageIndex
-import qualified Distribution.Client.InstallPlan        as InstallPlan
-import           Distribution.Client.InstallPlan          (InstallPlan)
-import           Distribution.Client.Types                
+import qualified Distribution.Client.PackageIndex as PackageIndex
+import qualified Distribution.Simple.PackageIndex as InstalledPackageIndex
+import qualified Distribution.Client.InstallPlan as InstallPlan
+import Distribution.Client.InstallPlan (InstallPlan)
+import Distribution.Client.Types
          ( SourcePackageDb(SourcePackageDb)
          , SourcePackage(..) )
-import           Distribution.Client.Dependency.Types     
+import Distribution.Client.Dependency.Types
          ( PreSolver(..), Solver(..), DependencyResolver, PackageConstraint(..)
          , PackagePreferences(..), InstalledPreference(..)
          , PackagesPreferenceDefault(..)
          , Progress(..), foldProgress )
-import           Distribution.Client.Sandbox.Types        
+import Distribution.Client.Sandbox.Types
          ( SandboxPackageInfo(..) )
-import           Distribution.Client.Targets              
-import qualified Distribution.InstalledPackageInfo      as Installed
-import           Distribution.Package                     
+import Distribution.Client.Targets
+import qualified Distribution.InstalledPackageInfo as Installed
+import Distribution.Package
          ( PackageName(..), PackageId, Package(..), packageName, packageVersion
          , InstalledPackageId, Dependency(Dependency))
-import           Distribution.Version                     
+import Distribution.Version
          ( Version(..), VersionRange, anyVersion, thisVersion, withinRange
          , simplifyVersionRange )
-import           Distribution.Compiler                    
+import Distribution.Compiler
          ( CompilerId(..), CompilerFlavor(..) )
-import           Distribution.System                      
+import Distribution.System
          ( Platform )
-import           Distribution.Simple.Utils                
+import Distribution.Simple.Utils
          ( comparing, warn, info )
-import           Distribution.Text                        
+import Distribution.Text
          ( display )
-import           Distribution.Verbosity                   
+import Distribution.Verbosity
          ( Verbosity )
 
-import           Data.List                                (maximumBy, foldl')
-import           Data.Maybe                               (fromMaybe)
-import qualified Data.Map                               as Map
-import qualified Data.Set                               as Set
-import           Data.Set                                 (Set)
+import Data.List (maximumBy, foldl')
+import Data.Maybe (fromMaybe)
+import qualified Data.Map as Map
+import qualified Data.Set as Set
+import Data.Set (Set)
 
 -- ------------------------------------------------------------
 -- * High level planner policy

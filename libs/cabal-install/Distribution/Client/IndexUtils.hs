@@ -24,61 +24,61 @@ module Distribution.Client.IndexUtils (
   BuildTreeRefType(..), refTypeFromTypeCode, typeCodeFromRefType
   ) where
 
-import qualified Distribution.Client.Tar               as Tar
-import           Distribution.Client.Types               
+import qualified Distribution.Client.Tar as Tar
+import Distribution.Client.Types
 
-import           Distribution.Package                    
+import Distribution.Package
          ( PackageId, PackageIdentifier(..), PackageName(..)
          , Package(..), packageVersion, packageName
          , Dependency(Dependency), InstalledPackageId(..) )
-import           Distribution.Client.PackageIndex        (PackageIndex)
+import Distribution.Client.PackageIndex (PackageIndex)
 import qualified Distribution.Client.PackageIndex      as PackageIndex
 import qualified Distribution.Simple.PackageIndex      as InstalledPackageIndex
 import qualified Distribution.InstalledPackageInfo     as InstalledPackageInfo
 import qualified Distribution.PackageDescription.Parse as PackageDesc.Parse
-import           Distribution.PackageDescription         
+import Distribution.PackageDescription
          ( GenericPackageDescription )
-import           Distribution.PackageDescription.Parse   
+import Distribution.PackageDescription.Parse
          ( parsePackageDescription )
-import           Distribution.Simple.Compiler            
+import Distribution.Simple.Compiler
          ( Compiler, PackageDBStack )
-import           Distribution.Simple.Program             
+import Distribution.Simple.Program
          ( ProgramConfiguration )
-import qualified Distribution.Simple.Configure         as Configure
+import qualified Distribution.Simple.Configure as Configure
          ( getInstalledPackages )
-import           Distribution.ParseUtils                 
+import Distribution.ParseUtils
          ( ParseResult(..) )
-import           Distribution.Version                    
+import Distribution.Version
          ( Version(Version), intersectVersionRanges )
-import           Distribution.Text                       
+import Distribution.Text
          ( display, simpleParse )
-import           Distribution.Verbosity                  
+import Distribution.Verbosity
          ( Verbosity, normal, lessVerbose )
-import           Distribution.Simple.Utils               
+import Distribution.Simple.Utils
          ( die, warn, info, fromUTF8, findPackageDesc )
 
-import           Data.Char                               (isAlphaNum)
-import           Data.Maybe                              (mapMaybe, fromMaybe)
-import           Data.List                               (isPrefixOf)
-import           Data.Monoid                             (Monoid(..))
-import qualified Data.Map                              as Map
-import           Control.Monad                           (MonadPlus(mplus), when, liftM)
-import           Control.Exception                       (evaluate)
-import qualified Data.ByteString.Lazy                  as BS
-import qualified Data.ByteString.Lazy.Char8            as BS.Char8
-import qualified Data.ByteString.Char8                 as BSS
-import           Data.ByteString.Lazy                    (ByteString)
-import           Distribution.Client.GZipUtils           (maybeDecompress)
-import           Distribution.Client.Utils               (byteStringToFilePath)
-import           Distribution.Compat.Exception           (catchIO)
-import           Distribution.Client.Compat.Time         
-import           System.Directory                        (doesFileExist)
-import           System.FilePath                         ((</>), takeExtension, splitDirectories, normalise)
-import           System.FilePath.Posix                 as FilePath.Posix
+import Data.Char   (isAlphaNum)
+import Data.Maybe  (mapMaybe, fromMaybe)
+import Data.List   (isPrefixOf)
+import Data.Monoid (Monoid(..))
+import qualified Data.Map as Map
+import Control.Monad (MonadPlus(mplus), when, liftM)
+import Control.Exception (evaluate)
+import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString.Lazy.Char8 as BS.Char8
+import qualified Data.ByteString.Char8 as BSS
+import Data.ByteString.Lazy (ByteString)
+import Distribution.Client.GZipUtils (maybeDecompress)
+import Distribution.Client.Utils (byteStringToFilePath)
+import Distribution.Compat.Exception (catchIO)
+import Distribution.Client.Compat.Time
+import System.Directory (doesFileExist)
+import System.FilePath ((</>), takeExtension, splitDirectories, normalise)
+import System.FilePath.Posix as FilePath.Posix
          ( takeFileName )
-import           System.IO                               
-import           System.IO.Unsafe                        (unsafeInterleaveIO)
-import           System.IO.Error                         (isDoesNotExistError)
+import System.IO
+import System.IO.Unsafe (unsafeInterleaveIO)
+import System.IO.Error (isDoesNotExistError)
 
 
 getInstalledPackages :: Verbosity -> Compiler

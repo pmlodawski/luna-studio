@@ -9,21 +9,21 @@ module Distribution.Client.BuildReports.Upload
     , putBuildLog
     ) where
 
-import           Network.Browser                              
+import Network.Browser
          ( BrowserAction, request, setAllowRedirects )
-import           Network.HTTP                                 
+import Network.HTTP
          ( Header(..), HeaderName(..)
          , Request(..), RequestMethod(..), Response(..) )
-import           Network.TCP                                  (HandleStream)
-import           Network.URI                                  (URI, uriPath, parseRelativeReference, relativeTo)
+import Network.TCP (HandleStream)
+import Network.URI (URI, uriPath, parseRelativeReference, relativeTo)
 
-import           Control.Monad                                
+import Control.Monad
          ( forM_ )
-import           System.FilePath.Posix                        
+import System.FilePath.Posix
          ( (</>) )
 import qualified Distribution.Client.BuildReports.Anonymous as BuildReport
-import           Distribution.Client.BuildReports.Anonymous   (BuildReport)
-import           Distribution.Text                            (display)
+import Distribution.Client.BuildReports.Anonymous (BuildReport)
+import Distribution.Text (display)
 
 type BuildReportId = URI
 type BuildLog = String

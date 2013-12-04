@@ -10,21 +10,21 @@
 module Distribution.Client.Run ( run, splitRunArgs )
        where
 
-import           Distribution.Client.Utils               (tryCanonicalizePath)
+import Distribution.Client.Utils             (tryCanonicalizePath)
 
 import Distribution.PackageDescription       (Executable (..),
                                               PackageDescription (..))
-import           Distribution.Simple.Build.PathsModule   (pkgPathEnvVar)
-import           Distribution.Simple.BuildPaths          (exeExtension)
-import           Distribution.Simple.LocalBuildInfo      (LocalBuildInfo (..))
-import           Distribution.Simple.Utils               (die, rawSystemExitWithEnv)
-import           Distribution.Verbosity                  (Verbosity)
+import Distribution.Simple.Build.PathsModule (pkgPathEnvVar)
+import Distribution.Simple.BuildPaths        (exeExtension)
+import Distribution.Simple.LocalBuildInfo    (LocalBuildInfo (..))
+import Distribution.Simple.Utils             (die, rawSystemExitWithEnv)
+import Distribution.Verbosity                (Verbosity)
 
-import           Data.Functor                            ((<$>))
-import           Data.List                               (find)
-import           System.Directory                        (getCurrentDirectory)
-import           Distribution.Compat.Environment         (getEnvironment)
-import           System.FilePath                         ((<.>), (</>))
+import Data.Functor                          ((<$>))
+import Data.List                             (find)
+import System.Directory                      (getCurrentDirectory)
+import Distribution.Compat.Environment       (getEnvironment)
+import System.FilePath                       ((<.>), (</>))
 
 
 -- | Return the executable to run and any extra arguments that should be

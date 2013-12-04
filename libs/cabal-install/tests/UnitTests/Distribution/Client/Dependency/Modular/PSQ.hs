@@ -2,10 +2,10 @@ module UnitTests.Distribution.Client.Dependency.Modular.PSQ (
   tests
   ) where
 
-import           Distribution.Client.Dependency.Modular.PSQ   
+import Distribution.Client.Dependency.Modular.PSQ
 
 import Test.Framework as TF (Test)
-import           Test.Framework.Providers.QuickCheck2         
+import Test.Framework.Providers.QuickCheck2
 
 tests :: [TF.Test]
 tests = [ testProperty "splitsAltImplementation" splitsTest

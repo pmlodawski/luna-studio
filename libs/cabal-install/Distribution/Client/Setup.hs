@@ -39,59 +39,59 @@ module Distribution.Client.Setup
     , parseRepo
     ) where
 
-import           Distribution.Client.Types                
+import Distribution.Client.Types
          ( Username(..), Password(..), Repo(..), RemoteRepo(..), LocalRepo(..) )
-import           Distribution.Client.BuildReports.Types   
+import Distribution.Client.BuildReports.Types
          ( ReportLevel(..) )
-import           Distribution.Client.Dependency.Types     
+import Distribution.Client.Dependency.Types
          ( PreSolver(..) )
-import qualified Distribution.Client.Init.Types         as IT
+import qualified Distribution.Client.Init.Types as IT
          ( InitFlags(..), PackageType(..) )
-import           Distribution.Client.Targets              
+import Distribution.Client.Targets
          ( UserConstraint, readUserConstraint )
 
-import           Distribution.Simple.Program              
+import Distribution.Simple.Program
          ( defaultProgramConfiguration )
-import           Distribution.Simple.Command            hiding (boolOpt)
-import qualified Distribution.Simple.Setup              as Cabal
-import           Distribution.Simple.Setup                
+import Distribution.Simple.Command hiding (boolOpt)
+import qualified Distribution.Simple.Setup as Cabal
+import Distribution.Simple.Setup
          ( ConfigFlags(..), BuildFlags(..), TestFlags(..), BenchmarkFlags(..)
          , SDistFlags(..), HaddockFlags(..)
          , Flag(..), toFlag, fromFlag, flagToMaybe, flagToList
          , optionVerbosity, boolOpt, trueArg, falseArg, numJobsParser )
-import           Distribution.Simple.InstallDirs          
+import Distribution.Simple.InstallDirs
          ( PathTemplate, InstallDirs(sysconfdir)
          , toPathTemplate, fromPathTemplate )
-import           Distribution.Version                     
+import Distribution.Version
          ( Version(Version), anyVersion, thisVersion )
-import           Distribution.Package                     
+import Distribution.Package
          ( PackageIdentifier, packageName, packageVersion, Dependency(..) )
-import           Distribution.PackageDescription          
+import Distribution.PackageDescription
          ( RepoKind(..) )
-import           Distribution.Text                        
+import Distribution.Text
          ( Text(..), display )
-import           Distribution.ReadE                       
+import Distribution.ReadE
          ( ReadE(..), readP_to_E, succeedReadE )
-import qualified Distribution.Compat.ReadP              as Parse
+import qualified Distribution.Compat.ReadP as Parse
          ( ReadP, readP_to_S, readS_to_P, char, munch1, pfail, (+++) )
-import           Distribution.Verbosity                   
+import Distribution.Verbosity
          ( Verbosity, normal )
-import           Distribution.Simple.Utils                
+import Distribution.Simple.Utils
          ( wrapText )
 
-import           Data.Char                                
+import Data.Char
          ( isSpace, isAlphaNum )
-import           Data.List                                
+import Data.List
          ( intercalate )
-import           Data.Maybe                               
+import Data.Maybe
          ( listToMaybe, maybeToList, fromMaybe )
-import           Data.Monoid                              
+import Data.Monoid
          ( Monoid(..) )
-import           Control.Monad                            
+import Control.Monad
          ( liftM )
-import           System.FilePath                          
+import System.FilePath
          ( (</>) )
-import           Network.URI                              
+import Network.URI
          ( parseAbsoluteURI, uriToString )
 
 -- ------------------------------------------------------------
@@ -109,7 +109,7 @@ data GlobalFlags = GlobalFlags {
     globalLocalRepos        :: [FilePath],
     globalLogsDir           :: Flag FilePath,
     globalWorldFile         :: Flag FilePath
-  } deriving (Show)
+  }
 
 defaultGlobalFlags :: GlobalFlags
 defaultGlobalFlags  = GlobalFlags {

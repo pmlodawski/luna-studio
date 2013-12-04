@@ -9,27 +9,27 @@ module Distribution.Client.Dependency.Modular
 -- and finally, we have to convert back the resulting install
 -- plan.
 
-import           Data.Map                                                    as M
+import Data.Map as M
          ( fromListWith )
-import           Distribution.Client.Dependency.Modular.Assignment             
+import Distribution.Client.Dependency.Modular.Assignment
          ( Assignment, toCPs )
-import           Distribution.Client.Dependency.Modular.Dependency             
+import Distribution.Client.Dependency.Modular.Dependency
          ( RevDepMap )
-import           Distribution.Client.Dependency.Modular.ConfiguredConversion   
+import Distribution.Client.Dependency.Modular.ConfiguredConversion
          ( convCP )
-import           Distribution.Client.Dependency.Modular.IndexConversion        
+import Distribution.Client.Dependency.Modular.IndexConversion
          ( convPIs )
-import           Distribution.Client.Dependency.Modular.Log                    
+import Distribution.Client.Dependency.Modular.Log
          ( logToProgress )
-import           Distribution.Client.Dependency.Modular.Package                
+import Distribution.Client.Dependency.Modular.Package
          ( PN )
-import           Distribution.Client.Dependency.Modular.Solver                 
+import Distribution.Client.Dependency.Modular.Solver
          ( SolverConfig(..), solve )
-import           Distribution.Client.Dependency.Types                          
+import Distribution.Client.Dependency.Types
          ( DependencyResolver, PackageConstraint(..) )
-import           Distribution.Client.InstallPlan                               
+import Distribution.Client.InstallPlan
          ( PlanPackage )
-import           Distribution.System                                           
+import Distribution.System
          ( Platform(..) )
 
 -- | Ties the two worlds together: classic cabal-install vs. the modular

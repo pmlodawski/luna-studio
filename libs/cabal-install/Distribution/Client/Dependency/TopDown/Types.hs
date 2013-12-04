@@ -12,13 +12,13 @@
 -----------------------------------------------------------------------------
 module Distribution.Client.Dependency.TopDown.Types where
 
-import           Distribution.Client.Types         
+import Distribution.Client.Types
          ( SourcePackage(..), InstalledPackage, OptionalStanza )
 
-import           Distribution.Package              
+import Distribution.Package
          ( PackageIdentifier, Dependency
          , Package(packageId), PackageFixedDeps(depends) )
-import           Distribution.PackageDescription   
+import Distribution.PackageDescription
          ( FlagAssignment )
 
 -- ------------------------------------------------------------

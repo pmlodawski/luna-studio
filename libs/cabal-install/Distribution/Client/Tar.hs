@@ -66,40 +66,40 @@ module Distribution.Client.Tar (
 
   ) where
 
-import           Data.Char                              (ord)
-import           Data.Int                               (Int64)
-import           Data.Bits                              (Bits, shiftL, testBit)
-import           Data.List                              (foldl')
-import           Numeric                                (readOct, showOct)
-import           Control.Applicative                    (Applicative(..))
-import           Control.Monad                          (MonadPlus(mplus), when, ap, liftM)
-import qualified Data.Map                             as Map
-import qualified Data.ByteString.Lazy                 as BS
-import qualified Data.ByteString.Lazy.Char8           as BS.Char8
-import           Data.ByteString.Lazy                   (ByteString)
-import qualified Codec.Compression.GZip               as GZip
-import qualified Distribution.Client.GZipUtils        as GZipUtils
+import Data.Char     (ord)
+import Data.Int      (Int64)
+import Data.Bits     (Bits, shiftL, testBit)
+import Data.List     (foldl')
+import Numeric       (readOct, showOct)
+import Control.Applicative (Applicative(..))
+import Control.Monad (MonadPlus(mplus), when, ap, liftM)
+import qualified Data.Map as Map
+import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString.Lazy.Char8 as BS.Char8
+import Data.ByteString.Lazy (ByteString)
+import qualified Codec.Compression.GZip as GZip
+import qualified Distribution.Client.GZipUtils as GZipUtils
 
-import           System.FilePath                        
+import System.FilePath
          ( (</>) )
-import qualified System.FilePath                      as FilePath.Native
-import qualified System.FilePath.Windows              as FilePath.Windows
-import qualified System.FilePath.Posix                as FilePath.Posix
-import           System.Directory                       
+import qualified System.FilePath         as FilePath.Native
+import qualified System.FilePath.Windows as FilePath.Windows
+import qualified System.FilePath.Posix   as FilePath.Posix
+import System.Directory
          ( getDirectoryContents, doesDirectoryExist
          , getPermissions, createDirectoryIfMissing, copyFile )
-import qualified System.Directory                     as Permissions
+import qualified System.Directory as Permissions
          ( Permissions(executable) )
-import           Distribution.Client.Compat.FilePerms   
+import Distribution.Client.Compat.FilePerms
          ( setFileExecutable )
-import           System.Posix.Types                     
+import System.Posix.Types
          ( FileMode )
-import           Distribution.Client.Compat.Time        
-import           System.IO                              
+import Distribution.Client.Compat.Time
+import System.IO
          ( IOMode(ReadMode), openBinaryFile, hFileSize )
-import           System.IO.Unsafe                       (unsafeInterleaveIO)
+import System.IO.Unsafe (unsafeInterleaveIO)
 
-import           Prelude                              hiding (read)
+import Prelude hiding (read)
 
 
 --

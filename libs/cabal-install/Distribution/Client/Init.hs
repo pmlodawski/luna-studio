@@ -21,73 +21,73 @@ module Distribution.Client.Init (
 
   ) where
 
-import           System.IO                             
+import System.IO
   ( hSetBuffering, stdout, BufferMode(..) )
-import           System.Directory                      
+import System.Directory
   ( getCurrentDirectory, doesDirectoryExist, doesFileExist, copyFile
   , getDirectoryContents )
-import           System.FilePath                       
+import System.FilePath
   ( (</>), (<.>), takeBaseName )
-import           Data.Time                             
+import Data.Time
   ( getCurrentTime, utcToLocalTime, toGregorian, localDay, getCurrentTimeZone )
 
-import           Data.Char                             
+import Data.Char
   ( toUpper )
-import           Data.List                             
+import Data.List
   ( intercalate, nub, groupBy, (\\) )
-import           Data.Maybe                            
+import Data.Maybe
   ( fromMaybe, isJust, catMaybes )
-import           Data.Function                         
+import Data.Function
   ( on )
-import qualified Data.Map                            as M
-import           Data.Traversable                      
+import qualified Data.Map as M
+import Data.Traversable
   ( traverse )
-import           Control.Applicative                   
+import Control.Applicative
   ( (<$>) )
-import           Control.Monad                         
+import Control.Monad
   ( when, unless, (>=>), join )
-import           Control.Arrow                         
+import Control.Arrow
   ( (&&&), (***) )
 
-import           Text.PrettyPrint                    hiding (mode, cat)
+import Text.PrettyPrint hiding (mode, cat)
 
-import           Data.Version                          
+import Data.Version
   ( Version(..) )
-import           Distribution.Version                  
+import Distribution.Version
   ( orLaterVersion, earlierVersion, intersectVersionRanges, VersionRange )
-import           Distribution.Verbosity                
+import Distribution.Verbosity
   ( Verbosity )
-import           Distribution.ModuleName               
+import Distribution.ModuleName
   ( ModuleName, fromString )  -- And for the Text instance
-import           Distribution.InstalledPackageInfo     
+import Distribution.InstalledPackageInfo
   ( InstalledPackageInfo, sourcePackageId, exposed )
-import qualified Distribution.Package                as P
-import           Language.Haskell.Extension            ( Language(..) )
+import qualified Distribution.Package as P
+import Language.Haskell.Extension ( Language(..) )
 
-import           Distribution.Client.Init.Types        
+import Distribution.Client.Init.Types
   ( InitFlags(..), PackageType(..), Category(..) )
-import           Distribution.Client.Init.Licenses     
+import Distribution.Client.Init.Licenses
   ( bsd3, gplv2, gplv3, lgpl2, lgpl3, agplv3, apache20 )
-import           Distribution.Client.Init.Heuristics   
+import Distribution.Client.Init.Heuristics
   ( guessPackageName, guessAuthorNameMail, SourceFileEntry(..),
     scanForModules, neededBuildPrograms )
 
-import           Distribution.License                  
+import Distribution.License
   ( License(..), knownLicenses )
 
-import           Distribution.ReadE                    
+import Distribution.ReadE
   ( runReadE, readP_to_E )
-import           Distribution.Simple.Setup             
+import Distribution.Simple.Setup
   ( Flag(..), flagToMaybe )
-import           Distribution.Simple.Configure         
+import Distribution.Simple.Configure
   ( getInstalledPackages )
-import           Distribution.Simple.Compiler          
+import Distribution.Simple.Compiler
   ( PackageDBStack, Compiler )
-import           Distribution.Simple.Program           
+import Distribution.Simple.Program
   ( ProgramConfiguration )
-import           Distribution.Simple.PackageIndex      
+import Distribution.Simple.PackageIndex
   ( PackageIndex, moduleNameIndex )
-import           Distribution.Text                     
+import Distribution.Text
   ( display, Text(..) )
 
 initCabal :: Verbosity

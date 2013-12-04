@@ -7,16 +7,16 @@ module Distribution.Client.Compat.FilePerms (
   ) where
 
 #ifndef mingw32_HOST_OS
-import           System.Posix.Types       
+import System.Posix.Types
          ( FileMode )
-import           System.Posix.Internals   
+import System.Posix.Internals
          ( c_chmod )
-import           Foreign.C                
+import Foreign.C
          ( withCString )
-import           Foreign.C                
+import Foreign.C
          ( throwErrnoPathIfMinus1_ )
 #else
-import           System.Win32.File        (setFileAttributes, fILE_ATTRIBUTE_HIDDEN)
+import System.Win32.File (setFileAttributes, fILE_ATTRIBUTE_HIDDEN)
 #endif /* mingw32_HOST_OS */
 
 setFileHidden, setFileOrdinary,  setFileExecutable  :: FilePath -> IO ()

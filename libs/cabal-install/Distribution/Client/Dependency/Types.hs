@@ -26,44 +26,44 @@ module Distribution.Client.Dependency.Types (
     foldProgress,
   ) where
 
-import           Control.Applicative                
+import Control.Applicative
          ( Applicative(..), Alternative(..) )
 
-import           Data.Char                          
+import Data.Char
          ( isAlpha, toLower )
-import           Data.Monoid                        
+import Data.Monoid
          ( Monoid(..) )
 
-import           Distribution.Client.Types          
+import Distribution.Client.Types
          ( OptionalStanza, SourcePackage(..) )
-import qualified Distribution.Client.InstallPlan  as InstallPlan
+import qualified Distribution.Client.InstallPlan as InstallPlan
 
-import           Distribution.Compat.ReadP          
+import Distribution.Compat.ReadP
          ( (<++) )
 
-import qualified Distribution.Compat.ReadP        as Parse
+import qualified Distribution.Compat.ReadP as Parse
          ( pfail, munch1 )
-import           Distribution.PackageDescription    
+import Distribution.PackageDescription
          ( FlagAssignment )
 import qualified Distribution.Client.PackageIndex as PackageIndex
          ( PackageIndex )
 import qualified Distribution.Simple.PackageIndex as InstalledPackageIndex
          ( PackageIndex )
-import           Distribution.Package               
+import Distribution.Package
          ( Dependency, PackageName, InstalledPackageId )
-import           Distribution.Version               
+import Distribution.Version
          ( VersionRange )
-import           Distribution.Compiler              
+import Distribution.Compiler
          ( CompilerId )
-import           Distribution.System                
+import Distribution.System
          ( Platform )
-import           Distribution.Text                  
+import Distribution.Text
          ( Text(..) )
 
-import           Text.PrettyPrint                   
+import Text.PrettyPrint
          ( text )
 
-import           Prelude                          hiding (fail)
+import Prelude hiding (fail)
 
 -- | Covers source dependencies and installed dependencies in
 -- one type.

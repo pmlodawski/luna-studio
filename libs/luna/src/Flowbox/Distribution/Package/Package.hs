@@ -4,40 +4,32 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveGeneric #-}
 
 module Flowbox.Distribution.Package.Package where
 
---import           Flowbox.Prelude   
---import           Data.Version           (Version)
---import qualified Data.Version         as Version
+import           Flowbox.Prelude   
+import qualified Flowbox.Data.Version                    as Version
+import           Flowbox.Data.Version                      (Version)
+import qualified Flowbox.Distribution.Package.Dependency as Dependency
+import           Flowbox.Distribution.Package.Dependency   (Dependency)
 
---data Package = Package { name         :: String
---                       , version      :: Version
---                       , synopsis     :: String
---                       , description  :: String
---                       , homepage     :: String
---                       , bugReports   :: String
---                       , license      :: String
---                       , licenseFile  :: String
---                       , authors      :: [String]
---                       , maintainers  :: [String]
---                       , copyright    :: String
---                       , tags         :: [String]
---                       , dependencies :: [Dependency]
---                       } deriving (Show)
+import           GHC.Generics
+import           Data.Aeson
+
+data Package = Package { name         :: String
+                       --, version      :: Version
+                       --, synopsis     :: String
+                       --, description  :: String
+                       --, homepage     :: String
+                       --, bugReports   :: String
+                       --, license      :: String
+                       --, licenseFile  :: String
+                       --, authors      :: [String]
+                       --, maintainers  :: [String]
+                       --, copyright    :: String
+                       --, tags         :: [String]
+                       --, dependencies :: [Dependency]
+                       } deriving (Show, Generic)
 
 
---data Dependency = Dependency { name    :: String
---                             , version :: CVersion
---                             } deriving (Show)
-
---data CVersion = CVersion { version      :: Version 
---                         , restrictions :: [Restriction]
---                         } deriving (Show)
-
---data Constrain = EQ Version
---               | LT Version
---               | LE Version
---               | GT Version
---               | GE Version
---               deriving (Show)

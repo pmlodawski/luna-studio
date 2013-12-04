@@ -44,60 +44,60 @@ module Distribution.Client.Targets (
 
   ) where
 
-import           Distribution.Package                    
+import Distribution.Package
          ( Package(..), PackageName(..)
          , PackageIdentifier(..), packageName, packageVersion
          , Dependency(Dependency) )
-import           Distribution.Client.Types               
+import Distribution.Client.Types
          ( SourcePackage(..), PackageLocation(..), OptionalStanza(..) )
-import           Distribution.Client.Dependency.Types    
+import Distribution.Client.Dependency.Types
          ( PackageConstraint(..) )
 
-import qualified Distribution.Client.World             as World
-import           Distribution.Client.PackageIndex        (PackageIndex)
-import qualified Distribution.Client.PackageIndex      as PackageIndex
-import qualified Distribution.Client.Tar               as Tar
-import           Distribution.Client.FetchUtils          
+import qualified Distribution.Client.World as World
+import Distribution.Client.PackageIndex (PackageIndex)
+import qualified Distribution.Client.PackageIndex as PackageIndex
+import qualified Distribution.Client.Tar as Tar
+import Distribution.Client.FetchUtils
 
-import           Distribution.PackageDescription         
+import Distribution.PackageDescription
          ( GenericPackageDescription, FlagName(..), FlagAssignment )
-import           Distribution.PackageDescription.Parse   
+import Distribution.PackageDescription.Parse
          ( readPackageDescription, parsePackageDescription, ParseResult(..) )
-import           Distribution.Version                    
+import Distribution.Version
          ( Version(Version), thisVersion, anyVersion, isAnyVersion
          , VersionRange )
-import           Distribution.Text                       
+import Distribution.Text
          ( Text(..), display )
-import           Distribution.Verbosity                  (Verbosity)
-import           Distribution.Simple.Utils               
+import Distribution.Verbosity (Verbosity)
+import Distribution.Simple.Utils
          ( die, warn, intercalate, findPackageDesc, fromUTF8, lowercase )
 
-import           Data.List                               
+import Data.List
          ( find, nub )
-import           Data.Maybe                              
+import Data.Maybe
          ( listToMaybe )
-import           Data.Either                             
+import Data.Either
          ( partitionEithers )
-import           Data.Monoid                             
+import Data.Monoid
          ( Monoid(..) )
-import qualified Data.Map                              as Map
-import qualified Data.ByteString.Lazy                  as BS
-import qualified Data.ByteString.Lazy.Char8            as BS.Char8
-import qualified Distribution.Client.GZipUtils         as GZipUtils
-import           Control.Monad                           (liftM)
-import qualified Distribution.Compat.ReadP             as Parse
-import           Distribution.Compat.ReadP               
+import qualified Data.Map as Map
+import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString.Lazy.Char8 as BS.Char8
+import qualified Distribution.Client.GZipUtils as GZipUtils
+import Control.Monad (liftM)
+import qualified Distribution.Compat.ReadP as Parse
+import Distribution.Compat.ReadP
          ( (+++), (<++) )
-import qualified Text.PrettyPrint                      as Disp
-import           Text.PrettyPrint                        
+import qualified Text.PrettyPrint as Disp
+import Text.PrettyPrint
          ( (<>), (<+>) )
-import           Data.Char                               
+import Data.Char
          ( isSpace, isAlphaNum )
-import           System.FilePath                         
+import System.FilePath
          ( takeExtension, dropExtension, takeDirectory, splitPath )
-import           System.Directory                        
+import System.Directory
          ( doesFileExist, doesDirectoryExist )
-import           Network.URI                             
+import Network.URI
          ( URI(..), URIAuth(..), parseAbsoluteURI )
 
 -- ------------------------------------------------------------

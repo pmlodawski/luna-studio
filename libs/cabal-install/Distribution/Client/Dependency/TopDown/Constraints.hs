@@ -23,27 +23,27 @@ module Distribution.Client.Dependency.TopDown.Constraints (
   conflicting,
   ) where
 
-import           Distribution.Client.Dependency.TopDown.Types   
-import qualified Distribution.Client.PackageIndex             as PackageIndex
-import           Distribution.Client.PackageIndex               (PackageIndex)
-import           Distribution.Package                           
+import Distribution.Client.Dependency.TopDown.Types
+import qualified Distribution.Client.PackageIndex as PackageIndex
+import Distribution.Client.PackageIndex (PackageIndex)
+import Distribution.Package
          ( PackageName, PackageId, PackageIdentifier(..)
          , Package(packageId), packageName, packageVersion
          , Dependency, PackageFixedDeps(depends) )
-import           Distribution.Version                           
+import Distribution.Version
          ( Version )
-import           Distribution.Client.Utils                      
+import Distribution.Client.Utils
          ( mergeBy, MergeResult(..) )
 
-import           Data.Monoid                                    
+import Data.Monoid
          ( Monoid(mempty) )
-import           Data.Either                                    
+import Data.Either
          ( partitionEithers )
-import qualified Data.Map                                     as Map
-import           Data.Map                                       (Map)
-import qualified Data.Set                                     as Set
-import           Data.Set                                       (Set)
-import           Control.Exception                              
+import qualified Data.Map as Map
+import Data.Map (Map)
+import qualified Data.Set as Set
+import Data.Set (Set)
+import Control.Exception
          ( assert )
 
 

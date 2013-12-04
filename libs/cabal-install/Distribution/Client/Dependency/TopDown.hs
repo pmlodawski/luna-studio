@@ -14,61 +14,61 @@ module Distribution.Client.Dependency.TopDown (
     topDownResolver
   ) where
 
-import           Distribution.Client.Dependency.TopDown.Types         
+import Distribution.Client.Dependency.TopDown.Types
 import qualified Distribution.Client.Dependency.TopDown.Constraints as Constraints
-import           Distribution.Client.Dependency.TopDown.Constraints   
+import Distribution.Client.Dependency.TopDown.Constraints
          ( Satisfiable(..) )
-import           Distribution.Client.IndexUtils                       
+import Distribution.Client.IndexUtils
          ( convert )
-import qualified Distribution.Client.InstallPlan                    as InstallPlan
-import           Distribution.Client.InstallPlan                      
+import qualified Distribution.Client.InstallPlan as InstallPlan
+import Distribution.Client.InstallPlan
          ( PlanPackage(..) )
-import           Distribution.Client.Types                            
+import Distribution.Client.Types
          ( SourcePackage(..), ConfiguredPackage(..), InstalledPackage(..)
          , enableStanzas )
-import           Distribution.Client.Dependency.Types                 
+import Distribution.Client.Dependency.Types
          ( DependencyResolver, PackageConstraint(..)
          , PackagePreferences(..), InstalledPreference(..)
          , Progress(..), foldProgress )
 
-import qualified Distribution.Client.PackageIndex                   as PackageIndex
-import           Distribution.Client.PackageIndex                     (PackageIndex)
-import           Distribution.Package                                 
+import qualified Distribution.Client.PackageIndex as PackageIndex
+import Distribution.Client.PackageIndex (PackageIndex)
+import Distribution.Package
          ( PackageName(..), PackageId, Package(..), packageVersion, packageName
          , Dependency(Dependency), thisPackageVersion
          , simplifyDependency, PackageFixedDeps(depends) )
-import           Distribution.PackageDescription                      
+import Distribution.PackageDescription
          ( PackageDescription(buildDepends) )
-import           Distribution.Client.PackageUtils                     
+import Distribution.Client.PackageUtils
          ( externalBuildDepends )
-import           Distribution.PackageDescription.Configuration        
+import Distribution.PackageDescription.Configuration
          ( finalizePackageDescription, flattenPackageDescription )
-import           Distribution.Version                                 
+import Distribution.Version
          ( VersionRange, withinRange, simplifyVersionRange
          , UpperBound(..), asVersionIntervals )
-import           Distribution.Compiler                                
+import Distribution.Compiler
          ( CompilerId )
-import           Distribution.System                                  
+import Distribution.System
          ( Platform )
-import           Distribution.Simple.Utils                            
+import Distribution.Simple.Utils
          ( equating, comparing )
-import           Distribution.Text                                    
+import Distribution.Text
          ( display )
 
-import           Data.List                                            
+import Data.List
          ( foldl', maximumBy, minimumBy, nub, sort, sortBy, groupBy )
-import           Data.Maybe                                           
+import Data.Maybe
          ( fromJust, fromMaybe, catMaybes )
-import           Data.Monoid                                          
+import Data.Monoid
          ( Monoid(mempty) )
-import           Control.Monad                                        
+import Control.Monad
          ( guard )
-import qualified Data.Set                                           as Set
-import           Data.Set                                             (Set)
-import qualified Data.Map                                           as Map
-import qualified Data.Graph                                         as Graph
-import qualified Data.Array                                         as Array
-import           Control.Exception                                    
+import qualified Data.Set as Set
+import Data.Set (Set)
+import qualified Data.Map as Map
+import qualified Data.Graph as Graph
+import qualified Data.Array as Array
+import Control.Exception
          ( assert )
 
 -- ------------------------------------------------------------

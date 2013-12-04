@@ -1,15 +1,15 @@
 module Distribution.Client.Dependency.Modular.Log where
 
-import           Control.Applicative                                 
-import           Data.List                                         as L
-import           Data.Set                                          as S
+import Control.Applicative
+import Data.List as L
+import Data.Set as S
 
 import Distribution.Client.Dependency.Types -- from Cabal
 
-import           Distribution.Client.Dependency.Modular.Dependency   
-import           Distribution.Client.Dependency.Modular.Message      
-import           Distribution.Client.Dependency.Modular.Package      
-import           Distribution.Client.Dependency.Modular.Tree         (FailReason(..))
+import Distribution.Client.Dependency.Modular.Dependency
+import Distribution.Client.Dependency.Modular.Message
+import Distribution.Client.Dependency.Modular.Package
+import Distribution.Client.Dependency.Modular.Tree (FailReason(..))
 
 -- | The 'Log' datatype.
 --

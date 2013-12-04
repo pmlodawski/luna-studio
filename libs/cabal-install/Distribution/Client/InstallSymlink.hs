@@ -18,10 +18,10 @@ module Distribution.Client.InstallSymlink (
 
 #if mingw32_HOST_OS || mingw32_TARGET_OS
 
-import           Distribution.Package                            (PackageIdentifier)
-import           Distribution.Client.InstallPlan                 (InstallPlan)
-import           Distribution.Client.Setup                       (InstallFlags)
-import           Distribution.Simple.Setup                       (ConfigFlags)
+import Distribution.Package (PackageIdentifier)
+import Distribution.Client.InstallPlan (InstallPlan)
+import Distribution.Client.Setup (InstallFlags)
+import Distribution.Simple.Setup (ConfigFlags)
 
 symlinkBinaries :: ConfigFlags
                 -> InstallFlags
@@ -34,41 +34,41 @@ symlinkBinary _ _ _ _ = fail "Symlinking feature not available on Windows"
 
 #else
 
-import           Distribution.Client.Types                       
+import Distribution.Client.Types
          ( SourcePackage(..), ConfiguredPackage(..), enableStanzas )
-import           Distribution.Client.Setup                       
+import Distribution.Client.Setup
          ( InstallFlags(installSymlinkBinDir) )
-import qualified Distribution.Client.InstallPlan               as InstallPlan
-import           Distribution.Client.InstallPlan                 (InstallPlan)
+import qualified Distribution.Client.InstallPlan as InstallPlan
+import Distribution.Client.InstallPlan (InstallPlan)
 
-import           Distribution.Package                            
+import Distribution.Package
          ( PackageIdentifier, Package(packageId) )
-import           Distribution.Compiler                           
+import Distribution.Compiler
          ( CompilerId(..) )
-import qualified Distribution.PackageDescription               as PackageDescription
-import           Distribution.PackageDescription                 
+import qualified Distribution.PackageDescription as PackageDescription
+import Distribution.PackageDescription
          ( PackageDescription )
-import           Distribution.PackageDescription.Configuration   
+import Distribution.PackageDescription.Configuration
          ( finalizePackageDescription )
-import           Distribution.Simple.Setup                       
+import Distribution.Simple.Setup
          ( ConfigFlags(..), fromFlag, fromFlagOrDefault, flagToMaybe )
-import qualified Distribution.Simple.InstallDirs               as InstallDirs
+import qualified Distribution.Simple.InstallDirs as InstallDirs
 
-import           System.Posix.Files                              
+import System.Posix.Files
          ( getSymbolicLinkStatus, isSymbolicLink, createSymbolicLink
          , removeLink )
-import           System.Directory                                
+import System.Directory
          ( canonicalizePath )
-import           System.FilePath                                 
+import System.FilePath
          ( (</>), splitPath, joinPath, isAbsolute )
 
-import           Prelude                                       hiding (ioError)
-import           System.IO.Error                                 
+import Prelude hiding (ioError)
+import System.IO.Error
          ( isDoesNotExistError, ioError )
-import           Distribution.Compat.Exception                   ( catchIO )
-import           Control.Exception                               
+import Distribution.Compat.Exception ( catchIO )
+import Control.Exception
          ( assert )
-import           Data.Maybe                                      
+import Data.Maybe
          ( catMaybes )
 
 -- | We would like by default to install binaries into some location that is on
