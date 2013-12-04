@@ -41,30 +41,3 @@ Library
                     protocol-buffers-descriptor,
                     text,
                     timeit
-
-
--- Executable batch 
---   Main-Is:        Flowbox/Batch/Main.hs
---   Hs-Source-Dirs: src
--- 
---   GHC-Options:    -Wall -O2
--- 
---   Extensions:     DoAndIfThenElse,
---                   NoImplicitPrelude
--- 
---   Build-Depends:    base,
---                     bytestring,
---                     containers,
---                     directory,
---                     flowbox-batch,
---                     flowbox-luna,
---                     flowbox-utils,
---                     hashable,
---                     network,
---                     parsec,
---                     pretty-show,
---                     text,
---                     thrift,
---                     timeit,
---                     unordered-containers,
---                     vector
