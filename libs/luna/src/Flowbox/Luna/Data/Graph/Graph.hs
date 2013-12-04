@@ -36,5 +36,5 @@ connect graph srcID dstID edge = insEdge (srcID, dstID, edge) graph
 
 make :: Graph
 make = insNode (0, Node.mkInputs)
-	 $ insNode (1, Node.mkOutputs)
-	 $ empty
+     $ insNode (1, Node.mkOutputs)
+     $ empty
