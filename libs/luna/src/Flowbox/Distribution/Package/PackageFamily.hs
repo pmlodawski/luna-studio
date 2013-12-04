@@ -13,8 +13,11 @@ import           GHC.Generics
 import           Data.Aeson                                
 import qualified Data.Aeson.TH                           as JSON
 import           Data.Default                              (Default, def)
+import           Data.List                                 (sortBy)
+import           Data.Function                             (on)
 
 import           Flowbox.Prelude                         hiding (id)
+import           Flowbox.Data.List                         (foldri)
 import qualified Flowbox.Data.Version                    as Version
 import           Flowbox.Data.Version                      (Version)
 import qualified Flowbox.Distribution.Package.Dependency as Dependency
@@ -22,7 +25,6 @@ import           Flowbox.Distribution.Package.Dependency   (Dependency)
 import           Flowbox.Distribution.License              (License)
 import qualified Flowbox.Distribution.Package.Package    as Package
 import           Flowbox.Distribution.Package.Package      (Package)
-
 
 
 
@@ -46,12 +48,31 @@ data PackageFamily = PackageFamily { _name              :: String
 makeLenses (''PackageFamily)
 
 
-mk :: [Package] -> PackageFamily
-mk = foldr update def
+mk :: ([Package], [Package]) -> PackageFamily
+mk (srcPkgs, instPkgs) = foldri registerInstalled instPkgs
+                       $ foldri update (sortBy (compare `on` (view $ Package.id . Package.version)) srcPkgs) def
 
 
 update :: Package -> PackageFamily -> PackageFamily
-update pkg pkgF = pkgF & name .~  (pkg ^. Package.id ^. Package.name)
+update pkg pkgF = pkgF & name              .~ (pkg ^. Package.id ^. Package.name)
+                       & availableVersions %~ (pkg ^. Package.id ^. Package.version :)
+                       & synopsis          .~ (pkg ^. Package.synopsis)
+                       & description       .~ (pkg ^. Package.description)
+                       & homepage          .~ (pkg ^. Package.homepage)
+                       & url               .~ (pkg ^. Package.url)
+                       & bugReports        .~ (pkg ^. Package.bugReports)
+                       & license           .~ (pkg ^. Package.license)
+                       & licenseFile       .~ (pkg ^. Package.licenseFile)
+                       & authors           .~ (pkg ^. Package.authors)
+                       & maintainers       .~ (pkg ^. Package.maintainers)
+                       & copyright         .~ (pkg ^. Package.copyright)
+                       & tags              .~ (pkg ^. Package.tags)
+                       & dependencies      .~ (pkg ^. Package.dependencies)
+
+
+registerInstalled :: Package -> PackageFamily -> PackageFamily
+registerInstalled pkg pkgF = pkgF & installedVersions %~ (pkg ^. Package.id ^. Package.version :)
+
 
 ------------------------------------------------------------------------
 -- INSTANCES
