@@ -8,21 +8,20 @@
 
 module Flowbox.Luna.Passes.Analysis.VarAlias.State where
 
-import           Flowbox.Prelude                   
 import           Control.Monad.State               
-import qualified Flowbox.Luna.Data.AliasAnalysis as AA
-import           Flowbox.Luna.Data.AliasAnalysis   (AA)
+import qualified Data.IntMap                     as IntMap
 import qualified Data.Map                        as Map
 import           Data.Map                          (Map)
 
-import qualified Data.IntMap                     as IntMap
-
+import           Flowbox.Prelude                   
+import qualified Flowbox.Luna.Data.AliasAnalysis as AA
+import           Flowbox.Luna.Data.AliasAnalysis   (AA)
 import           Flowbox.System.Log.Logger         
+
 
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.VarAlias.State"
-
 
 
 data LocState    = LocState { namemap :: Map String Int
@@ -39,8 +38,8 @@ empty = LocState Map.empty AA.empty
 bind :: LocStateM m => Int -> Int -> m ()
 bind kid vid = do
     s <- get
-    let vs = varstat s
-    let nvs = vs { AA.varmap = IntMap.insert kid vid $ AA.varmap vs }
+    let vs  = varstat s
+        nvs = vs { AA.varmap = IntMap.insert kid vid $ AA.varmap vs }
     put s { varstat = nvs }
 
 
