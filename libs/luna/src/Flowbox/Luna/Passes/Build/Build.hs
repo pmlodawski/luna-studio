@@ -39,7 +39,10 @@ import qualified Flowbox.System.UniPath                                as UniPat
 import           Flowbox.System.UniPath                                  (UniPath)
 import qualified Flowbox.Text.Show.Hs                                  as ShowHs
 
-
+-- REMOVE !!!! JUST TESTING
+import qualified Flowbox.Luna.Data.AST.Zipper                          as Zipper
+import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
+-- REMOVE !!!! JUST TESTING
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Build.Build"
@@ -75,6 +78,17 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
     hsc  <- map (Source.transCode ShowHs.hsShow) <$> HSC.run hast
     Diagnostics.printHSC hsc diag
 
+
+    -- REMOVE !!!! JUST TESTING
+    let zipper = Zipper.mk ast
+             >>= Zipper.focusFunction "main"
+        focus  = fmap Zipper.getFocus zipper
+        Just (Zipper.FunctionFocus expr) = focus
+
+    graph <- GraphBuilder.run va expr
+    logger info $ show graph           
+    -- REMOVE !!!! JUST TESTING
+
     let allLibs = "base"
                 : "flowboxM-core"
                 : "template-haskell"
@@ -86,8 +100,8 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
     Directory.withTmpDirectory tmpDirPrefix (\tmpDir -> do
         writeSources tmpDir hsc
         let cabal = case buildType of
-                BuildConfig.Library      -> CabalGen.genLibrary    name version ghcOptions allLibs hsc
-                BuildConfig.Executable {}-> CabalGen.genExecutable name version ghcOptions allLibs 
+                BuildConfig.Library       -> CabalGen.genLibrary    name version ghcOptions allLibs hsc
+                BuildConfig.Executable {} -> CabalGen.genExecutable name version ghcOptions allLibs 
         CabalStore.run cabal $ UniPath.append (name ++ cabalExt) tmpDir
         CabalInstall.run cfg tmpDir cabalFlags
         case buildType of
