@@ -18,7 +18,6 @@ import           Control.Monad.IO.Class   (liftIO, MonadIO)
 import           Data.Typeable            
 import qualified Data.Traversable       as Traversable
 import           Data.Traversable         (Traversable)
-import qualified Control.Exception      as Exception
 
 
 print :: (MonadIO m, Show s) => s -> m ()
@@ -67,8 +66,8 @@ isRight (Right _) = True
 isRight _         = False
 
 
-fromJust :: Maybe a -> IO a
-fromJust Nothing  = Exception.throwIO $ Exception.ErrorCall ("Maybe.fromJust: Nothing" :: String)
+fromJust :: Monad m => Maybe a -> m a
+fromJust Nothing  = fail "Maybe.fromJust: Nothing"
 fromJust (Just x) = return x
 
 

@@ -9,10 +9,13 @@
 module Flowbox.Luna.Passes.Transform.Graph.Builder.State where
 
 import           Control.Monad.State               
+import qualified Data.IntMap                     as IntMap
 import qualified Data.Map                        as Map
 import           Data.Map                          (Map)
 
 import           Flowbox.Prelude                   
+import qualified Flowbox.Luna.Data.AliasAnalysis as AA
+import           Flowbox.Luna.Data.AliasAnalysis   (AA)
 import qualified Flowbox.Luna.Data.AST.Utils     as AST
 import           Flowbox.Luna.Data.Graph.Edge      (Edge)
 import           Flowbox.Luna.Data.Graph.Graph     (Graph)
@@ -21,7 +24,6 @@ import qualified Flowbox.Luna.Data.Graph.Node    as Node
 import           Flowbox.Luna.Data.Graph.Node      (Node)
 import           Flowbox.Luna.Data.Graph.Port      (Port)
 import           Flowbox.System.Log.Logger         
-import           Flowbox.Luna.Data.AliasAnalysis   (AA)
 
 
 
@@ -33,8 +35,8 @@ type NodeMap = Map AST.ID (Node.ID, Port)
 
 
 data GBState = GBState { graph   :: Graph 
-                       , nodemap :: NodeMap
-                       , aa      :: AA
+                       , nodeMap :: NodeMap
+                       , aaMap   :: AA
                        } deriving (Show)
 
 
@@ -47,7 +49,7 @@ make = GBState Graph.make Map.empty
 
 addToMap :: GBStateM m => AST.ID -> (Node.ID, Port) -> m ()
 addToMap k v = do gm <- get
-                  put gm { nodemap = Map.insert k v $ nodemap gm }
+                  put gm { nodeMap = Map.insert k v $ nodeMap gm }
 
 
 connect :: GBStateM m => Node.ID -> Node.ID -> Edge -> m ()
@@ -68,3 +70,15 @@ getGraph = get >>= return . graph
 setGraph :: GBStateM m => Graph -> m ()
 setGraph gr = do gm <- get
                  put gm { graph = gr }
+
+getAAMap :: GBStateM m => m AA
+getAAMap = get >>= return . aaMap
+
+
+setAAMap :: GBStateM m => AA -> m ()
+setAAMap aa = do gm <- get
+                 put gm { aaMap = aa }
+
+
+aaLookUp :: GBStateM m => AST.ID -> m AST.ID
+aaLookUp astID = getAAMap >>= fromJust . (IntMap.lookup astID) . AA.varmap 

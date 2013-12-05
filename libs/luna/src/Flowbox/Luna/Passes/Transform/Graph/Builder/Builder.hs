@@ -13,7 +13,7 @@ import           Control.Monad.State
 import qualified Data.Map                                          as Map
 import           Data.Map                                            (Map)
 
-import           Flowbox.Prelude                                   hiding (error, mapM_)
+import           Flowbox.Prelude                                   hiding (error, mapM, mapM_)
 import           Flowbox.Luna.Data.AliasAnalysis                     (AA)
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import           Flowbox.Luna.Data.AST.Expr                          (Expr)
@@ -32,8 +32,8 @@ import           Flowbox.Luna.Passes.Pass                            (PassMonad)
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State as State
 import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBState)
 import           Flowbox.System.Log.Logger                           
-import qualified Flowbox.Luna.Data.Graph.Flags as Flags
-import qualified Flowbox.Luna.Data.Attributes  as Attributes
+import qualified Flowbox.Luna.Data.Graph.Flags                     as Flags
+import qualified Flowbox.Luna.Data.Attributes                      as Attributes
 
 
 logger :: Logger
@@ -76,7 +76,11 @@ buildExpr expr = case expr of
                                      d <- buildExpr dst
                                      State.connect p d $ Edge dummyNothing 0
                                      pure dummyValue
-    Expr.App        i src args -> dummyInsNewNode "dummy_expr_App"
+    Expr.App        i src args -> do s <- buildExpr src
+                                     a <- zip [0..] <$> mapM buildExpr args
+                                     mapM_ (\(no, d) -> State.connect d s $ Edge dummyNothing no) a
+                                     pure s
+    Expr.Var        i name     -> dummyInsNewNode "dummy_expr_Var"
     _                          -> dummyInsNewNode "dummy_expr_Other"
     
 

@@ -44,7 +44,7 @@ import           Flowbox.Text.Show.Hs                                    (hsShow
 import qualified Flowbox.Text.Show.Pretty                              as PP
 
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                     as ASTCrumb
-import qualified Flowbox.Luna.Data.AST.Zipper                     as Zipper
+import qualified Flowbox.Luna.Data.AST.Zipper                          as Zipper
 
 import           Control.Lens                                          hiding (Zipper)
 
