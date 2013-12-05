@@ -39,8 +39,8 @@ def try_call(cmd):
 check_install("cabal", "-V")
 check_cabal_version()
 
-print_info ("Generating Protocol Buffers files using generate-proto")
-path = os.path.join('scripts', 'generate-proto')
+print_info ("Generating Protocol Buffers files using genproto")
+path = os.path.join('scripts', 'genproto')
 try_call ('python %s' % path)
 
 print_info ("Generating cabal configs using gencabal")

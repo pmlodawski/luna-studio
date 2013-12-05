@@ -26,32 +26,22 @@ import qualified Flowbox.Luna.Data.Graph.Port                             as Por
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic             
 import qualified Generated.Proto.Graph.Graph                              as Gen
 import qualified Generated.Proto.Graph.Edge                               as Gen
-import qualified Generated.Proto.Graph.Port                               as Gen
-import qualified Generated.Proto.Graph.Port.Cls                           as GenPort
 import qualified Generated.Proto.Graph.Node                               as Gen
 import qualified Generated.Proto.Graph.Node.Cls                           as GenNode
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes   ()
 
 
 
-instance Convert Port Gen.Port where
-    encode port = case port of 
-        Port.All      -> Gen.Port GenPort.All    Nothing
-        Port.Number p -> Gen.Port GenPort.Number (encodePJ p)
-    decode (Gen.Port tcls mtnumber) = case tcls of 
-        GenPort.All    -> return $ Port.All
-        GenPort.Number -> do tnumber <- mtnumber <?> "Failed to decode Port: 'number' field is missing"
-                             return $ Port.Number $ decodeP tnumber
-
 instance Convert (Int, Int, Edge) Gen.Edge where
-    encode (nodeSrc, nodeDst, Edge portDst) =  
-        Gen.Edge (encodePJ nodeSrc) (encodePJ nodeDst) (encodeJ portDst)
-    decode (Gen.Edge mtnodeSrc mtnodeDst mtportDst) = do
+    encode (nodeSrc, nodeDst, Edge portSrc portDst) =  
+        Gen.Edge (encodePJ nodeSrc) (encodePJ nodeDst) tportSrc (encodePJ portDst) where
+            tportSrc = portSrc >>= return . encodeP                           
+    decode (Gen.Edge mtnodeSrc mtnodeDst mtportSrc mtportDst) = do
         tnodeSrc <- mtnodeSrc <?> "Failed to decode Edge: 'srcNode' field is missing"
         tnodeDst <- mtnodeDst <?> "Failed to decode Edge: 'dstNode' field is missing"
         tportDst <- mtportDst <?> "Failed to decode Edge: 'dstPort' field is missing"
-        portDst  <- decode tportDst
-        return $ (decodeP tnodeSrc, decodeP tnodeDst, Edge portDst)
+        let mportSrc = mtportSrc >>= return . decodeP
+        return $ (decodeP tnodeSrc, decodeP tnodeDst, Edge mportSrc (decodeP tportDst))
 
 
 instance Convert (Int, Node) Gen.Node where
