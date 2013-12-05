@@ -28,8 +28,10 @@ def main():
     cabals = [header + process(path, config) for (path, config) in zip(cabal_dirs, tcabals)]
 
     for (path, src) in zip(cabal_paths,cabals):
-        with open(path, 'w') as file:
-            file.write(src)
+        with open(path, 'rw') as file:
+            # check if file is changed
+            if not file.read() == src:
+                file.write(src)
 
 
 def find_regex(basepath, regex=r'.*', exclude=r'_^'):

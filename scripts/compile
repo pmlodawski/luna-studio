@@ -35,9 +35,9 @@ def getHaskellPlatformRoot():
     return path
 
 def main():
-    # print_info("Running gencabal")
-    # ret = call('python scripts/gencabal', shell=True)
-    # handle_ret(ret)
+    print_info("Running gencabal")
+    ret = call('python scripts/gencabal', shell=True)
+    handle_ret(ret)
 
     # We have to put Haskells mingw on the beginning of the Path not to use system one
     if platform.system() == "Windows":
