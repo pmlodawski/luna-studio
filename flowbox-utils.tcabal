@@ -30,6 +30,7 @@ Library
                   filepath,
                   generic-deriving,
                   hslogger,
+                  lens,
                   MissingH,
                   mtl,
                   optparse-applicative,
