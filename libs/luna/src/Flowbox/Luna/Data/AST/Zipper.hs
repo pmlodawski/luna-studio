@@ -7,7 +7,7 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Flowbox.Luna.Data.AST.Zipper.Expr where
+module Flowbox.Luna.Data.AST.Zipper where
 
 import           Flowbox.Prelude                   hiding (id, drop)
 import qualified Flowbox.Luna.Data.AST.Expr        as Expr
@@ -26,7 +26,7 @@ import           Control.Lens                      hiding (Zipper)
 --           deriving (Show)
 
 data Focus  = FunctionFocus Expr
-            | ModuleEnv Module
+            | ModuleFocus Module
             deriving (Show)
 
 type FocusPath = [Focus]
@@ -34,13 +34,13 @@ type FocusPath = [Focus]
 type Zipper = (Focus, FocusPath)
 
 mk :: Module -> Maybe Zipper
-mk rootmod = Just (ModuleEnv rootmod, [])
+mk rootmod = Just (ModuleFocus rootmod, [])
 
 defocus :: Zipper -> Zipper
 defocus zipper@(env, [])   = zipper
 defocus (env, parent:path) = (newenv, path) where
     newenv = case parent of
-        ModuleEnv pmod -> ModuleEnv $ case env of
+        ModuleFocus pmod -> ModuleFocus $ case env of
             FunctionFocus func -> Module.addMethod func pmod
 
 
@@ -49,16 +49,19 @@ modify f (env, path) = Just (f env, path)
 
 
 close :: Zipper -> Maybe Module
-close zipper@(env, []) = Just mod where ModuleEnv mod = env
+close zipper@(env, []) = Just mod where ModuleFocus mod = env
 close zipper           = close $ defocus zipper
 
 
 focusFunction :: String -> Zipper -> Maybe Zipper
 focusFunction name zipper@(env, path) = case env of
-    ModuleEnv mod -> focusListElem Module.methods Expr.name 
-                     FunctionFocus ModuleEnv mod name zipper
+    ModuleFocus mod -> focusListElem Module.methods Expr.name 
+                     FunctionFocus ModuleFocus mod name zipper
     _             -> Nothing
 
+
+getFocus :: Zipper -> Focus
+getFocus = fst
 
 focusListElem :: Lens' a [b] -> Traversal' b String -> (b -> Focus) -> (a -> Focus) -> a -> String -> Zipper -> Maybe Zipper
 focusListElem lens nameLens elemFocus crumbFocus elem name (env, path) = runMaybe $ do
