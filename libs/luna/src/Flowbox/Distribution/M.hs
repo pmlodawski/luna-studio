@@ -94,6 +94,8 @@ main = do
     -- Distribution.Client.Types.SourcePackageDb
     sourcePkgDb       <- IndexUtils.getSourcePackages verbosity repos
     let matchingPackages search index = [ pkg | pat <- pats, pkg <- search index pat ]
+
+        sourcePkgIndex :: PackageIndex.PackageIndex CliTypes.SourcePackage
         sourcePkgIndex = CliTypes.packageIndex sourcePkgDb
         -- sourcePkgs ?
         sourcePkgs     = matchingPackages (\ idx n -> concatMap snd (PackageIndex.searchByNameSubstring idx n)) sourcePkgIndex
