@@ -74,11 +74,10 @@ parseArg (input, no) = case input of
 
 buildExpr :: GBMonad m => Expr -> Pass.Result m AST.ID
 buildExpr expr = traceShow expr $ case expr of
-    --Expr.Accessor   i name dst -> do dstID  <- buildExpr dst
-                                     
-    --                                 accNID <- State.insNewNode $ Node.Expr name (Just expr) dummyFlags dummyAttrs
-    --                                 State.addToMap i (accNID, Nothing)
-    --                                 return i
+    Expr.Accessor   i name dst -> do str <- expr2String expr
+                                     accNID <- State.insNewNode $ Node.Expr str (Just expr) dummyFlags dummyAttrs
+                                     State.addToMap i (accNID, Nothing)
+                                     return i
     Expr.Assignment i pat dst  -> do (patIDs, patStr) <- buildPat pat
                                      dstID <- buildExpr dst
                                      (dstNID, dstPort) <- State.aaNodeMapLookUp dstID
@@ -88,13 +87,13 @@ buildExpr expr = traceShow expr $ case expr of
                                         _       -> mapM_ (\(n, patID) -> State.addToMap patID (patNID, Just n)) $ zip [0..] patIDs
                                      State.connect dstNID patNID $ Edge dstPort 0
                                      return dummyValue
-    --Expr.App        i src args -> do srcID <- buildExpr src
-                                     --(srcNID, _) <- State.aaNodeMapLookUp srcID
-                                     --argIDs <- mapM buildExpr args
-                                     --argNIDsP <- mapM State.aaNodeMapLookUp argIDs
-                                     --let numberedArgNIDsP = zip [0..] argNIDsP
-                                     --mapM_ (\(no, (argNID, p)) -> State.connect argNID srcNID $ Edge p no) numberedArgNIDsP
-                                     --return srcID
+    Expr.App        i src args -> do srcID <- buildExpr src
+                                     (srcNID, _) <- State.aaNodeMapLookUp srcID
+                                     argIDs <- mapM buildExpr args
+                                     argNIDsP <- mapM State.aaNodeMapLookUp argIDs
+                                     let numberedArgNIDsP = zip [0..] argNIDsP
+                                     mapM_ (\(no, (argNID, p)) -> State.connect argNID srcNID $ Edge p no) numberedArgNIDsP
+                                     return srcID
     Expr.Var        i _        -> do return i
     Expr.Lit        i lvalue   -> do (litID, litStr) <- buildLit lvalue
                                      litNID <- State.insNewNode $ Node.Expr litStr (Just expr) dummyFlags dummyAttrs
@@ -103,6 +102,13 @@ buildExpr expr = traceShow expr $ case expr of
     --Expr.Arg {}                -> dummyInsNewNode "dummy_expr_Arg"
     --_                          -> dummyInsNewNode "dummy_expr_Other"
     
+
+expr2String :: GBMonad m => Expr -> Pass.Result m String
+expr2String expr = case expr of
+    Expr.Accessor _ name dst -> do dstStr <- expr2String dst
+                                   return $ dstStr ++ "." ++ name
+    Expr.Var      _ name     -> return name
+
 
 buildPat :: GBMonad m => Pat -> Pass.Result m ([AST.ID], String)
 buildPat pat = case pat of
