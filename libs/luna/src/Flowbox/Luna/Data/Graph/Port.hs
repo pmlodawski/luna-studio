@@ -11,6 +11,4 @@ import           Flowbox.Prelude
 
 
 
-data Port = All
-          | Number Int
-          deriving (Show, Read, Ord, Eq)
+type Port = Int

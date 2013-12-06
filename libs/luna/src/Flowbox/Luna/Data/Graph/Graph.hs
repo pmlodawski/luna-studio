@@ -10,6 +10,8 @@ module Flowbox.Luna.Data.Graph.Graph(
     Graph,
     empty,
     connect,
+    inputsID,
+    outputID,
     make,
 ) where
 
@@ -30,11 +32,19 @@ empty :: Graph
 empty = DG.empty
 
 
-connect :: Graph -> Node.ID -> Node.ID -> Edge -> Graph
-connect graph srcID dstID edge = insEdge (srcID, dstID, edge) graph
+connect :: Node.ID -> Node.ID -> Edge -> Graph -> Graph
+connect srcID dstID edge = insEdge (srcID, dstID, edge)
+
+
+inputsID :: Node.ID
+inputsID = 0
+
+
+outputID :: Node.ID
+outputID = 1
 
 
 make :: Graph
-make = insNode (0, Node.mkInputs)
-     $ insNode (1, Node.mkOutputs)
+make = insNode (inputsID, Node.mkInputs)
+     $ insNode (outputID, Node.mkOutputs)
      $ empty

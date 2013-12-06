@@ -14,7 +14,9 @@ import           Flowbox.Prelude
 import           Flowbox.Luna.Data.Graph.Port   (Port)
 
 
-data Edge = Edge { dst :: Port
+
+data Edge = Edge { src :: Maybe Port
+                 , dst :: Port
                  } deriving (Show, Read, Ord, Eq)
 
 
