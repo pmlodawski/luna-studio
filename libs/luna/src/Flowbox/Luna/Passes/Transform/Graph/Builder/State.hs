@@ -22,7 +22,7 @@ import           Flowbox.Luna.Data.Graph.Graph     (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph   as Graph
 import qualified Flowbox.Luna.Data.Graph.Node    as Node
 import           Flowbox.Luna.Data.Graph.Node      (Node)
-import           Flowbox.Luna.Data.Graph.Port      (Port)
+import           Flowbox.Luna.Data.Graph.Port      (OutPort)
 import           Flowbox.System.Log.Logger         
 
 
@@ -31,7 +31,7 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.State"
 
 
-type NodeMap = Map AST.ID (Node.ID, Port)
+type NodeMap = Map AST.ID (Node.ID, OutPort)
 
 
 data GBState = GBState { graph   :: Graph 
@@ -47,7 +47,7 @@ make :: AA -> GBState
 make = GBState Graph.make Map.empty
 
 
-addToMap :: GBStateM m => AST.ID -> (Node.ID, Port) -> m ()
+addToMap :: GBStateM m => AST.ID -> (Node.ID, OutPort) -> m ()
 addToMap k v = do gm <- get
                   put gm { nodeMap = Map.insert k v $ nodeMap gm }
 
@@ -80,5 +80,22 @@ setAAMap aa = do gm <- get
                  put gm { aaMap = aa }
 
 
+getNodeMap :: GBStateM m => m NodeMap
+getNodeMap = get >>= return . nodeMap
+
+
+setNodeMap :: GBStateM m => NodeMap -> m ()
+setNodeMap nm = do gm <- get
+                   put gm { nodeMap = nm }
+
+
 aaLookUp :: GBStateM m => AST.ID -> m AST.ID
 aaLookUp astID = getAAMap >>= fromJust . (IntMap.lookup astID) . AA.varmap 
+
+
+nodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
+nodeMapLookUp astID = getNodeMap >>= fromJust . (Map.lookup astID)
+
+
+aaNodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
+aaNodeMapLookUp astID = (aaLookUp astID) >>= nodeMapLookUp

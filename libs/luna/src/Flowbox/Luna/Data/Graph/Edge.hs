@@ -11,12 +11,12 @@ module Flowbox.Luna.Data.Graph.Edge(
 ) where
 
 import           Flowbox.Prelude                
-import           Flowbox.Luna.Data.Graph.Port   (Port)
+import           Flowbox.Luna.Data.Graph.Port   (OutPort, InPort)
 
 
 
-data Edge = Edge { src :: Maybe Port
-                 , dst :: Port
+data Edge = Edge { src :: OutPort
+                 , dst :: InPort
                  } deriving (Show, Read, Ord, Eq)
 
 

@@ -11,4 +11,6 @@ import           Flowbox.Prelude
 
 
 
-type Port = Int
+type InPort = Int
+
+type OutPort = Maybe Int

@@ -81,7 +81,7 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
 
     -- REMOVE !!!! JUST TESTING
     let zipper = Zipper.mk ast
-             >>= Zipper.focusFunction "main"
+             >>= Zipper.focusFunction "test"
         focus  = fmap Zipper.getFocus zipper
         Just (Zipper.FunctionFocus expr) = focus
 

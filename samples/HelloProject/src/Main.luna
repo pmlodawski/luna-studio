@@ -3,14 +3,21 @@ import Std:All
 def add self x y:
     x.add y
     
-def addInts (self, x, y):
-    x.add y
+# def addInts (self, x, y):
+#     x.add y
 
 def main self:
-	x = 1
-	y = 2
-	z = self.add x y
-	
+    x = 1
+    # x2 = x
+    # y = 2
+    # z = self.add x y
+    
     # a = [1..]
     # a.each x:
     #     Console.print x
+
+def test self x y:
+    z = x
+    g = z
+    # z = self.add x y
+    
