@@ -5,6 +5,7 @@ from subprocess import call, Popen, PIPE
 from utils.colors import print_info, print_warning, print_error, format_info
 import sys
 import os
+from utils.path import write_if_changed
 
 def fatal():
     print_error ("ERROR")
@@ -39,13 +40,14 @@ def main():
     args = sys.argv
     print_info('Search paths: %s' % path_prefixes)
     if "all" in args:
-        print_info('Styling all haskell files')
-        paths = glob("**/*.hs")
+        print_info('Styling all git tracked haskell files')
+        (paths, err) = Popen('git ls-files', stdout=PIPE, stderr=PIPE, shell=True).communicate()
+        # paths = glob("**/*.hs")
     else:
         print_info('Styling only changed files in git repository. To style all files use "all" option.')
         (paths, err) = Popen('git diff --name-only', stdout=PIPE, stderr=PIPE, shell=True).communicate()
-        paths = paths.split('\n')
-        paths = [file for file in paths if file[-3:] == '.hs']
+    paths = paths.split('\n')
+    paths = [file for file in paths if file[-3:] == '.hs']
 
     # filter paths with prefixes
     paths = [path for path in paths if startswithAny(path, path_prefixes)]
@@ -56,9 +58,11 @@ def main():
     for i in range(total):
         path = paths[i]
         print "%s %s" % (get_progress(i+1, total), path)
-        (out, err) = Popen('stylish-haskell -i %s' % path, stdout=PIPE, stderr=PIPE, shell=True).communicate()
+        (out, err) = Popen('stylish-haskell %s' % path, stdout=PIPE, stderr=PIPE, shell=True).communicate()
         if err:
             print_error(err)
+        else:
+            write_if_changed(path, out)
 
 
 # def main ():
