@@ -19,97 +19,97 @@ import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Console.StyledText.Style (Style (Style))
 import qualified Flowbox.System.Console.StyledText.Style as Style
 
-data Element = Text T.Text
+data Element = TextElement T.Text
              | StylePush Style
              | StylePop
              deriving (Show)
 
-type Text = [Element]
+type StyledText = [Element]
 
 
-print :: Text -> IO ()
+print :: StyledText -> IO ()
 print txt = hPrintStack stdout [] txt
 
-printErr :: Text -> IO ()
+printErr :: StyledText -> IO ()
 printErr txt = hPrintStack stderr [] txt
 
-hPrintStack :: Handle -> [Style] -> Text -> IO ()
-hPrintStack handler stack []     = putStrLn ""
+hPrintStack :: Handle -> [Style] -> StyledText -> IO ()
+hPrintStack _ _ []     = putStrLn ""
 hPrintStack handler stack (x:xs) = case x of
-    Text txt    -> putStr (T.unpack txt) *> printStack stack xs
-    StylePush s -> ANSI.hSetSGR handler (Style.toSGR s) *> printStack (s:stack) xs
-    StylePop    -> case stack of
-                   s:ss:sss -> ANSI.hSetSGR handler (Style.toSGR ss)          *> printStack (ss:sss) xs
-                   s:[]     -> ANSI.hSetSGR handler (Style.toSGR Style.Reset) *> printStack [] xs
-                   []       -> printStack [] xs
+    TextElement txt    -> putStr (T.unpack txt) *> printStack stack xs
+    StylePush s        -> ANSI.hSetSGR handler (Style.toSGR s) *> printStack (s:stack) xs
+    StylePop           -> case stack of
+                          _:s:ss -> ANSI.hSetSGR handler (Style.toSGR s)             *> printStack (s:ss) xs
+                          _:[]     -> ANSI.hSetSGR handler (Style.toSGR Style.Reset) *> printStack [] xs
+                          []       -> printStack [] xs
     where printStack = hPrintStack handler
 
 
-clearFormatting :: Text -> Text
+clearFormatting :: StyledText -> StyledText
 clearFormatting [] = []
 clearFormatting (x:xs) = case x of
-    Text _ -> x : clearFormatting xs
-    _      -> clearFormatting xs
+    TextElement _ -> x : clearFormatting xs
+    _             -> clearFormatting xs
 
 
-toText :: Text -> T.Text
+toText :: StyledText -> T.Text
 toText [] = ""
 toText (x:xs) = case x of
-    Text txt -> txt ++ toText xs
-    _        -> toText xs
+    TextElement txt -> txt ++ toText xs
+    _               -> toText xs
 
-beginBlack :: Text
+beginBlack :: StyledText
 beginBlack = [StylePush $ Style Style.Foreground Style.Vivid Style.Black]
 
-beginRed :: Text
+beginRed :: StyledText
 beginRed = [StylePush $ Style Style.Foreground Style.Vivid Style.Red]
 
-beginGreen :: Text
+beginGreen :: StyledText
 beginGreen = [StylePush $ Style Style.Foreground Style.Vivid Style.Green]
 
-beginYellow :: Text
+beginYellow :: StyledText
 beginYellow = [StylePush $ Style Style.Foreground Style.Vivid Style.Yellow]
 
-beginBlue :: Text
+beginBlue :: StyledText
 beginBlue = [StylePush $ Style Style.Foreground Style.Vivid Style.Blue]
 
-beginMagenta :: Text
+beginMagenta :: StyledText
 beginMagenta = [StylePush $ Style Style.Foreground Style.Vivid Style.Magenta]
 
-beginCyan :: Text
+beginCyan :: StyledText
 beginCyan = [StylePush $ Style Style.Foreground Style.Vivid Style.Cyan]
 
-beginWhite :: Text
+beginWhite :: StyledText
 beginWhite = [StylePush $ Style Style.Foreground Style.Vivid Style.White]
 
-resetColor :: Text
+resetColor :: StyledText
 resetColor = [StylePush Style.Reset]
 
-popColor :: Text
+popColor :: StyledText
 popColor = [StylePop]
 
-black :: Text -> Text
+black :: StyledText -> StyledText
 black s = beginBlack ++ s ++ popColor
 
-red :: Text -> Text
+red :: StyledText -> StyledText
 red s = beginRed ++ s ++ popColor
 
-green :: Text -> Text
+green :: StyledText -> StyledText
 green s = beginGreen ++ s ++ popColor
 
-yellow :: Text -> Text
+yellow :: StyledText -> StyledText
 yellow s = beginYellow ++ s ++ popColor
 
-blue :: Text -> Text
+blue :: StyledText -> StyledText
 blue s = beginBlue ++ s ++ popColor
 
-magenta :: Text -> Text
+magenta :: StyledText -> StyledText
 magenta s = beginMagenta ++ s ++ popColor
 
-cyan :: Text -> Text
+cyan :: StyledText -> StyledText
 cyan s = beginCyan ++ s ++ popColor
 
-white :: Text -> Text
+white :: StyledText -> StyledText
 white s = beginWhite ++ s ++ popColor
 
 
@@ -118,8 +118,8 @@ white s = beginWhite ++ s ++ popColor
 ------------------------------------------------------------------------
 
 instance IsString Element where
-    fromString s = Text (fromString s)
+    fromString s = TextElement (fromString s)
 
-instance IsString Text where
+instance IsString StyledText where
     fromString s = [fromString s]
 
