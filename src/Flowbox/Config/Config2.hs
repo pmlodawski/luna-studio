@@ -1,14 +1,14 @@
 
-module Flowbox.Config.Config2 where 
-import           Flowbox.Prelude hiding (error)
+module Flowbox.Config.Config2 where
+import Flowbox.Prelude hiding (error)
 
 
 
-data Config = Config { root    :: String
-                     , base    :: Section
+data Config = Config { root :: String
+                     , base :: Section
                      } deriving(Show)
 
-data Section = Base { path  :: String 
+data Section = Base { path  :: String
                     , bin   :: String
                     , lib   :: String
                     , share :: String
@@ -27,7 +27,7 @@ mkcfg lroot = Config { root    = lroot
             where cfg = mkcfg lroot
 
 main :: IO ()
-main = do 
+main = do
     let c = mkcfg "xxx"
     print c
     print "hello"
