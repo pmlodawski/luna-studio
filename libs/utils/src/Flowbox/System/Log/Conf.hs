@@ -11,7 +11,7 @@ import           Control.Concurrent.MVar
 import qualified Data.Map                as Map
 import           System.IO.Unsafe        (unsafePerformIO)
 
-import Flowbox.Prelude
+import Flowbox.Prelude hiding (empty)
 
 
 

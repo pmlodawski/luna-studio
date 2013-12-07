@@ -15,7 +15,7 @@ module Flowbox.Luna.Data.Graph.Graph(
     make,
 ) where
 
-import Flowbox.Prelude
+import Flowbox.Prelude                        hiding (empty)
 
 import           Flowbox.Data.Graph           hiding (Edge, Graph, empty)
 import qualified Flowbox.Data.Graph           as DG

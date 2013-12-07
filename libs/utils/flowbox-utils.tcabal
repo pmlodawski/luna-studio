@@ -13,7 +13,9 @@ Library
   GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse,
-                  NoImplicitPrelude
+                  NoImplicitPrelude,
+                  OverloadedStrings,
+                  TypeSynonymInstances
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
@@ -53,6 +55,9 @@ Library
 --   Extensions:     DoAndIfThenElse
 --                   MultiParamTypeClasses
 --                   NoImplicitPrelude
+--                   OverloadedStrings
+--                   TypeSynonymInstances
+--                   
 --   Build-Depends:  base,
 --                   --dlist,
 --                   --ansi-terminal,

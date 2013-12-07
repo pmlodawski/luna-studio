@@ -27,7 +27,17 @@ main = do
     print "hello"
     print $ pkgFMap
     print $ JSON.encode pkgFMap
+    --mapM_ printPackageFamily $ Map.elems pkgFMap
 
+
+
+
+
+--printPackageFamily :: PackageFamily -> IO ()
+--printPackageFamily pf = print $ showPF pf
+
+--showPF :: PackageFamily -> String
+--showPF pf =
 
 
 --readPackages :: IO ([Package], [Package])

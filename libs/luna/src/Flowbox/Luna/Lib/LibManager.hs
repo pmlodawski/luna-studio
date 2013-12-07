@@ -19,7 +19,7 @@ import           Flowbox.Luna.Lib.Edge                      (Edge)
 import           Flowbox.Luna.Lib.Library                   (Library)
 import qualified Flowbox.Luna.Lib.Library                   as Library
 import qualified Flowbox.Luna.Tools.Serialize.Proto.Library as LibSerialization
-import           Flowbox.Prelude
+import           Flowbox.Prelude                            hiding(empty)
 import           Flowbox.System.UniPath                     (UniPath)
 
 

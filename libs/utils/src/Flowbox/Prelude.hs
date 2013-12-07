@@ -8,20 +8,26 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Prelude(
-    module Flowbox.Prelude,
+        module Control.Applicative,
     module Control.Lens,
+    module Data.Monoid,
+    module Flowbox.Prelude,
     module Prelude
 ) where
 
+import           Control.Applicative
 import qualified Control.Exception      as Exception
 import           Control.Lens
 import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Data.Monoid            (Monoid, mappend, mempty)
 import           Data.Traversable       (Traversable)
 import qualified Data.Traversable       as Traversable
 import           Data.Typeable
-import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn)
+import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn, (++))
 import qualified Prelude                as Prelude
 
+(++) :: Monoid a => a -> a -> a
+(++) = mappend
 
 print :: (MonadIO m, Show s) => s -> m ()
 print    = liftIO . Prelude.print

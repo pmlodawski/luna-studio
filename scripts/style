@@ -42,11 +42,14 @@ def main():
     if "all" in args:
         print_info('Styling all git tracked haskell files')
         (paths, err) = Popen('git ls-files', stdout=PIPE, stderr=PIPE, shell=True).communicate()
+        paths = paths.split('\n')
         # paths = glob("**/*.hs")
     else:
         print_info('Styling only changed files in git repository. To style all files use "all" option.')
-        (paths, err) = Popen('git diff --name-only', stdout=PIPE, stderr=PIPE, shell=True).communicate()
-    paths = paths.split('\n')
+        (paths, err) = Popen('git status --porcelain', stdout=PIPE, stderr=PIPE, shell=True).communicate()
+        paths = paths.split('\n')
+        paths = [file[3:] for file in paths]
+    
     paths = [file for file in paths if file[-3:] == '.hs']
 
     # filter paths with prefixes
