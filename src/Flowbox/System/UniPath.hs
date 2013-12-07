@@ -8,21 +8,21 @@
 module Flowbox.System.UniPath where
 
 import           Control.Applicative    hiding (empty)
+import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.List              as List
 import qualified Data.String.Utils      as StringUtils
 import qualified System.Directory       as Directory
 import qualified System.FilePath        as FilePath
-import           Control.Monad.IO.Class   (MonadIO, liftIO)
 
-import           Flowbox.Prelude          
+import Flowbox.Prelude
 
 
-data PathItem = Node String 
+data PathItem = Node String
               | Root String
-              | Var String 
+              | Var String
               | Up
-              | Current 
-              | Empty deriving (Eq,Ord,Show)  
+              | Current
+              | Empty deriving (Eq,Ord,Show)
 
 type UniPath = [PathItem]
 
@@ -33,11 +33,11 @@ empty = []
 
 fromUnixString :: String -> UniPath
 fromUnixString []           = empty
-fromUnixString spath@(x:xs) = let 
+fromUnixString spath@(x:xs) = let
     split a = StringUtils.split "/" $ StringUtils.replace "\\" "/" a
     in case x of
         '/' -> fromList $ "/" : split xs
-        '~' -> case xs of 
+        '~' -> case xs of
                   []     -> [Var "~"]
                   '/':ys -> Var "~" : (fromUnixString ys)
                   _      -> fromList $ split xs
@@ -84,7 +84,7 @@ append snode path = path ++ [toPathItem snode]
 
 
 prepend :: String -> UniPath -> UniPath
-prepend snode path = (toPathItem snode):path 
+prepend snode path = (toPathItem snode):path
 
 
 dirOf :: UniPath -> UniPath
@@ -117,7 +117,7 @@ normalise_r path undo = case path of
                 _             -> if undo>0 then
                                          normalise_r xs (undo-1)
                                      else x:normalise_r xs (undo)
-                
+
 
 fileName :: UniPath -> String
 fileName path = case last $ normalise path of
@@ -138,12 +138,12 @@ extension path = FilePath.takeExtension (toUnixString path)
 setExtension :: String -> UniPath -> UniPath
 setExtension ext path =
     normalise $ path ++ [Up] ++ [Node $ (fileName path) ++ ext]
-  
+
 
 dropExtension :: UniPath -> UniPath
 dropExtension path = fromUnixString $ FilePath.dropExtension $ toUnixString path
 
 
 makeRelative :: UniPath -> UniPath -> UniPath
-makeRelative path1 path2 = 
+makeRelative path1 path2 =
     fromUnixString $ FilePath.makeRelative (toUnixString path1) (toUnixString path2)

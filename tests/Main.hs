@@ -5,18 +5,20 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
-import           Prelude                         hiding (error)
-import           Flowbox.System.Log.Logger       as Logger
 import qualified Flowbox.Data.Version            as Version
-import           GHC.Generics                      
-import           Flowbox.Generics.Deriving.FShow   
+import           Flowbox.Generics.Deriving.FShow
+import           Flowbox.System.Log.Logger       as Logger
+import           GHC.Generics
+import           Prelude                         hiding (error)
 
 data Test = Test Int Int deriving(Show, Generic)
 
 instance FShow Test
-       
+
 logger :: Logger
 logger   = getLogger "MyApp.BuggyComponent"
 

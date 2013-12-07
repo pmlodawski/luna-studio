@@ -25,46 +25,35 @@ module Flowbox.System.Directory.Directory (
     module System.Directory,
 ) where
 
-import           Control.Applicative      
-import           Control.Monad.IO.Class   (MonadIO, liftIO)
+import           Control.Applicative
+import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.List              as List
+import           System.Directory       hiding (copyFile, createDirectory, createDirectoryIfMissing, doesDirectoryExist, doesFileExist, getCurrentDirectory, getTemporaryDirectory, removeDirectoryRecursive, removeFile, renameDirectory, renameFile, setCurrentDirectory)
 import qualified System.Directory       as Directory
-import           System.Directory       hiding (copyFile,
-                                                createDirectory, 
-                                                createDirectoryIfMissing, 
-                                                doesDirectoryExist, 
-                                                doesFileExist, 
-                                                getCurrentDirectory,
-                                                getTemporaryDirectory,
-                                                renameDirectory, 
-                                                renameFile, 
-                                                removeDirectoryRecursive, 
-                                                removeFile,
-                                                setCurrentDirectory)
 import qualified System.IO              as IO
 
-import           Flowbox.Prelude          
+import           Flowbox.Prelude
 import qualified Flowbox.System.Random  as Random
+import           Flowbox.System.UniPath (UniPath)
 import qualified Flowbox.System.UniPath as UniPath
-import           Flowbox.System.UniPath   (UniPath)
 
 
 
 copyDirectoryRecursive :: UniPath -> UniPath -> IO ()
 copyDirectoryRecursive usrc udst = do
-    let 
+    let
         copyContent :: UniPath -> UniPath -> String -> IO ()
-        copyContent s d name = do 
-            let sname = UniPath.append name s 
+        copyContent s d name = do
+            let sname = UniPath.append name s
                 dname = UniPath.append name d
             isDir <- doesDirectoryExist sname
-            if isDir 
+            if isDir
                 then do createDirectory dname
                         contents <- filter (`notElem` [".", ".."]) <$> Directory.getDirectoryContents (UniPath.toUnixString sname)
-                        mapM_ (copyContent sname dname) contents  
+                        mapM_ (copyContent sname dname) contents
                 else do
                     isFile <- doesFileExist sname
-                    if isFile 
+                    if isFile
                         then copyFile sname dname
                         else fail $ "Failed to copy '" ++ (UniPath.toUnixString sname) ++  "' not implmented record type."
 
@@ -73,7 +62,7 @@ copyDirectoryRecursive usrc udst = do
     let base     = UniPath.basePath src
         fileName = UniPath.fileName src
     copyContent base dst fileName
-    
+
 
 copyFile :: UniPath -> UniPath -> IO ()
 copyFile usrc udst = do
@@ -128,7 +117,7 @@ getTemporaryDirectory = UniPath.fromUnixString <$> Directory.getTemporaryDirecto
 
 
 getTmpDirectoryWithPrefix :: String -> IO UniPath
-getTmpDirectoryWithPrefix prefix = do 
+getTmpDirectoryWithPrefix prefix = do
     systemTmp <- getTemporaryDirectory
     guid      <- Random.newGUID
     return $ UniPath.append guid $ UniPath.append prefix systemTmp
@@ -173,7 +162,7 @@ touchFile upath = do
 
 
 withTmpDirectory :: MonadIO m => String -> (UniPath -> m a) -> m a
-withTmpDirectory prefix operation = do 
+withTmpDirectory prefix operation = do
     tmpDir <- liftIO $ getTmpDirectoryWithPrefix prefix
     result <- operation tmpDir
     liftIO $ removeDirectoryRecursive tmpDir

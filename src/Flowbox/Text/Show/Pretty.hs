@@ -6,15 +6,15 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Text.Show.Pretty (
-	module Flowbox.Text.Show.Pretty,
-	module Text.Show.Pretty
+        module Flowbox.Text.Show.Pretty,
+        module Text.Show.Pretty
 ) where
 
-import           Text.Show.Pretty                  
-import           Text.PrettyPrint                  
+import Text.PrettyPrint
+import Text.Show.Pretty
 
-import           Flowbox.Prelude                   
-import           Flowbox.Generics.Deriving.QShow   
+import Flowbox.Generics.Deriving.QShow
+import Flowbox.Prelude
 
 
 

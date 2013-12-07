@@ -7,8 +7,8 @@
 
 module Flowbox.Tools.Conversion.Common where
 
-import           Data.Int          
-import           Flowbox.Prelude   
+import Data.Int
+import Flowbox.Prelude
 
 
 

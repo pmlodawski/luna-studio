@@ -7,19 +7,19 @@
 module Flowbox.System.IO.Serializer(
     Serializable(..),
     Deserializable(..),
-    
+
     serializeMany,
     serialize,
     deserialize
 ) where
 
-import           Control.Applicative      
-import           System.Directory       as Dir
-import qualified System.IO              as IO
+import           Control.Applicative
+import           System.Directory    as Dir
+import qualified System.IO           as IO
 
-import           Flowbox.Prelude          
+import           Flowbox.Prelude
+import           Flowbox.System.UniPath (UniPath)
 import qualified Flowbox.System.UniPath as UniPath
-import           Flowbox.System.UniPath   (UniPath)
 
 
 

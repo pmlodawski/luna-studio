@@ -7,14 +7,14 @@
 
 module Flowbox.System.Random where
 
-import qualified Data.Time.LocalTime as LocalTime
 import qualified Data.Hash.MD5       as MD5
+import qualified Data.Time.LocalTime as LocalTime
 
-import           Flowbox.Prelude     hiding (error)
+import Flowbox.Prelude hiding (error)
 
 
 
 newGUID :: IO String
-newGUID = do 
+newGUID = do
     t <- LocalTime.getZonedTime
     return $ MD5.md5s $ MD5.Str $ show t
