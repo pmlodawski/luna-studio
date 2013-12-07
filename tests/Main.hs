@@ -9,10 +9,10 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-import           Flowbox.Generics.Deriving.FShow
-import           Flowbox.System.Log.Logger       as Logger
-import           GHC.Generics
-import           Prelude                         hiding (error)
+import Flowbox.Generics.Deriving.FShow
+import Flowbox.System.Log.Logger       as Logger
+import GHC.Generics
+import Prelude                         hiding (error)
 
 import qualified Flowbox.System.Console.StyledText.StyledText as Text
 
@@ -49,7 +49,10 @@ main = do
 
     print "colored text test"
     let x = "ala"
-        y = "ola"
-    Text.print (x ++ Text.green y ++ x)
+        y = Text.green "ola"
+        txt = (x ++ y ++ x)
+    Text.print txt
+    Text.print $ Text.clearFormatting txt
+    print $ Text.toText txt
 
     return ()
