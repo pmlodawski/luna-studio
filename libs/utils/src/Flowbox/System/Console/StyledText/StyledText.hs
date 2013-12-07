@@ -8,15 +8,16 @@
 
 module Flowbox.System.Console.StyledText.StyledText where
 
+import           Data.String         (IsString, fromString)
+import qualified Data.Text           as T
+import           GHC.IO.Handle.Types (Handle)
+import qualified System.Console.ANSI as ANSI
+import           System.IO           (stdout)
+
 import           Flowbox.Prelude                         hiding (print)
 import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Console.StyledText.Style (Style (Style))
 import qualified Flowbox.System.Console.StyledText.Style as Style
-
-import           Data.String         (IsString, fromString)
-import qualified Data.Text           as T
-import qualified System.Console.ANSI as ANSI
-import           System.IO           (stdout)
 
 data Element = Text T.Text
              | StylePush Style
@@ -26,16 +27,36 @@ data Element = Text T.Text
 type Text = [Element]
 
 
+print :: Text -> IO ()
+print txt = printStack [] txt
+
 printStack :: [Style] -> Text -> IO ()
-printStack stack []     = putStrLn ""
-printStack stack (x:xs) = case x of
+printStack = hPrintStack stdout
+
+
+hPrintStack :: Handle -> [Style] -> Text -> IO ()
+hPrintStack handler stack []     = putStrLn ""
+hPrintStack handler stack (x:xs) = case x of
     Text txt    -> putStr (T.unpack txt) *> printStack stack xs
-    StylePush s -> ANSI.hSetSGR stdout (Style.toSGR s) *> printStack (s:stack) xs
+    StylePush s -> ANSI.hSetSGR handler (Style.toSGR s) *> printStack (s:stack) xs
     StylePop    -> case stack of
-                   s:ss:sss -> ANSI.hSetSGR stdout (Style.toSGR ss)          *> printStack (ss:sss) xs
-                   s:[]     -> ANSI.hSetSGR stdout (Style.toSGR Style.Reset) *> printStack [] xs
+                   s:ss:sss -> ANSI.hSetSGR handler (Style.toSGR ss)          *> printStack (ss:sss) xs
+                   s:[]     -> ANSI.hSetSGR handler (Style.toSGR Style.Reset) *> printStack [] xs
                    []       -> printStack [] xs
 
+
+clearFormatting :: Text -> Text
+clearFormatting [] = []
+clearFormatting (x:xs) = case x of
+    Text _ -> x : clearFormatting xs
+    _      -> clearFormatting xs
+
+
+toText :: Text -> T.Text
+toText [] = ""
+toText (x:xs) = case x of
+    Text txt -> txt ++ toText xs
+    _        -> toText xs
 
 beginBlack :: Text
 beginBlack = [StylePush $ Style Style.Foreground Style.Vivid Style.Black]
@@ -90,9 +111,6 @@ cyan s = beginCyan ++ s ++ popColor
 
 white :: Text -> Text
 white s = beginWhite ++ s ++ popColor
-
-print :: Text -> IO ()
-print txt = printStack [] txt
 
 
 ------------------------------------------------------------------------
