@@ -7,14 +7,13 @@
 
 module Flowbox.System.UniPath where
 
-import           Control.Applicative    hiding (empty)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.List              as List
 import qualified Data.String.Utils      as StringUtils
 import qualified System.Directory       as Directory
 import qualified System.FilePath        as FilePath
 
-import Flowbox.Prelude
+import Flowbox.Prelude hiding (empty)
 
 
 data PathItem = Node String
