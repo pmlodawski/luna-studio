@@ -12,7 +12,7 @@ import           Data.String         (IsString, fromString)
 import qualified Data.Text           as T
 import           GHC.IO.Handle.Types (Handle)
 import qualified System.Console.ANSI as ANSI
-import           System.IO           (stdout)
+import           System.IO           (stderr, stdout)
 
 import           Flowbox.Prelude                         hiding (print)
 import qualified Flowbox.Prelude                         as Prelude
@@ -28,11 +28,10 @@ type Text = [Element]
 
 
 print :: Text -> IO ()
-print txt = printStack [] txt
+print txt = hPrintStack stdout [] txt
 
-printStack :: [Style] -> Text -> IO ()
-printStack = hPrintStack stdout
-
+printErr :: Text -> IO ()
+printErr txt = hPrintStack stderr [] txt
 
 hPrintStack :: Handle -> [Style] -> Text -> IO ()
 hPrintStack handler stack []     = putStrLn ""
@@ -43,6 +42,7 @@ hPrintStack handler stack (x:xs) = case x of
                    s:ss:sss -> ANSI.hSetSGR handler (Style.toSGR ss)          *> printStack (ss:sss) xs
                    s:[]     -> ANSI.hSetSGR handler (Style.toSGR Style.Reset) *> printStack [] xs
                    []       -> printStack [] xs
+    where printStack = hPrintStack handler
 
 
 clearFormatting :: Text -> Text
