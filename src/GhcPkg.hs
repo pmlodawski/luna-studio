@@ -2,15 +2,15 @@
 
 module GhcPkg where
 
-import qualified System.Cmd            as Cmd
-import qualified System.Process        as Process
-import qualified System.Environment    as Env
-import qualified System.Exit           as Exit
+import qualified System.Cmd         as Cmd
+import qualified System.Environment as Env
+import qualified System.Exit        as Exit
+import qualified System.Process     as Process
 
+import           Control.Monad
+import           Data.String.Utils     (replace)
 import qualified Flowbox.Config.Config as Cfg
-import           Data.String.Utils       (replace)
-import           System.IO               
-import           Control.Monad           
+import           System.IO
 
 
 main :: IO ()
@@ -24,7 +24,7 @@ main = do
     --appendFile "C:\\test.txt" "\n---\n"
 
     --stdinTxt <- if "-" `elem` args
-    --        then do 
+    --        then do
     --             inTxt <- hGetContents stdin
     --             appendFile "C:/test.txt" inTxt
     --             return inTxt
@@ -37,7 +37,7 @@ main = do
                        : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
                        : args
 
-    --(exitCode, outResult, errResult) <- Process.readProcessWithExitCode 
+    --(exitCode, outResult, errResult) <- Process.readProcessWithExitCode
     --                                    exec ( "--global-package-db"
     --                                    : (Cfg.pkgConf . Cfg.ghcTP . Cfg.thirdparty) cfg
     --                                    : "--global"
@@ -54,9 +54,9 @@ main = do
 --main = do
 --    cfg     <- Cfg.load
 --    args    <- Env.getArgs
-    
+
 --    stdinTxt <- if "-" `elem` args
---                then do 
+--                then do
 --                     inTxt <- hGetContents stdin
 --                     out <- return $ if "update" `elem` args && "--global" `elem` args
 --                        then replace ((Cfg.path . Cfg.ffs) cfg) "${pkgroot}/../../../.." inTxt
@@ -65,11 +65,11 @@ main = do
 --                     return out
 --                else return ""
 
-    
+
 --    let exec = (Cfg.ghcPkgBin . Cfg.ghcTP . Cfg.thirdparty) cfg
 --    print exec
 
---    (exitCode, outResult, errResult) <- Process.readProcessWithExitCode 
+--    (exitCode, outResult, errResult) <- Process.readProcessWithExitCode
 --                                        exec ( "--global-package-db"
 --                                        : (Cfg.pkgConf . Cfg.ghcTP . Cfg.thirdparty) cfg
 --                                        : "--global"
@@ -77,7 +77,7 @@ main = do
 --                                        : args
 --                                        )
 --                                        stdinTxt
---    hPutStr stderr errResult 
+--    hPutStr stderr errResult
 --    putStr outResult
 --    Exit.exitWith exitCode
-    
+
