@@ -1,9 +1,9 @@
 module Distribution.Client.Dependency.Modular.Configured where
 
-import Distribution.PackageDescription (FlagAssignment) -- from Cabal
-import           Distribution.Client.Types                        (OptionalStanza)
+import Distribution.Client.Types       (OptionalStanza)
+import Distribution.PackageDescription (FlagAssignment)
 
-import           Distribution.Client.Dependency.Modular.Package   
+import Distribution.Client.Dependency.Modular.Package
 
 -- | A configured package is a package instance together with
 -- a flag assignment and complete dependencies.

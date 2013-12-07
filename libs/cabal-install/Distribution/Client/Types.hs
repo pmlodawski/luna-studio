@@ -13,25 +13,17 @@
 -----------------------------------------------------------------------------
 module Distribution.Client.Types where
 
-import           Distribution.Package                            
-         ( PackageName, PackageId, Package(..), PackageFixedDeps(..) )
-import           Distribution.InstalledPackageInfo               
-         ( InstalledPackageInfo )
-import           Distribution.PackageDescription                 
-         ( Benchmark(..), GenericPackageDescription(..), FlagAssignment
-         , TestSuite(..) )
-import           Distribution.PackageDescription.Configuration   
-         ( mapTreeData )
-import           Distribution.Client.PackageIndex                
-         ( PackageIndex )
-import           Distribution.Version                            
-         ( VersionRange )
+import Distribution.Client.PackageIndex              (PackageIndex)
+import Distribution.InstalledPackageInfo             (InstalledPackageInfo)
+import Distribution.Package                          (Package (..), PackageFixedDeps (..), PackageId, PackageName)
+import Distribution.PackageDescription               (Benchmark (..), FlagAssignment, GenericPackageDescription (..), TestSuite (..))
+import Distribution.PackageDescription.Configuration (mapTreeData)
+import Distribution.Version                          (VersionRange)
 
-import           Data.Map                                        (Map)
-import           Network.URI                                     (URI)
-import           Data.ByteString.Lazy                            (ByteString)
-import           Control.Exception                               
-         ( SomeException )
+import Control.Exception    (SomeException)
+import Data.ByteString.Lazy (ByteString)
+import Data.Map             (Map)
+import Network.URI          (URI)
 
 newtype Username = Username { unUsername :: String }
 newtype Password = Password { unPassword :: String }

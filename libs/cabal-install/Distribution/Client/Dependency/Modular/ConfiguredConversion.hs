@@ -1,17 +1,17 @@
 module Distribution.Client.Dependency.Modular.ConfiguredConversion where
 
-import           Data.Maybe                                          
-import           Prelude                                           hiding (pi)
+import Data.Maybe
+import Prelude    hiding (pi)
 
-import           Distribution.Client.InstallPlan                     
-import           Distribution.Client.Types                           
-import           Distribution.Compiler                               
-import qualified Distribution.Client.PackageIndex                  as CI
-import qualified Distribution.Simple.PackageIndex                  as SI
-import           Distribution.System                                 
+import           Distribution.Client.InstallPlan
+import qualified Distribution.Client.PackageIndex as CI
+import           Distribution.Client.Types
+import           Distribution.Compiler
+import qualified Distribution.Simple.PackageIndex as SI
+import           Distribution.System
 
-import           Distribution.Client.Dependency.Modular.Configured   
-import           Distribution.Client.Dependency.Modular.Package      
+import Distribution.Client.Dependency.Modular.Configured
+import Distribution.Client.Dependency.Modular.Package
 
 mkPlan :: Platform -> CompilerId ->
           SI.PackageIndex -> CI.PackageIndex SourcePackage ->

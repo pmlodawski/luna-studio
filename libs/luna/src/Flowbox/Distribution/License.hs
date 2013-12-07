@@ -8,12 +8,12 @@
 
 module Flowbox.Distribution.License where
 
-import           Flowbox.Prelude        
-import           Flowbox.Data.Version   (Version)
+import Flowbox.Data.Version (Version)
+import Flowbox.Prelude
 
-import           Data.Default           (Default, def)
-import           GHC.Generics           
-import           Data.Aeson             
+import Data.Aeson
+import Data.Default (Default, def)
+import GHC.Generics
 
 
 data License = GPL (Maybe Version)

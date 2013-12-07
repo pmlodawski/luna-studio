@@ -5,11 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import           Flowbox.Prelude                   
 import qualified Flowbox.Batch.Samples.Nodes2Ast as Nodes2Ast
+import           Flowbox.Prelude
 
 
 main :: IO()
 main = do
-	--print "helpme world"
-	Nodes2Ast.main
+        --print "helpme world"
+        Nodes2Ast.main

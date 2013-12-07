@@ -3,36 +3,31 @@
 
 module Distribution.Client.Upload (check, upload, report) where
 
-import           Distribution.Client.Types                    (Username(..), Password(..),Repo(..),RemoteRepo(..))
-import           Distribution.Client.HttpUtils                (isOldHackageURI, cabalBrowse)
+import Distribution.Client.HttpUtils (cabalBrowse, isOldHackageURI)
+import Distribution.Client.Types     (Password (..), RemoteRepo (..), Repo (..), Username (..))
 
-import           Distribution.Simple.Utils                    (debug, notice, warn, info)
-import           Distribution.Verbosity                       (Verbosity)
-import           Distribution.Text                            (display)
-import           Distribution.Client.Config                   
+import Distribution.Client.Config
+import Distribution.Simple.Utils  (debug, info, notice, warn)
+import Distribution.Text          (display)
+import Distribution.Verbosity     (Verbosity)
 
 import qualified Distribution.Client.BuildReports.Anonymous as BuildReport
 import qualified Distribution.Client.BuildReports.Upload    as BuildReport
 
-import           Network.Browser                              
-         ( BrowserAction, request
-         , Authority(..), addAuthority )
-import           Network.HTTP                                 
-         ( Header(..), HeaderName(..), findHeader
-         , Request(..), RequestMethod(..), Response(..) )
-import           Network.TCP                                  (HandleStream)
-import           Network.URI                                  (URI(uriPath), parseURI)
+import Network.Browser (Authority (..), BrowserAction, addAuthority, request)
+import Network.HTTP    (Header (..), HeaderName (..), Request (..), RequestMethod (..), Response (..), findHeader)
+import Network.TCP     (HandleStream)
+import Network.URI     (URI (uriPath), parseURI)
 
-import           Data.Char                                    (intToDigit)
-import           Numeric                                      (showHex)
-import System.IO        (hFlush, stdin, stdout, hGetEcho, hSetEcho
-                        ,openBinaryFile, IOMode(ReadMode), hGetContents)
-import           Control.Exception                            (bracket)
-import           System.Random                                (randomRIO)
-import           System.FilePath                              ((</>), takeExtension, takeFileName)
+import           Control.Exception     (bracket)
+import           Control.Monad         (forM_, when)
+import           Data.Char             (intToDigit)
+import           Numeric               (showHex)
+import           System.Directory
+import           System.FilePath       (takeExtension, takeFileName, (</>))
 import qualified System.FilePath.Posix as FilePath.Posix (combine)
-import           System.Directory                             
-import           Control.Monad                                (forM_, when)
+import           System.IO             (IOMode (ReadMode), hFlush, hGetContents, hGetEcho, hSetEcho, openBinaryFile, stdin, stdout)
+import           System.Random         (randomRIO)
 
 
 --FIXME: how do we find this path for an arbitrary hackage server?
@@ -139,7 +134,7 @@ handlePackage verbosity uri auth path =
                        _ -> debug verbosity $ rspBody resp
 
 mkRequest :: URI -> FilePath -> IO (Request String)
-mkRequest uri path = 
+mkRequest uri path =
     do pkg <- readBinaryFile path
        boundary <- genBoundary
        let body = printMultiPart boundary (mkFormData path pkg)
@@ -175,7 +170,7 @@ hdrContentDisposition = HdrCustom "Content-disposition"
 data BodyPart = BodyPart [Header] String
 
 printMultiPart :: String -> [BodyPart] -> String
-printMultiPart boundary xs = 
+printMultiPart boundary xs =
     concatMap (printBodyPart boundary) xs ++ crlf ++ "--" ++ boundary ++ "--" ++ crlf
 
 printBodyPart :: String -> BodyPart -> String

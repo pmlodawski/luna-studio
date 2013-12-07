@@ -1,15 +1,15 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
 
 module Flowbox.Config.Config where
 
-import           Control.Applicative         
-import qualified Control.Exception         as Exception
-import qualified Data.Configurator         as Configurator
-import qualified System.Environment        as Env
+import           Control.Applicative
+import qualified Control.Exception   as Exception
+import qualified Data.Configurator   as Configurator
+import qualified System.Environment  as Env
 
 import           Flowbox.Prelude           hiding (error)
-import           Flowbox.System.Log.Logger   
+import           Flowbox.System.Log.Logger
 import qualified Prelude                   as Prelude
 
 
@@ -18,65 +18,65 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Config.Config"
 
 
-data Config = Config      { root       :: Section
-                          , base       :: Section
-                          , global     :: Section
-                          , local      :: Section
-                          , templates  :: Section
-                          , config     :: Section
-                          , tools      :: Section
-                          , wrappers   :: Section
-                          , bins       :: Section
-                          , ghcS       :: Section
+data Config = Config      { root      :: Section
+                          , base      :: Section
+                          , global    :: Section
+                          , local     :: Section
+                          , templates :: Section
+                          , config    :: Section
+                          , tools     :: Section
+                          , wrappers  :: Section
+                          , bins      :: Section
+                          , ghcS      :: Section
                           }
             deriving (Show)
-                          
-data Section = Root       { path      :: String
-                          , conf      :: String
-                          , bin       :: String
+
+data Section = Root       { path :: String
+                          , conf :: String
+                          , bin  :: String
                           }
-             | Base       { path      :: String
-                          , bin       :: String
-                          , lib       :: String
-                          , share     :: String
-                          , pkgDb     :: String
-                          } 
-             | Global     { path      :: String
-                          , bin       :: String
-                          , lib       :: String
-                          , share     :: String
-                          , pkgDb     :: String
+             | Base       { path  :: String
+                          , bin   :: String
+                          , lib   :: String
+                          , share :: String
+                          , pkgDb :: String
                           }
-             | Local      { home      :: String
-                          , path      :: String
-                          , conf      :: String
-                          , pkgDb     :: String
-                          , cabal     :: String
+             | Global     { path  :: String
+                          , bin   :: String
+                          , lib   :: String
+                          , share :: String
+                          , pkgDb :: String
                           }
-             | Templates  { path      :: String
-                          , cabal     :: String
+             | Local      { home  :: String
+                          , path  :: String
+                          , conf  :: String
+                          , pkgDb :: String
+                          , cabal :: String
                           }
-             | Cfg        { flowbox   :: String
-                          , cabal     :: String
+             | Templates  { path  :: String
+                          , cabal :: String
+                          }
+             | Cfg        { flowbox :: String
+                          , cabal   :: String
                           }
 
-             | Tools      { path      :: String
-                          , lunac     :: String
-                          , batchSrv  :: String
+             | Tools      { path     :: String
+                          , lunac    :: String
+                          , batchSrv :: String
                           }
-             | Wrappers   { path      :: String
-                          , ghc       :: String
-                          , ghcPkg    :: String
-                          , hsc2hs    :: String
-                          , cabal     :: String
+             | Wrappers   { path   :: String
+                          , ghc    :: String
+                          , ghcPkg :: String
+                          , hsc2hs :: String
+                          , cabal  :: String
                           }
-             | Bins       { ghc       :: String
-                          , ghcPkg    :: String
-                          , hsc2hs    :: String
-                          , cabal     :: String
+             | Bins       { ghc    :: String
+                          , ghcPkg :: String
+                          , hsc2hs :: String
+                          , cabal  :: String
                           }
-             | GHC        { ver       :: String
-                          , topDir    :: String
+             | GHC        { ver    :: String
+                          , topDir :: String
                           }
              deriving (Show)
 
@@ -146,7 +146,7 @@ load = do
            <*> ( GHC      <$> readConf "ghc.version"
                           <*> readConf "ghc.topDir"
                )
-           
+
 
 -- TODO[wd]: (?) Lunac powinien czytac config i jezli nie da sie go odczytac (np zmienna srodowiskowa nie istnieje, powinien zalozyc, ze zyje w $HOME/.flowbox - defaultowy config?)
 

@@ -7,7 +7,7 @@
 
 module Flowbox.Luna.Samples.HelloWorld where
 
---import           Flowbox.Prelude   
+--import           Flowbox.Prelude
 -- TODO [PM] Compatibility after removal of Call, Type and New
 -- (
 --    workspacelib,
@@ -81,7 +81,7 @@ module Flowbox.Luna.Samples.HelloWorld where
 
 
 --myFunInputs :: Type
---myFunInputs = Type.Tuple [Type.TypeVariable "a", 
+--myFunInputs = Type.Tuple [Type.TypeVariable "a",
 --                          Type.Named "in1" $ Type.TypeVariable "b"]
 
 
@@ -101,7 +101,7 @@ module Flowbox.Luna.Samples.HelloWorld where
 --                              (2, 3, Edge.standard),
 --                              (3, 4, Edge.standard),
 --                              (4, 5, Edge.standard)
---                             ] 
+--                             ]
 
 --           $ Graph.insNodes [(0, Node.mkInputs             ),
 --                             (1, Node.mkCall     "select0" ),
@@ -163,7 +163,7 @@ module Flowbox.Luna.Samples.HelloWorld where
 
 
 --myFunInputs3 :: Type
---myFunInputs3 = Type.Tuple [Type.TypeVariable "a", 
+--myFunInputs3 = Type.Tuple [Type.TypeVariable "a",
 --                          Type.Named "in1" $ Type.TypeVariable "b"]
 
 
@@ -206,7 +206,7 @@ module Flowbox.Luna.Samples.HelloWorld where
 
 
 --func_vec_incx_inputs :: Type
---func_vec_incx_inputs = Type.Tuple [Type.TypeVariable "a", 
+--func_vec_incx_inputs = Type.Tuple [Type.TypeVariable "a",
 --                          Type.Named "in1" $ Type.TypeVariable "b"]
 
 
@@ -284,7 +284,7 @@ module Flowbox.Luna.Samples.HelloWorld where
 
 
 --func_vec_init_inputs :: Type
---func_vec_init_inputs = Type.Tuple [Type.TypeVariable "a", 
+--func_vec_init_inputs = Type.Tuple [Type.TypeVariable "a",
 --                          Type.Named "in1" $ Type.TypeVariable "b"]
 
 
@@ -399,7 +399,7 @@ module Flowbox.Luna.Samples.HelloWorld where
 
 --libman :: LibManager
 --libman = libman where
---    libman = LibManager.insNode (0, workspacelib) 
+--    libman = LibManager.insNode (0, workspacelib)
 --           $ LibManager.empty
 
 
@@ -411,18 +411,18 @@ module Flowbox.Luna.Samples.HelloWorld where
 
 ----full_manager :: DefManager
 ----full_manager =  DefManager.addToParentMany [
-----                 (0, 1, Definition.make (Type.Function "Print" 
-----                                                    (Tuple [Type.Named "in1" $ Type.Class "Console" [], 
+----                 (0, 1, Definition.make (Type.Function "Print"
+----                                                    (Tuple [Type.Named "in1" $ Type.Class "Console" [],
 ----                                                           Type.Named "in2" $ Type.Class "String" []])
 ----                                                    (Tuple [Type.Class "Console"[]])
-----                                     ) stdLibKey) 
+----                                     ) stdLibKey)
 ----                ]
 ----             $ DefManager.add (0, Definition.make (Type.mkPackage "Std") stdLibKey)
 ----             $ base_manager
 
-    
 
-    
+
+
 
 -----------------------------------------
 
@@ -435,13 +435,13 @@ module Flowbox.Luna.Samples.HelloWorld where
 ----                   ]
 
 
-----workspace_old = Definition.empty{ Definition.cls     = Type.Module "Workspace'" 
+----workspace_old = Definition.empty{ Definition.cls     = Type.Module "Workspace'"
 ----                         , Definition.imports = workspaceImports
 ----                         , Definition.libID   = userLibKey
 ----                         }
 
 
-----testmod  = Definition.empty{ Definition.cls     = Type.Module "Testmod" 
+----testmod  = Definition.empty{ Definition.cls     = Type.Module "Testmod"
 ----                         , Definition.imports = workspaceImports
 ----                         , Definition.libID   = userLibKey
 ----                         }
@@ -450,13 +450,13 @@ module Flowbox.Luna.Samples.HelloWorld where
 ----base_manager :: DefManager
 ----base_manager = manager where
 ----    manager = DefManager.insNode (100, workspace_old)
-----            $ DefManager.empty 
+----            $ DefManager.empty
 
 
 ----base_libman :: LibManager
 ----base_libman = libman where
 ----  -- TODO [PM] : insert proper root nodeDef' ids in lines below
-----    libman = LibManager.insNode (userLibKey, Library "__workspace__" (UniPath.fromUnixString "lunalib/project")) 
+----    libman = LibManager.insNode (userLibKey, Library "__workspace__" (UniPath.fromUnixString "lunalib/project"))
 ----           $ LibManager.insNode (stdLibKey,  Library "std"           (UniPath.fromUnixString "lunalib/stdlib"))
 ----           $ LibManager.empty
 

@@ -16,27 +16,19 @@ module Distribution.Client.Haddock
     )
     where
 
-import           Data.Maybe                          (listToMaybe)
-import           Data.List                           (maximumBy)
-import           Control.Monad                       (guard)
-import System.Directory (createDirectoryIfMissing, doesFileExist,
-                         renameFile)
-import           System.FilePath                     ((</>), splitFileName, isAbsolute)
-import           Distribution.Package                
-         ( Package(..), packageVersion )
-import Distribution.Simple.Program (haddockProgram, ProgramConfiguration
-                                   , rawSystemProgram, requireProgramVersion)
-import           Distribution.Version                (Version(Version), orLaterVersion)
-import           Distribution.Verbosity              (Verbosity)
-import           Distribution.Text                   (display)
-import           Distribution.Simple.PackageIndex    
-         ( PackageIndex, allPackagesByName )
-import           Distribution.Simple.Utils           
-         ( comparing, intercalate, debug
-         , installDirectoryContents, withTempDirectory )
-import           Distribution.InstalledPackageInfo as InstalledPackageInfo
-         ( InstalledPackageInfo
-         , InstalledPackageInfo_(haddockHTMLs, haddockInterfaces, exposed) )
+import Control.Monad                     (guard)
+import Data.List                         (maximumBy)
+import Data.Maybe                        (listToMaybe)
+import Distribution.InstalledPackageInfo as InstalledPackageInfo (InstalledPackageInfo, InstalledPackageInfo_ (haddockHTMLs, haddockInterfaces, exposed))
+import Distribution.Package              (Package (..), packageVersion)
+import Distribution.Simple.PackageIndex  (PackageIndex, allPackagesByName)
+import Distribution.Simple.Program       (ProgramConfiguration, haddockProgram, rawSystemProgram, requireProgramVersion)
+import Distribution.Simple.Utils         (comparing, debug, installDirectoryContents, intercalate, withTempDirectory)
+import Distribution.Text                 (display)
+import Distribution.Verbosity            (Verbosity)
+import Distribution.Version              (Version (Version), orLaterVersion)
+import System.Directory                  (createDirectoryIfMissing, doesFileExist, renameFile)
+import System.FilePath                   (isAbsolute, splitFileName, (</>))
 
 regenerateHaddockIndex :: Verbosity -> PackageIndex -> ProgramConfiguration -> FilePath -> IO ()
 regenerateHaddockIndex verbosity pkgs conf index = do

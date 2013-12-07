@@ -4,15 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.Passes.Analysis.FuncPool.Pool where
 
-import           Control.Monad.State   
+import           Control.Monad.State
+import           Data.Set            (Set)
 import qualified Data.Set            as Set
-import           Data.Set              (Set)
 
-import           Flowbox.Prelude       
+import Flowbox.Prelude
 
 
 

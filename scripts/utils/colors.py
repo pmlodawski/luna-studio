@@ -13,12 +13,17 @@ class bcolors:
         self.ERROR = ''
         self.RESET = ''
 
+def format_info(s):
+    return bcolors.INFO + s + bcolors.RESET
+
+def format_warning(s):
+    return bcolors.WARNING + s + bcolors.RESET
 
 def print_info(s):
-    print bcolors.INFO + s + bcolors.RESET
+    print format_info(s)
 
 def print_warning(s):
-    print bcolors.WARNING + s + bcolors.RESET
+    print format_warning(s)
 
 def print_error(s):
     print bcolors.ERROR + s + bcolors.RESET

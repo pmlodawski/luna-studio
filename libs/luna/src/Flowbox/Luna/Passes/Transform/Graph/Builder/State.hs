@@ -4,24 +4,26 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Builder.State where
 
-import           Control.Monad.State               
-import qualified Data.Map                        as Map
-import           Data.Map                          (Map)
+import           Control.Monad.State
+import           Data.Map            (Map)
+import qualified Data.Map            as Map
 
-import           Flowbox.Prelude                   
+import           Flowbox.Luna.Data.AliasAnalysis (AA)
 import qualified Flowbox.Luna.Data.AST.Utils     as AST
-import           Flowbox.Luna.Data.Graph.Edge      (Edge)
-import           Flowbox.Luna.Data.Graph.Graph     (Graph)
+import           Flowbox.Luna.Data.Graph.Edge    (Edge)
+import           Flowbox.Luna.Data.Graph.Graph   (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph   as Graph
+import           Flowbox.Luna.Data.Graph.Node    (Node)
 import qualified Flowbox.Luna.Data.Graph.Node    as Node
-import           Flowbox.Luna.Data.Graph.Node      (Node)
-import           Flowbox.Luna.Data.Graph.Port      (Port)
-import           Flowbox.System.Log.Logger         
-import           Flowbox.Luna.Data.AliasAnalysis   (AA)
+import           Flowbox.Luna.Data.Graph.Port    (Port)
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 
 
 
@@ -32,7 +34,7 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.State"
 type NodeMap = Map AST.ID (Node.ID, Port)
 
 
-data GBState = GBState { graph   :: Graph 
+data GBState = GBState { graph   :: Graph
                        , nodemap :: NodeMap
                        , aa      :: AA
                        } deriving (Show)
@@ -55,7 +57,7 @@ connect srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edg
 
 
 insNewNode :: GBStateM m => Node -> m Node.ID
-insNewNode node = do gr <- getGraph 
+insNewNode node = do gr <- getGraph
                      let (gr', nodeID) = Graph.insNewNode node gr
                      setGraph gr'
                      return nodeID

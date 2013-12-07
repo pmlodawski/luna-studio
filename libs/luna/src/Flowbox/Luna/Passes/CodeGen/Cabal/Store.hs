@@ -7,14 +7,14 @@
 
 module Flowbox.Luna.Passes.CodeGen.Cabal.Store where
 
-import           Control.Monad.RWS                
-import qualified System.IO                      as IO
+import           Control.Monad.RWS
+import qualified System.IO         as IO
 
-import           Flowbox.Prelude                  
 import qualified Flowbox.Luna.Data.Cabal.Config as CabalConfig
-import           Flowbox.System.UniPath           (UniPath)
+import           Flowbox.Prelude
+import           Flowbox.System.IO.Serializer   (Serializable (Serializable))
 import qualified Flowbox.System.IO.Serializer   as Serializer
-import           Flowbox.System.IO.Serializer     (Serializable(Serializable))
+import           Flowbox.System.UniPath         (UniPath)
 
 
 type CabalConfig = CabalConfig.Config

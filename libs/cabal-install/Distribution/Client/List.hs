@@ -15,61 +15,40 @@ module Distribution.Client.List (
   getPkgList, list, info, PackageDisplayInfo(..), latestWithPref
   ) where
 
-import           Distribution.Package                            
-         ( PackageName(..), Package(..), packageName, packageVersion
-         , Dependency(..), simplifyDependency )
-import           Distribution.ModuleName                         (ModuleName)
-import           Distribution.License                            (License)
 import qualified Distribution.InstalledPackageInfo             as Installed
+import           Distribution.License                          (License)
+import           Distribution.ModuleName                       (ModuleName)
+import           Distribution.Package                          (Dependency (..), Package (..), PackageName (..), packageName, packageVersion, simplifyDependency)
+import           Distribution.PackageDescription               (Flag (..), FlagName (..))
 import qualified Distribution.PackageDescription               as Source
-import           Distribution.PackageDescription                 
-         ( Flag(..), FlagName(..) )
-import           Distribution.PackageDescription.Configuration   
-         ( flattenPackageDescription )
+import           Distribution.PackageDescription.Configuration (flattenPackageDescription)
 
-import           Distribution.Simple.Compiler                    
-        ( Compiler, PackageDBStack )
-import           Distribution.Simple.Program                     (ProgramConfiguration)
-import           Distribution.Simple.Utils                       
-        ( equating, comparing, die, notice )
-import           Distribution.Simple.Setup                       (fromFlag)
-import qualified Distribution.Simple.PackageIndex              as InstalledPackageIndex
-import qualified Distribution.Client.PackageIndex              as PackageIndex
-import           Distribution.Version                            
-         ( Version(..), VersionRange, withinRange, anyVersion
-         , intersectVersionRanges, simplifyVersionRange )
-import           Distribution.Verbosity                          (Verbosity)
-import           Distribution.Text                               
-         ( Text(disp), display )
+import qualified Distribution.Client.PackageIndex as PackageIndex
+import           Distribution.Simple.Compiler     (Compiler, PackageDBStack)
+import qualified Distribution.Simple.PackageIndex as InstalledPackageIndex
+import           Distribution.Simple.Program      (ProgramConfiguration)
+import           Distribution.Simple.Setup        (fromFlag)
+import           Distribution.Simple.Utils        (comparing, die, equating, notice)
+import           Distribution.Text                (Text (disp), display)
+import           Distribution.Verbosity           (Verbosity)
+import           Distribution.Version             (Version (..), VersionRange, anyVersion, intersectVersionRanges, simplifyVersionRange, withinRange)
 
-import           Distribution.Client.Types                       
-         ( SourcePackage(..), Repo, SourcePackageDb(..) )
-import           Distribution.Client.Dependency.Types            
-         ( PackageConstraint(..), ExtDependency(..) )
-import           Distribution.Client.Targets                     
-         ( UserTarget, resolveUserTargets, PackageSpecifier(..) )
-import           Distribution.Client.Setup                       
-         ( GlobalFlags(..), ListFlags(..), InfoFlags(..) )
-import           Distribution.Client.Utils                       
-         ( mergeBy, MergeResult(..) )
-import           Distribution.Client.IndexUtils                as IndexUtils
-         ( getSourcePackages, getInstalledPackages )
-import           Distribution.Client.FetchUtils                  
-         ( isFetched )
+import Distribution.Client.Dependency.Types (ExtDependency (..), PackageConstraint (..))
+import Distribution.Client.FetchUtils       (isFetched)
+import Distribution.Client.IndexUtils       as IndexUtils (getInstalledPackages, getSourcePackages)
+import Distribution.Client.Setup            (GlobalFlags (..), InfoFlags (..), ListFlags (..))
+import Distribution.Client.Targets          (PackageSpecifier (..), UserTarget, resolveUserTargets)
+import Distribution.Client.Types            (Repo, SourcePackage (..), SourcePackageDb (..))
+import Distribution.Client.Utils            (MergeResult (..), mergeBy)
 
-import           Data.List                                       
-         ( sortBy, groupBy, sort, nub, intersperse, maximumBy, partition )
-import           Data.Maybe                                      
-         ( listToMaybe, fromJust, fromMaybe, isJust )
-import qualified Data.Map                                      as Map
-import           Data.Tree                                     as Tree
-import           Control.Monad                                   
-         ( MonadPlus(mplus), join )
-import           Control.Exception                               
-         ( assert )
-import           Text.PrettyPrint                              as Disp
-import           System.Directory                                
-         ( doesDirectoryExist )
+import           Control.Exception (assert)
+import           Control.Monad     (MonadPlus (mplus), join)
+import           Data.List         (groupBy, intersperse, maximumBy, nub, partition, sort, sortBy)
+import qualified Data.Map          as Map
+import           Data.Maybe        (fromJust, fromMaybe, isJust, listToMaybe)
+import           Data.Tree         as Tree
+import           System.Directory  (doesDirectoryExist)
+import           Text.PrettyPrint  as Disp
 
 
 -- |Returns list of packages matching a search strings
@@ -273,7 +252,7 @@ data PackageDisplayInfo = PackageDisplayInfo {
     modules           :: [ModuleName],
     haddockHtml       :: FilePath,
     haveTarball       :: Bool
-  } 
+  }
 
 showPackageSummaryInfo :: PackageDisplayInfo -> String
 showPackageSummaryInfo pkginfo =

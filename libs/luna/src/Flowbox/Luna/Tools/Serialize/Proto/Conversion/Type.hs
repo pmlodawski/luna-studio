@@ -12,14 +12,13 @@
 
 module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Type where
 
-import           Control.Applicative                              
+import           Control.Applicative
 import qualified Data.Map                                       as Map
-import qualified Text.ProtocolBuffers.Extensions                as Extensions
-import           Flowbox.Prelude                                  
-import           Flowbox.Control.Error                            
+import           Flowbox.Control.Error
+import           Flowbox.Luna.Data.AST.Type                     (Type)
 import qualified Flowbox.Luna.Data.AST.Type                     as Type
-import           Flowbox.Luna.Data.AST.Type                       (Type)
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic   
+import           Flowbox.Prelude
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Type.App                       as GenApp
 import qualified Generated.Proto.Type.Class                     as GenClass
 import qualified Generated.Proto.Type.Con_                      as GenCon_
@@ -30,11 +29,12 @@ import qualified Generated.Proto.Type.Type                      as Gen
 import qualified Generated.Proto.Type.Type.Cls                  as GenCls
 import qualified Generated.Proto.Type.Unknown                   as GenUnknown
 import qualified Generated.Proto.Type.Var                       as GenVar
+import qualified Text.ProtocolBuffers.Extensions                as Extensions
 
 
 
 instance Convert Type Gen.Type where
-    encode t = case t of 
+    encode t = case t of
         Type.Unknown i               -> genType GenCls.Unknown GenUnknown.ext $ GenUnknown.Unknown (Just $ encodeP i)
         Type.Var     i name          -> genType GenCls.Var     GenVar.ext     $ GenVar.Var         (Just $ encodeP i) (Just $ encodeP name)
         Type.Tuple   i items         -> genType GenCls.Tuple   GenTuple.ext   $ GenTuple.Tuple     (Just $ encodeP i) (encodeList items)
@@ -48,7 +48,7 @@ instance Convert Type Gen.Type where
             genType cls key ext = Extensions.putExt key (Just ext)
                                 $ Gen.Type cls $ Extensions.ExtField Map.empty
 
-    decode t@(Gen.Type cls _) = case cls of 
+    decode t@(Gen.Type cls _) = case cls of
         GenCls.Unknown -> do ext <- getExt GenUnknown.ext
                              (GenUnknown.Unknown mtid) <- ext <?> "Failed to decode Type.Unknown: extension is missing"
                              tid <- mtid <?> "Failed to decode Type.Unknown: 'id' field is missing"

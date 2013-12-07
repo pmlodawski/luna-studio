@@ -34,78 +34,36 @@ module Distribution.Client.Config (
   ) where
 
 
-import           Distribution.Client.Types                
-         ( RemoteRepo(..), Username(..), Password(..) )
-import           Distribution.Client.BuildReports.Types   
-         ( ReportLevel(..) )
-import           Distribution.Client.Setup                
-         ( GlobalFlags(..), globalCommand
-         , ConfigExFlags(..), configureExOptions, defaultConfigExFlags
-         , InstallFlags(..), installOptions, defaultInstallFlags
-         , UploadFlags(..), uploadCommand
-         , ReportFlags(..), reportCommand
-         , showRepo, parseRepo )
+import Distribution.Client.BuildReports.Types (ReportLevel (..))
+import Distribution.Client.Setup              (ConfigExFlags (..), GlobalFlags (..), InstallFlags (..), ReportFlags (..), UploadFlags (..), configureExOptions, defaultConfigExFlags, defaultInstallFlags, globalCommand, installOptions, parseRepo, reportCommand, showRepo, uploadCommand)
+import Distribution.Client.Types              (Password (..), RemoteRepo (..), Username (..))
 
-import           Distribution.Simple.Compiler             
-         ( OptimisationLevel(..) )
-import           Distribution.Simple.Setup                
-         ( ConfigFlags(..), configureOptions, defaultConfigFlags
-         , installDirsOptions
-         , programConfigurationPaths', programConfigurationOptions
-         , Flag(..), toFlag, flagToMaybe, fromFlagOrDefault )
-import           Distribution.Simple.InstallDirs          
-         ( InstallDirs(..), defaultInstallDirs
-         , PathTemplate, toPathTemplate )
-import           Distribution.ParseUtils                  
-         ( FieldDescr(..), liftField
-         , ParseResult(..), PError(..), PWarning(..)
-         , locatedErrorMsg, showPWarning
-         , readFields, warning, lineNo
-         , simpleField, listField, parseFilePathQ, parseTokenQ )
-import           Distribution.Client.ParseUtils           
-         ( parseFields, ppFields, ppSection )
-import qualified Distribution.ParseUtils                as ParseUtils
-         ( Field(..) )
-import qualified Distribution.Text                      as Text
-         ( Text(..) )
-import           Distribution.Simple.Command              
-         ( CommandUI(commandOptions), commandDefaultFlags, ShowOrParseArgs(..)
-         , viewAsFieldDescr )
-import           Distribution.Simple.Program              
-         ( defaultProgramConfiguration )
-import           Distribution.Simple.Utils                
-         ( notice, warn, lowercase )
-import           Distribution.Compiler                    
-         ( CompilerFlavor(..), defaultCompilerFlavor )
-import           Distribution.Verbosity                   
-         ( Verbosity, normal )
+import           Distribution.Client.ParseUtils  (parseFields, ppFields, ppSection)
+import           Distribution.Compiler           (CompilerFlavor (..), defaultCompilerFlavor)
+import           Distribution.ParseUtils         (FieldDescr (..), PError (..), PWarning (..), ParseResult (..), liftField, lineNo, listField, locatedErrorMsg, parseFilePathQ, parseTokenQ, readFields, showPWarning, simpleField, warning)
+import qualified Distribution.ParseUtils         as ParseUtils (Field (..))
+import           Distribution.Simple.Command     (CommandUI (commandOptions), ShowOrParseArgs (..), commandDefaultFlags, viewAsFieldDescr)
+import           Distribution.Simple.Compiler    (OptimisationLevel (..))
+import           Distribution.Simple.InstallDirs (InstallDirs (..), PathTemplate, defaultInstallDirs, toPathTemplate)
+import           Distribution.Simple.Program     (defaultProgramConfiguration)
+import           Distribution.Simple.Setup       (ConfigFlags (..), Flag (..), configureOptions, defaultConfigFlags, flagToMaybe, fromFlagOrDefault, installDirsOptions, programConfigurationOptions, programConfigurationPaths', toFlag)
+import           Distribution.Simple.Utils       (lowercase, notice, warn)
+import qualified Distribution.Text               as Text (Text (..))
+import           Distribution.Verbosity          (Verbosity, normal)
 
-import           Data.List                                
-         ( partition, find )
-import           Data.Maybe                               
-         ( fromMaybe )
-import           Data.Monoid                              
-         ( Monoid(..) )
-import           Control.Monad                            
-         ( unless, foldM, liftM )
-import qualified Distribution.Compat.ReadP              as Parse
-         ( option )
-import qualified Text.PrettyPrint                       as Disp
-         ( render, text, empty )
-import           Text.PrettyPrint                         
-         ( ($+$) )
-import           System.Directory                         
-         ( createDirectoryIfMissing, getAppUserDataDirectory, renameFile )
-import           Network.URI                              
-         ( URI(..), URIAuth(..) )
-import           System.FilePath                          
-         ( (<.>), (</>), takeDirectory )
-import           System.IO.Error                          
-         ( isDoesNotExistError )
-import           Distribution.Compat.Environment          
-         ( getEnvironment )
-import           Distribution.Compat.Exception            
-         ( catchIO )
+import           Control.Monad                   (foldM, liftM, unless)
+import           Data.List                       (find, partition)
+import           Data.Maybe                      (fromMaybe)
+import           Data.Monoid                     (Monoid (..))
+import           Distribution.Compat.Environment (getEnvironment)
+import           Distribution.Compat.Exception   (catchIO)
+import qualified Distribution.Compat.ReadP       as Parse (option)
+import           Network.URI                     (URI (..), URIAuth (..))
+import           System.Directory                (createDirectoryIfMissing, getAppUserDataDirectory, renameFile)
+import           System.FilePath                 (takeDirectory, (<.>), (</>))
+import           System.IO.Error                 (isDoesNotExistError)
+import           Text.PrettyPrint                (($+$))
+import qualified Text.PrettyPrint                as Disp (empty, render, text)
 
 --
 -- * Configuration saved in the config file

@@ -15,10 +15,10 @@ module Distribution.Client.GZipUtils (
     maybeDecompress,
   ) where
 
-import qualified Data.ByteString.Lazy.Internal as BS (ByteString(..))
-import           Data.ByteString.Lazy              (ByteString)
-import           Codec.Compression.GZip            
-import           Codec.Compression.Zlib.Internal   
+import           Codec.Compression.GZip
+import           Codec.Compression.Zlib.Internal
+import           Data.ByteString.Lazy            (ByteString)
+import qualified Data.ByteString.Lazy.Internal   as BS (ByteString (..))
 
 -- | Attempts to decompress the `bytes' under the assumption that
 -- "data format" error at the very beginning of the stream means

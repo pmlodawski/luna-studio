@@ -7,13 +7,14 @@
 
 module Flowbox.Luna.Data.AliasAnalysis where
 
-import           Flowbox.Prelude   
-import qualified Data.IntMap     as IntMap
-import           Data.IntMap       (IntMap)
+import Flowbox.Prelude
+
+import           Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 
 
 
-data AA     = AA  { varmap :: IntMap Int } 
+data AA     = AA  { varmap :: IntMap Int }
                   deriving (Show)
 
 

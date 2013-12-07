@@ -18,38 +18,28 @@ module Distribution.Client.Sandbox.Index (
     defaultIndexFileName
   ) where
 
+import           Distribution.Client.IndexUtils   (BuildTreeRefType (..), getSourcePackagesStrict, refTypeFromTypeCode, typeCodeFromRefType)
+import           Distribution.Client.PackageIndex (allPackages)
 import qualified Distribution.Client.Tar          as Tar
-import           Distribution.Client.IndexUtils     ( BuildTreeRefType(..)
-                                      , refTypeFromTypeCode
-                                      , typeCodeFromRefType
-                                      , getSourcePackagesStrict )
-import           Distribution.Client.PackageIndex   ( allPackages )
-import           Distribution.Client.Types          ( Repo(..), LocalRepo(..)
-                                 , SourcePackageDb(..)
-                                 , SourcePackage(..), PackageLocation(..) )
-import Distribution.Client.Utils ( byteStringToFilePath, filePathToByteString
-                                 , makeAbsoluteToCwd, tryCanonicalizePath
-                                 , canonicalizePathNoThrow )
+import           Distribution.Client.Types        (LocalRepo (..), PackageLocation (..), Repo (..), SourcePackage (..), SourcePackageDb (..))
+import           Distribution.Client.Utils        (byteStringToFilePath, canonicalizePathNoThrow, filePathToByteString, makeAbsoluteToCwd, tryCanonicalizePath)
 
-import           Distribution.Simple.Utils          ( die, debug, findPackageDesc )
-import           Distribution.Verbosity             ( Verbosity )
+import Distribution.Simple.Utils (debug, die, findPackageDesc)
+import Distribution.Verbosity    (Verbosity)
 
-import qualified Data.ByteString.Lazy             as BS
-import           Control.Exception                  ( evaluate )
-import           Control.Monad                      ( liftM, unless )
-import           Data.List                          ( (\\), intersect, nub )
-import           Data.Maybe                         ( catMaybes )
-import System.Directory          ( createDirectoryIfMissing,
-                                   doesDirectoryExist, doesFileExist,
-                                   renameFile )
-import           System.FilePath                    ( (</>), (<.>), takeDirectory, takeExtension )
-import           System.IO                          ( IOMode(..), SeekMode(..)
-                                 , hSeek, withBinaryFile )
+import           Control.Exception    (evaluate)
+import           Control.Monad        (liftM, unless)
+import qualified Data.ByteString.Lazy as BS
+import           Data.List            (intersect, nub, (\\))
+import           Data.Maybe           (catMaybes)
+import           System.Directory     (createDirectoryIfMissing, doesDirectoryExist, doesFileExist, renameFile)
+import           System.FilePath      (takeDirectory, takeExtension, (<.>), (</>))
+import           System.IO            (IOMode (..), SeekMode (..), hSeek, withBinaryFile)
 
 -- | A reference to a local build tree.
 data BuildTreeRef = BuildTreeRef {
   buildTreeRefType :: !BuildTreeRefType,
-  buildTreePath     :: !FilePath
+  buildTreePath    :: !FilePath
   }
 
 defaultIndexFileName :: FilePath

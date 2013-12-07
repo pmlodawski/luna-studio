@@ -4,19 +4,21 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState where
 
-import           Flowbox.Prelude               hiding (mod)
-import           Control.Monad.State             
-import qualified Flowbox.Luna.Data.HAST.Expr   as HExpr
+import           Control.Monad.State
 import qualified Flowbox.Luna.Data.AST.Expr    as LExpr
 import qualified Flowbox.Luna.Data.AST.Type    as LType
+import qualified Flowbox.Luna.Data.HAST.Expr   as HExpr
 import qualified Flowbox.Luna.Data.HAST.Module as Module
+import           Flowbox.Prelude               hiding (mod)
 
-import           Flowbox.System.Log.Logger       
-import           Control.Applicative             
+import Control.Applicative
+import Flowbox.System.Log.Logger
 
 
 logger :: Logger
@@ -48,7 +50,7 @@ getCls = cls <$> get
 
 
 setModule :: GenStateM m => HExpr -> m ()
-setModule m = do 
+setModule m = do
     s <- get
     put s { mod = m }
 
@@ -58,36 +60,36 @@ getModule = mod <$> get
 
 
 addDataType :: GenStateM m => HExpr -> m ()
-addDataType dt = do 
+addDataType dt = do
     m <- getModule
     setModule $ m { Module.body = Module.body m ++ [dt]}
 
 
 addInstance :: GenStateM m => HExpr -> m ()
-addInstance inst = do 
+addInstance inst = do
     m <- getModule
     setModule $ m { Module.body = Module.body m ++ [inst]}
 
 
 addNewType :: GenStateM m => HExpr -> m ()
-addNewType dt = do 
+addNewType dt = do
     m <- getModule
     setModule $ m { Module.body = Module.body m ++ [dt] }
 
 
 addImport :: GenStateM m => HExpr -> m ()
-addImport imp = do 
+addImport imp = do
     m <- getModule
     setModule $ m { Module.imports = imp : Module.imports m }
 
 
 addFunction :: GenStateM m => HExpr -> m ()
-addFunction fun = do 
+addFunction fun = do
     m <- getModule
     setModule $ m { Module.body = Module.body m ++ [fun] }
 
 
 addTHExpression :: GenStateM m => HExpr -> m ()
-addTHExpression e = do 
+addTHExpression e = do
     m <- getModule
     setModule $ m { Module.body = Module.body m ++ [e] }

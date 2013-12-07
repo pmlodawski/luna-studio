@@ -22,32 +22,22 @@ module Distribution.Client.BuildReports.Storage (
     fromInstallPlan,
   ) where
 
+import           Distribution.Client.BuildReports.Anonymous (BuildReport)
 import qualified Distribution.Client.BuildReports.Anonymous as BuildReport
-import           Distribution.Client.BuildReports.Anonymous   (BuildReport)
 
-import           Distribution.Client.Types                    
-import qualified Distribution.Client.InstallPlan            as InstallPlan
-import           Distribution.Client.InstallPlan              
-         ( InstallPlan )
+import           Distribution.Client.InstallPlan (InstallPlan)
+import qualified Distribution.Client.InstallPlan as InstallPlan
+import           Distribution.Client.Types
 
-import           Distribution.Simple.InstallDirs              
-         ( PathTemplate, fromPathTemplate
-         , initialPathTemplateEnv, substPathTemplate )
-import           Distribution.System                          
-         ( Platform(Platform) )
-import           Distribution.Compiler                        
-         ( CompilerId )
-import           Distribution.Simple.Utils                    
-         ( comparing, equating )
+import Distribution.Compiler           (CompilerId)
+import Distribution.Simple.InstallDirs (PathTemplate, fromPathTemplate, initialPathTemplateEnv, substPathTemplate)
+import Distribution.Simple.Utils       (comparing, equating)
+import Distribution.System             (Platform (Platform))
 
-import           Data.List                                    
-         ( groupBy, sortBy )
-import           Data.Maybe                                   
-         ( catMaybes )
-import           System.FilePath                              
-         ( (</>), takeDirectory )
-import           System.Directory                             
-         ( createDirectoryIfMissing )
+import Data.List        (groupBy, sortBy)
+import Data.Maybe       (catMaybes)
+import System.Directory (createDirectoryIfMissing)
+import System.FilePath  (takeDirectory, (</>))
 
 storeAnonymous :: [(BuildReport, Repo)] -> IO ()
 storeAnonymous reports = sequence_

@@ -11,22 +11,22 @@ module Flowbox.Batch.Server.Handler.Maintenance (
     initialize,
 ) where
 
-import qualified Control.Concurrent.MVar                             as MVar
-import           Control.Concurrent.MVar                               (MVar)
-import           Data.IORef                                            (IORef)
-import qualified Data.ByteString.Lazy                                as ByteString
+import           Control.Concurrent.MVar (MVar)
+import qualified Control.Concurrent.MVar as MVar
+import qualified Data.ByteString.Lazy    as ByteString
+import           Data.IORef              (IORef)
 
-import           Flowbox.Prelude                                       
-import           Flowbox.Batch.Batch                                   (Batch)
+import           Flowbox.Batch.Batch                                 (Batch)
 import qualified Flowbox.Batch.Handler.Maintenance                   as BatchM
-import           Flowbox.Control.Error                                 
-import           Flowbox.System.Log.Logger                             
+import           Flowbox.Control.Error
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
+import qualified Generated.Proto.Batch.Maintenance.Dump.Args         as Dump
+import qualified Generated.Proto.Batch.Maintenance.Dump.Result       as Dump
 import qualified Generated.Proto.Batch.Maintenance.Initialize.Args   as Initialize
 import qualified Generated.Proto.Batch.Maintenance.Initialize.Result as Initialize
 import qualified Generated.Proto.Batch.Maintenance.Ping.Args         as Ping
 import qualified Generated.Proto.Batch.Maintenance.Ping.Result       as Ping
-import qualified Generated.Proto.Batch.Maintenance.Dump.Args         as Dump
-import qualified Generated.Proto.Batch.Maintenance.Dump.Result       as Dump
 import qualified Generated.Proto.Batch.Maintenance.Shutdown.Args     as Shutdown
 import qualified Generated.Proto.Batch.Maintenance.Shutdown.Result   as Shutdown
 
@@ -38,7 +38,7 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.Handler.Maintenance"
 
 ------ public api -------------------------------------------------
 initialize :: IORef Batch -> Initialize.Args -> Script Initialize.Result
-initialize batchHandler _ = do 
+initialize batchHandler _ = do
     scriptIO $ loggerIO info "called initialize"
     batch <- tryReadIORef batchHandler
     scriptIO $ BatchM.initialize batch

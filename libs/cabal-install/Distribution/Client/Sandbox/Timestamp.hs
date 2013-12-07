@@ -17,42 +17,30 @@ module Distribution.Client.Sandbox.Timestamp (
   listModifiedDeps,
   ) where
 
-import           Control.Monad                                   (filterM, forM, when)
-import           Data.Char                                       (isSpace)
-import           Data.List                                       (partition)
-import           System.Directory                                (renameFile)
-import           System.FilePath                                 ((<.>), (</>))
-import qualified Data.Map                                      as M
+import           Control.Monad    (filterM, forM, when)
+import           Data.Char        (isSpace)
+import           Data.List        (partition)
+import qualified Data.Map         as M
+import           System.Directory (renameFile)
+import           System.FilePath  ((<.>), (</>))
 
-import           Distribution.Compiler                           (CompilerId)
-import           Distribution.Package                            (packageName)
-import           Distribution.PackageDescription.Configuration   (flattenPackageDescription)
-import           Distribution.PackageDescription.Parse           (readPackageDescription)
-import Distribution.Simple.Setup                     (Flag (..),
-                                                      SDistFlags (..),
-                                                      defaultSDistFlags,
-                                                      sdistCommand)
-import Distribution.Simple.Utils                     (debug, die,
-                                                      findPackageDesc, warn)
-import           Distribution.System                             (Platform)
-import           Distribution.Text                               (display)
-import Distribution.Verbosity                        (Verbosity, lessVerbose,
-                                                      normal)
-import Distribution.Version                          (Version (..),
-                                                      orLaterVersion)
+import Distribution.Compiler                         (CompilerId)
+import Distribution.Package                          (packageName)
+import Distribution.PackageDescription.Configuration (flattenPackageDescription)
+import Distribution.PackageDescription.Parse         (readPackageDescription)
+import Distribution.Simple.Setup                     (Flag (..), SDistFlags (..), defaultSDistFlags, sdistCommand)
+import Distribution.Simple.Utils                     (debug, die, findPackageDesc, warn)
+import Distribution.System                           (Platform)
+import Distribution.Text                             (display)
+import Distribution.Verbosity                        (Verbosity, lessVerbose, normal)
+import Distribution.Version                          (Version (..), orLaterVersion)
 
-import           Distribution.Client.Sandbox.Index               
-  (ListIgnoredBuildTreeRefs (DontListIgnored), RefTypesToList(OnlyLinks)
-  ,listBuildTreeRefs)
-import Distribution.Client.SetupWrapper              (SetupScriptOptions (..),
-                                                      defaultSetupScriptOptions,
-                                                      setupWrapper)
-import Distribution.Client.Utils                     (inDir, removeExistingFile,
-                                                      tryCanonicalizePath)
+import Distribution.Client.Sandbox.Index (ListIgnoredBuildTreeRefs (DontListIgnored), RefTypesToList (OnlyLinks), listBuildTreeRefs)
+import Distribution.Client.SetupWrapper  (SetupScriptOptions (..), defaultSetupScriptOptions, setupWrapper)
+import Distribution.Client.Utils         (inDir, removeExistingFile, tryCanonicalizePath)
 
-import           Distribution.Compat.Exception                   (catchIO)
-import Distribution.Client.Compat.Time               (EpochTime, getCurTime,
-                                                      getModTime)
+import Distribution.Client.Compat.Time (EpochTime, getCurTime, getModTime)
+import Distribution.Compat.Exception   (catchIO)
 
 
 -- | Timestamp of an add-source dependency.

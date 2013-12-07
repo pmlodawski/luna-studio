@@ -25,30 +25,20 @@ module Distribution.Client.FetchUtils (
     downloadIndex,
   ) where
 
-import           Distribution.Client.Types       
-import           Distribution.Client.HttpUtils   
-         ( downloadURI, isOldHackageURI, DownloadResult(..) )
+import Distribution.Client.HttpUtils (DownloadResult (..), downloadURI, isOldHackageURI)
+import Distribution.Client.Types
 
-import           Distribution.Package            
-         ( PackageId, packageName, packageVersion )
-import           Distribution.Simple.Utils       
-         ( notice, info, setupMessage )
-import           Distribution.Text               
-         ( display )
-import           Distribution.Verbosity          
-         ( Verbosity )
+import Distribution.Package      (PackageId, packageName, packageVersion)
+import Distribution.Simple.Utils (info, notice, setupMessage)
+import Distribution.Text         (display)
+import Distribution.Verbosity    (Verbosity)
 
-import           Data.Maybe                      
-import           System.Directory                
-         ( doesFileExist, createDirectoryIfMissing, getTemporaryDirectory )
-import           System.IO                       
-         ( openTempFile, hClose )
-import           System.FilePath                 
-         ( (</>), (<.>) )
-import qualified System.FilePath.Posix         as FilePath.Posix
-         ( combine, joinPath )
-import           Network.URI                     
-         ( URI(uriPath) )
+import           Data.Maybe
+import           Network.URI           (URI (uriPath))
+import           System.Directory      (createDirectoryIfMissing, doesFileExist, getTemporaryDirectory)
+import           System.FilePath       ((<.>), (</>))
+import qualified System.FilePath.Posix as FilePath.Posix (combine, joinPath)
+import           System.IO             (hClose, openTempFile)
 
 -- ------------------------------------------------------------
 -- * Actually fetch things

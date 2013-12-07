@@ -10,8 +10,8 @@ module Flowbox.Luna.Data.Graph.Edge(
     noEdges,
 ) where
 
-import           Flowbox.Prelude                
-import           Flowbox.Luna.Data.Graph.Port   (Port)
+import Flowbox.Luna.Data.Graph.Port (Port)
+import Flowbox.Prelude
 
 
 
@@ -21,5 +21,5 @@ data Edge = Edge { src :: Maybe Port
 
 
 noEdges :: [Edge]
-noEdges = [] 
+noEdges = []
 

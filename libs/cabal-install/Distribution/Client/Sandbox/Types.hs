@@ -12,11 +12,11 @@ module Distribution.Client.Sandbox.Types (
   SandboxPackageInfo(..)
   ) where
 
+import           Distribution.Client.Types        (SourcePackage)
 import qualified Distribution.Simple.PackageIndex as InstalledPackageIndex
-import           Distribution.Client.Types          (SourcePackage)
 
-import           Data.Monoid                        
-import qualified Data.Set                         as S
+import           Data.Monoid
+import qualified Data.Set    as S
 
 -- | Are we using a sandbox?
 data UseSandbox = UseSandbox FilePath | NoSandbox

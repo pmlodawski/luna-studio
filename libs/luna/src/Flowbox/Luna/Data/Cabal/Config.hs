@@ -7,13 +7,13 @@
 
 module Flowbox.Luna.Data.Cabal.Config where
 
-import           Data.Version                      (Version)
-import qualified Data.Version                    as Version
+import           Data.Version (Version)
+import qualified Data.Version as Version
 
-import           Flowbox.Prelude                   
+import           Data.String.Utils               (join)
+import           Flowbox.Luna.Data.Cabal.Section (Section)
 import qualified Flowbox.Luna.Data.Cabal.Section as Section
-import           Flowbox.Luna.Data.Cabal.Section   (Section)
-import           Data.String.Utils                 (join)
+import           Flowbox.Prelude
 
 
 
@@ -43,7 +43,7 @@ genCode conf =  genField "Name"          (name conf)
              ++ genField "Cabal-Version" (cabalVersion conf)
              ++ genField "Build-Type"    (buildType conf)
              ++ "\n" ++  join "\n\n" (map Section.genCode $ sections conf)
-   
+
 
 addSection :: Section -> Config -> Config
 addSection s conf = conf { sections = s:sections conf }

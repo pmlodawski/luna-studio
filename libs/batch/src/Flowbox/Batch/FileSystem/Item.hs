@@ -7,10 +7,10 @@
 
 module Flowbox.Batch.FileSystem.Item (
     Item(..)
-) where 
+) where
 
-import           Flowbox.Prelude          
-import           Flowbox.System.UniPath   (UniPath)
+import Flowbox.Prelude
+import Flowbox.System.UniPath (UniPath)
 
 
 

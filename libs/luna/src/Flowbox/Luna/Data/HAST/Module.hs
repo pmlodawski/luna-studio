@@ -6,20 +6,20 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Data.HAST.Module (
-	module Flowbox.Luna.Data.HAST.Module,
-	module Flowbox.Luna.Data.HAST.Expr
+        module Flowbox.Luna.Data.HAST.Module,
+        module Flowbox.Luna.Data.HAST.Expr
 )where
 
-import           Flowbox.Prelude                    
-import           Flowbox.Luna.Data.HAST.Expr        
-import           Flowbox.Luna.Data.HAST.Extension   (Extension)
+import Flowbox.Luna.Data.HAST.Expr
+import Flowbox.Luna.Data.HAST.Extension (Extension)
+import Flowbox.Prelude
 
 
-empty :: Expr 
+empty :: Expr
 empty = Module [] [] [] []
 
 mk :: [String] -> Expr
-mk path' = Module path' [] [] [] 
+mk path' = Module path' [] [] []
 
 addImport :: [String] -> Expr -> Expr
 addImport path' mod' = mod' { imports = (Import False path' Nothing) : imports mod' }

@@ -9,4 +9,4 @@ module Flowbox.Batch.Config (
     module Paths_flowbox_batch
 ) where
 
-import           Paths_flowbox_batch   (version)
+import Paths_flowbox_batch (version)

@@ -7,23 +7,23 @@
 
 module Flowbox.Distribution.CabalConversion where
 
-import           Data.Default                                    (def)
-import           Data.List.Split                                 (splitOn)
+import           Data.Default                                  (def)
+import           Data.List.Split                               (splitOn)
 import           Data.Monoid
 import qualified Distribution.Client.Types                     as CliTypes
+import           Distribution.InstalledPackageInfo             (InstalledPackageInfo)
 import qualified Distribution.InstalledPackageInfo             as Installed
-import           Distribution.InstalledPackageInfo               (InstalledPackageInfo)
+import           Distribution.Package                          (PackageName (PackageName))
 import qualified Distribution.Package                          as DistPackage
-import           Distribution.Package                            (PackageName(PackageName))
+import           Distribution.PackageDescription               (PackageDescription)
 import qualified Distribution.PackageDescription               as DistPkgDesc
-import           Distribution.PackageDescription                 (PackageDescription)
 import qualified Distribution.PackageDescription.Configuration as DistConfig
 import qualified Distribution.Version                          as DistVersion
 
-import           Flowbox.Prelude  
-import           Flowbox.Data.Version                            (Version(Version))
-import qualified Flowbox.Distribution.Package.Package          as Package
-import           Flowbox.Distribution.Package.Package            (Package, PackageId(PackageId))
+import           Flowbox.Data.Version                 (Version (Version))
+import           Flowbox.Distribution.Package.Package (Package, PackageId (PackageId))
+import qualified Flowbox.Distribution.Package.Package as Package
+import           Flowbox.Prelude
 
 
 convertSrcPackage :: CliTypes.SourcePackage -> Package
@@ -59,6 +59,6 @@ convertInstPackage desc = def & Package.authors     .~ (splitOn "," $ Installed.
                               & Package.id          .~ PackageId name version
                         where PackageName name = DistPackage.packageName desc
                               version          = convertVersion $ DistPackage.packageVersion desc
-   
+
 convertVersion :: DistVersion.Version -> Version
 convertVersion dv = Version (DistVersion.versionBranch dv) (DistVersion.versionTags dv)

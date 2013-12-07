@@ -12,30 +12,30 @@
 
 module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Graph where
 
-import           Control.Applicative                                        
+import Control.Applicative
 
-import           Flowbox.Prelude                                            
-import           Flowbox.Control.Error                                      
-import           Flowbox.Luna.Data.Graph.Edge                               (Edge(Edge))
+import           Flowbox.Control.Error
+import           Flowbox.Luna.Data.Graph.Edge                             (Edge (Edge))
+import           Flowbox.Luna.Data.Graph.Graph                            (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                            as Graph
-import           Flowbox.Luna.Data.Graph.Graph                              (Graph)
+import           Flowbox.Luna.Data.Graph.Node                             (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                             as Node
-import           Flowbox.Luna.Data.Graph.Node                               (Node)
-import           Flowbox.Luna.Data.Graph.Port                               (Port)
+import           Flowbox.Luna.Data.Graph.Port                             (Port)
 import qualified Flowbox.Luna.Data.Graph.Port                             as Port
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic             
-import qualified Generated.Proto.Graph.Graph                              as Gen
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes ()
+import           Flowbox.Prelude
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Graph.Edge                               as Gen
+import qualified Generated.Proto.Graph.Graph                              as Gen
 import qualified Generated.Proto.Graph.Node                               as Gen
 import qualified Generated.Proto.Graph.Node.Cls                           as GenNode
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes   ()
 
 
 
 instance Convert (Int, Int, Edge) Gen.Edge where
-    encode (nodeSrc, nodeDst, Edge portSrc portDst) =  
+    encode (nodeSrc, nodeDst, Edge portSrc portDst) =
         Gen.Edge (encodePJ nodeSrc) (encodePJ nodeDst) tportSrc (encodePJ portDst) where
-            tportSrc = portSrc >>= return . encodeP                           
+            tportSrc = portSrc >>= return . encodeP
     decode (Gen.Edge mtnodeSrc mtnodeDst mtportSrc mtportDst) = do
         tnodeSrc <- mtnodeSrc <?> "Failed to decode Edge: 'srcNode' field is missing"
         tnodeDst <- mtnodeDst <?> "Failed to decode Edge: 'dstNode' field is missing"
@@ -63,7 +63,7 @@ instance Convert (Int, Node) Gen.Node where
 
 
 instance Convert Graph Gen.Graph where
-    encode graph = 
+    encode graph =
         Gen.Graph (encodeList $ Graph.labNodes graph) (encodeList $ Graph.labEdges graph)
     decode (Gen.Graph tnodes tedges) =
         Graph.mkGraph <$> decodeList tnodes <*> decodeList tedges

@@ -13,13 +13,13 @@ module Flowbox.Luna.Data.Graph.Node (
     mkOutputs,
 ) where
 
-import           Flowbox.Prelude                 
+import Flowbox.Prelude
 
-import qualified Flowbox.Luna.Data.Graph.Flags as Flags
-import           Flowbox.Luna.Data.Graph.Flags   (Flags)
+import           Flowbox.Luna.Data.AST.Expr    (Expr)
+import           Flowbox.Luna.Data.Attributes  (Attributes)
 import qualified Flowbox.Luna.Data.Attributes  as Attributes
-import           Flowbox.Luna.Data.Attributes    (Attributes)
-import           Flowbox.Luna.Data.AST.Expr      (Expr)
+import           Flowbox.Luna.Data.Graph.Flags (Flags)
+import qualified Flowbox.Luna.Data.Graph.Flags as Flags
 
 
 
@@ -28,7 +28,7 @@ data Node = Expr     { expr  :: String
                      , flags :: Flags, attributes :: Attributes }
           | Inputs   { flags :: Flags, attributes :: Attributes }
           | Outputs  { flags :: Flags, attributes :: Attributes }
-          
+
           deriving (Show)
 
 
@@ -45,4 +45,4 @@ mkInputs = Inputs Flags.empty Attributes.empty
 
 mkOutputs :: Node
 mkOutputs = Outputs Flags.empty Attributes.empty
- 
+

@@ -15,12 +15,12 @@ module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Import (
     genCode
 )where
 
-import           Flowbox.Prelude                                 hiding (simple)
+import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Path (Path (..))
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.Path as Path
-import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Path   (Path(..))
+import           Flowbox.Prelude                                 hiding (simple)
 
 
-data Import = Regular   {path :: Path, item :: String} 
+data Import = Regular   {path :: Path, item :: String}
             | Qualified {path :: Path}
             deriving (Show, Ord, Eq)
 
@@ -47,7 +47,7 @@ common name = simple $ Path ["Flowbox", "Luna", "FClasses", name]
 
 genCode :: Import -> String
 genCode imp = "import " ++ body where
-    paths = Path.toModulePath (path imp) 
+    paths = Path.toModulePath (path imp)
     src = Path.toString paths
     body = case imp of
         Regular _ item' -> src ++ els where

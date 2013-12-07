@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FunctionalDependencies #-} 
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 
 module Flowbox.Tools.Conversion.Proto (
@@ -13,13 +13,13 @@ module Flowbox.Tools.Conversion.Proto (
     ConvertPure(..),
 ) where
 
-import           Flowbox.Prelude   
+import Flowbox.Prelude
 
 
 
 class Convert a b | a -> b where
     encode :: a -> b
-    decode :: b -> Either String a 
+    decode :: b -> Either String a
 
     encodeJ :: a -> Maybe b
     encodeJ a = Just $ encode a
@@ -27,7 +27,7 @@ class Convert a b | a -> b where
 
 class ConvertPure a b | a -> b where
     encodeP :: a -> b
-    decodeP :: b -> a 
+    decodeP :: b -> a
 
-    encodePJ :: a -> Maybe b 
+    encodePJ :: a -> Maybe b
     encodePJ a = Just $ encodeP a

@@ -9,14 +9,14 @@ module Flowbox.Options.Applicative (
     optIntFlag,
 ) where
 
-import           Options.Applicative   
+import Options.Applicative
 
-import           Flowbox.Prelude       
+import Flowbox.Prelude
 
 
 
 optIntFlag :: Maybe String -> Char -> Int -> Int -> String -> Parser Int
-optIntFlag mlongName shortName baseval defval helpmsg = 
+optIntFlag mlongName shortName baseval defval helpmsg =
     (\sflag f -> let baselvl = if sflag then defval else baseval
                      explvl  = read f :: Int
                      lvl     = if explvl < 0 then baselvl else explvl

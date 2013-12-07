@@ -29,32 +29,24 @@ module Distribution.Client.World (
     getContents,
   ) where
 
-import           Distribution.Package              
-         ( Dependency(..) )
-import           Distribution.PackageDescription   
-         ( FlagAssignment, FlagName(FlagName) )
-import           Distribution.Verbosity            
-         ( Verbosity )
-import           Distribution.Simple.Utils         
-         ( die, info, chattyTry, writeFileAtomic )
-import           Distribution.Text                 
-         ( Text(..), display, simpleParse )
+import           Distribution.Compat.Exception   (catchIO)
 import qualified Distribution.Compat.ReadP       as Parse
-import           Distribution.Compat.Exception     ( catchIO )
+import           Distribution.Package            (Dependency (..))
+import           Distribution.PackageDescription (FlagAssignment, FlagName (FlagName))
+import           Distribution.Simple.Utils       (chattyTry, die, info, writeFileAtomic)
+import           Distribution.Text               (Text (..), display, simpleParse)
+import           Distribution.Verbosity          (Verbosity)
+import           Text.PrettyPrint                ((<+>), (<>))
 import qualified Text.PrettyPrint                as Disp
-import           Text.PrettyPrint                  ( (<>), (<+>) )
 
 
-import           Data.Char                       as Char
+import Data.Char as Char
 
-import           Data.List                         
-         ( unionBy, deleteFirstsBy, nubBy )
-import           Data.Maybe                        
-         ( isJust, fromJust )
-import           System.IO.Error                   
-         ( isDoesNotExistError )
-import qualified Data.ByteString.Lazy.Char8      as B
-import           Prelude                         hiding (getContents)
+import qualified Data.ByteString.Lazy.Char8 as B
+import           Data.List                  (deleteFirstsBy, nubBy, unionBy)
+import           Data.Maybe                 (fromJust, isJust)
+import           Prelude                    hiding (getContents)
+import           System.IO.Error            (isDoesNotExistError)
 
 
 data WorldPkgInfo = WorldPkgInfo Dependency FlagAssignment

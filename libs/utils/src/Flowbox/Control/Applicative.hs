@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Control.Applicative (
-	module Control.Applicative,
-	many1,
-	many2
+        module Control.Applicative,
+        many1,
+        many2
 ) where
 
-import           Control.Applicative   
+import Control.Applicative
 
 many1 :: Alternative f => f a -> f [a]
 many1 p = (:) <$> p <*> many p

@@ -8,17 +8,17 @@
 module Flowbox.Distribution.Config where
 
 import           Data.Monoid
-import qualified Distribution.Client.Config                    as CabalConf
-import           Distribution.Client.Sandbox                   as Sandbox
-import qualified Distribution.Client.Setup                     as Setup
-import           Distribution.Client.Setup                       (GlobalFlags)
-import           Distribution.Simple.Compiler                    (PackageDB(GlobalPackageDB, SpecificPackageDB))
-import           Distribution.Simple.Setup                       (Flag(Flag))
-import           Distribution.Verbosity                        as Verbosity
+import qualified Distribution.Client.Config   as CabalConf
+import           Distribution.Client.Sandbox  as Sandbox
+import           Distribution.Client.Setup    (GlobalFlags)
+import qualified Distribution.Client.Setup    as Setup
+import           Distribution.Simple.Compiler (PackageDB (GlobalPackageDB, SpecificPackageDB))
+import           Distribution.Simple.Setup    (Flag (Flag))
+import           Distribution.Verbosity       as Verbosity
 
-import           Flowbox.Prelude  
-import qualified Flowbox.Config.Config                         as Config
-import           Flowbox.Config.Config                           (Config)
+import           Flowbox.Config.Config (Config)
+import qualified Flowbox.Config.Config as Config
+import           Flowbox.Prelude
 
 
 localPkgDB :: Config -> PackageDB

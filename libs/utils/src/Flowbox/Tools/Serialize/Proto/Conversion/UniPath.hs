@@ -5,17 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Flowbox.Tools.Serialize.Proto.Conversion.UniPath where
 
-import qualified Text.ProtocolBuffers.Basic                      as Proto
+import qualified Text.ProtocolBuffers.Basic as Proto
 
-import           Flowbox.Prelude                                   
+import           Flowbox.Prelude
+import           Flowbox.System.UniPath                          (UniPath)
 import qualified Flowbox.System.UniPath                          as UniPath
-import           Flowbox.System.UniPath                            (UniPath)
-import           Flowbox.Tools.Conversion.Proto                    
-import           Flowbox.Tools.Serialize.Proto.Conversion.String   ()
+import           Flowbox.Tools.Conversion.Proto
+import           Flowbox.Tools.Serialize.Proto.Conversion.String ()
 
 
 

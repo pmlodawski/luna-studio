@@ -14,62 +14,37 @@ module Distribution.Client.Dependency.TopDown (
     topDownResolver
   ) where
 
-import           Distribution.Client.Dependency.TopDown.Types         
+import           Distribution.Client.Dependency.TopDown.Constraints (Satisfiable (..))
 import qualified Distribution.Client.Dependency.TopDown.Constraints as Constraints
-import           Distribution.Client.Dependency.TopDown.Constraints   
-         ( Satisfiable(..) )
-import           Distribution.Client.IndexUtils                       
-         ( convert )
+import           Distribution.Client.Dependency.TopDown.Types
+import           Distribution.Client.Dependency.Types               (DependencyResolver, InstalledPreference (..), PackageConstraint (..), PackagePreferences (..), Progress (..), foldProgress)
+import           Distribution.Client.IndexUtils                     (convert)
+import           Distribution.Client.InstallPlan                    (PlanPackage (..))
 import qualified Distribution.Client.InstallPlan                    as InstallPlan
-import           Distribution.Client.InstallPlan                      
-         ( PlanPackage(..) )
-import           Distribution.Client.Types                            
-         ( SourcePackage(..), ConfiguredPackage(..), InstalledPackage(..)
-         , enableStanzas )
-import           Distribution.Client.Dependency.Types                 
-         ( DependencyResolver, PackageConstraint(..)
-         , PackagePreferences(..), InstalledPreference(..)
-         , Progress(..), foldProgress )
+import           Distribution.Client.Types                          (ConfiguredPackage (..), InstalledPackage (..), SourcePackage (..), enableStanzas)
 
-import qualified Distribution.Client.PackageIndex                   as PackageIndex
-import           Distribution.Client.PackageIndex                     (PackageIndex)
-import           Distribution.Package                                 
-         ( PackageName(..), PackageId, Package(..), packageVersion, packageName
-         , Dependency(Dependency), thisPackageVersion
-         , simplifyDependency, PackageFixedDeps(depends) )
-import           Distribution.PackageDescription                      
-         ( PackageDescription(buildDepends) )
-import           Distribution.Client.PackageUtils                     
-         ( externalBuildDepends )
-import           Distribution.PackageDescription.Configuration        
-         ( finalizePackageDescription, flattenPackageDescription )
-import           Distribution.Version                                 
-         ( VersionRange, withinRange, simplifyVersionRange
-         , UpperBound(..), asVersionIntervals )
-import           Distribution.Compiler                                
-         ( CompilerId )
-import           Distribution.System                                  
-         ( Platform )
-import           Distribution.Simple.Utils                            
-         ( equating, comparing )
-import           Distribution.Text                                    
-         ( display )
+import           Distribution.Client.PackageIndex              (PackageIndex)
+import qualified Distribution.Client.PackageIndex              as PackageIndex
+import           Distribution.Client.PackageUtils              (externalBuildDepends)
+import           Distribution.Compiler                         (CompilerId)
+import           Distribution.Package                          (Dependency (Dependency), Package (..), PackageFixedDeps (depends), PackageId, PackageName (..), packageName, packageVersion, simplifyDependency, thisPackageVersion)
+import           Distribution.PackageDescription               (PackageDescription (buildDepends))
+import           Distribution.PackageDescription.Configuration (finalizePackageDescription, flattenPackageDescription)
+import           Distribution.Simple.Utils                     (comparing, equating)
+import           Distribution.System                           (Platform)
+import           Distribution.Text                             (display)
+import           Distribution.Version                          (UpperBound (..), VersionRange, asVersionIntervals, simplifyVersionRange, withinRange)
 
-import           Data.List                                            
-         ( foldl', maximumBy, minimumBy, nub, sort, sortBy, groupBy )
-import           Data.Maybe                                           
-         ( fromJust, fromMaybe, catMaybes )
-import           Data.Monoid                                          
-         ( Monoid(mempty) )
-import           Control.Monad                                        
-         ( guard )
-import qualified Data.Set                                           as Set
-import           Data.Set                                             (Set)
-import qualified Data.Map                                           as Map
-import qualified Data.Graph                                         as Graph
-import qualified Data.Array                                         as Array
-import           Control.Exception                                    
-         ( assert )
+import           Control.Exception (assert)
+import           Control.Monad     (guard)
+import qualified Data.Array        as Array
+import qualified Data.Graph        as Graph
+import           Data.List         (foldl', groupBy, maximumBy, minimumBy, nub, sort, sortBy)
+import qualified Data.Map          as Map
+import           Data.Maybe        (catMaybes, fromJust, fromMaybe)
+import           Data.Monoid       (Monoid (mempty))
+import           Data.Set          (Set)
+import qualified Data.Set          as Set
 
 -- ------------------------------------------------------------
 -- * Search state types

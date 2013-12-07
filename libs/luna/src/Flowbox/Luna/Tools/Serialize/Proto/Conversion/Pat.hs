@@ -12,17 +12,17 @@
 
 module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Pat where
 
-import           Control.Applicative                                  
-import qualified Data.Map                                           as Map
-import qualified Text.ProtocolBuffers.Extensions                    as Extensions
+import           Control.Applicative
+import qualified Data.Map                        as Map
+import qualified Text.ProtocolBuffers.Extensions as Extensions
 
-import           Flowbox.Prelude                                      
-import           Flowbox.Control.Error                                
+import           Flowbox.Control.Error
+import           Flowbox.Luna.Data.AST.Pat                          (Pat)
 import qualified Flowbox.Luna.Data.AST.Pat                          as Pat
-import           Flowbox.Luna.Data.AST.Pat                            (Pat)
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic       
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Lit    ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Type   ()
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Lit  ()
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Type ()
+import           Flowbox.Prelude
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Pat.App                            as GenApp
 import qualified Generated.Proto.Pat.Con_                           as GenCon_
 import qualified Generated.Proto.Pat.Lit                            as GenLit
@@ -36,7 +36,7 @@ import qualified Generated.Proto.Pat.Wildcard                       as GenWildca
 
 
 instance Convert Pat Gen.Pat where
-    encode p = case p of 
+    encode p = case p of
         Pat.Var   i name     -> genPat GenCls.Var   GenVar.ext   $ GenVar.Var     (encodePJ i) (encodePJ name)
         Pat.Lit   i value    -> genPat GenCls.Lit   GenLit.ext   $ GenLit.Lit     (encodePJ i) (encodeJ value)
         Pat.Tuple i items    -> genPat GenCls.Tuple GenTuple.ext $ GenTuple.Tuple (encodePJ i) (encodeList items)
@@ -48,8 +48,8 @@ instance Convert Pat Gen.Pat where
             genPat :: GenCls.Cls -> Extensions.Key Maybe Gen.Pat v -> v -> Gen.Pat
             genPat cls key ext = Extensions.putExt key (Just ext)
                                $ Gen.Pat cls $ Extensions.ExtField Map.empty
-            
-    decode p@(Gen.Pat cls _) = case cls of 
+
+    decode p@(Gen.Pat cls _) = case cls of
        GenCls.Var      -> do ext <- getExt GenVar.ext
                              (GenVar.Var mtid mtname) <- ext <?> "Failed to decode Pat.Var: extension is missing"
                              tid   <- mtid   <?> "Failed to decode Pat.Var: 'id' field is missing"

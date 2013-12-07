@@ -14,16 +14,12 @@ module Distribution.Client.BuildReports.Types (
     ReportLevel(..),
   ) where
 
-import qualified Distribution.Text         as Text
-         ( Text(..) )
+import qualified Distribution.Text as Text (Text (..))
 
-import qualified Distribution.Compat.ReadP as Parse
-         ( pfail, munch1 )
-import qualified Text.PrettyPrint          as Disp
-         ( text )
+import qualified Distribution.Compat.ReadP as Parse (munch1, pfail)
+import qualified Text.PrettyPrint          as Disp (text)
 
-import           Data.Char                 as Char
-         ( isAlpha, toLower )
+import Data.Char as Char (isAlpha, toLower)
 
 data ReportLevel = NoReports | AnonymousReports | DetailedReports
   deriving (Eq, Ord, Show)

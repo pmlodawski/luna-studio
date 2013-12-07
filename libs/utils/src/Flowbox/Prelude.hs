@@ -13,14 +13,14 @@ module Flowbox.Prelude(
     module Prelude
 ) where
 
-import           Prelude                hiding (print, putStr, putStrLn, mapM, mapM_)
-import qualified Prelude                as Prelude
-import           Control.Monad.IO.Class   (liftIO, MonadIO)
-import           Data.Typeable            
-import qualified Data.Traversable       as Traversable
-import           Data.Traversable         (Traversable)
 import qualified Control.Exception      as Exception
-import           Control.Lens             
+import           Control.Lens
+import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Data.Traversable       (Traversable)
+import qualified Data.Traversable       as Traversable
+import           Data.Typeable
+import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn)
+import qualified Prelude                as Prelude
 
 
 print :: (MonadIO m, Show s) => s -> m ()
@@ -56,7 +56,7 @@ mapM :: (Monad m, Traversable t) => (a -> m b) -> t a -> m (t b)
 mapM = Traversable.mapM
 
 mapM_ :: (Monad m, Traversable t) => (a -> m b) -> t a -> m ()
-mapM_ f as = do 
+mapM_ f as = do
     _ <- mapM f as
     return ()
 

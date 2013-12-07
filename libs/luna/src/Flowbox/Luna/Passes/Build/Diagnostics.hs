@@ -4,23 +4,25 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds, FlexibleContexts, NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.Passes.Build.Diagnostics where
 
-import           Control.Monad                     (when)
-import           Data.String.Utils                 (join)
+import Control.Monad     (when)
+import Data.String.Utils (join)
 
 
-import           Flowbox.Prelude                   
 import qualified Flowbox.Generics.Deriving.QShow as QShow
 import qualified Flowbox.Luna.Data.Source        as Source
-import           Flowbox.System.Log.Logger         
-import           Flowbox.Text.Show.Hs              (hsShow)
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
+import           Flowbox.Text.Show.Hs            (hsShow)
 import qualified Flowbox.Text.Show.Pretty        as PP
 
 
-data Diagnostics = Diagnostics { showDM   :: Bool 
+data Diagnostics = Diagnostics { showDM   :: Bool
                                , showAST  :: Bool
                                , showVA   :: Bool
                                , showFP   :: Bool
@@ -71,7 +73,7 @@ printHSC  v diag = when (showHSC  diag) $ logger info (showSrcs   v)
 
 
 showSrcs :: [Source.Source] -> String
-showSrcs srcs = join "\n\n" $ map showSrc srcs 
+showSrcs srcs = join "\n\n" $ map showSrc srcs
 
 
 showSrc :: Source.Source -> String

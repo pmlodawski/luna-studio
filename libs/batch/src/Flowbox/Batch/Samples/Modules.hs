@@ -7,7 +7,7 @@
 
 module Flowbox.Batch.Samples.Modules where
 
---import           Flowbox.Prelude                       
+--import           Flowbox.Prelude
 --import qualified Flowbox.Batch.Project.Project       as Project
 --import           Flowbox.Batch.Project.Project         (Project)
 --import qualified Flowbox.Luna.Network.Def.DefManager as DefManager
@@ -38,7 +38,7 @@ module Flowbox.Batch.Samples.Modules where
 --                                  }
 
 --mkModule :: String -> Definition
---mkModule name = mkDefinition (Type.mkModule name ) 
+--mkModule name = mkDefinition (Type.mkModule name )
 
 
 --mkClass :: String -> Definition
@@ -53,11 +53,11 @@ module Flowbox.Batch.Samples.Modules where
 --                                                   , Type.Class "c" [] []
 --                                                   , Type.Function "d" ( Type.Tuple [ Type.Class "e" [] []
 --                                                                                    ]
---                                                                       ) 
+--                                                                       )
 --                                                                       ( Type.Tuple []
 --                                                                       )
 --                                                                ]
---                                                   ) 
+--                                                   )
 --                                                   ( Type.Tuple [ Type.Class "o1" [] []
 --                                                                , Type.Class "o2" [] []
 --                                                                , Type.Class "o3" [] []
@@ -138,7 +138,7 @@ module Flowbox.Batch.Samples.Modules where
 
 
 --func_vec_incx_inputs :: Type
---func_vec_incx_inputs = Type.Tuple [Type.Named "self" $ Type.TypeName "a", 
+--func_vec_incx_inputs = Type.Tuple [Type.Named "self" $ Type.TypeName "a",
 --                                   Type.Named "in2"  $ Type.TypeName "a"]
 
 
@@ -150,8 +150,8 @@ module Flowbox.Batch.Samples.Modules where
 
 --emptyStdLibrary :: UniPath -> Library
 --emptyStdLibrary rootpath = Library.make "std" $ UniPath.append "stdlib.lunalib" rootpath
-    
-     
+
+
 --userLibrary :: UniPath -> Library
 --userLibrary rootpath = Library.make "workspace" $ UniPath.append "workspace.lunalib" rootpath
 
@@ -168,7 +168,7 @@ module Flowbox.Batch.Samples.Modules where
 
 
 --project :: Project
---project = addDefaultLibraries 
+--project = addDefaultLibraries
 --        $ Project.empty { Project.name = "wladczy projekt"
 --                        , Project.path = UniPath.fromUnixString "sample-projects/wladcy"
 --                        , Project.libs = LibManager.empty

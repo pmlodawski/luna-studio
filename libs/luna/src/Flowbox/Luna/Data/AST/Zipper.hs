@@ -4,20 +4,20 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE Rank2Types                #-}
 
 module Flowbox.Luna.Data.AST.Zipper where
 
-import           Flowbox.Prelude                   hiding (id, drop, Zipper)
+import           Flowbox.Control.Monad.Trans.Maybe
+import           Flowbox.Luna.Data.AST.Expr        (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr        as Expr
-import           Flowbox.Luna.Data.AST.Expr          (Expr)
+import           Flowbox.Luna.Data.AST.Module      (Module)
 import qualified Flowbox.Luna.Data.AST.Module      as Module
-import           Flowbox.Luna.Data.AST.Module        (Module)
-import           Flowbox.Control.Monad.Trans.Maybe   
+import           Flowbox.Prelude                   hiding (Zipper, drop, id)
 
-import           Data.List                           (find)
-import           Control.Error.Util                  (hoistMaybe)
+import Control.Error.Util (hoistMaybe)
+import Data.List          (find)
 
 --data Focus = FunctionFocus { expr :: Expr   , env :: FocusEnv }
 --           | ClassFocus    { expr :: Expr   , env :: FocusEnv }
@@ -54,7 +54,7 @@ close zipper           = close $ defocus zipper
 
 focusFunction :: String -> Zipper -> Maybe Zipper
 focusFunction name zipper@(env, path) = case env of
-    ModuleFocus mod -> focusListElem Module.methods Expr.name 
+    ModuleFocus mod -> focusListElem Module.methods Expr.name
                      FunctionFocus ModuleFocus mod name zipper
     _             -> Nothing
 
@@ -67,7 +67,7 @@ focusListElem lens nameLens elemFocus crumbFocus elem name (env, path) = runMayb
     let funcs    = elem ^. lens
         mfunc    = find (\f -> f ^. nameLens == name) funcs
         newfuncs = [ f | f <- funcs, f ^. nameLens /= name ]
-        newelem  = elem & lens .~ newfuncs 
+        newelem  = elem & lens .~ newfuncs
     func <- hoistMaybe mfunc
     return $ (elemFocus func, (crumbFocus newelem) : path)
 

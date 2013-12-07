@@ -28,42 +28,29 @@ module Distribution.Client.Sandbox.PackageEnvironment (
   , userPackageEnvironmentFile
   ) where
 
-import Distribution.Client.Config      ( SavedConfig(..), commentSavedConfig,
-                                         loadConfig, configFieldDescriptions,
-                                         installDirsFields, defaultCompiler )
-import           Distribution.Client.ParseUtils   ( parseFields, ppFields, ppSection )
-import           Distribution.Client.Setup        ( GlobalFlags(..), ConfigExFlags(..)
-                                       , InstallFlags(..)
-                                       , defaultSandboxLocation )
-import           Distribution.Simple.Compiler     ( Compiler, PackageDB(..)
-                                       , compilerFlavor, showCompilerId )
-import Distribution.Simple.InstallDirs ( InstallDirs(..), PathTemplate
-                                       , defaultInstallDirs, combineInstallDirs
-                                       , fromPathTemplate, toPathTemplate )
-import Distribution.Simple.Setup       ( Flag(..), ConfigFlags(..),
-                                         fromFlagOrDefault, toFlag )
-import           Distribution.Simple.Utils        ( die, info, notice, warn, lowercase )
-import Distribution.ParseUtils         ( FieldDescr(..), ParseResult(..),
-                                         commaListField,
-                                         liftField, lineNo, locatedErrorMsg,
-                                         parseFilePathQ, readFields,
-                                         showPWarning, simpleField, syntaxError )
-import           Distribution.System              ( Platform )
-import           Distribution.Verbosity           ( Verbosity, normal )
-import           Control.Monad                    ( foldM, when, unless )
-import           Data.List                        ( partition )
-import           Data.Monoid                      ( Monoid(..) )
-import           Distribution.Compat.Exception    ( catchIO )
-import System.Directory                ( doesDirectoryExist, doesFileExist,
-                                         renameFile )
-import           System.FilePath                  ( (<.>), (</>), takeDirectory )
-import           System.IO.Error                  ( isDoesNotExistError )
-import           Text.PrettyPrint                 ( ($+$) )
+import Control.Monad                   (foldM, unless, when)
+import Data.List                       (partition)
+import Data.Monoid                     (Monoid (..))
+import Distribution.Client.Config      (SavedConfig (..), commentSavedConfig, configFieldDescriptions, defaultCompiler, installDirsFields, loadConfig)
+import Distribution.Client.ParseUtils  (parseFields, ppFields, ppSection)
+import Distribution.Client.Setup       (ConfigExFlags (..), GlobalFlags (..), InstallFlags (..), defaultSandboxLocation)
+import Distribution.Compat.Exception   (catchIO)
+import Distribution.ParseUtils         (FieldDescr (..), ParseResult (..), commaListField, liftField, lineNo, locatedErrorMsg, parseFilePathQ, readFields, showPWarning, simpleField, syntaxError)
+import Distribution.Simple.Compiler    (Compiler, PackageDB (..), compilerFlavor, showCompilerId)
+import Distribution.Simple.InstallDirs (InstallDirs (..), PathTemplate, combineInstallDirs, defaultInstallDirs, fromPathTemplate, toPathTemplate)
+import Distribution.Simple.Setup       (ConfigFlags (..), Flag (..), fromFlagOrDefault, toFlag)
+import Distribution.Simple.Utils       (die, info, lowercase, notice, warn)
+import Distribution.System             (Platform)
+import Distribution.Verbosity          (Verbosity, normal)
+import System.Directory                (doesDirectoryExist, doesFileExist, renameFile)
+import System.FilePath                 (takeDirectory, (<.>), (</>))
+import System.IO.Error                 (isDoesNotExistError)
+import Text.PrettyPrint                (($+$))
 
-import qualified Text.PrettyPrint               as Disp
-import qualified Distribution.Compat.ReadP      as Parse
-import qualified Distribution.ParseUtils   as ParseUtils ( Field(..) )
-import qualified Distribution.Text              as Text
+import qualified Distribution.Compat.ReadP as Parse
+import qualified Distribution.ParseUtils   as ParseUtils (Field (..))
+import qualified Distribution.Text         as Text
+import qualified Text.PrettyPrint          as Disp
 
 
 --
@@ -75,8 +62,8 @@ import qualified Distribution.Text              as Text
 data PackageEnvironment = PackageEnvironment {
   -- The 'inherit' feature is not used ATM, but could be useful in the future
   -- for constructing nested sandboxes (see discussion in #1196).
-  pkgEnvInherit       :: Flag FilePath,
-  pkgEnvSavedConfig   :: SavedConfig
+  pkgEnvInherit     :: Flag FilePath,
+  pkgEnvSavedConfig :: SavedConfig
 }
 
 instance Monoid PackageEnvironment where

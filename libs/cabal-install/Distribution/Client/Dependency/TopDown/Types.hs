@@ -12,14 +12,10 @@
 -----------------------------------------------------------------------------
 module Distribution.Client.Dependency.TopDown.Types where
 
-import           Distribution.Client.Types         
-         ( SourcePackage(..), InstalledPackage, OptionalStanza )
+import Distribution.Client.Types (InstalledPackage, OptionalStanza, SourcePackage (..))
 
-import           Distribution.Package              
-         ( PackageIdentifier, Dependency
-         , Package(packageId), PackageFixedDeps(depends) )
-import           Distribution.PackageDescription   
-         ( FlagAssignment )
+import Distribution.Package            (Dependency, Package (packageId), PackageFixedDeps (depends), PackageIdentifier)
+import Distribution.PackageDescription (FlagAssignment)
 
 -- ------------------------------------------------------------
 -- * The various kinds of packages

@@ -15,20 +15,20 @@ module Flowbox.Batch.Handler.FileSystem (
     rm,
     cp,
     mv,
-) 
+)
 where
 
-import           Control.Applicative                  
+import           Control.Applicative
 import qualified Control.Exception                  as Exception
 import qualified Data.List                          as List
 import qualified Flowbox.System.Directory.Directory as Directory
 import qualified System.IO                          as IO
 
-import           Flowbox.Prelude                      
-import qualified Flowbox.Batch.FileSystem.Item      as Item
-import           Flowbox.Batch.FileSystem.Item        (Item)
-import qualified Flowbox.System.UniPath             as UniPath
-import           Flowbox.System.UniPath               (UniPath)
+import           Flowbox.Batch.FileSystem.Item (Item)
+import qualified Flowbox.Batch.FileSystem.Item as Item
+import           Flowbox.Prelude
+import           Flowbox.System.UniPath        (UniPath)
+import qualified Flowbox.System.UniPath        as UniPath
 
 
 
@@ -47,11 +47,11 @@ stat upath = do
     path <- UniPath.expand upath
 
     isDir  <- Directory.doesDirectoryExist path
-    if isDir 
+    if isDir
         then return $ Item.Directory path 0
         else do
             isFile <- Directory.doesFileExist path
-            if isFile 
+            if isFile
                 then Exception.handle (\(_ :: Exception.SomeException) -> return $ Item.File path (-1))
                      (do asize <- IO.withFile (UniPath.toUnixString path) IO.ReadMode IO.hFileSize
                          return $ Item.File path $ fromInteger asize)
@@ -71,18 +71,18 @@ rm upath = do
     path <- UniPath.expand upath
 
     isDir  <- Directory.doesDirectoryExist path
-    if isDir 
+    if isDir
         then Directory.removeDirectoryRecursive path
         else do
             isFile <- Directory.doesFileExist path
-            if isFile 
+            if isFile
                 then Directory.removeFile path
                 else error "Could not remove object: Unsupported type."
 
 
 cp :: UniPath -> UniPath -> IO ()
 cp = Directory.copyDirectoryRecursive
-    
+
 
 mv :: UniPath -> UniPath -> IO ()
 mv usrc udst = do
@@ -90,10 +90,10 @@ mv usrc udst = do
     dst <- UniPath.expand udst
 
     isDir  <- Directory.doesDirectoryExist src
-    if isDir 
+    if isDir
         then Directory.renameDirectory src dst
         else do
             isFile <- Directory.doesFileExist src
-            if isFile 
+            if isFile
                 then Directory.renameFile src dst
                 else error "Could not move object: Unsupported type."

@@ -1,11 +1,11 @@
 module Main
        where
 
-import           Test.Framework                                         
+import Test.Framework
 
-import qualified UnitTests.Distribution.Client.Sandbox                  
-import qualified UnitTests.Distribution.Client.Targets                  
-import qualified UnitTests.Distribution.Client.Dependency.Modular.PSQ   
+import qualified UnitTests.Distribution.Client.Dependency.Modular.PSQ
+import qualified UnitTests.Distribution.Client.Sandbox
+import qualified UnitTests.Distribution.Client.Targets
 
 tests :: [Test]
 tests = [

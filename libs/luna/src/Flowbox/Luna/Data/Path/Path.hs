@@ -21,7 +21,7 @@ module Flowbox.Luna.Data.Path.Path(
     --toString,
 ) where
 
-import           Flowbox.Prelude hiding (head, tail, init, last)
+import           Flowbox.Prelude hiding (head, init, last, tail)
 import qualified Flowbox.Prelude as Prelude
 
 newtype Path = Path {segments :: [String]} deriving (Show, Ord, Eq)
@@ -52,7 +52,7 @@ prepend :: String -> Path -> Path
 prepend segment path = Path $ segment:(segments path)
 
 
-head :: Path -> String 
+head :: Path -> String
 head path = Prelude.head $ segments path
 
 

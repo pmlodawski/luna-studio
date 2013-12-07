@@ -14,12 +14,9 @@ module Distribution.Client.PackageUtils (
     externalBuildDepends,
   ) where
 
-import           Distribution.Package              
-         ( packageVersion, packageName, Dependency(..) )
-import           Distribution.PackageDescription   
-         ( PackageDescription(..) )
-import           Distribution.Version              
-         ( withinRange )
+import Distribution.Package            (Dependency (..), packageName, packageVersion)
+import Distribution.PackageDescription (PackageDescription (..))
+import Distribution.Version            (withinRange)
 
 -- | The list of dependencies that refer to external packages
 -- rather than internal package components.

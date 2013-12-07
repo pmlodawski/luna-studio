@@ -8,10 +8,10 @@
 
 module Flowbox.Data.Version where
 
-import           Flowbox.Prelude   
-import           GHC.Generics      
-import           Data.Aeson        
-import           Data.Default      (Default, def)
+import Data.Aeson
+import Data.Default    (Default, def)
+import Flowbox.Prelude
+import GHC.Generics
 
 data Version = Version { branch :: [Int]
                        , tags   :: [String]

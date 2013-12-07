@@ -24,61 +24,47 @@ module Distribution.Client.IndexUtils (
   BuildTreeRefType(..), refTypeFromTypeCode, typeCodeFromRefType
   ) where
 
-import qualified Distribution.Client.Tar               as Tar
-import           Distribution.Client.Types               
+import qualified Distribution.Client.Tar   as Tar
+import           Distribution.Client.Types
 
-import           Distribution.Package                    
-         ( PackageId, PackageIdentifier(..), PackageName(..)
-         , Package(..), packageVersion, packageName
-         , Dependency(Dependency), InstalledPackageId(..) )
-import           Distribution.Client.PackageIndex        (PackageIndex)
+import           Distribution.Client.PackageIndex      (PackageIndex)
 import qualified Distribution.Client.PackageIndex      as PackageIndex
-import qualified Distribution.Simple.PackageIndex      as InstalledPackageIndex
 import qualified Distribution.InstalledPackageInfo     as InstalledPackageInfo
+import           Distribution.Package                  (Dependency (Dependency), InstalledPackageId (..), Package (..), PackageId, PackageIdentifier (..), PackageName (..), packageName, packageVersion)
+import           Distribution.PackageDescription       (GenericPackageDescription)
+import           Distribution.PackageDescription.Parse (parsePackageDescription)
 import qualified Distribution.PackageDescription.Parse as PackageDesc.Parse
-import           Distribution.PackageDescription         
-         ( GenericPackageDescription )
-import           Distribution.PackageDescription.Parse   
-         ( parsePackageDescription )
-import           Distribution.Simple.Compiler            
-         ( Compiler, PackageDBStack )
-import           Distribution.Simple.Program             
-         ( ProgramConfiguration )
-import qualified Distribution.Simple.Configure         as Configure
-         ( getInstalledPackages )
-import           Distribution.ParseUtils                 
-         ( ParseResult(..) )
-import           Distribution.Version                    
-         ( Version(Version), intersectVersionRanges )
-import           Distribution.Text                       
-         ( display, simpleParse )
-import           Distribution.Verbosity                  
-         ( Verbosity, normal, lessVerbose )
-import           Distribution.Simple.Utils               
-         ( die, warn, info, fromUTF8, findPackageDesc )
+import           Distribution.ParseUtils               (ParseResult (..))
+import           Distribution.Simple.Compiler          (Compiler, PackageDBStack)
+import qualified Distribution.Simple.Configure         as Configure (getInstalledPackages)
+import qualified Distribution.Simple.PackageIndex      as InstalledPackageIndex
+import           Distribution.Simple.Program           (ProgramConfiguration)
+import           Distribution.Simple.Utils             (die, findPackageDesc, fromUTF8, info, warn)
+import           Distribution.Text                     (display, simpleParse)
+import           Distribution.Verbosity                (Verbosity, lessVerbose, normal)
+import           Distribution.Version                  (Version (Version), intersectVersionRanges)
 
-import           Data.Char                               (isAlphaNum)
-import           Data.Maybe                              (mapMaybe, fromMaybe)
-import           Data.List                               (isPrefixOf)
-import           Data.Monoid                             (Monoid(..))
-import qualified Data.Map                              as Map
-import           Control.Monad                           (MonadPlus(mplus), when, liftM)
-import           Control.Exception                       (evaluate)
-import qualified Data.ByteString.Lazy                  as BS
-import qualified Data.ByteString.Lazy.Char8            as BS.Char8
-import qualified Data.ByteString.Char8                 as BSS
-import           Data.ByteString.Lazy                    (ByteString)
-import           Distribution.Client.GZipUtils           (maybeDecompress)
-import           Distribution.Client.Utils               (byteStringToFilePath)
-import           Distribution.Compat.Exception           (catchIO)
-import           Distribution.Client.Compat.Time         
-import           System.Directory                        (doesFileExist)
-import           System.FilePath                         ((</>), takeExtension, splitDirectories, normalise)
-import           System.FilePath.Posix                 as FilePath.Posix
-         ( takeFileName )
-import           System.IO                               
-import           System.IO.Unsafe                        (unsafeInterleaveIO)
-import           System.IO.Error                         (isDoesNotExistError)
+import           Control.Exception               (evaluate)
+import           Control.Monad                   (MonadPlus (mplus), liftM, when)
+import qualified Data.ByteString.Char8           as BSS
+import           Data.ByteString.Lazy            (ByteString)
+import qualified Data.ByteString.Lazy            as BS
+import qualified Data.ByteString.Lazy.Char8      as BS.Char8
+import           Data.Char                       (isAlphaNum)
+import           Data.List                       (isPrefixOf)
+import qualified Data.Map                        as Map
+import           Data.Maybe                      (fromMaybe, mapMaybe)
+import           Data.Monoid                     (Monoid (..))
+import           Distribution.Client.Compat.Time
+import           Distribution.Client.GZipUtils   (maybeDecompress)
+import           Distribution.Client.Utils       (byteStringToFilePath)
+import           Distribution.Compat.Exception   (catchIO)
+import           System.Directory                (doesFileExist)
+import           System.FilePath                 (normalise, splitDirectories, takeExtension, (</>))
+import           System.FilePath.Posix           as FilePath.Posix (takeFileName)
+import           System.IO
+import           System.IO.Error                 (isDoesNotExistError)
+import           System.IO.Unsafe                (unsafeInterleaveIO)
 
 
 getInstalledPackages :: Verbosity -> Compiler

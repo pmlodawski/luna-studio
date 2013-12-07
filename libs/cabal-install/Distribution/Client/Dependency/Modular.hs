@@ -9,28 +9,17 @@ module Distribution.Client.Dependency.Modular
 -- and finally, we have to convert back the resulting install
 -- plan.
 
-import           Data.Map                                                    as M
-         ( fromListWith )
-import           Distribution.Client.Dependency.Modular.Assignment             
-         ( Assignment, toCPs )
-import           Distribution.Client.Dependency.Modular.Dependency             
-         ( RevDepMap )
-import           Distribution.Client.Dependency.Modular.ConfiguredConversion   
-         ( convCP )
-import           Distribution.Client.Dependency.Modular.IndexConversion        
-         ( convPIs )
-import           Distribution.Client.Dependency.Modular.Log                    
-         ( logToProgress )
-import           Distribution.Client.Dependency.Modular.Package                
-         ( PN )
-import           Distribution.Client.Dependency.Modular.Solver                 
-         ( SolverConfig(..), solve )
-import           Distribution.Client.Dependency.Types                          
-         ( DependencyResolver, PackageConstraint(..) )
-import           Distribution.Client.InstallPlan                               
-         ( PlanPackage )
-import           Distribution.System                                           
-         ( Platform(..) )
+import Data.Map                                                    as M (fromListWith)
+import Distribution.Client.Dependency.Modular.Assignment           (Assignment, toCPs)
+import Distribution.Client.Dependency.Modular.ConfiguredConversion (convCP)
+import Distribution.Client.Dependency.Modular.Dependency           (RevDepMap)
+import Distribution.Client.Dependency.Modular.IndexConversion      (convPIs)
+import Distribution.Client.Dependency.Modular.Log                  (logToProgress)
+import Distribution.Client.Dependency.Modular.Package              (PN)
+import Distribution.Client.Dependency.Modular.Solver               (SolverConfig (..), solve)
+import Distribution.Client.Dependency.Types                        (DependencyResolver, PackageConstraint (..))
+import Distribution.Client.InstallPlan                             (PlanPackage)
+import Distribution.System                                         (Platform (..))
 
 -- | Ties the two worlds together: classic cabal-install vs. the modular
 -- solver. Performs the necessary translations before and after.

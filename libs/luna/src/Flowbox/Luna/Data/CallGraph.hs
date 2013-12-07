@@ -7,7 +7,7 @@
 
 module Flowbox.Luna.Data.CallGraph where
 
-import           Flowbox.Prelude   
+import Flowbox.Prelude
 
 data CallGraph   = CallGraph
                    deriving (Show)

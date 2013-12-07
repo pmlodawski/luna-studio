@@ -4,27 +4,27 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Distribution.Package.PackageFamily where
 
-import           GHC.Generics                              
-import           Data.Aeson                                
-import qualified Data.Aeson.TH                           as JSON
-import           Data.Default                              (Default, def)
-import           Data.List                                 (sortBy)
-import           Data.Function                             (on)
+import           Data.Aeson
+import qualified Data.Aeson.TH as JSON
+import           Data.Default  (Default, def)
+import           Data.Function (on)
+import           Data.List     (sortBy)
+import           GHC.Generics
 
-import           Flowbox.Prelude                         hiding (id)
-import           Flowbox.Data.List                         (foldri)
+import           Flowbox.Data.List                       (foldri)
+import           Flowbox.Data.Version                    (Version)
 import qualified Flowbox.Data.Version                    as Version
-import           Flowbox.Data.Version                      (Version)
+import           Flowbox.Distribution.License            (License)
+import           Flowbox.Distribution.Package.Dependency (Dependency)
 import qualified Flowbox.Distribution.Package.Dependency as Dependency
-import           Flowbox.Distribution.Package.Dependency   (Dependency)
-import           Flowbox.Distribution.License              (License)
+import           Flowbox.Distribution.Package.Package    (Package)
 import qualified Flowbox.Distribution.Package.Package    as Package
-import           Flowbox.Distribution.Package.Package      (Package)
+import           Flowbox.Prelude                         hiding (id)
 
 
 

@@ -7,10 +7,10 @@
 
 module Flowbox.Luna.Data.Cabal.Section where
 
-import           Flowbox.Prelude                    
-import           Flowbox.Luna.Data.HAST.Extension   (Extension)
+import Flowbox.Luna.Data.HAST.Extension (Extension)
+import Flowbox.Prelude
 
-import           Data.String.Utils                  (join)
+import Data.String.Utils (join)
 
 
 
@@ -20,12 +20,12 @@ data Section = Library    { exposedModules :: [String]
                           , extensions     :: [Extension]
                           , hsSourceDirs   :: [String]
                           }
-             | Executable { name           :: String
-                          , mainIs         :: String
-                          , ghcOptions     :: [String]
-                          , buildDepends   :: [String]
-                          , extensions     :: [Extension]
-                          , hsSourceDirs   :: [String]
+             | Executable { name         :: String
+                          , mainIs       :: String
+                          , ghcOptions   :: [String]
+                          , buildDepends :: [String]
+                          , extensions   :: [Extension]
+                          , hsSourceDirs :: [String]
                           }
                 deriving (Show)
 
@@ -57,22 +57,22 @@ genFields name' vals = genField name' $ if null vals
 
 
 genField :: String -> String -> String
-genField name' val = ident 
-                   ++ name' ++ ":" 
-                   ++ replicate (18 - length name') ' ' 
+genField name' val = ident
+                   ++ name' ++ ":"
+                   ++ replicate (18 - length name') ' '
                    ++ val ++ "\n"
 
 
 genCode :: Section -> String
-genCode s = genCodeSpecific s 
+genCode s = genCodeSpecific s
                ++ genFields "Hs-Source-Dirs"  (hsSourceDirs s)
                ++ genFields "GHC-Options"     (ghcOptions s)
                ++ genFields "Extensions"      (map show $ extensions s)
                ++ genFields "Build-Depends"   (buildDepends s)
-   
+
 
 genCodeSpecific :: Section -> String
-genCodeSpecific s = case s of 
+genCodeSpecific s = case s of
     Library {}    -> "Library\n"
                ++ genFields "Exposed-modules" (exposedModules s)
     Executable {} -> "Executable " ++ (name s) ++ "\n"

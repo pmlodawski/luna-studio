@@ -7,9 +7,9 @@
 
 module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils where
 
-import           Flowbox.Prelude             hiding (error, id)
 import qualified Flowbox.Luna.Data.HAST.Expr as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit  as HLit
+import           Flowbox.Prelude             hiding (error, id)
 
 
 mkCFName     = ("CF_" ++)
@@ -33,20 +33,20 @@ mkCGetCName i = "Get" ++ show i
 mkGetNName  i = "get" ++ show i
 mkCGetName  i = mkGetNName i
 
---genTH f a b c = HExpr.AppE (HExpr.Var f) 
---              $ HExpr.AppE (HExpr.Var $ mkTHTypeName a) 
---              $ HExpr.AppE (HExpr.Var $ mkTHVarName  b) 
+--genTH f a b c = HExpr.AppE (HExpr.Var f)
+--              $ HExpr.AppE (HExpr.Var $ mkTHTypeName a)
+--              $ HExpr.AppE (HExpr.Var $ mkTHVarName  b)
 --              $ HExpr.Var $ mkTHVarName c
 
 genTH f a b c = foldl (HExpr.AppE) (HExpr.Var f) vars where
-			    vars = map HExpr.Var [mkTHTypeName a, mkTHVarName b, mkTHVarName c]
+                            vars = map HExpr.Var [mkTHTypeName a, mkTHVarName b, mkTHVarName c]
 genTHInst  = genTH "mkInst"
 
 
 genTHInstMem name func = foldl (HExpr.AppE) (HExpr.Var "mkInstMem") vars where
-			    vars = [ HExpr.Lit $ HLit.String name
-			           , HExpr.Var $ mkTHVarName func
-			           ]
+                            vars = [ HExpr.Lit $ HLit.String name
+                                   , HExpr.Var $ mkTHVarName func
+                                   ]
 
 
 genCFDec cname cfname = foldl HExpr.AppE (HExpr.Var "mkNTWrapper") [ HExpr.Lit $ HLit.String cfname
@@ -56,15 +56,15 @@ genCFDec cname cfname = foldl HExpr.AppE (HExpr.Var "mkNTWrapper") [ HExpr.Lit $
 
 genCCDec name = HExpr.DataD name [] [HExpr.Con name []] []
 
-genDTGet0 name params = HExpr.InstanceD (foldl (HExpr.AppE) (HExpr.ConT "Get0") [baseType, baseType]) 
+genDTGet0 name params = HExpr.InstanceD (foldl (HExpr.AppE) (HExpr.ConT "Get0") [baseType, baseType])
                       $ [HExpr.Function "get0" [] $ HExpr.VarE "id"]
-						where baseType = mkPure $ foldl (HExpr.AppE) (HExpr.ConT name) $ map HExpr.VarE params
+                                                where baseType = mkPure $ foldl (HExpr.AppE) (HExpr.ConT name) $ map HExpr.VarE params
 
---genCon name fnum = HExpr.Function ("con" ++ mkConsName name) [] 
---                 $ HExpr.AppE (HExpr.Var $ "mkPure" ++ show fnum) 
+--genCon name fnum = HExpr.Function ("con" ++ mkConsName name) []
+--                 $ HExpr.AppE (HExpr.Var $ "mkPure" ++ show fnum)
 --                 $ HExpr.Var name
 
-genCon name ccname = HExpr.Function ("con" ++ mkConsName name) [] 
+genCon name ccname = HExpr.Function ("con" ++ mkConsName name) []
                    $ (HExpr.Var ccname) -- mkPure
 
 

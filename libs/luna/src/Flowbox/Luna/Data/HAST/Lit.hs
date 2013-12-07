@@ -7,8 +7,8 @@
 
 module Flowbox.Luna.Data.HAST.Lit where
 
+import           Flowbox.Prelude hiding (Char, Integer, String)
 import qualified Flowbox.Prelude as Prelude
-import           Flowbox.Prelude hiding (String, Char, Integer)
 
 data Lit = Char    Prelude.Char
          | String  Prelude.String

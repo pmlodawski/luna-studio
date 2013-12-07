@@ -11,7 +11,7 @@ module Flowbox.Data.List(
 ) where
 
 import qualified Data.List       as List
-import           Flowbox.Prelude   
+import           Flowbox.Prelude
 
 foldri :: (a -> b -> b) -> [a] -> b -> b
 foldri a b c = foldr a c b

@@ -1,14 +1,14 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE PolyKinds #-} -- Used by proxy DataType declaration
+{-# LANGUAGE PolyKinds                 #-}
 
 module FlowboxM.Luna.Bind where
 
-import           FlowboxM.Luna.Data   
+import FlowboxM.Luna.Data
 
 -- redefinition of do notation
 

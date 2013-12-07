@@ -38,81 +38,48 @@ module Distribution.Client.Sandbox (
     configPackageDB', configCompilerAux'
   ) where
 
-import           Distribution.Client.Setup                        
-  ( SandboxFlags(..), ConfigFlags(..), ConfigExFlags(..), InstallFlags(..)
-  , GlobalFlags(..), defaultConfigExFlags, defaultInstallFlags
-  , defaultSandboxLocation, globalRepos )
-import Distribution.Client.Sandbox.Timestamp  ( listModifiedDeps
-                                              , maybeAddCompilerTimestampRecord
-                                              , withAddTimestamps
-                                              , withRemoveTimestamps )
-import           Distribution.Client.Config                       ( SavedConfig(..), loadConfig )
-import           Distribution.Client.Dependency                   ( foldProgress )
-import           Distribution.Client.IndexUtils                   ( BuildTreeRefType(..) )
-import Distribution.Client.Install            ( InstallArgs,
-                                                makeInstallContext,
-                                                makeInstallPlan,
-                                                processInstallPlan )
-import           Distribution.Client.Sandbox.PackageEnvironment   
-  ( PackageEnvironment(..), IncludeComments(..), PackageEnvironmentType(..)
-  , createPackageEnvironmentFile, classifyPackageEnvironment
-  , tryLoadSandboxPackageEnvironmentFile, loadUserConfig
-  , commentPackageEnvironment, showPackageEnvironmentWithComments
-  , sandboxPackageEnvironmentFile, userPackageEnvironmentFile )
-import           Distribution.Client.Sandbox.Types                ( SandboxPackageInfo(..)
-                                              , UseSandbox(..) )
-import           Distribution.Client.Types                        ( PackageLocation(..)
-                                              , SourcePackage(..) )
-import           Distribution.Client.Utils                        ( inDir, tryCanonicalizePath )
-import           Distribution.PackageDescription.Configuration    
-                                              ( flattenPackageDescription )
-import           Distribution.PackageDescription.Parse            ( readPackageDescription )
-import           Distribution.Simple.Compiler                     ( Compiler(..), PackageDB(..)
-                                              , PackageDBStack )
-import Distribution.Simple.Configure          ( configCompilerAuxEx
-                                              , interpretPackageDbFlags
-                                              , getPackageDBContents )
-import           Distribution.Simple.PreProcess                   ( knownSuffixHandlers )
-import           Distribution.Simple.Program                      ( ProgramConfiguration )
-import           Distribution.Simple.Setup                        ( Flag(..), HaddockFlags(..)
-                                              , fromFlagOrDefault )
-import           Distribution.Simple.SrcDist                      ( prepareTree )
-import Distribution.Simple.Utils              ( die, debug, notice, info, warn
-                                              , debugNoWrap, defaultPackageDesc
-                                              , findPackageDesc
-                                              , intercalate, topHandlerWith
-                                              , createDirectoryIfMissingVerbose )
-import           Distribution.Package                             ( Package(..) )
-import           Distribution.System                              ( Platform )
-import           Distribution.Text                                ( display )
-import           Distribution.Verbosity                           ( Verbosity, lessVerbose )
-import           Distribution.Client.Compat.Environment           ( lookupEnv, setEnv )
-import           Distribution.Client.Compat.FilePerms             ( setFileHidden )
-import qualified Distribution.Client.Sandbox.Index              as Index
-import qualified Distribution.Simple.PackageIndex               as InstalledPackageIndex
-import qualified Distribution.Simple.Register                   as Register
+import           Control.Exception                              (assert, bracket_)
+import           Control.Monad                                  (forM, liftM2, unless, when)
+import           Data.Bits                                      (shiftL, shiftR, xor)
+import           Data.Char                                      (ord)
+import           Data.IORef                                     (newIORef, readIORef, writeIORef)
+import           Data.List                                      (delete, foldl')
 import qualified Data.Map                                       as M
+import           Data.Maybe                                     (fromJust)
+import           Data.Monoid                                    (mappend, mempty)
 import qualified Data.Set                                       as S
-import           Control.Exception                                ( assert, bracket_ )
-import           Control.Monad                                    ( forM, liftM2, unless, when )
-import           Data.Bits                                        ( shiftL, shiftR, xor )
-import           Data.Char                                        ( ord )
-import           Data.IORef                                       ( newIORef, writeIORef, readIORef )
-import           Data.List                                        ( delete, foldl' )
-import           Data.Maybe                                       ( fromJust )
-import           Data.Monoid                                      ( mempty, mappend )
-import           Data.Word                                        ( Word32 )
-import           Numeric                                          ( showHex )
-import System.Directory                       ( createDirectory
-                                              , doesDirectoryExist
-                                              , doesFileExist
-                                              , getCurrentDirectory
-                                              , removeDirectoryRecursive
-                                              , removeFile
-                                              , renameDirectory )
-import System.FilePath                        ( (</>), getSearchPath
-                                              , searchPathSeparator
-                                              , takeDirectory )
+import           Data.Word                                      (Word32)
+import           Distribution.Client.Compat.Environment         (lookupEnv, setEnv)
+import           Distribution.Client.Compat.FilePerms           (setFileHidden)
+import           Distribution.Client.Config                     (SavedConfig (..), loadConfig)
+import           Distribution.Client.Dependency                 (foldProgress)
+import           Distribution.Client.IndexUtils                 (BuildTreeRefType (..))
+import           Distribution.Client.Install                    (InstallArgs, makeInstallContext, makeInstallPlan, processInstallPlan)
+import qualified Distribution.Client.Sandbox.Index              as Index
+import           Distribution.Client.Sandbox.PackageEnvironment (IncludeComments (..), PackageEnvironment (..), PackageEnvironmentType (..), classifyPackageEnvironment, commentPackageEnvironment, createPackageEnvironmentFile, loadUserConfig, sandboxPackageEnvironmentFile, showPackageEnvironmentWithComments, tryLoadSandboxPackageEnvironmentFile, userPackageEnvironmentFile)
+import           Distribution.Client.Sandbox.Timestamp          (listModifiedDeps, maybeAddCompilerTimestampRecord, withAddTimestamps, withRemoveTimestamps)
+import           Distribution.Client.Sandbox.Types              (SandboxPackageInfo (..), UseSandbox (..))
+import           Distribution.Client.Setup                      (ConfigExFlags (..), ConfigFlags (..), GlobalFlags (..), InstallFlags (..), SandboxFlags (..), defaultConfigExFlags, defaultInstallFlags, defaultSandboxLocation, globalRepos)
+import           Distribution.Client.Types                      (PackageLocation (..), SourcePackage (..))
+import           Distribution.Client.Utils                      (inDir, tryCanonicalizePath)
+import           Distribution.Package                           (Package (..))
+import           Distribution.PackageDescription.Configuration  (flattenPackageDescription)
+import           Distribution.PackageDescription.Parse          (readPackageDescription)
+import           Distribution.Simple.Compiler                   (Compiler (..), PackageDB (..), PackageDBStack)
+import           Distribution.Simple.Configure                  (configCompilerAuxEx, getPackageDBContents, interpretPackageDbFlags)
+import qualified Distribution.Simple.PackageIndex               as InstalledPackageIndex
+import           Distribution.Simple.PreProcess                 (knownSuffixHandlers)
+import           Distribution.Simple.Program                    (ProgramConfiguration)
+import qualified Distribution.Simple.Register                   as Register
+import           Distribution.Simple.Setup                      (Flag (..), HaddockFlags (..), fromFlagOrDefault)
+import           Distribution.Simple.SrcDist                    (prepareTree)
+import           Distribution.Simple.Utils                      (createDirectoryIfMissingVerbose, debug, debugNoWrap, defaultPackageDesc, die, findPackageDesc, info, intercalate, notice, topHandlerWith, warn)
+import           Distribution.System                            (Platform)
+import           Distribution.Text                              (display)
+import           Distribution.Verbosity                         (Verbosity, lessVerbose)
+import           Numeric                                        (showHex)
+import           System.Directory                               (createDirectory, doesDirectoryExist, doesFileExist, getCurrentDirectory, removeDirectoryRecursive, removeFile, renameDirectory)
+import           System.FilePath                                (getSearchPath, searchPathSeparator, takeDirectory, (</>))
 
 
 --

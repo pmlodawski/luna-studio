@@ -10,96 +10,96 @@ module Flowbox.Luna.Data.HAST.Extension (
     genCode
 )where
 
-import           Flowbox.Prelude     
-import           Data.String.Utils   (join)
+import Data.String.Utils (join)
+import Flowbox.Prelude
 
-data Extension = AlternativeLayoutRule                
-               | AlternativeLayoutRuleTransitional    
-               | Arrows                               
-               | BangPatterns                         
-               | CApiFFI                              
-               | CPP                                  
-               | ConstrainedClassMethods              
-               | ConstraintKinds                      
-               | DataKinds                            
-               | DatatypeContexts                     
-               | DefaultSignatures                    
-               | DeriveDataTypeable                   
-               | DeriveFoldable                       
-               | DeriveFunctor                        
-               | DeriveGeneric                        
-               | DeriveTraversable                    
-               | DisambiguateRecordFields             
-               | DoAndIfThenElse                      
-               | DoRec                                
-               | EmptyDataDecls                       
-               | ExistentialQuantification            
-               | ExplicitForAll                       
-               | ExplicitNamespaces                   
-               | ExtendedDefaultRules                 
-               | FlexibleContexts                     
-               | FlexibleInstances                    
-               | ForeignFunctionInterface             
-               | FunctionalDependencies               
-               | GADTSyntax                           
-               | GADTs                                
-               | GHCForeignImportPrim                 
-               | GeneralizedNewtypeDeriving           
-               | Generics                             
-               | Haskell2010                          
-               | Haskell98                            
-               | ImplicitParams                       
-               | ImplicitPrelude                      
-               | ImpredicativeTypes                   
-               | IncoherentInstances                  
-               | InstanceSigs                         
-               | InterruptibleFFI                     
-               | KindSignatures                       
-               | LambdaCase                           
-               | LiberalTypeSynonyms                  
-               | MagicHash                            
-               | MonadComprehensions                  
-               | MonoLocalBinds                       
-               | MonoPatBinds                         
-               | MonomorphismRestriction              
-               | MultiParamTypeClasses                
-               | MultiWayIf                           
-               | NPlusKPatterns                       
-               | NamedFieldPuns                       
-               | NoAlternativeLayoutRule              
-               | NoAlternativeLayoutRuleTransitional  
-               | NoArrows                             
-               | NoBangPatterns                       
-               | NoCApiFFI                            
-               | NoCPP                                
-               | NoConstrainedClassMethods            
-               | NoConstraintKinds                    
-               | NoDataKinds                          
-               | NoDatatypeContexts                   
-               | NoDefaultSignatures                  
-               | NoDeriveDataTypeable                 
-               | NoDeriveFoldable                     
-               | NoDeriveFunctor                      
-               | NoDeriveGeneric                      
-               | NoDeriveTraversable                  
-               | NoDisambiguateRecordFields           
-               | NoDoAndIfThenElse                    
-               | NoDoRec                              
-               | NoEmptyDataDecls                     
-               | NoExistentialQuantification          
-               | NoExplicitForAll                     
-               | NoExplicitNamespaces                 
-               | NoExtendedDefaultRules               
-               | NoFlexibleContexts                   
-               | NoFlexibleInstances                  
-               | NoForeignFunctionInterface           
-               | NoFunctionalDependencies             
-               | NoGADTSyntax                         
-               | NoGADTs                              
-               | NoGHCForeignImportPrim               
-               | NoGeneralizedNewtypeDeriving         
-               | NoGenerics                           
-               | NoImplicitParams                     
+data Extension = AlternativeLayoutRule
+               | AlternativeLayoutRuleTransitional
+               | Arrows
+               | BangPatterns
+               | CApiFFI
+               | CPP
+               | ConstrainedClassMethods
+               | ConstraintKinds
+               | DataKinds
+               | DatatypeContexts
+               | DefaultSignatures
+               | DeriveDataTypeable
+               | DeriveFoldable
+               | DeriveFunctor
+               | DeriveGeneric
+               | DeriveTraversable
+               | DisambiguateRecordFields
+               | DoAndIfThenElse
+               | DoRec
+               | EmptyDataDecls
+               | ExistentialQuantification
+               | ExplicitForAll
+               | ExplicitNamespaces
+               | ExtendedDefaultRules
+               | FlexibleContexts
+               | FlexibleInstances
+               | ForeignFunctionInterface
+               | FunctionalDependencies
+               | GADTSyntax
+               | GADTs
+               | GHCForeignImportPrim
+               | GeneralizedNewtypeDeriving
+               | Generics
+               | Haskell2010
+               | Haskell98
+               | ImplicitParams
+               | ImplicitPrelude
+               | ImpredicativeTypes
+               | IncoherentInstances
+               | InstanceSigs
+               | InterruptibleFFI
+               | KindSignatures
+               | LambdaCase
+               | LiberalTypeSynonyms
+               | MagicHash
+               | MonadComprehensions
+               | MonoLocalBinds
+               | MonoPatBinds
+               | MonomorphismRestriction
+               | MultiParamTypeClasses
+               | MultiWayIf
+               | NPlusKPatterns
+               | NamedFieldPuns
+               | NoAlternativeLayoutRule
+               | NoAlternativeLayoutRuleTransitional
+               | NoArrows
+               | NoBangPatterns
+               | NoCApiFFI
+               | NoCPP
+               | NoConstrainedClassMethods
+               | NoConstraintKinds
+               | NoDataKinds
+               | NoDatatypeContexts
+               | NoDefaultSignatures
+               | NoDeriveDataTypeable
+               | NoDeriveFoldable
+               | NoDeriveFunctor
+               | NoDeriveGeneric
+               | NoDeriveTraversable
+               | NoDisambiguateRecordFields
+               | NoDoAndIfThenElse
+               | NoDoRec
+               | NoEmptyDataDecls
+               | NoExistentialQuantification
+               | NoExplicitForAll
+               | NoExplicitNamespaces
+               | NoExtendedDefaultRules
+               | NoFlexibleContexts
+               | NoFlexibleInstances
+               | NoForeignFunctionInterface
+               | NoFunctionalDependencies
+               | NoGADTSyntax
+               | NoGADTs
+               | NoGHCForeignImportPrim
+               | NoGeneralizedNewtypeDeriving
+               | NoGenerics
+               | NoImplicitParams
                | NoImplicitPrelude
                | NoImpredicativeTypes
                | NoIncoherentInstances
@@ -188,13 +188,13 @@ data Extension = AlternativeLayoutRule
                | UnliftedFFITypes
                | Unsafe
                | ViewPatterns
-			deriving (Show)
+                        deriving (Show)
 
 
 genCode :: [Extension] -> String
 genCode exts = case exts of
-	[] -> ""
-	_  -> "{-# LANGUAGE " ++ join ", " (map show exts) ++ " #-}\n\n"
+        [] -> ""
+        _  -> "{-# LANGUAGE " ++ join ", " (map show exts) ++ " #-}\n\n"
 
 
 

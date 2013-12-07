@@ -8,19 +8,19 @@
 
 module Flowbox.Batch.Server.Transport.TCP where
 
-import           Control.Monad                          (forever)
-import qualified Data.ByteString.Lazy                 as ByteString
-import           Data.ByteString.Lazy                   (ByteString)
-import           Data.Int                               (Int64)
-import qualified Network.Socket                       as Socket
-import qualified Network.Socket.ByteString            as SByteString
-import qualified Network.Socket.ByteString.Lazy       as SLByteString
-import qualified Text.ProtocolBuffers.WireMessage     as WireMessage
+import           Control.Monad                    (forever)
+import           Data.ByteString.Lazy             (ByteString)
+import qualified Data.ByteString.Lazy             as ByteString
+import           Data.Int                         (Int64)
+import qualified Network.Socket                   as Socket
+import qualified Network.Socket.ByteString        as SByteString
+import qualified Network.Socket.ByteString.Lazy   as SLByteString
+import qualified Text.ProtocolBuffers.WireMessage as WireMessage
 
-import           Flowbox.Prelude                      hiding (error)
+import           Flowbox.Batch.Server.Handler.Handler (Handler)
 import qualified Flowbox.Batch.Server.Processor       as Processor
-import           Flowbox.Batch.Server.Handler.Handler   (Handler)
-import           Flowbox.System.Log.Logger              
+import           Flowbox.Prelude                      hiding (error)
+import           Flowbox.System.Log.Logger
 
 
 
@@ -54,14 +54,14 @@ serve address port handler = Socket.withSocketsDo $ do
     --    else singleAcceptLoop (accepter_ socket) (proc_ hand)
 --    socket <- ZMQ3.socket ZMQ3.Rep
 --    ZMQ3.bind socket (address ++ ":" ++ show port)
-    --runSingleConnectionServer accepter 
+    --runSingleConnectionServer accepter
 
 
 handleCall :: (Handler handler) => Socket.Socket -> handler -> IO ()
 handleCall socket handler = do
-    loggerIO debug "handleCall: started"       
-   
-    encoded_request <- readData socket 
+    loggerIO debug "handleCall: started"
+
+    encoded_request <- readData socket
     --let (x :: Either String (Request, ByteString.ByteString) ) = Proto.messageGet encoded_request
     --let x = case Proto.messageWithLengthGet encoded_request of
     --            Left m -> Left m
@@ -91,4 +91,4 @@ readData socket = do
                 d = ByteString.append begin n
             if stillToRead == 0
                 then return d
-                else readRest d stillToRead        
+                else readRest d stillToRead

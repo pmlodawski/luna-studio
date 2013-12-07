@@ -9,8 +9,8 @@ module Flowbox.Luna.Data.Path.Import(
     Import(..),
 ) where
 
-import           Flowbox.Prelude               
-import           Flowbox.Luna.Data.Path.Path   (Path)
+import Flowbox.Luna.Data.Path.Path (Path)
+import Flowbox.Prelude
 
 data Import = Import {path :: Path, name :: String} deriving (Show)
 

@@ -1,16 +1,16 @@
+{-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell    #-}
 
 module Flowbox.Distribution.M where
 
-import qualified Data.Map                                      as Map
+import qualified Data.Map as Map
 
-import           Flowbox.Prelude                                 
-import qualified Flowbox.Config.Config                         as Config
-import qualified Data.Aeson                                    as JSON
-import qualified Flowbox.Distribution.Package.PackageFamily    as PackageFamily
-import qualified Flowbox.Distribution.Package.PackageIndex     as PackageIndex
+import qualified Data.Aeson                                 as JSON
+import qualified Flowbox.Config.Config                      as Config
+import qualified Flowbox.Distribution.Package.PackageFamily as PackageFamily
+import qualified Flowbox.Distribution.Package.PackageIndex  as PackageIndex
+import           Flowbox.Prelude
 
 
 main = do

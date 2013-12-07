@@ -4,22 +4,22 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Distribution.Package.Package where
 
-import           GHC.Generics                              
-import           Data.Aeson                                
-import qualified Data.Aeson.TH                           as JSON
-import           Data.Default                              (Default, def)
+import           Data.Aeson
+import qualified Data.Aeson.TH as JSON
+import           Data.Default  (Default, def)
+import           GHC.Generics
 
-import           Flowbox.Prelude                         hiding (id)
+import           Flowbox.Data.Version                    (Version)
 import qualified Flowbox.Data.Version                    as Version
-import           Flowbox.Data.Version                      (Version)
+import           Flowbox.Distribution.License            (License)
+import           Flowbox.Distribution.Package.Dependency (Dependency)
 import qualified Flowbox.Distribution.Package.Dependency as Dependency
-import           Flowbox.Distribution.Package.Dependency   (Dependency)
-import           Flowbox.Distribution.License              (License)
+import           Flowbox.Prelude                         hiding (id)
 
 
 

@@ -26,44 +26,29 @@ module Distribution.Client.Dependency.Types (
     foldProgress,
   ) where
 
-import           Control.Applicative                
-         ( Applicative(..), Alternative(..) )
+import Control.Applicative (Alternative (..), Applicative (..))
 
-import           Data.Char                          
-         ( isAlpha, toLower )
-import           Data.Monoid                        
-         ( Monoid(..) )
+import Data.Char   (isAlpha, toLower)
+import Data.Monoid (Monoid (..))
 
-import           Distribution.Client.Types          
-         ( OptionalStanza, SourcePackage(..) )
-import qualified Distribution.Client.InstallPlan  as InstallPlan
+import qualified Distribution.Client.InstallPlan as InstallPlan
+import           Distribution.Client.Types       (OptionalStanza, SourcePackage (..))
 
-import           Distribution.Compat.ReadP          
-         ( (<++) )
+import Distribution.Compat.ReadP ((<++))
 
-import qualified Distribution.Compat.ReadP        as Parse
-         ( pfail, munch1 )
-import           Distribution.PackageDescription    
-         ( FlagAssignment )
-import qualified Distribution.Client.PackageIndex as PackageIndex
-         ( PackageIndex )
-import qualified Distribution.Simple.PackageIndex as InstalledPackageIndex
-         ( PackageIndex )
-import           Distribution.Package               
-         ( Dependency, PackageName, InstalledPackageId )
-import           Distribution.Version               
-         ( VersionRange )
-import           Distribution.Compiler              
-         ( CompilerId )
-import           Distribution.System                
-         ( Platform )
-import           Distribution.Text                  
-         ( Text(..) )
+import qualified Distribution.Client.PackageIndex as PackageIndex (PackageIndex)
+import qualified Distribution.Compat.ReadP        as Parse (munch1, pfail)
+import           Distribution.Compiler            (CompilerId)
+import           Distribution.Package             (Dependency, InstalledPackageId, PackageName)
+import           Distribution.PackageDescription  (FlagAssignment)
+import qualified Distribution.Simple.PackageIndex as InstalledPackageIndex (PackageIndex)
+import           Distribution.System              (Platform)
+import           Distribution.Text                (Text (..))
+import           Distribution.Version             (VersionRange)
 
-import           Text.PrettyPrint                   
-         ( text )
+import Text.PrettyPrint (text)
 
-import           Prelude                          hiding (fail)
+import Prelude hiding (fail)
 
 -- | Covers source dependencies and installed dependencies in
 -- one type.

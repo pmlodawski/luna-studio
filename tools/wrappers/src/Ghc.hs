@@ -2,9 +2,9 @@
 
 module Ghc where
 
-import qualified System.Cmd            as Cmd
-import qualified System.Environment    as Env
-import qualified System.Exit           as Exit
+import qualified System.Cmd         as Cmd
+import qualified System.Environment as Env
+import qualified System.Exit        as Exit
 
 import qualified Flowbox.Config.Config as Cfg
 
@@ -21,7 +21,7 @@ main = do
 
     exitCode <- Cmd.rawSystem exec $ ("-B" ++ (Cfg.topDir . Cfg.ghcS) cfg)
     --exitCode <- Cmd.rawSystem exec $ ("-B" ++ (Cfg.libDir . Cfg.ghcTP . Cfg.thirdparty) cfg)
-                       : "-no-user-package-db" 
+                       : "-no-user-package-db"
                        : ("-package-db=" ++ (Cfg.pkgDb . Cfg.global) cfg)
                        : ("-package-db=" ++ (Cfg.pkgDb . Cfg.local)  cfg)
                        : args

@@ -57,48 +57,30 @@ module Distribution.Client.Dependency (
     hideInstalledPackagesAllVersions,
   ) where
 
-import           Distribution.Client.Dependency.TopDown   
-         ( topDownResolver )
-import           Distribution.Client.Dependency.Modular   
-         ( modularResolver, SolverConfig(..) )
-import qualified Distribution.Client.PackageIndex       as PackageIndex
-import qualified Distribution.Simple.PackageIndex       as InstalledPackageIndex
+import           Distribution.Client.Dependency.Modular (SolverConfig (..), modularResolver)
+import           Distribution.Client.Dependency.TopDown (topDownResolver)
+import           Distribution.Client.Dependency.Types   (DependencyResolver, InstalledPreference (..), PackageConstraint (..), PackagePreferences (..), PackagesPreferenceDefault (..), PreSolver (..), Progress (..), Solver (..), foldProgress)
+import           Distribution.Client.InstallPlan        (InstallPlan)
 import qualified Distribution.Client.InstallPlan        as InstallPlan
-import           Distribution.Client.InstallPlan          (InstallPlan)
-import           Distribution.Client.Types                
-         ( SourcePackageDb(SourcePackageDb)
-         , SourcePackage(..) )
-import           Distribution.Client.Dependency.Types     
-         ( PreSolver(..), Solver(..), DependencyResolver, PackageConstraint(..)
-         , PackagePreferences(..), InstalledPreference(..)
-         , PackagesPreferenceDefault(..)
-         , Progress(..), foldProgress )
-import           Distribution.Client.Sandbox.Types        
-         ( SandboxPackageInfo(..) )
-import           Distribution.Client.Targets              
+import qualified Distribution.Client.PackageIndex       as PackageIndex
+import           Distribution.Client.Sandbox.Types      (SandboxPackageInfo (..))
+import           Distribution.Client.Targets
+import           Distribution.Client.Types              (SourcePackage (..), SourcePackageDb (SourcePackageDb))
+import           Distribution.Compiler                  (CompilerFlavor (..), CompilerId (..))
 import qualified Distribution.InstalledPackageInfo      as Installed
-import           Distribution.Package                     
-         ( PackageName(..), PackageId, Package(..), packageName, packageVersion
-         , InstalledPackageId, Dependency(Dependency))
-import           Distribution.Version                     
-         ( Version(..), VersionRange, anyVersion, thisVersion, withinRange
-         , simplifyVersionRange )
-import           Distribution.Compiler                    
-         ( CompilerId(..), CompilerFlavor(..) )
-import           Distribution.System                      
-         ( Platform )
-import           Distribution.Simple.Utils                
-         ( comparing, warn, info )
-import           Distribution.Text                        
-         ( display )
-import           Distribution.Verbosity                   
-         ( Verbosity )
+import           Distribution.Package                   (Dependency (Dependency), InstalledPackageId, Package (..), PackageId, PackageName (..), packageName, packageVersion)
+import qualified Distribution.Simple.PackageIndex       as InstalledPackageIndex
+import           Distribution.Simple.Utils              (comparing, info, warn)
+import           Distribution.System                    (Platform)
+import           Distribution.Text                      (display)
+import           Distribution.Verbosity                 (Verbosity)
+import           Distribution.Version                   (Version (..), VersionRange, anyVersion, simplifyVersionRange, thisVersion, withinRange)
 
-import           Data.List                                (maximumBy, foldl')
-import           Data.Maybe                               (fromMaybe)
-import qualified Data.Map                               as Map
-import qualified Data.Set                               as Set
-import           Data.Set                                 (Set)
+import           Data.List  (foldl', maximumBy)
+import qualified Data.Map   as Map
+import           Data.Maybe (fromMaybe)
+import           Data.Set   (Set)
+import qualified Data.Set   as Set
 
 -- ------------------------------------------------------------
 -- * High level planner policy

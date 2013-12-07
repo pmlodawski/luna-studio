@@ -44,61 +44,40 @@ module Distribution.Client.Targets (
 
   ) where
 
-import           Distribution.Package                    
-         ( Package(..), PackageName(..)
-         , PackageIdentifier(..), packageName, packageVersion
-         , Dependency(Dependency) )
-import           Distribution.Client.Types               
-         ( SourcePackage(..), PackageLocation(..), OptionalStanza(..) )
-import           Distribution.Client.Dependency.Types    
-         ( PackageConstraint(..) )
+import Distribution.Client.Dependency.Types (PackageConstraint (..))
+import Distribution.Client.Types            (OptionalStanza (..), PackageLocation (..), SourcePackage (..))
+import Distribution.Package                 (Dependency (Dependency), Package (..), PackageIdentifier (..), PackageName (..), packageName, packageVersion)
 
-import qualified Distribution.Client.World             as World
-import           Distribution.Client.PackageIndex        (PackageIndex)
-import qualified Distribution.Client.PackageIndex      as PackageIndex
-import qualified Distribution.Client.Tar               as Tar
-import           Distribution.Client.FetchUtils          
+import           Distribution.Client.FetchUtils
+import           Distribution.Client.PackageIndex (PackageIndex)
+import qualified Distribution.Client.PackageIndex as PackageIndex
+import qualified Distribution.Client.Tar          as Tar
+import qualified Distribution.Client.World        as World
 
-import           Distribution.PackageDescription         
-         ( GenericPackageDescription, FlagName(..), FlagAssignment )
-import           Distribution.PackageDescription.Parse   
-         ( readPackageDescription, parsePackageDescription, ParseResult(..) )
-import           Distribution.Version                    
-         ( Version(Version), thisVersion, anyVersion, isAnyVersion
-         , VersionRange )
-import           Distribution.Text                       
-         ( Text(..), display )
-import           Distribution.Verbosity                  (Verbosity)
-import           Distribution.Simple.Utils               
-         ( die, warn, intercalate, findPackageDesc, fromUTF8, lowercase )
+import Distribution.PackageDescription       (FlagAssignment, FlagName (..), GenericPackageDescription)
+import Distribution.PackageDescription.Parse (ParseResult (..), parsePackageDescription, readPackageDescription)
+import Distribution.Simple.Utils             (die, findPackageDesc, fromUTF8, intercalate, lowercase, warn)
+import Distribution.Text                     (Text (..), display)
+import Distribution.Verbosity                (Verbosity)
+import Distribution.Version                  (Version (Version), VersionRange, anyVersion, isAnyVersion, thisVersion)
 
-import           Data.List                               
-         ( find, nub )
-import           Data.Maybe                              
-         ( listToMaybe )
-import           Data.Either                             
-         ( partitionEithers )
-import           Data.Monoid                             
-         ( Monoid(..) )
-import qualified Data.Map                              as Map
-import qualified Data.ByteString.Lazy                  as BS
-import qualified Data.ByteString.Lazy.Char8            as BS.Char8
-import qualified Distribution.Client.GZipUtils         as GZipUtils
-import           Control.Monad                           (liftM)
-import qualified Distribution.Compat.ReadP             as Parse
-import           Distribution.Compat.ReadP               
-         ( (+++), (<++) )
-import qualified Text.PrettyPrint                      as Disp
-import           Text.PrettyPrint                        
-         ( (<>), (<+>) )
-import           Data.Char                               
-         ( isSpace, isAlphaNum )
-import           System.FilePath                         
-         ( takeExtension, dropExtension, takeDirectory, splitPath )
-import           System.Directory                        
-         ( doesFileExist, doesDirectoryExist )
-import           Network.URI                             
-         ( URI(..), URIAuth(..), parseAbsoluteURI )
+import           Control.Monad                 (liftM)
+import qualified Data.ByteString.Lazy          as BS
+import qualified Data.ByteString.Lazy.Char8    as BS.Char8
+import           Data.Char                     (isAlphaNum, isSpace)
+import           Data.Either                   (partitionEithers)
+import           Data.List                     (find, nub)
+import qualified Data.Map                      as Map
+import           Data.Maybe                    (listToMaybe)
+import           Data.Monoid                   (Monoid (..))
+import qualified Distribution.Client.GZipUtils as GZipUtils
+import           Distribution.Compat.ReadP     ((+++), (<++))
+import qualified Distribution.Compat.ReadP     as Parse
+import           Network.URI                   (URI (..), URIAuth (..), parseAbsoluteURI)
+import           System.Directory              (doesDirectoryExist, doesFileExist)
+import           System.FilePath               (dropExtension, splitPath, takeDirectory, takeExtension)
+import           Text.PrettyPrint              ((<+>), (<>))
+import qualified Text.PrettyPrint              as Disp
 
 -- ------------------------------------------------------------
 -- * User targets

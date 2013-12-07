@@ -23,28 +23,20 @@ module Distribution.Client.Dependency.TopDown.Constraints (
   conflicting,
   ) where
 
-import           Distribution.Client.Dependency.TopDown.Types   
+import           Distribution.Client.Dependency.TopDown.Types
+import           Distribution.Client.PackageIndex             (PackageIndex)
 import qualified Distribution.Client.PackageIndex             as PackageIndex
-import           Distribution.Client.PackageIndex               (PackageIndex)
-import           Distribution.Package                           
-         ( PackageName, PackageId, PackageIdentifier(..)
-         , Package(packageId), packageName, packageVersion
-         , Dependency, PackageFixedDeps(depends) )
-import           Distribution.Version                           
-         ( Version )
-import           Distribution.Client.Utils                      
-         ( mergeBy, MergeResult(..) )
+import           Distribution.Client.Utils                    (MergeResult (..), mergeBy)
+import           Distribution.Package                         (Dependency, Package (packageId), PackageFixedDeps (depends), PackageId, PackageIdentifier (..), PackageName, packageName, packageVersion)
+import           Distribution.Version                         (Version)
 
-import           Data.Monoid                                    
-         ( Monoid(mempty) )
-import           Data.Either                                    
-         ( partitionEithers )
-import qualified Data.Map                                     as Map
-import           Data.Map                                       (Map)
-import qualified Data.Set                                     as Set
-import           Data.Set                                       (Set)
-import           Control.Exception                              
-         ( assert )
+import           Control.Exception (assert)
+import           Data.Either       (partitionEithers)
+import           Data.Map          (Map)
+import qualified Data.Map          as Map
+import           Data.Monoid       (Monoid (mempty))
+import           Data.Set          (Set)
+import qualified Data.Set          as Set
 
 
 -- | A set of satisfiable constraints on a set of packages.

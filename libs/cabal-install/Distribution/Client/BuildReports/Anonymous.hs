@@ -26,71 +26,53 @@ module Distribution.Client.BuildReports.Anonymous (
 --    showList,
   ) where
 
-import           Distribution.Client.Types         
-         ( ConfiguredPackage(..) )
-import qualified Distribution.Client.Types       as BR
-         ( BuildResult, BuildFailure(..), BuildSuccess(..)
-         , DocsResult(..), TestsResult(..) )
-import           Distribution.Client.Utils         
-         ( mergeBy, MergeResult(..) )
-import qualified Paths_cabal_install               (version)
+import           Distribution.Client.Types (ConfiguredPackage (..))
+import qualified Distribution.Client.Types as BR (BuildFailure (..), BuildResult, BuildSuccess (..), DocsResult (..), TestsResult (..))
+import           Distribution.Client.Utils (MergeResult (..), mergeBy)
+import qualified Paths_cabal_install       (version)
 
-import           Distribution.Package              
-         ( PackageIdentifier(..), PackageName(..), Package(packageId) )
-import           Distribution.PackageDescription   
-         ( FlagName(..), FlagAssignment )
+import Distribution.Package            (Package (packageId), PackageIdentifier (..), PackageName (..))
+import Distribution.PackageDescription (FlagAssignment, FlagName (..))
 --import Distribution.Version
 --         ( Version )
-import           Distribution.System               
-         ( OS, Arch )
-import           Distribution.Compiler             
-         ( CompilerId )
-import qualified Distribution.Text               as Text
-         ( Text(disp, parse) )
-import           Distribution.ParseUtils           
-         ( FieldDescr(..), ParseResult(..), Field(..)
-         , simpleField, listField, ppFields, readFields
-         , syntaxError, locatedErrorMsg )
-import           Distribution.Simple.Utils         
-         ( comparing )
+import           Distribution.Compiler     (CompilerId)
+import           Distribution.ParseUtils   (Field (..), FieldDescr (..), ParseResult (..), listField, locatedErrorMsg, ppFields, readFields, simpleField, syntaxError)
+import           Distribution.Simple.Utils (comparing)
+import           Distribution.System       (Arch, OS)
+import qualified Distribution.Text         as Text (Text (disp, parse))
 
-import qualified Distribution.Compat.ReadP       as Parse
-         ( ReadP, pfail, munch1, skipSpaces )
-import qualified Text.PrettyPrint                as Disp
-         ( Doc, render, char, text )
-import           Text.PrettyPrint                  
-         ( (<+>), (<>) )
+import qualified Distribution.Compat.ReadP as Parse (ReadP, munch1, pfail, skipSpaces)
+import           Text.PrettyPrint          ((<+>), (<>))
+import qualified Text.PrettyPrint          as Disp (Doc, char, render, text)
 
-import           Data.List                         
-         ( unfoldr, sortBy )
-import           Data.Char                       as Char
-         ( isAlpha, isAlphaNum )
+import Data.Char as Char (isAlpha, isAlphaNum)
+import Data.List (sortBy, unfoldr)
 
-import           Prelude                         hiding (show)
+import Prelude hiding (show)
 
 data BuildReport
    = BuildReport {
     -- | The package this build report is about
-    package         :: PackageIdentifier,
+    package        :: PackageIdentifier,
 
     -- | The OS and Arch the package was built on
-    os              :: OS,
-    arch            :: Arch,
+    os             :: OS,
+    arch           :: Arch,
 
     -- | The Haskell compiler (and hopefully version) used
-    compiler        :: CompilerId,
+    compiler       :: CompilerId,
 
     -- | The uploading client, ie cabal-install-x.y.z
-    client          :: PackageIdentifier,
+    client         :: PackageIdentifier,
 
     -- | Which configurations flags we used
-    flagAssignment  :: FlagAssignment,
+    flagAssignment :: FlagAssignment,
 
     -- | Which dependent packages we were using exactly
-    dependencies    :: [PackageIdentifier],
+    dependencies   :: [PackageIdentifier],
 
     -- | Did installing work ok?
-    installOutcome  :: InstallOutcome,
+    installOutcome :: InstallOutcome,
 
     --   Which version of the Cabal library was used to compile the Setup.hs
 --    cabalVersion    :: Version,
@@ -99,10 +81,10 @@ data BuildReport
 --    tools      :: [PackageIdentifier],
 
     -- | Configure outcome, did configure work ok?
-    docsOutcome     :: Outcome,
+    docsOutcome    :: Outcome,
 
     -- | Configure outcome, did configure work ok?
-    testsOutcome    :: Outcome
+    testsOutcome   :: Outcome
   }
 
 data InstallOutcome

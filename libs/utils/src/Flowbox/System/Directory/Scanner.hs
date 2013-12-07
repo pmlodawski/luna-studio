@@ -7,12 +7,12 @@
 
 module Flowbox.System.Directory.Scanner where
 
-import           Control.Applicative                  
+import Control.Applicative
 
-import           Flowbox.Prelude                      
+import           Flowbox.Prelude
 import qualified Flowbox.System.Directory.Directory as Directory
+import           Flowbox.System.UniPath             (UniPath)
 import qualified Flowbox.System.UniPath             as UniPath
-import           Flowbox.System.UniPath               (UniPath)
 
 
 

@@ -7,7 +7,7 @@
 
 module Flowbox.Batch.Samples.Std where
 
---import           Flowbox.Prelude                       
+--import           Flowbox.Prelude
 import qualified Flowbox.Batch.Project.Project as Project
 --import           Flowbox.Batch.Project.Project         (Project)
 --import qualified Flowbox.Luna.Network.Def.DefManager as DefManager
@@ -32,7 +32,7 @@ import qualified Flowbox.Batch.Project.Project as Project
 --                                     }
 
 --mkModule :: String -> Definition
---mkModule name = mkDefinition (Type.mkModule name ) 
+--mkModule name = mkDefinition (Type.mkModule name )
 
 
 --mkClass :: String -> Definition
@@ -60,28 +60,28 @@ import qualified Flowbox.Batch.Project.Project as Project
 
 --addSomeDefs :: DefManager -> DefManager
 --addSomeDefs defs = DefManager.addToParent (0, 12, mkFunction "at"        [ Type.Named "self"    $ Type.TypeName "String"
---                                                                         , Type.Named "index"   $ Type.TypeName "Int"] 
+--                                                                         , Type.Named "index"   $ Type.TypeName "Int"]
 --                                                                         [ Type.Named "element" $ Type.TypeName "Char"])
 --                 $ DefManager.addToParent (0, 11, mkFunction "contains"  [ Type.Named "self"    $ Type.TypeName "String"
---                                                                         , Type.Named "element" $ Type.TypeName "Char"] 
+--                                                                         , Type.Named "element" $ Type.TypeName "Char"]
 --                                                                         [ Type.Named "contains"$ Type.TypeName "Bool"])
 --                 $ DefManager.addToParent (0, 10, mkFunction "length"    [ Type.Named "self"    $ Type.TypeName "String"]
 --                                                                         [ Type.Named "length"  $ Type.TypeName "Int"])
 --                 $ DefManager.addToParent (0, 9 , mkFunction "add"       [ Type.Named "self"    $ Type.TypeName "Int"
---                                                                         , Type.Named "value"   $ Type.TypeName "Int" ] 
+--                                                                         , Type.Named "value"   $ Type.TypeName "Int" ]
 --                                                                         [ Type.Named "result"  $ Type.TypeName "Int"])
 --                 $ DefManager.addToParent (0, 8 , mkFunction "sub"       [ Type.Named "self"    $ Type.TypeName "Int"
---                                                                         , Type.Named "value"   $ Type.TypeName "Int" ] 
+--                                                                         , Type.Named "value"   $ Type.TypeName "Int" ]
 --                                                                         [ Type.Named "result"  $ Type.TypeName "Int"])
 --                 $ DefManager.addToParent (0, 7 , mkFunction "mul"       [ Type.Named "self"    $ Type.TypeName "Int"
---                                                                         , Type.Named "value"   $ Type.TypeName "Int" ] 
+--                                                                         , Type.Named "value"   $ Type.TypeName "Int" ]
 --                                                                         [ Type.Named "result"  $ Type.TypeName "Int"])
 --                 $ DefManager.addToParent (4, 5 , mkFunction "print"     [ Type.Named "self"    $ Type.TypeName "Console"
---                                                                         , Type.Named "obj"     $ Type.TypeName "String" ] 
+--                                                                         , Type.Named "obj"     $ Type.TypeName "String" ]
 --                                                                         [ Type.Named "console" $ Type.TypeName "Console"])
 --                 $ DefManager.addToParent (0, 4 , mkClass    "Console")
 --                 $ DefManager.addToParent (1, 3 , mkFunction "writeFile" [ Type.Named "self"    $ Type.TypeName "File"
---                                                                         , Type.Named "name"    $ Type.TypeName "String" 
+--                                                                         , Type.Named "name"    $ Type.TypeName "String"
 --                                                                         , Type.Named "content" $ Type.TypeName "String" ]
 --                                                                         [ ])
 --                 $ DefManager.addToParent (1, 2 , mkFunction "readFile"  [ Type.Named "self"    $ Type.TypeName "File"
@@ -94,8 +94,8 @@ import qualified Flowbox.Batch.Project.Project as Project
 
 --emptyStdLibrary :: UniPath -> Library
 --emptyStdLibrary rootpath = Library.make "std" $ UniPath.append "stdlib.lunalib" rootpath
-    
-     
+
+
 --userLibrary :: UniPath -> Library
 --userLibrary rootpath = Library.make "workspace" $ UniPath.append "workspace.lunalib" rootpath
 
@@ -112,7 +112,7 @@ import qualified Flowbox.Batch.Project.Project as Project
 
 
 --project :: Project
---project = addDefaultLibraries 
+--project = addDefaultLibraries
 --        $ Project.empty { Project.name = "test project"
 --                        , Project.path = UniPath.fromUnixString "~/.flowbox/visual"
 --                        , Project.libs = LibManager.empty

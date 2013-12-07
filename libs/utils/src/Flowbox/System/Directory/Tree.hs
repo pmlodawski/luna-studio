@@ -7,7 +7,7 @@
 
 module Flowbox.System.Directory.Tree where
 
-import           Flowbox.Prelude   
+import Flowbox.Prelude
 
 
 

@@ -4,31 +4,31 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Distribution.Package.PackageIndex where
 
-import           Data.Char                                       (toLower)
-import qualified Data.Map                                      as Map
-import           Data.Map                                        (Map)
-import qualified Data.List                                     as List
-import           Data.Monoid  
-import qualified Distribution.Client.Config                    as CabalConf
-import qualified Distribution.Client.PackageIndex              as SourcePackageIndex
-import           Distribution.Client.Sandbox                   as Sandbox
-import qualified Distribution.Client.Setup                     as Setup
-import qualified Distribution.Client.IndexUtils                as IndexUtils
-import qualified Distribution.Client.Types                     as CliTypes
-import qualified Distribution.Simple.PackageIndex              as InstalledPackageIndex
-import           Distribution.Verbosity                        as Verbosity
+import           Data.Char                        (toLower)
+import qualified Data.List                        as List
+import           Data.Map                         (Map)
+import qualified Data.Map                         as Map
+import           Data.Monoid
+import qualified Distribution.Client.Config       as CabalConf
+import qualified Distribution.Client.IndexUtils   as IndexUtils
+import qualified Distribution.Client.PackageIndex as SourcePackageIndex
+import           Distribution.Client.Sandbox      as Sandbox
+import qualified Distribution.Client.Setup        as Setup
+import qualified Distribution.Client.Types        as CliTypes
+import qualified Distribution.Simple.PackageIndex as InstalledPackageIndex
+import           Distribution.Verbosity           as Verbosity
 
-import           Flowbox.Prelude  
-import qualified Flowbox.Distribution.CabalConversion          as CabalConversion
-import qualified Flowbox.Distribution.Package.Package          as Package
-import           Flowbox.Distribution.Package.Package            (Package)
-import           Flowbox.Config.Config                           (Config)
-import qualified Flowbox.Distribution.Config                   as PkgConfig
+import           Flowbox.Config.Config                (Config)
+import qualified Flowbox.Distribution.CabalConversion as CabalConversion
+import qualified Flowbox.Distribution.Config          as PkgConfig
+import           Flowbox.Distribution.Package.Package (Package)
+import qualified Flowbox.Distribution.Package.Package as Package
+import           Flowbox.Prelude
 
 
 data PackageIndex = InstalledPackageIndex InstalledPackageIndex.PackageIndex

@@ -21,74 +21,44 @@ module Distribution.Client.Init (
 
   ) where
 
-import           System.IO                             
-  ( hSetBuffering, stdout, BufferMode(..) )
-import           System.Directory                      
-  ( getCurrentDirectory, doesDirectoryExist, doesFileExist, copyFile
-  , getDirectoryContents )
-import           System.FilePath                       
-  ( (</>), (<.>), takeBaseName )
-import           Data.Time                             
-  ( getCurrentTime, utcToLocalTime, toGregorian, localDay, getCurrentTimeZone )
+import Data.Time        (getCurrentTime, getCurrentTimeZone, localDay, toGregorian, utcToLocalTime)
+import System.Directory (copyFile, doesDirectoryExist, doesFileExist, getCurrentDirectory, getDirectoryContents)
+import System.FilePath  (takeBaseName, (<.>), (</>))
+import System.IO        (BufferMode (..), hSetBuffering, stdout)
 
-import           Data.Char                             
-  ( toUpper )
-import           Data.List                             
-  ( intercalate, nub, groupBy, (\\) )
-import           Data.Maybe                            
-  ( fromMaybe, isJust, catMaybes )
-import           Data.Function                         
-  ( on )
-import qualified Data.Map                            as M
-import           Data.Traversable                      
-  ( traverse )
-import           Control.Applicative                   
-  ( (<$>) )
-import           Control.Monad                         
-  ( when, unless, (>=>), join )
-import           Control.Arrow                         
-  ( (&&&), (***) )
+import           Control.Applicative ((<$>))
+import           Control.Arrow       ((&&&), (***))
+import           Control.Monad       (join, unless, when, (>=>))
+import           Data.Char           (toUpper)
+import           Data.Function       (on)
+import           Data.List           (groupBy, intercalate, nub, (\\))
+import qualified Data.Map            as M
+import           Data.Maybe          (catMaybes, fromMaybe, isJust)
+import           Data.Traversable    (traverse)
 
-import           Text.PrettyPrint                    hiding (mode, cat)
+import Text.PrettyPrint hiding (cat, mode)
 
-import           Data.Version                          
-  ( Version(..) )
-import           Distribution.Version                  
-  ( orLaterVersion, earlierVersion, intersectVersionRanges, VersionRange )
-import           Distribution.Verbosity                
-  ( Verbosity )
-import           Distribution.ModuleName               
-  ( ModuleName, fromString )  -- And for the Text instance
-import           Distribution.InstalledPackageInfo     
-  ( InstalledPackageInfo, sourcePackageId, exposed )
-import qualified Distribution.Package                as P
-import           Language.Haskell.Extension            ( Language(..) )
+import           Data.Version                      (Version (..))
+import           Distribution.InstalledPackageInfo (InstalledPackageInfo, exposed, sourcePackageId)
+import           Distribution.ModuleName           (ModuleName, fromString)
+import qualified Distribution.Package              as P
+import           Distribution.Verbosity            (Verbosity)
+import           Distribution.Version              (VersionRange, earlierVersion, intersectVersionRanges, orLaterVersion)
+import           Language.Haskell.Extension        (Language (..))
 
-import           Distribution.Client.Init.Types        
-  ( InitFlags(..), PackageType(..), Category(..) )
-import           Distribution.Client.Init.Licenses     
-  ( bsd3, gplv2, gplv3, lgpl2, lgpl3, agplv3, apache20 )
-import           Distribution.Client.Init.Heuristics   
-  ( guessPackageName, guessAuthorNameMail, SourceFileEntry(..),
-    scanForModules, neededBuildPrograms )
+import Distribution.Client.Init.Heuristics (SourceFileEntry (..), guessAuthorNameMail, guessPackageName, neededBuildPrograms, scanForModules)
+import Distribution.Client.Init.Licenses   (agplv3, apache20, bsd3, gplv2, gplv3, lgpl2, lgpl3)
+import Distribution.Client.Init.Types      (Category (..), InitFlags (..), PackageType (..))
 
-import           Distribution.License                  
-  ( License(..), knownLicenses )
+import Distribution.License (License (..), knownLicenses)
 
-import           Distribution.ReadE                    
-  ( runReadE, readP_to_E )
-import           Distribution.Simple.Setup             
-  ( Flag(..), flagToMaybe )
-import           Distribution.Simple.Configure         
-  ( getInstalledPackages )
-import           Distribution.Simple.Compiler          
-  ( PackageDBStack, Compiler )
-import           Distribution.Simple.Program           
-  ( ProgramConfiguration )
-import           Distribution.Simple.PackageIndex      
-  ( PackageIndex, moduleNameIndex )
-import           Distribution.Text                     
-  ( display, Text(..) )
+import Distribution.ReadE               (readP_to_E, runReadE)
+import Distribution.Simple.Compiler     (Compiler, PackageDBStack)
+import Distribution.Simple.Configure    (getInstalledPackages)
+import Distribution.Simple.PackageIndex (PackageIndex, moduleNameIndex)
+import Distribution.Simple.Program      (ProgramConfiguration)
+import Distribution.Simple.Setup        (Flag (..), flagToMaybe)
+import Distribution.Text                (Text (..), display)
 
 initCabal :: Verbosity
           -> PackageDBStack

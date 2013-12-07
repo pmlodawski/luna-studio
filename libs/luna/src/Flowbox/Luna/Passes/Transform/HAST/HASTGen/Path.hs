@@ -27,11 +27,11 @@ module Flowbox.Luna.Passes.Transform.HAST.HASTGen.Path (
     mkFuncName
 )where
 
-import           Data.Char                     (isLower)
-import           Data.String.Utils             (join)
+import Data.Char         (isLower)
+import Data.String.Utils (join)
 
-import           Flowbox.Prelude             hiding (last, init, tail, last)
-import           Flowbox.Luna.Data.Path.Path   
+import Flowbox.Luna.Data.Path.Path
+import Flowbox.Prelude             hiding (init, last, last, tail)
 
 
 
@@ -44,11 +44,11 @@ toModuleName name = case name of
     (preffix:_) -> if isLower preffix
                    then "U'" ++ name
                    else name
-                                  
+
 toFilePath :: Path -> Path
 toFilePath path = append (last modpath ++ ".hs") (init modpath) where
     modpath = toModulePath path
-    
+
 mkTemplateName :: String -> String
 mkTemplateName name = name ++ "'T"
 

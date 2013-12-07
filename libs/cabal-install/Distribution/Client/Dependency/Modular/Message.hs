@@ -1,14 +1,14 @@
 module Distribution.Client.Dependency.Modular.Message where
 
-import qualified Data.List                                         as L
-import           Prelude                                           hiding (pi)
+import qualified Data.List as L
+import           Prelude   hiding (pi)
 
-import Distribution.Text -- from Cabal
+import Distribution.Text
 
-import           Distribution.Client.Dependency.Modular.Dependency   
-import           Distribution.Client.Dependency.Modular.Flag         
-import           Distribution.Client.Dependency.Modular.Package      
-import           Distribution.Client.Dependency.Modular.Tree         
+import Distribution.Client.Dependency.Modular.Dependency
+import Distribution.Client.Dependency.Modular.Flag
+import Distribution.Client.Dependency.Modular.Package
+import Distribution.Client.Dependency.Modular.Tree
 
 data Message =
     Enter           -- ^ increase indentation level
