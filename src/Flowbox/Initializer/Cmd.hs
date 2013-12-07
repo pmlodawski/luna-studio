@@ -7,12 +7,12 @@
 
 module Flowbox.Initializer.Cmd where
 
-import           Flowbox.Prelude   
+import Flowbox.Prelude
 
 
 
 data Cmd = Initialization { verbose :: Int
                           , force   :: Bool
                           }
-         | Version        
+         | Version
          deriving Show

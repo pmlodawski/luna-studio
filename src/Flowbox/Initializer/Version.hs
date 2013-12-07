@@ -7,15 +7,15 @@
 
 module Flowbox.Initializer.Version where
 
-import qualified Data.Version               as Version
+import qualified Data.Version as Version
 
-import           Flowbox.Prelude              
 import qualified Flowbox.Initializer.Config as Config
+import           Flowbox.Prelude
 
 
 
 full :: Bool -> String
-full = initializer 
+full = initializer
 
 
 initializer :: Bool -> String

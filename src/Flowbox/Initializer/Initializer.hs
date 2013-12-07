@@ -7,19 +7,19 @@
 
 module Flowbox.Initializer.Initializer where
 
-import           Control.Applicative                  
-import           Control.Monad                        
-import qualified Data.String.Utils                  as StringUtils
-import qualified System.IO                          as IO
+import           Control.Applicative
+import           Control.Monad
+import qualified Data.String.Utils   as StringUtils
+import qualified System.IO           as IO
 
-import           Flowbox.Prelude                    hiding (error)
+import           Flowbox.Config.Config              (Config)
 import qualified Flowbox.Config.Config              as Config
-import           Flowbox.Config.Config                (Config)
+import           Flowbox.Prelude                    hiding (error)
 import qualified Flowbox.System.Directory.Directory as Directory
-import           Flowbox.System.Log.Logger            
+import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Process             as Process
+import           Flowbox.System.UniPath             (UniPath)
 import qualified Flowbox.System.UniPath             as UniPath
-import           Flowbox.System.UniPath               (UniPath)
 
 
 
@@ -29,12 +29,12 @@ logger = getLoggerIO "Flowbox.Initializer.Initializer"
 
 successfullInstallFilePath :: Config -> UniPath
 successfullInstallFilePath config = UniPath.append "installed" localPath where
-    localPath = UniPath.fromUnixString $ Config.path $ Config.local config 
+    localPath = UniPath.fromUnixString $ Config.path $ Config.local config
 
 
 isAlreadyInitilized :: Config -> IO Bool
-isAlreadyInitilized config = do 
-    let local      = Config.local  config 
+isAlreadyInitilized config = do
+    let local      = Config.local  config
         localCabal = Config.cabal local
         localPkgDb = Config.pkgDb local
     logger debug "Checking for Flowbox configuration."
@@ -45,7 +45,7 @@ isAlreadyInitilized config = do
     if exists
         then logger debug "Configuration already exists."
         else logger debug "Configuration does not exist or is broken."
-    return exists 
+    return exists
 
 
 initializeIfNeeded :: Config -> IO ()
@@ -58,7 +58,7 @@ initialize :: Config -> IO ()
 initialize config = do
     logger info "Configuring Flowbox for the first use. Please wait..."
     let root       = Config.root config
-        local      = Config.local  config 
+        local      = Config.local  config
         localCabal = Config.cabal local
         localPkgDb = Config.pkgDb local
         ghcPkgBin  = Config.ghcPkg . Config.wrappers  $ config
@@ -68,21 +68,21 @@ initialize config = do
 
     Directory.createDirectoryIfMissing True $ UniPath.fromUnixString localCabal
     Directory.createDirectoryIfMissing True $ UniPath.fromUnixString localPkgDb
-    Process.runProcess Nothing ghcPkgBin ["recache", "--package-db=" ++ localPkgDb] 
+    Process.runProcess Nothing ghcPkgBin ["recache", "--package-db=" ++ localPkgDb]
 
     cabalConfTContent <- IO.readFile cabalConfT
     let cabalConfContent = StringUtils.replace "${FB_INSTALL}"    (Config.path root)
                          $ StringUtils.replace "${FB_HOME_CABAL}" (Config.cabal local) cabalConfTContent
     IO.writeFile cabalConf cabalConfContent
-    Process.runProcess Nothing cabalBin ["update"] 
+    Process.runProcess Nothing cabalBin ["update"]
     Directory.touchFile $ successfullInstallFilePath config
     logger info "Flowbox configured successfully."
 
 
 clear :: Config -> IO ()
-clear config = do 
+clear config = do
     logger info "Cleaning Flowbox configuration."
-    let localPath = UniPath.fromUnixString $ Config.path $ Config.local config 
+    let localPath = UniPath.fromUnixString $ Config.path $ Config.local config
     exists <- Directory.doesDirectoryExist localPath
     if exists
         then Directory.removeDirectoryRecursive localPath
