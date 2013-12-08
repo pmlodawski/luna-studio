@@ -27,23 +27,28 @@ import           Flowbox.Prelude
 
 
 convertSrcPackage :: CliTypes.SourcePackage -> Package
-convertSrcPackage pkgInfo = convertPkgDescription desc where
+convertSrcPackage pkgInfo = convertPkgDescription desc name where
+    name    = DistPackage.packageName pkgInfo
     generic = CliTypes.packageDescription pkgInfo
+    --desc    = DistPkgDesc.packageDescription generic
     desc    = DistConfig.flattenPackageDescription generic
 
 
-convertPkgDescription :: PackageDescription -> Package
-convertPkgDescription desc = def & Package.authors     .~ (splitOn "," $ DistPkgDesc.author desc)
-                                 & Package.bugReports  .~ (DistPkgDesc.bugReports desc)
-                                 & Package.copyright   .~ (DistPkgDesc.copyright desc)
-                                 & Package.description .~ (DistPkgDesc.description desc)
-                                 & Package.homepage    .~ (DistPkgDesc.homepage desc)
-                                 & Package.maintainers .~ (splitOn "," $ DistPkgDesc.maintainer desc)
-                                 & Package.synopsis    .~ (DistPkgDesc.synopsis desc)
-                                 & Package.tags        .~ (splitOn "," $ DistPkgDesc.category desc)
-                                 & Package.url         .~ (DistPkgDesc.pkgUrl desc)
-                                 & Package.id          .~ PackageId name version
-                            where PackageName name = DistPackage.packageName desc
+convertPkgDescription :: PackageDescription -> PackageName -> Package
+convertPkgDescription desc (PackageName name) = def { Package._id = PackageId name version }
+                                  & Package.authors     .~ (splitOn "," $ DistPkgDesc.author desc)
+                                  & Package.bugReports  .~ (DistPkgDesc.bugReports desc)
+                                  & Package.copyright   .~ (DistPkgDesc.copyright desc)
+                                  & Package.description .~ (DistPkgDesc.description desc)
+                                  & Package.homepage    .~ (DistPkgDesc.homepage desc)
+                                  & Package.maintainers .~ (splitOn "," $ DistPkgDesc.maintainer desc)
+                                  & Package.synopsis    .~ (DistPkgDesc.synopsis desc)
+                                  & Package.tags        .~ (splitOn "," $ DistPkgDesc.category desc)
+                                  & Package.url         .~ (DistPkgDesc.pkgUrl desc)
+                                  -- & Package.id          .~ PackageId name version
+                            where 
+                                  --PackageName name = DistPackage.packageName desc
+                                  --PackageName name' = (DistPackage.pkgName $ DistPkgDesc.package desc)
                                   version          = convertVersion $ DistPackage.packageVersion desc
 
 convertInstPackage :: InstalledPackageInfo -> Package

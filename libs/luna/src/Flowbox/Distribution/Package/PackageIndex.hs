@@ -13,6 +13,7 @@ import           Data.Char                        (toLower)
 import qualified Data.List                        as List
 import           Data.Map                         (Map)
 import qualified Data.Map                         as Map
+import qualified Data.Set                         as Set
 import           Data.Monoid
 import qualified Distribution.Client.Config       as CabalConf
 import qualified Distribution.Client.IndexUtils   as IndexUtils
@@ -29,7 +30,10 @@ import qualified Flowbox.Distribution.Config          as PkgConfig
 import           Flowbox.Distribution.Package.Package (Package)
 import qualified Flowbox.Distribution.Package.Package as Package
 import           Flowbox.Prelude
+import           Control.Arrow                        ((***))
+import           Control.Monad                        (join)
 
+import Debug.Trace
 
 data PackageIndex = InstalledPackageIndex InstalledPackageIndex.PackageIndex
                   | SourcePackageIndex   (SourcePackageIndex.PackageIndex CliTypes.SourcePackage)
@@ -61,6 +65,12 @@ searchByNameSubstring idx pattern = case idx of
     InstalledPackageIndex pidx -> map CabalConversion.convertInstPackage $ InstalledPackageIndex.searchByNameSubstring pidx pattern
     SourcePackageIndex    pidx -> map CabalConversion.convertSrcPackage  $ concatMap snd (SourcePackageIndex.searchByNameSubstring pidx pattern)
 
+searchByNameSubstring' idx pattern = case idx of
+    InstalledPackageIndex pidx -> InstalledPackageIndex.allPackages pidx
+
+searchByNameSubstring'' idx pattern = case idx of
+    SourcePackageIndex    pidx -> SourcePackageIndex.allPackages pidx
+
 
 searchByName :: String -> [Package] -> [Package]
 searchByName name pkgs = filter (\p -> isSubstr False name $ view (Package.id . Package.name) p ) pkgs
@@ -78,5 +88,30 @@ partitionByName pkgs = foldr insertPkg mempty pkgs
                               in  Map.insert name pkgList map
 
 
+
 combinePkgMaps :: Map String [Package] -> Map String [Package] -> Map String ([Package], [Package])
-combinePkgMaps srcPkgMap instPkgMap = Map.mapWithKey (\k x -> (x, Map.findWithDefault [] k instPkgMap)) srcPkgMap
+combinePkgMaps srcPkgMap instPkgMap = Map.mapWithKey insert allSrcMap
+    where allSrcMap   = (Map.union srcPkgMap (Map.map (\_ -> []) instPkgMap))
+          insert k el = (el, Map.findWithDefault [] k instPkgMap)
+
+
+-- BUGREPORT[wd] : following functions take whole RAM. 
+
+--combinePkgMaps :: Map String [Package] -> Map String [Package] -> Map String ([Package], [Package])
+--combinePkgMaps srcPkgMap instPkgMap = Set.foldr finsert mempty keys
+--    where keys            = Set.union (Map.keysSet srcPkgMap) (Map.keysSet instPkgMap)
+--          findPkgs key    = join (***) (Map.findWithDefault [] key) (srcPkgMap,instPkgMap)
+--          finsert key map = Map.insert key (findPkgs key) map
+
+--combinePkgMaps :: Map String [Package] -> Map String [Package] -> Map String ([Package], [Package])
+--combinePkgMaps srcPkgMap instPkgMap = Map.fromList $ zip keys pkgs
+--    where keys            = Set.toList $ Set.union (Map.keysSet srcPkgMap) (Map.keysSet instPkgMap)
+--          pkgs            = map findPkgs keys
+--          findPkgs key    = join (***) (Map.findWithDefault [] key) (srcPkgMap,instPkgMap)
+
+
+--combinePkgMaps :: Map String [Package] -> Map String [Package] -> Map String ([Package], [Package])
+--combinePkgMaps srcPkgMap instPkgMap = Map.fromList $ zip keys pkgs
+--    where keys            = Set.toList $ Map.keysSet srcPkgMap
+--          pkgs            = map findPkgs keys
+--          findPkgs key    = join (***) (Map.findWithDefault [] key) (srcPkgMap,instPkgMap)

@@ -49,13 +49,13 @@ makeLenses (''PackageFamily)
 
 
 mk :: ([Package], [Package]) -> PackageFamily
-mk (srcPkgs, instPkgs) = foldri registerInstalled instPkgs
-                       $ foldri update (sortBy (compare `on` (view $ Package.id . Package.version)) srcPkgs) def
+mk (srcPkgs, instPkgs) = foldri registerAvailable srcPkgs
+                       $ foldri registerInstalled instPkgs
+                       $ foldri update (sortBy (compare `on` (view $ Package.id . Package.version)) (instPkgs ++ srcPkgs)) def
 
 
 update :: Package -> PackageFamily -> PackageFamily
 update pkg pkgF = pkgF & name              .~ (pkg ^. Package.id ^. Package.name)
-                       & availableVersions %~ (pkg ^. Package.id ^. Package.version :)
                        & synopsis          .~ (pkg ^. Package.synopsis)
                        & description       .~ (pkg ^. Package.description)
                        & homepage          .~ (pkg ^. Package.homepage)
@@ -70,8 +70,13 @@ update pkg pkgF = pkgF & name              .~ (pkg ^. Package.id ^. Package.name
                        & dependencies      .~ (pkg ^. Package.dependencies)
 
 
+registerAvailable :: Package -> PackageFamily -> PackageFamily
+registerAvailable pkg pkgF = pkgF & availableVersions %~ (pkg ^. Package.id ^. Package.version :)
+
+
 registerInstalled :: Package -> PackageFamily -> PackageFamily
 registerInstalled pkg pkgF = pkgF & installedVersions %~ (pkg ^. Package.id ^. Package.version :)
+
 
 
 ------------------------------------------------------------------------

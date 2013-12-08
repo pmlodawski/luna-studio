@@ -12,16 +12,37 @@ import qualified Flowbox.Luna.Data.HAST.Lit  as HLit
 import           Flowbox.Prelude             hiding (error, id)
 
 
+mkCFName :: String -> String
 mkCFName     = ("CF_" ++)
+
+mkCFLName :: String -> String
 mkCFLName    = ("CF_" ++)
+
+mkCCName :: String -> String
 mkCCName     = ("CC_" ++)
+
+mkGetName :: String -> String
 mkGetName    = ("get" ++)
+
+mkTHVarName :: String -> String
 mkTHVarName  = ("'" ++)
+
+mkTHTypeName :: String -> String
 mkTHTypeName = ("''" ++)
+
+mkFieldName :: String -> String
 mkFieldName  = (++"_T")
+
+mkFuncName :: String -> String
 mkFuncName   = ("f_" ++)
+
+mkVarName :: String -> String
 mkVarName    = ("_" ++)
+
+mkConsName :: String -> String
 mkConsName   = ("_" ++)
+
+mkLamName :: String -> String
 mkLamName    = ("Lambda_" ++)
 
 mangleName cname fname = cname ++ fname
