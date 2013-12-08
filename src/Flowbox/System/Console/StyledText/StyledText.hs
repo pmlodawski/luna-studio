@@ -121,5 +121,6 @@ instance IsString Element where
     fromString s = TextElement (fromString s)
 
 instance IsString StyledText where
-    fromString s = [fromString s]
+    fromString "" = []
+    fromString s  = [fromString s]
 

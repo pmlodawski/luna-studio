@@ -8,14 +8,27 @@
 
 module Flowbox.Data.Version where
 
-import Data.Aeson
-import Data.Default    (Default, def)
-import Flowbox.Prelude
-import GHC.Generics
+import           Data.Aeson
+import           Data.Default      (Default, def)
+import           Data.Map          (Map)
+import qualified Data.Map          as Map
+import           Data.String.Utils (join)
+import           Flowbox.Prelude
+import           GHC.Generics
 
 data Version = Version { branch :: [Int]
                        , tags   :: [String]
                        } deriving (Read, Show, Eq, Generic, Ord)
+
+
+partition :: Int -> [Version] -> Map [Int] [Version]
+partition i x = foldl (\m xs -> Map.insertWith (++) (take i $ branch xs) [xs] m) mempty x
+
+readable :: Version -> String
+readable v = readableBranch (branch v) ++ join "" (map ("-"++) $ tags v)
+
+readableBranch :: [Int] -> String
+readableBranch branch = join "." (map show branch)
 
 ------------------------------------------------------------------------
 -- INSTANCES
