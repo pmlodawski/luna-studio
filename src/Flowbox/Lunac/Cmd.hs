@@ -57,7 +57,7 @@ data Options = VersionOptions { compiler :: Bool
                               , dump_hast    :: Bool
                               , dump_hsc     :: Bool
                               }
-              | ListOptions   { input     :: String
+              | ListOptions   { inputs     :: [String]
                               , installed :: Bool
                               , simple    :: Bool
                               }
