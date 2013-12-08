@@ -37,8 +37,8 @@ main = do
     cfg <- Config.load
     srcPkgIdx  <- PackageIndex.readSrcPkgIdx cfg
     instPkgIdx <- PackageIndex.readInstPkgIdx cfg
-    let srcPkgs    = PackageIndex.searchByNameSubstring srcPkgIdx ""
-        instPkgs   = PackageIndex.searchByNameSubstring instPkgIdx ""
+    let srcPkgs    = PackageIndex.searchByNameSubstring srcPkgIdx "flowbox"
+        instPkgs   = PackageIndex.searchByNameSubstring instPkgIdx "flowbox"
         srcPkgMap  = PackageIndex.partitionByName srcPkgs
         instPkgMap = PackageIndex.partitionByName instPkgs
         pkgMap     = PackageIndex.combinePkgMaps srcPkgMap instPkgMap

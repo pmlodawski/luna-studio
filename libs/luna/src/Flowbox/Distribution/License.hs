@@ -24,8 +24,8 @@ data License = GPL (Maybe Version)
              | Apache (Maybe Version)
              | PublicDomain
              | AllRightsReserved
-             | OtherLicense
-             | UnknownLicense String
+             | OtherLicense String
+             | UnknownLicense 
              deriving (Read, Show, Eq, Generic)
 
 -------------------------------------------------
@@ -33,7 +33,7 @@ data License = GPL (Maybe Version)
 -------------------------------------------------
 
 instance Default License where
-    def = PublicDomain
+    def = AllRightsReserved
 
 instance ToJSON License
 instance FromJSON License
