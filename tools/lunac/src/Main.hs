@@ -54,7 +54,7 @@ buildParser = Cmd.Build <$> ( Cmd.BuildOptions <$> argument str ( metavar "INPUT
                             )
 
 listParser :: Opt.Parser Cmd.Command
-listParser = Cmd.List <$> ( Cmd.ListOptions <$> argument str ( metavar "PATTERNS" )
+listParser = Cmd.List <$> ( Cmd.ListOptions <$> many (argument str ( metavar "PATTERNS" ))
                                             <*> switch    ( long "installed"     <> help "only list installed packages" )
                                             <*> switch    ( long "simple"        <> help "list packages using simple output form" )
                           )
@@ -103,5 +103,5 @@ run prog = case Cmd.cmd prog of
                          cfg <- Config.load
                          Build.run cfg op
     Cmd.Repo  scmd -> case scmd of
-                      Cmd.List op -> DistList.list (Cmd.input op)
+                      Cmd.List op -> DistList.list (Cmd.inputs op)
 

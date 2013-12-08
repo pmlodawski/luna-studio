@@ -84,4 +84,5 @@ convertLicense lic = case lic of
     DistLicense.AllRightsReserved -> License.AllRightsReserved
     DistLicense.OtherLicense      -> License.UnknownLicense
     DistLicense.UnknownLicense s  -> License.OtherLicense s
+    other                         -> License.OtherLicense $ show other
 

@@ -15,8 +15,9 @@ import qualified Flowbox.Distribution.Package.PackageFamily as PackageFamily
 import qualified Flowbox.Distribution.Package.PackageIndex  as PackageIndex
 import           Flowbox.Prelude
 
-list :: String -> IO ()
-list name = do
+list :: [String] -> IO ()
+list patterns = do
+    let name = patterns !! 0
     cfg <- Config.load
     srcPkgIdx  <- PackageIndex.readSrcPkgIdx cfg
     instPkgIdx <- PackageIndex.readInstPkgIdx cfg
