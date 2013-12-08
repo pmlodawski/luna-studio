@@ -10,21 +10,26 @@
 module Flowbox.Distribution.Package.PackageFamily where
 
 import           Data.Aeson
-import qualified Data.Aeson.TH as JSON
-import           Data.Default  (Default, def)
-import           Data.Function (on)
-import           Data.List     (sortBy)
+import qualified Data.Aeson.TH     as JSON
+import           Data.Default      (Default, def)
+import           Data.Function     (on)
+import           Data.List         (sortBy)
+import qualified Data.Map          as Map
+import           Data.String       (fromString)
+import           Data.String.Utils (join)
 import           GHC.Generics
 
-import           Flowbox.Data.List                       (foldri)
-import           Flowbox.Data.Version                    (Version)
-import qualified Flowbox.Data.Version                    as Version
-import           Flowbox.Distribution.License            (License)
-import           Flowbox.Distribution.Package.Dependency (Dependency)
-import qualified Flowbox.Distribution.Package.Dependency as Dependency
-import           Flowbox.Distribution.Package.Package    (Package)
-import qualified Flowbox.Distribution.Package.Package    as Package
-import           Flowbox.Prelude                         hiding (id)
+import           Flowbox.Data.List                            (foldri)
+import           Flowbox.Data.Version                         (Version)
+import qualified Flowbox.Data.Version                         as Version
+import           Flowbox.Distribution.License                 (License)
+import           Flowbox.Distribution.Package.Dependency      (Dependency)
+import qualified Flowbox.Distribution.Package.Dependency      as Dependency
+import           Flowbox.Distribution.Package.Package         (Package)
+import qualified Flowbox.Distribution.Package.Package         as Package
+import           Flowbox.Prelude                              hiding (print)
+import           Flowbox.System.Console.StyledText.StyledText (StyledText)
+import qualified Flowbox.System.Console.StyledText.StyledText as StyledText
 
 
 
@@ -76,6 +81,37 @@ registerAvailable pkg pkgF = pkgF & availableVersions %~ (pkg ^. Package.id ^. P
 
 registerInstalled :: Package -> PackageFamily -> PackageFamily
 registerInstalled pkg pkgF = pkgF & installedVersions %~ (pkg ^. Package.id ^. Package.version :)
+
+
+
+styleShow :: PackageFamily -> StyledText
+styleShow pf =  indicator ++ " " ++ title
+             ++ showSection "Synopsis:           " (fromString   $ pf ^. synopsis)
+             ++ showSection "Homepage:           " (fromString   $ pf ^. homepage)
+             ++ showSection "License:            " (fromString   $ show $ pf ^. license)
+             ++ showSection "Available versions: " (showVersions $ pf ^. availableVersions)
+             ++ showSection "Installed versions: " (showVersions $ pf ^. installedVersions)
+
+             where nl = "\n"
+                   indent      = fromString $ replicate 4 ' '
+                   titleIndent = fromString $ replicate 20 ' '
+                   nli         = nl ++ indent
+                   isInstalled = not $ null $ pf ^. installedVersions
+                   indicator   = if isInstalled then "[" ++ StyledText.green "I" ++ "]"
+                                                else StyledText.green "*"
+                   title       = cmod (fromString $ pf ^. name)
+                                 where cmod = if isInstalled then StyledText.green else id
+                   showSection name content  = if null content then ""
+                                               else nli ++ StyledText.blue name ++ content
+                   collectVersions vs        = Map.foldrWithKey showVersion [] $ Version.partition 2 vs
+                   showVersions vs           = join (nl ++ indent ++ titleIndent) $ collectVersions vs
+                   showVersion branch vs lst =  (StyledText.yellow (fromString $ "(" ++ Version.readableBranch branch ++ ") ")
+                                             ++ fromString (join ", " (map Version.readable vs))) : lst
+
+
+print :: PackageFamily -> IO ()
+print pf =  (StyledText.print $ styleShow pf)
+         *> putStrLn ""
 
 
 

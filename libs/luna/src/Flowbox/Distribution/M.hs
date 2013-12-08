@@ -18,20 +18,20 @@ import           Flowbox.Prelude
 import           Flowbox.System.Console.StyledText.StyledText (StyledText)
 import qualified Flowbox.System.Console.StyledText.StyledText as StyledText
 
-import           Data.String.Utils (join)
+import Data.String.Utils (join)
 
-import Debug.Trace
-import           Flowbox.Distribution.Package.Package (Package)
-import qualified Flowbox.Distribution.Package.Package as Package
-import           Data.List         (groupBy, sortBy)
-import           Distribution.Simple.Utils        (comparing, die, equating, notice)
+import           Data.List                                     (groupBy, sortBy)
+import           Debug.Trace
+import qualified Distribution.Client.Types                     as CliTypes
 import qualified Distribution.InstalledPackageInfo             as Installed
-import qualified Distribution.Client.Types as CliTypes
-import           Distribution.Package (PackageName, packageName)
-import qualified Distribution.PackageDescription.Configuration as DistConfig
-import qualified Flowbox.Distribution.CabalConversion as CabalConversion
-import qualified Distribution.PackageDescription               as DistPkgDesc
+import           Distribution.Package                          (PackageName, packageName)
 import qualified Distribution.Package                          as DistPackage
+import qualified Distribution.PackageDescription               as DistPkgDesc
+import qualified Distribution.PackageDescription.Configuration as DistConfig
+import           Distribution.Simple.Utils                     (comparing, die, equating, notice)
+import qualified Flowbox.Distribution.CabalConversion          as CabalConversion
+import           Flowbox.Distribution.Package.Package          (Package)
+import qualified Flowbox.Distribution.Package.Package          as Package
 
 main = do
     cfg <- Config.load
@@ -46,36 +46,9 @@ main = do
 
     print "hello"
     print $ map (view $ Package.id . Package.name) instPkgs
-    mapM_ printPackageFamily $ Map.elems pkgFMap
+    mapM_ PackageFamily.print $ Map.elems pkgFMap
 
 
-viewPF :: PackageFamily -> StyledText
-viewPF pf = indicator ++ " " ++ title
-            ++ showSection "Synopsis:           " (fromString $ pf ^. PackageFamily.synopsis)
-            ++ showSection "Homepage:           " (fromString $ pf ^. PackageFamily.homepage)
-            ++ showSection "License:            " (fromString $ show $ pf ^. PackageFamily.license)
-            ++ showSection "Available versions: " (showVersions $ pf ^. PackageFamily.availableVersions)
-            ++ showSection "Installed versions: " (showVersions $ pf ^. PackageFamily.installedVersions)
-
-            where nl = "\n"
-                  indent      = fromString $ replicate 4 ' '
-                  titleIndent = fromString $ replicate 20 ' '
-                  nli         = nl ++ indent
-                  isInstalled = not $ null $ pf ^. PackageFamily.installedVersions
-                  indicator   = if isInstalled then "[" ++ StyledText.green "I" ++ "]"
-                                               else StyledText.green "*"
-                  title       = cmod (fromString $ pf ^. PackageFamily.name)
-                                where cmod = if isInstalled then StyledText.green else id
-                  showSection name content  = if null content then ""
-                                              else nli ++ StyledText.blue name ++ content
-                  collectVersions vs        = Map.foldrWithKey showVersion [] $ Version.partition 2 vs
-                  showVersions vs           = join (nl ++ indent ++ titleIndent) $ collectVersions vs
-                  showVersion branch vs lst =  (StyledText.yellow (fromString $ "(" ++ Version.readableBranch branch ++ ") ")
-                                            ++ fromString (join ", " (map Version.readable vs))) : lst
-
-printPackageFamily :: PackageFamily -> IO ()
-printPackageFamily pf =  (StyledText.print $ viewPF pf)
-                      *> putStrLn ""
 
 --showPF :: PackageFamily -> String
 --showPF pf =
