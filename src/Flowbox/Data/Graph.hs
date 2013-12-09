@@ -32,7 +32,6 @@ module Flowbox.Data.Graph (
 
 import Flowbox.Prelude hiding (fromJust, pre, (&))
 
-import           Data.Functor         ((<$>))
 import           Data.Graph.Inductive hiding (Graph, Node)
 import qualified Data.Graph.Inductive as DG
 import           Data.Maybe           (fromJust)

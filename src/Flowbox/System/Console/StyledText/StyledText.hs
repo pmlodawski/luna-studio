@@ -15,7 +15,6 @@ import qualified System.Console.ANSI as ANSI
 import           System.IO           (stderr, stdout)
 
 import           Flowbox.Prelude                         hiding (print)
-import qualified Flowbox.Prelude                         as Prelude
 import           Flowbox.System.Console.StyledText.Style (Style (Style))
 import qualified Flowbox.System.Console.StyledText.Style as Style
 

@@ -13,7 +13,6 @@ module Flowbox.Text.Show.Hs (
 
 import           Flowbox.Prelude       
 import           Control.Monad.State   
-import           Control.Applicative   
 
 data St = Struct
            | Paren

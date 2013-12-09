@@ -28,7 +28,7 @@ readable :: Version -> String
 readable v = readableBranch (branch v) ++ join "" (map ("-"++) $ tags v)
 
 readableBranch :: [Int] -> String
-readableBranch branch = join "." (map show branch)
+readableBranch b = join "." (map show b)
 
 ------------------------------------------------------------------------
 -- INSTANCES
