@@ -95,11 +95,9 @@ helper = Opt.abortOption Opt.ShowHelpText $ (long "help" <> short 'h' <> help "s
 
 main :: IO ()
 main = do
-    --prog <- Opt.execParser opts
     prog <- Opt.customExecParser
             (prefs Opt.showHelpOnError)
             opts
-         --(info (opts <**> helper) idm)
     run prog
 
 
