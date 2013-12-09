@@ -32,7 +32,7 @@ import           System.Directory       hiding (copyFile, createDirectory, creat
 import qualified System.Directory       as Directory
 import qualified System.IO              as IO
 
-import           Flowbox.Prelude        hiding(children)
+import           Flowbox.Prelude        hiding (children)
 import qualified Flowbox.System.Random  as Random
 import           Flowbox.System.UniPath (UniPath)
 import qualified Flowbox.System.UniPath as UniPath

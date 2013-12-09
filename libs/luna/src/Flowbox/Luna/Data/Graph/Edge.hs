@@ -10,8 +10,8 @@ module Flowbox.Luna.Data.Graph.Edge(
     noEdges,
 ) where
 
-import           Flowbox.Prelude                
-import           Flowbox.Luna.Data.Graph.Port   (OutPort, InPort)
+import Flowbox.Luna.Data.Graph.Port (InPort, OutPort)
+import Flowbox.Prelude
 
 
 

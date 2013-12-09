@@ -14,9 +14,9 @@ import           Flowbox.Luna.Data.AST.Expr        (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr        as Expr
 import           Flowbox.Luna.Data.AST.Module      (Module)
 import qualified Flowbox.Luna.Data.AST.Module      as Module
-import           Flowbox.Prelude                   hiding (Zipper, zipper, drop, id, mod)
+import           Flowbox.Prelude                   hiding (Zipper, drop, id, mod, zipper)
 
-import Data.List          (find)
+import Data.List (find)
 
 --data Focus = FunctionFocus { expr :: Expr   , env :: FocusEnv }
 --           | ClassFocus    { expr :: Expr   , env :: FocusEnv }

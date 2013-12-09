@@ -10,23 +10,23 @@
 
 module Flowbox.Luna.Passes.Transform.Graph.Builder.State where
 
-import           Control.Monad.State               
-import qualified Data.IntMap                     as IntMap
-import qualified Data.Map                        as Map
-import           Data.Map                          (Map)
+import           Control.Monad.State
+import qualified Data.IntMap         as IntMap
+import           Data.Map            (Map)
+import qualified Data.Map            as Map
 
-import           Flowbox.Prelude                   
+import           Debug.Trace
+import           Flowbox.Luna.Data.AliasAnalysis (AA)
 import qualified Flowbox.Luna.Data.AliasAnalysis as AA
-import           Flowbox.Luna.Data.AliasAnalysis   (AA)
 import qualified Flowbox.Luna.Data.AST.Utils     as AST
 import           Flowbox.Luna.Data.Graph.Edge    (Edge)
 import           Flowbox.Luna.Data.Graph.Graph   (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph   as Graph
+import           Flowbox.Luna.Data.Graph.Node    (Node)
 import qualified Flowbox.Luna.Data.Graph.Node    as Node
-import           Flowbox.Luna.Data.Graph.Node      (Node)
-import           Flowbox.Luna.Data.Graph.Port      (OutPort)
-import           Flowbox.System.Log.Logger         
-import Debug.Trace
+import           Flowbox.Luna.Data.Graph.Port    (OutPort)
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 
 
 
@@ -37,7 +37,7 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.State"
 type NodeMap = Map AST.ID (Node.ID, OutPort)
 
 
-data GBState = GBState { graph   :: Graph 
+data GBState = GBState { graph   :: Graph
                        , nodeMap :: NodeMap
                        , aaMap   :: AA
                        } deriving (Show)
@@ -93,7 +93,7 @@ setNodeMap nm = do gm <- get
 
 
 aaLookUp :: GBStateM m => AST.ID -> m AST.ID
-aaLookUp astID = do aa <- getAAMap 
+aaLookUp astID = do aa <- getAAMap
                     case IntMap.lookup astID $ AA.varmap aa of
                         Nothing -> return astID
                         Just a  -> return a
