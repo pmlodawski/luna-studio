@@ -10,15 +10,12 @@ module Flowbox.Luna.Passes.Transform.Graph.Builder.Builder where
 
 import           Control.Applicative                                 
 import           Control.Monad.State                                 
-import qualified Data.Map                                          as Map
-import           Data.Map                                            (Map)
 import qualified Data.List as List
 
 import           Flowbox.Prelude                                   hiding (error, mapM, mapM_)
 import           Flowbox.Luna.Data.AliasAnalysis                     (AA)
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import           Flowbox.Luna.Data.AST.Expr                          (Expr)
-import           Flowbox.Luna.Data.AST.Module                        (Module)
 import qualified Flowbox.Luna.Data.AST.Lit                         as Lit
 import           Flowbox.Luna.Data.AST.Lit                           (Lit)
 import qualified Flowbox.Luna.Data.AST.Pat                         as Pat
@@ -28,7 +25,6 @@ import           Flowbox.Luna.Data.Graph.Edge                        (Edge(Edge)
 import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                     as Graph
 import qualified Flowbox.Luna.Data.Graph.Node                      as Node
-import           Flowbox.Luna.Data.Graph.Node                        (Node)
 import qualified Flowbox.Luna.Passes.Pass                          as Pass
 import           Flowbox.Luna.Passes.Pass                            (PassMonad)
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State as State
@@ -108,15 +104,6 @@ buildExpr expr = case expr of
                                      litNID <- State.insNewNode $ Node.Expr litStr (Just expr) dummyProperties
                                      State.addToMap litID (litNID, Nothing)
                                      return litID
-    --Expr.Arg {}                -> dummyInsNewNode "dummy_expr_Arg"
-    --_                          -> dummyInsNewNode "dummy_expr_Other"
-    
-
-expr2String :: GBMonad m => Expr -> Pass.Result m String
-expr2String expr = case expr of
-    Expr.Accessor _ name dst -> do dstStr <- expr2String dst
-                                   return $ dstStr ++ "." ++ name
-    Expr.Var      _ name     -> return name
 
 
 buildPat :: GBMonad m => Pat -> Pass.Result m ([AST.ID], String)
@@ -148,9 +135,7 @@ buildLit lit = pure $ case lit of
 
 
 -- REMOVE ME --
-dummyInsNewNode name = State.insNewNode $ Node.Expr name Nothing dummyProperties
 dummyValue = (-1)
-dummyNothing = Nothing
 dummyProperties = Properties.empty
 dummyString s = "dummy_" ++ s
 --------------

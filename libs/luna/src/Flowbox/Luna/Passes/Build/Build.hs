@@ -91,7 +91,7 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
     logger info $ show graph           
 
     ast2 <- GraphParser.run graph
-    logger warning $ show ast2
+    logger warning $ ppShow ast2
 
     -- REMOVE !!!! JUST TESTING
 
