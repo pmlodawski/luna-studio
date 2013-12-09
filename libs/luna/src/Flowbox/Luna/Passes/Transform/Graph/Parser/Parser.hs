@@ -46,9 +46,18 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.Parser"
 type GPMonad m = PassMonad GPState m
 
 
-run :: PassMonad s m => AA -> Graph -> Pass.Result m Expr
-run aa = (Pass.run_ (Pass.Info "GraphParser") State.empty) . graph2expr
+run :: PassMonad s m => Graph -> Pass.Result m Expr
+run = (Pass.run_ (Pass.Info "GraphParser") State.empty) . graph2expr
 
 
 graph2expr :: GPMonad m => Graph -> Pass.Result m Expr
-graph2expr graph = undefined
+graph2expr graph = do 
+    let nodes = Graph.labNodes graph
+
+
+    return $ Expr.NOP dummyInt
+
+
+--- REMOVE ME ------
+dummyInt = (-1)
+--------------------

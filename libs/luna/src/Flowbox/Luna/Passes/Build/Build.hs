@@ -41,6 +41,7 @@ import qualified Flowbox.Text.Show.Hs                                  as ShowHs
 -- REMOVE !!!! JUST TESTING
 import qualified Flowbox.Luna.Data.AST.Zipper                          as Zipper
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
+import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser   as GraphParser
 import Debug.Trace as D
 import Text.Show.Pretty
 -- REMOVE !!!! JUST TESTING
@@ -88,6 +89,10 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
 
     graph <- GraphBuilder.run va $ D.trace (ppShow expr) expr
     logger info $ show graph           
+
+    ast2 <- GraphParser.run graph
+    logger warning $ show ast2
+
     -- REMOVE !!!! JUST TESTING
 
     let allLibs = "base"
