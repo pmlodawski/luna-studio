@@ -57,10 +57,10 @@ data Options = VersionOptions { compiler :: Bool
                               , dump_hast    :: Bool
                               , dump_hsc     :: Bool
                               }
-              | ListOptions   { inputs    :: [String]
+              | ListOptions   { inputs :: [String]
                               --, installed :: Bool
-                              , json      :: Bool
-                              , simple    :: Bool
+                              , json   :: Bool
+                              , simple :: Bool
                               }
               | RepoOptions   {
 
