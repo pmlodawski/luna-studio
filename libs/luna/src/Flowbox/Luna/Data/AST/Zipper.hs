@@ -14,9 +14,8 @@ import           Flowbox.Luna.Data.AST.Expr        (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr        as Expr
 import           Flowbox.Luna.Data.AST.Module      (Module)
 import qualified Flowbox.Luna.Data.AST.Module      as Module
-import           Flowbox.Prelude                   hiding (Zipper, drop, id)
+import           Flowbox.Prelude                   hiding (Zipper, zipper, drop, id, mod)
 
-import Control.Error.Util (hoistMaybe)
 import Data.List          (find)
 
 --data Focus = FunctionFocus { expr :: Expr   , env :: FocusEnv }
@@ -36,7 +35,7 @@ mk :: Module -> Maybe Zipper
 mk rootmod = Just (ModuleFocus rootmod, [])
 
 defocus :: Zipper -> Zipper
-defocus zipper@(env, [])   = zipper
+defocus zipper@(_, [])   = zipper
 defocus (env, parent:path) = (newenv, path) where
     newenv = case parent of
         ModuleFocus pmod -> ModuleFocus $ case env of
@@ -48,12 +47,12 @@ modify f (env, path) = Just (f env, path)
 
 
 close :: Zipper -> Maybe Module
-close zipper@(env, []) = Just mod where ModuleFocus mod = env
-close zipper           = close $ defocus zipper
+close (env, []) = Just mod where ModuleFocus mod = env
+close zipper    = close $ defocus zipper
 
 
 focusFunction :: String -> Zipper -> Maybe Zipper
-focusFunction name zipper@(env, path) = case env of
+focusFunction name zipper@(env, _) = case env of
     ModuleFocus mod -> focusListElem Module.methods Expr.name
                      FunctionFocus ModuleFocus mod name zipper
     _             -> Nothing
@@ -63,11 +62,11 @@ getFocus :: Zipper -> Focus
 getFocus = fst
 
 focusListElem :: Lens' a [b] -> Traversal' b String -> (b -> Focus) -> (a -> Focus) -> a -> String -> Zipper -> Maybe Zipper
-focusListElem lens nameLens elemFocus crumbFocus elem name (env, path) = runMaybe $ do
-    let funcs    = elem ^. lens
+focusListElem flens nameLens elemFocus crumbFocus el name (_, path) = runMaybe $ do
+    let funcs    = el ^. flens
         mfunc    = find (\f -> f ^. nameLens == name) funcs
         newfuncs = [ f | f <- funcs, f ^. nameLens /= name ]
-        newelem  = elem & lens .~ newfuncs
+        newelem  = el & flens .~ newfuncs
     func <- hoistMaybe mfunc
     return $ (elemFocus func, (crumbFocus newelem) : path)
 

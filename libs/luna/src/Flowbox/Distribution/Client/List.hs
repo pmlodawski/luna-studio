@@ -15,11 +15,10 @@ import           Data.String          (fromString)
 import           System.IO            (stdout)
 
 import qualified Flowbox.Config.Config                        as Config
-import qualified Flowbox.Distribution.Package.Package         as Package
 import           Flowbox.Distribution.Package.PackageFamily   (PackageFamily)
 import qualified Flowbox.Distribution.Package.PackageFamily   as PackageFamily
 import qualified Flowbox.Distribution.Package.PackageIndex    as PackageIndex
-import           Flowbox.Prelude
+import           Flowbox.Prelude                              hiding(index, simple)
 import qualified Flowbox.System.Console.StyledText.StyledText as StyledText
 
 list :: Bool -> [String] -> IO ()

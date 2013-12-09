@@ -47,7 +47,7 @@ main = do
     test_logger
     loggerIO error "IO error"
 
-    print "colored text test"
+    print ("colored text test" :: String)
     let x = "ala"
         y = Text.green "ola"
         txt = (x ++ y ++ x)

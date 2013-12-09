@@ -8,7 +8,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Prelude(
-        module Control.Applicative,
+    module Control.Applicative,
     module Control.Lens,
     module Data.Monoid,
     module Flowbox.Prelude,
@@ -20,7 +20,6 @@ import qualified Control.Exception      as Exception
 import           Control.Lens
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.Monoid            (Monoid, mappend, mempty)
-import           Data.Traversable       (Traversable)
 import qualified Data.Traversable       as Traversable
 import           Data.Typeable
 import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn, (++))

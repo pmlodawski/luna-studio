@@ -8,7 +8,7 @@
 
 module Flowbox.Luna.Passes.CodeGen.HSC.HSC where
 
-import           Flowbox.Prelude                    
+import           Flowbox.Prelude                  hiding(cons)                
 import qualified Flowbox.Luna.Data.HAST.Expr      as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit       as HLit
 import qualified Flowbox.Luna.Passes.Pass         as Pass

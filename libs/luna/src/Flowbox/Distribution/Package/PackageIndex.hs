@@ -14,7 +14,6 @@ import qualified Data.List                        as List
 import           Data.Map                         (Map)
 import qualified Data.Map                         as Map
 import           Data.Monoid
-import qualified Data.Set                         as Set
 import qualified Distribution.Client.Config       as CabalConf
 import qualified Distribution.Client.IndexUtils   as IndexUtils
 import qualified Distribution.Client.PackageIndex as SourcePackageIndex
@@ -24,8 +23,6 @@ import qualified Distribution.Client.Types        as CliTypes
 import qualified Distribution.Simple.PackageIndex as InstalledPackageIndex
 import           Distribution.Verbosity           as Verbosity
 
-import           Control.Arrow                        ((***))
-import           Control.Monad                        (join)
 import           Flowbox.Config.Config                (Config)
 import qualified Flowbox.Distribution.CabalConversion as CabalConversion
 import qualified Flowbox.Distribution.Config          as PkgConfig
@@ -33,7 +30,6 @@ import           Flowbox.Distribution.Package.Package (Package)
 import qualified Flowbox.Distribution.Package.Package as Package
 import           Flowbox.Prelude
 
-import Debug.Trace
 
 data PackageIndex = InstalledPackageIndex InstalledPackageIndex.PackageIndex
                   | SourcePackageIndex   (SourcePackageIndex.PackageIndex CliTypes.SourcePackage)
@@ -82,9 +78,9 @@ isSubstr caseSensitive pattern str = List.isInfixOf (f pattern) (f str)
 
 partitionByName :: [Package] -> Map String [Package]
 partitionByName pkgs = foldr insertPkg mempty pkgs
-    where insertPkg pkg map = let name = pkg ^. Package.id ^. Package.name
-                                  pkgList = pkg : Map.findWithDefault [] name map
-                              in  Map.insert name pkgList map
+    where insertPkg pkg pkgMap = let name = pkg ^. Package.id ^. Package.name
+                                     pkgList = pkg : Map.findWithDefault [] name pkgMap
+                                 in  Map.insert name pkgList pkgMap
 
 
 

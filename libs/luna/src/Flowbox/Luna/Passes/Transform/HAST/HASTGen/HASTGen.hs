@@ -31,8 +31,8 @@ import           Data.String.Utils                                     (join)
 import qualified Data.Set                                            as Set
 
 import           Control.Monad.State                                 hiding (mapM, mapM_, join)
-import           Control.Applicative                                   
-import           Control.Lens                                          
+
+
 
 type GenMonad m = PassMonad GenState m
 
@@ -53,7 +53,7 @@ run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) .: genModule
 genModule :: GenMonad m => LModule -> Pool -> Pass.Result m HExpr
 genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do 
     let (LType.Module _ path) = cls
-        fnames  = Set.toList $ Pool.names fpool
+        --fnames  = Set.toList $ Pool.names fpool
         mod     = HModule.addImport ["FlowboxM", "Luna", "Core"]
                 $ HModule.addExt HExtension.TemplateHaskell
                 $ HModule.addExt HExtension.NoMonomorphismRestriction

@@ -179,7 +179,7 @@ optableE  s i  = [ [ postfixM "."  (tok Expr.Accessor <*> pIdent s)             
                  , [ prefixfM      (try(binaryMatchE2 <$> tok Expr.Assignment <*> (pPattern s i) <* (L.reservedOp "=" <?> "pattern match")))]
                  ]
                  where
-                    operator s = binaryM  s (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':s)))
+                    operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':op)))
 
 binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 binaryMatchE2 f p q = f p (Expr.aftermatch q)

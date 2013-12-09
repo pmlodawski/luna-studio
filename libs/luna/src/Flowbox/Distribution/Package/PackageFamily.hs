@@ -9,7 +9,6 @@
 
 module Flowbox.Distribution.Package.PackageFamily where
 
-import           Data.Aeson
 import qualified Data.Aeson.TH     as JSON
 import           Data.Default      (Default, def)
 import           Data.Function     (on)
@@ -24,7 +23,6 @@ import           Flowbox.Data.Version                         (Version)
 import qualified Flowbox.Data.Version                         as Version
 import           Flowbox.Distribution.License                 (License)
 import           Flowbox.Distribution.Package.Dependency      (Dependency)
-import qualified Flowbox.Distribution.Package.Dependency      as Dependency
 import           Flowbox.Distribution.Package.Package         (Package)
 import qualified Flowbox.Distribution.Package.Package         as Package
 import           Flowbox.Prelude                              hiding (print)
@@ -101,8 +99,8 @@ styleShow pf =  indicator ++ " " ++ title
                                                 else StyledText.green "*"
                    title       = cmod (fromString $ pf ^. name)
                                  where cmod = if isInstalled then StyledText.green else id
-                   showSection name content  = if null content then ""
-                                               else nli ++ StyledText.blue name ++ content
+                   showSection prefix content  = if null content then ""
+                                               else nli ++ StyledText.blue prefix ++ content
                    collectVersions vs        = Map.foldrWithKey showVersion [] $ Version.partition 2 vs
                    showVersions vs           = join (nl ++ indent ++ titleIndent) $ collectVersions vs
                    showVersion branch vs lst =  (StyledText.yellow (fromString $ "(" ++ Version.readableBranch branch ++ ") ")

@@ -16,8 +16,6 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Process    as Process
 import           Flowbox.System.UniPath    (UniPath)
 
-import Control.Applicative
-
 
 
 loggerIO :: LoggerIO

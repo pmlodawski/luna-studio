@@ -9,16 +9,13 @@
 
 module Flowbox.Distribution.Package.Package where
 
-import           Data.Aeson
 import qualified Data.Aeson.TH as JSON
 import           Data.Default  (Default, def)
 import           GHC.Generics
 
 import           Flowbox.Data.Version                    (Version)
-import qualified Flowbox.Data.Version                    as Version
 import           Flowbox.Distribution.License            (License)
 import           Flowbox.Distribution.Package.Dependency (Dependency)
-import qualified Flowbox.Distribution.Package.Dependency as Dependency
 import           Flowbox.Prelude                         hiding (id)
 
 

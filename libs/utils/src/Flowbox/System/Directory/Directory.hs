@@ -32,7 +32,7 @@ import           System.Directory       hiding (copyFile, createDirectory, creat
 import qualified System.Directory       as Directory
 import qualified System.IO              as IO
 
-import           Flowbox.Prelude
+import           Flowbox.Prelude        hiding(children)
 import qualified Flowbox.System.Random  as Random
 import           Flowbox.System.UniPath (UniPath)
 import qualified Flowbox.System.UniPath as UniPath
@@ -105,8 +105,8 @@ getDirectoryRecursive upath = do
     isDir <- doesDirectoryExist path
     if isDir
         then do paths <- Directory.getDirectoryContents $ UniPath.toUnixString path
-                let filtered = filter (/= ".") $ filter (/= "..") paths
-                    upaths = map (\a -> UniPath.append a path) filtered
+                let filteredPaths = filter (/= ".") $ filter (/= "..") paths
+                    upaths = map (\a -> UniPath.append a path) filteredPaths
                 children <- mapM getDirectoryRecursive upaths
                 return $ List.concat children
         else return [path]

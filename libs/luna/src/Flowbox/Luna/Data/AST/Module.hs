@@ -15,9 +15,7 @@ import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Luna.Data.AST.Expr      (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr      as Expr
 import           Flowbox.Luna.Data.AST.Lit       (Lit)
-import qualified Flowbox.Luna.Data.AST.Lit       as Lit
 import           Flowbox.Luna.Data.AST.Pat       (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat       as Pat
 import           Flowbox.Luna.Data.AST.Type      (Type)
 import qualified Flowbox.Luna.Data.AST.Type      as Type
 import           Flowbox.Luna.Data.AST.Utils     (ID)

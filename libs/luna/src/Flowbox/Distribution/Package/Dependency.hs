@@ -9,8 +9,8 @@
 module Flowbox.Distribution.Package.Dependency where
 
 import           Data.Aeson
-import           Flowbox.Data.Version (Version)
-import qualified Flowbox.Data.Version as Version
+--import           Flowbox.Data.Version (Version)
+--import qualified Flowbox.Data.Version as Version
 import           Flowbox.Prelude
 import           GHC.Generics
 

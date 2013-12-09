@@ -148,3 +148,4 @@ setIntLevel lvl name = setLevel nlvl name where
         3 -> INFO      
         4 -> DEBUG     
         5 -> TRACE
+        _ -> TRACE

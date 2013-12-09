@@ -111,12 +111,11 @@ traverseM fexp ftype fpat flit e = case e of
     AppCons_    {}                                 -> pure e
     Arg         id' pat' value'                    -> Arg         id'       <$> fpat pat' <*> fexpMap value'
     where fexpMap = mapM fexp
-          fpatMap = mapM fpat
 
 
 traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Expr -> m ()
 traverseM_ fexp ftype fpat flit e = case e of
-    Accessor    _  name' dst'                      -> drop <* fexp dst'
+    Accessor    _  _ dst'                          -> drop <* fexp dst'
     App         _  src' args'                      -> drop <* fexp src'  <* fexpMap args'
     Assignment  _  pat' dst'                       -> drop <* fpat pat'  <* fexp dst'
     Class       _  cls' classes' fields' methods'  -> drop <* ftype cls' <* fexpMap classes' <* fexpMap fields' <* fexpMap methods'
@@ -129,7 +128,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     List        _  items'                          -> drop <* fexpMap items'
     Lit         _  val'                            -> drop <* flit val'
     Tuple       _  items'                          -> drop <* fexpMap items'
-    Typed       _  cls' _expr'                      -> drop <* ftype cls' <* fexp _expr'
+    Typed       _  cls' _expr'                     -> drop <* ftype cls' <* fexp _expr'
     Native      _ segments'                        -> drop <* fexpMap segments'
     RangeFromTo _ start' end'                      -> drop <* fexp start' <* fexp end'
     RangeFrom   _ start'                           -> drop <* fexp start'
@@ -142,7 +141,6 @@ traverseM_ fexp ftype fpat flit e = case e of
     Arg         _ pat' value'                      -> drop <* fpat pat' <* fexpMap value'
     where drop    = pure ()
           fexpMap = mapM_ fexp
-          fpatMap = fpatMap
 
 
 traverseM' :: Traversal m => (Expr -> m Expr) -> Expr -> m Expr
