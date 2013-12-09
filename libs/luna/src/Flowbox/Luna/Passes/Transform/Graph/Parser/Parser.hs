@@ -46,19 +46,16 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.Parser"
 type GPMonad m = PassMonad GPState m
 
 
-run :: PassMonad s m => Graph -> Pass.Result m Expr
-run gr = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr) graph2expr
+run :: PassMonad s m => Graph -> Expr -> Pass.Result m Expr
+run gr = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr) . graph2expr
 
 
-graph2expr :: GPMonad m => Pass.Result m Expr
-graph2expr = do 
+graph2expr :: GPMonad m => Expr -> Pass.Result m Expr
+graph2expr expr = do 
     graph <- State.getGraph
-    let nodes = Graph.labNodes graph
-    mapM_ node2expr nodes
-
+    mapM_ node2expr $ Graph.labNodes graph
     GPState _ body <- get
-    
-    return $ Expr.Function dummyInt dummyList dummyString dummyList dummyType body
+    return (Expr.body .~ body $ expr)
 
 
 node2expr :: GPMonad m => (Node.ID, Node) -> Pass.Result m ()

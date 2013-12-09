@@ -90,7 +90,7 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
     graph <- GraphBuilder.run va $ D.trace (ppShow expr) expr
     logger info $ show graph           
 
-    ast2 <- GraphParser.run graph
+    ast2 <- GraphParser.run graph expr
     logger warning $ ppShow ast2
 
     -- REMOVE !!!! JUST TESTING
