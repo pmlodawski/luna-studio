@@ -24,6 +24,7 @@ import qualified Flowbox.Luna.Data.Graph.Node    as Node
 import           Flowbox.Luna.Data.Graph.Node      (Node)
 import           Flowbox.Luna.Data.Graph.Port      (OutPort)
 import           Flowbox.System.Log.Logger         
+import Debug.Trace
 
 
 
@@ -90,7 +91,10 @@ setNodeMap nm = do gm <- get
 
 
 aaLookUp :: GBStateM m => AST.ID -> m AST.ID
-aaLookUp astID = getAAMap >>= fromJust . (IntMap.lookup astID) . AA.varmap 
+aaLookUp astID = do aa <- getAAMap 
+                    case IntMap.lookup astID $ AA.varmap aa of
+                        Nothing -> return astID
+                        Just a  -> return a
 
 
 nodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
@@ -98,4 +102,6 @@ nodeMapLookUp astID = getNodeMap >>= fromJust . (Map.lookup astID)
 
 
 aaNodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
-aaNodeMapLookUp astID = (aaLookUp astID) >>= nodeMapLookUp
+aaNodeMapLookUp astID = do s <- get
+                           i <- traceShow ("Looking for " ++ (show astID) ++ "\n" ++ (show s)) $ aaLookUp astID
+                           nodeMapLookUp i

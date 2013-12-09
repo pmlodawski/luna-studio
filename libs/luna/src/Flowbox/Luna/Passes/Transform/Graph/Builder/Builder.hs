@@ -36,7 +36,8 @@ import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBState)
 import           Flowbox.System.Log.Logger                           
 import qualified Flowbox.Luna.Data.Graph.Flags                     as Flags
 import qualified Flowbox.Luna.Data.Attributes                      as Attributes
-import Debug.Trace
+
+
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
@@ -73,10 +74,12 @@ parseArg (input, no) = case input of
 
 
 buildExpr :: GBMonad m => Expr -> Pass.Result m AST.ID
-buildExpr expr = traceShow expr $ case expr of
-    Expr.Accessor   i name dst -> do str <- expr2String expr
-                                     accNID <- State.insNewNode $ Node.Expr str (Just expr) dummyFlags dummyAttrs
+buildExpr expr = case expr of
+    Expr.Accessor   i name dst -> do dstID <- buildExpr dst
+                                     (dstNID, dstPort) <- State.aaNodeMapLookUp dstID
+                                     accNID <- State.insNewNode $ Node.Expr name (Just expr) dummyFlags dummyAttrs
                                      State.addToMap i (accNID, Nothing)
+                                     State.connect dstNID accNID $ Edge dstPort 0
                                      return i
     Expr.Assignment i pat dst  -> do (patIDs, patStr) <- buildPat pat
                                      dstID <- buildExpr dst
@@ -91,7 +94,7 @@ buildExpr expr = traceShow expr $ case expr of
                                      (srcNID, _) <- State.aaNodeMapLookUp srcID
                                      argIDs <- mapM buildExpr args
                                      argNIDsP <- mapM State.aaNodeMapLookUp argIDs
-                                     let numberedArgNIDsP = zip [0..] argNIDsP
+                                     let numberedArgNIDsP = zip [1..] argNIDsP
                                      mapM_ (\(no, (argNID, p)) -> State.connect argNID srcNID $ Edge p no) numberedArgNIDsP
                                      return srcID
     Expr.Var        i _        -> do return i

@@ -17,7 +17,7 @@ def main self:
     #     Console.print x
 
 def test self x y:
-    # z = x
-    # g = z
+    z = x
+    g = z
     z = self.add x y
     
