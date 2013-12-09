@@ -16,7 +16,7 @@ import           GHC.Generics
 
 data Dependency = Dependency { name :: String
                              --, version :: CVersion
-                             } deriving (Show, Generic)
+                             } deriving (Show, Generic, Ord, Eq)
 
 ------------------------------------------------------------------------
 -- INSTANCES

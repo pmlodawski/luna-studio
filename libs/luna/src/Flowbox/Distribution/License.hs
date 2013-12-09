@@ -25,8 +25,8 @@ data License = GPL (Maybe Version)
              | PublicDomain
              | AllRightsReserved
              | OtherLicense String
-             | UnknownLicense 
-             deriving (Read, Show, Eq, Generic)
+             | UnknownLicense
+             deriving (Read, Show, Eq, Generic, Ord)
 
 -------------------------------------------------
 -- INSTANCES

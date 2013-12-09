@@ -25,7 +25,7 @@ import           Flowbox.Prelude                         hiding (id)
 
 data PackageId = PackageId { _name    :: String
                            , _version :: Version
-                           } deriving (Show, Generic)
+                           } deriving (Show, Generic, Ord, Eq)
 makeLenses (''PackageId)
 
 
@@ -42,7 +42,7 @@ data Package = Package { _id           :: PackageId
                        , _copyright    :: String
                        , _tags         :: [String]
                        , _dependencies :: [Dependency]
-                       } deriving (Show, Generic)
+                       } deriving (Show, Generic, Ord, Eq)
 
 makeLenses (''Package)
 

@@ -55,7 +55,8 @@ buildParser = Cmd.Build <$> ( Cmd.BuildOptions <$> argument str ( metavar "INPUT
 
 listParser :: Opt.Parser Cmd.Command
 listParser = Cmd.List <$> ( Cmd.ListOptions <$> many (argument str ( metavar "PATTERNS" ))
-                                            <*> switch    ( long "installed"     <> help "only list installed packages" )
+                                            -- <*> switch    ( long "installed"     <> help "only list installed packages" )
+                                            <*> switch    ( long "json"          <> help "list packages using JSON data serialization format" )
                                             <*> switch    ( long "simple"        <> help "list packages using simple output form" )
                           )
 
@@ -103,5 +104,6 @@ run prog = case Cmd.cmd prog of
                          cfg <- Config.load
                          Build.run cfg op
     Cmd.Repo  scmd -> case scmd of
-                      Cmd.List op -> DistList.list (Cmd.inputs op)
+                      Cmd.List op -> list (Cmd.simple op) (Cmd.inputs op)
+                                     where list = if (Cmd.json op) then DistList.listJSON else DistList.list
 

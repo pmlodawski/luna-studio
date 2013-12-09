@@ -33,12 +33,14 @@ import qualified Flowbox.Distribution.CabalConversion          as CabalConversio
 import           Flowbox.Distribution.Package.Package          (Package)
 import qualified Flowbox.Distribution.Package.Package          as Package
 
+import qualified Data.Set as Set
+
 main = do
     cfg <- Config.load
     srcPkgIdx  <- PackageIndex.readSrcPkgIdx cfg
     instPkgIdx <- PackageIndex.readInstPkgIdx cfg
-    let srcPkgs    = PackageIndex.searchByNameSubstring srcPkgIdx "flowbox"
-        instPkgs   = PackageIndex.searchByNameSubstring instPkgIdx "flowbox"
+    let srcPkgs    = PackageIndex.searchByNameSubstring srcPkgIdx "x"
+        instPkgs   = PackageIndex.searchByNameSubstring instPkgIdx "x"
         srcPkgMap  = PackageIndex.partitionByName srcPkgs
         instPkgMap = PackageIndex.partitionByName instPkgs
         pkgMap     = PackageIndex.combinePkgMaps srcPkgMap instPkgMap

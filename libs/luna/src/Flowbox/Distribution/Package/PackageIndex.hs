@@ -13,8 +13,8 @@ import           Data.Char                        (toLower)
 import qualified Data.List                        as List
 import           Data.Map                         (Map)
 import qualified Data.Map                         as Map
-import qualified Data.Set                         as Set
 import           Data.Monoid
+import qualified Data.Set                         as Set
 import qualified Distribution.Client.Config       as CabalConf
 import qualified Distribution.Client.IndexUtils   as IndexUtils
 import qualified Distribution.Client.PackageIndex as SourcePackageIndex
@@ -24,14 +24,14 @@ import qualified Distribution.Client.Types        as CliTypes
 import qualified Distribution.Simple.PackageIndex as InstalledPackageIndex
 import           Distribution.Verbosity           as Verbosity
 
+import           Control.Arrow                        ((***))
+import           Control.Monad                        (join)
 import           Flowbox.Config.Config                (Config)
 import qualified Flowbox.Distribution.CabalConversion as CabalConversion
 import qualified Flowbox.Distribution.Config          as PkgConfig
 import           Flowbox.Distribution.Package.Package (Package)
 import qualified Flowbox.Distribution.Package.Package as Package
 import           Flowbox.Prelude
-import           Control.Arrow                        ((***))
-import           Control.Monad                        (join)
 
 import Debug.Trace
 
@@ -65,12 +65,11 @@ searchByNameSubstring idx pattern = case idx of
     InstalledPackageIndex pidx -> map CabalConversion.convertInstPackage $ InstalledPackageIndex.searchByNameSubstring pidx pattern
     SourcePackageIndex    pidx -> map CabalConversion.convertSrcPackage  $ concatMap snd (SourcePackageIndex.searchByNameSubstring pidx pattern)
 
-searchByNameSubstring' idx pattern = case idx of
-    InstalledPackageIndex pidx -> InstalledPackageIndex.allPackages pidx
 
-searchByNameSubstring'' idx pattern = case idx of
-    SourcePackageIndex    pidx -> SourcePackageIndex.allPackages pidx
-
+allPackages :: PackageIndex -> [Package]
+allPackages idx = case idx of
+    InstalledPackageIndex pidx -> map CabalConversion.convertInstPackage $ InstalledPackageIndex.allPackages pidx
+    SourcePackageIndex    pidx -> map CabalConversion.convertSrcPackage  $ SourcePackageIndex.allPackages pidx
 
 searchByName :: String -> [Package] -> [Package]
 searchByName name pkgs = filter (\p -> isSubstr False name $ view (Package.id . Package.name) p ) pkgs
@@ -95,7 +94,7 @@ combinePkgMaps srcPkgMap instPkgMap = Map.mapWithKey insert allSrcMap
           insert k el = (el, Map.findWithDefault [] k instPkgMap)
 
 
--- BUGREPORT[wd] : following functions take whole RAM. 
+-- BUGREPORT[wd] : following functions take whole RAM.
 
 --combinePkgMaps :: Map String [Package] -> Map String [Package] -> Map String ([Package], [Package])
 --combinePkgMaps srcPkgMap instPkgMap = Set.foldr finsert mempty keys
