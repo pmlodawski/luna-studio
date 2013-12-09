@@ -28,7 +28,7 @@ module Flowbox.Generics.Deriving.FShow (
 import           Generics.Deriving.Base        
 import           Generics.Deriving.Instances   ()
 
-import           Flowbox.Prelude               
+import           Flowbox.Prelude             hiding (from)
 
 
 type FType = String->String

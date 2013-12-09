@@ -5,18 +5,21 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
-import           Prelude                         hiding (error)
-import           Flowbox.System.Log.Logger       as Logger
-import qualified Flowbox.Data.Version            as Version
-import           GHC.Generics                      
-import           Flowbox.Generics.Deriving.FShow   
+import Flowbox.Generics.Deriving.FShow
+import Flowbox.System.Log.Logger       as Logger
+import GHC.Generics
+import Prelude                         hiding (error)
+
+import qualified Flowbox.System.Console.StyledText.StyledText as Text
 
 data Test = Test Int Int deriving(Show, Generic)
 
 instance FShow Test
-       
+
 logger :: Logger
 logger   = getLogger "MyApp.BuggyComponent"
 
@@ -27,12 +30,9 @@ test_logger :: IO ()
 test_logger = runLogger $ do
     logger debug      "debug"
     logger info       "info"
-    logger notice     "notice"
     logger warning    "warning"
     logger error      "error"
     logger critical   "critical"
-    logger alert      "alert"
-    logger emergency  "emergency"
 
 
 f :: String -> String
@@ -45,12 +45,14 @@ main = do
 
     logger setLevel DEBUG
     test_logger
-    let
-        v1 = Version.Version 0 1 0 Version.Alpha
-        v2 = Version.mk { Version.minor = 1
-                        , Version.stage = Version.Alpha
-                        }
-    print v1
-    print $ Version.str v1
-    print v2
     loggerIO error "IO error"
+
+    print ("colored text test" :: String)
+    let x = "ala"
+        y = Text.green "ola"
+        txt = (x ++ y ++ x)
+    Text.print txt
+    Text.print $ Text.clearFormatting txt
+    print $ Text.toText txt
+
+    return ()

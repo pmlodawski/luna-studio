@@ -10,7 +10,7 @@ module Flowbox.Control.Exception where
 
 import qualified Control.Exception as Exc
 
-import           Flowbox.Prelude     
+import Flowbox.Prelude
 
 
 try :: IO a -> IO (Either Exc.SomeException a)

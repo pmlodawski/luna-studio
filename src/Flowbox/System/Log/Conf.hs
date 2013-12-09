@@ -7,11 +7,11 @@
 
 module Flowbox.System.Log.Conf where
 
-import           Control.Concurrent.MVar   
-import           System.IO.Unsafe          (unsafePerformIO)
+import           Control.Concurrent.MVar
 import qualified Data.Map                as Map
+import           System.IO.Unsafe        (unsafePerformIO)
 
-import           Flowbox.Prelude           
+import Flowbox.Prelude hiding (empty)
 
 
 
@@ -34,7 +34,7 @@ conf = unsafePerformIO $ newMVar lempty
 
 
 read :: String -> IO Conf
-read lname = modifyMVar conf $ \c -> 
+read lname = modifyMVar conf $ \c ->
     case Map.lookup lname c of
         Just x  -> return (c,x)
         Nothing -> do
@@ -44,5 +44,5 @@ read lname = modifyMVar conf $ \c ->
 
 
 store :: String -> Conf -> IO ()
-store lname nc = modifyMVar conf $ \c -> 
+store lname nc = modifyMVar conf $ \c ->
     return (Map.insert lname nc c, ())

@@ -5,11 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Data.String where 
+module Flowbox.Data.String where
 
-import qualified Data.Char       as Char
+import qualified Data.Char as Char
 
-import           Flowbox.Prelude   
+import Flowbox.Prelude
 
 
 toUpper :: String -> String

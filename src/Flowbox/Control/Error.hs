@@ -17,15 +17,15 @@ module Flowbox.Control.Error (
     tryGetUniPath,
 ) where
 
-import           Control.Error                   hiding (runScript)
-import           Data.Int                          
-import           Data.IORef                        
-import           Data.Text.Lazy                    (Text, unpack)
-import qualified Control.Monad.IO.Class            
+import           Control.Error          hiding (runScript)
+import qualified Control.Monad.IO.Class
+import           Data.Int
+import           Data.IORef
+import           Data.Text.Lazy         (Text, unpack)
 
-import           Flowbox.Prelude                   
+import           Flowbox.Prelude
 import qualified Flowbox.System.UniPath          as UniPath
-import           Flowbox.Tools.Conversion.Common   
+import           Flowbox.Tools.Conversion.Common
 
 
 runScript :: Script a -> IO a
@@ -53,7 +53,7 @@ v <?> m = note m v
 
 
 ifnot :: Bool -> String -> Either String ()
-ifnot bool msg = if bool 
+ifnot bool msg = if bool
     then Right ()
     else Left msg
 

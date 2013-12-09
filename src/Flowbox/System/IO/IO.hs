@@ -5,13 +5,13 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.System.IO.IO(
-	writeFile
+        writeFile
 ) where
 
-import qualified Prelude                as Prelude
-import           Prelude                  (String, IO)
+import           Flowbox.System.UniPath (UniPath)
 import qualified Flowbox.System.UniPath as UniPath
-import           Flowbox.System.UniPath   (UniPath)
+import           Prelude                (IO, String)
+import qualified Prelude                as Prelude
 
 
 writeFile :: UniPath -> String -> IO ()

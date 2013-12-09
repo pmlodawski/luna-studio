@@ -6,9 +6,9 @@
 
 module Flowbox.System.Platform where
 
-import qualified System.Info     as Info
+import qualified System.Info as Info
 
-import           Flowbox.Prelude hiding (error)
+import Flowbox.Prelude hiding (error)
 
 
 data Platform = Linux

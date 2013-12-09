@@ -7,8 +7,8 @@
 
 module Flowbox.System.Log.Priority where
 
+import           Flowbox.Prelude
 import qualified System.Log.Logger as HSLogger
-import           Flowbox.Prelude     
 
 
 data Priority = TRACE
@@ -19,6 +19,7 @@ data Priority = TRACE
               | CRITICAL
               deriving (Show, Ord, Eq)
 
+pri2hspri :: Priority -> HSLogger.Priority
 pri2hspri p = case p of
     CRITICAL -> HSLogger.CRITICAL
     ERROR    -> HSLogger.ERROR
@@ -28,10 +29,13 @@ pri2hspri p = case p of
     TRACE    -> HSLogger.DEBUG
 
 
+hspri2pri :: HSLogger.Priority -> Priority
 hspri2pri p = case p of
-    HSLogger.CRITICAL -> CRITICAL     
-    HSLogger.ERROR    -> ERROR     
-    HSLogger.WARNING  -> WARNING     
-    HSLogger.NOTICE   -> INFO       
-    HSLogger.INFO     -> DEBUG    
-    HSLogger.DEBUG    -> TRACE   
+    HSLogger.ALERT     -> CRITICAL
+    HSLogger.EMERGENCY -> CRITICAL
+    HSLogger.CRITICAL  -> CRITICAL
+    HSLogger.ERROR     -> ERROR
+    HSLogger.WARNING   -> WARNING
+    HSLogger.NOTICE    -> INFO
+    HSLogger.INFO      -> DEBUG
+    HSLogger.DEBUG     -> TRACE
