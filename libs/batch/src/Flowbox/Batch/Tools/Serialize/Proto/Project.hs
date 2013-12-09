@@ -11,21 +11,21 @@ module Flowbox.Batch.Tools.Serialize.Proto.Project (
     restoreProject,
 ) where
 
-import qualified Data.ByteString.Lazy                                   as ByteString
-import           System.IO                                                
-import qualified Text.ProtocolBuffers                                   as Proto
+import qualified Data.ByteString.Lazy as ByteString
+import           System.IO
+import qualified Text.ProtocolBuffers as Proto
 
-import           Flowbox.Prelude                                          
+import           Flowbox.Batch.Project.Project                          (Project)
 import qualified Flowbox.Batch.Project.Project                          as Project
-import           Flowbox.Batch.Project.Project                            (Project)
-import qualified Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project   ()
+import qualified Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
+import           Flowbox.Control.Error
 import qualified Flowbox.Luna.Lib.LibManager                            as LibManager
+import           Flowbox.Prelude
+import           Flowbox.System.IO.Serializer                           (Deserializable (..), Serializable (..))
 import qualified Flowbox.System.IO.Serializer                           as Serializer
-import           Flowbox.System.IO.Serializer                             (Serializable(..), Deserializable(..))
+import           Flowbox.System.UniPath                                 (UniPath)
 import qualified Flowbox.System.UniPath                                 as UniPath
-import           Flowbox.System.UniPath                                   (UniPath)
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic           
-import           Flowbox.Control.Error                                    
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Project.Project                        as Gen
 
 
@@ -35,12 +35,12 @@ projectFile = "project.flowbox"
 
 
 saveProject :: Project -> Handle -> IO ()
-saveProject project h = 
+saveProject project h =
     ByteString.hPut h $ Proto.messagePut $ fst $ encode (-1::Project.ID, project)
 
 
 getProject :: Handle -> IO Project
-getProject h = runScript $ do 
+getProject h = runScript $ do
     bytes                        <- scriptIO $ ByteString.hGetContents h
     (tproject :: Gen.Project, _) <- tryRight $ Proto.messageGet bytes
     (_ :: Project.ID, project)   <- tryRight $ decode (tproject, LibManager.empty)
@@ -48,7 +48,7 @@ getProject h = runScript $ do
 
 
 storeProject :: Project -> IO ()
-storeProject project = do 
+storeProject project = do
     let filepath = UniPath.append projectFile $ Project.path project
         sproject = Serializable filepath (saveProject project)
     Serializer.serialize sproject

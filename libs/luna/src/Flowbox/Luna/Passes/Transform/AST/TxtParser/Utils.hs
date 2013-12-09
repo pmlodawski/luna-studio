@@ -8,21 +8,21 @@
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils where
 
-import           Flowbox.Prelude       
-import           Control.Applicative   
-import           Text.Parsec         hiding (parse, many, optional, (<|>))
+import Control.Applicative
+import Flowbox.Prelude
+import Text.Parsec         hiding (many, optional, parse, (<|>))
 
 checkIf f msg p = do
-	obj <- p
-	if (f obj)
-		then unexpected (msg ++ show obj)
-		else return obj
+        obj <- p
+        if (f obj)
+                then unexpected (msg ++ show obj)
+                else return obj
 
-pl <$*> pr = do 
+pl <$*> pr = do
     n <- pr
     pl n
 
-pl <*$> pr = do 
+pl <*$> pr = do
     n <- pl
     pr n
 

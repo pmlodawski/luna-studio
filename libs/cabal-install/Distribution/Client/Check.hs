@@ -15,17 +15,13 @@ module Distribution.Client.Check (
     check
   ) where
 
-import           Control.Monad                                   ( when, unless )
+import Control.Monad (unless, when)
 
-import           Distribution.PackageDescription.Parse           
-         ( readPackageDescription )
-import           Distribution.PackageDescription.Check           
-import           Distribution.PackageDescription.Configuration   
-         ( flattenPackageDescription )
-import           Distribution.Verbosity                          
-         ( Verbosity )
-import           Distribution.Simple.Utils                       
-         ( defaultPackageDesc, toUTF8, wrapText )
+import Distribution.PackageDescription.Check
+import Distribution.PackageDescription.Configuration (flattenPackageDescription)
+import Distribution.PackageDescription.Parse         (readPackageDescription)
+import Distribution.Simple.Utils                     (defaultPackageDesc, toUTF8, wrapText)
+import Distribution.Verbosity                        (Verbosity)
 
 check :: Verbosity -> IO Bool
 check verbosity = do

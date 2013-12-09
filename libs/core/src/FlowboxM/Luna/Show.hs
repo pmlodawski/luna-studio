@@ -1,17 +1,17 @@
+{-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module FlowboxM.Luna.Show (
-	module FlowboxM.Luna.Show,
-	lrepr,
-	LRepr
+        module FlowboxM.Luna.Show,
+        lrepr,
+        LRepr
 ) where
 
-import           FlowboxM.Luna.Data             
-import           FlowboxM.Utils.Generics.Show   
-import           FlowboxM.Utils.Generics.Repr   
-import           Data.Tuple.OneTuple            
-import           Data.Typeable                  (Typeable, typeOf)
+import Data.Tuple.OneTuple
+import Data.Typeable                (Typeable, typeOf)
+import FlowboxM.Luna.Data
+import FlowboxM.Utils.Generics.Repr
+import FlowboxM.Utils.Generics.Show
 
 instance (Typeable a) => Show (IO a) where
     show e = '(' : (show . typeOf) e ++ ")"
@@ -25,7 +25,7 @@ deriving instance Generic ((,,,,,,,) v1 v2 v3 v4 v5 v6 v7 v8)
 deriving instance Generic ((,,,,,,,,) v1 v2 v3 v4 v5 v6 v7 v8 v9)
 deriving instance Generic ((,,,,,,,,,) v1 v2 v3 v4 v5 v6 v7 v8 v9 v10)
 
-instance LRepr () where 
+instance LRepr () where
     lrepr _ = "{}"
 
 instance (LRepr v1) => LRepr (OneTuple v1) where

@@ -7,13 +7,13 @@
 
 module Flowbox.Lunac.Cmd where
 
-import           Data.Version      (Version)
+import Data.Version (Version)
 
-import           Flowbox.Prelude   
+import Flowbox.Prelude
 
 
 
-data Prog    = Prog { cmd      :: Command 
+data Prog    = Prog { cmd      :: Command
                     , no_color :: Bool
                     , verbose  :: Int
                     }
@@ -23,11 +23,11 @@ data Prog    = Prog { cmd      :: Command
 data Command = Hello
              | Build Options
              | Clean
-             | Doc 
-             | Env 
-             | Get 
-             | Install 
-             | Run 
+             | Doc
+             | Env
+             | Get
+             | Install
+             | Run
              | Version Options
              | Repo { c :: Command }
              | List Options
@@ -36,7 +36,7 @@ data Command = Hello
 
 data Options = VersionOptions { compiler :: Bool
                               , library  :: Bool
-                              , numeric  :: Bool 
+                              , numeric  :: Bool
                               }
              | BuildOptions   { input        :: String
                               , output       :: String
@@ -49,18 +49,20 @@ data Options = VersionOptions { compiler :: Bool
                               , rootPath     :: String
                               , global       :: Bool
 
-                              , dump_all     :: Bool 
+                              , dump_all     :: Bool
                               , dump_ast     :: Bool
-                              , dump_va      :: Bool 
-                              , dump_fp      :: Bool 
-                              , dump_ssa     :: Bool 
-                              , dump_hast    :: Bool 
-                              , dump_hsc     :: Bool 
+                              , dump_va      :: Bool
+                              , dump_fp      :: Bool
+                              , dump_ssa     :: Bool
+                              , dump_hast    :: Bool
+                              , dump_hsc     :: Bool
                               }
-              | ListOptions   { installed    :: Bool
-                              , simple       :: Bool 
+              | ListOptions   { inputs    :: [String]
+                              --, installed :: Bool
+                              , json      :: Bool
+                              , simple    :: Bool
                               }
-              | RepoOptions   { 
+              | RepoOptions   {
 
                               }
              deriving Show

@@ -12,13 +12,13 @@
 
 module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb where
 
-import           Control.Applicative                              
+import Control.Applicative
 
-import           Flowbox.Prelude                                  
-import           Flowbox.Control.Error                            
-import           Flowbox.Luna.Data.AST.Crumb.Crumb                (Breadcrumbs, Crumb)
+import           Flowbox.Control.Error
+import           Flowbox.Luna.Data.AST.Crumb.Crumb              (Breadcrumbs, Crumb)
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb              as Crumb
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic   
+import           Flowbox.Prelude
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Crumb.Breadcrumbs              as Gen
 import qualified Generated.Proto.Crumb.Crumb                    as Gen
 import qualified Generated.Proto.Crumb.Crumb.Cls                as GenCls

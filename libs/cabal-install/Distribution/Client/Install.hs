@@ -28,123 +28,68 @@ module Distribution.Client.Install (
     pruneInstallPlan
   ) where
 
-import           Data.List                                       
-         ( unfoldr, nub, sort, (\\) )
-import qualified Data.Set                                      as S
-import           Data.Maybe                                      
-         ( isJust, fromMaybe, maybeToList )
-import           Control.Exception                             as Exception
-         ( Exception(toException), bracket, catches
-         , Handler(Handler), handleJust, IOException, SomeException )
+import           Control.Exception as Exception (Exception (toException), Handler (Handler), IOException, SomeException, bracket, catches, handleJust)
+import           Data.List         (nub, sort, unfoldr, (\\))
+import           Data.Maybe        (fromMaybe, isJust, maybeToList)
+import qualified Data.Set          as S
 #ifndef mingw32_HOST_OS
-import           Control.Exception                             as Exception
-         ( Exception(fromException) )
+import Control.Exception as Exception (Exception (fromException))
 #endif
-import           System.Exit                                     
-         ( ExitCode(..) )
-import           Distribution.Compat.Exception                   
-         ( catchIO, catchExit )
-import           Control.Monad                                   
-         ( when, unless )
-import           System.Directory                                
-         ( getTemporaryDirectory, doesDirectoryExist, doesFileExist,
-           createDirectoryIfMissing, removeFile, renameDirectory )
-import           System.FilePath                                 
-         ( (</>), (<.>), takeDirectory )
-import           System.IO                                       
-         ( openFile, IOMode(AppendMode), hClose )
-import           System.IO.Error                                 
-         ( isDoesNotExistError, ioeGetFileName )
+import Control.Monad                 (unless, when)
+import Distribution.Compat.Exception (catchExit, catchIO)
+import System.Directory              (createDirectoryIfMissing, doesDirectoryExist, doesFileExist, getTemporaryDirectory, removeFile, renameDirectory)
+import System.Exit                   (ExitCode (..))
+import System.FilePath               (takeDirectory, (<.>), (</>))
+import System.IO                     (IOMode (AppendMode), hClose, openFile)
+import System.IO.Error               (ioeGetFileName, isDoesNotExistError)
 
-import           Distribution.Client.Targets                     
-import           Distribution.Client.Dependency                  
-import           Distribution.Client.Dependency.Types            
-         ( Solver(..) )
-import           Distribution.Client.FetchUtils                  
-import qualified Distribution.Client.Haddock as Haddock (regenerateHaddockIndex)
-import           Distribution.Client.IndexUtils                as IndexUtils
-         ( getSourcePackages, getInstalledPackages )
-import qualified Distribution.Client.InstallPlan               as InstallPlan
-import           Distribution.Client.InstallPlan                 (InstallPlan)
-import           Distribution.Client.Setup                       
-         ( GlobalFlags(..)
-         , ConfigFlags(..), configureCommand, filterConfigureFlags
-         , ConfigExFlags(..), InstallFlags(..) )
-import           Distribution.Client.Config                      
-         ( defaultCabalDir, defaultUserInstall )
-import           Distribution.Client.Sandbox.Timestamp           
-         ( withUpdateTimestamps )
-import           Distribution.Client.Sandbox.Types               
-         ( SandboxPackageInfo(..), UseSandbox(..), isUseSandbox
-         , whenUsingSandbox )
-import           Distribution.Client.Tar                         (extractTarGzFile)
-import           Distribution.Client.Types                     as Source
-import           Distribution.Client.BuildReports.Types          
-         ( ReportLevel(..) )
-import           Distribution.Client.SetupWrapper                
-         ( setupWrapper, SetupScriptOptions(..), defaultSetupScriptOptions )
-import qualified Distribution.Client.BuildReports.Anonymous    as BuildReports
-import qualified Distribution.Client.BuildReports.Storage      as BuildReports
-         ( storeAnonymous, storeLocal, fromInstallPlan )
-import qualified Distribution.Client.InstallSymlink            as InstallSymlink
-         ( symlinkBinaries )
-import qualified Distribution.Client.PackageIndex              as SourcePackageIndex
-import qualified Distribution.Client.Win32SelfUpgrade          as Win32SelfUpgrade
-import qualified Distribution.Client.World                     as World
-import qualified Distribution.InstalledPackageInfo             as Installed
-import           Paths_cabal_install                             (getBinDir)
-import           Distribution.Client.JobControl                  
+import qualified Distribution.Client.BuildReports.Anonymous as BuildReports
+import qualified Distribution.Client.BuildReports.Storage   as BuildReports (fromInstallPlan, storeAnonymous, storeLocal)
+import           Distribution.Client.BuildReports.Types     (ReportLevel (..))
+import           Distribution.Client.Config                 (defaultCabalDir, defaultUserInstall)
+import           Distribution.Client.Dependency
+import           Distribution.Client.Dependency.Types       (Solver (..))
+import           Distribution.Client.FetchUtils
+import qualified Distribution.Client.Haddock                as Haddock (regenerateHaddockIndex)
+import           Distribution.Client.IndexUtils             as IndexUtils (getInstalledPackages, getSourcePackages)
+import           Distribution.Client.InstallPlan            (InstallPlan)
+import qualified Distribution.Client.InstallPlan            as InstallPlan
+import qualified Distribution.Client.InstallSymlink         as InstallSymlink (symlinkBinaries)
+import           Distribution.Client.JobControl
+import qualified Distribution.Client.PackageIndex           as SourcePackageIndex
+import           Distribution.Client.Sandbox.Timestamp      (withUpdateTimestamps)
+import           Distribution.Client.Sandbox.Types          (SandboxPackageInfo (..), UseSandbox (..), isUseSandbox, whenUsingSandbox)
+import           Distribution.Client.Setup                  (ConfigExFlags (..), ConfigFlags (..), GlobalFlags (..), InstallFlags (..), configureCommand, filterConfigureFlags)
+import           Distribution.Client.SetupWrapper           (SetupScriptOptions (..), defaultSetupScriptOptions, setupWrapper)
+import           Distribution.Client.Tar                    (extractTarGzFile)
+import           Distribution.Client.Targets
+import           Distribution.Client.Types                  as Source
+import qualified Distribution.Client.Win32SelfUpgrade       as Win32SelfUpgrade
+import qualified Distribution.Client.World                  as World
+import qualified Distribution.InstalledPackageInfo          as Installed
+import           Paths_cabal_install                        (getBinDir)
 
-import           Distribution.Simple.Compiler                    
-         ( CompilerId(..), Compiler(compilerId), compilerFlavor
-         , PackageDB(..), PackageDBStack )
-import           Distribution.Simple.Program                     (ProgramConfiguration,
-                                    defaultProgramConfiguration)
-import qualified Distribution.Simple.InstallDirs               as InstallDirs
-import qualified Distribution.Simple.PackageIndex              as PackageIndex
-import           Distribution.Simple.PackageIndex                (PackageIndex)
-import           Distribution.Simple.Setup                       
-         ( haddockCommand, HaddockFlags(..)
-         , buildCommand, BuildFlags(..), emptyBuildFlags
-         , toFlag, fromFlag, fromFlagOrDefault, flagToMaybe, defaultDistPref )
-import qualified Distribution.Simple.Setup                     as Cabal
-         ( Flag(..)
-         , copyCommand, CopyFlags(..), emptyCopyFlags
-         , registerCommand, RegisterFlags(..), emptyRegisterFlags
-         , testCommand, TestFlags(..), emptyTestFlags )
-import           Distribution.Simple.Utils                       
-         ( createDirectoryIfMissingVerbose, rawSystemExit, comparing
-         , writeFileAtomic, withTempFile , withFileContents )
-import           Distribution.Simple.InstallDirs               as InstallDirs
-         ( PathTemplate, fromPathTemplate, toPathTemplate, substPathTemplate
-         , initialPathTemplateEnv, installDirsTemplateEnv )
-import           Distribution.Package                            
-         ( PackageIdentifier, PackageId, packageName, packageVersion
-         , Package(..), PackageFixedDeps(..)
-         , Dependency(..), thisPackageVersion, InstalledPackageId )
+import           Distribution.Client.Utils                     (MergeResult (..), determineNumJobs, inDir, mergeBy, tryCanonicalizePath)
+import           Distribution.Package                          (Dependency (..), InstalledPackageId, Package (..), PackageFixedDeps (..), PackageId, PackageIdentifier, packageName, packageVersion, thisPackageVersion)
+import           Distribution.PackageDescription               (Flag (..), FlagAssignment, FlagName (..), GenericPackageDescription (..), PackageDescription)
 import qualified Distribution.PackageDescription               as PackageDescription
-import           Distribution.PackageDescription                 
-         ( PackageDescription, GenericPackageDescription(..), Flag(..)
-         , FlagName(..), FlagAssignment )
-import           Distribution.PackageDescription.Configuration   
-         ( finalizePackageDescription )
-import           Distribution.ParseUtils                         
-         ( showPWarning )
-import           Distribution.Version                            
-         ( Version, anyVersion, thisVersion )
-import           Distribution.Simple.Utils                     as Utils
-         ( notice, info, warn, debug, debugNoWrap, die
-         , intercalate, withTempDirectory )
-import           Distribution.Client.Utils                       
-         ( determineNumJobs, inDir, mergeBy, MergeResult(..)
-         , tryCanonicalizePath )
-import           Distribution.System                             
-         ( Platform, OS(Windows), buildOS )
-import           Distribution.Text                               
-         ( display )
-import           Distribution.Verbosity                        as Verbosity
-         ( Verbosity, showForCabal, normal, verbose )
-import           Distribution.Simple.BuildPaths                  ( exeExtension )
+import           Distribution.PackageDescription.Configuration (finalizePackageDescription)
+import           Distribution.ParseUtils                       (showPWarning)
+import           Distribution.Simple.BuildPaths                (exeExtension)
+import           Distribution.Simple.Compiler                  (Compiler (compilerId), CompilerId (..), PackageDB (..), PackageDBStack, compilerFlavor)
+import           Distribution.Simple.InstallDirs               as InstallDirs (PathTemplate, fromPathTemplate, initialPathTemplateEnv, installDirsTemplateEnv, substPathTemplate, toPathTemplate)
+import qualified Distribution.Simple.InstallDirs               as InstallDirs
+import           Distribution.Simple.PackageIndex              (PackageIndex)
+import qualified Distribution.Simple.PackageIndex              as PackageIndex
+import           Distribution.Simple.Program                   (ProgramConfiguration, defaultProgramConfiguration)
+import           Distribution.Simple.Setup                     (BuildFlags (..), HaddockFlags (..), buildCommand, defaultDistPref, emptyBuildFlags, flagToMaybe, fromFlag, fromFlagOrDefault, haddockCommand, toFlag)
+import qualified Distribution.Simple.Setup                     as Cabal (CopyFlags (..), Flag (..), RegisterFlags (..), TestFlags (..), copyCommand, emptyCopyFlags, emptyRegisterFlags, emptyTestFlags, registerCommand, testCommand)
+import           Distribution.Simple.Utils                     (comparing, createDirectoryIfMissingVerbose, rawSystemExit, withFileContents, withTempFile, writeFileAtomic)
+import           Distribution.Simple.Utils                     as Utils (debug, debugNoWrap, die, info, intercalate, notice, warn, withTempDirectory)
+import           Distribution.System                           (OS (Windows), Platform, buildOS)
+import           Distribution.Text                             (display)
+import           Distribution.Verbosity                        as Verbosity (Verbosity, normal, showForCabal, verbose)
+import           Distribution.Version                          (Version, anyVersion, thisVersion)
 
 --TODO:
 -- * assign flags to packages individually

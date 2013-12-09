@@ -20,80 +20,47 @@ module Distribution.Client.SetupWrapper (
     defaultSetupScriptOptions,
   ) where
 
+import           Distribution.Client.Config            (defaultCabalDir)
+import           Distribution.Client.IndexUtils        (getInstalledPackages)
+import           Distribution.Client.JobControl        (Lock, criticalSection)
+import           Distribution.Client.Utils             (existsAndIsMoreRecentThan, inDir, moreRecentFile, tryCanonicalizePath)
+import           Distribution.Compat.Exception         (catchIO)
+import           Distribution.Compiler                 (buildCompilerId)
+import           Distribution.InstalledPackageInfo     (installedPackageId)
 import qualified Distribution.Make                     as Make
+import           Distribution.Package                  (Dependency (..), InstalledPackageId (..), Package (..), PackageIdentifier (..), PackageName (..), packageName, packageVersion)
+import           Distribution.PackageDescription       (BuildType (..), GenericPackageDescription (packageDescription), PackageDescription (..), knownBuildTypes, specVersion)
+import           Distribution.PackageDescription.Parse (readPackageDescription)
 import qualified Distribution.Simple                   as Simple
-import           Distribution.Version                    
-         ( Version(..), VersionRange, anyVersion
-         , intersectVersionRanges, orLaterVersion
-         , withinRange )
-import           Distribution.InstalledPackageInfo       (installedPackageId)
-import           Distribution.Package                    
-         ( InstalledPackageId(..), PackageIdentifier(..),
-           PackageName(..), Package(..), packageName
-         , packageVersion, Dependency(..) )
-import           Distribution.PackageDescription         
-         ( GenericPackageDescription(packageDescription)
-         , PackageDescription(..), specVersion
-         , BuildType(..), knownBuildTypes )
-import           Distribution.PackageDescription.Parse   
-         ( readPackageDescription )
-import           Distribution.Simple.Configure           
-         ( configCompilerEx )
-import           Distribution.Compiler                   ( buildCompilerId )
-import           Distribution.Simple.Compiler            
-         ( CompilerFlavor(GHC), Compiler(compilerId)
-         , PackageDB(..), PackageDBStack )
-import           Distribution.Simple.PreProcess          
-         ( runSimplePreProcessor, ppUnlit )
-import           Distribution.Simple.Program             
-         ( ProgramConfiguration, emptyProgramConfiguration
-         , getProgramSearchPath, getDbProgramOutput, runDbProgram, ghcProgram )
-import           Distribution.Simple.Program.Find        
-         ( programSearchPathAsPATHVar )
-import           Distribution.Simple.Program.Run         
-         ( getEffectiveEnvironment )
-import           Distribution.Simple.BuildPaths          
-         ( defaultDistPref, exeExtension )
-import           Distribution.Simple.Command             
-         ( CommandUI(..), commandShowOptions )
-import           Distribution.Simple.Program.GHC         
-         ( GhcMode(..), GhcOptions(..), renderGhcOptions )
+import           Distribution.Simple.BuildPaths        (defaultDistPref, exeExtension)
+import           Distribution.Simple.Command           (CommandUI (..), commandShowOptions)
+import           Distribution.Simple.Compiler          (Compiler (compilerId), CompilerFlavor (GHC), PackageDB (..), PackageDBStack)
+import           Distribution.Simple.Configure         (configCompilerEx)
+import           Distribution.Simple.PackageIndex      (PackageIndex)
 import qualified Distribution.Simple.PackageIndex      as PackageIndex
-import           Distribution.Simple.PackageIndex        (PackageIndex)
-import           Distribution.Client.Config              
-         ( defaultCabalDir )
-import           Distribution.Client.IndexUtils          
-         ( getInstalledPackages )
-import           Distribution.Client.JobControl          
-         ( Lock, criticalSection )
-import           Distribution.Simple.Setup               
-         ( Flag(..) )
-import           Distribution.Simple.Utils               
-         ( die, debug, info, cabalVersion, findPackageDesc, comparing
-         , createDirectoryIfMissingVerbose, installExecutableFile
-         , copyFileVerbose, rewriteFile, intercalate )
-import           Distribution.Client.Utils               
-         ( inDir, tryCanonicalizePath
-         , existsAndIsMoreRecentThan, moreRecentFile )
-import           Distribution.System                     ( Platform(..), buildPlatform )
-import           Distribution.Text                       
-         ( display )
-import           Distribution.Verbosity                  
-         ( Verbosity )
-import           Distribution.Compat.Exception           
-         ( catchIO )
+import           Distribution.Simple.PreProcess        (ppUnlit, runSimplePreProcessor)
+import           Distribution.Simple.Program           (ProgramConfiguration, emptyProgramConfiguration, getDbProgramOutput, getProgramSearchPath, ghcProgram, runDbProgram)
+import           Distribution.Simple.Program.Find      (programSearchPathAsPATHVar)
+import           Distribution.Simple.Program.GHC       (GhcMode (..), GhcOptions (..), renderGhcOptions)
+import           Distribution.Simple.Program.Run       (getEffectiveEnvironment)
+import           Distribution.Simple.Setup             (Flag (..))
+import           Distribution.Simple.Utils             (cabalVersion, comparing, copyFileVerbose, createDirectoryIfMissingVerbose, debug, die, findPackageDesc, info, installExecutableFile, intercalate, rewriteFile)
+import           Distribution.System                   (Platform (..), buildPlatform)
+import           Distribution.Text                     (display)
+import           Distribution.Verbosity                (Verbosity)
+import           Distribution.Version                  (Version (..), VersionRange, anyVersion, intersectVersionRanges, orLaterVersion, withinRange)
 
-import           System.Directory                        ( doesFileExist )
-import           System.FilePath                         ( (</>), (<.>) )
-import           System.IO                               ( Handle, hPutStr )
-import           System.Exit                             ( ExitCode(..), exitWith )
-import           System.Process                          ( runProcess, waitForProcess )
-import           Control.Applicative                     ( (<$>), (<*>) )
-import           Control.Monad                           ( when, unless )
-import           Data.List                               ( foldl1' )
-import           Data.Maybe                              ( fromMaybe, isJust )
-import           Data.Monoid                             ( mempty )
-import           Data.Char                               ( isSpace )
+import Control.Applicative ((<$>), (<*>))
+import Control.Monad       (unless, when)
+import Data.Char           (isSpace)
+import Data.List           (foldl1')
+import Data.Maybe          (fromMaybe, isJust)
+import Data.Monoid         (mempty)
+import System.Directory    (doesFileExist)
+import System.Exit         (ExitCode (..), exitWith)
+import System.FilePath     ((<.>), (</>))
+import System.IO           (Handle, hPutStr)
+import System.Process      (runProcess, waitForProcess)
 
 data SetupScriptOptions = SetupScriptOptions {
     useCabalVersion          :: VersionRange,

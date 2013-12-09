@@ -10,36 +10,23 @@ module Distribution.Client.HttpUtils (
     isOldHackageURI
   ) where
 
-import           Network.HTTP                 
-         ( Request (..), Response (..), RequestMethod (..)
-         , Header(..), HeaderName(..), lookupHeader )
-import           Network.HTTP.Proxy           ( Proxy(..), fetchProxy)
-import           Network.URI                  
-         ( URI (..), URIAuth (..) )
-import           Network.Browser              
-         ( BrowserAction, browse
-         , setOutHandler, setErrHandler, setProxy, setAuthorityGen, request)
-import           Network.Stream               
-         ( Result, ConnError(..) )
-import           Control.Monad                
-         ( liftM )
+import           Control.Monad              (liftM)
+import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as ByteString
-import           Data.ByteString.Lazy         (ByteString)
+import           Network.Browser            (BrowserAction, browse, request, setAuthorityGen, setErrHandler, setOutHandler, setProxy)
+import           Network.HTTP               (Header (..), HeaderName (..), Request (..), RequestMethod (..), Response (..), lookupHeader)
+import           Network.HTTP.Proxy         (Proxy (..), fetchProxy)
+import           Network.Stream             (ConnError (..), Result)
+import           Network.URI                (URI (..), URIAuth (..))
 
-import qualified Paths_cabal_install          (version)
-import           Distribution.Verbosity       (Verbosity)
-import           Distribution.Simple.Utils    
-         ( die, info, warn, debug, notice
-         , copyFileVerbose, writeFileAtomic )
-import           Distribution.Text            
-         ( display )
-import           Data.Char                    ( isSpace )
-import qualified System.FilePath.Posix      as FilePath.Posix
-         ( splitDirectories )
-import           System.FilePath              
-         ( (<.>) )
-import           System.Directory             
-         ( doesFileExist )
+import           Data.Char                 (isSpace)
+import           Distribution.Simple.Utils (copyFileVerbose, debug, die, info, notice, warn, writeFileAtomic)
+import           Distribution.Text         (display)
+import           Distribution.Verbosity    (Verbosity)
+import qualified Paths_cabal_install       (version)
+import           System.Directory          (doesFileExist)
+import           System.FilePath           ((<.>))
+import qualified System.FilePath.Posix     as FilePath.Posix (splitDirectories)
 
 data DownloadResult = FileAlreadyInCache | FileDownloaded FilePath deriving (Eq)
 

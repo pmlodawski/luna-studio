@@ -15,36 +15,25 @@ module Distribution.Client.Fetch (
     fetch,
   ) where
 
-import           Distribution.Client.Types          
-import           Distribution.Client.Targets        
-import           Distribution.Client.FetchUtils   hiding (fetchPackage)
-import           Distribution.Client.Dependency     
-import           Distribution.Client.IndexUtils   as IndexUtils
-         ( getSourcePackages, getInstalledPackages )
-import qualified Distribution.Client.InstallPlan  as InstallPlan
-import           Distribution.Client.Setup          
-         ( GlobalFlags(..), FetchFlags(..) )
+import           Distribution.Client.Dependency
+import           Distribution.Client.FetchUtils  hiding (fetchPackage)
+import           Distribution.Client.IndexUtils  as IndexUtils (getInstalledPackages, getSourcePackages)
+import qualified Distribution.Client.InstallPlan as InstallPlan
+import           Distribution.Client.Setup       (FetchFlags (..), GlobalFlags (..))
+import           Distribution.Client.Targets
+import           Distribution.Client.Types
 
-import           Distribution.Package               
-         ( packageId )
-import           Distribution.Simple.Compiler       
-         ( Compiler(compilerId), PackageDBStack )
-import           Distribution.Simple.PackageIndex   (PackageIndex)
-import           Distribution.Simple.Program        
-         ( ProgramConfiguration )
-import           Distribution.Simple.Setup          
-         ( fromFlag )
-import           Distribution.Simple.Utils          
-         ( die, notice, debug )
-import           Distribution.System                
-         ( Platform )
-import           Distribution.Text                  
-         ( display )
-import           Distribution.Verbosity             
-         ( Verbosity )
+import Distribution.Package             (packageId)
+import Distribution.Simple.Compiler     (Compiler (compilerId), PackageDBStack)
+import Distribution.Simple.PackageIndex (PackageIndex)
+import Distribution.Simple.Program      (ProgramConfiguration)
+import Distribution.Simple.Setup        (fromFlag)
+import Distribution.Simple.Utils        (debug, die, notice)
+import Distribution.System              (Platform)
+import Distribution.Text                (display)
+import Distribution.Verbosity           (Verbosity)
 
-import           Control.Monad                      
-         ( filterM )
+import Control.Monad (filterM)
 
 -- ------------------------------------------------------------
 -- * The fetch command

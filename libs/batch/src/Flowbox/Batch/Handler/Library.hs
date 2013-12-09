@@ -17,29 +17,29 @@ module Flowbox.Batch.Handler.Library (
     runLibrary,
 ) where
 
-import qualified Data.Maybe                                 as Maybe
-import           Data.Version                                 (Version(Version))
+import qualified Data.Maybe   as Maybe
+import           Data.Version (Version (Version))
 
-import           Flowbox.Prelude                              
+import           Flowbox.Batch.Batch                        (Batch)
 import qualified Flowbox.Batch.Batch                        as Batch
-import           Flowbox.Batch.Batch                          (Batch)
-import           Flowbox.Batch.Handler.Common                 (noresult, readonly, readonly', libManagerOp, libManagerOp', libraryOp, libraryOp')
+import           Flowbox.Batch.Handler.Common               (libManagerOp, libManagerOp', libraryOp, libraryOp', noresult, readonly, readonly')
 import qualified Flowbox.Batch.Project.Project              as Project
 import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
 import qualified Flowbox.Luna.Lib.LibManager                as LibManager
+import           Flowbox.Luna.Lib.Library                   (Library)
 import qualified Flowbox.Luna.Lib.Library                   as Library
-import           Flowbox.Luna.Lib.Library                     (Library)
-import qualified Flowbox.Luna.Tools.Serialize.Proto.Library as LibSerialization
 import qualified Flowbox.Luna.Passes.Build.Build            as Build
+import           Flowbox.Luna.Passes.Build.BuildConfig      (BuildConfig (BuildConfig))
 import qualified Flowbox.Luna.Passes.Build.BuildConfig      as BuildConfig
-import           Flowbox.Luna.Passes.Build.BuildConfig        (BuildConfig(BuildConfig))
 import qualified Flowbox.Luna.Passes.Build.Diagnostics      as Diagnostics
 import qualified Flowbox.Luna.Passes.General.Luna.Luna      as Luna
-import           Flowbox.System.Log.Logger                    
+import qualified Flowbox.Luna.Tools.Serialize.Proto.Library as LibSerialization
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform                    as Platform
 import qualified Flowbox.System.Process                     as Process
+import           Flowbox.System.UniPath                     (UniPath)
 import qualified Flowbox.System.UniPath                     as UniPath
-import           Flowbox.System.UniPath                       (UniPath)
 
 
 
@@ -48,8 +48,8 @@ loggerIO = getLoggerIO "Flowbox.Batch.Handler.Library"
 
 
 libraries :: Project.ID -> Batch -> Either String [(Library.ID, Library)]
-libraries projectID = readonly . libManagerOp projectID (\_ libManager -> 
-    let r = LibManager.labNodes libManager 
+libraries projectID = readonly . libManagerOp projectID (\_ libManager ->
+    let r = LibManager.labNodes libManager
     in Right (libManager, r))
 
 
@@ -72,7 +72,7 @@ loadLibrary path projectID = libManagerOp' projectID (\_ libManager -> do
 
 
 unloadLibrary :: Library.ID -> Project.ID -> Batch -> Either String Batch
-unloadLibrary libID projectID = noresult . libManagerOp projectID (\_ libManager -> 
+unloadLibrary libID projectID = noresult . libManagerOp projectID (\_ libManager ->
     let newLibManager = LibManager.delNode libID libManager
     in Right (newLibManager, ()))
 
@@ -94,23 +94,23 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
     --    defManger   = Library.defs library
     --    rootDefID   = Library.rootDefID
     --    rootDef     = Maybe.fromJust $ DefManager.lab defManger rootDefID
-       
+
     --    name        = Library.name library
     --    version     = Version [1][]      -- TODO [PM] : hardcoded version
     --    cfg         = Batch.config batch
     --    diag        = Diagnostics.none   -- TODO [PM] : hardcoded diagnostics
-    --    outputPath  = UniPath.append name projectPath 
+    --    outputPath  = UniPath.append name projectPath
     --    libs        = []                 -- TODO [PM] : hardcoded libs
     --    ghcFlags    = ["-O2"]            -- TODO [PM] : hardcoded ghc flags
     --    cabalFlags  = []                 -- TODO [PM] : hardcoded cabal flags
-        
+
     --    buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
     --    bldCfg      = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag
 
     --Luna.runIO $ do ast <- Build.parseGraph diag defManger (rootDefID, rootDef)
     --                Build.run bldCfg ast
     return (library, ()))
-    
+
 
 -- TODO [PM] : Needs architecture change
 runLibrary ::  Library.ID -> Project.ID -> Batch -> IO String

@@ -9,4 +9,4 @@ module Flowbox.Lunac.Config (
     module Paths_flowbox_lunac
 ) where
 
-import           Paths_flowbox_lunac   (version)
+import Paths_flowbox_lunac (version)

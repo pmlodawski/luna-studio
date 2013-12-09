@@ -8,25 +8,25 @@
 
 module Flowbox.Batch.Server.Handler.BatchHandler where
 
-import           Control.Applicative                        
-import qualified Control.Concurrent.MVar                  as MVar
-import           Control.Concurrent.MVar                    (MVar)
-import qualified Data.IORef                               as IORef
-import           Data.IORef                                 (IORef)
+import           Control.Applicative
+import           Control.Concurrent.MVar (MVar)
+import qualified Control.Concurrent.MVar as MVar
+import           Data.IORef              (IORef)
+import qualified Data.IORef              as IORef
 
-import           Flowbox.Prelude                            
+import           Flowbox.Batch.Batch                      (Batch)
 import qualified Flowbox.Batch.Batch                      as Batch
-import           Flowbox.Batch.Batch                        (Batch)
 import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
 import qualified Flowbox.Batch.Samples.Std                as Sample
-import qualified Flowbox.Batch.Server.Handler.Handler     as Handler
-import           Flowbox.Batch.Server.Handler.Handler       (Handler)
 import qualified Flowbox.Batch.Server.Handler.FileSystem  as HFileSystem
+import           Flowbox.Batch.Server.Handler.Handler     (Handler)
+import qualified Flowbox.Batch.Server.Handler.Handler     as Handler
 import qualified Flowbox.Batch.Server.Handler.Library     as HLibrary
 import qualified Flowbox.Batch.Server.Handler.Maintenance as HMaintenance
 import qualified Flowbox.Batch.Server.Handler.Project     as HProject
 import qualified Flowbox.Config.Config                    as Config
-import           Flowbox.System.Log.Logger                  
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 
 
 
@@ -53,7 +53,7 @@ instance Handler BatchHandler where
     rm         h = HFileSystem.rm    (batchRef h)
     cp         h = HFileSystem.cp    (batchRef h)
     mv         h = HFileSystem.mv    (batchRef h)
-    
+
     libraries     h = HLibrary.libraries     (batchRef h)
     libraryByID   h = HLibrary.libraryByID   (batchRef h)
     createLibrary h = HLibrary.createLibrary (batchRef h)
@@ -62,9 +62,9 @@ instance Handler BatchHandler where
     storeLibrary  h = HLibrary.storeLibrary  (batchRef h)
     buildLibrary  h = HLibrary.buildLibrary  (batchRef h)
     runLibrary    h = HLibrary.runLibrary    (batchRef h)
-    
+
     initialize h = HMaintenance.initialize (batchRef h)
-    ping       h = HMaintenance.ping       (batchRef h) 
+    ping       h = HMaintenance.ping       (batchRef h)
     dump       h = HMaintenance.dump       (batchRef h)
     shutdown   h = HMaintenance.shutdown   (quitMutex h)
 

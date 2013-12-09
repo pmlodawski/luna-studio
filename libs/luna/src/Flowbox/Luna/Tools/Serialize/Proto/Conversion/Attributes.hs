@@ -12,16 +12,16 @@
 
 module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes where
 
-import qualified Data.Foldable                                        as Foldable
-import qualified Data.Map                                             as Map
-import qualified Data.Sequence                                        as Sequence
+import qualified Data.Foldable as Foldable
+import qualified Data.Map      as Map
+import qualified Data.Sequence as Sequence
 
-import           Flowbox.Prelude                                        
-import           Flowbox.Control.Error                                  
-import           Flowbox.Luna.Data.Graph.Flags                          (Flags(Flags))
+import           Flowbox.Control.Error
+import           Flowbox.Luna.Data.Attributes                         (Attributes)
 import qualified Flowbox.Luna.Data.Attributes                         as Attributes
-import           Flowbox.Luna.Data.Attributes                           (Attributes)
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic         
+import           Flowbox.Luna.Data.Graph.Flags                        (Flags (Flags))
+import           Flowbox.Prelude
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Attributes.Attributes                as Gen
 import qualified Generated.Proto.Attributes.Attributes.Space          as Gen
 import qualified Generated.Proto.Attributes.Attributes.Space.KeyValue as Gen

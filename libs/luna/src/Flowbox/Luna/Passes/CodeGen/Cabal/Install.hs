@@ -7,16 +7,14 @@
 
 module Flowbox.Luna.Passes.CodeGen.Cabal.Install where
 
-import           Control.Monad.RWS           
+import Control.Monad.RWS
 
-import           Flowbox.Prelude           hiding (error)
-import qualified Flowbox.System.Process    as Process
-import           Flowbox.System.UniPath      (UniPath)
-import           Flowbox.System.Log.Logger   
+import           Flowbox.Config.Config     (Config)
 import qualified Flowbox.Config.Config     as Config
-import           Flowbox.Config.Config       (Config)
-
-import           Control.Applicative         
+import           Flowbox.Prelude           hiding (error)
+import           Flowbox.System.Log.Logger
+import qualified Flowbox.System.Process    as Process
+import           Flowbox.System.UniPath    (UniPath)
 
 
 

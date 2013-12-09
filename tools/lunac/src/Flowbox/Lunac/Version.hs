@@ -7,17 +7,17 @@
 
 module Flowbox.Lunac.Version  where
 
-import qualified Data.Version               as Version
+import qualified Data.Version as Version
 
-import           Flowbox.Prelude              
 import qualified Flowbox.Luna.Config.Config as LibConfig
 import qualified Flowbox.Lunac.Config       as Config
+import           Flowbox.Prelude
 
 
 
 full :: Bool -> Bool -> Bool -> String
-full numeric comp lib =  (if (not comp && lib) then "" else (compiler numeric ++ "\n")) 
-                      ++ (if (not lib && comp) then "" else (library numeric ++ "\n")) 
+full numeric comp lib =  (if (not comp && lib) then "" else (compiler numeric ++ "\n"))
+                      ++ (if (not lib && comp) then "" else (library numeric ++ "\n"))
 
 
 compiler :: Bool -> String

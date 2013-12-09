@@ -128,7 +128,8 @@ buildPat pat = case pat of
                                       strs = map snd argsStr
                                   (srcID, srcStr) <- buildPat src
                                   return (ids, srcStr ++ " " ++ (List.intercalate " " strs))
-    Pat.Typed    i pat cls  -> return $ ([i], dummyString "pattern_Typed")
+    Pat.Typed    i pat cls  -> do (patIDs, patStr) <- buildPat pat
+                                  return $ (patIDs, patStr ++ " :: " ++ dummyString "pattern_Typed")
     Pat.Wildcard i          -> return ([i], "_")
 
 

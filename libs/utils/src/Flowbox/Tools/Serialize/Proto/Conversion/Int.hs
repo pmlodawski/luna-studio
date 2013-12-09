@@ -5,15 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Flowbox.Tools.Serialize.Proto.Conversion.Int where
 
-import           Data.Int                          (Int32)
+import Data.Int (Int32)
 
-import           Flowbox.Prelude                   
-import           Flowbox.Tools.Conversion.Proto    
+import           Flowbox.Prelude
 import qualified Flowbox.Tools.Conversion.Common as Common
+import           Flowbox.Tools.Conversion.Proto
 
 
 

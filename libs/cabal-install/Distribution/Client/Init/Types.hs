@@ -13,21 +13,20 @@
 -----------------------------------------------------------------------------
 module Distribution.Client.Init.Types where
 
-import           Distribution.Simple.Setup    
-  ( Flag(..) )
+import Distribution.Simple.Setup (Flag (..))
 
-import           Distribution.Version         
-import           Distribution.Verbosity       
+import           Distribution.License
+import           Distribution.ModuleName
 import qualified Distribution.Package       as P
-import           Distribution.License         
-import           Distribution.ModuleName      
-import           Language.Haskell.Extension   ( Language(..), Extension )
+import           Distribution.Verbosity
+import           Distribution.Version
+import           Language.Haskell.Extension (Extension, Language (..))
 
-import qualified Text.PrettyPrint           as Disp
-import qualified Distribution.Compat.ReadP  as Parse
-import           Distribution.Text            
+import qualified Distribution.Compat.ReadP as Parse
+import           Distribution.Text
+import qualified Text.PrettyPrint          as Disp
 
-import           Data.Monoid                  
+import Data.Monoid
 
 -- | InitFlags is really just a simple type to represent certain
 --   portions of a .cabal file.  Rather than have a flag for EVERY
@@ -41,31 +40,31 @@ data InitFlags =
               , noComments     :: Flag Bool
               , minimal        :: Flag Bool
 
-              , packageName  :: Flag String
-              , version      :: Flag Version
-              , cabalVersion :: Flag VersionRange
-              , license      :: Flag License
-              , author       :: Flag String
-              , email        :: Flag String
-              , homepage     :: Flag String
+              , packageName    :: Flag String
+              , version        :: Flag Version
+              , cabalVersion   :: Flag VersionRange
+              , license        :: Flag License
+              , author         :: Flag String
+              , email          :: Flag String
+              , homepage       :: Flag String
 
-              , synopsis     :: Flag String
-              , category     :: Flag (Either String Category)
-              , extraSrc     :: Maybe [String]
+              , synopsis       :: Flag String
+              , category       :: Flag (Either String Category)
+              , extraSrc       :: Maybe [String]
 
-              , packageType  :: Flag PackageType
-              , language     :: Flag Language
+              , packageType    :: Flag PackageType
+              , language       :: Flag Language
 
               , exposedModules :: Maybe [ModuleName]
               , otherModules   :: Maybe [ModuleName]
               , otherExts      :: Maybe [Extension]
 
-              , dependencies :: Maybe [P.Dependency]
-              , sourceDirs   :: Maybe [String]
-              , buildTools   :: Maybe [String]
+              , dependencies   :: Maybe [P.Dependency]
+              , sourceDirs     :: Maybe [String]
+              , buildTools     :: Maybe [String]
 
-              , initVerbosity :: Flag Verbosity
-              , overwrite     :: Flag Bool
+              , initVerbosity  :: Flag Verbosity
+              , overwrite      :: Flag Bool
               }
   deriving (Show)
 

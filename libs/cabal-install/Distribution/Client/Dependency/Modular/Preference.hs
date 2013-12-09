@@ -2,22 +2,20 @@ module Distribution.Client.Dependency.Modular.Preference where
 
 -- Reordering or pruning the tree in order to prefer or make certain choices.
 
-import qualified Data.List                                         as L
-import qualified Data.Map                                          as M
-import           Data.Monoid                                         
-import           Data.Ord                                            
+import qualified Data.List   as L
+import qualified Data.Map    as M
+import           Data.Monoid
+import           Data.Ord
 
-import           Distribution.Client.Dependency.Types                
-  ( PackageConstraint(..), PackagePreferences(..), InstalledPreference(..) )
-import           Distribution.Client.Types                           
-  ( OptionalStanza(..) )
+import Distribution.Client.Dependency.Types (InstalledPreference (..), PackageConstraint (..), PackagePreferences (..))
+import Distribution.Client.Types            (OptionalStanza (..))
 
-import           Distribution.Client.Dependency.Modular.Dependency   
-import           Distribution.Client.Dependency.Modular.Flag         
-import           Distribution.Client.Dependency.Modular.Package      
-import           Distribution.Client.Dependency.Modular.PSQ        as P
-import           Distribution.Client.Dependency.Modular.Tree         
-import           Distribution.Client.Dependency.Modular.Version      
+import Distribution.Client.Dependency.Modular.Dependency
+import Distribution.Client.Dependency.Modular.Flag
+import Distribution.Client.Dependency.Modular.Package
+import Distribution.Client.Dependency.Modular.PSQ        as P
+import Distribution.Client.Dependency.Modular.Tree
+import Distribution.Client.Dependency.Modular.Version
 
 -- | Generic abstraction for strategies that just rearrange the package order.
 -- Only packages that match the given predicate are reordered.

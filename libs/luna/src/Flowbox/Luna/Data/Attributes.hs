@@ -10,8 +10,8 @@ module Flowbox.Luna.Data.Attributes (
     module Data.Map
 ) where
 
-import           Flowbox.Prelude   
-import           Data.Map          
+import Data.Map
+import Flowbox.Prelude
 
 
 

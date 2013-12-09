@@ -1,14 +1,14 @@
-{-# LANGUAGE FunctionalDependencies,
-             FlexibleInstances,
-             TemplateHaskell #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TemplateHaskell        #-}
 
 module FlowboxM.Luna.TH.Inst where
 
-import           Control.Monad         
-import           Language.Haskell.TH   
-import           Control.Applicative   
+import           Control.Applicative
+import           Control.Monad
+import           Debug.Trace
+import           Language.Haskell.TH
 import qualified Text.Show.Pretty    as PP
-import           Debug.Trace           
 
 ppTrace  x   = trace ("\n\n----------\n" ++ PP.ppShow x)
 ppTraces s x = trace ("\n\n--- " ++ s ++ " ---\n" ++ PP.ppShow x)
@@ -36,12 +36,12 @@ mkNTWrapper ntname basename = do
 getTyVarBndrName t = case t of
     PlainTV name    -> name
     KindedTV name _ -> name
-    
+
 
 pprint_me :: Ppr a => Q a -> Q String
 pprint_me = liftM pprint
 
-getType :: Name -> Q Type 
+getType :: Name -> Q Type
 getType name = do
     reified <- reify name
     return $ case reified of
@@ -105,13 +105,13 @@ mkInst2 tcName dtIdent fromFunRef fromFun toFun = do
     let (src, ret) = getSignature t
         cxt        = getContext t
         nt         = AppT(
-                         AppT( 
+                         AppT(
                              AppT
                                  (ConT tcName)
                                  (ConT dtIdent)
-                         ) 
+                         )
                          src
-                     ) 
+                     )
                      ret
         funcs      = [valD (varP toFun) (normalB (varE fromFun)) []] :: [Q Dec]
 
@@ -120,15 +120,15 @@ mkInst2 tcName dtIdent fromFunRef fromFun toFun = do
 
 
 
---mkInst'' :: Name -> Name -> Name -> Name -> DecsQ    
+--mkInst'' :: Name -> Name -> Name -> Name -> DecsQ
 --mkInst'' tcName fromFun fromIOFun toFun =
 --  do
 --    (src, ret) <- getSignature $ getType fromFun
 --    let typ = return $ AppT (AppT (ConT tcName) src) ret
---        cxt = 
+--        cxt =
 --         do
 --           typ <- getType fromFun
---           case typ of     
+--           case typ of
 --             ForallT _ cxt _ -> return cxt
 --             _               -> return []
 --        toFunIO = mkName $ nameBase toFun ++ "\''M"
@@ -147,7 +147,7 @@ mkInst2 tcName dtIdent fromFunRef fromFun toFun = do
 --    case ret of
 --      AppT (ConT cname) _ -> return $ show cname == "GHC.Types.IO"
 --      _                  -> return False
-    
+
 
 --getCname :: Name -> Q Name
 --getCname name =
@@ -168,10 +168,10 @@ mkInst2 tcName dtIdent fromFunRef fromFun toFun = do
 --mkGetter :: String -> Name -> DecsQ
 --mkGetter tcName' typeName = do
 --  let
---    tcName          = mkName $ "C''" ++ tcName' ++"'getter'" 
+--    tcName          = mkName $ "C''" ++ tcName' ++"'getter'"
 --    getterFunName   = mkName $ tcName' ++ "'getter'"
 --    primitiveGetter = mkName $ tcName' ++ "'F"
-  
+
 --  (src, ret) <- getSignature $ getType getterFunName
 --  let
 --      typ1st = AppT (AppT (TupleT 2) (AppT (ConT typeName) (VarT $ mkName "a")))
@@ -210,7 +210,7 @@ mkInst2 tcName dtIdent fromFunRef fromFun toFun = do
 --mkSetter :: String -> Name -> DecsQ
 --mkSetter tcName' typeName = do
 --  let
---    tcName          = mkName $ "C''" ++ tcName' ++"'setter'" 
+--    tcName          = mkName $ "C''" ++ tcName' ++"'setter'"
 --    getterFunName   = mkName $ tcName' ++ "'setter'"
 --    primitiveGetter = mkName $ tcName' ++ "'F"
 --  (src, ret) <- getSignature $ getType getterFunName

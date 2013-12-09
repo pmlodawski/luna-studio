@@ -6,37 +6,28 @@ module Distribution.Client.SrcDist (
   )  where
 
 
-import           Distribution.Client.SetupWrapper                
-        ( SetupScriptOptions(..), defaultSetupScriptOptions, setupWrapper )
-import           Distribution.Client.Tar                         (createTarGzFile)
+import Distribution.Client.SetupWrapper (SetupScriptOptions (..), defaultSetupScriptOptions, setupWrapper)
+import Distribution.Client.Tar          (createTarGzFile)
 
-import           Distribution.Package                            
-         ( Package(..) )
-import           Distribution.PackageDescription                 
-         ( PackageDescription )
-import           Distribution.PackageDescription.Configuration   
-         ( flattenPackageDescription )
-import           Distribution.PackageDescription.Parse           
-         ( readPackageDescription )
-import           Distribution.Simple.Utils                       
-         ( createDirectoryIfMissingVerbose, defaultPackageDesc
-         , die, notice, withTempDirectory )
-import           Distribution.Client.Setup                       
-         ( SDistFlags(..), SDistExFlags(..), ArchiveFormat(..) )
-import           Distribution.Simple.Setup                       
-         ( Flag(..), sdistCommand, flagToList, fromFlag, fromFlagOrDefault )
-import           Distribution.Simple.BuildPaths                  ( srcPref)
-import           Distribution.Simple.Program                     (requireProgram, simpleProgram, programPath)
-import           Distribution.Simple.Program.Db                  (emptyProgramDb)
-import           Distribution.Text                               ( display )
-import           Distribution.Verbosity                          (Verbosity, lessVerbose, normal)
-import           Distribution.Version                            (Version(..), orLaterVersion)
+import Distribution.Client.Setup                     (ArchiveFormat (..), SDistExFlags (..), SDistFlags (..))
+import Distribution.Package                          (Package (..))
+import Distribution.PackageDescription               (PackageDescription)
+import Distribution.PackageDescription.Configuration (flattenPackageDescription)
+import Distribution.PackageDescription.Parse         (readPackageDescription)
+import Distribution.Simple.BuildPaths                (srcPref)
+import Distribution.Simple.Program                   (programPath, requireProgram, simpleProgram)
+import Distribution.Simple.Program.Db                (emptyProgramDb)
+import Distribution.Simple.Setup                     (Flag (..), flagToList, fromFlag, fromFlagOrDefault, sdistCommand)
+import Distribution.Simple.Utils                     (createDirectoryIfMissingVerbose, defaultPackageDesc, die, notice, withTempDirectory)
+import Distribution.Text                             (display)
+import Distribution.Verbosity                        (Verbosity, lessVerbose, normal)
+import Distribution.Version                          (Version (..), orLaterVersion)
 
-import           System.FilePath                                 ((</>), (<.>))
-import           Control.Monad                                   (when, unless)
-import           System.Directory                                (doesFileExist, removeFile, canonicalizePath)
-import           System.Process                                  (runProcess, waitForProcess)
-import           System.Exit                                     (ExitCode(..))
+import Control.Monad    (unless, when)
+import System.Directory (canonicalizePath, doesFileExist, removeFile)
+import System.Exit      (ExitCode (..))
+import System.FilePath  ((<.>), (</>))
+import System.Process   (runProcess, waitForProcess)
 
 -- |Create a source distribution.
 sdist :: SDistFlags -> SDistExFlags -> IO ()

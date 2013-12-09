@@ -13,7 +13,7 @@ module Flowbox.Batch.Handler.Common (
     projectOp',
     libManagerOp',
     libraryOp',
-    
+
     projectOp,
     libManagerOp,
     libraryOp,
@@ -24,20 +24,20 @@ module Flowbox.Batch.Handler.Common (
     --nodeOp,
 ) where
 
-import           Flowbox.Prelude                        
-import qualified Flowbox.Batch.Batch                  as Batch
-import           Flowbox.Batch.Batch                    (Batch(..))
+import           Flowbox.Batch.Batch (Batch (..))
+import qualified Flowbox.Batch.Batch as Batch
+import           Flowbox.Prelude
 --import qualified Flowbox.Batch.GraphView.GraphView    as GraphView
 --import           Flowbox.Batch.GraphView.GraphView      (GraphView)
+import           Flowbox.Batch.Project.Project        (Project (..))
 import qualified Flowbox.Batch.Project.Project        as Project
-import           Flowbox.Batch.Project.Project          (Project(..))
+import           Flowbox.Batch.Project.ProjectManager (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
-import           Flowbox.Batch.Project.ProjectManager   (ProjectManager)
-import           Flowbox.Control.Error                  
+import           Flowbox.Control.Error
+import           Flowbox.Luna.Lib.LibManager          (LibManager)
 import qualified Flowbox.Luna.Lib.LibManager          as LibManager
-import           Flowbox.Luna.Lib.LibManager            (LibManager)
+import           Flowbox.Luna.Lib.Library             (Library (..))
 import qualified Flowbox.Luna.Lib.Library             as Library
-import           Flowbox.Luna.Lib.Library               (Library(..))
 --import qualified Flowbox.Luna.Network.Def.DefManager  as DefManager
 --import           Flowbox.Luna.Network.Def.DefManager    (DefManager)
 --import qualified Flowbox.Luna.Network.Def.Definition  as Definition
@@ -50,7 +50,7 @@ import           Flowbox.Luna.Lib.Library               (Library(..))
 
 
 readonly :: Either String (a, r) -> Either String r
-readonly op = case op of 
+readonly op = case op of
     Left message -> Left message
     Right (_, r) -> Right r
 
@@ -62,15 +62,15 @@ readonly' op = do
 
 
 noresult :: Either String (a, r) -> Either String a
-noresult op = case op of 
+noresult op = case op of
     Left message -> Left message
     Right (a, _) -> Right a
 
 
 projectManagerOp :: (Batch -> ProjectManager -> Either String (ProjectManager, r))
-                 -> Batch 
+                 -> Batch
                  -> Either String (Batch, r)
-projectManagerOp operation batch = do 
+projectManagerOp operation batch = do
     let aprojectManager = Batch.projectManager batch
     (newProjectManager, r) <- operation batch aprojectManager
     let newBatch = batch { Batch.projectManager = newProjectManager }
@@ -78,17 +78,17 @@ projectManagerOp operation batch = do
 
 
 projectManagerOp' :: (Batch -> ProjectManager -> IO (ProjectManager, r))
-                  -> Batch 
+                  -> Batch
                   -> IO (Batch, r)
-projectManagerOp' operation batch = do 
+projectManagerOp' operation batch = do
     let aprojectManager = Batch.projectManager batch
-    (newProjectManager, r) <- operation batch aprojectManager 
+    (newProjectManager, r) <- operation batch aprojectManager
     let newBatch = batch { Batch.projectManager = newProjectManager }
     return (newBatch, r)
 
 
-projectOp :: Project.ID 
-          -> (Batch -> Project -> Either String (Project, r)) 
+projectOp :: Project.ID
+          -> (Batch -> Project -> Either String (Project, r))
           -> Batch
           -> Either String (Batch, r)
 projectOp projectID operation = projectManagerOp (\batch aprojectManager -> do
@@ -98,8 +98,8 @@ projectOp projectID operation = projectManagerOp (\batch aprojectManager -> do
     return (newProjectManager, r))
 
 
-projectOp' :: Project.ID 
-           -> (Batch -> Project -> IO (Project, r)) 
+projectOp' :: Project.ID
+           -> (Batch -> Project -> IO (Project, r))
            -> Batch
            -> IO (Batch, r)
 projectOp' projectID operation = projectManagerOp' (\batch aprojectManager -> runScript $ do
@@ -109,22 +109,22 @@ projectOp' projectID operation = projectManagerOp' (\batch aprojectManager -> ru
     return (newProjectManager, r))
 
 
-libManagerOp :: Project.ID 
+libManagerOp :: Project.ID
              -> (Batch -> LibManager -> Either String (LibManager, r))
-             -> Batch 
+             -> Batch
              -> Either String (Batch, r)
 libManagerOp projectID operation = projectOp projectID (\batch project -> do
     let libManager = Project.libs project
     (newLibManager, r) <- operation batch libManager
     let newProject = project { Project.libs = newLibManager }
     return (newProject, r))
-                                            
 
-libManagerOp' :: Project.ID 
+
+libManagerOp' :: Project.ID
               -> (Batch -> LibManager -> IO (LibManager, r))
-              -> Batch 
+              -> Batch
               -> IO (Batch, r)
-libManagerOp' projectID operation = projectOp' projectID (\batch project -> do 
+libManagerOp' projectID operation = projectOp' projectID (\batch project -> do
     let libManager = Project.libs project
     (newLibManager, r) <- operation batch libManager
     let newProject = project { Project.libs = newLibManager }
@@ -132,7 +132,7 @@ libManagerOp' projectID operation = projectOp' projectID (\batch project -> do
 
 
 libraryOp :: Library.ID
-          -> Project.ID 
+          -> Project.ID
           -> (Batch -> Library -> Either String (Library, r))
           -> Batch
           -> Either String (Batch, r)
@@ -150,7 +150,7 @@ libraryOp' :: Library.ID
            -> IO (Batch, r)
 libraryOp' libID projectID operation = libManagerOp' projectID (\batch libManager -> runScript $ do
     library        <- LibManager.lab libManager libID <??> ("Wrong 'libID' = " ++ show libID)
-    (newLibary, r) <- scriptIO $ operation batch library 
+    (newLibary, r) <- scriptIO $ operation batch library
     let newLibManager = LibManager.updateNode (libID, newLibary) libManager
     return (newLibManager, r))
 
@@ -158,7 +158,7 @@ libraryOp' libID projectID operation = libManagerOp' projectID (\batch libManage
 --defManagerOp :: Library.ID
 --             -> Project.ID
 --             -> (Batch -> DefManager -> Either String (DefManager, r))
---             -> Batch 
+--             -> Batch
 --             -> Either String (Batch, r)
 --defManagerOp libID projectID operation = libraryOp libID projectID (\batch library -> do
 --    let defManager = Library.defs library
@@ -168,10 +168,10 @@ libraryOp' libID projectID operation = libManagerOp' projectID (\batch libManage
 
 
 --definitionOp :: Definition.ID
---             -> Library.ID 
+--             -> Library.ID
 --             -> Project.ID
 --             -> (Batch -> Definition -> Either String (Definition, r))
---             -> Batch 
+--             -> Batch
 --             -> Either String (Batch, r)
 --definitionOp defID libID projectID operation = defManagerOp libID projectID (\batch defManager -> do
 --    definition <- DefManager.lab defManager defID <?> ("Wrong 'defID' = " ++ show defID)
@@ -181,10 +181,10 @@ libraryOp' libID projectID operation = libManagerOp' projectID (\batch libManage
 
 
 --graphOp :: Definition.ID
---        -> Library.ID 
+--        -> Library.ID
 --        -> Project.ID
 --        -> (Batch -> Graph -> Either String (Graph, r))
---        -> Batch 
+--        -> Batch
 --        -> Either String (Batch, r)
 --graphOp defID libID projectID operation = definitionOp defID libID projectID (\batch definition -> do
 --    let agraph = Definition.graph definition
@@ -194,10 +194,10 @@ libraryOp' libID projectID operation = libManagerOp' projectID (\batch libManage
 
 
 --graphViewOp :: Definition.ID
---        -> Library.ID 
+--        -> Library.ID
 --        -> Project.ID
 --        -> (Batch -> GraphView -> Either String (GraphView, r))
---        -> Batch 
+--        -> Batch
 --        -> Either String (Batch, r)
 --graphViewOp defID libID projectID operation = definitionOp defID libID projectID (\batch definition -> do
 --    let agraph = Definition.graph definition
@@ -210,12 +210,12 @@ libraryOp' libID projectID operation = libManagerOp' projectID (\batch libManage
 
 --nodeOp :: Node.ID
 --       -> Definition.ID
---       -> Library.ID 
+--       -> Library.ID
 --       -> Project.ID
 --       -> (Batch -> Node -> Either String (Node, r))
---       -> Batch 
+--       -> Batch
 --       -> Either String (Batch, r)
---nodeOp nodeID defID libID projectID operation = graphOp defID libID projectID (\batch agraph -> do 
+--nodeOp nodeID defID libID projectID operation = graphOp defID libID projectID (\batch agraph -> do
 --    node <- Graph.lab agraph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
 --    (newNode, r) <- operation batch node
 --    let newGraph = Graph.updateNode (nodeID, newNode) agraph

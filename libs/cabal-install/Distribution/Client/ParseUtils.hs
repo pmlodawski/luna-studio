@@ -10,16 +10,13 @@
 module Distribution.Client.ParseUtils ( parseFields, ppFields, ppSection )
        where
 
-import           Distribution.ParseUtils   
-         ( FieldDescr(..), ParseResult(..), warning, lineNo )
-import qualified Distribution.ParseUtils as ParseUtils
-         ( Field(..) )
+import           Distribution.ParseUtils (FieldDescr (..), ParseResult (..), lineNo, warning)
+import qualified Distribution.ParseUtils as ParseUtils (Field (..))
 
-import           Control.Monad             ( foldM )
-import           Text.PrettyPrint          ( (<>), (<+>), ($$) )
-import qualified Data.Map                as Map
-import qualified Text.PrettyPrint        as Disp
-         ( Doc, text, colon, vcat, empty, isEmpty, nest )
+import           Control.Monad    (foldM)
+import qualified Data.Map         as Map
+import           Text.PrettyPrint (($$), (<+>), (<>))
+import qualified Text.PrettyPrint as Disp (Doc, colon, empty, isEmpty, nest, text, vcat)
 
 --FIXME: replace this with something better
 parseFields :: [FieldDescr a] -> a -> [ParseUtils.Field] -> ParseResult a

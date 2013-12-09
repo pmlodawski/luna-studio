@@ -7,7 +7,7 @@
 
 module Flowbox.Luna.Data.AST.Crumb.Crumb where
 
-import           Flowbox.Prelude hiding (id, drop)
+import Flowbox.Prelude hiding (drop, id)
 
 data Crumb = FunctionCrumb { name :: String }
            | ClassCrumb    { name :: String }

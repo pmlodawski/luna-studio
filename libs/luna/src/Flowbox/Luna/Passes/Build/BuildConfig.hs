@@ -7,17 +7,17 @@
 
 module Flowbox.Luna.Passes.Build.BuildConfig where
 
-import           Data.Version                            (Version)
+import Data.Version (Version)
 
-import           Flowbox.Prelude                         
-import           Flowbox.Config.Config                   (Config)
-import           Flowbox.Luna.Passes.Build.Diagnostics   (Diagnostics)
-import           Flowbox.System.UniPath                  (UniPath)
+import Flowbox.Config.Config                 (Config)
+import Flowbox.Luna.Passes.Build.Diagnostics (Diagnostics)
+import Flowbox.Prelude
+import Flowbox.System.UniPath                (UniPath)
 
 
 
 data BuildConfig = BuildConfig { name       :: String
-                               , version    :: Version 
+                               , version    :: Version
                                , libs       :: [String]
                                , ghcflags   :: [String]
                                , cabalflags :: [String]
@@ -27,4 +27,4 @@ data BuildConfig = BuildConfig { name       :: String
                                }
 
 data BuildType   = Executable  { outputPath :: UniPath }
-                 | Library     { } 
+                 | Library     { }

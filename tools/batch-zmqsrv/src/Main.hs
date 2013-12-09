@@ -7,21 +7,21 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 
-import qualified Control.Concurrent                        as Concurrent
-import qualified Control.Concurrent.MVar                   as MVar
-import qualified Control.Exception                         as Exception
-import qualified System.Exit                               as Exit
+import qualified Control.Concurrent      as Concurrent
+import qualified Control.Concurrent.MVar as MVar
+import qualified Control.Exception       as Exception
+import qualified System.Exit             as Exit
 
-import           Flowbox.Prelude                           hiding (error)
-import qualified Flowbox.Batch.Server.Version              as Version
+import           Flowbox.Batch.Server.Cmd                  (Cmd)
 import qualified Flowbox.Batch.Server.Cmd                  as Cmd
-import           Flowbox.Batch.Server.Cmd                    (Cmd)
-import qualified Flowbox.Batch.Server.Transport.TCP        as Server
-import qualified Flowbox.Options.Applicative               as Opt
-import           Flowbox.Options.Applicative               hiding (info)
-import           Flowbox.System.Log.Logger                   
+import           Flowbox.Batch.Server.Handler.BatchHandler (BatchHandler)
 import qualified Flowbox.Batch.Server.Handler.BatchHandler as BatchHandler
-import           Flowbox.Batch.Server.Handler.BatchHandler   (BatchHandler)
+import qualified Flowbox.Batch.Server.Transport.TCP        as Server
+import qualified Flowbox.Batch.Server.Version              as Version
+import           Flowbox.Options.Applicative               hiding (info)
+import qualified Flowbox.Options.Applicative               as Opt
+import           Flowbox.Prelude                           hiding (error)
+import           Flowbox.System.Log.Logger
 
 
 
@@ -66,7 +66,7 @@ run cmd = case cmd of
     Cmd.Serve {} -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
         handler <- BatchHandler.empty
-        _ <- Concurrent.forkIO $ Exception.handle 
+        _ <- Concurrent.forkIO $ Exception.handle
             (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
                                                    MVar.putMVar (BatchHandler.quitMutex handler) True)
             (serve cmd handler)

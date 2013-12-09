@@ -45,45 +45,26 @@ module Distribution.Client.InstallPlan (
   configuredPackageProblems
   ) where
 
-import           Distribution.Client.Types                       
-         ( SourcePackage(packageDescription), ConfiguredPackage(..)
-         , InstalledPackage, BuildFailure, BuildSuccess(..), enableStanzas,
-           InstalledPackage (..) )
-import           Distribution.Package                            
-         ( PackageIdentifier(..), PackageName(..), Package(..), packageName
-         , PackageFixedDeps(..), Dependency(..) )
-import           Distribution.Version                            
-         ( Version, withinRange )
-import           Distribution.PackageDescription                 
-         ( GenericPackageDescription(genPackageFlags)
-         , Flag(flagName), FlagName(..) )
-import           Distribution.Client.PackageUtils                
-         ( externalBuildDepends )
-import           Distribution.PackageDescription.Configuration   
-         ( finalizePackageDescription )
-import           Distribution.Client.PackageIndex                
-         ( PackageIndex )
+import           Distribution.Client.PackageIndex              (PackageIndex)
 import qualified Distribution.Client.PackageIndex              as PackageIndex
-import           Distribution.Text                               
-         ( display )
-import           Distribution.System                             
-         ( Platform )
-import           Distribution.Compiler                           
-         ( CompilerId(..) )
-import           Distribution.Client.Utils                       
-         ( duplicates, duplicatesBy, mergeBy, MergeResult(..) )
-import           Distribution.Simple.Utils                       
-         ( comparing, intercalate )
+import           Distribution.Client.PackageUtils              (externalBuildDepends)
+import           Distribution.Client.Types                     (BuildFailure, BuildSuccess (..), ConfiguredPackage (..), InstalledPackage, InstalledPackage (..), SourcePackage (packageDescription), enableStanzas)
+import           Distribution.Client.Utils                     (MergeResult (..), duplicates, duplicatesBy, mergeBy)
+import           Distribution.Compiler                         (CompilerId (..))
 import qualified Distribution.InstalledPackageInfo             as Installed
+import           Distribution.Package                          (Dependency (..), Package (..), PackageFixedDeps (..), PackageIdentifier (..), PackageName (..), packageName)
+import           Distribution.PackageDescription               (Flag (flagName), FlagName (..), GenericPackageDescription (genPackageFlags))
+import           Distribution.PackageDescription.Configuration (finalizePackageDescription)
+import           Distribution.Simple.Utils                     (comparing, intercalate)
+import           Distribution.System                           (Platform)
+import           Distribution.Text                             (display)
+import           Distribution.Version                          (Version, withinRange)
 
-import           Data.List                                       
-         ( sort, sortBy )
-import           Data.Maybe                                      
-         ( fromMaybe, maybeToList )
-import qualified Data.Graph                                    as Graph
-import           Data.Graph                                      (Graph)
-import           Control.Exception                               
-         ( assert )
+import           Control.Exception (assert)
+import           Data.Graph        (Graph)
+import qualified Data.Graph        as Graph
+import           Data.List         (sort, sortBy)
+import           Data.Maybe        (fromMaybe, maybeToList)
 
 -- When cabal tries to install a number of packages, including all their
 -- dependencies it has a non-trivial problem to solve.

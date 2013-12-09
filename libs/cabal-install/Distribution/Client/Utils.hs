@@ -1,4 +1,5 @@
-{-# LANGUAGE ForeignFunctionInterface, CPP #-}
+{-# LANGUAGE CPP                      #-}
+{-# LANGUAGE ForeignFunctionInterface #-}
 
 module Distribution.Client.Utils ( MergeResult(..)
                                  , mergeBy, duplicates, duplicatesBy
@@ -10,35 +11,26 @@ module Distribution.Client.Utils ( MergeResult(..)
                                  , moreRecentFile, existsAndIsMoreRecentThan )
        where
 
-import           Distribution.Compat.Exception     ( catchIO )
-import           Distribution.Client.Compat.Time   ( getModTime )
-import           Distribution.Simple.Setup         ( Flag(..) )
+import qualified Control.Exception               as Exception (finally)
+import           Control.Monad                   (when)
+import           Data.Bits                       (shiftL, shiftR, (.|.))
 import qualified Data.ByteString.Lazy            as BS
-import           Control.Monad                     
-         ( when )
-import           Data.Bits                         
-         ( (.|.), shiftL, shiftR )
-import           Data.Char                         
-         ( ord, chr )
-import           Data.List                         
-         ( sortBy, groupBy )
-import           Data.Word                         
-         ( Word8, Word32)
-import           Foreign.C.Types                   ( CInt(..) )
-import qualified Control.Exception               as Exception
-         ( finally )
-import           System.Directory                  
-         ( canonicalizePath, doesFileExist, getCurrentDirectory
-         , removeFile, setCurrentDirectory )
-import           System.FilePath                   
-         ( (</>), isAbsolute )
-import           System.IO.Unsafe                  ( unsafePerformIO )
+import           Data.Char                       (chr, ord)
+import           Data.List                       (groupBy, sortBy)
+import           Data.Word                       (Word32, Word8)
+import           Distribution.Client.Compat.Time (getModTime)
+import           Distribution.Compat.Exception   (catchIO)
+import           Distribution.Simple.Setup       (Flag (..))
+import           Foreign.C.Types                 (CInt (..))
+import           System.Directory                (canonicalizePath, doesFileExist, getCurrentDirectory, removeFile, setCurrentDirectory)
+import           System.FilePath                 (isAbsolute, (</>))
+import           System.IO.Unsafe                (unsafePerformIO)
 
 #if defined(mingw32_HOST_OS)
-import           Prelude                         hiding (ioError)
-import           Control.Monad                     (liftM2, unless)
-import           System.Directory                  (doesDirectoryExist)
-import           System.IO.Error                   (ioError, mkIOError, doesNotExistErrorType)
+import Control.Monad    (liftM2, unless)
+import Prelude          hiding (ioError)
+import System.Directory (doesDirectoryExist)
+import System.IO.Error  (doesNotExistErrorType, ioError, mkIOError)
 #endif
 
 -- | Generic merging utility. For sorted input lists this is a full outer join.

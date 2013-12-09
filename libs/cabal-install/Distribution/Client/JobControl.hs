@@ -26,14 +26,14 @@ module Distribution.Client.JobControl (
     criticalSection
   ) where
 
-import           Control.Monad                          
-import           Control.Concurrent                   hiding (QSem, newQSem, waitQSem, signalQSem)
-import           Control.Exception                      (SomeException, bracket_, mask, throw, try)
-import           Distribution.Client.Compat.Semaphore   
+import Control.Concurrent                   hiding (QSem, newQSem, signalQSem, waitQSem)
+import Control.Exception                    (SomeException, bracket_, mask, throw, try)
+import Control.Monad
+import Distribution.Client.Compat.Semaphore
 
 data JobControl m a = JobControl {
-       spawnJob    :: m a -> m (),
-       collectJob  :: m a
+       spawnJob   :: m a -> m (),
+       collectJob :: m a
      }
 
 

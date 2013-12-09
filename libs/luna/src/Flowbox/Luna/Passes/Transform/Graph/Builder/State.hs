@@ -4,7 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Builder.State where
 
@@ -17,8 +19,8 @@ import           Flowbox.Prelude
 import qualified Flowbox.Luna.Data.AliasAnalysis as AA
 import           Flowbox.Luna.Data.AliasAnalysis   (AA)
 import qualified Flowbox.Luna.Data.AST.Utils     as AST
-import           Flowbox.Luna.Data.Graph.Edge      (Edge)
-import           Flowbox.Luna.Data.Graph.Graph     (Graph)
+import           Flowbox.Luna.Data.Graph.Edge    (Edge)
+import           Flowbox.Luna.Data.Graph.Graph   (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph   as Graph
 import qualified Flowbox.Luna.Data.Graph.Node    as Node
 import           Flowbox.Luna.Data.Graph.Node      (Node)
@@ -58,7 +60,7 @@ connect srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edg
 
 
 insNewNode :: GBStateM m => Node -> m Node.ID
-insNewNode node = do gr <- getGraph 
+insNewNode node = do gr <- getGraph
                      let (gr', nodeID) = Graph.insNewNode node gr
                      setGraph gr'
                      return nodeID

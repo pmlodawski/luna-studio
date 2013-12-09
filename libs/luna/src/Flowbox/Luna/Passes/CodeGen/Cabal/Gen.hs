@@ -7,16 +7,16 @@
 
 module Flowbox.Luna.Passes.CodeGen.Cabal.Gen where
 
-import qualified Data.List                       as List
-import           Data.Version                      (Version)
+import qualified Data.List    as List
+import           Data.Version (Version)
 
-import           Flowbox.Prelude                   
+import           Flowbox.Luna.Data.Cabal.Config  (Config)
 import qualified Flowbox.Luna.Data.Cabal.Config  as Config
-import           Flowbox.Luna.Data.Cabal.Config    (Config)
+import           Flowbox.Luna.Data.Cabal.Section (Section)
 import qualified Flowbox.Luna.Data.Cabal.Section as Section
-import           Flowbox.Luna.Data.Cabal.Section   (Section)
+import           Flowbox.Luna.Data.Source        (Source)
 import qualified Flowbox.Luna.Data.Source        as Source
-import           Flowbox.Luna.Data.Source          (Source)
+import           Flowbox.Prelude
 
 
 
@@ -39,5 +39,5 @@ genCommon sectionBase name version ghcOptions libs = conf where
     section = sectionBase { Section.buildDepends = libs
                           , Section.ghcOptions   = ghcOptions
                           }
-    conf = Config.addSection section 
+    conf = Config.addSection section
          $ Config.make name version

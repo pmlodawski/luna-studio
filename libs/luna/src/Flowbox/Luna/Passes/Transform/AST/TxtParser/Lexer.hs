@@ -10,13 +10,13 @@
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer where
 
-import           Flowbox.Prelude                                     
-import           Control.Applicative                                 
-import           Text.Parsec                                       hiding (many, optional, (<|>))
-import           Data.List                                           ( nub, sort )
-import           Data.Char                                           ( digitToInt )
+import Control.Applicative
+import Data.Char           (digitToInt)
+import Data.List           (nub, sort)
+import Flowbox.Prelude     hiding(op)
+import Text.Parsec         hiding (many, optional, (<|>))
 
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils   
+import Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
 
 
 
@@ -192,7 +192,7 @@ fractExponentStr = (++) <$> fractionStr <*> option "" exponentStr'
 
 fractionStr     = (:) <$> char '.' <*> (many1 digit <|> ("0" <$ pSpaces1) <?> "fraction") <?> "fraction"
 
-exponentStr'    = (\a b c -> a:b:c) <$> oneOf "eE" <*> signStr <*> (decimalStr <?> "exponent") <?> "exponent" 
+exponentStr'    = (\a b c -> a:b:c) <$> oneOf "eE" <*> signStr <*> (decimalStr <?> "exponent") <?> "exponent"
 
 -- integers and naturals
 intStr          = ((:) <$> lexeme signStr <*> natStr) <|> natStr
@@ -230,7 +230,7 @@ number base baseDigit = do
         digits <- numberStr baseDigit
         let n = foldl (\x d -> base*x + toInteger (digitToInt d)) 0 digits
         seq n (return n)
-        
+
 
 -----------------------------------------------------------
 -- Operators & reserved ops
@@ -277,7 +277,7 @@ isReservedName name = isReserved (sort reservedNames) name
 -----------------------------------------------------------
 -- White space & symbols
 -----------------------------------------------------------
-lexeme p    = p <* skipMany pSpaces1 
+lexeme p    = p <* skipMany pSpaces1
 lexeme2 s p = p <* if s then skipMany pSpaces1 else return ()
 
 symbols    name = try $ lexeme (string name)

@@ -13,123 +13,53 @@
 
 module Main (main) where
 
-import           Distribution.Client.Setup                        
-         ( GlobalFlags(..), globalCommand, globalRepos
-         , ConfigFlags(..)
-         , ConfigExFlags(..), defaultConfigExFlags, configureExCommand
-         , BuildFlags(..), BuildExFlags(..), SkipAddSourceDepsCheck(..)
-         , buildCommand, testCommand, benchmarkCommand
-         , InstallFlags(..), defaultInstallFlags
-         , installCommand, upgradeCommand
-         , FetchFlags(..), fetchCommand
-         , GetFlags(..), getCommand, unpackCommand
-         , checkCommand
-         , updateCommand
-         , ListFlags(..), listCommand
-         , InfoFlags(..), infoCommand
-         , UploadFlags(..), uploadCommand
-         , ReportFlags(..), reportCommand
-         , runCommand
-         , InitFlags(initVerbosity), initCommand
-         , SDistFlags(..), SDistExFlags(..), sdistCommand
-         , Win32SelfUpgradeFlags(..), win32SelfUpgradeCommand
-         , SandboxFlags(..), sandboxCommand
-         , reportCommand
-         )
-import           Distribution.Simple.Setup                        
-         ( HaddockFlags(..), haddockCommand
-         , HscolourFlags(..), hscolourCommand
-         , ReplFlags(..), replCommand
-         , CopyFlags(..), copyCommand
-         , RegisterFlags(..), registerCommand
-         , CleanFlags(..), cleanCommand
-         , TestFlags(..), BenchmarkFlags(..)
-         , Flag(..), fromFlag, fromFlagOrDefault, flagToMaybe, toFlag
-         , configAbsolutePaths
-         )
+import Distribution.Client.Setup (BuildExFlags (..), BuildFlags (..), ConfigExFlags (..), ConfigFlags (..), FetchFlags (..), GetFlags (..), GlobalFlags (..), InfoFlags (..), InitFlags (initVerbosity), InstallFlags (..), ListFlags (..), ReportFlags (..), SDistExFlags (..), SDistFlags (..), SandboxFlags (..), SkipAddSourceDepsCheck (..), UploadFlags (..), Win32SelfUpgradeFlags (..), benchmarkCommand, buildCommand, checkCommand, configureExCommand, defaultConfigExFlags, defaultInstallFlags, fetchCommand, getCommand, globalCommand, globalRepos, infoCommand, initCommand, installCommand, listCommand, reportCommand, reportCommand, runCommand, sandboxCommand, sdistCommand, testCommand, unpackCommand, updateCommand, upgradeCommand, uploadCommand, win32SelfUpgradeCommand)
+import Distribution.Simple.Setup (BenchmarkFlags (..), CleanFlags (..), CopyFlags (..), Flag (..), HaddockFlags (..), HscolourFlags (..), RegisterFlags (..), ReplFlags (..), TestFlags (..), cleanCommand, configAbsolutePaths, copyCommand, flagToMaybe, fromFlag, fromFlagOrDefault, haddockCommand, hscolourCommand, registerCommand, replCommand, toFlag)
 
-import           Distribution.Client.SetupWrapper                 
-         ( setupWrapper, SetupScriptOptions(..), defaultSetupScriptOptions )
-import           Distribution.Client.Config                       
-         ( SavedConfig(..), loadConfig, defaultConfigFile )
-import           Distribution.Client.Targets                      
-         ( readUserTargets )
-import qualified Distribution.Client.List                       as List
-         ( list, info )
+import           Distribution.Client.Config       (SavedConfig (..), defaultConfigFile, loadConfig)
+import qualified Distribution.Client.List         as List (info, list)
+import           Distribution.Client.SetupWrapper (SetupScriptOptions (..), defaultSetupScriptOptions, setupWrapper)
+import           Distribution.Client.Targets      (readUserTargets)
 
-import           Distribution.Client.Install                      (install)
-import           Distribution.Client.Configure                    (configure)
-import           Distribution.Client.Update                       (update)
-import           Distribution.Client.Fetch                        (fetch)
-import Distribution.Client.Check as Check     (check)
+import Distribution.Client.Check     as Check (check)
+import Distribution.Client.Configure (configure)
+import Distribution.Client.Fetch     (fetch)
+import Distribution.Client.Install   (install)
+import Distribution.Client.Update    (update)
 --import Distribution.Client.Clean            (clean)
-import Distribution.Client.Upload as Upload   (upload, check, report)
-import           Distribution.Client.Run                          (run, splitRunArgs)
-import           Distribution.Client.SrcDist                      (sdist)
-import           Distribution.Client.Get                          (get)
-import           Distribution.Client.Sandbox                      (sandboxInit
-                                              ,sandboxAddSource
-                                              ,sandboxDelete
-                                              ,sandboxDeleteSource
-                                              ,sandboxListSources
-                                              ,sandboxHcPkg
-                                              ,dumpPackageEnvironment
-
-                                              ,getSandboxConfigFilePath
-                                              ,loadConfigOrSandboxConfig
-                                              ,initPackageDBIfNeeded
-                                              ,maybeWithSandboxDirOnSearchPath
-                                              ,maybeWithSandboxPackageInfo
-                                              ,WereDepsReinstalled(..)
-                                              ,maybeReinstallAddSourceDeps
-                                              ,tryGetIndexFilePath
-                                              ,sandboxBuildDir
-
-                                              ,configCompilerAux'
-                                              ,configPackageDB')
-import           Distribution.Client.Sandbox.PackageEnvironment   
-                                              (setPackageDB
-                                              ,userPackageEnvironmentFile)
-import           Distribution.Client.Sandbox.Timestamp            (maybeAddCompilerTimestampRecord)
-import           Distribution.Client.Sandbox.Types                (UseSandbox(..), whenUsingSandbox)
-import           Distribution.Client.Init                         (initCabal)
+import           Distribution.Client.Get                        (get)
+import           Distribution.Client.Init                       (initCabal)
+import           Distribution.Client.Run                        (run, splitRunArgs)
+import           Distribution.Client.Sandbox                    (WereDepsReinstalled (..), configCompilerAux', configPackageDB', dumpPackageEnvironment, getSandboxConfigFilePath, initPackageDBIfNeeded, loadConfigOrSandboxConfig, maybeReinstallAddSourceDeps, maybeWithSandboxDirOnSearchPath, maybeWithSandboxPackageInfo, sandboxAddSource, sandboxBuildDir, sandboxDelete, sandboxDeleteSource, sandboxHcPkg, sandboxInit, sandboxListSources, tryGetIndexFilePath)
+import           Distribution.Client.Sandbox.PackageEnvironment (setPackageDB, userPackageEnvironmentFile)
+import           Distribution.Client.Sandbox.Timestamp          (maybeAddCompilerTimestampRecord)
+import           Distribution.Client.Sandbox.Types              (UseSandbox (..), whenUsingSandbox)
+import           Distribution.Client.SrcDist                    (sdist)
+import           Distribution.Client.Upload                     as Upload (check, report, upload)
+import           Distribution.Client.Utils                      (determineNumJobs, existsAndIsMoreRecentThan)
 import qualified Distribution.Client.Win32SelfUpgrade           as Win32SelfUpgrade
-import           Distribution.Client.Utils                        (determineNumJobs
-                                              ,existsAndIsMoreRecentThan)
 
-import           Distribution.PackageDescription                  
-         ( Executable(..) )
-import           Distribution.Simple.Command                      
-         ( CommandParse(..), CommandUI(..), Command
-         , commandsRun, commandAddAction, hiddenCommand )
-import           Distribution.Simple.Compiler                     
-         ( Compiler(..) )
-import           Distribution.Simple.Configure                    
-         ( checkPersistBuildConfigOutdated, configCompilerAuxEx
-         , ConfigStateFileErrorType(..), localBuildInfoFile
-         , getPersistBuildConfig, tryGetPersistBuildConfig )
-import qualified Distribution.Simple.LocalBuildInfo             as LBI
-import           Distribution.Simple.Program                      (defaultProgramConfiguration)
-import qualified Distribution.Simple.Setup                      as Cabal
-import           Distribution.Simple.Utils                        
-         ( cabalVersion, die, notice, info, topHandler )
-import           Distribution.Text                                
-         ( display )
-import           Distribution.Verbosity                         as Verbosity
-         ( Verbosity, normal )
-import           Distribution.Version                             
-         ( Version(..), orLaterVersion )
-import qualified Paths_cabal_install                              (version)
+import           Distribution.PackageDescription    (Executable (..))
+import           Distribution.Simple.Command        (Command, CommandParse (..), CommandUI (..), commandAddAction, commandsRun, hiddenCommand)
+import           Distribution.Simple.Compiler       (Compiler (..))
+import           Distribution.Simple.Configure      (ConfigStateFileErrorType (..), checkPersistBuildConfigOutdated, configCompilerAuxEx, getPersistBuildConfig, localBuildInfoFile, tryGetPersistBuildConfig)
+import qualified Distribution.Simple.LocalBuildInfo as LBI
+import           Distribution.Simple.Program        (defaultProgramConfiguration)
+import qualified Distribution.Simple.Setup          as Cabal
+import           Distribution.Simple.Utils          (cabalVersion, die, info, notice, topHandler)
+import           Distribution.Text                  (display)
+import           Distribution.Verbosity             as Verbosity (Verbosity, normal)
+import           Distribution.Version               (Version (..), orLaterVersion)
+import qualified Paths_cabal_install                (version)
 
-import           System.Environment                               (getArgs, getProgName)
-import           System.Exit                                      (exitFailure)
-import           System.FilePath                                  (splitExtension, takeExtension)
-import           System.IO                                        (BufferMode(LineBuffering),
-                                 hSetBuffering, stdout)
-import           System.Directory                                 (doesFileExist)
-import           Data.List                                        (intercalate)
-import           Data.Monoid                                      (Monoid(..))
-import           Control.Monad                                    (when, unless)
+import Control.Monad      (unless, when)
+import Data.List          (intercalate)
+import Data.Monoid        (Monoid (..))
+import System.Directory   (doesFileExist)
+import System.Environment (getArgs, getProgName)
+import System.Exit        (exitFailure)
+import System.FilePath    (splitExtension, takeExtension)
+import System.IO          (BufferMode (LineBuffering), hSetBuffering, stdout)
 
 -- | Entry point
 --

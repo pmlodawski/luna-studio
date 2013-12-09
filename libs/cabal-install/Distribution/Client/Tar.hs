@@ -66,40 +66,33 @@ module Distribution.Client.Tar (
 
   ) where
 
-import           Data.Char                              (ord)
-import           Data.Int                               (Int64)
-import           Data.Bits                              (Bits, shiftL, testBit)
-import           Data.List                              (foldl')
-import           Numeric                                (readOct, showOct)
-import           Control.Applicative                    (Applicative(..))
-import           Control.Monad                          (MonadPlus(mplus), when, ap, liftM)
-import qualified Data.Map                             as Map
-import qualified Data.ByteString.Lazy                 as BS
-import qualified Data.ByteString.Lazy.Char8           as BS.Char8
-import           Data.ByteString.Lazy                   (ByteString)
-import qualified Codec.Compression.GZip               as GZip
-import qualified Distribution.Client.GZipUtils        as GZipUtils
+import qualified Codec.Compression.GZip        as GZip
+import           Control.Applicative           (Applicative (..))
+import           Control.Monad                 (MonadPlus (mplus), ap, liftM, when)
+import           Data.Bits                     (Bits, shiftL, testBit)
+import           Data.ByteString.Lazy          (ByteString)
+import qualified Data.ByteString.Lazy          as BS
+import qualified Data.ByteString.Lazy.Char8    as BS.Char8
+import           Data.Char                     (ord)
+import           Data.Int                      (Int64)
+import           Data.List                     (foldl')
+import qualified Data.Map                      as Map
+import qualified Distribution.Client.GZipUtils as GZipUtils
+import           Numeric                       (readOct, showOct)
 
-import           System.FilePath                        
-         ( (</>) )
+import           Distribution.Client.Compat.FilePerms (setFileExecutable)
+import           Distribution.Client.Compat.Time
+import           System.Directory                     (copyFile, createDirectoryIfMissing, doesDirectoryExist, getDirectoryContents, getPermissions)
+import qualified System.Directory                     as Permissions (Permissions (executable))
+import           System.FilePath                      ((</>))
 import qualified System.FilePath                      as FilePath.Native
-import qualified System.FilePath.Windows              as FilePath.Windows
 import qualified System.FilePath.Posix                as FilePath.Posix
-import           System.Directory                       
-         ( getDirectoryContents, doesDirectoryExist
-         , getPermissions, createDirectoryIfMissing, copyFile )
-import qualified System.Directory                     as Permissions
-         ( Permissions(executable) )
-import           Distribution.Client.Compat.FilePerms   
-         ( setFileExecutable )
-import           System.Posix.Types                     
-         ( FileMode )
-import           Distribution.Client.Compat.Time        
-import           System.IO                              
-         ( IOMode(ReadMode), openBinaryFile, hFileSize )
-import           System.IO.Unsafe                       (unsafeInterleaveIO)
+import qualified System.FilePath.Windows              as FilePath.Windows
+import           System.IO                            (IOMode (ReadMode), hFileSize, openBinaryFile)
+import           System.IO.Unsafe                     (unsafeInterleaveIO)
+import           System.Posix.Types                   (FileMode)
 
-import           Prelude                              hiding (read)
+import Prelude hiding (read)
 
 
 --
@@ -137,23 +130,23 @@ data Entry = Entry {
 
     -- | The path of the file or directory within the archive. This is in a
     -- tar-specific form. Use 'entryPath' to get a native 'FilePath'.
-    entryTarPath :: !TarPath,
+    entryTarPath     :: !TarPath,
 
     -- | The real content of the entry. For 'NormalFile' this includes the
     -- file data. An entry usually contains a 'NormalFile' or a 'Directory'.
-    entryContent :: !EntryContent,
+    entryContent     :: !EntryContent,
 
     -- | File permissions (Unix style file mode).
     entryPermissions :: !Permissions,
 
     -- | The user and group to which this file belongs.
-    entryOwnership :: !Ownership,
+    entryOwnership   :: !Ownership,
 
     -- | The time the file was last modified.
-    entryTime :: !EpochTime,
+    entryTime        :: !EpochTime,
 
     -- | The tar format the archive is using.
-    entryFormat :: !Format
+    entryFormat      :: !Format
   }
 
 -- | Type code for the local build tree reference entry type. We don't use the
@@ -212,10 +205,10 @@ data Ownership = Ownership {
     groupName :: String,
 
     -- | Numeric owner user id. Should be set to @0@ if unknown.
-    ownerId :: !Int,
+    ownerId   :: !Int,
 
     -- | Numeric owner group id. Should be set to @0@ if unknown.
-    groupId :: !Int
+    groupId   :: !Int
   }
 
 -- | There have been a number of extensions to the tar file format over the

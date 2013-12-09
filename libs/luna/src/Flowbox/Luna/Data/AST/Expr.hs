@@ -4,23 +4,22 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Flowbox.Luna.Data.AST.Expr where
 
-import           Flowbox.Prelude                 hiding (id, drop)
-import           Flowbox.Luna.Data.AST.Type        (Type)
+import           Control.Applicative
+import           Flowbox.Generics.Deriving.QShow
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
 import qualified Flowbox.Luna.Data.AST.Pat       as Pat
-import           Flowbox.Luna.Data.AST.Utils       (ID)
-import           Flowbox.Generics.Deriving.QShow   
-import           GHC.Generics                      (Generic)
-import           Control.Applicative               
-import           Control.Lens                    hiding (Traversal, Accessor)
+import           Flowbox.Luna.Data.AST.Type      (Type)
+import           Flowbox.Luna.Data.AST.Utils     (ID)
+import           Flowbox.Prelude                 hiding (Accessor, Traversal, drop, id)
+import           GHC.Generics                    (Generic)
 
 
 
@@ -39,7 +38,7 @@ data Expr  = NOP         { _id :: ID                                            
            | Function    { _id :: ID, _path      :: [String] , _name      :: String , _inputs    :: [Expr] , _output  :: Type   , _body    :: [Expr] }
            | Lambda      { _id :: ID, _inputs    :: [Expr]   , _output    :: Type   , _body      :: [Expr]                      }
            | Import      { _id :: ID, _path      :: [String] , _target    :: Expr   , _rename    :: Maybe String                }
-           | Infix       { _id :: ID, _name      :: String   , _src       :: Expr   , _dst       :: Expr                        }                                                               
+           | Infix       { _id :: ID, _name      :: String   , _src       :: Expr   , _dst       :: Expr                        }
            | List        { _id :: ID, _items     :: [Expr]                                                                      }
            | Lit         { _id :: ID, _lvalue    :: Lit                                                                         }
            | Tuple       { _id :: ID, _items     :: [Expr]                                                                      }
@@ -90,12 +89,12 @@ traverseM fexp ftype fpat flit e = case e of
     App         id' src' args'                     -> App         id'       <$> fexp src'  <*> fexpMap args'
     Assignment  id' pat' dst'                      -> Assignment  id'       <$> fpat pat'  <*> fexp dst'
     Class       id' cls' classes' fields' methods' -> Class       id'       <$> ftype cls' <*> fexpMap classes' <*> fexpMap fields' <*> fexpMap methods'
-    Con         {}                                 -> pure e       
-    Field       id' name' cls' value'              -> Field       id' name' <$> ftype cls' <*> fexpMap value' 
-    Function    id' path' name' inputs' output'                    
+    Con         {}                                 -> pure e
+    Field       id' name' cls' value'              -> Field       id' name' <$> ftype cls' <*> fexpMap value'
+    Function    id' path' name' inputs' output'
                 body'                              -> Function    id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Lambda      id' inputs' output' body'          -> Lambda      id'             <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
-    Import      {}                                 -> pure e      
+    Import      {}                                 -> pure e
     Infix       id' name' src' dst'                -> Infix       id' name' <$> fexp src'     <*> fexp dst'
     List        id' items'                         -> List        id'       <$> fexpMap items'
     Lit         id' val'                           -> Lit         id'       <$> flit val'
@@ -103,26 +102,25 @@ traverseM fexp ftype fpat flit e = case e of
     Typed       id' cls' _expr'                    -> Typed       id'       <$> ftype cls' <*> fexp _expr'
     Native      id' segments'                      -> Native      id'       <$> fexpMap segments'
     RangeFromTo id' start' end'                    -> RangeFromTo id'       <$> fexp start' <*> fexp end'
-    RangeFrom   id' start'                         -> RangeFrom   id'       <$> fexp start' 
-    NativeCode  {}                                 -> pure e      
-    NativeVar   {}                                 -> pure e      
-    Var         {}                                 -> pure e      
-    Wildcard    {}                                 -> pure e      
-    NOP         {}                                 -> pure e      
-    AppCons_    {}                                 -> pure e      
-    Arg         id' pat' value'                    -> Arg         id'       <$> fpat pat' <*> fexpMap value' 
+    RangeFrom   id' start'                         -> RangeFrom   id'       <$> fexp start'
+    NativeCode  {}                                 -> pure e
+    NativeVar   {}                                 -> pure e
+    Var         {}                                 -> pure e
+    Wildcard    {}                                 -> pure e
+    NOP         {}                                 -> pure e
+    AppCons_    {}                                 -> pure e
+    Arg         id' pat' value'                    -> Arg         id'       <$> fpat pat' <*> fexpMap value'
     where fexpMap = mapM fexp
-          fpatMap = mapM fpat
 
 
 traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Expr -> m ()
 traverseM_ fexp ftype fpat flit e = case e of
-    Accessor    _  name' dst'                      -> drop <* fexp dst'
+    Accessor    _  _ dst'                          -> drop <* fexp dst'
     App         _  src' args'                      -> drop <* fexp src'  <* fexpMap args'
     Assignment  _  pat' dst'                       -> drop <* fpat pat'  <* fexp dst'
     Class       _  cls' classes' fields' methods'  -> drop <* ftype cls' <* fexpMap classes' <* fexpMap fields' <* fexpMap methods'
     Con         {}                                 -> drop
-    Field       _ _ cls' value'                    -> drop <* ftype cls' <* fexpMap value' 
+    Field       _ _ cls' value'                    -> drop <* ftype cls' <* fexpMap value'
     Function    _ _ _ inputs' output' body'        -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
     Lambda      _ inputs' output' body'            -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
     Import      {}                                 -> drop
@@ -130,7 +128,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     List        _  items'                          -> drop <* fexpMap items'
     Lit         _  val'                            -> drop <* flit val'
     Tuple       _  items'                          -> drop <* fexpMap items'
-    Typed       _  cls' _expr'                      -> drop <* ftype cls' <* fexp _expr'
+    Typed       _  cls' _expr'                     -> drop <* ftype cls' <* fexp _expr'
     Native      _ segments'                        -> drop <* fexpMap segments'
     RangeFromTo _ start' end'                      -> drop <* fexp start' <* fexp end'
     RangeFrom   _ start'                           -> drop <* fexp start'
@@ -140,10 +138,9 @@ traverseM_ fexp ftype fpat flit e = case e of
     Wildcard    {}                                 -> drop
     NOP         {}                                 -> drop
     AppCons_    {}                                 -> drop
-    Arg         _ pat' value'                      -> drop <* fpat pat' <* fexpMap value' 
+    Arg         _ pat' value'                      -> drop <* fpat pat' <* fexpMap value'
     where drop    = pure ()
           fexpMap = mapM_ fexp
-          fpatMap = fpatMap
 
 
 traverseM' :: Traversal m => (Expr -> m Expr) -> Expr -> m Expr

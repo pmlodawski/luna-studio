@@ -21,5 +21,5 @@ data Edge = Edge { src :: OutPort
 
 
 noEdges :: [Edge]
-noEdges = [] 
+noEdges = []
 

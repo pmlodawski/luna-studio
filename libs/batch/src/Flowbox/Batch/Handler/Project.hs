@@ -16,14 +16,14 @@ module Flowbox.Batch.Handler.Project (
     storeProject,
 ) where
 
-import           Flowbox.Prelude                               
-import           Flowbox.Batch.Batch                           (Batch(..))
-import           Flowbox.Batch.Handler.Common                  (noresult, readonly, readonly', projectOp, projectOp')
+import           Flowbox.Batch.Batch                         (Batch (..))
+import           Flowbox.Batch.Handler.Common                (noresult, projectOp, projectOp', readonly, readonly')
+import           Flowbox.Batch.Project.Project               (Project (..))
 import qualified Flowbox.Batch.Project.Project               as Project
-import           Flowbox.Batch.Project.Project                 (Project(..))
 import qualified Flowbox.Batch.Project.ProjectManager        as ProjectManager
 import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerialization
-import           Flowbox.System.UniPath                        (UniPath)
+import           Flowbox.Prelude
+import           Flowbox.System.UniPath                      (UniPath)
 
 
 
@@ -59,7 +59,7 @@ updateProject (projectID, project) = noresult . projectOp projectID (\_ oldProje
 
 
 closeProject :: Project.ID -> Batch -> Batch
-closeProject projectID batch = newBatch where 
+closeProject projectID batch = newBatch where
     aprojectManager   = projectManager batch
     newProjectManager = ProjectManager.delNode projectID aprojectManager
     newBatch          = batch {projectManager = newProjectManager}

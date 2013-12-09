@@ -15,31 +15,31 @@ module Flowbox.Batch.Server.Handler.Library (
     runLibrary,
 ) where
 
-import           Data.IORef                                              (IORef)
+import Data.IORef (IORef)
 
-import           Flowbox.Prelude                                         
-import           Flowbox.Batch.Batch                                     (Batch)
+import           Flowbox.Batch.Batch                                   (Batch)
 import qualified Flowbox.Batch.Handler.Library                         as BatchL
-import           Flowbox.Control.Error                                   
-import           Flowbox.System.Log.Logger                               
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Library   ()
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic          
+import           Flowbox.Control.Error
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Library ()
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.Batch.Library.BuildLibrary.Args       as BuildLibrary
+import qualified Generated.Proto.Batch.Library.BuildLibrary.Result     as BuildLibrary
+import qualified Generated.Proto.Batch.Library.CreateLibrary.Args      as CreateLibrary
+import qualified Generated.Proto.Batch.Library.CreateLibrary.Result    as CreateLibrary
 import qualified Generated.Proto.Batch.Library.Libraries.Args          as Libraries
 import qualified Generated.Proto.Batch.Library.Libraries.Result        as Libraries
 import qualified Generated.Proto.Batch.Library.LibraryByID.Args        as LibraryByID
 import qualified Generated.Proto.Batch.Library.LibraryByID.Result      as LibraryByID
-import qualified Generated.Proto.Batch.Library.CreateLibrary.Args      as CreateLibrary
-import qualified Generated.Proto.Batch.Library.CreateLibrary.Result    as CreateLibrary
 import qualified Generated.Proto.Batch.Library.LoadLibrary.Args        as LoadLibrary
 import qualified Generated.Proto.Batch.Library.LoadLibrary.Result      as LoadLibrary
-import qualified Generated.Proto.Batch.Library.UnloadLibrary.Args      as UnloadLibrary
-import qualified Generated.Proto.Batch.Library.UnloadLibrary.Result    as UnloadLibrary
-import qualified Generated.Proto.Batch.Library.StoreLibrary.Args       as StoreLibrary
-import qualified Generated.Proto.Batch.Library.StoreLibrary.Result     as StoreLibrary
-import qualified Generated.Proto.Batch.Library.BuildLibrary.Args       as BuildLibrary
-import qualified Generated.Proto.Batch.Library.BuildLibrary.Result     as BuildLibrary
 import qualified Generated.Proto.Batch.Library.RunLibrary.Args         as RunLibrary
 import qualified Generated.Proto.Batch.Library.RunLibrary.Result       as RunLibrary
+import qualified Generated.Proto.Batch.Library.StoreLibrary.Args       as StoreLibrary
+import qualified Generated.Proto.Batch.Library.StoreLibrary.Result     as StoreLibrary
+import qualified Generated.Proto.Batch.Library.UnloadLibrary.Args      as UnloadLibrary
+import qualified Generated.Proto.Batch.Library.UnloadLibrary.Result    as UnloadLibrary
 
 
 
@@ -54,7 +54,7 @@ libraries batchHandler (Libraries.Args tprojectID) = do
     let projectID = decodeP tprojectID
     batch <- tryReadIORef batchHandler
     scriptIO $ loggerIO debug $ "projectID: " ++ (show projectID)
-    libs <- tryRight $ BatchL.libraries projectID batch 
+    libs <- tryRight $ BatchL.libraries projectID batch
     return $ Libraries.Result $ encodeList libs
 
 
@@ -101,7 +101,7 @@ unloadLibrary batchHandler (UnloadLibrary.Args tlibID tprojectID) = do
         projectID = decodeP tprojectID
     batch     <- tryReadIORef batchHandler
     scriptIO $ loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
-    newBatch  <- tryRight $ BatchL.unloadLibrary libID projectID batch 
+    newBatch  <- tryRight $ BatchL.unloadLibrary libID projectID batch
     tryWriteIORef batchHandler newBatch
     return UnloadLibrary.Result
 

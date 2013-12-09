@@ -5,14 +5,16 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Flowbox.Tools.Serialize.Proto.Conversion.String where
 
-import qualified Text.ProtocolBuffers.Basic     as Proto
+import qualified Text.ProtocolBuffers.Basic as Proto
 
-import           Flowbox.Prelude                  
-import           Flowbox.Tools.Conversion.Proto   
+import Flowbox.Prelude
+import Flowbox.Tools.Conversion.Proto
 
 
 instance ConvertPure String Proto.Utf8 where

@@ -11,11 +11,11 @@ module Flowbox.Luna.Lib.Library (
     make
 ) where
 
-import           Flowbox.Prelude                
-import           Flowbox.System.UniPath         (UniPath)
+import           Flowbox.Luna.Data.AST.Module (Module)
 import qualified Flowbox.Luna.Data.AST.Module as Module
-import           Flowbox.Luna.Data.AST.Module   (Module)
 import qualified Flowbox.Luna.Data.AST.Type   as Type
+import           Flowbox.Prelude
+import           Flowbox.System.UniPath       (UniPath)
 
 
 

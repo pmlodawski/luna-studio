@@ -4,19 +4,21 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.Passes.Analysis.VarAlias.State where
 
-import           Control.Monad.State               
-import qualified Data.IntMap                     as IntMap
-import qualified Data.Map                        as Map
-import           Data.Map                          (Map)
+import           Control.Monad.State
+import qualified Data.IntMap         as IntMap
+import           Data.Map            (Map)
+import qualified Data.Map            as Map
 
-import           Flowbox.Prelude                   
+import           Flowbox.Luna.Data.AliasAnalysis (AA)
 import qualified Flowbox.Luna.Data.AliasAnalysis as AA
-import           Flowbox.Luna.Data.AliasAnalysis   (AA)
-import           Flowbox.System.Log.Logger         
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 
 
 

@@ -8,23 +8,36 @@
 
 module Flowbox.Data.Version where
 
-import           Flowbox.Prelude   
-import           GHC.Generics      
-import           Data.Aeson        
-import           Data.Monoid       (Monoid, mempty)
+import           Data.Aeson
+import           Data.Default      (Default, def)
+import           Data.Map          (Map)
+import qualified Data.Map          as Map
+import           Data.String.Utils (join)
+import           Flowbox.Prelude
+import           GHC.Generics
 
 data Version = Version { branch :: [Int]
                        , tags   :: [String]
-                       } deriving (Show, Eq, Generic)
+                       } deriving (Read, Show, Eq, Generic, Ord)
 
--------------------------------------------------
+
+partition :: Int -> [Version] -> Map [Int] [Version]
+partition i x = foldl (\m xs -> Map.insertWith (++) (take i $ branch xs) [xs] m) mempty x
+
+readable :: Version -> String
+readable v = readableBranch (branch v) ++ join "" (map ("-"++) $ tags v)
+
+readableBranch :: [Int] -> String
+readableBranch b = join "." (map show b)
+
+------------------------------------------------------------------------
 -- INSTANCES
--------------------------------------------------
+------------------------------------------------------------------------
 
-instance Monoid Version where
-    mempty = Version { branch = [0,1,0]
-                     , tags   = mempty
-                     }
+instance Default Version where
+    def = Version { branch = [0,1,0]
+                  , tags   = def
+                  }
 
 instance ToJSON Version
 instance FromJSON Version

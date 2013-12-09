@@ -11,20 +11,20 @@ module Flowbox.Luna.Tools.Serialize.Proto.Library (
     restoreLibrary,
 ) where
 
-import qualified Data.ByteString.Lazy                                  as ByteString
-import qualified System.IO                                             as IO
-import qualified Text.ProtocolBuffers                                  as Proto
+import qualified Data.ByteString.Lazy as ByteString
+import qualified System.IO            as IO
+import qualified Text.ProtocolBuffers as Proto
 
-import           Flowbox.Prelude                                         
+import           Flowbox.Control.Error
+import           Flowbox.Luna.Lib.Library                              (Library)
 import qualified Flowbox.Luna.Lib.Library                              as Library
-import           Flowbox.Luna.Lib.Library                                (Library)
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Library   ()
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Library ()
+import           Flowbox.Prelude
+import           Flowbox.System.IO.Serializer                          (Deserializable (Deserializable), Serializable (Serializable))
 import qualified Flowbox.System.IO.Serializer                          as Serializer
-import           Flowbox.System.IO.Serializer                            (Serializable(Serializable), Deserializable(Deserializable))
-import           Flowbox.System.UniPath                                  (UniPath)
-import           Flowbox.System.Log.Logger                               
-import           Flowbox.Tools.Serialize.Proto.Conversion.Basic          
-import           Flowbox.Control.Error                                   
+import           Flowbox.System.Log.Logger
+import           Flowbox.System.UniPath                                (UniPath)
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Library.Library                       as Gen
 
 
@@ -34,13 +34,13 @@ loggerIO = getLoggerIO "Flowbox.Luna.Tools.Serialize.Proto.Lib"
 
 
 saveLib :: Library -> IO.Handle -> IO ()
-saveLib library h = do 
+saveLib library h = do
     let tlibrary = encode (-1 :: Int, library) :: Gen.Library
     ByteString.hPut h $ Proto.messagePut tlibrary
 
 
 getLib :: IO.Handle -> IO Library
-getLib h = runScript $ do 
+getLib h = runScript $ do
     binary              <- scriptIO $ ByteString.hGetContents h
     (tlibrary, _)       <- tryRight $ Proto.messageGet binary
     (_ :: Int, library) <- tryRight $ decode tlibrary
@@ -48,7 +48,7 @@ getLib h = runScript $ do
 
 
 storeLibrary :: Library -> IO ()
-storeLibrary lib = do 
+storeLibrary lib = do
     let libpath = Library.path lib
         slib    = Serializable libpath (saveLib lib)
     Serializer.serialize slib
@@ -80,7 +80,7 @@ restoreLibrary path = do
 
 
 --thriftSave :: (BinaryProtocol Handle -> object -> IO()) -> object -> Handle -> IO()
---thriftSave write object h = do 
+--thriftSave write object h = do
 --    let protocol = BinaryProtocol h
 --    write protocol object
 
@@ -95,7 +95,7 @@ restoreLibrary path = do
 
 
 --generate :: DefManager -> UniPath -> Definition.ID -> Definition -> [Serializable]
---generate defManager upath defID def = sdef:sgraph:schildren where 
+--generate defManager upath defID def = sdef:sgraph:schildren where
 --    children  = DefManager.suc defManager defID
 --    schildren = foldr (\child rest -> checkedGenerate defManager upath child ++ rest) [] children
 
@@ -117,7 +117,7 @@ restoreLibrary path = do
 --checkedGenerate defManager udirpath defID = s where
 --    s = case DefManager.lab defManager defID of
 --        Nothing -> error "Inconssistence in defManager: ID not found"
---        Just def -> case Definition.cls def of 
+--        Just def -> case Definition.cls def of
 --                Module   aname     -> gen aname
 --                Class    aname _ _ -> gen aname
 --                Function aname _ _ -> gen aname
@@ -136,12 +136,12 @@ restoreLibrary path = do
 
 
 --storeLibrary_old :: Library -> IO ()
---storeLibrary_old lib = do 
+--storeLibrary_old lib = do
 --    let defManager   = Library.defs lib
 --        rootPath     = Library.path lib
 --        libRootDefID = Library.rootDefID
 
---        defs = checkedGenerate defManager rootPath libRootDefID 
+--        defs = checkedGenerate defManager rootPath libRootDefID
 --        slib  = prepareLibrary lib
 
 --    Serializer.serialize slib
@@ -149,10 +149,10 @@ restoreLibrary path = do
 
 
 --getDefinition :: UniPath -> IO Definition
---getDefinition upath = do 
---    let 
+--getDefinition upath = do
+--    let
 --        convert :: TDefs.Definition -> Either String Definition
---        convert tdef = do 
+--        convert tdef = do
 --            (_, def) <- decode (tdef, Graph.empty)
 --            return def
 
@@ -162,7 +162,7 @@ restoreLibrary path = do
 --    Serializer.deserialize ddef
 
 
---restoreDefs :: UniPath -> IO DefManager 
+--restoreDefs :: UniPath -> IO DefManager
 --restoreDefs upath =
 --    restoreDefsContinue upath (DefManager.empty) Nothing
 
@@ -170,18 +170,18 @@ restoreLibrary path = do
 ---- TODO [PM] THIS METHOD DOES NOT WORK AT ALL
 --restoreDefsContinue :: UniPath -> DefManager -> Maybe Definition.ID -> IO DefManager
 --restoreDefsContinue upath defManager mparentID -- =
---    | apath =~ defFilePattern  = do 
+--    | apath =~ defFilePattern  = do
 --        putStrLn $ "file! " ++ apath
 --        def <- getDefinition upath
---        case mparentID of 
+--        case mparentID of
 --            Nothing       -> do let (newDefManager, defID) = DefManager.insNewNode def defManager
 --                                return newDefManager
 --            Just parentID -> do let (newDefManager, defID) = DefManager.addNewToParent (parentID, def) defManager
 --                                return newDefManager
 --    | apath =~ folderPattern   = do isDir <- doesDirectoryExist apath
---                                    case isDir of 
+--                                    case isDir of
 --                                        False -> handleOther
---                                        True -> do putStrLn $ "folder " ++ apath 
+--                                        True -> do putStrLn $ "folder " ++ apath
 --                                                   contents <- getDirectoryContents apath
 --                                                   _ <- sequence $ map (\c -> restoreDefs $ UniPath.append c upath) contents
 --                                                   return defManager
@@ -196,8 +196,8 @@ restoreLibrary path = do
 
 
 --getLibrary :: UniPath -> IO Library
---getLibrary upath = do 
---    let 
+--getLibrary upath = do
+--    let
 --        convert :: TLibs.Library -> Either String Library
 --        convert t = case decode (t, DefManager.empty) :: Either String (Library.ID, Library) of
 --            Left m       -> Left m

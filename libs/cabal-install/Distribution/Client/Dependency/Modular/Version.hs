@@ -1,7 +1,7 @@
 module Distribution.Client.Dependency.Modular.Version where
 
-import qualified Distribution.Version as CV -- from Cabal
-import Distribution.Text -- from Cabal
+import           Distribution.Text
+import qualified Distribution.Version as CV
 
 -- | Preliminary type for versions.
 type Ver = CV.Version

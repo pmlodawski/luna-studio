@@ -8,11 +8,13 @@
 
 module Flowbox.Distribution.License where
 
-import           Flowbox.Prelude        
-import           Flowbox.Data.Version   (Version)
+import Flowbox.Data.Version (Version)
+import Flowbox.Prelude
 
-import           GHC.Generics           
-import           Data.Aeson             
+import Data.Aeson
+import Data.Default (Default, def)
+import GHC.Generics
+
 
 data License = GPL (Maybe Version)
              | AGPL (Maybe Version)
@@ -22,13 +24,16 @@ data License = GPL (Maybe Version)
              | Apache (Maybe Version)
              | PublicDomain
              | AllRightsReserved
-             | OtherLicense
-             | UnknownLicense String
-             deriving (Show, Generic)
+             | OtherLicense String
+             | UnknownLicense
+             deriving (Read, Show, Eq, Generic, Ord)
 
 -------------------------------------------------
 -- INSTANCES
 -------------------------------------------------
+
+instance Default License where
+    def = AllRightsReserved
 
 instance ToJSON License
 instance FromJSON License

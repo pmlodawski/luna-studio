@@ -7,12 +7,12 @@ module Distribution.Client.Dependency.Modular.PSQ where
 -- (inefficiently implemented) lookup, because I think that queue-based
 -- operations and sorting turn out to be more efficiency-critical in practice.
 
-import           Control.Applicative   
-import           Data.Foldable         
-import           Data.Function         
-import Data.List as S hiding (foldr)
-import           Data.Traversable      
-import           Prelude             hiding (foldr)
+import Control.Applicative
+import Data.Foldable
+import Data.Function
+import Data.List           as S hiding (foldr)
+import Data.Traversable
+import Prelude             hiding (foldr)
 
 newtype PSQ k v = PSQ [(k, v)]
   deriving (Eq, Show)
@@ -66,7 +66,7 @@ casePSQ (PSQ xs) n c =
     (k, v) : ys -> c k v (PSQ ys)
 
 splits :: PSQ k a -> PSQ k (a, PSQ k a)
-splits = go id 
+splits = go id
   where
     go f xs = casePSQ xs
         (PSQ [])

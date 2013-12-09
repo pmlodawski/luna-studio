@@ -10,8 +10,8 @@ module Flowbox.Luna.Data.HAST.Deriving (
     genCode
 )where
 
-import           Flowbox.Prelude     
-import           Data.String.Utils   (join)
+import Data.String.Utils (join)
+import Flowbox.Prelude
 
 data Deriving = Eq
               | Ord
@@ -20,13 +20,13 @@ data Deriving = Eq
               | Bounded
               | Read
               | Show
-		    deriving (Show)
+                    deriving (Show)
 
 
 genCode :: [Deriving] -> String
 genCode d = case d of
-	[] -> ""
-	_  -> " deriving (" ++ join ", " (map show d) ++ ")"
+        [] -> ""
+        _  -> " deriving (" ++ join ", " (map show d) ++ ")"
 
 
 

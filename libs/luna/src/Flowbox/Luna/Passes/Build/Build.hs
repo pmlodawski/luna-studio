@@ -19,13 +19,12 @@ import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPo
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
 import qualified Flowbox.Luna.Passes.Build.BuildConfig                 as BuildConfig
 import           Flowbox.Luna.Passes.Build.BuildConfig                   (BuildConfig(BuildConfig))
-import           Flowbox.Luna.Passes.Build.Diagnostics                   (Diagnostics)
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen                 as CabalGen
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install             as CabalInstall
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store               as CabalStore
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
 import qualified Flowbox.Luna.Passes.Pass                              as Pass
-import           Flowbox.Luna.Passes.Pass                                (PassMonad, PassMonadIO)
+import           Flowbox.Luna.Passes.Pass                                (PassMonadIO)
 import qualified Flowbox.Luna.Passes.Source.File.Writer                as FileWriter
 import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser

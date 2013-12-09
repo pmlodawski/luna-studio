@@ -7,6 +7,6 @@
 
 module Flowbox.Luna.Data.AST.Utils where
 
-import           Flowbox.Prelude   
+import Flowbox.Prelude
 
 type ID = Int

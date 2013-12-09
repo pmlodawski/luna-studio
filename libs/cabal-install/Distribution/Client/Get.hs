@@ -17,52 +17,33 @@ module Distribution.Client.Get (
     get
   ) where
 
-import           Distribution.Package              
-         ( PackageId, packageId, packageName )
-import           Distribution.Simple.Setup         
-         ( Flag(..), fromFlag, fromFlagOrDefault )
-import           Distribution.Simple.Utils         
-         ( notice, die, info, writeFileAtomic )
-import           Distribution.Verbosity            
-         ( Verbosity )
-import           Distribution.Text(display)        
+import           Distribution.Package            (PackageId, packageId, packageName)
 import qualified Distribution.PackageDescription as PD
+import           Distribution.Simple.Setup       (Flag (..), fromFlag, fromFlagOrDefault)
+import           Distribution.Simple.Utils       (die, info, notice, writeFileAtomic)
+import           Distribution.Text               (display)
+import           Distribution.Verbosity          (Verbosity)
 
-import           Distribution.Client.Setup         
-         ( GlobalFlags(..), GetFlags(..) )
-import           Distribution.Client.Types         
-import           Distribution.Client.Targets       
-import           Distribution.Client.Dependency    
-import           Distribution.Client.FetchUtils    
-import qualified Distribution.Client.Tar as Tar (extractTarGzFile)
-import           Distribution.Client.IndexUtils  as IndexUtils
-        ( getSourcePackages )
-import           Distribution.Compat.Exception     
-        ( catchIO )
+import           Distribution.Client.Dependency
+import           Distribution.Client.FetchUtils
+import           Distribution.Client.IndexUtils as IndexUtils (getSourcePackages)
+import           Distribution.Client.Setup      (GetFlags (..), GlobalFlags (..))
+import qualified Distribution.Client.Tar        as Tar (extractTarGzFile)
+import           Distribution.Client.Targets
+import           Distribution.Client.Types
+import           Distribution.Compat.Exception  (catchIO)
 
-import           Control.Exception                 
-         ( finally )
-import           Control.Monad                     
-         ( filterM, forM_, unless, when )
-import           Data.List                         
-         ( sortBy )
-import qualified Data.Map                          
-import           Data.Maybe                        
-         ( listToMaybe, mapMaybe )
-import           Data.Monoid                       
-         ( mempty )
-import           Data.Ord                          
-         ( comparing )
-import           System.Directory                  
-         ( createDirectoryIfMissing, doesDirectoryExist, doesFileExist
-         , getCurrentDirectory, setCurrentDirectory
-         )
-import           System.Exit                       
-         ( ExitCode(..) )
-import           System.FilePath                   
-         ( (</>), (<.>), addTrailingPathSeparator )
-import           System.Process                    
-         ( rawSystem, readProcessWithExitCode )
+import           Control.Exception (finally)
+import           Control.Monad     (filterM, forM_, unless, when)
+import           Data.List         (sortBy)
+import qualified Data.Map
+import           Data.Maybe        (listToMaybe, mapMaybe)
+import           Data.Monoid       (mempty)
+import           Data.Ord          (comparing)
+import           System.Directory  (createDirectoryIfMissing, doesDirectoryExist, doesFileExist, getCurrentDirectory, setCurrentDirectory)
+import           System.Exit       (ExitCode (..))
+import           System.FilePath   (addTrailingPathSeparator, (<.>), (</>))
+import           System.Process    (rawSystem, readProcessWithExitCode)
 
 
 -- | Entry point for the 'cabal get' command.
@@ -183,7 +164,7 @@ unpackPackage verbosity prefix pkgid descOverride pkgPath = do
 data BranchCmd = BranchCmd (Verbosity -> FilePath -> IO ExitCode)
 
 data Brancher = Brancher
-    { brancherBinary :: String
+    { brancherBinary   :: String
     , brancherBuildCmd :: PD.SourceRepo -> Maybe BranchCmd
     }
 

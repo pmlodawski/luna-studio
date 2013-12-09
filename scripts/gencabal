@@ -4,6 +4,7 @@ import os
 import sys
 import re
 from utils.glob2 import glob
+from utils.path import write_if_changed
 
 header = '''\
 ---------------------------------------------------
@@ -28,10 +29,7 @@ def main():
     cabals = [header + process(path, config) for (path, config) in zip(cabal_dirs, tcabals)]
 
     for (path, src) in zip(cabal_paths,cabals):
-        with open(path, 'rw') as file:
-            # check if file is changed
-            if not file.read() == src:
-                file.write(src)
+        write_if_changed(path, src)
 
 
 def find_regex(basepath, regex=r'.*', exclude=r'_^'):

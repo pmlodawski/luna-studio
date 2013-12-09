@@ -15,13 +15,13 @@ module Flowbox.Luna.Data.Graph.Graph(
     make,
 ) where
 
-import           Flowbox.Prelude                
+import Flowbox.Prelude                        hiding (empty)
 
-import           Flowbox.Data.Graph           hiding (Graph, Edge, empty)
+import           Flowbox.Data.Graph           hiding (Edge, Graph, empty)
 import qualified Flowbox.Data.Graph           as DG
-import           Flowbox.Luna.Data.Graph.Edge   (Edge)
+import           Flowbox.Luna.Data.Graph.Edge (Edge)
+import           Flowbox.Luna.Data.Graph.Node (Node)
 import qualified Flowbox.Luna.Data.Graph.Node as Node
-import           Flowbox.Luna.Data.Graph.Node   (Node)
 
 
 

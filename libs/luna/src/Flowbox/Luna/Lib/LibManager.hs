@@ -13,14 +13,14 @@ module Flowbox.Luna.Lib.LibManager (
     loadLibrary,
 ) where
 
-import           Flowbox.Prelude                              
-import qualified Flowbox.Luna.Tools.Serialize.Proto.Library as LibSerialization
+import           Flowbox.Data.Graph                         hiding (Edge, Graph, empty)
 import qualified Flowbox.Data.Graph                         as DG
-import           Flowbox.Data.Graph                         hiding (Graph, Edge, empty)
+import           Flowbox.Luna.Lib.Edge                      (Edge)
+import           Flowbox.Luna.Lib.Library                   (Library)
 import qualified Flowbox.Luna.Lib.Library                   as Library
-import           Flowbox.Luna.Lib.Library                     (Library)
-import           Flowbox.Luna.Lib.Edge                        (Edge)
-import           Flowbox.System.UniPath                       (UniPath)
+import qualified Flowbox.Luna.Tools.Serialize.Proto.Library as LibSerialization
+import           Flowbox.Prelude                            hiding(empty)
+import           Flowbox.System.UniPath                     (UniPath)
 
 
 

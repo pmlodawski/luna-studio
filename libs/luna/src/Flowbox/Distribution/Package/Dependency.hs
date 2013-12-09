@@ -8,12 +8,19 @@
 
 module Flowbox.Distribution.Package.Dependency where
 
-import           Flowbox.Prelude   
-import           Data.Version      (Version)
-import qualified Data.Version    as Version
-import           GHC.Generics      
+import           Data.Aeson
+--import           Flowbox.Data.Version (Version)
+--import qualified Flowbox.Data.Version as Version
+import           Flowbox.Prelude
+import           GHC.Generics
 
-data Dependency = Dependency { name    :: String
+data Dependency = Dependency { name :: String
                              --, version :: CVersion
-                             } deriving (Show, Generic)
+                             } deriving (Show, Generic, Ord, Eq)
 
+------------------------------------------------------------------------
+-- INSTANCES
+------------------------------------------------------------------------
+
+instance ToJSON Dependency
+instance FromJSON Dependency

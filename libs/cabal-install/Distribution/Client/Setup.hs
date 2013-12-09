@@ -39,60 +39,33 @@ module Distribution.Client.Setup
     , parseRepo
     ) where
 
-import           Distribution.Client.Types                
-         ( Username(..), Password(..), Repo(..), RemoteRepo(..), LocalRepo(..) )
-import           Distribution.Client.BuildReports.Types   
-         ( ReportLevel(..) )
-import           Distribution.Client.Dependency.Types     
-         ( PreSolver(..) )
-import qualified Distribution.Client.Init.Types         as IT
-         ( InitFlags(..), PackageType(..) )
-import           Distribution.Client.Targets              
-         ( UserConstraint, readUserConstraint )
+import           Distribution.Client.BuildReports.Types (ReportLevel (..))
+import           Distribution.Client.Dependency.Types   (PreSolver (..))
+import qualified Distribution.Client.Init.Types         as IT (InitFlags (..), PackageType (..))
+import           Distribution.Client.Targets            (UserConstraint, readUserConstraint)
+import           Distribution.Client.Types              (LocalRepo (..), Password (..), RemoteRepo (..), Repo (..), Username (..))
 
-import           Distribution.Simple.Program              
-         ( defaultProgramConfiguration )
-import           Distribution.Simple.Command            hiding (boolOpt)
-import qualified Distribution.Simple.Setup              as Cabal
-import           Distribution.Simple.Setup                
-         ( ConfigFlags(..), BuildFlags(..), TestFlags(..), BenchmarkFlags(..)
-         , SDistFlags(..), HaddockFlags(..)
-         , Flag(..), toFlag, fromFlag, flagToMaybe, flagToList
-         , optionVerbosity, boolOpt, trueArg, falseArg, numJobsParser )
-import           Distribution.Simple.InstallDirs          
-         ( PathTemplate, InstallDirs(sysconfdir)
-         , toPathTemplate, fromPathTemplate )
-import           Distribution.Version                     
-         ( Version(Version), anyVersion, thisVersion )
-import           Distribution.Package                     
-         ( PackageIdentifier, packageName, packageVersion, Dependency(..) )
-import           Distribution.PackageDescription          
-         ( RepoKind(..) )
-import           Distribution.Text                        
-         ( Text(..), display )
-import           Distribution.ReadE                       
-         ( ReadE(..), readP_to_E, succeedReadE )
-import qualified Distribution.Compat.ReadP              as Parse
-         ( ReadP, readP_to_S, readS_to_P, char, munch1, pfail, (+++) )
-import           Distribution.Verbosity                   
-         ( Verbosity, normal )
-import           Distribution.Simple.Utils                
-         ( wrapText )
+import qualified Distribution.Compat.ReadP       as Parse (ReadP, char, munch1, pfail, readP_to_S, readS_to_P, (+++))
+import           Distribution.Package            (Dependency (..), PackageIdentifier, packageName, packageVersion)
+import           Distribution.PackageDescription (RepoKind (..))
+import           Distribution.ReadE              (ReadE (..), readP_to_E, succeedReadE)
+import           Distribution.Simple.Command     hiding (boolOpt)
+import           Distribution.Simple.InstallDirs (InstallDirs (sysconfdir), PathTemplate, fromPathTemplate, toPathTemplate)
+import           Distribution.Simple.Program     (defaultProgramConfiguration)
+import           Distribution.Simple.Setup       (BenchmarkFlags (..), BuildFlags (..), ConfigFlags (..), Flag (..), HaddockFlags (..), SDistFlags (..), TestFlags (..), boolOpt, falseArg, flagToList, flagToMaybe, fromFlag, numJobsParser, optionVerbosity, toFlag, trueArg)
+import qualified Distribution.Simple.Setup       as Cabal
+import           Distribution.Simple.Utils       (wrapText)
+import           Distribution.Text               (Text (..), display)
+import           Distribution.Verbosity          (Verbosity, normal)
+import           Distribution.Version            (Version (Version), anyVersion, thisVersion)
 
-import           Data.Char                                
-         ( isSpace, isAlphaNum )
-import           Data.List                                
-         ( intercalate )
-import           Data.Maybe                               
-         ( listToMaybe, maybeToList, fromMaybe )
-import           Data.Monoid                              
-         ( Monoid(..) )
-import           Control.Monad                            
-         ( liftM )
-import           System.FilePath                          
-         ( (</>) )
-import           Network.URI                              
-         ( parseAbsoluteURI, uriToString )
+import Control.Monad   (liftM)
+import Data.Char       (isAlphaNum, isSpace)
+import Data.List       (intercalate)
+import Data.Maybe      (fromMaybe, listToMaybe, maybeToList)
+import Data.Monoid     (Monoid (..))
+import Network.URI     (parseAbsoluteURI, uriToString)
+import System.FilePath ((</>))
 
 -- ------------------------------------------------------------
 -- * Global flags
@@ -272,10 +245,10 @@ filterConfigureFlags flags cabalLibVersion
 -- | cabal configure takes some extra flags beyond runghc Setup configure
 --
 data ConfigExFlags = ConfigExFlags {
-    configCabalVersion :: Flag Version,
+    configCabalVersion  :: Flag Version,
     configExConstraints:: [UserConstraint],
-    configPreferences  :: [Dependency],
-    configSolver       :: Flag PreSolver
+    configPreferences   :: [Dependency],
+    configSolver        :: Flag PreSolver
   }
 
 defaultConfigExFlags :: ConfigExFlags
@@ -344,7 +317,7 @@ data SkipAddSourceDepsCheck =
   deriving Eq
 
 data BuildExFlags = BuildExFlags {
-  buildOnly     :: Flag SkipAddSourceDepsCheck
+  buildOnly :: Flag SkipAddSourceDepsCheck
 }
 
 buildExOptions :: ShowOrParseArgs -> [OptionField BuildExFlags]
@@ -436,14 +409,14 @@ benchmarkCommand = parent {
 
 data FetchFlags = FetchFlags {
 --    fetchOutput    :: Flag FilePath,
-      fetchDeps      :: Flag Bool,
-      fetchDryRun    :: Flag Bool,
+      fetchDeps             :: Flag Bool,
+      fetchDryRun           :: Flag Bool,
       fetchSolver           :: Flag PreSolver,
       fetchMaxBackjumps     :: Flag Int,
       fetchReorderGoals     :: Flag Bool,
       fetchIndependentGoals :: Flag Bool,
       fetchShadowPkgs       :: Flag Bool,
-      fetchVerbosity :: Flag Verbosity
+      fetchVerbosity        :: Flag Verbosity
     }
 
 defaultFetchFlags :: FetchFlags
@@ -700,9 +673,9 @@ instance Monoid GetFlags where
 -- ------------------------------------------------------------
 
 data ListFlags = ListFlags {
-    listInstalled :: Flag Bool,
+    listInstalled    :: Flag Bool,
     listSimpleOutput :: Flag Bool,
-    listVerbosity :: Flag Verbosity
+    listVerbosity    :: Flag Verbosity
   }
 
 defaultListFlags :: ListFlags
@@ -783,26 +756,26 @@ instance Monoid InfoFlags where
 -- | Install takes the same flags as configure along with a few extras.
 --
 data InstallFlags = InstallFlags {
-    installDocumentation    :: Flag Bool,
-    installHaddockIndex     :: Flag PathTemplate,
-    installDryRun           :: Flag Bool,
-    installMaxBackjumps     :: Flag Int,
-    installReorderGoals     :: Flag Bool,
-    installIndependentGoals :: Flag Bool,
-    installShadowPkgs       :: Flag Bool,
-    installReinstall        :: Flag Bool,
-    installAvoidReinstalls  :: Flag Bool,
+    installDocumentation     :: Flag Bool,
+    installHaddockIndex      :: Flag PathTemplate,
+    installDryRun            :: Flag Bool,
+    installMaxBackjumps      :: Flag Int,
+    installReorderGoals      :: Flag Bool,
+    installIndependentGoals  :: Flag Bool,
+    installShadowPkgs        :: Flag Bool,
+    installReinstall         :: Flag Bool,
+    installAvoidReinstalls   :: Flag Bool,
     installOverrideReinstall :: Flag Bool,
-    installUpgradeDeps      :: Flag Bool,
-    installOnly             :: Flag Bool,
-    installOnlyDeps         :: Flag Bool,
-    installRootCmd          :: Flag String,
-    installSummaryFile      :: [PathTemplate],
-    installLogFile          :: Flag PathTemplate,
-    installBuildReports     :: Flag ReportLevel,
-    installSymlinkBinDir    :: Flag FilePath,
-    installOneShot          :: Flag Bool,
-    installNumJobs          :: Flag (Maybe Int)
+    installUpgradeDeps       :: Flag Bool,
+    installOnly              :: Flag Bool,
+    installOnlyDeps          :: Flag Bool,
+    installRootCmd           :: Flag String,
+    installSummaryFile       :: [PathTemplate],
+    installLogFile           :: Flag PathTemplate,
+    installBuildReports      :: Flag ReportLevel,
+    installSymlinkBinDir     :: Flag FilePath,
+    installOneShot           :: Flag Bool,
+    installNumJobs           :: Flag (Maybe Int)
   }
 
 defaultInstallFlags :: InstallFlags
@@ -1295,7 +1268,7 @@ initCommand = CommandUI {
 -- | Extra flags to @sdist@ beyond runghc Setup sdist
 --
 data SDistExFlags = SDistExFlags {
-    sDistFormat    :: Flag ArchiveFormat
+    sDistFormat :: Flag ArchiveFormat
   }
   deriving Show
 

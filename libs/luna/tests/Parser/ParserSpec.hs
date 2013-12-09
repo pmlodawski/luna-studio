@@ -7,11 +7,11 @@
 
 module Parser.ParserSpec where
 
-import           Test.Hspec                           
-import           Data.Either.Utils                    (forceEither)
+import           Data.Either.Utils                  (forceEither)
+import           Flowbox.Luna.AST.AST
+import           Flowbox.Luna.AST.Constant
 import qualified Flowbox.Luna.Passes.Txt2AST.Parser as Parser
-import Flowbox.Luna.AST.AST -- for tests
-import Flowbox.Luna.AST.Constant -- for tests
+import           Test.Hspec
 --import Flowbox.Luna.Parser.AST.Type -- for tests
 
 
@@ -43,7 +43,7 @@ spec = do
       it "character literal"                  $ parse ["'a'"]              `shouldBe` "[Constant (Char 'a')]"
       it "empty string literal"               $ parse ["\"\""]             `shouldBe` "[Constant (String \"\")]"
       it "string literal"                     $ parse ["\"test\""]         `shouldBe` "[Constant (String \"test\")]"
-    
+
     describe "tuples" $ do
       it "empty"                              $ parse ["()"]               `shouldBe` "[Tuple {items = []}]"
       it "single"                             $ parse ["(a,)"]             `shouldBe` "[Tuple {items = [Identifier \"a\"]}]"

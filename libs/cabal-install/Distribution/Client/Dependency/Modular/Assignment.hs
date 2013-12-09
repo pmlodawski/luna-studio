@@ -1,23 +1,23 @@
 module Distribution.Client.Dependency.Modular.Assignment where
 
-import           Control.Applicative                                 
-import           Control.Monad                                       
-import           Data.Array                                        as A
-import           Data.List                                         as L
-import           Data.Map                                          as M
-import           Data.Maybe                                          
-import           Data.Graph                                          
-import           Prelude                                           hiding (pi)
+import Control.Applicative
+import Control.Monad
+import Data.Array          as A
+import Data.Graph
+import Data.List           as L
+import Data.Map            as M
+import Data.Maybe
+import Prelude             hiding (pi)
 
-import Distribution.PackageDescription (FlagAssignment) -- from Cabal
-import           Distribution.Client.Types                           (OptionalStanza)
+import Distribution.Client.Types       (OptionalStanza)
+import Distribution.PackageDescription (FlagAssignment)
 
-import           Distribution.Client.Dependency.Modular.Configured   
-import           Distribution.Client.Dependency.Modular.Dependency   
-import           Distribution.Client.Dependency.Modular.Flag         
-import           Distribution.Client.Dependency.Modular.Index        
-import           Distribution.Client.Dependency.Modular.Package      
-import           Distribution.Client.Dependency.Modular.Version      
+import Distribution.Client.Dependency.Modular.Configured
+import Distribution.Client.Dependency.Modular.Dependency
+import Distribution.Client.Dependency.Modular.Flag
+import Distribution.Client.Dependency.Modular.Index
+import Distribution.Client.Dependency.Modular.Package
+import Distribution.Client.Dependency.Modular.Version
 
 -- | A (partial) package assignment. Qualified package names
 -- are associated with instances.

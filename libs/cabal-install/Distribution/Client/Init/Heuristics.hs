@@ -18,36 +18,29 @@ module Distribution.Client.Init.Heuristics (
     guessAuthorNameMail,
     knownCategories,
 ) where
-import           Distribution.Text                  (simpleParse)
-import           Distribution.Simple.Setup          (Flag(..))
-import           Distribution.ModuleName            
-    ( ModuleName, toFilePath )
-import           Distribution.Client.PackageIndex   
-    ( allPackagesByName )
-import qualified Distribution.PackageDescription  as PD
-    ( category, packageDescription )
-import           Distribution.Simple.Utils          
-         ( intercalate )
-import           Distribution.Client.Utils          
-         ( tryCanonicalizePath )
-import           Language.Haskell.Extension         ( Extension )
+import           Distribution.Client.PackageIndex (allPackagesByName)
+import           Distribution.Client.Utils        (tryCanonicalizePath)
+import           Distribution.ModuleName          (ModuleName, toFilePath)
+import qualified Distribution.PackageDescription  as PD (category, packageDescription)
+import           Distribution.Simple.Setup        (Flag (..))
+import           Distribution.Simple.Utils        (intercalate)
+import           Distribution.Text                (simpleParse)
+import           Language.Haskell.Extension       (Extension)
 
-import           Distribution.Client.Types          ( packageDescription, SourcePackageDb(..) )
-import           Control.Applicative                ( pure, (<$>), (<*>) )
-import           Control.Monad                      ( liftM )
-import           Data.Char                          ( isUpper, isLower, isSpace )
-import           Data.Either                        ( partitionEithers )
-import           Data.List                          ( isPrefixOf )
-import           Data.Maybe                         ( mapMaybe, catMaybes, maybeToList )
-import           Data.Monoid                        ( mempty, mconcat )
-import qualified Data.Set as Set ( fromList, toList )
-import System.Directory ( getDirectoryContents,
-                          doesDirectoryExist, doesFileExist, getHomeDirectory, )
-import           Distribution.Compat.Environment    ( getEnvironment )
-import System.FilePath ( takeExtension, takeBaseName, dropExtension,
-                         (</>), (<.>), splitDirectories, makeRelative )
-import           System.Process                     ( readProcessWithExitCode )
-import           System.Exit                        ( ExitCode(..) )
+import           Control.Applicative             (pure, (<$>), (<*>))
+import           Control.Monad                   (liftM)
+import           Data.Char                       (isLower, isSpace, isUpper)
+import           Data.Either                     (partitionEithers)
+import           Data.List                       (isPrefixOf)
+import           Data.Maybe                      (catMaybes, mapMaybe, maybeToList)
+import           Data.Monoid                     (mconcat, mempty)
+import qualified Data.Set                        as Set (fromList, toList)
+import           Distribution.Client.Types       (SourcePackageDb (..), packageDescription)
+import           Distribution.Compat.Environment (getEnvironment)
+import           System.Directory                (doesDirectoryExist, doesFileExist, getDirectoryContents, getHomeDirectory)
+import           System.Exit                     (ExitCode (..))
+import           System.FilePath                 (dropExtension, makeRelative, splitDirectories, takeBaseName, takeExtension, (<.>), (</>))
+import           System.Process                  (readProcessWithExitCode)
 
 -- |Guess the package name based on the given root directory
 guessPackageName :: FilePath -> IO String

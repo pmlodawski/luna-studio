@@ -7,25 +7,25 @@
 
 module Flowbox.Batch.Project.Project(
     Project(..),
-	ID,
-	empty,
-	make,
+        ID,
+        empty,
+        make,
 ) where
 
-import           Flowbox.Prelude                
-import qualified Flowbox.Luna.Lib.LibManager  as LibManager
-import           Flowbox.Luna.Lib.LibManager    (LibManager)
+import           Flowbox.Luna.Data.Attributes (Attributes)
 import qualified Flowbox.Luna.Data.Attributes as Attributes
-import           Flowbox.Luna.Data.Attributes   (Attributes)
+import           Flowbox.Luna.Lib.LibManager  (LibManager)
+import qualified Flowbox.Luna.Lib.LibManager  as LibManager
+import           Flowbox.Prelude
+import           Flowbox.System.UniPath       (UniPath)
 import qualified Flowbox.System.UniPath       as UniPath
-import           Flowbox.System.UniPath         (UniPath)
 
 
 
-data Project = Project { name  	  :: String
-                       , path  	  :: UniPath
+data Project = Project { name     :: String
+                       , path     :: UniPath
                        , libPaths :: [UniPath]
-                       , libs  	  :: LibManager
+                       , libs     :: LibManager
                        , attrs    :: Attributes
                        } deriving(Show)
 

@@ -5,15 +5,15 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-import           Flowbox.Prelude                 hiding (error)
 import qualified Flowbox.Config.Config           as Config
+import           Flowbox.Initializer.Cmd         (Cmd)
 import qualified Flowbox.Initializer.Cmd         as Cmd
-import           Flowbox.Initializer.Cmd           (Cmd)
 import qualified Flowbox.Initializer.Initializer as Initializer
-import qualified Flowbox.Options.Applicative     as Opt
-import           Flowbox.Options.Applicative     hiding (info)
-import           Flowbox.System.Log.Logger         
 import qualified Flowbox.Initializer.Version     as Version
+import           Flowbox.Options.Applicative     hiding (info)
+import qualified Flowbox.Options.Applicative     as Opt
+import           Flowbox.Prelude                 hiding (error)
+import           Flowbox.System.Log.Logger
 
 
 rootLogger :: Logger

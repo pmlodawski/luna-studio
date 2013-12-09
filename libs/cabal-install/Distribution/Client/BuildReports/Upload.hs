@@ -1,4 +1,5 @@
-{-# LANGUAGE CPP, PatternGuards #-}
+{-# LANGUAGE CPP           #-}
+{-# LANGUAGE PatternGuards #-}
 -- This is a quick hack for uploading build reports to Hackage.
 
 module Distribution.Client.BuildReports.Upload
@@ -9,21 +10,16 @@ module Distribution.Client.BuildReports.Upload
     , putBuildLog
     ) where
 
-import           Network.Browser                              
-         ( BrowserAction, request, setAllowRedirects )
-import           Network.HTTP                                 
-         ( Header(..), HeaderName(..)
-         , Request(..), RequestMethod(..), Response(..) )
-import           Network.TCP                                  (HandleStream)
-import           Network.URI                                  (URI, uriPath, parseRelativeReference, relativeTo)
+import Network.Browser (BrowserAction, request, setAllowRedirects)
+import Network.HTTP    (Header (..), HeaderName (..), Request (..), RequestMethod (..), Response (..))
+import Network.TCP     (HandleStream)
+import Network.URI     (URI, parseRelativeReference, relativeTo, uriPath)
 
-import           Control.Monad                                
-         ( forM_ )
-import           System.FilePath.Posix                        
-         ( (</>) )
+import           Control.Monad                              (forM_)
+import           Distribution.Client.BuildReports.Anonymous (BuildReport)
 import qualified Distribution.Client.BuildReports.Anonymous as BuildReport
-import           Distribution.Client.BuildReports.Anonymous   (BuildReport)
-import           Distribution.Text                            (display)
+import           Distribution.Text                          (display)
+import           System.FilePath.Posix                      ((</>))
 
 type BuildReportId = URI
 type BuildLog = String

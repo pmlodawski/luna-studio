@@ -30,12 +30,11 @@ module Flowbox.Data.Graph (
     topsortl,
 ) where
 
-import           Flowbox.Prelude      hiding (fromJust)
+import Flowbox.Prelude hiding (fromJust, pre, (&))
 
-import           Data.Functor           ((<$>))
-import           Data.Maybe             (fromJust)
+import           Data.Graph.Inductive hiding (Graph, Node)
 import qualified Data.Graph.Inductive as DG
-import           Data.Graph.Inductive hiding (Node, Graph)
+import           Data.Maybe           (fromJust)
 
 
 type Graph a b = DG.Gr a b
@@ -95,7 +94,7 @@ path g vtx = case pre g vtx of
 
 
 updateNode :: LVertex a -> Graph a b -> Graph a b
-updateNode (vid, v) graph = newGraph where 
+updateNode (vid, v) graph = newGraph where
     (c_ins, c_id, _, c_outs) = context graph vid
     newContext = (c_ins, c_id, v, c_outs)
     newGraph = newContext & delNode vid graph

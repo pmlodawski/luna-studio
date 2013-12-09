@@ -4,20 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Luna.Data.AST.Pat where
 
-import           Flowbox.Prelude                 hiding (id, drop)
+import           Control.Applicative
+import           Flowbox.Generics.Deriving.QShow
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
-import           Flowbox.Luna.Data.AST.Type        (Type)
-import           Flowbox.Luna.Data.AST.Utils       (ID)
-import           Flowbox.Generics.Deriving.QShow   
-import           GHC.Generics                      
-import           Control.Applicative               
-import           Control.Lens                    hiding (Traversal)
+import           Flowbox.Luna.Data.AST.Type      (Type)
+import           Flowbox.Luna.Data.AST.Utils     (ID)
+import           Flowbox.Prelude                 hiding (Traversal, drop, id)
+import           GHC.Generics
 
 type Lit = Lit.Lit
 

@@ -1,0 +1,103 @@
+#!/usr/bin/python
+from utils.glob2 import glob
+import re
+from subprocess import call, Popen, PIPE
+from utils.colors import print_info, print_warning, print_error, format_info
+import sys
+import os
+from utils.path import write_if_changed
+
+def fatal():
+    print_error ("ERROR")
+    sys.exit(1)
+
+def try_call(cmd):
+    if call(cmd, shell=True): fatal()
+
+def get_progress(i, total):
+    i = str(i)
+    total = str(total)
+    i += ' ' * (len(total) - len(i))
+    return format_info("[%s / %s]" % (i, total))
+
+def startswithAny(s, prefixes):
+    for prefix in prefixes:
+        if s.startswith(prefix):
+            return True
+    return False
+
+
+def main():
+    path_prefixes = ['libs', 'tools']
+
+    (out, err) = Popen('stylish-haskell --version', stdout=PIPE, stderr=PIPE, shell=True).communicate()
+    if not out:
+        print_error ("It seems 'stylish-haskell' is not installed")
+        print_error ("Please run 'cabal install stylish-haskell' and try again")
+        fatal() 
+        
+    # search for files
+    args = sys.argv
+    print_info('Search paths: %s' % path_prefixes)
+    if "all" in args:
+        print_info('Styling all git tracked haskell files')
+        (paths, err) = Popen('git ls-files', stdout=PIPE, stderr=PIPE, shell=True).communicate()
+        paths = paths.split('\n')
+        # paths = glob("**/*.hs")
+    else:
+        print_info('Styling only changed files in git repository. To style all files use "all" option.')
+        (paths, err) = Popen('git status --porcelain', stdout=PIPE, stderr=PIPE, shell=True).communicate()
+        paths = paths.split('\n')
+        paths = [file[3:] for file in paths]
+    
+    paths = [file for file in paths if file[-3:] == '.hs']
+
+    # filter paths with prefixes
+    paths = [path for path in paths if startswithAny(path, path_prefixes)]
+
+    # style files
+    total = len(paths)
+    print_info ("Styling %s files" % total)
+    for i in range(total):
+        path = paths[i]
+        print "%s %s" % (get_progress(i+1, total), path)
+        (out, err) = Popen('stylish-haskell %s' % path, stdout=PIPE, stderr=PIPE, shell=True).communicate()
+        if err:
+            print_error(err)
+        else:
+            write_if_changed(path, out)
+
+
+# def main ():
+#   paths = glob("**/*.hs")
+#   bodys = []
+#   for path in paths:
+#       with open(path, 'r') as file:
+#           bodys.append(file.read())
+#   newbodys = map(clean_imports, bodys)
+#   for (path, body, nbody) in zip(paths, bodys, newbodys):
+#       if body != nbody:
+#           with open(path, 'w') as file:
+#               file.write(nbody)
+
+
+# def clean_imports(src):
+#   match = re.compile (r'^import[\t ]*(?P<qualified>qualified)?[\t ]*(?P<path>[^\s]*)[\t ]*(?P<bind>as|hiding)?[\t ]*(?P<target>[^\s]*|\(.*\))[\t ]*$', re.MULTILINE)
+#   matches = [m for m in match.finditer(src)]
+#   matches.reverse()
+#   paths = [m.group('path') for m in matches]
+#   pathmaxlen = max(map(len,paths)) if paths else 0
+#   for m in matches:
+#       qualified = 'qualified '
+#       qualified = qualified if m.group('qualified') else ' '*len(qualified)
+#       path      = m.group('path')
+#       path      = path + ' '*(pathmaxlen - len(path)+1)
+#       ask       = m.group('bind').strip().lstrip()+' ' if m.group('bind') else '  '
+#       target    = m.group('target')
+#       imp = "import " + qualified + path + ask + target
+#       src = src[:m.start()] + imp + src[m.end():]
+#   return src
+
+
+main()
+# # print clean_imports(input)

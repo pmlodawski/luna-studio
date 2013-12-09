@@ -7,16 +7,16 @@
 
 module Flowbox.Batch.Server.Cmd where
 
-import           Flowbox.Prelude   
+import Flowbox.Prelude
 
 
 
 data Cmd = Serve { address            :: String
                  , port               :: Int
-                 
+
                  , verbose            :: Int
                  , noColor            :: Bool
-               
+
                  , shutdownWithClient :: Bool
                  }
          | Version

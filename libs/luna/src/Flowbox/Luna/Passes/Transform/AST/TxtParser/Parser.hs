@@ -10,22 +10,22 @@
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser where
 
-import           Control.Applicative                                 
-import           Text.Parsec                                       hiding (parse, many, optional, (<|>))
-import qualified Text.Parsec                                       as Parsec
-import qualified Text.Parsec.Expr                                  as PExpr
+import           Control.Applicative
+import           Text.Parsec         hiding (many, optional, parse, (<|>))
+import qualified Text.Parsec         as Parsec
+import qualified Text.Parsec.Expr    as PExpr
 
-import qualified Flowbox.Prelude                                   as Prelude
-import           Flowbox.Prelude                                   hiding (id, mod)
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils   
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer as L
+import qualified Flowbox.Luna.Data.AST.Class                       as Class
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import qualified Flowbox.Luna.Data.AST.Lit                         as Lit
-import qualified Flowbox.Luna.Data.AST.Pat                         as Pat
-import qualified Flowbox.Luna.Data.AST.Class                       as Class
 import qualified Flowbox.Luna.Data.AST.Module                      as Module
+import qualified Flowbox.Luna.Data.AST.Pat                         as Pat
 import qualified Flowbox.Luna.Data.AST.Type                        as Type
 import qualified Flowbox.Luna.Data.Source                          as Source
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer as L
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
+import           Flowbox.Prelude                                   hiding (id, mod)
+import qualified Flowbox.Prelude                                   as Prelude
 
 
 
@@ -73,19 +73,19 @@ genID = do
 -----------------------------------------------------------
 -- Declarations
 -----------------------------------------------------------
-pImport     s      = tok Expr.Import   <*  L.pImport 
+pImport     s      = tok Expr.Import   <*  L.pImport
                                        <*> pPath1 (pIdent s)
                                        <*  L.pBlockBegin
                                        <*> (try (tok Expr.Wildcard <* L.pImportAll) <|> pIdentE s)
-                                       <*> (     try (Just <$ L.pAs <*> (L.pIdent s <?> "import name")) 
+                                       <*> (     try (Just <$ L.pAs <*> (L.pIdent s <?> "import name"))
                                              <|> pure Nothing
                                            )
 
 
-pArg        s i    = tok Expr.Arg      <*> pPatCon s i 
+pArg        s i    = tok Expr.Arg      <*> pPatCon s i
                                        <*> ((Just <$ L.pAssignment <*> pExpr s i) <|> pure Nothing)
 
-pFunc       s i    = tok Expr.Function <*  L.pDef 
+pFunc       s i    = tok Expr.Function <*  L.pDef
                                        <*> pExtPath s
                                        <*> (pVar s)
                                        <*> pArgList s (pArg s i)
@@ -102,7 +102,7 @@ pLambda      s i    = tok Expr.Lambda  <*> pArgListL s (pArg s i)
 
 pClass       s i    = tok Class.mk     <*  L.pClass
                                        <*> (tok Type.Class <*> L.pIdentType s <*> many (L.pIdentTypeVar s))
-                                       <??$> pBlockBegin (pClassBody s) i 
+                                       <??$> pBlockBegin (pClassBody s) i
                                        <?> "class definition"
 
 pModule name s i    = tok Module.mk    <*>   (tok Type.Module <*> pure name)
@@ -118,7 +118,7 @@ pClassBody   s i    = choice [ Expr.addMethod <$> pFunc s i
 pModuleBody  s i    = choice [ Module.addMethod <$> pFunc s i
                              , pCombine Module.addField (pFields s i)
                              , Module.addClass  <$> pClass s i
-                             , Module.addImport <$> pImport s 
+                             , Module.addImport <$> pImport s
                              ]
 
 pCombine f p = do
@@ -126,9 +126,9 @@ pCombine f p = do
     foldl (liftA2 (.)) (pure Prelude.id) fs
 
 
-pField       s i    =   tok Expr.Field 
-                    <*> L.pIdent s 
-                    <*  L.pTypeDecl 
+pField       s i    =   tok Expr.Field
+                    <*> L.pIdent s
+                    <*  L.pTypeDecl
                     <*> pType s i
                     <*> (L.pAssignment *> (Just <$> pExpr s i) <|> pure Nothing)
 
@@ -136,11 +136,11 @@ mkField t val name id = Expr.Field id name t val
 
 pFields      s i    =   (\names t val -> map (tok . (mkField t val)) names )
                     <$> (sepBy1 (L.pIdent s) L.separator)
-                    <*  L.pTypeDecl 
+                    <*  L.pTypeDecl
                     <*> pType s i
                     <*> (L.pAssignment *> (Just <$> pExpr s i) <|> pure Nothing)
 
-pDeclaration s i    = choice [ pImport s 
+pDeclaration s i    = choice [ pImport s
                              , pFunc   s i
                              , pClass  s i
                              , try $ pLambda s i
@@ -179,7 +179,7 @@ optableE  s i  = [ [ postfixM "."  (tok Expr.Accessor <*> pIdent s)             
                  , [ prefixfM      (try(binaryMatchE2 <$> tok Expr.Assignment <*> (pPattern s i) <* (L.reservedOp "=" <?> "pattern match")))]
                  ]
                  where
-                    operator s = binaryM  s (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':s)))
+                    operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':op)))
 
 binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 binaryMatchE2 f p q = f p (Expr.aftermatch q)
@@ -206,7 +206,7 @@ pEntBaseE s i = choice [ pIdentE s
 
 -- Function application using parenthesis notation, e.g. f(1).next <=> (f 1).next or f (1).next <=> f 1.next
 pEntE     s i = (\expr ops -> foldr ($) expr $ reverse ops)
-             <$> pEntBaseE False i 
+             <$> pEntBaseE False i
              <*> choice [ try $ many1 ( flip <$> (Expr.App <$> genID) <*> pCallList False (pTermE s i))
                         ,       [] <$ L.pSpaces
                         ]
@@ -222,7 +222,7 @@ pExprBlock     s i = pBlockBegin (pExpr s) i
 -----------------------------------------------------------
 pType       s i   = choice [ try $ pLambdaT s i
                            , try $ pConAppT s i
-                           , pTermT s i 
+                           , pTermT s i
                            ]
               <?> "type"
 
@@ -231,7 +231,7 @@ pTermT      s i   = choice[ try $ L.parensed s (pType s i)
                         ]
               <?> "type term"
 
-pConAppT    s i   = tok Type.App     <*> pAppBaseT s <*> many1 (pTermT s i) 
+pConAppT    s i   = tok Type.App     <*> pAppBaseT s <*> many1 (pTermT s i)
 pLambdaT    s i   = tok Type.Lambda  <*> pArgList' s (pTermT s i) <* L.pArrow <*> pTermT s i
 pVarT       s     = tok Type.Var     <*> pVar s
 pConT       s     = tok Type.Con     <*> pPath1 (pCon s)
@@ -239,12 +239,12 @@ pTupleT     s i   = tok Type.Tuple   <*> pTuple (pType s i)
 pWildcardT        = tok Type.Unknown <*  L.pWildcard
 --pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
 
-pAppBaseT   s     = choice [ pVarT   s 
-                           , pConT  s  
+pAppBaseT   s     = choice [ pVarT   s
+                           , pConT  s
                            ]
 
-pEntT       s i   = choice [ pVarT   s 
-                           , pConT  s 
+pEntT       s i   = choice [ pVarT   s
+                           , pConT  s
                            , pTupleT s i
                            , pWildcardT
                            ]
@@ -258,7 +258,7 @@ pPattern    s i = choice [ try $ tok Pat.Tuple <*> sepBy2 (pPatCon s i) L.separa
                          ]
 
 pPatCon     s i = choice [ try(pConAppP s i)
-                         , pTermP s i 
+                         , pTermP s i
                          ]
 
 pTermP      s i = choice [ try $ L.parensed s (pPatCon s i)
@@ -272,7 +272,7 @@ pLitP       s   = tok Pat.Lit      <*> pLit s
 pTupleP     s i = tok Pat.Tuple    <*> pTuple (pPatCon s i)
 pWildcardP      = tok Pat.Wildcard <*  L.pWildcard
 pConP       s   = tok Pat.Con     <*> pCon s
-pConAppP   s i = tok Pat.App      <*> pConP s <*> many1 (pTermP s i) 
+pConAppP   s i = tok Pat.App      <*> pConP s <*> many1 (pTermP s i)
 
 pEntP   s i = choice [ pVarP      s
                      , pLitP      s
@@ -307,7 +307,7 @@ pSegmentBegin   p i = do
 
 pSegment        p i = try (Prelude.id <$ pIndentExact i <*> p i)
 
-pBlockBegin     p i = L.pBlockBegin *> pBlock p (i+1)  
+pBlockBegin     p i = L.pBlockBegin *> pBlock p (i+1)
 
 pBlock          p i = pSegmentBegin p i <?> "indented block"
 
@@ -328,7 +328,7 @@ postfixM name fun       = PExpr.Postfix (L.reservedOp name *>        fun)
 -- Program
 -----------------------------------------------------------
 
---pProgram mod = Expr.Module (Expr.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof) 
+--pProgram mod = Expr.Module (Expr.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof)
 --                                           <|> pSegmentBegin pExpr 0 <* many(L.eol <* L.pSpaces) <* eof)
 
 pExprTemp = do
@@ -348,5 +348,5 @@ parse (Source.Source mod code) = Parsec.runParser (pProgram mod) (0::Int) "Luna 
 
 
 
-                            
-                            
+
+

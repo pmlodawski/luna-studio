@@ -12,10 +12,10 @@ module Flowbox.Batch.Batch (
     attributeKey,
 ) where
 
-import           Flowbox.Prelude                        
+import           Flowbox.Batch.Project.ProjectManager (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
-import           Flowbox.Batch.Project.ProjectManager   (ProjectManager)
-import           Flowbox.Config.Config                  (Config)
+import           Flowbox.Config.Config                (Config)
+import           Flowbox.Prelude
 
 
 

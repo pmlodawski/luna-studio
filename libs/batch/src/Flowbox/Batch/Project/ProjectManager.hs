@@ -12,13 +12,13 @@ module Flowbox.Batch.Project.ProjectManager (
     openProject,
 ) where
 
-import           Flowbox.Prelude                               
-import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerialization
-import           Flowbox.System.UniPath                        (UniPath)
+import           Flowbox.Batch.Project.Project               (Project)
 import qualified Flowbox.Batch.Project.Project               as Project
-import           Flowbox.Batch.Project.Project                 (Project)
-import           Flowbox.Data.Graph                          hiding (Graph, Edge, empty)
+import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerialization
+import           Flowbox.Data.Graph                          hiding (Edge, Graph, empty)
 import qualified Flowbox.Data.Graph                          as DG
+import           Flowbox.Prelude
+import           Flowbox.System.UniPath                      (UniPath)
 
 
 

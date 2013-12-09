@@ -4,56 +4,75 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Distribution.Package.Package where
 
+import qualified Data.Aeson.TH as JSON
+import           Data.Default  (Default, def)
+import           GHC.Generics
+
+import           Flowbox.Data.Version                    (Version)
+import           Flowbox.Distribution.License            (License)
+import           Flowbox.Distribution.Package.Dependency (Dependency)
 import           Flowbox.Prelude                         hiding (id)
-import qualified Flowbox.Data.Version                    as Version
-import           Flowbox.Data.Version                      (Version)
-import qualified Flowbox.Distribution.Package.Dependency as Dependency
-import           Flowbox.Distribution.Package.Dependency   (Dependency)
-
-import           GHC.Generics                              
-import           Data.Aeson                                
-import           Data.Monoid                               (Monoid, mempty)
-
-data Package = Package { id           :: PackageIdentifier
-                       --, synopsis     :: String
-                       --, description  :: String
-                       --, homepage     :: String
-                       --, bugReports   :: String
-                       --, license      :: String
-                       --, licenseFile  :: String
-                       --, authors      :: [String]
-                       --, maintainers  :: [String]
-                       --, copyright    :: String
-                       --, tags         :: [String]
-                       --, dependencies :: [Dependency]
-                       } deriving (Show, Generic)
-
-data PackageIdentifier = PackageIdentifier { name    :: String
-                                           , version :: Version
-                                           } deriving (Show, Generic)
 
 
 
--------------------------------------------------
+data PackageId = PackageId { _name    :: String
+                           , _version :: Version
+                           } deriving (Show, Generic, Ord, Eq)
+makeLenses (''PackageId)
+
+
+data Package = Package { _id           :: PackageId
+                       , _synopsis     :: String
+                       , _description  :: String
+                       , _homepage     :: String
+                       , _url          :: String
+                       , _bugReports   :: String
+                       , _license      :: License
+                       , _licenseFile  :: Maybe String
+                       , _authors      :: [String]
+                       , _maintainers  :: [String]
+                       , _copyright    :: String
+                       , _tags         :: [String]
+                       , _dependencies :: [Dependency]
+                       } deriving (Show, Generic, Ord, Eq)
+
+makeLenses (''Package)
+
+
+chooseNewer :: Package -> Package -> Package
+chooseNewer pkg1 pkg2 = if (pkg1^.id^.version > pkg2^.id^.version) then pkg1 else pkg2
+
+------------------------------------------------------------------------
 -- INSTANCES
--------------------------------------------------
+------------------------------------------------------------------------
 
-instance Monoid Package where
-    mempty = Package { id = mempty
-                     }
+instance Default Package where
+    def = Package { _id           = def
+                  , _synopsis     = def
+                  , _description  = def
+                  , _homepage     = def
+                  , _url          = def
+                  , _bugReports   = def
+                  , _license      = def
+                  , _licenseFile  = def
+                  , _authors      = def
+                  , _maintainers  = def
+                  , _copyright    = def
+                  , _tags         = def
+                  , _dependencies = def
+                  }
 
-instance Monoid PackageIdentifier where
-    mempty = PackageIdentifier { name    = "unnamed"
-                               , version = mempty
-                               }
+instance Default PackageId where
+    def = PackageId { _name    = "unnamed"
+                    , _version = def
+                    }
 
-instance ToJSON Package
-instance FromJSON Package
+JSON.deriveJSON JSON.defaultOptions{JSON.fieldLabelModifier = drop 1} ''Package
+JSON.deriveJSON JSON.defaultOptions{JSON.fieldLabelModifier = drop 1} ''PackageId
 
-instance ToJSON PackageIdentifier
-instance FromJSON PackageIdentifier
 

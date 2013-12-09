@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Data.HAST.DataType (
-	module Flowbox.Luna.Data.HAST.DataType,
-	module Flowbox.Luna.Data.HAST.Expr
+        module Flowbox.Luna.Data.HAST.DataType,
+        module Flowbox.Luna.Data.HAST.Expr
 )where
 
-import           Flowbox.Luna.Data.HAST.Expr   
+import Flowbox.Luna.Data.HAST.Expr
 
 empty :: Expr
 empty = DataD "" [] [] []
