@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 import           Data.Version        (Version (Version))
-import           Options.Applicative (argument, prefs, command, command, fullDesc, header, help, hidden, long, metavar, option, progDesc, short, str, strOption, subparser, switch, value, (<>))
+import           Options.Applicative (argument, prefs, command, command, fullDesc, help, hidden, long, metavar, option, progDesc, short, str, strOption, subparser, switch, value, (<>))
 import qualified Options.Applicative as Opt
 
 import qualified Flowbox.Config.Config            as Config
@@ -16,7 +16,7 @@ import qualified Flowbox.Lunac.Build              as Build
 import qualified Flowbox.Lunac.Cmd                as Cmd
 import qualified Flowbox.Lunac.Version            as Version
 import           Flowbox.Options.Applicative      (optIntFlag)
-import           Flowbox.Prelude                  hiding (argument)
+import           Flowbox.Prelude                  hiding (argument, op)
 import           Flowbox.System.Log.Logger
 
 
@@ -94,11 +94,9 @@ helper = Opt.abortOption Opt.ShowHelpText $ (long "help" <> short 'h' <> help "s
 
 
 main :: IO ()
-main = do
-    prog <- Opt.customExecParser
-            (prefs Opt.showHelpOnError)
-            opts
-    run prog
+main = run =<< Opt.customExecParser
+              (prefs Opt.showHelpOnError)
+              opts
 
 
 run :: Cmd.Prog -> IO ()
@@ -110,4 +108,5 @@ run prog = case Cmd.cmd prog of
     Cmd.Repo  scmd -> case scmd of
                       Cmd.List op -> list (Cmd.simple op) (Cmd.inputs op)
                                      where list = if (Cmd.json op) then DistList.listJSON else DistList.list
+    _              -> putStrLn "Sorry, the command is not implemented yet."
 
