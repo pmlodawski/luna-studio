@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 import           Data.Version        (Version (Version))
-import           Options.Applicative (argument, command, command, fullDesc, header, help, hidden, long, metavar, option, progDesc, short, str, strOption, subparser, switch, value, (<>))
+import           Options.Applicative (argument, prefs, command, command, fullDesc, header, help, hidden, long, metavar, option, progDesc, short, str, strOption, subparser, switch, value, (<>))
 import qualified Options.Applicative as Opt
 
 import qualified Flowbox.Config.Config            as Config
@@ -86,7 +86,7 @@ parser = Cmd.Prog <$> subparser ( command "build"   (Opt.info buildParser      (
 
 
 opts :: Opt.ParserInfo Cmd.Prog
-opts = Opt.info parser (fullDesc <> header (Version.full False True True)) --idm
+opts = Opt.info parser (fullDesc <> Opt.progDesc "Luna compiler & package manager") --idm
 
 
 helper :: Opt.Parser (a -> a)
@@ -94,7 +94,13 @@ helper = Opt.abortOption Opt.ShowHelpText $ (long "help" <> short 'h' <> help "s
 
 
 main :: IO ()
-main = Opt.execParser opts >>= run
+main = do
+    --prog <- Opt.execParser opts
+    prog <- Opt.customExecParser
+            (prefs Opt.showHelpOnError)
+            opts
+         --(info (opts <**> helper) idm)
+    run prog
 
 
 run :: Cmd.Prog -> IO ()
