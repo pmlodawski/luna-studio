@@ -20,8 +20,7 @@ message Node {
     required Cls    cls    = 1;
     optional int32  nodeID = 2;
     optional string name   = 3;
-	optional generated.proto.attributes.Flags      flags = 4;
-    optional generated.proto.attributes.Attributes attrs = 5;
+	optional generated.proto.attributes.Properties properties = 4;
 }
 
 message Edge {
@@ -35,4 +34,3 @@ message Graph {
 	repeated Node nodes = 1;
 	repeated Edge edges = 2;
 }
-

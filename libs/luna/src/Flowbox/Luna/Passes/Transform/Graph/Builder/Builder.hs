@@ -34,8 +34,7 @@ import           Flowbox.Luna.Passes.Pass                            (PassMonad)
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State as State
 import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBState)
 import           Flowbox.System.Log.Logger                           
-import qualified Flowbox.Luna.Data.Graph.Flags                     as Flags
-import qualified Flowbox.Luna.Data.Attributes                      as Attributes
+import qualified Flowbox.Luna.Data.Graph.Properties as Properties
 
 
 
@@ -54,8 +53,6 @@ expr2graph :: GBMonad m => Expr -> Pass.Result m Graph
 expr2graph expr = case expr of
     Expr.Function i path name inputs output body -> do parseArgs inputs
                                                        mapM_ buildExpr body
-                                                       s <- get
-                                                       logger warning $ show s
                                                        State.getGraph
     _                                            -> fail "expr2graph: Unsupported Expr type"
 
@@ -77,14 +74,14 @@ buildExpr :: GBMonad m => Expr -> Pass.Result m AST.ID
 buildExpr expr = case expr of
     Expr.Accessor   i name dst -> do dstID <- buildExpr dst
                                      (dstNID, dstPort) <- State.aaNodeMapLookUp dstID
-                                     accNID <- State.insNewNode $ Node.Expr name (Just expr) dummyFlags dummyAttrs
+                                     accNID <- State.insNewNode $ Node.Expr name (Just expr) dummyProperties
                                      State.addToMap i (accNID, Nothing)
                                      State.connect dstNID accNID $ Edge dstPort 0
                                      return i
     Expr.Assignment i pat dst  -> do (patIDs, patStr) <- buildPat pat
                                      dstID <- buildExpr dst
                                      (dstNID, dstPort) <- State.aaNodeMapLookUp dstID
-                                     patNID <- State.insNewNode $ Node.Expr ('=': patStr) (Just expr) dummyFlags dummyAttrs
+                                     patNID <- State.insNewNode $ Node.Expr ('=': patStr) (Just expr) dummyProperties
                                      case patIDs of 
                                         [patID] -> State.addToMap patID (patNID, Nothing)
                                         _       -> mapM_ (\(n, patID) -> State.addToMap patID (patNID, Just n)) $ zip [0..] patIDs
@@ -101,14 +98,14 @@ buildExpr expr = case expr of
                                      dstID <- buildExpr dst
                                      (srcNID, srcP) <- State.aaNodeMapLookUp srcID
                                      (dstNID, dstP) <- State.aaNodeMapLookUp dstID
-                                     infixNID <- State.insNewNode $ Node.Expr name (Just expr) dummyFlags dummyAttrs
+                                     infixNID <- State.insNewNode $ Node.Expr name (Just expr) dummyProperties
                                      State.addToMap i (infixNID, Nothing)
                                      State.connect srcNID infixNID $ Edge srcP 0
                                      State.connect dstNID infixNID $ Edge dstP 1
                                      return i
     Expr.Var        i _        -> do return i
     Expr.Lit        i lvalue   -> do (litID, litStr) <- buildLit lvalue
-                                     litNID <- State.insNewNode $ Node.Expr litStr (Just expr) dummyFlags dummyAttrs
+                                     litNID <- State.insNewNode $ Node.Expr litStr (Just expr) dummyProperties
                                      State.addToMap litID (litNID, Nothing)
                                      return litID
     --Expr.Arg {}                -> dummyInsNewNode "dummy_expr_Arg"
@@ -151,10 +148,9 @@ buildLit lit = pure $ case lit of
 
 
 -- REMOVE ME --
-dummyInsNewNode name = State.insNewNode $ Node.Expr name Nothing dummyFlags dummyAttrs
+dummyInsNewNode name = State.insNewNode $ Node.Expr name Nothing dummyProperties
 dummyValue = (-1)
 dummyNothing = Nothing
-dummyFlags = Flags.empty
-dummyAttrs = Attributes.empty
+dummyProperties = Properties.empty
 dummyString s = "dummy_" ++ s
 --------------

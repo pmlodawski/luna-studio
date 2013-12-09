@@ -15,19 +15,17 @@ module Flowbox.Luna.Data.Graph.Node (
 
 import Flowbox.Prelude
 
-import           Flowbox.Luna.Data.AST.Expr    (Expr)
-import           Flowbox.Luna.Data.Attributes  (Attributes)
-import qualified Flowbox.Luna.Data.Attributes  as Attributes
-import           Flowbox.Luna.Data.Graph.Flags (Flags)
-import qualified Flowbox.Luna.Data.Graph.Flags as Flags
+import           Flowbox.Luna.Data.AST.Expr         (Expr)
+import           Flowbox.Luna.Data.Graph.Properties (Properties)
+import qualified Flowbox.Luna.Data.Graph.Properties as Properties
 
 
 
-data Node = Expr     { expr  :: String
-                     , ast   :: Maybe Expr
-                     , flags :: Flags, attributes :: Attributes }
-          | Inputs   { flags :: Flags, attributes :: Attributes }
-          | Outputs  { flags :: Flags, attributes :: Attributes }
+data Node = Expr     { expr       :: String
+                     , ast        :: Maybe Expr
+                     , properties :: Properties }
+          | Inputs   { properties :: Properties }
+          | Outputs  { properties :: Properties }
 
           deriving (Show)
 
@@ -36,13 +34,13 @@ type ID = Int
 
 
 mkExpr :: String -> Node
-mkExpr name = Expr name Nothing Flags.empty Attributes.empty
+mkExpr name = Expr name Nothing Properties.empty
 
 
 mkInputs :: Node
-mkInputs = Inputs Flags.empty Attributes.empty
+mkInputs = Inputs Properties.empty
 
 
 mkOutputs :: Node
-mkOutputs = Outputs Flags.empty Attributes.empty
+mkOutputs = Outputs Properties.empty
 

@@ -45,20 +45,19 @@ instance Convert (Int, Int, Edge) Gen.Edge where
 
 instance Convert (Int, Node) Gen.Node where
     encode (nodeID, node) = case node of
-        Node.Expr expr _ flags attrs -> Gen.Node GenNode.Expr    (encodePJ nodeID) (encodePJ expr) (encodeJ flags) (encodePJ attrs)
-        Node.Inputs      flags attrs -> Gen.Node GenNode.Inputs  (encodePJ nodeID) Nothing         (encodeJ flags) (encodePJ attrs)
-        Node.Outputs     flags attrs -> Gen.Node GenNode.Outputs (encodePJ nodeID) Nothing         (encodeJ flags) (encodePJ attrs)
-    decode (Gen.Node tcls mtnodeID mtexpr mtflags mtattrs) = do
+        Node.Expr expr _ properties -> Gen.Node GenNode.Expr    (encodePJ nodeID) (encodePJ expr) (encodeJ properties)
+        Node.Inputs      properties -> Gen.Node GenNode.Inputs  (encodePJ nodeID) Nothing         (encodeJ properties)
+        Node.Outputs     properties -> Gen.Node GenNode.Outputs (encodePJ nodeID) Nothing         (encodeJ properties)
+    decode (Gen.Node tcls mtnodeID mtexpr mtproperties) = do
         nodeID <- decodeP <$> mtnodeID <?> "Failed to decode Node: 'nodeID' field is missing"
-        attrs  <- decodeP <$> mtattrs  <?> "Failed to decode Node: 'attrs' field is missing"
-        tflags <- mtflags <?> "Failed to decode Node: 'flags' field is missing"
-        flags  <- decode tflags
+        tproperties <- mtproperties <?> "Failed to decode Node: 'flags' field is missing"
+        properties  <- decode tproperties
         node <- case tcls of
             GenNode.Expr -> do expr <- decodeP <$> mtexpr <?> "Failed to decode Node: 'expr' field is missing"
                                return $ Node.Expr expr Nothing
             GenNode.Inputs  -> return Node.Inputs
             GenNode.Outputs -> return Node.Outputs
-        return (nodeID, node flags attrs)
+        return (nodeID, node properties)
 
 
 instance Convert Graph Gen.Graph where

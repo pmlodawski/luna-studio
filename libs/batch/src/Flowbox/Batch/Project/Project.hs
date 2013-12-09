@@ -16,7 +16,7 @@ import           Flowbox.Luna.Data.Attributes (Attributes)
 import qualified Flowbox.Luna.Data.Attributes as Attributes
 import           Flowbox.Luna.Lib.LibManager  (LibManager)
 import qualified Flowbox.Luna.Lib.LibManager  as LibManager
-import           Flowbox.Prelude
+import           Flowbox.Prelude              hiding (empty)
 import           Flowbox.System.UniPath       (UniPath)
 import qualified Flowbox.System.UniPath       as UniPath
 
