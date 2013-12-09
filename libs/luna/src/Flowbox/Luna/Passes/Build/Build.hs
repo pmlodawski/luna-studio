@@ -41,6 +41,8 @@ import qualified Flowbox.Text.Show.Hs                                  as ShowHs
 -- REMOVE !!!! JUST TESTING
 import qualified Flowbox.Luna.Data.AST.Zipper                          as Zipper
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
+import Debug.Trace as D
+import Text.Show.Pretty
 -- REMOVE !!!! JUST TESTING
 
 logger :: Logger
@@ -84,7 +86,7 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
         focus  = fmap Zipper.getFocus zipper
         Just (Zipper.FunctionFocus expr) = focus
 
-    graph <- GraphBuilder.run va expr
+    graph <- GraphBuilder.run va $ D.trace (ppShow expr) expr
     logger info $ show graph           
     -- REMOVE !!!! JUST TESTING
 

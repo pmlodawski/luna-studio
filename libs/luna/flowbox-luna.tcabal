@@ -45,6 +45,7 @@ Library
                   MissingH,
                   mtl,
                   parsec3,
+                  pretty-show,
                   protocol-buffers,
                   protocol-buffers-descriptor,
                   split,

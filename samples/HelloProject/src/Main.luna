@@ -20,4 +20,4 @@ def test self x y:
     z = x
     g = z
     z = self.add x y
-    
+    h = x + y

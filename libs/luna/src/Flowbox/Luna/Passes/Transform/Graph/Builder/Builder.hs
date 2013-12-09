@@ -97,6 +97,15 @@ buildExpr expr = case expr of
                                      let numberedArgNIDsP = zip [1..] argNIDsP
                                      mapM_ (\(no, (argNID, p)) -> State.connect argNID srcNID $ Edge p no) numberedArgNIDsP
                                      return srcID
+    Expr.Infix  i name src dst -> do srcID <- buildExpr src
+                                     dstID <- buildExpr dst
+                                     (srcNID, srcP) <- State.aaNodeMapLookUp srcID
+                                     (dstNID, dstP) <- State.aaNodeMapLookUp dstID
+                                     infixNID <- State.insNewNode $ Node.Expr name (Just expr) dummyFlags dummyAttrs
+                                     State.addToMap i (infixNID, Nothing)
+                                     State.connect srcNID infixNID $ Edge srcP 0
+                                     State.connect dstNID infixNID $ Edge dstP 1
+                                     return i
     Expr.Var        i _        -> do return i
     Expr.Lit        i lvalue   -> do (litID, litStr) <- buildLit lvalue
                                      litNID <- State.insNewNode $ Node.Expr litStr (Just expr) dummyFlags dummyAttrs
