@@ -17,35 +17,34 @@ module Flowbox.Batch.Handler.Common (
     projectOp,
     libManagerOp,
     libraryOp,
-    --defManagerOp,
-    --definitionOp,
-    --graphOp,
-    --graphViewOp,
-    --nodeOp,
+
+    astOp,
+    graphOp',
 ) where
 
-import           Flowbox.Batch.Batch (Batch (..))
-import qualified Flowbox.Batch.Batch as Batch
-import           Flowbox.Prelude
---import qualified Flowbox.Batch.GraphView.GraphView    as GraphView
---import           Flowbox.Batch.GraphView.GraphView      (GraphView)
-import           Flowbox.Batch.Project.Project        (Project (..))
-import qualified Flowbox.Batch.Project.Project        as Project
-import           Flowbox.Batch.Project.ProjectManager (ProjectManager)
-import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
+import           Control.Monad.RWS
+import           Flowbox.Batch.Batch                                 (Batch (..))
+import qualified Flowbox.Batch.Batch                                 as Batch
+import           Flowbox.Batch.Project.Project                       (Project (..))
+import qualified Flowbox.Batch.Project.Project                       as Project
+import           Flowbox.Batch.Project.ProjectManager                (ProjectManager)
+import qualified Flowbox.Batch.Project.ProjectManager                as ProjectManager
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Lib.LibManager          (LibManager)
-import qualified Flowbox.Luna.Lib.LibManager          as LibManager
-import           Flowbox.Luna.Lib.Library             (Library (..))
-import qualified Flowbox.Luna.Lib.Library             as Library
---import qualified Flowbox.Luna.Network.Def.DefManager  as DefManager
---import           Flowbox.Luna.Network.Def.DefManager    (DefManager)
---import qualified Flowbox.Luna.Network.Def.Definition  as Definition
---import           Flowbox.Luna.Network.Def.Definition    (Definition(..))
---import qualified Flowbox.Luna.Network.Graph.Graph     as Graph
---import           Flowbox.Luna.Network.Graph.Graph       (Graph)
---import qualified Flowbox.Luna.Network.Graph.Node      as Node
---import           Flowbox.Luna.Network.Graph.Node        (Node)
+import           Flowbox.Luna.Data.AST.Crumb.Crumb                   (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Module                        (Module)
+import           Flowbox.Luna.Data.AST.Module                        (Module)
+import qualified Flowbox.Luna.Data.AST.Zipper                        as Zipper
+import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
+import           Flowbox.Luna.Lib.LibManager                         (LibManager)
+import qualified Flowbox.Luna.Lib.LibManager                         as LibManager
+import           Flowbox.Luna.Lib.Library                            (Library (..))
+import qualified Flowbox.Luna.Lib.Library                            as Library
+import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias      as VarAlias
+import qualified Flowbox.Luna.Passes.General.Luna.Luna               as Luna
+import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder as GraphBuilder
+import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser   as GraphParser
+import           Flowbox.Prelude
+import           Text.Show.Pretty
 
 
 
@@ -155,58 +154,50 @@ libraryOp' libID projectID operation = libManagerOp' projectID (\batch libManage
     return (newLibManager, r))
 
 
---defManagerOp :: Library.ID
---             -> Project.ID
---             -> (Batch -> DefManager -> Either String (DefManager, r))
---             -> Batch
---             -> Either String (Batch, r)
---defManagerOp libID projectID operation = libraryOp libID projectID (\batch library -> do
---    let defManager = Library.defs library
---    (newDefManager, r) <- operation batch defManager
---    let newLibrary = library { Library.defs = newDefManager }
---    return (newLibrary, r))
+astOp :: Library.ID
+      -> Project.ID
+      -> (Batch -> Module -> Either String (Module, r))
+      -> Batch
+      -> Either String (Batch, r)
+astOp libID projectID operation = libraryOp libID projectID (\batch library -> do
+    (newAst, r) <- operation batch $ Library.ast library
+    let newLibrary = library { Library.ast = newAst }
+    return (newLibrary, r))
 
 
---definitionOp :: Definition.ID
---             -> Library.ID
---             -> Project.ID
---             -> (Batch -> Definition -> Either String (Definition, r))
---             -> Batch
---             -> Either String (Batch, r)
---definitionOp defID libID projectID operation = defManagerOp libID projectID (\batch defManager -> do
---    definition <- DefManager.lab defManager defID <?> ("Wrong 'defID' = " ++ show defID)
---    (newDefinition, r) <- operation batch definition
---    let newDefManager = DefManager.updateNode (defID, newDefinition) defManager
---    return (newDefManager, r))
+astOp' :: Library.ID
+       -> Project.ID
+       -> (Batch -> Module -> IO (Module, r))
+       -> Batch
+       -> IO (Batch, r)
+astOp' libID projectID operation = libraryOp' libID projectID (\batch library -> do
+    (newAst, r) <- operation batch $ Library.ast library
+    let newLibrary = library { Library.ast = newAst }
+    return (newLibrary, r))
 
 
---graphOp :: Definition.ID
---        -> Library.ID
---        -> Project.ID
---        -> (Batch -> Graph -> Either String (Graph, r))
---        -> Batch
---        -> Either String (Batch, r)
---graphOp defID libID projectID operation = definitionOp defID libID projectID (\batch definition -> do
---    let agraph = Definition.graph definition
---    (newGraph, r) <- operation batch agraph
---    let newDefinition = definition {Definition.graph =  newGraph}
---    return (newDefinition, r))
+graphOp' :: Breadcrumbs
+        -> Library.ID
+        -> Project.ID
+        -> (Batch -> Graph -> IO (Graph, r))
+        -> Batch
+        -> IO (Batch, r)
+graphOp' bc libID projectID operation = astOp' libID projectID (\batch ast -> Luna.runIO $ do
+    let zipper = Zipper.mk ast
+             >>= Zipper.focusBreadcrumbs bc
+        focus  = fmap Zipper.getFocus zipper
+        Just (Zipper.FunctionFocus expr) = focus
 
+    --va    <- VarAlias.run ast
+    --graph <- GraphBuilder.run va expr
+    --(newGraph, r) <- liftIO $ operation batch graph
+    --ast' <- GraphParser.run newGraph expr
 
---graphViewOp :: Definition.ID
---        -> Library.ID
---        -> Project.ID
---        -> (Batch -> GraphView -> Either String (GraphView, r))
---        -> Batch
---        -> Either String (Batch, r)
---graphViewOp defID libID projectID operation = definitionOp defID libID projectID (\batch definition -> do
---    let agraph = Definition.graph definition
---    graphView <- GraphView.fromGraph agraph
---    (newGraphView, r) <- operation batch graphView
---    newGraph <- GraphView.toGraph newGraphView
---    let newDefinition = definition {Definition.graph = newGraph}
---    return (newDefinition, r))
-
+    --let newAst = Zipper.modify (\_ -> Zipper.FunctionFocus ast')
+    --           >>= Zipper.close
+    ---- TODO [PM] defocus zipper
+    --return (newAst, r))
+    undefined)
 
 --nodeOp :: Node.ID
 --       -> Definition.ID

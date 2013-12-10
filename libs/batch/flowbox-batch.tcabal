@@ -33,6 +33,7 @@ Library
                     flowbox-initializer,
                     flowbox-luna,
                     flowbox-utils,
+                    mtl,
                     network,
                     parsec,
                     pretty-show,
