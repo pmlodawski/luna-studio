@@ -38,13 +38,13 @@ import qualified Flowbox.System.UniPath                                as UniPat
 import           Flowbox.System.UniPath                                  (UniPath)
 import qualified Flowbox.Text.Show.Hs                                  as ShowHs
 
--- REMOVE !!!! JUST TESTING
-import qualified Flowbox.Luna.Data.AST.Zipper                          as Zipper
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser   as GraphParser
-import Debug.Trace as D
-import Text.Show.Pretty
--- REMOVE !!!! JUST TESTING
+---- REMOVE !!!! JUST TESTING
+--import qualified Flowbox.Luna.Data.AST.Zipper                          as Zipper
+--import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
+--import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser   as GraphParser
+--import Debug.Trace as D
+--import Text.Show.Pretty
+---- REMOVE !!!! JUST TESTING
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Build.Build"
@@ -81,19 +81,19 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
     Diagnostics.printHSC hsc diag
 
 
-    -- REMOVE !!!! JUST TESTING
-    let zipper = Zipper.mk ast
-             >>= Zipper.focusFunction "test"
-        focus  = fmap Zipper.getFocus zipper
-        Just (Zipper.FunctionFocus expr) = focus
+    ---- REMOVE !!!! JUST TESTING
+    --let zipper = Zipper.mk ast
+    --         >>= Zipper.focusFunction "test"
+    --    focus  = fmap Zipper.getFocus zipper
+    --    Just (Zipper.FunctionFocus expr) = focus
 
-    graph <- GraphBuilder.run va $ D.trace (ppShow expr) expr
-    logger info $ show graph           
+    --graph <- GraphBuilder.run va $ D.trace (ppShow expr) expr
+    --logger info $ show graph           
 
-    ast2 <- GraphParser.run graph expr
-    logger warning $ ppShow ast2
+    --ast2 <- GraphParser.run graph expr
+    --logger warning $ ppShow ast2
 
-    -- REMOVE !!!! JUST TESTING
+    ---- REMOVE !!!! JUST TESTING
 
     let allLibs = "base"
                 : "flowboxM-core"
