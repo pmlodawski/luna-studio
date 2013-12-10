@@ -55,15 +55,21 @@ addToMap k v = do gm <- get
                   put gm { nodeMap = Map.insert k v $ nodeMap gm }
 
 
-connect :: GBStateM m => Node.ID -> Node.ID -> Edge -> m ()
-connect srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
-
-
 insNewNode :: GBStateM m => Node -> m Node.ID
 insNewNode node = do gr <- getGraph
                      let (gr', nodeID) = Graph.insNewNode node gr
                      setGraph gr'
                      return nodeID
+
+
+addNode :: GBStateM m => AST.ID -> OutPort -> Node -> m Node.ID
+addNode astID outPort node = do
+    nodeID <- insNewNode node
+    addToMap astID (nodeID, outPort)
+    return nodeID
+
+connect :: GBStateM m => Node.ID -> Node.ID -> Edge -> m ()
+connect srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
 
 
 getGraph :: GBStateM m => m Graph

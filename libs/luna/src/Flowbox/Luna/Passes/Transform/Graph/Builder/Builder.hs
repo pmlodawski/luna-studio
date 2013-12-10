@@ -70,8 +70,7 @@ buildExpr :: GBMonad m => Expr -> Pass.Result m AST.ID
 buildExpr expr = case expr of
     Expr.Accessor   i name dst -> do dstID <- buildExpr dst
                                      (dstNID, dstPort) <- State.aaNodeMapLookUp dstID
-                                     accNID <- State.insNewNode $ Node.Expr name (Just expr) dummyProperties
-                                     State.addToMap i (accNID, Nothing)
+                                     accNID <- State.addNode i Nothing $ Node.Expr name (Just expr) dummyProperties
                                      State.connect dstNID accNID $ Edge dstPort 0
                                      return i
     Expr.Assignment i pat dst  -> do (patIDs, patStr) <- buildPat pat
@@ -94,15 +93,15 @@ buildExpr expr = case expr of
                                      dstID <- buildExpr dst
                                      (srcNID, srcP) <- State.aaNodeMapLookUp srcID
                                      (dstNID, dstP) <- State.aaNodeMapLookUp dstID
-                                     infixNID <- State.insNewNode $ Node.Expr name (Just expr) dummyProperties
-                                     State.addToMap i (infixNID, Nothing)
+                                     infixNID <- State.addNode i Nothing $ Node.Expr name (Just expr) dummyProperties
                                      State.connect srcNID infixNID $ Edge srcP 0
                                      State.connect dstNID infixNID $ Edge dstP 1
                                      return i
     Expr.Var        i _        -> do return i
+    Expr.Con        i name     -> do _ <- State.addNode i Nothing $ Node.Expr name (Just expr) dummyProperties
+                                     return i
     Expr.Lit        i lvalue   -> do (litID, litStr) <- buildLit lvalue
-                                     litNID <- State.insNewNode $ Node.Expr litStr (Just expr) dummyProperties
-                                     State.addToMap litID (litNID, Nothing)
+                                     _ <- State.addNode litID Nothing $ Node.Expr litStr (Just expr) dummyProperties
                                      return litID
 
 

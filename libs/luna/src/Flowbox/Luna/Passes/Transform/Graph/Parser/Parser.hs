@@ -53,34 +53,51 @@ run gr = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr) . graph2expr
 graph2expr :: GPMonad m => Expr -> Pass.Result m Expr
 graph2expr expr = do 
     graph <- State.getGraph
-    mapM_ node2expr $ Graph.labNodes graph
+    mapM_ parseMode $ Graph.labNodes graph
     GPState _ body <- get
     return (Expr.body .~ body $ expr)
 
 
-node2expr :: GPMonad m => (Node.ID, Node) -> Pass.Result m ()
-node2expr (nodeID, node) = do
+parseMode :: GPMonad m => (Node.ID, Node) -> Pass.Result m ()
+parseMode (nodeID, node) = do
     graph <- State.getGraph
     case node of 
         Node.Expr expr mast properties -> case mast of
             Just ast -> State.addToBody ast
-            Nothing  -> exprNode2expr expr properties
-        Node.Inputs  properties -> inputsNode2expr  properties
-        Node.Outputs properties -> outputsNode2expr properties
+            Nothing  -> parseExprNode expr properties
+        Node.Inputs  properties -> parseInputsNode  properties
+        Node.Outputs properties -> parseOutputsNode properties
 
 
-exprNode2expr :: GPMonad m => String -> Properties -> Pass.Result m ()
-exprNode2expr expr properties = do
+parseExprNode :: GPMonad m => String -> Properties -> Pass.Result m ()
+parseExprNode expr properties = case expr of 
+    '=':pat -> parsePatNode   pat properties
+    '~':inf -> parseInfixNode inf properties
+    _       -> parseAppNode  expr properties
+
+
+parseInputsNode :: GPMonad m => Properties -> Pass.Result m ()
+parseInputsNode properties = do
     return ()
 
 
-inputsNode2expr :: GPMonad m => Properties -> Pass.Result m ()
-inputsNode2expr properties = do
+parseOutputsNode :: GPMonad m => Properties -> Pass.Result m ()
+parseOutputsNode properties = do
     return ()
 
 
-outputsNode2expr :: GPMonad m => Properties -> Pass.Result m ()
-outputsNode2expr properties = do
+parsePatNode :: GPMonad m => String -> Properties -> Pass.Result m ()
+parsePatNode pat properties = do
+    return ()
+
+
+parseInfixNode :: GPMonad m => String -> Properties -> Pass.Result m ()
+parseInfixNode inf properties = do
+    return ()
+
+
+parseAppNode :: GPMonad m => String -> Properties -> Pass.Result m ()
+parseAppNode app properties = do
     return ()
 
 

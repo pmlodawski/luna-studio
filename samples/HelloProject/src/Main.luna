@@ -21,3 +21,4 @@ def test self x y:
     g = z
     z = self.add x y
     h = x + y
+    Console.print x
