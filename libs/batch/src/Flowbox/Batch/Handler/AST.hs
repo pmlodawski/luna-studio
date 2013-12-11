@@ -8,13 +8,14 @@
 module Flowbox.Batch.Handler.AST where
 
 import           Flowbox.Batch.Batch                      (Batch)
-import           Flowbox.Batch.Handler.Common             (astFocusOp, astOp, noresult, readonly)
+import           Flowbox.Batch.Handler.Common             (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp, noresult, readonly)
 import qualified Flowbox.Batch.Project.Project            as Project
 import           Flowbox.Luna.Data.AST.Crumb.Crumb        (Breadcrumbs)
 import           Flowbox.Luna.Data.AST.Expr               (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr               as Expr
 import           Flowbox.Luna.Data.AST.Module             (Module)
 import qualified Flowbox.Luna.Data.AST.Module             as Module
+import           Flowbox.Luna.Data.AST.Type               (Type)
 import qualified Flowbox.Luna.Data.AST.Zipper             as Zipper
 import qualified Flowbox.Luna.Lib.Library                 as Library
 import qualified Flowbox.Luna.Passes.Transform.AST.Shrink as Shrink
@@ -44,7 +45,6 @@ addModule newModule bcParent libID projectID = noresult . astFocusOp bcParent li
     return (newFocus , ()))
 
 
-
 addClass :: (Applicative m, Monad m)
           => Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
 addClass newClass bcParent libID projectID = noresult . astFocusOp bcParent libID projectID (\_ focus -> do
@@ -70,3 +70,57 @@ remove :: (Applicative m, Monad m)
 remove bc libID projectID = noresult . astOp libID projectID (\_ ast -> do
     newAst <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc >>= Zipper.close . Zipper.defocusDrop
     return (newAst, ()))
+
+
+updateModuleCls :: (Applicative m, Monad m)
+                => Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+updateModuleCls cls bc libID projectID = noresult . astModuleFocusOp bc libID projectID (\_ m ->
+    return (m & Module.cls .~ cls, ()))
+
+
+updateModuleImports :: (Applicative m, Monad m)
+                    => [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+updateModuleImports imports bc libID projectID = noresult . astModuleFocusOp bc libID projectID (\_ m ->
+    return (m & Module.imports .~ imports, ()))
+
+
+updateModuleFields :: (Applicative m, Monad m)
+                   => [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+updateModuleFields fields bc libID projectID = noresult . astModuleFocusOp bc libID projectID (\_ m ->
+    return (m & Module.fields .~ fields, ()))
+
+
+updateClassCls :: (Applicative m, Monad m)
+               => Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+updateClassCls cls bc libID projectID = noresult . astClassFocusOp bc libID projectID (\_ m ->
+    return (m & Expr.cls .~ cls, ()))
+
+
+updateClassFields :: (Applicative m, Monad m)
+                  => [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+updateClassFields fields bc libID projectID = noresult . astClassFocusOp bc libID projectID (\_ m ->
+    return (m & Expr.fields .~ fields, ()))
+
+
+updateFunctionName :: (Applicative m, Monad m)
+                   => String -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+updateFunctionName name bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m ->
+    return (m & Expr.name .~ name, ()))
+
+
+updateFunctionPath :: (Applicative m, Monad m)
+                   => [String] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+updateFunctionPath path bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m ->
+    return (m & Expr.path .~ path, ()))
+
+
+updateFunctionInputs :: (Applicative m, Monad m)
+                   => [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+updateFunctionInputs inputs bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m ->
+    return (m & Expr.inputs .~ inputs, ()))
+
+
+updateFunctionOutput :: (Applicative m, Monad m)
+                   => Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+updateFunctionOutput output bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m ->
+    return (m & Expr.output .~ output, ()))

@@ -15,6 +15,9 @@ module Flowbox.Batch.Handler.Common (
 
     astOp,
     astFocusOp,
+    astClassFocusOp,
+    astModuleFocusOp,
+    astFunctionFocusOp,
     graphOp',
     nodeOp',
 ) where
@@ -28,6 +31,7 @@ import           Flowbox.Batch.Project.ProjectManager                  (ProjectM
 import qualified Flowbox.Batch.Project.ProjectManager                  as ProjectManager
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Crumb.Crumb                     (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Expr                            (Expr)
 import           Flowbox.Luna.Data.AST.Module                          (Module)
 import           Flowbox.Luna.Data.AST.Zipper                          (Focus)
 import qualified Flowbox.Luna.Data.AST.Zipper                          as Zipper
@@ -133,6 +137,47 @@ astFocusOp bc libID projectID operation = astOp libID projectID (\batch ast -> d
     return (newAst, r))
 
 
+astModuleFocusOp :: (Applicative m, Monad m)
+                 => Breadcrumbs
+                 -> Library.ID
+                 -> Project.ID
+                 -> (Batch -> Module -> m (Module, r))
+                 -> Batch
+                 -> m (Batch, r)
+astModuleFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
+    (m, r) <- case focus of
+        Zipper.ModuleFocus m -> operation batch m
+        _                    -> fail "Target is not a module"
+    return (Zipper.ModuleFocus m, r))
+
+
+astFunctionFocusOp :: (Applicative m, Monad m)
+                 => Breadcrumbs
+                 -> Library.ID
+                 -> Project.ID
+                 -> (Batch -> Expr -> m (Expr, r))
+                 -> Batch
+                 -> m (Batch, r)
+astFunctionFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
+    (f, r) <- case focus of
+        Zipper.FunctionFocus f -> operation batch f
+        _                      -> fail "Target is not a function"
+    return (Zipper.FunctionFocus f, r))
+
+
+astClassFocusOp :: (Applicative m, Monad m)
+                 => Breadcrumbs
+                 -> Library.ID
+                 -> Project.ID
+                 -> (Batch -> Expr -> m (Expr, r))
+                 -> Batch
+                 -> m (Batch, r)
+astClassFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
+    (c, r) <- case focus of
+        Zipper.ClassFocus c -> operation batch c
+        _                      -> fail "Target is not a class"
+    return (Zipper.ClassFocus c, r))
+
 
 graphOp' :: Breadcrumbs
          -> Library.ID
@@ -145,7 +190,7 @@ graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Lun
     let focus = Zipper.getFocus zipper
     expr <- case focus of
         Zipper.FunctionFocus expr -> return expr
-        _                         -> fail $ "Breadcrumbs are not focusing on function: " ++ (show bc)
+        _                         -> fail "Breadcrumbs are not focusing on function."
     va    <- VarAlias.run ast
 
     graph <- GraphBuilder.run va expr
