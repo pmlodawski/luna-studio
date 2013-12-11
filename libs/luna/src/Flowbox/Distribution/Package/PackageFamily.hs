@@ -54,7 +54,7 @@ makeLenses (''PackageFamily)
 mk :: ([Package], [Package]) -> PackageFamily
 mk (srcPkgs, instPkgs) = foldri registerAvailable srcPkgs
                        $ foldri registerInstalled instPkgs
-                       $ foldri update (sortBy (compare `on` (view $ Package.id . Package.version)) (instPkgs ++ srcPkgs)) def
+                       $ foldri update ( reverse $ sortBy (compare `on` (view $ Package.id . Package.version)) (instPkgs ++ srcPkgs)) def
 
 
 update :: Package -> PackageFamily -> PackageFamily

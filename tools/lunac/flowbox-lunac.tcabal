@@ -19,6 +19,7 @@ Library
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
+                  OverloadedStrings,
                   TemplateHaskell
   
   Exposed-modules: `findmodules('src', '.*\.hs', exclude='(.*Main\.hs)')`
@@ -47,6 +48,7 @@ Executable luna
 
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
+                  OverloadedStrings
                   NoImplicitPrelude
   Build-Depends:  base,
                   containers,
