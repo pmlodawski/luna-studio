@@ -5,21 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Graph.Edge(
-    Edge(..),
-    noEdges,
-) where
+module Flowbox.Batch.GraphView.Value where
 
-import Flowbox.Luna.Data.Graph.Port (InPort, OutPort)
 import Flowbox.Prelude
 
 
 
-data Edge = Edge { src :: OutPort
-                 , dst :: InPort
-                 } deriving (Show, Ord, Eq)
-
-
-noEdges :: [Edge]
-noEdges = []
+data Value = Value { value :: String }
+             deriving (Show, Read, Ord, Eq)
 

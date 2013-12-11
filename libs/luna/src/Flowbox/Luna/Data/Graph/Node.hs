@@ -4,30 +4,26 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Data.Graph.Node (
-    Node(..),
-    ID,
-    mkExpr,
-    mkInputs,
-    mkOutputs,
-) where
-
-import Flowbox.Prelude
+module Flowbox.Luna.Data.Graph.Node where
 
 import           Flowbox.Luna.Data.AST.Expr         (Expr)
 import           Flowbox.Luna.Data.Graph.Properties (Properties)
 import qualified Flowbox.Luna.Data.Graph.Properties as Properties
+import           Flowbox.Prelude
 
 
 
-data Node = Expr     { expr       :: String
-                     , ast        :: Maybe Expr
-                     , properties :: Properties }
-          | Inputs   { properties :: Properties }
-          | Outputs  { properties :: Properties }
-
+data Node = Expr     { _expr       :: String
+                     , _ast        :: Maybe Expr
+                     , _properties :: Properties }
+          | Inputs   { _properties :: Properties }
+          | Outputs  { _properties :: Properties }
           deriving (Show)
+
+
+makeLenses (''Node)
 
 
 type ID = Int

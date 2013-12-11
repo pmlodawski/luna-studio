@@ -15,9 +15,12 @@ import           Flowbox.Prelude
 
 
 
-data Properties = Properties { flags :: Flags
-                             , attrs :: Attributes
+data Properties = Properties { _flags :: Flags
+                             , _attrs :: Attributes
                              } deriving (Show)
+
+makeLenses (''Properties)
+
 
 empty :: Properties
 empty = Properties Flags.empty Attributes.empty
