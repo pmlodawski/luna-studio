@@ -42,7 +42,7 @@ import qualified Flowbox.Luna.Passes.General.Luna.Luna               as Luna
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser   as GraphParser
 import           Flowbox.Prelude                                     hiding (focus, zipper)
-
+import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaults
 
 
 readonly :: (Applicative m, Monad m) => m (a, r) -> m r
@@ -128,7 +128,9 @@ graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Lun
 
     va    <- VarAlias.run ast
     graph <- GraphBuilder.run va expr
-    (newGraph, r) <- liftIO $ operation batch graph
+    let graphWithDefaults = Defaults.addDefaults graph
+    (newGraphWithDefaults, r) <- liftIO $ operation batch graphWithDefaults
+    let newGraph = Defaults.removeDefaults newGraphWithDefaults
     ast' <- GraphParser.run newGraph expr
 
     newAst <- Zipper.modify (\_ -> Zipper.FunctionFocus ast') zipper >>= Zipper.close
