@@ -13,16 +13,19 @@ module Flowbox.Luna.Data.Graph.Graph(
     inputsID,
     outputID,
     make,
+
+    portMatches,
+    isNotAlreadyConnected
 ) where
 
 import Flowbox.Prelude hiding (empty)
 
 import           Flowbox.Data.Graph           hiding (Edge, Graph, empty)
 import qualified Flowbox.Data.Graph           as DG
-import           Flowbox.Luna.Data.Graph.Edge (Edge)
+import           Flowbox.Luna.Data.Graph.Edge (Edge (Edge))
 import           Flowbox.Luna.Data.Graph.Node (Node)
 import qualified Flowbox.Luna.Data.Graph.Node as Node
-
+import           Flowbox.Luna.Data.Graph.Port (InPort)
 
 
 type Graph = DG.Graph Node Edge
@@ -48,3 +51,14 @@ make :: Graph
 make = insNode (inputsID, Node.mkInputs)
      $ insNode (outputID, Node.mkOutputs)
      $ empty
+
+
+
+portMatches :: InPort -> LEdge Edge -> Bool
+portMatches newDstPort (_, _, Edge _ connectedDstPort) = newDstPort == connectedDstPort
+
+
+isNotAlreadyConnected :: Graph -> Node.ID -> InPort -> Bool
+isNotAlreadyConnected graph nodeID adstPort = not connected where
+    connected = any (portMatches adstPort) (inn graph nodeID)
+

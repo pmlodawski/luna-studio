@@ -11,6 +11,7 @@ module Flowbox.Luna.Data.Attributes (
 
     get,
     set,
+    lunaAttributeKey,
 ) where
 
 import           Data.Map
@@ -27,7 +28,11 @@ get userKey key attrs = Map.lookup userKey attrs >>= Map.lookup key
 
 
 set :: String -> String -> String -> Attributes -> Attributes
-set userKey key value attrs = Map.insert userKey userAttrs attrs where
-    userAttrs = case Map.lookup userKey attrs of
-                    Nothing        -> Map.fromList [(key, value)]
-                    Just userAttrs -> Map.insert     key  value userAttrs
+set userKey key value attrs = Map.insert userKey newUserAttrs attrs where
+    newUserAttrs = case Map.lookup userKey attrs of
+                            Nothing        -> Map.fromList [(key, value)]
+                            Just userAttrs -> Map.insert     key  value userAttrs
+
+
+lunaAttributeKey :: String
+lunaAttributeKey = "Luna-0.1"

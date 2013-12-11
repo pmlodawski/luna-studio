@@ -5,24 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.GraphView.Defaults (
-    DefaultsMap,
-
-    defaultsMapKey,
-    getDefaults,
-    setDefaults,
-) where
+module Flowbox.Luna.Passes.Transform.Graph.Defaults.DefaultsMap where
 
 import           Data.Map (Map)
 import qualified Data.Map as Map
 
-import qualified Flowbox.Batch.Batch                as Batch
-import           Flowbox.Batch.GraphView.Value      (Value)
-import qualified Flowbox.Luna.Data.Attributes       as Attributes
-import           Flowbox.Luna.Data.Graph.Node       (Node)
-import qualified Flowbox.Luna.Data.Graph.Node       as Node
-import           Flowbox.Luna.Data.Graph.Port       (InPort)
-import qualified Flowbox.Luna.Data.Graph.Properties as Proprties
+import qualified Flowbox.Luna.Data.Attributes                       as Attributes
+import           Flowbox.Luna.Data.Graph.Node                       (Node)
+import qualified Flowbox.Luna.Data.Graph.Node                       as Node
+import           Flowbox.Luna.Data.Graph.Port                       (InPort)
+import qualified Flowbox.Luna.Data.Graph.Properties                 as Proprties
+import           Flowbox.Luna.Passes.Transform.Graph.Defaults.Value (Value)
 import           Flowbox.Prelude
 
 
@@ -38,12 +31,12 @@ getDefaults :: Node -> DefaultsMap
 getDefaults node = case getKey $ node ^. (Node.properties . Proprties.attrs) of
     Nothing -> Map.empty
     Just d  -> read d
-    where getKey = Attributes.get Batch.attributeKey defaultsMapKey
+    where getKey = Attributes.get Attributes.lunaAttributeKey defaultsMapKey
 
 
 setDefaults :: Node -> DefaultsMap -> Node
 setDefaults node defaults =
     node & (Node.properties . Proprties.attrs)
-        %~ Attributes.set Batch.attributeKey defaultsMapKey (show defaults)
+        %~ Attributes.set Attributes.lunaAttributeKey defaultsMapKey (show defaults)
 
 
