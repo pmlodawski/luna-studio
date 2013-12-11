@@ -41,7 +41,7 @@ mk rootmod = return (ModuleFocus rootmod, [])
 
 
 defocus :: Zipper -> Zipper
-defocus zipper@(_, [])   = zipper
+defocus zipper@(_, [])     = zipper
 defocus (env, parent:path) = (newenv, path) where
     newenv = case parent of
         ModuleFocus pmod -> ModuleFocus $ case env of
@@ -51,6 +51,11 @@ defocus (env, parent:path) = (newenv, path) where
         ClassFocus  pcls -> ClassFocus $ case env of
             FunctionFocus fun -> Expr.addMethod fun pcls
             ClassFocus    cls -> Expr.addClass  cls pcls
+
+
+defocusDrop :: Zipper -> Zipper
+defocusDrop zipper@(_, [])     = zipper
+defocusDrop (env, parent:path) = (parent, path)
 
 
 modify :: (Applicative m, Monad m) => (Focus -> Focus) -> Zipper -> m Zipper
