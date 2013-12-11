@@ -62,17 +62,18 @@ removeNode nodeID bc libID projectID = noresult . graphOp' bc libID projectID (\
 
 connect :: Node.ID -> OutPort -> Node.ID -> InPort
         -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-connect srcNodeID asrcPort dstNodeID adstPort bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph -> do
+connect srcNodeID srcPort dstNodeID dstPort bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph -> do
     Graph.gelem srcNodeID graph `ifnot` ("Unable to connect: Wrong 'srcNodeID' = " ++ show srcNodeID)
     Graph.gelem dstNodeID graph `ifnot` ("Unable to connect: Wrong 'dstNodeID' = " ++ show dstNodeID)
-    let newGraph = Graph.insEdge (srcNodeID, dstNodeID, Edge asrcPort adstPort) graph
+    Graph.isNotAlreadyConnected graph dstNodeID dstPort `ifnot` "Unable to connect: Port is already connected"
+    let newGraph = Graph.insEdge (srcNodeID, dstNodeID, Edge srcPort dstPort) graph
     return (newGraph, ()))
 
 
 disconnect :: Node.ID -> OutPort -> Node.ID -> InPort
            -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-disconnect srcNodeID asrcPort dstNodeID adstPort bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph -> do
+disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph -> do
     Graph.gelem srcNodeID graph `ifnot` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
     Graph.gelem dstNodeID graph `ifnot` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
-    let newGraph = Graph.delLEdge (srcNodeID, dstNodeID, Edge asrcPort adstPort) graph
+    let newGraph = Graph.delLEdge (srcNodeID, dstNodeID, Edge srcPort dstPort) graph
     return (newGraph, ()))
