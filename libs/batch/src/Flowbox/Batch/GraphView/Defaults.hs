@@ -42,7 +42,7 @@ getDefaults node = case getKey $ node ^. (Node.properties . Proprties.attrs) of
 
 
 setDefaults :: Node -> DefaultsMap -> Node
-setDefaults node defaults = 
+setDefaults node defaults =
     node & (Node.properties . Proprties.attrs)
         %~ Attributes.set Batch.attributeKey defaultsMapKey (show defaults)
 

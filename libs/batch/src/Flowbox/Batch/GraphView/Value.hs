@@ -11,6 +11,5 @@ import Flowbox.Prelude
 
 
 
-data Value = Value { value :: String }
-             deriving (Show, Read, Ord, Eq)
+type Value = String
 
