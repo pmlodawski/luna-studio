@@ -14,35 +14,38 @@ module Flowbox.Batch.Handler.Common (
     libraryOp,
 
     astOp,
+    astFocusOp,
     graphOp',
     nodeOp',
 ) where
 
 import           Control.Monad.RWS
-import           Flowbox.Batch.Batch                                 (Batch)
-import qualified Flowbox.Batch.Batch                                 as Batch
-import           Flowbox.Batch.Project.Project                       (Project)
-import qualified Flowbox.Batch.Project.Project                       as Project
-import           Flowbox.Batch.Project.ProjectManager                (ProjectManager)
-import qualified Flowbox.Batch.Project.ProjectManager                as ProjectManager
+import           Flowbox.Batch.Batch                                   (Batch)
+import qualified Flowbox.Batch.Batch                                   as Batch
+import           Flowbox.Batch.Project.Project                         (Project)
+import qualified Flowbox.Batch.Project.Project                         as Project
+import           Flowbox.Batch.Project.ProjectManager                  (ProjectManager)
+import qualified Flowbox.Batch.Project.ProjectManager                  as ProjectManager
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AST.Crumb.Crumb                   (Breadcrumbs)
-import           Flowbox.Luna.Data.AST.Module                        (Module)
-import qualified Flowbox.Luna.Data.AST.Zipper                        as Zipper
-import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                       as Graph
-import           Flowbox.Luna.Data.Graph.Node                        (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                        as Node
-import           Flowbox.Luna.Lib.LibManager                         (LibManager)
-import qualified Flowbox.Luna.Lib.LibManager                         as LibManager
-import           Flowbox.Luna.Lib.Library                            (Library)
-import qualified Flowbox.Luna.Lib.Library                            as Library
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias      as VarAlias
-import qualified Flowbox.Luna.Passes.General.Luna.Luna               as Luna
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder as GraphBuilder
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser   as GraphParser
-import           Flowbox.Prelude                                     hiding (focus, zipper)
+import           Flowbox.Luna.Data.AST.Crumb.Crumb                     (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Module                          (Module)
+import           Flowbox.Luna.Data.AST.Zipper                          (Focus)
+import qualified Flowbox.Luna.Data.AST.Zipper                          as Zipper
+import           Flowbox.Luna.Data.Graph.Graph                         (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph                         as Graph
+import           Flowbox.Luna.Data.Graph.Node                          (Node)
+import qualified Flowbox.Luna.Data.Graph.Node                          as Node
+import           Flowbox.Luna.Lib.LibManager                           (LibManager)
+import qualified Flowbox.Luna.Lib.LibManager                           as LibManager
+import           Flowbox.Luna.Lib.Library                              (Library)
+import qualified Flowbox.Luna.Lib.Library                              as Library
+import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
+import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
+import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaults
+import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
+import           Flowbox.Prelude                                       hiding (focus, zipper)
+
 
 
 readonly :: (Applicative m, Monad m) => m (a, r) -> m r
@@ -113,6 +116,24 @@ astOp libID projectID operation = libraryOp libID projectID (\batch library -> d
     return (newLibrary, r))
 
 
+astFocusOp :: (Applicative m, Monad m)
+           => Breadcrumbs
+           -> Library.ID
+           -> Project.ID
+           -> (Batch -> Focus -> m (Focus, r))
+           -> Batch
+           -> m (Batch, r)
+astFocusOp bc libID projectID operation = astOp libID projectID (\batch ast -> do
+    zipper <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc
+    let focus = Zipper.getFocus zipper
+
+    (newFocus, r) <- operation batch focus
+
+    newAst <- Zipper.modify (\_ -> newFocus) zipper >>= Zipper.close
+    return (newAst, r))
+
+
+
 graphOp' :: Breadcrumbs
          -> Library.ID
          -> Project.ID
@@ -125,8 +146,8 @@ graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Lun
     expr <- case focus of
         Zipper.FunctionFocus expr -> return expr
         _                         -> fail $ "Breadcrumbs are not focusing on function: " ++ (show bc)
-
     va    <- VarAlias.run ast
+
     graph <- GraphBuilder.run va expr
     let graphWithDefaults = Defaults.addDefaults graph
     (newGraphWithDefaults, r) <- liftIO $ operation batch graphWithDefaults

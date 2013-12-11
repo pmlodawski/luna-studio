@@ -30,7 +30,7 @@ import           Flowbox.Prelude
 
 
 nodeDefaults :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO DefaultsMap
-nodeDefaults nodeID bc libID projectID  = readonly . nodeOp' nodeID bc libID projectID (\_ node -> 
+nodeDefaults nodeID bc libID projectID  = readonly . nodeOp' nodeID bc libID projectID (\_ node ->
     return (node, DefaultsMap.getDefaults node))
 
 
