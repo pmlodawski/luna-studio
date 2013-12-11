@@ -183,10 +183,10 @@ main_inner = Luna.run $ do
 
     let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]
 
-    let ast2 =     Zipper.mk ast
-               >>= Zipper.focusFunction "add"
-               >>= Zipper.modify (\(Zipper.FunctionFocus func) -> Zipper.FunctionFocus (func & LExpr.name .~ "dupa"))
-               >>= Zipper.close
+    ast2 <- Zipper.mk ast
+        >>= Zipper.focusFunction "add"
+        >>= Zipper.modify (\(Zipper.FunctionFocus func) -> Zipper.FunctionFocus (func & LExpr.name .~ "dupa"))
+        >>= Zipper.close
 
     logger info $ PP.ppqShow ast2
 

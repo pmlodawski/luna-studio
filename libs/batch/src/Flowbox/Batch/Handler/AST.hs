@@ -9,7 +9,7 @@ module Flowbox.Batch.Handler.AST where
 
 import           Flowbox.Batch.Batch                      (Batch)
 import qualified Flowbox.Batch.Batch                      as Batch
-import           Flowbox.Batch.Handler.Common             (astOp, noresult, readonly)
+import           Flowbox.Batch.Handler.Common             (astOp, readonly)
 import qualified Flowbox.Batch.Project.Project            as Project
 import           Flowbox.Luna.Data.AST.Crumb.Crumb        (Breadcrumbs)
 import           Flowbox.Luna.Data.AST.Module             (Module)

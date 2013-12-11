@@ -20,7 +20,6 @@ import           Flowbox.Luna.Data.Graph.Graph                            (Graph
 import qualified Flowbox.Luna.Data.Graph.Graph                            as Graph
 import           Flowbox.Luna.Data.Graph.Node                             (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                             as Node
-import qualified Flowbox.Luna.Data.Graph.Port                             as Port
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes ()
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic

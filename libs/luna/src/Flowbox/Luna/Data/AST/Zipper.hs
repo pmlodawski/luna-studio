@@ -10,7 +10,6 @@
 module Flowbox.Luna.Data.AST.Zipper where
 
 import           Data.List                         (find)
-import           Flowbox.Control.Monad.Trans.Maybe
 import           Flowbox.Luna.Data.AST.Crumb.Crumb (Breadcrumbs)
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb as Crumb
 import           Flowbox.Luna.Data.AST.Expr        (Expr)
@@ -37,8 +36,8 @@ type FocusPath = [Focus]
 type Zipper = (Focus, FocusPath)
 
 
-mk :: Module -> Maybe Zipper
-mk rootmod = Just (ModuleFocus rootmod, [])
+mk :: (Applicative m, Monad m) => Module -> m Zipper
+mk rootmod = return (ModuleFocus rootmod, [])
 
 
 defocus :: Zipper -> Zipper
@@ -54,60 +53,61 @@ defocus (env, parent:path) = (newenv, path) where
             ClassFocus    cls -> Expr.addClass  cls pcls
 
 
-modify :: (Focus -> Focus) -> Zipper -> Maybe Zipper
-modify f (env, path) = Just (f env, path)
+modify :: (Applicative m, Monad m) => (Focus -> Focus) -> Zipper -> m Zipper
+modify f (env, path) = return (f env, path)
 
 
-close :: Zipper -> Maybe Module
-close (env, []) = Just mod where ModuleFocus mod = env
+close :: (Applicative m, Monad m) => Zipper -> m Module
+close (env, []) = return mod where ModuleFocus mod = env
 close zipper    = close $ defocus zipper
 
 
-focusClass :: String -> Zipper -> Maybe Zipper
+focusClass :: (Applicative m, Monad m) => String -> Zipper -> m Zipper
 focusClass name zipper@(env, _) = case env of
     ModuleFocus mod -> focusListElem Module.classes (Expr.cls . Type.name)
                        ClassFocus ModuleFocus mod name zipper
     ClassFocus  cls -> focusListElem Expr.classes (Expr.cls . Type.name)
                        ClassFocus ClassFocus  cls name zipper
-    _               -> Nothing
+    _               -> fail $ "Cannot focus on " ++ (show name)
 
 
-focusFunction :: String -> Zipper -> Maybe Zipper
+focusFunction :: (Applicative m, Monad m) => String -> Zipper -> m Zipper
 focusFunction name zipper@(env, _) = case env of
     ModuleFocus mod -> focusListElem Module.methods Expr.name
                        FunctionFocus ModuleFocus mod name zipper
     ClassFocus  cls -> focusListElem Expr.methods Expr.name
                        FunctionFocus ClassFocus  cls name zipper
-    _               -> Nothing
+    _               -> fail $ "Cannot focus on " ++ (show name)
 
 
-focusModule :: String -> Zipper -> Maybe Zipper
+focusModule :: (Applicative m, Monad m) => String -> Zipper -> m Zipper
 focusModule name zipper@(env, _) = case env of
     ModuleFocus mod -> focusListElem Module.modules (Module.cls . Type.path . (to last))
                        ModuleFocus ModuleFocus mod name zipper
-    _               -> Nothing
+    _               -> fail $ "Cannot focus on " ++ (show name)
 
 
-
-focusBreadcrumbs :: Breadcrumbs -> Zipper -> Maybe Zipper
+focusBreadcrumbs :: (Applicative m, Monad m) => Breadcrumbs -> Zipper -> m Zipper
 focusBreadcrumbs bc zipper = case bc of
     []  -> return zipper
     h:t -> let f = case h of
                        Crumb.ClassCrumb    name -> focusClass    name
                        Crumb.FunctionCrumb name -> focusFunction name
                        Crumb.ModuleCrumb   name -> focusModule   name
-           in f zipper >>= focusBreadcrumbs t 
+           in f zipper >>= focusBreadcrumbs t
 
 
 getFocus :: Zipper -> Focus
 getFocus = fst
 
 
-focusListElem :: Traversal' a [b] -> Fold b String -> (b -> Focus) -> (a -> Focus) -> a -> String -> Zipper -> Maybe Zipper
-focusListElem flens nameLens elemFocus crumbFocus el name (_, path) = runMaybe $ do
+focusListElem :: (Applicative m, Monad m) => Traversal' a [b] -> Fold b String -> (b -> Focus) -> (a -> Focus) -> a -> String -> Zipper -> m Zipper
+focusListElem flens nameLens elemFocus crumbFocus el name (_, path) = do
     let funcs    = el ^. flens
         mfunc    = find (\f -> f ^. nameLens == name) funcs
         newfuncs = [ f | f <- funcs, f ^. nameLens /= name ]
         newelem  = el & flens .~ newfuncs
-    func <- hoistMaybe mfunc
+    func <- case mfunc of
+                Just func -> return func
+                Nothing   -> fail $ "Cannot find " ++ (show name) ++ " in AST."
     return $ (elemFocus func, (crumbFocus newelem) : path)

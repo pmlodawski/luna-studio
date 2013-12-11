@@ -7,12 +7,7 @@
 
 module Flowbox.Batch.Handler.Common (
     readonly,
-    readonly',
     noresult,
-
-    projectOp',
-    libManagerOp',
-    libraryOp',
 
     projectOp,
     libManagerOp,
@@ -23,52 +18,41 @@ module Flowbox.Batch.Handler.Common (
 ) where
 
 import           Control.Monad.RWS
-import           Flowbox.Batch.Batch                                 (Batch (..))
+import           Flowbox.Batch.Batch                                 (Batch)
 import qualified Flowbox.Batch.Batch                                 as Batch
-import           Flowbox.Batch.Project.Project                       (Project (..))
+import           Flowbox.Batch.Project.Project                       (Project)
 import qualified Flowbox.Batch.Project.Project                       as Project
 import           Flowbox.Batch.Project.ProjectManager                (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager                as ProjectManager
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Crumb.Crumb                   (Breadcrumbs)
 import           Flowbox.Luna.Data.AST.Module                        (Module)
-import           Flowbox.Luna.Data.AST.Module                        (Module)
 import qualified Flowbox.Luna.Data.AST.Zipper                        as Zipper
 import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
 import           Flowbox.Luna.Lib.LibManager                         (LibManager)
 import qualified Flowbox.Luna.Lib.LibManager                         as LibManager
-import           Flowbox.Luna.Lib.Library                            (Library (..))
+import           Flowbox.Luna.Lib.Library                            (Library)
 import qualified Flowbox.Luna.Lib.Library                            as Library
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias      as VarAlias
 import qualified Flowbox.Luna.Passes.General.Luna.Luna               as Luna
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser   as GraphParser
-import           Flowbox.Prelude
-import           Text.Show.Pretty
+import           Flowbox.Prelude                                     hiding (focus, zipper)
 
 
 
-readonly :: Either String (a, r) -> Either String r
-readonly op = case op of
-    Left message -> Left message
-    Right (_, r) -> Right r
+readonly :: (Applicative m, Monad m) => m (a, r) -> m r
+readonly operation = snd <$> operation
 
 
-readonly' :: IO (a, r) -> IO r
-readonly' op = do
-    (_, r) <- op
-    return r
+noresult :: (Applicative m, Monad m) => m (a, r) -> m a
+noresult operation = fst <$> operation
 
 
-noresult :: Either String (a, r) -> Either String a
-noresult op = case op of
-    Left message -> Left message
-    Right (a, _) -> Right a
-
-
-projectManagerOp :: (Batch -> ProjectManager -> Either String (ProjectManager, r))
+projectManagerOp :: (Applicative m, Monad m)
+                 => (Batch -> ProjectManager -> m (ProjectManager, r))
                  -> Batch
-                 -> Either String (Batch, r)
+                 -> m (Batch, r)
 projectManagerOp operation batch = do
     let aprojectManager = Batch.projectManager batch
     (newProjectManager, r) <- operation batch aprojectManager
@@ -76,20 +60,11 @@ projectManagerOp operation batch = do
     return (newBatch, r)
 
 
-projectManagerOp' :: (Batch -> ProjectManager -> IO (ProjectManager, r))
-                  -> Batch
-                  -> IO (Batch, r)
-projectManagerOp' operation batch = do
-    let aprojectManager = Batch.projectManager batch
-    (newProjectManager, r) <- operation batch aprojectManager
-    let newBatch = batch { Batch.projectManager = newProjectManager }
-    return (newBatch, r)
-
-
-projectOp :: Project.ID
-          -> (Batch -> Project -> Either String (Project, r))
+projectOp :: (Applicative m, Monad m)
+          => Project.ID
+          -> (Batch -> Project -> m (Project, r))
           -> Batch
-          -> Either String (Batch, r)
+          -> m (Batch, r)
 projectOp projectID operation = projectManagerOp (\batch aprojectManager -> do
     project         <- ProjectManager.lab aprojectManager projectID <?> ("Wrong 'projectID' = " ++ show projectID)
     (newProject, r) <- operation batch project
@@ -97,21 +72,11 @@ projectOp projectID operation = projectManagerOp (\batch aprojectManager -> do
     return (newProjectManager, r))
 
 
-projectOp' :: Project.ID
-           -> (Batch -> Project -> IO (Project, r))
-           -> Batch
-           -> IO (Batch, r)
-projectOp' projectID operation = projectManagerOp' (\batch aprojectManager -> runScript $ do
-    project         <- ProjectManager.lab aprojectManager projectID <??> ("Wrong 'projectID' = " ++ show projectID)
-    (newProject, r) <- scriptIO $ operation batch project
-    let newProjectManager = ProjectManager.updateNode (projectID, newProject) aprojectManager
-    return (newProjectManager, r))
-
-
-libManagerOp :: Project.ID
-             -> (Batch -> LibManager -> Either String (LibManager, r))
+libManagerOp :: (Applicative m, Monad m)
+             => Project.ID
+             -> (Batch -> LibManager -> m (LibManager, r))
              -> Batch
-             -> Either String (Batch, r)
+             -> m (Batch, r)
 libManagerOp projectID operation = projectOp projectID (\batch project -> do
     let libManager = Project.libs project
     (newLibManager, r) <- operation batch libManager
@@ -119,22 +84,12 @@ libManagerOp projectID operation = projectOp projectID (\batch project -> do
     return (newProject, r))
 
 
-libManagerOp' :: Project.ID
-              -> (Batch -> LibManager -> IO (LibManager, r))
-              -> Batch
-              -> IO (Batch, r)
-libManagerOp' projectID operation = projectOp' projectID (\batch project -> do
-    let libManager = Project.libs project
-    (newLibManager, r) <- operation batch libManager
-    let newProject = project { Project.libs = newLibManager }
-    return (newProject, r))
-
-
-libraryOp :: Library.ID
+libraryOp :: (Applicative m, Monad m)
+          => Library.ID
           -> Project.ID
-          -> (Batch -> Library -> Either String (Library, r))
+          -> (Batch -> Library -> m (Library, r))
           -> Batch
-          -> Either String (Batch, r)
+          -> m (Batch, r)
 libraryOp libID projectID operation = libManagerOp projectID (\batch libManager -> do
     library        <- LibManager.lab libManager libID <?> ("Wrong 'libID' = " ++ show libID)
     (newLibary, r) <- operation batch library
@@ -142,38 +97,17 @@ libraryOp libID projectID operation = libManagerOp projectID (\batch libManager 
     return (newLibManager, r))
 
 
-libraryOp' :: Library.ID
-           -> Project.ID
-           -> (Batch -> Library -> IO (Library, r))
-           -> Batch
-           -> IO (Batch, r)
-libraryOp' libID projectID operation = libManagerOp' projectID (\batch libManager -> runScript $ do
-    library        <- LibManager.lab libManager libID <??> ("Wrong 'libID' = " ++ show libID)
-    (newLibary, r) <- scriptIO $ operation batch library
-    let newLibManager = LibManager.updateNode (libID, newLibary) libManager
-    return (newLibManager, r))
-
-
-astOp :: Library.ID
+astOp :: (Applicative m, Monad m)
+      => Library.ID
       -> Project.ID
-      -> (Batch -> Module -> Either String (Module, r))
+      -> (Batch -> Module -> m (Module, r))
       -> Batch
-      -> Either String (Batch, r)
+      -> m (Batch, r)
 astOp libID projectID operation = libraryOp libID projectID (\batch library -> do
     (newAst, r) <- operation batch $ Library.ast library
     let newLibrary = library { Library.ast = newAst }
     return (newLibrary, r))
 
-
-astOp' :: Library.ID
-       -> Project.ID
-       -> (Batch -> Module -> IO (Module, r))
-       -> Batch
-       -> IO (Batch, r)
-astOp' libID projectID operation = libraryOp' libID projectID (\batch library -> do
-    (newAst, r) <- operation batch $ Library.ast library
-    let newLibrary = library { Library.ast = newAst }
-    return (newLibrary, r))
 
 
 graphOp' :: Breadcrumbs
@@ -182,22 +116,20 @@ graphOp' :: Breadcrumbs
         -> (Batch -> Graph -> IO (Graph, r))
         -> Batch
         -> IO (Batch, r)
-graphOp' bc libID projectID operation = astOp' libID projectID (\batch ast -> Luna.runIO $ do
-    let zipper = Zipper.mk ast
-             >>= Zipper.focusBreadcrumbs bc
-        focus  = fmap Zipper.getFocus zipper
-        Just (Zipper.FunctionFocus expr) = focus
+graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Luna.runIO $ do
+    zipper <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc
+    let focus = Zipper.getFocus zipper
+    expr <- case focus of
+        Zipper.FunctionFocus expr -> return expr
+        _                         -> fail $ "Breadcrumbs are not focusing on function: " ++ (show bc)
 
-    --va    <- VarAlias.run ast
-    --graph <- GraphBuilder.run va expr
-    --(newGraph, r) <- liftIO $ operation batch graph
-    --ast' <- GraphParser.run newGraph expr
+    va    <- VarAlias.run ast
+    graph <- GraphBuilder.run va expr
+    (newGraph, r) <- liftIO $ operation batch graph
+    ast' <- GraphParser.run newGraph expr
 
-    --let newAst = Zipper.modify (\_ -> Zipper.FunctionFocus ast')
-    --           >>= Zipper.close
-    ---- TODO [PM] defocus zipper
-    --return (newAst, r))
-    undefined)
+    newAst <- Zipper.modify (\_ -> Zipper.FunctionFocus ast') zipper >>= Zipper.close
+    return (newAst, r))
 
 --nodeOp :: Node.ID
 --       -> Definition.ID
