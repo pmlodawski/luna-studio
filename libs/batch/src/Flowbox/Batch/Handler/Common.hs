@@ -15,6 +15,7 @@ module Flowbox.Batch.Handler.Common (
 
     astOp,
     graphOp',
+    nodeOp',
 ) where
 
 import           Control.Monad.RWS
@@ -29,6 +30,9 @@ import           Flowbox.Luna.Data.AST.Crumb.Crumb                   (Breadcrumb
 import           Flowbox.Luna.Data.AST.Module                        (Module)
 import qualified Flowbox.Luna.Data.AST.Zipper                        as Zipper
 import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph                       as Graph
+import           Flowbox.Luna.Data.Graph.Node                        (Node)
+import qualified Flowbox.Luna.Data.Graph.Node                        as Node
 import           Flowbox.Luna.Lib.LibManager                         (LibManager)
 import qualified Flowbox.Luna.Lib.LibManager                         as LibManager
 import           Flowbox.Luna.Lib.Library                            (Library)
@@ -109,13 +113,12 @@ astOp libID projectID operation = libraryOp libID projectID (\batch library -> d
     return (newLibrary, r))
 
 
-
 graphOp' :: Breadcrumbs
-        -> Library.ID
-        -> Project.ID
-        -> (Batch -> Graph -> IO (Graph, r))
-        -> Batch
-        -> IO (Batch, r)
+         -> Library.ID
+         -> Project.ID
+         -> (Batch -> Graph -> IO (Graph, r))
+         -> Batch
+         -> IO (Batch, r)
 graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Luna.runIO $ do
     zipper <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc
     let focus = Zipper.getFocus zipper
@@ -131,15 +134,16 @@ graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Lun
     newAst <- Zipper.modify (\_ -> Zipper.FunctionFocus ast') zipper >>= Zipper.close
     return (newAst, r))
 
---nodeOp :: Node.ID
---       -> Definition.ID
---       -> Library.ID
---       -> Project.ID
---       -> (Batch -> Node -> Either String (Node, r))
---       -> Batch
---       -> Either String (Batch, r)
---nodeOp nodeID defID libID projectID operation = graphOp defID libID projectID (\batch agraph -> do
---    node <- Graph.lab agraph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
---    (newNode, r) <- operation batch node
---    let newGraph = Graph.updateNode (nodeID, newNode) agraph
---    return (newGraph, r))
+
+nodeOp' :: Node.ID
+        -> Breadcrumbs
+        -> Library.ID
+        -> Project.ID
+        -> (Batch -> Node -> IO (Node, r))
+        -> Batch
+        -> IO (Batch, r)
+nodeOp' nodeID bc libID projectID operation = graphOp' bc libID projectID (\batch graph -> do
+    node <- Graph.lab graph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
+    (newNode, r) <- operation batch node
+    let newGraph = Graph.updateNode (nodeID, newNode) graph
+    return (newGraph, r))

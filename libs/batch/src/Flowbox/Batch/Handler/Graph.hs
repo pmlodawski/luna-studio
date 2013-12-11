@@ -8,7 +8,7 @@
 module Flowbox.Batch.Handler.Graph where
 
 import           Flowbox.Batch.Batch               (Batch)
-import           Flowbox.Batch.Handler.Common      (graphOp', noresult, readonly)
+import           Flowbox.Batch.Handler.Common      (graphOp', nodeOp', noresult, readonly)
 import qualified Flowbox.Batch.Project.Project     as Project
 import           Flowbox.Control.Error             (ifnot)
 import           Flowbox.Luna.Data.AST.Crumb.Crumb (Breadcrumbs)
@@ -31,10 +31,9 @@ nodesGraph bc libID projectID = readonly . graphOp' bc libID projectID (\_ graph
     return (graph, graph))
 
 
-
---nodeByID :: Node.ID -> Definition.ID -> Library.ID -> Project.ID -> Batch -> Either String Node
---nodeByID nodeID defID libID projectID = readonly . nodeOp nodeID defID libID projectID (\_ node -> do
---    return (node, node))
+nodeByID :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Node
+nodeByID nodeID bc libID projectID = readonly . nodeOp' nodeID bc libID projectID (\_ node -> do
+    return (node, node))
 
 
 addNode :: Node
