@@ -1,4 +1,4 @@
-Name:               flowbox-batch-zmqsrv
+Name:               flowbox-batch-srv
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -11,10 +11,10 @@ Flag Debug
     Default:        False
 
 
-Executable batch-zmqsrv
+Executable batch-srv
     Hs-Source-Dirs: dist/gen
                     src
-    Other-Modules:  Paths_flowbox_batch_zmqsrv
+    Other-Modules:  Paths_flowbox_batch_srv
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2

@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Batch.Server.Config (
-    module Paths_flowbox_batch_zmqsrv
+    module Paths_flowbox_batch_srv
 ) where
 
-import Paths_flowbox_batch_zmqsrv (version)
+import Paths_flowbox_batch_srv (version)
