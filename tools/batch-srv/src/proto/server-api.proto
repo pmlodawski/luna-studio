@@ -337,7 +337,7 @@ message Graph {
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1203; }
-            required int32 nodeID = 1;
+            required generated.proto.graph.Node node = 1;
         }   
     }
     message UpdateNode {

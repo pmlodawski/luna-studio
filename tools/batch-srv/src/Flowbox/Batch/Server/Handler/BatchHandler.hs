@@ -20,6 +20,7 @@ import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
 import qualified Flowbox.Batch.Samples.Std                as Sample
 import qualified Flowbox.Batch.Server.Handler.AST         as HAST
 import qualified Flowbox.Batch.Server.Handler.FileSystem  as HFileSystem
+import qualified Flowbox.Batch.Server.Handler.Graph       as HGraph
 import           Flowbox.Batch.Server.Handler.Handler     (Handler)
 import qualified Flowbox.Batch.Server.Handler.Handler     as Handler
 import qualified Flowbox.Batch.Server.Handler.Library     as HLibrary
@@ -96,3 +97,10 @@ instance Handler BatchHandler where
     updateFunctionInputs h = HAST.updateFunctionInputs (batchRef h)
     updateFunctionOutput h = HAST.updateFunctionOutput (batchRef h)
 
+    nodesGraph h = HGraph.nodesGraph (batchRef h)
+    nodeByID   h = HGraph.nodeByID   (batchRef h)
+    addNode    h = HGraph.addNode    (batchRef h)
+    updateNode h = HGraph.updateNode (batchRef h)
+    removeNode h = HGraph.removeNode (batchRef h)
+    connect    h = HGraph.connect    (batchRef h)
+    disconnect h = HGraph.disconnect (batchRef h)
