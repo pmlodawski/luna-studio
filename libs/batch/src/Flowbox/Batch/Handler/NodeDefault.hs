@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Handler.Default (
+module Flowbox.Batch.Handler.NodeDefault (
     nodeDefaults,
     setNodeDefault,
     removeNodeDefault,

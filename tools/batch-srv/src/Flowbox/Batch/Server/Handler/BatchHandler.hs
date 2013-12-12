@@ -18,11 +18,13 @@ import           Flowbox.Batch.Batch                      (Batch)
 import qualified Flowbox.Batch.Batch                      as Batch
 import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
 import qualified Flowbox.Batch.Samples.Std                as Sample
+import qualified Flowbox.Batch.Server.Handler.AST         as HAST
 import qualified Flowbox.Batch.Server.Handler.FileSystem  as HFileSystem
 import           Flowbox.Batch.Server.Handler.Handler     (Handler)
 import qualified Flowbox.Batch.Server.Handler.Handler     as Handler
 import qualified Flowbox.Batch.Server.Handler.Library     as HLibrary
 import qualified Flowbox.Batch.Server.Handler.Maintenance as HMaintenance
+import qualified Flowbox.Batch.Server.Handler.NodeDefault as HNodeDefault
 import qualified Flowbox.Batch.Server.Handler.Project     as HProject
 import qualified Flowbox.Config.Config                    as Config
 import           Flowbox.Prelude
@@ -68,6 +70,10 @@ instance Handler BatchHandler where
     dump       h = HMaintenance.dump       (batchRef h)
     shutdown   h = HMaintenance.shutdown   (quitMutex h)
 
+    nodeDefaults      h = HNodeDefault.nodeDefaults      (batchRef h)
+    setNodeDefault    h = HNodeDefault.setNodeDefault    (batchRef h)
+    removeNodeDefault h = HNodeDefault.removeNodeDefault (batchRef h)
+
     projects      h = HProject.projects      (batchRef h)
     projectByID   h = HProject.projectByID   (batchRef h)
     createProject h = HProject.createProject (batchRef h)
@@ -75,4 +81,18 @@ instance Handler BatchHandler where
     updateProject h = HProject.updateProject (batchRef h)
     closeProject  h = HProject.closeProject  (batchRef h)
     storeProject  h = HProject.storeProject  (batchRef h)
+
+    addModule            h = HAST.addModule            (batchRef h)
+    addClass             h = HAST.addClass             (batchRef h)
+    addFunction          h = HAST.addFunction          (batchRef h)
+    remove               h = HAST.remove               (batchRef h)
+    updateModuleCls      h = HAST.updateModuleCls      (batchRef h)
+    updateModuleImports  h = HAST.updateModuleImports  (batchRef h)
+    updateModuleFields   h = HAST.updateModuleFields   (batchRef h)
+    updateClassCls       h = HAST.updateClassCls       (batchRef h)
+    updateClassFields    h = HAST.updateClassFields    (batchRef h)
+    updateFunctionName   h = HAST.updateFunctionName   (batchRef h)
+    updateFunctionPath   h = HAST.updateFunctionPath   (batchRef h)
+    updateFunctionInputs h = HAST.updateFunctionInputs (batchRef h)
+    updateFunctionOutput h = HAST.updateFunctionOutput (batchRef h)
 

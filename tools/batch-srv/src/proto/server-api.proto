@@ -216,8 +216,6 @@ message AST {
     }
 }
 
-
-
 message NodeDefault {
     message NodeDefaults {
         message Args   { extend Request  { optional Args   req = 1301; }
@@ -252,8 +250,6 @@ message NodeDefault {
         message Result { extend Response { optional Result rsp = 1303; } }   
     }
 }
-
-
 
 message FileSystem {
     message LS {

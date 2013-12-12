@@ -10,12 +10,12 @@ module Flowbox.Luna.Data.Graph.Default.DefaultsMap where
 import           Data.Map (Map)
 import qualified Data.Map as Map
 
-import qualified Flowbox.Luna.Data.Attributes                       as Attributes
-import           Flowbox.Luna.Data.Graph.Node                       (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                       as Node
-import           Flowbox.Luna.Data.Graph.Port                       (InPort)
-import qualified Flowbox.Luna.Data.Graph.Properties                 as Proprties
+import qualified Flowbox.Luna.Data.Attributes          as Attributes
 import           Flowbox.Luna.Data.Graph.Default.Value (Value)
+import           Flowbox.Luna.Data.Graph.Node          (Node)
+import qualified Flowbox.Luna.Data.Graph.Node          as Node
+import           Flowbox.Luna.Data.Graph.Port          (InPort)
+import qualified Flowbox.Luna.Data.Graph.Properties    as Proprties
 import           Flowbox.Prelude
 
 
