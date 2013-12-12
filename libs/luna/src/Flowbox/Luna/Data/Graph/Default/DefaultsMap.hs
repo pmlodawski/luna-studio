@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.Graph.Defaults.DefaultsMap where
+module Flowbox.Luna.Data.Graph.Default.DefaultsMap where
 
 import           Data.Map (Map)
 import qualified Data.Map as Map
@@ -15,7 +15,7 @@ import           Flowbox.Luna.Data.Graph.Node                       (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                       as Node
 import           Flowbox.Luna.Data.Graph.Port                       (InPort)
 import qualified Flowbox.Luna.Data.Graph.Properties                 as Proprties
-import           Flowbox.Luna.Passes.Transform.Graph.Defaults.Value (Value)
+import           Flowbox.Luna.Data.Graph.Default.Value (Value)
 import           Flowbox.Prelude
 
 

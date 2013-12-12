@@ -12,20 +12,20 @@ module Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults (
 
 import qualified Data.Map as Map
 
-import           Flowbox.Control.Error                                    ()
-import qualified Flowbox.Luna.Data.Attributes                             as Attributes
-import           Flowbox.Luna.Data.Graph.Edge                             (Edge (Edge))
-import qualified Flowbox.Luna.Data.Graph.Flags                            as Flags
-import           Flowbox.Luna.Data.Graph.Graph                            (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                            as Graph
-import           Flowbox.Luna.Data.Graph.Node                             (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                             as Node
-import           Flowbox.Luna.Data.Graph.Port                             (InPort)
-import           Flowbox.Luna.Data.Graph.Properties                       (Properties (Properties))
-import qualified Flowbox.Luna.Data.Graph.Properties                       as Properties
-import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.DefaultsMap as DefaultsMap
-import           Flowbox.Luna.Passes.Transform.Graph.Defaults.Value       (Value)
-import           Flowbox.Prelude                                          hiding (empty)
+import           Flowbox.Control.Error                       ()
+import qualified Flowbox.Luna.Data.Attributes                as Attributes
+import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap as DefaultsMap
+import           Flowbox.Luna.Data.Graph.Default.Value       (Value)
+import           Flowbox.Luna.Data.Graph.Edge                (Edge (Edge))
+import qualified Flowbox.Luna.Data.Graph.Flags               as Flags
+import           Flowbox.Luna.Data.Graph.Graph               (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph               as Graph
+import           Flowbox.Luna.Data.Graph.Node                (Node)
+import qualified Flowbox.Luna.Data.Graph.Node                as Node
+import           Flowbox.Luna.Data.Graph.Port                (InPort)
+import           Flowbox.Luna.Data.Graph.Properties          (Properties (Properties))
+import qualified Flowbox.Luna.Data.Graph.Properties          as Properties
+import           Flowbox.Prelude                             hiding (empty)
 
 
 

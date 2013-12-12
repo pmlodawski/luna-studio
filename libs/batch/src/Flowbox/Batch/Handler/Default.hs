@@ -13,18 +13,18 @@ module Flowbox.Batch.Handler.Default (
 
 import qualified Data.Map as Map
 
-import           Flowbox.Batch.Batch                                      (Batch)
-import           Flowbox.Batch.Handler.Common                             (graphOp', nodeOp', noresult, readonly)
-import qualified Flowbox.Batch.Project.Project                            as Project
+import           Flowbox.Batch.Batch                         (Batch)
+import           Flowbox.Batch.Handler.Common                (graphOp', nodeOp', noresult, readonly)
+import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AST.Crumb.Crumb                        (Breadcrumbs)
-import qualified Flowbox.Luna.Data.Graph.Graph                            as Graph
-import qualified Flowbox.Luna.Data.Graph.Node                             as Node
-import           Flowbox.Luna.Data.Graph.Port                             (InPort)
-import qualified Flowbox.Luna.Lib.Library                                 as Library
-import           Flowbox.Luna.Passes.Transform.Graph.Defaults.DefaultsMap (DefaultsMap)
-import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.DefaultsMap as DefaultsMap
-import           Flowbox.Luna.Passes.Transform.Graph.Defaults.Value       (Value)
+import           Flowbox.Luna.Data.AST.Crumb.Crumb           (Breadcrumbs)
+import           Flowbox.Luna.Data.Graph.Default.DefaultsMap (DefaultsMap)
+import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap as DefaultsMap
+import           Flowbox.Luna.Data.Graph.Default.Value       (Value)
+import qualified Flowbox.Luna.Data.Graph.Graph               as Graph
+import qualified Flowbox.Luna.Data.Graph.Node                as Node
+import           Flowbox.Luna.Data.Graph.Port                (InPort)
+import qualified Flowbox.Luna.Lib.Library                    as Library
 import           Flowbox.Prelude
 
 

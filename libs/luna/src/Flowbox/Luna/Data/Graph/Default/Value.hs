@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.Graph.Defaults.Value where
+module Flowbox.Luna.Data.Graph.Default.Value where
 
 import Flowbox.Prelude
 

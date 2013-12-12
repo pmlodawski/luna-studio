@@ -7,44 +7,76 @@
 
 package generated.proto.batch;
 
+import "crumb.proto";
+import "expr.proto";
 import "file-system.proto";
-import "project.proto";
+import "graph.proto";
 import "library.proto";
+import "module.proto";
+import "nodedefault.proto";
+import "project.proto";
+import "type.proto";
 
 
 
 message Request {
     required Method method = 1;
     enum Method {
-        LS    = 1;
-        Stat  = 2;
-        MkDir = 3;
-        Touch = 4;
-        RM    = 5;
-        CP    = 6;
-        MV    = 7;
+        AST_AddModule            = 27;
+        AST_AddClass             = 28;
+        AST_AddFunction          = 29;
+        AST_UpdateModuleCls      = 30;
+        AST_UpdateModuleImports  = 31;
+        AST_UpdateModuleFields   = 32;
+        AST_UpdateClassCls       = 33;
+        AST_UpdateClassFields    = 34;
+        AST_UpdateFunctionName   = 35;
+        AST_UpdateFunctionPath   = 36;
+        AST_UpdateFunctionInputs = 37;
+        AST_UpdateFunctionOutput = 38;
+        AST_Remove               = 39;
 
-        Libraries     = 8;
-        LibraryByID   = 9;
-        CreateLibrary = 10;
-        LoadLibrary   = 11;
-        UnloadLibrary = 12;
-        StoreLibrary  = 13;
-        BuildLibrary  = 14;
-        RunLibrary    = 15;
+        NodeDefault_NodeDefaults      = 47;
+        NodeDefault_SetNodeDefault    = 48;
+        NodeDefault_RemoveNodeDefault = 49;
 
-        Initialize = 16;
-        Ping       = 17;
-        Dump       = 18;
-        Shutdown   = 19;
+        FileSystem_LS    = 1;
+        FileSystem_Stat  = 2;
+        FileSystem_MkDir = 3;
+        FileSystem_Touch = 4;
+        FileSystem_RM    = 5;
+        FileSystem_CP    = 6;
+        FileSystem_MV    = 7;
 
-        Projects      = 20;
-        ProjectByID   = 21;
-        CreateProject = 22;
-        OpenProject   = 23;
-        UpdateProject = 24;
-        CloseProject  = 25;
-        StoreProject  = 26;
+        Graph_NodesGraph = 40;
+        Graph_NodeByID   = 41;
+        Graph_AddNode    = 42;
+        Graph_UpdateNode = 43;
+        Graph_RemoveNode = 44;
+        Graph_Connect    = 45;
+        Graph_Disconnect = 46;
+
+        Library_Libraries     = 8;
+        Library_LibraryByID   = 9;
+        Library_CreateLibrary = 10;
+        Library_LoadLibrary   = 11;
+        Library_UnloadLibrary = 12;
+        Library_StoreLibrary  = 13;
+        Library_BuildLibrary  = 14;
+        Library_RunLibrary    = 15;
+
+        Maintenance_Initialize = 16;
+        Maintenance_Ping       = 17;
+        Maintenance_Dump       = 18;
+        Maintenance_Shutdown   = 19;
+
+        Project_Projects      = 20;
+        Project_ProjectByID   = 21;
+        Project_CreateProject = 22;
+        Project_OpenProject   = 23;
+        Project_UpdateProject = 24;
+        Project_CloseProject  = 25;
+        Project_StoreProject  = 26;
     }
 
     extensions 1000 to max;
@@ -63,6 +95,164 @@ message Response {
 message Exception { extend Response { optional Exception rsp = 1000; }
     optional string message = 1;
 }
+
+
+message AST {
+    message AddModule {
+        message Args   { extend Request  { optional Args   req = 1101; }
+            required generated.proto.module.Module module = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1101; } }   
+    }
+    message AddClass {
+        message Args   { extend Request  { optional Args   req = 1102; }
+            required generated.proto.expr.Expr class      = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1102; } }   
+    }
+    message AddFunction {
+        message Args   { extend Request  { optional Args   req = 1103; }
+            required generated.proto.expr.Expr function   = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1103; } }   
+    }
+    message UpdateModuleCls {
+        message Args   { extend Request  { optional Args   req = 1104; }
+            required generated.proto.type.Type cls        = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1104; } }   
+    }
+    message UpdateModuleImports {
+        message Args   { extend Request  { optional Args   req = 1105; }
+            repeated generated.proto.expr.Expr imports    = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1105; } }   
+    }
+    message UpdateModuleFields {
+        message Args   { extend Request  { optional Args   req = 1106; }
+            repeated generated.proto.expr.Expr fields     = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1106; } }   
+    }
+    message UpdateClassCls {
+        message Args   { extend Request  { optional Args   req = 1107; }
+            required generated.proto.type.Type cls        = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1107; } }   
+    }
+    message UpdateClassFields {
+        message Args   { extend Request  { optional Args   req = 1108; }
+            repeated generated.proto.expr.Expr fields     = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1108; } }   
+    }
+    message UpdateFunctionName {
+        message Args   { extend Request  { optional Args   req = 1109; }
+            required string name     = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1109; } }   
+    }
+    message UpdateFunctionPath {
+        message Args   { extend Request  { optional Args   req = 1110; }
+            repeated string path     = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1110; } }   
+    }
+    message UpdateFunctionInputs {
+        message Args   { extend Request  { optional Args   req = 1111; }
+            repeated generated.proto.expr.Expr inputs     = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1111; } }   
+    }
+    message UpdateFunctionOutput {
+        message Args   { extend Request  { optional Args   req = 1112; }
+            required generated.proto.type.Type output     = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1112; } }   
+    }
+    message Remove {
+        message Args   { extend Request  { optional Args   req = 1113; }
+            required generated.proto.crumb.Breadcrumbs bc = 1;
+            required int32 libID     = 2;
+            required int32 projectID = 3;
+        }
+        message Result { extend Response { optional Result rsp = 1113; } }   
+    }
+}
+
+
+
+message NodeDefault {
+    message NodeDefaults {
+        message Args   { extend Request  { optional Args   req = 1301; }
+            required int32 nodeID    = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1301; }
+            required generated.proto.nodedefault.DefaultsMap defaultsMap = 1;
+        }   
+    }
+    message SetNodeDefault {
+        message Args   { extend Request  { optional Args   req = 1302; }
+            required int32 inPort    = 1;
+            required string value    = 2;
+            required int32 nodeID    = 3;
+            required generated.proto.crumb.Breadcrumbs bc = 4;
+            required int32 libID     = 5;
+            required int32 projectID = 6;
+        }
+        message Result { extend Response { optional Result rsp = 1302; } }   
+    }
+    message RemoveNodeDefault {
+        message Args   { extend Request  { optional Args   req = 1303; }
+            required int32 inPort    = 1;
+            required int32 nodeID    = 2;
+            required generated.proto.crumb.Breadcrumbs bc = 3;
+            required int32 libID     = 4;
+            required int32 projectID = 5;
+        }
+        message Result { extend Response { optional Result rsp = 1303; } }   
+    }
+}
+
 
 
 message FileSystem {
@@ -118,6 +308,83 @@ message FileSystem {
         }
         message Result { extend Response { optional Result rsp = 1007; }
         }
+    }
+}
+
+message Graph {
+    message NodesGraph {
+        message Args   { extend Request  { optional Args   req = 1201; }
+            required generated.proto.crumb.Breadcrumbs bc = 1;
+            required int32 libID     = 2;
+            required int32 projectID = 3;
+        }
+        message Result { extend Response { optional Result rsp = 1201; }
+            required generated.proto.graph.Graph graph = 1;
+        }   
+    }
+    message NodeByID {
+        message Args   { extend Request  { optional Args   req = 1202; }
+            required int32 nodeID    = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1202; }
+            required generated.proto.graph.Node node = 1;
+        }   
+    }
+    message AddNode {
+        message Args   { extend Request  { optional Args   req = 1203; }
+            required generated.proto.graph.Node node      = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1203; }
+            required int32 nodeID = 1;
+        }   
+    }
+    message UpdateNode {
+        message Args   { extend Request  { optional Args   req = 1204; }
+            required generated.proto.graph.Node node      = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1204; } }   
+    }
+    message RemoveNode {
+        message Args   { extend Request  { optional Args   req = 1205; }
+            required int32 nodeID    = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1205; } }   
+    }
+    message Connect {
+        message Args   { extend Request  { optional Args   req = 1206; }
+            required int32 srcNodeID = 1;
+            optional int32 srcPort   = 2;
+            required int32 dstNodeID = 3;
+            required int32 dstPort   = 4;
+            required generated.proto.crumb.Breadcrumbs bc = 5;
+            required int32 libID     = 6;
+            required int32 projectID = 7;
+        }
+        message Result { extend Response { optional Result rsp = 1206; } }   
+    }
+    message Disconnect {
+        message Args   { extend Request  { optional Args   req = 1207; }
+            required int32 srcNodeID = 1;
+            optional int32 srcPort   = 2;
+            required int32 dstNodeID = 3;
+            required int32 dstPort   = 4;
+            required generated.proto.crumb.Breadcrumbs bc = 5;
+            required int32 libID     = 6;
+            required int32 projectID = 7;
+        }
+        message Result { extend Response { optional Result rsp = 1207; } }   
     }
 }
 
