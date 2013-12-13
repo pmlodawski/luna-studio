@@ -83,11 +83,10 @@ instance Handler BatchHandler where
     closeProject  h = HProject.closeProject  (batchRef h)
     storeProject  h = HProject.storeProject  (batchRef h)
 
-    definitions          h = HAST.definitions            (batchRef h)
     addModule            h = HAST.addModule            (batchRef h)
     addClass             h = HAST.addClass             (batchRef h)
     addFunction          h = HAST.addFunction          (batchRef h)
-    remove               h = HAST.remove               (batchRef h)
+    definitions          h = HAST.definitions          (batchRef h)
     updateModuleCls      h = HAST.updateModuleCls      (batchRef h)
     updateModuleImports  h = HAST.updateModuleImports  (batchRef h)
     updateModuleFields   h = HAST.updateModuleFields   (batchRef h)
@@ -97,6 +96,7 @@ instance Handler BatchHandler where
     updateFunctionPath   h = HAST.updateFunctionPath   (batchRef h)
     updateFunctionInputs h = HAST.updateFunctionInputs (batchRef h)
     updateFunctionOutput h = HAST.updateFunctionOutput (batchRef h)
+    remove               h = HAST.remove               (batchRef h)
 
     nodesGraph h = HGraph.nodesGraph (batchRef h)
     nodeByID   h = HGraph.nodeByID   (batchRef h)

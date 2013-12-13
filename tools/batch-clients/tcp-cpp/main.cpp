@@ -140,10 +140,10 @@ NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &socket, int pid,
 	defaultsRequest.set_method(Request_Method_NodeDefault_NodeDefaults);
 
 	NodeDefault_NodeDefaults_Args *defaultsArgs = defaultsRequest.MutableExtension(NodeDefault_NodeDefaults_Args::req);
-	defaultsArgs->set_projectid(5);
-	defaultsArgs->set_libid(5);
+	defaultsArgs->set_projectid(pid);
+	defaultsArgs->set_libid(lid);
 	defaultsArgs->set_allocated_bc(breadcrumbs);
-	defaultsArgs->set_nodeid(5);
+	defaultsArgs->set_nodeid(nid);
 
 	try
 	{
