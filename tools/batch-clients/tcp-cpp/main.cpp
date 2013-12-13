@@ -107,6 +107,62 @@ Response call(Socket &socket, const Request& request)
 	return receiveResponse(socket);
 }
 
+Response callAndTranslateException(Socket &socket, const Request& request)
+{
+	auto response = call(socket, request);
+
+	if(response.type() == generated::proto::batch::Response_Type_Exception)
+	{
+		const auto exc = response.GetExtension(Exception::rsp);
+		const auto msg = exc.message();
+		throw std::runtime_error(msg);
+	}
+
+	return response;
+}
+
+
+typedef std::vector<std::pair<generated::proto::crumb::Crumb_Cls, std::string>> BreadcrumbsHelper;
+
+NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &socket, int pid, int lid, BreadcrumbsHelper breadcrumbsInfo, int nid)
+{
+	auto breadcrumbs = new generated::proto::crumb::Breadcrumbs();
+	for(auto &crumbDescriptor : breadcrumbsInfo)
+	{
+		auto crumb = breadcrumbs->mutable_crumbs()->Add();
+		crumb->set_cls(crumbDescriptor.first);
+		crumb->set_name(crumbDescriptor.second);
+	}
+
+
+
+	Request defaultsRequest;
+	defaultsRequest.set_method(Request_Method_NodeDefault_NodeDefaults);
+
+	NodeDefault_NodeDefaults_Args *defaultsArgs = defaultsRequest.MutableExtension(NodeDefault_NodeDefaults_Args::req);
+	defaultsArgs->set_projectid(5);
+	defaultsArgs->set_libid(5);
+	defaultsArgs->set_allocated_bc(breadcrumbs);
+	defaultsArgs->set_nodeid(5);
+
+	try
+	{
+		auto response = callAndTranslateException(socket, defaultsRequest);
+		assert(response.type() == Response_Type_Result); //exception would be transleted to exception
+		auto defaultsResponse = response.GetExtension(NodeDefault_NodeDefaults_Result::rsp);
+		
+		auto defaultsMap = defaultsResponse.defaultsmap();
+		auto mapFromTheMap = defaultsMap.map();
+
+		return defaultsResponse;
+	}
+	catch(std::exception &e)
+	{
+		//std::cout << "Cannot get defaults, encountered an exception: " << e.what() << std::endl;
+		throw;
+	}
+}
+
 int main()
 {
 	try
@@ -116,6 +172,9 @@ int main()
 		tcp::socket socket(io_service);
 		tcp::resolver resolver(io_service);
 		//Connect
+		const std::string host = "localhost", port = "30521";
+
+		std::cout << "Connecting to " << host << " at port " << port << std::endl;
 		boost::asio::connect(socket, resolver.resolve({ "localhost", "30521" }));
 
 		StopWatch sw;
@@ -155,6 +214,33 @@ int main()
 
 		std::cout << "." << std::endl;
 		std::cout << "Request-response: " << sw.elapsedMs().count() << "ms\n";
+
+		try
+		{
+			using namespace generated::proto::crumb;
+			auto defaults = askForNodeDefaults(socket, 0, 0, { { Crumb_Cls_FunctionCrumb, "main" } }, 0);
+		}
+		catch(std::exception &e)
+		{
+			std::cout << "Cannot get node defaults. Error: " << e.what() << std::endl;
+		}
+		std::cout << "Query for node defaults: " << sw.elapsedMs().count() << "ms\n";
+
+		const int nodeDefaultsAskCount = 100;
+		for(int i = 0; i < nodeDefaultsAskCount; i++)
+		{
+			try
+			{
+				using namespace generated::proto::crumb;
+				auto defaults = askForNodeDefaults(socket, 0, 0, { { Crumb_Cls_FunctionCrumb, "main" } }, 0);
+			}
+			catch(std::exception &e)
+			{
+				std::cout << "Cannot get node defaults. Error: " << e.what() << std::endl;
+			}
+		}
+		std::cout << nodeDefaultsAskCount << " queries for node defaults: " << sw.elapsedMs().count() << "ms\n";
+
 		const int pingCount = 10000;
 		for(int i = 0; i < pingCount; ++i)
 		{
