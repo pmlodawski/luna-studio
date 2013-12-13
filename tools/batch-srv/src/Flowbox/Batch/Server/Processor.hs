@@ -37,6 +37,8 @@ import qualified Generated.Proto.Batch.AST.AddFunction.Args                 as A
 import qualified Generated.Proto.Batch.AST.AddFunction.Result               as AddFunction
 import qualified Generated.Proto.Batch.AST.AddModule.Args                   as AddModule
 import qualified Generated.Proto.Batch.AST.AddModule.Result                 as AddModule
+import qualified Generated.Proto.Batch.AST.Definitions.Args                 as Definitions
+import qualified Generated.Proto.Batch.AST.Definitions.Result               as Definitions
 import qualified Generated.Proto.Batch.AST.Remove.Args                      as Remove
 import qualified Generated.Proto.Batch.AST.Remove.Result                    as Remove
 import qualified Generated.Proto.Batch.AST.UpdateClassCls.Args              as UpdateClassCls
@@ -198,6 +200,7 @@ process handler encoded_request = case Proto.messageWithLengthGet encoded_reques
         Method.AST_AddModule            -> call request handler Handler.addModule            AddModule.req            AddModule.rsp
         Method.AST_AddClass             -> call request handler Handler.addClass             AddClass.req             AddClass.rsp
         Method.AST_AddFunction          -> call request handler Handler.addFunction          AddFunction.req          AddFunction.rsp
+        Method.AST_Definitions          -> call request handler Handler.definitions          Definitions.req          Definitions.rsp
         Method.AST_UpdateModuleCls      -> call request handler Handler.updateModuleCls      UpdateModuleCls.req      UpdateModuleCls.rsp
         Method.AST_UpdateModuleImports  -> call request handler Handler.updateModuleImports  UpdateModuleImports.req  UpdateModuleImports.rsp
         Method.AST_UpdateModuleFields   -> call request handler Handler.updateModuleFields   UpdateModuleFields.req   UpdateModuleFields.rsp

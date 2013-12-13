@@ -16,12 +16,14 @@ import "module.proto";
 import "nodedefault.proto";
 import "project.proto";
 import "type.proto";
+import "focus.proto";
 
 
 
 message Request {
     required Method method = 1;
     enum Method {
+        AST_Definitions          = 50;
         AST_AddModule            = 27;
         AST_AddClass             = 28;
         AST_AddFunction          = 29;
@@ -98,6 +100,17 @@ message Exception { extend Response { optional Exception rsp = 1000; }
 
 
 message AST {
+    message Definitions {
+        message Args   { extend Request  { optional Args   req = 1114; }
+            optional int32 maxDepth  = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libID     = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1114; }
+            required generated.proto.focus.Focus focus = 1;
+        }   
+    }
     message AddModule {
         message Args   { extend Request  { optional Args   req = 1101; }
             required generated.proto.module.Module module = 1;

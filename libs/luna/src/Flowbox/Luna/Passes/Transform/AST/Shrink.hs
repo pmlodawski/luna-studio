@@ -9,16 +9,16 @@ module Flowbox.Luna.Passes.Transform.AST.Shrink (
     shrinkFunctionBodies,
 ) where
 
-import           Flowbox.Luna.Data.AST.Expr   (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr   as Expr
-import           Flowbox.Luna.Data.AST.Module (Module)
-import qualified Flowbox.Luna.Data.AST.Module as Module
+import           Flowbox.Luna.Data.AST.Expr         (Expr)
+import qualified Flowbox.Luna.Data.AST.Expr         as Expr
+import           Flowbox.Luna.Data.AST.Zipper.Focus (Focus)
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus as Focus
 import           Flowbox.Prelude
 
 
 
-shrinkFunctionBodies :: (Applicative m, Monad m) => Module -> m Module
-shrinkFunctionBodies m = Module.traverseM pure shrinkExpr pure pure pure m
+shrinkFunctionBodies :: (Applicative m, Monad m) => Focus -> m Focus
+shrinkFunctionBodies = Focus.traverseM pure shrinkExpr pure pure pure
 
 
 shrinkExpr :: (Applicative m, Monad m) => Expr -> m Expr

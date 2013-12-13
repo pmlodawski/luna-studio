@@ -16,7 +16,9 @@ import qualified Flowbox.Luna.Data.AST.Expr               as Expr
 import           Flowbox.Luna.Data.AST.Module             (Module)
 import qualified Flowbox.Luna.Data.AST.Module             as Module
 import           Flowbox.Luna.Data.AST.Type               (Type)
-import qualified Flowbox.Luna.Data.AST.Zipper             as Zipper
+import           Flowbox.Luna.Data.AST.Zipper.Focus       (Focus)
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus       as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper      as Zipper
 import qualified Flowbox.Luna.Lib.Library                 as Library
 import qualified Flowbox.Luna.Passes.Transform.AST.Shrink as Shrink
 import           Flowbox.Prelude                          hiding (focus)
@@ -28,20 +30,28 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Handler.AST"
 
 
-definitions :: Int -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Module
-definitions maxDepth bc libID projectID = readonly . astOp libID projectID (\_ ast -> do
-    loggerIO warning "maxDepth and breadcrumbs are not yet implemented. Returning whole AST from root."
-    shrinked <- Shrink.shrinkFunctionBodies ast
-    return (ast, shrinked))
+--definitions :: Int -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Module
+--definitions maxDepth bc libID projectID = readonly . astOp libID projectID (\_ ast -> do
+--    loggerIO warning "maxDepth and breadcrumbs are not yet implemented. Returning whole AST from root."
+--    shrinked <- Shrink.shrinkFunctionBodies ast
+--    return (ast, shrinked))
+
+
+
+definitions :: Maybe Int -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Focus
+definitions mmaxDepth bc libID projectID = readonly . astFocusOp bc libID projectID (\_ focus -> do
+    shrinked <- Shrink.shrinkFunctionBodies focus
+    return (focus, shrinked))
+
 
 
 addModule :: (Applicative m, Monad m)
           => Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
 addModule newModule bcParent libID projectID = noresult . astFocusOp bcParent libID projectID (\_ focus -> do
     newFocus <- case focus of
-        Zipper.ClassFocus    _ -> fail "Cannot add module to a class"
-        Zipper.FunctionFocus _ -> fail "Cannot add module to a function"
-        Zipper.ModuleFocus   m -> return $ Zipper.ModuleFocus $ Module.addModule newModule m
+        Focus.ClassFocus    _ -> fail "Cannot add module to a class"
+        Focus.FunctionFocus _ -> fail "Cannot add module to a function"
+        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addModule newModule m
     return (newFocus , ()))
 
 
@@ -49,9 +59,9 @@ addClass :: (Applicative m, Monad m)
           => Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
 addClass newClass bcParent libID projectID = noresult . astFocusOp bcParent libID projectID (\_ focus -> do
     newFocus <- case focus of
-        Zipper.ClassFocus    c -> return $ Zipper.ClassFocus $ Expr.addClass newClass c
-        Zipper.FunctionFocus _ -> fail "Cannot add class to a function"
-        Zipper.ModuleFocus   m -> return $ Zipper.ModuleFocus $ Module.addClass newClass m
+        Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addClass newClass c
+        Focus.FunctionFocus _ -> fail "Cannot add class to a function"
+        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addClass newClass m
     return (newFocus, ()))
 
 
@@ -59,9 +69,9 @@ addFunction :: (Applicative m, Monad m)
             => Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
 addFunction newFunction bcParent libID projectID = noresult . astFocusOp bcParent libID projectID (\_ focus -> do
     newFocus <- case focus of
-        Zipper.ClassFocus    c -> return $ Zipper.ClassFocus $ Expr.addMethod newFunction c
-        Zipper.FunctionFocus _ -> fail "Cannot add function to a function"
-        Zipper.ModuleFocus   m -> return $ Zipper.ModuleFocus $ Module.addMethod newFunction m
+        Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addMethod newFunction c
+        Focus.FunctionFocus _ -> fail "Cannot add function to a function"
+        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addMethod newFunction m
     return (newFocus, ()))
 
 

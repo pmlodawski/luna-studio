@@ -15,6 +15,8 @@ import qualified Generated.Proto.Batch.AST.AddFunction.Args                 as A
 import qualified Generated.Proto.Batch.AST.AddFunction.Result               as AddFunction
 import qualified Generated.Proto.Batch.AST.AddModule.Args                   as AddModule
 import qualified Generated.Proto.Batch.AST.AddModule.Result                 as AddModule
+import qualified Generated.Proto.Batch.AST.Definitions.Args                 as Definitions
+import qualified Generated.Proto.Batch.AST.Definitions.Result               as Definitions
 import qualified Generated.Proto.Batch.AST.Remove.Args                      as Remove
 import qualified Generated.Proto.Batch.AST.Remove.Result                    as Remove
 import qualified Generated.Proto.Batch.AST.UpdateClassCls.Args              as UpdateClassCls
@@ -109,9 +111,11 @@ import qualified Generated.Proto.Batch.Project.UpdateProject.Args           as U
 import qualified Generated.Proto.Batch.Project.UpdateProject.Result         as UpdateProject
 
 
+
 class Handler h where
     addModule            :: h -> AddModule.Args            -> Script AddModule.Result
     addClass             :: h -> AddClass.Args             -> Script AddClass.Result
+    definitions          :: h -> Definitions.Args             -> Script Definitions.Result
     addFunction          :: h -> AddFunction.Args          -> Script AddFunction.Result
     updateModuleCls      :: h -> UpdateModuleCls.Args      -> Script UpdateModuleCls.Result
     updateModuleImports  :: h -> UpdateModuleImports.Args  -> Script UpdateModuleImports.Result

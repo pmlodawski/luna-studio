@@ -44,8 +44,9 @@ import qualified Flowbox.System.UniPath                                as UniPat
 import           Flowbox.Text.Show.Hs                                  (hsShow)
 import qualified Flowbox.Text.Show.Pretty                              as PP
 
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb as ASTCrumb
-import qualified Flowbox.Luna.Data.AST.Zipper      as Zipper
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb   as ASTCrumb
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus  as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper as Zipper
 
 
 
@@ -185,7 +186,7 @@ main_inner = Luna.run $ do
 
     ast2 <- Zipper.mk ast
         >>= Zipper.focusFunction "add"
-        >>= Zipper.modify (\(Zipper.FunctionFocus func) -> Zipper.FunctionFocus (func & LExpr.name .~ "dupa"))
+        >>= Zipper.modify (\(Focus.FunctionFocus func) -> Focus.FunctionFocus (func & LExpr.name .~ "dupa"))
         >>= Zipper.close
 
     logger info $ PP.ppqShow ast2
