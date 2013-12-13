@@ -13,6 +13,7 @@ import qualified Flowbox.Batch.Handler.AST                             as BatchA
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb   ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr    ()
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Focus   ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Module  ()
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -23,6 +24,8 @@ import qualified Generated.Proto.Batch.AST.AddFunction.Args            as AddFun
 import qualified Generated.Proto.Batch.AST.AddFunction.Result          as AddFunction
 import qualified Generated.Proto.Batch.AST.AddModule.Args              as AddModule
 import qualified Generated.Proto.Batch.AST.AddModule.Result            as AddModule
+import qualified Generated.Proto.Batch.AST.Definitions.Args            as Definitions
+import qualified Generated.Proto.Batch.AST.Definitions.Result          as Definitions
 import qualified Generated.Proto.Batch.AST.Remove.Args                 as Remove
 import qualified Generated.Proto.Batch.AST.Remove.Result               as Remove
 import qualified Generated.Proto.Batch.AST.UpdateClassCls.Args         as UpdateClassCls
@@ -45,16 +48,22 @@ import qualified Generated.Proto.Batch.AST.UpdateModuleImports.Args    as Update
 import qualified Generated.Proto.Batch.AST.UpdateModuleImports.Result  as UpdateModuleImports
 
 
+
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.AST"
 
 -------- public api -------------------------------------------------
 
---definitions :: IORef Batch -> Definitions.Args -> Script Definitions.Result
---definitions maxDepth bc libID projectID = readonly . astOp libID projectID (\_ ast -> do
---    loggerIO warning "maxDepth and breadcrumbs are not yet implemented. Returning whole AST from root."
---    shrinked <- Shrink.shrinkFunctionBodies ast
---    return (ast, shrinked))
+definitions :: IORef Batch -> Definitions.Args -> Script Definitions.Result
+definitions batchHandler (Definitions.Args mtmaxDepth tbc tlibID tprojectID) = do
+    scriptIO $ loggerIO info "called definitions"
+    bc  <- tryRight $ decode tbc
+    let mmaxDepth = fmap decodeP mtmaxDepth
+        libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    batch <- tryReadIORef batchHandler
+    focus <- scriptIO $ BatchAST.definitions mmaxDepth bc libID projectID batch
+    return $ Definitions.Result $ encode focus
 
 
 addModule :: IORef Batch -> AddModule.Args -> Script AddModule.Result

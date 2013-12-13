@@ -83,6 +83,7 @@ instance Handler BatchHandler where
     closeProject  h = HProject.closeProject  (batchRef h)
     storeProject  h = HProject.storeProject  (batchRef h)
 
+    definitions          h = HAST.definitions            (batchRef h)
     addModule            h = HAST.addModule            (batchRef h)
     addClass             h = HAST.addClass             (batchRef h)
     addFunction          h = HAST.addFunction          (batchRef h)

@@ -7,30 +7,18 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Data.AST.Zipper where
+module Flowbox.Luna.Data.AST.Zipper.Zipper where
 
-import           Data.List                         (find)
-import           Flowbox.Luna.Data.AST.Crumb.Crumb (Breadcrumbs)
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb as Crumb
-import           Flowbox.Luna.Data.AST.Expr        (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr        as Expr
-import           Flowbox.Luna.Data.AST.Module      (Module)
-import qualified Flowbox.Luna.Data.AST.Module      as Module
-import qualified Flowbox.Luna.Data.AST.Type        as Type
-import           Flowbox.Prelude                   hiding (Zipper, drop, id, mod, zipper)
+import           Data.List                          (find)
+import           Flowbox.Luna.Data.AST.Crumb.Crumb  (Breadcrumbs)
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb  as Crumb
+import qualified Flowbox.Luna.Data.AST.Expr         as Expr
+import           Flowbox.Luna.Data.AST.Module       (Module)
+import qualified Flowbox.Luna.Data.AST.Module       as Module
+import qualified Flowbox.Luna.Data.AST.Type         as Type
+import           Flowbox.Luna.Data.AST.Zipper.Focus (Focus (ModuleFocus, ClassFocus, FunctionFocus), FocusPath)
+import           Flowbox.Prelude                    hiding (Zipper, drop, id, mod, zipper)
 
---data Focus = FunctionFocus { expr :: Expr   , env :: FocusEnv }
---           | ClassFocus    { expr :: Expr   , env :: FocusEnv }
---           | ModuleFocus   { mod  :: Module , env :: FocusEnv }
---           deriving (Show)
-
-data Focus  = FunctionFocus Expr
-            | ClassFocus    Expr
-            | ModuleFocus Module
-            deriving (Show)
-
-
-type FocusPath = [Focus]
 
 
 type Zipper = (Focus, FocusPath)
@@ -54,8 +42,8 @@ defocus (env, parent:path) = (newenv, path) where
 
 
 defocusDrop :: Zipper -> Zipper
-defocusDrop zipper@(_, [])     = zipper
-defocusDrop (env, parent:path) = (parent, path)
+defocusDrop zipper@(_, [])   = zipper
+defocusDrop (_, parent:path) = (parent, path)
 
 
 modify :: (Applicative m, Monad m) => (Focus -> Focus) -> Zipper -> m Zipper
