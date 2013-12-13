@@ -6,12 +6,14 @@
 *~
 *.imports
 tools/batch-clients/tcp-cpp/main
+tools/batch-clients/tcp-cpp-performance/main
 tools/batch-clients/zmq-cpp/main
 out
 
 #generated files
 gen
 tools/batch-clients/tcp-cpp/generated
+tools/batch-clients/tcp-cpp-performance/generated
 tools/batch-clients/zmq-cpp/generated
 
 # luna library files
