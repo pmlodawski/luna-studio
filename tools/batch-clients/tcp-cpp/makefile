@@ -2,6 +2,7 @@ GEN_SRC :=  generated/attributes.pb.cc \
 			generated/crumb.pb.cc \
 			generated/expr.pb.cc \
 			generated/file-system.pb.cc \
+			generated/focus.pb.cc \
 			generated/graph.pb.cc \
 			generated/library.pb.cc \
 			generated/lit.pb.cc \
