@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{402E19B5-4F20-4F20-8A3B-31907619E2B9}</ProjectGuid>
-    <RootNamespace>tcpcpp</RootNamespace>
+    <ProjectGuid>{D7274813-2AB9-47EA-A2E5-DF00A659CAA9}</ProjectGuid>
+    <RootNamespace>generator</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -73,7 +73,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="generator.cpp" />
     <ClCompile Include="generated\*.cc" />
     <ClInclude Include="generated\*.h" />
   </ItemGroup>
