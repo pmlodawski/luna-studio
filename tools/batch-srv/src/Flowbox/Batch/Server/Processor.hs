@@ -13,23 +13,23 @@ import           Control.Applicative
 import           Data.ByteString.Lazy             (ByteString)
 import qualified Data.Map                         as Map
 import qualified Text.ProtocolBuffers             as Proto
-import qualified Text.ProtocolBuffers.Basic       as Proto
 import qualified Text.ProtocolBuffers.Extensions  as Extensions
 import qualified Text.ProtocolBuffers.Reflections as Reflections
 import qualified Text.ProtocolBuffers.WireMessage as WireMessage
 
-import           Flowbox.Batch.Server.Handler.Handler (Handler)
-import qualified Flowbox.Batch.Server.Handler.Handler as Handler
+import           Flowbox.Batch.Server.Handler.Handler           (Handler)
+import qualified Flowbox.Batch.Server.Handler.Handler           as Handler
 import           Flowbox.Control.Error
-import           Flowbox.Prelude                      hiding (error)
+import           Flowbox.Prelude                                hiding (error)
 import           Flowbox.System.Log.Logger
-import           Generated.Proto.Batch.Exception      (Exception (Exception))
-import qualified Generated.Proto.Batch.Exception      as Exception
-import           Generated.Proto.Batch.Request        (Request)
-import qualified Generated.Proto.Batch.Request        as Request
-import qualified Generated.Proto.Batch.Request.Method as Method
-import           Generated.Proto.Batch.Response       (Response (Response))
-import qualified Generated.Proto.Batch.Response.Type  as ResponseType
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import           Generated.Proto.Batch.Exception                (Exception (Exception))
+import qualified Generated.Proto.Batch.Exception                as Exception
+import           Generated.Proto.Batch.Request                  (Request)
+import qualified Generated.Proto.Batch.Request                  as Request
+import qualified Generated.Proto.Batch.Request.Method           as Method
+import           Generated.Proto.Batch.Response                 (Response (Response))
+import qualified Generated.Proto.Batch.Response.Type            as ResponseType
 
 import qualified Generated.Proto.Batch.AST.AddClass.Args                    as AddClass
 import qualified Generated.Proto.Batch.AST.AddClass.Result                  as AddClass
@@ -142,13 +142,13 @@ rpcRunScript :: (Reflections.ReflectDescriptor r, WireMessage.Wire r)
              => Extensions.Key Maybe Response r -> Script r -> IO ByteString
 rpcRunScript rspkey s = do
     e <- runEitherT s
-    let r = Response ResponseType.Exception $ Extensions.ExtField Map.empty
+    let r t = Response t $ Extensions.ExtField Map.empty
     Proto.messageWithLengthPut <$> case e of
     -- TODO [PM] : move messageWithLengthPut from here
         Left  m -> do loggerIO error m
-                      let exc = Exception $ Just $ Proto.uFromString m
-                      return $ Extensions.putExt Exception.rsp (Just exc) r
-        Right a ->    return $ Extensions.putExt rspkey        (Just a  ) r
+                      let exc = Exception $ encodePJ m
+                      return $ Extensions.putExt Exception.rsp (Just exc) $ r ResponseType.Exception
+        Right a ->    return $ Extensions.putExt rspkey        (Just a  ) $ r ResponseType.Result
 
 
 call :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
