@@ -3,12 +3,12 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.Script>, 2013
+-- Flowbox Team <contact@flowbox.IO>, 2013
 ---------------------------------------------------------------------------
 
 module Flowbox.Batch.Server.Handler.Handler where
 
-import           Flowbox.Control.Error
+import           Flowbox.Prelude
 import qualified Generated.Proto.Batch.AST.AddClass.Args                    as AddClass
 import qualified Generated.Proto.Batch.AST.AddClass.Result                  as AddClass
 import qualified Generated.Proto.Batch.AST.AddFunction.Args                 as AddFunction
@@ -113,59 +113,59 @@ import qualified Generated.Proto.Batch.Project.UpdateProject.Result         as U
 
 
 class Handler h where
-    addModule            :: h -> AddModule.Args            -> Script AddModule.Result
-    addClass             :: h -> AddClass.Args             -> Script AddClass.Result
-    addFunction          :: h -> AddFunction.Args          -> Script AddFunction.Result
-    definitions          :: h -> Definitions.Args          -> Script Definitions.Result
-    updateModuleCls      :: h -> UpdateModuleCls.Args      -> Script UpdateModuleCls.Result
-    updateModuleImports  :: h -> UpdateModuleImports.Args  -> Script UpdateModuleImports.Result
-    updateModuleFields   :: h -> UpdateModuleFields.Args   -> Script UpdateModuleFields.Result
-    updateClassCls       :: h -> UpdateClassCls.Args       -> Script UpdateClassCls.Result
-    updateClassFields    :: h -> UpdateClassFields.Args    -> Script UpdateClassFields.Result
-    updateFunctionName   :: h -> UpdateFunctionName.Args   -> Script UpdateFunctionName.Result
-    updateFunctionPath   :: h -> UpdateFunctionPath.Args   -> Script UpdateFunctionPath.Result
-    updateFunctionInputs :: h -> UpdateFunctionInputs.Args -> Script UpdateFunctionInputs.Result
-    updateFunctionOutput :: h -> UpdateFunctionOutput.Args -> Script UpdateFunctionOutput.Result
-    remove               :: h -> Remove.Args               -> Script Remove.Result
+    addModule            :: h -> AddModule.Args            -> IO AddModule.Result
+    addClass             :: h -> AddClass.Args             -> IO AddClass.Result
+    addFunction          :: h -> AddFunction.Args          -> IO AddFunction.Result
+    definitions          :: h -> Definitions.Args          -> IO Definitions.Result
+    updateModuleCls      :: h -> UpdateModuleCls.Args      -> IO UpdateModuleCls.Result
+    updateModuleImports  :: h -> UpdateModuleImports.Args  -> IO UpdateModuleImports.Result
+    updateModuleFields   :: h -> UpdateModuleFields.Args   -> IO UpdateModuleFields.Result
+    updateClassCls       :: h -> UpdateClassCls.Args       -> IO UpdateClassCls.Result
+    updateClassFields    :: h -> UpdateClassFields.Args    -> IO UpdateClassFields.Result
+    updateFunctionName   :: h -> UpdateFunctionName.Args   -> IO UpdateFunctionName.Result
+    updateFunctionPath   :: h -> UpdateFunctionPath.Args   -> IO UpdateFunctionPath.Result
+    updateFunctionInputs :: h -> UpdateFunctionInputs.Args -> IO UpdateFunctionInputs.Result
+    updateFunctionOutput :: h -> UpdateFunctionOutput.Args -> IO UpdateFunctionOutput.Result
+    remove               :: h -> Remove.Args               -> IO Remove.Result
 
-    ls         :: h -> LS.Args    -> Script LS.Result
-    stat       :: h -> Stat.Args  -> Script Stat.Result
-    mkdir      :: h -> MkDir.Args -> Script MkDir.Result
-    touch      :: h -> Touch.Args -> Script Touch.Result
-    rm         :: h -> RM.Args    -> Script RM.Result
-    cp         :: h -> CP.Args    -> Script CP.Result
-    mv         :: h -> MV.Args    -> Script MV.Result
+    ls         :: h -> LS.Args    -> IO LS.Result
+    stat       :: h -> Stat.Args  -> IO Stat.Result
+    mkdir      :: h -> MkDir.Args -> IO MkDir.Result
+    touch      :: h -> Touch.Args -> IO Touch.Result
+    rm         :: h -> RM.Args    -> IO RM.Result
+    cp         :: h -> CP.Args    -> IO CP.Result
+    mv         :: h -> MV.Args    -> IO MV.Result
 
-    nodesGraph :: h -> NodesGraph.Args -> Script NodesGraph.Result
-    nodeByID   :: h -> NodeByID.Args   -> Script NodeByID.Result
-    addNode    :: h -> AddNode.Args    -> Script AddNode.Result
-    updateNode :: h -> UpdateNode.Args -> Script UpdateNode.Result
-    removeNode :: h -> RemoveNode.Args -> Script RemoveNode.Result
-    connect    :: h -> Connect.Args    -> Script Connect.Result
-    disconnect :: h -> Disconnect.Args -> Script Disconnect.Result
+    nodesGraph :: h -> NodesGraph.Args -> IO NodesGraph.Result
+    nodeByID   :: h -> NodeByID.Args   -> IO NodeByID.Result
+    addNode    :: h -> AddNode.Args    -> IO AddNode.Result
+    updateNode :: h -> UpdateNode.Args -> IO UpdateNode.Result
+    removeNode :: h -> RemoveNode.Args -> IO RemoveNode.Result
+    connect    :: h -> Connect.Args    -> IO Connect.Result
+    disconnect :: h -> Disconnect.Args -> IO Disconnect.Result
 
-    libraries     :: h -> Libraries.Args     -> Script Libraries.Result
-    libraryByID   :: h -> LibraryByID.Args   -> Script LibraryByID.Result
-    createLibrary :: h -> CreateLibrary.Args -> Script CreateLibrary.Result
-    loadLibrary   :: h -> LoadLibrary.Args   -> Script LoadLibrary.Result
-    unloadLibrary :: h -> UnloadLibrary.Args -> Script UnloadLibrary.Result
-    storeLibrary  :: h -> StoreLibrary.Args  -> Script StoreLibrary.Result
-    buildLibrary  :: h -> BuildLibrary.Args  -> Script BuildLibrary.Result
-    runLibrary    :: h -> RunLibrary.Args    -> Script RunLibrary.Result
+    libraries     :: h -> Libraries.Args     -> IO Libraries.Result
+    libraryByID   :: h -> LibraryByID.Args   -> IO LibraryByID.Result
+    createLibrary :: h -> CreateLibrary.Args -> IO CreateLibrary.Result
+    loadLibrary   :: h -> LoadLibrary.Args   -> IO LoadLibrary.Result
+    unloadLibrary :: h -> UnloadLibrary.Args -> IO UnloadLibrary.Result
+    storeLibrary  :: h -> StoreLibrary.Args  -> IO StoreLibrary.Result
+    buildLibrary  :: h -> BuildLibrary.Args  -> IO BuildLibrary.Result
+    runLibrary    :: h -> RunLibrary.Args    -> IO RunLibrary.Result
 
-    initialize :: h -> Initialize.Args -> Script Initialize.Result
-    ping       :: h -> Ping.Args       -> Script Ping.Result
-    dump       :: h -> Dump.Args       -> Script Dump.Result
-    shutdown   :: h -> Shutdown.Args   -> Script Shutdown.Result
+    initialize :: h -> Initialize.Args -> IO Initialize.Result
+    ping       :: h -> Ping.Args       -> IO Ping.Result
+    dump       :: h -> Dump.Args       -> IO Dump.Result
+    shutdown   :: h -> Shutdown.Args   -> IO Shutdown.Result
 
-    nodeDefaults      :: h -> NodeDefaults.Args      -> Script NodeDefaults.Result
-    setNodeDefault    :: h -> SetNodeDefault.Args    -> Script SetNodeDefault.Result
-    removeNodeDefault :: h -> RemoveNodeDefault.Args -> Script RemoveNodeDefault.Result
+    nodeDefaults      :: h -> NodeDefaults.Args      -> IO NodeDefaults.Result
+    setNodeDefault    :: h -> SetNodeDefault.Args    -> IO SetNodeDefault.Result
+    removeNodeDefault :: h -> RemoveNodeDefault.Args -> IO RemoveNodeDefault.Result
 
-    projects      :: h -> Projects.Args      -> Script Projects.Result
-    projectByID   :: h -> ProjectByID.Args   -> Script ProjectByID.Result
-    createProject :: h -> CreateProject.Args -> Script CreateProject.Result
-    openProject   :: h -> OpenProject.Args   -> Script OpenProject.Result
-    updateProject :: h -> UpdateProject.Args -> Script UpdateProject.Result
-    closeProject  :: h -> CloseProject.Args  -> Script CloseProject.Result
-    storeProject  :: h -> StoreProject.Args  -> Script StoreProject.Result
+    projects      :: h -> Projects.Args      -> IO Projects.Result
+    projectByID   :: h -> ProjectByID.Args   -> IO ProjectByID.Result
+    createProject :: h -> CreateProject.Args -> IO CreateProject.Result
+    openProject   :: h -> OpenProject.Args   -> IO OpenProject.Result
+    updateProject :: h -> UpdateProject.Args -> IO UpdateProject.Result
+    closeProject  :: h -> CloseProject.Args  -> IO CloseProject.Result
+    storeProject  :: h -> StoreProject.Args  -> IO StoreProject.Result

@@ -84,4 +84,6 @@ instance Convert Pat Gen.Pat where
                              (GenWildcard.Wildcard mtid) <- ext <?> "Failed to decode Pat.Wildcard: extension is missing"
                              tid   <- mtid   <?> "Failed to decode Pat.Wildcard: 'id' field is missing"
                              pure $ Pat.Wildcard (decodeP tid)
-       where getExt = flip Extensions.getExt p
+       where getExt k = case Extensions.getExt k p of
+                                Right a -> return a
+                                Left m  -> fail m

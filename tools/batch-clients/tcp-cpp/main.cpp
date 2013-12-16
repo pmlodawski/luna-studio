@@ -166,6 +166,14 @@ void setField(TMessage *msg, int i, SomeMessageType *value)
 	messageField->GetReflection()->Swap(messageField, value);
 	delete value;
 }
+
+template <typename TMessage, typename SomeMessageType>
+void setField(TMessage *msg, int i, SomeMessageType value)
+{
+	static_assert(std::is_base_of<google::protobuf::Message, SomeMessageType>::value, "Cannot set field to a non-message pointer");
+	auto messageField = msg->GetReflection()->MutableMessage(msg, TMessage::descriptor()->field(i));
+	messageField->GetReflection()->Swap(messageField, &value);
+}
 /*
 template <typename TMessage, typename TField>
 void setField(TMessage *msg, int, const TField &)
@@ -314,6 +322,13 @@ int main()
 		auto lsResult = macro::FileSystem::LS(socket, "~");
 		std::cout << sw.elapsedMs().count() << "ms\tFileSystem::LS\n";
 
+		{
+			auto project = project::Project();
+			project.set_name("testProject");
+
+			auto r = macro::Project::CreateProject(socket, project);
+		}
+
 		macro::Maintenance::Dump(socket);
 		std::cout << sw.elapsedMs().count() << "ms\tMaintenance::Dump\n";
 
@@ -349,7 +364,7 @@ int main()
 		}
 		std::cout << sw.elapsedMs().count() << "ms\tSending " << dataSize << " bytes\n";
 
-		macro::Maintenance::Shutdown(socket);
+		// macro::Maintenance::Shutdown(socket);
 		std::cout << "done" << std::endl;
 
 		return EXIT_SUCCESS;

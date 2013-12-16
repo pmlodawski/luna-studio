@@ -8,14 +8,14 @@ module Flowbox.Batch.Server.Handler.AST where
 
 import Data.IORef (IORef)
 
+import qualified Data.IORef                                            as IORef
 import           Flowbox.Batch.Batch                                   (Batch)
 import qualified Flowbox.Batch.Handler.AST                             as BatchAST
-import           Flowbox.Control.Error
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb   ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr    ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Focus   ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Module  ()
-import           Flowbox.Prelude
+import           Flowbox.Prelude                                       hiding (focus)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Batch.AST.AddClass.Args               as AddClass
@@ -54,181 +54,181 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.AST"
 
 -------- public api -------------------------------------------------
 
-definitions :: IORef Batch -> Definitions.Args -> Script Definitions.Result
+definitions :: IORef Batch -> Definitions.Args -> IO Definitions.Result
 definitions batchHandler (Definitions.Args mtmaxDepth tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called definitions"
-    bc  <- tryRight $ decode tbc
+    loggerIO info "called definitions"
+    bc  <- decode tbc
     let mmaxDepth = fmap decodeP mtmaxDepth
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    focus <- scriptIO $ BatchAST.definitions mmaxDepth bc libID projectID batch
+    batch <- IORef.readIORef batchHandler
+    focus <- BatchAST.definitions mmaxDepth bc libID projectID batch
     return $ Definitions.Result $ encode focus
 
 
-addModule :: IORef Batch -> AddModule.Args -> Script AddModule.Result
+addModule :: IORef Batch -> AddModule.Args -> IO AddModule.Result
 addModule batchHandler (AddModule.Args tnewModule tbcParent tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called addModule"
-    newModule <- tryRight $ decode tnewModule
-    bcParent  <- tryRight $ decode tbcParent
+    loggerIO info "called addModule"
+    newModule <- decode tnewModule
+    bcParent  <- decode tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.addModule newModule bcParent libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.addModule newModule bcParent libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return AddModule.Result
 
 
-addClass :: IORef Batch -> AddClass.Args -> Script AddClass.Result
+addClass :: IORef Batch -> AddClass.Args -> IO AddClass.Result
 addClass batchHandler (AddClass.Args tnewClass tbcParent tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called addClass"
-    newClass <- tryRight $ decode tnewClass
-    bcParent <- tryRight $ decode tbcParent
+    loggerIO info "called addClass"
+    newClass <- decode tnewClass
+    bcParent <- decode tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.addClass newClass bcParent libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.addClass newClass bcParent libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return AddClass.Result
 
 
-addFunction :: IORef Batch -> AddFunction.Args -> Script AddFunction.Result
+addFunction :: IORef Batch -> AddFunction.Args -> IO AddFunction.Result
 addFunction batchHandler (AddFunction.Args tnewFunction tbcParent tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called addFunction"
-    newFunction <- tryRight $ decode tnewFunction
-    bcParent    <- tryRight $ decode tbcParent
+    loggerIO info "called addFunction"
+    newFunction <- decode tnewFunction
+    bcParent    <- decode tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.addFunction newFunction bcParent libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.addFunction newFunction bcParent libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return AddFunction.Result
 
 
-remove :: IORef Batch -> Remove.Args -> Script Remove.Result
+remove :: IORef Batch -> Remove.Args -> IO Remove.Result
 remove batchHandler (Remove.Args tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called remove"
-    bc  <- tryRight $ decode tbc
+    loggerIO info "called remove"
+    bc  <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.remove bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.remove bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return Remove.Result
 
 
-updateModuleCls :: IORef Batch -> UpdateModuleCls.Args -> Script UpdateModuleCls.Result
+updateModuleCls :: IORef Batch -> UpdateModuleCls.Args -> IO UpdateModuleCls.Result
 updateModuleCls batchHandler (UpdateModuleCls.Args tcls tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called updateModuleCls"
-    cls <- tryRight $ decode tcls
-    bc  <- tryRight $ decode tbc
+    loggerIO info "called updateModuleCls"
+    cls <- decode tcls
+    bc  <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.updateModuleCls cls bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.updateModuleCls cls bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return UpdateModuleCls.Result
 
 
-updateModuleImports :: IORef Batch -> UpdateModuleImports.Args -> Script UpdateModuleImports.Result
+updateModuleImports :: IORef Batch -> UpdateModuleImports.Args -> IO UpdateModuleImports.Result
 updateModuleImports batchHandler (UpdateModuleImports.Args timports tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called updateModuleImports"
-    imports <- tryRight $ decodeList timports
-    bc      <- tryRight $ decode tbc
+    loggerIO info "called updateModuleImports"
+    imports <- decodeList timports
+    bc      <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.updateModuleImports imports bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.updateModuleImports imports bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return UpdateModuleImports.Result
 
 
-updateModuleFields :: IORef Batch -> UpdateModuleFields.Args -> Script UpdateModuleFields.Result
+updateModuleFields :: IORef Batch -> UpdateModuleFields.Args -> IO UpdateModuleFields.Result
 updateModuleFields batchHandler (UpdateModuleFields.Args tfields tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called updateModuleFields"
-    fields <- tryRight $ decodeList tfields
-    bc     <- tryRight $ decode tbc
+    loggerIO info "called updateModuleFields"
+    fields <- decodeList tfields
+    bc     <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.updateModuleFields fields bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.updateModuleFields fields bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return UpdateModuleFields.Result
 
 
-updateClassCls :: IORef Batch -> UpdateClassCls.Args -> Script UpdateClassCls.Result
+updateClassCls :: IORef Batch -> UpdateClassCls.Args -> IO UpdateClassCls.Result
 updateClassCls batchHandler (UpdateClassCls.Args tcls tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called updateClassCls"
-    cls <- tryRight $ decode tcls
-    bc  <- tryRight $ decode tbc
+    loggerIO info "called updateClassCls"
+    cls <- decode tcls
+    bc  <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.updateClassCls cls bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.updateClassCls cls bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return UpdateClassCls.Result
 
 
-updateClassFields :: IORef Batch -> UpdateClassFields.Args -> Script UpdateClassFields.Result
+updateClassFields :: IORef Batch -> UpdateClassFields.Args -> IO UpdateClassFields.Result
 updateClassFields batchHandler (UpdateClassFields.Args tfields tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called updateClassFields"
-    fields <- tryRight $ decodeList tfields
-    bc     <- tryRight $ decode tbc
+    loggerIO info "called updateClassFields"
+    fields <- decodeList tfields
+    bc     <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.updateClassFields fields bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.updateClassFields fields bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return UpdateClassFields.Result
 
 
-updateFunctionName :: IORef Batch -> UpdateFunctionName.Args -> Script UpdateFunctionName.Result
+updateFunctionName :: IORef Batch -> UpdateFunctionName.Args -> IO UpdateFunctionName.Result
 updateFunctionName batchHandler (UpdateFunctionName.Args tname tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called updateFunctionName"
-    bc <- tryRight $ decode tbc
+    loggerIO info "called updateFunctionName"
+    bc <- decode tbc
     let name      = decodeP tname
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.updateFunctionName name bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.updateFunctionName name bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return UpdateFunctionName.Result
 
 
-updateFunctionPath :: IORef Batch -> UpdateFunctionPath.Args -> Script UpdateFunctionPath.Result
+updateFunctionPath :: IORef Batch -> UpdateFunctionPath.Args -> IO UpdateFunctionPath.Result
 updateFunctionPath batchHandler (UpdateFunctionPath.Args tpath tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called updateFunctionPath"
-    bc <- tryRight $ decode tbc
+    loggerIO info "called updateFunctionPath"
+    bc <- decode tbc
     let path      = decodeListP tpath
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.updateFunctionPath path bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.updateFunctionPath path bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return UpdateFunctionPath.Result
 
 
-updateFunctionInputs :: IORef Batch -> UpdateFunctionInputs.Args -> Script UpdateFunctionInputs.Result
+updateFunctionInputs :: IORef Batch -> UpdateFunctionInputs.Args -> IO UpdateFunctionInputs.Result
 updateFunctionInputs batchHandler (UpdateFunctionInputs.Args tinputs tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called updateFunctionInputs"
-    inputs <- tryRight $ decodeList tinputs
-    bc     <- tryRight $ decode tbc
+    loggerIO info "called updateFunctionInputs"
+    inputs <- decodeList tinputs
+    bc     <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.updateFunctionInputs inputs bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.updateFunctionInputs inputs bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return UpdateFunctionInputs.Result
 
 
-updateFunctionOutput :: IORef Batch -> UpdateFunctionOutput.Args -> Script UpdateFunctionOutput.Result
+updateFunctionOutput :: IORef Batch -> UpdateFunctionOutput.Args -> IO UpdateFunctionOutput.Result
 updateFunctionOutput batchHandler (UpdateFunctionOutput.Args toutput tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called updateFunctionOutput"
-    output <- tryRight $ decode toutput
-    bc     <- tryRight $ decode tbc
+    loggerIO info "called updateFunctionOutput"
+    output <- decode toutput
+    bc     <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchAST.updateFunctionOutput output bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.updateFunctionOutput output bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return UpdateFunctionOutput.Result

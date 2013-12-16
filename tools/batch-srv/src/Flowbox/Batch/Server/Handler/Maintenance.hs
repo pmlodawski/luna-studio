@@ -16,9 +16,9 @@ import qualified Control.Concurrent.MVar as MVar
 import qualified Data.ByteString.Lazy    as ByteString
 import           Data.IORef              (IORef)
 
+import qualified Data.IORef                                          as IORef
 import           Flowbox.Batch.Batch                                 (Batch)
 import qualified Flowbox.Batch.Handler.Maintenance                   as BatchM
-import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.Batch.Maintenance.Dump.Args         as Dump
@@ -37,15 +37,15 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.Handler.Maintenance"
 
 
 ------ public api -------------------------------------------------
-initialize :: IORef Batch -> Initialize.Args -> Script Initialize.Result
+initialize :: IORef Batch -> Initialize.Args -> IO Initialize.Result
 initialize batchHandler _ = do
-    scriptIO $ loggerIO info "called initialize"
-    batch <- tryReadIORef batchHandler
-    scriptIO $ BatchM.initialize batch
+    loggerIO info "called initialize"
+    batch <- IORef.readIORef batchHandler
+    BatchM.initialize batch
     return Initialize.Result
 
 
-ping :: IORef Batch -> Ping.Args -> Script Ping.Result
+ping :: IORef Batch -> Ping.Args -> IO Ping.Result
 ping _ (Ping.Args mdata) = do
     loggerIO info "called ping"
     case mdata of
@@ -54,18 +54,18 @@ ping _ (Ping.Args mdata) = do
     return $ Ping.Result Nothing
 
 
-dump :: IORef Batch -> Dump.Args -> Script Dump.Result
+dump :: IORef Batch -> Dump.Args -> IO Dump.Result
 dump batchHandler _ = do
     loggerIO info "called ping"
-    batch <- tryReadIORef batchHandler
-    scriptIO $ print batch
+    batch <- IORef.readIORef batchHandler
+    print batch
     return Dump.Result
 
 
-shutdown :: MVar Bool -> Shutdown.Args -> Script Shutdown.Result
+shutdown :: MVar Bool -> Shutdown.Args -> IO Shutdown.Result
 shutdown quitMutex _ = do
     loggerIO info "called shutdown"
-    scriptIO $ MVar.putMVar quitMutex True
+    MVar.putMVar quitMutex True
     return Shutdown.Result
 
 

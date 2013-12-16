@@ -8,24 +8,12 @@ module Flowbox.Control.Error (
     module Control.Error,
     runScript,
     (<?>),
-    (<??>),
     ifnot,
-    tryReadIORef,
-    tryWriteIORef,
-    tryGetID,
-    tryGetString,
-    tryGetUniPath,
 ) where
 
 import           Control.Error          hiding (runScript)
-import qualified Control.Monad.IO.Class
-import           Data.Int
-import           Data.IORef
-import           Data.Text.Lazy         (Text, unpack)
 
 import           Flowbox.Prelude
-import qualified Flowbox.System.UniPath          as UniPath
-import           Flowbox.Tools.Conversion.Common
 
 
 runScript :: Script a -> IO a
@@ -34,18 +22,6 @@ runScript s = do
     case e of
         Left  m -> fail m
         Right a -> return a
-
-
-tryReadIORef :: IORef a -> EitherT String IO a
-tryReadIORef = scriptIO . readIORef
-
-
-tryWriteIORef :: Control.Monad.IO.Class.MonadIO m  => IORef a -> a -> EitherT String m ()
-tryWriteIORef ref v = scriptIO $ writeIORef ref v
-
-
-(<??>) :: Monad m => Maybe a -> e -> EitherT e m a
-v <??> m = tryRight $ note m v
 
 
 (<?>) :: (Applicative m, Monad m) => Maybe b -> String -> m b
@@ -58,22 +34,4 @@ ifnot :: (Applicative m, Monad m) => Bool -> String -> m ()
 ifnot bool msg = if bool
     then return ()
     else fail msg
-
-
-tryGetID :: Monad m => Maybe Int32 -> String -> EitherT String m Int
-tryGetID mtID name = do
-    tID <- mtID <??> ((show name) ++ " argument is missing")
-    return $ i32toi tID
-
-
-tryGetString :: Monad m => Maybe Text -> String -> EitherT String m String
-tryGetString mtstring name = do
-    tstring <- mtstring <??> ((show name) ++ " argument is missing")
-    return $ unpack tstring
-
-
-tryGetUniPath :: Monad m => Maybe Text -> String -> EitherT String m UniPath.UniPath
-tryGetUniPath mtpath name = do
-    tpath <- mtpath <??> ((show name) ++ " argument is missing")
-    return $ UniPath.fromUnixString $ unpack tpath
 

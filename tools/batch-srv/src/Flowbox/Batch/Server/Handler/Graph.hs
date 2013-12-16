@@ -9,9 +9,9 @@ module Flowbox.Batch.Server.Handler.Graph where
 
 import Data.IORef (IORef)
 
+import qualified Data.IORef                                          as IORef
 import           Flowbox.Batch.Batch                                 (Batch)
 import qualified Flowbox.Batch.Handler.Graph                         as BatchG
-import           Flowbox.Control.Error
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Graph ()
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -37,95 +37,95 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Graph"
 
 
-nodesGraph :: IORef Batch -> NodesGraph.Args -> Script NodesGraph.Result
+nodesGraph :: IORef Batch -> NodesGraph.Args -> IO NodesGraph.Result
 nodesGraph batchHandler (NodesGraph.Args tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called nodesGraph"
-    bc <- tryRight $ decode tbc
+    loggerIO info "called nodesGraph"
+    bc <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    ng <- scriptIO $ BatchG.nodesGraph bc libID projectID batch
+    batch <- IORef.readIORef batchHandler
+    ng <- BatchG.nodesGraph bc libID projectID batch
     return $ NodesGraph.Result $ encode ng
 
 
-nodeByID :: IORef Batch -> NodeByID.Args -> Script NodeByID.Result
+nodeByID :: IORef Batch -> NodeByID.Args -> IO NodeByID.Result
 nodeByID batchHandler (NodeByID.Args tnodeID tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called nodeByID"
-    bc <- tryRight $ decode tbc
+    loggerIO info "called nodeByID"
+    bc <- decode tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    node  <- scriptIO $ BatchG.nodeByID nodeID bc libID projectID batch
+    batch <- IORef.readIORef batchHandler
+    node  <- BatchG.nodeByID nodeID bc libID projectID batch
     return $ NodeByID.Result $ encode (nodeID, node)
 
 
-addNode :: IORef Batch -> AddNode.Args -> Script AddNode.Result
+addNode :: IORef Batch -> AddNode.Args -> IO AddNode.Result
 addNode batchHandler (AddNode.Args tnode tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called addNode"
-    bc <- tryRight $ decode tbc
-    (_ :: Int, node) <- tryRight $ decode tnode
+    loggerIO info "called addNode"
+    bc <- decode tbc
+    (_ :: Int, node) <- decode tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    (newBatch, newNodeID) <- scriptIO $ BatchG.addNode node bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    (newBatch, newNodeID) <- BatchG.addNode node bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return $ AddNode.Result $ encode (newNodeID, node)
 
 
-updateNode :: IORef Batch -> UpdateNode.Args -> Script UpdateNode.Result
+updateNode :: IORef Batch -> UpdateNode.Args -> IO UpdateNode.Result
 updateNode batchHandler (UpdateNode.Args tnode tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called updateNode"
-    bc <- tryRight $ decode tbc
-    (nodeID, node) <- tryRight $ decode tnode
+    loggerIO info "called updateNode"
+    bc <- decode tbc
+    (nodeID, node) <- decode tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchG.updateNode (nodeID, node) bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchG.updateNode (nodeID, node) bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return UpdateNode.Result
 
 
-removeNode :: IORef Batch -> RemoveNode.Args -> Script RemoveNode.Result
+removeNode :: IORef Batch -> RemoveNode.Args -> IO RemoveNode.Result
 removeNode batchHandler (RemoveNode.Args tnodeID tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called removeNode"
-    bc <- tryRight $ decode tbc
+    loggerIO info "called removeNode"
+    bc <- decode tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchG.removeNode nodeID bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchG.removeNode nodeID bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return RemoveNode.Result
 
 
-connect :: IORef Batch -> Connect.Args -> Script Connect.Result
+connect :: IORef Batch -> Connect.Args -> IO Connect.Result
 connect batchHandler (Connect.Args tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called connect"
-    bc <- tryRight $ decode tbc
+    loggerIO info "called connect"
+    bc <- decode tbc
     let srcNodeID = decodeP tsrcNodeID
         srcPort   = fmap decodeP tsrcPort
         dstNodeID = decodeP tdstNodeID
         dstPort   = decodeP tdstPort
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchG.connect srcNodeID srcPort dstNodeID dstPort bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchG.connect srcNodeID srcPort dstNodeID dstPort bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return Connect.Result
 
 
-disconnect :: IORef Batch -> Disconnect.Args -> Script Disconnect.Result
+disconnect :: IORef Batch -> Disconnect.Args -> IO Disconnect.Result
 disconnect batchHandler (Disconnect.Args tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called disconnect"
-    bc <- tryRight $ decode tbc
+    loggerIO info "called disconnect"
+    bc <- decode tbc
     let srcNodeID = decodeP tsrcNodeID
         srcPort   = fmap decodeP tsrcPort
         dstNodeID = decodeP tdstNodeID
         dstPort   = decodeP tdstPort
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchG.disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchG.disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return Disconnect.Result

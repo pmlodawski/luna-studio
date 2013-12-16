@@ -138,7 +138,7 @@ instance Convert Expr Gen.Expr where
             tid <- mtid  <?> "Failed to decode Expr.AppCons_: 'id' field is missing"
             Expr.AppCons_ (decodeP tid) <$> decodeList targs
         GenCls.Assignment -> do
-            ext <- Extensions.getExt GenAssignment.ext t
+            ext <- getExt GenAssignment.ext
             (GenAssignment.Assignment mtid mtpat mtdst) <- ext <?> "Failed to decode Expr.Assignment: extension is missing"
             tid  <- mtid  <?> "Failed to decode Expr.Assignment: 'id' field is missing"
             tpat <- mtpat <?> "Failed to decode Expr.Assignment: 'pat' field is missing"
@@ -265,5 +265,6 @@ instance Convert Expr Gen.Expr where
             tid   <- mtid   <?> "Failed to decode Expr.NativeVar: 'id' field is missing"
             tname <- mtname <?> "Failed to decode Expr.NativeVar: 'name' field is missing"
             pure $ Expr.NativeVar (decodeP tid) (decodeP tname)
-        where
-            getExt = flip Extensions.getExt t
+       where getExt k = case Extensions.getExt k t of
+                                Right a -> return a
+                                Left m  -> fail m

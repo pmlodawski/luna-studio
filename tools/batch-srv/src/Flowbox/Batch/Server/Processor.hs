@@ -139,9 +139,9 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Processor"
 
 
 rpcRunScript :: (Reflections.ReflectDescriptor r, WireMessage.Wire r)
-             => Extensions.Key Maybe Response r -> Script r -> IO ByteString
+             => Extensions.Key Maybe Response r -> IO r -> IO ByteString
 rpcRunScript rspkey s = do
-    e <- runEitherT s
+    e <- runEitherT $ scriptIO s
     let r t = Response t $ Extensions.ExtField Map.empty
     Proto.messageWithLengthPut <$> case e of
     -- TODO [PM] : move messageWithLengthPut from here
@@ -152,7 +152,7 @@ rpcRunScript rspkey s = do
 
 
 call :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
-     => Request -> h ->  (h -> arg -> Script r)
+     => Request -> h ->  (h -> arg -> IO r)
      -> Extensions.Key Maybe Request arg
      -> Extensions.Key Maybe Response r
      -> IO ByteString

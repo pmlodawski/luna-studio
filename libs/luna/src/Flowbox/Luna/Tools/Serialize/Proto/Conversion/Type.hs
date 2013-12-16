@@ -85,4 +85,6 @@ instance Convert Type Gen.Type where
                              tid  <- mtid  <?> "Failed to decode Type.App: 'id' field is missing"
                              tsrc <- mtsrc <?> "Failed to decode Type.App: 'src' field is missing"
                              Type.App (decodeP tid) <$> (decode tsrc) <*> (decodeList targs)
-        where getExt = flip Extensions.getExt t
+        where getExt k = case Extensions.getExt k t of
+                                Right a -> return a
+                                Left m  -> fail m

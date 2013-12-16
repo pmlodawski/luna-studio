@@ -8,9 +8,9 @@ module Flowbox.Batch.Server.Handler.NodeDefault where
 
 import Data.IORef (IORef)
 
+import qualified Data.IORef                                                 as IORef
 import           Flowbox.Batch.Batch                                        (Batch)
 import qualified Flowbox.Batch.Handler.NodeDefault                          as BatchND
-import           Flowbox.Control.Error
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.NodeDefault  ()
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -28,42 +28,42 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.NodeDefault"
 
 
-nodeDefaults :: IORef Batch -> NodeDefaults.Args -> Script NodeDefaults.Result
+nodeDefaults :: IORef Batch -> NodeDefaults.Args -> IO NodeDefaults.Result
 nodeDefaults batchHandler (NodeDefaults.Args tnodeID tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called nodeDefaults"
-    bc <- tryRight $ decode tbc
+    loggerIO info "called nodeDefaults"
+    bc <- decode tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    nd <- scriptIO $ BatchND.nodeDefaults nodeID bc libID projectID batch
+    batch <- IORef.readIORef batchHandler
+    nd <- BatchND.nodeDefaults nodeID bc libID projectID batch
     return $ NodeDefaults.Result $ encode nd
 
 
-setNodeDefault :: IORef Batch -> SetNodeDefault.Args -> Script SetNodeDefault.Result
+setNodeDefault :: IORef Batch -> SetNodeDefault.Args -> IO SetNodeDefault.Result
 setNodeDefault batchHandler (SetNodeDefault.Args tdstPort tvalue tnodeID tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called setNodeDefault"
-    bc      <- tryRight $ decode tbc
+    loggerIO info "called setNodeDefault"
+    bc <- decode tbc
     let dstPort   = decodeP tdstPort
         value     = decodeP tvalue
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchND.setNodeDefault dstPort value nodeID bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchND.setNodeDefault dstPort value nodeID bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return SetNodeDefault.Result
 
 
-removeNodeDefault :: IORef Batch -> RemoveNodeDefault.Args -> Script RemoveNodeDefault.Result
+removeNodeDefault :: IORef Batch -> RemoveNodeDefault.Args -> IO RemoveNodeDefault.Result
 removeNodeDefault batchHandler (RemoveNodeDefault.Args tdstPort tnodeID tbc tlibID tprojectID) = do
-    scriptIO $ loggerIO info "called removeNodeDefault"
-    bc      <- tryRight $ decode tbc
+    loggerIO info "called removeNodeDefault"
+    bc <- decode tbc
     let dstPort   = decodeP tdstPort
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- tryReadIORef batchHandler
-    newBatch <- scriptIO $ BatchND.removeNodeDefault dstPort nodeID bc libID projectID batch
-    tryWriteIORef batchHandler newBatch
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchND.removeNodeDefault dstPort nodeID bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
     return RemoveNodeDefault.Result
