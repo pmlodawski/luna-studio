@@ -139,25 +139,33 @@ generated::proto::crumb::Breadcrumbs *buildBreadcrumbs(const BreadcrumbsHelper &
 	return breadcrumbs;
 }
 
-template <typename TMessage, typename TField>
-void setField(TMessage *msg, int, const TField &)
-{
-	static_assert(0, "Don't know how to set this kind of value");
-}
-
 template <typename TMessage>
 void setField(TMessage *msg, int i, int value)
 {
-	 msg->GetReflection()->SetInt32(msg, NodeDefault_NodeDefaults_Args::descriptor()->field(i), value);
+	 msg->GetReflection()->SetInt32(msg, TMessage::descriptor()->field(i), value);
 }
+
+
+template <typename TMessage>
+void setField(TMessage *msg, int i, std::string value)
+{
+	 msg->GetReflection()->SetString(msg, TMessage::descriptor()->field(i), value);
+}
+
 template <typename TMessage, typename SomeMessageType>
 void setField(TMessage *msg, int i, SomeMessageType *value)
 {
 	static_assert(std::is_base_of<google::protobuf::Message, SomeMessageType>::value, "Cannot set field to a non-message pointer");
-	auto messageField = msg->GetReflection()->MutableMessage(msg, NodeDefault_NodeDefaults_Args::descriptor()->field(i));
+	auto messageField = msg->GetReflection()->MutableMessage(msg, TMessage::descriptor()->field(i));
 	messageField->GetReflection()->Swap(messageField, value);
 	delete value;
 }
+/*
+template <typename TMessage, typename TField>
+void setField(TMessage *msg, int, const TField &)
+{
+	static_assert(0, "Don't know how to set this kind of value");
+}*/
 
 template <int index, typename TMessage>
 void setArgsInternal(TMessage *ms)

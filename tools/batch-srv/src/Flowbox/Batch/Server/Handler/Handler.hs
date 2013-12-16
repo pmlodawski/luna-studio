@@ -115,8 +115,8 @@ import qualified Generated.Proto.Batch.Project.UpdateProject.Result         as U
 class Handler h where
     addModule            :: h -> AddModule.Args            -> Script AddModule.Result
     addClass             :: h -> AddClass.Args             -> Script AddClass.Result
-    definitions          :: h -> Definitions.Args             -> Script Definitions.Result
     addFunction          :: h -> AddFunction.Args          -> Script AddFunction.Result
+    definitions          :: h -> Definitions.Args          -> Script Definitions.Result
     updateModuleCls      :: h -> UpdateModuleCls.Args      -> Script UpdateModuleCls.Result
     updateModuleImports  :: h -> UpdateModuleImports.Args  -> Script UpdateModuleImports.Result
     updateModuleFields   :: h -> UpdateModuleFields.Args   -> Script UpdateModuleFields.Result
