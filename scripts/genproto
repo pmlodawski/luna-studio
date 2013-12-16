@@ -29,6 +29,7 @@ def run_protoc(proto_path):
 
     try_call('protoc --cpp_out=' + cpp_gen_dir + ' -I libs/batch/src/proto -I libs/luna/src/proto -I ' + proto_dir + ' ' + proto_path)
     try_call('protoc --cpp_out=' + cpp_gen_dir2 + ' -I libs/batch/src/proto -I libs/luna/src/proto -I ' + proto_dir + ' ' + proto_path)
+    try_call('protoc --cpp_out=' + cpp_gen_dir3 + ' -I libs/batch/src/proto -I libs/luna/src/proto -I ' + proto_dir + ' ' + proto_path)
     
     os.chdir(proto_dir)
     try_call('hprotoc -d ' + hs_gen_dir + ' -I ../../../../libs/batch/src/proto -I ../../../../libs/luna/src/proto ' + proto_name)
