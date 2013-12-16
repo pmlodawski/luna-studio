@@ -22,7 +22,7 @@ int main ()
     std::cout << "Processing requests..." << std::flush;
     {
         Request request;
-        request.set_method(Request_Method_Initialize);
+        request.set_method(Request_Method_Maintenance_Initialize);
         Maintenance_Initialize_Args* args = request.MutableExtension(Maintenance_Initialize_Args::req);
 
         std::string buffer = request.SerializeAsString();
@@ -37,7 +37,7 @@ int main ()
     for(int i = 0 ; i < 10000 ; ++i)
     {
         Request request;
-        request.set_method(Request_Method_Ping);
+        request.set_method(Request_Method_Maintenance_Ping);
         Maintenance_Ping_Args* args = request.MutableExtension(Maintenance_Ping_Args::req);
 
         std::string buffer = request.SerializeAsString();
@@ -51,7 +51,7 @@ int main ()
 
     {
         Request request;
-        request.set_method(Request_Method_Dump);
+        request.set_method(Request_Method_Maintenance_Dump);
         Maintenance_Dump_Args* args = request.MutableExtension(Maintenance_Dump_Args::req);
 
         std::string buffer = request.SerializeAsString();
@@ -65,7 +65,7 @@ int main ()
 
     {
         Request request;
-        request.set_method(Request_Method_Shutdown);
+        request.set_method(Request_Method_Maintenance_Shutdown);
         Maintenance_Shutdown_Args* args = request.MutableExtension(Maintenance_Shutdown_Args::req);
 
         std::string buffer = request.SerializeAsString();

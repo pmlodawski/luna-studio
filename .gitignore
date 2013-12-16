@@ -5,16 +5,16 @@
 .virthualenv
 *~
 *.imports
+tools/batch-clients/performance/tcp/main
+tools/batch-clients/performance/zmq/main
 tools/batch-clients/tcp-cpp/main
-tools/batch-clients/tcp-cpp-performance/main
-tools/batch-clients/zmq-cpp/main
 out
 
 #generated files
 gen
+tools/batch-clients/performance/tcp/generated
+tools/batch-clients/performance/zmq/generated
 tools/batch-clients/tcp-cpp/generated
-tools/batch-clients/tcp-cpp-performance/generated
-tools/batch-clients/zmq-cpp/generated
 
 # luna library files
 *.node
