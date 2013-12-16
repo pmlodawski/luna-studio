@@ -69,12 +69,8 @@ run cmd = case cmd of
         _ <- Concurrent.forkIO $ Exception.handle
             (\(e :: Exception.SomeException) -> do loggerIO error $ "Server run failure: " ++ show e
                                                    MVar.putMVar (BatchHandler.quitMutex handler) True)
-            (serve cmd handler)
+            (Server.serve cmd handler)
         waitForQuit handler
-
-
-serve :: Cmd -> BatchHandler -> IO ()
-serve cmd = Server.serve (Cmd.address cmd) (Cmd.port cmd)
 
 
 waitForQuit :: BatchHandler -> IO b

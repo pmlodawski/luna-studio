@@ -16,8 +16,6 @@ import qualified Data.IORef              as IORef
 
 import           Flowbox.Batch.Batch                      (Batch)
 import qualified Flowbox.Batch.Batch                      as Batch
-import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
-import qualified Flowbox.Batch.Samples.Std                as Sample
 import qualified Flowbox.Batch.Server.Handler.AST         as HAST
 import qualified Flowbox.Batch.Server.Handler.FileSystem  as HFileSystem
 import qualified Flowbox.Batch.Server.Handler.Graph       as HGraph
@@ -30,6 +28,8 @@ import qualified Flowbox.Batch.Server.Handler.Project     as HProject
 import qualified Flowbox.Config.Config                    as Config
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+--import qualified Flowbox.Batch.Project.ProjectManager     as ProjectManager
+--import qualified Flowbox.Batch.Samples.Std                as Sample
 
 
 
@@ -45,7 +45,8 @@ data BatchHandler = BatchHandler { quitMutex :: MVar Bool
 empty :: IO BatchHandler
 empty = do emptyBatch <- Batch.make <$> Config.load
            BatchHandler <$> MVar.newEmptyMVar
-                        <*> IORef.newIORef emptyBatch { Batch.projectManager = ProjectManager.mkGraph [(0, Sample.project)] [] }
+                        <*> IORef.newIORef emptyBatch
+                        -- <*> IORef.newIORef emptyBatch { Batch.projectManager = ProjectManager.mkGraph [(0, Sample.project)] [] }
 
 
 instance Handler BatchHandler where

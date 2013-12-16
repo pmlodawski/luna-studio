@@ -292,14 +292,6 @@ NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &socket, int pid,
 	return macro::NodeDefault::NodeDefaults_(socket, args);
 }
 
-void ping(tcp::socket &socket)
-{
-	macro::Maintenance::Ping(socket);
-	return;
-
-	// or, alternatively the following can be used:
-	macro::Maintenance::Ping_(socket, new Maintenance_Ping_Args());
-}
 
 int main()
 {
@@ -316,23 +308,17 @@ int main()
 
 		StopWatch sw;
 
-		//////////////////////////////////////////////////////////////////////////
-		std::cout << "Initializing.." << std::flush;
-		{
-			try
-			{
-				macro::Maintenance::Initialize(socket);
-			}
-			catch(std::exception &e)
-			{
-				std::cout << "Exception on Initialize: " << e.what() << std::endl;
-			}
-		}
-		std::cout << "." << std::endl;
-		std::cout << "Request-response: " << sw.elapsedMs().count() << "ms\n";
-		//////////////////////////////////////////////////////////////////////////
+		macro::Maintenance::Initialize(socket);
+		std::cout << sw.elapsedMs().count() << "ms\tMaintenance::Initialize\n";
+
 		auto lsResult = macro::FileSystem::LS(socket, "~");
-		std::cout << "Filesystem LS: " << sw.elapsedMs().count() << "ms\n";
+		std::cout << sw.elapsedMs().count() << "ms\tFileSystem::LS\n";
+
+		macro::Maintenance::Dump(socket);
+		std::cout << sw.elapsedMs().count() << "ms\tMaintenance::Dump\n";
+
+		//////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
 		// Asking for node defaults
 		try
@@ -344,31 +330,25 @@ int main()
 		{
 			std::cout << "Cannot get node defaults. Error: " << e.what() << std::endl;
 		}
-		std::cout << "Query for node defaults: " << sw.elapsedMs().count() << "ms\n";
+		std::cout << sw.elapsedMs().count() << "ms\tQuery for node defaults\n";
 		//////////////////////////////////////////////////////////////////////////
 		// Pings
-		const int pingCount = 10000;
-		for(int i = 0; i < pingCount; ++i)
-			ping(socket);
+		const int pingCount = 10;
+		for(int i = 0; i < pingCount; ++i) 
+			macro::Maintenance::Ping(socket);
+		std::cout << sw.elapsedMs().count() << "ms\t" << pingCount << " pings\n";
 
-		std::cout << pingCount << " pings " << sw.elapsedMs().count() << "ms\n";
-		//////////////////////////////////////////////////////////////////////////
-		macro::Maintenance::Dump(socket);
-		std::cout << "a dump " << sw.elapsedMs().count() << "ms\n";
-		//////////////////////////////////////////////////////////////////////////
-		// Sending data test
 		const int dataSize = 100000000;
 		{
 			Maintenance_Ping_Args* args = new Maintenance_Ping_Args();
-			std::vector<char> data(dataSize, 65);
+			std::vector<char> data(dataSize + 1, 65);
 			data.back() = 0;
 			args->set_data(data.data());
 
 			auto response = macro::Maintenance::Ping_(socket, args);
-			//Response response = call(socket, request);
 		}
-		std::cout << "Sending " << dataSize << " bytes " << sw.elapsedMs().count() << "ms\n";
-		//////////////////////////////////////////////////////////////////////////
+		std::cout << sw.elapsedMs().count() << "ms\tSending " << dataSize << " bytes\n";
+
 		macro::Maintenance::Shutdown(socket);
 		std::cout << "done" << std::endl;
 

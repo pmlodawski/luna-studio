@@ -5,9 +5,11 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Batch.Server.Transport.TCP where
 
+import qualified Control.Exception                as Exception
 import           Control.Monad                    (forever)
 import           Data.ByteString.Lazy             (ByteString)
 import qualified Data.ByteString.Lazy             as ByteString
@@ -17,6 +19,8 @@ import qualified Network.Socket.ByteString        as SByteString
 import qualified Network.Socket.ByteString.Lazy   as SLByteString
 import qualified Text.ProtocolBuffers.WireMessage as WireMessage
 
+import           Flowbox.Batch.Server.Cmd             (Cmd)
+import qualified Flowbox.Batch.Server.Cmd             as Cmd
 import           Flowbox.Batch.Server.Handler.Handler (Handler)
 import qualified Flowbox.Batch.Server.Processor       as Processor
 import           Flowbox.Prelude                      hiding (error)
@@ -33,10 +37,13 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.TCP"
 --TODO [PM] : Cleanup needed
 
 
-serve :: Handler h => String -> Int -> h -> IO ()
-serve address port handler = Socket.withSocketsDo $ do
-    let tcp = 6
+serve :: Handler h => Cmd -> h -> IO ()
+serve cmd handler = Socket.withSocketsDo $ do
+    let address = Cmd.address cmd
+        port    = Cmd.port cmd
+        tcp = 6
         maxConnections = 1
+        
     socket  <- Socket.socket Socket.AF_INET Socket.Stream tcp
     --serverAddress <- Socket.inet_addr "127.0.0.1"
     Socket.setSocketOption socket Socket.ReuseAddr 1
@@ -44,29 +51,25 @@ serve address port handler = Socket.withSocketsDo $ do
     --let sockAddr = Socket.SockAddrInet (Socket.PortNum 30521) serverAddress --Socket.iNADDR_ANY
     Socket.bindSocket socket sockAddr -- TODO [PM] pretty code doesn't work ;/
     Socket.listen socket maxConnections
+
+    if Cmd.shutdownWithClient cmd
+        then acceptAndHandle socket handler
+        else forever $ Exception.handle
+            (\(e :: Exception.SomeException) -> loggerIO critical $ "Connection to client lost: " ++ show e)
+            (acceptAndHandle socket handler)
+
+
+acceptAndHandle :: Handler h => Socket.Socket -> h -> IO ()
+acceptAndHandle socket handler = do
     (client, clientSockAddr) <- Socket.accept socket
     loggerIO info $ "Accepted connection from " ++ (show clientSockAddr)
-    --IO.hSetBinaryMode h True
     forever $ handleCall client handler
-
-    --if Cmd.shutdownWithClient cmd
-    --    then singleAccept (accepter_ socket) (proc_ hand)
-    --    else singleAcceptLoop (accepter_ socket) (proc_ hand)
---    socket <- ZMQ3.socket ZMQ3.Rep
---    ZMQ3.bind socket (address ++ ":" ++ show port)
-    --runSingleConnectionServer accepter
 
 
 handleCall :: (Handler handler) => Socket.Socket -> handler -> IO ()
 handleCall socket handler = do
     loggerIO debug "handleCall: started"
-
-    encoded_request <- readData socket
-    --let (x :: Either String (Request, ByteString.ByteString) ) = Proto.messageGet encoded_request
-    --let x = case Proto.messageWithLengthGet encoded_request of
-    --            Left m -> Left m
-    --            Right (r :: Request, _) -> Right r
-    --print x
+    encoded_request  <- readData socket
     encoded_response <- Processor.process handler encoded_request
     loggerIO debug "handleCall: processing done"
     SByteString.sendAll socket $ ByteString.toStrict encoded_response
