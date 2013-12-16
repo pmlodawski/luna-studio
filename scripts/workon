@@ -46,7 +46,7 @@ class HProject(Project):
     def uninstall(self):
         cmd = 'cabal sandbox hc-pkg unregister %s' % self.name
         (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
-        if err: 
+        if err:
             err = err.replace('.exe', '')
             if not err.startswith('ghc-pkg: cannot find package'):
                 handle_error(err)
@@ -63,7 +63,7 @@ class AllProject(Project):
         return tgts
 
 
-deptree = ['batch-zmqsrv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'core', 'cabal-install', 'graphics', 'num-conversion', 'utils']
+deptree = ['batch-zmqsrv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'core', 'cabal-install', 'graphics', 'num-conversion', 'utils', 'markup']
 
 pkgs = { '@all'           : AllProject (deps = deptree)
        , 'cabal-install'  : HProject   ('cabal-install'       , os.path.join ('libs'  , 'cabal-install') , 'libs'    , []                                                  )
@@ -78,6 +78,7 @@ pkgs = { '@all'           : AllProject (deps = deptree)
        , 'batch-zmqsrv'   : HProject   ('flowbox-batch-zmqsrv', os.path.join ('tools' , 'batch-zmqsrv')  , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
        , 'num-conversion' : HProject   ('num-conversion'      , os.path.join ('libs'  , 'num-conversion'), 'libs'    , [] )
        , 'graphics'       : HProject   ('flowbox-graphics'    , os.path.join ('libs'  , 'graphics')      , 'libs'    , ['utils', 'num-conversion'] )
+       , 'markup'        : HProject   ('doc-markup'          , os.path.join ('libs'  , 'markup')        , 'libs'    , []                                                  )
        } 
 
 
