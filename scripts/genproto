@@ -10,9 +10,9 @@ from utils.colors import print_error
 
 
 cwd         = os.getcwd()
-cpp_gen_dir = os.path.join(cwd, 'tools/batch-clients/zmq-cpp/generated')
-cpp_gen_dir2 = os.path.join(cwd, 'tools/batch-clients/tcp-cpp/generated')
-cpp_gen_dir3 = os.path.join(cwd, 'tools/batch-clients/tcp-cpp-performance/generated')
+cpp_gen_dir  = os.path.join(cwd, 'tools/batch-clients/performance/zmq/generated')
+cpp_gen_dir2 = os.path.join(cwd, 'tools/batch-clients/performance/tcp/generated')
+cpp_gen_dir3 = os.path.join(cwd, 'tools/batch-clients/tcp-cpp/generated')
 
 def main():
     proto_paths = glob('**/*.proto')
