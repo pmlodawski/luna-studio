@@ -32,6 +32,7 @@ using namespace generated::proto::batch;
 const int BUFFER_SIZE = 10000000; // TODO [PM] : magic constant
 char buffer[BUFFER_SIZE];
 
+const std::string host = "localhost", port = "30521";
 
 class StopWatch
 {
@@ -145,6 +146,11 @@ void setField(TMessage *msg, int i, int value)
 	 msg->GetReflection()->SetInt32(msg, TMessage::descriptor()->field(i), value);
 }
 
+template <typename TMessage>
+void setField(TMessage *msg, int i, const char* value)
+{
+	msg->GetReflection()->SetString(msg, TMessage::descriptor()->field(i), value);
+}
 
 template <typename TMessage>
 void setField(TMessage *msg, int i, std::string value)
@@ -202,14 +208,22 @@ TResult askSecondaryWrapper(tcp::socket &socket, TArgs * args,
 	return defaultsResponse;
 }
 
-#define makeAsk(space, method) namespace macro { namespace space {  \
-space ##_ ## method ## _Result                                      \
-method(tcp::socket &socket, space ## _ ## method ## _Args *args)    \
-{                                                                   \
-	return askSecondaryWrapper                                      \
-	<space ##_ ## method ## _Result, space ## _ ## method ## _Args> \
-	(socket, args, Request_Method_ ## space ## _ ## method);        \
-} } } 
+#define makeAsk(space, method) namespace macro { namespace space {              \
+space ##_ ## method ## _Result                                                  \
+method##_(tcp::socket &socket, space ## _ ## method ## _Args *args)             \
+{                                                                               \
+	return askSecondaryWrapper                                                  \
+	<space ##_ ## method ## _Result, space ## _ ## method ## _Args>             \
+	(socket, args, Request_Method_ ## space ## _ ## method);                    \
+}                                                                               \
+	                                                                            \
+template<typename ...Args> 	                       	                            \
+space ##_ ## method ## _Result                                                  \
+method(tcp::socket &socket, const Args & ...args)                               \
+{                                                                               \
+	return method##_(socket, buildArgs<space ## _ ## method ## _Args>(args...));\
+} } }
+
 
 makeAsk(NodeDefault, NodeDefaults)
 makeAsk(NodeDefault, SetNodeDefault)
@@ -269,19 +283,22 @@ makeAsk(Library, RunLibrary)
 
 NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &socket, int pid, int lid, BreadcrumbsHelper breadcrumbsInfo, int nid)
 {
-	auto *bc = buildBreadcrumbs({ { crumb::Crumb_Cls_FunctionCrumb, "main" } });
-	auto *args = buildArgs<NodeDefault_NodeDefaults_Args>(nid, bc, lid, pid);
-	return macro::NodeDefault::NodeDefaults(socket, args);
-}
+	crumb::Breadcrumbs *bc = buildBreadcrumbs(breadcrumbsInfo);
 
-void temporaryFunctionForExperiments(tcp::socket &socket)
-{
-//	auto result = macro::FileSystem::LS(socket, buildArgs<FileSystem_LS_Args>("~"));
+	return macro::NodeDefault::NodeDefaults(socket, nid, bc, lid, pid);
+
+	// or alternatively (unreachable code used as sample)
+	auto *args = buildArgs<NodeDefault_NodeDefaults_Args>(nid, bc, lid, pid);
+	return macro::NodeDefault::NodeDefaults_(socket, args);
 }
 
 void ping(tcp::socket &socket)
 {
-	macro::Maintenance::Ping(socket, buildArgs<Maintenance_Ping_Args>());
+	macro::Maintenance::Ping(socket);
+	return;
+
+	// or, alternatively the following can be used:
+	macro::Maintenance::Ping_(socket, new Maintenance_Ping_Args());
 }
 
 int main()
@@ -292,50 +309,32 @@ int main()
 		boost::asio::io_service io_service;
 		tcp::socket socket(io_service);
 		tcp::resolver resolver(io_service);
-		//Connect
-		const std::string host = "localhost", port = "30521";
 
+		//Connect
 		std::cout << "Connecting to " << host << " at port " << port << std::endl;
 		boost::asio::connect(socket, resolver.resolve({ "localhost", "30521" }));
 
 		StopWatch sw;
-		std::cout << "Processing requests.." << std::flush;
+
+		//////////////////////////////////////////////////////////////////////////
+		std::cout << "Initializing.." << std::flush;
 		{
-			Request request;
-			request.set_method(Request_Method_Maintenance_Initialize);
-			Maintenance_Initialize_Args* args = request.MutableExtension(Maintenance_Initialize_Args::req);
-
-			// request.SerializeToFileDescriptor(sockfd);
-			// output.WriteVarint32(request.ByteSize());
-			// request.SerializeToZeroCopyStream(&foutput);
-			// request.SerializeToCodedStream(&output);
-			// foutput.Flush();
-
-			// std::string buffer = request.SerializeAsString();
-			// int l = send(sockfd, buffer.c_str(), (size_t) buffer.size() + 5, 0);
-			// std::cout << "sent " << l << std::flush;
-			// if (-1 == l) {
-			//     perror("send");
-			//     return 1;
-			// }
-			// std::cout << "sent" << std::flush;
-
-			Response response = call(socket, request);
-
-			// response.ParseFromZeroCopyStream(input);
-			// response.ParseFromFileDescriptor(sockfd);
-			// std::cout << "received" << std::flush;
-
-			// char b[1000];
-			// int r = recv(sockfd, b, 1000, 0);
-			// std::cout << "received " << r << std::flush;
-			// zmq::message_t reply;
-			// socket.recv (&reply);
+			try
+			{
+				macro::Maintenance::Initialize(socket);
+			}
+			catch(std::exception &e)
+			{
+				std::cout << "Exception on Initialize: " << e.what() << std::endl;
+			}
 		}
-
 		std::cout << "." << std::endl;
 		std::cout << "Request-response: " << sw.elapsedMs().count() << "ms\n";
-
+		//////////////////////////////////////////////////////////////////////////
+		auto lsResult = macro::FileSystem::LS(socket, "~");
+		std::cout << "Filesystem LS: " << sw.elapsedMs().count() << "ms\n";
+		//////////////////////////////////////////////////////////////////////////
+		// Asking for node defaults
 		try
 		{
 			using namespace generated::proto::crumb;
@@ -346,68 +345,38 @@ int main()
 			std::cout << "Cannot get node defaults. Error: " << e.what() << std::endl;
 		}
 		std::cout << "Query for node defaults: " << sw.elapsedMs().count() << "ms\n";
-
-		const int nodeDefaultsAskCount = 100;
-		for(int i = 0; i < nodeDefaultsAskCount; i++)
-		{
-			try
-			{
-				using namespace generated::proto::crumb;
-				auto defaults = askForNodeDefaults(socket, 0, 0, { { Crumb_Cls_FunctionCrumb, "main" } }, 0);
-			}
-			catch(std::exception &e)
-			{
-				std::cout << "Cannot get node defaults. Error: " << e.what() << std::endl;
-			}
-		}
-		std::cout << nodeDefaultsAskCount << " queries for node defaults: " << sw.elapsedMs().count() << "ms\n";
-
+		//////////////////////////////////////////////////////////////////////////
+		// Pings
 		const int pingCount = 10000;
 		for(int i = 0; i < pingCount; ++i)
-		{
-			Request request;
-			request.set_method(Request_Method_Maintenance_Ping);
-			Maintenance_Ping_Args* args = request.MutableExtension(Maintenance_Ping_Args::req);
-
-			Response response = call(socket, request);
-		}
-		{
-			Request request;
-			request.set_method(Request_Method_Maintenance_Dump);
-			Maintenance_Dump_Args* args = request.MutableExtension(Maintenance_Dump_Args::req);
-
-			Response response = call(socket, request);
-		}
+			ping(socket);
 
 		std::cout << pingCount << " pings " << sw.elapsedMs().count() << "ms\n";
-
-		const int ps = 100000000;
+		//////////////////////////////////////////////////////////////////////////
+		macro::Maintenance::Dump(socket);
+		std::cout << "a dump " << sw.elapsedMs().count() << "ms\n";
+		//////////////////////////////////////////////////////////////////////////
+		// Sending data test
+		const int dataSize = 100000000;
 		{
-			Request request;
-			request.set_method(Request_Method_Maintenance_Ping);
-			Maintenance_Ping_Args* args = request.MutableExtension(Maintenance_Ping_Args::req);
+			Maintenance_Ping_Args* args = new Maintenance_Ping_Args();
+			std::vector<char> data(dataSize, 65);
+			data.back() = 0;
+			args->set_data(data.data());
 
-			char* p = new char[ps];
-			std::fill(p, p + ps - 1, 65);
-			p[ps - 1] = 0;
-			args->set_data(p);
-			delete [] p;
-			Response response = call(socket, request);
+			auto response = macro::Maintenance::Ping_(socket, args);
+			//Response response = call(socket, request);
 		}
-		{
-			Request request;
-			request.set_method(Request_Method_Maintenance_Shutdown);
-			Maintenance_Shutdown_Args* args = request.MutableExtension(Maintenance_Shutdown_Args::req);
-			Response response = call(socket, request);
-		}
-		std::cout << "Sending " << ps << " bytes " << sw.elapsedMs().count() << "ms\n";
+		std::cout << "Sending " << dataSize << " bytes " << sw.elapsedMs().count() << "ms\n";
+		//////////////////////////////////////////////////////////////////////////
+		macro::Maintenance::Shutdown(socket);
 		std::cout << "done" << std::endl;
 
-		return 0;
+		return EXIT_SUCCESS;
 	}
 	catch(std::exception &e)
 	{
 		std::cout << "Encountered an exception: " << e.what() << std::endl;
-		return 1;
+		return EXIT_FAILURE;
 	}
 }
