@@ -14,8 +14,9 @@
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
-// zero_copy_stream_impl.h>
+
 #include "generated/server-api.pb.h"  
+#include "generated/attributes.pb.h"  
 
 #include <boost/asio.hpp>
 
@@ -323,10 +324,8 @@ int main()
 		std::cout << sw.elapsedMs().count() << "ms\tFileSystem::LS\n";
 
 		{
-			auto project = project::Project();
-			project.set_name("testProject");
-
-			auto r = macro::Project::CreateProject(socket, project);
+			auto attributes = attributes::Attributes();
+			auto r = macro::Project::CreateProject(socket, "testProject", "tmp/testProject", attributes);
 		}
 
 		macro::Maintenance::Dump(socket);

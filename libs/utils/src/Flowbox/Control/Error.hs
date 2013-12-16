@@ -11,9 +11,9 @@ module Flowbox.Control.Error (
     ifnot,
 ) where
 
-import           Control.Error          hiding (runScript)
+import Control.Error hiding (runScript)
 
-import           Flowbox.Prelude
+import Flowbox.Prelude
 
 
 runScript :: Script a -> IO a

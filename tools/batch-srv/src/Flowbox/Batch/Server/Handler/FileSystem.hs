@@ -49,44 +49,45 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.Handler.FileSystem"
 ls :: IORef Batch -> LS.Args -> IO LS.Result
 ls _ (LS.Args tpath) = do
     loggerIO info "called ls"
-    let upath = decodeP tpath
-    items <- BatchFS.ls upath
+    let path = decodeP tpath
+    loggerIO debug $ "path: " ++ (show path)
+    items <- BatchFS.ls path
     return $ LS.Result $ encodeList items
 
 
 stat :: IORef Batch -> Stat.Args -> IO Stat.Result
 stat _ (Stat.Args tpath) = do
     loggerIO info "called stat"
-    let upath = decodeP tpath
-    loggerIO debug $ "path: " ++ (show upath)
-    item  <- BatchFS.stat upath
+    let path = decodeP tpath
+    loggerIO debug $ "path: " ++ (show path)
+    item  <- BatchFS.stat path
     return $ Stat.Result $ encode item
 
 
 mkdir :: IORef Batch -> MkDir.Args -> IO MkDir.Result
 mkdir _ (MkDir.Args tpath) = do
     loggerIO info "called mkdir"
-    let upath = decodeP tpath
-    loggerIO debug $ "path: " ++ (show upath)
-    BatchFS.mkdir upath
+    let path = decodeP tpath
+    loggerIO debug $ "path: " ++ (show path)
+    BatchFS.mkdir path
     return MkDir.Result
 
 
 touch :: IORef Batch -> Touch.Args -> IO Touch.Result
 touch _ (Touch.Args tpath) = do
     loggerIO info "called touch"
-    let upath = decodeP tpath
-    loggerIO debug $ "path: " ++ (show upath)
-    BatchFS.touch upath
+    let path = decodeP tpath
+    loggerIO debug $ "path: " ++ (show path)
+    BatchFS.touch path
     return Touch.Result
 
 
 rm :: IORef Batch -> RM.Args -> IO RM.Result
 rm _ (RM.Args tpath) = do
     loggerIO info "called rm"
-    let upath = decodeP tpath
-    loggerIO debug $ "path: " ++ (show upath)
-    BatchFS.rm upath
+    let path = decodeP tpath
+    loggerIO debug $ "path: " ++ (show path)
+    BatchFS.rm path
     return RM.Result
 
 

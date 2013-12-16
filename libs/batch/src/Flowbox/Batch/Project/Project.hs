@@ -36,5 +36,5 @@ empty :: Project
 empty = Project "" UniPath.empty [] LibManager.empty Attributes.empty
 
 
-make :: String -> UniPath -> Project
-make aname upath = empty { name = aname, path = upath }
+make :: String -> UniPath -> Attributes -> Project
+make name' path' attrs' = empty { name = name', path = path', attrs = attrs'}

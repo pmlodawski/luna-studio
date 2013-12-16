@@ -56,7 +56,7 @@ ping _ (Ping.Args mdata) = do
 
 dump :: IORef Batch -> Dump.Args -> IO Dump.Result
 dump batchHandler _ = do
-    loggerIO info "called ping"
+    loggerIO info "called dump"
     batch <- IORef.readIORef batchHandler
     print batch
     return Dump.Result

@@ -43,7 +43,7 @@ serve cmd handler = Socket.withSocketsDo $ do
         port    = Cmd.port cmd
         tcp = 6
         maxConnections = 1
-        
+
     socket  <- Socket.socket Socket.AF_INET Socket.Stream tcp
     --serverAddress <- Socket.inet_addr "127.0.0.1"
     Socket.setSocketOption socket Socket.ReuseAddr 1
