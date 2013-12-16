@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <type_traits>
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
@@ -121,10 +122,8 @@ Response callAndTranslateException(Socket &socket, const Request& request)
 	return response;
 }
 
-
 typedef std::vector<std::pair<generated::proto::crumb::Crumb_Cls, std::string>> BreadcrumbsHelper;
-
-NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &socket, int pid, int lid, BreadcrumbsHelper breadcrumbsInfo, int nid)
+generated::proto::crumb::Breadcrumbs *buildBreadcrumbs(const BreadcrumbsHelper &breadcrumbsInfo)
 {
 	auto breadcrumbs = new generated::proto::crumb::Breadcrumbs();
 	for(auto &crumbDescriptor : breadcrumbsInfo)
@@ -133,20 +132,60 @@ NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &socket, int pid,
 		crumb->set_cls(crumbDescriptor.first);
 		crumb->set_name(crumbDescriptor.second);
 	}
+	return breadcrumbs;
+}
 
+template <typename TMessage, typename TField>
+void setField(TMessage *msg, int, const TField &)
+{
+	static_assert(0, "Don't know how to set this kind of value");
+}
 
+template <typename TMessage>
+void setField(TMessage *msg, int i, int value)
+{
+	 msg->GetReflection()->SetInt32(msg, NodeDefault_NodeDefaults_Args::descriptor()->field(i), value);
+}
+template <typename TMessage, typename SomeMessageType>
+void setField(TMessage *msg, int i, SomeMessageType *value)
+{
+	static_assert(std::is_base_of<google::protobuf::Message, SomeMessageType>::value, "Cannot set field to a non-message pointer");
+	auto messageField = msg->GetReflection()->MutableMessage(msg, NodeDefault_NodeDefaults_Args::descriptor()->field(i));
+	messageField->GetReflection()->Swap(messageField, value);
+	delete value;
+}
 
-	Request defaultsRequest;
-	defaultsRequest.set_method(Request_Method_NodeDefault_NodeDefaults);
+template <int index, typename TMessage>
+void setArgsInternal(TMessage *ms)
+{
+}
 
-	NodeDefault_NodeDefaults_Args *defaultsArgs = defaultsRequest.MutableExtension(NodeDefault_NodeDefaults_Args::req);
-	defaultsArgs->set_projectid(pid);
-	defaultsArgs->set_libid(lid);
-	defaultsArgs->set_allocated_bc(breadcrumbs);
-	defaultsArgs->set_nodeid(nid);
+template <int index, typename TMessage, typename Arg, typename ... Args>
+void setArgsInternal(TMessage *msg, Arg arg1, Args ... args)
+{
+	setField(msg, index, arg1);
+	setArgsInternal<index + 1>(msg, args...);
+}
 
+template <typename TMessage, typename ... Args>
+TMessage *buildArgs(Args ... args)
+{
+	auto ret = new TMessage(); 
+	setArgsInternal<0, TMessage, Args...>(ret, args...);
+	return ret;
+}
+
+NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &socket, int pid, int lid, BreadcrumbsHelper breadcrumbsInfo, int nid)
+{
 	try
 	{
+		auto *bc   = buildBreadcrumbs({ { crumb::Crumb_Cls_FunctionCrumb, "main" } });
+		auto *args = buildArgs<NodeDefault_NodeDefaults_Args>(5, bc, 5, 5);	
+
+		Request defaultsRequest;
+		defaultsRequest.set_method(Request_Method_NodeDefault_NodeDefaults);
+		defaultsRequest.SetAllocatedExtension(NodeDefault_NodeDefaults_Args::req, args);
+		
 		auto response = callAndTranslateException(socket, defaultsRequest);
 		assert(response.type() == Response_Type_Result); //exception would be transleted to exception
 		auto defaultsResponse = response.GetExtension(NodeDefault_NodeDefaults_Result::rsp);
@@ -161,6 +200,21 @@ NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &socket, int pid,
 		//std::cout << "Cannot get defaults, encountered an exception: " << e.what() << std::endl;
 		throw;
 	}
+}
+
+void temporaryFunctionForExperiments()
+{
+	auto *bc = buildBreadcrumbs({ { crumb::Crumb_Cls_FunctionCrumb, "main" } });
+	auto test1 = buildArgs<NodeDefault_NodeDefaults_Args>(5, bc, 5, 5);
+
+
+	auto descr = NodeDefault_NodeDefaults_Args::descriptor();
+	auto field0 = descr->field(0);
+	auto field1 = descr->field(1);
+	auto field2 = descr->field(2);
+	auto field3 = descr->field(3);
+	auto field4 = descr->field(4);
+	//bc->GetReflection()->message
 }
 
 int main()
