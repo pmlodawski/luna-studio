@@ -10,14 +10,17 @@
 #include <string>
 #include <algorithm>
 #include <type_traits>
+#include <cstdint>
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
 // zero_copy_stream_impl.h>
-#include "generated/server-api.pb.h"
-
+#include "generated/server-api.pb.h"  
 
 #include <boost/asio.hpp>
+
+
+
 using boost::asio::ip::tcp;
 using Socket = tcp::socket;
 
@@ -28,6 +31,7 @@ using namespace generated::proto::batch;
 
 const int BUFFER_SIZE = 10000000; // TODO [PM] : magic constant
 char buffer[BUFFER_SIZE];
+
 
 class StopWatch
 {
@@ -175,46 +179,101 @@ TMessage *buildArgs(Args ... args)
 	return ret;
 }
 
-NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &socket, int pid, int lid, BreadcrumbsHelper breadcrumbsInfo, int nid)
+template<typename TResult, typename TArgs>
+TResult askSecondaryWrapper(tcp::socket &socket, TArgs * args, 
+							 generated::proto::batch::Request_Method method)
 {
-	try
-	{
-		auto *bc   = buildBreadcrumbs({ { crumb::Crumb_Cls_FunctionCrumb, "main" } });
-		auto *args = buildArgs<NodeDefault_NodeDefaults_Args>(5, bc, 5, 5);	
+	Request request;
+	request.set_method(method);
+	request.SetAllocatedExtension(TArgs::req, args);
 
-		Request defaultsRequest;
-		defaultsRequest.set_method(Request_Method_NodeDefault_NodeDefaults);
-		defaultsRequest.SetAllocatedExtension(NodeDefault_NodeDefaults_Args::req, args);
-		
-		auto response = callAndTranslateException(socket, defaultsRequest);
-		assert(response.type() == Response_Type_Result); //exception would be transleted to exception
-		auto defaultsResponse = response.GetExtension(NodeDefault_NodeDefaults_Result::rsp);
-		
-		auto defaultsMap = defaultsResponse.defaultsmap();
-		auto mapFromTheMap = defaultsMap.map();
-
-		return defaultsResponse;
-	}
-	catch(std::exception &e)
-	{
-		//std::cout << "Cannot get defaults, encountered an exception: " << e.what() << std::endl;
-		throw;
-	}
+	auto response = callAndTranslateException(socket, request);
+	assert(response.type() == Response_Type_Result); //exception would be translated to exception
+	auto defaultsResponse = response.GetExtension(TResult::rsp);
+	response.Clear();
+	return defaultsResponse;
 }
 
-void temporaryFunctionForExperiments()
+#define makeAsk(space, method) namespace macro { namespace space {  \
+space ##_ ## method ## _Result                                      \
+method(tcp::socket &socket, space ## _ ## method ## _Args *args)    \
+{                                                                   \
+	return askSecondaryWrapper                                      \
+	<space ##_ ## method ## _Result, space ## _ ## method ## _Args> \
+	(socket, args, Request_Method_ ## space ## _ ## method);        \
+} } } 
+
+makeAsk(NodeDefault, NodeDefaults)
+makeAsk(NodeDefault, SetNodeDefault)
+makeAsk(NodeDefault, RemoveNodeDefault)
+
+//makeAsk(AST, AST_Definitions)
+makeAsk(AST, AddModule)
+makeAsk(AST, AddClass)
+makeAsk(AST, AddFunction)
+makeAsk(AST, UpdateModuleCls)
+makeAsk(AST, UpdateModuleImports)
+makeAsk(AST, UpdateModuleFields)
+makeAsk(AST, UpdateClassCls)
+makeAsk(AST, UpdateClassFields)
+makeAsk(AST, UpdateFunctionName)
+makeAsk(AST, UpdateFunctionPath)
+makeAsk(AST, UpdateFunctionInputs)
+makeAsk(AST, UpdateFunctionOutput)
+makeAsk(AST, Remove)
+
+makeAsk(FileSystem, LS)
+makeAsk(FileSystem, Stat)
+makeAsk(FileSystem, MkDir)
+makeAsk(FileSystem, Touch)
+makeAsk(FileSystem, RM)
+makeAsk(FileSystem, CP)
+makeAsk(FileSystem, MV)
+
+makeAsk(Graph, NodesGraph)
+makeAsk(Graph, NodeByID)
+makeAsk(Graph, AddNode)
+makeAsk(Graph, UpdateNode)
+makeAsk(Graph, RemoveNode)
+makeAsk(Graph, Connect)
+makeAsk(Graph, Disconnect)
+
+makeAsk(Maintenance, Initialize)
+makeAsk(Maintenance, Ping)
+makeAsk(Maintenance, Dump)
+makeAsk(Maintenance, Shutdown)
+
+makeAsk(Project, Projects)
+makeAsk(Project, ProjectByID)
+makeAsk(Project, CreateProject)
+makeAsk(Project, OpenProject)
+makeAsk(Project, UpdateProject)
+makeAsk(Project, CloseProject)
+makeAsk(Project, StoreProject)
+
+makeAsk(Library, Libraries)
+makeAsk(Library, LibraryByID)
+makeAsk(Library, CreateLibrary)
+makeAsk(Library, LoadLibrary)
+makeAsk(Library, UnloadLibrary)
+makeAsk(Library, StoreLibrary)
+makeAsk(Library, RunLibrary)
+
+NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &socket, int pid, int lid, BreadcrumbsHelper breadcrumbsInfo, int nid)
 {
 	auto *bc = buildBreadcrumbs({ { crumb::Crumb_Cls_FunctionCrumb, "main" } });
-	auto test1 = buildArgs<NodeDefault_NodeDefaults_Args>(5, bc, 5, 5);
+	auto *args = buildArgs<NodeDefault_NodeDefaults_Args>(nid, bc, lid, pid);
+	return macro::NodeDefault::NodeDefaults(socket, args);
+}
 
+void temporaryFunctionForExperiments(tcp::socket &socket)
+{
+//	auto result = macro::FileSystem::LS(socket, buildArgs<FileSystem_LS_Args>("~"));
+}
 
-	auto descr = NodeDefault_NodeDefaults_Args::descriptor();
-	auto field0 = descr->field(0);
-	auto field1 = descr->field(1);
-	auto field2 = descr->field(2);
-	auto field3 = descr->field(3);
-	auto field4 = descr->field(4);
-	//bc->GetReflection()->message
+void ping(tcp::socket &socket)
+{
+	macro::Maintenance::Ping(socket, buildArgs<Maintenance_Ping_Args>());
 }
 
 int main()
