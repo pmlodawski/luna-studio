@@ -46,7 +46,7 @@ class HProject(Project):
     def uninstall(self):
         cmd = 'cabal sandbox hc-pkg unregister %s' % self.name
         (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
-        if err: 
+        if err:
             err = err.replace('.exe', '')
             if not err.startswith('ghc-pkg: cannot find package'):
                 handle_error(err)
@@ -63,7 +63,7 @@ class AllProject(Project):
         return tgts
 
 
-deptree = ['batch-zmqsrv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'utils', 'core', 'cabal-install']
+deptree = ['batch-zmqsrv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'utils', 'core', 'cabal-install', 'markup']
 
 pkgs = { '@all'          : AllProject (deps = deptree)
        , 'cabal-install' : HProject   ('cabal-install'       , os.path.join ('libs'  , 'cabal-install') , 'libs'    , []                                                  )
@@ -76,7 +76,8 @@ pkgs = { '@all'          : AllProject (deps = deptree)
        , 'lunac'         : HProject   ('flowbox-lunac'       , os.path.join ('tools' , 'lunac')         , 'tools'   , ['utils', 'config', 'initializer', 'luna']          )
        , 'batch'         : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')         , 'libs'    , ['utils', 'config', 'initializer', 'luna']          )
        , 'batch-zmqsrv'  : HProject   ('flowbox-batch-zmqsrv', os.path.join ('tools' , 'batch-zmqsrv')  , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
-       } 
+       , 'markup'        : HProject   ('doc-markup'          , os.path.join ('libs'  , 'markup')        , 'libs'    , []                                                  )
+       }
 
 
 def flatten(lofl):
@@ -149,7 +150,7 @@ def unregister(name):
     print_info("Unregistering %s" % name)
     pkg = pkgs[name]
     pkg.uninstall()
-    
+
 
 main()
 
