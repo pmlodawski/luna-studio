@@ -28,5 +28,5 @@ message Attributes {
 
 message Properties {
     optional Flags      flags = 1;
-    optional Attributes attrs = 2;
+    optional Attributes attributes = 2;
 }
