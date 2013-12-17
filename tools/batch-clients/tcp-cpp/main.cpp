@@ -363,6 +363,7 @@ int main()
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
 			macro::Graph::NodesGraph(socket, bc_Main_test, library.id(), project.id());
 		}
+		graph::Node node45;
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
 			graph::Node node;
@@ -371,9 +372,34 @@ int main()
 			auto properties = node.mutable_properties();
 			properties->mutable_flags();
 			properties->mutable_attributes();
-			macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id());
+			node45 = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
 		}
-
+		graph::Node node90;
+		{
+			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			graph::Node node;
+			node.set_cls(graph::Node::Expr);
+			node.set_expr("90"); 
+			auto properties = node.mutable_properties();
+			properties->mutable_flags();
+			properties->mutable_attributes();
+			node90 = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
+		}
+		graph::Node nodeAdd;
+		{
+			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			graph::Node node;
+			node.set_cls(graph::Node::Expr);
+			node.set_expr("add"); 
+			auto properties = node.mutable_properties();
+			properties->mutable_flags();
+			properties->mutable_attributes();
+			nodeAdd = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
+		}
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+		// 	macro::Graph::Connect(socket, node45.id(), #, node90.id(), # , bc_Main_test, library.id(), project.id()).node();
+		// }
 		macro::Maintenance::Dump(socket);
 
 		macro::Library::StoreLibrary(socket, library.id(), project.id());
