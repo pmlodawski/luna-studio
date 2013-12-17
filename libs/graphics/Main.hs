@@ -2,6 +2,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ViewPatterns #-}
 
+{-# LANGUAGE NoMonomorphismRestriction #-}
+
 import           Control.Applicative
 
 import qualified Canny                         as Canny
@@ -10,7 +12,7 @@ import qualified Monitoring                    as Monitoring
 import qualified ParseArgs                     as ParseArgs
 import qualified Wildfire                      as Wildfire
                                                    
-import           Prelude                       as P
+import           Flowbox.Prelude               as P
 import qualified Data.Label                    as Label
 import           Criterion.Main                ( defaultMainWith, bgroup, bench, whnf )
 import qualified System.Exit                   as Exit
@@ -47,6 +49,8 @@ import Data.Bits ((.&.))
 
 
 import qualified Data.Array.Accelerate.CUDA             as CUDA
+
+import Control.Monad.Trans.Either (runEitherT, hoistEither)
 
 
 normalize :: (R.Target a Double, R.Source a Double, R.Source a Word8, Monad m, R.Shape dim) => 
@@ -177,7 +181,26 @@ luminance2 rname gname bname outname img = flip (Image.insert outname) img <$> o
           colormix r g b = 0.3 * r + 0.59 * g + 0.11 * b
           out = Channel.Acc <$> ((A.zipWith3 colormix) <$> chr <*> chg <*> chb)
 
+luminance3 :: String -> String -> String -> String -> (Image Float) -> Either Image.Error (Image Float)
+luminance3 rname gname bname outname img = do
+    chr <- fmap Channel.use $ Image.lookup' rname img
+    chg <- fmap Channel.use $ Image.lookup' gname img
+    chb <- fmap Channel.use $ Image.lookup' bname img
+    let chan = Channel.Acc $ A.zipWith3 colormix chr chg chb
+        colormix r g b = 0.3 * r + 0.59 * g + 0.11 * b
+        outimg = Image.insert outname chan img
+    return outimg
 
+luminance3' :: (Image Float) -> Either Image.Error (Image Float)
+luminance3' = luminance3 "red" "green" "blue" "luminance"
+
+--tst :: String -> IO (Either Int ())
+tst fileIn = runEitherT $ do
+    print "hello"
+    raw <- hoistEither =<< (Image.readImageFromBMP fileIn)
+    let img = Image.reprFloat raw
+
+    return ()
 
 main :: IO ()
 main

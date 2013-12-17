@@ -12,6 +12,7 @@
 
 module Wildfire where
 
+import Flowbox.Prelude
 import Canny
 
 import Data.Word

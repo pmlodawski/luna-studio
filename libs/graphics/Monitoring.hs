@@ -3,6 +3,7 @@
 
 module Monitoring where
 
+import Flowbox.Prelude
 -- #ifdef ACCELERATE_ENABLE_EKG
 import Control.Monad
 import System.Remote.Monitoring

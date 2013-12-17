@@ -10,6 +10,7 @@ module ParseArgs (
 
 ) where
 
+import Flowbox.Prelude                                  hiding(set, (++))
 import Data.Char
 import Data.List
 import Data.Label

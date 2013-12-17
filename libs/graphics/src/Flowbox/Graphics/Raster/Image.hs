@@ -10,6 +10,7 @@ import qualified Data.Map                      as Map
 import           Data.Map                      (Map)
 import           Data.Monoid                   (mempty, Monoid)
 import           Control.Lens
+import           Control.Error
 
 import qualified Flowbox.Graphics.Raster.Channel as Channel
 import           Flowbox.Graphics.Raster.Channel (Channel)
@@ -21,6 +22,9 @@ data Image a = Image { _channels :: Map String (Channel a)
 makeLenses ''Image
 
 
+data Error = LookupError
+           deriving (Show)
+
 map :: (A.Elt a, A.Elt b) => (Exp a -> Exp b) -> Image a -> Image b
 map f img = Image $ Map.map (Channel.map f) $ view channels img
 
@@ -28,6 +32,10 @@ compute img = Image $ Map.map Channel.compute $ view channels img
 
 lookup :: String -> Image a -> Maybe (Channel a)
 lookup name img = Map.lookup name (view channels img)
+
+
+lookup' :: String -> Image a -> Either Error (Channel a)
+lookup' name img = justErr LookupError $ Map.lookup name (view channels img)
 
 cpChannel :: String -> String -> Image a -> Image a
 cpChannel src dst img = case chan of

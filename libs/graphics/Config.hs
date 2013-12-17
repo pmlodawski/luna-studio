@@ -2,6 +2,7 @@
 
 module Config where
 
+import Flowbox.Prelude hiding(set)
 import ParseArgs
 import Data.Label
 

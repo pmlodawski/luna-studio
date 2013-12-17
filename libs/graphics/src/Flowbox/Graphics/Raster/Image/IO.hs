@@ -12,6 +12,7 @@ import           Data.Bits                     ((.&.))
 import           Data.Monoid                   (mempty, Monoid)
 import qualified Codec.BMP                     as BMP
 import           Control.Applicative
+import           Control.Monad.IO.Class        (MonadIO, liftIO)
 
 import qualified Flowbox.Graphics.Raster.Image    as Image
 import           Flowbox.Graphics.Raster.Image    (Image)
@@ -19,8 +20,8 @@ import qualified Flowbox.Graphics.Raster.Channel  as Channel
 import           Flowbox.Graphics.Raster.Channel  (Channel)
 
 
-readImageFromBMP :: FilePath -> IO (Either BMP.Error (Image A.Word8))
-readImageFromBMP file = fmap decodeRGBA32 <$> A.readImageFromBMP file
+readImageFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image A.Word8))
+readImageFromBMP file = liftIO(fmap decodeRGBA32 <$> A.readImageFromBMP file)
 
 
 decodeRGBA32 :: A.Array A.DIM2 A.RGBA32 -> Image A.Word8

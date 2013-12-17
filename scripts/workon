@@ -78,7 +78,7 @@ pkgs = { '@all'           : AllProject (deps = deptree)
        , 'batch-zmqsrv'   : HProject   ('flowbox-batch-zmqsrv', os.path.join ('tools' , 'batch-zmqsrv')  , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
        , 'num-conversion' : HProject   ('num-conversion'      , os.path.join ('libs'  , 'num-conversion'), 'libs'    , [] )
        , 'graphics'       : HProject   ('flowbox-graphics'    , os.path.join ('libs'  , 'graphics')      , 'libs'    , ['utils', 'num-conversion'] )
-       , 'markup'        : HProject   ('doc-markup'          , os.path.join ('libs'  , 'markup')        , 'libs'    , []                                                  )
+       , 'markup'         : HProject   ('doc-markup'          , os.path.join ('libs'  , 'markup')        , 'libs'    , []                                                  )
        } 
 
 
