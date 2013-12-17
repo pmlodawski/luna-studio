@@ -41,6 +41,7 @@ const std::string headerFile = R"(
 #include <boost/optional.hpp>
 #include <boost/asio.hpp>
 
+#include "../BatchIdWrappers.h"
 
 class %wrapper_name%
 {
@@ -50,6 +51,8 @@ std::function<void(const std::string&)> success;
 std::function<void(const std::string&)> error;
 std::function<void(const std::string&)> after;
 
+
+generated::proto::crumb::Breadcrumbs crumbify(DefinitionId defID);
 
 size_t sendAll(void *data, size_t size);
 void sendRequest(const generated::proto::batch::Request& request);
@@ -65,7 +68,7 @@ boost::asio::ip::tcp::socket &socket;
 
 const std::string sourceFile = R"(
 
-#include "out.h"
+#include "BatchClient.h"
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
@@ -159,11 +162,11 @@ const std::string methodDeclaration = "%rettype% %space%_%method%(%args_list%);"
 const std::string methodDefinition = R"(
 %rettype% %wrapper_name%::%space%_%method%(%args_list%)
 {
-	if(before) before();
-	FINALIZE{ if(after) after(); };
+	if(before) before("%space%_%method%");
+	FINALIZE{ if(after) after("%space%_%method%"); };
 	try
 	{
-		FINALIZE{ if(success) success(); };
+		
 		generated::proto::batch::%space%_%method%_Args *args = new generated::proto::batch::%space%_%method%_Args();
 		%setters%
 
@@ -174,11 +177,12 @@ const std::string methodDefinition = R"(
 		generated::proto::batch::Response response = callAndTranslateException(request);
 		assert(response.type() == generated::proto::batch::Response_Type_Result); //exception would be translated to exception
 
+		FINALIZE{ if(success) success("%space%_%method%"); };
 		%epilogue%
 	}
 	catch(std::exception &e)
 	{
-		if(error) error();
+		if(error) error("%space%_%method%");
 		std::string msg = std::string("Call to batch method %space%::%method% triggered an exception: ") + e.what();
 		throw std::runtime_error(msg);
 	}
@@ -265,8 +269,10 @@ struct MethodWrapper
 
 	std::string space, name;
 
-	std::string returnedType, epilogue;
+	std::string returnedType, epilogue, arguments, setters;
 
+	std::vector<int> collapsedArgs;
+	std::string collapsedName; 
 
 	MethodWrapper(const FileDescriptor *file, const EnumValueDescriptor *method) : methodValue(method)
 	{
@@ -284,6 +290,8 @@ struct MethodWrapper
 		for(int i = 0; i < args->field_count(); i++)
 			argsFields.push_back(args->field(i));
 
+		arguments = translateArguments();
+		setters = formatSetters();
 		formatEpilogue();
 	}
 
@@ -292,8 +300,8 @@ struct MethodWrapper
 		auto ret = input;
 		boost::replace_all(ret, "%space%", space);
 		boost::replace_all(ret, "%method%", name);
-		boost::replace_all(ret, "%args_list%", translateArguments());
-		boost::replace_all(ret, "%setters%", formatSetters());
+		boost::replace_all(ret, "%args_list%", arguments);
+		boost::replace_all(ret, "%setters%", setters);
 		boost::replace_all(ret, "%epilogue%", epilogue);
 		boost::replace_all(ret, "%rettype%", returnedType);
 		//boost::replace_all(ret, "%rettype%", returnedType);
@@ -310,11 +318,55 @@ struct MethodWrapper
 		return format(methodDefinition);
 	}
 
-	std::string translateArguments() const 
+	std::string translateArguments() 
 	{
 		std::vector<std::string> argsTxt;
-		for(auto arg : argsFields)
-			argsTxt.push_back(ArgWrapper(arg).formatArgument());
+		for(int i = 0; i < argsFields.size(); i++)
+		{
+			auto &arg = argsFields.at(i);
+			if(arg->name() == "nodeID")
+			{
+				assert(argsFields.at(i + 1)->name() == "bc");
+				assert(argsFields.at(i + 2)->name() == "libraryID");
+				assert(argsFields.at(i + 3)->name() == "projectID");
+				collapsedArgs.resize(4, i);
+				i += 3;
+				argsTxt.push_back("const NodeId &nodeID");
+				collapsedName = "nodeID";
+			}
+			else if(arg->name() == "bc" || arg->name() == "parentbc")
+			{
+				assert(argsFields.at(i + 1)->name() == "libraryID");
+				assert(argsFields.at(i + 2)->name() == "projectID");
+				collapsedArgs.resize(3, i);
+				i += 2;
+
+				if(arg->name() == "bc")
+					collapsedName = "defID";
+				else
+					collapsedName = "parent";
+				argsTxt.push_back("const DefinitionId &" + collapsedName);
+			}
+			else if(arg->name() == "libraryID")
+			{
+				assert(argsFields.at(i + 1)->name() == "projectID");
+				collapsedArgs.resize(2, i);
+				i += 1;
+
+				collapsedName = "libID";
+				argsTxt.push_back("const LibraryId &libID");
+			}
+			else if(arg->name() == "projectID")
+			{
+				collapsedArgs.resize(1, i);
+				collapsedName = "projID";
+				argsTxt.push_back("const ProjectId &projID");
+			}
+			else
+			{
+				argsTxt.push_back(ArgWrapper(arg).formatArgument());
+			}
+		}
 
 		return boost::join(argsTxt, ", ");
 	}
@@ -322,40 +374,62 @@ struct MethodWrapper
 	std::string formatSetters() const
 	{
 		std::string ret;
-		for(auto arg : argsFields)
+		for(int i = 0; i < argsFields.size(); i++)
 		{
-			std::string entry;
-			if(arg->is_repeated())
+			auto &arg = argsFields.at(i);
+			if(collapsedArgs.size() && collapsedArgs.front() == i)
 			{
-				if(arg->type() == FieldDescriptor::TYPE_MESSAGE)
+				for(int j = 0; j < collapsedArgs.size(); j++)
 				{
-					entry = 
-				 R"(for(size_t i = 0; i < %1.size(); i++)
-					{
-						auto added = args->add_%2();
-						added->MergeFrom(*args);
-						delete args;
-					})";
-				}
-				else
-				{
-					entry = 
-						R"(	for(size_t i = 0; i < %1.size(); i++)
-							{
-						      args->set_%2(i, %1.at(i));
-							})";
-				}
-			}
-			else if(arg->is_optional())
-				entry = "if(%1)\n{\nargs->set_%2(*%1);\n}";
-			else if(arg->type() == FieldDescriptor::TYPE_MESSAGE)
-				entry = "args->mutable_%2()->CopyFrom(%1);";
-			else
-				entry = "args->set_%2(%1);";
+					auto &argInner = argsFields.at(i+j);
 
-			boost::replace_all(entry, "%1", arg->name());
-			boost::replace_all(entry, "%2", arg->lowercase_name());
-			ret += entry + "\n";
+					static const std::string names[] = { "nodeID", "defID", "libID", "projID" };
+					int index = 4-collapsedArgs.size()+j;
+					auto derefedArg = collapsedName + "." + names[index];
+					if(index == 1)
+					{
+						ret += "args->mutable_" + argInner->lowercase_name() + "()->CopyFrom(crumbify(" + collapsedName + "));\n";
+					}
+					else
+						ret += "args->set_" + argInner->lowercase_name() + "(" + derefedArg + ");\n";
+				}
+				i += collapsedArgs.size() - 1;
+			}
+			else
+			{
+				std::string entry;
+				if(arg->is_repeated())
+				{
+					if(arg->type() == FieldDescriptor::TYPE_MESSAGE)
+					{
+						entry =
+							R"(for(size_t i = 0; i < %1.size(); i++)
+								{
+									auto added = args->add_%2();
+									added->MergeFrom(*args);
+									delete args;
+								})";
+					}
+					else
+					{
+						entry =
+							R"(	for(size_t i = 0; i < %1.size(); i++)
+										{
+									      args->set_%2(i, %1.at(i));
+										})";
+					}
+				}
+				else if(arg->is_optional())
+					entry = "if(%1)\n{\nargs->set_%2(*%1);\n}";
+				else if(arg->type() == FieldDescriptor::TYPE_MESSAGE)
+					entry = "args->mutable_%2()->CopyFrom(%1);";
+				else
+					entry = "args->set_%2(%1);";
+
+				boost::replace_all(entry, "%1", arg->name());
+				boost::replace_all(entry, "%2", arg->lowercase_name());
+				ret += entry + "\n";
+			}
 		}
 		return ret;
 	}
