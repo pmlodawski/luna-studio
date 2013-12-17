@@ -206,6 +206,8 @@ main :: IO ()
 main
   = do
         Monitoring.beginMonitoring
+
+        
         argv                    <- Env.getArgs
         (conf, cconf, nops)     <- ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer argv
         (fileIn, fileOut)       <- case nops of
@@ -213,6 +215,7 @@ main
           _       -> ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer ("--help":argv)
                   >> Exit.exitSuccess
 
+        let backend     = Label.get Cfg.configBackend conf
         -- Read in the image file
         print "Reading"
         imgx <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn 
@@ -227,10 +230,10 @@ main
                        $ fmap (Image.cpChannel "luminance" "green")
                        $ fmap (Image.cpChannel "luminance" "blue")
                        $ luminance2 "red" "green" "blue" "luminance" imgf
-            Just outarr = fmap CUDA.run $ Image.encodeRGBA32 imgf2
+            Just outarr = fmap (ParseArgs.run backend) (Image.encodeRGBA32 imgf2)
 
 
-            Channel.Raw ltest = Channel.compute $ Channel.map color2Int lchan
+            Channel.Raw ltest = Channel.compute (ParseArgs.run backend) $ Channel.map color2Int lchan
 
         A.writeImageToBMP fileOut outarr
         -- Set up the algorithm parameters

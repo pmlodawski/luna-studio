@@ -28,7 +28,7 @@ data Error = LookupError
 map :: (A.Elt a, A.Elt b) => (Exp a -> Exp b) -> Image a -> Image b
 map f img = Image $ Map.map (Channel.map f) $ view channels img
 
-compute img = Image $ Map.map Channel.compute $ view channels img
+compute backend img = Image $ Map.map (Channel.compute backend) $ view channels img
 
 lookup :: String -> Image a -> Maybe (Channel a)
 lookup name img = Map.lookup name (view channels img)

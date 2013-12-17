@@ -3,7 +3,6 @@ module Flowbox.Graphics.Raster.Channel where
 import Flowbox.Prelude
 
 import qualified Data.Array.Accelerate         as A
-import qualified Data.Array.Accelerate.CUDA    as CUDA
 
 data Channel a = Raw (A.Array A.DIM2 a)
                | Acc (A.Acc (A.Array A.DIM2 a))
@@ -21,6 +20,6 @@ use chan = case chan of
     Acc m -> m
 
 
-compute chan = Raw $ case chan of 
+compute backend chan = Raw $ case chan of 
     Raw m -> m
-    Acc m -> CUDA.run m
+    Acc m -> backend m
