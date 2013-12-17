@@ -16,7 +16,6 @@ module Flowbox.Prelude(
 ) where
 
 import           Control.Applicative
-import qualified Control.Exception      as Exception
 import           Control.Lens
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.Monoid            (Monoid, mappend, mempty)
