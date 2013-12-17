@@ -11,41 +11,175 @@
 using namespace generated::proto::batch;
 using namespace google::protobuf;
 
-const std::string primaryWrapper = R"(class %1
-{
-public:
 
-generated::proto::batch::Response callAndTranslateException(const Request& request)
+void formatOutput(std::ostream &out, std::string contents)
 {
-	return ::callAndTranslateException(socket, request);
+	auto hlp = contents;
+	boost::replace_all(hlp, "\t", "");
+	int count = 0;
+	std::string outtxt;
+	for(int i = 0; i < hlp.size(); i++)
+	{
+		const char &c = hlp[i];
+
+		if(c == '}'  &&  outtxt.back() == '\t') outtxt.pop_back();
+
+		outtxt.push_back(c);
+		if(c == '{') count++;
+		else if(c == '}') count--;
+		else if(c == '\n') for(int j = 0; j < count; j++) outtxt.push_back('\t');
+
+	}
+
+	out << outtxt;
 }
 
-tcp::socket &socket;
-%1(tcp::socket &socket) : socket(socket) {}
-%2
+
+const std::string headerFile = R"(
+#include <string>
+#include <vector>
+#include <boost/optional.hpp>
+#include <boost/asio.hpp>
+
+
+class %wrapper_name%
+{
+public:
+std::function<void(const std::string&)> before;
+std::function<void(const std::string&)> success;
+std::function<void(const std::string&)> error;
+std::function<void(const std::string&)> after;
+
+
+size_t sendAll(void *data, size_t size);
+void sendRequest(const generated::proto::batch::Request& request);
+generated::proto::batch::Response receiveResponse();
+generated::proto::batch::Response call(const generated::proto::batch::Request& request);
+generated::proto::batch::Response callAndTranslateException(const generated::proto::batch::Request& request);
+
+boost::asio::ip::tcp::socket &socket;
+%wrapper_name%(boost::asio::ip::tcp::socket &socket) : socket(socket) {}
+%method_decls%
 };
 )";
 
-const std::string methodWrapper = R"(
-%6 %1_%2(%3)
+const std::string sourceFile = R"(
+
+#include "out.h"
+
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/io/coded_stream.h>
+
+
+const int BUFFER_SIZE = 10000000; // TODO [PM] : magic constant
+
+using boost::asio::ip::tcp;
+using Socket = tcp::socket;
+
+size_t %wrapper_name%::sendAll(void *data, size_t size)
 {
+	size_t sent = boost::asio::write(socket, boost::asio::buffer(data, size));
+	assert(sent == size);
+	return sent;
+}
+
+
+void %wrapper_name%::sendRequest(const generated::proto::batch::Request& request)
+{
+	int  requestSize = request.ByteSize() + 4;
+	std::vector<char> requestBuf(requestSize, 0);
+	//char* requestBuf = new char[requestSize];
+
+	//write varint delimiter to buffer
+	google::protobuf::io::ArrayOutputStream arrayOut(requestBuf.data(), requestSize);
+	google::protobuf::io::CodedOutputStream codedOut(&arrayOut);
+	codedOut.WriteVarint32(request.ByteSize());
+
+	//write protobuf ack to buffer
+	request.SerializeToCodedStream(&codedOut);
+
+	//send buffer to client
+	sendAll(requestBuf.data(), requestSize);
+	// std::cout << "Sent: " << sent << std::flush;
+
+	//delete [] requestBuf;
+}
+
+generated::proto::batch::Response %wrapper_name%::receiveResponse()
+{
+	static char buffer[BUFFER_SIZE];
+
+	generated::proto::batch::Response response;
+	size_t received = boost::asio::read(socket, boost::asio::buffer(buffer, 4));
+
+	//read varint delimited protobuf object in to buffer
+	//there's no method to do this in the C++ library so here's the workaround
+	google::protobuf::io::ArrayInputStream headerArrayIn(buffer, received);
+	google::protobuf::io::CodedInputStream headerCodedIn(&headerArrayIn);
+	google::protobuf::uint32 packetSize;
+	headerCodedIn.ReadVarint32(&packetSize);
+	const int sizeinfoLength = headerCodedIn.CurrentPosition();
+	const int remainingToRead = packetSize + sizeinfoLength - received;
+
+	received = boost::asio::read(socket, boost::asio::buffer(buffer + received, remainingToRead));
+
+	google::protobuf::io::ArrayInputStream arrayIn(buffer + sizeinfoLength, packetSize);
+	google::protobuf::io::CodedInputStream codedIn(&arrayIn);
+	google::protobuf::io::CodedInputStream::Limit msgLimit = codedIn.PushLimit(packetSize);
+	response.ParseFromCodedStream(&codedIn);
+	codedIn.PopLimit(msgLimit);
+	return response;
+}
+
+generated::proto::batch::Response %wrapper_name%::call(const generated::proto::batch::Request& request)
+{
+	sendRequest(request);
+	return receiveResponse();
+}
+
+generated::proto::batch::Response %wrapper_name%::callAndTranslateException(const generated::proto::batch::Request& request)
+{
+	auto response = call(request);
+
+	if(response.type() == generated::proto::batch::Response_Type_Exception)
+	{
+		const auto exc = response.GetExtension(generated::proto::batch::Exception::rsp);
+		const auto msg = exc.message();
+		throw std::runtime_error(msg);
+	}
+
+	return response;
+}
+
+%method_impls%
+)";
+
+const std::string methodDeclaration = "%rettype% %space%_%method%(%args_list%);";
+
+const std::string methodDefinition = R"(
+%rettype% %wrapper_name%::%space%_%method%(%args_list%)
+{
+	if(before) before();
+	FINALIZE{ if(after) after(); };
 	try
 	{
-		generated::proto::batch::%1_%2_Args *args = new generated::proto::batch::%1_%2_Args();
-	%4
+		FINALIZE{ if(success) success(); };
+		generated::proto::batch::%space%_%method%_Args *args = new generated::proto::batch::%space%_%method%_Args();
+		%setters%
 
-		Request request;
-		request.set_method(Request_Method_%1_%2);
-		request.SetAllocatedExtension(generated::proto::batch::%1_%2_Args::req, args);
+		generated::proto::batch::Request request;
+		request.set_method(generated::proto::batch::Request_Method_%space%_%method%);
+		request.SetAllocatedExtension(generated::proto::batch::%space%_%method%_Args::req, args);
 
 		generated::proto::batch::Response response = callAndTranslateException(request);
-		assert(response.type() == Response_Type_Result); //exception would be translated to exception
+		assert(response.type() == generated::proto::batch::Response_Type_Result); //exception would be translated to exception
 
-	%5
+		%epilogue%
 	}
 	catch(std::exception &e)
 	{
-		std::string msg = std::string("Call to batch method %1::%2 triggered an exception: ") + e.what();
+		if(error) error();
+		std::string msg = std::string("Call to batch method %space%::%method% triggered an exception: ") + e.what();
 		throw std::runtime_error(msg);
 	}
 }
@@ -107,7 +241,7 @@ struct ArgWrapper
 			if(asValue)
 				ret = "%1";
 			else
-				ret = "%1 *";
+				ret = "const %1 &";
 		}
 		else
 			ret = "%1";
@@ -153,16 +287,27 @@ struct MethodWrapper
 		formatEpilogue();
 	}
 
-	std::string format() const 
+	std::string format(const std::string &input) const
 	{
-		auto ret = methodWrapper;
-		boost::replace_all(ret, "%1", space);
-		boost::replace_all(ret, "%2", name);
-		boost::replace_all(ret, "%3", translateArguments());
-		boost::replace_all(ret, "%4", formatSetters());
-		boost::replace_all(ret, "%5", epilogue);
-		boost::replace_all(ret, "%6", returnedType);
+		auto ret = input;
+		boost::replace_all(ret, "%space%", space);
+		boost::replace_all(ret, "%method%", name);
+		boost::replace_all(ret, "%args_list%", translateArguments());
+		boost::replace_all(ret, "%setters%", formatSetters());
+		boost::replace_all(ret, "%epilogue%", epilogue);
+		boost::replace_all(ret, "%rettype%", returnedType);
+		//boost::replace_all(ret, "%rettype%", returnedType);
 		return ret;
+	}
+
+	std::string formatDecl() const
+	{
+		return format(methodDeclaration);
+	}
+
+	std::string formatImpl() const
+	{
+		return format(methodDefinition);
 	}
 
 	std::string translateArguments() const 
@@ -184,26 +329,29 @@ struct MethodWrapper
 			{
 				if(arg->type() == FieldDescriptor::TYPE_MESSAGE)
 				{
-					entry = "\tfor(size_t i = 0; i < %1.size(); i++)\n"
-					"\t{\n"
-						"\t\tauto added = args->add_%2();\n"
-						"\t\tadded->MergeFrom(*args);\n"
-						"\t\tdelete args;\n"
-					"\t}\n";
+					entry = 
+				 R"(for(size_t i = 0; i < %1.size(); i++)
+					{
+						auto added = args->add_%2();
+						added->MergeFrom(*args);
+						delete args;
+					})";
 				}
 				else
 				{
-					entry = "\tfor(size_t i = 0; i < %1.size(); i++)\n"
-						"\t\targs->set_%2(i, %1.at(i));";
+					entry = 
+						R"(	for(size_t i = 0; i < %1.size(); i++)
+							{
+						      args->set_%2(i, %1.at(i));
+							})";
 				}
 			}
 			else if(arg->is_optional())
-				entry = "\tif(%1)\n"
-				"\t\targs->set_%2(*%1);";
+				entry = "if(%1)\n{\nargs->set_%2(*%1);\n}";
 			else if(arg->type() == FieldDescriptor::TYPE_MESSAGE)
-				entry = "\targs->set_allocated_%2(%1);";
+				entry = "args->mutable_%2()->CopyFrom(%1);";
 			else
-				entry = "\targs->set_%2(%1);";
+				entry = "args->set_%2(%1);";
 
 			boost::replace_all(entry, "%1", arg->name());
 			boost::replace_all(entry, "%2", arg->lowercase_name());
@@ -218,30 +366,30 @@ struct MethodWrapper
 		if(result->field_count() == 0)
 		{
 			returnedType = "void";
-			epilogue = "\treturn;";
+			epilogue = "return;";
 		}
 		else if(result->field_count() == 1)
 		{
 			auto field = result->field(0);
 			returnedType = ArgWrapper(result->field(0)).translateType(true);
-			epilogue = "\t" + resultPack + " result = response.GetExtension(" + resultPack + "::rsp);\n";
+			epilogue = resultPack + " result = response.GetExtension(" + resultPack + "::rsp);\n";
 			
 			if(field->is_repeated())
 			{
-				epilogue += "\t" + returnedType + " ret;\n";
-				epilogue += "\tfor(int i = 0; i < result."+field->lowercase_name()+"_size(); i++)\n";
-				epilogue += "\t\tret.push_back(result."+field->lowercase_name()+"(i));\n";
-				epilogue += "\treturn ret;";
+				epilogue += returnedType + " ret;\n";
+				epilogue += "for(int i = 0; i < result."+field->lowercase_name()+"_size(); i++)\n{\n";
+				epilogue += "ret.push_back(result."+field->lowercase_name()+"(i));\n}\n";
+				epilogue += "return ret;";
 			}
 			else
 			{
-				epilogue += "\treturn result." + field->lowercase_name() + "();";
+				epilogue += "return result." + field->lowercase_name() + "();";
 			}
 		}
 		else
 		{
 			returnedType = "generated::proto::batch::" + space + "_" + name + "_Result";
-			epilogue = "\treturn response.GetExtension(" + returnedType + "::rsp);";
+			epilogue = "return response.GetExtension(" + returnedType + "::rsp);";
 		}
 	}
 };
@@ -249,21 +397,34 @@ struct MethodWrapper
 
 void generate(const std::string &outputFile)
 {
-	std::string methodsList;
+	std::string methodImpls;
+	std::string methodDecls;
 
 	auto fileDescriptor = AST::descriptor()->file();
 	auto methodsDescriptor = Request::Method_descriptor();
 	for(int i = 0; i < methodsDescriptor->value_count(); i++)
 	{
-		methodsList += MethodWrapper(fileDescriptor, methodsDescriptor->value(i)).format();
+		methodImpls += MethodWrapper(fileDescriptor, methodsDescriptor->value(i)).formatImpl();
+		methodDecls += MethodWrapper(fileDescriptor, methodsDescriptor->value(i)).formatDecl() + "\n";
 	}
 
-	std::string output = primaryWrapper;
-	boost::replace_all(output, "%1", "Wrapper");
-	boost::replace_all(output, "%2", methodsList);
+	auto formatFile = [&](const std::string &input) -> std::string
+	{
+		auto ret = input;
+		boost::replace_all(ret, "%method_decls%", methodDecls);
+		boost::replace_all(ret, "%method_impls%", methodImpls);
+		boost::replace_all(ret, "%wrapper_name%", "BatchClient");
+		return ret;
+	};
 
-	std::ofstream out(outputFile);
-	out << output << std::flush;
+	{
+		std::ofstream out(outputFile + ".cpp");
+		formatOutput(out, formatFile(sourceFile));
+	}
+	{
+		std::ofstream out(outputFile + ".h");
+		formatOutput(out, formatFile(headerFile));
+	}
 
 	for(int i = 0; i < fileDescriptor->message_type_count(); i++)
 	{
@@ -274,6 +435,6 @@ void generate(const std::string &outputFile)
 
 int main()
 {
-	generate("out.cpp");
+	generate("generated/BatchClient");
 	return EXIT_SUCCESS;
 }
