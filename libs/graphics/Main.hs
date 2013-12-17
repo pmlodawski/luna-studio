@@ -183,10 +183,10 @@ luminance2 rname gname bname outname img = flip (Image.insert outname) img <$> o
 
 luminance3 :: String -> String -> String -> String -> (Image Float) -> Either Image.Error (Image Float)
 luminance3 rname gname bname outname img = do
-    chr <- fmap Channel.use $ Image.lookup' rname img
-    chg <- fmap Channel.use $ Image.lookup' gname img
-    chb <- fmap Channel.use $ Image.lookup' bname img
-    let chan = Channel.Acc $ A.zipWith3 colormix chr chg chb
+    chr <- Image.lookup' rname img
+    chg <- Image.lookup' gname img
+    chb <- Image.lookup' bname img
+    let chan = Channel.zipWith3 colormix chr chg chb
         colormix r g b = 0.3 * r + 0.59 * g + 0.11 * b
         outimg = Image.insert outname chan img
     return outimg
