@@ -9,6 +9,7 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 import           Control.Applicative
+import           Control.Lens               hiding (Zipper)
 import           Control.Monad.RWS          hiding (join)
 import           Control.Monad.State        hiding (join)
 import           Control.Monad.Trans.Either
@@ -17,11 +18,15 @@ import           Control.Monad.Writer       hiding (join)
 import qualified Data.DList                 as DList
 import           Data.Either.Utils          (forceEither)
 import           Data.String.Utils          (join)
+import           Data.Version               (Version (Version))
 import           Debug.Trace
 import           System.TimeIt
 
-import           Data.Version                                          (Version (Version))
+import qualified Flowbox.Distribution.M                                as DistMain
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                     as ASTCrumb
 import qualified Flowbox.Luna.Data.AST.Expr                            as LExpr
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus                    as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                   as Zipper
 import qualified Flowbox.Luna.Data.Cabal.Config                        as Config
 import qualified Flowbox.Luna.Data.Cabal.Section                       as Section
 import qualified Flowbox.Luna.Data.HAST.Expr                           as HExpr
@@ -34,6 +39,9 @@ import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
 import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
+import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
+import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaults
+import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
 import           Flowbox.Prelude
@@ -44,15 +52,7 @@ import qualified Flowbox.System.UniPath                                as UniPat
 import           Flowbox.Text.Show.Hs                                  (hsShow)
 import qualified Flowbox.Text.Show.Pretty                              as PP
 
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb   as ASTCrumb
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus  as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper as Zipper
 
-
-
-import Control.Lens hiding (Zipper)
-
-import qualified Flowbox.Distribution.M as DistMain
 
 genProject :: String -> Config.Config
 genProject name = let
@@ -163,14 +163,13 @@ example = Source.Source ["Main"]
 
 main :: IO ()
 main = do
-    DistMain.main
-    --logger setLevel DEBUG
+    --DistMain.main
+    logger setLevel DEBUG
 
-    --out <- timeIt main_inner
-    --case out of
-    --    Right _ -> return ()
-    --    Left  e -> putStrLn e
-
+    out <- timeIt main_graph
+    case out of
+        Right _ -> return ()
+        Left  e -> putStrLn e
 
 
 
@@ -196,6 +195,49 @@ main_inner = Luna.run $ do
     --logger info "\n-------- VarAlias --------"
     --va <- VarAlias.run     ast
     --logger info $ PP.ppShow va
+
+    --logger info "\n-------- FuncPool --------"
+    --fp <- FuncPool.run ast
+    --logger info $ PP.ppShow fp
+
+    --logger info "\n-------- SSA --------"
+    --ssa <- SSA.run va ast
+    ----logger info $ PP.ppqShow ssa
+
+    --logger info "\n-------- HASTGen --------"
+    --hast <- HASTGen.run ssa fp
+    --logger info $ PP.ppShow hast
+
+    --logger info "\n-------- HSC --------"
+    --hsc <- HSC.run  hast
+    --logger info $ join "\n\n" (map printSrc hsc)
+
+
+    return ()
+
+
+main_graph :: IO (Either String ())
+main_graph = Luna.run $ do
+    let source = example
+
+    logger info "\n-------- TxtParser --------"
+    ast <- TxtParser.run source
+    logger info $ PP.ppqShow ast
+
+    logger info "\n-------- VarAlias --------"
+    va <- VarAlias.run     ast
+    logger info $ PP.ppShow va
+
+
+    (Focus.FunctionFocus expr) <- Zipper.mk ast
+                              >>= Zipper.focusFunction "add"
+                              >>= return . Zipper.getFocus
+    logger info $ PP.ppShow expr
+    graph <- GraphBuilder.run va expr
+    logger info $ show graph
+
+    expr' <- GraphParser.run graph expr
+    logger info $ PP.ppShow expr'
 
     --logger info "\n-------- FuncPool --------"
     --fp <- FuncPool.run ast
