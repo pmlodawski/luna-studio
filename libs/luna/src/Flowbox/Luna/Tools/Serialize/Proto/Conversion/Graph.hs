@@ -48,7 +48,7 @@ instance Convert (Int, Node) Gen.Node where
         Node.Inputs      properties -> Gen.Node GenNode.Inputs  (encodePJ nodeID) Nothing         (encodeJ properties)
         Node.Outputs     properties -> Gen.Node GenNode.Outputs (encodePJ nodeID) Nothing         (encodeJ properties)
     decode (Gen.Node tcls mtnodeID mtexpr mtproperties) = do
-        nodeID <- decodeP <$> mtnodeID <?> "Failed to decode Node: 'nodeID' field is missing"
+        nodeID <- decodeP <$> mtnodeID <?> "Failed to decode Node: 'id' field is missing"
         tproperties <- mtproperties <?> "Failed to decode Node: 'flags' field is missing"
         properties  <- decode tproperties
         node <- case tcls of

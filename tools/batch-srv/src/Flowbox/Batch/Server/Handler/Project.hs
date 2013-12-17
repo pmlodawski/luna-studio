@@ -20,7 +20,7 @@ import qualified Data.IORef                                               as IOR
 import qualified Data.Sequence                                            as Sequence
 import           Flowbox.Batch.Batch                                      (Batch)
 import qualified Flowbox.Batch.Handler.Project                            as BatchP
-import           Flowbox.Batch.Project.Project                            (Project (Project))
+import           Flowbox.Batch.Project.Project                            (Project)
 import qualified Flowbox.Batch.Project.Project                            as Project
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project   ()
 import qualified Flowbox.Luna.Lib.LibManager                              as LibManager

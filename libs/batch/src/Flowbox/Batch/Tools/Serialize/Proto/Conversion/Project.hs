@@ -37,7 +37,7 @@ instance Convert (Project.ID, Project) (Gen.Project, LibManager) where
         tname       <- mtname      <?> "Failed to decode Project: 'name' field is missing"
         tpath       <- mtpath      <?> "Failed to decode Project: 'path' field is missing"
         tattrs      <- mtattrs     <?> "Failed to decode Project: 'attrs' field is missing"
-        tprojectID  <- mtprojectID <?> "Failed to decode Project: 'projectID' field is missing"
+        tprojectID  <- mtprojectID <?> "Failed to decode Project: 'id' field is missing"
         let name      = decodeP tname
             path      = decodeP tpath
             libPaths  = decodeListP tlibPaths

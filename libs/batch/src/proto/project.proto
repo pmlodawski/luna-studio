@@ -16,5 +16,5 @@ message Project {
     optional string     path       = 2;
     repeated string     libPaths   = 3;
     optional generated.proto.attributes.Attributes attributes = 4;
-    optional int32      projectID  = 5;
+    optional int32      id         = 5;
 }
