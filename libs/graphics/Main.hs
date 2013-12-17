@@ -11,13 +11,13 @@ import qualified Config                        as Cfg
 import qualified Monitoring                    as Monitoring
 import qualified ParseArgs                     as ParseArgs
 import qualified Wildfire                      as Wildfire
-                                                   
+
 import           Flowbox.Prelude               as P
 import qualified Data.Label                    as Label
 import           Criterion.Main                ( defaultMainWith, bgroup, bench, whnf )
 import qualified System.Exit                   as Exit
 import qualified System.Environment            as Env
-                                                    
+
 import           Data.Monoid                   (mempty, Monoid)
 import qualified Data.Array.Accelerate         as A
 import           Data.Array.Accelerate         (Acc, Exp, (:.)(..))
@@ -48,12 +48,12 @@ import qualified Data.Array.Repa.Eval           as R
 import Data.Bits ((.&.))
 
 
-import qualified Data.Array.Accelerate.CUDA             as CUDA
+--import qualified Data.Array.Accelerate.CUDA             as CUDA
 
 import Control.Monad.Trans.Either (runEitherT, hoistEither)
 
 
-normalize :: (R.Target a Double, R.Source a Double, R.Source a Word8, Monad m, R.Shape dim) => 
+normalize :: (R.Target a Double, R.Source a Double, R.Source a Word8, Monad m, R.Shape dim) =>
              R.Array a dim Word8 -> m (R.Array a dim Double)
 normalize arr = R.computeP $ R.map ffs arr
                 where {-# INLINE ffs #-}
@@ -73,7 +73,7 @@ normalize arr = R.computeP $ R.map ffs arr
 
 --instance Functor Channel where
 --    fmap f chan = case chan of
---        AccChannel m -> AccChannel $ A.map f m 
+--        AccChannel m -> AccChannel $ A.map f m
 
 
 --data Channel a = RepaChannel (R.Array R.U R.DIM2 a)
@@ -91,7 +91,7 @@ normalize arr = R.computeP $ R.map ffs arr
     --    r  <- R.computeP $ R.slice nm (R.Any R.:. R.All R.:. R.All R.:. (2::Int))
     --    g  <- R.computeP $ R.slice nm (R.Any R.:. R.All R.:. R.All R.:. (1::Int))
     --    b  <- R.computeP $ R.slice nm (R.Any R.:. R.All R.:. R.All R.:. (0::Int))
-    --    return $ Image 
+    --    return $ Image
     --           $ Map.insert "red"   ( RepaChannel r )
     --           $ Map.insert "green" ( RepaChannel g )
     --           $ Map.insert "blue"  ( RepaChannel b )
@@ -108,7 +108,7 @@ normalize arr = R.computeP $ R.map ffs arr
 
 
 demote  :: R.Array A.A R.DIM2 Float -> IO (R.Array R.U R.DIM2 Word8)
-demote arr = R.computeP $ R.map ffs arr where 
+demote arr = R.computeP $ R.map ffs arr where
     {-# INLINE ffs #-}
     ffs     :: Float -> Word8
     ffs x   =  P.fromIntegral (P.truncate x :: Int)
@@ -116,7 +116,7 @@ demote arr = R.computeP $ R.map ffs arr where
 
 
 demote2  :: R.Array A.A R.DIM2 Word8 -> IO (R.Array R.U R.DIM2 Word8)
-demote2 arr = R.computeP $ R.map id arr where 
+demote2 arr = R.computeP $ R.map id arr where
 {-# NOINLINE demote2 #-}
 
 
@@ -157,13 +157,13 @@ color2Int c = A.truncate $ c * 255
 img2Int :: Image A.Float -> Image A.Word8
 img2Int img = Image.map color2Int img
 
-normalizeRGBA32 :: A.Array A.DIM2 A.RGBA32 -> Image Float
-normalizeRGBA32 (A.use -> img) = Image.insert "red"   ( getChan getRfromRGBA32 )
-                               $ Image.insert "green" ( getChan getGfromRGBA32 )
-                               $ Image.insert "blue"  ( getChan getBfromRGBA32 )
-                               $ Image.insert "alpha" ( getChan getAfromRGBA32 )
-                               $ mempty
-                               where getChan f = Channel.Raw $ CUDA.run $ A.map (normalizeColor . f) img
+--normalizeRGBA32 :: A.Array A.DIM2 A.RGBA32 -> Image Float
+--normalizeRGBA32 (A.use -> img) = Image.insert "red"   ( getChan getRfromRGBA32 )
+--                               $ Image.insert "green" ( getChan getGfromRGBA32 )
+--                               $ Image.insert "blue"  ( getChan getBfromRGBA32 )
+--                               $ Image.insert "alpha" ( getChan getAfromRGBA32 )
+--                               $ mempty
+--                               where getChan f = Channel.Raw $ CUDA.run $ A.map (normalizeColor . f) img
 
 luminance :: Image Float -> Maybe (Channel Float)
 luminance img = out
@@ -207,7 +207,7 @@ main
   = do
         Monitoring.beginMonitoring
 
-        
+
         argv                    <- Env.getArgs
         (conf, cconf, nops)     <- ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer argv
         (fileIn, fileOut)       <- case nops of
@@ -218,14 +218,14 @@ main
         let backend     = Label.get Cfg.configBackend conf
         -- Read in the image file
         print "Reading"
-        imgx <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn 
+        imgx <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
         let imgf = Image.reprFloat imgx :: Image Float
 
         --img   <- timeIt $ (either (error . show) id `fmap` A.readImageFromBMP fileIn :: IO (A.Array A.DIM2 A.Word32))
         --let imgn = normalizeRGBA32 img :: Image Float
 
         let Just lchan = luminance imgf
-            Just imgf2 = fmap Image.reprWord8 
+            Just imgf2 = fmap Image.reprWord8
                        $ fmap (Image.cpChannel "luminance" "red")
                        $ fmap (Image.cpChannel "luminance" "green")
                        $ fmap (Image.cpChannel "luminance" "blue")

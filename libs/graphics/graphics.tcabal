@@ -15,7 +15,7 @@ Flag ekg
 
 Flag cuda
   Description:          Enable the CUDA parallel backend for NVIDIA GPUs
-  Default:              True
+  Default:              False
 
 Flag opencl
   Description:          Enable the OpenCL parallel backend
@@ -40,9 +40,9 @@ Library
                   NoImplicitPrelude,
                   TemplateHaskell,
                   OverloadedStrings
-  
+
   Exposed-modules: `findmodules('src', '.*\.hs')`
-  
+
   Build-Depends:  containers,
                   lens,
                   bmp,
@@ -82,7 +82,7 @@ Executable test
                   NoImplicitPrelude,
                   TemplateHaskell,
                   OverloadedStrings
-  
+
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND

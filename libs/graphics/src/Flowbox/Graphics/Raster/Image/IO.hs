@@ -6,7 +6,6 @@ import           Prelude                       hiding(map)
 
 import qualified Data.Array.Accelerate         as A
 import           Data.Array.Accelerate         (Acc, Exp, (:.)(..))
-import qualified Data.Array.Accelerate.CUDA    as CUDA
 import qualified Data.Array.Accelerate.IO      as A
 import           Data.Bits                     ((.&.))
 import           Data.Monoid                   (mempty, Monoid)
