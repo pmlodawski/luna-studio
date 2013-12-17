@@ -123,7 +123,7 @@ message AST {
     }
     message AddClass {
         message Args   { extend Request  { optional Args   req = 1102; }
-            required generated.proto.expr.Expr class      = 1;
+            required generated.proto.expr.Expr class_      = 1;
             required generated.proto.crumb.Breadcrumbs parentbc = 2;
             required int32 libraryID = 3;
             required int32 projectID = 4;
