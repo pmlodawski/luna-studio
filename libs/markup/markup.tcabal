@@ -13,6 +13,10 @@ Library
 
   Exposed-modules: Text.Doc.Markup
 
+  Other-modules: Text.Doc.Parser,
+                 Text.Doc.Lexer,
+                 Text.Doc.Utils
+
   Build-Depends:  base,
                   containers,
                   parsec,

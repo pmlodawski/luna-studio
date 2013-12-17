@@ -14,7 +14,7 @@ headingTxt = many $ noneOf "="
 pTextBoldItalic = string "***"
 pTextItalic         = string "**"
 pTextBold                 = string "*"
-formattedText = many $ noneOf "*"
+formattedText = many $ noneOf "*\n\r"
 
 pCodeLineBegin         = string $ replicate 4 ' '
 pCodeInline         = string "`"
