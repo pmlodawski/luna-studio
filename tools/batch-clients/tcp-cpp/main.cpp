@@ -323,8 +323,8 @@ int main()
 		auto lsResult = macro::FileSystem::LS(socket, "~");
 		std::cout << sw.elapsedMs().count() << "ms\tFileSystem::LS\n";
 
-		auto project = macro::Project::CreateProject(socket, "testProject", "tmp/testProject", attributes::Attributes()).project();
-		auto library = macro::Library::CreateLibrary(socket, "testLibrary", "tmp/testProject/testLibrary", project.id()).library();
+		auto project = macro::Project::CreateProject(socket, "testProject", "/tmp/flowbox/testProject", attributes::Attributes()).project();
+		auto library = macro::Library::CreateLibrary(socket, "Main", "/tmp/flowbox/testProject/testLibrary", project.id()).library();
 		
 		auto projects = macro::Project::Projects(socket).projects();
 		std::cout << "Projects loaded: " << projects.size() << std::endl;
@@ -336,6 +336,40 @@ int main()
 		auto library2 = macro::Library::LibraryByID(socket, library.id(), project.id()).library();
 		std::cout << "Library name: " << library2.name() << std::endl;
 
+		{
+			module::Module module;
+			auto moduleTypeBase = module.mutable_type();
+			moduleTypeBase->set_cls(type::Type::Module);
+			auto moduleType = new type::Module();
+			moduleType->add_path("Main");
+			moduleTypeBase->SetAllocatedExtension(type::Module::ext, moduleType);
+			auto bc_Root = buildBreadcrumbs({});
+			macro::AST::AddModule(socket, module, bc_Root, library.id(), project.id());
+		}
+		{
+			auto function = new expr::Function();
+			function->set_name("test");
+			auto unknown = new type::Type;
+			unknown->set_cls(type::Type::Unknown);
+			unknown->SetAllocatedExtension(type::Unknown::ext, new type::Unknown);
+			function->set_allocated_output(unknown);
+			expr::Expr functionBase;
+			functionBase.set_cls(expr::Expr::Function);
+			functionBase.SetAllocatedExtension(expr::Function::ext, function);
+			auto bc_Main = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main" }});
+			macro::AST::AddFunction(socket, functionBase, bc_Main, library.id(), project.id());
+		}
+		{
+			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			macro::Graph::NodesGraph(socket, bc_Main_test, library.id(), project.id());
+		}
+		{
+			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			graph::Node node;
+			node.set_cls(graph::Node::Expr);
+			node.set_name("45"); 
+			macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id());
+		}
 
 		macro::Maintenance::Dump(socket);
 
@@ -344,8 +378,8 @@ int main()
 		macro::Project::StoreProject(socket, project.id());
 		macro::Project::CloseProject(socket, project.id());
 
-		auto loadedProject = macro::Project::OpenProject(socket, "tmp/testProject").project();
-		macro::Library::LoadLibrary(socket, "tmp/testProject/testLibrary", loadedProject.id());
+		auto loadedProject = macro::Project::OpenProject(socket, "/tmp/flowbox/testProject").project();
+		macro::Library::LoadLibrary(socket, "/tmp/flowbox/testProject/testLibrary", loadedProject.id());
 
 		macro::Maintenance::Dump(socket);
 		macro::Project::CloseProject(socket, loadedProject.id());
@@ -354,16 +388,16 @@ int main()
 		// //////////////////////////////////////////////////////////////////////////
 		// //////////////////////////////////////////////////////////////////////////
 		// // Asking for node defaults
-		try
-		{
-			using namespace generated::proto::crumb;
-			auto defaults = askForNodeDefaults(socket, 0, 0, { { Crumb_Cls_FunctionCrumb, "main" } }, 0);
-		}
-		catch(std::exception &e)
-		{
-			std::cout << "Cannot get node defaults. Error: " << e.what() << std::endl;
-		}
-		std::cout << sw.elapsedMs().count() << "ms\tQuery for node defaults\n";
+		// try
+		// {
+		// 	using namespace generated::proto::crumb;
+		// 	auto defaults = askForNodeDefaults(socket, 0, 0, { { Crumb_Cls_FunctionCrumb, "main" } }, 0);
+		// }
+		// catch(std::exception &e)
+		// {
+		// 	std::cout << "Cannot get node defaults. Error: " << e.what() << std::endl;
+		// }
+		// std::cout << sw.elapsedMs().count() << "ms\tQuery for node defaults\n";
 		// //////////////////////////////////////////////////////////////////////////
 		// // Pings
 		// const int pingCount = 10;

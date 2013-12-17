@@ -136,14 +136,13 @@ import qualified Generated.Proto.Batch.Project.UpdateProject.Result         as U
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Processor"
 
+
 response :: ResponseType.Type -> r -> Extensions.Key Maybe Response r -> ByteString
-response t r rspkey = Proto.messageWithLengthPut 
-                    $ Extensions.putExt rspkey (Just r) 
+response t r rspkey = Proto.messageWithLengthPut
+                    $ Extensions.putExt rspkey (Just r)
                     $ Response t $ Extensions.ExtField Map.empty
 
 
---unsafeCall :: (Reflections.ReflectDescriptor r, WireMessage.Wire r)
---             => Extensions.Key Maybe Response r -> IO r -> IO ByteString
 unsafeCall :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
      => Request -> h ->  (h -> arg -> IO r)
      -> Extensions.Key Maybe Request arg
@@ -152,7 +151,7 @@ unsafeCall :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
 unsafeCall request handler method reqkey rspkey = do
     r <- case Extensions.getExt reqkey request of
         Right (Just args) -> method handler args
-                                
+
         Left   e'         -> fail $ "Error while getting extension: " ++ e'
         _                 -> fail $ "Error while getting extension"
     return $ response ResponseType.Result r rspkey
@@ -165,11 +164,11 @@ call :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
      -> IO ByteString
 call request handler method reqkey rspkey = do
     e <- runEitherT $ scriptIO $ unsafeCall request handler method reqkey rspkey
-    case e of 
+    case e of
         Left  m -> do loggerIO error m
                       let exc = Exception $ encodePJ m
                       return $ response ResponseType.Exception exc Exception.rsp
-        Right a ->    return a 
+        Right a ->    return a
 
 
 process :: Handler h => h -> ByteString -> IO ByteString

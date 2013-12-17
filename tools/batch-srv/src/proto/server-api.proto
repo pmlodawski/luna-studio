@@ -105,7 +105,7 @@ message AST {
         message Args   { extend Request  { optional Args   req = 1114; }
             optional int32 maxDepth  = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1114; }
@@ -115,8 +115,8 @@ message AST {
     message AddModule {
         message Args   { extend Request  { optional Args   req = 1101; }
             required generated.proto.module.Module module = 1;
-            required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required generated.proto.crumb.Breadcrumbs parentbc = 2;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1101; } }   
@@ -124,8 +124,8 @@ message AST {
     message AddClass {
         message Args   { extend Request  { optional Args   req = 1102; }
             required generated.proto.expr.Expr class      = 1;
-            required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required generated.proto.crumb.Breadcrumbs parentbc = 2;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1102; } }   
@@ -133,8 +133,8 @@ message AST {
     message AddFunction {
         message Args   { extend Request  { optional Args   req = 1103; }
             required generated.proto.expr.Expr function   = 1;
-            required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required generated.proto.crumb.Breadcrumbs parentbc = 2;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1103; } }   
@@ -143,7 +143,7 @@ message AST {
         message Args   { extend Request  { optional Args   req = 1104; }
             required generated.proto.type.Type cls        = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1104; } }   
@@ -152,7 +152,7 @@ message AST {
         message Args   { extend Request  { optional Args   req = 1105; }
             repeated generated.proto.expr.Expr imports    = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1105; } }   
@@ -161,7 +161,7 @@ message AST {
         message Args   { extend Request  { optional Args   req = 1106; }
             repeated generated.proto.expr.Expr fields     = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1106; } }   
@@ -170,7 +170,7 @@ message AST {
         message Args   { extend Request  { optional Args   req = 1107; }
             required generated.proto.type.Type cls        = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1107; } }   
@@ -179,7 +179,7 @@ message AST {
         message Args   { extend Request  { optional Args   req = 1108; }
             repeated generated.proto.expr.Expr fields     = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1108; } }   
@@ -188,7 +188,7 @@ message AST {
         message Args   { extend Request  { optional Args   req = 1109; }
             required string name     = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1109; } }   
@@ -197,7 +197,7 @@ message AST {
         message Args   { extend Request  { optional Args   req = 1110; }
             repeated string path     = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1110; } }   
@@ -206,7 +206,7 @@ message AST {
         message Args   { extend Request  { optional Args   req = 1111; }
             repeated generated.proto.expr.Expr inputs     = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1111; } }   
@@ -215,7 +215,7 @@ message AST {
         message Args   { extend Request  { optional Args   req = 1112; }
             required generated.proto.type.Type output     = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1112; } }   
@@ -223,7 +223,7 @@ message AST {
     message Remove {
         message Args   { extend Request  { optional Args   req = 1113; }
             required generated.proto.crumb.Breadcrumbs bc = 1;
-            required int32 libID     = 2;
+            required int32 libraryID = 2;
             required int32 projectID = 3;
         }
         message Result { extend Response { optional Result rsp = 1113; } }   
@@ -235,7 +235,7 @@ message NodeDefault {
         message Args   { extend Request  { optional Args   req = 1301; }
             required int32 nodeID    = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1301; }
@@ -248,7 +248,7 @@ message NodeDefault {
             required string value    = 2;
             required int32 nodeID    = 3;
             required generated.proto.crumb.Breadcrumbs bc = 4;
-            required int32 libID     = 5;
+            required int32 libraryID = 5;
             required int32 projectID = 6;
         }
         message Result { extend Response { optional Result rsp = 1302; } }   
@@ -258,7 +258,7 @@ message NodeDefault {
             required int32 inPort    = 1;
             required int32 nodeID    = 2;
             required generated.proto.crumb.Breadcrumbs bc = 3;
-            required int32 libID     = 4;
+            required int32 libraryID = 4;
             required int32 projectID = 5;
         }
         message Result { extend Response { optional Result rsp = 1303; } }   
@@ -325,7 +325,7 @@ message Graph {
     message NodesGraph {
         message Args   { extend Request  { optional Args   req = 1201; }
             required generated.proto.crumb.Breadcrumbs bc = 1;
-            required int32 libID     = 2;
+            required int32 libraryID = 2;
             required int32 projectID = 3;
         }
         message Result { extend Response { optional Result rsp = 1201; }
@@ -336,7 +336,7 @@ message Graph {
         message Args   { extend Request  { optional Args   req = 1202; }
             required int32 nodeID    = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1202; }
@@ -347,7 +347,7 @@ message Graph {
         message Args   { extend Request  { optional Args   req = 1203; }
             required generated.proto.graph.Node node      = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1203; }
@@ -358,7 +358,7 @@ message Graph {
         message Args   { extend Request  { optional Args   req = 1204; }
             required generated.proto.graph.Node node      = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1204; } }   
@@ -367,7 +367,7 @@ message Graph {
         message Args   { extend Request  { optional Args   req = 1205; }
             required int32 nodeID    = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libID     = 3;
+            required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1205; } }   
@@ -379,7 +379,7 @@ message Graph {
             required int32 dstNodeID = 3;
             required int32 dstPort   = 4;
             required generated.proto.crumb.Breadcrumbs bc = 5;
-            required int32 libID     = 6;
+            required int32 libraryID = 6;
             required int32 projectID = 7;
         }
         message Result { extend Response { optional Result rsp = 1206; } }   
@@ -391,7 +391,7 @@ message Graph {
             required int32 dstNodeID = 3;
             required int32 dstPort   = 4;
             required generated.proto.crumb.Breadcrumbs bc = 5;
-            required int32 libID     = 6;
+            required int32 libraryID = 6;
             required int32 projectID = 7;
         }
         message Result { extend Response { optional Result rsp = 1207; } }   
@@ -409,8 +409,8 @@ message Library {
     }
     message LibraryByID {
         message Args   { extend Request  { optional Args   req = 1011; } 
-            required int32 projectID = 1;
-            required int32 libraryID = 2;
+            required int32 libraryID = 1;
+            required int32 projectID = 2;
         }
         message Result { extend Response { optional Result rsp = 1011; } 
             required generated.proto.library.Library library = 1;
