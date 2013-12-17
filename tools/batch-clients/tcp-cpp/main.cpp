@@ -323,18 +323,37 @@ int main()
 		auto lsResult = macro::FileSystem::LS(socket, "~");
 		std::cout << sw.elapsedMs().count() << "ms\tFileSystem::LS\n";
 
-		{
-			auto attributes = attributes::Attributes();
-			auto r = macro::Project::CreateProject(socket, "testProject", "tmp/testProject", attributes);
-		}
+		auto project = macro::Project::CreateProject(socket, "testProject", "tmp/testProject", attributes::Attributes()).project();
+		auto library = macro::Library::CreateLibrary(socket, "testLibrary", "tmp/testProject/testLibrary", project.id()).library();
+		
+		auto projects = macro::Project::Projects(socket).projects();
+		std::cout << "Projects loaded: " << projects.size() << std::endl;
+		auto project2 = macro::Project::ProjectByID(socket, project.id()).project();
+		std::cout << "Project name: " << project2.name() << std::endl;
+
+		auto libraries = macro::Library::Libraries(socket, project.id()).libraries();
+		std::cout << "Libraries loaded: " << libraries.size() << std::endl;
+		auto library2 = macro::Library::LibraryByID(socket, library.id(), project.id()).library();
+		std::cout << "Library name: " << library2.name() << std::endl;
+
 
 		macro::Maintenance::Dump(socket);
-		std::cout << sw.elapsedMs().count() << "ms\tMaintenance::Dump\n";
 
-		//////////////////////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////////
-		// Asking for node defaults
+		macro::Library::StoreLibrary(socket, library.id(), project.id());
+		macro::Library::UnloadLibrary(socket, library.id(), project.id());
+		macro::Project::StoreProject(socket, project.id());
+		macro::Project::CloseProject(socket, project.id());
+
+		auto loadedProject = macro::Project::OpenProject(socket, "tmp/testProject").project();
+		macro::Library::LoadLibrary(socket, "tmp/testProject/testLibrary", loadedProject.id());
+
+		macro::Maintenance::Dump(socket);
+		macro::Project::CloseProject(socket, loadedProject.id());
+
+		// //////////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////////////
+		// // Asking for node defaults
 		try
 		{
 			using namespace generated::proto::crumb;
@@ -345,25 +364,25 @@ int main()
 			std::cout << "Cannot get node defaults. Error: " << e.what() << std::endl;
 		}
 		std::cout << sw.elapsedMs().count() << "ms\tQuery for node defaults\n";
-		//////////////////////////////////////////////////////////////////////////
-		// Pings
-		const int pingCount = 10;
-		for(int i = 0; i < pingCount; ++i) 
-			macro::Maintenance::Ping(socket);
-		std::cout << sw.elapsedMs().count() << "ms\t" << pingCount << " pings\n";
+		// //////////////////////////////////////////////////////////////////////////
+		// // Pings
+		// const int pingCount = 10;
+		// for(int i = 0; i < pingCount; ++i) 
+		// 	macro::Maintenance::Ping(socket);
+		// std::cout << sw.elapsedMs().count() << "ms\t" << pingCount << " pings\n";
 
-		const int dataSize = 100000000;
-		{
-			Maintenance_Ping_Args* args = new Maintenance_Ping_Args();
-			std::vector<char> data(dataSize + 1, 65);
-			data.back() = 0;
-			args->set_data(data.data());
+		// const int dataSize = 100000000;
+		// {
+		// 	Maintenance_Ping_Args* args = new Maintenance_Ping_Args();
+		// 	std::vector<char> data(dataSize + 1, 65);
+		// 	data.back() = 0;
+		// 	args->set_data(data.data());
 
-			auto response = macro::Maintenance::Ping_(socket, args);
-		}
-		std::cout << sw.elapsedMs().count() << "ms\tSending " << dataSize << " bytes\n";
+		// 	auto response = macro::Maintenance::Ping_(socket, args);
+		// }
+		// std::cout << sw.elapsedMs().count() << "ms\tSending " << dataSize << " bytes\n";
 
-		// macro::Maintenance::Shutdown(socket);
+		// // macro::Maintenance::Shutdown(socket);
 		std::cout << "done" << std::endl;
 
 		return EXIT_SUCCESS;

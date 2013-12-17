@@ -404,7 +404,7 @@ message Library {
             required int32 projectID = 1;
         }
         message Result { extend Response { optional Result rsp = 1009; } 
-            repeated generated.proto.library.Library liraries = 1;
+            repeated generated.proto.library.Library libraries = 1;
         }
     }
     message LibraryByID {
@@ -492,11 +492,9 @@ message Maintenance {
 
 message Project {
     message Projects {
-        message Args   { extend Request  { optional Args   req = 1022; }
-            required int32 projectID = 1;
-        }
+        message Args   { extend Request  { optional Args   req = 1022; } }
         message Result { extend Response { optional Result rsp = 1022; }
-            repeated generated.proto.project.Project project = 1;
+            repeated generated.proto.project.Project projects = 1;
         }   
     }
     message ProjectByID {
