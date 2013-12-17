@@ -367,7 +367,10 @@ int main()
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
-			node.set_name("45"); 
+			node.set_expr("45"); 
+			auto properties = node.mutable_properties();
+			properties->mutable_flags();
+			properties->mutable_attributes();
 			macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id());
 		}
 

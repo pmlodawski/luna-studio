@@ -40,7 +40,7 @@ instance Convert Flags Gen.Flags where
 
 
 instance ConvertPure Attributes Gen.Attributes where
-    encodeP attrs = Gen.Attributes $ Sequence.fromList $ map encodeP $ Attributes.toList attrs
+    encodeP attributes = Gen.Attributes $ Sequence.fromList $ map encodeP $ Attributes.toList attributes
     decodeP (Gen.Attributes tspaces) = Attributes.fromList $ map decodeP $ Foldable.toList tspaces
 
 
@@ -55,8 +55,8 @@ instance ConvertPure (String, String) Gen.KeyValue where
 
 
 instance Convert Properties Gen.Properties where
-    encode (Properties flags attrs) = Gen.Properties (encodeJ flags) (encodePJ attrs)
-    decode (Gen.Properties mflags mattrs) = do
-        flags <- mflags <?> "Failed to decode Properties: 'flags' field is missing"
-        attrs <- mattrs <?> "Failed to decode Properties: 'attrs' field is missing"
-        Properties <$> decode flags <*> (pure $ decodeP attrs)
+    encode (Properties flags attributes) = Gen.Properties (encodeJ flags) (encodePJ attributes)
+    decode (Gen.Properties mflags mattributes) = do
+        flags      <- mflags      <?> "Failed to decode Properties: 'flags' field is missing"
+        attributes <- mattributes <?> "Failed to decode Properties: 'attributes' field is missing"
+        Properties <$> decode flags <*> (pure $ decodeP attributes)
