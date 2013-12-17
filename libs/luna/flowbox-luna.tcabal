@@ -5,6 +5,7 @@ Cabal-Version:  >= 1.8
 Author:         Flowbox <contact@flowbox.io>
 Maintainer:     Flowbox <contact@flowbox.io>
 Build-Type:     Simple
+Description:    jest źle parsowany rpzez Wojtkowy skrypt
 
 Flag Debug
   Description: Enable debug support
@@ -23,10 +24,10 @@ Library
                   NoImplicitPrelude,
                   TemplateHaskell,
                   OverloadedStrings
-  
-  Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
+
+  Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`,
                    `findmodules('src', '.*\.hs')`
-  
+
   Build-Depends:  aeson,
                   base,
                   bytestring,
@@ -35,6 +36,7 @@ Library
                   containers,
                   data-default,
                   directory,
+                  doc-markup,
                   either,
                   errors,
                   fgl,

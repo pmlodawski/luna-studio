@@ -53,12 +53,12 @@ def main():
     if not os.path.isfile(cfgname):
         print_error("No build configuration file found. Run 'workon' script.")
         sys.exit(1)
-    
+
     config = ConfigParser.RawConfigParser()
     config.read(cfgname)
 
     print_info("Binary path is set to '%s'" % bin_dir)
-    
+
     names    = config.get('Target', 'names').split(',')
     binpaths = config.get('Target', 'binpaths').split(',')
     for (name, path) in zip(names, binpaths):
