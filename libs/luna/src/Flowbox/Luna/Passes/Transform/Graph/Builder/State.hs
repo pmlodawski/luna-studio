@@ -15,19 +15,20 @@ import qualified Data.IntMap         as IntMap
 import           Data.Map            (Map)
 import qualified Data.Map            as Map
 
-import           Debug.Trace
-import           Flowbox.Luna.Data.AliasAnalysis (AA)
-import qualified Flowbox.Luna.Data.AliasAnalysis as AA
-import qualified Flowbox.Luna.Data.AST.Utils     as AST
-import           Flowbox.Luna.Data.Graph.Edge    (Edge)
-import           Flowbox.Luna.Data.Graph.Graph   (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph   as Graph
-import           Flowbox.Luna.Data.Graph.Node    (Node)
-import qualified Flowbox.Luna.Data.Graph.Node    as Node
-import           Flowbox.Luna.Data.Graph.Port    (OutPort)
+import           Flowbox.Control.Error
+import           Flowbox.Luna.Data.AliasAnalysis             (AA)
+import qualified Flowbox.Luna.Data.AliasAnalysis             as AA
+import qualified Flowbox.Luna.Data.AST.Utils                 as AST
+import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap as DefaultsMap
+import           Flowbox.Luna.Data.Graph.Default.Value       (Value)
+import           Flowbox.Luna.Data.Graph.Edge                (Edge)
+import           Flowbox.Luna.Data.Graph.Graph               (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph               as Graph
+import           Flowbox.Luna.Data.Graph.Node                (Node)
+import qualified Flowbox.Luna.Data.Graph.Node                as Node
+import           Flowbox.Luna.Data.Graph.Port                (InPort, OutPort)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-
 
 
 logger :: Logger
@@ -110,6 +111,12 @@ nodeMapLookUp astID = getNodeMap >>= fromJust . (Map.lookup astID)
 
 
 aaNodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
-aaNodeMapLookUp astID = do s <- get
-                           i <- traceShow ("Looking for " ++ (show astID) ++ "\n" ++ (show s)) $ aaLookUp astID
-                           nodeMapLookUp i
+aaNodeMapLookUp astID = aaLookUp astID >>= nodeMapLookUp
+
+
+addNodeDefault :: GBStateM m => InPort -> Value -> Node.ID -> m ()
+addNodeDefault dstPort value nodeID = do
+    gr <- getGraph
+    node <- Graph.lab gr nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
+    let newNode = DefaultsMap.addDefault dstPort value node
+    setGraph $ Graph.updateNode (nodeID, newNode) gr

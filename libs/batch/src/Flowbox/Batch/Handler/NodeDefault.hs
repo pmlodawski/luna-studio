@@ -31,26 +31,16 @@ import           Flowbox.Prelude
 
 nodeDefaults :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO DefaultsMap
 nodeDefaults nodeID bc libID projectID  = readonly . nodeOp' nodeID bc libID projectID (\_ node ->
-    return (node, DefaultsMap.getDefaults node))
+    return (node, DefaultsMap.getDefaultsMap node))
 
 
 setNodeDefault :: InPort -> Value
                -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-setNodeDefault dstPort value nodeID bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph -> do
-    node <- Graph.lab graph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
-    let newDefaults  = Map.insert dstPort value
-                     $ DefaultsMap.getDefaults node
-        newNode      = DefaultsMap.setDefaults node newDefaults
-        newGraph = Graph.updateNode (nodeID, newNode) graph
-    return (newGraph, ()))
+setNodeDefault dstPort value nodeID bc libID projectID = noresult . nodeOp' nodeID bc libID projectID (\_ node -> do
+    return (DefaultsMap.addDefault dstPort value node, ()))
 
 
 removeNodeDefault :: InPort
                   -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-removeNodeDefault dstPort nodeID bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph -> do
-    node <- Graph.lab graph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
-    let newDefaults  = Map.delete dstPort
-                     $ DefaultsMap.getDefaults node
-        newNode      = DefaultsMap.setDefaults node newDefaults
-        newGraph = Graph.updateNode (nodeID, newNode) graph
-    return (newGraph, ()))
+removeNodeDefault dstPort nodeID bc libID projectID = noresult . nodeOp' nodeID bc libID projectID (\_ node -> do
+    return (DefaultsMap.removeDefault dstPort node, ()))

@@ -51,7 +51,7 @@ addDefaults graph =
 addNodeDefaults :: (Node.ID, Node) -> Graph -> Graph
 addNodeDefaults (nodeID, node) graph =
     foldr (addNodeDefault nodeID) graph $ Map.toList defaultsMap where
-    defaultsMap = DefaultsMap.getDefaults node
+    defaultsMap = DefaultsMap.getDefaultsMap node
 
 
 addNodeDefault :: Node.ID -> (InPort, Value) -> Graph -> Graph

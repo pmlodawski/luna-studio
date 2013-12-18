@@ -41,6 +41,7 @@ import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileRe
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaults
+import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaults
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
@@ -126,11 +127,13 @@ example = Source.Source ["Main"]
                   --, "    Console.print \"hello\""
 
                   , "def test self x y a b:"
-                  , "   a + b"
+                  --, "   a + b"
+                  --, "   a.add b"
                   , "   z = x.add y"
                   --, "   g = Console"
                   --, "   h = 45"
                   --, "   Console.print 4"
+                  , "   Console.printLn"
 
                   --, "def add self x y:"
                   --, "   x.add y"
@@ -239,9 +242,13 @@ main_graph = Luna.run $ do
                               >>= return . Zipper.getFocus
     logger info $ PP.ppShow expr
     graph <- GraphBuilder.run va expr
-    logger info $ show graph
+    let graphWithDefaults = Defaults.addDefaults graph
+    logger warning $ show graph
+    logger info $ show graphWithDefaults
+    let newGraph = Defaults.removeDefaults graphWithDefaults
+    logger warning $ show newGraph
 
-    expr' <- GraphParser.run graph expr
+    expr' <- GraphParser.run newGraph expr
     logger info $ PP.ppShow expr'
 
     --logger info "\n-------- FuncPool --------"

@@ -27,16 +27,26 @@ defaultsMapKey :: String
 defaultsMapKey = "Defaults-map"
 
 
-getDefaults :: Node -> DefaultsMap
-getDefaults node = case getKey $ node ^. (Node.properties . Proprties.attrs) of
+getDefaultsMap :: Node -> DefaultsMap
+getDefaultsMap node = case getKey $ node ^. (Node.properties . Proprties.attrs) of
     Nothing -> Map.empty
     Just d  -> read d
     where getKey = Attributes.get Attributes.lunaAttributeKey defaultsMapKey
 
 
-setDefaults :: Node -> DefaultsMap -> Node
-setDefaults node defaults =
+setDefaultsMap :: DefaultsMap -> Node -> Node
+setDefaultsMap defaults node =
     node & (Node.properties . Proprties.attrs)
         %~ Attributes.set Attributes.lunaAttributeKey defaultsMapKey (show defaults)
 
 
+addDefault :: InPort -> Value -> Node -> Node
+addDefault dstPort value node = newNode where
+     newDefaults = Map.insert dstPort value $ getDefaultsMap node
+     newNode     = setDefaultsMap newDefaults node
+
+
+removeDefault :: InPort -> Node -> Node
+removeDefault dstPort node = newNode where
+    newDefaults  = Map.delete dstPort $ getDefaultsMap node
+    newNode      = setDefaultsMap newDefaults node
