@@ -24,13 +24,13 @@ runScript s = do
         Right a -> return a
 
 
-(<?>) :: (Applicative m, Monad m) => Maybe b -> String -> m b
+(<?>) :: Monad m => Maybe b -> String -> m b
 val <?> m = case val of
     Just v  -> return v
     Nothing -> fail m
 
 
-ifnot :: (Applicative m, Monad m) => Bool -> String -> m ()
+ifnot :: Monad m => Bool -> String -> m ()
 ifnot bool msg = if bool
     then return ()
     else fail msg
