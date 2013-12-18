@@ -21,7 +21,7 @@ import qualified Flowbox.Luna.Data.AliasAnalysis             as AA
 import qualified Flowbox.Luna.Data.AST.Utils                 as AST
 import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap as DefaultsMap
 import           Flowbox.Luna.Data.Graph.Default.Value       (Value)
-import           Flowbox.Luna.Data.Graph.Edge                (Edge)
+import           Flowbox.Luna.Data.Graph.Edge                (Edge (Edge))
 import           Flowbox.Luna.Data.Graph.Graph               (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph               as Graph
 import           Flowbox.Luna.Data.Graph.Node                (Node)
@@ -69,8 +69,20 @@ addNode astID outPort node = do
     addToMap astID (nodeID, outPort)
     return nodeID
 
+
+addNode_ :: GBStateM m => AST.ID -> OutPort -> Node -> m ()
+addNode_ astID outPort node = do _ <- addNode astID outPort node
+                                 return ()
+
+
 connect :: GBStateM m => Node.ID -> Node.ID -> Edge -> m ()
 connect srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
+
+
+connectAST :: GBStateM m => AST.ID -> Node.ID -> InPort -> m ()
+connectAST srcID dstNID dstPort = do
+    (srcNID, srcPort) <- aaNodeMapLookUp srcID
+    connect srcNID dstNID $ Edge srcPort dstPort
 
 
 getGraph :: GBStateM m => m Graph

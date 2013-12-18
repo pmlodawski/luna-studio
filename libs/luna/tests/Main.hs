@@ -127,12 +127,14 @@ example = Source.Source ["Main"]
                   --, "    Console.print \"hello\""
 
                   , "def test self x y a b:"
-                  --, "   a + b"
+                  --, "   4"
+                  --, "   5"
+                  , "   a + b"
                   --, "   a.add b"
-                  , "   z = x.add y"
+                  --, "   z = x.add y"
                   --, "   g = Console"
                   --, "   h = 45"
-                  --, "   Console.print 4"
+                  , "   Console.print 4"
                   , "   Console.printLn"
 
                   --, "def add self x y:"
