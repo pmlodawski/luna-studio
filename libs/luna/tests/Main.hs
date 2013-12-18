@@ -125,13 +125,18 @@ example = Source.Source ["Main"]
                   --, "        el.add 1"
                   --, "    Console.print \"hello\""
 
+                  , "def test self x y a b:"
+                  , "   a + b"
+                  , "   z = x.add y"
+                  --, "   g = Console"
+                  --, "   h = 45"
+                  --, "   Console.print 4"
 
+                  --, "def add self x y:"
+                  --, "   x.add y"
 
-                  , "def add self x y:"
-                  , "   x.add y"
-
-                  , "def add2 self x y:"
-                  , "   x.add y"
+                  --, "def add2 self x y:"
+                  --, "   x.add y"
                   --, "def addInts(self, x, y) -> Int:"
                   --, "   x.add y"
                   --, "def main self:"
@@ -230,7 +235,7 @@ main_graph = Luna.run $ do
 
 
     (Focus.FunctionFocus expr) <- Zipper.mk ast
-                              >>= Zipper.focusFunction "add"
+                              >>= Zipper.focusFunction "test"
                               >>= return . Zipper.getFocus
     logger info $ PP.ppShow expr
     graph <- GraphBuilder.run va expr
