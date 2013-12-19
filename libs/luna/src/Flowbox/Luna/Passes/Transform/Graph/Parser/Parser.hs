@@ -40,6 +40,7 @@ import           Flowbox.Luna.Passes.Transform.Graph.Parser.State   (GPState(GPS
 import           Flowbox.System.Log.Logger                           
 
 
+
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.Parser"
 
@@ -54,57 +55,85 @@ run gr = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr) . graph2expr
 graph2expr :: GPMonad m => Expr -> Pass.Result m Expr
 graph2expr expr = do 
     graph <- State.getGraph
-    mapM_ parseMode $ Graph.labNodes graph
-    GPState _ body <- get
+    mapM_ parseNode $ Graph.topsortl graph
+    body <- State.getBody
     return (Expr.body .~ body $ expr)
 
 
-parseMode :: GPMonad m => (Node.ID, Node) -> Pass.Result m ()
-parseMode (nodeID, node) = do
-    graph <- State.getGraph
+parseNode :: GPMonad m => (Node.ID, Node) -> Pass.Result m ()
+parseNode (nodeID, node) = do
     case node of 
         Node.Expr expr mast properties -> case mast of
             Just ast -> State.addToBody ast
-            Nothing  -> parseExprNode expr properties
-        Node.Inputs  properties -> parseInputsNode  properties
-        Node.Outputs properties -> parseOutputsNode properties
+            Nothing  -> parseExprNode nodeID expr properties
+        Node.Inputs  properties -> parseInputsNode  nodeID properties
+        Node.Outputs properties -> parseOutputsNode nodeID properties
 
 
-parseExprNode :: GPMonad m => String -> Properties -> Pass.Result m ()
-parseExprNode expr properties = case expr of 
-    '=':pat -> parsePatNode   pat properties
-    '~':inf -> parseInfixNode inf properties
-    _       -> parseAppNode  expr properties
+parseExprNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
+parseExprNode nodeID expr properties = case expr of 
+    '=':pat -> parsePatNode   nodeID pat  properties
+    '~':inf -> parseInfixNode nodeID expr properties
+    _       -> parseAppNode   nodeID expr properties
 
 
-parseInputsNode :: GPMonad m => Properties -> Pass.Result m ()
-parseInputsNode properties = do
+parseInputsNode :: GPMonad m => Node.ID -> Properties -> Pass.Result m ()
+parseInputsNode nodeID properties = do
+    addExpr nodeID dummyExpr
+
+
+parseOutputsNode :: GPMonad m => Node.ID -> Properties -> Pass.Result m ()
+parseOutputsNode nodeID properties = do
     return ()
 
 
-parseOutputsNode :: GPMonad m => Properties -> Pass.Result m ()
-parseOutputsNode properties = do
-    return ()
+parsePatNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
+parsePatNode nodeID pat properties = do
+    srcs <- State.getNodeSrcs nodeID
+    case srcs of 
+        [s] -> do let p = Pat.Con dummyInt pat
+                      e = Expr.Assignment dummyInt p s
+                  State.addToNodeMap nodeID e
 
 
-parsePatNode :: GPMonad m => String -> Properties -> Pass.Result m ()
-parsePatNode pat properties = do
-    return ()
+parseInfixNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
+parseInfixNode nodeID inf properties = do
+    srcs <- State.getNodeSrcs nodeID
+    case srcs of
+        [a, b] -> do let e = Expr.Infix dummyInt inf a b
+                     addExpr nodeID e
+        _      -> fail "parseInfixNode: Wrong Infix arguments"
 
 
-parseInfixNode :: GPMonad m => String -> Properties -> Pass.Result m ()
-parseInfixNode inf properties = do
-    return ()
+parseAppNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
+parseAppNode nodeID app properties = do
+    addExpr nodeID dummyExpr
+    srcs <- State.getNodeSrcs nodeID
+    case srcs of 
+        []  -> do let e   = Expr.Con dummyInt app
+                  addExpr nodeID e
+        [f] -> do let e   = Expr.Accessor dummyInt app f
+                  addExpr nodeID e
+        f:t -> do let acc = Expr.Accessor dummyInt app f
+                      e   = Expr.App      dummyInt acc t
+                  addExpr nodeID e
 
 
-parseAppNode :: GPMonad m => String -> Properties -> Pass.Result m ()
-parseAppNode app properties = do
-    return ()
+addExpr :: GPMonad m => Node.ID -> Expr -> Pass.Result m ()
+addExpr nodeID e = if dummyFolded
+    then State.addToNodeMap nodeID e
+    else do let p  = Pat.Var  dummyInt dummyString
+                p' = Expr.Var dummyInt dummyString
+                a  = Expr.Assignment dummyInt p e
+            State.addToNodeMap nodeID p'
+            State.addToBody a
 
 
 --- REMOVE ME ------
+dummyFolded = False
 dummyInt = (-1)
 dummyString = "dummy"
 dummyList = []
-dummyType = Type.Unknown dummyInt
+dummyExpr = Expr.NOP dummyInt
+dummyPat = Pat.Wildcard dummyInt
 --------------------

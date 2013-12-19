@@ -131,7 +131,7 @@ example = Source.Source ["Main"]
                   --, "   5"
                   , "   a + b"
                   --, "   a.add b"
-                  --, "   z = x.add y"
+                  , "   z = x.add y"
                   --, "   g = Console"
                   --, "   h = 45"
                   , "   Console.print 4"

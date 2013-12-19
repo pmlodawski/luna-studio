@@ -51,9 +51,9 @@ make :: AA -> GBState
 make = GBState Graph.make Map.empty
 
 
-addToMap :: GBStateM m => AST.ID -> (Node.ID, OutPort) -> m ()
-addToMap k v = do gm <- get
-                  put gm { nodeMap = Map.insert k v $ nodeMap gm }
+addToNodeMap :: GBStateM m => AST.ID -> (Node.ID, OutPort) -> m ()
+addToNodeMap k v = do nm <- getNodeMap
+                      setNodeMap $ Map.insert k v nm
 
 
 insNewNode :: GBStateM m => Node -> m Node.ID
@@ -66,7 +66,7 @@ insNewNode node = do gr <- getGraph
 addNode :: GBStateM m => AST.ID -> OutPort -> Node -> m Node.ID
 addNode astID outPort node = do
     nodeID <- insNewNode node
-    addToMap astID (nodeID, outPort)
+    addToNodeMap astID (nodeID, outPort)
     return nodeID
 
 
