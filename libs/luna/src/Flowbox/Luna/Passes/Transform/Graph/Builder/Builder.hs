@@ -68,37 +68,42 @@ parseArg (input, no) = case input of
 
 buildNode :: GBMonad m => Expr -> Pass.Result m AST.ID
 buildNode expr = case expr of
-    Expr.Accessor   i name dst -> do dstID <- buildNode dst
-                                     accNID <- State.addNode i Nothing $ Node.Expr name Nothing name dummyProperties
+    Expr.Accessor   i name dst -> do dstID  <- buildNode dst
+                                     accNID <- State.addNode i Nothing 
+                                             $ Node.Expr name Nothing (dummyGenName name) dummyProperties
                                      State.connectAST dstID accNID 0
                                      return i
     Expr.Assignment i pat dst  -> do (patIDs, patStr) <- buildPat pat
-                                     patNID <- State.insNewNode $ Node.Expr ('=': patStr) Nothing patStr dummyProperties
+                                     patNID <- State.insNewNode 
+                                             $ Node.Expr ('=': patStr) Nothing (dummyGenName patStr) dummyProperties
                                      case patIDs of 
                                         [patID] -> State.addToNodeMap patID (patNID, Nothing)
                                         _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (patNID, Just n)) $ zip [0..] patIDs
                                      dstID <- buildNode dst
                                      State.connectAST dstID patNID 0
                                      return dummyValue
-    Expr.App        i src args -> do srcID <- buildNode src
+    Expr.App        i src args -> do srcID       <- buildNode src
                                      (srcNID, _) <- State.aaNodeMapLookUp srcID
-                                     argIDs <- mapM buildNode args
+                                     argIDs      <- mapM buildNode args
                                      let numberedArgIDs = zip [1..] argIDs
                                      mapM_ (\(no, argID) -> State.connectAST argID srcNID no) numberedArgIDs
                                      return srcID
-    Expr.Infix  i name src dst -> do srcID <- buildNode src
-                                     dstID <- buildNode dst
-                                     infixNID <- State.addNode i Nothing $ Node.Expr name Nothing name dummyProperties
+    Expr.Infix  i name src dst -> do srcID    <- buildNode src
+                                     dstID    <- buildNode dst
+                                     infixNID <- State.addNode i Nothing 
+                                               $ Node.Expr name Nothing (dummyGenName name) dummyProperties
                                      State.connectAST srcID infixNID 0
                                      State.connectAST dstID infixNID 1
                                      return i
     Expr.Var        i _        -> do return i
-    Expr.Con        i name     -> do State.addNode_ i Nothing $ Node.Expr name Nothing name dummyProperties
+    Expr.Con        i name     -> do State.addNode_ i Nothing $ Node.Expr name Nothing (dummyGenName name) dummyProperties
                                      return i
     Expr.Lit        i lvalue   -> do (_, litStr) <- buildLit lvalue
-                                     State.addNode_ i Nothing $ Node.Expr litStr Nothing litStr dummyProperties
+                                     State.addNode_ i Nothing $ Node.Expr litStr Nothing (dummyGenName litStr) dummyProperties
                                      return i
 
+dummyGenName :: String -> String
+dummyGenName name = "out_" ++ name
 
 
 --connect :: GBMonad m => Node.ID -> (InPort, ([AST.ID], Maybe String)) -> Pass.Result m ()
