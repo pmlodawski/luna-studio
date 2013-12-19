@@ -246,11 +246,11 @@ main_graph = Luna.run $ do
     graph <- GraphBuilder.run va expr
     let graphWithDefaults = Defaults.addDefaults graph
     logger warning $ show graph
-    logger info $ show graphWithDefaults
+    --logger info $ show graphWithDefaults
     let newGraph = Defaults.removeDefaults graphWithDefaults
-    logger warning $ show newGraph
-
+    --logger warning $ show newGraph
     expr' <- GraphParser.run newGraph expr
+
     logger info $ PP.ppShow expr'
 
     --logger info "\n-------- FuncPool --------"

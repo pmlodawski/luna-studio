@@ -48,10 +48,10 @@ run aa = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make aa) . expr2graph
 
 expr2graph :: GBMonad m => Expr -> Pass.Result m Graph
 expr2graph expr = case expr of
-    Expr.Function i path name inputs output body -> do parseArgs inputs
-                                                       mapM_ buildNode body
-                                                       State.getGraph
-    _                                            -> fail "expr2graph: Unsupported Expr type"
+    Expr.Function _ _ _ inputs _ body -> do parseArgs inputs
+                                            mapM_ buildNode body
+                                            State.getGraph
+    _                                 -> fail "expr2graph: Unsupported Expr type"
 
 
 parseArgs :: GBMonad m => [Expr] -> Pass.Result m ()
@@ -71,17 +71,17 @@ buildNode :: GBMonad m => Expr -> Pass.Result m AST.ID
 buildNode expr = case expr of
     Expr.Accessor   i name dst -> do dstID  <- buildNode dst
                                      let node = Node.Expr name (dummyGenName name) dummyProperties 
-                                     accNID <- State.addNode i Port.All node
-                                     State.connectAST dstID accNID 0
+                                     State.addNode i Port.All node
+                                     State.connectAST dstID i 0
                                      return i
     Expr.Assignment i pat dst  -> do (patIDs, patStr) <- buildPat pat
                                      let node = Node.Expr ('=': patStr) (dummyGenName patStr) dummyProperties
-                                     patNID <- State.insNewNode node
+                                     State.insNode (i, node)
                                      case patIDs of 
-                                        [patID] -> State.addToNodeMap patID (patNID, Port.All)
-                                        _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (patNID, Port.Num n)) $ zip [0..] patIDs
+                                        [patID] -> State.addToNodeMap patID (i, Port.All)
+                                        _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (i, Port.Num n)) $ zip [0..] patIDs
                                      dstID <- buildNode dst
-                                     State.connectAST dstID patNID 0
+                                     State.connectAST dstID i 0
                                      return dummyValue
     Expr.App        i src args -> do srcID       <- buildNode src
                                      (srcNID, _) <- State.aaNodeMapLookUp srcID
@@ -92,17 +92,17 @@ buildNode expr = case expr of
     Expr.Infix  i name src dst -> do srcID    <- buildNode src
                                      dstID    <- buildNode dst
                                      let node = Node.Expr name (dummyGenName name) dummyProperties
-                                     infixNID <- State.addNode i Port.All node
-                                     State.connectAST srcID infixNID 0
-                                     State.connectAST dstID infixNID 1
+                                     State.addNode i Port.All node
+                                     State.connectAST srcID i 0
+                                     State.connectAST dstID i 1
                                      return i
     Expr.Var        i _        -> do return i
     Expr.Con        i name     -> do let node = Node.Expr name (dummyGenName name) dummyProperties
-                                     State.addNode_ i Port.All node
+                                     State.addNode i Port.All node
                                      return i
     Expr.Lit        i lvalue   -> do (_, litStr) <- buildLit lvalue
                                      let node = Node.Expr litStr (dummyGenName litStr) dummyProperties
-                                     State.addNode_ i Port.All node
+                                     State.addNode i Port.All node
                                      return i
 
 dummyGenName :: String -> String

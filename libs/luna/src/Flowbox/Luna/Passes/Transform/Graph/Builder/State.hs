@@ -31,6 +31,7 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
 
+
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.State"
 
@@ -56,23 +57,20 @@ addToNodeMap k v = do nm <- getNodeMap
                       setNodeMap $ Map.insert k v nm
 
 
-insNewNode :: GBStateM m => Node -> m Node.ID
-insNewNode node = do gr <- getGraph
-                     let (gr', nodeID) = Graph.insNewNode node gr
-                     setGraph gr'
-                     return nodeID
+--insNewNode :: GBStateM m => Node -> m Node.ID
+--insNewNode node = do gr <- getGraph
+--                     let (gr', nodeID) = Graph.insNewNode node gr
+--                     setGraph gr'
+--                     return nodeID
+
+insNode :: GBStateM m => (Node.ID, Node) -> m ()
+insNode n = do getGraph >>= setGraph . Graph.insNode n
 
 
-addNode :: GBStateM m => AST.ID -> OutPort -> Node -> m Node.ID
+addNode :: GBStateM m => AST.ID -> OutPort -> Node -> m ()
 addNode astID outPort node = do
-    nodeID <- insNewNode node
-    addToNodeMap astID (nodeID, outPort)
-    return nodeID
-
-
-addNode_ :: GBStateM m => AST.ID -> OutPort -> Node -> m ()
-addNode_ astID outPort node = do _ <- addNode astID outPort node
-                                 return ()
+    insNode (astID, node)
+    addToNodeMap astID (astID, outPort)
 
 
 connect :: GBStateM m => Node.ID -> Node.ID -> Edge -> m ()

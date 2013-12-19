@@ -84,7 +84,7 @@ parsePatNode nodeID pat properties = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of 
         [s] -> do let p = dummyPat pat
-                      e = Expr.Assignment dummyInt p s
+                      e = Expr.Assignment nodeID p s
                   State.addToNodeMap (nodeID, Port.All) e
         _      -> fail "parsePatNode: Wrong Pat arguments"
 
@@ -93,7 +93,7 @@ parseInfixNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m 
 parseInfixNode nodeID inf properties = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
-        [a, b] -> do let e = Expr.Infix dummyInt inf a b
+        [a, b] -> do let e = Expr.Infix nodeID inf a b
                      addExpr nodeID e
         _      -> fail "parseInfixNode: Wrong Infix arguments"
 
@@ -104,9 +104,9 @@ parseAppNode nodeID app properties = do
     case srcs of 
         []  -> do let e   = dummyExpr app
                   addExpr nodeID e
-        [f] -> do let e   = Expr.Accessor dummyInt app f
+        [f] -> do let e   = Expr.Accessor nodeID app f
                   addExpr nodeID e
-        f:t -> do let acc = Expr.Accessor dummyInt app f
+        f:t -> do let acc = Expr.Accessor nodeID app f
                       e   = Expr.App      dummyInt acc t
                   addExpr nodeID e
 
