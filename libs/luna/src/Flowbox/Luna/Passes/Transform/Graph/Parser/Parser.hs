@@ -41,19 +41,20 @@ run gr = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr) . graph2expr
 
 graph2expr :: GPMonad m => Expr -> Pass.Result m Expr
 graph2expr expr = do 
+    let inputs = expr ^. Expr.inputs
     graph <- State.getGraph
-    mapM_ parseNode $ Graph.topsortl graph
+    mapM_ (parseNode inputs) $ Graph.topsortl graph
     body <- State.getBody
     return (Expr.body .~ body $ expr)
 
 
-parseNode :: GPMonad m => (Node.ID, Node) -> Pass.Result m ()
-parseNode (nodeID, node) = do
+parseNode :: GPMonad m => [Expr] ->  (Node.ID, Node) -> Pass.Result m ()
+parseNode inputs (nodeID, node) = do
     case node of 
         Node.Expr expr mast _ properties -> case mast of
             Just ast -> State.addToBody ast
             Nothing  -> parseExprNode nodeID expr properties
-        Node.Inputs  properties -> parseInputsNode  nodeID properties
+        Node.Inputs  properties -> parseInputsNode  nodeID inputs properties
         Node.Outputs properties -> parseOutputsNode nodeID properties
 
 
@@ -64,10 +65,15 @@ parseExprNode nodeID expr properties = case expr of
     _       -> parseAppNode   nodeID expr properties
 
 
-parseInputsNode :: GPMonad m => Node.ID -> Properties -> Pass.Result m ()
-parseInputsNode nodeID properties = do
-    addExpr nodeID $ dummyExpr dummyString
+parseInputsNode :: GPMonad m => Node.ID -> [Expr] -> Properties -> Pass.Result m ()
+parseInputsNode nodeID inputs properties = do
+    mapM_ (parseArg nodeID properties) $ zip [0..] inputs
 
+
+parseArg :: State.GPStateM m => Node.ID -> Properties -> (Int, Expr) -> m ()
+parseArg nodeID properties (num, input) = case input of
+    Expr.Arg i (Pat.Var j name) value -> State.addToNodeMap (nodeID, Just num) $ Expr.Var dummyInt name
+    _ -> fail "parseArg: Wrong Arg type"
 
 parseOutputsNode :: GPMonad m => Node.ID -> Properties -> Pass.Result m ()
 parseOutputsNode nodeID properties = do
@@ -80,7 +86,8 @@ parsePatNode nodeID pat properties = do
     case srcs of 
         [s] -> do let p = dummyPat pat
                       e = Expr.Assignment dummyInt p s
-                  State.addToNodeMap nodeID e
+                  State.addToNodeMap (nodeID, Nothing) e
+        _      -> fail "parsePatNode: Wrong Pat arguments"
 
 
 parseInfixNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
@@ -107,12 +114,12 @@ parseAppNode nodeID app properties = do
 
 addExpr :: GPMonad m => Node.ID -> Expr -> Pass.Result m ()
 addExpr nodeID e = if dummyFolded
-    then State.addToNodeMap nodeID e
+    then State.addToNodeMap (nodeID, Nothing) e
     else do outputName <- State.getNodeOutputName nodeID
             let p  = Pat.Var  dummyInt outputName
                 p' = Expr.Var dummyInt outputName
                 a  = Expr.Assignment dummyInt p e
-            State.addToNodeMap nodeID p'
+            State.addToNodeMap (nodeID, Nothing) p'
             State.addToBody a
 
 

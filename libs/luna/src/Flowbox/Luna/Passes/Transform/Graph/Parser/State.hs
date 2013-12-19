@@ -6,7 +6,6 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Parser.State where
 
@@ -21,7 +20,7 @@ import           Flowbox.Luna.Data.AST.Expr      (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr      as Expr
 import           Flowbox.Luna.Data.AST.Pat       (Pat)
 import qualified Flowbox.Luna.Data.AST.Utils     as AST
-import           Flowbox.Luna.Data.Graph.Edge    (Edge)
+import           Flowbox.Luna.Data.Graph.Edge    (Edge(Edge))
 import           Flowbox.Luna.Data.Graph.Graph   (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph   as Graph
 import           Flowbox.Luna.Data.Graph.Node    (Node)
@@ -35,7 +34,7 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.State"
 
 
-type NodeMap = Map Node.ID Expr
+type NodeMap = Map (Node.ID, OutPort) Expr
 
 
 data GPState = GPState { graph   :: Graph
@@ -78,18 +77,19 @@ addToBody e = do b <- getBody
                  setBody $ b ++ [e]
 
 
-addToNodeMap :: GPStateM m => Node.ID -> Expr -> m ()
-addToNodeMap nodeID expr = getNodeMap >>= setNodeMap . Map.insert nodeID expr
+addToNodeMap :: GPStateM m => (Node.ID, OutPort) -> Expr -> m ()
+addToNodeMap key expr = getNodeMap >>= setNodeMap . Map.insert key expr
 
 
-nodeMapLookUp :: GPStateM m => Node.ID -> m Expr
-nodeMapLookUp nodeID = do nm <- getNodeMap 
-                          Map.lookup nodeID nm <?> ("nodeMapLookUp: Cannot find nodeID=" ++ (show nodeID) ++ " in map")
+nodeMapLookUp :: GPStateM m => (Node.ID, OutPort) -> m Expr
+nodeMapLookUp key = do nm <- getNodeMap 
+                       Map.lookup key nm <?> ("nodeMapLookUp: Cannot find " ++ (show key) ++ " in nodeMap")
 
 
 getNodeSrcs :: GPStateM m => Node.ID -> m [Expr]
 getNodeSrcs nodeID = do g <- getGraph
-                        mapM nodeMapLookUp $ Graph.pre g nodeID
+                        mapM nodeMapLookUp $ map (\(pNID, _, Edge s d) -> (pNID, s)) 
+                                           $ Graph.lprel g nodeID
 
 getNode :: GPStateM m => Node.ID -> m Node
 getNode nodeID = do gr <- getGraph
