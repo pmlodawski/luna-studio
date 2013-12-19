@@ -52,11 +52,9 @@ graph2expr expr = do
 parseNode :: GPMonad m => [Expr] ->  (Node.ID, Node) -> Pass.Result m ()
 parseNode inputs (nodeID, node) = do
     case node of 
-        Node.Expr expr mast _ properties -> case mast of
-            Just ast -> State.addToBody ast
-            Nothing  -> parseExprNode nodeID expr properties
-        Node.Inputs  properties -> parseInputsNode  nodeID inputs properties
-        Node.Outputs properties -> parseOutputsNode nodeID properties
+        Node.Expr expr _ properties -> parseExprNode    nodeID expr properties
+        Node.Inputs  properties     -> parseInputsNode  nodeID inputs properties
+        Node.Outputs properties     -> parseOutputsNode nodeID properties
 
 
 parseExprNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()

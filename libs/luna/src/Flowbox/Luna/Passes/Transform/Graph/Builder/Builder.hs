@@ -70,13 +70,13 @@ parseArg (input, no) = case input of
 buildNode :: GBMonad m => Expr -> Pass.Result m AST.ID
 buildNode expr = case expr of
     Expr.Accessor   i name dst -> do dstID  <- buildNode dst
-                                     accNID <- State.addNode i Port.All 
-                                             $ Node.Expr name Nothing (dummyGenName name) dummyProperties
+                                     let node = Node.Expr name (dummyGenName name) dummyProperties 
+                                     accNID <- State.addNode i Port.All node
                                      State.connectAST dstID accNID 0
                                      return i
     Expr.Assignment i pat dst  -> do (patIDs, patStr) <- buildPat pat
-                                     patNID <- State.insNewNode 
-                                             $ Node.Expr ('=': patStr) Nothing (dummyGenName patStr) dummyProperties
+                                     let node = Node.Expr ('=': patStr) (dummyGenName patStr) dummyProperties
+                                     patNID <- State.insNewNode node
                                      case patIDs of 
                                         [patID] -> State.addToNodeMap patID (patNID, Port.All)
                                         _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (patNID, Port.Num n)) $ zip [0..] patIDs
@@ -91,16 +91,18 @@ buildNode expr = case expr of
                                      return srcID
     Expr.Infix  i name src dst -> do srcID    <- buildNode src
                                      dstID    <- buildNode dst
-                                     infixNID <- State.addNode i Port.All 
-                                               $ Node.Expr name Nothing (dummyGenName name) dummyProperties
+                                     let node = Node.Expr name (dummyGenName name) dummyProperties
+                                     infixNID <- State.addNode i Port.All node
                                      State.connectAST srcID infixNID 0
                                      State.connectAST dstID infixNID 1
                                      return i
     Expr.Var        i _        -> do return i
-    Expr.Con        i name     -> do State.addNode_ i Port.All $ Node.Expr name Nothing (dummyGenName name) dummyProperties
+    Expr.Con        i name     -> do let node = Node.Expr name (dummyGenName name) dummyProperties
+                                     State.addNode_ i Port.All node
                                      return i
     Expr.Lit        i lvalue   -> do (_, litStr) <- buildLit lvalue
-                                     State.addNode_ i Port.All $ Node.Expr litStr Nothing (dummyGenName litStr) dummyProperties
+                                     let node = Node.Expr litStr (dummyGenName litStr) dummyProperties
+                                     State.addNode_ i Port.All node
                                      return i
 
 dummyGenName :: String -> String

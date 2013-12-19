@@ -45,7 +45,7 @@ instance Convert (Int, Int, Edge) Gen.Edge where
 
 instance Convert (Int, Node) Gen.Node where
     encode (nodeID, node) = case node of
-        Node.Expr expr _ outName properties
+        Node.Expr expr outName properties
                                 -> Gen.Node GenNode.Expr    (encodePJ nodeID) (encodePJ expr) (encodePJ outName) (encodeJ properties)
         Node.Inputs  properties -> Gen.Node GenNode.Inputs  (encodePJ nodeID) Nothing Nothing (encodeJ properties)
         Node.Outputs properties -> Gen.Node GenNode.Outputs (encodePJ nodeID) Nothing Nothing (encodeJ properties)
@@ -56,7 +56,7 @@ instance Convert (Int, Node) Gen.Node where
         node <- case tcls of
             GenNode.Expr -> do expr       <- decodeP <$> mtexpr       <?> "Failed to decode Node: 'expr' field is missing"
                                outputName <- decodeP <$> mtoutputName <?> "Failed to decode Node: 'outputName' field is missing"
-                               return $ Node.Expr expr Nothing outputName
+                               return $ Node.Expr expr outputName
             GenNode.Inputs  -> return Node.Inputs
             GenNode.Outputs -> return Node.Outputs
         return (nodeID, node properties)

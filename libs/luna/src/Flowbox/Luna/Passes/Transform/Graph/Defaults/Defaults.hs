@@ -46,7 +46,7 @@ generatedProperties = Properties Flags.empty
 
 addDefaults :: Graph -> Graph
 addDefaults graph =
-    foldr addNodeDefaults graph (Graph.labNodes graph)
+    foldr addNodeDefaults graph $ Graph.labNodes graph
 
 
 addNodeDefaults :: (Node.ID, Node) -> Graph -> Graph
@@ -60,7 +60,7 @@ addNodeDefault nodeID (adstPort, defaultValue) graph =
     if Graph.isNotAlreadyConnected graph nodeID adstPort
         then Graph.connect defaultNodeID nodeID (Edge Port.All adstPort) newGraph
         else graph
-    where (newGraph, defaultNodeID) = Graph.insNewNode (Node.Expr defaultValue Nothing defaultValue generatedProperties) graph
+    where (newGraph, defaultNodeID) = Graph.insNewNode (Node.Expr defaultValue defaultValue generatedProperties) graph
 
 
 isGenerated :: Node -> Bool

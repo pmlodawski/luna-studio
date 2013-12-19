@@ -16,7 +16,6 @@ import           Flowbox.Prelude
 
 
 data Node = Expr     { _expr       :: String
-                     , _ast        :: Maybe Expr
                      , _outputName :: String
                      , _properties :: Properties }
           | Inputs   { _properties :: Properties }
@@ -31,7 +30,7 @@ type ID = Int
 
 
 mkExpr :: String -> String -> Node
-mkExpr name outName = Expr name Nothing outName Properties.empty
+mkExpr name outName = Expr name outName Properties.empty
 
 
 mkInputs :: Node
