@@ -104,7 +104,7 @@ connect batchHandler (Connect.Args tsrcNodeID tsrcPort tdstNodeID tdstPort tbc t
     loggerIO info "called connect"
     bc <- decode tbc
     let srcNodeID = decodeP tsrcNodeID
-        srcPort   = fmap decodeP tsrcPort
+        srcPort   = decodeP tsrcPort
         dstNodeID = decodeP tdstNodeID
         dstPort   = decodeP tdstPort
         libID     = decodeP tlibID
@@ -120,7 +120,7 @@ disconnect batchHandler (Disconnect.Args tsrcNodeID tsrcPort tdstNodeID tdstPort
     loggerIO info "called disconnect"
     bc <- decode tbc
     let srcNodeID = decodeP tsrcNodeID
-        srcPort   = fmap decodeP tsrcPort
+        srcPort   = decodeP tsrcPort
         dstNodeID = decodeP tdstNodeID
         dstPort   = decodeP tdstPort
         libID     = decodeP tlibID

@@ -18,6 +18,7 @@ import qualified Flowbox.Luna.Data.AST.Pat                        as Pat
 import           Flowbox.Luna.Data.Graph.Graph                      (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                    as Graph
 import qualified Flowbox.Luna.Data.Graph.Node                     as Node
+import qualified Flowbox.Luna.Data.Graph.Port                     as Port
 import           Flowbox.Luna.Data.Graph.Node                       (Node)
 import           Flowbox.Luna.Data.Graph.Properties                 (Properties)
 import qualified Flowbox.Luna.Passes.Pass                         as Pass
@@ -72,7 +73,7 @@ parseInputsNode nodeID inputs properties = do
 
 parseArg :: State.GPStateM m => Node.ID -> Properties -> (Int, Expr) -> m ()
 parseArg nodeID properties (num, input) = case input of
-    Expr.Arg i (Pat.Var j name) value -> State.addToNodeMap (nodeID, Just num) $ Expr.Var dummyInt name
+    Expr.Arg i (Pat.Var j name) value -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var dummyInt name
     _ -> fail "parseArg: Wrong Arg type"
 
 parseOutputsNode :: GPMonad m => Node.ID -> Properties -> Pass.Result m ()
@@ -86,7 +87,7 @@ parsePatNode nodeID pat properties = do
     case srcs of 
         [s] -> do let p = dummyPat pat
                       e = Expr.Assignment dummyInt p s
-                  State.addToNodeMap (nodeID, Nothing) e
+                  State.addToNodeMap (nodeID, Port.All) e
         _      -> fail "parsePatNode: Wrong Pat arguments"
 
 
@@ -114,12 +115,12 @@ parseAppNode nodeID app properties = do
 
 addExpr :: GPMonad m => Node.ID -> Expr -> Pass.Result m ()
 addExpr nodeID e = if dummyFolded
-    then State.addToNodeMap (nodeID, Nothing) e
+    then State.addToNodeMap (nodeID, Port.All) e
     else do outputName <- State.getNodeOutputName nodeID
             let p  = Pat.Var  dummyInt outputName
                 p' = Expr.Var dummyInt outputName
                 a  = Expr.Assignment dummyInt p e
-            State.addToNodeMap (nodeID, Nothing) p'
+            State.addToNodeMap (nodeID, Port.All) p'
             State.addToBody a
 
 

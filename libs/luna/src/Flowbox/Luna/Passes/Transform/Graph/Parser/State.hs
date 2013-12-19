@@ -4,31 +4,25 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds           #-}
-{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE ConstraintKinds  #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Parser.State where
 
 import           Control.Monad.State
-import qualified Data.IntMap         as IntMap
 import           Data.Map            (Map)
 import qualified Data.Map            as Map
 
-import           Flowbox.Luna.Data.AliasAnalysis (AA)
-import qualified Flowbox.Luna.Data.AliasAnalysis as AA
-import           Flowbox.Luna.Data.AST.Expr      (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr      as Expr
-import           Flowbox.Luna.Data.AST.Pat       (Pat)
-import qualified Flowbox.Luna.Data.AST.Utils     as AST
-import           Flowbox.Luna.Data.Graph.Edge    (Edge(Edge))
-import           Flowbox.Luna.Data.Graph.Graph   (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph   as Graph
-import           Flowbox.Luna.Data.Graph.Node    (Node)
-import qualified Flowbox.Luna.Data.Graph.Node    as Node
-import           Flowbox.Luna.Data.Graph.Port    (OutPort)
-import           Flowbox.Prelude                 hiding (mapM)
+import           Flowbox.Control.Error
+import           Flowbox.Luna.Data.AST.Expr    (Expr)
+import           Flowbox.Luna.Data.Graph.Edge  (Edge (Edge))
+import           Flowbox.Luna.Data.Graph.Graph (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph as Graph
+import           Flowbox.Luna.Data.Graph.Node  (Node)
+import qualified Flowbox.Luna.Data.Graph.Node  as Node
+import           Flowbox.Luna.Data.Graph.Port  (OutPort)
+import           Flowbox.Prelude               hiding (mapM)
 import           Flowbox.System.Log.Logger
-import Flowbox.Control.Error
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.State"
@@ -82,13 +76,13 @@ addToNodeMap key expr = getNodeMap >>= setNodeMap . Map.insert key expr
 
 
 nodeMapLookUp :: GPStateM m => (Node.ID, OutPort) -> m Expr
-nodeMapLookUp key = do nm <- getNodeMap 
+nodeMapLookUp key = do nm <- getNodeMap
                        Map.lookup key nm <?> ("nodeMapLookUp: Cannot find " ++ (show key) ++ " in nodeMap")
 
 
 getNodeSrcs :: GPStateM m => Node.ID -> m [Expr]
 getNodeSrcs nodeID = do g <- getGraph
-                        mapM nodeMapLookUp $ map (\(pNID, _, Edge s d) -> (pNID, s)) 
+                        mapM nodeMapLookUp $ map (\(pNID, _, Edge s _) -> (pNID, s))
                                            $ Graph.lprel g nodeID
 
 getNode :: GPStateM m => Node.ID -> m Node

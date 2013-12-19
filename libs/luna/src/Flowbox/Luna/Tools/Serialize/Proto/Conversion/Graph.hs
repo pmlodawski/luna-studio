@@ -13,6 +13,7 @@
 module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Graph where
 
 import Control.Applicative
+import Data.Int            (Int32)
 
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.Graph.Edge                             (Edge (Edge))
@@ -20,6 +21,8 @@ import           Flowbox.Luna.Data.Graph.Graph                            (Graph
 import qualified Flowbox.Luna.Data.Graph.Graph                            as Graph
 import           Flowbox.Luna.Data.Graph.Node                             (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                             as Node
+import           Flowbox.Luna.Data.Graph.Port                             (OutPort)
+import qualified Flowbox.Luna.Data.Graph.Port                             as Port
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes ()
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -32,19 +35,17 @@ import qualified Generated.Proto.Graph.Node.Cls                           as Gen
 
 instance Convert (Int, Int, Edge) Gen.Edge where
     encode (nodeSrc, nodeDst, Edge portSrc portDst) =
-        Gen.Edge (encodePJ nodeSrc) (encodePJ nodeDst) tportSrc (encodePJ portDst) where
-            tportSrc = portSrc >>= return . encodeP
+        Gen.Edge (encodePJ nodeSrc) (encodePJ nodeDst) (encodeP portSrc) (encodePJ portDst)
     decode (Gen.Edge mtnodeSrc mtnodeDst mtportSrc mtportDst) = do
         tnodeSrc <- mtnodeSrc <?> "Failed to decode Edge: 'srcNode' field is missing"
         tnodeDst <- mtnodeDst <?> "Failed to decode Edge: 'dstNode' field is missing"
         tportDst <- mtportDst <?> "Failed to decode Edge: 'dstPort' field is missing"
-        let mportSrc = mtportSrc >>= return . decodeP
-        return $ (decodeP tnodeSrc, decodeP tnodeDst, Edge mportSrc (decodeP tportDst))
+        return $ (decodeP tnodeSrc, decodeP tnodeDst, Edge (decodeP mtportSrc) (decodeP tportDst))
 
 
 instance Convert (Int, Node) Gen.Node where
     encode (nodeID, node) = case node of
-        Node.Expr expr _ outName properties 
+        Node.Expr expr _ outName properties
                                 -> Gen.Node GenNode.Expr    (encodePJ nodeID) (encodePJ expr) (encodePJ outName) (encodeJ properties)
         Node.Inputs  properties -> Gen.Node GenNode.Inputs  (encodePJ nodeID) Nothing Nothing (encodeJ properties)
         Node.Outputs properties -> Gen.Node GenNode.Outputs (encodePJ nodeID) Nothing Nothing (encodeJ properties)
@@ -66,3 +67,12 @@ instance Convert Graph Gen.Graph where
         Gen.Graph (encodeList $ Graph.labNodes graph) (encodeList $ Graph.labEdges graph)
     decode (Gen.Graph tnodes tedges) =
         Graph.mkGraph <$> decodeList tnodes <*> decodeList tedges
+
+
+instance ConvertPure OutPort (Maybe Int32) where
+    encodeP port = case port of
+        Port.All   -> Nothing
+        Port.Num n -> encodePJ n
+    decodeP mtport = case mtport of
+        Nothing -> Port.All
+        Just tn -> Port.Num $ decodeP tn

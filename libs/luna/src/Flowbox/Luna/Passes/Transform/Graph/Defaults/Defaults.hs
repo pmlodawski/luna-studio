@@ -23,6 +23,7 @@ import qualified Flowbox.Luna.Data.Graph.Graph               as Graph
 import           Flowbox.Luna.Data.Graph.Node                (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                as Node
 import           Flowbox.Luna.Data.Graph.Port                (InPort)
+import qualified Flowbox.Luna.Data.Graph.Port                as Port
 import           Flowbox.Luna.Data.Graph.Properties          (Properties (Properties))
 import qualified Flowbox.Luna.Data.Graph.Properties          as Properties
 import           Flowbox.Prelude                             hiding (empty)
@@ -57,7 +58,7 @@ addNodeDefaults (nodeID, node) graph =
 addNodeDefault :: Node.ID -> (InPort, Value) -> Graph -> Graph
 addNodeDefault nodeID (adstPort, defaultValue) graph =
     if Graph.isNotAlreadyConnected graph nodeID adstPort
-        then Graph.connect defaultNodeID nodeID (Edge Nothing adstPort) newGraph
+        then Graph.connect defaultNodeID nodeID (Edge Port.All adstPort) newGraph
         else graph
     where (newGraph, defaultNodeID) = Graph.insNewNode (Node.Expr defaultValue Nothing defaultValue generatedProperties) graph
 

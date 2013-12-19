@@ -13,4 +13,6 @@ import Flowbox.Prelude
 
 type InPort = Int
 
-type OutPort = Maybe Int
+data OutPort = All
+             | Num Int
+             deriving (Eq, Show, Ord, Read)

@@ -25,6 +25,7 @@ import qualified Flowbox.Luna.Data.AST.Utils                       as AST
 import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                     as Graph
 import qualified Flowbox.Luna.Data.Graph.Node                      as Node
+import qualified Flowbox.Luna.Data.Graph.Port                      as Port
 import qualified Flowbox.Luna.Data.Graph.Properties                as Properties
 import qualified Flowbox.Luna.Passes.Pass                          as Pass
 import           Flowbox.Luna.Passes.Pass                            (PassMonad)
@@ -62,14 +63,14 @@ parseArgs inputs = do
 parseArg :: GBMonad m => (Expr, Int) -> Pass.Result m ()
 parseArg (input, no) = case input of
     Expr.Arg _ pat _ -> do ([p], _) <- buildPat pat
-                           State.addToNodeMap p (Graph.inputsID, Just no)
+                           State.addToNodeMap p (Graph.inputsID, Port.Num no)
     _                -> fail "parseArg: Wrong Expr type"
 
 
 buildNode :: GBMonad m => Expr -> Pass.Result m AST.ID
 buildNode expr = case expr of
     Expr.Accessor   i name dst -> do dstID  <- buildNode dst
-                                     accNID <- State.addNode i Nothing 
+                                     accNID <- State.addNode i Port.All 
                                              $ Node.Expr name Nothing (dummyGenName name) dummyProperties
                                      State.connectAST dstID accNID 0
                                      return i
@@ -77,8 +78,8 @@ buildNode expr = case expr of
                                      patNID <- State.insNewNode 
                                              $ Node.Expr ('=': patStr) Nothing (dummyGenName patStr) dummyProperties
                                      case patIDs of 
-                                        [patID] -> State.addToNodeMap patID (patNID, Nothing)
-                                        _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (patNID, Just n)) $ zip [0..] patIDs
+                                        [patID] -> State.addToNodeMap patID (patNID, Port.All)
+                                        _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (patNID, Port.Num n)) $ zip [0..] patIDs
                                      dstID <- buildNode dst
                                      State.connectAST dstID patNID 0
                                      return dummyValue
@@ -90,16 +91,16 @@ buildNode expr = case expr of
                                      return srcID
     Expr.Infix  i name src dst -> do srcID    <- buildNode src
                                      dstID    <- buildNode dst
-                                     infixNID <- State.addNode i Nothing 
+                                     infixNID <- State.addNode i Port.All 
                                                $ Node.Expr name Nothing (dummyGenName name) dummyProperties
                                      State.connectAST srcID infixNID 0
                                      State.connectAST dstID infixNID 1
                                      return i
     Expr.Var        i _        -> do return i
-    Expr.Con        i name     -> do State.addNode_ i Nothing $ Node.Expr name Nothing (dummyGenName name) dummyProperties
+    Expr.Con        i name     -> do State.addNode_ i Port.All $ Node.Expr name Nothing (dummyGenName name) dummyProperties
                                      return i
     Expr.Lit        i lvalue   -> do (_, litStr) <- buildLit lvalue
-                                     State.addNode_ i Nothing $ Node.Expr litStr Nothing (dummyGenName litStr) dummyProperties
+                                     State.addNode_ i Port.All $ Node.Expr litStr Nothing (dummyGenName litStr) dummyProperties
                                      return i
 
 dummyGenName :: String -> String

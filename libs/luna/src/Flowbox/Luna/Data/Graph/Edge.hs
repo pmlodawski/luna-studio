@@ -17,7 +17,7 @@ import Flowbox.Prelude
 
 data Edge = Edge { src :: OutPort
                  , dst :: InPort
-                 } deriving (Show, Ord, Eq)
+                 } deriving (Show, Read, Ord, Eq)
 
 
 noEdges :: [Edge]
