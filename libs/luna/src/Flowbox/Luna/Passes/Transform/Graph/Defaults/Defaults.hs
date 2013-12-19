@@ -59,7 +59,7 @@ addNodeDefault nodeID (adstPort, defaultValue) graph =
     if Graph.isNotAlreadyConnected graph nodeID adstPort
         then Graph.connect defaultNodeID nodeID (Edge Nothing adstPort) newGraph
         else graph
-    where (newGraph, defaultNodeID) = Graph.insNewNode (Node.Expr defaultValue Nothing generatedProperties) graph
+    where (newGraph, defaultNodeID) = Graph.insNewNode (Node.Expr defaultValue Nothing defaultValue generatedProperties) graph
 
 
 isGenerated :: Node -> Bool

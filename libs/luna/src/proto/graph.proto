@@ -20,6 +20,7 @@ message Node {
     required Cls    cls  = 1;
     optional int32  id   = 2 [default = -1];
     optional string expr = 3;
+    optional string outputName = 5;
     optional generated.proto.attributes.Properties properties = 4;
 }
 

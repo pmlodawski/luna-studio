@@ -84,9 +84,18 @@ addToNodeMap nodeID expr = getNodeMap >>= setNodeMap . Map.insert nodeID expr
 
 nodeMapLookUp :: GPStateM m => Node.ID -> m Expr
 nodeMapLookUp nodeID = do nm <- getNodeMap 
-                          Map.lookup nodeID nm <?> ("nodeMapLookUp: Couldn't find nodeID=" ++ (show nodeID) ++ " in map")
+                          Map.lookup nodeID nm <?> ("nodeMapLookUp: Cannot find nodeID=" ++ (show nodeID) ++ " in map")
 
 
 getNodeSrcs :: GPStateM m => Node.ID -> m [Expr]
 getNodeSrcs nodeID = do g <- getGraph
                         mapM nodeMapLookUp $ Graph.pre g nodeID
+
+getNode :: GPStateM m => Node.ID -> m Node
+getNode nodeID = do gr <- getGraph
+                    Graph.lab gr nodeID <?> ("getNodeOutputName: Cannot find nodeID=" ++ (show nodeID) ++ " in graph")
+
+
+getNodeOutputName :: GPStateM m => Node.ID -> m String
+getNodeOutputName nodeID = do node <- getNode nodeID
+                              return $ node ^. Node.outputName

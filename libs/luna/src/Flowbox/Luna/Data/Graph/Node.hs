@@ -17,6 +17,7 @@ import           Flowbox.Prelude
 
 data Node = Expr     { _expr       :: String
                      , _ast        :: Maybe Expr
+                     , _outputName :: String
                      , _properties :: Properties }
           | Inputs   { _properties :: Properties }
           | Outputs  { _properties :: Properties }
@@ -29,8 +30,8 @@ makeLenses (''Node)
 type ID = Int
 
 
-mkExpr :: String -> Node
-mkExpr name = Expr name Nothing Properties.empty
+mkExpr :: String -> String -> Node
+mkExpr name outName = Expr name Nothing outName Properties.empty
 
 
 mkInputs :: Node

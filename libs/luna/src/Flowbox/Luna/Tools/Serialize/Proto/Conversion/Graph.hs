@@ -44,16 +44,18 @@ instance Convert (Int, Int, Edge) Gen.Edge where
 
 instance Convert (Int, Node) Gen.Node where
     encode (nodeID, node) = case node of
-        Node.Expr expr _ properties -> Gen.Node GenNode.Expr    (encodePJ nodeID) (encodePJ expr) (encodeJ properties)
-        Node.Inputs      properties -> Gen.Node GenNode.Inputs  (encodePJ nodeID) Nothing         (encodeJ properties)
-        Node.Outputs     properties -> Gen.Node GenNode.Outputs (encodePJ nodeID) Nothing         (encodeJ properties)
-    decode (Gen.Node tcls mtnodeID mtexpr mtproperties) = do
+        Node.Expr expr _ outName properties 
+                                -> Gen.Node GenNode.Expr    (encodePJ nodeID) (encodePJ expr) (encodePJ outName) (encodeJ properties)
+        Node.Inputs  properties -> Gen.Node GenNode.Inputs  (encodePJ nodeID) Nothing Nothing (encodeJ properties)
+        Node.Outputs properties -> Gen.Node GenNode.Outputs (encodePJ nodeID) Nothing Nothing (encodeJ properties)
+    decode (Gen.Node tcls mtnodeID mtexpr mtoutputName mtproperties) = do
         nodeID <- decodeP <$> mtnodeID <?> "Failed to decode Node: 'id' field is missing"
-        tproperties <- mtproperties <?> "Failed to decode Node: 'properties' field is missing"
+        tproperties <- mtproperties    <?> "Failed to decode Node: 'properties' field is missing"
         properties  <- decode tproperties
         node <- case tcls of
-            GenNode.Expr -> do expr <- decodeP <$> mtexpr <?> "Failed to decode Node: 'expr' field is missing"
-                               return $ Node.Expr expr Nothing
+            GenNode.Expr -> do expr       <- decodeP <$> mtexpr       <?> "Failed to decode Node: 'expr' field is missing"
+                               outputName <- decodeP <$> mtoutputName <?> "Failed to decode Node: 'outputName' field is missing"
+                               return $ Node.Expr expr Nothing outputName
             GenNode.Inputs  -> return Node.Inputs
             GenNode.Outputs -> return Node.Outputs
         return (nodeID, node properties)
