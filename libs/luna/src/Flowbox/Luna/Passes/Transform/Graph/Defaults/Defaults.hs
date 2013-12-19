@@ -27,21 +27,16 @@ import qualified Flowbox.Luna.Data.Graph.Port                as Port
 import           Flowbox.Luna.Data.Graph.Properties          (Properties (Properties))
 import qualified Flowbox.Luna.Data.Graph.Properties          as Properties
 import           Flowbox.Prelude                             hiding (empty)
-
-
-
-
-isGeneratedKey :: String
-isGeneratedKey = "DefaultNode-generated"
-
-
-trueVal :: String
-trueVal = "True"
+import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes as Attributes
 
 
 generatedProperties :: Properties
 generatedProperties = Properties Flags.empty
-                    $ Attributes.fromList [(Attributes.lunaAttributeKey, Map.fromList [(isGeneratedKey, trueVal)])]
+                    $ Attributes.fromList [( Attributes.luna
+                                           , Map.fromList [( Attributes.defaultNodeGenerated
+                                                           , Attributes.true
+                                                           )]
+                                           )]
 
 
 addDefaults :: Graph -> Graph
@@ -67,7 +62,7 @@ isGenerated :: Node -> Bool
 isGenerated node = case getKey $ node ^. (Node.properties . Properties.attrs) of
     Just "True" -> True
     _           -> False
-    where getKey = Attributes.get Attributes.lunaAttributeKey isGeneratedKey
+    where getKey = Attributes.get Attributes.luna Attributes.defaultNodeGenerated
 
 
 delGenerated :: (Node.ID, Node) -> Graph -> Graph

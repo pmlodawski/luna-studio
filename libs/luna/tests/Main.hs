@@ -238,10 +238,10 @@ main_graph = Luna.run $ do
     va <- VarAlias.run     ast
     logger info $ PP.ppShow va
 
-
     (Focus.FunctionFocus expr) <- Zipper.mk ast
                               >>= Zipper.focusFunction "test"
                               >>= return . Zipper.getFocus
+
     logger info $ PP.ppShow expr
     graph <- GraphBuilder.run va expr
     let graphWithDefaults = Defaults.addDefaults graph

@@ -15,14 +15,17 @@ import           Flowbox.Prelude                                  hiding (error,
 import qualified Flowbox.Luna.Data.AST.Expr                       as Expr
 import           Flowbox.Luna.Data.AST.Expr                         (Expr)
 import qualified Flowbox.Luna.Data.AST.Pat                        as Pat
+import qualified Flowbox.Luna.Data.Attributes                     as Attributes
 import           Flowbox.Luna.Data.Graph.Graph                      (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                    as Graph
 import qualified Flowbox.Luna.Data.Graph.Node                     as Node
 import qualified Flowbox.Luna.Data.Graph.Port                     as Port
 import           Flowbox.Luna.Data.Graph.Node                       (Node)
+import qualified Flowbox.Luna.Data.Graph.Properties               as Properties
 import           Flowbox.Luna.Data.Graph.Properties                 (Properties)
 import qualified Flowbox.Luna.Passes.Pass                         as Pass
 import           Flowbox.Luna.Passes.Pass                           (PassMonad)
+import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes   as Attributes
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.State as State
 import           Flowbox.Luna.Passes.Transform.Graph.Parser.State   (GPState)
 import           Flowbox.System.Log.Logger                           
@@ -86,6 +89,7 @@ parsePatNode nodeID pat properties = do
         [s] -> do let p = dummyPat pat
                       e = Expr.Assignment nodeID p s
                   State.addToNodeMap (nodeID, Port.All) e
+                  State.addToBody e
         _      -> fail "parsePatNode: Wrong Pat arguments"
 
 
@@ -112,18 +116,31 @@ parseAppNode nodeID app properties = do
 
 
 addExpr :: GPMonad m => Node.ID -> Expr -> Pass.Result m ()
-addExpr nodeID e = if dummyFolded
-    then State.addToNodeMap (nodeID, Port.All) e
-    else do outputName <- State.getNodeOutputName nodeID
-            let p  = Pat.Var  dummyInt outputName
-                p' = Expr.Var dummyInt outputName
-                a  = Expr.Assignment dummyInt p e
-            State.addToNodeMap (nodeID, Port.All) p'
-            State.addToBody a
+addExpr nodeID e = do 
+    folded <- isFolded nodeID
+    if folded
+        then State.addToNodeMap (nodeID, Port.All) e
+        else do 
+                --outputName <- State.getNodeOutputName nodeID
+                --let p  = Pat.Var  dummyInt outputName
+                --    p' = Expr.Var dummyInt outputName
+                --    a  = Expr.Assignment dummyInt p e
+                --State.addToNodeMap (nodeID, Port.All) p'
+                --State.addToBody a
+                State.addToNodeMap (nodeID, Port.All) e
+                State.addToBody e
 
+
+isFolded :: GPMonad m => Node.ID -> Pass.Result m Bool
+isFolded nodeID = do
+    node <- State.getNode nodeID
+    let attrs = node ^. (Node.properties . Properties.attrs)
+    case Attributes.get Attributes.luna Attributes.astFolded attrs of
+        Just "True" -> return True
+        _           -> return False
 
 --- REMOVE ME ------
-dummyFolded = False
+
 dummyString = "dummy"
 dummyInt = (-1)
 dummyExpr name = Expr.Con dummyInt name
