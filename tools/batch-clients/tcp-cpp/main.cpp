@@ -369,6 +369,7 @@ int main()
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("45"); 
+			node.set_outputname("v45"); 
 			auto properties = node.mutable_properties();
 			properties->mutable_flags();
 			properties->mutable_attributes();
@@ -380,6 +381,7 @@ int main()
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("90"); 
+			node.set_outputname("v90"); 
 			auto properties = node.mutable_properties();
 			properties->mutable_flags();
 			properties->mutable_attributes();
@@ -391,6 +393,7 @@ int main()
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("add"); 
+			node.set_outputname("add_result"); 
 			auto properties = node.mutable_properties();
 			properties->mutable_flags();
 			properties->mutable_attributes();
