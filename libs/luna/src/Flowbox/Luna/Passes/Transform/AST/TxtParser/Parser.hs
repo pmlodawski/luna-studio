@@ -337,8 +337,15 @@ pExprTemp = do
     return (out, id)
 
 
+pPatternTemp = do
+    out <- pPattern True 0 <* many(L.eol <* L.pSpaces) <* eof
+    id  <- getState
+    return (out, id)
+
 
 parseExpr input startID = Parsec.runParser pExprTemp startID "Luna Parser" input
+
+parsePattern input startID = Parsec.runParser pPatternTemp startID "Luna Parser" input
 
 pProgram mod = pModule mod True 0 <* many(L.eol <* L.pSpaces) <* eof
 

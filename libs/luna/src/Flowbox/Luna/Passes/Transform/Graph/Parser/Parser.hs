@@ -11,22 +11,23 @@ module Flowbox.Luna.Passes.Transform.Graph.Parser.Parser where
 
 import           Control.Monad.State                                 
 
-import           Flowbox.Prelude                                  hiding (error, mapM, mapM_)
-import qualified Flowbox.Luna.Data.AST.Expr                       as Expr
+import           Flowbox.Prelude                                    hiding (error, folded, mapM, mapM_)
+import qualified Flowbox.Luna.Data.AST.Expr                         as Expr
 import           Flowbox.Luna.Data.AST.Expr                         (Expr)
-import qualified Flowbox.Luna.Data.AST.Pat                        as Pat
-import qualified Flowbox.Luna.Data.Attributes                     as Attributes
+import qualified Flowbox.Luna.Data.AST.Pat                          as Pat
+import qualified Flowbox.Luna.Data.Attributes                       as Attributes
 import           Flowbox.Luna.Data.Graph.Graph                      (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                    as Graph
-import qualified Flowbox.Luna.Data.Graph.Node                     as Node
-import qualified Flowbox.Luna.Data.Graph.Port                     as Port
+import qualified Flowbox.Luna.Data.Graph.Graph                      as Graph
+import qualified Flowbox.Luna.Data.Graph.Node                       as Node
+import qualified Flowbox.Luna.Data.Graph.Port                       as Port
 import           Flowbox.Luna.Data.Graph.Node                       (Node)
-import qualified Flowbox.Luna.Data.Graph.Properties               as Properties
+import qualified Flowbox.Luna.Data.Graph.Properties                 as Properties
 import           Flowbox.Luna.Data.Graph.Properties                 (Properties)
-import qualified Flowbox.Luna.Passes.Pass                         as Pass
+import qualified Flowbox.Luna.Passes.Pass                           as Pass
 import           Flowbox.Luna.Passes.Pass                           (PassMonad)
-import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes   as Attributes
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.State as State
+import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes     as Attributes
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
+import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.State   as State
 import           Flowbox.Luna.Passes.Transform.Graph.Parser.State   (GPState)
 import           Flowbox.System.Log.Logger                           
 
@@ -86,8 +87,10 @@ parsePatNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
 parsePatNode nodeID pat properties = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of 
-        [s] -> do let p = dummyPat pat
-                      e = Expr.Assignment nodeID p s
+        [s] -> do p <- case Parser.parsePattern pat dummyInt of
+                            Left  er         -> fail $ show er
+                            Right (p, outID) -> pure p
+                  let e = Expr.Assignment nodeID p s
                   State.addToNodeMap (nodeID, Port.All) e
                   State.addToBody e
         _      -> fail "parsePatNode: Wrong Pat arguments"
@@ -106,7 +109,9 @@ parseAppNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
 parseAppNode nodeID app properties = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of 
-        []  -> do let e   = dummyExpr app
+        []  -> do e <- case Parser.parseExpr app dummyInt of
+                        Left  er         -> fail $ show er
+                        Right (e, outID) -> return e
                   addExpr nodeID e
         [f] -> do let e   = Expr.Accessor nodeID app f
                   addExpr nodeID e
@@ -117,18 +122,18 @@ parseAppNode nodeID app properties = do
 
 addExpr :: GPMonad m => Node.ID -> Expr -> Pass.Result m ()
 addExpr nodeID e = do 
+    State.addToNodeMap (nodeID, Port.All) e
     folded <- isFolded nodeID
     if folded
-        then State.addToNodeMap (nodeID, Port.All) e
-        else do 
+        then return ()
+        else State.addToBody e
                 --outputName <- State.getNodeOutputName nodeID
                 --let p  = Pat.Var  dummyInt outputName
                 --    p' = Expr.Var dummyInt outputName
                 --    a  = Expr.Assignment dummyInt p e
                 --State.addToNodeMap (nodeID, Port.All) p'
                 --State.addToBody a
-                State.addToNodeMap (nodeID, Port.All) e
-                State.addToBody e
+                
 
 
 isFolded :: GPMonad m => Node.ID -> Pass.Result m Bool
@@ -139,10 +144,7 @@ isFolded nodeID = do
         Just "True" -> return True
         _           -> return False
 
---- REMOVE ME ------
 
-dummyString = "dummy"
-dummyInt = (-1)
-dummyExpr name = Expr.Con dummyInt name
-dummyPat name = Pat.Con dummyInt name
+--- REMOVE ME ------
+dummyInt = (10000)
 --------------------
