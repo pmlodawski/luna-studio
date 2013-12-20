@@ -399,10 +399,19 @@ int main()
 			properties->mutable_attributes();
 			nodeAdd = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
 		}
-		// {
-		// 	auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-		// 	macro::Graph::Connect(socket, node45.id(), #, node90.id(), # , bc_Main_test, library.id(), project.id()).node();
-		// }
+		{
+			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+
+			auto args = new Graph_Connect_Args;
+			args->set_srcnodeid(node45.id());
+			args->set_dstnodeid(nodeAdd.id());
+			args->set_dstport(0);
+			args->set_allocated_bc(bc_Main_test);
+			args->set_libraryid(library.id());
+			args->set_projectid(project.id());
+
+			macro::Graph::Connect_(socket, args);
+		}
 		macro::Maintenance::Dump(socket);
 
 		macro::Library::StoreLibrary(socket, library.id(), project.id());

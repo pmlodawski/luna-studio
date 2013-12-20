@@ -15,6 +15,8 @@ import qualified Data.Map            as Map
 
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Expr    (Expr)
+import qualified Flowbox.Luna.Data.AST.Expr    as Expr
+import qualified Flowbox.Luna.Data.AST.Utils   as AST
 import           Flowbox.Luna.Data.Graph.Edge  (Edge (Edge))
 import           Flowbox.Luna.Data.Graph.Graph (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph as Graph
@@ -33,17 +35,18 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.State"
 type NodeMap = Map (Node.ID, OutPort) Expr
 
 
-data GPState = GPState { graph   :: Graph
-                       , body    :: [Expr]
+data GPState = GPState { body    :: [Expr]
                        , nodeMap :: NodeMap
+                       , graph   :: Graph
+                       , maxID   :: AST.ID
                        } deriving (Show)
 
 
 type GPStateM m = MonadState GPState m
 
 
-make :: Graph -> GPState
-make gr = GPState gr [] Map.empty
+make :: Graph -> AST.ID -> GPState
+make = GPState [] Map.empty
 
 
 getGraph :: GPStateM m => m Graph
@@ -81,11 +84,16 @@ nodeMapLookUp :: GPStateM m => (Node.ID, OutPort) -> m Expr
 nodeMapLookUp key = do nm <- getNodeMap
                        Map.lookup key nm <?> ("nodeMapLookUp: Cannot find " ++ (show key) ++ " in nodeMap")
 
+updateID :: GPStateM m => Expr -> m Expr
+updateID expr = do i <- newID
+                   return $ expr & Expr.id .~ i
+
 
 getNodeSrcs :: GPStateM m => Node.ID -> m [Expr]
 getNodeSrcs nodeID = do g <- getGraph
-                        mapM nodeMapLookUp $ map (\(pNID, _, Edge s _) -> (pNID, s))
-                                           $ Graph.lprel g nodeID
+                        srcs <- mapM nodeMapLookUp $ map (\(pNID, _, Edge s _) -> (pNID, s))
+                                                   $ Graph.lprel g nodeID
+                        mapM updateID srcs
 
 getNode :: GPStateM m => Node.ID -> m Node
 getNode nodeID = do gr <- getGraph
@@ -95,3 +103,19 @@ getNode nodeID = do gr <- getGraph
 getNodeOutputName :: GPStateM m => Node.ID -> m String
 getNodeOutputName nodeID = do node <- getNode nodeID
                               return $ node ^. Node.outputName
+
+
+newID :: GPStateM m => m AST.ID
+newID = do i <- getMaxID
+           let n = i + 1
+           setMaxID n
+           return n
+
+
+getMaxID :: GPStateM m => m AST.ID
+getMaxID = get >>= return . maxID
+
+
+setMaxID :: GPStateM m => AST.ID -> m ()
+setMaxID i = do s <- get
+                put s { maxID = i }

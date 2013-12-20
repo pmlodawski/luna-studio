@@ -41,7 +41,7 @@ type GPMonad m = PassMonad GPState m
 
 
 run :: PassMonad s m => Graph -> Expr -> Pass.Result m Expr
-run gr = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr) . graph2expr
+run gr = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr dummyInt) . graph2expr
 
 
 graph2expr :: GPMonad m => Expr -> Pass.Result m Expr
@@ -87,9 +87,11 @@ parsePatNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
 parsePatNode nodeID pat properties = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of 
-        [s] -> do p <- case Parser.parsePattern pat dummyInt of
+        [s] -> do i <- State.newID
+                  p <- case Parser.parsePattern pat i of
                             Left  er         -> fail $ show er
-                            Right (p, outID) -> pure p
+                            Right (p, outID) -> do State.setMaxID outID
+                                                   return p
                   let e = Expr.Assignment nodeID p s
                   State.addToNodeMap (nodeID, Port.All) e
                   State.addToBody e
@@ -109,14 +111,17 @@ parseAppNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
 parseAppNode nodeID app properties = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of 
-        []  -> do e <- case Parser.parseExpr app dummyInt of
+        []  -> do i <- State.newID
+                  e <- case Parser.parseExpr app i of
                         Left  er         -> fail $ show er
-                        Right (e, outID) -> return e
+                        Right (e, outID) -> do State.setMaxID outID
+                                               return e
                   addExpr nodeID e
         [f] -> do let e   = Expr.Accessor nodeID app f
                   addExpr nodeID e
-        f:t -> do let acc = Expr.Accessor nodeID app f
-                      e   = Expr.App      dummyInt acc t
+        f:t -> do i <- State.newID
+                  let acc = Expr.Accessor nodeID app f
+                      e   = Expr.App      i acc t
                   addExpr nodeID e
 
 
@@ -139,5 +144,5 @@ isFolded nodeID = do
 
 
 --- REMOVE ME ------
-dummyInt = (10000)
+dummyInt = 1000000
 --------------------

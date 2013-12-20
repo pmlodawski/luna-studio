@@ -54,7 +54,6 @@ import           Flowbox.Text.Show.Hs                                  (hsShow)
 import qualified Flowbox.Text.Show.Pretty                              as PP
 
 
-
 genProject :: String -> Config.Config
 genProject name = let
     exec = Section.mkExecutable name
@@ -129,7 +128,7 @@ example = Source.Source ["Main"]
                   , "def test self x y a b:"
                   --, "   4"
                   --, "   5"
-                  --, "   a + b"
+                  , "   a + b"
                   ----, "   a.add b"
                   , "   z = x.add y"
                   , "   {g, 3} = Console"
@@ -250,7 +249,6 @@ main_graph = Luna.run $ do
     let newGraph = Defaults.removeDefaults graphWithDefaults
     --logger warning $ show newGraph
     expr' <- GraphParser.run newGraph expr
-
     logger info $ PP.ppShow expr'
 
     --logger info "\n-------- FuncPool --------"
