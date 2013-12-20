@@ -127,13 +127,6 @@ addExpr nodeID e = do
     if folded
         then return ()
         else State.addToBody e
-                --outputName <- State.getNodeOutputName nodeID
-                --let p  = Pat.Var  dummyInt outputName
-                --    p' = Expr.Var dummyInt outputName
-                --    a  = Expr.Assignment dummyInt p e
-                --State.addToNodeMap (nodeID, Port.All) p'
-                --State.addToBody a
-                
 
 
 isFolded :: GPMonad m => Node.ID -> Pass.Result m Bool

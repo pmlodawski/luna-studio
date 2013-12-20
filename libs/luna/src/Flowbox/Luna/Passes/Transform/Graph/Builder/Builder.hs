@@ -11,7 +11,7 @@ module Flowbox.Luna.Passes.Transform.Graph.Builder.Builder where
 
 import           Control.Applicative                                 
 import           Control.Monad.State                                 
-import qualified Data.List as List
+import qualified Data.List           as List
 
 import           Flowbox.Prelude                                   hiding (error, mapM, mapM_)
 import           Flowbox.Luna.Data.AliasAnalysis                   (AA)
@@ -19,7 +19,6 @@ import qualified Flowbox.Luna.Data.Attributes                      as Attributes
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import           Flowbox.Luna.Data.AST.Expr                        (Expr)
 import qualified Flowbox.Luna.Data.AST.Lit                         as Lit
-import           Flowbox.Luna.Data.AST.Lit                         (Lit)
 import qualified Flowbox.Luna.Data.AST.Pat                         as Pat
 import           Flowbox.Luna.Data.AST.Pat                         (Pat)
 import qualified Flowbox.Luna.Data.AST.Utils                       as AST
@@ -35,6 +34,7 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes    as Attributes
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State as State
 import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBState)
 import           Flowbox.System.Log.Logger                           
+
 
 
 logger :: Logger
@@ -64,7 +64,7 @@ parseArgs inputs = do
 
 parseArg :: GBMonad m => (Expr, Int) -> Pass.Result m ()
 parseArg (input, no) = case input of
-    Expr.Arg _ pat _ -> do ([p], _) <- buildPat pat
+    Expr.Arg _ pat _ -> do [p] <- buildPat pat
                            State.addToNodeMap p (Graph.inputsID, Port.Num no)
     _                -> fail "parseArg: Wrong Expr type"
 
@@ -76,8 +76,9 @@ buildNode astFolded expr = case expr of
                                      State.addNode i Port.All node
                                      State.connectAST dstID i 0
                                      return i
-    Expr.Assignment i pat dst  -> do (patIDs, patStr) <- buildPat pat
-                                     let node = Node.Expr ('=': patStr) (dummyGenName patStr) $ addAttr astFolded dummyProperties 
+    Expr.Assignment i pat dst  -> do patIDs <- buildPat pat
+                                     let patStr = Pat.lunaShow pat
+                                         node = Node.Expr ('=': patStr) (dummyGenName patStr) $ addAttr astFolded dummyProperties 
                                      State.insNode (i, node)
                                      case patIDs of 
                                         [patID] -> State.addToNodeMap patID (i, Port.All)
@@ -102,11 +103,10 @@ buildNode astFolded expr = case expr of
     Expr.Con        i name     -> do let node = Node.Expr name (dummyGenName name) $ addAttr astFolded dummyProperties 
                                      State.addNode i Port.All node
                                      return i
-    Expr.Lit        i lvalue   -> do (_, litStr) <- buildLit lvalue
-                                     let node = Node.Expr litStr (dummyGenName litStr) $ addAttr astFolded dummyProperties 
+    Expr.Lit        i lvalue   -> do let litStr = Lit.lunaShow lvalue
+                                         node = Node.Expr litStr (dummyGenName litStr) $ addAttr astFolded dummyProperties 
                                      State.addNode i Port.All node
                                      return i
-
 
 
 addAttr :: Bool -> Properties -> Properties
@@ -115,87 +115,21 @@ addAttr astFolded p = if astFolded
     else p
   
 
-dummyGenName :: String -> String
-dummyGenName name = "out_" ++ name
-
-
---connect :: GBMonad m => Node.ID -> (InPort, ([AST.ID], Maybe String)) -> Pass.Result m ()
---connect dstNID (dstPort, (srcIDs, mname)) = case srcIDs of
---    [] -> do name <- mname <?> "GraphBuilder: Could not connect!"
---             State.addNodeDefault dstPort name dstNID 
---    _  -> do srcIDsP <- mapM State.aaNodeMapLookUp srcIDs
---             mapM_ (\(srcNID, p) -> State.connect srcNID dstNID $ Edge p dstPort) srcIDsP
-
-
-
-
---buildExpr :: GBMonad m => Expr -> Pass.Result m ([AST.ID], Maybe String)
---buildExpr expr = case expr of
---    Expr.Accessor   i name dst -> do (dstIDs, mdstStr) <- buildExpr dst
---                                     return $ case mdstStr of
---                                                Nothing -> (dstIDs, Just name)
---                                                Just n  -> (dstIDs, Just $ n ++ "." ++ name)
---    Expr.Var        i _        -> do return ([i], Nothing)
---    ----Expr.Assignment i pat dst  -> do (patIDs, patStr) <- buildPat pat
---    ----                                 dstID <- buildExpr dst
---    ----                                 (dstNID, dstPort) <- State.aaNodeMapLookUp dstID
---    ----                                 patNID <- State.insNewNode $ Node.Expr ('=': patStr) (Just expr) dummyProperties
---    ----                                 case patIDs of 
---    ----                                    [patID] -> State.addToMap patID (patNID, Nothing)
---    ----                                    _       -> mapM_ (\(n, patID) -> State.addToMap patID (patNID, Just n)) $ zip [0..] patIDs
---    ----                                 State.connect dstNID patNID $ Edge dstPort 0
---    ----                                 return dummyValue
---    ----Expr.App        i src args -> do srcID <- buildExpr src
---    ----                                 (srcNID, _) <- State.aaNodeMapLookUp srcID
---    ----                                 argIDs <- mapM buildExpr args
---    ----                                 argNIDsP <- mapM State.aaNodeMapLookUp argIDs
---    ----                                 let numberedArgNIDsP = zip [1..] argNIDsP
---    ----                                 mapM_ (\(no, (argNID, p)) -> State.connect argNID srcNID $ Edge p no) numberedArgNIDsP
---    ----                                 return srcID
---    ----Expr.Infix  i name src dst -> do srcID <- buildExpr src
---    ----                                 dstID <- buildExpr dst
---    ----                                 (srcNID, srcP) <- State.aaNodeMapLookUp srcID
---    ----                                 (dstNID, dstP) <- State.aaNodeMapLookUp dstID
---    ----                                 infixNID <- State.addNode i Nothing $ Node.Expr name (Just expr) dummyProperties
---    ----                                 State.connect srcNID infixNID $ Edge srcP 0
---    ----                                 State.connect dstNID infixNID $ Edge dstP 1
---    ----                                 return i
---    Expr.Con        i name     -> do return ([], Just name)
---    Expr.Lit        i lvalue   -> do (_, litStr) <- buildLit lvalue
---                                     return ([], Just litStr)
-
-
-
-buildPat :: GBMonad m => Pat -> Pass.Result m ([AST.ID], String)
-buildPat pat = case pat of
-    Pat.Var      i name     -> return ([i], name)
-    Pat.Lit      i value    -> do (litID, litStr) <- buildLit value
-                                  return ([i], litStr)
-    Pat.Tuple    i items    -> do itemsStr <- mapM buildPat items
-                                  let ids  = List.concat $ map fst itemsStr
-                                      strs = map snd itemsStr
-                                  return (ids, "{" ++ (List.intercalate ", " strs) ++ "}")
-    Pat.Con      i name     -> return ([i], name)
-    Pat.App      i src args -> do argsStr <- mapM buildPat args
-                                  let ids  = List.concat $ map fst argsStr
-                                      strs = map snd argsStr
-                                  (srcID, srcStr) <- buildPat src
-                                  return (ids, srcStr ++ " " ++ (List.intercalate " " strs))
-    Pat.Typed    i pat cls  -> do (patIDs, patStr) <- buildPat pat
-                                  return $ (patIDs, patStr ++ " :: " ++ dummyString "pattern_Typed")
-    Pat.Wildcard i          -> return ([i], "_")
-
-
-buildLit :: GBMonad m => Lit -> Pass.Result m (AST.ID, String)
-buildLit lit = pure $ case lit of 
-    Lit.Char    i char -> (i, [char])
-    Lit.String  i str  -> (i, str)
-    Lit.Integer i str  -> (i, str)
-    Lit.Float   i str  -> (i, str)
+buildPat :: GBMonad m => Pat -> Pass.Result m [AST.ID]
+buildPat p = case p of
+    Pat.Var      i _      -> return [i]
+    Pat.Lit      i _      -> return [i]
+    Pat.Tuple    i items  -> List.concat <$> mapM buildPat items
+    Pat.Con      i _      -> return [i]
+    Pat.App      i _ args -> List.concat <$> mapM buildPat args
+    Pat.Typed    i pat _  -> buildPat pat
+    Pat.Wildcard i        -> return [i]
 
 
 -- REMOVE ME --
+dummyGenName :: String -> String
+dummyGenName name = "out_" ++ name
+
 dummyValue = (-1)
 dummyProperties = Properties.empty
-dummyString s = "dummy_" ++ s
 --------------

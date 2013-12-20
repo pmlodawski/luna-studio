@@ -8,7 +8,6 @@
 
 module Flowbox.Luna.Data.Graph.Node where
 
-import           Flowbox.Luna.Data.AST.Expr         (Expr)
 import           Flowbox.Luna.Data.Graph.Properties (Properties)
 import qualified Flowbox.Luna.Data.Graph.Properties as Properties
 import           Flowbox.Prelude
