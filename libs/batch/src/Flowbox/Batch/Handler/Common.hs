@@ -47,11 +47,11 @@ import qualified Flowbox.Luna.Lib.Library                              as Librar
 import qualified Flowbox.Luna.Passes.Analysis.MaxID.MaxID              as MaxID
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
+import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer     as IDFixer
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaults
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
 import           Flowbox.Prelude                                       hiding (focus, zipper)
-
 
 
 readonly :: (Applicative m, Monad m) => m (a, r) -> m r
@@ -110,25 +110,25 @@ libraryOp libID projectID operation = libManagerOp projectID (\batch libManager 
     return (newLibManager, r))
 
 
-astOp :: (Applicative m, Monad m)
-      => Library.ID
+astOp :: Library.ID
       -> Project.ID
-      -> (Batch -> Module -> m (Module, r))
+      -> (Batch -> Module -> IO (Module, r))
       -> Batch
-      -> m (Batch, r)
-astOp libID projectID operation = libraryOp libID projectID (\batch library -> do
-    (newAst, r) <- operation batch $ Library.ast library
-    let newLibrary = library { Library.ast = newAst }
+      -> IO (Batch, r)
+astOp libID projectID operation = libraryOp libID projectID (\batch library -> Luna.runIO $ do
+    (newAst, r) <- liftIO $ operation batch $ Library.ast library
+    maxID    <- MaxID.run newAst
+    fixedAST <- IDFixer.run maxID newAst
+    let newLibrary = library { Library.ast = fixedAST }
     return (newLibrary, r))
 
 
-astFocusOp :: (Applicative m, Monad m)
-           => Breadcrumbs
+astFocusOp :: Breadcrumbs
            -> Library.ID
            -> Project.ID
-           -> (Batch -> Focus -> m (Focus, r))
+           -> (Batch -> Focus -> IO (Focus, r))
            -> Batch
-           -> m (Batch, r)
+           -> IO (Batch, r)
 astFocusOp bc libID projectID operation = astOp libID projectID (\batch ast -> do
     zipper <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc
     let focus = Zipper.getFocus zipper
@@ -139,13 +139,12 @@ astFocusOp bc libID projectID operation = astOp libID projectID (\batch ast -> d
     return (newAst, r))
 
 
-astModuleFocusOp :: (Applicative m, Monad m)
-                 => Breadcrumbs
+astModuleFocusOp :: Breadcrumbs
                  -> Library.ID
                  -> Project.ID
-                 -> (Batch -> Module -> m (Module, r))
+                 -> (Batch -> Module -> IO (Module, r))
                  -> Batch
-                 -> m (Batch, r)
+                 -> IO (Batch, r)
 astModuleFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
     (m, r) <- case focus of
         Focus.ModuleFocus m -> operation batch m
@@ -153,13 +152,12 @@ astModuleFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\
     return (Focus.ModuleFocus m, r))
 
 
-astFunctionFocusOp :: (Applicative m, Monad m)
-                 => Breadcrumbs
-                 -> Library.ID
-                 -> Project.ID
-                 -> (Batch -> Expr -> m (Expr, r))
-                 -> Batch
-                 -> m (Batch, r)
+astFunctionFocusOp :: Breadcrumbs
+                   -> Library.ID
+                   -> Project.ID
+                   -> (Batch -> Expr -> IO (Expr, r))
+                   -> Batch
+                   -> IO (Batch, r)
 astFunctionFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
     (f, r) <- case focus of
         Focus.FunctionFocus f -> operation batch f
@@ -167,13 +165,12 @@ astFunctionFocusOp bc libID projectID operation = astFocusOp bc libID projectID 
     return (Focus.FunctionFocus f, r))
 
 
-astClassFocusOp :: (Applicative m, Monad m)
-                 => Breadcrumbs
-                 -> Library.ID
-                 -> Project.ID
-                 -> (Batch -> Expr -> m (Expr, r))
-                 -> Batch
-                 -> m (Batch, r)
+astClassFocusOp :: Breadcrumbs
+                -> Library.ID
+                -> Project.ID
+                -> (Batch -> Expr -> IO (Expr, r))
+                -> Batch
+                -> IO (Batch, r)
 astClassFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
     (c, r) <- case focus of
         Focus.ClassFocus c -> operation batch c

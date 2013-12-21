@@ -78,8 +78,8 @@ parseArg :: State.GPStateM m => Node.ID -> Properties -> (Int, Expr) -> m ()
 parseArg nodeID properties (num, input) = case input of
     Expr.Arg _ (Pat.Var _ name) _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var dummyInt name
     _ -> fail "parseArg: Wrong Arg type"
-    where 
-      dummyInt = (-1) -- value does not matter, is replaced anyway
+    where dummyInt = (-1) -- value does not matter, is replaced anyway
+
 
 parseOutputsNode :: GPMonad m => Node.ID -> Properties -> Pass.Result m ()
 parseOutputsNode nodeID properties = do
