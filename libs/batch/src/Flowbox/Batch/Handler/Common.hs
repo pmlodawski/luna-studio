@@ -44,6 +44,7 @@ import           Flowbox.Luna.Lib.LibManager                           (LibManag
 import qualified Flowbox.Luna.Lib.LibManager                           as LibManager
 import           Flowbox.Luna.Lib.Library                              (Library)
 import qualified Flowbox.Luna.Lib.Library                              as Library
+import qualified Flowbox.Luna.Passes.Analysis.MaxID.MaxID              as MaxID
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
@@ -193,12 +194,13 @@ graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Lun
         Focus.FunctionFocus expr -> return expr
         _                         -> fail "Breadcrumbs are not focusing on function."
     va    <- VarAlias.run ast
+    maxID <- MaxID.run ast
 
     graph <- GraphBuilder.run va expr
     let graphWithDefaults = Defaults.addDefaults graph
     (newGraphWithDefaults, r) <- liftIO $ operation batch graphWithDefaults
     let newGraph = Defaults.removeDefaults newGraphWithDefaults
-    ast' <- GraphParser.run newGraph expr
+    ast' <- GraphParser.run newGraph maxID expr
 
     newAst <- Zipper.modify (\_ -> Focus.FunctionFocus ast') zipper >>= Zipper.close
     return (newAst, r))

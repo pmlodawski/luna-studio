@@ -34,6 +34,7 @@ import qualified Flowbox.Luna.Data.HAST.Module                         as Module
 import           Flowbox.Luna.Data.Source                              (Source)
 import qualified Flowbox.Luna.Data.Source                              as Source
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPool
+import qualified Flowbox.Luna.Passes.Analysis.MaxID.MaxID              as MaxID
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
@@ -52,6 +53,7 @@ import qualified Flowbox.System.Log.Logger                             as Logger
 import qualified Flowbox.System.UniPath                                as UniPath
 import           Flowbox.Text.Show.Hs                                  (hsShow)
 import qualified Flowbox.Text.Show.Pretty                              as PP
+
 
 
 genProject :: String -> Config.Config
@@ -237,6 +239,8 @@ main_graph = Luna.run $ do
     va <- VarAlias.run     ast
     logger info $ PP.ppShow va
 
+    maxID <- MaxID.run ast
+
     (Focus.FunctionFocus expr) <- Zipper.mk ast
                               >>= Zipper.focusFunction "test"
                               >>= return . Zipper.getFocus
@@ -248,7 +252,7 @@ main_graph = Luna.run $ do
     --logger info $ show graphWithDefaults
     let newGraph = Defaults.removeDefaults graphWithDefaults
     --logger warning $ show newGraph
-    expr' <- GraphParser.run newGraph expr
+    expr' <- GraphParser.run newGraph maxID expr
     logger info $ PP.ppShow expr'
 
     --logger info "\n-------- FuncPool --------"
