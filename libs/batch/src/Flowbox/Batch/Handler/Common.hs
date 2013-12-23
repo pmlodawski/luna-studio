@@ -161,7 +161,7 @@ astFunctionFocusOp :: Breadcrumbs
 astFunctionFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
     (f, r) <- case focus of
         Focus.FunctionFocus f -> operation batch f
-        _                      -> fail "Target is not a function"
+        _                     -> fail "Target is not a function"
     return (Focus.FunctionFocus f, r))
 
 
@@ -174,7 +174,7 @@ astClassFocusOp :: Breadcrumbs
 astClassFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
     (c, r) <- case focus of
         Focus.ClassFocus c -> operation batch c
-        _                      -> fail "Target is not a class"
+        _                  -> fail "Target is not a class"
     return (Focus.ClassFocus c, r))
 
 
@@ -189,7 +189,7 @@ graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Lun
     let focus = Zipper.getFocus zipper
     expr <- case focus of
         Focus.FunctionFocus expr -> return expr
-        _                         -> fail "Breadcrumbs are not focusing on function."
+        _                        -> fail "Breadcrumbs are not focusing on function."
     va    <- VarAlias.run ast
     maxID <- MaxID.run ast
 

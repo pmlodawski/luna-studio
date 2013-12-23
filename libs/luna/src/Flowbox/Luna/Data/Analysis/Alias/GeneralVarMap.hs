@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.AliasAnalysis where
+module Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap where
 
 import Flowbox.Prelude
 
@@ -14,9 +14,10 @@ import qualified Data.IntMap as IntMap
 
 
 
-data AA     = AA  { varmap :: IntMap Int }
-                  deriving (Show)
+data GeneralVarMap = GeneralVarMap { varmap :: IntMap (Maybe Int) }
+                                   deriving (Show)
 
 
-empty :: AA
-empty = AA IntMap.empty
+empty :: GeneralVarMap
+empty = GeneralVarMap IntMap.empty
+
