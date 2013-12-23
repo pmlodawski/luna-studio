@@ -15,8 +15,8 @@ import           Data.Map            (Map)
 import qualified Data.Map            as Map
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.Analysis.Alias.Alias      (AA)
-import qualified Flowbox.Luna.Data.Analysis.Alias.Alias      as AA
+import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap      (GeneralVarMap)
+import qualified Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap      as GeneralVarMap
 import qualified Flowbox.Luna.Data.AST.Utils                 as AST
 import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap as DefaultsMap
 import           Flowbox.Luna.Data.Graph.Default.Value       (Value)
@@ -40,14 +40,14 @@ type NodeMap = Map AST.ID (Node.ID, OutPort)
 
 data GBState = GBState { graph   :: Graph
                        , nodeMap :: NodeMap
-                       , aaMap   :: AA
+                       , gvmMap   :: GeneralVarMap
                        } deriving (Show)
 
 
 type GBStateM m = MonadState GBState m
 
 
-make :: AA -> GBState
+make :: GeneralVarMap -> GBState
 make = GBState Graph.make Map.empty
 
 
@@ -78,7 +78,7 @@ connect srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edg
 
 connectAST :: GBStateM m => AST.ID -> Node.ID -> InPort -> m ()
 connectAST srcID dstNID dstPort = do
-    (srcNID, srcPort) <- aaNodeMapLookUp srcID
+    (srcNID, srcPort) <- gvmNodeMapLookUp srcID
     connect srcNID dstNID $ Edge srcPort dstPort
 
 
@@ -90,13 +90,13 @@ setGraph :: GBStateM m => Graph -> m ()
 setGraph gr = do gm <- get
                  put gm { graph = gr }
 
-getAAMap :: GBStateM m => m AA
-getAAMap = get >>= return . aaMap
+getgvmMap :: GBStateM m => m GeneralVarMap
+getgvmMap = get >>= return . gvmMap
 
 
-setAAMap :: GBStateM m => AA -> m ()
-setAAMap aa = do gm <- get
-                 put gm { aaMap = aa }
+setgvmMap :: GBStateM m => GeneralVarMap -> m ()
+setgvmMap gvm = do gm <- get
+                   put gm { gvmMap = gvm }
 
 
 getNodeMap :: GBStateM m => m NodeMap
@@ -108,19 +108,19 @@ setNodeMap nm = do gm <- get
                    put gm { nodeMap = nm }
 
 
-aaLookUp :: GBStateM m => AST.ID -> m AST.ID
-aaLookUp astID = do aa <- getAAMap
-                    case IntMap.lookup astID $ AA.varmap aa of
-                        Nothing -> return astID
-                        Just a  -> return a
+gvmLookUp :: GBStateM m => AST.ID -> m AST.ID
+gvmLookUp astID = do gvm <- getgvmMap
+                     case IntMap.lookup astID $ GeneralVarMap.varmap gvm of
+                        Just (Right a) -> return a
+                        _              -> return astID
 
 
 nodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
 nodeMapLookUp astID = getNodeMap >>= fromJust . (Map.lookup astID)
 
 
-aaNodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
-aaNodeMapLookUp astID = aaLookUp astID >>= nodeMapLookUp
+gvmNodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
+gvmNodeMapLookUp astID = gvmLookUp astID >>= nodeMapLookUp
 
 
 addNodeDefault :: GBStateM m => InPort -> Value -> Node.ID -> m ()

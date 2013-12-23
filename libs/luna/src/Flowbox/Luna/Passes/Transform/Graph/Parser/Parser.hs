@@ -114,8 +114,8 @@ parseAppNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
 parseAppNode nodeID app properties = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
-        []  -> do i <- State.newID
-                  e <- case Parser.parseExpr app i of
+        []  -> do --i <- State.newID
+                  e <- case Parser.parseExpr app nodeID of
                         Left  er         -> fail $ show er
                         Right (e, outID) -> do State.setMaxID outID
                                                return e

@@ -236,7 +236,7 @@ main_graph = Luna.run $ do
     logger info $ PP.ppqShow ast
 
     logger info "\n-------- VarAlias --------"
-    va <- VarAlias.run     ast
+    va <- VarAlias.runGather ast
     logger info $ PP.ppShow va
 
     maxID <- MaxID.run ast

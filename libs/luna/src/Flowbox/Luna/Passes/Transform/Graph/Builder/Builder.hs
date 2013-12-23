@@ -14,7 +14,7 @@ import           Control.Monad.State
 import qualified Data.List           as List
 
 import           Flowbox.Prelude                                   hiding (error, mapM, mapM_)
-import           Flowbox.Luna.Data.Analysis.Alias.Alias            (AA)
+import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap    (GeneralVarMap)
 import qualified Flowbox.Luna.Data.Attributes                      as Attributes
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import           Flowbox.Luna.Data.AST.Expr                        (Expr)
@@ -44,8 +44,8 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
 type GBMonad m = PassMonad GBState m
 
 
-run :: PassMonad s m => AA -> Expr -> Pass.Result m Graph
-run aa = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make aa) . expr2graph
+run :: PassMonad s m => GeneralVarMap -> Expr -> Pass.Result m Graph
+run gvm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make gvm) . expr2graph
 
 
 expr2graph :: GBMonad m => Expr -> Pass.Result m Graph
@@ -87,7 +87,7 @@ buildNode astFolded expr = case expr of
                                      State.connectAST dstID i 0
                                      return dummyValue
     Expr.App        i src args -> do srcID       <- buildNode (astFolded || False) src
-                                     (srcNID, _) <- State.aaNodeMapLookUp srcID
+                                     (srcNID, _) <- State.gvmNodeMapLookUp srcID
                                      argIDs      <- mapM (buildNode True) args
                                      let numberedArgIDs = zip [1..] argIDs
                                      mapM_ (\(no, argID) -> State.connectAST argID srcNID no) numberedArgIDs
@@ -99,7 +99,11 @@ buildNode astFolded expr = case expr of
                                      State.connectAST srcID i 0
                                      State.connectAST dstID i 1
                                      return i
-    Expr.Var        i _        -> do return i
+    Expr.Var        i name     -> if astFolded 
+                                     then return i
+                                     else do let node = Node.Expr name (dummyGenName name) $ addAttr astFolded dummyProperties 
+                                             State.addNode i Port.All node
+                                             return i
     Expr.Con        i name     -> do let node = Node.Expr name (dummyGenName name) $ addAttr astFolded dummyProperties 
                                      State.addNode i Port.All node
                                      return i

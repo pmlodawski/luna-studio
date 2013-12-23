@@ -52,6 +52,12 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphB
 import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaults
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
 import           Flowbox.Prelude                                       hiding (focus, zipper)
+import           Flowbox.System.Log.Logger
+
+
+
+loggerIO :: LoggerIO
+loggerIO = getLoggerIO "Flowbox.Batch.Handler.Common"
 
 
 readonly :: (Applicative m, Monad m) => m (a, r) -> m r
@@ -190,14 +196,20 @@ graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Lun
     expr <- case focus of
         Focus.FunctionFocus expr -> return expr
         _                        -> fail "Breadcrumbs are not focusing on function."
-    va    <- VarAlias.run ast
+    va    <- VarAlias.runGather ast
     maxID <- MaxID.run ast
 
     graph <- GraphBuilder.run va expr
     let graphWithDefaults = Defaults.addDefaults graph
+
     (newGraphWithDefaults, r) <- liftIO $ operation batch graphWithDefaults
     let newGraph = Defaults.removeDefaults newGraphWithDefaults
     ast' <- GraphParser.run newGraph maxID expr
+    
+    loggerIO warning $ show graphWithDefaults
+    loggerIO info $ show expr
+    loggerIO warning $ show newGraph
+    loggerIO info $ show ast'
 
     newAst <- Zipper.modify (\_ -> Focus.FunctionFocus ast') zipper >>= Zipper.close
     return (newAst, r))
