@@ -6,7 +6,6 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.Passes.Analysis.VarAlias.State where
 
@@ -17,7 +16,7 @@ import qualified Data.Map            as Map
 
 import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap (GeneralVarMap)
 import qualified Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap as GeneralVarMap
-import           Flowbox.Prelude
+import           Flowbox.Prelude                                hiding (id)
 import           Flowbox.System.Log.Logger
 
 
@@ -37,7 +36,7 @@ empty :: LocState
 empty = LocState Map.empty GeneralVarMap.empty
 
 
-bind :: LocStateM m => Int -> Maybe Int -> m ()
+bind :: LocStateM m => Int -> Either String Int -> m ()
 bind kid vid = do
     s <- get
     let vs  = varstat s
@@ -62,3 +61,10 @@ lookupVar :: LocStateM m => String -> m (Maybe Int)
 lookupVar vname = do
     s <- get
     return $ Map.lookup vname (namemap s)
+
+
+bindVar :: LocStateM m => String -> Int -> m ()
+bindVar name id = do mv <- lookupVar name
+                     case mv of
+                        Just v  -> bind id $ Right v
+                        Nothing -> bind id $ Left $ "Not in scope: " ++ (show name)

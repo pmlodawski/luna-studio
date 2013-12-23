@@ -14,7 +14,7 @@ import           Control.Monad.State
 import qualified Data.List           as List
 
 import           Flowbox.Prelude                                   hiding (error, mapM, mapM_)
-import           Flowbox.Luna.Data.AliasAnalysis                   (AA)
+import           Flowbox.Luna.Data.Analysis.Alias.Alias            (AA)
 import qualified Flowbox.Luna.Data.Attributes                      as Attributes
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import           Flowbox.Luna.Data.AST.Expr                        (Expr)

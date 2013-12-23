@@ -10,10 +10,11 @@
 
 module Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias where
 
-import Control.Applicative
-import Control.Monad.State hiding (mapM, mapM_)
+import           Control.Applicative
+import           Control.Monad.State hiding (mapM, mapM_)
+import qualified Data.IntMap            as IntMap
 
-import           Flowbox.Luna.Data.Analysis.Alias.Alias         (AA)
+import           Flowbox.Luna.Data.Analysis.Alias.Alias         (AA (AA))
 import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap (GeneralVarMap)
 import qualified Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap as GeneralVarMap
 import qualified Flowbox.Luna.Data.AST.Expr                     as Expr
@@ -44,15 +45,18 @@ run = (Pass.run_ (Pass.Info "VarAlias") LocState.empty) . gatherAndCheck
 
 
 runGather :: PassMonad s m => Module -> Pass.Result m GeneralVarMap
-runGather = (Pass.run_ (Pass.Info "VarAlias") LocState.empty) . gather
+runGather = (Pass.run_ (Pass.Info "VarAlias") LocState.empty) . vaMod
 
 
 gatherAndCheck :: VAMonad m => Module -> Pass.Result m AA
-gatherAndCheck = undefined
+gatherAndCheck m = do gvm <- vaMod m
+                      (AA . IntMap.fromList) <$> (mapM check $ IntMap.toList $ GeneralVarMap.varmap gvm)
 
 
-gather :: VAMonad m => Module -> Pass.Result m GeneralVarMap
-gather = vaMod
+check :: VAMonad m => (Int, Either String Int) -> Pass.Result m (Int, Int)
+check (id, v) = case v of
+    Left e   -> fail e
+    Right vi -> return (id, vi)
 
 
 runNested :: VAMonad m => Pass.Transformer LocState b -> Pass.Result m LocState
@@ -75,12 +79,8 @@ vaExpr ast = case ast of
                                                   vaExprMap body
                                              LocState.updateVarStat s
     Expr.Assignment _ pat dst             -> vaExpr dst <* vaPat pat
-    Expr.Var        id name               -> do
-                                             v <- LocState.lookupVar name
-                                             LocState.bind id v
-    Expr.NativeVar  id name               -> do
-                                             v <- LocState.lookupVar name
-                                             LocState.bind id v
+    Expr.Var        id name               -> LocState.bindVar name id
+    Expr.NativeVar  id name               -> LocState.bindVar name id
     _                                     -> Expr.traverseM_ vaExpr vaType vaPat pure ast
     where
         vaExprMap = mapM_ vaExpr

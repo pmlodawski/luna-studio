@@ -14,7 +14,7 @@ import qualified Data.IntMap as IntMap
 
 
 
-data GeneralVarMap = GeneralVarMap { varmap :: IntMap (Maybe Int) }
+data GeneralVarMap = GeneralVarMap { varmap :: IntMap (Either String Int) }
                                    deriving (Show)
 
 

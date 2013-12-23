@@ -15,8 +15,8 @@ import           Data.Map            (Map)
 import qualified Data.Map            as Map
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AliasAnalysis             (AA)
-import qualified Flowbox.Luna.Data.AliasAnalysis             as AA
+import           Flowbox.Luna.Data.Analysis.Alias.Alias      (AA)
+import qualified Flowbox.Luna.Data.Analysis.Alias.Alias      as AA
 import qualified Flowbox.Luna.Data.AST.Utils                 as AST
 import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap as DefaultsMap
 import           Flowbox.Luna.Data.Graph.Default.Value       (Value)
