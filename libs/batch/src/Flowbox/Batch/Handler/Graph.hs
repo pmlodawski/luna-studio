@@ -29,8 +29,8 @@ loggerIO = getLoggerIO "Flowbox.Batch.Handler.Graph"
 
 
 nodesGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Graph
-nodesGraph bc libID projectID = readonly . graphOp' bc libID projectID (\_ graph -> do
-    return (graph, graph))
+nodesGraph bc libID projectID = readonly . graphOp' bc libID projectID (\_ graph maxID -> do
+    return ((graph, maxID), graph))
 
 
 nodeByID :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Node
@@ -40,40 +40,41 @@ nodeByID nodeID bc libID projectID = readonly . nodeOp' nodeID bc libID projectI
 
 addNode :: Node
         -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Node.ID)
-addNode node bc libID projectID = graphOp' bc libID projectID (\_ graph ->
-    return $ Graph.insNewNode node graph)
+addNode node bc libID projectID = graphOp' bc libID projectID (\_ graph maxID -> do
+    let newID = maxID + 1
+    return ((Graph.insNode (newID, node) graph, newID), newID))
 
 
 updateNode :: (Node.ID, Node)
            -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-updateNode (nodeID, node) bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph -> do
+updateNode (nodeID, node) bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph maxID -> do
     Graph.gelem nodeID graph `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
     let newGraph = Graph.updateNode (nodeID, node) graph
-    return (newGraph, ()))
+    return ((newGraph, maxID), ()))
 
 
 removeNode :: Node.ID
            -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-removeNode nodeID bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph -> do
+removeNode nodeID bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph maxID -> do
     Graph.gelem nodeID graph `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
     let newGraph = Graph.delNode nodeID graph
-    return (newGraph, ()))
+    return ((newGraph, maxID), ()))
 
 
 connect :: Node.ID -> OutPort -> Node.ID -> InPort
         -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-connect srcNodeID srcPort dstNodeID dstPort bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph -> do
+connect srcNodeID srcPort dstNodeID dstPort bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph maxID -> do
     Graph.gelem srcNodeID graph `ifnot` ("Unable to connect: Wrong 'srcNodeID' = " ++ show srcNodeID)
     Graph.gelem dstNodeID graph `ifnot` ("Unable to connect: Wrong 'dstNodeID' = " ++ show dstNodeID)
     Graph.isNotAlreadyConnected graph dstNodeID dstPort `ifnot` "Unable to connect: Port is already connected"
     let newGraph = Graph.insEdge (srcNodeID, dstNodeID, Edge srcPort dstPort) graph
-    return (newGraph, ()))
+    return ((newGraph, maxID), ()))
 
 
 disconnect :: Node.ID -> OutPort -> Node.ID -> InPort
            -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph -> do
+disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph maxID -> do
     Graph.gelem srcNodeID graph `ifnot` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
     Graph.gelem dstNodeID graph `ifnot` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
     let newGraph = Graph.delLEdge (srcNodeID, dstNodeID, Edge srcPort dstPort) graph
-    return (newGraph, ()))
+    return ((newGraph, maxID), ()))
