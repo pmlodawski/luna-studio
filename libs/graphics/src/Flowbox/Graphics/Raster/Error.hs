@@ -1,6 +1,6 @@
 module Flowbox.Graphics.Raster.Error where
 
-import Flowbox.Prelude hiding(map, lookup)
+import Flowbox.Prelude hiding (lookup, map)
 
 
 data Error = ChannelLookupError { name :: String }

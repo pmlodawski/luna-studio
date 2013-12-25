@@ -1,14 +1,14 @@
 module Flowbox.Graphics.Raster.Repr.RGBA where
 
-import qualified Data.Array.Accelerate         as A
-import qualified Data.Array.Accelerate.IO      as A
-import           Data.Array.Accelerate         (Exp)
-import           Data.Bits                     ((.&.))
+import           Data.Array.Accelerate    (Exp)
+import qualified Data.Array.Accelerate    as A
+import qualified Data.Array.Accelerate.IO as A
+import           Data.Bits                ((.&.))
 
-import           Flowbox.Prelude                  hiding(map)
-import qualified Flowbox.Graphics.Raster.Image    as Image
-import           Flowbox.Graphics.Raster.Image    (Image)
-import qualified Flowbox.Graphics.Raster.Channel  as Channel
+import qualified Flowbox.Graphics.Raster.Channel as Channel
+import           Flowbox.Graphics.Raster.Image   (Image)
+import qualified Flowbox.Graphics.Raster.Image   as Image
+import           Flowbox.Prelude                 hiding (map)
 
 
 decompose :: Image A.Word32 -> Either Image.Error (Image A.Word8)
@@ -28,7 +28,7 @@ compose img = do r <- Image.lookup "r" img
                  g <- Image.lookup "g" img
                  b <- Image.lookup "b" img
                  a <- Image.lookup "a" img
-                 
+
                  let rgba = Channel.map pack32 (Channel.zip4 r g b a)
                  return $ Image.insert "rgba" rgba mempty
 

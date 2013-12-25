@@ -83,3 +83,23 @@ either2io :: Either String b -> IO b
 either2io f = case f of
         Right r -> return r
         Left  e -> fail e
+
+
+whenLeft :: (Monad m) => Either a b -> (a -> m ()) -> m ()
+whenLeft e f = case e of
+    Left  v -> f v
+    Right _ -> return ()
+
+
+whenLeft' :: (Monad m) => Either a b -> m () -> m ()
+whenLeft' e f = whenLeft e (\_ -> f)
+
+
+whenRight :: (Monad m) => Either a b -> (b -> m ()) -> m ()
+whenRight e f = case e of
+    Left  _ -> return ()
+    Right v -> f v
+
+
+whenRight' :: (Monad m) => Either a b -> m () -> m ()
+whenRight' e f = whenRight e (\_ -> f)

@@ -1,8 +1,9 @@
 module Flowbox.Graphics.Raster.Channel where
 
-import Flowbox.Prelude hiding(use)
+import Flowbox.Prelude hiding (use)
 
-import qualified Data.Array.Accelerate         as A
+import qualified Data.Array.Accelerate as A
+
 
 type RawData a = A.Array A.DIM2 a
 
@@ -13,29 +14,26 @@ data Channel a = Raw (RawData a)
                deriving (Show)
 
 
-
+map :: (A.Elt a, A.Elt b) => (A.Exp a -> A.Exp b) -> Channel a -> Channel b
 map f chan = Acc $ A.map f ch
     where ch = case chan of
                Raw m -> A.use m
-               Acc m -> m 
+               Acc m -> m
 
 
-use chan = case chan of 
-    Raw m -> A.use m
-    Acc m -> m
 
-
-use' :: A.Elt a => Channel a -> Channel a
-use' chan = case chan of 
+use :: A.Elt a => Channel a -> Channel a
+use chan = case chan of
     Raw m -> Acc $ A.use m
     Acc m -> Acc m
 
 
 accMatrix :: A.Elt a => Channel a -> A.Acc(RawData a)
-accMatrix chan = m where Acc m = use' chan
+accMatrix chan = m where Acc m = use chan
 
 
-compute backend chan = Raw $ case chan of 
+compute :: Backend a -> Channel a -> Channel a
+compute backend chan = Raw $ case chan of
     Raw m -> m
     Acc m -> backend m
 
@@ -58,3 +56,13 @@ zip6 ch1 ch2 ch3 ch4 ch5 ch6             = Acc $ A.zip6 (accMatrix ch1) (accMatr
 zip7 ch1 ch2 ch3 ch4 ch5 ch6 ch7         = Acc $ A.zip7 (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6) (accMatrix ch7)
 zip8 ch1 ch2 ch3 ch4 ch5 ch6 ch7 ch8     = Acc $ A.zip8 (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6) (accMatrix ch7) (accMatrix ch8)
 zip9 ch1 ch2 ch3 ch4 ch5 ch6 ch7 ch8 ch9 = Acc $ A.zip9 (accMatrix ch1) (accMatrix ch2) (accMatrix ch3) (accMatrix ch4) (accMatrix ch5) (accMatrix ch6) (accMatrix ch7) (accMatrix ch8) (accMatrix ch9)
+
+
+unzip  chan = over each Acc $ A.unzip  (accMatrix chan)
+unzip3 chan = over each Acc $ A.unzip3 (accMatrix chan)
+unzip4 chan = over each Acc $ A.unzip4 (accMatrix chan)
+unzip5 chan = over each Acc $ A.unzip5 (accMatrix chan)
+unzip6 chan = over each Acc $ A.unzip6 (accMatrix chan)
+unzip7 chan = over each Acc $ A.unzip7 (accMatrix chan)
+unzip8 chan = over each Acc $ A.unzip8 (accMatrix chan)
+unzip9 chan = over each Acc $ A.unzip9 (accMatrix chan)

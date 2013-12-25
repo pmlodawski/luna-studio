@@ -1,19 +1,21 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Graphics.Raster.Image where
+module Flowbox.Graphics.Raster.Image (
+    module Flowbox.Graphics.Raster.Image,
+    Error(..)
+) where
 
-import Flowbox.Prelude hiding(map, lookup)
+import Flowbox.Prelude hiding (lookup, map)
 
-import qualified Data.Array.Accelerate         as A
-import           Data.Array.Accelerate         (Acc, Exp, (:.)(..))
-import qualified Data.Map                      as Map
-import           Data.Map                      (Map)
-import           Data.Monoid                   (mempty, Monoid)
-import           Control.Lens
 import           Control.Error
+import           Data.Array.Accelerate (Exp)
+import qualified Data.Array.Accelerate as A
+import           Data.Map              (Map)
+import qualified Data.Map              as Map
 
-import qualified Flowbox.Graphics.Raster.Channel as Channel
 import           Flowbox.Graphics.Raster.Channel (Channel)
+import qualified Flowbox.Graphics.Raster.Channel as Channel
+import           Flowbox.Graphics.Raster.Error   (Error (ChannelLookupError))
 
 data Image a = Image { _channels :: Map String (Channel a)
                      }
@@ -22,27 +24,23 @@ data Image a = Image { _channels :: Map String (Channel a)
 makeLenses ''Image
 
 
-data Error = LookupError
-           deriving (Show)
+compute :: Channel.Backend a -> Image a -> Image a
+compute backend img = Image $ Map.map (Channel.compute backend) $ view channels img
+
 
 map :: (A.Elt a, A.Elt b) => (Exp a -> Exp b) -> Image a -> Image b
 map f img = Image $ Map.map (Channel.map f) $ view channels img
 
-compute backend img = Image $ Map.map (Channel.compute backend) $ view channels img
 
-lookup :: String -> Image a -> Maybe (Channel a)
-lookup name img = Map.lookup name (view channels img)
+lookup :: String -> Image a -> Either Error (Channel a)
+lookup name img = justErr (ChannelLookupError name) $ Map.lookup name (view channels img)
 
 
-lookup' :: String -> Image a -> Either Error (Channel a)
-lookup' name img = justErr LookupError $ Map.lookup name (view channels img)
+cpChannel :: String -> String -> Image a -> Either Error (Image a)
+cpChannel src dst img = do
+    chan <- lookup src img
+    return $ img & channels %~ (Map.insert dst chan)
 
-cpChannel :: String -> String -> Image a -> Image a
-cpChannel src dst img = case chan of
-	Nothing -> img
-	Just ch -> img & channels %~ (Map.insert dst ch)
-	where chan = lookup src img
-	
 
 insert :: String -> Channel a -> Image a -> Image a
 insert name chan img = img & channels %~ (Map.insert name chan)
@@ -58,4 +56,5 @@ reprWord8 img = map (\c -> A.truncate $ c * 255) img
 ------------------------------------------------------------------------
 
 instance Monoid (Image a) where
-	mempty = Image mempty
+    mempty        = Image mempty
+    a `mappend` b = Image $ (view channels a) `mappend` (view channels b)

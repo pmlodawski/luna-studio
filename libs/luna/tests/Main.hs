@@ -102,8 +102,9 @@ example = Source.Source ["Main"]
                   --, "        ```print #{msg}```"
 
 
-                  --, "class Vector a:"
-                  --, "    x,y,z :: a"
+                  , "class Vector a:"
+                  , "    x,y,z :: a"
+                  , "    def test self x: x+x"
                   --, "def Vector.vtest self a b:"
                   --, "    {a,b}"
                   --, "def test self a b:"
@@ -124,14 +125,15 @@ example = Source.Source ["Main"]
 
 
 
-                  , "def add self x y:"
-                  , "   x.add y"
+                  --, "def add self x y:"
+                  --, "   x.add y"
 
-                  , "def add2 self x y:"
-                  , "   x.add y"
+                  --, "def add2 self x y:"
+                  --, "   x.add y"
                   --, "def addInts(self, x, y) -> Int:"
                   --, "   x.add y"
                   --, "def main self:"
+                  --, "    Console.print 1"
                   --, "   [1..10].each x:"
                   --, "       Console.print x"
 
@@ -160,13 +162,13 @@ example = Source.Source ["Main"]
 
 main :: IO ()
 main = do
-    DistMain.main
-    --logger setLevel DEBUG
+    --DistMain.main
+    logger setLevel DEBUG
 
-    --out <- timeIt main_inner
-    --case out of
-    --    Right _ -> return ()
-    --    Left  e -> putStrLn e
+    out <- timeIt main_inner
+    case out of
+        Right _ -> return ()
+        Left  e -> putStrLn e
 
 
 
@@ -179,36 +181,36 @@ main_inner = Luna.run $ do
     ast <- TxtParser.run source
     logger info $ PP.ppqShow ast
 
-    let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]
+    --let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]
 
-    let ast2 =     Zipper.mk ast
-               >>= Zipper.focusFunction "add"
-               >>= Zipper.modify (\(Zipper.FunctionFocus func) -> Zipper.FunctionFocus (func & LExpr.name .~ "dupa"))
-               >>= Zipper.close
+    --let ast2 =     Zipper.mk ast
+    --           >>= Zipper.focusFunction "add"
+    --           >>= Zipper.modify (\(Zipper.FunctionFocus func) -> Zipper.FunctionFocus (func & LExpr.name .~ "dupa"))
+    --           >>= Zipper.close
 
-    logger info $ PP.ppqShow ast2
+    --logger info $ PP.ppqShow ast2
 
     --putStrLn $ PP.ppShow zipper
 
-    --logger info "\n-------- VarAlias --------"
-    --va <- VarAlias.run     ast
-    --logger info $ PP.ppShow va
+    logger info "\n-------- VarAlias --------"
+    va <- VarAlias.run     ast
+    logger info $ PP.ppShow va
 
-    --logger info "\n-------- FuncPool --------"
-    --fp <- FuncPool.run ast
-    --logger info $ PP.ppShow fp
+    logger info "\n-------- FuncPool --------"
+    fp <- FuncPool.run ast
+    logger info $ PP.ppShow fp
 
-    --logger info "\n-------- SSA --------"
-    --ssa <- SSA.run va ast
-    ----logger info $ PP.ppqShow ssa
+    logger info "\n-------- SSA --------"
+    ssa <- SSA.run va ast
+    --logger info $ PP.ppqShow ssa
 
-    --logger info "\n-------- HASTGen --------"
-    --hast <- HASTGen.run ssa fp
-    --logger info $ PP.ppShow hast
+    logger info "\n-------- HASTGen --------"
+    hast <- HASTGen.run ssa fp
+    logger info $ PP.ppShow hast
 
-    --logger info "\n-------- HSC --------"
-    --hsc <- HSC.run  hast
-    --logger info $ join "\n\n" (map printSrc hsc)
+    logger info "\n-------- HSC --------"
+    hsc <- HSC.run  hast
+    logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()
