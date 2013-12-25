@@ -37,7 +37,7 @@ type IDFixerMonad m = PassMonad IDFixerState m
 
 
 run :: PassMonad s m => AST.ID -> Module -> Pass.Result m Module
-run maxID = (Pass.run_ (Pass.Info "MaxID") $ State.make maxID) . fixModule
+run maxID = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID) . fixModule
 
 
 fixModule :: IDFixerMonad m => Module -> Pass.Result m Module

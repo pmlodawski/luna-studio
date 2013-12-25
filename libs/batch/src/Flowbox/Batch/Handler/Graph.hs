@@ -19,7 +19,7 @@ import           Flowbox.Luna.Data.Graph.Node      (Node)
 import qualified Flowbox.Luna.Data.Graph.Node      as Node
 import           Flowbox.Luna.Data.Graph.Port      (InPort, OutPort)
 import qualified Flowbox.Luna.Lib.Library          as Library
-import           Flowbox.Prelude
+import           Flowbox.Prelude                   hiding (error)
 import           Flowbox.System.Log.Logger
 
 
@@ -30,7 +30,7 @@ loggerIO = getLoggerIO "Flowbox.Batch.Handler.Graph"
 
 nodesGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Graph
 nodesGraph bc libID projectID = readonly . graphOp' bc libID projectID (\_ graph maxID -> do
-    return ((graph, maxID), graph))
+    return (graph, graph))
 
 
 nodeByID :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Node
@@ -42,15 +42,17 @@ addNode :: Node
         -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Node.ID)
 addNode node bc libID projectID = graphOp' bc libID projectID (\_ graph maxID -> do
     let newID = maxID + 1
-    return ((Graph.insNode (newID, node) graph, newID), newID))
+    return (Graph.insNode (newID, node) graph, newID))
 
 
 updateNode :: (Node.ID, Node)
            -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
 updateNode (nodeID, node) bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph maxID -> do
-    Graph.gelem nodeID graph `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
-    let newGraph = Graph.updateNode (nodeID, node) graph
-    return ((newGraph, maxID), ()))
+    --Graph.gelem nodeID graph `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
+    --let newGraph = Graph.updateNode (nodeID, node) graph
+    --return (newGraph, ()))
+    loggerIO error "updateNode: Deprecated!"
+    return (graph, ()))
 
 
 removeNode :: Node.ID
@@ -58,7 +60,7 @@ removeNode :: Node.ID
 removeNode nodeID bc libID projectID = noresult . graphOp' bc libID projectID (\_ graph maxID -> do
     Graph.gelem nodeID graph `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
     let newGraph = Graph.delNode nodeID graph
-    return ((newGraph, maxID), ()))
+    return (newGraph, ()))
 
 
 connect :: Node.ID -> OutPort -> Node.ID -> InPort
@@ -68,7 +70,7 @@ connect srcNodeID srcPort dstNodeID dstPort bc libID projectID = noresult . grap
     Graph.gelem dstNodeID graph `ifnot` ("Unable to connect: Wrong 'dstNodeID' = " ++ show dstNodeID)
     Graph.isNotAlreadyConnected graph dstNodeID dstPort `ifnot` "Unable to connect: Port is already connected"
     let newGraph = Graph.insEdge (srcNodeID, dstNodeID, Edge srcPort dstPort) graph
-    return ((newGraph, maxID), ()))
+    return (newGraph, ()))
 
 
 disconnect :: Node.ID -> OutPort -> Node.ID -> InPort
@@ -77,4 +79,4 @@ disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID = noresult . g
     Graph.gelem srcNodeID graph `ifnot` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
     Graph.gelem dstNodeID graph `ifnot` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
     let newGraph = Graph.delLEdge (srcNodeID, dstNodeID, Edge srcPort dstPort) graph
-    return ((newGraph, maxID), ()))
+    return (newGraph, ()))

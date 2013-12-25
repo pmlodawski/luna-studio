@@ -54,7 +54,7 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaul
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
 import           Flowbox.Prelude                                       hiding (focus, zipper)
 import           Flowbox.System.Log.Logger
-
+import           Text.Show.Pretty
 
 
 loggerIO :: LoggerIO
@@ -126,6 +126,7 @@ astOp libID projectID operation = libraryOp libID projectID (\batch library -> L
     (newAst, r) <- liftIO $ operation batch $ Library.ast library
     maxID    <- MaxID.run newAst
     fixedAST <- IDFixer.run maxID newAst
+    loggerIO debug $ ppShow fixedAST
     let newLibrary = library { Library.ast = fixedAST }
     return (newLibrary, r))
 
@@ -188,7 +189,7 @@ astClassFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\b
 graphOp' :: Breadcrumbs
          -> Library.ID
          -> Project.ID
-         -> (Batch -> Graph -> AST.ID -> IO ((Graph, AST.ID), r))
+         -> (Batch -> Graph -> AST.ID -> IO (Graph, r))
          -> Batch
          -> IO (Batch, r)
 graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Luna.runIO $ do
@@ -203,15 +204,15 @@ graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Lun
     graph <- GraphBuilder.run va expr
     let graphWithDefaults = Defaults.addDefaults graph
 
-    ((newGraphWithDefaults, maxID2), r) <- liftIO $ operation batch graphWithDefaults maxID
+    (newGraphWithDefaults, r) <- liftIO $ operation batch graphWithDefaults maxID
     let newGraph = Defaults.removeDefaults newGraphWithDefaults
 
-    ast' <- GraphParser.run newGraph maxID2 expr
+    ast' <- GraphParser.run newGraph expr
 
     loggerIO warning $ show graphWithDefaults
-    loggerIO info $ show expr
+    loggerIO info $ ppShow expr
     loggerIO warning $ show newGraph
-    loggerIO info $ show ast'
+    loggerIO info $ ppShow ast'
 
     newAst <- Zipper.modify (\_ -> Focus.FunctionFocus ast') zipper >>= Zipper.close
     return (newAst, r))
@@ -224,8 +225,8 @@ nodeOp' :: Node.ID
         -> (Batch -> Node -> IO (Node, r))
         -> Batch
         -> IO (Batch, r)
-nodeOp' nodeID bc libID projectID operation = graphOp' bc libID projectID (\batch graph maxID -> do
+nodeOp' nodeID bc libID projectID operation = graphOp' bc libID projectID (\batch graph _ -> do
     node <- Graph.lab graph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
     (newNode, r) <- operation batch node
     let newGraph = Graph.updateNode (nodeID, newNode) graph
-    return ((newGraph, maxID), r))
+    return (newGraph, r))

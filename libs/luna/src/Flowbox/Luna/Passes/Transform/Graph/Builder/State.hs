@@ -15,17 +15,17 @@ import           Data.Map            (Map)
 import qualified Data.Map            as Map
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap      (GeneralVarMap)
-import qualified Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap      as GeneralVarMap
-import qualified Flowbox.Luna.Data.AST.Utils                 as AST
-import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap as DefaultsMap
-import           Flowbox.Luna.Data.Graph.Default.Value       (Value)
-import           Flowbox.Luna.Data.Graph.Edge                (Edge (Edge))
-import           Flowbox.Luna.Data.Graph.Graph               (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph               as Graph
-import           Flowbox.Luna.Data.Graph.Node                (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                as Node
-import           Flowbox.Luna.Data.Graph.Port                (InPort, OutPort)
+import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap (GeneralVarMap)
+import qualified Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap as GeneralVarMap
+import qualified Flowbox.Luna.Data.AST.Utils                    as AST
+import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap    as DefaultsMap
+import           Flowbox.Luna.Data.Graph.Default.Value          (Value)
+import           Flowbox.Luna.Data.Graph.Edge                   (Edge (Edge))
+import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
+import           Flowbox.Luna.Data.Graph.Node                   (Node)
+import qualified Flowbox.Luna.Data.Graph.Node                   as Node
+import           Flowbox.Luna.Data.Graph.Port                   (InPort, OutPort)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -40,7 +40,7 @@ type NodeMap = Map AST.ID (Node.ID, OutPort)
 
 data GBState = GBState { graph   :: Graph
                        , nodeMap :: NodeMap
-                       , gvmMap   :: GeneralVarMap
+                       , gvmMap  :: GeneralVarMap
                        } deriving (Show)
 
 
@@ -116,7 +116,9 @@ gvmLookUp astID = do gvm <- getgvmMap
 
 
 nodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
-nodeMapLookUp astID = getNodeMap >>= fromJust . (Map.lookup astID)
+nodeMapLookUp astID = do nm <- getNodeMap
+                         Map.lookup astID nm <?> ("Cannot find " ++ (show astID) ++ " in nodeMap")
+
 
 
 gvmNodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)

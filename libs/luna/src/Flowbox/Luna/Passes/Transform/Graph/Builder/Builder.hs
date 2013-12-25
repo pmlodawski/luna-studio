@@ -51,7 +51,7 @@ run gvm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make gvm) . expr2graph
 expr2graph :: GBMonad m => Expr -> Pass.Result m Graph
 expr2graph expr = case expr of
     Expr.Function _ _ _ inputs _ body -> do parseArgs inputs
-                                            mapM_ (buildNode False) body
+                                            mapM_ (buildNode False Nothing) body
                                             State.getGraph
     _                                 -> fail "expr2graph: Unsupported Expr type"
 
@@ -69,48 +69,57 @@ parseArg (input, no) = case input of
     _                -> fail "parseArg: Wrong Expr type"
 
 
-buildNode :: GBMonad m => Bool -> Expr -> Pass.Result m AST.ID
-buildNode astFolded expr = case expr of
-    Expr.Accessor   i name dst -> do dstID  <- buildNode True dst
-                                     let node = Node.Expr name (dummyGenName name) $ addAttr astFolded dummyProperties 
+buildNode :: GBMonad m => Bool -> Maybe String -> Expr -> Pass.Result m AST.ID
+buildNode astFolded outName expr = case expr of
+    Expr.Accessor   i name dst -> do dstID  <- buildNode True Nothing dst
+                                     let node = Node.Expr name (genName name i) $ addAttr astFolded dummyProperties 
                                      State.addNode i Port.All node
                                      State.connectAST dstID i 0
                                      return i
-    Expr.Assignment i pat dst  -> do patIDs <- buildPat pat
-                                     let patStr = Pat.lunaShow pat
-                                         node = Node.Expr ('=': patStr) (dummyGenName patStr) $ addAttr astFolded dummyProperties 
-                                     State.insNode (i, node)
-                                     case patIDs of 
-                                        [patID] -> State.addToNodeMap patID (i, Port.All)
-                                        _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (i, Port.Num n)) $ zip [0..] patIDs
-                                     dstID <- buildNode True dst
-                                     State.connectAST dstID i 0
-                                     return dummyValue
-    Expr.App        i src args -> do srcID       <- buildNode (astFolded || False) src
+    Expr.Assignment i pat dst  -> do let patStr = Pat.lunaShow pat
+                                     if isRealPat pat
+                                         then do patIDs <- buildPat pat
+                                                 let node = Node.Expr ('=': patStr) (genName "pattern" i) $ addAttr astFolded dummyProperties 
+                                                 State.insNode (i, node)
+                                                 case patIDs of 
+                                                    [patID] -> State.addToNodeMap patID (i, Port.All)
+                                                    _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (i, Port.Num n)) $ zip [0..] patIDs
+                                                 dstID <- buildNode True Nothing dst
+                                                 State.connectAST dstID i 0
+                                                 return dummyValue
+                                         else do [p] <- buildPat pat
+                                                 j <- buildNode False (Just patStr) dst
+                                                 State.addToNodeMap p (j, Port.All)
+                                                 return dummyValue
+    Expr.App        i src args -> do srcID       <- buildNode (astFolded || False) Nothing src
                                      (srcNID, _) <- State.gvmNodeMapLookUp srcID
-                                     argIDs      <- mapM (buildNode True) args
+                                     argIDs      <- mapM (buildNode True Nothing) args
                                      let numberedArgIDs = zip [1..] argIDs
                                      mapM_ (\(no, argID) -> State.connectAST argID srcNID no) numberedArgIDs
                                      return srcID
-    Expr.Infix  i name src dst -> do srcID    <- buildNode True src
-                                     dstID    <- buildNode True dst
-                                     let node = Node.Expr name (dummyGenName name) $ addAttr astFolded dummyProperties 
+    Expr.Infix  i name src dst -> do srcID    <- buildNode True Nothing src 
+                                     dstID    <- buildNode True Nothing dst
+                                     let node = Node.Expr name (genName name i) $ addAttr astFolded dummyProperties 
                                      State.addNode i Port.All node
                                      State.connectAST srcID i 0
                                      State.connectAST dstID i 1
                                      return i
     Expr.Var        i name     -> if astFolded 
                                      then return i
-                                     else do let node = Node.Expr name (dummyGenName name) $ addAttr astFolded dummyProperties 
+                                     else do let node = Node.Expr name (genName name i) $ addAttr astFolded dummyProperties 
                                              State.addNode i Port.All node
                                              return i
-    Expr.Con        i name     -> do let node = Node.Expr name (dummyGenName name) $ addAttr astFolded dummyProperties 
+    Expr.Con        i name     -> do let node = Node.Expr name (genName name i) $ addAttr astFolded dummyProperties 
                                      State.addNode i Port.All node
                                      return i
     Expr.Lit        i lvalue   -> do let litStr = Lit.lunaShow lvalue
-                                         node = Node.Expr litStr (dummyGenName litStr) $ addAttr astFolded dummyProperties 
+                                         node = Node.Expr litStr (genName litStr i) $ addAttr astFolded dummyProperties 
                                      State.addNode i Port.All node
                                      return i
+    where 
+        genName base num = case outName of
+            Nothing   -> "out" ++ (show num) ++ "_" ++ base
+            Just name -> name
 
 
 addAttr :: Bool -> Properties -> Properties
@@ -118,6 +127,13 @@ addAttr astFolded p = if astFolded
     then p & Properties.attrs %~ Attributes.set Attributes.luna Attributes.astFolded Attributes.true
     else p
   
+
+
+isRealPat :: Pat -> Bool
+isRealPat p = case p of
+    Pat.Var {}-> False
+    _         -> True
+
 
 buildPat :: GBMonad m => Pat -> Pass.Result m [AST.ID]
 buildPat p = case p of
@@ -131,9 +147,6 @@ buildPat p = case p of
 
 
 -- REMOVE ME --
-dummyGenName :: String -> String
-dummyGenName name = "out_" ++ name
-
 dummyValue = (-1)
 dummyProperties = Properties.empty
 --------------

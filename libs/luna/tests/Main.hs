@@ -239,8 +239,6 @@ main_graph = Luna.run $ do
     va <- VarAlias.runGather ast
     logger info $ PP.ppShow va
 
-    maxID <- MaxID.run ast
-
     (Focus.FunctionFocus expr) <- Zipper.mk ast
                               >>= Zipper.focusFunction "test"
                               >>= return . Zipper.getFocus
@@ -252,7 +250,7 @@ main_graph = Luna.run $ do
     --logger info $ show graphWithDefaults
     let newGraph = Defaults.removeDefaults graphWithDefaults
     --logger warning $ show newGraph
-    expr' <- GraphParser.run newGraph maxID expr
+    expr' <- GraphParser.run newGraph expr
     logger info $ PP.ppShow expr'
 
     --logger info "\n-------- FuncPool --------"
