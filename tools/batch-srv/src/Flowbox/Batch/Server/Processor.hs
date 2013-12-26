@@ -128,6 +128,10 @@ import qualified Generated.Proto.Batch.Project.StoreProject.Args            as S
 import qualified Generated.Proto.Batch.Project.StoreProject.Result          as StoreProject
 import qualified Generated.Proto.Batch.Project.UpdateProject.Args           as UpdateProject
 import qualified Generated.Proto.Batch.Project.UpdateProject.Result         as UpdateProject
+import qualified Generated.Proto.Batch.Properties.GetProperties.Args        as GetProperties
+import qualified Generated.Proto.Batch.Properties.GetProperties.Result      as GetProperties
+import qualified Generated.Proto.Batch.Properties.SetProperties.Args        as SetProperties
+import qualified Generated.Proto.Batch.Properties.SetProperties.Result      as SetProperties
 
 
 
@@ -229,3 +233,6 @@ process handler encoded_request = case Proto.messageWithLengthGet encoded_reques
         Method.Graph_RemoveNode -> call request handler Handler.removeNode RemoveNode.req RemoveNode.rsp
         Method.Graph_Connect    -> call request handler Handler.connect    Connect.req    Connect.rsp
         Method.Graph_Disconnect -> call request handler Handler.disconnect Disconnect.req Disconnect.rsp
+
+        Method.Properties_GetProperties -> call request handler Handler.getProperties GetProperties.req GetProperties.rsp
+        Method.Properties_SetProperties -> call request handler Handler.setProperties SetProperties.req SetProperties.rsp

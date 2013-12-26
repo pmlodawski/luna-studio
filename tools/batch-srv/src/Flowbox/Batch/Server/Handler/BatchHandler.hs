@@ -25,6 +25,7 @@ import qualified Flowbox.Batch.Server.Handler.Library     as HLibrary
 import qualified Flowbox.Batch.Server.Handler.Maintenance as HMaintenance
 import qualified Flowbox.Batch.Server.Handler.NodeDefault as HNodeDefault
 import qualified Flowbox.Batch.Server.Handler.Project     as HProject
+import qualified Flowbox.Batch.Server.Handler.Properties  as HProperties
 import qualified Flowbox.Config.Config                    as Config
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -105,3 +106,6 @@ instance Handler BatchHandler where
     removeNode h = HGraph.removeNode (batchRef h)
     connect    h = HGraph.connect    (batchRef h)
     disconnect h = HGraph.disconnect (batchRef h)
+
+    getProperties h = HProperties.getProperties (batchRef h)
+    setProperties h = HProperties.setProperties (batchRef h)

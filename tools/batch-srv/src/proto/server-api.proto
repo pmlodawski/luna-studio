@@ -79,6 +79,9 @@ message Request {
         Project_UpdateProject = 24;
         Project_CloseProject  = 25;
         Project_StoreProject  = 26;
+
+        Properties_GetProperties = 51;
+        Properties_SetProperties = 52;
     }
 
     extensions 1000 to max;
@@ -530,5 +533,27 @@ message Project {
             required int32 projectID = 1;
         }
         message Result { extend Response { optional Result rsp = 1028; } }   
+    }
+}
+
+message Properties {
+    message GetProperties {
+        message Args   { extend Request  { optional Args   req = 1401; }
+            required int32 nodeID    = 1;
+            required int32 libraryID = 2;
+            required int32 projectID = 3;
+        }
+        message Result { extend Response { optional Result rsp = 1401; }
+            required generated.proto.attributes.Properties properties = 1;
+        }   
+    }
+    message SetProperties {
+        message Args   { extend Request  { optional Args   req = 1402; }
+            required generated.proto.attributes.Properties properties = 1;
+            required int32 nodeID    = 2;
+            required int32 libraryID = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1402; } }   
     }
 }

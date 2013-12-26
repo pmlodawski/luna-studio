@@ -41,7 +41,6 @@ definitions mmaxDepth bc libID projectID = readonly . astFocusOp bc libID projec
     return (focus, shrinked))
 
 
-
 addModule :: Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
 addModule newModule bcParent libID projectID = noresult . astFocusOp bcParent libID projectID (\_ focus -> do
     newFocus <- case focus of

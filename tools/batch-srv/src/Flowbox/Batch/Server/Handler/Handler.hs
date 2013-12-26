@@ -107,6 +107,10 @@ import qualified Generated.Proto.Batch.Project.StoreProject.Args            as S
 import qualified Generated.Proto.Batch.Project.StoreProject.Result          as StoreProject
 import qualified Generated.Proto.Batch.Project.UpdateProject.Args           as UpdateProject
 import qualified Generated.Proto.Batch.Project.UpdateProject.Result         as UpdateProject
+import qualified Generated.Proto.Batch.Properties.GetProperties.Args        as GetProperties
+import qualified Generated.Proto.Batch.Properties.GetProperties.Result      as GetProperties
+import qualified Generated.Proto.Batch.Properties.SetProperties.Args        as SetProperties
+import qualified Generated.Proto.Batch.Properties.SetProperties.Result      as SetProperties
 
 
 
@@ -166,3 +170,6 @@ class Handler h where
     updateProject :: h -> UpdateProject.Args -> IO UpdateProject.Result
     closeProject  :: h -> CloseProject.Args  -> IO CloseProject.Result
     storeProject  :: h -> StoreProject.Args  -> IO StoreProject.Result
+
+    getProperties :: h -> GetProperties.Args -> IO GetProperties.Result
+    setProperties :: h -> SetProperties.Args -> IO SetProperties.Result
