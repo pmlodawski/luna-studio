@@ -35,7 +35,7 @@ import qualified Flowbox.Luna.Data.PropertyMap                         as Proper
 import           Flowbox.Luna.Data.Source                              (Source)
 import qualified Flowbox.Luna.Data.Source                              as Source
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPool
-import qualified Flowbox.Luna.Passes.Analysis.MaxID.MaxID              as MaxID
+import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                 as MaxID
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna

@@ -7,21 +7,26 @@
 
 module Flowbox.Batch.Handler.AST where
 
-import           Flowbox.Batch.Batch                      (Batch)
-import           Flowbox.Batch.Handler.Common             (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp, noresult, readonly)
-import qualified Flowbox.Batch.Project.Project            as Project
-import           Flowbox.Luna.Data.AST.Crumb.Crumb        (Breadcrumbs)
-import           Flowbox.Luna.Data.AST.Expr               (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr               as Expr
-import           Flowbox.Luna.Data.AST.Module             (Module)
-import qualified Flowbox.Luna.Data.AST.Module             as Module
-import           Flowbox.Luna.Data.AST.Type               (Type)
-import           Flowbox.Luna.Data.AST.Zipper.Focus       (Focus)
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus       as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper      as Zipper
-import qualified Flowbox.Luna.Lib.Library                 as Library
-import qualified Flowbox.Luna.Passes.Transform.AST.Shrink as Shrink
-import           Flowbox.Prelude                          hiding (focus)
+import qualified Data.IntSet as IntSet
+
+import           Flowbox.Batch.Batch                        (Batch)
+import           Flowbox.Batch.Handler.Common               (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp, noresult, readonly)
+import qualified Flowbox.Batch.Project.Project              as Project
+import           Flowbox.Luna.Data.AST.Crumb.Crumb          (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Expr                 (Expr)
+import qualified Flowbox.Luna.Data.AST.Expr                 as Expr
+import           Flowbox.Luna.Data.AST.Module               (Module)
+import qualified Flowbox.Luna.Data.AST.Module               as Module
+import           Flowbox.Luna.Data.AST.Type                 (Type)
+import           Flowbox.Luna.Data.AST.Zipper.Focus         (Focus)
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus         as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper        as Zipper
+import qualified Flowbox.Luna.Data.PropertyMap              as PropertyMap
+import qualified Flowbox.Luna.Lib.Library                   as Library
+import qualified Flowbox.Luna.Passes.Analysis.ID.ExtractIDs as ExtractIDs
+import qualified Flowbox.Luna.Passes.General.Luna.Luna      as Luna
+import qualified Flowbox.Luna.Passes.Transform.AST.Shrink   as Shrink
+import           Flowbox.Prelude                            hiding (focus)
 import           Flowbox.System.Log.Logger
 
 
@@ -66,10 +71,11 @@ addFunction newFunction bcParent libID projectID = noresult . astFocusOp bcParen
 
 remove :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
 remove bc libID projectID = noresult . astOp libID projectID (\_ ast propertyMap -> do
-    newAst <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc >>= Zipper.close . Zipper.defocusDrop
-    loggerIO warning "remove: not fully implemented"
-    -- TODO [PM] : remove all children from property map
-    return ((newAst, propertyMap), ()))
+    focus <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc
+    ids   <- Luna.runIO $ ExtractIDs.run $ Zipper.getFocus focus
+    let newPropertyMap = foldr PropertyMap.delete propertyMap $ IntSet.toList ids
+    newAst <- Zipper.close $ Zipper.defocusDrop focus
+    return ((newAst, newPropertyMap), ()))
 
 
 updateModuleCls :: Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch

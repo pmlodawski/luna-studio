@@ -48,7 +48,7 @@ import           Flowbox.Luna.Lib.LibManager                           (LibManag
 import qualified Flowbox.Luna.Lib.LibManager                           as LibManager
 import           Flowbox.Luna.Lib.Library                              (Library)
 import qualified Flowbox.Luna.Lib.Library                              as Library
-import qualified Flowbox.Luna.Passes.Analysis.MaxID.MaxID              as MaxID
+import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                 as MaxID
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
 import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer     as IDFixer
