@@ -7,8 +7,6 @@
 
 package generated.proto.graph;
 
-import "attributes.proto";
-
 
 
 message Node {
@@ -21,7 +19,6 @@ message Node {
     optional int32  id   = 2 [default = -1];
     optional string expr = 3;
     optional string outputName = 5;
-    optional generated.proto.attributes.Properties properties = 4;
 }
 
 message Edge {

@@ -12,22 +12,23 @@ module Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults (
 
 import qualified Data.Map as Map
 
-import           Flowbox.Control.Error                       ()
-import qualified Flowbox.Luna.Data.Attributes                as Attributes
-import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap as DefaultsMap
-import           Flowbox.Luna.Data.Graph.Default.Value       (Value)
-import           Flowbox.Luna.Data.Graph.Edge                (Edge (Edge))
-import qualified Flowbox.Luna.Data.Graph.Flags               as Flags
-import           Flowbox.Luna.Data.Graph.Graph               (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph               as Graph
-import           Flowbox.Luna.Data.Graph.Node                (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                as Node
-import           Flowbox.Luna.Data.Graph.Port                (InPort)
-import qualified Flowbox.Luna.Data.Graph.Port                as Port
-import           Flowbox.Luna.Data.Graph.Properties          (Properties (Properties))
-import qualified Flowbox.Luna.Data.Graph.Properties          as Properties
-import           Flowbox.Prelude                             hiding (empty)
+import           Flowbox.Control.Error                          ()
+import qualified Flowbox.Luna.Data.Attributes                   as Attributes
+import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap    as DefaultsMap
+import           Flowbox.Luna.Data.Graph.Default.Value          (Value)
+import           Flowbox.Luna.Data.Graph.Edge                   (Edge (Edge))
+import qualified Flowbox.Luna.Data.Graph.Flags                  as Flags
+import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
+import qualified Flowbox.Luna.Data.Graph.Node                   as Node
+import           Flowbox.Luna.Data.Graph.Port                   (InPort)
+import qualified Flowbox.Luna.Data.Graph.Port                   as Port
+import           Flowbox.Luna.Data.Graph.Properties             (Properties (Properties))
+import           Flowbox.Luna.Data.PropertyMap                  (PropertyMap)
+import qualified Flowbox.Luna.Data.PropertyMap                  as PropertyMap
 import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes as Attributes
+import           Flowbox.Prelude                                hiding (empty)
+
 
 
 generatedProperties :: Properties
@@ -39,38 +40,42 @@ generatedProperties = Properties Flags.empty
                                            )]
 
 
-addDefaults :: Graph -> Graph
-addDefaults graph =
-    foldr addNodeDefaults graph $ Graph.labNodes graph
+addDefaults :: Graph -> PropertyMap -> (Graph, PropertyMap)
+addDefaults graph propertyMap =
+    foldr addNodeDefaults (graph, propertyMap) $ Graph.nodes graph
 
 
-addNodeDefaults :: (Node.ID, Node) -> Graph -> Graph
-addNodeDefaults (nodeID, node) graph =
-    foldr (addNodeDefault nodeID) graph $ Map.toList defaultsMap where
-    defaultsMap = DefaultsMap.getDefaultsMap node
+addNodeDefaults :: Node.ID -> (Graph, PropertyMap) -> (Graph, PropertyMap)
+addNodeDefaults nodeID gp@(_, propertyMap) =
+    foldr (addNodeDefault nodeID) gp defaults
+    where
+        defaults = Map.toList $ DefaultsMap.getDefaultsMap nodeID propertyMap
 
 
-addNodeDefault :: Node.ID -> (InPort, Value) -> Graph -> Graph
-addNodeDefault nodeID (adstPort, defaultValue) graph =
+addNodeDefault :: Node.ID -> (InPort, Value) -> (Graph, PropertyMap) -> (Graph, PropertyMap)
+addNodeDefault nodeID (adstPort, defaultValue) (graph, propertyMap) =
     if Graph.isNotAlreadyConnected graph nodeID adstPort
-        then Graph.connect defaultNodeID nodeID (Edge Port.All adstPort) newGraph
-        else graph
-    where (newGraph, defaultNodeID) = Graph.insNewNode (Node.Expr defaultValue defaultValue generatedProperties) graph
+        then (newGraph2, newPropertyMap)
+        else (graph, propertyMap)
+    where
+      (newGraph, defaultNodeID) = Graph.insNewNode (Node.Expr defaultValue defaultValue) graph
+      newGraph2 = Graph.connect defaultNodeID nodeID (Edge Port.All adstPort) newGraph
+      newPropertyMap = PropertyMap.insert defaultNodeID generatedProperties propertyMap
 
 
-isGenerated :: Node -> Bool
-isGenerated node = case getKey $ node ^. (Node.properties . Properties.attrs) of
+
+isGenerated :: Node.ID -> PropertyMap -> Bool
+isGenerated nodeID propertyMap = case PropertyMap.get nodeID Attributes.luna Attributes.defaultNodeGenerated propertyMap of
     Just "True" -> True
     _           -> False
-    where getKey = Attributes.get Attributes.luna Attributes.defaultNodeGenerated
 
 
-delGenerated :: (Node.ID, Node) -> Graph -> Graph
-delGenerated (nodeID, node) graph = if isGenerated node
-    then Graph.delNode nodeID graph
-    else graph
+delGenerated :: Node.ID -> (Graph, PropertyMap) -> (Graph, PropertyMap)
+delGenerated nodeID gp@(graph, propertyMap) = if isGenerated nodeID propertyMap
+    then (Graph.delNode nodeID graph, PropertyMap.delete nodeID propertyMap)
+    else gp
 
 
-removeDefaults :: Graph -> Graph
-removeDefaults graph = foldr delGenerated graph $ Graph.labNodes graph
+removeDefaults :: Graph -> PropertyMap -> (Graph, PropertyMap)
+removeDefaults graph propertyMap = foldr delGenerated (graph, propertyMap) $ Graph.nodes graph
 

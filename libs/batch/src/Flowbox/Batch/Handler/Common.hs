@@ -18,11 +18,13 @@ module Flowbox.Batch.Handler.Common (
     astClassFocusOp,
     astModuleFocusOp,
     astFunctionFocusOp,
-    graphOp',
-    nodeOp',
+    graphOp,
+    readonlyNodeOp,
 ) where
 
-import           Control.Monad.RWS
+import Control.Monad.RWS
+import Text.Show.Pretty
+
 import           Flowbox.Batch.Batch                                   (Batch)
 import qualified Flowbox.Batch.Batch                                   as Batch
 import           Flowbox.Batch.Project.Project                         (Project)
@@ -41,6 +43,7 @@ import           Flowbox.Luna.Data.Graph.Graph                         (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                         as Graph
 import           Flowbox.Luna.Data.Graph.Node                          (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                          as Node
+import           Flowbox.Luna.Data.PropertyMap                         (PropertyMap)
 import           Flowbox.Luna.Lib.LibManager                           (LibManager)
 import qualified Flowbox.Luna.Lib.LibManager                           as LibManager
 import           Flowbox.Luna.Lib.Library                              (Library)
@@ -54,7 +57,7 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaul
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
 import           Flowbox.Prelude                                       hiding (focus, zipper)
 import           Flowbox.System.Log.Logger
-import           Text.Show.Pretty
+
 
 
 loggerIO :: LoggerIO
@@ -119,15 +122,15 @@ libraryOp libID projectID operation = libManagerOp projectID (\batch libManager 
 
 astOp :: Library.ID
       -> Project.ID
-      -> (Batch -> Module -> IO (Module, r))
+      -> (Batch -> Module -> PropertyMap -> IO ((Module, PropertyMap), r))
       -> Batch
       -> IO (Batch, r)
 astOp libID projectID operation = libraryOp libID projectID (\batch library -> Luna.runIO $ do
-    (newAst, r) <- liftIO $ operation batch $ Library.ast library
+    ((newAst, newPM), r) <- liftIO $ operation batch (Library.ast library) (Library.propertyMap library)
     maxID    <- MaxID.run newAst
     fixedAST <- IDFixer.run maxID newAst
     loggerIO debug $ ppShow fixedAST
-    let newLibrary = library { Library.ast = fixedAST }
+    let newLibrary = library { Library.ast = fixedAST, Library.propertyMap = newPM }
     return (newLibrary, r))
 
 
@@ -137,14 +140,14 @@ astFocusOp :: Breadcrumbs
            -> (Batch -> Focus -> IO (Focus, r))
            -> Batch
            -> IO (Batch, r)
-astFocusOp bc libID projectID operation = astOp libID projectID (\batch ast -> do
+astFocusOp bc libID projectID operation = astOp libID projectID (\batch ast pm -> do
     zipper <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc
     let focus = Zipper.getFocus zipper
 
     (newFocus, r) <- operation batch focus
 
     newAst <- Zipper.modify (\_ -> newFocus) zipper >>= Zipper.close
-    return (newAst, r))
+    return ((newAst, pm), r))
 
 
 astModuleFocusOp :: Breadcrumbs
@@ -186,13 +189,13 @@ astClassFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\b
     return (Focus.ClassFocus c, r))
 
 
-graphOp' :: Breadcrumbs
+graphOp :: Breadcrumbs
          -> Library.ID
          -> Project.ID
-         -> (Batch -> Graph -> AST.ID -> IO (Graph, r))
+         -> (Batch -> Graph -> PropertyMap -> AST.ID -> IO ((Graph, PropertyMap), r))
          -> Batch
          -> IO (Batch, r)
-graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Luna.runIO $ do
+graphOp bc libID projectID operation = astOp libID projectID (\batch ast propertyMap -> Luna.runIO $ do
     zipper <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc
     let focus = Zipper.getFocus zipper
     expr <- case focus of
@@ -201,13 +204,13 @@ graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Lun
     va    <- VarAlias.runGather ast
     maxID <- MaxID.run ast
 
-    graph <- GraphBuilder.run va expr
-    let graphWithDefaults = Defaults.addDefaults graph
+    (graph, pm) <- GraphBuilder.run va propertyMap expr
+    let (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graph pm
 
-    (newGraphWithDefaults, r) <- liftIO $ operation batch graphWithDefaults maxID
-    let newGraph = Defaults.removeDefaults newGraphWithDefaults
+    ((newGraphWithDefaults, newPMWithDefaults), r) <- liftIO $ operation batch graphWithDefaults pmWithDefaults maxID
+    let (newGraph, newPM) = Defaults.removeDefaults newGraphWithDefaults newPMWithDefaults
 
-    ast' <- GraphParser.run newGraph expr
+    ast' <- GraphParser.run newGraph newPM expr
 
     loggerIO warning $ show graphWithDefaults
     loggerIO info $ ppShow expr
@@ -215,18 +218,17 @@ graphOp' bc libID projectID operation = astOp libID projectID (\batch ast -> Lun
     loggerIO info $ ppShow ast'
 
     newAst <- Zipper.modify (\_ -> Focus.FunctionFocus ast') zipper >>= Zipper.close
-    return (newAst, r))
+    return ((newAst, newPM), r))
 
 
-nodeOp' :: Node.ID
-        -> Breadcrumbs
-        -> Library.ID
-        -> Project.ID
-        -> (Batch -> Node -> IO (Node, r))
-        -> Batch
-        -> IO (Batch, r)
-nodeOp' nodeID bc libID projectID operation = graphOp' bc libID projectID (\batch graph _ -> do
+readonlyNodeOp :: Node.ID
+               -> Breadcrumbs
+               -> Library.ID
+               -> Project.ID
+               -> (Batch -> Node -> IO r)
+               -> Batch
+               -> IO r
+readonlyNodeOp nodeID bc libID projectID operation = readonly . graphOp bc libID projectID (\batch graph propertyMap _ -> do
     node <- Graph.lab graph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
-    (newNode, r) <- operation batch node
-    let newGraph = Graph.updateNode (nodeID, newNode) graph
-    return (newGraph, r))
+    r <- operation batch node
+    return ((graph, propertyMap), r))

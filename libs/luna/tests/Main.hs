@@ -31,6 +31,7 @@ import qualified Flowbox.Luna.Data.Cabal.Config                        as Config
 import qualified Flowbox.Luna.Data.Cabal.Section                       as Section
 import qualified Flowbox.Luna.Data.HAST.Expr                           as HExpr
 import qualified Flowbox.Luna.Data.HAST.Module                         as Module
+import qualified Flowbox.Luna.Data.PropertyMap                         as PropertyMap
 import           Flowbox.Luna.Data.Source                              (Source)
 import qualified Flowbox.Luna.Data.Source                              as Source
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPool
@@ -229,7 +230,8 @@ main_inner = Luna.run $ do
 
 main_graph :: IO (Either String ())
 main_graph = Luna.run $ do
-    let source = example
+    let source  = example
+        emptyPM = PropertyMap.empty
 
     logger info "\n-------- TxtParser --------"
     ast <- TxtParser.run source
@@ -244,14 +246,16 @@ main_graph = Luna.run $ do
                               >>= return . Zipper.getFocus
 
     logger info $ PP.ppShow expr
-    graph <- GraphBuilder.run va expr
-    let graphWithDefaults = Defaults.addDefaults graph
+    (graph, pm) <- GraphBuilder.run va emptyPM expr
+    let (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graph pm
     logger warning $ show graph
+    logger warning $ PP.ppShow pm
     --logger info $ show graphWithDefaults
-    let newGraph = Defaults.removeDefaults graphWithDefaults
+    let (newGraph, newPM) = Defaults.removeDefaults graphWithDefaults pmWithDefaults
     --logger warning $ show newGraph
-    expr' <- GraphParser.run newGraph expr
+    expr' <- GraphParser.run newGraph newPM expr
     logger info $ PP.ppShow expr'
+    logger warning $ PP.ppShow newPM
 
     --logger info "\n-------- FuncPool --------"
     --fp <- FuncPool.run ast

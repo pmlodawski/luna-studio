@@ -30,14 +30,6 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Handler.AST"
 
 
---definitions :: Int -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Module
---definitions maxDepth bc libID projectID = readonly . astOp libID projectID (\_ ast -> do
---    loggerIO warning "maxDepth and breadcrumbs are not yet implemented. Returning whole AST from root."
---    shrinked <- Shrink.shrinkFunctionBodies ast
---    return (ast, shrinked))
-
-
-
 definitions :: Maybe Int -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Focus
 definitions mmaxDepth bc libID projectID = readonly . astFocusOp bc libID projectID (\_ focus -> do
     shrinked <- Shrink.shrinkFunctionBodies focus
@@ -73,9 +65,11 @@ addFunction newFunction bcParent libID projectID = noresult . astFocusOp bcParen
 
 
 remove :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-remove bc libID projectID = noresult . astOp libID projectID (\_ ast -> do
+remove bc libID projectID = noresult . astOp libID projectID (\_ ast propertyMap -> do
     newAst <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc >>= Zipper.close . Zipper.defocusDrop
-    return (newAst, ()))
+    loggerIO warning "remove: not fully implemented"
+    -- TODO [PM] : remove all children from property map
+    return ((newAst, propertyMap), ()))
 
 
 updateModuleCls :: Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch

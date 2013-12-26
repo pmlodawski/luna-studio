@@ -264,7 +264,6 @@ makeAsk(FileSystem, MV)
 makeAsk(Graph, NodesGraph)
 makeAsk(Graph, NodeByID)
 makeAsk(Graph, AddNode)
-makeAsk(Graph, UpdateNode)
 makeAsk(Graph, RemoveNode)
 makeAsk(Graph, Connect)
 makeAsk(Graph, Disconnect)
@@ -370,9 +369,6 @@ int main()
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("45"); 
 			node.set_outputname("v45"); 
-			auto properties = node.mutable_properties();
-			properties->mutable_flags();
-			properties->mutable_attributes();
 			node45 = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
 		}
 		graph::Node node90;
@@ -382,9 +378,6 @@ int main()
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("90"); 
 			node.set_outputname("v90"); 
-			auto properties = node.mutable_properties();
-			properties->mutable_flags();
-			properties->mutable_attributes();
 			node90 = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
 		}
 		graph::Node nodeAdd;
@@ -394,9 +387,6 @@ int main()
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("add"); 
 			node.set_outputname("add_result"); 
-			auto properties = node.mutable_properties();
-			properties->mutable_flags();
-			properties->mutable_attributes();
 			nodeAdd = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
 		}
 		macro::Maintenance::Dump(socket);

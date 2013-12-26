@@ -16,20 +16,19 @@ import Control.Applicative
 import Data.Int            (Int32)
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.Graph.Edge                             (Edge (Edge))
-import           Flowbox.Luna.Data.Graph.Graph                            (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                            as Graph
-import           Flowbox.Luna.Data.Graph.Node                             (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                             as Node
-import           Flowbox.Luna.Data.Graph.Port                             (OutPort)
-import qualified Flowbox.Luna.Data.Graph.Port                             as Port
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes ()
+import           Flowbox.Luna.Data.Graph.Edge                   (Edge (Edge))
+import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
+import           Flowbox.Luna.Data.Graph.Node                   (Node)
+import qualified Flowbox.Luna.Data.Graph.Node                   as Node
+import           Flowbox.Luna.Data.Graph.Port                   (OutPort)
+import qualified Flowbox.Luna.Data.Graph.Port                   as Port
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Graph.Edge                               as Gen
-import qualified Generated.Proto.Graph.Graph                              as Gen
-import qualified Generated.Proto.Graph.Node                               as Gen
-import qualified Generated.Proto.Graph.Node.Cls                           as GenNode
+import qualified Generated.Proto.Graph.Edge                     as Gen
+import qualified Generated.Proto.Graph.Graph                    as Gen
+import qualified Generated.Proto.Graph.Node                     as Gen
+import qualified Generated.Proto.Graph.Node.Cls                 as GenNode
 
 
 
@@ -45,21 +44,19 @@ instance Convert (Int, Int, Edge) Gen.Edge where
 
 instance Convert (Int, Node) Gen.Node where
     encode (nodeID, node) = case node of
-        Node.Expr expr outName properties
-                                -> Gen.Node GenNode.Expr    (encodePJ nodeID) (encodePJ expr) (encodePJ outName) (encodeJ properties)
-        Node.Inputs  properties -> Gen.Node GenNode.Inputs  (encodePJ nodeID) Nothing Nothing (encodeJ properties)
-        Node.Outputs properties -> Gen.Node GenNode.Outputs (encodePJ nodeID) Nothing Nothing (encodeJ properties)
-    decode (Gen.Node tcls mtnodeID mtexpr mtoutputName mtproperties) = do
+        Node.Expr expr outName
+                     -> Gen.Node GenNode.Expr    (encodePJ nodeID) (encodePJ expr) (encodePJ outName)
+        Node.Inputs  -> Gen.Node GenNode.Inputs  (encodePJ nodeID) Nothing Nothing
+        Node.Outputs -> Gen.Node GenNode.Outputs (encodePJ nodeID) Nothing Nothing
+    decode (Gen.Node tcls mtnodeID mtexpr mtoutputName) = do
         nodeID <- decodeP <$> mtnodeID <?> "Failed to decode Node: 'id' field is missing"
-        tproperties <- mtproperties    <?> "Failed to decode Node: 'properties' field is missing"
-        properties  <- decode tproperties
         node <- case tcls of
             GenNode.Expr -> do expr       <- decodeP <$> mtexpr       <?> "Failed to decode Node: 'expr' field is missing"
                                outputName <- decodeP <$> mtoutputName <?> "Failed to decode Node: 'outputName' field is missing"
                                return $ Node.Expr expr outputName
             GenNode.Inputs  -> return Node.Inputs
             GenNode.Outputs -> return Node.Outputs
-        return (nodeID, node properties)
+        return (nodeID, node)
 
 
 instance Convert Graph Gen.Graph where

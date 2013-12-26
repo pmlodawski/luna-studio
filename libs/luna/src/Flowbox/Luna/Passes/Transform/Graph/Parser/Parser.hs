@@ -20,8 +20,8 @@ import qualified Flowbox.Luna.Data.Graph.Graph                      as Graph
 import           Flowbox.Luna.Data.Graph.Node                       (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                       as Node
 import qualified Flowbox.Luna.Data.Graph.Port                       as Port
-import           Flowbox.Luna.Data.Graph.Properties                 (Properties)
-import qualified Flowbox.Luna.Data.Graph.Properties                 as Properties
+import           Flowbox.Luna.Data.PropertyMap                      (PropertyMap)
+import qualified Flowbox.Luna.Data.PropertyMap                      as PropertyMap
 import           Flowbox.Luna.Passes.Pass                           (PassMonad)
 import qualified Flowbox.Luna.Passes.Pass                           as Pass
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
@@ -30,6 +30,7 @@ import           Flowbox.Luna.Passes.Transform.Graph.Parser.State   (GPState)
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.State   as State
 import           Flowbox.Prelude                                    hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.State as IDFixer
 
 
 
@@ -40,8 +41,8 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.Parser"
 type GPMonad m = PassMonad GPState m
 
 
-run :: PassMonad s m => Graph -> Expr -> Pass.Result m Expr
-run gr = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr) . graph2expr
+run :: PassMonad s m => Graph -> PropertyMap -> Expr -> Pass.Result m Expr
+run gr pm = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr pm) . graph2expr
 
 
 graph2expr :: GPMonad m => Expr -> Pass.Result m Expr
@@ -56,39 +57,39 @@ graph2expr expr = do
 parseNode :: GPMonad m => [Expr] ->  (Node.ID, Node) -> Pass.Result m ()
 parseNode inputs (nodeID, node) = do
     case node of
-        Node.Expr expr _ properties -> parseExprNode    nodeID expr properties
-        Node.Inputs  properties     -> parseInputsNode  nodeID inputs properties
-        Node.Outputs properties     -> parseOutputsNode nodeID properties
+        Node.Expr expr _  -> parseExprNode    nodeID expr
+        Node.Inputs       -> parseInputsNode  nodeID inputs
+        Node.Outputs      -> parseOutputsNode nodeID
 
 
-parseExprNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
-parseExprNode nodeID expr properties = case expr of
-    '=':pat -> parsePatNode   nodeID pat  properties
-    '~':_   -> parseInfixNode nodeID expr properties
-    _       -> parseAppNode   nodeID expr properties
+parseExprNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
+parseExprNode nodeID expr = case expr of
+    '=':pat -> parsePatNode   nodeID pat
+    '~':_   -> parseInfixNode nodeID expr
+    _       -> parseAppNode   nodeID expr
 
 
-parseInputsNode :: GPMonad m => Node.ID -> [Expr] -> Properties -> Pass.Result m ()
-parseInputsNode nodeID inputs properties = do
-    mapM_ (parseArg nodeID properties) $ zip [0..] inputs
+parseInputsNode :: GPMonad m => Node.ID -> [Expr] -> Pass.Result m ()
+parseInputsNode nodeID inputs = do
+    mapM_ (parseArg nodeID) $ zip [0..] inputs
 
 
-parseArg :: State.GPStateM m => Node.ID -> Properties -> (Int, Expr) -> m ()
-parseArg nodeID properties (num, input) = case input of
-    Expr.Arg _ (Pat.Var _ name) _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var unknownID name
+parseArg :: State.GPStateM m => Node.ID  -> (Int, Expr) -> m ()
+parseArg nodeID (num, input) = case input of
+    Expr.Arg _ (Pat.Var _ name) _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
     _ -> fail "parseArg: Wrong Arg type"
 
 
-parseOutputsNode :: GPMonad m => Node.ID -> Properties -> Pass.Result m ()
-parseOutputsNode nodeID properties = do
+parseOutputsNode :: GPMonad m => Node.ID -> Pass.Result m ()
+parseOutputsNode nodeID = do
     return ()
 
 
-parsePatNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
-parsePatNode nodeID pat properties = do
+parsePatNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
+parsePatNode nodeID pat = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
-        [s] -> do p <- case Parser.parsePattern pat unknownID of
+        [s] -> do p <- case Parser.parsePattern pat IDFixer.unknownID of
                             Left  er     -> fail $ show er
                             Right (p, _) -> return p
                   let e = Expr.Assignment nodeID p s
@@ -97,8 +98,8 @@ parsePatNode nodeID pat properties = do
         _      -> fail "parsePatNode: Wrong Pat arguments"
 
 
-parseInfixNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
-parseInfixNode nodeID inf properties = do
+parseInfixNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
+parseInfixNode nodeID inf = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
         [a, b] -> do let e = Expr.Infix nodeID inf a b
@@ -106,8 +107,8 @@ parseInfixNode nodeID inf properties = do
         _      -> fail "parseInfixNode: Wrong Infix arguments"
 
 
-parseAppNode :: GPMonad m => Node.ID -> String -> Properties -> Pass.Result m ()
-parseAppNode nodeID app properties = do
+parseAppNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
+parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
         []  -> case Parser.parseExpr app nodeID of
@@ -116,7 +117,7 @@ parseAppNode nodeID app properties = do
         [f] -> do let e   = Expr.Accessor nodeID app f
                   addExpr nodeID e
         f:t -> do let acc = Expr.Accessor nodeID app f
-                      e   = Expr.App      unknownID acc t
+                      e   = Expr.App      IDFixer.unknownID acc t
                   addExpr nodeID e
 
 
@@ -126,19 +127,16 @@ addExpr nodeID e = do
     if folded
         then State.addToNodeMap (nodeID, Port.All) e
         else do outName <- State.getNodeOutputName nodeID
-                let p = Pat.Var unknownID outName
-                    v = Expr.Var unknownID outName
-                    a = Expr.Assignment unknownID p e
+                let p = Pat.Var IDFixer.unknownID outName
+                    v = Expr.Var IDFixer.unknownID outName
+                    a = Expr.Assignment IDFixer.unknownID p e
                 State.addToNodeMap (nodeID, Port.All) v
                 State.addToBody a
 
 
 isFolded :: GPMonad m => Node.ID -> Pass.Result m Bool
 isFolded nodeID = do
-    node <- State.getNode nodeID
-    let attrs = node ^. (Node.properties . Properties.attrs)
-    case Attributes.get Attributes.luna Attributes.astFolded attrs of
+    pm <- State.getPropertyMap
+    case PropertyMap.get nodeID Attributes.luna Attributes.astFolded pm of
         Just "True" -> return True
         _           -> return False
-
-unknownID = (-1)

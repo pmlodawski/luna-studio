@@ -4,34 +4,31 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.Luna.Lib.Library (
-    Library(..),
-    ID,
-    make
-) where
+module Flowbox.Luna.Lib.Library where
 
-import           Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
-
-import           Flowbox.Luna.Data.AST.Module       (Module)
-import qualified Flowbox.Luna.Data.AST.Module       as Module
-import qualified Flowbox.Luna.Data.AST.Type         as Type
-import           Flowbox.Luna.Data.Graph.Properties (Properties)
+import           Flowbox.Luna.Data.AST.Module  (Module)
+import qualified Flowbox.Luna.Data.AST.Module  as Module
+import qualified Flowbox.Luna.Data.AST.Type    as Type
+import           Flowbox.Luna.Data.PropertyMap (PropertyMap)
+import qualified Flowbox.Luna.Data.PropertyMap as PropertyMap
 import           Flowbox.Prelude
-import           Flowbox.System.UniPath             (UniPath)
-
+import           Flowbox.System.UniPath        (UniPath)
 
 
 data Library = Library { name        :: String
                        , path        :: UniPath
                        , ast         :: Module
-                       , propertyMap :: IntMap Properties
+                       , propertyMap :: PropertyMap
                        } deriving (Show)
+
+makeLenses (''Library)
+
 
 type ID  = Int
 
 
 make :: String -> UniPath -> [String] -> Library
-make name' path' moduleName = Library name' path' emptyModule IntMap.empty where
+make name' path' moduleName = Library name' path' emptyModule PropertyMap.empty where
     emptyModule = Module.mk 0 $ Type.Module 1 moduleName

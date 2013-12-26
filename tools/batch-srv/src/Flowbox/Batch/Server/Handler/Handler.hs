@@ -63,8 +63,6 @@ import qualified Generated.Proto.Batch.Graph.NodesGraph.Args                as N
 import qualified Generated.Proto.Batch.Graph.NodesGraph.Result              as NodesGraph
 import qualified Generated.Proto.Batch.Graph.RemoveNode.Args                as RemoveNode
 import qualified Generated.Proto.Batch.Graph.RemoveNode.Result              as RemoveNode
-import qualified Generated.Proto.Batch.Graph.UpdateNode.Args                as UpdateNode
-import qualified Generated.Proto.Batch.Graph.UpdateNode.Result              as UpdateNode
 import qualified Generated.Proto.Batch.Library.BuildLibrary.Args            as BuildLibrary
 import qualified Generated.Proto.Batch.Library.BuildLibrary.Result          as BuildLibrary
 import qualified Generated.Proto.Batch.Library.CreateLibrary.Args           as CreateLibrary
@@ -139,7 +137,6 @@ class Handler h where
     nodesGraph :: h -> NodesGraph.Args -> IO NodesGraph.Result
     nodeByID   :: h -> NodeByID.Args   -> IO NodeByID.Result
     addNode    :: h -> AddNode.Args    -> IO AddNode.Result
-    updateNode :: h -> UpdateNode.Args -> IO UpdateNode.Result
     removeNode :: h -> RemoveNode.Args -> IO RemoveNode.Result
     connect    :: h -> Connect.Args    -> IO Connect.Result
     disconnect :: h -> Disconnect.Args -> IO Disconnect.Result

@@ -8,17 +8,15 @@
 
 module Flowbox.Luna.Data.Graph.Node where
 
-import           Flowbox.Luna.Data.Graph.Properties (Properties)
-import qualified Flowbox.Luna.Data.Graph.Properties as Properties
-import           Flowbox.Prelude
+import Flowbox.Prelude
 
 
 
 data Node = Expr     { _expr       :: String
                      , _outputName :: String
-                     , _properties :: Properties }
-          | Inputs   { _properties :: Properties }
-          | Outputs  { _properties :: Properties }
+                     }
+          | Inputs
+          | Outputs
           deriving (Show)
 
 
@@ -29,13 +27,13 @@ type ID = Int
 
 
 mkExpr :: String -> String -> Node
-mkExpr name outName = Expr name outName Properties.empty
+mkExpr name outName = Expr name outName
 
 
 mkInputs :: Node
-mkInputs = Inputs Properties.empty
+mkInputs = Inputs
 
 
 mkOutputs :: Node
-mkOutputs = Outputs Properties.empty
+mkOutputs = Outputs
 

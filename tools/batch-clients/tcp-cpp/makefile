@@ -14,14 +14,14 @@ GEN_SRC :=  generated/attributes.pb.cc \
 			generated/type.pb.cc
 GEN_OBJ := $(patsubst %.cc,%.o, $(GEN_SRC))
 
-.PHONY: all clean hs
+.PHONY: all clean
 
 all: main 
 
 %.o: %.cc
 	$(CXX) -c  $< -o $@
 
-main.o: main.cpp
+main.o: main.cpp $(GEN_SRC) 
 	$(CXX) -std=gnu++11 -Wall -c  $< -o $@
 
 main: main.o $(GEN_OBJ) 

@@ -12,10 +12,10 @@ import qualified Data.Map as Map
 
 import qualified Flowbox.Luna.Data.Attributes          as Attributes
 import           Flowbox.Luna.Data.Graph.Default.Value (Value)
-import           Flowbox.Luna.Data.Graph.Node          (Node)
 import qualified Flowbox.Luna.Data.Graph.Node          as Node
 import           Flowbox.Luna.Data.Graph.Port          (InPort)
-import qualified Flowbox.Luna.Data.Graph.Properties    as Properties
+import           Flowbox.Luna.Data.PropertyMap         (PropertyMap)
+import qualified Flowbox.Luna.Data.PropertyMap         as PropertyMap
 import           Flowbox.Prelude
 
 
@@ -27,26 +27,24 @@ defaultsMapKey :: String
 defaultsMapKey = "Defaults-map"
 
 
-getDefaultsMap :: Node -> DefaultsMap
-getDefaultsMap node = case getKey $ node ^. (Node.properties . Properties.attrs) of
+getDefaultsMap :: Node.ID -> PropertyMap -> DefaultsMap
+getDefaultsMap nodeID propertyMap = case PropertyMap.get nodeID Attributes.luna defaultsMapKey propertyMap of
     Nothing -> Map.empty
     Just d  -> read d
-    where getKey = Attributes.get Attributes.luna defaultsMapKey
 
 
-setDefaultsMap :: DefaultsMap -> Node -> Node
-setDefaultsMap defaults node =
-    node & (Node.properties . Properties.attrs)
-        %~ Attributes.set Attributes.luna defaultsMapKey (show defaults)
+setDefaultsMap :: DefaultsMap -> Node.ID -> PropertyMap -> PropertyMap
+setDefaultsMap defaults nodeID =
+    PropertyMap.set nodeID Attributes.luna defaultsMapKey (show defaults)
 
 
-addDefault :: InPort -> Value -> Node -> Node
-addDefault dstPort value node = newNode where
-     newDefaults = Map.insert dstPort value $ getDefaultsMap node
-     newNode     = setDefaultsMap newDefaults node
+addDefault :: InPort -> Value -> Node.ID -> PropertyMap -> PropertyMap
+addDefault dstPort value nodeID propertyMap = newPropertyMap where
+     newDefaults    = Map.insert dstPort value $ getDefaultsMap nodeID propertyMap
+     newPropertyMap = setDefaultsMap newDefaults nodeID propertyMap
 
 
-removeDefault :: InPort -> Node -> Node
-removeDefault dstPort node = newNode where
-    newDefaults  = Map.delete dstPort $ getDefaultsMap node
-    newNode      = setDefaultsMap newDefaults node
+removeDefault :: InPort -> Node.ID -> PropertyMap -> PropertyMap
+removeDefault dstPort nodeID propertyMap = newPropertyMap where
+    newDefaults    = Map.delete dstPort $ getDefaultsMap nodeID propertyMap
+    newPropertyMap = setDefaultsMap newDefaults nodeID propertyMap

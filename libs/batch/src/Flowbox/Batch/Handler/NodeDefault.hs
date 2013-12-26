@@ -12,7 +12,7 @@ module Flowbox.Batch.Handler.NodeDefault (
 ) where
 
 import           Flowbox.Batch.Batch                         (Batch)
-import           Flowbox.Batch.Handler.Common                (nodeOp', noresult, readonly)
+import           Flowbox.Batch.Handler.Common                (astOp, noresult, readonly)
 import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Luna.Data.AST.Crumb.Crumb           (Breadcrumbs)
 import           Flowbox.Luna.Data.Graph.Default.DefaultsMap (DefaultsMap)
@@ -26,17 +26,17 @@ import           Flowbox.Prelude
 
 
 nodeDefaults :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO DefaultsMap
-nodeDefaults nodeID bc libID projectID  = readonly . nodeOp' nodeID bc libID projectID (\_ node ->
-    return (node, DefaultsMap.getDefaultsMap node))
+nodeDefaults nodeID _ libID projectID  = readonly . astOp libID projectID (\_ ast propertyMap ->
+    return ((ast, propertyMap), DefaultsMap.getDefaultsMap nodeID propertyMap))
 
 
 setNodeDefault :: InPort -> Value
                -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-setNodeDefault dstPort value nodeID bc libID projectID = noresult . nodeOp' nodeID bc libID projectID (\_ node -> do
-    return (DefaultsMap.addDefault dstPort value node, ()))
+setNodeDefault dstPort value nodeID _ libID projectID = noresult . astOp libID projectID (\_ ast propertyMap ->
+    return ((ast, DefaultsMap.addDefault dstPort value nodeID propertyMap), ()))
 
 
 removeNodeDefault :: InPort
                   -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-removeNodeDefault dstPort nodeID bc libID projectID = noresult . nodeOp' nodeID bc libID projectID (\_ node -> do
-    return (DefaultsMap.removeDefault dstPort node, ()))
+removeNodeDefault dstPort nodeID _ libID projectID = noresult . astOp libID projectID (\_ ast propertyMap ->
+    return ((ast, DefaultsMap.removeDefault dstPort nodeID propertyMap), ()))

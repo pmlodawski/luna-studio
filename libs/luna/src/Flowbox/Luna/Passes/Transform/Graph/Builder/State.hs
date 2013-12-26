@@ -18,14 +18,16 @@ import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap (GeneralVarMap)
 import qualified Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap as GeneralVarMap
 import qualified Flowbox.Luna.Data.AST.Utils                    as AST
-import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap    as DefaultsMap
-import           Flowbox.Luna.Data.Graph.Default.Value          (Value)
+import qualified Flowbox.Luna.Data.Attributes                   as Attributes
 import           Flowbox.Luna.Data.Graph.Edge                   (Edge (Edge))
 import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
 import           Flowbox.Luna.Data.Graph.Node                   (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                   as Node
 import           Flowbox.Luna.Data.Graph.Port                   (InPort, OutPort)
+import           Flowbox.Luna.Data.PropertyMap                  (PropertyMap)
+import qualified Flowbox.Luna.Data.PropertyMap                  as PropertyMap
+import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes as Attributes
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -38,16 +40,17 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.State"
 type NodeMap = Map AST.ID (Node.ID, OutPort)
 
 
-data GBState = GBState { graph   :: Graph
-                       , nodeMap :: NodeMap
-                       , gvmMap  :: GeneralVarMap
+data GBState = GBState { graph       :: Graph
+                       , nodeMap     :: NodeMap
+                       , gvmMap      :: GeneralVarMap
+                       , propertyMap :: PropertyMap
                        } deriving (Show)
 
 
 type GBStateM m = MonadState GBState m
 
 
-make :: GeneralVarMap -> GBState
+make :: GeneralVarMap -> PropertyMap -> GBState
 make = GBState Graph.make Map.empty
 
 
@@ -56,19 +59,18 @@ addToNodeMap k v = do nm <- getNodeMap
                       setNodeMap $ Map.insert k v nm
 
 
---insNewNode :: GBStateM m => Node -> m Node.ID
---insNewNode node = do gr <- getGraph
---                     let (gr', nodeID) = Graph.insNewNode node gr
---                     setGraph gr'
---                     return nodeID
+insNode :: GBStateM m => (Node.ID, Node) -> Bool -> m ()
+insNode n@(nodeID, _) isFolded = do g <- getGraph
+                                    setGraph $ Graph.insNode n g
+                                    pm <- getPropertyMap
+                                    if isFolded
+                                        then setPropertyMap $ PropertyMap.set nodeID Attributes.luna Attributes.astFolded Attributes.true pm
+                                        else return ()
 
-insNode :: GBStateM m => (Node.ID, Node) -> m ()
-insNode n = do getGraph >>= setGraph . Graph.insNode n
 
-
-addNode :: GBStateM m => AST.ID -> OutPort -> Node -> m ()
-addNode astID outPort node = do
-    insNode (astID, node)
+addNode :: GBStateM m => AST.ID -> OutPort -> Node -> Bool -> m ()
+addNode astID outPort node isFolded = do
+    insNode (astID, node) isFolded
     addToNodeMap astID (astID, outPort)
 
 
@@ -87,16 +89,8 @@ getGraph = get >>= return . graph
 
 
 setGraph :: GBStateM m => Graph -> m ()
-setGraph gr = do gm <- get
-                 put gm { graph = gr }
-
-getgvmMap :: GBStateM m => m GeneralVarMap
-getgvmMap = get >>= return . gvmMap
-
-
-setgvmMap :: GBStateM m => GeneralVarMap -> m ()
-setgvmMap gvm = do gm <- get
-                   put gm { gvmMap = gvm }
+setGraph gr = do s <- get
+                 put s { graph = gr }
 
 
 getNodeMap :: GBStateM m => m NodeMap
@@ -104,8 +98,26 @@ getNodeMap = get >>= return . nodeMap
 
 
 setNodeMap :: GBStateM m => NodeMap -> m ()
-setNodeMap nm = do gm <- get
-                   put gm { nodeMap = nm }
+setNodeMap nm = do s <- get
+                   put s { nodeMap = nm }
+
+
+getgvmMap :: GBStateM m => m GeneralVarMap
+getgvmMap = get >>= return . gvmMap
+
+
+setgvmMap :: GBStateM m => GeneralVarMap -> m ()
+setgvmMap gvm = do s <- get
+                   put s { gvmMap = gvm }
+
+
+getPropertyMap :: GBStateM m => m PropertyMap
+getPropertyMap = get >>= return . propertyMap
+
+
+setPropertyMap :: GBStateM m => PropertyMap -> m ()
+setPropertyMap pm = do s <- get
+                       put s { propertyMap = pm }
 
 
 gvmLookUp :: GBStateM m => AST.ID -> m AST.ID
@@ -123,11 +135,3 @@ nodeMapLookUp astID = do nm <- getNodeMap
 
 gvmNodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
 gvmNodeMapLookUp astID = gvmLookUp astID >>= nodeMapLookUp
-
-
-addNodeDefault :: GBStateM m => InPort -> Value -> Node.ID -> m ()
-addNodeDefault dstPort value nodeID = do
-    gr <- getGraph
-    node <- Graph.lab gr nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
-    let newNode = DefaultsMap.addDefault dstPort value node
-    setGraph $ Graph.updateNode (nodeID, newNode) gr

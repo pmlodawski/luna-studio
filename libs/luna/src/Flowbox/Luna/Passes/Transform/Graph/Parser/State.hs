@@ -21,6 +21,7 @@ import qualified Flowbox.Luna.Data.Graph.Graph as Graph
 import           Flowbox.Luna.Data.Graph.Node  (Node)
 import qualified Flowbox.Luna.Data.Graph.Node  as Node
 import           Flowbox.Luna.Data.Graph.Port  (OutPort)
+import           Flowbox.Luna.Data.PropertyMap (PropertyMap)
 import           Flowbox.Prelude               hiding (mapM)
 import           Flowbox.System.Log.Logger
 
@@ -33,21 +34,18 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.State"
 type NodeMap = Map (Node.ID, OutPort) Expr
 
 
-data GPState = GPState { body    :: [Expr]
-                       , nodeMap :: NodeMap
-                       , graph   :: Graph
+data GPState = GPState { body        :: [Expr]
+                       , nodeMap     :: NodeMap
+                       , graph       :: Graph
+                       , propertyMap :: PropertyMap
                        } deriving (Show)
 
 
 type GPStateM m = MonadState GPState m
 
 
-make :: Graph -> GPState
+make :: Graph -> PropertyMap -> GPState
 make = GPState [] Map.empty
-
-
-getGraph :: GPStateM m => m Graph
-getGraph = get >>= return . graph
 
 
 getBody :: GPStateM m => m [Expr]
@@ -66,6 +64,14 @@ getNodeMap = get >>= return . nodeMap
 setNodeMap :: GPStateM m => NodeMap -> m ()
 setNodeMap nm = do gm <- get
                    put gm { nodeMap = nm }
+
+
+getGraph :: GPStateM m => m Graph
+getGraph = get >>= return . graph
+
+
+getPropertyMap :: GPStateM m => m PropertyMap
+getPropertyMap = get >>= return . propertyMap
 
 
 addToBody :: GPStateM m => Expr -> m ()

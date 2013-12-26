@@ -102,7 +102,6 @@ instance Handler BatchHandler where
     nodesGraph h = HGraph.nodesGraph (batchRef h)
     nodeByID   h = HGraph.nodeByID   (batchRef h)
     addNode    h = HGraph.addNode    (batchRef h)
-    updateNode h = HGraph.updateNode (batchRef h)
     removeNode h = HGraph.removeNode (batchRef h)
     connect    h = HGraph.connect    (batchRef h)
     disconnect h = HGraph.disconnect (batchRef h)
