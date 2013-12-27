@@ -394,8 +394,21 @@ int main()
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
 
 			auto args = new Graph_Connect_Args;
-			args->set_srcnodeid(node45.id());
+			args->set_srcnodeid(node90.id());
 			args->set_dstnodeid(nodeAdd.id());
+			args->set_dstport(0);
+			args->set_allocated_bc(bc_Main_test);
+			args->set_libraryid(library.id());
+			args->set_projectid(project.id());
+
+			macro::Graph::Connect_(socket, args);
+		}
+		{
+			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+
+			auto args = new Graph_Connect_Args;
+			args->set_srcnodeid(nodeAdd.id());
+			args->set_dstnodeid(1);
 			args->set_dstport(0);
 			args->set_allocated_bc(bc_Main_test);
 			args->set_libraryid(library.id());

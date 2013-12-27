@@ -232,41 +232,6 @@ message AST {
     }
 }
 
-message NodeDefault {
-    message NodeDefaults {
-        message Args   { extend Request  { optional Args   req = 1301; }
-            required int32 nodeID    = 1;
-            required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libraryID = 3;
-            required int32 projectID = 4;
-        }
-        message Result { extend Response { optional Result rsp = 1301; }
-            required generated.proto.nodedefault.DefaultsMap defaultsMap = 1;
-        }   
-    }
-    message SetNodeDefault {
-        message Args   { extend Request  { optional Args   req = 1302; }
-            required int32 inPort    = 1;
-            required string value    = 2;
-            required int32 nodeID    = 3;
-            required generated.proto.crumb.Breadcrumbs bc = 4;
-            required int32 libraryID = 5;
-            required int32 projectID = 6;
-        }
-        message Result { extend Response { optional Result rsp = 1302; } }   
-    }
-    message RemoveNodeDefault {
-        message Args   { extend Request  { optional Args   req = 1303; }
-            required int32 inPort    = 1;
-            required int32 nodeID    = 2;
-            required generated.proto.crumb.Breadcrumbs bc = 3;
-            required int32 libraryID = 4;
-            required int32 projectID = 5;
-        }
-        message Result { extend Response { optional Result rsp = 1303; } }   
-    }
-}
-
 message FileSystem {
     message LS {
         message Args   { extend Request  { optional Args   req = 1001; }
@@ -480,6 +445,41 @@ message Maintenance {
     message Shutdown {
         message Args   { extend Request  { optional Args   req = 1021; } }
         message Result { extend Response { optional Result rsp = 1021; } }
+    }
+}
+
+message NodeDefault {
+    message NodeDefaults {
+        message Args   { extend Request  { optional Args   req = 1301; }
+            required int32 nodeID    = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libraryID = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1301; }
+            required generated.proto.nodedefault.DefaultsMap defaultsMap = 1;
+        }   
+    }
+    message SetNodeDefault {
+        message Args   { extend Request  { optional Args   req = 1302; }
+            required int32 inPort    = 1;
+            required string value    = 2;
+            required int32 nodeID    = 3;
+            required generated.proto.crumb.Breadcrumbs bc = 4;
+            required int32 libraryID = 5;
+            required int32 projectID = 6;
+        }
+        message Result { extend Response { optional Result rsp = 1302; } }   
+    }
+    message RemoveNodeDefault {
+        message Args   { extend Request  { optional Args   req = 1303; }
+            required int32 inPort    = 1;
+            required int32 nodeID    = 2;
+            required generated.proto.crumb.Breadcrumbs bc = 3;
+            required int32 libraryID = 4;
+            required int32 projectID = 5;
+        }
+        message Result { extend Response { optional Result rsp = 1303; } }   
     }
 }
 
