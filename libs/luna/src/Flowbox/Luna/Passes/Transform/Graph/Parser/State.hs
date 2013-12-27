@@ -35,6 +35,7 @@ type NodeMap = Map (Node.ID, OutPort) Expr
 
 
 data GPState = GPState { body        :: [Expr]
+                       , output      :: Maybe Expr
                        , nodeMap     :: NodeMap
                        , graph       :: Graph
                        , propertyMap :: PropertyMap
@@ -45,7 +46,7 @@ type GPStateM m = MonadState GPState m
 
 
 make :: Graph -> PropertyMap -> GPState
-make = GPState [] Map.empty
+make = GPState [] Nothing Map.empty
 
 
 getBody :: GPStateM m => m [Expr]
@@ -55,6 +56,17 @@ getBody = get >>= return . body
 setBody :: GPStateM m => [Expr] -> m ()
 setBody b = do s <- get
                put s { body = b }
+
+
+getOutput :: GPStateM m => m Expr
+getOutput = do s <- get
+               case output s of
+                   Nothing -> fail "GraphParser: getOutput: Output not defined!"
+                   Just o  -> return o
+
+setOutput :: GPStateM m => Expr -> m ()
+setOutput o = do s <- get
+                 put s { output = Just o }
 
 
 getNodeMap :: GPStateM m => m NodeMap
@@ -85,7 +97,7 @@ addToNodeMap key expr = getNodeMap >>= setNodeMap . Map.insert key expr
 
 nodeMapLookUp :: GPStateM m => (Node.ID, OutPort) -> m Expr
 nodeMapLookUp key = do nm <- getNodeMap
-                       Map.lookup key nm <?> ("nodeMapLookUp: Cannot find " ++ (show key) ++ " in nodeMap")
+                       Map.lookup key nm <?> ("GraphParser: nodeMapLookUp: Cannot find " ++ (show key) ++ " in nodeMap")
 
 
 
@@ -97,7 +109,7 @@ getNodeSrcs nodeID = do g <- getGraph
 
 getNode :: GPStateM m => Node.ID -> m Node
 getNode nodeID = do gr <- getGraph
-                    Graph.lab gr nodeID <?> ("getNodeOutputName: Cannot find nodeID=" ++ (show nodeID) ++ " in graph")
+                    Graph.lab gr nodeID <?> ("GraphParser: getNodeOutputName: Cannot find nodeID=" ++ (show nodeID) ++ " in graph")
 
 
 getNodeOutputName :: GPStateM m => Node.ID -> m String

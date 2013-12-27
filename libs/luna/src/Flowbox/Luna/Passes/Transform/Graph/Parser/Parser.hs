@@ -51,7 +51,9 @@ graph2expr expr = do
     let inputs = expr ^. Expr.inputs
     graph <- State.getGraph
     mapM_ (parseNode inputs) $ Graph.topsortl graph
-    body <- reverse <$> State.getBody
+    b <- State.getBody
+    o <- State.getOutput
+    let body = reverse $ o : b
     return (Expr.body .~ body $ expr)
 
 
@@ -87,12 +89,12 @@ parseArg nodeID (num, input) = case input of
 
 parseOutputsNode :: GPMonad m => Node.ID -> Pass.Result m ()
 parseOutputsNode nodeID = do
-    --return ()
     srcs <- State.getNodeSrcs nodeID
     let e = case srcs of
                 [s] -> s
                 _   -> Expr.Tuple IDFixer.unknownID srcs
-    State.addToBody e
+    logger debug $ show e
+    State.setOutput e
 
 
 parsePatNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
