@@ -386,7 +386,7 @@ int main()
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("add"); 
-			node.set_outputname("add_result"); 
+			node.set_outputname("addResult"); 
 			nodeAdd = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
 		}
 		macro::Maintenance::Dump(socket);
@@ -429,7 +429,7 @@ int main()
 
 			macro::Graph::Connect_(socket, args);
 		}
-		macro::Maintenance::Dump(socket);
+		// macro::Maintenance::Dump(socket);
 
 		macro::Library::StoreLibrary(socket, library.id(), project.id());
 		macro::Library::UnloadLibrary(socket, library.id(), project.id());
@@ -439,7 +439,7 @@ int main()
 		auto loadedProject = macro::Project::OpenProject(socket, "/tmp/flowbox/testProject").project();
 		macro::Library::LoadLibrary(socket, "/tmp/flowbox/testProject/testLibrary", loadedProject.id());
 
-		macro::Maintenance::Dump(socket);
+		// macro::Maintenance::Dump(socket);
 		macro::Project::CloseProject(socket, loadedProject.id());
 
 		// //////////////////////////////////////////////////////////////////////////
@@ -474,7 +474,7 @@ int main()
 		// }
 		// std::cout << sw.elapsedMs().count() << "ms\tSending " << dataSize << " bytes\n";
 
-		// // macro::Maintenance::Shutdown(socket);
+		macro::Maintenance::Shutdown(socket);
 		std::cout << "done" << std::endl;
 
 		return EXIT_SUCCESS;

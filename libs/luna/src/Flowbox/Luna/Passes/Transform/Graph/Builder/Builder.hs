@@ -72,14 +72,14 @@ buildNode :: GBMonad m => Bool -> Maybe String -> Expr -> Pass.Result m AST.ID
 buildNode astFolded outName expr = case expr of
     Expr.Accessor   i name dst -> do dstID  <- buildNode True Nothing dst
                                      let node = Node.Expr name (genName name i)
-                                     State.addNode i Port.All node astFolded
+                                     State.addNode i Port.All node astFolded noAssignment
                                      State.connectAST dstID i 0
                                      return i
     Expr.Assignment i pat dst  -> do let patStr = Pat.lunaShow pat
                                      if isRealPat pat
                                          then do patIDs <- buildPat pat
                                                  let node = Node.Expr ('=': patStr) (genName "pattern" i)
-                                                 State.insNode (i, node) astFolded
+                                                 State.insNode (i, node) astFolded noAssignment
                                                  case patIDs of
                                                     [patID] -> State.addToNodeMap patID (i, Port.All)
                                                     _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (i, Port.Num n)) $ zip [0..] patIDs
@@ -99,26 +99,31 @@ buildNode astFolded outName expr = case expr of
     Expr.Infix  i name src dst -> do srcID    <- buildNode True Nothing src
                                      dstID    <- buildNode True Nothing dst
                                      let node = Node.Expr name (genName name i)
-                                     State.addNode i Port.All node astFolded
+                                     State.addNode i Port.All node astFolded noAssignment
                                      State.connectAST srcID i 0
                                      State.connectAST dstID i 1
                                      return i
     Expr.Var        i name     -> if astFolded
                                      then return i
                                      else do let node = Node.Expr name (genName name i)
-                                             State.addNode i Port.All node astFolded
+                                             State.addNode i Port.All node astFolded noAssignment
                                              return i
     Expr.Con        i name     -> do let node = Node.Expr name (genName name i)
-                                     State.addNode i Port.All node astFolded
+                                     State.addNode i Port.All node astFolded noAssignment
                                      return i
     Expr.Lit        i lvalue   -> do let litStr = Lit.lunaShow lvalue
                                          node = Node.Expr litStr (genName litStr i)
-                                     State.addNode i Port.All node astFolded
+                                     State.addNode i Port.All node astFolded noAssignment
                                      return i
+    Expr.Tuple      i items    -> do return i
     where
         genName base num = case outName of
-            Nothing   -> "out" ++ (show num) ++ "_" ++ base
+            Nothing   -> base ++ "Result" ++ (show num)
             Just name -> name
+
+        noAssignment = case outName of
+            Nothing -> True
+            Just _  -> False
 
 
 isRealPat :: Pat -> Bool

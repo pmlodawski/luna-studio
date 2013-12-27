@@ -22,3 +22,7 @@ defaultNodeGenerated = "DefaultNode-generated"
 
 astFolded :: String
 astFolded = "AST-folded"
+
+
+astNoAssignment :: String
+astNoAssignment = "AST-no-assignment"

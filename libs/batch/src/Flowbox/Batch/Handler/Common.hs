@@ -129,7 +129,6 @@ astOp libID projectID operation = libraryOp libID projectID (\batch library -> L
     ((newAst, newPM), r) <- liftIO $ operation batch (Library.ast library) (Library.propertyMap library)
     maxID    <- MaxID.run newAst
     fixedAST <- IDFixer.run maxID newAst
-    loggerIO debug $ ppShow fixedAST
     let newLibrary = library { Library.ast = fixedAST, Library.propertyMap = newPM }
     return (newLibrary, r))
 

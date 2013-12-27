@@ -76,7 +76,7 @@ getPropertyMap = get >>= return . propertyMap
 
 addToBody :: GPStateM m => Expr -> m ()
 addToBody e = do b <- getBody
-                 setBody $ b ++ [e]
+                 setBody $ e : b
 
 
 addToNodeMap :: GPStateM m => (Node.ID, OutPort) -> Expr -> m ()

@@ -59,18 +59,22 @@ addToNodeMap k v = do nm <- getNodeMap
                       setNodeMap $ Map.insert k v nm
 
 
-insNode :: GBStateM m => (Node.ID, Node) -> Bool -> m ()
-insNode n@(nodeID, _) isFolded = do g <- getGraph
-                                    setGraph $ Graph.insNode n g
-                                    pm <- getPropertyMap
-                                    if isFolded
-                                        then setPropertyMap $ PropertyMap.set nodeID Attributes.luna Attributes.astFolded Attributes.true pm
-                                        else return ()
+insNode :: GBStateM m => (Node.ID, Node) -> Bool -> Bool -> m ()
+insNode n@(nodeID, _) isFolded noAssignment = do 
+    g <- getGraph
+    setGraph $ Graph.insNode n g
+    if isFolded
+        then setProperty Attributes.astFolded
+        else return ()
+    if noAssignment
+        then setProperty Attributes.astNoAssignment
+        else return ()
+    where setProperty key = getPropertyMap >>= setPropertyMap . PropertyMap.set nodeID Attributes.luna key Attributes.true
 
 
-addNode :: GBStateM m => AST.ID -> OutPort -> Node -> Bool -> m ()
-addNode astID outPort node isFolded = do
-    insNode (astID, node) isFolded
+addNode :: GBStateM m => AST.ID -> OutPort -> Node -> Bool -> Bool -> m ()
+addNode astID outPort node isFolded noAssignment = do
+    insNode (astID, node) isFolded noAssignment
     addToNodeMap astID (astID, outPort)
 
 

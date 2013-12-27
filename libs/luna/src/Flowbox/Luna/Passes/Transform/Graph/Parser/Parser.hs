@@ -51,7 +51,7 @@ graph2expr expr = do
     let inputs = expr ^. Expr.inputs
     graph <- State.getGraph
     mapM_ (parseNode inputs) $ Graph.topsortl graph
-    body <- State.getBody
+    body <- reverse <$> State.getBody
     return (Expr.body .~ body $ expr)
 
 
@@ -86,7 +86,11 @@ parseArg nodeID (num, input) = case input of
 
 parseOutputsNode :: GPMonad m => Node.ID -> Pass.Result m ()
 parseOutputsNode nodeID = do
-    return ()
+    srcs <- State.getNodeSrcs nodeID
+    let e = case srcs of
+                [s] -> s
+                _   -> Expr.Tuple IDFixer.unknownID srcs
+    State.addToBody e
 
 
 parsePatNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
@@ -127,21 +131,25 @@ parseAppNode nodeID app = do
 
 addExpr :: GPMonad m => Node.ID -> Expr -> Pass.Result m ()
 addExpr nodeID e = do
-    folded <- isFolded nodeID
+    gr <- State.getGraph
+    folded        <- hasFlag nodeID Attributes.astFolded
+    noAssignement <- hasFlag nodeID Attributes.astNoAssignment
     if folded
         then State.addToNodeMap (nodeID, Port.All) e
-        else do outName <- State.getNodeOutputName nodeID
-                let p = Pat.Var IDFixer.unknownID outName
-                    v = Expr.Var IDFixer.unknownID outName
-                    a = Expr.Assignment IDFixer.unknownID p e
-                State.addToNodeMap (nodeID, Port.All) v
-                State.addToBody a
+        else if noAssignement && (Graph.outdeg gr nodeID == 0)
+            then do State.addToBody e
+            else do outName <- State.getNodeOutputName nodeID
+                    let p = Pat.Var IDFixer.unknownID outName
+                        v = Expr.Var IDFixer.unknownID outName
+                        a = Expr.Assignment IDFixer.unknownID p e
+                    State.addToNodeMap (nodeID, Port.All) v
+                    State.addToBody a
 
 
-isFolded :: GPMonad m => Node.ID -> Pass.Result m Bool
-isFolded nodeID = do
+hasFlag :: GPMonad m => Node.ID -> String -> Pass.Result m Bool
+hasFlag nodeID flag = do
     pm <- State.getPropertyMap
-    case PropertyMap.get nodeID Attributes.luna Attributes.astFolded pm of
+    case PropertyMap.get nodeID Attributes.luna flag pm of
         Just "True" -> return True
         _           -> return False
 
