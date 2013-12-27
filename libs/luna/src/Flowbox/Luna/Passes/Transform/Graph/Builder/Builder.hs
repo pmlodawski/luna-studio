@@ -47,12 +47,18 @@ run gvm pm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make gvm pm) . expr2g
 
 expr2graph :: GBMonad m => Expr -> Pass.Result m (Graph, PropertyMap)
 expr2graph expr = case expr of
+    Expr.Function _ _ _ inputs _ []   -> do finalize
     Expr.Function _ _ _ inputs _ body -> do parseArgs inputs
-                                            mapM_ (buildNode False Nothing) body
-                                            g <- State.getGraph
-                                            pm <- State.getPropertyMap
-                                            return (g, pm)
+                                            mapM_ (buildNode False Nothing) $ init body
+                                            buildOutput $ last body
+                                            finalize
     _                                 -> fail "expr2graph: Unsupported Expr type"
+
+
+finalize :: GBMonad m => Pass.Result m (Graph, PropertyMap)
+finalize = do g <- State.getGraph
+              pm <- State.getPropertyMap
+              return (g, pm)
 
 
 parseArgs :: GBMonad m => [Expr] -> Pass.Result m ()
@@ -66,6 +72,16 @@ parseArg (input, no) = case input of
     Expr.Arg _ pat _ -> do [p] <- buildPat pat
                            State.addToNodeMap p (Graph.inputsID, Port.Num no)
     _                -> fail "parseArg: Wrong Expr type"
+
+
+buildOutput :: GBMonad m => Expr -> Pass.Result m ()
+buildOutput expr = case expr of
+    Expr.Assignment {} -> return ()
+    Expr.Tuple _ items -> do itemIDs <- mapM (buildNode True Nothing) items
+                             let numberedItemsIDs = zip [0..] itemIDs
+                             mapM_ (\(no, argID) -> State.connect argID Graph.outputID no) numberedItemsIDs
+    _                  -> do i <- buildNode True Nothing expr
+                             State.connect i Graph.outputID 0
 
 
 buildNode :: GBMonad m => Bool -> Maybe String -> Expr -> Pass.Result m AST.ID
@@ -90,7 +106,7 @@ buildNode astFolded outName expr = case expr of
                                                  j <- buildNode False (Just patStr) dst
                                                  State.addToNodeMap p (j, Port.All)
                                                  return dummyValue
-    Expr.App        i src args -> do srcID       <- buildNode (astFolded || False) Nothing src
+    Expr.App        _ src args -> do srcID       <- buildNode (astFolded || False) Nothing src
                                      (srcNID, _) <- State.gvmNodeMapLookUp srcID
                                      argIDs      <- mapM (buildNode True Nothing) args
                                      let numberedArgIDs = zip [1..] argIDs
@@ -141,13 +157,14 @@ buildPat :: GBMonad m => Pat -> Pass.Result m [AST.ID]
 buildPat p = case p of
     Pat.Var      i _      -> return [i]
     Pat.Lit      i _      -> return [i]
-    Pat.Tuple    i items  -> List.concat <$> mapM buildPat items
+    Pat.Tuple    _ items  -> List.concat <$> mapM buildPat items
     Pat.Con      i _      -> return [i]
-    Pat.App      i _ args -> List.concat <$> mapM buildPat args
-    Pat.Typed    i pat _  -> buildPat pat
+    Pat.App      _ _ args -> List.concat <$> mapM buildPat args
+    Pat.Typed    _ pat _  -> buildPat pat
     Pat.Wildcard i        -> return [i]
 
 
 -- REMOVE ME --
+dummyValue :: Int
 dummyValue = (-1)
 --------------

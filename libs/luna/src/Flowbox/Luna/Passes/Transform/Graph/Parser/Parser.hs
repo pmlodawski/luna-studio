@@ -87,12 +87,12 @@ parseArg nodeID (num, input) = case input of
 
 parseOutputsNode :: GPMonad m => Node.ID -> Pass.Result m ()
 parseOutputsNode nodeID = do
-    return ()
-    --srcs <- State.getNodeSrcs nodeID
-    --let e = case srcs of
-    --            [s] -> s
-    --            _   -> Expr.Tuple IDFixer.unknownID srcs
-    --State.addToBody e
+    --return ()
+    srcs <- State.getNodeSrcs nodeID
+    let e = case srcs of
+                [s] -> s
+                _   -> Expr.Tuple IDFixer.unknownID srcs
+    State.addToBody e
 
 
 parsePatNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
