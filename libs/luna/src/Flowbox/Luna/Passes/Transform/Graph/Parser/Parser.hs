@@ -65,6 +65,7 @@ parseNode inputs (nodeID, node) = do
 
 parseExprNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
 parseExprNode nodeID expr = case expr of
+    "Tuple" -> parseTupleNode nodeID
     '=':pat -> parsePatNode   nodeID pat
     '~':_   -> parseInfixNode nodeID expr
     _       -> do generated <- isGenerated nodeID 
@@ -86,11 +87,12 @@ parseArg nodeID (num, input) = case input of
 
 parseOutputsNode :: GPMonad m => Node.ID -> Pass.Result m ()
 parseOutputsNode nodeID = do
-    srcs <- State.getNodeSrcs nodeID
-    let e = case srcs of
-                [s] -> s
-                _   -> Expr.Tuple IDFixer.unknownID srcs
-    State.addToBody e
+    return ()
+    --srcs <- State.getNodeSrcs nodeID
+    --let e = case srcs of
+    --            [s] -> s
+    --            _   -> Expr.Tuple IDFixer.unknownID srcs
+    --State.addToBody e
 
 
 parsePatNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
@@ -127,6 +129,12 @@ parseAppNode nodeID app = do
         f:t -> do let acc = Expr.Accessor nodeID app f
                       e   = Expr.App      IDFixer.unknownID acc t
                   addExpr nodeID e
+
+parseTupleNode :: GPMonad m => Node.ID -> Pass.Result m ()
+parseTupleNode nodeID = do
+    srcs <- State.getNodeSrcs nodeID
+    let e = Expr.Tuple nodeID srcs
+    addExpr nodeID e
 
 
 addExpr :: GPMonad m => Node.ID -> Expr -> Pass.Result m ()

@@ -78,14 +78,14 @@ addNode astID outPort node isFolded noAssignment = do
     addToNodeMap astID (astID, outPort)
 
 
-connect :: GBStateM m => Node.ID -> Node.ID -> Edge -> m ()
-connect srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
+connectNodes :: GBStateM m => Node.ID -> Node.ID -> Edge -> m ()
+connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
 
 
-connectAST :: GBStateM m => AST.ID -> Node.ID -> InPort -> m ()
-connectAST srcID dstNID dstPort = do
+connect :: GBStateM m => AST.ID -> Node.ID -> InPort -> m ()
+connect srcID dstNID dstPort = do
     (srcNID, srcPort) <- gvmNodeMapLookUp srcID
-    connect srcNID dstNID $ Edge srcPort dstPort
+    connectNodes srcNID dstNID $ Edge srcPort dstPort
 
 
 getGraph :: GBStateM m => m Graph

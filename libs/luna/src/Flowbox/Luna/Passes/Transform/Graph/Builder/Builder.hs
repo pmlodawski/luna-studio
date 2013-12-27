@@ -73,7 +73,7 @@ buildNode astFolded outName expr = case expr of
     Expr.Accessor   i name dst -> do dstID  <- buildNode True Nothing dst
                                      let node = Node.Expr name (genName name i)
                                      State.addNode i Port.All node astFolded noAssignment
-                                     State.connectAST dstID i 0
+                                     State.connect dstID i 0
                                      return i
     Expr.Assignment i pat dst  -> do let patStr = Pat.lunaShow pat
                                      if isRealPat pat
@@ -84,7 +84,7 @@ buildNode astFolded outName expr = case expr of
                                                     [patID] -> State.addToNodeMap patID (i, Port.All)
                                                     _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (i, Port.Num n)) $ zip [0..] patIDs
                                                  dstID <- buildNode True Nothing dst
-                                                 State.connectAST dstID i 0
+                                                 State.connect dstID i 0
                                                  return dummyValue
                                          else do [p] <- buildPat pat
                                                  j <- buildNode False (Just patStr) dst
@@ -94,14 +94,14 @@ buildNode astFolded outName expr = case expr of
                                      (srcNID, _) <- State.gvmNodeMapLookUp srcID
                                      argIDs      <- mapM (buildNode True Nothing) args
                                      let numberedArgIDs = zip [1..] argIDs
-                                     mapM_ (\(no, argID) -> State.connectAST argID srcNID no) numberedArgIDs
+                                     mapM_ (\(no, argID) -> State.connect argID srcNID no) numberedArgIDs
                                      return srcID
     Expr.Infix  i name src dst -> do srcID    <- buildNode True Nothing src
                                      dstID    <- buildNode True Nothing dst
                                      let node = Node.Expr name (genName name i)
                                      State.addNode i Port.All node astFolded noAssignment
-                                     State.connectAST srcID i 0
-                                     State.connectAST dstID i 1
+                                     State.connect srcID i 0
+                                     State.connect dstID i 1
                                      return i
     Expr.Var        i name     -> if astFolded
                                      then return i
@@ -115,7 +115,12 @@ buildNode astFolded outName expr = case expr of
                                          node = Node.Expr litStr (genName litStr i)
                                      State.addNode i Port.All node astFolded noAssignment
                                      return i
-    Expr.Tuple      i items    -> do return i
+    Expr.Tuple      i items    -> do let node = Node.Expr "Tuple" (genName "tuple" i)
+                                     State.addNode i Port.All node astFolded noAssignment
+                                     itemIDs <- mapM (buildNode True Nothing) items
+                                     let numberedItemsIDs = zip [0..] itemIDs
+                                     mapM_ (\(no, argID) -> State.connect argID i no) numberedItemsIDs
+                                     return i
     where
         genName base num = case outName of
             Nothing   -> base ++ "Result" ++ (show num)
