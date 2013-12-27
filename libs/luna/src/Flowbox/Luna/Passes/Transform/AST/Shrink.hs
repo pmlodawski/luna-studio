@@ -18,7 +18,7 @@ import           Flowbox.Prelude
 
 
 shrinkFunctionBodies :: (Applicative m, Monad m) => Focus -> m Focus
-shrinkFunctionBodies = Focus.traverseM pure shrinkExpr pure pure pure
+shrinkFunctionBodies = Focus.traverseM pure shrinkExpr
 
 
 shrinkExpr :: (Applicative m, Monad m) => Expr -> m Expr

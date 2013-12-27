@@ -32,15 +32,15 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 
 
-traverseM :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Focus -> m Focus
-traverseM fmod fexp ftype fpat flit focus = case focus of
-    FunctionFocus f -> FunctionFocus <$> Expr.traverseM fexp ftype fpat flit f
-    ClassFocus    c -> ClassFocus    <$> Expr.traverseM fexp ftype fpat flit c
-    ModuleFocus   m -> ModuleFocus   <$> Module.traverseM fmod fexp ftype fpat flit m
+traverseM :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> Focus -> m Focus
+traverseM fmod fexp focus = case focus of
+    FunctionFocus f -> FunctionFocus <$> fexp f
+    ClassFocus    c -> ClassFocus    <$> fexp c
+    ModuleFocus   m -> ModuleFocus   <$> fmod m
 
 
-traverseM_ :: Traversal m => (Module -> m r) -> (Expr -> m r) -> (Type -> m r) -> (Pat -> m r) -> (Lit -> m r) -> Focus -> m ()
-traverseM_ fmod fexp ftype fpat flit focus = case focus of
-    FunctionFocus f -> Expr.traverseM_ fexp ftype fpat flit f
-    ClassFocus    c -> Expr.traverseM_ fexp ftype fpat flit c
-    ModuleFocus   m -> Module.traverseM_ fmod fexp ftype fpat flit m
+traverseM_ :: Traversal m => (Module -> m r) -> (Expr -> m r) -> Focus -> m r
+traverseM_ fmod fexp focus = case focus of
+    FunctionFocus f -> fexp f
+    ClassFocus    c -> fexp c
+    ModuleFocus   m -> fmod m

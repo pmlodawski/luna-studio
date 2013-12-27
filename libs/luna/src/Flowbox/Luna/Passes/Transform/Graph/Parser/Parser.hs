@@ -77,14 +77,13 @@ parseExprNode nodeID expr = case expr of
 
 
 parseInputsNode :: GPMonad m => Node.ID -> [Expr] -> Pass.Result m ()
-parseInputsNode nodeID inputs = do
-    mapM_ (parseArg nodeID) $ zip [0..] inputs
+parseInputsNode nodeID = mapM_ (parseArg nodeID) . zip [0..]
 
 
 parseArg :: State.GPStateM m => Node.ID  -> (Int, Expr) -> m ()
 parseArg nodeID (num, input) = case input of
     Expr.Arg _ (Pat.Var _ name) _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
-    _ -> fail "parseArg: Wrong Arg type"
+    _                             -> fail "parseArg: Wrong Arg type"
 
 
 parseOutputsNode :: GPMonad m => Node.ID -> Pass.Result m ()
@@ -93,7 +92,6 @@ parseOutputsNode nodeID = do
     let e = case srcs of
                 [s] -> s
                 _   -> Expr.Tuple IDFixer.unknownID srcs
-    logger debug $ show e
     State.setOutput e
 
 

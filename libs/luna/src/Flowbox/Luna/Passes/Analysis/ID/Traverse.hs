@@ -25,7 +25,7 @@ import           Flowbox.Prelude                    hiding (mapM, mapM_, op)
 
 
 traverseFocus :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Focus -> m ()
-traverseFocus op f = Focus.traverseM_ (traverseModule op) (traverseExpr op) (traverseType op) (traversePat op) (traverseLit op) f
+traverseFocus op f = Focus.traverseM_ (traverseModule op) (traverseExpr op) f
 
 
 traverseModule :: (Applicative m, Monad m) => (AST.ID -> m ()) -> Module -> m ()
