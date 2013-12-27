@@ -11,26 +11,27 @@ module Flowbox.Luna.Passes.Transform.Graph.Parser.Parser where
 
 import Control.Monad.State
 
-import           Flowbox.Luna.Data.AST.Expr                         (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr                         as Expr
-import qualified Flowbox.Luna.Data.AST.Pat                          as Pat
-import qualified Flowbox.Luna.Data.Attributes                       as Attributes
-import           Flowbox.Luna.Data.Graph.Graph                      (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                      as Graph
-import           Flowbox.Luna.Data.Graph.Node                       (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                       as Node
-import qualified Flowbox.Luna.Data.Graph.Port                       as Port
-import           Flowbox.Luna.Data.PropertyMap                      (PropertyMap)
-import qualified Flowbox.Luna.Data.PropertyMap                      as PropertyMap
-import           Flowbox.Luna.Passes.Pass                           (PassMonad)
-import qualified Flowbox.Luna.Passes.Pass                           as Pass
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
-import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes     as Attributes
-import           Flowbox.Luna.Passes.Transform.Graph.Parser.State   (GPState)
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.State   as State
-import           Flowbox.Prelude                                    hiding (error, folded, mapM, mapM_)
+import           Flowbox.Luna.Data.AST.Expr                            (Expr)
+import qualified Flowbox.Luna.Data.AST.Expr                            as Expr
+import qualified Flowbox.Luna.Data.AST.Pat                             as Pat
+import qualified Flowbox.Luna.Data.Attributes                          as Attributes
+import           Flowbox.Luna.Data.Graph.Graph                         (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph                         as Graph
+import           Flowbox.Luna.Data.Graph.Node                          (Node)
+import qualified Flowbox.Luna.Data.Graph.Node                          as Node
+import qualified Flowbox.Luna.Data.Graph.Port                          as Port
+import           Flowbox.Luna.Data.PropertyMap                         (PropertyMap)
+import qualified Flowbox.Luna.Data.PropertyMap                         as PropertyMap
+import           Flowbox.Luna.Passes.Pass                              (PassMonad)
+import qualified Flowbox.Luna.Passes.Pass                              as Pass
+import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.State       as IDFixer
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser    as Parser
+import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes        as Attributes
+import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaults
+import           Flowbox.Luna.Passes.Transform.Graph.Parser.State      (GPState)
+import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.State      as State
+import           Flowbox.Prelude                                       hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.State as IDFixer
 
 
 
@@ -66,7 +67,10 @@ parseExprNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
 parseExprNode nodeID expr = case expr of
     '=':pat -> parsePatNode   nodeID pat
     '~':_   -> parseInfixNode nodeID expr
-    _       -> parseAppNode   nodeID expr
+    _       -> do generated <- isGenerated nodeID 
+                  if generated
+                     then fail "GraphParser: Not implemented for generated nodes" --parseAppNode IDFixer.unknownID expr
+                     else parseAppNode nodeID expr
 
 
 parseInputsNode :: GPMonad m => Node.ID -> [Expr] -> Pass.Result m ()
@@ -140,3 +144,7 @@ isFolded nodeID = do
     case PropertyMap.get nodeID Attributes.luna Attributes.astFolded pm of
         Just "True" -> return True
         _           -> return False
+
+
+isGenerated :: GPMonad m => Node.ID -> Pass.Result m Bool
+isGenerated nodeID = Defaults.isGenerated nodeID <$> State.getPropertyMap

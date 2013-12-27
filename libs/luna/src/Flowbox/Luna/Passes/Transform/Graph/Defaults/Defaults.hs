@@ -8,6 +8,7 @@
 module Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults (
     addDefaults,
     removeDefaults,
+    isGenerated,
 ) where
 
 import qualified Data.Map as Map
