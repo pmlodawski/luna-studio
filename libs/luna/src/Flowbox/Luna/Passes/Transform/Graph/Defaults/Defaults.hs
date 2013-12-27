@@ -53,13 +53,13 @@ addNodeDefaults nodeID gp@(_, propertyMap) =
         defaults = Map.toList $ DefaultsMap.getDefaultsMap nodeID propertyMap
 
 
-addNodeDefault :: Node.ID -> (InPort, Value) -> (Graph, PropertyMap) -> (Graph, PropertyMap)
-addNodeDefault nodeID (adstPort, defaultValue) (graph, propertyMap) =
+addNodeDefault :: Node.ID -> (InPort, (Node.ID, Value)) -> (Graph, PropertyMap) -> (Graph, PropertyMap)
+addNodeDefault nodeID (adstPort, (defaultNodeID, defaultValue)) (graph, propertyMap) =
     if Graph.isNotAlreadyConnected graph nodeID adstPort
         then (newGraph2, newPropertyMap)
         else (graph, propertyMap)
     where
-      (newGraph, defaultNodeID) = Graph.insNewNode (Node.Expr defaultValue defaultValue) graph
+      newGraph = Graph.insNode (defaultNodeID, Node.Expr defaultValue defaultValue) graph
       newGraph2 = Graph.connect defaultNodeID nodeID (Edge Port.All adstPort) newGraph
       newPropertyMap = PropertyMap.insert defaultNodeID generatedProperties propertyMap
 

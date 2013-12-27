@@ -158,7 +158,7 @@ astModuleFocusOp :: Breadcrumbs
 astModuleFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
     (m, r) <- case focus of
         Focus.ModuleFocus m -> operation batch m
-        _                    -> fail "Target is not a module"
+        _                   -> fail "Target is not a module"
     return (Focus.ModuleFocus m, r))
 
 
@@ -204,20 +204,20 @@ graphOp bc libID projectID operation = astOp libID projectID (\batch ast propert
     maxID <- MaxID.run ast
 
     (graph, pm) <- GraphBuilder.run va propertyMap expr
-    let (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graph pm
+    let (graph', pm') = Defaults.removeDefaults graph pm
 
-    ((newGraphWithDefaults, newPMWithDefaults), r) <- liftIO $ operation batch graphWithDefaults pmWithDefaults maxID
-    let (newGraph, newPM) = Defaults.removeDefaults newGraphWithDefaults newPMWithDefaults
+    ((newGraph, newPM), r) <- liftIO $ operation batch graph' pm' maxID
+    let (newGraphWithDefaults, newPMWithDefaults) = Defaults.addDefaults newGraph newPM
 
-    ast' <- GraphParser.run newGraph newPM expr
+    ast' <- GraphParser.run newGraphWithDefaults newPMWithDefaults expr
 
-    loggerIO warning $ show graphWithDefaults
-    loggerIO info $ ppShow expr
-    loggerIO warning $ show newGraph
-    loggerIO info $ ppShow ast'
+    loggerIO debug $ show newGraph
+    loggerIO debug $ show newGraphWithDefaults
+    loggerIO debug $ ppShow newPMWithDefaults
+    loggerIO debug $ ppShow ast'
 
     newAst <- Zipper.modify (\_ -> Focus.FunctionFocus ast') zipper >>= Zipper.close
-    return ((newAst, newPM), r))
+    return ((newAst, newPMWithDefaults), r))
 
 
 readonlyNodeOp :: Node.ID

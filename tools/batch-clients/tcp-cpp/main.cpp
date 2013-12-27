@@ -389,6 +389,23 @@ int main()
 			node.set_outputname("addResult"); 
 			nodeAdd = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
 		}
+		graph::Node nodePrint;
+		{
+			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			graph::Node node;
+			node.set_cls(graph::Node::Expr);
+			node.set_expr("print"); 
+			node.set_outputname("console"); 
+			nodePrint = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
+		}
+		{
+			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			macro::NodeDefault::SetNodeDefault(socket, 1, "477", nodePrint.id(), bc_Main_test, library.id(), project.id());
+		}
+		{
+			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			macro::NodeDefault::SetNodeDefault(socket, 0, "Console", nodePrint.id(), bc_Main_test, library.id(), project.id());
+		}
 		macro::Maintenance::Dump(socket);
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});

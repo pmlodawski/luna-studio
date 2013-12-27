@@ -21,7 +21,8 @@ import           Flowbox.Luna.Data.Graph.Port                     (InPort)
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Nodedefault.DefaultsMap          as Gen
-import qualified Generated.Proto.Nodedefault.DefaultsMap.KeyValue as Gen
+import qualified Generated.Proto.Nodedefault.DefaultsMap.Entry as Gen
+import qualified Flowbox.Luna.Data.Graph.Node          as Node
 
 
 
@@ -30,10 +31,11 @@ instance Convert DefaultsMap Gen.DefaultsMap where
     decode (Gen.DefaultsMap items) = Map.fromList <$> decodeList items
 
 
-instance Convert (InPort, Value) Gen.KeyValue where
-    encode (inPort, value) = Gen.KeyValue (encodePJ inPort) (encodePJ value)
-    decode (Gen.KeyValue minPort mvalue) = do
-        inPort <- minPort<?> "Failed to decode Properties: 'inPort' field is missing"
-        value  <- mvalue <?> "Failed to decode Properties: 'value' field is missing"
-        return (decodeP inPort, decodeP value)
+instance Convert (InPort, (Node.ID, Value)) Gen.Entry where
+    encode (inPort, (nodeID, value)) = Gen.Entry (encodePJ inPort) (encodePJ nodeID) (encodePJ value)
+    decode (Gen.Entry minPort mnodeID mvalue) = do
+        inPort <- minPort <?> "Failed to decode DefaultsMap.Entry: 'inPort' field is missing"
+        nodeID <- mnodeID <?> "Failed to decode DefaultsMap.Entry: 'nodeID' field is missing"
+        value  <- mvalue  <?> "Failed to decode DefaultsMap.Entry: 'value' field is missing"
+        return (decodeP inPort, (decodeP nodeID, decodeP value))
 

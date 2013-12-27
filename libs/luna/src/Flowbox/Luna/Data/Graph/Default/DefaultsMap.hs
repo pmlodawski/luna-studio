@@ -20,7 +20,7 @@ import           Flowbox.Prelude
 
 
 
-type DefaultsMap = Map InPort Value
+type DefaultsMap = Map InPort (Node.ID, Value)
 
 
 defaultsMapKey :: String
@@ -38,9 +38,9 @@ setDefaultsMap defaults nodeID =
     PropertyMap.set nodeID Attributes.luna defaultsMapKey (show defaults)
 
 
-addDefault :: InPort -> Value -> Node.ID -> PropertyMap -> PropertyMap
-addDefault dstPort value nodeID propertyMap = newPropertyMap where
-     newDefaults    = Map.insert dstPort value $ getDefaultsMap nodeID propertyMap
+addDefault :: InPort -> (Node.ID, Value) -> Node.ID -> PropertyMap -> PropertyMap
+addDefault dstPort default_ nodeID propertyMap = newPropertyMap where
+     newDefaults    = Map.insert dstPort default_ $ getDefaultsMap nodeID propertyMap
      newPropertyMap = setDefaultsMap newDefaults nodeID propertyMap
 
 

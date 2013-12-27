@@ -10,10 +10,11 @@ package generated.proto.nodedefault;
 
 
 message DefaultsMap {
-    message KeyValue {
-        optional int32  key = 1;
-        optional string value = 2;
+    message Entry {
+        optional int32  key    = 1;
+        optional int32  nodeID = 2;
+        optional string value  = 3;
     }
 
-    repeated KeyValue map = 1;
+    repeated Entry map = 1;
 }

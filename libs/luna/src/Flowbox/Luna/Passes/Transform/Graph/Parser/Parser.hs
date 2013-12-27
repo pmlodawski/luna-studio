@@ -70,10 +70,7 @@ parseExprNode nodeID expr = case expr of
     "Tuple" -> parseTupleNode nodeID
     '=':pat -> parsePatNode   nodeID pat
     '~':_   -> parseInfixNode nodeID expr
-    _       -> do generated <- isGenerated nodeID 
-                  if generated
-                     then fail "GraphParser: Not implemented for generated nodes" --parseAppNode IDFixer.unknownID expr
-                     else parseAppNode nodeID expr
+    _       -> parseAppNode nodeID expr
 
 
 parseInputsNode :: GPMonad m => Node.ID -> [Expr] -> Pass.Result m ()
@@ -140,9 +137,10 @@ parseTupleNode nodeID = do
 addExpr :: GPMonad m => Node.ID -> Expr -> Pass.Result m ()
 addExpr nodeID e = do
     gr <- State.getGraph
-    folded        <- hasFlag nodeID Attributes.astFolded
-    noAssignement <- hasFlag nodeID Attributes.astNoAssignment
-    if folded
+    folded         <- hasFlag nodeID Attributes.astFolded
+    noAssignement  <- hasFlag nodeID Attributes.astNoAssignment
+    defaultNodeGen <- hasFlag nodeID Attributes.defaultNodeGenerated
+    if folded || defaultNodeGen
         then State.addToNodeMap (nodeID, Port.All) e
         else if noAssignement && (Graph.outdeg gr nodeID == 0)
             then do State.addToBody e

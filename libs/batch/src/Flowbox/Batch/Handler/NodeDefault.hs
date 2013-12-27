@@ -32,8 +32,8 @@ nodeDefaults nodeID bc libID projectID  = readonly . graphOp bc libID projectID 
 
 setNodeDefault :: InPort -> Value
                -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-setNodeDefault dstPort value nodeID bc libID projectID = noresult . graphOp bc libID projectID (\_ graph propertyMap _ ->
-    return ((graph, DefaultsMap.addDefault dstPort value nodeID propertyMap), ()))
+setNodeDefault dstPort value nodeID bc libID projectID = noresult . graphOp bc libID projectID (\_ graph propertyMap maxID ->
+    return ((graph, DefaultsMap.addDefault dstPort (maxID, value) nodeID propertyMap), ()))
 
 
 removeNodeDefault :: InPort
