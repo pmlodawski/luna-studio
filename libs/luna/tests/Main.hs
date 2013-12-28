@@ -104,7 +104,10 @@ example = Source.Source ["Main"]
 
                   , "class Vector a:"
                   , "    x,y,z :: a"
-                  , "    def test self x: x+x"
+                  , "    def test self x: 5"
+
+                  , "def main self:"
+                  , "    5"
                   --, "def Vector.vtest self a b:"
                   --, "    {a,b}"
                   --, "def test self a b:"

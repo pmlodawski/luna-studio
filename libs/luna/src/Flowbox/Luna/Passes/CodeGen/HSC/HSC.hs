@@ -106,19 +106,22 @@ genExpr e = case e of
     HExpr.TupleP   items                  -> "(" ++ sepjoin (fexpMap items) ++ ")"
     HExpr.ConE     qname                  -> join "." qname
     HExpr.ConT     name                   -> name
-    HExpr.AppT     src dst                -> "(" ++ genExpr src ++ " (" ++ genExpr dst ++ ")" ++ ")" -- for literals, e.g. Pure (1 :: Int)
-    HExpr.AppE     src dst                -> "(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
+    HExpr.AppT     src dst                -> appJoin (genExpr src) (genExpr dst) --"(" ++ genExpr src ++ " (" ++ genExpr dst ++ ")" ++ ")" -- for literals, e.g. Pure (1 :: Int)
+    HExpr.AppE     src dst                -> appJoin (genExpr src) (genExpr dst) --"(" ++ genExpr src ++ " " ++ genExpr dst ++ ")"
     HExpr.Native   code                   -> code
     HExpr.ListE    items                  -> "[" ++ sepjoin (fexpMap items) ++ "]"
     HExpr.Bang     expr                   -> "--->>>   " ++ genExpr expr
+    HExpr.THE      expr                   -> "$(" ++ genExpr expr ++ ")"
     where sepjoin = join ", "
           fexpMap = map genExpr
+          appJoin l r = l ++ " " ++ (if ' ' `elem` r then "(" ++ r ++ ")" else r)
     --HExpr.NewtypeD 
 
 
 genLit :: HLit.Lit -> String
 genLit lit = case lit of
     HLit.Integer val -> val
+    HLit.Int     val -> val
     HLit.Float   val -> val
     HLit.String  val -> "\"" ++ val   ++ "\""
     HLit.Char    val -> "'"  ++ [val] ++ "'"

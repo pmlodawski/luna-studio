@@ -22,7 +22,7 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.Monoid            (Monoid, mappend, mempty)
 import qualified Data.Traversable       as Traversable
 import           Data.Typeable
-import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn, (++))
+import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude                as Prelude
 
 (++) :: Monoid a => a -> a -> a
@@ -48,6 +48,10 @@ instance (Typeable a, Typeable b) => Show (a -> b) where
 -- f .: g = (f .) . g
 -- (.:) f = ((f .) .)
 -- (.:) = (.) (.) (.)
+infixr 9 .
+(.) :: (Functor f) => (a -> b) -> f a -> f b
+(.) = fmap
+
 (.:)  :: (x -> y) -> (a -> b -> x) -> (a -> b -> y)
 (.:)   = (.) . (.)
 
