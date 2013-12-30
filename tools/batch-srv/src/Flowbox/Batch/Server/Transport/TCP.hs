@@ -15,6 +15,7 @@ import           Data.ByteString.Lazy             (ByteString)
 import qualified Data.ByteString.Lazy             as ByteString
 import           Data.Int                         (Int64)
 import qualified Network.Socket                   as Socket
+import  Network.Socket                    (Socket)
 import qualified Network.Socket.ByteString        as SByteString
 import qualified Network.Socket.ByteString.Lazy   as SLByteString
 import qualified Text.ProtocolBuffers.WireMessage as WireMessage
@@ -39,46 +40,53 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.TCP"
 
 serve :: Handler h => Cmd -> h -> IO ()
 serve cmd handler = Socket.withSocketsDo $ do
-    let address = Cmd.address cmd
-        port    = Cmd.port cmd
-        tcp = 6
+    let address     = Cmd.address cmd
+        controlPort = Cmd.port cmd
+        notifyPort  = controlPort + 1
         maxConnections = 1
 
-    socket  <- Socket.socket Socket.AF_INET Socket.Stream tcp
+    controlSocket <- openSocket address controlPort maxConnections
+
+    if Cmd.shutdownWithClient cmd
+        then acceptAndHandle controlSocket handler
+        else forever $ Exception.handle
+            (\(e :: Exception.SomeException) -> loggerIO critical $ "Connection to client lost: " ++ show e)
+            (acceptAndHandle controlSocket handler)
+
+
+openSocket :: String -> Int -> Int -> IO Socket
+openSocket address port maxConnections = do
+    let tcp = 6
+    socket <- Socket.socket Socket.AF_INET Socket.Stream tcp
     Socket.setSocketOption socket Socket.ReuseAddr 1
     (Socket.AddrInfo _ _ _ _ sockAddr _):_ <- Socket.getAddrInfo Nothing (Just address) (Just $ show port)
     --serverAddress <- Socket.inet_addr "127.0.0.1"
     --let sockAddr = Socket.SockAddrInet (Socket.PortNum 30521) serverAddress --Socket.iNADDR_ANY
     Socket.bind socket sockAddr -- TODO [PM] pretty code doesn't work ;/
     Socket.listen socket maxConnections
-
-    if Cmd.shutdownWithClient cmd
-        then acceptAndHandle socket handler
-        else forever $ Exception.handle
-            (\(e :: Exception.SomeException) -> loggerIO critical $ "Connection to client lost: " ++ show e)
-            (acceptAndHandle socket handler)
+    return socket
 
 
 acceptAndHandle :: Handler h => Socket.Socket -> h -> IO ()
-acceptAndHandle socket handler = do
-    (client, clientSockAddr) <- Socket.accept socket
+acceptAndHandle controlSocket handler = do
+    (client, clientSockAddr) <- Socket.accept controlSocket
     loggerIO info $ "Accepted connection from " ++ (show clientSockAddr)
     forever $ handleCall client handler
 
 
-handleCall :: (Handler handler) => Socket.Socket -> handler -> IO ()
-handleCall socket handler = do
+handleCall :: Handler h => Socket.Socket -> h -> IO ()
+handleCall controlSocket handler = do
     loggerIO debug "handleCall: started"
-    encoded_request  <- readData socket
+    encoded_request  <- readData controlSocket
     encoded_response <- Processor.process handler encoded_request
     loggerIO debug "handleCall: processing done"
-    SByteString.sendAll socket $ ByteString.toStrict encoded_response
+    SByteString.sendAll controlSocket $ ByteString.toStrict encoded_response
     loggerIO debug "handleCall: reply sent"
 
 
 readData :: Socket.Socket -> IO ByteString
-readData socket = do
-    header <- SLByteString.recv socket 1024
+readData controlSocket = do
+    header <- SLByteString.recv controlSocket 1024
     (size, _) <- case WireMessage.runGetOnLazy WireMessage.getVarInt header of
                     Left   m     -> fail m
                     Right (s, r) -> return (s, r)
@@ -89,7 +97,7 @@ readData socket = do
     where
         readRest :: ByteString -> Int64 -> IO ByteString
         readRest begin l = do
-            n <- SLByteString.recv socket l
+            n <- SLByteString.recv controlSocket l
             let stillToRead = l - ByteString.length n
                 d = ByteString.append begin n
             if stillToRead == 0

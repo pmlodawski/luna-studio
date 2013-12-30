@@ -44,7 +44,7 @@ defaultPort = 30521
 parser :: Parser Cmd
 parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Serve
-           <$> strOption ( long "addres"  <> short 'a' <> value defaultAddress <> metavar "address" <> help "Server address"       )
+           <$> strOption ( long "address" <> short 'a' <> value defaultAddress <> metavar "address" <> help "Server address"       )
            <*> option    ( long "port"    <> short 'p' <> (value defaultPort)  <> metavar "port"    <> help "Server port"          )
            <*> optIntFlag (Just "verbose") 'v' 2 3          "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"          <> help "Disable color output" )
