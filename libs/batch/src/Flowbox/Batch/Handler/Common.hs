@@ -5,28 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Handler.Common (
-    readonly,
-    noresult,
-
-    projectOp,
-    libManagerOp,
-    libraryOp,
-
-    astOp,
-    astFocusOp,
-    astClassFocusOp,
-    astModuleFocusOp,
-    astFunctionFocusOp,
-    graphOp,
-    readonlyNodeOp,
-) where
+module Flowbox.Batch.Handler.Common where
 
 import Control.Monad.RWS
 import Text.Show.Pretty
 
 import           Flowbox.Batch.Batch                                   (Batch)
 import qualified Flowbox.Batch.Batch                                   as Batch
+import           Flowbox.Batch.Process.Map                             (ProcessMap)
 import           Flowbox.Batch.Project.Project                         (Project)
 import qualified Flowbox.Batch.Project.Project                         as Project
 import           Flowbox.Batch.Project.ProjectManager                  (ProjectManager)
@@ -95,13 +81,25 @@ projectOp projectID operation = projectManagerOp (\batch aprojectManager -> do
     return (newProjectManager, r))
 
 
+processMapOp :: (Applicative m, Monad m)
+             => Project.ID
+             -> (Batch -> ProcessMap -> m (ProcessMap, r))
+             -> Batch
+             -> m (Batch, r)
+processMapOp projectID operation = projectOp projectID (\batch project -> do
+    let processMap = Project.processMap $ project
+    (newProcessMap, r) <- operation batch processMap
+    let newProject = project { Project.processMap = newProcessMap }
+    return (newProject, r))
+
+
 libManagerOp :: (Applicative m, Monad m)
              => Project.ID
              -> (Batch -> LibManager -> m (LibManager, r))
              -> Batch
              -> m (Batch, r)
 libManagerOp projectID operation = projectOp projectID (\batch project -> do
-    let libManager = Project.libs project
+    let libManager = Project.libs $ project
     (newLibManager, r) <- operation batch libManager
     let newProject = project { Project.libs = newLibManager }
     return (newProject, r))

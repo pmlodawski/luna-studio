@@ -8,14 +8,9 @@
 
 module Flowbox.Luna.Data.AST.Zipper.Focus where
 
-import           Flowbox.Luna.Data.AST.Expr   (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr   as Expr
-import           Flowbox.Luna.Data.AST.Lit    (Lit)
-import           Flowbox.Luna.Data.AST.Module (Module)
-import qualified Flowbox.Luna.Data.AST.Module as Module
-import           Flowbox.Luna.Data.AST.Pat    (Pat)
-import           Flowbox.Luna.Data.AST.Type   (Type)
-import           Flowbox.Prelude              hiding (Traversal, focus)
+import Flowbox.Luna.Data.AST.Expr   (Expr)
+import Flowbox.Luna.Data.AST.Module (Module)
+import Flowbox.Prelude              hiding (Traversal, focus)
 
 
 

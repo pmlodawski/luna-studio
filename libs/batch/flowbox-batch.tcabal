@@ -12,33 +12,34 @@ Flag Debug
 
 
 Library
-    Hs-Source-Dirs: dist/gen,
-                    src
-    Other-Modules:  Paths_flowbox_batch
+  Hs-Source-Dirs: dist/gen,
+                  src
+  Other-Modules:  Paths_flowbox_batch
 
-    GHC-Options:    -Wall -O2
+  GHC-Options:    -Wall -O2
 
-    Extensions:     FlexibleInstances,
-                    NoImplicitPrelude,
-                    TypeSynonymInstances
- 
-    Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
-                     `findmodules('src', '.*\.hs', exclude='(.*Flowbox/Batch/Main\.hs)')`
-                     
-    Build-Depends:  base,
-                    bytestring,
-                    containers,
-                    directory,
-                    flowbox-config,
-                    flowbox-initializer,
-                    flowbox-luna,
-                    flowbox-utils,
-                    mtl,
-                    network,
-                    parsec,
-                    pretty-show,
-                    process,
-                    protocol-buffers,
-                    protocol-buffers-descriptor,
-                    text,
-                    timeit
+  Extensions:     FlexibleInstances,
+                  NoImplicitPrelude,
+                  TypeSynonymInstances
+
+  Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
+                   `findmodules('src', '.*\.hs', exclude='(.*Flowbox/Batch/Main\.hs)')`
+                   
+  Build-Depends:  base,
+                  bytestring,
+                  containers,
+                  directory,
+                  flowbox-config,
+                  flowbox-initializer,
+                  flowbox-luna,
+                  flowbox-utils,
+                  lens,
+                  mtl,
+                  network,
+                  parsec,
+                  pretty-show,
+                  process,
+                  protocol-buffers,
+                  protocol-buffers-descriptor,
+                  text,
+                  timeit

@@ -47,7 +47,7 @@ run gvm pm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make gvm pm) . expr2g
 
 expr2graph :: GBMonad m => Expr -> Pass.Result m (Graph, PropertyMap)
 expr2graph expr = case expr of
-    Expr.Function _ _ _ inputs _ []   -> do finalize
+    Expr.Function _ _ _ _      _ []   -> do finalize
     Expr.Function _ _ _ inputs _ body -> do parseArgs inputs
                                             mapM_ (buildNode False Nothing) $ init body
                                             buildOutput $ last body

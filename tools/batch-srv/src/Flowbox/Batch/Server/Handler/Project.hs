@@ -20,6 +20,7 @@ import qualified Data.IORef                                               as IOR
 import qualified Data.Sequence                                            as Sequence
 import           Flowbox.Batch.Batch                                      (Batch)
 import qualified Flowbox.Batch.Handler.Project                            as BatchP
+import qualified Flowbox.Batch.Process.Map                                as ProcessMap
 import           Flowbox.Batch.Project.Project                            (Project)
 import qualified Flowbox.Batch.Project.Project                            as Project
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project   ()
@@ -56,7 +57,7 @@ projects batchHandler _ = do
     loggerIO info "called projects"
     batch <- IORef.readIORef batchHandler
     let aprojects       = BatchP.projects batch
-        tprojects       = map (fst . encode) aprojects
+        tprojects       = map (\a -> encode a ^. _1) aprojects
         tprojectsVector = Sequence.fromList tprojects
     return $ Projects.Result tprojectsVector
 
@@ -68,7 +69,7 @@ projectByID batchHandler (ProjectByID.Args tprojectID) = do
     loggerIO debug $ "projectID: " ++ (show projectID)
     batch     <- IORef.readIORef batchHandler
     project   <- BatchP.projectByID projectID batch
-    return $ ProjectByID.Result $ fst $ encode (projectID, project)
+    return $ ProjectByID.Result $ encode (projectID, project) ^. _1
 
 
 createProject :: IORef Batch -> CreateProject.Args -> IO CreateProject.Result
@@ -81,7 +82,7 @@ createProject batchHandler (CreateProject.Args tname tpath tattributes) = do
     loggerIO debug $ "name: " ++ (show name) ++ " path: " ++ (show path) ++ " attributes: " ++ (show attributes)
     let (newBatch, newProject) = BatchP.createProject name path attributes batch
     IORef.writeIORef batchHandler newBatch
-    return $ CreateProject.Result $ fst $ encode newProject
+    return $ CreateProject.Result $ encode newProject ^. _1
 
 
 openProject :: IORef Batch -> OpenProject.Args -> IO OpenProject.Result
@@ -92,13 +93,13 @@ openProject batchHandler (OpenProject.Args tpath) = do
     loggerIO debug $ "path: " ++ (show upath)
     (newBatch, (projectID, aproject)) <- BatchP.openProject upath batch
     IORef.writeIORef batchHandler newBatch
-    return $ OpenProject.Result $ fst $ encode (projectID, aproject)
+    return $ OpenProject.Result $ encode (projectID, aproject) ^. _1
 
 
 updateProject :: IORef Batch -> UpdateProject.Args -> IO UpdateProject.Result
 updateProject batchHandler  (UpdateProject.Args tproject) = do
     loggerIO info "called updateProject"
-    project <- (decode (tproject, LibManager.empty) :: IO (Project.ID, Project))
+    project <- (decode (tproject, LibManager.empty, ProcessMap.empty) :: IO (Project.ID, Project))
     batch   <- IORef.readIORef batchHandler
     loggerIO debug $ "project: " ++ (show project)
     newBatch <-  BatchP.updateProject project batch
