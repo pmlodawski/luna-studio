@@ -163,7 +163,7 @@ template <typename TMessage>
 void setField(TMessage *msg, int i, std::vector<int> value)
 {
 	for(int index = 0 ; index < value.size() ; ++index)
-		msg->GetReflection()->SetRepeatedInt32(msg, TMessage::descriptor()->field(i), index, value[index]);
+		msg->GetReflection()->AddInt32(msg, TMessage::descriptor()->field(i), value[index]);
 }
 
 template <typename TMessage, typename SomeMessageType>
