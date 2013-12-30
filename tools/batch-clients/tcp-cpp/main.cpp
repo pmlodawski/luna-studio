@@ -144,7 +144,7 @@ generated::proto::crumb::Breadcrumbs *buildBreadcrumbs(const BreadcrumbsHelper &
 template <typename TMessage>
 void setField(TMessage *msg, int i, int value)
 {
-	 msg->GetReflection()->SetInt32(msg, TMessage::descriptor()->field(i), value);
+	msg->GetReflection()->SetInt32(msg, TMessage::descriptor()->field(i), value);
 }
 
 template <typename TMessage>
@@ -157,6 +157,13 @@ template <typename TMessage>
 void setField(TMessage *msg, int i, std::string value)
 {
 	 msg->GetReflection()->SetString(msg, TMessage::descriptor()->field(i), value);
+}
+
+template <typename TMessage>
+void setField(TMessage *msg, int i, std::vector<int> value)
+{
+	for(int index = 0 ; index < value.size() ; ++index)
+		msg->GetReflection()->SetRepeatedInt32(msg, TMessage::descriptor()->field(i), index, value[index]);
 }
 
 template <typename TMessage, typename SomeMessageType>
@@ -175,6 +182,7 @@ void setField(TMessage *msg, int i, SomeMessageType value)
 	auto messageField = msg->GetReflection()->MutableMessage(msg, TMessage::descriptor()->field(i));
 	messageField->GetReflection()->Swap(messageField, &value);
 }
+
 /*
 template <typename TMessage, typename TField>
 void setField(TMessage *msg, int, const TField &)
@@ -400,51 +408,24 @@ int main()
 		}
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-			macro::NodeDefault::SetNodeDefault(socket, 1, "477", nodePrint.id(), bc_Main_test, library.id(), project.id());
+			macro::NodeDefault::SetNodeDefault(socket, std::vector<int>{1}, "477", nodePrint.id(), bc_Main_test, library.id(), project.id());
 		}
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-			macro::NodeDefault::SetNodeDefault(socket, 0, "Console", nodePrint.id(), bc_Main_test, library.id(), project.id());
+			macro::NodeDefault::SetNodeDefault(socket, std::vector<int>{0}, "Console", nodePrint.id(), bc_Main_test, library.id(), project.id());
 		}
 		macro::Maintenance::Dump(socket);
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-
-			auto args = new Graph_Connect_Args;
-			args->set_srcnodeid(node90.id());
-			args->set_dstnodeid(nodeAdd.id());
-			args->set_dstport(0);
-			args->set_allocated_bc(bc_Main_test);
-			args->set_libraryid(library.id());
-			args->set_projectid(project.id());
-
-			macro::Graph::Connect_(socket, args);
+			macro::Graph::Connect(socket, node90.id(), std::vector<int>{}, nodeAdd.id(), std::vector<int>{0}, bc_Main_test, library.id(), project.id());
 		}
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-
-			auto args = new Graph_Connect_Args;
-			args->set_srcnodeid(nodeAdd.id());
-			args->set_dstnodeid(1);
-			args->set_dstport(0);
-			args->set_allocated_bc(bc_Main_test);
-			args->set_libraryid(library.id());
-			args->set_projectid(project.id());
-
-			macro::Graph::Connect_(socket, args);
+			macro::Graph::Connect(socket, nodeAdd.id(), std::vector<int>{}, 1, std::vector<int>{0}, bc_Main_test, library.id(), project.id());
 		}
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-
-			auto args = new Graph_Connect_Args;
-			args->set_srcnodeid(node45.id());
-			args->set_dstnodeid(nodeAdd.id());
-			args->set_dstport(1);
-			args->set_allocated_bc(bc_Main_test);
-			args->set_libraryid(library.id());
-			args->set_projectid(project.id());
-
-			macro::Graph::Connect_(socket, args);
+			macro::Graph::Connect(socket, node45.id(), std::vector<int>{}, nodeAdd.id(), std::vector<int>{1}, bc_Main_test, library.id(), project.id());
 		}
 		// macro::Maintenance::Dump(socket);
 

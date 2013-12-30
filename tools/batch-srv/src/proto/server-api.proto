@@ -12,6 +12,7 @@ import "crumb.proto";
 import "expr.proto";
 import "file-system.proto";
 import "graph.proto";
+import "graphview.proto";
 import "library.proto";
 import "module.proto";
 import "nodedefault.proto";
@@ -300,7 +301,7 @@ message Graph {
             required int32 projectID = 3;
         }
         message Result { extend Response { optional Result rsp = 1300; }
-            required generated.proto.graph.Graph graph = 1;
+            required generated.proto.graphview.GraphView graph = 1;
         }   
     }
     message NodeByID {
@@ -337,9 +338,9 @@ message Graph {
     message Connect {
         message Args   { extend Request  { optional Args   req = 1304; }
             required int32 srcNodeID = 1;
-            optional int32 srcPort   = 2;
+            repeated int32 srcPort   = 2;
             required int32 dstNodeID = 3;
-            required int32 dstPort   = 4;
+            repeated int32 dstPort   = 4;
             required generated.proto.crumb.Breadcrumbs bc = 5;
             required int32 libraryID = 6;
             required int32 projectID = 7;
@@ -349,9 +350,9 @@ message Graph {
     message Disconnect {
         message Args   { extend Request  { optional Args   req = 1305; }
             required int32 srcNodeID = 1;
-            optional int32 srcPort   = 2;
+            repeated int32 srcPort   = 2;
             required int32 dstNodeID = 3;
-            required int32 dstPort   = 4;
+            repeated int32 dstPort   = 4;
             required generated.proto.crumb.Breadcrumbs bc = 5;
             required int32 libraryID = 6;
             required int32 projectID = 7;
@@ -466,7 +467,7 @@ message NodeDefault {
     }
     message SetNodeDefault {
         message Args   { extend Request  { optional Args   req = 1601; }
-            required int32 inPort    = 1;
+            repeated int32 inPort    = 1;
             required string value    = 2;
             required int32 nodeID    = 3;
             required generated.proto.crumb.Breadcrumbs bc = 4;
@@ -477,7 +478,7 @@ message NodeDefault {
     }
     message RemoveNodeDefault {
         message Args   { extend Request  { optional Args   req = 1602; }
-            required int32 inPort    = 1;
+            repeated int32 inPort    = 1;
             required int32 nodeID    = 2;
             required generated.proto.crumb.Breadcrumbs bc = 3;
             required int32 libraryID = 4;

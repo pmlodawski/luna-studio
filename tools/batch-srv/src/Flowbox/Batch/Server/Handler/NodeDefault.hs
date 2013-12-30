@@ -44,7 +44,7 @@ setNodeDefault :: IORef Batch -> SetNodeDefault.Args -> IO SetNodeDefault.Result
 setNodeDefault batchHandler (SetNodeDefault.Args tdstPort tvalue tnodeID tbc tlibID tprojectID) = do
     loggerIO info "called setNodeDefault"
     bc <- decode tbc
-    let dstPort   = decodeP tdstPort
+    let dstPort   = decodeListP tdstPort
         value     = decodeP tvalue
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
@@ -59,7 +59,7 @@ removeNodeDefault :: IORef Batch -> RemoveNodeDefault.Args -> IO RemoveNodeDefau
 removeNodeDefault batchHandler (RemoveNodeDefault.Args tdstPort tnodeID tbc tlibID tprojectID) = do
     loggerIO info "called removeNodeDefault"
     bc <- decode tbc
-    let dstPort   = decodeP tdstPort
+    let dstPort   = decodeListP tdstPort
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID

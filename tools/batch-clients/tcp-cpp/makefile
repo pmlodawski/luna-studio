@@ -4,6 +4,7 @@ GEN_SRC :=  generated/attributes.pb.cc \
 			generated/file-system.pb.cc \
 			generated/focus.pb.cc \
 			generated/graph.pb.cc \
+			generated/graphview.pb.cc \
 			generated/library.pb.cc \
 			generated/lit.pb.cc \
 			generated/nodedefault.pb.cc \

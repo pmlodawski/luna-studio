@@ -5,16 +5,19 @@
 // Flowbox Team <contact@flowbox.io>, 2013
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto.nodedefault;
+package generated.proto.graphview;
+
+import "graph.proto";
 
 
+message EdgeView {
+    optional int32 nodeSrc = 1;
+    optional int32 nodeDst = 2;
+    repeated int32 portSrc = 3;
+    repeated int32 portDst = 4;
+}
 
-message DefaultsMap {
-    message Entry {
-        repeated int32  key    = 1;
-        optional int32  nodeID = 2;
-        optional string value  = 3;
-    }
-
-    repeated Entry map = 1;
+message GraphView {
+    repeated generated.proto.graph.Node nodes = 1;
+    repeated EdgeView edges = 2;
 }

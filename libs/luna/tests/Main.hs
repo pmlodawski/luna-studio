@@ -22,38 +22,39 @@ import           Data.Version               (Version (Version))
 import           Debug.Trace
 import           System.TimeIt
 
-import qualified Flowbox.Distribution.M                                as DistMain
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                     as ASTCrumb
-import qualified Flowbox.Luna.Data.AST.Expr                            as LExpr
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus                    as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                   as Zipper
-import qualified Flowbox.Luna.Data.Cabal.Config                        as Config
-import qualified Flowbox.Luna.Data.Cabal.Section                       as Section
-import qualified Flowbox.Luna.Data.HAST.Expr                           as HExpr
-import qualified Flowbox.Luna.Data.HAST.Module                         as Module
-import qualified Flowbox.Luna.Data.PropertyMap                         as PropertyMap
-import           Flowbox.Luna.Data.Source                              (Source)
-import qualified Flowbox.Luna.Data.Source                              as Source
-import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPool
-import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                 as MaxID
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
-import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
-import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
-import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
-import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaults
-import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaults
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
-import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
-import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
+import qualified Flowbox.Distribution.M                                    as DistMain
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                         as ASTCrumb
+import qualified Flowbox.Luna.Data.AST.Expr                                as LExpr
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus                        as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                       as Zipper
+import qualified Flowbox.Luna.Data.Cabal.Config                            as Config
+import qualified Flowbox.Luna.Data.Cabal.Section                           as Section
+import qualified Flowbox.Luna.Data.GraphView.GraphView                     as GraphView
+import qualified Flowbox.Luna.Data.HAST.Expr                               as HExpr
+import qualified Flowbox.Luna.Data.HAST.Module                             as Module
+import qualified Flowbox.Luna.Data.PropertyMap                             as PropertyMap
+import           Flowbox.Luna.Data.Source                                  (Source)
+import qualified Flowbox.Luna.Data.Source                                  as Source
+import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool            as FuncPool
+import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                     as MaxID
+import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
+import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
+import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
+import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
+import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
+import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as GraphParser
+import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
+import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
+import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
+import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
 import           Flowbox.Prelude
-import qualified Flowbox.System.Log.LogEntry                           as LogEntry
+import qualified Flowbox.System.Log.LogEntry                               as LogEntry
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.Log.Logger                             as Logger
-import qualified Flowbox.System.UniPath                                as UniPath
-import           Flowbox.Text.Show.Hs                                  (hsShow)
-import qualified Flowbox.Text.Show.Pretty                              as PP
+import qualified Flowbox.System.Log.Logger                                 as Logger
+import qualified Flowbox.System.UniPath                                    as UniPath
+import           Flowbox.Text.Show.Hs                                      (hsShow)
+import qualified Flowbox.Text.Show.Pretty                                  as PP
 
 
 
@@ -247,11 +248,13 @@ main_graph = Luna.run $ do
 
     logger info $ PP.ppShow expr
     (graph, pm) <- GraphBuilder.run va emptyPM expr
-    let (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graph pm
+    let graphView = GraphView.fromGraph graph
+        (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graphView pm
     logger warning $ show graph
     logger warning $ PP.ppShow pm
     --logger info $ show graphWithDefaults
-    let (newGraph, newPM) = Defaults.removeDefaults graphWithDefaults pmWithDefaults
+    let (newGraphView, newPM) = Defaults.removeDefaults graphWithDefaults pmWithDefaults
+    newGraph <- GraphView.toGraph newGraphView
     --logger warning $ show newGraph
     expr' <- GraphParser.run newGraph newPM expr
     logger info $ PP.ppShow expr'

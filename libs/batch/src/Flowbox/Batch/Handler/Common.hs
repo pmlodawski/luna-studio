@@ -10,38 +10,40 @@ module Flowbox.Batch.Handler.Common where
 import Control.Monad.RWS
 import Text.Show.Pretty
 
-import           Flowbox.Batch.Batch                                   (Batch)
-import qualified Flowbox.Batch.Batch                                   as Batch
-import           Flowbox.Batch.Process.Map                             (ProcessMap)
-import           Flowbox.Batch.Project.Project                         (Project)
-import qualified Flowbox.Batch.Project.Project                         as Project
-import           Flowbox.Batch.Project.ProjectManager                  (ProjectManager)
-import qualified Flowbox.Batch.Project.ProjectManager                  as ProjectManager
+import           Flowbox.Batch.Batch                                       (Batch)
+import qualified Flowbox.Batch.Batch                                       as Batch
+import           Flowbox.Batch.Process.Map                                 (ProcessMap)
+import           Flowbox.Batch.Project.Project                             (Project)
+import qualified Flowbox.Batch.Project.Project                             as Project
+import           Flowbox.Batch.Project.ProjectManager                      (ProjectManager)
+import qualified Flowbox.Batch.Project.ProjectManager                      as ProjectManager
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AST.Crumb.Crumb                     (Breadcrumbs)
-import           Flowbox.Luna.Data.AST.Expr                            (Expr)
-import           Flowbox.Luna.Data.AST.Module                          (Module)
-import qualified Flowbox.Luna.Data.AST.Utils                           as AST
-import           Flowbox.Luna.Data.AST.Zipper.Focus                    (Focus)
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus                    as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                   as Zipper
-import           Flowbox.Luna.Data.Graph.Graph                         (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                         as Graph
-import           Flowbox.Luna.Data.Graph.Node                          (Node)
-import qualified Flowbox.Luna.Data.Graph.Node                          as Node
-import           Flowbox.Luna.Data.PropertyMap                         (PropertyMap)
-import           Flowbox.Luna.Lib.LibManager                           (LibManager)
-import qualified Flowbox.Luna.Lib.LibManager                           as LibManager
-import           Flowbox.Luna.Lib.Library                              (Library)
-import qualified Flowbox.Luna.Lib.Library                              as Library
-import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                 as MaxID
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
-import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
-import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer     as IDFixer
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder   as GraphBuilder
-import qualified Flowbox.Luna.Passes.Transform.Graph.Defaults.Defaults as Defaults
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser     as GraphParser
-import           Flowbox.Prelude                                       hiding (focus, zipper)
+import           Flowbox.Luna.Data.AST.Crumb.Crumb                         (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Expr                                (Expr)
+import           Flowbox.Luna.Data.AST.Module                              (Module)
+import qualified Flowbox.Luna.Data.AST.Utils                               as AST
+import           Flowbox.Luna.Data.AST.Zipper.Focus                        (Focus)
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus                        as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                       as Zipper
+import           Flowbox.Luna.Data.Graph.Graph                             (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph                             as Graph
+import           Flowbox.Luna.Data.Graph.Node                              (Node)
+import qualified Flowbox.Luna.Data.Graph.Node                              as Node
+import           Flowbox.Luna.Data.GraphView.GraphView                     (GraphView)
+import qualified Flowbox.Luna.Data.GraphView.GraphView                     as GraphView
+import           Flowbox.Luna.Data.PropertyMap                             (PropertyMap)
+import           Flowbox.Luna.Lib.LibManager                               (LibManager)
+import qualified Flowbox.Luna.Lib.LibManager                               as LibManager
+import           Flowbox.Luna.Lib.Library                                  (Library)
+import qualified Flowbox.Luna.Lib.Library                                  as Library
+import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                     as MaxID
+import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
+import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
+import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer         as IDFixer
+import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
+import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as GraphParser
+import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
+import           Flowbox.Prelude                                           hiding (focus, zipper)
 import           Flowbox.System.Log.Logger
 
 
@@ -202,20 +204,32 @@ graphOp bc libID projectID operation = astOp libID projectID (\batch ast propert
     maxID <- MaxID.run ast
 
     (graph, pm) <- GraphBuilder.run va propertyMap expr
-    let (graph', pm') = Defaults.removeDefaults graph pm
 
-    ((newGraph, newPM), r) <- liftIO $ operation batch graph' pm' maxID
-    let (newGraphWithDefaults, newPMWithDefaults) = Defaults.addDefaults newGraph newPM
+    ((newGraph, newPM), r) <- liftIO $ operation batch graph pm maxID
 
-    ast' <- GraphParser.run newGraphWithDefaults newPMWithDefaults expr
+    ast' <- GraphParser.run newGraph newPM expr
 
     loggerIO debug $ show newGraph
-    loggerIO debug $ show newGraphWithDefaults
-    loggerIO debug $ ppShow newPMWithDefaults
+    loggerIO debug $ show newPM
     loggerIO debug $ ppShow ast'
 
     newAst <- Zipper.modify (\_ -> Focus.FunctionFocus ast') zipper >>= Zipper.close
-    return ((newAst, newPMWithDefaults), r))
+    return ((newAst, newPM), r))
+
+
+graphViewOp :: Breadcrumbs
+            -> Library.ID
+            -> Project.ID
+            -> (Batch -> GraphView -> PropertyMap -> AST.ID -> IO ((GraphView, PropertyMap), r))
+            -> Batch
+            -> IO (Batch, r)
+graphViewOp bc libID projectID operation = graphOp bc libID projectID (\batch graph propertyMap maxID -> do
+    let graphView = GraphView.fromGraph graph
+    let (graphView', propertyMap') = Defaults.removeDefaults graphView propertyMap
+    ((newGraphView', newPM'), r) <- operation batch graphView' propertyMap' maxID
+    let (newGraphView, newPM) = Defaults.addDefaults newGraphView' newPM'
+    newGraph <- GraphView.toGraph newGraphView
+    return ((newGraph, newPM), r))
 
 
 readonlyNodeOp :: Node.ID
@@ -225,7 +239,7 @@ readonlyNodeOp :: Node.ID
                -> (Batch -> Node -> IO r)
                -> Batch
                -> IO r
-readonlyNodeOp nodeID bc libID projectID operation = readonly . graphOp bc libID projectID (\batch graph propertyMap _ -> do
+readonlyNodeOp nodeID bc libID projectID operation = readonly . graphViewOp bc libID projectID (\batch graph propertyMap _ -> do
     node <- Graph.lab graph nodeID <?> ("Wrong 'nodeID' = " ++ show nodeID)
     r <- operation batch node
     return ((graph, propertyMap), r))

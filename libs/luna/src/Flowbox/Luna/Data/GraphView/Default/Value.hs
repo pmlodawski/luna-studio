@@ -5,13 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Graph.Edge where
+module Flowbox.Luna.Data.GraphView.Default.Value where
 
-import Flowbox.Luna.Data.Graph.Port (InPort, OutPort)
 import Flowbox.Prelude
 
 
 
-data Edge = Edge { src :: OutPort
-                 , dst :: InPort
-                 } deriving (Show, Read, Ord, Eq)
+type Value = String
+

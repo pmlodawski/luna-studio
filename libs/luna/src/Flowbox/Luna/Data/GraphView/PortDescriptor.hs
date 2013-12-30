@@ -5,11 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Graph.Default.Value where
+module Flowbox.Luna.Data.GraphView.PortDescriptor where
 
 import Flowbox.Prelude
 
 
 
-type Value = String
-
+type PortDescriptor = [Int]

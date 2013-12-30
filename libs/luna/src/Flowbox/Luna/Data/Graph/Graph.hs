@@ -8,7 +8,6 @@
 module Flowbox.Luna.Data.Graph.Graph(
     module Flowbox.Data.Graph,
     Graph,
-    empty,
     connect,
     inputsID,
     outputID,
@@ -18,21 +17,16 @@ module Flowbox.Luna.Data.Graph.Graph(
     isNotAlreadyConnected
 ) where
 
-import Flowbox.Prelude hiding (empty)
-
-import           Flowbox.Data.Graph           hiding (Edge, Graph, empty)
+import           Flowbox.Data.Graph           hiding (Edge, Graph)
 import qualified Flowbox.Data.Graph           as DG
 import           Flowbox.Luna.Data.Graph.Edge (Edge (Edge))
 import           Flowbox.Luna.Data.Graph.Node (Node)
 import qualified Flowbox.Luna.Data.Graph.Node as Node
 import           Flowbox.Luna.Data.Graph.Port (InPort)
+import           Flowbox.Prelude              hiding (empty)
 
 
 type Graph = DG.Graph Node Edge
-
-
-empty :: Graph
-empty = DG.empty
 
 
 connect :: Node.ID -> Node.ID -> Edge -> Graph -> Graph

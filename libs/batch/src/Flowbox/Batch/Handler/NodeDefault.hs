@@ -5,38 +5,34 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Handler.NodeDefault (
-    nodeDefaults,
-    setNodeDefault,
-    removeNodeDefault,
-) where
+module Flowbox.Batch.Handler.NodeDefault where
 
-import           Flowbox.Batch.Batch                         (Batch)
-import           Flowbox.Batch.Handler.Common                (graphOp, noresult, readonly)
-import qualified Flowbox.Batch.Project.Project               as Project
-import           Flowbox.Luna.Data.AST.Crumb.Crumb           (Breadcrumbs)
-import           Flowbox.Luna.Data.Graph.Default.DefaultsMap (DefaultsMap)
-import qualified Flowbox.Luna.Data.Graph.Default.DefaultsMap as DefaultsMap
-import           Flowbox.Luna.Data.Graph.Default.Value       (Value)
-import qualified Flowbox.Luna.Data.Graph.Node                as Node
-import           Flowbox.Luna.Data.Graph.Port                (InPort)
-import qualified Flowbox.Luna.Lib.Library                    as Library
+import           Flowbox.Batch.Batch                             (Batch)
+import           Flowbox.Batch.Handler.Common                    (graphViewOp, noresult, readonly)
+import qualified Flowbox.Batch.Project.Project                   as Project
+import           Flowbox.Luna.Data.AST.Crumb.Crumb               (Breadcrumbs)
+import qualified Flowbox.Luna.Data.Graph.Node                    as Node
+import           Flowbox.Luna.Data.GraphView.Default.DefaultsMap (DefaultsMap)
+import qualified Flowbox.Luna.Data.GraphView.Default.DefaultsMap as DefaultsMap
+import           Flowbox.Luna.Data.GraphView.Default.Value       (Value)
+import           Flowbox.Luna.Data.GraphView.PortDescriptor      (PortDescriptor)
+import qualified Flowbox.Luna.Lib.Library                        as Library
 import           Flowbox.Prelude
 
 
 
 nodeDefaults :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO DefaultsMap
-nodeDefaults nodeID bc libID projectID  = readonly . graphOp bc libID projectID (\_ graph propertyMap _ ->
+nodeDefaults nodeID bc libID projectID  = readonly . graphViewOp bc libID projectID (\_ graph propertyMap _ -> do
     return ((graph, propertyMap), DefaultsMap.getDefaultsMap nodeID propertyMap))
 
 
-setNodeDefault :: InPort -> Value
+setNodeDefault :: PortDescriptor -> Value
                -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-setNodeDefault dstPort value nodeID bc libID projectID = noresult . graphOp bc libID projectID (\_ graph propertyMap maxID ->
+setNodeDefault dstPort value nodeID bc libID projectID = noresult . graphViewOp bc libID projectID (\_ graph propertyMap maxID ->
     return ((graph, DefaultsMap.addDefault dstPort (maxID, value) nodeID propertyMap), ()))
 
 
-removeNodeDefault :: InPort
+removeNodeDefault :: PortDescriptor
                   -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-removeNodeDefault dstPort nodeID bc libID projectID = noresult . graphOp bc libID projectID (\_ graph propertyMap _ ->
+removeNodeDefault dstPort nodeID bc libID projectID = noresult . graphViewOp bc libID projectID (\_ graph propertyMap _ ->
     return ((graph, DefaultsMap.removeDefault dstPort nodeID propertyMap), ()))

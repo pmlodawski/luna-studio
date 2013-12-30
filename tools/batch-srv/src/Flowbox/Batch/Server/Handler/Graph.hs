@@ -9,25 +9,25 @@ module Flowbox.Batch.Server.Handler.Graph where
 
 import Data.IORef (IORef)
 
-import qualified Data.IORef                                          as IORef
-import           Flowbox.Batch.Batch                                 (Batch)
-import qualified Flowbox.Batch.Handler.Graph                         as BatchG
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Graph ()
+import qualified Data.IORef                                              as IORef
+import           Flowbox.Batch.Batch                                     (Batch)
+import qualified Flowbox.Batch.Handler.Graph                             as BatchG
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.GraphView ()
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Batch.Graph.AddNode.Args            as AddNode
-import qualified Generated.Proto.Batch.Graph.AddNode.Result          as AddNode
-import qualified Generated.Proto.Batch.Graph.Connect.Args            as Connect
-import qualified Generated.Proto.Batch.Graph.Connect.Result          as Connect
-import qualified Generated.Proto.Batch.Graph.Disconnect.Args         as Disconnect
-import qualified Generated.Proto.Batch.Graph.Disconnect.Result       as Disconnect
-import qualified Generated.Proto.Batch.Graph.NodeByID.Args           as NodeByID
-import qualified Generated.Proto.Batch.Graph.NodeByID.Result         as NodeByID
-import qualified Generated.Proto.Batch.Graph.NodesGraph.Args         as NodesGraph
-import qualified Generated.Proto.Batch.Graph.NodesGraph.Result       as NodesGraph
-import qualified Generated.Proto.Batch.Graph.RemoveNode.Args         as RemoveNode
-import qualified Generated.Proto.Batch.Graph.RemoveNode.Result       as RemoveNode
+import qualified Generated.Proto.Batch.Graph.AddNode.Args                as AddNode
+import qualified Generated.Proto.Batch.Graph.AddNode.Result              as AddNode
+import qualified Generated.Proto.Batch.Graph.Connect.Args                as Connect
+import qualified Generated.Proto.Batch.Graph.Connect.Result              as Connect
+import qualified Generated.Proto.Batch.Graph.Disconnect.Args             as Disconnect
+import qualified Generated.Proto.Batch.Graph.Disconnect.Result           as Disconnect
+import qualified Generated.Proto.Batch.Graph.NodeByID.Args               as NodeByID
+import qualified Generated.Proto.Batch.Graph.NodeByID.Result             as NodeByID
+import qualified Generated.Proto.Batch.Graph.NodesGraph.Args             as NodesGraph
+import qualified Generated.Proto.Batch.Graph.NodesGraph.Result           as NodesGraph
+import qualified Generated.Proto.Batch.Graph.RemoveNode.Args             as RemoveNode
+import qualified Generated.Proto.Batch.Graph.RemoveNode.Result           as RemoveNode
 
 
 
@@ -89,9 +89,9 @@ connect batchHandler (Connect.Args tsrcNodeID tsrcPort tdstNodeID tdstPort tbc t
     loggerIO info "called connect"
     bc <- decode tbc
     let srcNodeID = decodeP tsrcNodeID
-        srcPort   = decodeP tsrcPort
+        srcPort   = decodeListP tsrcPort
         dstNodeID = decodeP tdstNodeID
-        dstPort   = decodeP tdstPort
+        dstPort   = decodeListP tdstPort
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
@@ -106,9 +106,9 @@ disconnect batchHandler (Disconnect.Args tsrcNodeID tsrcPort tdstNodeID tdstPort
     loggerIO info "called disconnect"
     bc <- decode tbc
     let srcNodeID = decodeP tsrcNodeID
-        srcPort   = decodeP tsrcPort
+        srcPort   = decodeListP tsrcPort
         dstNodeID = decodeP tdstNodeID
-        dstPort   = decodeP tdstPort
+        dstPort   = decodeListP tdstPort
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
