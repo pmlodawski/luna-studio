@@ -15,6 +15,7 @@ import "graph.proto";
 import "library.proto";
 import "module.proto";
 import "nodedefault.proto";
+import "pat.proto";
 import "project.proto";
 import "type.proto";
 import "focus.proto";
@@ -24,64 +25,67 @@ import "focus.proto";
 message Request {
     required Method method = 1;
     enum Method {
-        AST_Definitions          = 50;
-        AST_AddModule            = 27;
-        AST_AddClass             = 28;
-        AST_AddFunction          = 29;
-        AST_UpdateModuleCls      = 30;
-        AST_UpdateModuleImports  = 31;
-        AST_UpdateModuleFields   = 32;
-        AST_UpdateClassCls       = 33;
-        AST_UpdateClassFields    = 34;
-        AST_UpdateFunctionName   = 35;
-        AST_UpdateFunctionPath   = 36;
-        AST_UpdateFunctionInputs = 37;
-        AST_UpdateFunctionOutput = 38;
-        AST_Remove               = 39;
+        AST_Definitions          = 1100;
+        AST_AddModule            = 1101;
+        AST_AddClass             = 1102;
+        AST_AddFunction          = 1103;
+        AST_UpdateModuleCls      = 1104;
+        AST_UpdateModuleImports  = 1105;
+        AST_UpdateModuleFields   = 1106;
+        AST_UpdateClassCls       = 1107;
+        AST_UpdateClassFields    = 1108;
+        AST_UpdateFunctionName   = 1109;
+        AST_UpdateFunctionPath   = 1110;
+        AST_UpdateFunctionInputs = 1111;
+        AST_UpdateFunctionOutput = 1112;
+        AST_Remove               = 1113;
 
-        NodeDefault_NodeDefaults      = 47;
-        NodeDefault_SetNodeDefault    = 48;
-        NodeDefault_RemoveNodeDefault = 49;
+        FileSystem_LS    = 1200;
+        FileSystem_Stat  = 1201;
+        FileSystem_MkDir = 1202;
+        FileSystem_Touch = 1203;
+        FileSystem_RM    = 1204;
+        FileSystem_CP    = 1205;
+        FileSystem_MV    = 1206;
 
-        FileSystem_LS    = 1;
-        FileSystem_Stat  = 2;
-        FileSystem_MkDir = 3;
-        FileSystem_Touch = 4;
-        FileSystem_RM    = 5;
-        FileSystem_CP    = 6;
-        FileSystem_MV    = 7;
+        Graph_NodesGraph = 1300;
+        Graph_NodeByID   = 1301;
+        Graph_AddNode    = 1302;
+        Graph_RemoveNode = 1303;
+        Graph_Connect    = 1304;
+        Graph_Disconnect = 1305;
 
-        Graph_NodesGraph = 40;
-        Graph_NodeByID   = 41;
-        Graph_AddNode    = 42;
-        Graph_RemoveNode = 44;
-        Graph_Connect    = 45;
-        Graph_Disconnect = 46;
+        Library_Libraries     = 1400;
+        Library_LibraryByID   = 1401;
+        Library_CreateLibrary = 1402;
+        Library_LoadLibrary   = 1403;
+        Library_UnloadLibrary = 1404;
+        Library_StoreLibrary  = 1405;
+        Library_BuildLibrary  = 1406;
+        Library_RunLibrary    = 1407;
 
-        Library_Libraries     = 8;
-        Library_LibraryByID   = 9;
-        Library_CreateLibrary = 10;
-        Library_LoadLibrary   = 11;
-        Library_UnloadLibrary = 12;
-        Library_StoreLibrary  = 13;
-        Library_BuildLibrary  = 14;
-        Library_RunLibrary    = 15;
+        Maintenance_Initialize = 1500;
+        Maintenance_Ping       = 1501;
+        Maintenance_Dump       = 1502;
+        Maintenance_Shutdown   = 1503;
 
-        Maintenance_Initialize = 16;
-        Maintenance_Ping       = 17;
-        Maintenance_Dump       = 18;
-        Maintenance_Shutdown   = 19;
+        NodeDefault_NodeDefaults      = 1600;
+        NodeDefault_SetNodeDefault    = 1601;
+        NodeDefault_RemoveNodeDefault = 1602;
 
-        Project_Projects      = 20;
-        Project_ProjectByID   = 21;
-        Project_CreateProject = 22;
-        Project_OpenProject   = 23;
-        Project_UpdateProject = 24;
-        Project_CloseProject  = 25;
-        Project_StoreProject  = 26;
+        Parser_ParseExpr      = 1700;
+        Parser_ParsePat       = 1701;
 
-        Properties_GetProperties = 51;
-        Properties_SetProperties = 52;
+        Project_Projects      = 1800;
+        Project_ProjectByID   = 1801;
+        Project_CreateProject = 1802;
+        Project_OpenProject   = 1803;
+        Project_UpdateProject = 1804;
+        Project_CloseProject  = 1805;
+        Project_StoreProject  = 1806;
+
+        Properties_GetProperties = 1900;
+        Properties_SetProperties = 1901;
     }
 
     extensions 1000 to max;
@@ -104,13 +108,13 @@ message Exception { extend Response { optional Exception rsp = 1000; }
 
 message AST {
     message Definitions {
-        message Args   { extend Request  { optional Args   req = 1114; }
+        message Args   { extend Request  { optional Args   req = 1100; }
             optional int32 maxDepth  = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
             required int32 libraryID = 3;
             required int32 projectID = 4;
         }
-        message Result { extend Response { optional Result rsp = 1114; }
+        message Result { extend Response { optional Result rsp = 1100; }
             required generated.proto.focus.Focus focus = 1;
         }   
     }
@@ -234,222 +238,72 @@ message AST {
 
 message FileSystem {
     message LS {
-        message Args   { extend Request  { optional Args   req = 1001; }
+        message Args   { extend Request  { optional Args   req = 1200; }
             required string path = 1;
         }
-        message Result { extend Response { optional Result rsp = 1001; }
+        message Result { extend Response { optional Result rsp = 1200; }
             repeated generated.proto.filesystem.Item items = 1;
         }
     }
     message Stat {
-        message Args   { extend Request  { optional Args   req = 1002; }
+        message Args   { extend Request  { optional Args   req = 1201; }
             required string path = 1;
         }
-        message Result { extend Response { optional Result rsp = 1002; }
+        message Result { extend Response { optional Result rsp = 1201; }
             required generated.proto.filesystem.Item item = 1;
         }
     }
     message MkDir {
-        message Args   { extend Request  { optional Args   req = 1003; }
+        message Args   { extend Request  { optional Args   req = 1202; }
             required string path = 1;
         }
-        message Result { extend Response { optional Result rsp = 1003; }
+        message Result { extend Response { optional Result rsp = 1202; }
         }
     }
     message Touch {
-        message Args   { extend Request  { optional Args   req = 1004; }
+        message Args   { extend Request  { optional Args   req = 1203; }
             required string path = 1;
         }
-        message Result { extend Response { optional Result rsp = 1004; }
+        message Result { extend Response { optional Result rsp = 1203; }
         }
     }
     message RM {
-        message Args   { extend Request  { optional Args   req = 1005; }
+        message Args   { extend Request  { optional Args   req = 1204; }
             required string path = 1;
         }
-        message Result { extend Response { optional Result rsp = 1005; }
+        message Result { extend Response { optional Result rsp = 1204; }
         }
     }
     message CP {
-        message Args   { extend Request  { optional Args   req = 1006; }
+        message Args   { extend Request  { optional Args   req = 1205; }
             required string src = 1;
             required string dst = 2;
         }
-        message Result { extend Response { optional Result rsp = 1006; }
+        message Result { extend Response { optional Result rsp = 1205; }
         }
     }
     message MV {
-        message Args   { extend Request  { optional Args   req = 1007; }
+        message Args   { extend Request  { optional Args   req = 1206; }
             required string src = 1;
             required string dst = 2;
         }
-        message Result { extend Response { optional Result rsp = 1007; }
+        message Result { extend Response { optional Result rsp = 1206; }
         }
     }
 }
 
 message Graph {
     message NodesGraph {
-        message Args   { extend Request  { optional Args   req = 1201; }
+        message Args   { extend Request  { optional Args   req = 1300; }
             required generated.proto.crumb.Breadcrumbs bc = 1;
             required int32 libraryID = 2;
             required int32 projectID = 3;
         }
-        message Result { extend Response { optional Result rsp = 1201; }
+        message Result { extend Response { optional Result rsp = 1300; }
             required generated.proto.graph.Graph graph = 1;
         }   
     }
     message NodeByID {
-        message Args   { extend Request  { optional Args   req = 1202; }
-            required int32 nodeID    = 1;
-            required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libraryID = 3;
-            required int32 projectID = 4;
-        }
-        message Result { extend Response { optional Result rsp = 1202; }
-            required generated.proto.graph.Node node = 1;
-        }   
-    }
-    message AddNode {
-        message Args   { extend Request  { optional Args   req = 1203; }
-            required generated.proto.graph.Node node      = 1;
-            required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libraryID = 3;
-            required int32 projectID = 4;
-        }
-        message Result { extend Response { optional Result rsp = 1203; }
-            required generated.proto.graph.Node node = 1;
-        }   
-    }
-    message RemoveNode {
-        message Args   { extend Request  { optional Args   req = 1205; }
-            required int32 nodeID    = 1;
-            required generated.proto.crumb.Breadcrumbs bc = 2;
-            required int32 libraryID = 3;
-            required int32 projectID = 4;
-        }
-        message Result { extend Response { optional Result rsp = 1205; } }   
-    }
-    message Connect {
-        message Args   { extend Request  { optional Args   req = 1206; }
-            required int32 srcNodeID = 1;
-            optional int32 srcPort   = 2;
-            required int32 dstNodeID = 3;
-            required int32 dstPort   = 4;
-            required generated.proto.crumb.Breadcrumbs bc = 5;
-            required int32 libraryID = 6;
-            required int32 projectID = 7;
-        }
-        message Result { extend Response { optional Result rsp = 1206; } }   
-    }
-    message Disconnect {
-        message Args   { extend Request  { optional Args   req = 1207; }
-            required int32 srcNodeID = 1;
-            optional int32 srcPort   = 2;
-            required int32 dstNodeID = 3;
-            required int32 dstPort   = 4;
-            required generated.proto.crumb.Breadcrumbs bc = 5;
-            required int32 libraryID = 6;
-            required int32 projectID = 7;
-        }
-        message Result { extend Response { optional Result rsp = 1207; } }   
-    }
-}
-
-message Library {
-    message Libraries {
-        message Args   { extend Request  { optional Args   req = 1008; } 
-            required int32 projectID = 1;
-        }
-        message Result { extend Response { optional Result rsp = 1009; } 
-            repeated generated.proto.library.Library libraries = 1;
-        }
-    }
-    message LibraryByID {
-        message Args   { extend Request  { optional Args   req = 1011; } 
-            required int32 libraryID = 1;
-            required int32 projectID = 2;
-        }
-        message Result { extend Response { optional Result rsp = 1011; } 
-            required generated.proto.library.Library library = 1;
-        }
-    }
-    message CreateLibrary {
-        message Args   { extend Request  { optional Args   req = 1012; } 
-            required string name      = 1;
-            required string path      = 2;
-            required int32  projectID = 3;
-        }
-        message Result { extend Response { optional Result rsp = 1012; } 
-            required generated.proto.library.Library library = 1;
-        }
-    }
-    message LoadLibrary {
-        message Args   { extend Request  { optional Args   req = 1013; } 
-            required string path      = 1;
-            required int32  projectID = 2;
-        }
-        message Result { extend Response { optional Result rsp = 1013; } 
-            required generated.proto.library.Library library = 1;
-        }
-    }
-    message UnloadLibrary {
-        message Args   { extend Request  { optional Args   req = 1014; } 
-            required int32 libraryID = 1;
-            required int32 projectID = 2;
-        }
-        message Result { extend Response { optional Result rsp = 1014; } }
-    }
-    message StoreLibrary {
-        message Args   { extend Request  { optional Args   req = 1015; } 
-            required int32 libraryID = 1;
-            required int32 projectID = 2;
-        }
-        message Result { extend Response { optional Result rsp = 1015; } }
-    }
-    message BuildLibrary {
-        message Args   { extend Request  { optional Args   req = 1016; } 
-            required int32 libraryID = 1;
-            required int32 projectID = 2;
-        }
-        message Result { extend Response { optional Result rsp = 1016; } }
-    }
-    message RunLibrary {
-        message Args   { extend Request  { optional Args   req = 1017; } 
-            required int32 libraryID = 1;
-            required int32 projectID = 2;
-        }
-        message Result { extend Response { optional Result rsp = 1017; } 
-            required string output = 1;
-        }
-    }
-}
-
-message Maintenance {
-    message Initialize {
-        message Args   { extend Request  { optional Args   req = 1018; } }
-        message Result { extend Response { optional Result rsp = 1018; } }   
-    }
-    message Ping {
-        message Args   { extend Request  { optional Args   req = 1019; }
-            optional bytes data = 1;
-        }
-        message Result { extend Response { optional Result rsp = 1019; } 
-            optional bytes data = 1;
-        }
-    }
-    message Dump {
-        message Args   { extend Request  { optional Args   req = 1020; } }
-        message Result { extend Response { optional Result rsp = 1020; } }
-    }
-    message Shutdown {
-        message Args   { extend Request  { optional Args   req = 1021; } }
-        message Result { extend Response { optional Result rsp = 1021; } }
-    }
-}
-
-message NodeDefault {
-    message NodeDefaults {
         message Args   { extend Request  { optional Args   req = 1301; }
             required int32 nodeID    = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
@@ -457,11 +311,161 @@ message NodeDefault {
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1301; }
+            required generated.proto.graph.Node node = 1;
+        }   
+    }
+    message AddNode {
+        message Args   { extend Request  { optional Args   req = 1302; }
+            required generated.proto.graph.Node node      = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libraryID = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1302; }
+            required generated.proto.graph.Node node = 1;
+        }   
+    }
+    message RemoveNode {
+        message Args   { extend Request  { optional Args   req = 1303; }
+            required int32 nodeID    = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libraryID = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1303; } }   
+    }
+    message Connect {
+        message Args   { extend Request  { optional Args   req = 1304; }
+            required int32 srcNodeID = 1;
+            optional int32 srcPort   = 2;
+            required int32 dstNodeID = 3;
+            required int32 dstPort   = 4;
+            required generated.proto.crumb.Breadcrumbs bc = 5;
+            required int32 libraryID = 6;
+            required int32 projectID = 7;
+        }
+        message Result { extend Response { optional Result rsp = 1304; } }   
+    }
+    message Disconnect {
+        message Args   { extend Request  { optional Args   req = 1305; }
+            required int32 srcNodeID = 1;
+            optional int32 srcPort   = 2;
+            required int32 dstNodeID = 3;
+            required int32 dstPort   = 4;
+            required generated.proto.crumb.Breadcrumbs bc = 5;
+            required int32 libraryID = 6;
+            required int32 projectID = 7;
+        }
+        message Result { extend Response { optional Result rsp = 1305; } }   
+    }
+}
+
+message Library {
+    message Libraries {
+        message Args   { extend Request  { optional Args   req = 1400; } 
+            required int32 projectID = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1400; } 
+            repeated generated.proto.library.Library libraries = 1;
+        }
+    }
+    message LibraryByID {
+        message Args   { extend Request  { optional Args   req = 1401; } 
+            required int32 libraryID = 1;
+            required int32 projectID = 2;
+        }
+        message Result { extend Response { optional Result rsp = 1401; } 
+            required generated.proto.library.Library library = 1;
+        }
+    }
+    message CreateLibrary {
+        message Args   { extend Request  { optional Args   req = 1402; } 
+            required string name      = 1;
+            required string path      = 2;
+            required int32  projectID = 3;
+        }
+        message Result { extend Response { optional Result rsp = 1402; } 
+            required generated.proto.library.Library library = 1;
+        }
+    }
+    message LoadLibrary {
+        message Args   { extend Request  { optional Args   req = 1403; } 
+            required string path      = 1;
+            required int32  projectID = 2;
+        }
+        message Result { extend Response { optional Result rsp = 1403; } 
+            required generated.proto.library.Library library = 1;
+        }
+    }
+    message UnloadLibrary {
+        message Args   { extend Request  { optional Args   req = 1404; } 
+            required int32 libraryID = 1;
+            required int32 projectID = 2;
+        }
+        message Result { extend Response { optional Result rsp = 1404; } }
+    }
+    message StoreLibrary {
+        message Args   { extend Request  { optional Args   req = 1405; } 
+            required int32 libraryID = 1;
+            required int32 projectID = 2;
+        }
+        message Result { extend Response { optional Result rsp = 1405; } }
+    }
+    message BuildLibrary {
+        message Args   { extend Request  { optional Args   req = 1406; } 
+            required int32 libraryID = 1;
+            required int32 projectID = 2;
+        }
+        message Result { extend Response { optional Result rsp = 1406; } }
+    }
+    message RunLibrary {
+        message Args   { extend Request  { optional Args   req = 1407; } 
+            required int32 libraryID = 1;
+            required int32 projectID = 2;
+        }
+        message Result { extend Response { optional Result rsp = 1407; } 
+            required string output = 1;
+        }
+    }
+}
+
+message Maintenance {
+    message Initialize {
+        message Args   { extend Request  { optional Args   req = 1500; } }
+        message Result { extend Response { optional Result rsp = 1500; } }   
+    }
+    message Ping {
+        message Args   { extend Request  { optional Args   req = 1501; }
+            optional bytes data = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1501; } 
+            optional bytes data = 1;
+        }
+    }
+    message Dump {
+        message Args   { extend Request  { optional Args   req = 1502; } }
+        message Result { extend Response { optional Result rsp = 1502; } }
+    }
+    message Shutdown {
+        message Args   { extend Request  { optional Args   req = 1503; } }
+        message Result { extend Response { optional Result rsp = 1503; } }
+    }
+}
+
+message NodeDefault {
+    message NodeDefaults {
+        message Args   { extend Request  { optional Args   req = 1600; }
+            required int32 nodeID    = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libraryID = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1600; }
             required generated.proto.nodedefault.DefaultsMap defaultsMap = 1;
         }   
     }
     message SetNodeDefault {
-        message Args   { extend Request  { optional Args   req = 1302; }
+        message Args   { extend Request  { optional Args   req = 1601; }
             required int32 inPort    = 1;
             required string value    = 2;
             required int32 nodeID    = 3;
@@ -469,91 +473,110 @@ message NodeDefault {
             required int32 libraryID = 5;
             required int32 projectID = 6;
         }
-        message Result { extend Response { optional Result rsp = 1302; } }   
+        message Result { extend Response { optional Result rsp = 1601; } }   
     }
     message RemoveNodeDefault {
-        message Args   { extend Request  { optional Args   req = 1303; }
+        message Args   { extend Request  { optional Args   req = 1602; }
             required int32 inPort    = 1;
             required int32 nodeID    = 2;
             required generated.proto.crumb.Breadcrumbs bc = 3;
             required int32 libraryID = 4;
             required int32 projectID = 5;
         }
-        message Result { extend Response { optional Result rsp = 1303; } }   
+        message Result { extend Response { optional Result rsp = 1602; } }   
+    }
+}
+
+message Parser {
+    message ParseExpr {
+        message Args   { extend Request  { optional Args   req = 1700; }
+            required string str = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1700; }
+            required generated.proto.expr.Expr expr = 1;
+        }   
+    }
+    message ParsePat {
+        message Args   { extend Request  { optional Args   req = 1701; }
+            required string str = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1701; }
+            required generated.proto.pat.Pat pat = 1;
+        }   
     }
 }
 
 message Project {
     message Projects {
-        message Args   { extend Request  { optional Args   req = 1022; } }
-        message Result { extend Response { optional Result rsp = 1022; }
+        message Args   { extend Request  { optional Args   req = 1800; } }
+        message Result { extend Response { optional Result rsp = 1800; }
             repeated generated.proto.project.Project projects = 1;
         }   
     }
     message ProjectByID {
-        message Args   { extend Request  { optional Args   req = 1023; }
+        message Args   { extend Request  { optional Args   req = 1801; }
             required int32 projectID = 1;
         }
-        message Result { extend Response { optional Result rsp = 1023; }
+        message Result { extend Response { optional Result rsp = 1801; }
             required generated.proto.project.Project project = 1;
         }   
     }
     message CreateProject {
-        message Args   { extend Request  { optional Args   req = 1024; }
+        message Args   { extend Request  { optional Args   req = 1802; }
             required string name = 1;
             required string path = 2;
             required generated.proto.attributes.Attributes attributes = 3;
         }
-        message Result { extend Response { optional Result rsp = 1024; }
+        message Result { extend Response { optional Result rsp = 1802; }
             required generated.proto.project.Project project = 1;
         }   
     }
     message OpenProject {
-        message Args   { extend Request  { optional Args   req = 1025; }
+        message Args   { extend Request  { optional Args   req = 1803; }
             required string path = 1;
         }
-        message Result { extend Response { optional Result rsp = 1025; }
+        message Result { extend Response { optional Result rsp = 1803; }
             required generated.proto.project.Project project = 1;
         }   
     }
     message UpdateProject {
-        message Args   { extend Request  { optional Args   req = 1026; }
+        message Args   { extend Request  { optional Args   req = 1804; }
             required generated.proto.project.Project project = 1;
         }
-        message Result { extend Response { optional Result rsp = 1026; } }   
+        message Result { extend Response { optional Result rsp = 1804; } }   
     }    
     message CloseProject {
-        message Args   { extend Request  { optional Args   req = 1027; }
+        message Args   { extend Request  { optional Args   req = 1805; }
             required int32 projectID = 1;
         }
-        message Result { extend Response { optional Result rsp = 1027; } }   
+        message Result { extend Response { optional Result rsp = 1805; } }   
     }
     message StoreProject {
-        message Args   { extend Request  { optional Args   req = 1028; }
+        message Args   { extend Request  { optional Args   req = 1806; }
             required int32 projectID = 1;
         }
-        message Result { extend Response { optional Result rsp = 1028; } }   
+        message Result { extend Response { optional Result rsp = 1806; } }   
     }
 }
 
 message Properties {
     message GetProperties {
-        message Args   { extend Request  { optional Args   req = 1401; }
+        message Args   { extend Request  { optional Args   req = 1900; }
             required int32 nodeID    = 1;
             required int32 libraryID = 2;
             required int32 projectID = 3;
         }
-        message Result { extend Response { optional Result rsp = 1401; }
+        message Result { extend Response { optional Result rsp = 1900; }
             required generated.proto.attributes.Properties properties = 1;
         }   
     }
     message SetProperties {
-        message Args   { extend Request  { optional Args   req = 1402; }
+        message Args   { extend Request  { optional Args   req = 1901; }
             required generated.proto.attributes.Properties properties = 1;
             required int32 nodeID    = 2;
             required int32 libraryID = 3;
             required int32 projectID = 4;
         }
-        message Result { extend Response { optional Result rsp = 1402; } }   
+        message Result { extend Response { optional Result rsp = 1901; } }   
     }
 }

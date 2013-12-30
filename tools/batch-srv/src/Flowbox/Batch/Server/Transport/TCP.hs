@@ -45,11 +45,11 @@ serve cmd handler = Socket.withSocketsDo $ do
         maxConnections = 1
 
     socket  <- Socket.socket Socket.AF_INET Socket.Stream tcp
-    --serverAddress <- Socket.inet_addr "127.0.0.1"
     Socket.setSocketOption socket Socket.ReuseAddr 1
     (Socket.AddrInfo _ _ _ _ sockAddr _):_ <- Socket.getAddrInfo Nothing (Just address) (Just $ show port)
+    --serverAddress <- Socket.inet_addr "127.0.0.1"
     --let sockAddr = Socket.SockAddrInet (Socket.PortNum 30521) serverAddress --Socket.iNADDR_ANY
-    Socket.bindSocket socket sockAddr -- TODO [PM] pretty code doesn't work ;/
+    Socket.bind socket sockAddr -- TODO [PM] pretty code doesn't work ;/
     Socket.listen socket maxConnections
 
     if Cmd.shutdownWithClient cmd

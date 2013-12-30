@@ -114,6 +114,10 @@ import qualified Generated.Proto.Batch.NodeDefault.RemoveNodeDefault.Args   as R
 import qualified Generated.Proto.Batch.NodeDefault.RemoveNodeDefault.Result as RemoveNodeDefault
 import qualified Generated.Proto.Batch.NodeDefault.SetNodeDefault.Args      as SetNodeDefault
 import qualified Generated.Proto.Batch.NodeDefault.SetNodeDefault.Result    as SetNodeDefault
+import qualified Generated.Proto.Batch.Parser.ParseExpr.Args                as ParseExpr
+import qualified Generated.Proto.Batch.Parser.ParseExpr.Result              as ParseExpr
+import qualified Generated.Proto.Batch.Parser.ParsePat.Args                 as ParsePat
+import qualified Generated.Proto.Batch.Parser.ParsePat.Result               as ParsePat
 import qualified Generated.Proto.Batch.Project.CloseProject.Args            as CloseProject
 import qualified Generated.Proto.Batch.Project.CloseProject.Result          as CloseProject
 import qualified Generated.Proto.Batch.Project.CreateProject.Args           as CreateProject
@@ -178,36 +182,6 @@ process handler encoded_request = case Proto.messageWithLengthGet encoded_reques
                                      -- TODO [PM] : move messageWithLengthGet from here
     Left   e           -> fail $ "Error while decoding request: " ++ e
     Right (request, _) -> case Request.method request of
-        Method.FileSystem_LS    -> call request handler Handler.ls    LS.req    LS.rsp
-        Method.FileSystem_Stat  -> call request handler Handler.stat  Stat.req  Stat.rsp
-        Method.FileSystem_MkDir -> call request handler Handler.mkdir MkDir.req MkDir.rsp
-        Method.FileSystem_Touch -> call request handler Handler.touch Touch.req Touch.rsp
-        Method.FileSystem_RM    -> call request handler Handler.rm    RM.req    RM.rsp
-        Method.FileSystem_CP    -> call request handler Handler.cp    CP.req    CP.rsp
-        Method.FileSystem_MV    -> call request handler Handler.mv    MV.req    MV.rsp
-
-        Method.Library_Libraries     -> call request handler Handler.libraries     Libraries.req     Libraries.rsp
-        Method.Library_LibraryByID   -> call request handler Handler.libraryByID   LibraryByID.req   LibraryByID.rsp
-        Method.Library_CreateLibrary -> call request handler Handler.createLibrary CreateLibrary.req CreateLibrary.rsp
-        Method.Library_LoadLibrary   -> call request handler Handler.loadLibrary   LoadLibrary.req   LoadLibrary.rsp
-        Method.Library_UnloadLibrary -> call request handler Handler.unloadLibrary UnloadLibrary.req UnloadLibrary.rsp
-        Method.Library_StoreLibrary  -> call request handler Handler.storeLibrary  StoreLibrary.req  StoreLibrary.rsp
-        Method.Library_BuildLibrary  -> call request handler Handler.buildLibrary  BuildLibrary.req  BuildLibrary.rsp
-        Method.Library_RunLibrary    -> call request handler Handler.runLibrary    RunLibrary.req    RunLibrary.rsp
-
-        Method.Project_Projects      -> call request handler Handler.projects      Projects.req      Projects.rsp
-        Method.Project_ProjectByID   -> call request handler Handler.projectByID   ProjectByID.req   ProjectByID.rsp
-        Method.Project_CreateProject -> call request handler Handler.createProject CreateProject.req CreateProject.rsp
-        Method.Project_OpenProject   -> call request handler Handler.openProject   OpenProject.req   OpenProject.rsp
-        Method.Project_UpdateProject -> call request handler Handler.updateProject UpdateProject.req UpdateProject.rsp
-        Method.Project_CloseProject  -> call request handler Handler.closeProject  CloseProject.req  CloseProject.rsp
-        Method.Project_StoreProject  -> call request handler Handler.storeProject  StoreProject.req  StoreProject.rsp
-
-        Method.Maintenance_Initialize -> call request handler Handler.initialize Initialize.req Initialize.rsp
-        Method.Maintenance_Ping       -> call request handler Handler.ping       Ping.req       Ping.rsp
-        Method.Maintenance_Dump       -> call request handler Handler.dump       Dump.req       Dump.rsp
-        Method.Maintenance_Shutdown   -> call request handler Handler.shutdown   Shutdown.req   Shutdown.rsp
-
         Method.AST_AddModule            -> call request handler Handler.addModule            AddModule.req            AddModule.rsp
         Method.AST_AddClass             -> call request handler Handler.addClass             AddClass.req             AddClass.rsp
         Method.AST_AddFunction          -> call request handler Handler.addFunction          AddFunction.req          AddFunction.rsp
@@ -223,9 +197,13 @@ process handler encoded_request = case Proto.messageWithLengthGet encoded_reques
         Method.AST_UpdateFunctionOutput -> call request handler Handler.updateFunctionOutput UpdateFunctionOutput.req UpdateFunctionOutput.rsp
         Method.AST_Remove               -> call request handler Handler.remove               Remove.req               Remove.rsp
 
-        Method.NodeDefault_NodeDefaults      -> call request handler Handler.nodeDefaults      NodeDefaults.req      NodeDefaults.rsp
-        Method.NodeDefault_SetNodeDefault    -> call request handler Handler.setNodeDefault    SetNodeDefault.req    SetNodeDefault.rsp
-        Method.NodeDefault_RemoveNodeDefault -> call request handler Handler.removeNodeDefault RemoveNodeDefault.req RemoveNodeDefault.rsp
+        Method.FileSystem_LS    -> call request handler Handler.ls    LS.req    LS.rsp
+        Method.FileSystem_Stat  -> call request handler Handler.stat  Stat.req  Stat.rsp
+        Method.FileSystem_MkDir -> call request handler Handler.mkdir MkDir.req MkDir.rsp
+        Method.FileSystem_Touch -> call request handler Handler.touch Touch.req Touch.rsp
+        Method.FileSystem_RM    -> call request handler Handler.rm    RM.req    RM.rsp
+        Method.FileSystem_CP    -> call request handler Handler.cp    CP.req    CP.rsp
+        Method.FileSystem_MV    -> call request handler Handler.mv    MV.req    MV.rsp
 
         Method.Graph_NodesGraph -> call request handler Handler.nodesGraph NodesGraph.req NodesGraph.rsp
         Method.Graph_NodeByID   -> call request handler Handler.nodeByID   NodeByID.req   NodeByID.rsp
@@ -234,5 +212,35 @@ process handler encoded_request = case Proto.messageWithLengthGet encoded_reques
         Method.Graph_Connect    -> call request handler Handler.connect    Connect.req    Connect.rsp
         Method.Graph_Disconnect -> call request handler Handler.disconnect Disconnect.req Disconnect.rsp
 
+        Method.Library_Libraries     -> call request handler Handler.libraries     Libraries.req     Libraries.rsp
+        Method.Library_LibraryByID   -> call request handler Handler.libraryByID   LibraryByID.req   LibraryByID.rsp
+        Method.Library_CreateLibrary -> call request handler Handler.createLibrary CreateLibrary.req CreateLibrary.rsp
+        Method.Library_LoadLibrary   -> call request handler Handler.loadLibrary   LoadLibrary.req   LoadLibrary.rsp
+        Method.Library_UnloadLibrary -> call request handler Handler.unloadLibrary UnloadLibrary.req UnloadLibrary.rsp
+        Method.Library_StoreLibrary  -> call request handler Handler.storeLibrary  StoreLibrary.req  StoreLibrary.rsp
+        Method.Library_BuildLibrary  -> call request handler Handler.buildLibrary  BuildLibrary.req  BuildLibrary.rsp
+        Method.Library_RunLibrary    -> call request handler Handler.runLibrary    RunLibrary.req    RunLibrary.rsp
+
+        Method.Maintenance_Initialize -> call request handler Handler.initialize Initialize.req Initialize.rsp
+        Method.Maintenance_Ping       -> call request handler Handler.ping       Ping.req       Ping.rsp
+        Method.Maintenance_Dump       -> call request handler Handler.dump       Dump.req       Dump.rsp
+        Method.Maintenance_Shutdown   -> call request handler Handler.shutdown   Shutdown.req   Shutdown.rsp
+
+        Method.NodeDefault_NodeDefaults      -> call request handler Handler.nodeDefaults      NodeDefaults.req      NodeDefaults.rsp
+        Method.NodeDefault_SetNodeDefault    -> call request handler Handler.setNodeDefault    SetNodeDefault.req    SetNodeDefault.rsp
+        Method.NodeDefault_RemoveNodeDefault -> call request handler Handler.removeNodeDefault RemoveNodeDefault.req RemoveNodeDefault.rsp
+
+        Method.Parser_ParseExpr -> call request handler Handler.parseExpr ParseExpr.req ParseExpr.rsp
+        Method.Parser_ParsePat  -> call request handler Handler.parsePat  ParsePat.req  ParsePat.rsp
+
+        Method.Project_Projects      -> call request handler Handler.projects      Projects.req      Projects.rsp
+        Method.Project_ProjectByID   -> call request handler Handler.projectByID   ProjectByID.req   ProjectByID.rsp
+        Method.Project_CreateProject -> call request handler Handler.createProject CreateProject.req CreateProject.rsp
+        Method.Project_OpenProject   -> call request handler Handler.openProject   OpenProject.req   OpenProject.rsp
+        Method.Project_UpdateProject -> call request handler Handler.updateProject UpdateProject.req UpdateProject.rsp
+        Method.Project_CloseProject  -> call request handler Handler.closeProject  CloseProject.req  CloseProject.rsp
+        Method.Project_StoreProject  -> call request handler Handler.storeProject  StoreProject.req  StoreProject.rsp
+
         Method.Properties_GetProperties -> call request handler Handler.getProperties GetProperties.req GetProperties.rsp
         Method.Properties_SetProperties -> call request handler Handler.setProperties SetProperties.req SetProperties.rsp
+

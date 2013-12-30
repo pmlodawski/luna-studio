@@ -93,6 +93,10 @@ import qualified Generated.Proto.Batch.NodeDefault.RemoveNodeDefault.Args   as R
 import qualified Generated.Proto.Batch.NodeDefault.RemoveNodeDefault.Result as RemoveNodeDefault
 import qualified Generated.Proto.Batch.NodeDefault.SetNodeDefault.Args      as SetNodeDefault
 import qualified Generated.Proto.Batch.NodeDefault.SetNodeDefault.Result    as SetNodeDefault
+import qualified Generated.Proto.Batch.Parser.ParseExpr.Args                as ParseExpr
+import qualified Generated.Proto.Batch.Parser.ParseExpr.Result              as ParseExpr
+import qualified Generated.Proto.Batch.Parser.ParsePat.Args                 as ParsePat
+import qualified Generated.Proto.Batch.Parser.ParsePat.Result               as ParsePat
 import qualified Generated.Proto.Batch.Project.CloseProject.Args            as CloseProject
 import qualified Generated.Proto.Batch.Project.CloseProject.Result          as CloseProject
 import qualified Generated.Proto.Batch.Project.CreateProject.Args           as CreateProject
@@ -162,6 +166,9 @@ class Handler h where
     nodeDefaults      :: h -> NodeDefaults.Args      -> IO NodeDefaults.Result
     setNodeDefault    :: h -> SetNodeDefault.Args    -> IO SetNodeDefault.Result
     removeNodeDefault :: h -> RemoveNodeDefault.Args -> IO RemoveNodeDefault.Result
+
+    parseExpr :: h -> ParseExpr.Args -> IO ParseExpr.Result
+    parsePat  :: h -> ParsePat.Args  -> IO ParsePat.Result
 
     projects      :: h -> Projects.Args      -> IO Projects.Result
     projectByID   :: h -> ProjectByID.Args   -> IO ProjectByID.Result

@@ -24,6 +24,7 @@ import qualified Flowbox.Batch.Server.Handler.Handler     as Handler
 import qualified Flowbox.Batch.Server.Handler.Library     as HLibrary
 import qualified Flowbox.Batch.Server.Handler.Maintenance as HMaintenance
 import qualified Flowbox.Batch.Server.Handler.NodeDefault as HNodeDefault
+import qualified Flowbox.Batch.Server.Handler.Parser      as HParser
 import qualified Flowbox.Batch.Server.Handler.Project     as HProject
 import qualified Flowbox.Batch.Server.Handler.Properties  as HProperties
 import qualified Flowbox.Config.Config                    as Config
@@ -51,6 +52,28 @@ empty = do emptyBatch <- Batch.make <$> Config.load
 
 
 instance Handler BatchHandler where
+    addModule            h = HAST.addModule            (batchRef h)
+    addClass             h = HAST.addClass             (batchRef h)
+    addFunction          h = HAST.addFunction          (batchRef h)
+    definitions          h = HAST.definitions          (batchRef h)
+    updateModuleCls      h = HAST.updateModuleCls      (batchRef h)
+    updateModuleImports  h = HAST.updateModuleImports  (batchRef h)
+    updateModuleFields   h = HAST.updateModuleFields   (batchRef h)
+    updateClassCls       h = HAST.updateClassCls       (batchRef h)
+    updateClassFields    h = HAST.updateClassFields    (batchRef h)
+    updateFunctionName   h = HAST.updateFunctionName   (batchRef h)
+    updateFunctionPath   h = HAST.updateFunctionPath   (batchRef h)
+    updateFunctionInputs h = HAST.updateFunctionInputs (batchRef h)
+    updateFunctionOutput h = HAST.updateFunctionOutput (batchRef h)
+    remove               h = HAST.remove               (batchRef h)
+
+    nodesGraph h = HGraph.nodesGraph (batchRef h)
+    nodeByID   h = HGraph.nodeByID   (batchRef h)
+    addNode    h = HGraph.addNode    (batchRef h)
+    removeNode h = HGraph.removeNode (batchRef h)
+    connect    h = HGraph.connect    (batchRef h)
+    disconnect h = HGraph.disconnect (batchRef h)
+
     ls         h = HFileSystem.ls    (batchRef h)
     stat       h = HFileSystem.stat  (batchRef h)
     mkdir      h = HFileSystem.mkdir (batchRef h)
@@ -77,6 +100,9 @@ instance Handler BatchHandler where
     setNodeDefault    h = HNodeDefault.setNodeDefault    (batchRef h)
     removeNodeDefault h = HNodeDefault.removeNodeDefault (batchRef h)
 
+    parseExpr     h = HParser.parseExpr      (batchRef h)
+    parsePat      h = HParser.parsePat       (batchRef h)
+
     projects      h = HProject.projects      (batchRef h)
     projectByID   h = HProject.projectByID   (batchRef h)
     createProject h = HProject.createProject (batchRef h)
@@ -84,28 +110,6 @@ instance Handler BatchHandler where
     updateProject h = HProject.updateProject (batchRef h)
     closeProject  h = HProject.closeProject  (batchRef h)
     storeProject  h = HProject.storeProject  (batchRef h)
-
-    addModule            h = HAST.addModule            (batchRef h)
-    addClass             h = HAST.addClass             (batchRef h)
-    addFunction          h = HAST.addFunction          (batchRef h)
-    definitions          h = HAST.definitions          (batchRef h)
-    updateModuleCls      h = HAST.updateModuleCls      (batchRef h)
-    updateModuleImports  h = HAST.updateModuleImports  (batchRef h)
-    updateModuleFields   h = HAST.updateModuleFields   (batchRef h)
-    updateClassCls       h = HAST.updateClassCls       (batchRef h)
-    updateClassFields    h = HAST.updateClassFields    (batchRef h)
-    updateFunctionName   h = HAST.updateFunctionName   (batchRef h)
-    updateFunctionPath   h = HAST.updateFunctionPath   (batchRef h)
-    updateFunctionInputs h = HAST.updateFunctionInputs (batchRef h)
-    updateFunctionOutput h = HAST.updateFunctionOutput (batchRef h)
-    remove               h = HAST.remove               (batchRef h)
-
-    nodesGraph h = HGraph.nodesGraph (batchRef h)
-    nodeByID   h = HGraph.nodeByID   (batchRef h)
-    addNode    h = HGraph.addNode    (batchRef h)
-    removeNode h = HGraph.removeNode (batchRef h)
-    connect    h = HGraph.connect    (batchRef h)
-    disconnect h = HGraph.disconnect (batchRef h)
 
     getProperties h = HProperties.getProperties (batchRef h)
     setProperties h = HProperties.setProperties (batchRef h)
