@@ -70,7 +70,7 @@ addFunction newFunction bcParent libID projectID = noresult . astFocusOp bcParen
 
 remove :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
 remove bc libID projectID = noresult . astOp libID projectID (\_ ast propertyMap -> do
-    focus <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc
+    focus <- Zipper.focusBreadcrumbs' bc ast
     ids   <- Luna.runIO $ ExtractIDs.run $ Zipper.getFocus focus
     let newPropertyMap = foldr PropertyMap.delete propertyMap $ IntSet.toList ids
     newAst <- Zipper.close $ Zipper.defocusDrop focus

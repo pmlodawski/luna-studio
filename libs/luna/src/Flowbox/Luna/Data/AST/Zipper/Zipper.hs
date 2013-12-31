@@ -10,6 +10,7 @@
 module Flowbox.Luna.Data.AST.Zipper.Zipper where
 
 import           Data.List                          (find)
+import           Flowbox.Control.Error              (assert)
 import           Flowbox.Luna.Data.AST.Crumb.Crumb  (Breadcrumbs)
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb  as Crumb
 import qualified Flowbox.Luna.Data.AST.Expr         as Expr
@@ -18,7 +19,6 @@ import qualified Flowbox.Luna.Data.AST.Module       as Module
 import qualified Flowbox.Luna.Data.AST.Type         as Type
 import           Flowbox.Luna.Data.AST.Zipper.Focus (Focus (ModuleFocus, ClassFocus, FunctionFocus), FocusPath)
 import           Flowbox.Prelude                    hiding (Zipper, drop, id, mod, zipper)
-
 
 
 type Zipper = (Focus, FocusPath)
@@ -88,6 +88,14 @@ focusBreadcrumbs bc zipper = case bc of
                        Crumb.FunctionCrumb name -> focusFunction name
                        Crumb.ModuleCrumb   name -> focusModule   name
            in f zipper >>= focusBreadcrumbs t
+
+
+focusBreadcrumbs' :: (Applicative m, Monad m) => Breadcrumbs -> Module -> m Zipper
+focusBreadcrumbs' bc m = case bc of
+    (Crumb.ModuleCrumb h):t -> do 
+         assert (m ^. Module.cls . Type.path . (to last) == h) $ "Cannot focus on " ++ (show h)
+         mk m >>= focusBreadcrumbs t 
+    _ -> fail $ "Cannot focus on " ++ (show bc)
 
 
 getFocus :: Zipper -> Focus

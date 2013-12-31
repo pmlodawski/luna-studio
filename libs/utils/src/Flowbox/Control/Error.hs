@@ -8,7 +8,7 @@ module Flowbox.Control.Error (
     module Control.Error,
     runScript,
     (<?>),
-    ifnot,
+    assert,
 ) where
 
 import Control.Error hiding (runScript)
@@ -30,8 +30,8 @@ val <?> m = case val of
     Nothing -> fail m
 
 
-ifnot :: Monad m => Bool -> String -> m ()
-ifnot bool msg = if bool
+assert :: Monad m => Bool -> String -> m ()
+assert bool msg = if bool
     then return ()
     else fail msg
 

@@ -10,7 +10,7 @@ module Flowbox.Batch.Handler.Graph where
 import           Flowbox.Batch.Batch                        (Batch)
 import           Flowbox.Batch.Handler.Common               (graphViewOp, noresult, readonly, readonlyNodeOp)
 import qualified Flowbox.Batch.Project.Project              as Project
-import           Flowbox.Control.Error                      (ifnot)
+import           Flowbox.Control.Error                      (assert)
 import           Flowbox.Luna.Data.AST.Crumb.Crumb          (Breadcrumbs)
 import           Flowbox.Luna.Data.Graph.Node               (Node)
 import qualified Flowbox.Luna.Data.Graph.Node               as Node
@@ -49,7 +49,7 @@ addNode node bc libID projectID = graphViewOp bc libID projectID (\_ graph prope
 removeNode :: Node.ID
            -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
 removeNode nodeID bc libID projectID = noresult . graphViewOp bc libID projectID (\_ graph propertyMap _ -> do
-    GraphView.gelem nodeID graph `ifnot` ("Wrong 'nodeID' = " ++ show nodeID)
+    GraphView.gelem nodeID graph `assert` ("Wrong 'nodeID' = " ++ show nodeID)
     let newGraph = GraphView.delNode nodeID graph
         newPropertyMap = PropertyMap.delete nodeID propertyMap
     return ((newGraph, newPropertyMap), ()))
@@ -58,9 +58,9 @@ removeNode nodeID bc libID projectID = noresult . graphViewOp bc libID projectID
 connect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor
         -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
 connect srcNodeID srcPort dstNodeID dstPort bc libID projectID = noresult . graphViewOp bc libID projectID (\_ graph propertyMap _ -> do
-    GraphView.gelem srcNodeID graph `ifnot` ("Unable to connect: Wrong 'srcNodeID' = " ++ show srcNodeID)
-    GraphView.gelem dstNodeID graph `ifnot` ("Unable to connect: Wrong 'dstNodeID' = " ++ show dstNodeID)
-    GraphView.isNotAlreadyConnected graph dstNodeID dstPort `ifnot` "Unable to connect: Port is already connected"
+    GraphView.gelem srcNodeID graph `assert` ("Unable to connect: Wrong 'srcNodeID' = " ++ show srcNodeID)
+    GraphView.gelem dstNodeID graph `assert` ("Unable to connect: Wrong 'dstNodeID' = " ++ show dstNodeID)
+    GraphView.isNotAlreadyConnected graph dstNodeID dstPort `assert` "Unable to connect: Port is already connected"
     let newGraph = GraphView.insEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) graph
     return ((newGraph, propertyMap), ()))
 
@@ -68,7 +68,7 @@ connect srcNodeID srcPort dstNodeID dstPort bc libID projectID = noresult . grap
 disconnect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor
            -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
 disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID = noresult . graphViewOp bc libID projectID (\_ graph propertyMap _ -> do
-    GraphView.gelem srcNodeID graph `ifnot` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
-    GraphView.gelem dstNodeID graph `ifnot` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
+    GraphView.gelem srcNodeID graph `assert` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
+    GraphView.gelem dstNodeID graph `assert` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
     let newGraph = GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) graph
     return ((newGraph, propertyMap), ()))

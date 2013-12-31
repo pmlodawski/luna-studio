@@ -140,7 +140,7 @@ astFocusOp :: Breadcrumbs
            -> Batch
            -> IO (Batch, r)
 astFocusOp bc libID projectID operation = astOp libID projectID (\batch ast pm -> do
-    zipper <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc
+    zipper <- Zipper.focusBreadcrumbs' bc ast
     let focus = Zipper.getFocus zipper
 
     (newFocus, r) <- operation batch focus
@@ -195,7 +195,7 @@ graphOp :: Breadcrumbs
          -> Batch
          -> IO (Batch, r)
 graphOp bc libID projectID operation = astOp libID projectID (\batch ast propertyMap -> Luna.runIO $ do
-    zipper <- Zipper.mk ast >>= Zipper.focusBreadcrumbs bc
+    zipper <- Zipper.focusBreadcrumbs' bc ast
     let focus = Zipper.getFocus zipper
     expr <- case focus of
         Focus.FunctionFocus expr -> return expr

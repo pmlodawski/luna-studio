@@ -325,7 +325,7 @@ int main()
 		std::cout << sw.elapsedMs().count() << "ms\tFileSystem::LS\n";
 
 		auto project = macro::Project::CreateProject(controlSocket, "testProject", "/tmp/flowbox/testProject", attributes::Attributes()).project();
-		auto library = macro::Library::CreateLibrary(controlSocket, "Main", "/tmp/flowbox/testProject/testLibrary", project.id()).library();
+		auto library = macro::Library::CreateLibrary(controlSocket, "MyLib", "/tmp/flowbox/testProject/testLibrary", project.id()).library();
 		
 		auto projects = macro::Project::Projects(controlSocket).projects();
 		std::cout << "Projects loaded: " << projects.size() << std::endl;
@@ -337,6 +337,12 @@ int main()
 		auto library2 = macro::Library::LibraryByID(controlSocket, library.id(), project.id()).library();
 		std::cout << "Library name: " << library2.name() << std::endl;
 
+		const BreadcrumbsHelper crumbsRoot = { {crumb::Crumb_Cls_ModuleCrumb, "MyLib"} };
+		const BreadcrumbsHelper crumbsMain = { {crumb::Crumb_Cls_ModuleCrumb, "MyLib"} 
+											 , {crumb::Crumb_Cls_ModuleCrumb, "Main" } };
+		const BreadcrumbsHelper crumbsTest = { {crumb::Crumb_Cls_ModuleCrumb, "MyLib"}
+											 , {crumb::Crumb_Cls_ModuleCrumb, "Main" }
+											 , {crumb::Crumb_Cls_FunctionCrumb, "test"} };
 		{
 			module::Module module;
 			auto moduleTypeBase = module.mutable_type();
@@ -344,7 +350,7 @@ int main()
 			auto moduleType = new type::Module();
 			moduleType->add_path("Main");
 			moduleTypeBase->SetAllocatedExtension(type::Module::ext, moduleType);
-			auto bc_Root = buildBreadcrumbs({});
+			auto bc_Root = buildBreadcrumbs(crumbsRoot);
 			macro::AST::AddModule(controlSocket, module, bc_Root, library.id(), project.id());
 		}
 		{
@@ -357,16 +363,16 @@ int main()
 			expr::Expr functionBase;
 			functionBase.set_cls(expr::Expr::Function);
 			functionBase.SetAllocatedExtension(expr::Function::ext, function);
-			auto bc_Main = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main" }});
+			auto bc_Main = buildBreadcrumbs(crumbsMain);
 			macro::AST::AddFunction(controlSocket, functionBase, bc_Main, library.id(), project.id());
 		}
 		{
-			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			macro::Graph::NodesGraph(controlSocket, bc_Main_test, library.id(), project.id());
 		}
 		graph::Node node45;
 		{
-			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("45"); 
@@ -375,7 +381,7 @@ int main()
 		}
 		graph::Node node90;
 		{
-			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("90"); 
@@ -384,7 +390,7 @@ int main()
 		}
 		graph::Node nodeAdd;
 		{
-			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("add"); 
@@ -393,7 +399,7 @@ int main()
 		}
 		graph::Node nodePrint;
 		{
-			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("print"); 
@@ -401,24 +407,24 @@ int main()
 			nodePrint = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).node();
 		}
 		{
-			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			macro::NodeDefault::SetNodeDefault(controlSocket, std::vector<int>{1}, "477", nodePrint.id(), bc_Main_test, library.id(), project.id());
 		}
 		{
-			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			macro::NodeDefault::SetNodeDefault(controlSocket, std::vector<int>{0}, "Console", nodePrint.id(), bc_Main_test, library.id(), project.id());
 		}
 		macro::Maintenance::Dump(controlSocket);
 		{
-			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			macro::Graph::Connect(controlSocket, node90.id(), std::vector<int>{}, nodeAdd.id(), std::vector<int>{0}, bc_Main_test, library.id(), project.id());
 		}
 		{
-			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			macro::Graph::Connect(controlSocket, nodeAdd.id(), std::vector<int>{}, 1, std::vector<int>{0}, bc_Main_test, library.id(), project.id());
 		}
 		{
-			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			macro::Graph::Connect(controlSocket, node45.id(), std::vector<int>{}, nodeAdd.id(), std::vector<int>{1}, bc_Main_test, library.id(), project.id());
 		}
 		// macro::Maintenance::Dump(controlSocket);
