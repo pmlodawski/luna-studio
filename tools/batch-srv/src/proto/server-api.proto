@@ -129,7 +129,9 @@ message AST {
             required int32 libraryID = 3;
             required int32 projectID = 4;
         }
-        message Result { extend Response { optional Result rsp = 1101; } }   
+        message Result { extend Response { optional Result rsp = 1101; } 
+            required generated.proto.module.Module module = 1;
+        }   
     }
     message AddClass {
         message Args   { extend Request  { optional Args   req = 1102; }
@@ -138,7 +140,9 @@ message AST {
             required int32 libraryID = 3;
             required int32 projectID = 4;
         }
-        message Result { extend Response { optional Result rsp = 1102; } }   
+        message Result { extend Response { optional Result rsp = 1102; } 
+            required generated.proto.expr.Expr class_      = 1;
+        }   
     }
     message AddFunction {
         message Args   { extend Request  { optional Args   req = 1103; }
@@ -147,7 +151,9 @@ message AST {
             required int32 libraryID = 3;
             required int32 projectID = 4;
         }
-        message Result { extend Response { optional Result rsp = 1103; } }   
+        message Result { extend Response { optional Result rsp = 1103; } 
+            required generated.proto.expr.Expr function   = 1;
+        }   
     }
     message UpdateModuleCls {
         message Args   { extend Request  { optional Args   req = 1104; }

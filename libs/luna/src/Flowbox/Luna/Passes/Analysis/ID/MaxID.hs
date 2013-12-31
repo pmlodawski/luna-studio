@@ -9,6 +9,7 @@
 
 module Flowbox.Luna.Passes.Analysis.ID.MaxID where
 
+import           Flowbox.Luna.Data.AST.Expr               (Expr)
 import           Flowbox.Luna.Data.AST.Module             (Module)
 import qualified Flowbox.Luna.Data.AST.Utils              as AST
 import           Flowbox.Luna.Passes.Analysis.ID.State    (IDState)
@@ -30,6 +31,14 @@ run :: PassMonad s m => Module -> Pass.Result m AST.ID
 run = (Pass.run_ (Pass.Info "MaxID") $ State.make) . analyseModule
 
 
+runExpr :: PassMonad s m => Expr -> Pass.Result m AST.ID
+runExpr = (Pass.run_ (Pass.Info "MaxID") $ State.make) . analyseExpr
+
+
 analyseModule :: MaxIDMonad m => Module -> Pass.Result m AST.ID
 analyseModule m = do IDTraverse.traverseModule State.compareID m
                      State.getMaxID
+
+analyseExpr :: MaxIDMonad m => Expr -> Pass.Result m AST.ID
+analyseExpr e = do IDTraverse.traverseExpr State.compareID e
+                   State.getMaxID

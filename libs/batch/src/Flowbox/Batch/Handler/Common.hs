@@ -125,25 +125,26 @@ astOp :: Library.ID
       -> (Batch -> Module -> PropertyMap -> IO ((Module, PropertyMap), r))
       -> Batch
       -> IO (Batch, r)
-astOp libID projectID operation = libraryOp libID projectID (\batch library -> Luna.runIO $ do
-    ((newAst, newPM), r) <- liftIO $ operation batch (Library.ast library) (Library.propertyMap library)
-    maxID    <- MaxID.run newAst
-    fixedAST <- IDFixer.run maxID newAst
-    let newLibrary = library { Library.ast = fixedAST, Library.propertyMap = newPM }
+astOp libID projectID operation = libraryOp libID projectID (\batch library -> do
+    let ast         = Library.ast library
+        propertyMap = Library.propertyMap library
+    ((newAst, newPM), r) <- operation batch ast propertyMap
+    let newLibrary = library { Library.ast = newAst, Library.propertyMap = newPM }
     return (newLibrary, r))
 
 
 astFocusOp :: Breadcrumbs
            -> Library.ID
            -> Project.ID
-           -> (Batch -> Focus -> IO (Focus, r))
+           -> (Batch -> Focus -> AST.ID -> IO (Focus, r))
            -> Batch
            -> IO (Batch, r)
 astFocusOp bc libID projectID operation = astOp libID projectID (\batch ast pm -> do
     zipper <- Zipper.focusBreadcrumbs' bc ast
     let focus = Zipper.getFocus zipper
 
-    (newFocus, r) <- operation batch focus
+    maxID <- Luna.runIO $ MaxID.run ast
+    (newFocus, r) <- operation batch focus maxID
 
     newAst <- Zipper.modify (\_ -> newFocus) zipper >>= Zipper.close
     return ((newAst, pm), r))
@@ -155,11 +156,12 @@ astModuleFocusOp :: Breadcrumbs
                  -> (Batch -> Module -> IO (Module, r))
                  -> Batch
                  -> IO (Batch, r)
-astModuleFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
+astModuleFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus maxID -> do
     (m, r) <- case focus of
         Focus.ModuleFocus m -> operation batch m
         _                   -> fail "Target is not a module"
-    return (Focus.ModuleFocus m, r))
+    fm <- Luna.runIO $ IDFixer.runModule maxID m
+    return (Focus.ModuleFocus fm, r))
 
 
 astFunctionFocusOp :: Breadcrumbs
@@ -168,11 +170,12 @@ astFunctionFocusOp :: Breadcrumbs
                    -> (Batch -> Expr -> IO (Expr, r))
                    -> Batch
                    -> IO (Batch, r)
-astFunctionFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
+astFunctionFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus maxID -> do
     (f, r) <- case focus of
         Focus.FunctionFocus f -> operation batch f
         _                     -> fail "Target is not a function"
-    return (Focus.FunctionFocus f, r))
+    ff <- Luna.runIO $ IDFixer.runExpr maxID f
+    return (Focus.FunctionFocus ff, r))
 
 
 astClassFocusOp :: Breadcrumbs
@@ -181,11 +184,12 @@ astClassFocusOp :: Breadcrumbs
                 -> (Batch -> Expr -> IO (Expr, r))
                 -> Batch
                 -> IO (Batch, r)
-astClassFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus -> do
+astClassFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus maxID -> do
     (c, r) <- case focus of
         Focus.ClassFocus c -> operation batch c
         _                  -> fail "Target is not a class"
-    return (Focus.ClassFocus c, r))
+    fc <- Luna.runIO $ IDFixer.runExpr maxID c
+    return (Focus.ClassFocus fc, r))
 
 
 graphOp :: Breadcrumbs
@@ -209,11 +213,14 @@ graphOp bc libID projectID operation = astOp libID projectID (\batch ast propert
 
     ast' <- GraphParser.run newGraph newPM expr
 
+    newMaxID <- MaxID.runExpr ast'
+    fixedAst <- IDFixer.runExpr newMaxID ast'
+
     loggerIO debug $ show newGraph
     loggerIO debug $ show newPM
-    loggerIO debug $ ppShow ast'
+    loggerIO debug $ ppShow fixedAst
 
-    newAst <- Zipper.modify (\_ -> Focus.FunctionFocus ast') zipper >>= Zipper.close
+    newAst <- Zipper.modify (\_ -> Focus.FunctionFocus fixedAst) zipper >>= Zipper.close
     return ((newAst, newPM), r))
 
 
