@@ -51,8 +51,23 @@ std::function<void(const std::string&)> success;
 std::function<void(const std::string&)> error;
 std::function<void(const std::string&)> after;
 
+std::function<generated::proto::crumb::Breadcrumbs(DefinitionId defID)> crumbifyMethod;
 
-generated::proto::crumb::Breadcrumbs crumbify(DefinitionId defID);
+
+generated::proto::crumb::Breadcrumbs crumbify(DefinitionId defID) 
+{
+	try
+	{
+		if(!crumbifyMethod) 
+			throw std::runtime_error("No crumbifyMethod provided!");
+		
+		return crumbifyMethod(defID);
+	}
+	catch(std::exception &e)
+	{
+		THROW("Failed to translate id %s to BreadCrumbs: %s.", defID, e);
+	}
+}
 
 size_t sendAll(void *data, size_t size);
 void sendRequest(const generated::proto::batch::Request& request);
@@ -61,7 +76,9 @@ generated::proto::batch::Response call(const generated::proto::batch::Request& r
 generated::proto::batch::Response callAndTranslateException(const generated::proto::batch::Request& request);
 
 boost::asio::ip::tcp::socket &socket;
-%wrapper_name%(boost::asio::ip::tcp::socket &socket) : socket(socket) {}
+boost::asio::ip::tcp::socket &notifySocket;
+
+%wrapper_name%(boost::asio::ip::tcp::socket &socket, boost::asio::ip::tcp::socket &notifySocket) : socket(socket), notifySocket(notifySocket) {}
 %method_decls%
 };
 )";
@@ -324,7 +341,7 @@ struct MethodWrapper
 		for(int i = 0; i < argsFields.size(); i++)
 		{
 			auto &arg = argsFields.at(i);
-			if(arg->name() == "nodeID")
+			if(arg->name() == "nodeID" && argsFields.at(i + 1)->name() == "bc")
 			{
 				assert(argsFields.at(i + 1)->name() == "bc");
 				assert(argsFields.at(i + 2)->name() == "libraryID");
@@ -406,7 +423,7 @@ struct MethodWrapper
 							R"(for(size_t i = 0; i < %1.size(); i++)
 								{
 									auto added = args->add_%2();
-									added->MergeFrom(*args);
+									added->MergeFrom(%1[i]);
 									delete args;
 								})";
 					}
