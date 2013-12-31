@@ -74,9 +74,9 @@ addModule batchHandler (AddModule.Args tnewModule tbcParent tlibID tprojectID) =
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    newBatch <- BatchAST.addModule newModule bcParent libID projectID batch
+    (newBatch, addedModule) <- BatchAST.addModule newModule bcParent libID projectID batch
     IORef.writeIORef batchHandler newBatch
-    return AddModule.Result
+    return $ AddModule.Result $ encode addedModule
 
 
 addClass :: IORef Batch -> AddClass.Args -> IO AddClass.Result
@@ -87,9 +87,9 @@ addClass batchHandler (AddClass.Args tnewClass tbcParent tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    newBatch <- BatchAST.addClass newClass bcParent libID projectID batch
+    (newBatch, addedClass) <- BatchAST.addClass newClass bcParent libID projectID batch
     IORef.writeIORef batchHandler newBatch
-    return AddClass.Result
+    return $ AddClass.Result $ encode addedClass
 
 
 addFunction :: IORef Batch -> AddFunction.Args -> IO AddFunction.Result
@@ -100,9 +100,9 @@ addFunction batchHandler (AddFunction.Args tnewFunction tbcParent tlibID tprojec
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    newBatch <- BatchAST.addFunction newFunction bcParent libID projectID batch
+    (newBatch, addedFunction) <- BatchAST.addFunction newFunction bcParent libID projectID batch
     IORef.writeIORef batchHandler newBatch
-    return AddFunction.Result
+    return $ AddFunction.Result $ encode addedFunction
 
 
 remove :: IORef Batch -> Remove.Args -> IO Remove.Result

@@ -28,6 +28,7 @@ import qualified Flowbox.Luna.Passes.General.Luna.Luna      as Luna
 import qualified Flowbox.Luna.Passes.Transform.AST.Shrink   as Shrink
 import           Flowbox.Prelude                            hiding (focus)
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer         as IDFixer
 
 
 
@@ -36,36 +37,39 @@ loggerIO = getLoggerIO "Flowbox.Batch.Handler.AST"
 
 
 definitions :: Maybe Int -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Focus
-definitions mmaxDepth bc libID projectID = readonly . astFocusOp bc libID projectID (\_ focus -> do
+definitions mmaxDepth bc libID projectID = readonly . astFocusOp bc libID projectID (\_ focus _ -> do
     shrinked <- Shrink.shrinkFunctionBodies focus
     return (focus, shrinked))
 
 
-addModule :: Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-addModule newModule bcParent libID projectID = noresult . astFocusOp bcParent libID projectID (\_ focus -> do
+addModule :: Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Module)
+addModule newModule bcParent libID projectID = astFocusOp bcParent libID projectID (\_ focus maxID -> do
+    fixedModule <- Luna.runIO $ IDFixer.runModule maxID newModule
     newFocus <- case focus of
         Focus.ClassFocus    _ -> fail "Cannot add module to a class"
         Focus.FunctionFocus _ -> fail "Cannot add module to a function"
-        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addModule newModule m
-    return (newFocus , ()))
+        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addModule fixedModule m
+    return (newFocus, fixedModule))
 
 
-addClass :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-addClass newClass bcParent libID projectID = noresult . astFocusOp bcParent libID projectID (\_ focus -> do
+addClass :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Expr)
+addClass newClass bcParent libID projectID = astFocusOp bcParent libID projectID (\_ focus maxID -> do
+    fixedClass <- Luna.runIO $ IDFixer.runExpr maxID newClass
     newFocus <- case focus of
-        Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addClass newClass c
+        Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addClass fixedClass c
         Focus.FunctionFocus _ -> fail "Cannot add class to a function"
-        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addClass newClass m
-    return (newFocus, ()))
+        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addClass fixedClass m
+    return (newFocus, fixedClass))
 
 
-addFunction :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-addFunction newFunction bcParent libID projectID = noresult . astFocusOp bcParent libID projectID (\_ focus -> do
+addFunction :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Expr)
+addFunction newFunction bcParent libID projectID = astFocusOp bcParent libID projectID (\_ focus maxID -> do
+    fixedFunction <- Luna.runIO $ IDFixer.runExpr maxID newFunction
     newFocus <- case focus of
-        Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addMethod newFunction c
+        Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addMethod fixedFunction c
         Focus.FunctionFocus _ -> fail "Cannot add function to a function"
-        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addMethod newFunction m
-    return (newFocus, ()))
+        Focus.ModuleFocus   m -> return $ Focus.ModuleFocus $ Module.addMethod fixedFunction m
+    return (newFocus, fixedFunction))
 
 
 remove :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
