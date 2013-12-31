@@ -76,6 +76,7 @@ message Request {
 
         Parser_ParseExpr      = 1700;
         Parser_ParsePat       = 1701;
+        Parser_ParseType      = 1702;
 
         Project_Projects      = 1800;
         Project_ProjectByID   = 1801;
@@ -505,6 +506,14 @@ message Parser {
         }
         message Result { extend Response { optional Result rsp = 1701; }
             required generated.proto.pat.Pat pat = 1;
+        }   
+    }
+    message ParseType {
+        message Args   { extend Request  { optional Args   req = 1702; }
+            required string str = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1702; }
+            required generated.proto.type.Type type = 1;
         }   
     }
 }

@@ -298,17 +298,6 @@ makeAsk(Library, RunLibrary)
 makeAsk(Library, BuildLibrary)
 
 
-NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &controlSocket, int pid, int lid, BreadcrumbsHelper breadcrumbsInfo, int nid)
-{
-	crumb::Breadcrumbs *bc = buildBreadcrumbs(breadcrumbsInfo);
-
-	return macro::NodeDefault::NodeDefaults(controlSocket, nid, bc, lid, pid);
-
-	// or alternatively (unreachable code used as sample)
-	auto *args = buildArgs<NodeDefault_NodeDefaults_Args>(nid, bc, lid, pid);
-	return macro::NodeDefault::NodeDefaults_(controlSocket, args);
-}
-
 
 int main()
 {
@@ -434,7 +423,7 @@ int main()
 		}
 		// macro::Maintenance::Dump(controlSocket);
 
-		macro::Library::BuildLibrary(controlSocket, library.id(), project.id());
+		// macro::Library::BuildLibrary(controlSocket, library.id(), project.id());
 		macro::Library::StoreLibrary(controlSocket, library.id(), project.id());
 		macro::Library::UnloadLibrary(controlSocket, library.id(), project.id());
 		macro::Project::StoreProject(controlSocket, project.id());
@@ -448,18 +437,6 @@ int main()
 
 		// //////////////////////////////////////////////////////////////////////////
 		// //////////////////////////////////////////////////////////////////////////
-		// //////////////////////////////////////////////////////////////////////////
-		// // Asking for node defaults
-		// try
-		// {
-		// 	using namespace generated::proto::crumb;
-		// 	auto defaults = askForNodeDefaults(controlSocket, 0, 0, { { Crumb_Cls_FunctionCrumb, "main" } }, 0);
-		// }
-		// catch(std::exception &e)
-		// {
-		// 	std::cout << "Cannot get node defaults. Error: " << e.what() << std::endl;
-		// }
-		// std::cout << sw.elapsedMs().count() << "ms\tQuery for node defaults\n";
 		// //////////////////////////////////////////////////////////////////////////
 		// // Pings
 		// const int pingCount = 10;

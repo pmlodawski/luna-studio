@@ -19,6 +19,9 @@ import qualified Generated.Proto.Batch.Parser.ParseExpr.Args        as ParseExpr
 import qualified Generated.Proto.Batch.Parser.ParseExpr.Result      as ParseExpr
 import qualified Generated.Proto.Batch.Parser.ParsePat.Args         as ParsePat
 import qualified Generated.Proto.Batch.Parser.ParsePat.Result       as ParsePat
+import qualified Generated.Proto.Batch.Parser.ParseType.Args        as ParseType
+import qualified Generated.Proto.Batch.Parser.ParseType.Result      as ParseType
+
 
 
 loggerIO :: LoggerIO
@@ -42,3 +45,12 @@ parsePat _ (ParsePat.Args tstr) = do
     loggerIO debug $ "str: " ++ (show str)
     pat <- BatchP.parsePat str
     return $ ParsePat.Result $ encode pat
+
+
+parseType :: IORef Batch -> ParseType.Args -> IO ParseType.Result
+parseType _ (ParseType.Args tstr) = do
+    loggerIO info "called parseType"
+    let str = decodeP tstr
+    loggerIO debug $ "str: " ++ (show str)
+    pat <- BatchP.parseType str
+    return $ ParseType.Result $ encode pat

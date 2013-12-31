@@ -331,21 +331,17 @@ postfixM name fun       = PExpr.Postfix (L.reservedOp name *>        fun)
 --pProgram mod = Expr.Module (Expr.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof)
 --                                           <|> pSegmentBegin pExpr 0 <* many(L.eol <* L.pSpaces) <* eof)
 
-pExprTemp = do
-    out <- pExpr True 0 <* many(L.eol <* L.pSpaces) <* eof
+pTemp p  = do
+    out <- p True 0 <* many(L.eol <* L.pSpaces) <* eof
     id  <- getState
     return (out, id)
 
 
-pPatternTemp = do
-    out <- pPattern True 0 <* many(L.eol <* L.pSpaces) <* eof
-    id  <- getState
-    return (out, id)
+parseExpr input startID = Parsec.runParser (pTemp pExpr) startID "Luna Parser" input
 
+parsePattern input startID = Parsec.runParser (pTemp pPattern) startID "Luna Parser" input
 
-parseExpr input startID = Parsec.runParser pExprTemp startID "Luna Parser" input
-
-parsePattern input startID = Parsec.runParser pPatternTemp startID "Luna Parser" input
+parseType input startID = Parsec.runParser (pTemp pType) startID "Luna Parser" input
 
 pProgram mod = pModule mod True 0 <* many(L.eol <* L.pSpaces) <* eof
 

@@ -102,6 +102,7 @@ instance Handler BatchHandler where
 
     parseExpr     h = HParser.parseExpr      (batchRef h)
     parsePat      h = HParser.parsePat       (batchRef h)
+    parseType     h = HParser.parseType      (batchRef h)
 
     projects      h = HProject.projects      (batchRef h)
     projectByID   h = HProject.projectByID   (batchRef h)
