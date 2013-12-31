@@ -9,8 +9,13 @@
 
 module Flowbox.Batch.Server.Processor where
 
+import qualified Control.Concurrent               as Concurrent
+import           Control.Concurrent.MVar          (MVar)
+import qualified Control.Concurrent.MVar          as MVar
 import           Data.ByteString.Lazy             (ByteString)
 import qualified Data.Map                         as Map
+import           Network.Socket                   (Socket)
+import           Text.ProtocolBuffers             (Int32)
 import qualified Text.ProtocolBuffers             as Proto
 import qualified Text.ProtocolBuffers.Extensions  as Extensions
 import qualified Text.ProtocolBuffers.Reflections as Reflections
@@ -18,6 +23,7 @@ import qualified Text.ProtocolBuffers.WireMessage as WireMessage
 
 import           Flowbox.Batch.Server.Handler.Handler           (Handler)
 import qualified Flowbox.Batch.Server.Handler.Handler           as Handler
+import qualified Flowbox.Batch.Server.Transport.TCP.TCP         as TCP
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                                hiding (error)
 import           Flowbox.System.Log.Logger
@@ -143,10 +149,14 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Server.ZMQ.Processor"
 
 
-response :: ResponseType.Type -> r -> Extensions.Key Maybe Response r -> ByteString
-response t r rspkey = Proto.messageWithLengthPut
-                    $ Extensions.putExt rspkey (Just r)
-                    $ Response t $ Extensions.ExtField Map.empty
+responseExt :: ResponseType.Type -> Maybe Int32 -> r -> Extensions.Key Maybe Response r -> ByteString
+responseExt t i r rspkey = Proto.messageWithLengthPut
+                         $ Extensions.putExt rspkey (Just r)
+                         $ Response t i $ Extensions.ExtField Map.empty
+
+response :: ResponseType.Type -> Maybe Int32 -> ByteString
+response t i = Proto.messageWithLengthPut
+             $ Response t i $ Extensions.ExtField Map.empty
 
 
 unsafeCall :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
@@ -160,7 +170,7 @@ unsafeCall request handler method reqkey rspkey = do
 
         Left   e'         -> fail $ "Error while getting extension: " ++ e'
         _                 -> fail $ "Error while getting extension"
-    return $ response ResponseType.Result r rspkey
+    return $ responseExt ResponseType.Result Nothing r rspkey
 
 
 call :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
@@ -173,12 +183,26 @@ call request handler method reqkey rspkey = do
     case e of
         Left  m -> do loggerIO error m
                       let exc = Exception $ encodePJ m
-                      return $ response ResponseType.Exception exc Exception.rsp
+                      return $ responseExt ResponseType.Exception Nothing exc Exception.rsp
         Right a ->    return a
 
 
-process :: Handler h => h -> ByteString -> IO ByteString
-process handler encoded_request = case Proto.messageWithLengthGet encoded_request of
+async :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
+      => Request -> h ->  (h -> arg -> IO r)
+      -> Extensions.Key Maybe Request arg
+      -> Extensions.Key Maybe Response r
+      -> MVar Socket
+      -> IO ByteString
+async request handler method reqkey rspkey notifySocket = do
+    _ <- Concurrent.forkIO $ do b <- call request handler method reqkey rspkey
+                                MVar.withMVar notifySocket (\s -> TCP.sendData s b)
+    return $ response ResponseType.Accept (Just 0)
+    --let exc = Exception $ encodePJ "just testing"
+    --return $ response ResponseType.Accept exc Exception.rsp
+
+
+process :: Handler h => MVar Socket -> h -> ByteString -> IO ByteString
+process notifySocket handler encoded_request = case Proto.messageWithLengthGet encoded_request of
                                      -- TODO [PM] : move messageWithLengthGet from here
     Left   e           -> fail $ "Error while decoding request: " ++ e
     Right (request, _) -> case Request.method request of
@@ -218,7 +242,7 @@ process handler encoded_request = case Proto.messageWithLengthGet encoded_reques
         Method.Library_LoadLibrary   -> call request handler Handler.loadLibrary   LoadLibrary.req   LoadLibrary.rsp
         Method.Library_UnloadLibrary -> call request handler Handler.unloadLibrary UnloadLibrary.req UnloadLibrary.rsp
         Method.Library_StoreLibrary  -> call request handler Handler.storeLibrary  StoreLibrary.req  StoreLibrary.rsp
-        Method.Library_BuildLibrary  -> call request handler Handler.buildLibrary  BuildLibrary.req  BuildLibrary.rsp
+        Method.Library_BuildLibrary  -> async request handler Handler.buildLibrary  BuildLibrary.req  BuildLibrary.rsp notifySocket
         Method.Library_RunLibrary    -> call request handler Handler.runLibrary    RunLibrary.req    RunLibrary.rsp
 
         Method.Maintenance_Initialize -> call request handler Handler.initialize Initialize.req Initialize.rsp

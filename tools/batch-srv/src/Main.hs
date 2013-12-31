@@ -16,7 +16,7 @@ import           Flowbox.Batch.Server.Cmd                  (Cmd)
 import qualified Flowbox.Batch.Server.Cmd                  as Cmd
 import           Flowbox.Batch.Server.Handler.BatchHandler (BatchHandler)
 import qualified Flowbox.Batch.Server.Handler.BatchHandler as BatchHandler
-import qualified Flowbox.Batch.Server.Transport.TCP        as Server
+import qualified Flowbox.Batch.Server.Transport.TCP.Server as Server
 import qualified Flowbox.Batch.Server.Version              as Version
 import           Flowbox.Options.Applicative               hiding (info)
 import qualified Flowbox.Options.Applicative               as Opt

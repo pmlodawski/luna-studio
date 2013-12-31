@@ -94,10 +94,12 @@ message Request {
 
 message Response {
     required Type type = 1;
-
+    optional int32 id  = 2;
+    
     enum Type {
         Result    = 0;
         Exception = 1;
+        Accept    = 2;
     }
     extensions 1000 to max;
 }

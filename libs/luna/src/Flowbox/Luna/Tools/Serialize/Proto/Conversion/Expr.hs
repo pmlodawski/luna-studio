@@ -17,6 +17,7 @@ import qualified Data.Map                                          as Map
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Expr                        (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
+import qualified Flowbox.Luna.Data.AST.Utils                       as AST
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Pat ()
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -47,7 +48,6 @@ import qualified Generated.Proto.Expr.Typed                        as GenTyped
 import qualified Generated.Proto.Expr.Var                          as GenVar
 import qualified Generated.Proto.Expr.Wildcard                     as GenWildcard
 import qualified Text.ProtocolBuffers.Extensions                   as Extensions
-import qualified Flowbox.Luna.Data.AST.Utils                        as AST
 
 
 

@@ -7,7 +7,7 @@
 
 module Flowbox.Luna.Passes.Transform.Graph.Attributes where
 
-import           Flowbox.Prelude
+import Flowbox.Prelude
 
 
 

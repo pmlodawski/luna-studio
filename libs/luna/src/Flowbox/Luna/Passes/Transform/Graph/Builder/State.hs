@@ -60,7 +60,7 @@ addToNodeMap k v = do nm <- getNodeMap
 
 
 insNode :: GBStateM m => (Node.ID, Node) -> Bool -> Bool -> m ()
-insNode n@(nodeID, _) isFolded noAssignment = do 
+insNode n@(nodeID, _) isFolded noAssignment = do
     g <- getGraph
     setGraph $ Graph.insNode n g
     if isFolded

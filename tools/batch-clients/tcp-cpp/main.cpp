@@ -33,7 +33,7 @@ using namespace generated::proto::batch;
 const int BUFFER_SIZE = 10000000; // TODO [PM] : magic constant
 char buffer[BUFFER_SIZE];
 
-const std::string host = "localhost", port = "30521";
+const std::string host = "localhost", controlPort = "30521", notifyPort = "30522";
 
 class StopWatch
 {
@@ -56,15 +56,15 @@ public:
 	}
 };
 
-size_t sendAll(Socket &socket, void *data, size_t size)
+size_t sendAll(Socket &controlSocket, void *data, size_t size)
 {
-	size_t sent = boost::asio::write(socket, boost::asio::buffer(data, size));
+	size_t sent = boost::asio::write(controlSocket, boost::asio::buffer(data, size));
 	assert(sent == size);
 	return sent;
 }
 
 
-void sendRequest(Socket &socket, const Request& request)
+void sendRequest(Socket &controlSocket, const Request& request)
 {
 	int  requestSize = request.ByteSize() + 4;
 	char* requestBuf = new char[requestSize];
@@ -78,16 +78,16 @@ void sendRequest(Socket &socket, const Request& request)
 	request.SerializeToCodedStream(&codedOut);
 
 	//send buffer to client
-	sendAll(socket, requestBuf, requestSize);
+	sendAll(controlSocket, requestBuf, requestSize);
 	// std::cout << "Sent: " << sent << std::flush;
 
 	delete [] requestBuf;
 }
 
-Response receiveResponse(Socket &socket)
+Response receiveResponse(Socket &controlSocket)
 {
 	Response response;
-	size_t received = boost::asio::read(socket, boost::asio::buffer(buffer, 4));
+	size_t received = boost::asio::read(controlSocket, boost::asio::buffer(buffer, 3));
 
 	//read varint delimited protobuf object in to buffer
 	//there's no method to do this in the C++ library so here's the workaround
@@ -97,8 +97,7 @@ Response receiveResponse(Socket &socket)
 	headerCodedIn.ReadVarint32(&packetSize);
 	const int sizeinfoLength = headerCodedIn.CurrentPosition();
 	const int remainingToRead = packetSize + sizeinfoLength - received;
-
-	received = boost::asio::read(socket, boost::asio::buffer(buffer + received, remainingToRead));
+	received = boost::asio::read(controlSocket, boost::asio::buffer(buffer + received, remainingToRead));
 
 	ArrayInputStream arrayIn(buffer + sizeinfoLength, packetSize);
 	CodedInputStream codedIn(&arrayIn);
@@ -108,15 +107,15 @@ Response receiveResponse(Socket &socket)
 	return response;
 }
 
-Response call(Socket &socket, const Request& request)
+Response call(Socket &controlSocket, const Request& request)
 {
-	sendRequest(socket, request);
-	return receiveResponse(socket);
+	sendRequest(controlSocket, request);
+	return receiveResponse(controlSocket);
 }
 
-Response callAndTranslateException(Socket &socket, const Request& request)
+Response callAndTranslateException(Socket &controlSocket, const Request& request)
 {
-	auto response = call(socket, request);
+	auto response = call(controlSocket, request);
 
 	if(response.type() == generated::proto::batch::Response_Type_Exception)
 	{
@@ -211,14 +210,14 @@ TMessage *buildArgs(Args ... args)
 }
 
 template<typename TResult, typename TArgs>
-TResult askSecondaryWrapper(tcp::socket &socket, TArgs * args, 
+TResult askSecondaryWrapper(tcp::socket &controlSocket, TArgs * args, 
 							 generated::proto::batch::Request_Method method)
 {
 	Request request;
 	request.set_method(method);
 	request.SetAllocatedExtension(TArgs::req, args);
 
-	auto response = callAndTranslateException(socket, request);
+	auto response = callAndTranslateException(controlSocket, request);
 	assert(response.type() == Response_Type_Result); //exception would be translated to exception
 	auto defaultsResponse = response.GetExtension(TResult::rsp);
 	response.Clear();
@@ -227,18 +226,18 @@ TResult askSecondaryWrapper(tcp::socket &socket, TArgs * args,
 
 #define makeAsk(space, method) namespace macro { namespace space {              \
 space ##_ ## method ## _Result                                                  \
-method##_(tcp::socket &socket, space ## _ ## method ## _Args *args)             \
+method##_(tcp::socket &controlSocket, space ## _ ## method ## _Args *args)             \
 {                                                                               \
 	return askSecondaryWrapper                                                  \
 	<space ##_ ## method ## _Result, space ## _ ## method ## _Args>             \
-	(socket, args, Request_Method_ ## space ## _ ## method);                    \
+	(controlSocket, args, Request_Method_ ## space ## _ ## method);                    \
 }                                                                               \
 	                                                                            \
 template<typename ...Args> 	                       	                            \
 space ##_ ## method ## _Result                                                  \
-method(tcp::socket &socket, const Args & ...args)                               \
+method(tcp::socket &controlSocket, const Args & ...args)                               \
 {                                                                               \
-	return method##_(socket, buildArgs<space ## _ ## method ## _Args>(args...));\
+	return method##_(controlSocket, buildArgs<space ## _ ## method ## _Args>(args...));\
 } } }
 
 
@@ -296,16 +295,18 @@ makeAsk(Library, LoadLibrary)
 makeAsk(Library, UnloadLibrary)
 makeAsk(Library, StoreLibrary)
 makeAsk(Library, RunLibrary)
+makeAsk(Library, BuildLibrary)
 
-NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &socket, int pid, int lid, BreadcrumbsHelper breadcrumbsInfo, int nid)
+
+NodeDefault_NodeDefaults_Result askForNodeDefaults(tcp::socket &controlSocket, int pid, int lid, BreadcrumbsHelper breadcrumbsInfo, int nid)
 {
 	crumb::Breadcrumbs *bc = buildBreadcrumbs(breadcrumbsInfo);
 
-	return macro::NodeDefault::NodeDefaults(socket, nid, bc, lid, pid);
+	return macro::NodeDefault::NodeDefaults(controlSocket, nid, bc, lid, pid);
 
 	// or alternatively (unreachable code used as sample)
 	auto *args = buildArgs<NodeDefault_NodeDefaults_Args>(nid, bc, lid, pid);
-	return macro::NodeDefault::NodeDefaults_(socket, args);
+	return macro::NodeDefault::NodeDefaults_(controlSocket, args);
 }
 
 
@@ -315,32 +316,36 @@ int main()
 	{
 		//Prepare Boost.Asio
 		boost::asio::io_service io_service;
-		tcp::socket socket(io_service);
+		tcp::socket controlSocket(io_service);
 		tcp::resolver resolver(io_service);
 
+		tcp::socket notifySocket(io_service);
+
+
 		//Connect
-		std::cout << "Connecting to " << host << " at port " << port << std::endl;
-		boost::asio::connect(socket, resolver.resolve({ "localhost", "30521" }));
+		std::cout << "Connecting to " << host << " at port " << controlPort << " / " << notifyPort << std::endl;
+		boost::asio::connect(controlSocket, resolver.resolve({ host, controlPort }));
+		boost::asio::connect(notifySocket, resolver.resolve({ host, notifyPort }));
 
 		StopWatch sw;
 
-		macro::Maintenance::Initialize(socket);
+		macro::Maintenance::Initialize(controlSocket);
 		std::cout << sw.elapsedMs().count() << "ms\tMaintenance::Initialize\n";
 
-		auto lsResult = macro::FileSystem::LS(socket, "~");
+		auto lsResult = macro::FileSystem::LS(controlSocket, "~");
 		std::cout << sw.elapsedMs().count() << "ms\tFileSystem::LS\n";
 
-		auto project = macro::Project::CreateProject(socket, "testProject", "/tmp/flowbox/testProject", attributes::Attributes()).project();
-		auto library = macro::Library::CreateLibrary(socket, "Main", "/tmp/flowbox/testProject/testLibrary", project.id()).library();
+		auto project = macro::Project::CreateProject(controlSocket, "testProject", "/tmp/flowbox/testProject", attributes::Attributes()).project();
+		auto library = macro::Library::CreateLibrary(controlSocket, "Main", "/tmp/flowbox/testProject/testLibrary", project.id()).library();
 		
-		auto projects = macro::Project::Projects(socket).projects();
+		auto projects = macro::Project::Projects(controlSocket).projects();
 		std::cout << "Projects loaded: " << projects.size() << std::endl;
-		auto project2 = macro::Project::ProjectByID(socket, project.id()).project();
+		auto project2 = macro::Project::ProjectByID(controlSocket, project.id()).project();
 		std::cout << "Project name: " << project2.name() << std::endl;
 
-		auto libraries = macro::Library::Libraries(socket, project.id()).libraries();
+		auto libraries = macro::Library::Libraries(controlSocket, project.id()).libraries();
 		std::cout << "Libraries loaded: " << libraries.size() << std::endl;
-		auto library2 = macro::Library::LibraryByID(socket, library.id(), project.id()).library();
+		auto library2 = macro::Library::LibraryByID(controlSocket, library.id(), project.id()).library();
 		std::cout << "Library name: " << library2.name() << std::endl;
 
 		{
@@ -351,7 +356,7 @@ int main()
 			moduleType->add_path("Main");
 			moduleTypeBase->SetAllocatedExtension(type::Module::ext, moduleType);
 			auto bc_Root = buildBreadcrumbs({});
-			macro::AST::AddModule(socket, module, bc_Root, library.id(), project.id());
+			macro::AST::AddModule(controlSocket, module, bc_Root, library.id(), project.id());
 		}
 		{
 			auto function = new expr::Function();
@@ -364,11 +369,11 @@ int main()
 			functionBase.set_cls(expr::Expr::Function);
 			functionBase.SetAllocatedExtension(expr::Function::ext, function);
 			auto bc_Main = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main" }});
-			macro::AST::AddFunction(socket, functionBase, bc_Main, library.id(), project.id());
+			macro::AST::AddFunction(controlSocket, functionBase, bc_Main, library.id(), project.id());
 		}
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-			macro::Graph::NodesGraph(socket, bc_Main_test, library.id(), project.id());
+			macro::Graph::NodesGraph(controlSocket, bc_Main_test, library.id(), project.id());
 		}
 		graph::Node node45;
 		{
@@ -377,7 +382,7 @@ int main()
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("45"); 
 			node.set_outputname("v45"); 
-			node45 = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
+			node45 = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).node();
 		}
 		graph::Node node90;
 		{
@@ -386,7 +391,7 @@ int main()
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("90"); 
 			node.set_outputname("v90"); 
-			node90 = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
+			node90 = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).node();
 		}
 		graph::Node nodeAdd;
 		{
@@ -395,7 +400,7 @@ int main()
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("add"); 
 			node.set_outputname("addResult"); 
-			nodeAdd = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
+			nodeAdd = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).node();
 		}
 		graph::Node nodePrint;
 		{
@@ -404,41 +409,42 @@ int main()
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("print"); 
 			node.set_outputname("console"); 
-			nodePrint = macro::Graph::AddNode(socket, node, bc_Main_test, library.id(), project.id()).node();
+			nodePrint = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).node();
 		}
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-			macro::NodeDefault::SetNodeDefault(socket, std::vector<int>{1}, "477", nodePrint.id(), bc_Main_test, library.id(), project.id());
+			macro::NodeDefault::SetNodeDefault(controlSocket, std::vector<int>{1}, "477", nodePrint.id(), bc_Main_test, library.id(), project.id());
 		}
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-			macro::NodeDefault::SetNodeDefault(socket, std::vector<int>{0}, "Console", nodePrint.id(), bc_Main_test, library.id(), project.id());
+			macro::NodeDefault::SetNodeDefault(controlSocket, std::vector<int>{0}, "Console", nodePrint.id(), bc_Main_test, library.id(), project.id());
 		}
-		macro::Maintenance::Dump(socket);
+		macro::Maintenance::Dump(controlSocket);
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-			macro::Graph::Connect(socket, node90.id(), std::vector<int>{}, nodeAdd.id(), std::vector<int>{0}, bc_Main_test, library.id(), project.id());
-		}
-		{
-			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-			macro::Graph::Connect(socket, nodeAdd.id(), std::vector<int>{}, 1, std::vector<int>{0}, bc_Main_test, library.id(), project.id());
+			macro::Graph::Connect(controlSocket, node90.id(), std::vector<int>{}, nodeAdd.id(), std::vector<int>{0}, bc_Main_test, library.id(), project.id());
 		}
 		{
 			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
-			macro::Graph::Connect(socket, node45.id(), std::vector<int>{}, nodeAdd.id(), std::vector<int>{1}, bc_Main_test, library.id(), project.id());
+			macro::Graph::Connect(controlSocket, nodeAdd.id(), std::vector<int>{}, 1, std::vector<int>{0}, bc_Main_test, library.id(), project.id());
 		}
-		// macro::Maintenance::Dump(socket);
+		{
+			auto bc_Main_test = buildBreadcrumbs({{crumb::Crumb_Cls_ModuleCrumb, "Main"}, {crumb::Crumb_Cls_FunctionCrumb, "test"}});
+			macro::Graph::Connect(controlSocket, node45.id(), std::vector<int>{}, nodeAdd.id(), std::vector<int>{1}, bc_Main_test, library.id(), project.id());
+		}
+		// macro::Maintenance::Dump(controlSocket);
 
-		macro::Library::StoreLibrary(socket, library.id(), project.id());
-		macro::Library::UnloadLibrary(socket, library.id(), project.id());
-		macro::Project::StoreProject(socket, project.id());
-		macro::Project::CloseProject(socket, project.id());
+		macro::Library::BuildLibrary(controlSocket, library.id(), project.id());
+		macro::Library::StoreLibrary(controlSocket, library.id(), project.id());
+		macro::Library::UnloadLibrary(controlSocket, library.id(), project.id());
+		macro::Project::StoreProject(controlSocket, project.id());
+		macro::Project::CloseProject(controlSocket, project.id());
 
-		auto loadedProject = macro::Project::OpenProject(socket, "/tmp/flowbox/testProject").project();
-		macro::Library::LoadLibrary(socket, "/tmp/flowbox/testProject/testLibrary", loadedProject.id());
+		auto loadedProject = macro::Project::OpenProject(controlSocket, "/tmp/flowbox/testProject").project();
+		macro::Library::LoadLibrary(controlSocket, "/tmp/flowbox/testProject/testLibrary", loadedProject.id());
 
-		// macro::Maintenance::Dump(socket);
-		macro::Project::CloseProject(socket, loadedProject.id());
+		// macro::Maintenance::Dump(controlSocket);
+		macro::Project::CloseProject(controlSocket, loadedProject.id());
 
 		// //////////////////////////////////////////////////////////////////////////
 		// //////////////////////////////////////////////////////////////////////////
@@ -447,7 +453,7 @@ int main()
 		// try
 		// {
 		// 	using namespace generated::proto::crumb;
-		// 	auto defaults = askForNodeDefaults(socket, 0, 0, { { Crumb_Cls_FunctionCrumb, "main" } }, 0);
+		// 	auto defaults = askForNodeDefaults(controlSocket, 0, 0, { { Crumb_Cls_FunctionCrumb, "main" } }, 0);
 		// }
 		// catch(std::exception &e)
 		// {
@@ -458,7 +464,7 @@ int main()
 		// // Pings
 		// const int pingCount = 10;
 		// for(int i = 0; i < pingCount; ++i) 
-		// 	macro::Maintenance::Ping(socket);
+		// 	macro::Maintenance::Ping(controlSocket);
 		// std::cout << sw.elapsedMs().count() << "ms\t" << pingCount << " pings\n";
 
 		// const int dataSize = 100000000;
@@ -468,11 +474,11 @@ int main()
 		// 	data.back() = 0;
 		// 	args->set_data(data.data());
 
-		// 	auto response = macro::Maintenance::Ping_(socket, args);
+		// 	auto response = macro::Maintenance::Ping_(controlSocket, args);
 		// }
 		// std::cout << sw.elapsedMs().count() << "ms\tSending " << dataSize << " bytes\n";
 
-		macro::Maintenance::Shutdown(socket);
+		macro::Maintenance::Shutdown(controlSocket);
 		std::cout << "done" << std::endl;
 
 		return EXIT_SUCCESS;

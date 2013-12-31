@@ -5,53 +5,20 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Batch.Server.Transport.TCP where
+module Flowbox.Batch.Server.Transport.TCP.TCP where
 
-import qualified Control.Exception                as Exception
-import           Control.Monad                    (forever)
 import           Data.ByteString.Lazy             (ByteString)
 import qualified Data.ByteString.Lazy             as ByteString
 import           Data.Int                         (Int64)
+import           Network.Socket                   (Socket)
 import qualified Network.Socket                   as Socket
-import  Network.Socket                    (Socket)
 import qualified Network.Socket.ByteString        as SByteString
 import qualified Network.Socket.ByteString.Lazy   as SLByteString
 import qualified Text.ProtocolBuffers.WireMessage as WireMessage
 
-import           Flowbox.Batch.Server.Cmd             (Cmd)
-import qualified Flowbox.Batch.Server.Cmd             as Cmd
-import           Flowbox.Batch.Server.Handler.Handler (Handler)
-import qualified Flowbox.Batch.Server.Processor       as Processor
-import           Flowbox.Prelude                      hiding (error)
-import           Flowbox.System.Log.Logger
+import Flowbox.Prelude hiding (error)
 
-
-
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Server.TCP"
-
-
---TODO [PM] : Refactor needed
---TODO [PM] : Magic constants
---TODO [PM] : Cleanup needed
-
-
-serve :: Handler h => Cmd -> h -> IO ()
-serve cmd handler = Socket.withSocketsDo $ do
-    let address     = Cmd.address cmd
-        controlPort = Cmd.port cmd
-        notifyPort  = controlPort + 1
-        maxConnections = 1
-
-    controlSocket <- openSocket address controlPort maxConnections
-
-    if Cmd.shutdownWithClient cmd
-        then acceptAndHandle controlSocket handler
-        else forever $ Exception.handle
-            (\(e :: Exception.SomeException) -> loggerIO critical $ "Connection to client lost: " ++ show e)
-            (acceptAndHandle controlSocket handler)
 
 
 openSocket :: String -> Int -> Int -> IO Socket
@@ -67,24 +34,11 @@ openSocket address port maxConnections = do
     return socket
 
 
-acceptAndHandle :: Handler h => Socket.Socket -> h -> IO ()
-acceptAndHandle controlSocket handler = do
-    (client, clientSockAddr) <- Socket.accept controlSocket
-    loggerIO info $ "Accepted connection from " ++ (show clientSockAddr)
-    forever $ handleCall client handler
+sendData :: Socket -> ByteString -> IO ()
+sendData socket bytes = SByteString.sendAll socket $ ByteString.toStrict bytes
 
 
-handleCall :: Handler h => Socket.Socket -> h -> IO ()
-handleCall controlSocket handler = do
-    loggerIO debug "handleCall: started"
-    encoded_request  <- readData controlSocket
-    encoded_response <- Processor.process handler encoded_request
-    loggerIO debug "handleCall: processing done"
-    SByteString.sendAll controlSocket $ ByteString.toStrict encoded_response
-    loggerIO debug "handleCall: reply sent"
-
-
-readData :: Socket.Socket -> IO ByteString
+readData :: Socket -> IO ByteString
 readData controlSocket = do
     header <- SLByteString.recv controlSocket 1024
     (size, _) <- case WireMessage.runGetOnLazy WireMessage.getVarInt header of
