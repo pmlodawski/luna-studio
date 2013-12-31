@@ -30,11 +30,14 @@ mkTHVarName  = ("'" ++)
 mkTHTypeName :: String -> String
 mkTHTypeName = ("''" ++)
 
-mkFieldName :: String -> String
-mkFieldName  = (++"_T")
+mkFieldName :: String -> String -> String
+mkFieldName clsName name = ("m_" ++ clsName ++ "_" ++ name)
 
 mkFuncName :: String -> String
 mkFuncName   = ("f_" ++)
+
+mkConName :: String -> String
+mkConName   = ("con_" ++)
 
 mkVarName :: String -> String
 mkVarName    = ("_" ++)
@@ -75,8 +78,26 @@ thRegisterFunction clsName fname name argNum _defaults = HExpr.THE $ foldl (HExp
                                    , HExpr.ListE []
                                    ]
 
+thRegisterLambda fname argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerLambda") vars where
+                            vars = [ HExpr.Var $ mkTHVarName  fname
+                                   , HExpr.Lit $ HLit.Int (show argNum)
+                                   , HExpr.ListE []
+                                   ]
+
 thClsCallInsts name argNum defNum = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "mkCallInsts") vars where
                             vars = [HExpr.Var $ mkTHVarName name, HExpr.Lit $ HLit.Int (show argNum), HExpr.Lit $ HLit.Int (show defNum)]
+
+
+
+thGenerateClsGetters name = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "generateClsGetters") vars where
+                            vars = [ HExpr.Var $ mkTHTypeName name ]
+
+thRegisterClsGetters name = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerClsGetters") vars where
+                            vars = [ HExpr.Var $ mkTHTypeName name ]
+
+thCallInstsGetters name = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "mkCallInstsGetters") vars where
+                          vars = [ HExpr.Var $ mkTHTypeName name ]
+
 
 genTHInstMem name func = foldl (HExpr.AppE) (HExpr.Var "mkInstMem") vars where
                             vars = [ HExpr.Lit $ HLit.String name

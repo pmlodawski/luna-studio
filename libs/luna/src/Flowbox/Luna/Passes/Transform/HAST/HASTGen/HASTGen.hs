@@ -200,6 +200,7 @@ genExpr ast = case ast of
     LExpr.Lambda id inputs output body   -> do
                                             let mname      = mkLamName $ show id
                                                 fname      = mkFuncName mname
+                                                conName    = mkConName fname
                                                 cfName     = mkCFLName mname
                                                 argNum     = length inputs
                                                 cgetCName  = mkCGetCName argNum
@@ -210,16 +211,18 @@ genExpr ast = case ast of
                                             GenState.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] ["Show"]
 
                                             f  <-   HExpr.Assignment (HExpr.Var fname) 
-                                                    <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show argNum)
-                                                          <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
-                                                                             <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
-                                                              )
+                                                    <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
+                                                                       <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
                                                         )
                                             GenState.addFunction f
-                                            GenState.addFunction vargGetter
-                                            GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
 
-                                            return $ mkPure $ HExpr.Var cfName
+                                            GenState.addTHExpression $ thRegisterLambda fname argNum [] 
+                                            GenState.addTHExpression $ thClsCallInsts fname argNum 0
+
+                                            --GenState.addFunction vargGetter
+                                            --GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
+
+                                            return $ HExpr.Var conName
 
     LExpr.Arg _ pat _                    -> genPat pat
                                                   
@@ -278,6 +281,9 @@ genExpr ast = case ast of
 
                                             GenState.addTHExpression $ thRegisterClass name fieldlen [] 
                                             GenState.addTHExpression $ thClsCallInsts name fieldlen 0
+                                            GenState.addTHExpression $ thGenerateClsGetters name
+                                            GenState.addTHExpression $ thRegisterClsGetters name
+                                            GenState.addTHExpression $ thCallInstsGetters name
 
 
                                             mapM_ genExpr methods
@@ -288,10 +294,14 @@ genExpr ast = case ast of
     LExpr.Infix       _ name src dst      -> HExpr.Infix name <$> genExpr src <*> genExpr dst
     LExpr.Assignment  _ pat dst           -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
     LExpr.Lit         _ value             -> genLit value
-    LExpr.Tuple       _ items             -> mkPure . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
-    LExpr.Field       _ name cls _        -> genTyped HExpr.Typed cls <*> pure (HExpr.Var $ mkFieldName name)
-    LExpr.App         _ src args          -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
-    LExpr.Accessor    _ name dst          -> (HExpr.AppE <$> (pure $ mkMemberGetter name) <*> (get0 <$> genExpr dst))
+    LExpr.Tuple       _ items             -> mkVal . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
+    LExpr.Field       _ name fcls _       -> do
+                                             cls <- GenState.getCls 
+                                             let clsName = view LType.name cls
+                                             genTyped HExpr.Typed fcls <*> pure (HExpr.Var $ mkFieldName clsName name)
+    --LExpr.App         _ src args          -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
+    LExpr.App         _ src args          -> HExpr.AppE <$> (HExpr.AppE (HExpr.Var "call") <$> genExpr src) <*> (HExpr.Tuple <$> mapM genCallExpr args)
+    LExpr.Accessor    _ name dst          -> HExpr.AppE <$> (pure $ mkMemberGetter name) <*> genExpr dst --(get0 <$> genExpr dst))
     LExpr.List        _ items             -> do
                                              let liftEl el = case el of
                                                      LExpr.RangeFromTo {} -> el
@@ -301,10 +311,11 @@ genExpr ast = case ast of
                                                      then (HExpr.AppE (HExpr.Var "concatPure"), liftEl)
                                                      else (Prelude.id, Prelude.id)
                          
-                                             mkPure . arrMod . HExpr.ListE <$> mapM (genExpr . elmod) items
+                                             mkVal . arrMod . HExpr.ListE <$> mapM (genExpr . elmod) items
     LExpr.RangeFromTo _ start end         -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
     LExpr.RangeFrom   _ start             -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start 
     LExpr.Native      _ segments          -> pure $ HExpr.Native (join "" $ map genNative segments)
+    --x                                     -> logger error (show x) *> return HExpr.NOP
     where
         getN n = HExpr.AppE (HExpr.Var $ "call" ++ show n)
         get0   = getN (0::Int)
@@ -326,7 +337,8 @@ genCallExpr e = trans <$> genExpr e where
         LExpr.Native     {} -> id
         LExpr.Assignment {} -> id
         LExpr.Lambda     {} -> id
-        _                   -> call0
+        _                   -> id
+        --_                   -> call0
     id     = Prelude.id
     call0  = HExpr.AppE (HExpr.Var "call0")
     ret    = HExpr.AppE $ HExpr.Var "return"
@@ -339,7 +351,7 @@ genFuncBody exprs output = case exprs of
                       LExpr.Native     {}      -> genCallExpr x
                       _                        -> (genTyped HExpr.TypedE output <*> genCallExpr x) -- mkGetIO <$>
                 <*> case x of
-                      LExpr.Assignment _ _ dst -> (:[]) <$> (genTyped HExpr.TypedE output <*> pure (mkPure $ HExpr.Tuple [])) -- . mkGetIO 
+                      LExpr.Assignment _ _ dst -> (:[]) <$> (genTyped HExpr.TypedE output <*> pure (mkVal $ HExpr.Tuple [])) -- . mkGetIO 
                       _                        -> pure []
     x:xs -> (:) <$> genCallExpr x <*> genFuncBody xs output
 

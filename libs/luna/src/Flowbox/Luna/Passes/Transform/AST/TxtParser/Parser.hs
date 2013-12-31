@@ -86,8 +86,8 @@ pArg        s i    = tok Expr.Arg      <*> pPatCon s i
                                        <*> ((Just <$ L.pAssignment <*> pExpr s i) <|> pure Nothing)
 
 pFunc       s i    = tok Expr.Function <*  L.pDef
-                                       <*> pExtPath s
-                                       <*> (pVar s)
+                                       <*> (pExtPath s <?> "")
+                                       <*> (pVar s     <?> "function name")
                                        <*> pArgList s (pArg s i)
                                        <*> (try (L.pArrow *> pType s i) <|> tok Type.Unknown)
                                        <*> (pExprBlock s i <|> return [])
@@ -159,23 +159,46 @@ pNativeVar      = tok Expr.NativeCode <*> many1 (noneOf "`#")
 pNativeCode     = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol2 False '}'
 
 
-pExpr     s i   = Expr.aftermatch <$> PExpr.buildExpressionParser (optableE s i) (pTermE s i)
+pExpr     s i   = Expr.aftermatch <$> PExpr.buildExpressionParser (optableE s i) (pEntE s i)
            <?> "expression"
 
-pTermE    s i   = choice[ pDeclaration s i
+
+--pDotTermE s i   = choice [ try $ (flip <$> tok Expr.Accessor) <*> pTermE s i <* L.pAccessor <*> pVar s
+--                         , pTermE s i
+--                         ]
+
+pDotTermE s i   = choice [ try $ (pEntBaseE s i <**> (tok Expr.Accessor <* L.pAccessor <*> pVar s))
+                         , pEntBaseE s i
+                         ]
+
+
+
+pEntBaseE s i   = choice[ pDeclaration s i
                         , try $ L.parensed s (pExpr s i)
-                        , pEntE s i
+                        , pIdentE s
+                        , tok Expr.Lit    <*> pLit s
+                        , tok Expr.Tuple  <*> pTuple  (pExpr s i)
+                        , tok Expr.List   <*> pList   (pListExpr s i)
+                        , tok Expr.Native <*> pNative
                         ]
            <?> "expression term"
 
-optableE  s i  = [ [ postfixM "."  (tok Expr.Accessor <*> pIdent s)                ]
-                 , [ postfixM "::" (tok Expr.Typed <*> pType s i)                  ]
+--pTermE    s i   = choice[ pDeclaration s i
+--                        --, try $ L.parensed s (pExpr s i)
+--                        , pEntE s i
+--                        ]
+--           <?> "expression term"
+
+optableE  s i  = [ --[ postfixM "."  (tok Expr.Accessor <*> pIdent s)                ]
+                   --[ binaryM  "."  (tok (\id x y -> Expr.Accessor id (view Expr.name y) x))             PExpr.AssocLeft ]
+                  [ postfixM "::" (tok Expr.Typed <*> pType s i)                  ]
                  , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
                  , [ operator "^"                                  PExpr.AssocLeft ]
                  , [ operator "*"                                  PExpr.AssocLeft ]
                  , [ operator "/"                                  PExpr.AssocLeft ]
                  , [ operator "+"                                  PExpr.AssocLeft ]
                  , [ operator "-"                                  PExpr.AssocLeft ]
+                 , [ binaryM  "$"  (binaryMatchE <$> tok Expr.callConstructor)      PExpr.AssocLeft ]
                  , [ prefixfM      (try(binaryMatchE2 <$> tok Expr.Assignment <*> (pPattern s i) <* (L.reservedOp "=" <?> "pattern match")))]
                  ]
                  where
@@ -197,18 +220,12 @@ pListExpr s i = choice [ try $ tok Expr.RangeFromTo <*> pExpr s i <* L.pRange <*
                        , pExpr s i
                        ]
 
-pEntBaseE s i = choice [ pIdentE s
-                       , tok Expr.Lit    <*> pLit s
-                       , tok Expr.Tuple  <*> pTuple  (pExpr s i)
-                       , tok Expr.List   <*> pList   (pListExpr s i)
-                       , tok Expr.Native <*> pNative
-                       ]
-
 -- Function application using parenthesis notation, e.g. f(1).next <=> (f 1).next or f (1).next <=> f 1.next
 pEntE     s i = (\expr ops -> foldr ($) expr $ reverse ops)
-             <$> pEntBaseE False i
-             <*> choice [ try $ many1 ( flip <$> (Expr.App <$> genID) <*> pCallList False (pTermE s i))
+             <$> pDotTermE False i
+             <*> choice [ try $ many1 ( flip <$> (tok Expr.App) <*> pCallList False (pEntE s i) <* L.pSpaces)
                         ,       [] <$ L.pSpaces
+                        --,       ((:[]) <$> (flip <$> (tok Expr.App) <*> pure [])) <* L.pSpaces
                         ]
 
 ---- Implicit tuples support
@@ -271,8 +288,8 @@ pVarP       s   = tok Pat.Var      <*> pVar s
 pLitP       s   = tok Pat.Lit      <*> pLit s
 pTupleP     s i = tok Pat.Tuple    <*> pTuple (pPatCon s i)
 pWildcardP      = tok Pat.Wildcard <*  L.pWildcard
-pConP       s   = tok Pat.Con     <*> pCon s
-pConAppP   s i = tok Pat.App      <*> pConP s <*> many1 (pTermP s i)
+pConP       s   = tok Pat.Con      <*> pCon s
+pConAppP    s i = tok Pat.App      <*> pConP s <*> many1 (pTermP s i)
 
 pEntP   s i = choice [ pVarP      s
                      , pLitP      s
@@ -294,7 +311,7 @@ pEmptyLine          = try(L.pSpaces *> L.eol)
 pIndentExact      i = i <$ count i (char ' ')
 
 pIdentAtLast      i = do
-                      _   <- many (char ' ')
+                      _   <- many (char ' ') <?> "indentation"
                       col <- sourceColumn <$> getPosition
                       if col > i then pure (col-1)
                                  else fail "incorrect indentation"
@@ -335,6 +352,7 @@ pExprTemp = do
     out <- pExpr True 0 <* many(L.eol <* L.pSpaces) <* eof
     id  <- getState
     return (out, id)
+
 
 
 

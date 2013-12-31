@@ -52,7 +52,8 @@ ssaExpr vs ast = case ast of
     Expr.Accessor   id name dst           -> Expr.Accessor id name <$> ssaExpr vs dst
     Expr.Var        id name               -> case IntMap.lookup id (AA.varmap vs) of
                                                   Just nid -> return $ Expr.Var id (mkVar nid)
-                                                  Nothing  -> Pass.fail ("Not in scope '" ++ name ++ "'.")
+                                                  Nothing  -> (logger error $ "Not in scope '" ++ name ++ "'.")
+                                                           *> (return $ Expr.Var id name)
     Expr.NativeVar  id name               -> case IntMap.lookup id (AA.varmap vs) of
                                                   Just nid -> return $ Expr.NativeVar id (mkVar nid)
                                                   Nothing  -> Pass.fail ("Not in scope '" ++ name ++ "'.")
