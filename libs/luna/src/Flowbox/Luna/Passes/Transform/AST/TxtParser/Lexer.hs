@@ -18,7 +18,6 @@ import Text.Parsec         hiding (many, optional, (<|>), getPosition)
 
 
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token as Token
 import           Flowbox.Luna.Data.AST.SourcePos                   (SourceRange(SourceRange))
 
 
@@ -67,7 +66,7 @@ pInterface  = reserved "interface"
 -- imports
 pFrom       = reserved "from"
 pImport     = storePos $ reserved "import"
-pAs         = reserved "as"
+pAs         = storePos $ reserved "as"
 
 
 -----------------------------------------------------------
@@ -252,12 +251,6 @@ isReservedOp name = isReserved (sort reservedOpNames) name
 -----------------------------------------------------------
 --reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> "")
 reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
-
-
-storePos p = (\pre res post -> Token.mk res pre post) <$> getPosition <*> p <*> getPosition
-
-
-
 
 pIdentVar     = storePos pIdentLower <?> "variable identifier"
 pIdentType    = storePos pIdentUpper <?> "type identifier"

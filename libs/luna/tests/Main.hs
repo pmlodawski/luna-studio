@@ -43,6 +43,7 @@ import qualified Flowbox.System.Log.Logger                             as Logger
 import qualified Flowbox.System.UniPath                                as UniPath
 import           Flowbox.Text.Show.Hs                                  (hsShow)
 import qualified Flowbox.Text.Show.Pretty                              as PP
+import qualified Flowbox.Luna.Data.AST.Module                          as FModule
 
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb as ASTCrumb
 import qualified Flowbox.Luna.Data.AST.Zipper      as Zipper
@@ -86,7 +87,7 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source ["Main"] $
         concat $ replicate 1 $ unlines [ ""
-                    , "import Std:Vector"
+                    --, "import Std:Vector"
                     ----, "def List.length self:"
                     ----, "    ```getIO $ liftFPure1 length #{self}```"
                     ----, "def List.each self callback:"
@@ -122,8 +123,8 @@ example = Source.Source ["Main"] $
                   --, "    v"
                   --, "    (2+2).f"
 
-                  --, "def fxx:"
-                  --, "    a"
+                  , "def fxx:"
+                  , "    1"
                   --, "    Vector"
                   --, "    def g:"
                   --, "        xxx"
@@ -221,6 +222,7 @@ main_inner = Luna.run $ do
     (ast, srcMap) <- TxtParser.run source
     logger info $ PP.ppqShow ast
     logger info $ PP.ppShow srcMap
+    --logger info (show.length $ FModule._classes ast)
     return ()
 
     ----let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]

@@ -52,6 +52,8 @@ genID' p = do
     return (id, Token.value tok)
 
 
+tokPure a = pure $ Token Nothing a mempty
+
 tokPrep f = do
     id  <- genID
     let range = mempty
@@ -75,6 +77,51 @@ tok1 f p = do
     registerSrc id (Token.range tok)
     return $ Token (Just id) (f id $ Token.value tok) (Token.range tok)
 
+tok a = do
+    st <- getState
+    let id = view ParseState.id st
+    setState (set ParseState.id (id+1) st)
+    a <$> pure id
+
+genID = do
+    st <- getState
+    let id = view ParseState.id st
+    setState (set ParseState.id (id+1) st)
+    pure id
+
+
+infixl 4 <$#>, <$#, <*#>, <*#
+
+l <*# r = do
+    Token id value lRange <- l
+    Token _ _ rRange             <- r
+    let range = mappend lRange rRange
+    case id of
+        Just v  -> registerSrc v range
+        Nothing -> return ()
+    return $ Token id value range
+
+l *#> r = do
+    Token _ _ lRange      <- l
+    Token id value rRange <- r
+    let range = mappend lRange rRange
+    case id of
+        Just v  -> registerSrc v range
+        Nothing -> return ()
+    return $ Token id value range
+
+l <*#> r = do
+    Token lId lValue lRange <- l
+    Token rId rValue rRange <- r
+    let range = mappend lRange rRange
+    case lId of
+        Just v  -> registerSrc v range
+        Nothing -> return ()
+    return $ Token lId (lValue rValue) range
+
+l <$#> r = tokPrep l <*#> r
+
+l <$# r = tokPrep l <*# r
 
 -----------------------------------------------------------
 -- Entities
@@ -91,59 +138,29 @@ pCon         = Token.value <$> L.pIdentType
 pCon'        = L.pIdentType
 pVar         = do
     x <- L.pIdentVar
-    return $ trace(show x) (Token.value x)
+    return $ (Token.value x)
 pVar'        = L.pIdentVar
 pIdent       = choice [ pCon, pVar ]
 pIdent'      = choice [ pCon', pVar' ]
 pExtPath     = (pPath1 pCon <* L.pAccessor) <|> pure []
+wildcard     = storePos L.pWildcard
+
+
+parensed p = (storePos L.parenL) *#> p <*# (storePos L.parenR)
 
 -----------------------------------------------------------
 -- Literals
 -----------------------------------------------------------
-pIntL    = tok Lit.Integer <*> L.integerStr 
-pFloatL  = tok Lit.Float   <*> L.floatStr
-pCharL   = tok Lit.Char    <*> L.charLiteral
-pStringL = tok Lit.String  <*> L.stringLiteral
+
+pIntL    = Lit.Integer <$#> storePos L.integerStr
+pFloatL  = Lit.Float   <$#> storePos L.floatStr
+pCharL   = Lit.Char    <$#> storePos L.charLiteral
+pStringL = Lit.String  <$#> storePos L.stringLiteral
 pLit     = choice [ try $ pFloatL
                   , pIntL
                   , pCharL 
                   , pStringL
                   ]
-
-tok a = do
-    st <- getState
-    let id = view ParseState.id st
-    setState (set ParseState.id (id+1) st)
-    a <$> pure id
-
-genID = do
-    st <- getState
-    let id = view ParseState.id st
-    setState (set ParseState.id (id+1) st)
-    pure id
-
-
-infixl 4 <$#, <*#>, <*#
-
-l <*# r = do
-    Token id value lRange <- l
-    Token _ _ rRange             <- r
-    let range = mappend lRange rRange
-    case id of
-        Just v  -> registerSrc v range
-        Nothing -> return ()
-    return $ Token id value range
-
-l <*#> r = do
-    Token lId lValue lRange <- l
-    Token rId rValue rRange <- r
-    let range = mappend lRange rRange
-    case lId of
-        Just v  -> registerSrc v range
-        Nothing -> return ()
-    return $ Token lId (lValue rValue) range
-
-l <$# r = tokPrep l <*# r
 
 -----------------------------------------------------------
 -- Declarations
@@ -155,10 +172,9 @@ pImport          = Expr.Import <$#  L.pImport
                                <*#> (Token.flatten <$> pPath1 pIdent')
                                <*#  L.pBlockBegin
                                <*#> (try (Expr.Wildcard <$# L.pImportAll) <|> pIdentE)
-                               <*#> pure (Token Nothing Nothing mempty )
-                                    -- <*> (     try (Just <$ L.pAs <*> (L.pIdent <?> "import name"))
-                                    --       <|> pure Nothing
-                                    --     )
+                               <*#> (     try (tokPure Just <*# L.pAs <*#> (pIdent' <?> "import name"))
+                                      <|> tokPure Nothing
+                                    )
 
 
 pArg            = tok Expr.Arg      <*> pPatCon
@@ -252,8 +268,8 @@ pDotTermE = (pEntBaseE) <??> (flip applyAll <$> many1 (tok Expr.Accessor <* L.pA
 
 pEntBaseE = choice[ pDeclaration 
                   , try $ L.parensed pExpr
-                  --, pIdentE
-                  , tok Expr.Lit    <*> pLit
+                  , (Token.value <$> pIdentE)
+                  , (Token.value <$> (Expr.Lit <$#> pLit))
                   , tok Expr.Tuple  <*> pTuple  pExpr
                   , tok Expr.List   <*> pList   pListExpr
                   , tok Expr.Native <*> pNative
@@ -341,18 +357,18 @@ pTermP      = choice [ try $ L.parensed pPatCon
                      ]
               <?> "pattern term"
 
-pVarP       = tok Pat.Var      <*> pVar
-pLitP       = tok Pat.Lit      <*> pLit
+pVarP       = Pat.Var      <$#> pVar'
+pLitP       = Pat.Lit      <$#> pLit
 pTupleP     = tok Pat.Tuple    <*> pTuple pPatCon
-pWildcardP  = tok Pat.Wildcard <*  L.pWildcard
-pConP       = tok Pat.Con      <*> pCon
-pConAppP    = tok Pat.App      <*> pConP <*> many1 pTermP
+pWildcardP  = Pat.Wildcard <$# wildcard
+pConP       = Pat.Con      <$#> pCon'
+pConAppP    = tok Pat.App      <*> (Token.value <$> pConP) <*> many1 pTermP
 
-pEntP = choice [ pVarP      
-               , pLitP      
+pEntP = choice [ (Token.value <$> pVarP)
+               , (Token.value <$> pLitP)
                , pTupleP    
-               , pWildcardP
-               , pConP      
+               , (Token.value <$> pWildcardP)
+               , (Token.value <$> pConP)
                ]
 
 -------------------------------------------------------------

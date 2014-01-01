@@ -15,6 +15,7 @@ import Control.Applicative
 import Flowbox.Prelude
 import Text.Parsec         hiding (many, optional, parse, (<|>), getPosition)
 import Flowbox.Luna.Data.AST.SourcePos (SourcePos(SourcePos))
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token as Token
 
 checkIf f msg p = do
         obj <- p
@@ -60,4 +61,4 @@ applyAll x [] = x
 getPosition = convertSourcePos <$> Parsec.getPosition
 convertSourcePos psp = SourcePos (sourceLine psp) (sourceColumn psp)
 
-
+storePos p = (\pre res post -> Token.mk res pre post) <$> getPosition <*> p <*> getPosition
