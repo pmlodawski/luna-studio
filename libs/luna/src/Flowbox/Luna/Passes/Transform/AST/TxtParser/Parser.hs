@@ -31,6 +31,12 @@ import qualified Flowbox.Prelude                                   as Prelude
 import Text.Parsec.Pos
 import Control.Monad.State
 
+import qualified Prelude
+
+
+blockSpaces = try (spaces <* checkIndent) <|> pure ()
+
+multiBblock p = block (p <* blockSpaces)
 
 -----------------------------------------------------------
 -- Entities
@@ -93,7 +99,6 @@ pFunc           = tok Expr.Function <*  L.pDef
                                     <*> (pArgList pArg  <?> "dunction argument list")
                                     <*> (try (L.pArrow *> pType) <|> tok Type.Unknown)
                                     <*> (pExprBlock <|> return [])
-                                    -- <* spaces
                                     <?> "function definition"
 
 
@@ -109,8 +114,9 @@ pClass           = tok Class.mk     <*  L.pClass
                                     <??$> pBlockBegin pClassBody
                                     <?> "class definition"
 
+
 pModule name     = tok Module.mk    <*>   (tok Type.Module <*> pure name)
-                                    <??$> withPos (block pModuleBody)
+                                    <??$> withPos (multiBblock pModuleBody)
 
 
 
@@ -145,7 +151,6 @@ pFields        =   (\names t val -> map (tok . (mkField t val)) names )
                <*  L.pTypeDecl
                <*> pType
                <*> (L.pAssignment *> (Just <$> pExpr) <|> pure Nothing)
-               <*  spaces
 
 pDeclaration   = choice [ pImport 
                         , pFunc   
@@ -166,10 +171,12 @@ pNativeVar  = tok Expr.NativeCode <*> many1 (noneOf "`#")
 pNativeCode = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol '}'
 
 
-pExpr       = Expr.aftermatch <$> PExpr.buildExpressionParser optableE pDotTermE <* spaces
-            <?> "expression"
+pExpr =   try (tok Expr.Assignment <*> pPattern <* (L.reservedOp "=") <*> pOpE)
+      <|> pOpE
+      <?> "expression"
 
-
+pOpE      = Expr.aftermatch <$> PExpr.buildExpressionParser optableE pDotTermE
+          
 pDotTermE = (pEntBaseE) <??> (flip applyAll <$> many1 (tok Expr.Accessor <* L.pAccessor <*> pVar))
 
 pEntBaseE = choice[ pDeclaration 
@@ -182,8 +189,7 @@ pEntBaseE = choice[ pDeclaration
                   ]
            <?> "expression term"
 
-
-optableE = [ [ postfixM "::" (tok Expr.Typed <*> pType)                  ]
+optableE = [ [ postfixM "::" (tok Expr.Typed <*> pType)                      ]
            , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
            , [ operator "^"                                  PExpr.AssocLeft ]
            , [ operator "*"                                  PExpr.AssocLeft ]
@@ -191,14 +197,11 @@ optableE = [ [ postfixM "::" (tok Expr.Typed <*> pType)                  ]
            , [ operator "+"                                  PExpr.AssocLeft ]
            , [ operator "-"                                  PExpr.AssocLeft ]
            , [ binaryM  "$"  (binaryMatchE <$> tok Expr.callConstructor)      PExpr.AssocLeft ]
-           , [ prefixfM      (try(binaryMatchE2 <$> tok Expr.Assignment <*> pPattern <* (L.reservedOp "=" <?> "pattern match")))]
            ]
            where
               operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':op)))
 
 binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
-binaryMatchE2 f p q = f p (Expr.aftermatch q)
-
 
 pVarE   = tok Expr.Var <*> pVar
 pConE   = tok Expr.Con <*> pCon
@@ -283,7 +286,7 @@ pEntP = choice [ pVarP
 ---- Nested Segments
 -------------------------------------------------------------
 
-pBlockBegin     p = L.pBlockBegin *> spaces *> indented *> withPos(block p)
+pBlockBegin     p = L.pBlockBegin *> spaces *> indented *> withPos(multiBblock p)
 
 
 -----------------------------------------------------------
