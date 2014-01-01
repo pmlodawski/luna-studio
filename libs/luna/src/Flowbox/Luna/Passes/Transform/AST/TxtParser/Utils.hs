@@ -58,6 +58,6 @@ applyAll x [] = x
 
 
 getPosition = convertSourcePos <$> Parsec.getPosition
-convertSourcePos psp = SourcePos (sourceName psp) (sourceLine psp) (sourceColumn psp)
+convertSourcePos psp = SourcePos (sourceLine psp) (sourceColumn psp)
 
 

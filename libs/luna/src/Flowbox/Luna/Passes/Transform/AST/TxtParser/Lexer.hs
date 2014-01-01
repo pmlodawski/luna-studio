@@ -17,9 +17,9 @@ import Flowbox.Prelude     hiding (op)
 import Text.Parsec         hiding (many, optional, (<|>), getPosition)
 
 
-import Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-import Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token(Token))
-import Flowbox.Luna.Data.AST.SourcePos                   (SourceRange(SourceRange))
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token as Token
+import           Flowbox.Luna.Data.AST.SourcePos                   (SourceRange(SourceRange))
 
 
 
@@ -33,7 +33,7 @@ commentEnd   = "#]"
 kDef = reserved "def"
 
 pWildcard    = symbol  '_' <?> "wildcard"
-pBlockBegin  = symbol  ':'
+pBlockBegin  = storePos $ symbol  ':'
 separator    = symbol  ','
 parenL       = symbol  '('
 parenR       = symbol  ')'
@@ -44,7 +44,7 @@ braceR       = symbol  '}'
 pAccessor    = symbol  '.'
 pArrow       = symbols "->"
 pTypeDecl    = symbols "::"
-pImportAll   = symbol  '*'
+pImportAll   = storePos $ symbol  '*'
 pAssignment  = symbol  '='
 pNativeSym   = symbols "```"
 pRange       = symbols ".."
@@ -66,7 +66,7 @@ pInterface  = reserved "interface"
 
 -- imports
 pFrom       = reserved "from"
-pImport     = reserved "import"
+pImport     = storePos $ reserved "import"
 pAs         = reserved "as"
 
 
@@ -254,7 +254,7 @@ isReservedOp name = isReserved (sort reservedOpNames) name
 reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
 
 
-storePos p = (\pre res post -> Token res $ SourceRange pre post) <$> getPosition <*> p <*> getPosition
+storePos p = (\pre res post -> Token.mk res pre post) <$> getPosition <*> p <*> getPosition
 
 
 

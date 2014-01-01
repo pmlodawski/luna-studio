@@ -11,8 +11,7 @@ import Flowbox.Prelude
 
 -- this implementation is limited by hardcoded SourcePos in Parsec
 -- appropriate bug is reported
-data SourcePos = SourcePos { name   :: String
-                           , line   :: Int
+data SourcePos = SourcePos { line   :: Int
                            , column :: Int
                            }
                --deriving (Show)
@@ -20,8 +19,8 @@ data SourcePos = SourcePos { name   :: String
 
 
 
-data SourceRange = SourceRange { begin :: SourcePos
-                               , end   :: SourcePos
+data SourceRange = SourceRange { begin :: Maybe SourcePos
+                               , end   :: Maybe SourcePos
                                }
                  deriving (Show)
 
@@ -31,8 +30,20 @@ data SourceRange = SourceRange { begin :: SourcePos
 ------------------------------------------------------------------------
 
 instance Show SourcePos where
-    show sp = "SourcePos " ++ show(line sp) ++ ":" ++ show(column sp)
+    show sp = "SourcePos (" ++ show(line sp) ++ ", " ++ show(column sp) ++ ")"
 
 
---instance Show SourceRange where
---    show sr = "SourceRange " ++ show(begin sr) ++ " - " ++ show(end sr)
+instance Monoid SourcePos where
+    mempty       = SourcePos 0 0
+    mappend _ s2 = s2
+
+
+instance Monoid SourceRange where
+    mempty          = SourceRange mempty mempty
+    mappend sr1 sr2 = SourceRange begin' end'
+        where begin' = case (begin sr1) of
+                       Nothing -> (begin sr2)
+                       Just v  -> Just v
+              end'   = case (end sr2) of
+                       Nothing -> (end sr1)
+                       Just v  -> Just v

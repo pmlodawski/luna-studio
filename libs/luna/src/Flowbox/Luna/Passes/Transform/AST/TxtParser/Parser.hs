@@ -25,6 +25,7 @@ import qualified Flowbox.Luna.Data.Source                          as Source
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer as L
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token(Token))
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token as Token
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
 import           Flowbox.Prelude                                   hiding (id, mod)
@@ -37,6 +38,44 @@ import qualified Prelude
 
 import Debug.Trace
 
+
+
+
+registerSrc id src = do
+    st <- getState
+    setState $ ParseState.registerSrc id src st
+
+genID' p = do
+    id  <- genID
+    tok <- p
+    registerSrc id (Token.range tok)
+    return (id, Token.value tok)
+
+
+tokPrep f = do
+    id  <- genID
+    let range = mempty
+    registerSrc id range
+    return $ Token (Just id) (f id) range
+
+tok0' f p = do
+    tok <- p 
+    id  <- case Token.id tok of
+                Nothing -> genID
+                Just id -> pure id
+    registerSrc id (Token.range tok)
+    return $ Token (Just id) (f id) (Token.range tok)
+
+
+tok1 f p = do
+    tok <- p 
+    id  <- case Token.id tok of
+                Nothing -> genID
+                Just id -> pure id
+    registerSrc id (Token.range tok)
+    return $ Token (Just id) (f id $ Token.value tok) (Token.range tok)
+
+
 -----------------------------------------------------------
 -- Entities
 -----------------------------------------------------------
@@ -48,13 +87,14 @@ pArgList   p = try(L.parensed (sepBy2 p L.separator)) <|> many (try p <|> L.pare
 pArgList'  p = try(L.parensed (sepBy2 p L.separator)) <|> ((:[]) <$> p)
 pList      p = L.bracketed (sepBy p L.separator)
 pPath1     p = sepBy1' p L.pAccessor
-pCon         = Token.text <$> L.pIdentType
+pCon         = Token.value <$> L.pIdentType
 pCon'        = L.pIdentType
 pVar         = do
     x <- L.pIdentVar
-    return $ trace(show x) (Token.text x)
+    return $ trace(show x) (Token.value x)
 pVar'        = L.pIdentVar
 pIdent       = choice [ pCon, pVar ]
+pIdent'      = choice [ pCon', pVar' ]
 pExtPath     = (pPath1 pCon <* L.pAccessor) <|> pure []
 
 -----------------------------------------------------------
@@ -83,16 +123,42 @@ genID = do
     pure id
 
 
+infixl 4 <$#, <*#>, <*#
+
+l <*# r = do
+    Token id value lRange <- l
+    Token _ _ rRange             <- r
+    let range = mappend lRange rRange
+    case id of
+        Just v  -> registerSrc v range
+        Nothing -> return ()
+    return $ Token id value range
+
+l <*#> r = do
+    Token lId lValue lRange <- l
+    Token rId rValue rRange <- r
+    let range = mappend lRange rRange
+    case lId of
+        Just v  -> registerSrc v range
+        Nothing -> return ()
+    return $ Token lId (lValue rValue) range
+
+l <$# r = tokPrep l <*# r
+
 -----------------------------------------------------------
 -- Declarations
 -----------------------------------------------------------
-pImport          = tok Expr.Import   <*  L.pImport
-                                     <*> pPath1 pIdent
-                                     <*  L.pBlockBegin
-                                     <*> (try (tok Expr.Wildcard <* L.pImportAll) <|> pIdentE)
-                                     <*> (     try (Just <$ L.pAs <*> (L.pIdent <?> "import name"))
-                                           <|> pure Nothing
-                                         )
+--pImport          = (tokPrep Expr.Import    <*+ L.pImport)
+--                                          <*>+ (Token.value . Token.flatten <$> pPath1 pIdent')
+
+pImport          = Expr.Import <$#  L.pImport
+                               <*#> (Token.flatten <$> pPath1 pIdent')
+                               <*#  L.pBlockBegin
+                               <*#> (try (Expr.Wildcard <$# L.pImportAll) <|> pIdentE)
+                               <*#> pure (Token Nothing Nothing mempty )
+                                    -- <*> (     try (Just <$ L.pAs <*> (L.pIdent <?> "import name"))
+                                    --       <|> pure Nothing
+                                    --     )
 
 
 pArg            = tok Expr.Arg      <*> pPatCon
@@ -134,7 +200,7 @@ pClassBody       = choice [ Expr.addMethod <$> pFunc
 pModuleBody      = choice [ Module.addMethod <$> pFunc
                           , pCombine Module.addField pFields
                           , Module.addClass  <$> pClass
-                          , Module.addImport <$> pImport
+                          , Module.addImport <$> (Token.value <$> pImport)
                           ]
                 <?> "module body"
 
@@ -157,8 +223,8 @@ pFields        =   (\names t val -> map (tok . (mkField t val)) names )
                <*> pType
                <*> (L.pAssignment *> (Just <$> pExpr) <|> pure Nothing)
 
-pDeclaration   = choice [ pImport 
-                        , pFunc   
+pDeclaration   = choice [ -- pImport 
+                         pFunc   
                         , pClass  
                         , try $ pLambda
                         ]
@@ -186,7 +252,7 @@ pDotTermE = (pEntBaseE) <??> (flip applyAll <$> many1 (tok Expr.Accessor <* L.pA
 
 pEntBaseE = choice[ pDeclaration 
                   , try $ L.parensed pExpr
-                  , pIdentE
+                  --, pIdentE
                   , tok Expr.Lit    <*> pLit
                   , tok Expr.Tuple  <*> pTuple  pExpr
                   , tok Expr.List   <*> pList   pListExpr
@@ -209,20 +275,9 @@ optableE = [ [ postfixM "::" (tok Expr.Typed <*> pType)                      ]
 binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 
 
-registerSrc id src = do
-    st <- getState
-    setState $ ParseState.registerSrc id src st
 
-genID' p = do
-    id  <- genID
-    tok <- p
-    registerSrc id (Token.range tok)
-    return (id, Token.text tok)
-
-
-
-pVarE   = uncurry Expr.Var <$> genID' pVar'
-pConE   = tok Expr.Con <*> pCon
+pVarE   = tok1 Expr.Var $ pVar'
+pConE   = tok1 Expr.Con $ pCon'
 
 pIdentE = choice [ pVarE
                  , pConE

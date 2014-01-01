@@ -86,6 +86,7 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source ["Main"] $
         concat $ replicate 1 $ unlines [ ""
+                    , "import Std:Vector"
                     ----, "def List.length self:"
                     ----, "    ```getIO $ liftFPure1 length #{self}```"
                     ----, "def List.each self callback:"
@@ -121,8 +122,9 @@ example = Source.Source ["Main"] $
                   --, "    v"
                   --, "    (2+2).f"
 
-                  , "def fxx:"
-                  , "    a"
+                  --, "def fxx:"
+                  --, "    a"
+                  --, "    Vector"
                   --, "    def g:"
                   --, "        xxx"
                   --, "    def h:"
