@@ -33,6 +33,7 @@ Library
                   bytestring,
                   Cabal,
                   cabal-install,
+                  concatenative,
                   containers,
                   data-default,
                   directory,
@@ -70,6 +71,7 @@ Executable luna
 
   Build-Depends:  aeson,
                   base,
+                  concatenative,
                   dlist,
                   either,
                   flowbox-luna,

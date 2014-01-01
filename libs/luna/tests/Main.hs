@@ -51,6 +51,8 @@ import Control.Lens hiding (Zipper)
 
 import qualified Flowbox.Distribution.M as DistMain
 
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
+
 genProject :: String -> Config.Config
 genProject name = let
     exec = Section.mkExecutable name
@@ -107,7 +109,11 @@ example = Source.Source ["Main"] $
 
                   --, "class Vector a:"
                   --, "    x,y,z :: a"
+                  --, "    def f"
+                  --, "def f"
+                  --, "def g"
                   --, "    def test self x: {self,5}"
+                  --, "    def test2 self x: {self,5}"
 
                   --, "def main self:"
                   ----, "    v = Vector 1 2 3"
@@ -115,9 +121,14 @@ example = Source.Source ["Main"] $
                   --, "    (2+2).f"
 
                   , "def fxx:"
-                  , "    a"
-                  , "def fyy:"
-                  , "    a"
+                  , "    def g:"
+                  , "        xxx"
+                  , "    def h:"
+                  , "        yyy"
+                  --, "    a"
+                  --, "    b"
+                  --, "def fyy:"
+                  --, "    b"
                   --, "    v.x.y"
                   --, "    [1,2,3].each x:"
                   --, "       Console.print x"
@@ -184,6 +195,10 @@ main :: IO ()
 main = do
     --DistMain.main
     logger setLevel DEBUG
+    --let x = Parser.parse' example
+    --    --x :: Int
+
+    --print $ x
 
     out <- timeIt main_inner
     case out of
