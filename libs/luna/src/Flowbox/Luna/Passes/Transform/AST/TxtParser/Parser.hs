@@ -11,7 +11,7 @@
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser where
 
 import           Control.Applicative
-import           Text.Parsec         hiding (many, optional, parse, (<|>))
+import           Text.Parsec         hiding (many, optional, parse, (<|>), State)
 import qualified Text.Parsec         as Parsec
 import qualified Text.Parsec.Expr    as PExpr
 
@@ -25,6 +25,8 @@ import qualified Flowbox.Luna.Data.Source                          as Source
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer as L
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token as Token
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
 import           Flowbox.Prelude                                   hiding (id, mod)
 import qualified Flowbox.Prelude                                   as Prelude
 
@@ -33,10 +35,7 @@ import Control.Monad.State
 
 import qualified Prelude
 
-
-blockSpaces = try (spaces <* checkIndent) <|> pure ()
-
-multiBblock p = block (p <* blockSpaces)
+import Debug.Trace
 
 -----------------------------------------------------------
 -- Entities
@@ -50,7 +49,10 @@ pArgList'  p = try(L.parensed (sepBy2 p L.separator)) <|> ((:[]) <$> p)
 pList      p = L.bracketed (sepBy p L.separator)
 pPath1     p = sepBy1' p L.pAccessor
 pCon         = L.pIdentType
-pVar         = L.pIdentVar
+pVar         = do
+    x <- L.pIdentVar
+    return $ trace(show x) (Token.text x)
+pVar'        = L.pIdentVar
 pIdent       = choice [ pCon, pVar ]
 pExtPath     = (pPath1 pCon <* L.pAccessor) <|> pure []
 
@@ -68,13 +70,15 @@ pLit     = choice [ try $ pFloatL
                   ]
 
 tok a = do
-    id <- getState
-    setState (id+1)
+    st <- getState
+    let id = view ParseState.id st
+    setState (set ParseState.id (id+1) st)
     a <$> pure id
 
 genID = do
-    id <- getState
-    setState (id+1)
+    st <- getState
+    let id = view ParseState.id st
+    setState (set ParseState.id (id+1) st)
     pure id
 
 
@@ -288,6 +292,9 @@ pEntP = choice [ pVarP
 
 pBlockBegin     p = L.pBlockBegin *> spaces *> indented *> withPos(multiBblock p)
 
+blockSpaces = try (spaces <* checkIndent) <|> pure ()
+
+multiBblock p = block (p <* blockSpaces)
 
 -----------------------------------------------------------
 -- Operator Utils
@@ -311,10 +318,15 @@ pExprTemp = do
     return (out, id)
 
 
+pProgram :: [String] -> ParsecT String ParseState.ParseState (State SourcePos) Module.Module
 pProgram mod = spaces *> pModule mod <* (spaces <?> "") <* eof
 
+pResult mod = (\ast st -> (ast, view ParseState.sourceMap st)) <$> pProgram mod <*> getState
+    --ast <- pProgram
+    --st  <- getState
+    --return (ast, view ParseState.sourceMap st)
 
-parse (Source.Source mod code) = fst $ flip runState (initialPos "") $ runParserT (pProgram mod) (0::Int) "Luna Parser" code
+parse (Source.Source mod code) = fst $ flip runState (initialPos "") $ runParserT (pResult mod) def "Luna Parser" code
 
 
 

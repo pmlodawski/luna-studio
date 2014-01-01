@@ -13,10 +13,12 @@ module Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer where
 import Control.Applicative
 import Data.Char           (digitToInt, isSpace)
 import Data.List           (nub, sort)
-import Flowbox.Prelude     hiding(op)
-import Text.Parsec         hiding (many, optional, (<|>))
+import Flowbox.Prelude     hiding (op)
+import Text.Parsec         hiding (many, optional, (<|>), getPosition)
+
 
 import Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
+import Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token(Token))
 
 
 
@@ -250,7 +252,13 @@ isReservedOp name = isReserved (sort reservedOpNames) name
 --reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> "")
 reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
 
-pIdentVar     = pIdentLower <?> "variable identifier"
+
+storePos p = (\pre res post -> Token res pre post) <$> getPosition <*> p <*> getPosition
+
+
+
+
+pIdentVar     = storePos pIdentLower <?> "variable identifier"
 pIdentType    = pIdentUpper <?> "type identifier"
 pIdentTypeVar = pIdentLower <?> "identifier"
 

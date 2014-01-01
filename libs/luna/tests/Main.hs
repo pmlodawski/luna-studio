@@ -107,10 +107,10 @@ example = Source.Source ["Main"] $
                     --, "        ```print' #{msg}```"
 
 
-                  , "class Vector a:"
-                  , "    x,y,z :: a"
-                  , "    def f:"
-                  , "       a"
+                  --, "class Vector a:"
+                  --, "    x,y,z :: a"
+                  --, "    def f:"
+                  --, "       a"
                   --, "def f"
                   --, "def g"
                   --, "    def test self x: {self,5}"
@@ -121,17 +121,17 @@ example = Source.Source ["Main"] $
                   --, "    v"
                   --, "    (2+2).f"
 
-                  , "def fxx:"
-                  , "    a"
-                  , "    def g:"
-                  , "        xxx"
+                  , "def fxx"
+                  --, "    a"
+                  --, "    def g:"
+                  --, "        xxx"
                   --, "    def h:"
                   --, "        yyy"
                   --, "    b"
-                  , "    b x:"
-                  , "        x+1"
-                  , "def fyy:"
-                  , "    b"
+                  --, "    b x:"
+                  --, "        x+1"
+                  --, "def fyy:"
+                  --, "    b"
                   --, "    v.x.y"
                   --, "    [1,2,3].each x:"
                   --, "       Console.print x"
@@ -216,8 +216,9 @@ main_inner = Luna.run $ do
     let source = example
 
     logger info "\n-------- TxtParser --------"
-    ast <- TxtParser.run source
+    (ast, srcMap) <- TxtParser.run source
     logger info $ PP.ppqShow ast
+    logger info $ PP.ppShow srcMap
     return ()
 
     ----let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]

@@ -5,12 +5,16 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils where
 
+import qualified Text.Parsec as Parsec
 import Control.Applicative
+
 import Flowbox.Prelude
-import Text.Parsec         hiding (many, optional, parse, (<|>))
+import Text.Parsec         hiding (many, optional, parse, (<|>), getPosition)
+import Flowbox.Luna.Data.AST.SourcePos (SourcePos(SourcePos))
 
 checkIf f msg p = do
         obj <- p
@@ -50,5 +54,10 @@ liftList p = (:[]) <$> p
 
 applyAll x (f : fs) = applyAll (f x) fs
 applyAll x [] = x
+
+
+
+getPosition = convertSourcePos <$> Parsec.getPosition
+convertSourcePos psp = SourcePos (sourceName psp) (sourceLine psp) (sourceColumn psp)
 
 

@@ -37,6 +37,7 @@ import qualified Flowbox.System.Platform                               as Platfo
 import qualified Flowbox.System.UniPath                                as UniPath
 import           Flowbox.System.UniPath                                  (UniPath)
 import qualified Flowbox.Text.Show.Hs                                  as ShowHs
+import           Flowbox.Luna.Data.Pass.SourceMap                     (SourceMap)
 
 
 
@@ -111,7 +112,7 @@ copyExecutable location name outputPath = liftIO $ do
     Directory.copyFile executable outputPath
 
 
-parseFile :: PassMonadIO s m => UniPath -> UniPath -> Pass.Result m ASTModule.Module
+parseFile :: PassMonadIO s m => UniPath -> UniPath -> Pass.Result m (ASTModule.Module, SourceMap)
 parseFile rootPath filePath = do 
     logger debug $ "Compiling file '" ++ UniPath.toUnixString filePath ++ "'"
     source <- FileReader.run rootPath filePath

@@ -14,6 +14,7 @@ import           Flowbox.Luna.Data.Source                             (Source)
 import           Flowbox.Luna.Data.AST.Module                         (Module)
 import           Flowbox.System.Log.Logger                            
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
+import           Flowbox.Luna.Data.Pass.SourceMap                   (SourceMap)
 
 import           Control.Monad.State                                  
 import           Flowbox.Prelude                                    hiding (error)
@@ -26,11 +27,11 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser"
 type ParserMonad m = PassMonad Pass.NoState m
 
 
-run :: PassMonad s m => Source -> Pass.Result m Module
+run :: PassMonad s m => Source -> Pass.Result m (Module, SourceMap)
 run = (Pass.run_ (Pass.Info "Luna Parser") Pass.NoState) . parse
 
 
-parse :: ParserMonad m => Source -> Pass.Result m Module
+parse :: ParserMonad m => Source -> Pass.Result m (Module, SourceMap)
 parse src = case Parser.parse src of
     Left  e -> Pass.fail $ show e
     Right v -> return v
