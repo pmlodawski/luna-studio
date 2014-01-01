@@ -121,8 +121,8 @@ example = Source.Source ["Main"] $
                   --, "    v"
                   --, "    (2+2).f"
 
-                  , "def fxx"
-                  --, "    a"
+                  , "def fxx:"
+                  , "    a"
                   --, "    def g:"
                   --, "        xxx"
                   --, "    def h:"

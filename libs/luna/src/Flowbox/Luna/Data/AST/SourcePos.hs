@@ -15,4 +15,24 @@ data SourcePos = SourcePos { name   :: String
                            , line   :: Int
                            , column :: Int
                            }
-               deriving (Show)
+               --deriving (Show)
+
+
+
+
+data SourceRange = SourceRange { begin :: SourcePos
+                               , end   :: SourcePos
+                               }
+                 deriving (Show)
+
+
+------------------------------------------------------------------------
+-- Instances
+------------------------------------------------------------------------
+
+instance Show SourcePos where
+    show sp = "SourcePos " ++ show(line sp) ++ ":" ++ show(column sp)
+
+
+--instance Show SourceRange where
+--    show sr = "SourceRange " ++ show(begin sr) ++ " - " ++ show(end sr)

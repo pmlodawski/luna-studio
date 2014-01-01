@@ -7,9 +7,11 @@
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState where
 
-import Flowbox.Prelude                  hiding(id)
-import Flowbox.Luna.Data.AST.SourcePos  (SourcePos)
-import Flowbox.Luna.Data.Pass.SourceMap (SourceMap)
+import           Flowbox.Prelude                  hiding(id)
+import           Flowbox.Luna.Data.AST.SourcePos  (SourceRange)
+import           Flowbox.Luna.Data.Pass.SourceMap (SourceMap)
+import qualified Flowbox.Luna.Data.Pass.SourceMap as SourceMap
+import           Flowbox.Luna.Data.AST.Utils      (ID)
 
 data ParseState = ParseState { _id        :: Int
                              , _sourceMap :: SourceMap
@@ -18,6 +20,10 @@ data ParseState = ParseState { _id        :: Int
                 
 
 makeLenses ''ParseState
+
+
+registerSrc :: ID -> SourceRange -> ParseState -> ParseState
+registerSrc id src state = state & sourceMap %~ (SourceMap.insert id src)
 
 ------------------------------------------------------------------------
 -- Instances

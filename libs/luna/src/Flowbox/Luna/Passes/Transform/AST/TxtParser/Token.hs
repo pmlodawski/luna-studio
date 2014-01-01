@@ -8,10 +8,9 @@
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Token where
 
 import Flowbox.Prelude
-import Flowbox.Luna.Data.AST.SourcePos (SourcePos)
+import Flowbox.Luna.Data.AST.SourcePos (SourceRange)
 
 data Token = Token { text  :: String
-                   , begin :: SourcePos
-                   , end   :: SourcePos
+                   , range :: SourceRange
                    }
            deriving (Show)

@@ -48,7 +48,8 @@ pArgList   p = try(L.parensed (sepBy2 p L.separator)) <|> many (try p <|> L.pare
 pArgList'  p = try(L.parensed (sepBy2 p L.separator)) <|> ((:[]) <$> p)
 pList      p = L.bracketed (sepBy p L.separator)
 pPath1     p = sepBy1' p L.pAccessor
-pCon         = L.pIdentType
+pCon         = Token.text <$> L.pIdentType
+pCon'        = L.pIdentType
 pVar         = do
     x <- L.pIdentVar
     return $ trace(show x) (Token.text x)
@@ -113,7 +114,7 @@ pLambda          = tok Expr.Lambda  <*> pArgListL pArg
 
 
 pClass           = tok Class.mk     <*  L.pClass
-                                    <*> (tok Type.Class <*> (L.pIdentType         <?> "class name")
+                                    <*> (tok Type.Class <*> (pCon                 <?> "class name")
                                                         <*> (many L.pIdentTypeVar <?> "class parameters"))
                                     <??$> pBlockBegin pClassBody
                                     <?> "class definition"
@@ -207,7 +208,20 @@ optableE = [ [ postfixM "::" (tok Expr.Typed <*> pType)                      ]
 
 binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 
-pVarE   = tok Expr.Var <*> pVar
+
+registerSrc id src = do
+    st <- getState
+    setState $ ParseState.registerSrc id src st
+
+genID' p = do
+    id  <- genID
+    tok <- p
+    registerSrc id (Token.range tok)
+    return (id, Token.text tok)
+
+
+
+pVarE   = uncurry Expr.Var <$> genID' pVar'
 pConE   = tok Expr.Con <*> pCon
 
 pIdentE = choice [ pVarE

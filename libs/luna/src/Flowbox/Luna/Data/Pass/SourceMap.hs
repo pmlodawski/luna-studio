@@ -5,14 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Pass.SourceMap where
+module Flowbox.Luna.Data.Pass.SourceMap (
+	module Flowbox.Luna.Data.Pass.SourceMap,
+	module Data.Map
+)where
 
 import qualified Data.Map as Map
-import           Data.Map (Map)
+import           Data.Map 
 
 import Flowbox.Prelude                 hiding(id)
-import Flowbox.Luna.Data.AST.SourcePos (SourcePos)
+import Flowbox.Luna.Data.AST.SourcePos (SourceRange)
 import Flowbox.Luna.Data.AST.Utils     (ID)
 
 
-type SourceMap = Map ID SourcePos
+type SourceMap = Map ID SourceRange
+
