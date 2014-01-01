@@ -10,6 +10,7 @@
 module Flowbox.Prelude(
     module Control.Applicative,
     module Control.Lens,
+    module Data.Default,
     module Data.Monoid,
     module Flowbox.Prelude,
     module Prelude
@@ -19,6 +20,7 @@ import           Control.Applicative
 import qualified Control.Exception      as Exception
 import           Control.Lens
 import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Data.Default
 import           Data.Monoid            (Monoid, mappend, mempty)
 import qualified Data.Traversable       as Traversable
 import           Data.Typeable
