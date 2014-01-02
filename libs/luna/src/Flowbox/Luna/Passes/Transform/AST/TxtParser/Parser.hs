@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser where
@@ -123,6 +124,11 @@ l <$#> r = tokPrep l <*#> r
 
 l <$# r = tokPrep l <*# r
 
+p <**#> q = tokPure (\f g -> g f) <*#> p <*#> q
+p <??#> q = p <**#> (q <|> tokPure Prelude.id)
+
+--p <??$#> q = p <**#> ((flip (foldr ($)) <$#> q) <|> tokPure Prelude.id)
+
 -----------------------------------------------------------
 -- Entities
 -----------------------------------------------------------
@@ -131,9 +137,9 @@ pImplTuple p = sepBy2 p L.separator
 pCallList  p = L.parensed (sepBy p L.separator)
 pArgListL  p = try(L.parensed (sepBy2 p L.separator)) <|> ((:[]) <$> (try p <|> L.parensed p))
 pArgList   p = try(L.parensed (sepBy2 p L.separator)) <|> many (try p <|> L.parensed p)
-pArgList'  p = try(L.parensed (sepBy2 p L.separator)) <|> ((:[]) <$> p)
+pArgList2  p = try(L.parensed (sepBy2 p L.separator)) <|> ((:[]) <$> p)
 pList      p = L.bracketed (sepBy p L.separator)
-pPath1     p = sepBy1' p L.pAccessor
+pPath1     p = sepBy1_ng p L.pAccessor
 pCon         = Token.value <$> L.pIdentType
 pCon'        = L.pIdentType
 pVar         = do
@@ -145,8 +151,38 @@ pIdent'      = choice [ pCon', pVar' ]
 pExtPath     = (pPath1 pCon <* L.pAccessor) <|> pure []
 wildcard     = storePos L.pWildcard
 
+pExtPath'     = (pPath1' pCon' <*# accessor) <|> tokPure []
 
-parensed p = (storePos L.parenL) *#> p <*# (storePos L.parenR)
+pArgList'  p = try(parensed (sepBy2' p L.separator)) <|> many' (try p <|> parensed p)
+
+separator    = storePos L.separator
+
+pAssignment = storePos L.pAssignment
+
+parensed p = between' (storePos L.parenL) (storePos L.parenR) p
+
+braced p = between' (storePos L.braceL) (storePos L.braceR) p
+
+bracketed p = between' (storePos L.bracketL) (storePos L.bracketR) p
+
+tuple  p = braced (Token.flatten <$> sepBy p L.separator)
+
+list   p = bracketed (Token.flatten <$> sepBy p L.separator)
+
+typeDecl = storePos L.pTypeDecl
+
+nativeSym = storePos L.pNativeSym
+
+accessor = storePos L.pAccessor
+
+between' sepL sepR p = sepL *#> p <*# sepR
+
+sepBy'  p sep = Token.flatten <$> sepBy  p sep
+sepBy1' p sep = Token.flatten <$> sepBy1 p sep
+sepBy2' p sep = Token.flatten <$> sepBy2 p sep
+many'   p     = Token.flatten <$> many p
+many1'  p     = Token.flatten <$> many1  p
+pPath1' p     = Token.flatten <$> pPath1 p
 
 -----------------------------------------------------------
 -- Literals
@@ -165,8 +201,6 @@ pLit     = choice [ try $ pFloatL
 -----------------------------------------------------------
 -- Declarations
 -----------------------------------------------------------
---pImport          = (tokPrep Expr.Import    <*+ L.pImport)
---                                          <*>+ (Token.value . Token.flatten <$> pPath1 pIdent')
 
 pImport          = Expr.Import <$#  L.pImport
                                <*#> (Token.flatten <$> pPath1 pIdent')
@@ -177,20 +211,20 @@ pImport          = Expr.Import <$#  L.pImport
                                     )
 
 
-pArg            = tok Expr.Arg      <*> pPatCon
-                                    <*> ((Just <$ L.pAssignment <*> pExpr) <|> pure Nothing)
+pArg            = Expr.Arg      <$#> pPatCon
+                                <*#> tokPure Nothing -- ((Just <$ pAssignment <*#> pExpr') <|> pure Nothing)
 
-pFunc           = tok Expr.Function <*  L.pDef
-                                    <*> (pExtPath       <?> "")
-                                    <*> (pVar           <?> "function name")
-                                    <*> (pArgList pArg  <?> "dunction argument list")
-                                    <*> (try (L.pArrow *> pType) <|> tok Type.Unknown)
-                                    <*> (pExprBlock <|> return [])
-                                    <?> "function definition"
+pFunc           = Expr.Function <$#  (storePos L.pDef)
+                                <*#> (pExtPath'      <?> "")
+                                <*#> (pVar'          <?> "function name")
+                                <*#> (pArgList' pArg  <?> "dunction argument list")
+                                <*#> (try (storePos L.pArrow *#> pType) <|> tokPrep Type.Unknown)
+                                <*#> (pExprBlock' <|> tokPure [])
+                                <?> "function definition"
 
 
-pLambda          = tok Expr.Lambda  <*> pArgListL pArg
-                                    <*> (try (L.pArrow *> pType) <|> tok Type.Unknown)
+pLambda          = tok Expr.Lambda  <*> pArgListL (Token.value <$> pArg)
+                                    <*> (try (L.pArrow *> (Token.value <$> pType)) <|> tok Type.Unknown)
                                     <*> pExprBlock
                                     <?> "lambda definition"
 
@@ -207,14 +241,14 @@ pModule name     = tok Module.mk    <*>   (tok Type.Module <*> pure name)
 
 
 
-pClassBody       = choice [ Expr.addMethod <$> pFunc
-                          , pCombine Expr.addField pFields
+pClassBody       = choice [ Expr.addMethod <$> (Token.value <$> pFunc)
+                          , pCombine Expr.addField (Token.value <$> pFields)
                           , Expr.addClass  <$> pClass
                           ]
                 <?> "class body"
 
-pModuleBody      = choice [ Module.addMethod <$> pFunc
-                          , pCombine Module.addField pFields
+pModuleBody      = choice [ Module.addMethod <$> (Token.value <$> pFunc)
+                          , pCombine Module.addField (Token.value <$> pFields)
                           , Module.addClass  <$> pClass
                           , Module.addImport <$> (Token.value <$> pImport)
                           ]
@@ -228,19 +262,20 @@ pCombine f p = do
 pField         =   tok Expr.Field
                <*> L.pIdent
                <*  L.pTypeDecl
-               <*> pType
+               <*> (Token.value <$> pType)
                <*> (L.pAssignment *> (Just <$> pExpr) <|> pure Nothing)
 
 mkField t val name id = Expr.Field id name t val
 
-pFields        =   (\names t val -> map (tok . (mkField t val)) names )
-               <$> (sepBy1 L.pIdent L.separator)
-               <*  L.pTypeDecl
-               <*> pType
-               <*> (L.pAssignment *> (Just <$> pExpr) <|> pure Nothing)
+-- FIXME: tok is resolved not by Token
+pFields        =  tokPure (\names t val -> map (tok . (mkField t val)) names )
+               <*#> (sepBy1' pIdent' L.separator)
+               <*#  typeDecl
+               <*#> pType
+               <*#> (pAssignment *#> (fmap Just <$> pExpr') <|> tokPure Nothing)
 
-pDeclaration   = choice [ -- pImport 
-                         pFunc   
+pDeclaration   = choice [ Token.value <$> pImport 
+                        , Token.value <$> pFunc   
                         , pClass  
                         , try $ pLambda
                         ]
@@ -250,91 +285,145 @@ pDeclaration   = choice [ -- pImport
 -- Expressions
 -----------------------------------------------------------
 
-pNative     = between L.pNativeSym L.pNativeSym (many pNativeElem)
+
+buildExpressionParser operators simpleExpr
+    = foldl (makeParser) simpleExpr operators
+    where
+      makeParser term lassoc
+        = let 
+              lassocOp   = choice lassoc
+
+              lassocP (Token _ x rangeL)  = do 
+                  Token id f rangeM <- lassocOp
+                  Token _ y rangeR <- term
+                  let range = mappend rangeL rangeR
+                  case id of
+                      Just v  -> registerSrc v range
+                      Nothing -> return ()
+                  lassocP1 (Token id (f x y) range)
+                             
+              lassocP1 x = lassocP x <|> return x
+
+           in  do x <- term
+                  lassocP x <|> return x
+                 
+
+pNative     = between nativeSym nativeSym (many' pNativeElem)
 pNativeElem = choice [ pNativeVar
                      , pNativeCode
                      ]
-pNativeVar  = tok Expr.NativeCode <*> many1 (noneOf "`#")
-pNativeCode = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol '}'
+pNativeVar  = Expr.NativeCode <$#> many1' (storePos $ noneOf "`#")
+pNativeCode = Expr.NativeVar  <$#> storePos (L.symbols "#{" *> many (noneOf "}") <* L.symbol '}')
 
+pExpr = Token.value <$> pExpr'
 
-pExpr =   try (tok Expr.Assignment <*> pPattern <* (L.reservedOp "=") <*> pOpE)
+pExpr' =  try (Expr.Assignment <$#> pPattern <*# (storePos $ L.reservedOp "=") <*#> pOpE)
       <|> pOpE
       <?> "expression"
 
-pOpE      = Expr.aftermatch <$> PExpr.buildExpressionParser optableE pDotTermE
+pOpE      = fmap Expr.aftermatch <$> buildExpressionParser optableE'' pDotTermE
           
-pDotTermE = (pEntBaseE) <??> (flip applyAll <$> many1 (tok Expr.Accessor <* L.pAccessor <*> pVar))
+pDotTermE = (pEntBaseE) <??#> (tokPure (flip applyAll) <*#> many1' (Expr.Accessor <$# accessor <*#> pVar'))
 
-pEntBaseE = choice[ pDeclaration 
-                  , try $ L.parensed pExpr
-                  , (Token.value <$> pIdentE)
-                  , (Token.value <$> (Expr.Lit <$#> pLit))
-                  , tok Expr.Tuple  <*> pTuple  pExpr
-                  , tok Expr.List   <*> pList   pListExpr
-                  , tok Expr.Native <*> pNative
+pEntBaseE = choice[ tokPure =<< pDeclaration 
+                  , try $ parensed pExpr'
+                  , pIdentE
+                  , Expr.Lit    <$#> pLit
+                  , Expr.Tuple  <$#> tuple pExpr'
+                  , Expr.List   <$#> list  pListExpr
+                  , Expr.Native <$#> pNative
                   ]
            <?> "expression term"
 
-optableE = [ [ postfixM "::" (tok Expr.Typed <*> pType)                      ]
-           , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
-           , [ operator "^"                                  PExpr.AssocLeft ]
-           , [ operator "*"                                  PExpr.AssocLeft ]
-           , [ operator "/"                                  PExpr.AssocLeft ]
-           , [ operator "+"                                  PExpr.AssocLeft ]
-           , [ operator "-"                                  PExpr.AssocLeft ]
-           , [ binaryM  "$"  (binaryMatchE <$> tok Expr.callConstructor)      PExpr.AssocLeft ]
-           ]
-           where
-              operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':op)))
+binaryM'  name fun = (L.reservedOp name *>        fun)
+
+binaryM''  name fun = (storePos (L.reservedOp name) *#>        fun)
+
+optableE'' = [ [ binaryM''  ""   (tokPrep Expr.callConstructor)            ]
+             , [ operator "^"                                              ]
+             , [ operator "*"                                              ]
+             , [ operator "/"                                              ]
+             , [ operator "+"                                              ]
+             , [ operator "-"                                              ]
+             , [ binaryM''  "$"  (tokPrep $ binaryMatchE' . Expr.callConstructor) ]
+             ]
+             where
+                operator op = binaryM'' op ((binaryMatchE' . Expr.Infix <$#> tokPure ('~':op)))
+                --operator op = binaryM'' op (tokPure binaryMatchE' <*#> (Expr.Infix <$#> tokPure ('~':op)))
+
+--optableE' = [ [ binaryM'  ""   (tok Expr.callConstructor)                  ]
+--            , [ operator "^"                                               ]
+--            , [ operator "*"                                               ]
+--            , [ operator "/"                                               ]
+--            , [ operator "+"                                               ]
+--            , [ operator "-"                                               ]
+--            , [ binaryM'  "$"  (binaryMatchE <$> tok Expr.callConstructor) ]
+--            ]
+--            where
+--               operator op = binaryM' op (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':op)))
+
+--optableE = [ [ postfixM "::" (tok Expr.Typed <*> (Token.value <$> pType))                      ]
+--           , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
+--           , [ operator "^"                                  PExpr.AssocLeft ]
+--           , [ operator "*"                                  PExpr.AssocLeft ]
+--           , [ operator "/"                                  PExpr.AssocLeft ]
+--           , [ operator "+"                                  PExpr.AssocLeft ]
+--           , [ operator "-"                                  PExpr.AssocLeft ]
+--           , [ binaryM  "$"  (binaryMatchE <$> tok Expr.callConstructor)      PExpr.AssocLeft ]
+--           ]
+--           where
+--              operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':op)))
+binaryMatchE' f p q = f p q
 
 binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 
 
 
-pVarE   = tok1 Expr.Var $ pVar'
-pConE   = tok1 Expr.Con $ pCon'
+pVarE   = Expr.Var <$#> pVar'
+pConE   = Expr.Con <$#> pCon'
 
 pIdentE = choice [ pVarE
                  , pConE
                  ]
 
-pListExpr = choice [ try $ tok Expr.RangeFromTo <*> pExpr <* L.pRange <*> pExpr
-                   , try $ tok Expr.RangeFrom   <*> pExpr <* L.pRange
-                   , pExpr 
+pListExpr = choice [ try $ Expr.RangeFromTo <$#> pExpr' <*# (storePos L.pRange) <*#> pExpr'
+                   , try $ Expr.RangeFrom   <$#> pExpr' <*# (storePos L.pRange)
+                   , pExpr'
                    ]
 
 pExprBlock  = pBlockBegin pExpr
+
+pExprBlock' = Token.flatten <$> pBlockBegin pExpr'
+
 
 
 -----------------------------------------------------------
 -- Types
 -----------------------------------------------------------
-pType       = choice [ try $ pLambdaT
-                     , try $ pConAppT
+pType       = choice [ --try $ pLambdaT
+                      try $ pConAppT
                      , pTermT
                      ]
               <?> "type"
 
-pTermT      = choice[ try $ L.parensed pType
+pTermT      = choice[ try $ parensed pType
                     , pEntT
                     ]
               <?> "type term"
 
-pConAppT    = tok Type.App     <*> pAppBaseT <*> many1 pTermT
-pLambdaT    = tok Type.Lambda  <*> pArgList' pTermT <* L.pArrow <*> pTermT
-pVarT       = tok Type.Var     <*> pVar
-pConT       = tok Type.Con     <*> pPath1 pCon
-pTupleT     = tok Type.Tuple   <*> pTuple pType
-pWildcardT  = tok Type.Unknown <*  L.pWildcard
---pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
+pConAppT    = Type.App     <$#> pAppBaseT <*#> many1' pTermT
+--pLambdaT    = tok Type.Lambda  <*> pArgList2 pTermT <* L.pArrow <*> pTermT
+pVarT       = Type.Var     <$#> pVar'
+pConT       = Type.Con     <$#> pPath1' pCon'
+pTupleT     = Type.Tuple   <$#> tuple pType
+pWildcardT  = Type.Unknown <$#  wildcard
+----pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
 
 pAppBaseT   = choice [ pVarT  
                      , pConT  
                      ]
 
-pEntT       = choice [ pVarT  
-                     , pConT  
+pEntT       = choice [ pAppBaseT 
                      , pTupleT
                      , pWildcardT
                      ]
@@ -343,32 +432,32 @@ pEntT       = choice [ pVarT
 -----------------------------------------------------------
 -- Patterns
 -----------------------------------------------------------
-pPattern    = choice [ try $ tok Pat.Tuple <*> sepBy2 pPatCon L.separator
+pPattern    = choice [ try $ (Pat.Tuple <$#> sepBy2' pPatCon separator)
                      , pPatCon 
                      ]
 
-pPatCon     = choice [ try pConAppP
+pPatCon     = choice [ pConAppP
                      , pTermP
                      ]
 
-pTermP      = choice [ try $ L.parensed pPatCon
-                     , try (tok Pat.Typed <*> pEntP <* L.pTypeDecl <*> pType)
+pTermP      = choice [ try $ parensed pPatCon
+                     , try (Pat.Typed <$#> pEntP <*# typeDecl <*#> pType)
                      , pEntP
                      ]
               <?> "pattern term"
 
 pVarP       = Pat.Var      <$#> pVar'
 pLitP       = Pat.Lit      <$#> pLit
-pTupleP     = tok Pat.Tuple    <*> pTuple pPatCon
-pWildcardP  = Pat.Wildcard <$# wildcard
+pTupleP     = Pat.Tuple    <$#> tuple pPatCon
+pWildcardP  = Pat.Wildcard <$#  wildcard
 pConP       = Pat.Con      <$#> pCon'
-pConAppP    = tok Pat.App      <*> (Token.value <$> pConP) <*> many1 pTermP
+pConAppP    = Pat.App      <$#> pConP <*#> many1' pTermP
 
-pEntP = choice [ (Token.value <$> pVarP)
-               , (Token.value <$> pLitP)
+pEntP = choice [ pVarP
+               , pLitP
                , pTupleP    
-               , (Token.value <$> pWildcardP)
-               , (Token.value <$> pConP)
+               , pWildcardP
+               , pConP
                ]
 
 -------------------------------------------------------------
@@ -397,10 +486,10 @@ postfixM name fun       = PExpr.Postfix (L.reservedOp name *>        fun)
 -- Program
 -----------------------------------------------------------
 
-pExprTemp = do
-    out <- pExpr <* many(L.eol <* L.pSpaces) <* eof
-    id  <- getState
-    return (out, id)
+--pExprTemp = do
+--    out <- pExpr <* many(L.eol <* L.pSpaces) <* eof
+--    id  <- getState
+--    return (out, id)
 
 
 pProgram :: [String] -> ParsecT String ParseState.ParseState (State SourcePos) Module.Module

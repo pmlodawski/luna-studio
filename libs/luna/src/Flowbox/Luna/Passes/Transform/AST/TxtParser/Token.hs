@@ -35,3 +35,7 @@ append t1 t2 = Token Nothing (value t1 : value t2) (mappend (range t1) (range t2
 instance Monoid a => Monoid (Token a) where
 	mempty        = Token Nothing mempty mempty
 	mappend t1 t2 = Token Nothing (mappend (value t1) (value t2)) (mappend (range t1) (range t2))
+
+
+instance Functor Token where
+	fmap f tok = tok { value = f $ value tok }

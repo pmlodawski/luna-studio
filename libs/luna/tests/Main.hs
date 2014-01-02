@@ -123,8 +123,8 @@ example = Source.Source ["Main"] $
                   --, "    v"
                   --, "    (2+2).f"
 
-                  , "def fxx:"
-                  , "    1"
+                  , "def fxx (y::Int):"
+                  , "    a = b + (c)"
                   --, "    Vector"
                   --, "    def g:"
                   --, "        xxx"
@@ -220,7 +220,9 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- TxtParser --------"
     (ast, srcMap) <- TxtParser.run source
+    logger info "\n>> AST"
     logger info $ PP.ppqShow ast
+    logger info "\n>> Source Map"
     logger info $ PP.ppShow srcMap
     --logger info (show.length $ FModule._classes ast)
     return ()
