@@ -36,6 +36,8 @@ void formatOutput(std::ostream &out, std::string contents)
 
 
 const std::string headerFile = R"(
+#pragma once
+
 #include <string>
 #include <vector>
 #include <boost/optional.hpp>
@@ -81,6 +83,9 @@ boost::asio::ip::tcp::socket &notifySocket;
 %wrapper_name%(boost::asio::ip::tcp::socket &socket, boost::asio::ip::tcp::socket &notifySocket) : socket(socket), notifySocket(notifySocket) {}
 %method_decls%
 };
+
+%ext_to_enum%
+
 )";
 
 const std::string sourceFile = R"(
@@ -200,9 +205,16 @@ const std::string methodDefinition = R"(
 	catch(std::exception &e)
 	{
 		if(error) error("%space%_%method%");
-		std::string msg = std::string("Call to batch method %space%::%method% triggered an exception: ") + e.what();
-		throw std::runtime_error(msg);
+		//std::string msg = std::string("Call to batch method %space%::%method% triggered an exception: ") + e.what();
+		throw BatchException(e.what(), "%method%");
 	}
+}
+)";
+
+const std::string clsGetterMethod = R"(
+inline generated::proto::%fname%::%msg%_Cls getCls(const generated::proto::%fname%::%ext% *arg)
+{
+	return generated::proto::%fname%::%msg%_Cls_%ext%;
 }
 )";
 
@@ -484,6 +496,48 @@ struct MethodWrapper
 	}
 };
 
+//methods covnerting between expr/pat/type -> cls 
+std::string extToClsCovnersions()
+{
+	std::string ret;
+
+	std::vector<std::string> toHandle = { "Expr", "Pat", "Type" };
+	auto d = AST::descriptor();
+	auto f = d->file();
+	for(int i = 0; i < f->dependency_count(); i++)
+	{
+		auto dep = f->dependency(i);
+		for(int j = 0; j < dep->message_type_count(); j++)
+		{
+			auto msg = dep->message_type(j);
+			auto e = msg->FindEnumTypeByName("Cls");
+			//std::cout << msg->full_name() << std::endl;
+			if(e  &&  std::find(toHandle.begin(), toHandle.end(), e->containing_type()->name()) != toHandle.end())
+			{
+				auto fname = e->file()->name();
+				boost::replace_last(fname, ".proto", "");
+
+				std::cout << "\t" << e->containing_type()->name() << " -> " << e->full_name() << std::endl;
+				for(int k = 0; k < e->value_count(); k++)
+				{
+					auto enumVal = e->value(k);
+
+					auto hlp = clsGetterMethod;
+
+					boost::replace_all(hlp, "%fname%", fname);
+					boost::replace_all(hlp, "%msg%", msg->name());
+					boost::replace_all(hlp, "%ext%", enumVal->name());
+					ret += hlp;
+				}
+				//boost::replace_all(hlp, "%ext_msg%", )
+				//std::cout << hlp << std::endl;
+			}
+		}
+
+		//std::cout << dep->name() << std::endl;
+	}
+	return ret;
+}
 
 void generate(const std::string &outputFile)
 {
@@ -504,6 +558,7 @@ void generate(const std::string &outputFile)
 		boost::replace_all(ret, "%method_decls%", methodDecls);
 		boost::replace_all(ret, "%method_impls%", methodImpls);
 		boost::replace_all(ret, "%wrapper_name%", "BatchClient");
+		boost::replace_all(ret, "%ext_to_enum%", extToClsCovnersions());
 		return ret;
 	};
 
@@ -525,6 +580,7 @@ void generate(const std::string &outputFile)
 
 int main()
 {
+	extToClsCovnersions();
 	generate("generated/BatchClient");
 	return EXIT_SUCCESS;
 }
