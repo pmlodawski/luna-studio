@@ -1,8 +1,12 @@
-module FlowboxM.Luna.Imports where
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2013
+---------------------------------------------------------------------------
 
-import qualified Data.List as List
-import qualified System.IO as IO
+module FlowboxM.Luna.Imports (
+    module Data.Tuple.OneTuple
+)where
 
-hsLib_System_IO_readFile  = IO.readFile
-hsLib_System_IO_writeFile = IO.writeFile
-hsLib_System_IO_openBinaryFile = IO.openBinaryFile
+import Data.Tuple.OneTuple

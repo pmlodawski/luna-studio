@@ -19,7 +19,7 @@ import qualified Flowbox.Luna.Passes.Build.BuildConfig as BuildConfig
 import           Flowbox.Luna.Passes.Build.Diagnostics (Diagnostics (Diagnostics))
 import qualified Flowbox.Luna.Passes.General.Luna.Luna as Luna
 import qualified Flowbox.Lunac.Cmd                     as Cmd
-import           Flowbox.Prelude
+import           Flowbox.Prelude                       hiding (op)
 import           Flowbox.System.Log.Logger
 import           Flowbox.System.UniPath                (UniPath)
 import qualified Flowbox.System.UniPath                as UniPath
@@ -70,6 +70,6 @@ build cfg op diag filePath = Luna.runIO $ do
                         then BuildConfig.Library
                         else BuildConfig.Executable outputPath
         bldCfg = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag
-    ast <- Build.parseFile rootPath filePath
+    ast <- fst <$> Build.parseFile rootPath filePath
     Build.run bldCfg ast
     return ()
