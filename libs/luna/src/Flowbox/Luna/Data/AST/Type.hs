@@ -8,10 +8,12 @@
 
 module Flowbox.Luna.Data.AST.Type where
 
+import qualified Data.List as List
+import           GHC.Generics                      
+
 import           Flowbox.Prelude                 hiding (id, drop, Traversal)
 import           Flowbox.Generics.Deriving.QShow   
 import           Flowbox.Luna.Data.AST.Utils       (ID)
-import           GHC.Generics                      
 
 data Type = Unknown { _id :: ID                                               }
           | Var     { _id :: ID, _name     :: String                          }
@@ -55,3 +57,12 @@ traverseM_ ftype t = case t of
           ftypeMap = mapM_ ftype
 
 
+lunaShow :: Type -> String
+lunaShow t = case t of
+    Unknown _               -> "Unknown"
+    Var     _ name'         -> name'
+    Tuple   _ items'        -> "{" ++ (List.intercalate ", " strs) ++ "}" where
+                                   strs = map lunaShow items'
+    --Class   _ name' params' -> name' ++ " " ++ (List.intercalate " " params')
+    --Module  _ path'         -> List.intercalate "." path'
+    Con     _ segments'     -> List.intercalate "." segments'

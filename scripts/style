@@ -49,6 +49,7 @@ def main():
         (paths, err) = Popen('git status --porcelain', stdout=PIPE, stderr=PIPE, shell=True).communicate()
         paths = paths.split('\n')
         paths = [file[3:] for file in paths]
+        paths = [path.split(' -> ')[-1] for path in paths]
     
     paths = [file for file in paths if file[-3:] == '.hs']
 

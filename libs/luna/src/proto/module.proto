@@ -13,7 +13,7 @@ import "type.proto";
 
 
 message Module {
-    optional int32 id = 1;
+    optional int32 id = 1 [default = -1];
     optional generated.proto.type.Type type    = 2;
     repeated generated.proto.expr.Expr imports = 3;
     repeated generated.proto.expr.Expr classes = 4;

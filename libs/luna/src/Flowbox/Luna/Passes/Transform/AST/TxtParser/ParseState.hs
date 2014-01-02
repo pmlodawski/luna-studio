@@ -31,3 +31,7 @@ registerSrc id src state = state & sourceMap %~ (SourceMap.insert id src)
 
 instance Default ParseState where
 	def = ParseState 0 def
+
+
+make :: ID -> ParseState
+make i = ParseState i SourceMap.empty

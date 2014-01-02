@@ -15,6 +15,8 @@ import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           GHC.Generics                      
 import           Control.Lens                      
 
+
+
 data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
          | String  { _id :: ID, _str  :: Prelude.String }
          | Integer { _id :: ID, _str  :: Prelude.String }
@@ -23,3 +25,11 @@ data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
 
 instance QShow Lit
 makeLenses (''Lit)
+
+
+lunaShow :: Lit -> Prelude.String
+lunaShow lit = case lit of 
+    Char    _ char' -> [char']
+    String  _ str'  -> str'
+    Integer _ str'  -> str'
+    Float   _ str'  -> str'

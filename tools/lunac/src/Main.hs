@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 import           Data.Version        (Version (Version))
-import           Options.Applicative (argument, prefs, command, command, fullDesc, help, hidden, long, metavar, option, progDesc, short, str, strOption, subparser, switch, value, (<>))
+import           Options.Applicative (argument, command, command, fullDesc, help, hidden, long, metavar, option, prefs, progDesc, short, str, strOption, subparser, switch, value, (<>))
 import qualified Options.Applicative as Opt
 
 import qualified Flowbox.Config.Config            as Config

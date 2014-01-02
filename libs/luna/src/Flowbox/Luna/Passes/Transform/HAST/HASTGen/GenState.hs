@@ -10,7 +10,7 @@
 
 module Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState where
 
-import           Control.Monad.State
+import Control.Monad.State
 
 import qualified Flowbox.Luna.Data.AST.Expr    as LExpr
 import qualified Flowbox.Luna.Data.AST.Type    as LType

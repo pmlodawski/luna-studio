@@ -17,7 +17,6 @@ module Flowbox.Prelude(
 ) where
 
 import           Control.Applicative
-import qualified Control.Exception      as Exception
 import           Control.Lens
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.Default
@@ -26,6 +25,8 @@ import qualified Data.Traversable       as Traversable
 import           Data.Typeable
 import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude                as Prelude
+
+
 
 (++) :: Monoid a => a -> a -> a
 (++) = mappend
@@ -80,8 +81,8 @@ isRight (Right _) = True
 isRight _         = False
 
 
-fromJust :: Maybe a -> IO a
-fromJust Nothing  = Exception.throwIO $ Exception.ErrorCall ("Maybe.fromJust: Nothing" :: String)
+fromJust :: Monad m => Maybe a -> m a
+fromJust Nothing  = fail "Maybe.fromJust: Nothing"
 fromJust (Just x) = return x
 
 

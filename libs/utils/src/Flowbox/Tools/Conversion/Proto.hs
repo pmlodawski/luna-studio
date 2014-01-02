@@ -19,7 +19,7 @@ import Flowbox.Prelude
 
 class Convert a b | a -> b where
     encode :: a -> b
-    decode :: b -> Either String a
+    decode :: (Applicative m, Monad m) => b -> m a
 
     encodeJ :: a -> Maybe b
     encodeJ a = Just $ encode a

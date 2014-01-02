@@ -53,6 +53,9 @@ addField field mod = mod & fields %~ (field:)
 addClass :: Expr -> Module -> Module
 addClass ncls mod = mod & classes %~ (ncls:)
 
+addModule :: Module -> Module -> Module
+addModule submod mod = mod & modules %~ (submod:)
+
 addImport :: Expr -> Module -> Module
 addImport imp mod = mod & imports %~ (imp:)
 

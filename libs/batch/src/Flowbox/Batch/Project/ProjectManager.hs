@@ -17,7 +17,7 @@ import qualified Flowbox.Batch.Project.Project               as Project
 import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerialization
 import           Flowbox.Data.Graph                          hiding (Edge, Graph, empty)
 import qualified Flowbox.Data.Graph                          as DG
-import           Flowbox.Prelude
+import           Flowbox.Prelude                             hiding (empty)
 import           Flowbox.System.UniPath                      (UniPath)
 
 

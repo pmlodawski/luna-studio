@@ -11,27 +11,27 @@
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser where
 
 import           Control.Applicative
-import           Text.Parsec         hiding (many, optional, parse, (<|>), State)
+import           Text.Parsec         hiding (State, many, optional, parse, (<|>))
 import qualified Text.Parsec         as Parsec
 import qualified Text.Parsec.Expr    as PExpr
 
-import qualified Flowbox.Luna.Data.AST.Class                       as Class
-import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
-import qualified Flowbox.Luna.Data.AST.Lit                         as Lit
-import qualified Flowbox.Luna.Data.AST.Module                      as Module
-import qualified Flowbox.Luna.Data.AST.Pat                         as Pat
-import qualified Flowbox.Luna.Data.AST.Type                        as Type
-import qualified Flowbox.Luna.Data.Source                          as Source
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer as L
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
+import qualified Flowbox.Luna.Data.AST.Class                            as Class
+import qualified Flowbox.Luna.Data.AST.Expr                             as Expr
+import qualified Flowbox.Luna.Data.AST.Lit                              as Lit
+import qualified Flowbox.Luna.Data.AST.Module                           as Module
+import qualified Flowbox.Luna.Data.AST.Pat                              as Pat
+import qualified Flowbox.Luna.Data.AST.Type                             as Type
+import qualified Flowbox.Luna.Data.Source                               as Source
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token as Token
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer      as L
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
-import           Flowbox.Prelude                                   hiding (id, mod)
-import qualified Flowbox.Prelude                                   as Prelude
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token      as Token
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
+import           Flowbox.Prelude                                        hiding (id, mod)
+import qualified Flowbox.Prelude                                        as Prelude
 
-import Text.Parsec.Pos
 import Control.Monad.State
+import Text.Parsec.Pos
 
 import qualified Prelude
 
@@ -56,13 +56,13 @@ pExtPath     = (pPath1 pCon <* L.pAccessor) <|> pure []
 -----------------------------------------------------------
 -- Literals
 -----------------------------------------------------------
-pIntL    = tok Lit.Integer <*> L.integerStr 
+pIntL    = tok Lit.Integer <*> L.integerStr
 pFloatL  = tok Lit.Float   <*> L.floatStr
 pCharL   = tok Lit.Char    <*> L.charLiteral
 pStringL = tok Lit.String  <*> L.stringLiteral
 pLit     = choice [ try $ pFloatL
                   , pIntL
-                  , pCharL 
+                  , pCharL
                   , pStringL
                   ]
 
@@ -153,9 +153,9 @@ pFields        =   (\names t val -> map (tok . (mkField t val)) names )
                <*> pType
                <*> (L.pAssignment *> (Just <$> pExpr) <|> pure Nothing)
 
-pDeclaration   = choice [ pImport 
-                        , pFunc   
-                        , pClass  
+pDeclaration   = choice [ pImport
+                        , pFunc
+                        , pClass
                         , try $ pLambda
                         ]
 
@@ -177,10 +177,10 @@ pExpr =   try (tok Expr.Assignment <*> pPattern <* (L.reservedOp "=") <*> pOpE)
       <?> "expression"
 
 pOpE      = Expr.aftermatch <$> PExpr.buildExpressionParser optableE pDotTermE
-          
+
 pDotTermE = (pEntBaseE) <??> (flip applyAll <$> many1 (tok Expr.Accessor <* L.pAccessor <*> pVar))
 
-pEntBaseE = choice[ pDeclaration 
+pEntBaseE = choice[ pDeclaration
                   , try $ L.parensed pExpr
                   , pIdentE
                   , tok Expr.Lit    <*> pLit
@@ -215,7 +215,7 @@ pIdentE = choice [ pVarE
 
 pListExpr = choice [ try $ tok Expr.RangeFromTo <*> pExpr <* L.pRange <*> pExpr
                    , try $ tok Expr.RangeFrom   <*> pExpr <* L.pRange
-                   , pExpr 
+                   , pExpr
                    ]
 
 pExprBlock  = pBlockBegin pExpr
@@ -243,12 +243,12 @@ pTupleT     = tok Type.Tuple   <*> pTuple pType
 pWildcardT  = tok Type.Unknown <*  L.pWildcard
 --pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
 
-pAppBaseT   = choice [ pVarT  
-                     , pConT  
+pAppBaseT   = choice [ pVarT
+                     , pConT
                      ]
 
-pEntT       = choice [ pVarT  
-                     , pConT  
+pEntT       = choice [ pVarT
+                     , pConT
                      , pTupleT
                      , pWildcardT
                      ]
@@ -258,7 +258,7 @@ pEntT       = choice [ pVarT
 -- Patterns
 -----------------------------------------------------------
 pPattern    = choice [ try $ tok Pat.Tuple <*> sepBy2 pPatCon L.separator
-                     , pPatCon 
+                     , pPatCon
                      ]
 
 pPatCon     = choice [ try pConAppP
@@ -278,11 +278,11 @@ pWildcardP  = tok Pat.Wildcard <*  L.pWildcard
 pConP       = tok Pat.Con      <*> pCon
 pConAppP    = tok Pat.App      <*> pConP <*> many1 pTermP
 
-pEntP = choice [ pVarP      
-               , pLitP      
-               , pTupleP    
+pEntP = choice [ pVarP
+               , pLitP
+               , pTupleP
                , pWildcardP
-               , pConP      
+               , pConP
                ]
 
 -------------------------------------------------------------
@@ -311,22 +311,29 @@ postfixM name fun       = PExpr.Postfix (L.reservedOp name *>        fun)
 -- Program
 -----------------------------------------------------------
 
-pExprTemp = do
-    out <- pExpr <* many(L.eol <* L.pSpaces) <* eof
-    id  <- getState
-    return (out, id)
+--pProgram mod = Expr.Module (Expr.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof)
+--                                           <|> pSegmentBegin pExpr 0 <* many(L.eol <* L.pSpaces) <* eof)
+
+pProgEnd = (spaces <?> "") <* eof
+
+pProgWithState p  = (,) <$> (p <* pProgEnd) <*> getState
+
+parseExpr    = parseGen (pProgWithState pExpr)
+parsePattern = parseGen (pProgWithState pPattern)
+parseType    = parseGen (pProgWithState pType)
 
 
 pProgram :: [String] -> ParsecT String ParseState.ParseState (State SourcePos) Module.Module
-pProgram mod = spaces *> pModule mod <* (spaces <?> "") <* eof
+pProgram mod = spaces *> pModule mod <* pProgEnd
+
 
 pResult mod = (\ast st -> (ast, view ParseState.sourceMap st)) <$> pProgram mod <*> getState
-    --ast <- pProgram
-    --st  <- getState
-    --return (ast, view ParseState.sourceMap st)
 
-parse (Source.Source mod code) = fst $ flip runState (initialPos "") $ runParserT (pResult mod) def "Luna Parser" code
 
+parse (Source.Source mod code) = parseGen (pResult mod) code def
+
+
+parseGen p src startID = fst $ flip runState (initialPos "") $ runParserT p startID "Luna Parser" src
 
 
 

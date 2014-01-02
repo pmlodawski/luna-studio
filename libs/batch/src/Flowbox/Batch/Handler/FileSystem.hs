@@ -44,9 +44,8 @@ ls upath = do
 
 stat :: UniPath -> IO Item
 stat upath = do
-    path <- UniPath.expand upath
-
-    isDir  <- Directory.doesDirectoryExist path
+    path  <- UniPath.expand upath
+    isDir <- Directory.doesDirectoryExist path
     if isDir
         then return $ Item.Directory path 0
         else do
@@ -68,9 +67,8 @@ touch = Directory.touchFile
 
 rm :: UniPath -> IO ()
 rm upath = do
-    path <- UniPath.expand upath
-
-    isDir  <- Directory.doesDirectoryExist path
+    path  <- UniPath.expand upath
+    isDir <- Directory.doesDirectoryExist path
     if isDir
         then Directory.removeDirectoryRecursive path
         else do
@@ -86,10 +84,9 @@ cp = Directory.copyDirectoryRecursive
 
 mv :: UniPath -> UniPath -> IO ()
 mv usrc udst = do
-    src <- UniPath.expand usrc
-    dst <- UniPath.expand udst
-
-    isDir  <- Directory.doesDirectoryExist src
+    src   <- UniPath.expand usrc
+    dst   <- UniPath.expand udst
+    isDir <- Directory.doesDirectoryExist src
     if isDir
         then Directory.renameDirectory src dst
         else do

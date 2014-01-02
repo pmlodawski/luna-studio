@@ -8,24 +8,12 @@ module Flowbox.Control.Error (
     module Control.Error,
     runScript,
     (<?>),
-    (<??>),
-    ifnot,
-    tryReadIORef,
-    tryWriteIORef,
-    tryGetID,
-    tryGetString,
-    tryGetUniPath,
+    assert,
 ) where
 
-import           Control.Error          hiding (runScript)
-import qualified Control.Monad.IO.Class
-import           Data.Int
-import           Data.IORef
-import           Data.Text.Lazy         (Text, unpack)
+import Control.Error hiding (runScript)
 
-import           Flowbox.Prelude
-import qualified Flowbox.System.UniPath          as UniPath
-import           Flowbox.Tools.Conversion.Common
+import Flowbox.Prelude
 
 
 runScript :: Script a -> IO a
@@ -36,42 +24,14 @@ runScript s = do
         Right a -> return a
 
 
-tryReadIORef :: IORef a -> EitherT String IO a
-tryReadIORef = scriptIO . readIORef
+(<?>) :: Monad m => Maybe b -> String -> m b
+val <?> m = case val of
+    Just v  -> return v
+    Nothing -> fail m
 
 
-tryWriteIORef :: Control.Monad.IO.Class.MonadIO m  => IORef a -> a -> EitherT String m ()
-tryWriteIORef ref v = scriptIO $ writeIORef ref v
-
-
-(<??>) :: Monad m => Maybe a -> e -> EitherT e m a
-v <??> m = tryRight $ note m v
-
-
-(<?>) :: Maybe b -> a -> Either a b
-v <?> m = note m v
-
-
-ifnot :: Bool -> String -> Either String ()
-ifnot bool msg = if bool
-    then Right ()
-    else Left msg
-
-
-tryGetID :: Monad m => Maybe Int32 -> String -> EitherT String m Int
-tryGetID mtID name = do
-    tID <- mtID <??> ("'" ++ name  ++ "' argument is missing")
-    return $ i32toi tID
-
-
-tryGetString :: Monad m => Maybe Text -> String -> EitherT String m String
-tryGetString mtstring name = do
-    tstring <- mtstring <??> ("'" ++ name  ++ "' argument is missing")
-    return $ unpack tstring
-
-
-tryGetUniPath :: Monad m => Maybe Text -> String -> EitherT String m UniPath.UniPath
-tryGetUniPath mtpath name = do
-    tpath <- mtpath <??> ("'" ++ name  ++ "' argument is missing")
-    return $ UniPath.fromUnixString $ unpack tpath
+assert :: Monad m => Bool -> String -> m ()
+assert bool msg = if bool
+    then return ()
+    else fail msg
 

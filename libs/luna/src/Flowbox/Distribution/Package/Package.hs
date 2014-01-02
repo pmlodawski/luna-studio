@@ -13,10 +13,10 @@ import qualified Data.Aeson.TH as JSON
 import           Data.Default  (Default, def)
 import           GHC.Generics
 
-import           Flowbox.Data.Version                    (Version)
-import           Flowbox.Distribution.License            (License)
-import           Flowbox.Distribution.Package.Dependency (Dependency)
-import           Flowbox.Prelude                         hiding (id)
+import Flowbox.Data.Version                    (Version)
+import Flowbox.Distribution.License            (License)
+import Flowbox.Distribution.Package.Dependency (Dependency)
+import Flowbox.Prelude                         hiding (id)
 
 
 

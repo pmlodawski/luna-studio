@@ -14,11 +14,11 @@ import Control.Applicative
 import Data.Char           (digitToInt, isSpace)
 import Data.List           (nub, sort)
 import Flowbox.Prelude     hiding (op)
-import Text.Parsec         hiding (many, optional, (<|>), getPosition)
+import Text.Parsec         hiding (getPosition, many, optional, (<|>))
 
 
+import Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token (Token))
 import Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-import Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token(Token))
 
 
 identLetter  = alphaNum
@@ -287,8 +287,8 @@ symbols    name = try $ lexeme (string name)
 symbol     name = lexeme (char name)
 --symbol2  s name = lexeme2 s (char name)
 
-pSpace      = satisfy (`elem` "\t\f\v ") <?> "" 
---pSpace      = satisfy (isSpace) <?> "" 
+pSpace      = satisfy (`elem` "\t\f\v ") <?> ""
+--pSpace      = satisfy (isSpace) <?> ""
 pSpacesBase = many1 pSpace <|> try(multiLineComment) <|> oneLineComment <?> ""
 pSpaces1    = many1 pSpacesBase <?> ""
 pSpaces     = many  pSpacesBase <?> ""
