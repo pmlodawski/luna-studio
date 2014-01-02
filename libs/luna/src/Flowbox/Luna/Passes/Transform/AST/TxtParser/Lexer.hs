@@ -17,9 +17,8 @@ import Flowbox.Prelude     hiding (op)
 import Text.Parsec         hiding (many, optional, (<|>), getPosition)
 
 
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-import           Flowbox.Luna.Data.AST.SourcePos                   (SourceRange(SourceRange))
-
+import Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
+import Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token(Token))
 
 
 identLetter  = alphaNum
@@ -32,7 +31,7 @@ commentEnd   = "#]"
 kDef = reserved "def"
 
 pWildcard    = symbol  '_' <?> "wildcard"
-pBlockBegin  = storePos $ symbol  ':'
+pBlockBegin  = symbol  ':'
 separator    = symbol  ','
 parenL       = symbol  '('
 parenR       = symbol  ')'
@@ -43,7 +42,7 @@ braceR       = symbol  '}'
 pAccessor    = symbol  '.'
 pArrow       = symbols "->"
 pTypeDecl    = symbols "::"
-pImportAll   = storePos $ symbol  '*'
+pImportAll   = symbol  '*'
 pAssignment  = symbol  '='
 pNativeSym   = symbols "```"
 pRange       = symbols ".."
@@ -65,8 +64,8 @@ pInterface  = reserved "interface"
 
 -- imports
 pFrom       = reserved "from"
-pImport     = storePos $ reserved "import"
-pAs         = storePos $ reserved "as"
+pImport     = reserved "import"
+pAs         = reserved "as"
 
 
 -----------------------------------------------------------
@@ -252,8 +251,9 @@ isReservedOp name = isReserved (sort reservedOpNames) name
 --reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> "")
 reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("end of " ++ show name))
 
-pIdentVar     = storePos pIdentLower <?> "variable identifier"
-pIdentType    = storePos pIdentUpper <?> "type identifier"
+
+pIdentVar     = pIdentLower <?> "variable identifier"
+pIdentType    = pIdentUpper <?> "type identifier"
 pIdentTypeVar = pIdentLower <?> "identifier"
 
 pIdent        = pIdentLower <|> pIdentUpper <?> "identifier"
