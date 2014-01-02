@@ -27,7 +27,7 @@ Library
                   directory,
                   dlist,
                   --either,
-                  errors,
+                  errors > 1.4,
                   fgl,
                   filepath,
                   generic-deriving,
