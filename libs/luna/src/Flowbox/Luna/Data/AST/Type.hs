@@ -16,7 +16,7 @@ import           GHC.Generics
 data Type = Unknown { _id :: ID                                               }
           | Var     { _id :: ID, _name     :: String                          }
           | Tuple   { _id :: ID, _items    :: [Type]                          }
-          | Class   { _id :: ID, _name     :: String   , _params  :: [String] }
+          | Data    { _id :: ID, _name     :: String   , _params  :: [String] }
           | Module  { _id :: ID, _path     :: [String]                        }
           | Lambda  { _id :: ID, _inputs   :: [Type]   , _output  :: Type     }
           | Con     { _id :: ID, _segments :: [String]                        }
@@ -35,7 +35,7 @@ traverseM ftype t = case t of
     Lambda     id' inputs' output'           -> Lambda id' <$> ftypeMap inputs' <*> ftype output'
     App        id' src' args'                -> App    id' <$> ftype    src'    <*> ftypeMap args'
     Var        {}                            -> pure t
-    Class      {}                            -> pure t
+    Data       {}                            -> pure t
     Module     {}                            -> pure t
     Con        {}                            -> pure t
     Unknown    {}                            -> pure t
@@ -47,7 +47,7 @@ traverseM_ ftype t = case t of
     Lambda     _  inputs' output'            -> drop <* ftypeMap inputs' <* ftype output'
     App        _  src' args'                 -> drop <* ftype    src'    <* ftypeMap args'
     Var        {}                            -> drop
-    Class      {}                            -> drop
+    Data       {}                            -> drop
     Module     {}                            -> drop
     Con        {}                            -> drop
     Unknown    {}                            -> drop

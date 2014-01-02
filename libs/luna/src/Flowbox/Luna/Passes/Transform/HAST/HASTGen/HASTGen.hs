@@ -238,58 +238,58 @@ genExpr ast = case ast of
                                             
                                             return $ HExpr.Import False (["FlowboxM", "Libs"] ++ path ++ [tname]) Nothing where
                                               
-    LExpr.Class _ cls _ fields methods   -> do 
-                                            let name        = view LType.name   cls
-                                                params      = view LType.params cls
-                                                fieldNames  = map (view LExpr.name) fields
-                                                fieldlen    = length fields
-                                                --tmethods    = map (typeMethodSelf name) methods
-                                                funcNames   = map (view LExpr.name) methods 
-                                                memberNames = fieldNames ++ funcNames
-                                                ccname      = mkCCName name
+    --LExpr.Class _ cls _ fields methods   -> do 
+    --                                        let name        = view LType.name   cls
+    --                                            params      = view LType.params cls
+    --                                            fieldNames  = map (view LExpr.name) fields
+    --                                            fieldlen    = length fields
+    --                                            --tmethods    = map (typeMethodSelf name) methods
+    --                                            funcNames   = map (view LExpr.name) methods 
+    --                                            memberNames = fieldNames ++ funcNames
+    --                                            ccname      = mkCCName name
                                             
-                                            GenState.setCls cls
+    --                                        GenState.setCls cls
                                             
-                                            -- DataType
-                                            cons   <- HExpr.Con name <$> mapM genExpr fields
-                                            let dt = HExpr.DataD name params [cons] ["Show", "Generic"]
-                                            GenState.addDataType dt
+    --                                        -- DataType
+    --                                        cons   <- HExpr.Con name <$> mapM genExpr fields
+    --                                        let dt = HExpr.DataD name params [cons] ["Show", "Generic"]
+    --                                        GenState.addDataType dt
 
-                                            ---- get0 value instance
-                                            --GenState.addInstance $ genDTGet0 name params
+    --                                        ---- get0 value instance
+    --                                        --GenState.addInstance $ genDTGet0 name params
 
-                                            --mapM_ genExpr methods
+    --                                        --mapM_ genExpr methods
 
-                                            ---- CONSTRUCTORS --
+    --                                        ---- CONSTRUCTORS --
 
-                                            ---- CC type constructor
-                                            --let con = genCCDec ccname
-                                            --GenState.addDataType con
+    --                                        ---- CC type constructor
+    --                                        --let con = genCCDec ccname
+    --                                        --GenState.addDataType con
 
-                                            ---- constructor function
-                                            --GenState.addFunction $ genCon name ccname
+    --                                        ---- constructor function
+    --                                        --GenState.addFunction $ genCon name ccname
 
-                                            --let test   = genVArgCon fieldlen name ccname [] (HExpr.ConE [name])
-                                            --GenState.addFunction $ test
+    --                                        --let test   = genVArgCon fieldlen name ccname [] (HExpr.ConE [name])
+    --                                        --GenState.addFunction $ test
 
-                                            -- Constructor TH snippet
-                                            let arglen    = fieldlen
-                                                cgetCName = mkCGetCName arglen
-                                                cgetName  = mkCGetName  arglen
-                                                getNName  = mkTName arglen name
-                                            --GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
+    --                                        -- Constructor TH snippet
+    --                                        let arglen    = fieldlen
+    --                                            cgetCName = mkCGetCName arglen
+    --                                            cgetName  = mkCGetName  arglen
+    --                                            getNName  = mkTName arglen name
+    --                                        --GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
 
-                                            GenState.addTHExpression $ thRegisterClass name fieldlen [] 
-                                            GenState.addTHExpression $ thClsCallInsts name fieldlen 0
-                                            GenState.addTHExpression $ thGenerateClsGetters name
-                                            GenState.addTHExpression $ thRegisterClsGetters name
-                                            GenState.addTHExpression $ thCallInstsGetters name
+    --                                        GenState.addTHExpression $ thRegisterClass name fieldlen [] 
+    --                                        GenState.addTHExpression $ thClsCallInsts name fieldlen 0
+    --                                        GenState.addTHExpression $ thGenerateClsGetters name
+    --                                        GenState.addTHExpression $ thRegisterClsGetters name
+    --                                        GenState.addTHExpression $ thCallInstsGetters name
 
 
-                                            mapM_ genExpr methods
+    --                                        mapM_ genExpr methods
 
                                               
-                                            return dt
+    --                                        return dt
 
     LExpr.Infix       _ name src dst      -> HExpr.Infix name <$> genExpr src <*> genExpr dst
     LExpr.Assignment  _ pat dst           -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst

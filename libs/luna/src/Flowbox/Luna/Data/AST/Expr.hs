@@ -33,7 +33,8 @@ data Expr  = NOP         { _id :: ID                                            
            | App         { _id :: ID, _src       :: Expr     , _args      :: [Expr]                                             }
            | AppCons_    { _id :: ID, _args      :: [Expr]                                                                      }
            | Assignment  { _id :: ID, _pat       :: Pat      , _dst       :: Expr                                               }
-           | Class       { _id :: ID, _cls       :: Type     , _classes   :: [Expr] , _fields    :: [Expr] , _methods :: [Expr] }
+           | Data        { _id :: ID, _cls       :: Type     , _cons      :: [Expr]                                              }
+           | ConD        { _id :: ID, _name      :: String   , _classes   :: [Expr] , _fields    :: [Expr] , _methods :: [Expr] }
            | Con         { _id :: ID, _name      :: String                                                                      }
            | Function    { _id :: ID, _path      :: [String] , _name      :: String , _inputs    :: [Expr] , _output  :: Type   , _body    :: [Expr] }
            | Lambda      { _id :: ID, _inputs    :: [Expr]   , _output    :: Type   , _body      :: [Expr]                      }
@@ -52,11 +53,19 @@ data Expr  = NOP         { _id :: ID                                            
            | Native      { _id :: ID, _segments  :: [Expr]                                                                      }
            | NativeCode  { _id :: ID, _code      :: String }
            | NativeVar   { _id :: ID, _name      :: String }
+           | Case        { _id :: ID, _expr      :: Expr     , _match     :: [Match]}
            deriving (Show, Eq, Generic)
 
 
+
+data Match = Match { _matchID :: ID, _matchPat :: Pat, _matchExpr :: [Expr] }
+           deriving (Show, Eq, Generic)
+
 instance QShow Expr
 makeLenses (''Expr)
+
+instance QShow Match
+makeLenses (''Match)
 
 
 callConstructor :: ID -> Expr -> Expr -> Expr

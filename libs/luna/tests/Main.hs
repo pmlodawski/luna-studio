@@ -88,27 +88,36 @@ example :: Source
 example = Source.Source ["Main"] $
         concat $ replicate 1 $ unlines [ ""
                     --, "import Std:Vector"
-                    ----, "def List.length self:"
-                    ----, "    ```getIO $ liftFPure1 length #{self}```"
-                    ----, "def List.each self callback:"
-                    ----, "    ```let {mymap x (Pure y) = mapM x y}```"
-                    ----, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
+                    --, "def List.length self:"
+                    --, "    ```getIO $ liftFPure1 length #{self}```"
                     --, "def List.each self callback:"
-                    --, "    ```let {mymap = liftf2 map}```"
-                    --, "    ```mymap (val $ call1 #{callback}) #{self}```"
-                    ----, "def Int.add a b:"
-                    ----, "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
-                    ----, "def Int.sub a b:"
-                    ----, "    ```getIO $ liftFPure2 (-) #{a} #{b}```"
-                    ----, "def Int.mul a b:"
-                    ----, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
-                    ----, "def List.add self x:"
-                    ----, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
-                    --, "class Console:"
-                    --, "    def print self msg:"
-                    --, "        ```print' #{msg}```"
+                    --, "    ```let {mymap x (Pure y) = mapM x y}```"
+                    --, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
+                    , "def List.each self callback:"
+                    , "    ```let {mymap = liftf2 map}```"
+                    , "    ```mymap (val $ call1 #{callback}) #{self}```"
+                    --, "def Int.add a b:"
+                    --, "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
+                    --, "def Int.sub a b:"
+                    --, "    ```getIO $ liftFPure2 (-) #{a} #{b}```"
+                    --, "def Int.mul a b:"
+                    --, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
+                    --, "def List.add self x:"
+                    --, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
+                    , "class Console:"
+                    , "    def print self msg:"
+                    , "        ```print' #{msg}```"
 
-
+                  --, "class Vector a b c"
+                  --, "    x :: a"
+                  --, "class Vector a = Vector | Scalar "
+                  --, "               | Scalar2"
+                  --, "class Vector a = Vector: x :: a"
+                  --, "                         y :: a"
+                  --, "                         z :: a"
+                  --, "               | Scalar"
+                  --, "               | Vector2: x :: a"
+                  --, "               | Scalar"
                   --, "class Vector a:"
                   --, "    x,y,z :: a"
                   --, "    def f:"
@@ -123,21 +132,25 @@ example = Source.Source ["Main"] $
                   --, "    v"
                   --, "    (2+2).f"
 
-                  , "def fxx (y::Int):"
-                  , "    a = b + (c)"
+                  --, "def fxx (y::Int):"
+                  --, "    a = b + (c)"
                   --, "    Vector"
                   --, "    def g:"
                   --, "        xxx"
-                  --, "    def h:"
-                  --, "        yyy"
                   --, "    b"
                   --, "    b x:"
                   --, "        x+1"
-                  --, "def fyy:"
+                  --, "def fyy x:"
                   --, "    b"
+                  --, "    def h:"
+                  --, "        yyy"
+                  --, "    a = case x:"
+                  --, "        a: a"
+                  --, "        {a,b} : 1"
                   --, "    v.x.y"
-                  --, "    [1,2,3].each x:"
-                  --, "       Console.print x"
+                  , "def main self:"
+                  , "    [1,2,3].each x:"
+                  , "       Console.print x"
                   --, "    a.throw"
 
 
@@ -227,36 +240,36 @@ main_inner = Luna.run $ do
     --logger info (show.length $ FModule._classes ast)
     return ()
 
-    ----let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]
+    --let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]
 
-    ----let ast2 =     Zipper.mk ast
-    ----           >>= Zipper.focusFunction "add"
-    ----           >>= Zipper.modify (\(Zipper.FunctionFocus func) -> Zipper.FunctionFocus (func & LExpr.name .~ "dupa"))
-    ----           >>= Zipper.close
+    --let ast2 =     Zipper.mk ast
+    --           >>= Zipper.focusFunction "add"
+    --           >>= Zipper.modify (\(Zipper.FunctionFocus func) -> Zipper.FunctionFocus (func & LExpr.name .~ "dupa"))
+    --           >>= Zipper.close
 
-    ----logger info $ PP.ppqShow ast2
+    --logger info $ PP.ppqShow ast2
 
-    ----putStrLn $ PP.ppShow zipper
+    --putStrLn $ PP.ppShow zipper
 
-    --logger info "\n-------- VarAlias --------"
-    --va <- VarAlias.run     ast
-    --logger info $ PP.ppShow va
+    logger info "\n-------- VarAlias --------"
+    va <- VarAlias.run     ast
+    logger info $ PP.ppShow va
 
-    --logger info "\n-------- FuncPool --------"
-    --fp <- FuncPool.run ast
-    --logger info $ PP.ppShow fp
+    logger info "\n-------- FuncPool --------"
+    fp <- FuncPool.run ast
+    logger info $ PP.ppShow fp
 
-    --logger info "\n-------- SSA --------"
-    --ssa <- SSA.run va ast
-    ----logger info $ PP.ppqShow ssa
+    logger info "\n-------- SSA --------"
+    ssa <- SSA.run va ast
+    --logger info $ PP.ppqShow ssa
 
-    --logger info "\n-------- HASTGen --------"
-    --hast <- HASTGen.run ssa fp
-    --logger info $ PP.ppShow hast
+    logger info "\n-------- HASTGen --------"
+    hast <- HASTGen.run ssa fp
+    logger info $ PP.ppShow hast
 
-    --logger info "\n-------- HSC --------"
-    --hsc <- HSC.run  hast
-    --logger info $ join "\n\n" (map printSrc hsc)
+    logger info "\n-------- HSC --------"
+    hsc <- HSC.run  hast
+    logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()

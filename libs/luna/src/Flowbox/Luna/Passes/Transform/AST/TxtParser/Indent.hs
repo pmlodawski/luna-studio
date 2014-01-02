@@ -7,7 +7,7 @@ module Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent (
     -- * Types
     IndentParser, runIndent,
     -- * Blocks
-    withBlock, withBlock', block,
+    withBlock, withBlock', block, rawBlock, rawBlock1,
     -- * Indentation Checking
     indented, same, sameOrIndented, checkIndent, withPos,
     -- * Paired characters
@@ -64,9 +64,13 @@ same = do
     
 -- | Parses a block of lines at the same indentation level
 block :: (Stream s (State SourcePos) z) => IndentParser s u a -> IndentParser s u [a]
-block p = withPos $ do
-    r <- many1 (checkIndent >> p)
-    return r
+block p = withPos $ rawBlock1 p
+
+rawBlock1 :: (Stream s (State SourcePos) z) => IndentParser s u a -> IndentParser s u [a]
+rawBlock1 p = many1 (checkIndent >> p)
+
+rawBlock :: (Stream s (State SourcePos) z) => IndentParser s u a -> IndentParser s u [a]
+rawBlock p = many (checkIndent >> p)
 
 -- | Parses using the current location for indentation reference
 withPos :: (Stream s (State SourcePos) z) => IndentParser s u a -> IndentParser s u a

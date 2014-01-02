@@ -38,7 +38,7 @@ instance Convert Type Gen.Type where
         Type.Unknown i               -> genType GenCls.Unknown GenUnknown.ext $ GenUnknown.Unknown (Just $ encodeP i)
         Type.Var     i name          -> genType GenCls.Var     GenVar.ext     $ GenVar.Var         (Just $ encodeP i) (Just $ encodeP name)
         Type.Tuple   i items         -> genType GenCls.Tuple   GenTuple.ext   $ GenTuple.Tuple     (Just $ encodeP i) (encodeList items)
-        Type.Class   i name params   -> genType GenCls.Class   GenClass.ext   $ GenClass.Class     (Just $ encodeP i) (Just $ encodeP name) (encodeListP params)
+        Type.Data    i name params   -> genType GenCls.Class   GenClass.ext   $ GenClass.Class     (Just $ encodeP i) (Just $ encodeP name) (encodeListP params)
         Type.Module  i path          -> genType GenCls.Module  GenModule.ext  $ GenModule.Module   (Just $ encodeP i) (encodeListP path)
         Type.Lambda  i inputs output -> genType GenCls.Lambda  GenLambda.ext  $ GenLambda.Lambda   (Just $ encodeP i) (encodeList inputs) (Just $ encode output)
         Type.Con     i segments      -> genType GenCls.Con_    GenCon_.ext    $ GenCon_.Con_       (Just $ encodeP i) (encodeListP segments)
@@ -66,7 +66,7 @@ instance Convert Type Gen.Type where
                              (GenClass.Class mtid mtname tparams) <- ext <?> "Failed to decode Type.Class: extension is missing"
                              tid   <- mtid   <?> "Failed to decode Type.Class: 'id' field is missing"
                              tname <- mtname <?> "Failed to decode Type.Class: 'name' field is missing"
-                             pure $ Type.Class (decodeP tid) (decodeP tname) (decodeListP tparams)
+                             pure $ Type.Data (decodeP tid) (decodeP tname) (decodeListP tparams)
         GenCls.Module  -> do ext <- getExt GenModule.ext
                              (GenModule.Module mtid tpath) <- ext <?> "Failed to decode Type.Module: extension is missing"
                              tid <- mtid <?> "Failed to decode Type.Module: 'id' field is missing"

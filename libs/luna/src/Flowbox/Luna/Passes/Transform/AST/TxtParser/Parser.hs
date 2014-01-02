@@ -15,7 +15,7 @@ import           Text.Parsec         hiding (many, optional, parse, (<|>), State
 import qualified Text.Parsec         as Parsec
 import qualified Text.Parsec.Expr    as PExpr
 
-import qualified Flowbox.Luna.Data.AST.Class                       as Class
+import qualified Flowbox.Luna.Data.AST.Data                        as Data
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import qualified Flowbox.Luna.Data.AST.Lit                         as Lit
 import qualified Flowbox.Luna.Data.AST.Module                      as Module
@@ -109,27 +109,47 @@ pLambda          = tok Expr.Lambda  <*> pArgListL pArg
                                     <?> "lambda definition"
 
 
-pClass           = tok Class.mk     <*  L.pClass
-                                    <*> (tok Type.Class <*> (pCon                 <?> "class name")
-                                                        <*> (many L.pIdentTypeVar <?> "class parameters"))
-                                    <??$> pBlockBegin pClassBody
-                                    <?> "class definition"
+pData            = do L.pClass
+                      name  <- pCon                 <?> "class name"
+                      tvars <- many L.pIdentTypeVar <?> "class parameters"
+                      cls   <- tok Type.Data <*> pure name <*> pure tvars
+                      cons  <- try(pPipeBlockBegin pConD) <|> ((:[]) <$> pConDN name)
+                      tok Expr.Data <*> pure cls <*> pure cons
+
+--pData            = tok Expr.Data    <*  L.pClass
+--                                    <*> (tok Type.Data  <*> (pCon                 <?> "class name")
+--                                                        <*> (many L.pIdentTypeVar <?> "class parameters"))
+--                                    <*> (pPipeBlockBegin pConD <|> (pConDN)
+--                                    -- <??$> pDotBlockBegin pDataBody
+--                                    <?> "class definition"
+
+
+pConDN      name = tok (\i -> Expr.ConD i name [] [] [])
+                                    <??$> pDotBlockBegin pDataBody
+                                    <?> "data constructor definition"
+
+pConD            = tok Expr.ConD    <*> pCon
+                                    <*> pure []
+                                    <*> pure []
+                                    <*> pure []
+                                    <??$> pDotBlockBegin pDataBody
+                                    <?> "data constructor definition"
 
 
 pModule name     = tok Module.mk    <*>   (tok Type.Module <*> pure name)
-                                    <??$> withPos (multiBblock pModuleBody)
+                                    <??$> withPos (multiBlock1 pModuleBody)
 
 
 
-pClassBody       = choice [ Expr.addMethod <$> pFunc
+pDataBody       = choice [ Expr.addMethod <$> pFunc
                           , pCombine Expr.addField pFields
-                          , Expr.addClass  <$> pClass
+                          , Expr.addClass  <$> pData
                           ]
                 <?> "class body"
 
 pModuleBody      = choice [ Module.addMethod <$> pFunc
                           , pCombine Module.addField pFields
-                          , Module.addClass  <$> pClass
+                          , Module.addClass  <$> pData
                           , Module.addImport <$> pImport
                           ]
                 <?> "module body"
@@ -155,7 +175,7 @@ pFields        =   (\names t val -> map (tok . (mkField t val)) names )
 
 pDeclaration   = choice [ pImport 
                         , pFunc   
-                        , pClass  
+                        , pData  
                         , try $ pLambda
                         ]
 
@@ -171,16 +191,33 @@ pNativeElem = choice [ pNativeVar
 pNativeVar  = tok Expr.NativeCode <*> many1 (noneOf "`#")
 pNativeCode = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol '}'
 
+pExpr       = pExprT (pEntBaseConsE pEntBaseExE)
 
-pExpr =   try (tok Expr.Assignment <*> pPattern <* (L.reservedOp "=") <*> pOpE)
-      <|> pOpE
-      <?> "expression"
+pExprSimple = pExprT (pEntBaseConsE pEntBaseE)
 
-pOpE      = Expr.aftermatch <$> PExpr.buildExpressionParser optableE pDotTermE
+pExprT base =   try (tok Expr.Assignment <*> pPattern <* (L.reservedOp "=") <*> pOpE base)
+            <|> pOpE base
+            <?> "expression"
+
+pOpE base = Expr.aftermatch <$> PExpr.buildExpressionParser optableE (pDotTermE base)
           
-pDotTermE = (pEntBaseE) <??> (flip applyAll <$> many1 (tok Expr.Accessor <* L.pAccessor <*> pVar))
+pDotTermE base = (base) <??> (flip applyAll <$> many1 (tok Expr.Accessor <* L.pAccessor <*> pVar))
 
-pEntBaseE = choice[ pDeclaration 
+
+pCaseE     = tok Expr.Case <* L.pCase <*> pExprSimple <*> (pDotBlockBegin pCaseBodyE <|> return [])
+pCaseBodyE = tok Expr.Match <*> pPattern <*> pExprBlock
+
+
+pEntBaseConsE base = choice [ try $ L.parensed (pExprT base)
+                            , base
+                            ]
+
+pEntBaseExE = choice[ pDeclaration
+                    , pEntBaseE
+                    ]
+           <?> "expression term"
+
+pEntBaseE = choice[ try $ pCaseE
                   , try $ L.parensed pExpr
                   , pIdentE
                   , tok Expr.Lit    <*> pLit
@@ -218,7 +255,7 @@ pListExpr = choice [ try $ tok Expr.RangeFromTo <*> pExpr <* L.pRange <*> pExpr
                    , pExpr 
                    ]
 
-pExprBlock  = pBlockBegin pExpr
+pExprBlock  = pDotBlockBegin pExpr
 
 
 -----------------------------------------------------------
@@ -289,11 +326,24 @@ pEntP = choice [ pVarP
 ---- Nested Segments
 -------------------------------------------------------------
 
-pBlockBegin     p = L.pBlockBegin *> spaces *> indented *> withPos(multiBblock p)
+pDotBlockBegin  p = L.pBlockBegin *> pBlockBegin p
 
-blockSpaces = try (spaces <* checkIndent) <|> pure ()
+--pPipeBlockBegin p = pBlockPrefix *> withPos((:) <$ L.pAssignment <*> (p <* blockSpaces) <*> multiBlock (L.pPipe *> p))
 
-multiBblock p = block (p <* blockSpaces)
+--pPipeBlockBegin p = pBlockPrefix *> withPos((:) <$ L.pAssignment <*> (p <* blockSpaces) <*> many ( (same <|> checkIndent) >> (L.pPipe *> p <* blockSpaces)) )
+
+pPipeBlockBegin p = pBlockPrefix *> ((:) <$ L.pAssignment <*> (p <* blockSpaces') <*> many ( (same <|> indented) >> (L.pPipe *> p <* blockSpaces')) )
+
+pBlockBegin     p = pBlockPrefix *> withPos(multiBlock1 p)
+
+pBlockPrefix      = spaces *> indented
+
+blockSpaces       = try (spaces <* checkIndent) <|> pure ()
+
+blockSpaces'      = try (spaces <* indented) <|> pure ()
+
+multiBlock1     p = rawBlock1 (p <* blockSpaces)
+multiBlock      p = rawBlock  (p <* blockSpaces)
 
 -----------------------------------------------------------
 -- Operator Utils
