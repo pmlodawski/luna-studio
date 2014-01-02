@@ -39,22 +39,22 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Analysis.NameResolver"
 
 
+resolve :: (Applicative m, Monad m)
+        => String -> Breadcrumbs -> Library.ID -> LibManager -> m [(Breadcrumbs, Library.ID)]
+resolve name bc libID libManager = do
+    library <- LibManager.lab libManager libID <?> "NameResolver: Cannot find library with id=" ++ show libID
+    zipper  <- Zipper.focusCrumb' (head bc) $ Library.ast $ library
+    imports <- getImports zipper $ tail bc
+    let elements = splitOn "." name
+        possiblePaths = mapMaybe (possiblePath elements) imports
+    return $ List.concat $ map (flip searchLibManager libManager) $ elements:possiblePaths
+
+
 getImports :: (Applicative m, Monad m) => Zipper -> Breadcrumbs -> m [Expr]
 getImports z@(Focus.ModuleFocus m, _) (h:t) = do newZ <- Zipper.focusCrumb h z
                                                  imports <- getImports newZ t
                                                  pure $ (m ^. Module.imports) ++ imports
 getImports _                              _ = pure []
-
-
-resolve :: (Applicative m, Monad m)
-        => String -> Breadcrumbs -> Library.ID -> LibManager -> m [(Breadcrumbs, Library.ID)]
-resolve name bc libID libManager = do
-    library <- LibManager.lab libManager libID <?> "NameResolver: Cannot find library with id=" ++ show libID
-    zipper  <- Zipper.mk $ Library.ast $ library
-    imports <- getImports zipper bc
-    let elements = splitOn "." name
-        possiblePaths = mapMaybe (possiblePath elements) imports
-    return $ List.concat $ map (flip searchLibManager libManager) $ elements:possiblePaths
 
 
 possiblePath :: [String] -> Expr -> Maybe [String]
@@ -75,21 +75,21 @@ searchLibManager path libManager = do
 searchLib :: [String] -> Library -> [Breadcrumbs]
 searchLib path library =
     if libName == head path
-        then searchModule (tail path) [] ast
+        then searchModule path [] ast
         else []
     where libName = Library.name library
           ast     = Library.ast  library
 
 
 searchModule :: [String] -> Breadcrumbs -> Module -> [Breadcrumbs]
-searchModule path bc (Module.Module _ (Type.Module _ name) _ classes _ methods modules) = 
-    if head path == head name
-        then if length path == 1 
+searchModule path bc (Module.Module _ (Type.Module _ name) _ classes _ methods modules) =
+    if length path > 0 && last name == head path
+        then if length path == 1
                 then [currentBc]
                 else (List.concat $ map (searchExpr   (tail path) currentBc) $ classes ++ methods)
                   ++ (List.concat $ map (searchModule (tail path) currentBc) modules)
         else []
-    where currentBc = bc ++ [Crumb.ModuleCrumb $ head name]
+    where currentBc = bc ++ [Crumb.ModuleCrumb $ head path]
 
 
 searchExpr :: [String] -> Breadcrumbs -> Expr -> [Breadcrumbs]

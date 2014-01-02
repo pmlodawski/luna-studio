@@ -259,6 +259,7 @@ makeAsk(AST, UpdateFunctionPath)
 makeAsk(AST, UpdateFunctionInputs)
 makeAsk(AST, UpdateFunctionOutput)
 makeAsk(AST, Remove)
+makeAsk(AST, ResolveDefinition)
 
 makeAsk(FileSystem, LS)
 makeAsk(FileSystem, Stat)
@@ -426,6 +427,12 @@ int main()
 		{
 			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			macro::Graph::Connect(controlSocket, node45.id(), std::vector<int>{}, nodeAdd.id(), std::vector<int>{1}, bc_Main_test, library.id(), project.id());
+		}
+		{
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+			auto r = macro::AST::ResolveDefinition(controlSocket, "MyLib.Main", bc_Main_test, library.id(), project.id()).astptr();
+			std::cout << "Result size: " << r.size() << std::endl;
+			
 		}
 		// macro::Maintenance::Dump(controlSocket);
 

@@ -94,12 +94,22 @@ focusBreadcrumbs bc zipper = case bc of
     h:t -> focusCrumb h zipper >>= focusBreadcrumbs t
 
 
+focusModule' :: (Applicative m, Monad m) => String -> Module -> m Zipper
+focusModule' name m = do
+    assert (m ^. Module.cls . Type.path . (to last) == name) $ "Cannot focus on " ++ (show name)
+    mk m
+
+
+focusCrumb' :: (Applicative m, Monad m) => Crumb -> Module -> m Zipper
+focusCrumb' c m = case c of
+    Crumb.ModuleCrumb name -> focusModule' name m
+    _                      -> fail $ "Cannot focus on " ++ (show c)
+
+
 focusBreadcrumbs' :: (Applicative m, Monad m) => Breadcrumbs -> Module -> m Zipper
 focusBreadcrumbs' bc m = case bc of
-    (Crumb.ModuleCrumb h):t -> do
-         assert (m ^. Module.cls . Type.path . (to last) == h) $ "Cannot focus on " ++ (show h)
-         mk m >>= focusBreadcrumbs t
-    _ -> fail $ "Cannot focus on " ++ (show bc)
+    h:t -> focusCrumb' h m >>= focusBreadcrumbs t
+    _   -> fail $ "Cannot focus on " ++ (show bc)
 
 
 getFocus :: Zipper -> Focus

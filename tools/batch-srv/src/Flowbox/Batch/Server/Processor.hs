@@ -46,6 +46,8 @@ import qualified Generated.Proto.Batch.AST.Definitions.Args                 as D
 import qualified Generated.Proto.Batch.AST.Definitions.Result               as Definitions
 import qualified Generated.Proto.Batch.AST.Remove.Args                      as Remove
 import qualified Generated.Proto.Batch.AST.Remove.Result                    as Remove
+import qualified Generated.Proto.Batch.AST.ResolveDefinition.Args           as ResolveDefinition
+import qualified Generated.Proto.Batch.AST.ResolveDefinition.Result         as ResolveDefinition
 import qualified Generated.Proto.Batch.AST.UpdateClassCls.Args              as UpdateClassCls
 import qualified Generated.Proto.Batch.AST.UpdateClassCls.Result            as UpdateClassCls
 import qualified Generated.Proto.Batch.AST.UpdateClassFields.Args           as UpdateClassFields
@@ -222,6 +224,7 @@ process notifySocket handler encoded_request = case Proto.messageWithLengthGet e
         Method.AST_UpdateFunctionInputs -> call request handler Handler.updateFunctionInputs UpdateFunctionInputs.req UpdateFunctionInputs.rsp
         Method.AST_UpdateFunctionOutput -> call request handler Handler.updateFunctionOutput UpdateFunctionOutput.req UpdateFunctionOutput.rsp
         Method.AST_Remove               -> call request handler Handler.remove               Remove.req               Remove.rsp
+        Method.AST_ResolveDefinition    -> call request handler Handler.resolveDefinition    ResolveDefinition.req    ResolveDefinition.rsp
 
         Method.FileSystem_LS    -> call request handler Handler.ls    LS.req    LS.rsp
         Method.FileSystem_Stat  -> call request handler Handler.stat  Stat.req  Stat.rsp

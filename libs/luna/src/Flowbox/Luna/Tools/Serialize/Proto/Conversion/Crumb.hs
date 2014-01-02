@@ -18,8 +18,10 @@ import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs        (Breadcrumbs)
 import           Flowbox.Luna.Data.AST.Crumb.Crumb              (Crumb)
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb              as Crumb
+import qualified Flowbox.Luna.Lib.Library                       as Library
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.Crumb.ASTPtr                   as Gen
 import qualified Generated.Proto.Crumb.Breadcrumbs              as Gen
 import qualified Generated.Proto.Crumb.Crumb                    as Gen
 import qualified Generated.Proto.Crumb.Crumb.Cls                as GenCls
@@ -32,7 +34,7 @@ instance Convert Crumb Gen.Crumb where
         Crumb.ClassCrumb    name -> Gen.Crumb GenCls.ClassCrumb    $ encodePJ name
         Crumb.ModuleCrumb   name -> Gen.Crumb GenCls.ModuleCrumb   $ encodePJ name
     decode (Gen.Crumb tcls mtname) = do
-        name <- decodeP <$> mtname <?> "Failed to decode Crumb: `name` field is missing"
+        name <- decodeP <$> mtname <?> "Failed to decode Crumb: 'name' field is missing"
         let cls = case tcls of
                     GenCls.FunctionCrumb -> Crumb.FunctionCrumb
                     GenCls.ClassCrumb    -> Crumb.ClassCrumb
@@ -43,3 +45,12 @@ instance Convert Crumb Gen.Crumb where
 instance Convert Breadcrumbs Gen.Breadcrumbs where
     encode = Gen.Breadcrumbs . encodeList
     decode (Gen.Breadcrumbs b) = decodeList b
+
+
+instance Convert (Breadcrumbs, Library.ID) Gen.ASTPtr where
+    encode (bc, libraryID) = Gen.ASTPtr (encodeJ bc) (encodePJ libraryID)
+    decode (Gen.ASTPtr mtbc mtlibraryID) = do
+        tbc <- mtbc <?> "Failed to decode ASTPtr: 'breadcrumbs' field is missing"
+        bc  <- decode tbc
+        libraryID <- decodeP <$> mtlibraryID <?> "Failed to decode ASTPtr: 'libraryID' field is missing"
+        return (bc, libraryID)
