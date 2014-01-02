@@ -44,6 +44,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Infix      { name      :: String   , src       :: Expr        , dst          :: Expr  }
           | Lit        { lval :: Lit                                                         }
           | Native     { code :: String                                                      }
+          | THE        { expr :: Expr                                                        }
           | WildP
           | NOP
           | Undefined

@@ -26,6 +26,7 @@ import           Flowbox.Luna.Passes.Pass                                  (Pass
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
 import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.State           as IDFixer
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser        as Parser
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState    as ParseState
 import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes            as Attributes
 import           Flowbox.Luna.Passes.Transform.Graph.Parser.State          (GPState)
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.State          as State
@@ -96,7 +97,7 @@ parsePatNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
 parsePatNode nodeID pat = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
-        [s] -> do p <- case Parser.parsePattern pat IDFixer.unknownID of
+        [s] -> do p <- case Parser.parsePattern pat $ ParseState.make IDFixer.unknownID of
                             Left  er     -> fail $ show er
                             Right (p, _) -> return p
                   let e = Expr.Assignment nodeID p s
@@ -118,7 +119,7 @@ parseAppNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
 parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
-        []  -> case Parser.parseExpr app nodeID of
+        []  -> case Parser.parseExpr app $ ParseState.make nodeID of
                     Left  er     -> fail $ show er
                     Right (e, _) -> addExpr nodeID e
         [f] -> do let e   = Expr.Accessor nodeID app f

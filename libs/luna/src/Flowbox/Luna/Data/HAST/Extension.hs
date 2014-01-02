@@ -13,98 +13,107 @@ module Flowbox.Luna.Data.HAST.Extension (
 import Data.String.Utils (join)
 import Flowbox.Prelude
 
-data Extension = AlternativeLayoutRule
-               | AlternativeLayoutRuleTransitional
-               | Arrows
-               | BangPatterns
-               | CApiFFI
-               | CPP
-               | ConstrainedClassMethods
-               | ConstraintKinds
-               | DataKinds
-               | DatatypeContexts
-               | DefaultSignatures
-               | DeriveDataTypeable
-               | DeriveFoldable
-               | DeriveFunctor
-               | DeriveGeneric
-               | DeriveTraversable
-               | DisambiguateRecordFields
-               | DoAndIfThenElse
-               | DoRec
-               | EmptyDataDecls
-               | ExistentialQuantification
-               | ExplicitForAll
-               | ExplicitNamespaces
-               | ExtendedDefaultRules
-               | FlexibleContexts
-               | FlexibleInstances
-               | ForeignFunctionInterface
-               | FunctionalDependencies
-               | GADTSyntax
-               | GADTs
-               | GHCForeignImportPrim
-               | GeneralizedNewtypeDeriving
-               | Generics
-               | Haskell2010
-               | Haskell98
-               | ImplicitParams
-               | ImplicitPrelude
-               | ImpredicativeTypes
-               | IncoherentInstances
-               | InstanceSigs
-               | InterruptibleFFI
-               | KindSignatures
-               | LambdaCase
-               | LiberalTypeSynonyms
-               | MagicHash
-               | MonadComprehensions
-               | MonoLocalBinds
-               | MonoPatBinds
-               | MonomorphismRestriction
-               | MultiParamTypeClasses
-               | MultiWayIf
-               | NPlusKPatterns
-               | NamedFieldPuns
-               | NoAlternativeLayoutRule
-               | NoAlternativeLayoutRuleTransitional
-               | NoArrows
-               | NoBangPatterns
-               | NoCApiFFI
-               | NoCPP
-               | NoConstrainedClassMethods
-               | NoConstraintKinds
-               | NoDataKinds
-               | NoDatatypeContexts
-               | NoDefaultSignatures
-               | NoDeriveDataTypeable
-               | NoDeriveFoldable
-               | NoDeriveFunctor
-               | NoDeriveGeneric
-               | NoDeriveTraversable
-               | NoDisambiguateRecordFields
-               | NoDoAndIfThenElse
-               | NoDoRec
-               | NoEmptyDataDecls
-               | NoExistentialQuantification
-               | NoExplicitForAll
-               | NoExplicitNamespaces
-               | NoExtendedDefaultRules
-               | NoFlexibleContexts
-               | NoFlexibleInstances
-               | NoForeignFunctionInterface
-               | NoFunctionalDependencies
-               | NoGADTSyntax
-               | NoGADTs
-               | NoGHCForeignImportPrim
-               | NoGeneralizedNewtypeDeriving
-               | NoGenerics
-               | NoImplicitParams
-               | NoImplicitPrelude
-               | NoImpredicativeTypes
+data Extension = AllowAmbiguousTypes                  
+               | AlternativeLayoutRule                
+               | AlternativeLayoutRuleTransitional    
+               | Arrows                               
+               | AutoDeriveTypeable                   
+               | BangPatterns                         
+               | CApiFFI                              
+               | CPP                                  
+               | ConstrainedClassMethods              
+               | ConstraintKinds                      
+               | DataKinds                            
+               | DatatypeContexts                     
+               | DefaultSignatures                    
+               | DeriveDataTypeable                   
+               | DeriveFoldable                       
+               | DeriveFunctor                        
+               | DeriveGeneric                        
+               | DeriveTraversable                    
+               | DisambiguateRecordFields             
+               | DoAndIfThenElse                      
+               | DoRec                                
+               | EmptyCase                            
+               | EmptyDataDecls                       
+               | ExistentialQuantification            
+               | ExplicitForAll                       
+               | ExplicitNamespaces                   
+               | ExtendedDefaultRules                 
+               | FlexibleContexts                     
+               | FlexibleInstances                    
+               | ForeignFunctionInterface             
+               | FunctionalDependencies               
+               | GADTSyntax                           
+               | GADTs                                
+               | GHCForeignImportPrim                 
+               | GeneralizedNewtypeDeriving           
+               | Generics                             
+               | Haskell2010                          
+               | Haskell98                            
+               | ImplicitParams                       
+               | ImplicitPrelude                      
+               | ImpredicativeTypes                   
+               | IncoherentInstances                  
+               | InstanceSigs                         
+               | InterruptibleFFI                     
+               | JavaScriptFFI                        
+               | KindSignatures                       
+               | LambdaCase                           
+               | LiberalTypeSynonyms                  
+               | MagicHash                            
+               | MonadComprehensions                  
+               | MonoLocalBinds                       
+               | MonoPatBinds                         
+               | MonomorphismRestriction              
+               | MultiParamTypeClasses                
+               | MultiWayIf                           
+               | NPlusKPatterns                       
+               | NamedFieldPuns                       
+               | NegativeLiterals                     
+               | NoAllowAmbiguousTypes                
+               | NoAlternativeLayoutRule              
+               | NoAlternativeLayoutRuleTransitional  
+               | NoArrows                             
+               | NoAutoDeriveTypeable                 
+               | NoBangPatterns                       
+               | NoCApiFFI                            
+               | NoCPP                                
+               | NoConstrainedClassMethods            
+               | NoConstraintKinds                    
+               | NoDataKinds                          
+               | NoDatatypeContexts                   
+               | NoDefaultSignatures                  
+               | NoDeriveDataTypeable                 
+               | NoDeriveFoldable                     
+               | NoDeriveFunctor                      
+               | NoDeriveGeneric                      
+               | NoDeriveTraversable                  
+               | NoDisambiguateRecordFields           
+               | NoDoAndIfThenElse                    
+               | NoDoRec                              
+               | NoEmptyCase                          
+               | NoEmptyDataDecls                     
+               | NoExistentialQuantification          
+               | NoExplicitForAll                     
+               | NoExplicitNamespaces                 
+               | NoExtendedDefaultRules               
+               | NoFlexibleContexts                   
+               | NoFlexibleInstances                  
+               | NoForeignFunctionInterface           
+               | NoFunctionalDependencies             
+               | NoGADTSyntax                         
+               | NoGADTs                              
+               | NoGHCForeignImportPrim               
+               | NoGeneralizedNewtypeDeriving         
+               | NoGenerics                           
+               | NoImplicitParams                     
+               | NoImplicitPrelude                    
+               | NoImpredicativeTypes                 
                | NoIncoherentInstances
                | NoInstanceSigs
                | NoInterruptibleFFI
+               | NoJavaScriptFFI
                | NoKindSignatures
                | NoLambdaCase
                | NoLiberalTypeSynonyms
@@ -117,8 +126,12 @@ data Extension = AlternativeLayoutRule
                | NoMultiWayIf
                | NoNPlusKPatterns
                | NoNamedFieldPuns
+               | NoNegativeLiterals
                | NoNondecreasingIndentation
+               | NoNullaryTypeClasses
+               | NoNumDecimals
                | NoOverlappingInstances
+               | NoOverloadedLists
                | NoOverloadedStrings
                | NoPackageImports
                | NoParallelArrays
@@ -137,6 +150,7 @@ data Extension = AlternativeLayoutRule
                | NoRecursiveDo
                | NoRelaxedLayout
                | NoRelaxedPolyRec
+               | NoRoleAnnotations
                | NoScopedTypeVariables
                | NoStandaloneDeriving
                | NoTemplateHaskell
@@ -144,6 +158,7 @@ data Extension = AlternativeLayoutRule
                | NoTransformListComp
                | NoTupleSections
                | NoTypeFamilies
+               | NoTypeHoles
                | NoTypeOperators
                | NoTypeSynonymInstances
                | NoUnboxedTuples
@@ -152,7 +167,10 @@ data Extension = AlternativeLayoutRule
                | NoUnliftedFFITypes
                | NoViewPatterns
                | NondecreasingIndentation
+               | NullaryTypeClasses
+               | NumDecimals
                | OverlappingInstances
+               | OverloadedLists
                | OverloadedStrings
                | PackageImports
                | ParallelArrays
@@ -171,6 +189,7 @@ data Extension = AlternativeLayoutRule
                | RecursiveDo
                | RelaxedLayout
                | RelaxedPolyRec
+               | RoleAnnotations
                | Safe
                | ScopedTypeVariables
                | StandaloneDeriving
@@ -180,6 +199,7 @@ data Extension = AlternativeLayoutRule
                | Trustworthy
                | TupleSections
                | TypeFamilies
+               | TypeHoles
                | TypeOperators
                | TypeSynonymInstances
                | UnboxedTuples
@@ -188,7 +208,7 @@ data Extension = AlternativeLayoutRule
                | UnliftedFFITypes
                | Unsafe
                | ViewPatterns
-                        deriving (Show)
+               deriving (Show)
 
 
 genCode :: [Extension] -> String

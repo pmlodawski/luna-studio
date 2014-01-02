@@ -9,26 +9,26 @@ module Flowbox.Batch.Handler.AST where
 
 import qualified Data.IntSet as IntSet
 
-import           Flowbox.Batch.Batch                        (Batch)
-import           Flowbox.Batch.Handler.Common               (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp, noresult, readonly)
-import qualified Flowbox.Batch.Project.Project              as Project
-import           Flowbox.Luna.Data.AST.Crumb.Crumb          (Breadcrumbs)
-import           Flowbox.Luna.Data.AST.Expr                 (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr                 as Expr
-import           Flowbox.Luna.Data.AST.Module               (Module)
-import qualified Flowbox.Luna.Data.AST.Module               as Module
-import           Flowbox.Luna.Data.AST.Type                 (Type)
-import           Flowbox.Luna.Data.AST.Zipper.Focus         (Focus)
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus         as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper        as Zipper
-import qualified Flowbox.Luna.Data.PropertyMap              as PropertyMap
-import qualified Flowbox.Luna.Lib.Library                   as Library
-import qualified Flowbox.Luna.Passes.Analysis.ID.ExtractIDs as ExtractIDs
-import qualified Flowbox.Luna.Passes.General.Luna.Luna      as Luna
-import qualified Flowbox.Luna.Passes.Transform.AST.Shrink   as Shrink
-import           Flowbox.Prelude                            hiding (focus)
+import           Flowbox.Batch.Batch                               (Batch)
+import           Flowbox.Batch.Handler.Common                      (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp, noresult, readonly)
+import qualified Flowbox.Batch.Project.Project                     as Project
+import           Flowbox.Luna.Data.AST.Crumb.Crumb                 (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Expr                        (Expr)
+import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
+import           Flowbox.Luna.Data.AST.Module                      (Module)
+import qualified Flowbox.Luna.Data.AST.Module                      as Module
+import           Flowbox.Luna.Data.AST.Type                        (Type)
+import           Flowbox.Luna.Data.AST.Zipper.Focus                (Focus)
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus                as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper               as Zipper
+import qualified Flowbox.Luna.Data.PropertyMap                     as PropertyMap
+import qualified Flowbox.Luna.Lib.Library                          as Library
+import qualified Flowbox.Luna.Passes.Analysis.ID.ExtractIDs        as ExtractIDs
+import qualified Flowbox.Luna.Passes.General.Luna.Luna             as Luna
+import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer as IDFixer
+import qualified Flowbox.Luna.Passes.Transform.AST.Shrink          as Shrink
+import           Flowbox.Prelude                                   hiding (focus)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer         as IDFixer
 
 
 

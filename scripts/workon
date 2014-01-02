@@ -46,7 +46,7 @@ class HProject(Project):
     def uninstall(self):
         cmd = 'cabal sandbox hc-pkg unregister %s' % self.name
         (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
-        if err: 
+        if err:
             err = err.replace('.exe', '')
             if not err.startswith('ghc-pkg: cannot find package'):
                 handle_error(err)
@@ -63,19 +63,22 @@ class AllProject(Project):
         return tgts
 
 
-deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'utils', 'core', 'cabal-install']
+deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'core', 'cabal-install', 'graphics', 'num-conversion', 'utils', 'markup']
 
-pkgs = { '@all'          : AllProject (deps = deptree)
-       , 'cabal-install' : HProject   ('cabal-install'       , os.path.join ('libs'  , 'cabal-install') , 'libs'    , []                                                  )
-       , 'core'          : HProject   ('flowboxM-core'       , os.path.join ('libs'  , 'core')          , 'libs'    , []                                                  )
-       , 'utils'         : HProject   ('flowbox-utils'       , os.path.join ('libs'  , 'utils')         , 'libs'    , []                                                  )
-       , 'config'        : HProject   ('flowbox-config'      , os.path.join ('libs'  , 'config')        , 'libs'    , ['utils']                                           )
-       , 'wrappers'      : HProject   ('flowbox-wrappers'    , os.path.join ('tools' , 'wrappers')      , 'wrappers', ['config']                                          )
-       , 'luna'          : HProject   ('flowbox-luna'        , os.path.join ('libs'  , 'luna')          , 'libs'    , ['utils', 'config', 'cabal-install']                )
-       , 'initializer'   : HProject   ('flowbox-initializer' , os.path.join ('tools' , 'initializer')   , 'tools'   , ['utils', 'config']                                 )
-       , 'lunac'         : HProject   ('flowbox-lunac'       , os.path.join ('tools' , 'lunac')         , 'tools'   , ['utils', 'config', 'initializer', 'luna']          )
-       , 'batch'         : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')         , 'libs'    , ['utils', 'config', 'initializer', 'luna']          )
-       , 'batch-srv'     : HProject   ('flowbox-batch-srv'   , os.path.join ('tools' , 'batch-srv')     , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
+pkgs = { '@all'           : AllProject (deps = deptree)
+       , 'cabal-install'  : HProject   ('cabal-install'       , os.path.join ('libs'  , 'cabal-install') , 'libs'    , []                                                  )
+       , 'core'           : HProject   ('flowboxM-core'       , os.path.join ('libs'  , 'core')          , 'libs'    , []                                                  )
+       , 'utils'          : HProject   ('flowbox-utils'       , os.path.join ('libs'  , 'utils')         , 'libs'    , []                                                  )
+       , 'config'         : HProject   ('flowbox-config'      , os.path.join ('libs'  , 'config')        , 'libs'    , ['utils']                                           )
+       , 'wrappers'       : HProject   ('flowbox-wrappers'    , os.path.join ('tools' , 'wrappers')      , 'wrappers', ['config']                                          )
+       , 'luna'           : HProject   ('flowbox-luna'        , os.path.join ('libs'  , 'luna')          , 'libs'    , ['utils', 'config', 'cabal-install', 'markup']      )
+       , 'initializer'    : HProject   ('flowbox-initializer' , os.path.join ('tools' , 'initializer')   , 'tools'   , ['utils', 'config']                                 )
+       , 'lunac'          : HProject   ('flowbox-lunac'       , os.path.join ('tools' , 'lunac')         , 'tools'   , ['utils', 'config', 'initializer', 'luna']          )
+       , 'batch'          : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')         , 'libs'    , ['utils', 'config', 'initializer', 'luna']          )
+       , 'batch-srv'      : HProject   ('flowbox-batch-srv'   , os.path.join ('tools' , 'batch-srv')     , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
+       , 'num-conversion' : HProject   ('num-conversion'      , os.path.join ('libs'  , 'num-conversion'), 'libs'    , [] )
+       , 'graphics'       : HProject   ('flowbox-graphics'    , os.path.join ('libs'  , 'graphics')      , 'libs'    , ['utils', 'num-conversion'] )
+       , 'markup'         : HProject   ('doc-markup'          , os.path.join ('libs'  , 'markup')        , 'libs'    , []                                                  )
        } 
 
 
@@ -149,7 +152,7 @@ def unregister(name):
     print_info("Unregistering %s" % name)
     pkg = pkgs[name]
     pkg.uninstall()
-    
+
 
 main()
 

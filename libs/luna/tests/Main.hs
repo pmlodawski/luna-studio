@@ -25,6 +25,7 @@ import           System.TimeIt
 import qualified Flowbox.Distribution.M                                    as DistMain
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                         as ASTCrumb
 import qualified Flowbox.Luna.Data.AST.Expr                                as LExpr
+import qualified Flowbox.Luna.Data.AST.Module                              as FModule
 import qualified Flowbox.Luna.Data.AST.Zipper.Focus                        as Focus
 import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                       as Zipper
 import qualified Flowbox.Luna.Data.Cabal.Config                            as Config
@@ -41,6 +42,7 @@ import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as Va
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser        as Parser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as GraphParser
@@ -55,6 +57,7 @@ import qualified Flowbox.System.Log.Logger                                 as Lo
 import qualified Flowbox.System.UniPath                                    as UniPath
 import           Flowbox.Text.Show.Hs                                      (hsShow)
 import qualified Flowbox.Text.Show.Pretty                                  as PP
+
 
 
 
@@ -89,28 +92,63 @@ logger = getLogger "Flowbox"
 --                  ]
 
 example :: Source
-example = Source.Source ["Main"]
-        $ unlines [ ""
-                  --, "def List.length self:"
-                  --, "    ```getIO $ liftFPure1 length #{self}```"
-                  --, "def List.each self callback:"
-                  --, "    ```let {mymap x (Pure y) = mapM x y}```"
-                  --, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
-                  --, "def Int.add a b:"
-                  --, "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
-                  --, "def Int.sub a b:"
-                  --, "    ```getIO $ liftFPure2 (-) #{a} #{b}```"
-                  --, "def Int.mul a b:"
-                  --, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
-                  --, "def List.add self x:"
-                  --, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
-                  --, "class Console:"
-                  --, "    def print self msg:"
-                  --, "        ```print #{msg}```"
+example = Source.Source ["Main"] $
+        concat $ replicate 1 $ unlines [ ""
+                    --, "import Std:Vector"
+                    ----, "def List.length self:"
+                    ----, "    ```getIO $ liftFPure1 length #{self}```"
+                    ----, "def List.each self callback:"
+                    ----, "    ```let {mymap x (Pure y) = mapM x y}```"
+                    ----, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
+                    --, "def List.each self callback:"
+                    --, "    ```let {mymap = liftf2 map}```"
+                    --, "    ```mymap (val $ call1 #{callback}) #{self}```"
+                    ----, "def Int.add a b:"
+                    ----, "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
+                    ----, "def Int.sub a b:"
+                    ----, "    ```getIO $ liftFPure2 (-) #{a} #{b}```"
+                    ----, "def Int.mul a b:"
+                    ----, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
+                    ----, "def List.add self x:"
+                    ----, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
+                    --, "class Console:"
+                    --, "    def print self msg:"
+                    --, "        ```print' #{msg}```"
 
 
                   --, "class Vector a:"
                   --, "    x,y,z :: a"
+                  --, "    def f:"
+                  --, "       a"
+                  --, "def f"
+                  --, "def g"
+                  --, "    def test self x: {self,5}"
+                  --, "    def test2 self x: {self,5}"
+
+                  --, "def main self:"
+                  ----, "    v = Vector 1 2 3"
+                  --, "    v"
+                  --, "    (2+2).f"
+
+                  , "def fxx (y::Int):"
+                  , "    a = b + (c)"
+                  --, "    Vector"
+                  --, "    def g:"
+                  --, "        xxx"
+                  --, "    def h:"
+                  --, "        yyy"
+                  --, "    b"
+                  --, "    b x:"
+                  --, "        x+1"
+                  --, "def fyy:"
+                  --, "    b"
+                  --, "    v.x.y"
+                  --, "    [1,2,3].each x:"
+                  --, "       Console.print x"
+                  --, "    a.throw"
+
+
+                  --, "    Console().print $ v.test 1"
                   --, "def Vector.vtest self a b:"
                   --, "    {a,b}"
                   --, "def test self a b:"
@@ -143,11 +181,17 @@ example = Source.Source ["Main"]
                   --, "def add self x y:"
                   --, "   x.add y"
 
+
+                  --, "def add self x y:"
+                  --, "   x.add y"
+
+
                   --, "def add2 self x y:"
                   --, "   x.add y"
                   --, "def addInts(self, x, y) -> Int:"
                   --, "   x.add y"
                   --, "def main self:"
+                  --, "    Console.print 1"
                   --, "   [1..10].each x:"
                   --, "       Console.print x"
 
@@ -178,11 +222,20 @@ main :: IO ()
 main = do
     --DistMain.main
     logger setLevel DEBUG
+    --let x = Parser.parse' example
+    --    --x :: Int
 
-    out <- timeIt main_graph
+    --print $ x
+
+    out <- timeIt main_inner
     case out of
         Right _ -> return ()
         Left  e -> putStrLn e
+
+    --out <- timeIt main_graph
+    --case out of
+    --    Right _ -> return ()
+    --    Left  e -> putStrLn e
 
 
 
@@ -191,19 +244,24 @@ main_inner = Luna.run $ do
     let source = example
 
     logger info "\n-------- TxtParser --------"
-    ast <- TxtParser.run source
+    (ast, srcMap) <- TxtParser.run source
+    logger info "\n>> AST"
     logger info $ PP.ppqShow ast
+    logger info "\n>> Source Map"
+    logger info $ PP.ppShow srcMap
+    --logger info (show.length $ FModule._classes ast)
+    return ()
 
-    let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]
+    ----let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]
 
-    ast2 <- Zipper.mk ast
-        >>= Zipper.focusFunction "add" 
-        >>= Zipper.modify (\(Focus.FunctionFocus func) -> Focus.FunctionFocus (func & LExpr.name .~ "ekhem"))
-        >>= Zipper.close
+    --ast2 <- Zipper.mk ast
+    --    >>= Zipper.focusFunction "add"
+    --    >>= Zipper.modify (\(Focus.FunctionFocus func) -> Focus.FunctionFocus (func & LExpr.name .~ "ekhem"))
+    --    >>= Zipper.close
 
-    logger info $ PP.ppqShow ast2
+    ----logger info $ PP.ppqShow ast2
 
-    --putStrLn $ PP.ppShow zipper
+    ----putStrLn $ PP.ppShow zipper
 
     --logger info "\n-------- VarAlias --------"
     --va <- VarAlias.run     ast
@@ -235,7 +293,7 @@ main_graph = Luna.run $ do
         emptyPM = PropertyMap.empty
 
     logger info "\n-------- TxtParser --------"
-    ast <- TxtParser.run source
+    (ast, _) <- TxtParser.run source
     logger info $ PP.ppqShow ast
 
     logger info "\n-------- VarAlias --------"

@@ -5,12 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils where
 
+import qualified Text.Parsec as Parsec
 import Control.Applicative
+
 import Flowbox.Prelude
-import Text.Parsec         hiding (many, optional, parse, (<|>))
+import Text.Parsec         hiding (many, optional, parse, (<|>), getPosition)
+import Flowbox.Luna.Data.AST.SourcePos (SourcePos(SourcePos))
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token as Token
 
 checkIf f msg p = do
         obj <- p
@@ -41,10 +46,19 @@ sepBy2 p sep = (:) <$> p <* sep <*> sepBy1 p sep
 
 --sepBy2  p sep = (:) <$> p <*> try(sep *> sepBy1 p sep)
 
-sepBy'  p sep = sepBy1' p sep <|> return []
-sepBy1' p sep = (:) <$> p <*> many (try(sep *> p))
-sepBy2' p sep = (:) <$> p <*> try(sep *> sepBy1' p sep)
+sepBy_ng  p sep = sepBy1_ng p sep <|> return []
+sepBy1_ng p sep = (:) <$> p <*> many (try(sep *> p))
+sepBy2_ng p sep = (:) <$> p <*> try(sep *> sepBy1_ng p sep)
 
 liftList p = (:[]) <$> p
 
 
+applyAll x (f : fs) = applyAll (f x) fs
+applyAll x [] = x
+
+
+
+getPosition = convertSourcePos <$> Parsec.getPosition
+convertSourcePos psp = SourcePos (sourceLine psp) (sourceColumn psp)
+
+storePos p = (\pre res post -> Token.mk res pre post) <$> getPosition <*> p <*> getPosition

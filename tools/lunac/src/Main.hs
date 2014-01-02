@@ -58,6 +58,7 @@ listParser = Cmd.List <$> ( Cmd.ListOptions <$> many (argument str ( metavar "PA
                                             -- <*> switch    ( long "installed"     <> help "only list installed packages" )
                                             <*> switch    ( long "json"          <> help "list packages using JSON data serialization format" )
                                             <*> switch    ( long "simple"        <> help "list packages using simple output form" )
+                                            <*> switch    ( long "html"          <> help "list packages with description in HTML format" )
                           )
 
 repoParser :: Opt.Parser Cmd.Command
@@ -107,6 +108,6 @@ run prog = case Cmd.cmd prog of
                          Build.run cfg op
     Cmd.Repo  scmd -> case scmd of
                       Cmd.List op -> list (Cmd.simple op) (Cmd.inputs op)
-                                     where list = if (Cmd.json op) then DistList.listJSON else DistList.list
+                                     where list = if (Cmd.json op) then DistList.listJSON (Cmd.html op) else DistList.list
     _              -> putStrLn "Sorry, the command is not implemented yet."
 

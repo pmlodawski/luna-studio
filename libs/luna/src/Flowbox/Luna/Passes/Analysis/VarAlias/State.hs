@@ -67,4 +67,5 @@ bindVar :: LocStateM m => String -> Int -> m ()
 bindVar name id = do mv <- lookupVar name
                      case mv of
                         Just v  -> bind id $ Right v
-                        Nothing -> bind id $ Left $ "Not in scope: " ++ (show name)
+                        Nothing -> do
+                                      bind id $ Left $ "Not in scope: " ++ (show name)

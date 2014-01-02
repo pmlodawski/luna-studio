@@ -61,6 +61,7 @@ data Options = VersionOptions { compiler :: Bool
                               --, installed :: Bool
                               , json   :: Bool
                               , simple :: Bool
+                              , html   :: Bool
                               }
               | RepoOptions   {
 

@@ -10,6 +10,7 @@
 module Flowbox.Prelude(
     module Control.Applicative,
     module Control.Lens,
+    module Data.Default,
     module Data.Monoid,
     module Flowbox.Prelude,
     module Prelude
@@ -18,10 +19,11 @@ module Flowbox.Prelude(
 import           Control.Applicative
 import           Control.Lens
 import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Data.Default
 import           Data.Monoid            (Monoid, mappend, mempty)
 import qualified Data.Traversable       as Traversable
 import           Data.Typeable
-import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn, (++))
+import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude                as Prelude
 
 
@@ -49,6 +51,10 @@ instance (Typeable a, Typeable b) => Show (a -> b) where
 -- f .: g = (f .) . g
 -- (.:) f = ((f .) .)
 -- (.:) = (.) (.) (.)
+infixr 9 .
+(.) :: (Functor f) => (a -> b) -> f a -> f b
+(.) = fmap
+
 (.:)  :: (x -> y) -> (a -> b -> x) -> (a -> b -> y)
 (.:)   = (.) . (.)
 
@@ -84,3 +90,23 @@ either2io :: Either String b -> IO b
 either2io f = case f of
         Right r -> return r
         Left  e -> fail e
+
+
+whenLeft :: (Monad m) => Either a b -> (a -> m ()) -> m ()
+whenLeft e f = case e of
+    Left  v -> f v
+    Right _ -> return ()
+
+
+whenLeft' :: (Monad m) => Either a b -> m () -> m ()
+whenLeft' e f = whenLeft e (\_ -> f)
+
+
+whenRight :: (Monad m) => Either a b -> (b -> m ()) -> m ()
+whenRight e f = case e of
+    Left  _ -> return ()
+    Right v -> f v
+
+
+whenRight' :: (Monad m) => Either a b -> m () -> m ()
+whenRight' e f = whenRight e (\_ -> f)

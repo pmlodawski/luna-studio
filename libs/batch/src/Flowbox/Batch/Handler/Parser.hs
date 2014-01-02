@@ -7,27 +7,28 @@
 
 module Flowbox.Batch.Handler.Parser where
 
-import           Flowbox.Luna.Data.AST.Expr                         (Expr)
-import           Flowbox.Luna.Data.AST.Pat                          (Pat)
-import           Flowbox.Luna.Data.AST.Type                         (Type)
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
+import           Flowbox.Luna.Data.AST.Expr                             (Expr)
+import           Flowbox.Luna.Data.AST.Pat                              (Pat)
+import           Flowbox.Luna.Data.AST.Type                             (Type)
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser     as Parser
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
 import           Flowbox.Prelude
 
 
 
 parseExpr :: (Applicative m, Monad m) => String -> m Expr
-parseExpr str = case Parser.parseExpr str 0 of
+parseExpr str = case Parser.parseExpr str $ ParseState.make 0 of
     Left  er     -> fail $ show er
     Right (e, _) -> return e
 
 
 parsePat :: (Applicative m, Monad m) => String -> m Pat
-parsePat str = case Parser.parsePattern str 0 of
+parsePat str = case Parser.parsePattern str $ ParseState.make 0 of
     Left  er     -> fail $ show er
     Right (e, _) -> return e
 
 
 parseType :: (Applicative m, Monad m) => String -> m Type
-parseType str = case Parser.parseType str 0 of
+parseType str = case Parser.parseType str $ ParseState.make 0 of
     Left  er     -> fail $ show er
     Right (e, _) -> return e

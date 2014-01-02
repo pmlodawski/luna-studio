@@ -12,6 +12,7 @@ import qualified Flowbox.Prelude as Prelude
 
 data Lit = Char    Prelude.Char
          | String  Prelude.String
+         | Int     Prelude.String
          | Integer Prelude.String
          | Float   Prelude.String
          deriving (Show, Eq)
