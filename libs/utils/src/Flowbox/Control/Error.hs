@@ -23,7 +23,7 @@ runScript s = do
         Left  m -> fail m
         Right a -> return a
 
-
+infixl 4 <?>
 (<?>) :: Monad m => Maybe b -> String -> m b
 val <?> m = case val of
     Just v  -> return v

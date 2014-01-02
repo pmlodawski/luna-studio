@@ -12,7 +12,7 @@ import qualified Data.IntSet as IntSet
 import           Flowbox.Batch.Batch                               (Batch)
 import           Flowbox.Batch.Handler.Common                      (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp, noresult, readonly)
 import qualified Flowbox.Batch.Project.Project                     as Project
-import           Flowbox.Luna.Data.AST.Crumb.Crumb                 (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs           (Breadcrumbs)
 import           Flowbox.Luna.Data.AST.Expr                        (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import           Flowbox.Luna.Data.AST.Module                      (Module)

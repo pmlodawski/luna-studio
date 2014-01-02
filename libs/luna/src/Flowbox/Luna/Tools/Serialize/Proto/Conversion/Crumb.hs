@@ -15,7 +15,8 @@ module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb where
 import Control.Applicative
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AST.Crumb.Crumb              (Breadcrumbs, Crumb)
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs        (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Crumb.Crumb              (Crumb)
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb              as Crumb
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -37,6 +38,7 @@ instance Convert Crumb Gen.Crumb where
                     GenCls.ClassCrumb    -> Crumb.ClassCrumb
                     GenCls.ModuleCrumb   -> Crumb.ModuleCrumb
         return $ cls name
+
 
 instance Convert Breadcrumbs Gen.Breadcrumbs where
     encode = Gen.Breadcrumbs . encodeList

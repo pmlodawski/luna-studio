@@ -5,13 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.AST.Crumb.Crumb where
+module Flowbox.Luna.Data.AST.Crumb.Breadcrumbs where
 
-import Flowbox.Prelude
+import Flowbox.Luna.Data.AST.Crumb.Crumb (Crumb)
 
 
 
-data Crumb = FunctionCrumb { name :: String }
-           | ClassCrumb    { name :: String }
-           | ModuleCrumb   { name :: String }
-           deriving (Show)
+type Breadcrumbs = [Crumb]
