@@ -11,7 +11,7 @@ import           Flowbox.Batch.Batch                        (Batch)
 import           Flowbox.Batch.Handler.Common               (graphViewOp, noresult, readonly, readonlyNodeOp)
 import qualified Flowbox.Batch.Project.Project              as Project
 import           Flowbox.Control.Error                      (assert)
-import           Flowbox.Luna.Data.AST.Crumb.Crumb          (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs    (Breadcrumbs)
 import           Flowbox.Luna.Data.Graph.Node               (Node)
 import qualified Flowbox.Luna.Data.Graph.Node               as Node
 import           Flowbox.Luna.Data.GraphView.EdgeView       (EdgeView (EdgeView))

@@ -40,6 +40,7 @@ message Request {
         AST_UpdateFunctionInputs = 1111;
         AST_UpdateFunctionOutput = 1112;
         AST_Remove               = 1113;
+        AST_ResolveDefinition    = 1114;
 
         FileSystem_LS    = 1200;
         FileSystem_Stat  = 1201;
@@ -243,6 +244,17 @@ message AST {
             required int32 projectID = 3;
         }
         message Result { extend Response { optional Result rsp = 1113; } }   
+    }
+    message ResolveDefinition {
+        message Args   { extend Request  { optional Args   req = 1114; }
+            required string name = 1;
+            required generated.proto.crumb.Breadcrumbs parentbc = 2;
+            required int32 libraryID = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1114; } 
+            repeated generated.proto.crumb.ASTPtr astptr = 1;
+        }   
     }
 }
 

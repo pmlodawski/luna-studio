@@ -19,6 +19,8 @@ import qualified Generated.Proto.Batch.AST.Definitions.Args                 as D
 import qualified Generated.Proto.Batch.AST.Definitions.Result               as Definitions
 import qualified Generated.Proto.Batch.AST.Remove.Args                      as Remove
 import qualified Generated.Proto.Batch.AST.Remove.Result                    as Remove
+import qualified Generated.Proto.Batch.AST.ResolveDefinition.Args           as ResolveDefinition
+import qualified Generated.Proto.Batch.AST.ResolveDefinition.Result         as ResolveDefinition
 import qualified Generated.Proto.Batch.AST.UpdateClassCls.Args              as UpdateClassCls
 import qualified Generated.Proto.Batch.AST.UpdateClassCls.Result            as UpdateClassCls
 import qualified Generated.Proto.Batch.AST.UpdateClassFields.Args           as UpdateClassFields
@@ -119,7 +121,6 @@ import qualified Generated.Proto.Batch.Properties.SetProperties.Args        as S
 import qualified Generated.Proto.Batch.Properties.SetProperties.Result      as SetProperties
 
 
-
 class Handler h where
     addModule            :: h -> AddModule.Args            -> IO AddModule.Result
     addClass             :: h -> AddClass.Args             -> IO AddClass.Result
@@ -135,6 +136,7 @@ class Handler h where
     updateFunctionInputs :: h -> UpdateFunctionInputs.Args -> IO UpdateFunctionInputs.Result
     updateFunctionOutput :: h -> UpdateFunctionOutput.Args -> IO UpdateFunctionOutput.Result
     remove               :: h -> Remove.Args               -> IO Remove.Result
+    resolveDefinition    :: h -> ResolveDefinition.Args    -> IO ResolveDefinition.Result
 
     ls         :: h -> LS.Args    -> IO LS.Result
     stat       :: h -> Stat.Args  -> IO Stat.Result

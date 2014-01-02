@@ -66,6 +66,7 @@ instance Handler BatchHandler where
     updateFunctionInputs h = HAST.updateFunctionInputs (batchRef h)
     updateFunctionOutput h = HAST.updateFunctionOutput (batchRef h)
     remove               h = HAST.remove               (batchRef h)
+    resolveDefinition    h = HAST.resolveDefinition    (batchRef h)
 
     nodesGraph h = HGraph.nodesGraph (batchRef h)
     nodeByID   h = HGraph.nodeByID   (batchRef h)

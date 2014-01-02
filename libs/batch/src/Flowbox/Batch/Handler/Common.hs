@@ -18,7 +18,7 @@ import qualified Flowbox.Batch.Project.Project                             as Pr
 import           Flowbox.Batch.Project.ProjectManager                      (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager                      as ProjectManager
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.AST.Crumb.Crumb                         (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs                   (Breadcrumbs)
 import           Flowbox.Luna.Data.AST.Expr                                (Expr)
 import           Flowbox.Luna.Data.AST.Module                              (Module)
 import qualified Flowbox.Luna.Data.AST.Utils                               as AST

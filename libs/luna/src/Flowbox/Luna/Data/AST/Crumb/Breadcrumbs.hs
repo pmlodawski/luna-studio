@@ -5,15 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE NoMonomorphismRestriction #-}
+module Flowbox.Luna.Data.AST.Crumb.Breadcrumbs where
 
-module FlowboxM.Luna.Bind where
+import Flowbox.Luna.Data.AST.Crumb.Crumb (Crumb)
 
-import Prelude hiding (fail, return, (>>), (>>=))
 
-import FlowboxM.Luna.Base
 
-(>>=) = bind
-(>>)  = bind_
-fail = ()
-return a = a
+type Breadcrumbs = [Crumb]

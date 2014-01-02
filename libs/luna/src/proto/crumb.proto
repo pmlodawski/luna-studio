@@ -22,3 +22,8 @@ message Crumb {
 message Breadcrumbs {
     repeated Crumb crumbs = 1;
 }
+
+message ASTPtr {
+	optional Breadcrumbs breadcrumbs = 1;
+	optional int32       libraryID   = 2;
+}

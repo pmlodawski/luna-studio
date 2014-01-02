@@ -28,6 +28,8 @@ import qualified Generated.Proto.Batch.AST.Definitions.Args            as Defini
 import qualified Generated.Proto.Batch.AST.Definitions.Result          as Definitions
 import qualified Generated.Proto.Batch.AST.Remove.Args                 as Remove
 import qualified Generated.Proto.Batch.AST.Remove.Result               as Remove
+import qualified Generated.Proto.Batch.AST.ResolveDefinition.Args      as ResolveDefinition
+import qualified Generated.Proto.Batch.AST.ResolveDefinition.Result    as ResolveDefinition
 import qualified Generated.Proto.Batch.AST.UpdateClassCls.Args         as UpdateClassCls
 import qualified Generated.Proto.Batch.AST.UpdateClassCls.Result       as UpdateClassCls
 import qualified Generated.Proto.Batch.AST.UpdateClassFields.Args      as UpdateClassFields
@@ -115,6 +117,18 @@ remove batchHandler (Remove.Args tbc tlibID tprojectID) = do
     newBatch <- BatchAST.remove bc libID projectID batch
     IORef.writeIORef batchHandler newBatch
     return Remove.Result
+
+
+resolveDefinition :: IORef Batch -> ResolveDefinition.Args -> IO ResolveDefinition.Result
+resolveDefinition batchHandler (ResolveDefinition.Args tname tbc tlibID tprojectID) = do
+    loggerIO info "called resolveDefinition"
+    bc  <- decode tbc
+    let name      = decodeP tname
+        libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    batch <- IORef.readIORef batchHandler
+    results <- BatchAST.resolveDefinition name bc libID projectID batch
+    return $ ResolveDefinition.Result $ encodeList results
 
 
 updateModuleCls :: IORef Batch -> UpdateModuleCls.Args -> IO UpdateModuleCls.Result

@@ -1,27 +1,29 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module FlowboxM.Luna.Std where
 
-import           FlowboxM.Luna.Data    
-import           FlowboxM.Luna.Utils   
+import FlowboxM.Luna.Base
+import FlowboxM.Luna.Data
+import FlowboxM.Luna.Utils
+
+--instance Call (Pure a) () (Pure a) where
+--    call val _ = val
+
+--instance Call (m(s([a]))) () (m(s([a]))) where
+--    call val _ = val
+
+--instance Call (m(s(Int))) () (m(s(Int))) where
+--    call val _ = val
+
+
+--instance Call (IO a) () (IO a) where
+--    call val _ = val
 
 type List a = [a]
-instance Get0 (Pure [a]) (Pure [a]) where get0 = id
-
-con_True  = Pure True
-con_False = Pure False
-instance Get0 (Pure Bool) (Pure Bool) where get0 = id
-
-instance Get0 (Pure Char) (Pure Char) where get0 = id
 
 
-
--- operators
-(~^) = defFunction2 (\a b -> get1 (member (Proxy :: Proxy "pow") (get0 a)) b)
-(~*) = defFunction2 (\a b -> get1 (member (Proxy :: Proxy "mul") (get0 a)) b)
-(~/) = defFunction2 (\a b -> get1 (member (Proxy :: Proxy "div") (get0 a)) b)
-(~+) = defFunction2 (\a b -> get1 (member (Proxy :: Proxy "add") (get0 a)) b)
-(~-) = defFunction2 (\a b -> get1 (member (Proxy :: Proxy "sub") (get0 a)) b)
+concatPure a                  = map val $ concat a
+rangeFromTo (Pure(Safe a)) (Pure(Safe b)) = if a < b then [a..b] else [a,a-1..b]
+rangeFrom   (Pure(Safe a))                = [a..]

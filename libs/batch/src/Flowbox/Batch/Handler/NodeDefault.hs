@@ -10,7 +10,7 @@ module Flowbox.Batch.Handler.NodeDefault where
 import           Flowbox.Batch.Batch                             (Batch)
 import           Flowbox.Batch.Handler.Common                    (graphViewOp, noresult, readonly)
 import qualified Flowbox.Batch.Project.Project                   as Project
-import           Flowbox.Luna.Data.AST.Crumb.Crumb               (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs         (Breadcrumbs)
 import qualified Flowbox.Luna.Data.Graph.Node                    as Node
 import           Flowbox.Luna.Data.GraphView.Default.DefaultsMap (DefaultsMap)
 import qualified Flowbox.Luna.Data.GraphView.Default.DefaultsMap as DefaultsMap

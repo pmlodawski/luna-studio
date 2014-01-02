@@ -9,16 +9,17 @@
 
 module Flowbox.Luna.Data.AST.Zipper.Zipper where
 
-import           Data.List                          (find)
-import           Flowbox.Control.Error              (assert)
-import           Flowbox.Luna.Data.AST.Crumb.Crumb  (Breadcrumbs)
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb  as Crumb
-import qualified Flowbox.Luna.Data.AST.Expr         as Expr
-import           Flowbox.Luna.Data.AST.Module       (Module)
-import qualified Flowbox.Luna.Data.AST.Module       as Module
-import qualified Flowbox.Luna.Data.AST.Type         as Type
-import           Flowbox.Luna.Data.AST.Zipper.Focus (Focus (ModuleFocus, ClassFocus, FunctionFocus), FocusPath)
-import           Flowbox.Prelude                    hiding (Zipper, drop, id, mod, zipper)
+import           Data.List                               (find)
+import           Flowbox.Control.Error                   (assert)
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs (Breadcrumbs)
+import           Flowbox.Luna.Data.AST.Crumb.Crumb       (Crumb)
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb       as Crumb
+import qualified Flowbox.Luna.Data.AST.Expr              as Expr
+import           Flowbox.Luna.Data.AST.Module            (Module)
+import qualified Flowbox.Luna.Data.AST.Module            as Module
+import qualified Flowbox.Luna.Data.AST.Type              as Type
+import           Flowbox.Luna.Data.AST.Zipper.Focus      (Focus (ModuleFocus, ClassFocus, FunctionFocus), FocusPath)
+import           Flowbox.Prelude                         hiding (Zipper, drop, id, mod, zipper)
 
 
 type Zipper = (Focus, FocusPath)
@@ -80,22 +81,35 @@ focusModule name zipper@(env, _) = case env of
     _               -> fail $ "Cannot focus on " ++ (show name)
 
 
+focusCrumb :: (Applicative m, Monad m) => Crumb -> Zipper -> m Zipper
+focusCrumb c = case c of
+    Crumb.ClassCrumb    name -> focusClass    name
+    Crumb.FunctionCrumb name -> focusFunction name
+    Crumb.ModuleCrumb   name -> focusModule   name
+
+
 focusBreadcrumbs :: (Applicative m, Monad m) => Breadcrumbs -> Zipper -> m Zipper
 focusBreadcrumbs bc zipper = case bc of
     []  -> return zipper
-    h:t -> let f = case h of
-                       Crumb.ClassCrumb    name -> focusClass    name
-                       Crumb.FunctionCrumb name -> focusFunction name
-                       Crumb.ModuleCrumb   name -> focusModule   name
-           in f zipper >>= focusBreadcrumbs t
+    h:t -> focusCrumb h zipper >>= focusBreadcrumbs t
+
+
+focusModule' :: (Applicative m, Monad m) => String -> Module -> m Zipper
+focusModule' name m = do
+    assert (m ^. Module.cls . Type.path . (to last) == name) $ "Cannot focus on " ++ (show name)
+    mk m
+
+
+focusCrumb' :: (Applicative m, Monad m) => Crumb -> Module -> m Zipper
+focusCrumb' c m = case c of
+    Crumb.ModuleCrumb name -> focusModule' name m
+    _                      -> fail $ "Cannot focus on " ++ (show c)
 
 
 focusBreadcrumbs' :: (Applicative m, Monad m) => Breadcrumbs -> Module -> m Zipper
 focusBreadcrumbs' bc m = case bc of
-    (Crumb.ModuleCrumb h):t -> do
-         assert (m ^. Module.cls . Type.path . (to last) == h) $ "Cannot focus on " ++ (show h)
-         mk m >>= focusBreadcrumbs t
-    _ -> fail $ "Cannot focus on " ++ (show bc)
+    h:t -> focusCrumb' h m >>= focusBreadcrumbs t
+    _   -> fail $ "Cannot focus on " ++ (show bc)
 
 
 getFocus :: Zipper -> Focus

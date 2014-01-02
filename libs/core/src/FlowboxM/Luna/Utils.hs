@@ -1,79 +1,95 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2013
+---------------------------------------------------------------------------
+
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts #-}
+
 module FlowboxM.Luna.Utils where
 
+import           Data.Typeable (Typeable, typeOf)
+
+import FlowboxM.Luna.Base
 import FlowboxM.Luna.Data
+import FlowboxM.Luna.Imports
 
-(.:) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
--- f .: g = \x y->f (g x y)
--- f .: g = (f .) . g
--- (.:) f = ((f .) .)
--- (.:) = (.) (.) (.)
-(.:) = (.) . (.)
+------------------------------------------------------------------------
+-- Display utils
+------------------------------------------------------------------------
 
-liftFPure1  f (Pure a) = Pure $ f a
-liftFPure2  f (Pure a) = liftFPure1 (f a)
-liftFPure3  f (Pure a) = liftFPure2 (f a)
-liftFPure4  f (Pure a) = liftFPure3 (f a)
-liftFPure5  f (Pure a) = liftFPure4 (f a)
-liftFPure6  f (Pure a) = liftFPure5 (f a)
-liftFPure7  f (Pure a) = liftFPure6 (f a)
-liftFPure8  f (Pure a) = liftFPure7 (f a)
-liftFPure9  f (Pure a) = liftFPure8 (f a)
-liftFPure10 f (Pure a) = liftFPure9 (f a)
+instance (Typeable a) => Show (IO a) where
+    show e = '<' : (show . typeOf) e ++ ">"
+
+instance (Typeable a, Typeable b) => Show (a -> b) where
+    show e = '<' : (show . typeOf) e ++ ">"
+
+------------------------------------------------------------------------
+-- Func utils
+------------------------------------------------------------------------
+
+val = Pure . Safe
+
+call0 a = call a ()
+call1 a v1 = call a (OneTuple v1)
+call2 a v1 v2 = call a (v1,v2)
+call3 a v1 v2 v3 = call a (v1,v2,v3)
+call4 a v1 v2 v3 v4 = call a (v1,v2,v3,v4)
+call5 a v1 v2 v3 v4 v5 = call a (v1,v2,v3,v4,v5)
+call6 a v1 v2 v3 v4 v5 v6 = call a (v1,v2,v3,v4,v5,v6)
+call7 a v1 v2 v3 v4 v5 v6 v7 = call a (v1,v2,v3,v4,v5,v6,v7)
+call8 a v1 v2 v3 v4 v5 v6 v7 v8 = call a (v1,v2,v3,v4,v5,v6,v7,v8)
+call9 a v1 v2 v3 v4 v5 v6 v7 v8 v9 = call a (v1,v2,v3,v4,v5,v6,v7,v8,v9)
+
+flattenCtx a = fmap flattenErr $ (flattenEnv $ fmap flipCtx a)
+
+throw :: Pure (Safe a) -> Pure b -> Pure(Either b a)
+throw (Pure (Safe a)) (Pure b) = Pure $ Left b
+
+dot0  = ($)
+dot1  = (.)
+dot2  = dot1 . (.)
+dot3  = dot2 . (.)
+dot4  = dot3 . (.)
+dot5  = dot4 . (.)
+dot6  = dot5 . (.)
+dot7  = dot6 . (.)
+dot8  = dot7 . (.)
+dot9  = dot8 . (.)
+dot10 = dot9 . (.)
+
+call v args = flattenCtx $ liftf2 callProto v (val args)
+
+print' s = print s >> return (Safe ())
+
+print'' :: (EvalEnvProto a IO (Pure b), Show b) => a -> IO (Safe ())
+print'' s = eval s >>= print >> return (Safe ())
+
+------------------------------------------------------------------------
+-- Lifted functions
+------------------------------------------------------------------------
+
+(~+) = liftf2 (+)
+(~-) = liftf2 (-)
+(~*) = liftf2 (*)
+(~<) = liftf2 (<)
+(~>) = liftf2 (>)
+(~:) = liftf2 (:)
+(~!!) = flattenCtx `dot2` liftf2 (!!)
+tuple2 = liftf2 (,)
+
+map' = liftf2 map
+
+each' a f = do
+    map' f a
+
+ifthenelse = liftf3 (\cond tval fval -> if cond then tval else fval)
 
 
-liftFIO1  f (Pure a) = f a
-liftFIO2  f (Pure a) = liftFIO1 (f a)
-liftFIO3  f (Pure a) = liftFIO2 (f a)
-liftFIO4  f (Pure a) = liftFIO3 (f a)
-liftFIO5  f (Pure a) = liftFIO4 (f a)
-liftFIO6  f (Pure a) = liftFIO5 (f a)
-liftFIO7  f (Pure a) = liftFIO6 (f a)
-liftFIO8  f (Pure a) = liftFIO7 (f a)
-liftFIO9  f (Pure a) = liftFIO8 (f a)
-liftFIO10 f (Pure a) = liftFIO9 (f a)
+exIO_1 :: IO (Safe Int)
+exIO_1 = return (Safe 1)
 
 
-mkPure0  a = Pure $ a
-mkPure1  a v1 = Pure $ a v1
-mkPure2  a v1 v2 = Pure $ a v1 v2
-mkPure3  a v1 v2 v3 = Pure $ a v1 v2 v3
-mkPure4  a v1 v2 v3 v4 = Pure $ a v1 v2 v3 v4
-mkPure5  a v1 v2 v3 v4 v5 = Pure $ a v1 v2 v3 v4 v5
-mkPure6  a v1 v2 v3 v4 v5 v6 = Pure $ a v1 v2 v3 v4 v5 v6
-mkPure7  a v1 v2 v3 v4 v5 v6 v7 = Pure $ a v1 v2 v3 v4 v5 v6 v7
-mkPure8  a v1 v2 v3 v4 v5 v6 v7 v8 = Pure $ a v1 v2 v3 v4 v5 v6 v7 v8
-mkPure9  a v1 v2 v3 v4 v5 v6 v7 v8 v9 = Pure $ a v1 v2 v3 v4 v5 v6 v7 v8 v9
-mkPure10 a v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 = Pure $ a v1 v2 v3 v4 v5 v6 v7 v8 v9 v10
 
-
-defFunction0 f = f
-
-defFunction1 f v1 = do
-    v1' <- getIO v1
-    f (Pure v1')
-
-defFunction2 f v1 v2 = do
-    v1' <- getIO v1
-    v2' <- getIO v2
-    f (Pure v1') (Pure v2')
-
-defFunction3 f v1 v2 v3 = do
-    v1' <- getIO v1
-    v2' <- getIO v2
-    v3' <- getIO v3
-    f (Pure v1') (Pure v2') (Pure v3')
-
-defFunction4 f v1 v2 v3 v4 = do
-    v1' <- getIO v1
-    v2' <- getIO v2
-    v3' <- getIO v3
-    v4' <- getIO v4
-    f (Pure v1') (Pure v2') (Pure v3') (Pure v4')
-
-defFunction5 f v1 v2 v3 v4 v5 = do
-    v1' <- getIO v1
-    v2' <- getIO v2
-    v3' <- getIO v3
-    v4' <- getIO v4
-    v5' <- getIO v5
-    f (Pure v1') (Pure v2') (Pure v3') (Pure v4') (Pure v5')
