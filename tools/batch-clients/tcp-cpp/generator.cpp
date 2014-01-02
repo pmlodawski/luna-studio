@@ -424,7 +424,6 @@ struct MethodWrapper
 								{
 									auto added = args->add_%2();
 									added->MergeFrom(%1[i]);
-									delete args;
 								})";
 					}
 					else
