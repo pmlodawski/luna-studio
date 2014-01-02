@@ -13,7 +13,6 @@ module Flowbox.Luna.Passes.Analysis.NameResolver where
 import           Control.Applicative
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.List           as List
-import           Data.Maybe          (mapMaybe)
 
 import           Data.List.Split                         (splitOn)
 import           Flowbox.Control.Error
@@ -23,7 +22,6 @@ import           Flowbox.Luna.Data.AST.Expr              (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr              as Expr
 import           Flowbox.Luna.Data.AST.Module            (Module)
 import qualified Flowbox.Luna.Data.AST.Module            as Module
-import           Flowbox.Luna.Data.AST.Type              (Type)
 import qualified Flowbox.Luna.Data.AST.Type              as Type
 import qualified Flowbox.Luna.Data.AST.Zipper.Focus      as Focus
 import           Flowbox.Luna.Data.AST.Zipper.Zipper     (Zipper)
@@ -59,11 +57,6 @@ resolve name bc libID libManager = do
     return $ List.concat $ map (flip searchLibManager libManager) $ elements:possiblePaths
 
 
---possiblePaths :: String -> [Expr] -> [String]
---possiblePaths name imports = paths where
---    elements = splitOn "." name
-
-
 possiblePath :: [String] -> Expr -> Maybe [String]
 possiblePath elements (Expr.Import _ path (Expr.Var _ name) rename) =
     if imported == head elements
@@ -76,37 +69,36 @@ possiblePath elements (Expr.Import _ path (Expr.Var _ name) rename) =
 
 searchLibManager :: [String] -> LibManager -> [(Breadcrumbs, Library.ID)]
 searchLibManager path libManager = do
-    mapMaybe (\(libID, library) -> (,libID) <$> searchLib path library) $ LibManager.labNodes libManager
+    List.concat $ map (\(libID, library) -> (,libID) <$> searchLib path library) $ LibManager.labNodes libManager
 
 
-searchLib :: [String] -> Library -> Maybe Breadcrumbs
+searchLib :: [String] -> Library -> [Breadcrumbs]
 searchLib path library =
     if libName == head path
         then searchModule (tail path) [] ast
-        else Nothing
+        else []
     where libName = Library.name library
           ast     = Library.ast  library
 
 
-searchModule :: [String] -> Breadcrumbs -> Module -> Maybe Breadcrumbs
-searchModule path bc mod = undefined
+searchModule :: [String] -> Breadcrumbs -> Module -> [Breadcrumbs]
+searchModule path bc (Module.Module _ (Type.Module _ name) _ classes _ methods modules) = 
+    if head path == head name
+        then if length path == 1 
+                then [currentBc]
+                else (List.concat $ map (searchExpr   (tail path) currentBc) $ classes ++ methods)
+                  ++ (List.concat $ map (searchModule (tail path) currentBc) modules)
+        else []
+    where currentBc = bc ++ [Crumb.ModuleCrumb $ head name]
 
 
-searchExpr :: [String] -> Breadcrumbs -> Expr -> Maybe Breadcrumbs
+searchExpr :: [String] -> Breadcrumbs -> Expr -> [Breadcrumbs]
 searchExpr path bc expr = case expr of
-    Expr.Function    _ _ name _ _ _ -> if length path == 1 && head path == name
-                                          then Just $ bc ++ [Crumb.FunctionCrumb name]
-                                          else Nothing
-    Expr.Class       _ cls _ _ _    -> searchType path bc cls
-    _                               -> Nothing
+    Expr.Function _ _ name _ _ _ ->             if length path == 1 && head path == name
+                                                    then [bc ++ [Crumb.FunctionCrumb name]]
+                                                    else []
+    Expr.Class _ (Type.Class _ name _) _ _ _ -> if length path == 1 && head path == name
+                                                    then [bc ++ [Crumb.ClassCrumb name]]
+                                                    else []
+    _                                        -> []
 
-
-searchType :: [String] -> Breadcrumbs -> Type -> Maybe Breadcrumbs
-searchType path bc t = case t of
-    Type.Class _ name _ -> if length path == 1 && head path == name
-                               then Just $ bc ++ [Crumb.ClassCrumb name]
-                               else Nothing
-    Type.Module _ name  -> if length path == 1 && head path == head name
-                               then Just $ bc ++ [Crumb.ModuleCrumb $ head name]
-                               else Nothing
-    _                   -> Nothing
