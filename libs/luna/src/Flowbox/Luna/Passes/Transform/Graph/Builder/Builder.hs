@@ -2,9 +2,13 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
+
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Builder.Builder where
 
@@ -27,52 +31,52 @@ import qualified Flowbox.Luna.Data.Graph.Node                      as Node
 import           Flowbox.Luna.Data.Graph.Node                        (Node)
 import           Flowbox.Luna.Data.Graph.Port                        (Port)
 import qualified Flowbox.Luna.Passes.Pass                          as Pass
-import           Flowbox.Luna.Passes.Pass                            (PassMonad)
+import           Flowbox.Luna.Passes.Pass                            (Pass)
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State as State
 import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBState)
 import           Flowbox.System.Log.Logger                           
 
 
 
-logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
 
 
-type GBMonad m = PassMonad GBState m
+type GBPass result = Pass GBState result
 
 
-run :: PassMonad s m => AA -> Expr -> Pass.Result m Graph
+run :: AA -> Expr -> Pass.Result Graph
 run aa = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make aa) . expr2graph
          
 
-expr2graph :: GBMonad m => Expr -> Pass.Result m Graph
+expr2graph :: Expr -> GBPass Graph
 expr2graph expr = case expr of
     Expr.Function i path name inputs output body -> do parseArgs inputs
                                                        Expr.traverseM_ buildExpr pure pure pure expr
                                                        State.getGraph 
-    _                                            -> fail "expr2graph: Unsupported Expr type"
+    _                                            -> Pass.fail "expr2graph: Unsupported Expr type"
 
 
-parseArgs :: GBMonad m => [Expr] -> Pass.Result m ()
+parseArgs :: [Expr] -> GBPass ()
 parseArgs inputs = do
     let numberedInputs = zip inputs [0..]
     mapM_ parseArg numberedInputs
 
 
-parseArg :: GBMonad m => (Expr, Port) -> Pass.Result m ()
+parseArg :: (Expr, Port) -> GBPass ()
 parseArg (input, no) = case input of
     Expr.Arg i _ _ -> State.addToMap i (Graph.inputsID, no)
-    _              -> fail "parseArg: Wrong Expr type"
+    _              -> Pass.fail "parseArg: Wrong Expr type"
 
 
-buildExpr :: GBMonad m => Expr -> Pass.Result m Node.ID
+buildExpr :: Expr -> GBPass Node.ID
 buildExpr expr = case expr of
     Expr.Accessor   i name dst -> State.insNewNode $ Node.Expr name (Just expr) undefined undefined
     Expr.Assignment i pat dst  -> undefined
     Expr.App        i src args -> undefined
     
 
-buildPat :: GBMonad m => Pat -> Pass.Result m Node.ID
+buildPat :: Pat -> GBPass Node.ID
 buildPat pat = case pat of
     Pat.Var      i name     -> undefined
     Pat.Lit      i value    -> undefined

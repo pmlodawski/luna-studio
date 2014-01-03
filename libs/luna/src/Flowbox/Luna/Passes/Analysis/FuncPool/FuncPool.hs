@@ -2,9 +2,13 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
+
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool where
 
@@ -22,27 +26,27 @@ import           Flowbox.Luna.Data.AST.Module                 (Module)
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.Pool as Pool
 import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool   (Pool)
 import qualified Flowbox.Luna.Passes.Pass                   as Pass
-import           Flowbox.Luna.Passes.Pass                     (PassMonad)
+import           Flowbox.Luna.Passes.Pass                     (Pass)
 import           Flowbox.System.Log.Logger                    
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.FuncPool.FuncPool"
 
 
-type FPMonad m = PassMonad Pool m
+type FPPass result = Pass Pool result
 
 
-run :: PassMonad s m => Module -> Pass.Result m Pool
+run :: Module -> Pass.Result Pool
 run = (Pass.run_ (Pass.Info "FuncPool") Pool.empty) . fpMod
 
 
-fpMod :: FPMonad m => Module -> Pass.Result m Pool
+fpMod :: Module -> FPPass Pool
 fpMod mod = do
     Module.traverseM_ fpMod fpExpr fpType fpPat pure mod
     get
 
 
-fpExpr :: FPMonad m => Expr.Expr -> Pass.Result m ()
+fpExpr :: Expr.Expr -> FPPass ()
 fpExpr ast = case ast of
     Expr.Function {}                      -> register
     Expr.Var      {}                      -> register
@@ -53,10 +57,10 @@ fpExpr ast = case ast of
         continue  = Expr.traverseM_ fpExpr fpType fpPat pure ast
 
 
-fpPat :: FPMonad m => Pat -> Pass.Result m ()
+fpPat :: Pat -> FPPass ()
 fpPat pat = case pat of
     _                                   -> Pat.traverseM_ fpPat fpType pure pat
 
-fpType :: FPMonad m => Type -> Pass.Result m ()
+fpType :: Type -> FPPass ()
 fpType t = case t of
     _                                   -> Type.traverseM_ fpType t

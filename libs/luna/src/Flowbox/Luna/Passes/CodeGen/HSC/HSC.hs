@@ -2,9 +2,14 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, TupleSections #-}
+
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Flowbox.Luna.Passes.CodeGen.HSC.HSC where
 
@@ -12,7 +17,7 @@ import           Flowbox.Prelude                  hiding(cons)
 import qualified Flowbox.Luna.Data.HAST.Expr      as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit       as HLit
 import qualified Flowbox.Luna.Passes.Pass         as Pass
-import           Flowbox.Luna.Passes.Pass           (PassMonad)
+import           Flowbox.Luna.Passes.Pass           (Pass)
 import           Data.String.Utils                  (join)
 import           Flowbox.Luna.Data.Source           (Source(Source))
 import           Flowbox.Luna.Data.HAST.Extension   (Extension)
@@ -25,11 +30,12 @@ logger = getLogger "Flowbox.Luna.Passes.HSC.HSC"
 
 type HExpr = HExpr.Expr
 
-type HSCMonad m = PassMonad Pass.NoState m
+type HSCPass result = Pass Pass.NoState result
 
 
-run :: PassMonad s m => HExpr -> Pass.Result m [Source]
-run expr = (Pass.run_ (Pass.Info "HSC") Pass.NoState) (return $ genModule expr)
+
+run :: HExpr -> Pass.Result [Source]
+run expr = Pass.run_ (Pass.Info "HSC") Pass.NoState (return $ genModule expr)
 
 
 eol :: String

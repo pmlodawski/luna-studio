@@ -2,9 +2,12 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds, FlexibleContexts #-}
+
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Flowbox.Luna.Passes.Build.Build where
 
@@ -24,7 +27,7 @@ import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install             as CabalI
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store               as CabalStore
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
 import qualified Flowbox.Luna.Passes.Pass                              as Pass
-import           Flowbox.Luna.Passes.Pass                                (PassMonadIO)
+--import           Flowbox.Luna.Passes.Pass                                (PassMonadIO)
 import qualified Flowbox.Luna.Passes.Source.File.Writer                as FileWriter
 import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
@@ -38,11 +41,12 @@ import qualified Flowbox.System.UniPath                                as UniPat
 import           Flowbox.System.UniPath                                  (UniPath)
 import qualified Flowbox.Text.Show.Hs                                  as ShowHs
 import           Flowbox.Luna.Data.Pass.SourceMap                     (SourceMap)
+import           Control.Monad.Trans.Either
 
 
 
-logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Build.Build"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Luna.Passes.Build.Build"
 
 
 srcFolder :: String
@@ -61,18 +65,18 @@ tmpDirPrefix :: String
 tmpDirPrefix = "lunac"
 
 
-run :: PassMonadIO s m => BuildConfig -> ASTModule.Module -> Pass.Result m ()
+--run :: BuildConfig -> ASTModule.Module -> Pass.Result ()
 run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast = do
     Diagnostics.printAST ast diag 
-    va   <- VarAlias.run ast
+    va   <- hoistEither =<< VarAlias.run ast
     Diagnostics.printVA va diag 
-    fp <- FuncPool.run ast
+    fp <- hoistEither =<< FuncPool.run ast
     Diagnostics.printFP fp diag
-    ssa  <- SSA.run va ast
+    ssa  <- hoistEither =<< SSA.run va ast
     Diagnostics.printSSA ssa diag
-    hast <- HASTGen.run ssa fp
+    hast <- hoistEither =<< HASTGen.run ssa fp
     Diagnostics.printHAST hast diag
-    hsc  <- map (Source.transCode ShowHs.hsShow) <$> HSC.run hast
+    hsc  <- map (Source.transCode ShowHs.hsShow) <$> (hoistEither =<< HSC.run hast)
     Diagnostics.printHSC hsc diag
 
     let allLibs = "base"
@@ -96,27 +100,27 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
         )
 
 
-writeSources :: PassMonadIO s m => UniPath -> [Source] -> Pass.Result m ()
+--writeSources :: PassMonadIO s m => UniPath -> [Source] -> Pass.Result m ()
 writeSources outputPath sources = mapM_ (writeSource outputPath) sources
 
 
-writeSource :: PassMonadIO s m => UniPath -> Source -> Pass.Result m ()
+--writeSource :: PassMonadIO s m => UniPath -> Source -> Pass.Result m ()
 writeSource outputPath source = FileWriter.run path hsExt source where
     path = UniPath.append srcFolder outputPath
 
     
-copyExecutable :: PassMonadIO s m => UniPath -> String -> UniPath -> Pass.Result m ()
+--copyExecutable :: PassMonadIO s m => UniPath -> String -> UniPath -> Pass.Result m ()
 copyExecutable location name outputPath = liftIO $ do 
     let execName   = Platform.dependent name (name ++ ".exe") name
         executable = UniPath.append ("dist/build/" ++ name ++ "/" ++ execName) location
     Directory.copyFile executable outputPath
 
 
-parseFile :: PassMonadIO s m => UniPath -> UniPath -> Pass.Result m (ASTModule.Module, SourceMap)
+--parseFile :: UniPath -> UniPath -> (MonadIO m => Pass.ResultT m (ASTModule.Module, SourceMap))
 parseFile rootPath filePath = do 
     logger debug $ "Compiling file '" ++ UniPath.toUnixString filePath ++ "'"
-    source <- FileReader.run rootPath filePath
-    ast    <- TxtParser.run source
+    source <- hoistEither =<< FileReader.run rootPath filePath
+    ast    <- hoistEither =<< TxtParser.run source
     return ast
 
 

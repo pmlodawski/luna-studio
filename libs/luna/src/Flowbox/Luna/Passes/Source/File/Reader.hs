@@ -1,4 +1,14 @@
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds #-}
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
+
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Flowbox.Luna.Passes.Source.File.Reader where
 
@@ -13,20 +23,20 @@ import           Flowbox.System.UniPath      (UniPath)
 import           Data.String.Utils           (replace)
 
 import qualified Flowbox.Luna.Passes.Pass  as Pass
-import           Flowbox.Luna.Passes.Pass    (PassMonadIO)
+import           Flowbox.Luna.Passes.Pass    (Pass)
 
 import           Flowbox.System.Log.Logger   
 
 
-type FRMonad m = PassMonadIO Pass.NoState m
+type FRPass result = Pass Pass.NoState result
 
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Source.File.Reader"
 
 
-run :: PassMonadIO s m => UniPath -> UniPath -> Pass.Result m Source
-run = (Pass.runT_ (Pass.Info "FileReader") Pass.NoState) .: readSource
+run :: UniPath -> UniPath -> Pass.Result Source
+run = (Pass.run_ (Pass.Info "FileReader") Pass.NoState) .: readSource
 
 
 path2module :: UniPath -> [String]
@@ -37,7 +47,7 @@ getModule :: UniPath -> UniPath -> [String]
 getModule rootPath path = path2module $ UniPath.makeRelative rootPath path
 
 
-readSource :: FRMonad m => UniPath -> UniPath -> Pass.Result m Source
+readSource :: UniPath -> UniPath -> FRPass Source
 readSource rootPath path = do
     filename <- UniPath.toUnixString <$> UniPath.expand path
     txt      <- liftIO $ IO.readFile filename

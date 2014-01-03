@@ -136,8 +136,8 @@ criticalFail msg name = do
     log CRITICAL msg name
     fail msg
 
-setLevel :: Priority -> String -> IO ()
-setLevel lvl name = HSLogger.updateGlobalLogger name (HSLogger.setLevel $ pri2hspri lvl)
+setLevel :: MonadIO m => Priority -> String -> m ()
+setLevel lvl name = liftIO $ HSLogger.updateGlobalLogger name (HSLogger.setLevel $ pri2hspri lvl)
 
 setIntLevel :: Int -> String -> IO ()
 setIntLevel lvl name = setLevel nlvl name where 

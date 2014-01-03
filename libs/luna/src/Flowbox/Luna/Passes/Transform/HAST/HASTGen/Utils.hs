@@ -67,7 +67,7 @@ genTH f a b c = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var f) vars where
 genTHInst  = genTH "mkInst"
 
 
-thRegisterClass name argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerClass") vars where
+thRegisterCon name argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerCon") vars where
                             vars = [HExpr.Var $ mkTHVarName name, HExpr.Lit $ HLit.Int (show argNum), HExpr.ListE []]
 
 thRegisterFunction clsName fname name argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerFunction") vars where
@@ -120,8 +120,8 @@ genDTGet0 name params = HExpr.InstanceD (foldl (HExpr.AppE) (HExpr.ConT "Get0") 
 --                 $ HExpr.AppE (HExpr.Var $ "mkPure" ++ show fnum)
 --                 $ HExpr.Var name
 
-genCon name ccname = HExpr.Function ("con" ++ mkConsName name) []
-                   $ (HExpr.Var ccname) -- mkPure
+--genCon name ccname = HExpr.Function ("con" ++ mkConsName name) []
+--                   $ (HExpr.Var ccname) -- mkPure
 
 
 mkPure   = HExpr.AppE (HExpr.Var "Pure")

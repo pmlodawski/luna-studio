@@ -72,8 +72,8 @@ genProject name = let
 
 
 
-logger :: Logger
-logger = getLogger "Flowbox"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox"
 
 
 --example :: Source
@@ -87,35 +87,35 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source ["Main"] $
         concat $ replicate 1 $ unlines [ ""
-                    --, "import Std:Vector"
-                    --, "def List.length self:"
-                    --, "    ```getIO $ liftFPure1 length #{self}```"
+                    ----, "import Std:Vector"
+                    ----, "def List.length self:"
+                    ----, "    ```getIO $ liftFPure1 length #{self}```"
+                    ----, "def List.each self callback:"
+                    ----, "    ```let {mymap x (Pure y) = mapM x y}```"
+                    ----, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
                     --, "def List.each self callback:"
-                    --, "    ```let {mymap x (Pure y) = mapM x y}```"
-                    --, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
-                    , "def List.each self callback:"
-                    , "    ```let {mymap = liftf2 map}```"
-                    , "    ```mymap (val $ call1 #{callback}) #{self}```"
-                    --, "def Int.add a b:"
-                    --, "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
-                    --, "def Int.sub a b:"
-                    --, "    ```getIO $ liftFPure2 (-) #{a} #{b}```"
-                    --, "def Int.mul a b:"
-                    --, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
-                    --, "def List.add self x:"
-                    --, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
-                    , "class Console:"
-                    , "    def print self msg:"
-                    , "        ```print' #{msg}```"
+                    --, "    ```let {mymap = liftf2 map}```"
+                    --, "    ```mymap (val $ call1 #{callback}) #{self}```"
+                    ----, "def Int.add a b:"
+                    ----, "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
+                    ----, "def Int.sub a b:"
+                    ----, "    ```getIO $ liftFPure2 (-) #{a} #{b}```"
+                    ----, "def Int.mul a b:"
+                    ----, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
+                    ----, "def List.add self x:"
+                    ----, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
+                    --, "class Console:"
+                    --, "    def print self msg:"
+                    --, "        ```print' #{msg}```"
 
-                  --, "class Vector a b c"
+                  --, "class Vector a b c:"
                   --, "    x :: a"
                   --, "class Vector a = Vector | Scalar "
                   --, "               | Scalar2"
-                  --, "class Vector a = Vector: x :: a"
-                  --, "                         y :: a"
-                  --, "                         z :: a"
-                  --, "               | Scalar"
+                  , "class Vector a = Vector: x :: a"
+                  , "                         y :: a"
+                  , "                         z :: a"
+                  , "               | Scalar: a :: a"
                   --, "               | Vector2: x :: a"
                   --, "               | Scalar"
                   --, "class Vector a:"
@@ -148,9 +148,9 @@ example = Source.Source ["Main"] $
                   --, "        a: a"
                   --, "        {a,b} : 1"
                   --, "    v.x.y"
-                  , "def main self:"
-                  , "    [1,2,3].each x:"
-                  , "       Console.print x"
+                  --, "def main self:"
+                  --, "    [1,2,3].each x:"
+                  --, "       Console.print x"
                   --, "    a.throw"
 
 
@@ -213,7 +213,7 @@ example = Source.Source ["Main"] $
 main :: IO ()
 main = do
     --DistMain.main
-    logger setLevel DEBUG
+    Logger.setLevel DEBUG "Flowbox" 
     --let x = Parser.parse' example
     --    --x :: Int
 
@@ -232,7 +232,7 @@ main_inner = Luna.run $ do
     let source = example
 
     logger info "\n-------- TxtParser --------"
-    (ast, srcMap) <- TxtParser.run source
+    (ast, srcMap) <- hoistEither =<< TxtParser.run source
     logger info "\n>> AST"
     logger info $ PP.ppqShow ast
     logger info "\n>> Source Map"
@@ -252,23 +252,23 @@ main_inner = Luna.run $ do
     --putStrLn $ PP.ppShow zipper
 
     logger info "\n-------- VarAlias --------"
-    va <- VarAlias.run     ast
+    va <- hoistEither =<< VarAlias.run     ast
     logger info $ PP.ppShow va
 
     logger info "\n-------- FuncPool --------"
-    fp <- FuncPool.run ast
+    fp <- hoistEither =<< FuncPool.run ast
     logger info $ PP.ppShow fp
 
     logger info "\n-------- SSA --------"
-    ssa <- SSA.run va ast
+    ssa <- hoistEither =<< SSA.run va ast
     --logger info $ PP.ppqShow ssa
 
     logger info "\n-------- HASTGen --------"
-    hast <- HASTGen.run ssa fp
+    hast <- hoistEither =<< HASTGen.run ssa fp
     logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------"
-    hsc <- HSC.run  hast
+    hsc <- hoistEither =<< HSC.run  hast
     logger info $ join "\n\n" (map printSrc hsc)
 
 
