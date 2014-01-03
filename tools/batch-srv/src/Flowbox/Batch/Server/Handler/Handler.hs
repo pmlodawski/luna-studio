@@ -119,6 +119,9 @@ import qualified Generated.Proto.Batch.Properties.GetProperties.Args        as G
 import qualified Generated.Proto.Batch.Properties.GetProperties.Result      as GetProperties
 import qualified Generated.Proto.Batch.Properties.SetProperties.Args        as SetProperties
 import qualified Generated.Proto.Batch.Properties.SetProperties.Result      as SetProperties
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Args                   as UpdateNode
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Result                   as UpdateNode
+
 
 
 class Handler h where
@@ -149,6 +152,7 @@ class Handler h where
     nodesGraph :: h -> NodesGraph.Args -> IO NodesGraph.Result
     nodeByID   :: h -> NodeByID.Args   -> IO NodeByID.Result
     addNode    :: h -> AddNode.Args    -> IO AddNode.Result
+    updateNode :: h -> UpdateNode.Args -> IO UpdateNode.Result
     removeNode :: h -> RemoveNode.Args -> IO RemoveNode.Result
     connect    :: h -> Connect.Args    -> IO Connect.Result
     disconnect :: h -> Disconnect.Args -> IO Disconnect.Result

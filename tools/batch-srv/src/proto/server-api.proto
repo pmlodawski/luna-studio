@@ -53,6 +53,7 @@ message Request {
         Graph_NodesGraph = 1300;
         Graph_NodeByID   = 1301;
         Graph_AddNode    = 1302;
+        Graph_UpdateNode = 1306;
         Graph_RemoveNode = 1303;
         Graph_Connect    = 1304;
         Graph_Disconnect = 1305;
@@ -344,7 +345,18 @@ message Graph {
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1302; }
-            required generated.proto.graph.Node node = 1;
+            required int32 nodeID = 1;
+        }   
+    }
+    message UpdateNode {
+        message Args   { extend Request  { optional Args   req = 1306; }
+            required generated.proto.graph.Node node      = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libraryID = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1306; }
+            required int32 nodeID = 1;
         }   
     }
     message RemoveNode {

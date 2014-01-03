@@ -28,7 +28,8 @@ import qualified Generated.Proto.Batch.Graph.NodesGraph.Args             as Node
 import qualified Generated.Proto.Batch.Graph.NodesGraph.Result           as NodesGraph
 import qualified Generated.Proto.Batch.Graph.RemoveNode.Args             as RemoveNode
 import qualified Generated.Proto.Batch.Graph.RemoveNode.Result           as RemoveNode
-
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Args                   as UpdateNode
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Result                   as UpdateNode
 
 
 loggerIO :: LoggerIO
@@ -68,7 +69,20 @@ addNode batchHandler (AddNode.Args tnode tbc tlibID tprojectID) = do
     batch <- IORef.readIORef batchHandler
     (newBatch, newNodeID) <- BatchG.addNode node bc libID projectID batch
     IORef.writeIORef batchHandler newBatch
-    return $ AddNode.Result $ encode (newNodeID, node)
+    return $ AddNode.Result $ encodeP newNodeID
+
+
+updateNode :: IORef Batch -> UpdateNode.Args -> IO UpdateNode.Result
+updateNode batchHandler (UpdateNode.Args tnode tbc tlibID tprojectID) = do
+    loggerIO info "called addNode"
+    bc <- decode tbc
+    nodeWithId <- decode tnode
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    batch <- IORef.readIORef batchHandler
+    (newBatch, newNodeID) <- BatchG.updateNode nodeWithId bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
+    return $ UpdateNode.Result $ encodeP newNodeID
 
 
 removeNode :: IORef Batch -> RemoveNode.Args -> IO RemoveNode.Result

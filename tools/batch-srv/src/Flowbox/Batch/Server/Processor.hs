@@ -81,6 +81,8 @@ import qualified Generated.Proto.Batch.FileSystem.Stat.Result               as S
 import qualified Generated.Proto.Batch.FileSystem.Touch.Args                as Touch
 import qualified Generated.Proto.Batch.FileSystem.Touch.Result              as Touch
 import qualified Generated.Proto.Batch.Graph.AddNode.Args                   as AddNode
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Args                   as UpdateNode
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Result                   as UpdateNode
 import qualified Generated.Proto.Batch.Graph.AddNode.Result                 as AddNode
 import qualified Generated.Proto.Batch.Graph.Connect.Args                   as Connect
 import qualified Generated.Proto.Batch.Graph.Connect.Result                 as Connect
@@ -235,6 +237,7 @@ process notifySocket handler encoded_request = case Proto.messageWithLengthGet e
         Method.Graph_NodesGraph -> call request handler Handler.nodesGraph NodesGraph.req NodesGraph.rsp
         Method.Graph_NodeByID   -> call request handler Handler.nodeByID   NodeByID.req   NodeByID.rsp
         Method.Graph_AddNode    -> call request handler Handler.addNode    AddNode.req    AddNode.rsp
+        Method.Graph_UpdateNode -> call request handler Handler.updateNode UpdateNode.req UpdateNode.rsp
         Method.Graph_RemoveNode -> call request handler Handler.removeNode RemoveNode.req RemoveNode.rsp
         Method.Graph_Connect    -> call request handler Handler.connect    Connect.req    Connect.rsp
         Method.Graph_Disconnect -> call request handler Handler.disconnect Disconnect.req Disconnect.rsp
