@@ -50,7 +50,6 @@ ls :: IORef Batch -> LS.Args -> IO LS.Result
 ls _ (LS.Args tpath) = do
     loggerIO info "called ls"
     let path = decodeP tpath
-    loggerIO debug $ "path: " ++ (show path)
     items <- BatchFS.ls path
     return $ LS.Result $ encodeList items
 
@@ -59,7 +58,6 @@ stat :: IORef Batch -> Stat.Args -> IO Stat.Result
 stat _ (Stat.Args tpath) = do
     loggerIO info "called stat"
     let path = decodeP tpath
-    loggerIO debug $ "path: " ++ (show path)
     item  <- BatchFS.stat path
     return $ Stat.Result $ encode item
 
@@ -68,7 +66,6 @@ mkdir :: IORef Batch -> MkDir.Args -> IO MkDir.Result
 mkdir _ (MkDir.Args tpath) = do
     loggerIO info "called mkdir"
     let path = decodeP tpath
-    loggerIO debug $ "path: " ++ (show path)
     BatchFS.mkdir path
     return MkDir.Result
 
@@ -77,7 +74,6 @@ touch :: IORef Batch -> Touch.Args -> IO Touch.Result
 touch _ (Touch.Args tpath) = do
     loggerIO info "called touch"
     let path = decodeP tpath
-    loggerIO debug $ "path: " ++ (show path)
     BatchFS.touch path
     return Touch.Result
 
@@ -86,7 +82,6 @@ rm :: IORef Batch -> RM.Args -> IO RM.Result
 rm _ (RM.Args tpath) = do
     loggerIO info "called rm"
     let path = decodeP tpath
-    loggerIO debug $ "path: " ++ (show path)
     BatchFS.rm path
     return RM.Result
 
@@ -96,7 +91,6 @@ cp _ (CP.Args tsrc tdst) = do
     loggerIO info "called cp"
     let usrc = decodeP tsrc
     let udst = decodeP tdst
-    loggerIO debug $ "src: " ++ (show usrc) ++ " dst: " ++ (show udst)
     BatchFS.cp usrc udst
     return CP.Result
 
@@ -106,6 +100,5 @@ mv _ (MV.Args tsrc tdst) = do
     loggerIO info "called mv"
     let usrc = decodeP tsrc
     let udst = decodeP tdst
-    loggerIO debug $ "src: " ++ (show usrc) ++ " dst: " ++ (show udst)
     BatchFS.mv usrc udst
     return MV.Result

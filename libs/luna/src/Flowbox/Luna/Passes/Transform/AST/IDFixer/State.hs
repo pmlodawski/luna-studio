@@ -21,15 +21,16 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.AST.IDFixer.State"
 
 
-data IDFixerState = IDFixerState { maxID :: AST.ID
+data IDFixerState = IDFixerState { maxID  :: AST.ID
+                                 , fixAll :: Bool
                                  } deriving (Show)
 
 
 type IDFixerStateM m = MonadState IDFixerState m
 
 
-make :: AST.ID -> IDFixerState
-make m = IDFixerState m
+make :: AST.ID -> Bool -> IDFixerState
+make = IDFixerState
 
 
 getMaxID :: IDFixerStateM m => m AST.ID
@@ -41,6 +42,10 @@ setMaxID i = do s <- get
                 put s { maxID = i }
 
 
+getFixAll :: IDFixerStateM m => m Bool
+getFixAll = get >>= return . fixAll
+
+
 newID :: IDFixerStateM m => m AST.ID
 newID = do i <- getMaxID
            let n = i + 1
@@ -49,9 +54,10 @@ newID = do i <- getMaxID
 
 
 fixID :: IDFixerStateM m => AST.ID -> m AST.ID
-fixID i = if i == unknownID
-            then newID
-            else return i
+fixID i = do f <- getFixAll
+             if f || i == unknownID
+                then newID
+                else return i
 
 
 unknownID :: AST.ID

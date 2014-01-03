@@ -95,7 +95,6 @@ connect batchHandler (Connect.Args tsrcNodeID tsrcPort tdstNodeID tdstPort tbc t
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "srcNodeID: " ++ (show srcNodeID)
     newBatch <- BatchG.connect srcNodeID srcPort dstNodeID dstPort bc libID projectID batch
     IORef.writeIORef batchHandler newBatch
     return Connect.Result

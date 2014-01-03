@@ -66,7 +66,6 @@ projectByID :: IORef Batch -> ProjectByID.Args -> IO ProjectByID.Result
 projectByID batchHandler (ProjectByID.Args tprojectID) = do
     loggerIO info "called projectByID"
     let projectID = decodeP tprojectID
-    loggerIO debug $ "projectID: " ++ (show projectID)
     batch     <- IORef.readIORef batchHandler
     project   <- BatchP.projectByID projectID batch
     return $ ProjectByID.Result $ encode (projectID, project) ^. _1
@@ -79,7 +78,6 @@ createProject batchHandler (CreateProject.Args tname tpath tattributes) = do
         path = decodeP tpath
         attributes = decodeP tattributes
     batch        <- IORef.readIORef batchHandler
-    loggerIO debug $ "name: " ++ (show name) ++ " path: " ++ (show path) ++ " attributes: " ++ (show attributes)
     let (newBatch, newProject) = BatchP.createProject name path attributes batch
     IORef.writeIORef batchHandler newBatch
     return $ CreateProject.Result $ encode newProject ^. _1
@@ -90,7 +88,6 @@ openProject batchHandler (OpenProject.Args tpath) = do
     loggerIO info "called openProject"
     let upath = decodeP tpath
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "path: " ++ (show upath)
     (newBatch, (projectID, aproject)) <- BatchP.openProject upath batch
     IORef.writeIORef batchHandler newBatch
     return $ OpenProject.Result $ encode (projectID, aproject) ^. _1
@@ -101,7 +98,6 @@ updateProject batchHandler  (UpdateProject.Args tproject) = do
     loggerIO info "called updateProject"
     project <- (decode (tproject, LibManager.empty, ProcessMap.empty) :: IO (Project.ID, Project))
     batch   <- IORef.readIORef batchHandler
-    loggerIO debug $ "project: " ++ (show project)
     newBatch <-  BatchP.updateProject project batch
     IORef.writeIORef batchHandler newBatch
     return UpdateProject.Result
@@ -112,7 +108,6 @@ closeProject batchHandler (CloseProject.Args tprojectID) = do
     loggerIO info "called closeProject"
     let projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "projectID: " ++ (show projectID)
     let newBatch = BatchP.closeProject projectID batch
     IORef.writeIORef batchHandler newBatch
     return CloseProject.Result
@@ -123,6 +118,5 @@ storeProject batchHandler (StoreProject.Args tprojectID) = do
     loggerIO info "called storeProject"
     let projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "projectID: " ++ (show projectID)
     BatchP.storeProject projectID batch
     return StoreProject.Result

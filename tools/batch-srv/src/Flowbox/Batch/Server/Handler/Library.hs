@@ -53,7 +53,6 @@ libraries batchHandler (Libraries.Args tprojectID) = do
     loggerIO info "called libraries"
     let projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "projectID: " ++ (show projectID)
     libs <- BatchL.libraries projectID batch
     return $ Libraries.Result $ encodeList libs
 
@@ -64,7 +63,6 @@ libraryByID batchHandler (LibraryByID.Args tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     library <- BatchL.libraryByID libID projectID batch
     return $ LibraryByID.Result $ encode (libID, library)
 
@@ -76,7 +74,6 @@ createLibrary batchHandler (CreateLibrary.Args tname tpath tprojectID) = do
         name      = decodeP tname
         path      = decodeP tpath
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "name: " ++ (show name) ++ " path: " ++ (show path) ++ " projectID: " ++ (show projectID)
     (newBatch, newLibrary) <-  BatchL.createLibrary name path projectID batch
     IORef.writeIORef batchHandler newBatch
     return $ CreateLibrary.Result $ encode newLibrary
@@ -88,7 +85,6 @@ loadLibrary batchHandler (LoadLibrary.Args tpath tprojectID) = do
     let path      = decodeP tpath
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "path: " ++ (show path) ++ " projectID: " ++ (show projectID)
     (newBatch, (newLibID, newLibrary)) <- BatchL.loadLibrary path projectID batch
     IORef.writeIORef batchHandler newBatch
     return $ LoadLibrary.Result $ encode (newLibID, newLibrary)
@@ -100,7 +96,6 @@ unloadLibrary batchHandler (UnloadLibrary.Args tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     newBatch <- BatchL.unloadLibrary libID projectID batch
     IORef.writeIORef batchHandler newBatch
     return UnloadLibrary.Result
@@ -112,7 +107,6 @@ storeLibrary batchHandler (StoreLibrary.Args tlibID tprojectID) =  do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     BatchL.storeLibrary libID projectID batch
     return StoreLibrary.Result
 
@@ -123,7 +117,6 @@ buildLibrary batchHandler (BuildLibrary.Args tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     BatchL.buildLibrary libID projectID batch
     return BuildLibrary.Result
 
@@ -134,7 +127,6 @@ runLibrary batchHandler (RunLibrary.Args tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    loggerIO debug $ "libID: " ++ (show libID) ++ " projectID: " ++ (show projectID)
     output <- BatchL.runLibrary libID projectID batch
     return $ RunLibrary.Result $ encodeP output
 

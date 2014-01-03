@@ -33,7 +33,6 @@ parseExpr :: IORef Batch -> ParseExpr.Args -> IO ParseExpr.Result
 parseExpr _ (ParseExpr.Args tstr) = do
     loggerIO info "called parseExpr"
     let str = decodeP tstr
-    loggerIO debug $ "str: " ++ (show str)
     expr <- BatchP.parseExpr str
     return $ ParseExpr.Result $ encode expr
 
@@ -42,7 +41,6 @@ parsePat :: IORef Batch -> ParsePat.Args -> IO ParsePat.Result
 parsePat _ (ParsePat.Args tstr) = do
     loggerIO info "called parsePat"
     let str = decodeP tstr
-    loggerIO debug $ "str: " ++ (show str)
     pat <- BatchP.parsePat str
     return $ ParsePat.Result $ encode pat
 
@@ -51,6 +49,5 @@ parseType :: IORef Batch -> ParseType.Args -> IO ParseType.Result
 parseType _ (ParseType.Args tstr) = do
     loggerIO info "called parseType"
     let str = decodeP tstr
-    loggerIO debug $ "str: " ++ (show str)
     pat <- BatchP.parseType str
     return $ ParseType.Result $ encode pat

@@ -153,43 +153,40 @@ astFocusOp bc libID projectID operation = astOp libID projectID (\batch ast pm -
 astModuleFocusOp :: Breadcrumbs
                  -> Library.ID
                  -> Project.ID
-                 -> (Batch -> Module -> IO (Module, r))
+                 -> (Batch -> Module -> AST.ID -> IO (Module, r))
                  -> Batch
                  -> IO (Batch, r)
 astModuleFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus maxID -> do
     (m, r) <- case focus of
-        Focus.ModuleFocus m -> operation batch m
+        Focus.ModuleFocus m -> operation batch m maxID
         _                   -> fail "Target is not a module"
-    fm <- Luna.runIO $ IDFixer.runModule maxID m
-    return (Focus.ModuleFocus fm, r))
+    return (Focus.ModuleFocus m, r))
 
 
 astFunctionFocusOp :: Breadcrumbs
                    -> Library.ID
                    -> Project.ID
-                   -> (Batch -> Expr -> IO (Expr, r))
+                   -> (Batch -> Expr -> AST.ID -> IO (Expr, r))
                    -> Batch
                    -> IO (Batch, r)
 astFunctionFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus maxID -> do
     (f, r) <- case focus of
-        Focus.FunctionFocus f -> operation batch f
+        Focus.FunctionFocus f -> operation batch f maxID
         _                     -> fail "Target is not a function"
-    ff <- Luna.runIO $ IDFixer.runExpr maxID f
-    return (Focus.FunctionFocus ff, r))
+    return (Focus.FunctionFocus f, r))
 
 
 astClassFocusOp :: Breadcrumbs
                 -> Library.ID
                 -> Project.ID
-                -> (Batch -> Expr -> IO (Expr, r))
+                -> (Batch -> Expr -> AST.ID -> IO (Expr, r))
                 -> Batch
                 -> IO (Batch, r)
 astClassFocusOp bc libID projectID operation = astFocusOp bc libID projectID (\batch focus maxID -> do
     (c, r) <- case focus of
-        Focus.ClassFocus c -> operation batch c
+        Focus.ClassFocus c -> operation batch c maxID
         _                  -> fail "Target is not a class"
-    fc <- Luna.runIO $ IDFixer.runExpr maxID c
-    return (Focus.ClassFocus fc, r))
+    return (Focus.ClassFocus c, r))
 
 
 graphOp :: Breadcrumbs
@@ -214,7 +211,7 @@ graphOp bc libID projectID operation = astOp libID projectID (\batch ast propert
     ast' <- GraphParser.run newGraph newPM expr
 
     newMaxID <- MaxID.runExpr ast'
-    fixedAst <- IDFixer.runExpr newMaxID ast'
+    fixedAst <- IDFixer.runExpr newMaxID False ast'
 
     loggerIO debug $ show newGraph
     loggerIO debug $ show newPM

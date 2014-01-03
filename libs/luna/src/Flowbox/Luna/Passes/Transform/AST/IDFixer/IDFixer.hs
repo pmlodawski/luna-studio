@@ -26,7 +26,7 @@ import           Flowbox.Luna.Passes.Pass                        (PassMonad)
 import qualified Flowbox.Luna.Passes.Pass                        as Pass
 import           Flowbox.Luna.Passes.Transform.AST.IDFixer.State (IDFixerState)
 import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.State as State
-import           Flowbox.Prelude                                 hiding (mapM, mapM_)
+import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
 
@@ -38,16 +38,24 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer"
 type IDFixerMonad m = PassMonad IDFixerState m
 
 
-run :: PassMonad s m => AST.ID -> Focus -> Pass.Result m Focus
-run maxID = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID) . fixFocus
+run :: PassMonad s m => AST.ID -> Bool -> Focus -> Pass.Result m Focus
+run maxID fixAll = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID fixAll) . fixFocus
 
 
-runModule :: PassMonad s m => AST.ID -> Module -> Pass.Result m Module
-runModule maxID = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID) . fixModule
+runModule :: PassMonad s m => AST.ID -> Bool -> Module -> Pass.Result m Module
+runModule maxID fixAll = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID fixAll) . fixModule
 
 
-runExpr :: PassMonad s m => AST.ID -> Expr -> Pass.Result m Expr
-runExpr maxID = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID) . fixExpr
+runExpr :: PassMonad s m => AST.ID -> Bool -> Expr -> Pass.Result m Expr
+runExpr maxID fixAll = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID fixAll) . fixExpr
+
+
+runExprs :: PassMonad s m => AST.ID -> Bool -> [Expr] -> Pass.Result m [Expr]
+runExprs maxID fixAll = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID fixAll) . (mapM fixExpr)
+
+
+runType :: PassMonad s m => AST.ID -> Bool -> Type -> Pass.Result m Type
+runType maxID fixAll = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID fixAll) . fixType
 
 
 fixFocus :: IDFixerMonad m => Focus -> Pass.Result m Focus

@@ -163,21 +163,21 @@ response t i = Proto.messageWithLengthPut
              $ Response t i $ Extensions.ExtField Map.empty
 
 
-unsafeCall :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
+unsafeCall :: (WireMessage.Wire r, Reflections.ReflectDescriptor r, Show arg)
      => Request -> h ->  (h -> arg -> IO r)
      -> Extensions.Key Maybe Request arg
      -> Extensions.Key Maybe Response r
      -> IO ByteString
 unsafeCall request handler method reqkey rspkey = do
     r <- case Extensions.getExt reqkey request of
-        Right (Just args) -> method handler args
-
+        Right (Just args) -> do loggerIO debug $ show args
+                                method handler args
         Left   e'         -> fail $ "Error while getting extension: " ++ e'
         _                 -> fail $ "Error while getting extension"
     return $ responseExt ResponseType.Result Nothing r rspkey
 
 
-call :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
+call :: (WireMessage.Wire r, Reflections.ReflectDescriptor r, Show arg)
      => Request -> h ->  (h -> arg -> IO r)
      -> Extensions.Key Maybe Request arg
      -> Extensions.Key Maybe Response r
@@ -191,7 +191,7 @@ call request handler method reqkey rspkey = do
         Right a ->    return a
 
 
-async :: (WireMessage.Wire r, Reflections.ReflectDescriptor r)
+async :: (WireMessage.Wire r, Reflections.ReflectDescriptor r, Show arg)
       => Request -> h ->  (h -> arg -> IO r)
       -> Extensions.Key Maybe Request arg
       -> Extensions.Key Maybe Response r
@@ -201,8 +201,6 @@ async request handler method reqkey rspkey notifySocket = do
     _ <- Concurrent.forkIO $ do b <- call request handler method reqkey rspkey
                                 MVar.withMVar notifySocket (\s -> TCP.sendData s b)
     return $ response ResponseType.Accept (Just 0)
-    --let exc = Exception $ encodePJ "just testing"
-    --return $ response ResponseType.Accept exc Exception.rsp
 
 
 process :: Handler h => MVar Socket -> h -> ByteString -> IO ByteString

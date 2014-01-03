@@ -45,7 +45,7 @@ definitions mmaxDepth bc libID projectID = readonly . astFocusOp bc libID projec
 
 addModule :: Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Module)
 addModule newModule bcParent libID projectID = astFocusOp bcParent libID projectID (\_ focus maxID -> do
-    fixedModule <- Luna.runIO $ IDFixer.runModule maxID newModule
+    fixedModule <- Luna.runIO $ IDFixer.runModule maxID True newModule
     newFocus <- case focus of
         Focus.ClassFocus    _ -> fail "Cannot add module to a class"
         Focus.FunctionFocus _ -> fail "Cannot add module to a function"
@@ -55,7 +55,7 @@ addModule newModule bcParent libID projectID = astFocusOp bcParent libID project
 
 addClass :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Expr)
 addClass newClass bcParent libID projectID = astFocusOp bcParent libID projectID (\_ focus maxID -> do
-    fixedClass <- Luna.runIO $ IDFixer.runExpr maxID newClass
+    fixedClass <- Luna.runIO $ IDFixer.runExpr maxID True newClass
     newFocus <- case focus of
         Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addClass fixedClass c
         Focus.FunctionFocus _ -> fail "Cannot add class to a function"
@@ -65,7 +65,7 @@ addClass newClass bcParent libID projectID = astFocusOp bcParent libID projectID
 
 addFunction :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Expr)
 addFunction newFunction bcParent libID projectID = astFocusOp bcParent libID projectID (\_ focus maxID -> do
-    fixedFunction <- Luna.runIO $ IDFixer.runExpr maxID newFunction
+    fixedFunction <- Luna.runIO $ IDFixer.runExpr maxID True newFunction
     newFocus <- case focus of
         Focus.ClassFocus    c -> return $ Focus.ClassFocus $ Expr.addMethod fixedFunction c
         Focus.FunctionFocus _ -> fail "Cannot add function to a function"
@@ -91,45 +91,52 @@ resolveDefinition name bc libID projectID = readonly . libManagerOp projectID (\
 
 
 updateModuleCls :: Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-updateModuleCls cls bc libID projectID = noresult . astModuleFocusOp bc libID projectID (\_ m ->
-    return (m & Module.cls .~ cls, ()))
+updateModuleCls cls bc libID projectID = noresult . astModuleFocusOp bc libID projectID (\_ m maxID -> do
+    fixedCls <- Luna.runIO $ IDFixer.runType maxID True cls
+    return (m & Module.cls .~ fixedCls, ()))
 
 
 updateModuleImports :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-updateModuleImports imports bc libID projectID = noresult . astModuleFocusOp bc libID projectID (\_ m ->
-    return (m & Module.imports .~ imports, ()))
+updateModuleImports imports bc libID projectID = noresult . astModuleFocusOp bc libID projectID (\_ m maxID -> do
+    fixedImports <- Luna.runIO $ IDFixer.runExprs maxID True imports
+    return (m & Module.imports .~ fixedImports, ()))
 
 
 updateModuleFields :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-updateModuleFields fields bc libID projectID = noresult . astModuleFocusOp bc libID projectID (\_ m ->
-    return (m & Module.fields .~ fields, ()))
+updateModuleFields fields bc libID projectID = noresult . astModuleFocusOp bc libID projectID (\_ m maxID -> do
+    fixedFields <- Luna.runIO $ IDFixer.runExprs maxID True fields
+    return (m & Module.fields .~ fixedFields, ()))
 
 
 updateClassCls :: Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-updateClassCls cls bc libID projectID = noresult . astClassFocusOp bc libID projectID (\_ m ->
-    return (m & Expr.cls .~ cls, ()))
+updateClassCls cls bc libID projectID = noresult . astClassFocusOp bc libID projectID (\_ m maxID -> do
+    fixedCls <- Luna.runIO $ IDFixer.runType maxID True cls
+    return (m & Expr.cls .~ fixedCls, ()))
 
 
 updateClassFields :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-updateClassFields fields bc libID projectID = noresult . astClassFocusOp bc libID projectID (\_ m ->
-    return (m & Expr.fields .~ fields, ()))
+updateClassFields fields bc libID projectID = noresult . astClassFocusOp bc libID projectID (\_ m maxID -> do
+    fixedFields <- Luna.runIO $ IDFixer.runExprs maxID True fields
+    return (m & Expr.fields .~ fixedFields, ()))
 
 
 updateFunctionName :: String -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-updateFunctionName name bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m ->
+updateFunctionName name bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m _ ->
     return (m & Expr.name .~ name, ()))
 
 
 updateFunctionPath :: [String] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-updateFunctionPath path bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m ->
+updateFunctionPath path bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m _ ->
     return (m & Expr.path .~ path, ()))
 
 
 updateFunctionInputs :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-updateFunctionInputs inputs bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m ->
-    return (m & Expr.inputs .~ inputs, ()))
+updateFunctionInputs inputs bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m maxID -> do
+    fixedInputs <- Luna.runIO $ IDFixer.runExprs maxID True inputs
+    return (m & Expr.inputs .~ fixedInputs, ()))
 
 
 updateFunctionOutput :: Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-updateFunctionOutput output bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m ->
-    return (m & Expr.output .~ output, ()))
+updateFunctionOutput output bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m maxID -> do
+    fixedOutput <- Luna.runIO $ IDFixer.runType maxID True output
+    return (m & Expr.output .~ fixedOutput, ()))
