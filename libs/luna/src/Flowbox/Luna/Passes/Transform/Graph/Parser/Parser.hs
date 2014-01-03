@@ -80,8 +80,9 @@ parseInputsNode nodeID = mapM_ (parseArg nodeID) . zip [0..]
 
 parseArg :: State.GPStateM m => Node.ID  -> (Int, Expr) -> m ()
 parseArg nodeID (num, input) = case input of
-    Expr.Arg _ (Pat.Var _ name) _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
-    _                             -> fail "parseArg: Wrong Arg type"
+    Expr.Arg _              (Pat.Var _ name)    _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
+    Expr.Arg _ (Pat.Typed _ (Pat.Var _ name) _) _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
+    _                                             -> fail "parseArg: Wrong Arg type"
 
 
 parseOutputsNode :: GPMonad m => Node.ID -> Pass.Result m ()
@@ -127,6 +128,7 @@ parseAppNode nodeID app = do
         f:t -> do let acc = Expr.Accessor nodeID app f
                       e   = Expr.App      IDFixer.unknownID acc t
                   addExpr nodeID e
+
 
 parseTupleNode :: GPMonad m => Node.ID -> Pass.Result m ()
 parseTupleNode nodeID = do

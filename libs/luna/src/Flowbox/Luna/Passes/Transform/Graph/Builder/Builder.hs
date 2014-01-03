@@ -31,7 +31,7 @@ import           Flowbox.Luna.Passes.Transform.Graph.Builder.State (GBState)
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State as State
 import           Flowbox.Prelude                                   hiding (error, mapM, mapM_)
 import           Flowbox.System.Log.Logger
-
+import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
 
 
 logger :: Logger
@@ -139,7 +139,7 @@ buildNode astFolded outName expr = case expr of
                                      return i
     where
         genName base num = case outName of
-            Nothing   -> base ++ "Result" ++ (show num)
+            Nothing   -> OutputName.generate base num
             Just name -> name
 
         noAssignment = case outName of
