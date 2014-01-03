@@ -58,7 +58,7 @@ getImports _                              _ = pure []
 
 
 possiblePath :: [String] -> Expr -> Maybe [String]
-possiblePath elements (Expr.Import _ path (Expr.Var _ name) rename) =
+possiblePath elements (Expr.Import _ path (Expr.Con _ name) rename) =
     if imported == head elements
         then Just $ path ++ tail elements
         else Nothing
