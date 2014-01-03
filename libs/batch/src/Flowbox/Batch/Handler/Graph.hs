@@ -22,7 +22,7 @@ import qualified Flowbox.Luna.Data.PropertyMap              as PropertyMap
 import qualified Flowbox.Luna.Lib.Library                   as Library
 import           Flowbox.Prelude                            hiding (error)
 import           Flowbox.System.Log.Logger
-
+import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
 
 
 loggerIO :: LoggerIO
@@ -42,15 +42,17 @@ nodeByID nodeID bc libID projectID = readonlyNodeOp nodeID bc libID projectID (\
 addNode :: Node
         -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Node.ID)
 addNode node bc libID projectID = graphViewOp bc libID projectID (\_ graph propertyMap maxID -> do
-    let newID = maxID + 1
-    return ((GraphView.insNode (newID, node) graph, propertyMap), newID))
+    let newID     = maxID + 1
+        fixedNode = OutputName.fixEmpty node newID
+    return ((GraphView.insNode (newID, fixedNode) graph, propertyMap), newID))
 
 
 updateNode :: (Node.ID, Node)
            -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Node.ID)
 updateNode (nodeID, newNode) bc libID projectID = graphViewOp bc libID projectID (\_ graph propertyMap maxID -> do
-    let newID    = maxID + 1
-        newGraph = GraphView.replaceNode (newID, newNode) nodeID graph
+    let newID     = maxID + 1
+        fixedNode = OutputName.fixEmpty newNode newID
+        newGraph  = GraphView.replaceNode (newID, fixedNode) nodeID graph
         newPropertyMap = case PropertyMap.lookup nodeID propertyMap of 
             Nothing -> propertyMap
             Just k  -> PropertyMap.insert newID k $ PropertyMap.delete nodeID propertyMap

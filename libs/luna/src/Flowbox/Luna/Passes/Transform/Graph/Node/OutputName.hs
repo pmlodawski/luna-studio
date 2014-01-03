@@ -7,6 +7,9 @@
 
 module Flowbox.Luna.Passes.Transform.Graph.Node.OutputName where
 
+import qualified Data.List as List
+import qualified Data.Char as Char
+
 import           Flowbox.Luna.Data.Graph.Node (Node)
 import qualified Flowbox.Luna.Data.Graph.Node as Node
 import           Flowbox.Prelude
@@ -14,7 +17,7 @@ import           Flowbox.Prelude
 
 
 generate :: String -> Int -> String
-generate base num = base ++ "Result" ++ (show num)
+generate base num = (mangle base) ++ "Result" ++ (show num)
 
 
 fixEmpty :: Node -> Node.ID -> Node
@@ -29,3 +32,9 @@ fix node nodeID = newNode where
     newNode = node &  Node.outputName .~ generate expr nodeID
 
 
+mangle :: String -> String
+mangle name = case (List.takeWhile Char.isAlphaNum) name of
+    f:alphaNum -> if Char.isDigit f 
+                     then 'r' : f : alphaNum
+                     else (Char.toLower f) : alphaNum
+    []         -> "node"

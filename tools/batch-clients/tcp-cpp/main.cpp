@@ -387,7 +387,6 @@ int main()
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("90"); 
-			node.set_outputname("v90"); 
 			node90id = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
 		}
 		int nodeAddid;
@@ -396,7 +395,6 @@ int main()
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("add"); 
-			node.set_outputname("addResult"); 
 			nodeAddid = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
 		}
 		int nodePrintid;
@@ -405,7 +403,6 @@ int main()
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
 			node.set_expr("print"); 
-			node.set_outputname("console"); 
 			nodePrintid = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
 		}
 		{
