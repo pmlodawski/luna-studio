@@ -79,8 +79,8 @@ genProject name = let
 
 
 
-logger :: Logger
-logger = getLogger "Flowbox"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox"
 
 
 --example :: Source
@@ -94,7 +94,7 @@ logger = getLogger "Flowbox"
 example :: Source
 example = Source.Source ["Main"] $
         concat $ replicate 1 $ unlines [ ""
-                    --, "import Std:Vector"
+                    ----, "import Std:Vector"
                     ----, "def List.length self:"
                     ----, "    ```getIO $ liftFPure1 length #{self}```"
                     ----, "def List.each self callback:"
@@ -115,7 +115,16 @@ example = Source.Source ["Main"] $
                     --, "    def print self msg:"
                     --, "        ```print' #{msg}```"
 
-
+                  --, "class Vector a b c:"
+                  --, "    x :: a"
+                  --, "class Vector a = Vector | Scalar "
+                  --, "               | Scalar2"
+                  , "class Vector a = Vector: x :: a"
+                  , "                         y :: a"
+                  , "                         z :: a"
+                  , "               | Scalar: a :: a"
+                  --, "               | Vector2: x :: a"
+                  --, "               | Scalar"
                   --, "class Vector a:"
                   --, "    x,y,z :: a"
                   --, "    def f:"
@@ -130,19 +139,23 @@ example = Source.Source ["Main"] $
                   --, "    v"
                   --, "    (2+2).f"
 
-                  , "def fxx (y::Int):"
-                  , "    a = b + (c)"
+                  --, "def fxx (y::Int):"
+                  --, "    a = b + (c)"
                   --, "    Vector"
                   --, "    def g:"
                   --, "        xxx"
-                  --, "    def h:"
-                  --, "        yyy"
                   --, "    b"
                   --, "    b x:"
                   --, "        x+1"
-                  --, "def fyy:"
+                  --, "def fyy x:"
                   --, "    b"
+                  --, "    def h:"
+                  --, "        yyy"
+                  --, "    a = case x:"
+                  --, "        a: a"
+                  --, "        {a,b} : 1"
                   --, "    v.x.y"
+                  --, "def main self:"
                   --, "    [1,2,3].each x:"
                   --, "       Console.print x"
                   --, "    a.throw"
@@ -221,7 +234,7 @@ example = Source.Source ["Main"] $
 main :: IO ()
 main = do
     --DistMain.main
-    logger setLevel DEBUG
+    Logger.setLevel DEBUG "Flowbox" 
     --let x = Parser.parse' example
     --    --x :: Int
 
@@ -244,7 +257,7 @@ main_inner = Luna.run $ do
     let source = example
 
     logger info "\n-------- TxtParser --------"
-    (ast, srcMap) <- TxtParser.run source
+    (ast, srcMap) <- hoistEither =<< TxtParser.run source
     logger info "\n>> AST"
     logger info $ PP.ppqShow ast
     logger info "\n>> Source Map"
@@ -252,36 +265,36 @@ main_inner = Luna.run $ do
     --logger info (show.length $ FModule._classes ast)
     return ()
 
-    ----let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]
+    --let crumbs = [ASTCrumb.ModuleCrumb "Main", ASTCrumb.FunctionCrumb "add"]
 
-    --ast2 <- Zipper.mk ast
-    --    >>= Zipper.focusFunction "add"
-    --    >>= Zipper.modify (\(Focus.FunctionFocus func) -> Focus.FunctionFocus (func & LExpr.name .~ "ekhem"))
-    --    >>= Zipper.close
+    --let ast2 =     Zipper.mk ast
+    --           >>= Zipper.focusFunction "add"
+    --           >>= Zipper.modify (\(Zipper.FunctionFocus func) -> Zipper.FunctionFocus (func & LExpr.name .~ "dupa"))
+    --           >>= Zipper.close
 
-    ----logger info $ PP.ppqShow ast2
+    --logger info $ PP.ppqShow ast2
 
-    ----putStrLn $ PP.ppShow zipper
+    --putStrLn $ PP.ppShow zipper
 
-    --logger info "\n-------- VarAlias --------"
-    --va <- VarAlias.run     ast
-    --logger info $ PP.ppShow va
+    logger info "\n-------- VarAlias --------"
+    va <- hoistEither =<< VarAlias.run     ast
+    logger info $ PP.ppShow va
 
-    --logger info "\n-------- FuncPool --------"
-    --fp <- FuncPool.run ast
-    --logger info $ PP.ppShow fp
+    logger info "\n-------- FuncPool --------"
+    fp <- hoistEither =<< FuncPool.run ast
+    logger info $ PP.ppShow fp
 
-    --logger info "\n-------- SSA --------"
-    --ssa <- SSA.run va ast
-    ----logger info $ PP.ppqShow ssa
+    logger info "\n-------- SSA --------"
+    ssa <- hoistEither =<< SSA.run va ast
+    --logger info $ PP.ppqShow ssa
 
-    --logger info "\n-------- HASTGen --------"
-    --hast <- HASTGen.run ssa fp
-    --logger info $ PP.ppShow hast
+    logger info "\n-------- HASTGen --------"
+    hast <- hoistEither =<< HASTGen.run ssa fp
+    logger info $ PP.ppShow hast
 
-    --logger info "\n-------- HSC --------"
-    --hsc <- HSC.run  hast
-    --logger info $ join "\n\n" (map printSrc hsc)
+    logger info "\n-------- HSC --------"
+    hsc <- hoistEither =<< HSC.run  hast
+    logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()
@@ -293,11 +306,11 @@ main_graph = Luna.run $ do
         emptyPM = PropertyMap.empty
 
     logger info "\n-------- TxtParser --------"
-    (ast, _) <- TxtParser.run source
+    (ast, _) <- hoistEither =<< TxtParser.run source
     logger info $ PP.ppqShow ast
 
     logger info "\n-------- VarAlias --------"
-    va <- VarAlias.runGather ast
+    va <- hoistEither =<< VarAlias.runGather ast
     logger info $ PP.ppShow va
 
     (Focus.FunctionFocus expr) <- Zipper.mk ast
@@ -305,7 +318,7 @@ main_graph = Luna.run $ do
                               >>= return . Zipper.getFocus
 
     logger info $ PP.ppShow expr
-    (graph, pm) <- GraphBuilder.run va emptyPM expr
+    (graph, pm) <- hoistEither =<< GraphBuilder.run va emptyPM expr
     let graphView = GraphView.fromGraph graph
         (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graphView pm
     logger warning $ show graph
@@ -314,7 +327,7 @@ main_graph = Luna.run $ do
     let (newGraphView, newPM) = Defaults.removeDefaults graphWithDefaults pmWithDefaults
     newGraph <- GraphView.toGraph newGraphView
     --logger warning $ show newGraph
-    expr' <- GraphParser.run newGraph newPM expr
+    expr' <- hoistEither =<< GraphParser.run newGraph newPM expr
     logger info $ PP.ppShow expr'
     logger warning $ PP.ppShow newPM
 

@@ -19,7 +19,7 @@ message Expr {
         App         = 3;
         AppCons_    = 4;
         Assignment  = 5;
-        Class       = 6;
+        Data       = 6;
         Con_        = 7;
         Function    = 8;
         Lambda      = 9;
@@ -73,11 +73,11 @@ message Assignment {
     optional Expr  dst = 3;
 }
 
-message Class {
-    extend Expr { optional Class ext = 105; }
+message Data {
+    extend Expr { optional Data ext = 105; }
     optional generated.proto.type.Type cls = 2;
-    repeated Expr  classes = 3;
-    repeated Expr  fields  = 4;
+    repeated Expr  cls = 3;
+    repeated Expr  cons  = 4;
     repeated Expr  methods = 5;
 }
 

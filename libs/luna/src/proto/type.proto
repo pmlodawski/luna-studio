@@ -14,7 +14,7 @@ message Type {
         Unknown = 1;
         Var     = 2;
         Tuple   = 3;
-        Class   = 4;
+        Data    = 4;
         Module  = 5;
         Lambda  = 6;
         Con_    = 7;
@@ -40,8 +40,8 @@ message Tuple {
     repeated Type   items    = 2;
 }
 
-message Class {
-    extend Type { optional Class ext = 103; }
+message Data {
+    extend Type { optional Data ext = 103; }
     optional string name     = 2;
     repeated string params   = 3;
 }

@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances #-}
 
-module Flowbox.Luna.Data.AST.Class where
+module Flowbox.Luna.Data.AST.Data where
 
 import           Flowbox.Luna.Data.AST.Expr  (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr  as Expr
@@ -14,5 +14,5 @@ import           Flowbox.Luna.Data.AST.Type  (Type)
 import           Flowbox.Luna.Data.AST.Utils (ID)
 
 
-mk :: ID -> Type -> Expr
-mk id cls = Expr.Class id cls [] [] []
+--mk :: ID -> Type -> Expr
+--mk id cls = Expr.Data id cls [] [] []

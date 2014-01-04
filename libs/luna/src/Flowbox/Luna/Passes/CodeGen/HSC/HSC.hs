@@ -2,22 +2,27 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, TupleSections #-}
+
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TupleSections             #-}
 
 module Flowbox.Luna.Passes.CodeGen.HSC.HSC where
 
-import           Flowbox.Prelude                  hiding(cons)                
+import           Data.String.Utils                (join)
 import qualified Flowbox.Luna.Data.HAST.Expr      as HExpr
+import           Flowbox.Luna.Data.HAST.Extension (Extension)
 import qualified Flowbox.Luna.Data.HAST.Lit       as HLit
+import           Flowbox.Luna.Data.Source         (Source (Source))
+import           Flowbox.Luna.Passes.Pass         (Pass)
 import qualified Flowbox.Luna.Passes.Pass         as Pass
-import           Flowbox.Luna.Passes.Pass           (PassMonad)
-import           Data.String.Utils                  (join)
-import           Flowbox.Luna.Data.Source           (Source(Source))
-import           Flowbox.Luna.Data.HAST.Extension   (Extension)
+import           Flowbox.Prelude                  hiding (cons)
 
-import           Flowbox.System.Log.Logger          
+import Flowbox.System.Log.Logger
 
 
 logger :: Logger
@@ -25,11 +30,12 @@ logger = getLogger "Flowbox.Luna.Passes.HSC.HSC"
 
 type HExpr = HExpr.Expr
 
-type HSCMonad m = PassMonad Pass.NoState m
+type HSCPass result = Pass Pass.NoState result
 
 
-run :: PassMonad s m => HExpr -> Pass.Result m [Source]
-run expr = (Pass.run_ (Pass.Info "HSC") Pass.NoState) (return $ genModule expr)
+
+run :: HExpr -> Pass.Result [Source]
+run expr = Pass.run_ (Pass.Info "HSC") Pass.NoState (return $ genModule expr)
 
 
 eol :: String
@@ -40,7 +46,7 @@ sectionHeader :: String -> String
 sectionHeader name = "-- " ++ name ++ " --\n"
 
 genSection :: String -> (a -> String) -> [a] -> String
-genSection header generator d = if null d 
+genSection header generator d = if null d
     then ""
     else sectionHeader header ++ (join "\n" $ map generator d) ++ "\n\n"
 
@@ -92,31 +98,31 @@ buildExpr e = case e of
     HExpr.Var      name                   -> pure name
     HExpr.VarE     name                   -> pure name
     HExpr.VarT     name                   -> pure name
-    HExpr.Import   q segments rename      -> pure $ "import " 
+    HExpr.Import   q segments rename      -> pure $ "import "
                                              ++ if q then "qualified " else ""
-                                             ++ join "." segments 
+                                             ++ join "." segments
                                              ++ case rename of
                                                      Just name -> " as " ++ name
                                                      Nothing   -> ""
-    HExpr.DataD    name params cons ders  -> pure $ "data " ++ name ++ params' ++ " = " ++ cons' ++ ders' 
+    HExpr.DataD    name params cons ders  -> pure $ "data " ++ name ++ params' ++ " = " ++ cons' ++ ders'
                                              where params' = if null params then "" else " " ++ join " " params
                                                    cons'   = join " | " (fexpMap cons)
                                                    ders'   = if null ders then "" else " deriving (" ++ sepjoin ders ++ ")"
     HExpr.InstanceD tp decs               -> pure $ "instance " ++ (code.buildExpr) tp ++ " where { " ++ join "; " (map (code.buildExpr) decs) ++ " }"
-    HExpr.NewTypeD name params con        -> pure $ "newtype " ++ name ++ params' ++ " = " ++ (code.buildExpr) con 
+    HExpr.NewTypeD name params con        -> pure $ "newtype " ++ name ++ params' ++ " = " ++ (code.buildExpr) con
                                              where params' = if null params then "" else " " ++ join " " params
     HExpr.Con      name fields            -> pure $ name ++ body
                                              where body = if null fields then "" else " { " ++ sepjoin (fexpMap fields) ++ " }"
     HExpr.Typed    cls  expr              -> pure $ (code.buildExpr) expr ++ " :: " ++ (code.buildExpr) cls
     HExpr.TypedP   cls  expr              -> Complex $ (code.buildExpr) expr ++ " :: " ++ (code.buildExpr) cls
     HExpr.TypedE   cls  expr              -> Complex $ (code.buildExpr) expr ++ " :: " ++ (code.buildExpr) cls
-    HExpr.Function name signature expr    -> pure $ name ++ params ++ " = " ++ (code.buildExpr) expr 
+    HExpr.Function name signature expr    -> pure $ name ++ params ++ " = " ++ (code.buildExpr) expr
                                              where params = if null signature then ""
                                                             else " " ++ join " " (fexpMap signature)
     HExpr.Lambda   signature expr         -> pure $ "(\\" ++ params ++ " -> " ++ (code.buildExpr) expr ++ ")"
                                              where params = if null signature then ""
                                                             else " " ++ join " " (fexpMap signature)
-    HExpr.LetBlock exprs result           -> pure $ "let { " ++ join "; " (fexpMap exprs) ++ " } in " ++ (code.buildExpr) result 
+    HExpr.LetBlock exprs result           -> pure $ "let { " ++ join "; " (fexpMap exprs) ++ " } in " ++ (code.buildExpr) result
     HExpr.DoBlock  exprs                  -> pure $ "do { " ++ body ++ " }"
                                              where body = if null exprs then "" else join "; " (fexpMap exprs) ++ ";"
     HExpr.Infix    name src dst           -> Complex $ csBuildExpr src ++ " " ++ name ++ " " ++ csBuildExpr dst

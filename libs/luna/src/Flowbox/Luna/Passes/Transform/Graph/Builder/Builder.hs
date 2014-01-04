@@ -2,10 +2,11 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE Rank2Types       #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Builder.Builder where
 
@@ -13,39 +14,40 @@ import           Control.Applicative
 import           Control.Monad.State
 import qualified Data.List           as List
 
-import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap    (GeneralVarMap)
-import           Flowbox.Luna.Data.AST.Expr                        (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
-import qualified Flowbox.Luna.Data.AST.Lit                         as Lit
-import           Flowbox.Luna.Data.AST.Pat                         (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat                         as Pat
-import qualified Flowbox.Luna.Data.AST.Utils                       as AST
-import           Flowbox.Luna.Data.Graph.Graph                     (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                     as Graph
-import qualified Flowbox.Luna.Data.Graph.Node                      as Node
-import qualified Flowbox.Luna.Data.Graph.Port                      as Port
-import           Flowbox.Luna.Data.PropertyMap                     (PropertyMap)
-import           Flowbox.Luna.Passes.Pass                          (PassMonad)
-import qualified Flowbox.Luna.Passes.Pass                          as Pass
-import           Flowbox.Luna.Passes.Transform.Graph.Builder.State (GBState)
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State as State
-import           Flowbox.Prelude                                   hiding (error, mapM, mapM_)
-import           Flowbox.System.Log.Logger
+import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap      (GeneralVarMap)
+import           Flowbox.Luna.Data.AST.Expr                          (Expr)
+import qualified Flowbox.Luna.Data.AST.Expr                          as Expr
+import qualified Flowbox.Luna.Data.AST.Lit                           as Lit
+import           Flowbox.Luna.Data.AST.Pat                           (Pat)
+import qualified Flowbox.Luna.Data.AST.Pat                           as Pat
+import qualified Flowbox.Luna.Data.AST.Utils                         as AST
+import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
+import qualified Flowbox.Luna.Data.Graph.Graph                       as Graph
+import qualified Flowbox.Luna.Data.Graph.Node                        as Node
+import qualified Flowbox.Luna.Data.Graph.Port                        as Port
+import           Flowbox.Luna.Data.PropertyMap                       (PropertyMap)
+import           Flowbox.Luna.Passes.Pass                            (Pass)
+import qualified Flowbox.Luna.Passes.Pass                            as Pass
+import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBState)
+import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State   as State
 import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
+import           Flowbox.Prelude                                     hiding (error, mapM, mapM_)
+import           Flowbox.System.Log.Logger
 
 
-logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
+
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
 
 
-type GBMonad m = PassMonad GBState m
+type GBPass result = Pass GBState result
 
 
-run :: PassMonad s m => GeneralVarMap -> PropertyMap -> Expr -> Pass.Result m (Graph, PropertyMap)
+run ::  GeneralVarMap -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
 run gvm pm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make gvm pm) . expr2graph
 
 
-expr2graph :: GBMonad m => Expr -> Pass.Result m (Graph, PropertyMap)
+expr2graph :: Expr -> GBPass (Graph, PropertyMap)
 expr2graph expr = case expr of
     Expr.Function _ _ _ _      _ []   -> do finalize
     Expr.Function _ _ _ inputs _ body -> do parseArgs inputs
@@ -55,26 +57,26 @@ expr2graph expr = case expr of
     _                                 -> fail "expr2graph: Unsupported Expr type"
 
 
-finalize :: GBMonad m => Pass.Result m (Graph, PropertyMap)
+finalize :: GBPass (Graph, PropertyMap)
 finalize = do g <- State.getGraph
               pm <- State.getPropertyMap
               return (g, pm)
 
 
-parseArgs :: GBMonad m => [Expr] -> Pass.Result m ()
+parseArgs :: [Expr] -> GBPass ()
 parseArgs inputs = do
     let numberedInputs = zip inputs [0..]
     mapM_ parseArg numberedInputs
 
 
-parseArg :: GBMonad m => (Expr, Int) -> Pass.Result m ()
+parseArg :: (Expr, Int) -> GBPass ()
 parseArg (input, no) = case input of
     Expr.Arg _ pat _ -> do [p] <- buildPat pat
                            State.addToNodeMap p (Graph.inputsID, Port.Num no)
     _                -> fail "parseArg: Wrong Expr type"
 
 
-buildOutput :: GBMonad m => Expr -> Pass.Result m ()
+buildOutput :: Expr -> GBPass ()
 buildOutput expr = case expr of
     Expr.Assignment {} -> return ()
     Expr.Tuple _ items -> do itemIDs <- mapM (buildNode True Nothing) items
@@ -84,7 +86,7 @@ buildOutput expr = case expr of
                              State.connect i Graph.outputID 0
 
 
-buildNode :: GBMonad m => Bool -> Maybe String -> Expr -> Pass.Result m AST.ID
+buildNode :: Bool -> Maybe String -> Expr -> GBPass AST.ID
 buildNode astFolded outName expr = case expr of
     Expr.Accessor   i name dst -> do dstID  <- buildNode True Nothing dst
                                      let node = Node.Expr name (genName name i)
@@ -153,7 +155,7 @@ isRealPat p = case p of
     _         -> True
 
 
-buildPat :: GBMonad m => Pat -> Pass.Result m [AST.ID]
+buildPat :: Pat -> GBPass [AST.ID]
 buildPat p = case p of
     Pat.Var      i _      -> return [i]
     Pat.Lit      i _      -> return [i]

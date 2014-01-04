@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE Rank2Types       #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Parser.Parser where
 
@@ -22,7 +23,7 @@ import qualified Flowbox.Luna.Data.Graph.Node                              as No
 import qualified Flowbox.Luna.Data.Graph.Port                              as Port
 import           Flowbox.Luna.Data.PropertyMap                             (PropertyMap)
 import qualified Flowbox.Luna.Data.PropertyMap                             as PropertyMap
-import           Flowbox.Luna.Passes.Pass                                  (PassMonad)
+import           Flowbox.Luna.Passes.Pass                                  (Pass)
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
 import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.State           as IDFixer
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser        as Parser
@@ -40,14 +41,14 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.Graph.Parser.Parser"
 
 
-type GPMonad m = PassMonad GPState m
+type GPPass result = Pass GPState result
 
 
-run :: PassMonad s m => Graph -> PropertyMap -> Expr -> Pass.Result m Expr
+run :: Graph -> PropertyMap -> Expr -> Pass.Result Expr
 run gr pm = (Pass.run_ (Pass.Info "GraphParser") $ State.make gr pm) . graph2expr
 
 
-graph2expr :: GPMonad m => Expr -> Pass.Result m Expr
+graph2expr :: Expr -> GPPass Expr
 graph2expr expr = do
     let inputs = expr ^. Expr.inputs
     graph <- State.getGraph
@@ -58,7 +59,7 @@ graph2expr expr = do
     return (Expr.body .~ body $ expr)
 
 
-parseNode :: GPMonad m => [Expr] ->  (Node.ID, Node) -> Pass.Result m ()
+parseNode :: [Expr] ->  (Node.ID, Node) -> GPPass ()
 parseNode inputs (nodeID, node) = do
     case node of
         Node.Expr expr _  -> parseExprNode    nodeID expr
@@ -66,7 +67,7 @@ parseNode inputs (nodeID, node) = do
         Node.Outputs      -> parseOutputsNode nodeID
 
 
-parseExprNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
+parseExprNode :: Node.ID -> String -> GPPass ()
 parseExprNode nodeID expr = case expr of
     "Tuple" -> parseTupleNode nodeID
     '=':pat -> parsePatNode   nodeID pat
@@ -74,18 +75,18 @@ parseExprNode nodeID expr = case expr of
     _       -> parseAppNode nodeID expr
 
 
-parseInputsNode :: GPMonad m => Node.ID -> [Expr] -> Pass.Result m ()
+parseInputsNode :: Node.ID -> [Expr] -> GPPass ()
 parseInputsNode nodeID = mapM_ (parseArg nodeID) . zip [0..]
 
 
-parseArg :: State.GPStateM m => Node.ID  -> (Int, Expr) -> m ()
+parseArg :: Node.ID -> (Int, Expr) -> GPPass ()
 parseArg nodeID (num, input) = case input of
     Expr.Arg _              (Pat.Var _ name)    _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
     Expr.Arg _ (Pat.Typed _ (Pat.Var _ name) _) _ -> State.addToNodeMap (nodeID, Port.Num num) $ Expr.Var IDFixer.unknownID name
     _                                             -> fail "parseArg: Wrong Arg type"
 
 
-parseOutputsNode :: GPMonad m => Node.ID -> Pass.Result m ()
+parseOutputsNode :: Node.ID -> GPPass ()
 parseOutputsNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     let e = case srcs of
@@ -94,7 +95,7 @@ parseOutputsNode nodeID = do
     State.setOutput e
 
 
-parsePatNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
+parsePatNode :: Node.ID -> String -> GPPass ()
 parsePatNode nodeID pat = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
@@ -107,7 +108,7 @@ parsePatNode nodeID pat = do
         _      -> fail "parsePatNode: Wrong Pat arguments"
 
 
-parseInfixNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
+parseInfixNode :: Node.ID -> String -> GPPass ()
 parseInfixNode nodeID inf = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
@@ -116,7 +117,7 @@ parseInfixNode nodeID inf = do
         _      -> fail "parseInfixNode: Wrong Infix arguments"
 
 
-parseAppNode :: GPMonad m => Node.ID -> String -> Pass.Result m ()
+parseAppNode :: Node.ID -> String -> GPPass ()
 parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
@@ -130,14 +131,14 @@ parseAppNode nodeID app = do
                   addExpr nodeID e
 
 
-parseTupleNode :: GPMonad m => Node.ID -> Pass.Result m ()
+parseTupleNode :: Node.ID -> GPPass ()
 parseTupleNode nodeID = do
     srcs <- State.getNodeSrcs nodeID
     let e = Expr.Tuple nodeID srcs
     addExpr nodeID e
 
 
-addExpr :: GPMonad m => Node.ID -> Expr -> Pass.Result m ()
+addExpr :: Node.ID -> Expr -> GPPass ()
 addExpr nodeID e = do
     gr <- State.getGraph
     folded         <- hasFlag nodeID Attributes.astFolded
@@ -155,7 +156,7 @@ addExpr nodeID e = do
                     State.addToBody a
 
 
-hasFlag :: GPMonad m => Node.ID -> String -> Pass.Result m Bool
+hasFlag :: Node.ID -> String -> GPPass Bool
 hasFlag nodeID flag = do
     pm <- State.getPropertyMap
     case PropertyMap.get nodeID Attributes.luna flag pm of
@@ -163,5 +164,5 @@ hasFlag nodeID flag = do
         _           -> return False
 
 
-isGenerated :: GPMonad m => Node.ID -> Pass.Result m Bool
+isGenerated :: Node.ID -> GPPass Bool
 isGenerated nodeID = Defaults.isGenerated nodeID <$> State.getPropertyMap

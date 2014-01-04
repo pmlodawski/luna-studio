@@ -94,11 +94,11 @@ searchModule path bc (Module.Module _ (Type.Module _ name) _ classes _ methods m
 
 searchExpr :: [String] -> Breadcrumbs -> Expr -> [Breadcrumbs]
 searchExpr path bc expr = case expr of
-    Expr.Function _ _ name _ _ _ ->             if length path == 1 && head path == name
-                                                    then [bc ++ [Crumb.FunctionCrumb name]]
-                                                    else []
-    Expr.Class _ (Type.Class _ name _) _ _ _ -> if length path == 1 && head path == name
-                                                    then [bc ++ [Crumb.ClassCrumb name]]
-                                                    else []
-    _                                        -> []
+    Expr.Function _ _ name _ _ _        -> if length path == 1 && head path == name
+                                              then [bc ++ [Crumb.FunctionCrumb name]]
+                                              else []
+    Expr.Data _ (Type.Data _ name _) _  -> if length path == 1 && head path == name
+                                              then [bc ++ [Crumb.ClassCrumb name]]
+                                              else []
+    _                                   -> []
 

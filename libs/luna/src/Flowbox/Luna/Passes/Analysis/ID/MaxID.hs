@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE Rank2Types       #-}
 
 module Flowbox.Luna.Passes.Analysis.ID.MaxID where
 
@@ -15,30 +16,33 @@ import qualified Flowbox.Luna.Data.AST.Utils              as AST
 import           Flowbox.Luna.Passes.Analysis.ID.State    (IDState)
 import qualified Flowbox.Luna.Passes.Analysis.ID.State    as State
 import qualified Flowbox.Luna.Passes.Analysis.ID.Traverse as IDTraverse
-import           Flowbox.Luna.Passes.Pass                 (PassMonad)
+import           Flowbox.Luna.Passes.Pass                 (Pass)
 import qualified Flowbox.Luna.Passes.Pass                 as Pass
 import           Flowbox.Prelude                          hiding (mapM, mapM_)
 import           Flowbox.System.Log.Logger
+
+
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Analysis.ID.MaxID"
 
 
-type MaxIDMonad m = PassMonad IDState m
+type MaxIDPass result = Pass IDState result
 
 
-run :: PassMonad s m => Module -> Pass.Result m AST.ID
+run :: Module -> Pass.Result AST.ID
 run = (Pass.run_ (Pass.Info "MaxID") $ State.make) . analyseModule
 
 
-runExpr :: PassMonad s m => Expr -> Pass.Result m AST.ID
+runExpr :: Expr -> Pass.Result AST.ID
 runExpr = (Pass.run_ (Pass.Info "MaxID") $ State.make) . analyseExpr
 
 
-analyseModule :: MaxIDMonad m => Module -> Pass.Result m AST.ID
+analyseModule :: Module -> MaxIDPass AST.ID
 analyseModule m = do IDTraverse.traverseModule State.compareID m
                      State.getMaxID
 
-analyseExpr :: MaxIDMonad m => Expr -> Pass.Result m AST.ID
+
+analyseExpr :: Expr -> MaxIDPass AST.ID
 analyseExpr e = do IDTraverse.traverseExpr State.compareID e
                    State.getMaxID

@@ -21,7 +21,7 @@ import qualified Flowbox.Luna.Data.AST.Utils                    as AST
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Type.App                       as GenApp
-import qualified Generated.Proto.Type.Class                     as GenClass
+import qualified Generated.Proto.Type.Data                      as GenData
 import qualified Generated.Proto.Type.Con_                      as GenCon_
 import qualified Generated.Proto.Type.Lambda                    as GenLambda
 import qualified Generated.Proto.Type.Module                    as GenModule
@@ -39,7 +39,7 @@ instance Convert Type Gen.Type where
         Type.Unknown i               -> genType GenCls.Unknown i GenUnknown.ext $ GenUnknown.Unknown
         Type.Var     i name          -> genType GenCls.Var     i GenVar.ext     $ GenVar.Var         (Just $ encodeP name)
         Type.Tuple   i items         -> genType GenCls.Tuple   i GenTuple.ext   $ GenTuple.Tuple     (encodeList items)
-        Type.Class   i name params   -> genType GenCls.Class   i GenClass.ext   $ GenClass.Class     (Just $ encodeP name) (encodeListP params)
+        Type.Data    i name params   -> genType GenCls.Data    i GenData.ext    $ GenData.Data     (Just $ encodeP name) (encodeListP params)
         Type.Module  i path          -> genType GenCls.Module  i GenModule.ext  $ GenModule.Module   (encodeListP path)
         Type.Lambda  i inputs output -> genType GenCls.Lambda  i GenLambda.ext  $ GenLambda.Lambda   (encodeList inputs) (Just $ encode output)
         Type.Con     i segments      -> genType GenCls.Con_    i GenCon_.ext    $ GenCon_.Con_       (encodeListP segments)
@@ -62,10 +62,10 @@ instance Convert Type Gen.Type where
             GenCls.Tuple   -> do ext <- getExt GenTuple.ext
                                  (GenTuple.Tuple titems) <- ext <?> "Failed to decode Type.Tuple: extension is missing"
                                  Type.Tuple i <$> decodeList titems
-            GenCls.Class   -> do ext <- getExt GenClass.ext
-                                 (GenClass.Class mtname tparams) <- ext <?> "Failed to decode Type.Class: extension is missing"
-                                 tname <- mtname <?> "Failed to decode Type.Class: 'name' field is missing"
-                                 pure $ Type.Class i (decodeP tname) (decodeListP tparams)
+            GenCls.Data    -> do ext <- getExt GenData.ext
+                                 (GenData.Data mtname tparams) <- ext <?> "Failed to decode Type.Data: extension is missing"
+                                 tname <- mtname <?> "Failed to decode Type.Data: 'name' field is missing"
+                                 pure $ Type.Data i (decodeP tname) (decodeListP tparams)
             GenCls.Module  -> do ext <- getExt GenModule.ext
                                  (GenModule.Module tpath) <- ext <?> "Failed to decode Type.Module: extension is missing"
                                  pure $ Type.Module i (decodeListP tpath)
@@ -83,3 +83,4 @@ instance Convert Type Gen.Type where
         where getExt k = case Extensions.getExt k t of
                                 Right a -> return a
                                 Left m  -> fail m
+

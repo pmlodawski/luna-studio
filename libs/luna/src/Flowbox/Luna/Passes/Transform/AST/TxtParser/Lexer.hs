@@ -39,6 +39,7 @@ bracketL     = symbol  '['
 bracketR     = symbol  ']'
 braceL       = symbol  '{'
 braceR       = symbol  '}'
+pPipe        = symbol  '|'
 pAccessor    = symbol  '.'
 pArrow       = symbols "->"
 pTypeDecl    = symbols "::"
@@ -55,17 +56,15 @@ reservedOpNames = ["=", "::", ":", ".", "->", "<-"]
 -----------------------------------------------------------
 -- Keywords
 -----------------------------------------------------------
-reservedNames = ["def", "class", "interface", "from", "import", "as"]
+reservedNames = ["as", "case", "class", "def", "from", "interface", "import"]
 
--- entities
-pDef        = reserved "def"
-pClass      = reserved "class"
-pInterface  = reserved "interface"
-
--- imports
-pFrom       = reserved "from"
-pImport     = reserved "import"
 pAs         = reserved "as"
+pCase       = reserved "case"
+pClass      = reserved "class"
+pDef        = reserved "def"
+pFrom       = reserved "from"
+pInterface  = reserved "interface"
+pImport     = reserved "import"
 
 
 -----------------------------------------------------------

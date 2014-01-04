@@ -26,7 +26,6 @@ import qualified Generated.Proto.Expr.App                          as GenApp
 import qualified Generated.Proto.Expr.AppCons_                     as GenAppCons_
 import qualified Generated.Proto.Expr.Arg                          as GenArg
 import qualified Generated.Proto.Expr.Assignment                   as GenAssignment
-import qualified Generated.Proto.Expr.Class                        as GenClass
 import qualified Generated.Proto.Expr.Con_                         as GenCon_
 import qualified Generated.Proto.Expr.Expr                         as Gen
 import qualified Generated.Proto.Expr.Expr.Cls                     as GenCls
@@ -62,9 +61,6 @@ instance Convert Expr Gen.Expr where
                                       (encodeList args)
         Expr.Assignment i pat dst  -> genExpr GenCls.Assignment i GenAssignment.ext $ GenAssignment.Assignment
                                       (encodeJ pat) (encodeJ dst)
-        Expr.Class      i cls classes fields methods
-                                   -> genExpr GenCls.Class i GenClass.ext $ GenClass.Class
-                                      (encodeJ cls) (encodeList classes) (encodeList fields) (encodeList methods)
         Expr.Con        i name     -> genExpr GenCls.Con_ i GenCon_.ext $ GenCon_.Con_
                                       (encodePJ name)
         Expr.Function   i path name inputs output body
@@ -140,11 +136,6 @@ instance Convert Expr Gen.Expr where
                 tpat <- mtpat <?> "Failed to decode Expr.Assignment: 'pat' field is missing"
                 tdst <- mtdst <?> "Failed to decode Expr.Assignment: 'dst' field is missing"
                 Expr.Assignment i <$> decode tpat <*> decode tdst
-            GenCls.Class -> do
-                ext <- getExt GenClass.ext
-                (GenClass.Class mtcls tclasses tfields tmethods) <- ext <?> "Failed to decode Expr.Class: extension is missing"
-                tcls <- mtcls <?> "Failed to decode Expr.Class: 'cls' field is missing"
-                Expr.Class i <$> decode tcls <*> decodeList tclasses <*> decodeList tfields <*> decodeList tmethods
             GenCls.Con_ -> do
                 ext <- getExt GenCon_.ext
                 (GenCon_.Con_ mtname) <- ext <?> "Failed to decode Expr.Con: extension is missing"
@@ -245,3 +236,4 @@ instance Convert Expr Gen.Expr where
        where getExt k = case Extensions.getExt k t of
                                 Right a -> return a
                                 Left m  -> fail m
+
