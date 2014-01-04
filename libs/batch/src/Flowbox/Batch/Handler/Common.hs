@@ -195,23 +195,23 @@ graphOp :: Breadcrumbs
          -> (Batch -> Graph -> PropertyMap -> AST.ID -> IO ((Graph, PropertyMap), r))
          -> Batch
          -> IO (Batch, r)
-graphOp bc libID projectID operation = astOp libID projectID (\batch ast propertyMap -> Luna.runIO $ do
+graphOp bc libID projectID operation = astOp libID projectID (\batch ast propertyMap -> do
     zipper <- Zipper.focusBreadcrumbs' bc ast
     let focus = Zipper.getFocus zipper
     expr <- case focus of
         Focus.FunctionFocus expr -> return expr
         _                        -> fail "Breadcrumbs are not focusing on function."
-    va    <- VarAlias.runGather ast
-    maxID <- MaxID.run ast
+    va    <- Luna.runIO $ VarAlias.runGather ast
+    maxID <- Luna.runIO $ MaxID.run ast
 
-    (graph, pm) <- GraphBuilder.run va propertyMap expr
+    (graph, pm) <- Luna.runIO $ GraphBuilder.run va propertyMap expr
 
     ((newGraph, newPM), r) <- liftIO $ operation batch graph pm maxID
 
-    ast' <- GraphParser.run newGraph newPM expr
+    ast' <- Luna.runIO $ GraphParser.run newGraph newPM expr
 
-    newMaxID <- MaxID.runExpr ast'
-    fixedAst <- IDFixer.runExpr newMaxID False ast'
+    newMaxID <- Luna.runIO $ MaxID.runExpr ast'
+    fixedAst <- Luna.runIO $ IDFixer.runExpr newMaxID False ast'
 
     loggerIO debug $ show newGraph
     loggerIO debug $ show newPM

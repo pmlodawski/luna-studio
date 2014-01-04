@@ -76,9 +76,7 @@ message Assignment {
 message Data {
     extend Expr { optional Data ext = 105; }
     optional generated.proto.type.Type cls = 2;
-    repeated Expr  cls = 3;
     repeated Expr  cons  = 4;
-    repeated Expr  methods = 5;
 }
 
 message Con_ {
