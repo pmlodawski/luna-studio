@@ -27,6 +27,7 @@ import qualified Data.Array.Repa.Repr.Unboxed as R
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Monoid                  (Monoid, mempty)
+import qualified Data.Fixed                   as F
 
 import System.TimeIt (timeIt)
 
@@ -79,6 +80,114 @@ imgtest img = do
     RGBA.compose $ Image.reprWord8 lrgba
 
 
+
+-- convolution
+
+convolve3x3 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil3x3 a -> A.Exp a
+convolve3x3 kernel ((a,b,c),(d,e,f),(g,h,i))
+    = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i]
+
+-- ?!?!?!?!?!?!?!?!
+blurChannel :: String -> [A.Exp Float] -> (Image Float) -> Either Image.Error (Image Float)
+blurChannel cname kernel img = do
+    channel <- Image.lookup cname img
+    let outimg = Image.insert cname channel' img
+        channel' = Channel.Acc $ A.stencil (convolve3x3 kernel) A.Clamp (Channel.accMatrix channel)
+    return outimg
+
+
+
+-- brightness and contrast
+
+adjustCB :: A.Exp Float -> A.Exp Float -> String -> (Image Float) -> Either Image.Error (Image Float)
+adjustCB contrast brightness cname img = do
+    channel <- Image.lookup cname img
+    let outimg = Image.insert cname channel' img
+        channel' = Channel.Acc $ A.map adjust (Channel.accMatrix channel)
+        adjust x = contrast * x + brightness
+    return outimg
+
+contrast :: A.Exp Float -> String -> (Image Float) -> Either Image.Error (Image Float)
+contrast c = adjustCB c 0
+
+brightness :: A.Exp Float -> String -> (Image Float) -> Either Image.Error (Image Float)
+brightness b = adjustCB 1 b
+
+
+
+-- color conversion
+
+clipValues :: (Channel Float) -> (Channel Float)
+clipValues channel = Channel.Acc $ A.map (P.max 0 . P.min 1) $ Channel.accMatrix channel
+
+calculateHueFromRGB :: Exp Float -> Exp Float -> Exp Float -> Exp Float
+calculateHueFromRGB r g b = ((60 * (h - d / (maxRGB - minRGB))) `F.mod'` 360) / 360
+    where h      = if r == minRGB then 3 else (if b == minRGB then 1 else 5)
+          d      = if r == minRGB then g-b else (if b == minRGB then r-g else b-r)
+          minRGB = P.min r $ P.min g b
+          maxRGB = P.max r $ P.max g b
+
+calculateSaturationFromRGB :: Exp Float -> Exp Float -> Exp Float -> Exp Float
+calculateSaturationFromRGB r g b = (maxRGB - minRGB) / maxRGB
+    where maxRGB = P.max r $ P.max g b
+          minRGB = P.min r $ P.min g b
+
+calculateValueFromRGB :: Exp Float -> Exp Float -> Exp Float -> Exp Float
+calculateValueFromRGB r g b = P.max r $ P.max g b
+
+convertRGBtoHSV :: (Image Float) -> Either Image.Error (Image Float)
+convertRGBtoHSV img = do
+    r <- Image.lookup "red"   img
+    g <- Image.lookup "green" img
+    b <- Image.lookup "blue"  img
+    let outimg     = Image.insert "hue" hue
+                   $ Image.insert "saturation" saturation
+                   $ Image.insert "value" value
+                   $ img
+        hue        = Channel.Acc $ A.zipWith3 calculateHueFromRGB   r' g' b'
+        saturation = Channel.Acc $ A.zipWith3 calculateValueFromRGB r' g' b'
+        value      = Channel.Acc $ A.zipWith3 calculateValueFromRGB r' g' b'
+        r'         = Channel.accMatrix r
+        g'         = Channel.accMatrix g
+        b'         = Channel.accMatrix b
+    return outimg
+
+calculateRGBfromHSV :: Exp Float -> Exp Float -> Exp Float -> (Exp Float, Exp Float, Exp Float)
+calculateRGBfromHSV h s v = (r+m, g+m, b+m)
+    where (r, g, b) = case h' of
+                      z | 0   <= z && z < 60  -> (c, x, 0)
+                      z | 60  <= z && z < 120 -> (x, c, 0)
+                      z | 120 <= z && z < 180 -> (0, c, x)
+                      z | 180 <= z && z < 240 -> (0, x, c)
+                      z | 240 <= z && z < 300 -> (x, 0, c)
+                      z | 300 <= z && z < 360 -> (c, 0, x)
+          m  = v - c
+          x  = c * (1 - P.abs (((h' / 60) `F.mod'` 2) - 1))
+          c  = v * s
+          h' = (h `F.mod'` 1) * 360
+
+convertHSVtoRGB :: (Image Float) -> Either Image.Error (Image Float)
+convertHSVtoRGB img = do
+    h <- Image.lookup "hue" img
+    s <- Image.lookup "saturation" img
+    v <- Image.lookup "value" img
+    let outimg = Image.insert "red" red
+               $ Image.insert "green" green
+               $ Image.insert "blue" blue
+               $ img
+        red    = Channel.Acc $ A.zipWith3 calcR h' s' v'
+        green  = Channel.Acc $ A.zipWith3 calcG h' s' v'
+        blue   = Channel.Acc $ A.zipWith3 calcB h' s' v'
+        calcR  = (\a b c -> let (z, _, _) = calculateRGBfromHSV a b c in z)
+        calcG  = (\a b c -> let (_, z, _) = calculateRGBfromHSV a b c in z)
+        calcB  = (\a b c -> let (_, _, z) = calculateRGBfromHSV a b c in z)
+        h' = Channel.accMatrix h
+        s' = Channel.accMatrix s
+        v' = Channel.accMatrix v
+    return outimg
+
+
+-- main
 
 main :: IO ()
 main
