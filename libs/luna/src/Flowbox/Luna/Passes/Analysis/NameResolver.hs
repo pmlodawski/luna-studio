@@ -34,7 +34,6 @@ import           Flowbox.Prelude                         hiding (Zipper, element
 import           Flowbox.System.Log.Logger
 
 
-
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Analysis.NameResolver"
 
@@ -46,15 +45,16 @@ resolve name bc libID libManager = do
     zipper  <- Zipper.focusCrumb' (head bc) $ Library.ast $ library
     imports <- getImports zipper $ tail bc
     let elements = splitOn "." name
-        possiblePaths = mapMaybe (possiblePath elements) imports
-    return $ List.concat $ map (flip searchLibManager libManager) $ elements:possiblePaths
-
+        possiblePaths = elements
+                      : (currentScope bc ++ elements)
+                      : (mapMaybe (possiblePath elements) imports)
+    return $ List.concat $ map (flip searchLibManager libManager) possiblePaths
 
 getImports :: (Applicative m, Monad m) => Zipper -> Breadcrumbs -> m [Expr]
 getImports z@(Focus.ModuleFocus m, _) (h:t) = do newZ <- Zipper.focusCrumb h z
                                                  imports <- getImports newZ t
                                                  pure $ (m ^. Module.imports) ++ imports
-getImports _                              _ = pure []
+getImports _                           _    = pure []
 
 
 possiblePath :: [String] -> Expr -> Maybe [String]
@@ -65,6 +65,13 @@ possiblePath elements (Expr.Import _ path (Expr.Con _ name) rename) =
     where imported = case rename of
                         Nothing -> name
                         Just r  -> r
+
+
+currentScope :: Breadcrumbs -> [String]
+currentScope ((Crumb.ModuleCrumb   m):t) = m:(currentScope t)
+currentScope ((Crumb.ClassCrumb    c):t) = c:(currentScope t)
+currentScope ((Crumb.FunctionCrumb _):_) = []
+currentScope []                          = []
 
 
 searchLibManager :: [String] -> LibManager -> [(Breadcrumbs, Library.ID)]

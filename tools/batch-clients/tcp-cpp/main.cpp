@@ -369,6 +369,21 @@ int main()
 			macro::AST::AddFunction(controlSocket, functionBase, bc_Main, library.id(), project.id());
 		}
 		{
+			auto type = new type::Data;
+			type->set_name("A");
+			auto typeBase = new type::Type;
+			typeBase->set_cls(type::Type::Data);
+			typeBase->SetAllocatedExtension(type::Data::ext, type);
+			auto data = new expr::Data;
+			data->set_allocated_cls(typeBase);
+			data->mutable_cons();
+			expr::Expr dataBase;
+			dataBase.set_cls(expr::Expr::Data);
+			dataBase.SetAllocatedExtension(expr::Data::ext, data);
+			auto bc_Main = buildBreadcrumbs(crumbsMain);
+			macro::AST::AddClass(controlSocket, dataBase, bc_Main, library.id(), project.id());
+		}
+		{
 			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			macro::Graph::NodesGraph(controlSocket, bc_Main_test, library.id(), project.id());
 		}
@@ -427,12 +442,12 @@ int main()
 			macro::Graph::Connect(controlSocket, node45id, std::vector<int>{}, nodeAddid, std::vector<int>{1}, bc_Main_test, library.id(), project.id());
 		}
 		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
-			auto r = macro::AST::ResolveDefinition(controlSocket, "MyLib.Main", bc_Main_test, library.id(), project.id()).astptr();
+			auto bc_Main_test = buildBreadcrumbs(crumbsMain);
+			auto r = macro::AST::ResolveDefinition(controlSocket, "A", bc_Main_test, library.id(), project.id()).astptr();
 			std::cout << "Result size: " << r.size() << std::endl;
 			
 		}
-		// macro::Maintenance::Dump(controlSocket);
+		macro::Maintenance::Dump(controlSocket);
 
 		// macro::Library::BuildLibrary(controlSocket, library.id(), project.id());
 		macro::Library::StoreLibrary(controlSocket, library.id(), project.id());
