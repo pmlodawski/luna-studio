@@ -19,26 +19,29 @@ message Expr {
         App         = 3;
         AppCons_    = 4;
         Assignment  = 5;
-        Data       = 6;
-        Con_        = 7;
-        Function    = 8;
-        Lambda      = 9;
-        Import      = 10;
-        Infix       = 11;
-        List        = 12;
-        Lit         = 13;
-        Tuple       = 14;
-        Typed       = 15;
-        Var         = 16;
-        Wildcard    = 17;
+        Data        = 6;
+        ConD        = 7;
+        Con_        = 8;
+        Function    = 9;
+        Lambda      = 10;
+        Import      = 11;
+        Infix       = 12;
+        List        = 13;
+        Lit         = 14;
+        Tuple       = 15;
+        Typed       = 16;
+        Var         = 17;
+        Wildcard    = 18;
 
-        RangeFromTo = 18;
-        RangeFrom   = 19;
-        Field       = 20;
-        Arg         = 21;
-        Native      = 22;
-        NativeCode  = 23;
-        NativeVar   = 24;
+        RangeFromTo = 19;
+        RangeFrom   = 20;
+        Field       = 21;
+        Arg         = 22;
+        Native      = 23;
+        NativeCode  = 24;
+        NativeVar   = 25;
+        Case        = 26;
+        Match       = 27;
     }
     required Cls cls = 1;
     optional int32 id = 2 [default = -1];
@@ -52,92 +55,100 @@ message NOP {
 
 message Accessor {
     extend Expr { optional Accessor ext = 101; }
-    optional string name = 2;
-    optional Expr   dst  = 3;
+    optional string name = 1;
+    optional Expr   dst  = 2;
 }
 
 message App {
     extend Expr { optional App ext = 102; }
-    optional Expr  src  = 2;
-    repeated Expr  args = 3;
+    optional Expr  src  = 1;
+    repeated Expr  args = 2;
 }
 
 message AppCons_ {
     extend Expr { optional AppCons_ ext = 103; }
-    repeated Expr  args = 2;
+    repeated Expr  args = 1;
 }
 
 message Assignment {
     extend Expr { optional Assignment ext = 104; }
-    optional generated.proto.pat.Pat pat = 2;
-    optional Expr  dst = 3;
+    optional generated.proto.pat.Pat pat = 1;
+    optional Expr  dst = 2;
 }
 
 message Data {
     extend Expr { optional Data ext = 105; }
-    optional generated.proto.type.Type cls = 2;
-    repeated Expr  cons  = 4;
+    optional generated.proto.type.Type cls = 1;
+    repeated Expr  cons  = 2;
+}
+
+message ConD {
+    extend Expr { optional ConD ext = 126; }
+    optional string name = 1;
+    repeated generated.proto.expr.Expr classes = 2;
+    repeated generated.proto.expr.Expr fields  = 3;
+    repeated generated.proto.expr.Expr methods = 4;
 }
 
 message Con_ {
     extend Expr { optional Con_ ext = 106; }
-    optional string name = 2;
+    optional string name = 1;
 }
 
 message Function {
     extend Expr { optional Function ext = 107; }
-    repeated string path   = 2;
-    optional string name   = 3;
-    repeated Expr   inputs = 4;
-    optional generated.proto.type.Type output = 5;
-    repeated Expr   body   = 6;
+    repeated string path   = 1;
+    optional string name   = 2;
+    repeated Expr   inputs = 3;
+    optional generated.proto.type.Type output = 4;
+    repeated Expr   body   = 5;
 }
 
 message Lambda {
     extend Expr { optional Lambda ext = 108; }
-    repeated Expr   inputs = 2;
-    optional generated.proto.type.Type output = 3;
-    repeated Expr   body   = 4;
+    repeated Expr   inputs = 1;
+    optional generated.proto.type.Type output = 2;
+    repeated Expr   body   = 3;
 }
 
 message Import {
     extend Expr { optional Import ext = 109; }
-    repeated string path   = 2;
-    optional Expr   target = 3;
-    optional string rename = 4;
+    repeated string path   = 1;
+    optional Expr   target = 2;
+    optional string rename = 3;
 }
 
 message Infix {
     extend Expr { optional Infix ext = 110; }
-    optional string name = 2;
-    optional Expr   src  = 3;
-    optional Expr   dst  = 4;
+    optional string name = 1;
+    optional Expr   src  = 2;
+    optional Expr   dst  = 3;
 }
 
 message List {
     extend Expr { optional List ext = 111; }
-    repeated Expr  items = 2;
+    repeated Expr  items = 1;
 }
 
 message Lit {
     extend Expr { optional Lit ext = 112; }
-    optional generated.proto.lit.Lit  lvalue = 2;
+    optional generated.proto.lit.Lit  lvalue = 1;
 }
 
 message Tuple {
     extend Expr { optional Tuple ext = 113; }
-    repeated Expr  items = 2;
+    repeated Expr  items = 1;
 }
 
 message Typed {
     extend Expr { optional Typed ext = 114; }
-    optional generated.proto.type.Type  cls  = 2;
-    optional Expr  expr = 3;
+    optional generated.proto.type.Type cls  = 1;
+    optional Expr expr = 2;
 }
 
 message Var {
     extend Expr { optional Var ext = 115; }
-    optional string name = 2;
+    optional string name = 1;
 }
 
 message Wildcard {
@@ -146,39 +157,51 @@ message Wildcard {
 
 message RangeFromTo {
     extend Expr { optional RangeFromTo ext = 117; }
-    optional Expr  start = 2;
-    optional Expr  end   = 3;
+    optional Expr  start = 1;
+    optional Expr  end   = 2;
 }
 
 message RangeFrom {
     extend Expr { optional RangeFrom ext = 118; }
-    optional Expr  start = 2;
+    optional Expr  start = 1;
 }
 
 message Field {
     extend Expr { optional Field ext = 119; }
-    optional string name  = 2;
-    optional generated.proto.type.Type cls = 3;
-    optional Expr   value = 4;
+    optional string name  = 1;
+    optional generated.proto.type.Type cls = 2;
+    optional Expr   value = 3;
 }
 
 message Arg {
     extend Expr { optional Arg ext = 120; }
-    optional generated.proto.pat.Pat pat = 2;
-    optional Expr  value = 3;
+    optional generated.proto.pat.Pat pat = 1;
+    optional Expr  value = 2;
 }
 
 message Native {
     extend Expr { optional Native ext = 121; }
-    repeated Expr  segments = 2;
+    repeated Expr  segments = 1;
 }
 
 message NativeCode {
     extend Expr { optional NativeCode ext = 122; }
-    optional string code = 2;
+    optional string code = 1;
 }
 
 message NativeVar {
     extend Expr { optional NativeVar ext = 123; }
-    optional string name = 2;
+    optional string name = 1;
+}
+
+message Case {
+    extend Expr { optional Case ext = 124; }
+    optional generated.proto.expr.Expr expr  = 1;
+    repeated generated.proto.expr.Expr match = 2;
+}
+
+message Match {
+    extend Expr { optional Match ext = 125; }
+    optional generated.proto.pat.Pat   pat  = 1;
+    repeated generated.proto.expr.Expr body = 2;
 }

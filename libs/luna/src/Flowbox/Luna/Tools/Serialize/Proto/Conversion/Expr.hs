@@ -19,14 +19,17 @@ import           Flowbox.Luna.Data.AST.Expr                        (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import qualified Flowbox.Luna.Data.AST.Utils                       as AST
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Pat ()
-import           Flowbox.Prelude
+import           Flowbox.Prelude                                   hiding (cons)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Expr.Accessor                     as GenAccessor
 import qualified Generated.Proto.Expr.App                          as GenApp
 import qualified Generated.Proto.Expr.AppCons_                     as GenAppCons_
 import qualified Generated.Proto.Expr.Arg                          as GenArg
 import qualified Generated.Proto.Expr.Assignment                   as GenAssignment
+import qualified Generated.Proto.Expr.Case                         as GenCase
 import qualified Generated.Proto.Expr.Con_                         as GenCon_
+import qualified Generated.Proto.Expr.ConD                         as GenConD
+import qualified Generated.Proto.Expr.Data                         as GenData
 import qualified Generated.Proto.Expr.Expr                         as Gen
 import qualified Generated.Proto.Expr.Expr.Cls                     as GenCls
 import qualified Generated.Proto.Expr.Field                        as GenField
@@ -36,6 +39,7 @@ import qualified Generated.Proto.Expr.Infix                        as GenInfix
 import qualified Generated.Proto.Expr.Lambda                       as GenLambda
 import qualified Generated.Proto.Expr.List                         as GenList
 import qualified Generated.Proto.Expr.Lit                          as GenLit
+import qualified Generated.Proto.Expr.Match                        as GenMatch
 import qualified Generated.Proto.Expr.Native                       as GenNative
 import qualified Generated.Proto.Expr.NativeCode                   as GenNativeCode
 import qualified Generated.Proto.Expr.NativeVar                    as GenNativeVar
@@ -61,8 +65,13 @@ instance Convert Expr Gen.Expr where
                                       (encodeList args)
         Expr.Assignment i pat dst  -> genExpr GenCls.Assignment i GenAssignment.ext $ GenAssignment.Assignment
                                       (encodeJ pat) (encodeJ dst)
+        Expr.Data       i cls cons -> genExpr GenCls.Data i GenData.ext $ GenData.Data
+                                      (encodeJ cls) (encodeList cons)
         Expr.Con        i name     -> genExpr GenCls.Con_ i GenCon_.ext $ GenCon_.Con_
                                       (encodePJ name)
+        Expr.ConD       i name classes fields methods
+                                   -> genExpr GenCls.ConD i GenConD.ext $ GenConD.ConD
+                                      (encodePJ name) (encodeList classes) (encodeList fields) (encodeList methods)
         Expr.Function   i path name inputs output body
                                    -> genExpr GenCls.Function i GenFunction.ext $ GenFunction.Function
                                       (encodeListP path) (encodePJ name) (encodeList inputs) (encodeJ output) (encodeList body)
@@ -103,6 +112,10 @@ instance Convert Expr Gen.Expr where
                                       (encodePJ code)
         Expr.NativeVar  i name     -> genExpr GenCls.NativeVar i GenNativeVar.ext $ GenNativeVar.NativeVar
                                       (encodePJ name)
+        Expr.Case  i expr match    -> genExpr GenCls.Case i GenCase.ext $ GenCase.Case
+                                      (encodeJ expr) (encodeList match)
+        Expr.Match i pat body      -> genExpr GenCls.Match i GenMatch.ext $ GenMatch.Match
+                                      (encodeJ pat) (encodeList body)
         where
             genExpr :: GenCls.Cls -> AST.ID -> Extensions.Key Maybe Gen.Expr v -> v -> Gen.Expr
             genExpr cls i key ext = Extensions.putExt key (Just ext)
@@ -136,6 +149,16 @@ instance Convert Expr Gen.Expr where
                 tpat <- mtpat <?> "Failed to decode Expr.Assignment: 'pat' field is missing"
                 tdst <- mtdst <?> "Failed to decode Expr.Assignment: 'dst' field is missing"
                 Expr.Assignment i <$> decode tpat <*> decode tdst
+            GenCls.Data -> do
+                ext <- getExt GenData.ext
+                (GenData.Data mtcls tcons) <- ext <?> "Failed to decode Expr.Data: extension is missing"
+                tcls <- mtcls <?> "Failed to decode Expr.Data: 'name' field is missing"
+                Expr.Data i <$> decode tcls <*> decodeList tcons
+            GenCls.ConD -> do
+                ext <- getExt GenConD.ext
+                (GenConD.ConD mtname tclasses tfields tmethods) <- ext <?> "Failed to decode Expr.ConD: extension is missing"
+                tname <- mtname <?> "Failed to decode Expr.ConD: 'name' field is missing"
+                Expr.ConD i (decodeP tname) <$> decodeList tclasses <*> decodeList tfields <*> decodeList tmethods
             GenCls.Con_ -> do
                 ext <- getExt GenCon_.ext
                 (GenCon_.Con_ mtname) <- ext <?> "Failed to decode Expr.Con: extension is missing"
@@ -233,6 +256,16 @@ instance Convert Expr Gen.Expr where
                 (GenNativeVar.NativeVar mtname) <- ext <?> "Failed to decode Expr.NativeVar: extension is missing"
                 tname <- mtname <?> "Failed to decode Expr.NativeVar: 'name' field is missing"
                 pure $ Expr.NativeVar i (decodeP tname)
+            GenCls.Case -> do
+                ext <- getExt GenCase.ext
+                (GenCase.Case mtexpr tmatch) <- ext <?> "Failed to decode Expr.Case: extension is missing"
+                texpr <- mtexpr <?> "Failed to decode Expr.Case: 'expr' field is missing"
+                Expr.Case i <$> decode texpr <*> decodeList tmatch
+            GenCls.Match -> do
+                ext <- getExt GenMatch.ext
+                (GenMatch.Match mtpat tbody) <- ext <?> "Failed to decode Expr.Match: extension is missing"
+                tpat <- mtpat <?> "Failed to decode Expr.Match: 'pat' field is missing"
+                Expr.Match i <$> decode tpat <*> decodeList tbody
        where getExt k = case Extensions.getExt k t of
                                 Right a -> return a
                                 Left m  -> fail m
