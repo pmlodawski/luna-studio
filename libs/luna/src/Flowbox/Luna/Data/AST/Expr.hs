@@ -16,9 +16,10 @@ import           Control.Applicative
 import           Flowbox.Generics.Deriving.QShow
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
 import qualified Flowbox.Luna.Data.AST.Pat       as Pat
+import qualified Flowbox.Luna.Data.AST.Type      as Type
 import           Flowbox.Luna.Data.AST.Type      (Type)
 import           Flowbox.Luna.Data.AST.Utils     (ID)
-import           Flowbox.Prelude                 hiding (Accessor, Traversal, drop, id)
+import           Flowbox.Prelude                 hiding (Accessor, Traversal, drop, id, cons)
 import           GHC.Generics                    (Generic)
 
 
@@ -33,8 +34,8 @@ data Expr  = NOP         { _id :: ID                                            
            | App         { _id :: ID, _src       :: Expr     , _args      :: [Expr]                                             }
            | AppCons_    { _id :: ID, _args      :: [Expr]                                                                      }
            | Assignment  { _id :: ID, _pat       :: Pat      , _dst       :: Expr                                               }
-           | Data        { _id :: ID, _cls       :: Type     , _cons      :: [Expr]                                             }
-           | ConD        { _id :: ID, _name      :: String   , _classes   :: [Expr] , _fields    :: [Expr] , _methods :: [Expr] }
+           | Data        { _id :: ID, _cls       :: Type     , _cons      :: [Expr] , _classes   :: [Expr] , _methods :: [Expr] }
+           | ConD        { _id :: ID, _name      :: String   , _fields    :: [Expr]                                             }
            | Con         { _id :: ID, _name      :: String                                                                      }
            | Function    { _id :: ID, _path      :: [String] , _name      :: String , _inputs    :: [Expr] , _output  :: Type   , _body    :: [Expr] }
            | Lambda      { _id :: ID, _inputs    :: [Expr]   , _output    :: Type   , _body      :: [Expr]                      }
@@ -81,9 +82,26 @@ addMethod method e = e & methods %~ (method:)
 addField :: Expr -> Expr -> Expr
 addField field e = e & fields %~ (field:)
 
+addFieldDC :: Expr -> Expr -> Expr
+addFieldDC field e = e & cons .~ addField field defc : cons' where
+    defc:cons' = e ^. cons
+
+
+afterData :: Expr -> Expr
+afterData d = nd where
+    dcons = d ^. cons
+    defc  = last dcons
+    ncons = if length dcons == 1
+                then [defc & name .~ (nd ^. (cls. Type.name))]
+                else init dcons
+    nd = d & cons .~ ncons
+
 
 addClass :: Expr -> Expr -> Expr
 addClass ncls e = e & classes %~ (ncls:)
+
+addCon :: Expr -> Expr -> Expr
+addCon ncon e = e & cons %~ (ncon:)
 
 
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
@@ -91,8 +109,8 @@ traverseM fexp ftype fpat flit e = case e of
     Accessor    id' name' dst'                      -> Accessor    id' name' <$> fexp dst'
     App         id' src' args'                      -> App         id'       <$> fexp src'  <*> fexpMap args'
     Assignment  id' pat' dst'                       -> Assignment  id'       <$> fpat pat'  <*> fexp dst'
-    Data        id' cls' cons'                      -> Data        id'       <$> ftype cls' <*> fexpMap cons'
-    ConD        id' name' classes' fields' methods' -> ConD        id' name' <$> fexpMap classes' <*> fexpMap fields' <*> fexpMap methods'
+    Data        id' cls' cons' classes' methods'    -> Data        id'       <$> ftype cls' <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
+    ConD        id' name' fields'                   -> ConD        id' name' <$> fexpMap fields'
     Con         {}                                  -> pure e
     Field       id' name' cls' value'               -> Field       id' name' <$> ftype cls' <*> fexpMap value'
     Function    id' path' name' inputs' output'     
@@ -124,8 +142,8 @@ traverseM_ fexp ftype fpat flit e = case e of
     Accessor    _  _ dst'                           -> drop <* fexp dst'
     App         _  src' args'                       -> drop <* fexp src'  <* fexpMap args'
     Assignment  _  pat' dst'                        -> drop <* fpat pat'  <* fexp dst'
-    Data        _ cls' cons'                        -> drop <* ftype cls' <* fexpMap cons'
-    ConD        _ _ classes' fields' methods'       -> drop <* fexpMap classes' <* fexpMap fields' <* fexpMap methods'
+    Data        _ cls' cons'  classes' methods'     -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
+    ConD        _ _ fields'                         -> drop <* fexpMap fields'
     Con         {}                                  -> drop
     Field       _ _ cls' value'                     -> drop <* ftype cls' <* fexpMap value'
     Function    _ _ _ inputs' output' body'         -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'

@@ -14,5 +14,5 @@ import           Flowbox.Luna.Data.AST.Type  (Type)
 import           Flowbox.Luna.Data.AST.Utils (ID)
 
 
---mk :: ID -> Type -> Expr
---mk id cls = Expr.Data id cls [] [] []
+mk :: ID -> Type -> Expr -> Expr
+mk id cls con = Expr.Data id cls [con] [] []

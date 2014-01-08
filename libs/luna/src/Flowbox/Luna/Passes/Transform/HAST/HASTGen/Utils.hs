@@ -48,7 +48,7 @@ mkConsName   = ("_" ++)
 mkLamName :: String -> String
 mkLamName    = ("Lambda_" ++)
 
-mangleName cname fname = cname ++ fname
+mangleName cname fName = cname ++ fName
 
 --mkTName      = (++ "_T")
 mkTName i name = mkGetNName i ++ "_" ++ name ++ "_T"
@@ -70,16 +70,16 @@ genTHInst  = genTH "mkInst"
 thRegisterCon name argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerCon") vars where
                             vars = [HExpr.Var $ mkTHVarName name, HExpr.Lit $ HLit.Int (show argNum), HExpr.ListE []]
 
-thRegisterFunction clsName fname name argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerFunction") vars where
-                            vars = [ HExpr.Var $ mkTHTypeName clsName
-                                   , HExpr.Var $ mkTHVarName  fname
+thRegisterFunction fName clsName name argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerFunctionST") vars where
+                            vars = [ HExpr.Var $ mkTHVarName  fName
+                                   , HExpr.Var $ mkTHTypeName clsName
                                    , HExpr.Lit $ HLit.String name 
                                    , HExpr.Lit $ HLit.Int (show argNum)
                                    , HExpr.ListE []
                                    ]
 
-thRegisterLambda fname argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerLambda") vars where
-                            vars = [ HExpr.Var $ mkTHVarName  fname
+thRegisterLambda fName argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerLambda") vars where
+                            vars = [ HExpr.Var $ mkTHVarName  fName
                                    , HExpr.Lit $ HLit.Int (show argNum)
                                    , HExpr.ListE []
                                    ]
@@ -88,6 +88,14 @@ thClsCallInsts name argNum defNum = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "m
                             vars = [HExpr.Var $ mkTHVarName name, HExpr.Lit $ HLit.Int (show argNum), HExpr.Lit $ HLit.Int (show defNum)]
 
 
+thFuncCallInsts name argNum defNum = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "mkFuncCallInsts") vars where
+                            vars = [HExpr.Var $ mkTHVarName name, HExpr.Lit $ HLit.Int (show argNum), HExpr.Lit $ HLit.Int (show defNum)]
+
+
+thSelfTyped fName clsName = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "mkSelfTyped") vars where
+                            vars = [ HExpr.Var $ mkTHVarName  fName
+                                   , HExpr.Var $ mkTHTypeName clsName
+                                   ]
 
 thGenerateClsGetters name = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "generateClsGetters") vars where
                             vars = [ HExpr.Var $ mkTHTypeName name ]

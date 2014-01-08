@@ -109,31 +109,36 @@ pLambda          = tok Expr.Lambda  <*> pArgListL pArg
                                     <?> "lambda definition"
 
 
-pData            = do L.pClass
-                      name  <- pCon                 <?> "class name"
-                      tvars <- many L.pIdentTypeVar <?> "class parameters"
-                      cls   <- tok Type.Data <*> pure name <*> pure tvars
-                      cons  <- try(pPipeBlockBegin pConD) <|> ((:[]) <$> pConDN name)
-                      tok Expr.Data <*> pure cls <*> pure cons
-
---pData            = tok Expr.Data    <*  L.pClass
---                                    <*> (tok Type.Data  <*> (pCon                 <?> "class name")
---                                                        <*> (many L.pIdentTypeVar <?> "class parameters"))
---                                    <*> (pPipeBlockBegin pConD <|> (pConDN)
---                                    -- <??$> pDotBlockBegin pDataBody
---                                    <?> "class definition"
+--pData            = do L.pClass
+--                      name  <- pCon                 <?> "class name"
+--                      tvars <- many L.pIdentTypeVar <?> "class parameters"
+--                      cls   <- tok Type.Data <*> pure name <*> pure tvars
+--                      pDotBlockBegin pDataBody'
+--                      --cons  <- try(pPipeBlockBegin pConD) <|> ((:[]) <$> pConDN name)
+--                      tok Expr.Data <*> pure cls <*> pure cons
 
 
-pConDN      name = tok (\i -> Expr.ConD i name [] [] [])
-                                    <??$> pDotBlockBegin pDataBody
-                                    <?> "data constructor definition"
+pData            = Expr.afterData <$> pDataT
+
+pDataT           = tok Data.mk    <*  L.pClass
+                                  <*> (tok Type.Data  <*> (pCon                 <?> "class name")
+                                                      <*> (many L.pIdentTypeVar <?> "class parameters"))
+                                  <*> (tok Expr.ConD <*> pure "default" <*> pure [] ) -- default constructor
+                                  <??$> pDotBlockBegin pDataBody
+                                  <?> "class definition"
+
+
+--pConDN      name = tok (\i -> Expr.ConD i name [] [] [])
+--                                    <??$> pDotBlockBegin pDataBody
+--                                    <?> "data constructor definition"
 
 pConD            = tok Expr.ConD    <*> pCon
                                     <*> pure []
-                                    <*> pure []
-                                    <*> pure []
-                                    <??$> pDotBlockBegin pDataBody
+                                    <??$> pDotBlockBegin pConDBody
                                     <?> "data constructor definition"
+
+
+pConDBody        = pCombine Expr.addField pFields
 
 
 pModule name     = tok Module.mk    <*>   (tok Type.Module <*> pure name)
@@ -142,9 +147,10 @@ pModule name     = tok Module.mk    <*>   (tok Type.Module <*> pure name)
 
 
 pDataBody       = choice [ Expr.addMethod <$> pFunc
-                          , pCombine Expr.addField pFields
-                          , Expr.addClass  <$> pData
-                          ]
+                         , pCombine Expr.addFieldDC pFields
+                         , Expr.addClass  <$> pData
+                         , Expr.addCon    <$> pConD
+                         ]
                 <?> "class body"
 
 pModuleBody      = choice [ Module.addMethod <$> pFunc
@@ -168,7 +174,7 @@ pField         =   tok Expr.Field
 mkField t val name id = Expr.Field id name t val
 
 pFields        =   (\names t val -> map (tok . (mkField t val)) names )
-               <$> (sepBy1 L.pIdent L.separator)
+               <$> (sepBy1 L.pIdentVar L.separator)
                <*  L.pTypeDecl
                <*> pType
                <*> (L.pAssignment *> (Just <$> pExpr) <|> pure Nothing)
@@ -191,37 +197,67 @@ pNativeElem = choice [ pNativeVar
 pNativeVar  = tok Expr.NativeCode <*> many1 (noneOf "`#")
 pNativeCode = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol '}'
 
-pExpr       = pExprT (pEntBaseConsE pEntBaseExE)
+pExpr       = pExprT pEntBaseE
 
-pExprSimple = pExprT (pEntBaseConsE pEntBaseE)
+pExprSimple = pExprT pEntBaseSimpleE
 
-pExprT base =   try (tok Expr.Assignment <*> pPattern <* (L.reservedOp "=") <*> pOpE base)
-            <|> pOpE base
+pExprT base =   (try (tok Expr.Assignment <*> pPattern <* (L.reservedOp "=")) <*> pOpTE base)
+            <|> pOpTE base
             <?> "expression"
 
-pOpE base = Expr.aftermatch <$> PExpr.buildExpressionParser optableE (pDotTermE base)
-          
-pDotTermE base = (base) <??> (flip applyAll <$> many1 (tok Expr.Accessor <* L.pAccessor <*> pVar))
 
+pOpE       = pOpTE pEntBaseE
+pOpTE base = Expr.aftermatch <$> PExpr.buildExpressionParser optableE (pTermE base)
+          
+pTermE base = base <??> (flip applyAll <$> many1 (try $ pTermBaseE base))
+
+
+pTermBaseE p = choice [ pDotTermE
+                      , pCallTermE p
+                      ]
+
+pDotTermE    = tok Expr.Accessor <* L.pAccessor <*> pVar
+pCallTermE p = pLastLexemeEmpty *> ((flip <$> tok Expr.App) <*> pCallList p)
+
+pLastLexeme = view ParseState.lastLexeme <$> getState
+
+pLastLexemeEmpty = do
+    llex <- pLastLexeme
+    case llex of
+        [] -> return ()
+        _  -> parserFail "not empty"
+
+--pXXX base = do
+--    res <- base
+--    st  <- getState
+--    return 
+--       $ trace "-----------"
+--       $ trace ("base: " ++ show res)
+--       $ trace ("state: " ++ show st)
+--       $ res
 
 pCaseE     = tok Expr.Case <* L.pCase <*> pExprSimple <*> (pDotBlockBegin pCaseBodyE <|> return [])
 pCaseBodyE = tok Expr.Match <*> pPattern <*> pExprBlock
 
 
-pEntBaseConsE base = choice [ try $ L.parensed (pExprT base)
-                            , base
-                            ]
 
-pEntBaseExE = choice[ pDeclaration
-                    , pEntBaseE
-                    ]
-           <?> "expression term"
+pEntBaseE       = pEntConsE pEntComplexE
+pEntBaseSimpleE = pEntConsE pEntBaseSimpleE
 
-pEntBaseE = choice[ try $ pCaseE
+pEntConsE base = choice [ try $ L.parensed (pExprT base)
+                        , base
+                        ]
+
+pEntComplexE = choice[ pDeclaration
+                     , pEntSimpleE
+                     ]
+             <?> "expression term"
+
+pEntSimpleE = choice[ try $ pCaseE
                   , try $ L.parensed pExpr
                   , pIdentE
                   , tok Expr.Lit    <*> pLit
-                  , tok Expr.Tuple  <*> pTuple  pExpr
+                  , tok Expr.Tuple  <*> pTuple  pOpE
                   , tok Expr.List   <*> pList   pListExpr
                   , tok Expr.Native <*> pNative
                   ]
@@ -250,9 +286,9 @@ pIdentE = choice [ pVarE
                  , pConE
                  ]
 
-pListExpr = choice [ try $ tok Expr.RangeFromTo <*> pExpr <* L.pRange <*> pExpr
-                   , try $ tok Expr.RangeFrom   <*> pExpr <* L.pRange
-                   , pExpr 
+pListExpr = choice [ try $ tok Expr.RangeFromTo <*> pOpE <* L.pRange <*> pOpE
+                   , try $ tok Expr.RangeFrom   <*> pOpE <* L.pRange
+                   , pOpE 
                    ]
 
 pExprBlock  = pDotBlockBegin pExpr
@@ -368,7 +404,10 @@ pExprTemp = do
 
 
 pProgram :: [String] -> ParsecT String ParseState.ParseState (State SourcePos) Module.Module
-pProgram mod = spaces *> pModule mod <* (spaces <?> "") <* eof
+pProgram mod = do
+    out <- (spaces *> pModule mod <* (spaces <?> "") <* eof)
+    s <- getParserState
+    return $ trace (show $ stateInput s) out
 
 pResult mod = (\ast st -> (ast, view ParseState.sourceMap st)) <$> pProgram mod <*> getState
     --ast <- pProgram

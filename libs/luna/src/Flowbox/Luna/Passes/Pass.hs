@@ -35,6 +35,7 @@ data Info = Info { name :: String
                  } deriving (Show)
 
 
+
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Pass"
 

@@ -17,8 +17,11 @@ import Flowbox.Prelude     hiding (op)
 import Text.Parsec         hiding (many, optional, (<|>), getPosition)
 
 
-import Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-import Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token(Token))
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token(Token))
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
+
+import Debug.Trace
 
 
 identLetter  = alphaNum
@@ -253,7 +256,7 @@ reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("e
 
 pIdentVar     = pIdentLower <?> "variable identifier"
 pIdentType    = pIdentUpper <?> "type identifier"
-pIdentTypeVar = pIdentLower <?> "identifier"
+pIdentTypeVar = pIdentLower <?> "identifier variable identifier"
 
 pIdent        = pIdentLower <|> pIdentUpper <?> "identifier"
 
@@ -278,7 +281,12 @@ isReservedName name = isReserved (sort reservedNames) name
 -----------------------------------------------------------
 -- White space & symbols
 -----------------------------------------------------------
-lexeme p    = p <* skipMany pSpaces1
+lexeme p    = do
+  res <- p
+  spaces <- pSpaces
+  state  <- getState
+  putState (state & ParseState.lastLexeme .~ spaces)
+  return $ (trace $ "lexeme >> " ++ show res) res
 --lexeme2 s p = p <* if s then skipMany pSpaces1 else return ()
 
 symbols    name = try $ lexeme (string name)
@@ -290,7 +298,7 @@ pSpace      = satisfy (`elem` "\t\f\v ") <?> ""
 --pSpace      = satisfy (isSpace) <?> "" 
 pSpacesBase = many1 pSpace <|> try(multiLineComment) <|> oneLineComment <?> ""
 pSpaces1    = many1 pSpacesBase <?> ""
-pSpaces     = many  pSpacesBase <?> ""
+pSpaces     = concat <$> many  pSpacesBase <?> ""
 
 
 oneLineComment   = try (string commentLine) *> many (satisfy (/= '\n'))

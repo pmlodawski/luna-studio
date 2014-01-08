@@ -149,9 +149,12 @@ typeMethodSelf cls inputs = nargs
 
 
 --genCon :: GenMonad m => LExpr -> Pass.Result m (HExpr, m0())
-genCon (LExpr.ConD _ name _ fields methods) = do
+genCon (LExpr.ConD _ name fields) = do
+    let fieldlen = length fields
     expr  <- HExpr.Con name <$> mapM genExpr fields
-    let th = GenState.addTHExpression $ thRegisterCon name (length fields) [] 
+    let th =  GenState.addTHExpression (thRegisterCon name fieldlen [])
+           *> GenState.addTHExpression (thClsCallInsts name fieldlen 0)
+           -- *> GenState.addTHExpression (thGenerateClsGetters name)
     return (expr, th)
 
 
@@ -159,7 +162,7 @@ genExpr :: LExpr -> GenPass HExpr
 genExpr ast = case ast of
     LExpr.Var      _ name                -> pure $ HExpr.Var $ mkVarName name
     LExpr.Con      _ name                -> pure $ HExpr.Var ("con" ++ mkConsName name)
-    LExpr.Function _ path name  
+    LExpr.Function _ path name   
                      inputs output body  -> do
                                             cls <- GenState.getCls
                                             let 
@@ -180,6 +183,7 @@ genExpr ast = case ast of
                                                 cgetName   = mkCGetName  argNum
                                                 getNName   = mkTName argNum mname
                                                 fname      = mkFuncName mname
+
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
 
@@ -204,8 +208,9 @@ genExpr ast = case ast of
                                             
                                             ---- TH snippets
                                             --GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
-                                            GenState.addTHExpression $ thRegisterFunction clsName fname name argNum [] 
-                                            GenState.addTHExpression $ thClsCallInsts fname argNum 0
+                                            GenState.addTHExpression $ thSelfTyped fname clsName
+                                            GenState.addTHExpression $ thRegisterFunction fname clsName name argNum [] 
+                                            GenState.addTHExpression $ thFuncCallInsts fname argNum 0
 
                                             return f
 
@@ -250,7 +255,7 @@ genExpr ast = case ast of
                                             
                                             return $ HExpr.Import False (["FlowboxM", "Libs"] ++ path ++ [tname]) Nothing where
                      
-    LExpr.Data _ cls cons               -> do 
+    LExpr.Data _ cls cons classes methods -> do 
                                            let name        = view LType.name   cls
                                                params      = view LType.params cls
                                                --fieldNames  = map (view LExpr.name) fields
@@ -303,12 +308,12 @@ genExpr ast = case ast of
           
                                            --GenState.addTHExpression $ thRegisterClass name fieldlen [] 
                                            --GenState.addTHExpression $ thClsCallInsts name fieldlen 0
-                                           --GenState.addTHExpression $ thGenerateClsGetters name
-                                           --GenState.addTHExpression $ thRegisterClsGetters name
-                                           --GenState.addTHExpression $ thCallInstsGetters name
+                                           GenState.addTHExpression $ thGenerateClsGetters name
+                                           GenState.addTHExpression $ thRegisterClsGetters name
+                                           GenState.addTHExpression $ thCallInstsGetters name
          
             
-                                           --mapM_ genExpr methods
+                                           mapM_ genExpr methods
            
                                                        
                                            return dt
@@ -394,8 +399,10 @@ genTyped cls t = case t of
 
 genType :: LType -> GenPass HExpr
 genType t = case t of
-    LType.Var     _ name     -> return $ HExpr.Var (name)
-    LType.Con     _ segments -> return $ HExpr.AppT (HExpr.ConT "Pure") ( HExpr.AppT (HExpr.ConT "Safe") (HExpr.ConE segments))
+    LType.Var     _ name      -> return $ HExpr.Var (name)
+    LType.Con     id segments -> return $ HExpr.AppT (HExpr.VarT $ "Pure") -- it has to be pure, otherwise we get very strange type checker error
+                                        $ HExpr.AppT (HExpr.VarT $ "s_" ++ show id) 
+                                        $ HExpr.ConE segments
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType items
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
     LType.Unknown _          -> logger critical "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"
