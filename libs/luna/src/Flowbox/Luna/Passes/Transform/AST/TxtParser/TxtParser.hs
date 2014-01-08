@@ -5,24 +5,24 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TupleSections             #-}
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser where
 
-import qualified Flowbox.Luna.Passes.Pass                           as Pass
-import           Flowbox.Luna.Passes.Pass                             (Pass)
-import           Flowbox.Luna.Data.Source                             (Source)
-import           Flowbox.Luna.Data.AST.Module                         (Module)
-import           Flowbox.System.Log.Logger                            
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
+import           Flowbox.Luna.Data.AST.Module                       (Module)
 import           Flowbox.Luna.Data.Pass.SourceMap                   (SourceMap)
+import           Flowbox.Luna.Data.Source                           (Source)
+import           Flowbox.Luna.Passes.Pass                           (Pass)
+import qualified Flowbox.Luna.Passes.Pass                           as Pass
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
+import           Flowbox.System.Log.Logger
 
-import           Control.Monad.State                                  
-import           Flowbox.Prelude                                    hiding (error)
+import Control.Monad.State
+import Flowbox.Prelude     hiding (error)
 
 
 logger :: Logger

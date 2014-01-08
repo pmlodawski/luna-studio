@@ -5,24 +5,24 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types                #-}
 
 module Flowbox.Luna.Passes.Source.File.Writer where
 
-import           Control.Monad.RWS                    
-import qualified System.IO                          as IO
+import           Control.Monad.RWS
+import qualified System.IO         as IO
 
-import           Flowbox.Prelude                    hiding (error, id)
-import           Flowbox.Luna.Data.Source             (Source(Source))
+import           Flowbox.Luna.Data.Source           (Source (Source))
+import           Flowbox.Luna.Passes.Pass           (Pass)
 import qualified Flowbox.Luna.Passes.Pass           as Pass
-import           Flowbox.Luna.Passes.Pass             (Pass)
+import           Flowbox.Prelude                    hiding (error, id)
 import qualified Flowbox.System.Directory.Directory as Directory
-import           Flowbox.System.Log.Logger            
+import           Flowbox.System.Log.Logger
+import           Flowbox.System.UniPath             (UniPath)
 import qualified Flowbox.System.UniPath             as UniPath
-import           Flowbox.System.UniPath               (UniPath)
 
 
 

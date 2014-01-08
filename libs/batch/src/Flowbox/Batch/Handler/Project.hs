@@ -16,57 +16,59 @@ module Flowbox.Batch.Handler.Project (
     storeProject,
 ) where
 
-import           Flowbox.Batch.Batch                         (Batch (..))
-import           Flowbox.Batch.Handler.Common                (noresult, projectOp, projectOp', readonly, readonly')
-import           Flowbox.Batch.Project.Project               (Project (..))
+import           Flowbox.Batch.Batch                         (Batch)
+import qualified Flowbox.Batch.Batch                         as Batch
+import           Flowbox.Batch.Handler.Common                (noresult, projectOp, readonly)
+import           Flowbox.Batch.Project.Project               (Project)
 import qualified Flowbox.Batch.Project.Project               as Project
 import qualified Flowbox.Batch.Project.ProjectManager        as ProjectManager
 import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerialization
+import           Flowbox.Luna.Data.Attributes                (Attributes)
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath                      (UniPath)
 
 
-
 projects :: Batch -> [(Project.ID, Project)]
-projects batch = ProjectManager.labNodes (projectManager batch)
+projects batch = ProjectManager.labNodes (Batch.projectManager batch)
 
 
-projectByID :: Project.ID -> Batch -> Either String Project
+projectByID :: (Applicative m, Monad m) => Project.ID -> Batch -> m Project
 projectByID projectID = readonly . projectOp projectID (\_ project -> do
     return (project, project))
 
 
-createProject :: Project -> Batch -> (Batch, (Project.ID, Project))
-createProject project batch = (newBatch, (projectID, project)) where
-    pm                 = projectManager batch
+createProject :: String -> UniPath -> Attributes -> Batch -> (Batch, (Project.ID, Project))
+createProject name path attributes batch = (newBatch, (projectID, project)) where
+    project            = Project.make name path attributes
+    pm                 = Batch.projectManager batch
     (newpm, projectID) = ProjectManager.insNewNode project pm
-    newBatch           = batch { projectManager = newpm }
+    newBatch           = batch { Batch.projectManager = newpm }
 
 
 openProject :: UniPath -> Batch -> IO (Batch, (Project.ID, Project))
 openProject ppath batch = do
-    let aprojectManager = projectManager batch
+    let aprojectManager = Batch.projectManager batch
     (newProjectManager, newP) <- ProjectManager.openProject aprojectManager ppath
-    let newBatch = batch {projectManager = newProjectManager}
+    let newBatch = batch {Batch.projectManager = newProjectManager}
     return (newBatch, newP)
 
 
-updateProject :: (Project.ID, Project) -> Batch -> Either String Batch
+updateProject :: (Applicative m, Monad m) => (Project.ID, Project) -> Batch -> m Batch
 updateProject (projectID, project) = noresult . projectOp projectID (\_ oldProject -> do
-    let plibs = Project.libs oldProject
-        newProject = project { Project.libs = plibs }
+    let libs = Project.libs oldProject
+        newProject = project { Project.libs = libs }
     return (newProject, ()))
 
 
 closeProject :: Project.ID -> Batch -> Batch
 closeProject projectID batch = newBatch where
-    aprojectManager   = projectManager batch
-    newProjectManager = ProjectManager.delNode projectID aprojectManager
-    newBatch          = batch {projectManager = newProjectManager}
+    projectManager    = Batch.projectManager batch
+    newProjectManager = ProjectManager.delNode projectID projectManager
+    newBatch          = batch {Batch.projectManager = newProjectManager}
 
 
 storeProject :: Project.ID -> Batch -> IO ()
-storeProject projectID = readonly' . projectOp' projectID (\_ project -> do
+storeProject projectID = readonly . projectOp projectID (\_ project -> do
     ProjectSerialization.storeProject project
     return (project, ()))
 

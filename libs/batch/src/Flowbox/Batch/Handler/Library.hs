@@ -17,29 +17,29 @@ module Flowbox.Batch.Handler.Library (
     runLibrary,
 ) where
 
-import qualified Data.Maybe   as Maybe
-import           Data.Version (Version (Version))
+--import qualified Data.Maybe   as Maybe
+--import           Data.Version (Version (Version))
 
-import           Flowbox.Batch.Batch                        (Batch)
-import qualified Flowbox.Batch.Batch                        as Batch
-import           Flowbox.Batch.Handler.Common               (libManagerOp, libManagerOp', libraryOp, libraryOp', noresult, readonly, readonly')
-import qualified Flowbox.Batch.Project.Project              as Project
-import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
-import qualified Flowbox.Luna.Lib.LibManager                as LibManager
-import           Flowbox.Luna.Lib.Library                   (Library)
-import qualified Flowbox.Luna.Lib.Library                   as Library
-import qualified Flowbox.Luna.Passes.Build.Build            as Build
-import           Flowbox.Luna.Passes.Build.BuildConfig      (BuildConfig (BuildConfig))
-import qualified Flowbox.Luna.Passes.Build.BuildConfig      as BuildConfig
-import qualified Flowbox.Luna.Passes.Build.Diagnostics      as Diagnostics
-import qualified Flowbox.Luna.Passes.General.Luna.Luna      as Luna
+import           Flowbox.Batch.Batch                  (Batch)
+import qualified Flowbox.Batch.Batch                  as Batch
+import           Flowbox.Batch.Handler.Common         (libManagerOp, libraryOp, noresult, readonly)
+import qualified Flowbox.Batch.Project.Project        as Project
+import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
+import qualified Flowbox.Luna.Lib.LibManager          as LibManager
+import           Flowbox.Luna.Lib.Library             (Library)
+import qualified Flowbox.Luna.Lib.Library             as Library
+--import qualified Flowbox.Luna.Passes.Build.Build            as Build
+--import           Flowbox.Luna.Passes.Build.BuildConfig      (BuildConfig (BuildConfig))
+--import qualified Flowbox.Luna.Passes.Build.BuildConfig      as BuildConfig
+--import qualified Flowbox.Luna.Passes.Build.Diagnostics      as Diagnostics
+--import qualified Flowbox.Luna.Passes.General.Luna.Luna      as Luna
 import qualified Flowbox.Luna.Tools.Serialize.Proto.Library as LibSerialization
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform                    as Platform
 import qualified Flowbox.System.Process                     as Process
 import           Flowbox.System.UniPath                     (UniPath)
-import qualified Flowbox.System.UniPath                     as UniPath
+--import qualified Flowbox.System.UniPath                     as UniPath
 
 
 
@@ -47,18 +47,17 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Handler.Library"
 
 
-libraries :: Project.ID -> Batch -> Either String [(Library.ID, Library)]
+libraries :: (Applicative m, Monad m) => Project.ID -> Batch -> m [(Library.ID, Library)]
 libraries projectID = readonly . libManagerOp projectID (\_ libManager ->
-    let r = LibManager.labNodes libManager
-    in Right (libManager, r))
+    return (libManager, LibManager.labNodes libManager))
 
 
-libraryByID :: Library.ID -> Project.ID -> Batch -> Either String Library
+libraryByID :: (Applicative m, Monad m) => Library.ID -> Project.ID -> Batch -> m Library
 libraryByID libID projectID = readonly . libraryOp libID projectID (\_ library -> do
     return (library, library))
 
 
-createLibrary :: String -> UniPath -> Project.ID -> Batch -> Either String (Batch, (Library.ID, Library))
+createLibrary :: (Applicative m, Monad m) => String -> UniPath -> Project.ID -> Batch -> m (Batch, (Library.ID, Library))
 createLibrary name path projectID = libManagerOp projectID (\_ libManager -> do
     let library                = Library.make name path [name]
         (newLibManager, libID) = LibManager.insNewNode library libManager
@@ -66,26 +65,24 @@ createLibrary name path projectID = libManagerOp projectID (\_ libManager -> do
 
 
 loadLibrary :: UniPath -> Project.ID -> Batch -> IO (Batch, (Library.ID, Library))
-loadLibrary path projectID = libManagerOp' projectID (\_ libManager -> do
-    r <- LibManager.loadLibrary path libManager
-    return r)
+loadLibrary path projectID = libManagerOp projectID (\_ libManager -> do
+    LibManager.loadLibrary path libManager)
 
 
-unloadLibrary :: Library.ID -> Project.ID -> Batch -> Either String Batch
+unloadLibrary :: (Applicative m, Monad m) => Library.ID -> Project.ID -> Batch -> m Batch
 unloadLibrary libID projectID = noresult . libManagerOp projectID (\_ libManager ->
-    let newLibManager = LibManager.delNode libID libManager
-    in Right (newLibManager, ()))
+    return (LibManager.delNode libID libManager, ()))
 
 
 storeLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-storeLibrary libID projectID = readonly' . libraryOp' libID projectID (\_ library -> do
+storeLibrary libID projectID = readonly . libraryOp libID projectID (\_ library -> do
     LibSerialization.storeLibrary library
     return (library, ()))
 
 
 -- TODO [PM] : More remote arguments needed
 buildLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch library -> do
+buildLibrary libID projectID = readonly . libraryOp libID projectID (\batch library -> do
     loggerIO critical "Not implemented - buildLibrary"
     --let projManager = Batch.projectManager batch
     --    (Just proj) = ProjectManager.lab projManager projectID
@@ -114,7 +111,7 @@ buildLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch li
 
 -- TODO [PM] : Needs architecture change
 runLibrary ::  Library.ID -> Project.ID -> Batch -> IO String
-runLibrary libID projectID = readonly' . libraryOp' libID projectID (\batch library -> do
+runLibrary libID projectID = readonly . libraryOp libID projectID (\batch library -> do
     let projManager = Batch.projectManager batch
         (Just proj) = ProjectManager.lab projManager projectID
         projectPath = Project.path proj

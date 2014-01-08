@@ -4,27 +4,30 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, TupleSections #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TupleSections             #-}
 
 module Flowbox.Luna.Passes.Pass where
 
-import           Control.Monad.State        hiding (fail)
-import           Control.Monad.RWS          hiding (fail)
-import           Control.Monad.Trans.Either  
-import           Control.Monad.Reader
- 
+import Control.Monad.Reader
+import Control.Monad.RWS          hiding (fail)
+import Control.Monad.State        hiding (fail)
+import Control.Monad.Trans.Either
 
-import           Flowbox.System.Log.Logger    
-import qualified Flowbox.System.Log.Logger  as Logger
-import           Flowbox.Prelude            hiding (error, fail)
-  
+
+import           Flowbox.Prelude           hiding (error, fail)
+import           Flowbox.System.Log.Logger
+import qualified Flowbox.System.Log.Logger as Logger
+
 
 --type PassError              = String
 
 --type PassMonad    s m       = (Functor m, MonadRWS Info LogList s m)
 --type PassMonadIO  s m       = (Functor m, MonadRWS Info LogList s m, MonadIO m)
---type Transformer  s b       = EitherT PassError (RWS Info LogList s) b 
+--type Transformer  s b       = EitherT PassError (RWS Info LogList s) b
 --type TransformerT s a m b   = EitherT a (RWST Info LogList s m) b
 --type Result       m output  = ResultT m output
 --type ResultT      m         = EitherT PassError m
@@ -72,6 +75,14 @@ runHoist env state pass = hoistEither =<< run env state pass
 
 runHoist_ :: Monad m => env -> state -> ESRT err env state (EitherT err m) result -> EitherT err m result
 runHoist_ env state pass = fst <$> runHoist env state pass
+
+-- Please do not use unless you really have to
+runIO :: Show err => env -> state -> ESRT err env state IO result -> IO (result, state)
+runIO env state pass = either2M =<< run env state pass
+
+-- Please do not use unless you really have to
+runIO_ :: Show err => env -> state -> ESRT err env state IO result -> IO result
+runIO_ env state pass = fst <$> runIO env state pass
 
 
 fail = left
@@ -133,7 +144,7 @@ fail = left
 --                  Left  e  -> Left e
 --                  Right r  -> Right (r, state')
 --    Logger.append logs'
---    hoistEither out 
+--    hoistEither out
 
 
 --logPassExec :: LogWriter m => Info -> m ()

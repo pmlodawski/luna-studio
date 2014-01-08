@@ -92,7 +92,7 @@ dirOf path = init path
 
 toPathItem :: String -> PathItem
 toPathItem snode = case snode of
-        "/"  -> Root "/"
+        "/"  -> Root ""
         ".." -> Up
         "."  -> Current
         ""   -> Empty

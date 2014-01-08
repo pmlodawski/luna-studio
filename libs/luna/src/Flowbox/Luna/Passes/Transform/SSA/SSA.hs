@@ -4,31 +4,29 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types                #-}
 
 module Flowbox.Luna.Passes.Transform.SSA.SSA where
 
-import qualified Flowbox.Luna.Data.AST.Module    as Module
-import           Flowbox.Luna.Data.AST.Module      (Module)
-import qualified Flowbox.Luna.Data.AST.Expr      as Expr
-import qualified Flowbox.Luna.Data.AST.Pat       as Pat
-import           Flowbox.Luna.Data.AST.Pat         (Pat)
-import qualified Flowbox.Luna.Data.AliasAnalysis as AA
-import           Flowbox.Luna.Data.AliasAnalysis   (AA)
-import qualified Flowbox.Luna.Passes.Pass        as Pass
-import           Flowbox.Luna.Passes.Pass          (Pass)
-import qualified Data.IntMap                     as IntMap
+import           Control.Applicative
+import           Control.Monad.State
+import qualified Data.IntMap         as IntMap
 
-import           Control.Monad.State               
-import           Control.Applicative               
+import           Flowbox.Luna.Data.Analysis.Alias.Alias (AA)
+import qualified Flowbox.Luna.Data.Analysis.Alias.Alias as AA
+import qualified Flowbox.Luna.Data.AST.Expr             as Expr
+import           Flowbox.Luna.Data.AST.Module           (Module)
+import qualified Flowbox.Luna.Data.AST.Module           as Module
+import           Flowbox.Luna.Data.AST.Pat              (Pat)
+import qualified Flowbox.Luna.Data.AST.Pat              as Pat
+import           Flowbox.Luna.Passes.Pass               (Pass)
+import qualified Flowbox.Luna.Passes.Pass               as Pass
+import           Flowbox.Prelude                        hiding (error, id, mod)
+import           Flowbox.System.Log.Logger
 
-import           Flowbox.System.Log.Logger         
-
-import           Flowbox.Prelude                 hiding (error, id, mod)
 
 
 logger :: LoggerIO
@@ -44,7 +42,6 @@ mkVar id = "v_" ++ show id
 
 run :: AA -> Module -> Pass.Result Module
 run vs = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . (ssaModule vs)
---run vs = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . (ssaModule vs)
 
 
 ssaModule :: AA -> Module -> SSAPass Module

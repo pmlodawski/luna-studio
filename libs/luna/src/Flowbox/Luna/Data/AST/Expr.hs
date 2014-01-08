@@ -113,10 +113,10 @@ traverseM fexp ftype fpat flit e = case e of
     ConD        id' name' fields'                   -> ConD        id' name' <$> fexpMap fields'
     Con         {}                                  -> pure e
     Field       id' name' cls' value'               -> Field       id' name' <$> ftype cls' <*> fexpMap value'
-    Function    id' path' name' inputs' output'     
+    Function    id' path' name' inputs' output'
                 body'                               -> Function    id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Lambda      id' inputs' output' body'           -> Lambda      id'             <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
-    Import      {}                                  -> pure e
+    Import      id' path' target' rename'           -> Import      id' path' <$> fexp target'  <*> pure rename'
     Infix       id' name' src' dst'                 -> Infix       id' name' <$> fexp src'     <*> fexp dst'
     List        id' items'                          -> List        id'       <$> fexpMap items'
     Lit         id' val'                            -> Lit         id'       <$> flit val'
@@ -148,7 +148,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     Field       _ _ cls' value'                     -> drop <* ftype cls' <* fexpMap value'
     Function    _ _ _ inputs' output' body'         -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
     Lambda      _ inputs' output' body'             -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
-    Import      {}                                  -> drop
+    Import      _ _ target' _                       -> drop <* fexp target'
     Infix       _  _ src' dst'                      -> drop <* fexp src'     <* fexp dst'
     List        _  items'                           -> drop <* fexpMap items'
     Lit         _  val'                             -> drop <* flit val'

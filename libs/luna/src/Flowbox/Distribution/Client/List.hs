@@ -14,14 +14,14 @@ import qualified Data.Map             as Map
 import           Data.String          (fromString)
 import           System.IO            (stdout)
 
+import qualified Data.ByteString.Char8                        as Char8
 import qualified Flowbox.Config.Config                        as Config
 import           Flowbox.Distribution.Package.PackageFamily   (PackageFamily)
 import qualified Flowbox.Distribution.Package.PackageFamily   as PackageFamily
 import qualified Flowbox.Distribution.Package.PackageIndex    as PackageIndex
-import           Flowbox.Prelude                              hiding(index, simple)
+import           Flowbox.Prelude                              hiding (index, simple)
 import qualified Flowbox.System.Console.StyledText.StyledText as StyledText
-import qualified Text.Doc.Markup as Markup
-import qualified Data.ByteString.Char8 as Char8
+import qualified Text.Doc.Markup                              as Markup
 
 list :: Bool -> [String] -> IO ()
 list simple pats = do

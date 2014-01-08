@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Luna.Data.Graph.Flags where
 
@@ -11,7 +12,13 @@ import Flowbox.Prelude
 
 
 
-data Flags = Flags {io :: Bool, omit :: Bool } deriving (Show)
+data Flags = Flags { _io   :: Bool
+                   , _omit :: Bool
+                   } deriving (Show, Read)
+
+
+makeLenses (''Flags)
+
 
 empty :: Flags
 empty = Flags False False

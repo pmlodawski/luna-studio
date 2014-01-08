@@ -9,6 +9,7 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 import           Control.Applicative
+import           Control.Lens               hiding (Zipper)
 import           Control.Monad.RWS          hiding (join)
 import           Control.Monad.State        hiding (join)
 import           Control.Monad.Trans.Either
@@ -17,36 +18,47 @@ import           Control.Monad.Writer       hiding (join)
 import qualified Data.DList                 as DList
 import           Data.Either.Utils          (forceEither)
 import           Data.String.Utils          (join)
+import           Data.Version               (Version (Version))
 import           Debug.Trace
 import           System.TimeIt
 
-import           Data.Version                                          (Version (Version))
-import qualified Flowbox.Luna.Data.AST.Expr                            as LExpr
-import qualified Flowbox.Luna.Data.Cabal.Config                        as Config
-import qualified Flowbox.Luna.Data.Cabal.Section                       as Section
-import qualified Flowbox.Luna.Data.HAST.Expr                           as HExpr
-import qualified Flowbox.Luna.Data.HAST.Module                         as Module
-import           Flowbox.Luna.Data.Source                              (Source)
-import qualified Flowbox.Luna.Data.Source                              as Source
-import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPool
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
-import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
-import qualified Flowbox.Luna.Passes.General.Luna.Luna                 as Luna
-import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
-import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
-import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
+import qualified Flowbox.Distribution.M                                    as DistMain
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                         as ASTCrumb
+import qualified Flowbox.Luna.Data.AST.Expr                                as LExpr
+import qualified Flowbox.Luna.Data.AST.Module                              as FModule
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus                        as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                       as Zipper
+import qualified Flowbox.Luna.Data.Cabal.Config                            as Config
+import qualified Flowbox.Luna.Data.Cabal.Section                           as Section
+import qualified Flowbox.Luna.Data.GraphView.GraphView                     as GraphView
+import qualified Flowbox.Luna.Data.HAST.Expr                               as HExpr
+import qualified Flowbox.Luna.Data.HAST.Module                             as Module
+import qualified Flowbox.Luna.Data.PropertyMap                             as PropertyMap
+import           Flowbox.Luna.Data.Source                                  (Source)
+import qualified Flowbox.Luna.Data.Source                                  as Source
+import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool            as FuncPool
+import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                     as MaxID
+import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
+import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
+import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
+import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser        as Parser
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
+import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
+import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as GraphParser
+import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
+import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
+import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
+import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
 import           Flowbox.Prelude
-import qualified Flowbox.System.Log.LogEntry                           as LogEntry
+import qualified Flowbox.System.Log.LogEntry                               as LogEntry
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.Log.Logger                             as Logger
-import qualified Flowbox.System.UniPath                                as UniPath
-import           Flowbox.Text.Show.Hs                                  (hsShow)
-import qualified Flowbox.Text.Show.Pretty                              as PP
-import qualified Flowbox.Luna.Data.AST.Module                          as FModule
+import qualified Flowbox.System.Log.Logger                                 as Logger
+import qualified Flowbox.System.UniPath                                    as UniPath
+import           Flowbox.Text.Show.Hs                                      (hsShow)
+import qualified Flowbox.Text.Show.Pretty                                  as PP
 
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb as ASTCrumb
-import qualified Flowbox.Luna.Data.AST.Zipper      as Zipper
 
 import Control.Lens hiding (Zipper)
 
@@ -232,6 +244,10 @@ main = do
         Right _ -> return ()
         Left  e -> putStrLn e
 
+    --out <- timeIt main_graph
+    --case out of
+    --    Right _ -> return ()
+    --    Left  e -> putStrLn e
 
 
 
@@ -278,6 +294,57 @@ main_inner = Luna.run $ do
     logger info "\n-------- HSC --------"
     hsc <- hoistEither =<< HSC.run  hast
     logger info $ join "\n\n" (map printSrc hsc)
+
+
+    return ()
+
+
+main_graph :: IO (Either String ())
+main_graph = Luna.run $ do
+    let source  = example
+        emptyPM = PropertyMap.empty
+
+    logger info "\n-------- TxtParser --------"
+    (ast, _) <- hoistEither =<< TxtParser.run source
+    logger info $ PP.ppqShow ast
+
+    logger info "\n-------- VarAlias --------"
+    va <- hoistEither =<< VarAlias.runGather ast
+    logger info $ PP.ppShow va
+
+    (Focus.FunctionFocus expr) <- Zipper.mk ast
+                              >>= Zipper.focusFunction "test"
+                              >>= return . Zipper.getFocus
+
+    logger info $ PP.ppShow expr
+    (graph, pm) <- hoistEither =<< GraphBuilder.run va emptyPM expr
+    let graphView = GraphView.fromGraph graph
+        (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graphView pm
+    logger warning $ show graph
+    logger warning $ PP.ppShow pm
+    --logger info $ show graphWithDefaults
+    let (newGraphView, newPM) = Defaults.removeDefaults graphWithDefaults pmWithDefaults
+    newGraph <- GraphView.toGraph newGraphView
+    --logger warning $ show newGraph
+    expr' <- hoistEither =<< GraphParser.run newGraph newPM expr
+    logger info $ PP.ppShow expr'
+    logger warning $ PP.ppShow newPM
+
+    --logger info "\n-------- FuncPool --------"
+    --fp <- FuncPool.run ast
+    --logger info $ PP.ppShow fp
+
+    --logger info "\n-------- SSA --------"
+    --ssa <- SSA.run va ast
+    ----logger info $ PP.ppqShow ssa
+
+    --logger info "\n-------- HASTGen --------"
+    --hast <- HASTGen.run ssa fp
+    --logger info $ PP.ppShow hast
+
+    --logger info "\n-------- HSC --------"
+    --hsc <- HSC.run  hast
+    --logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()

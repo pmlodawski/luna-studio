@@ -8,12 +8,23 @@
 package generated.proto.library;
 
 import "module.proto";
+import "attributes.proto";
 
 
 
 message Library {
-	optional int32  id   = 1;
-	optional string name = 2;
-	optional string path = 3;
+    optional int32  id   = 1;
+    optional string name = 2;
+    optional string path = 3;
     optional generated.proto.module.Module ast = 4;
+    optional PropertyMap propertyMap = 5;
+
+    message PropertyMap {
+    	repeated KeyValue items = 1;
+
+    	message KeyValue {
+    		required int32 astID = 1;
+    		required generated.proto.attributes.Properties properties = 2;
+    	}
+    }
 }

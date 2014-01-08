@@ -5,27 +5,27 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types                #-}
 
 module Flowbox.Luna.Passes.Source.File.Reader where
 
-import           Control.Applicative         
-import           Control.Monad.RWS           
-import qualified System.IO                 as IO
+import           Control.Applicative
+import           Control.Monad.RWS
+import qualified System.IO           as IO
 
-import           Flowbox.Prelude           hiding (error, id)
-import           Flowbox.Luna.Data.Source    (Source(Source))
-import qualified Flowbox.System.UniPath    as UniPath
-import           Flowbox.System.UniPath      (UniPath)
-import           Data.String.Utils           (replace)
+import           Data.String.Utils        (replace)
+import           Flowbox.Luna.Data.Source (Source (Source))
+import           Flowbox.Prelude          hiding (error, id)
+import           Flowbox.System.UniPath   (UniPath)
+import qualified Flowbox.System.UniPath   as UniPath
 
-import qualified Flowbox.Luna.Passes.Pass  as Pass
-import           Flowbox.Luna.Passes.Pass    (Pass)
+import           Flowbox.Luna.Passes.Pass (Pass)
+import qualified Flowbox.Luna.Passes.Pass as Pass
 
-import           Flowbox.System.Log.Logger   
+import Flowbox.System.Log.Logger
 
 
 type FRPass result = Pass Pass.NoState result

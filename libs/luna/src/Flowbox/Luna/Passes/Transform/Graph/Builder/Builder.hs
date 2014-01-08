@@ -4,37 +4,35 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-
+{-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types       #-}
 
 module Flowbox.Luna.Passes.Transform.Graph.Builder.Builder where
 
-import           Control.Applicative                                 
-import           Control.Monad.State                                 
-import qualified Data.Map                                          as Map
-import           Data.Map                                            (Map)
+import           Control.Applicative
+import           Control.Monad.State
+import qualified Data.List           as List
 
-import           Flowbox.Prelude                                   hiding (error, mapM_)
-import           Flowbox.Luna.Data.AliasAnalysis                     (AA)
-import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
+import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap      (GeneralVarMap)
 import           Flowbox.Luna.Data.AST.Expr                          (Expr)
-import           Flowbox.Luna.Data.AST.Module                        (Module)
-import qualified Flowbox.Luna.Data.AST.Pat                         as Pat
+import qualified Flowbox.Luna.Data.AST.Expr                          as Expr
+import qualified Flowbox.Luna.Data.AST.Lit                           as Lit
 import           Flowbox.Luna.Data.AST.Pat                           (Pat)
-import qualified Flowbox.Luna.Data.AST.Utils                       as AST
+import qualified Flowbox.Luna.Data.AST.Pat                           as Pat
+import qualified Flowbox.Luna.Data.AST.Utils                         as AST
 import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                     as Graph
-import qualified Flowbox.Luna.Data.Graph.Node                      as Node
-import           Flowbox.Luna.Data.Graph.Node                        (Node)
-import           Flowbox.Luna.Data.Graph.Port                        (Port)
-import qualified Flowbox.Luna.Passes.Pass                          as Pass
+import qualified Flowbox.Luna.Data.Graph.Graph                       as Graph
+import qualified Flowbox.Luna.Data.Graph.Node                        as Node
+import qualified Flowbox.Luna.Data.Graph.Port                        as Port
+import           Flowbox.Luna.Data.PropertyMap                       (PropertyMap)
 import           Flowbox.Luna.Passes.Pass                            (Pass)
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State as State
+import qualified Flowbox.Luna.Passes.Pass                            as Pass
 import           Flowbox.Luna.Passes.Transform.Graph.Builder.State   (GBState)
-import           Flowbox.System.Log.Logger                           
+import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.State   as State
+import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
+import           Flowbox.Prelude                                     hiding (error, mapM, mapM_)
+import           Flowbox.System.Log.Logger
 
 
 
@@ -45,16 +43,24 @@ logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
 type GBPass result = Pass GBState result
 
 
-run :: AA -> Expr -> Pass.Result Graph
-run aa = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make aa) . expr2graph
-         
+run ::  GeneralVarMap -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
+run gvm pm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make gvm pm) . expr2graph
 
-expr2graph :: Expr -> GBPass Graph
+
+expr2graph :: Expr -> GBPass (Graph, PropertyMap)
 expr2graph expr = case expr of
-    Expr.Function i path name inputs output body -> do parseArgs inputs
-                                                       Expr.traverseM_ buildExpr pure pure pure expr
-                                                       State.getGraph 
-    _                                            -> Pass.fail "expr2graph: Unsupported Expr type"
+    Expr.Function _ _ _ _      _ []   -> do finalize
+    Expr.Function _ _ _ inputs _ body -> do parseArgs inputs
+                                            mapM_ (buildNode False Nothing) $ init body
+                                            buildOutput $ last body
+                                            finalize
+    _                                 -> fail "expr2graph: Unsupported Expr type"
+
+
+finalize :: GBPass (Graph, PropertyMap)
+finalize = do g <- State.getGraph
+              pm <- State.getPropertyMap
+              return (g, pm)
 
 
 parseArgs :: [Expr] -> GBPass ()
@@ -63,26 +69,104 @@ parseArgs inputs = do
     mapM_ parseArg numberedInputs
 
 
-parseArg :: (Expr, Port) -> GBPass ()
+parseArg :: (Expr, Int) -> GBPass ()
 parseArg (input, no) = case input of
-    Expr.Arg i _ _ -> State.addToMap i (Graph.inputsID, no)
-    _              -> Pass.fail "parseArg: Wrong Expr type"
+    Expr.Arg _ pat _ -> do [p] <- buildPat pat
+                           State.addToNodeMap p (Graph.inputsID, Port.Num no)
+    _                -> fail "parseArg: Wrong Expr type"
 
 
-buildExpr :: Expr -> GBPass Node.ID
-buildExpr expr = case expr of
-    Expr.Accessor   i name dst -> State.insNewNode $ Node.Expr name (Just expr) undefined undefined
-    Expr.Assignment i pat dst  -> undefined
-    Expr.App        i src args -> undefined
-    
+buildOutput :: Expr -> GBPass ()
+buildOutput expr = case expr of
+    Expr.Assignment {} -> return ()
+    Expr.Tuple _ items -> do itemIDs <- mapM (buildNode True Nothing) items
+                             let numberedItemsIDs = zip [0..] itemIDs
+                             mapM_ (\(no, argID) -> State.connect argID Graph.outputID no) numberedItemsIDs
+    _                  -> do i <- buildNode True Nothing expr
+                             State.connect i Graph.outputID 0
 
-buildPat :: Pat -> GBPass Node.ID
-buildPat pat = case pat of
-    Pat.Var      i name     -> undefined
-    Pat.Lit      i value    -> undefined
-    Pat.Tuple    i items    -> undefined
-    Pat.Con      i name     -> undefined
-    Pat.App      i src args -> undefined
-    Pat.Typed    i pat cls  -> undefined
-    Pat.Wildcard i          -> undefined
-    
+
+buildNode :: Bool -> Maybe String -> Expr -> GBPass AST.ID
+buildNode astFolded outName expr = case expr of
+    Expr.Accessor   i name dst -> do dstID  <- buildNode True Nothing dst
+                                     let node = Node.Expr name (genName name i)
+                                     State.addNode i Port.All node astFolded noAssignment
+                                     State.connect dstID i 0
+                                     return i
+    Expr.Assignment i pat dst  -> do let patStr = Pat.lunaShow pat
+                                     if isRealPat pat
+                                         then do patIDs <- buildPat pat
+                                                 let node = Node.Expr ('=': patStr) (genName "pattern" i)
+                                                 State.insNode (i, node) astFolded noAssignment
+                                                 case patIDs of
+                                                    [patID] -> State.addToNodeMap patID (i, Port.All)
+                                                    _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (i, Port.Num n)) $ zip [0..] patIDs
+                                                 dstID <- buildNode True Nothing dst
+                                                 State.connect dstID i 0
+                                                 return dummyValue
+                                         else do [p] <- buildPat pat
+                                                 j <- buildNode False (Just patStr) dst
+                                                 State.addToNodeMap p (j, Port.All)
+                                                 return dummyValue
+    Expr.App        _ src args -> do srcID       <- buildNode (astFolded || False) Nothing src
+                                     (srcNID, _) <- State.gvmNodeMapLookUp srcID
+                                     argIDs      <- mapM (buildNode True Nothing) args
+                                     let numberedArgIDs = zip [1..] argIDs
+                                     mapM_ (\(no, argID) -> State.connect argID srcNID no) numberedArgIDs
+                                     return srcID
+    Expr.Infix  i name src dst -> do srcID    <- buildNode True Nothing src
+                                     dstID    <- buildNode True Nothing dst
+                                     let node = Node.Expr name (genName name i)
+                                     State.addNode i Port.All node astFolded noAssignment
+                                     State.connect srcID i 0
+                                     State.connect dstID i 1
+                                     return i
+    Expr.Var        i name     -> if astFolded
+                                     then return i
+                                     else do let node = Node.Expr name (genName name i)
+                                             State.addNode i Port.All node astFolded noAssignment
+                                             return i
+    Expr.Con        i name     -> do let node = Node.Expr name (genName name i)
+                                     State.addNode i Port.All node astFolded noAssignment
+                                     return i
+    Expr.Lit        i lvalue   -> do let litStr = Lit.lunaShow lvalue
+                                         node = Node.Expr litStr (genName litStr i)
+                                     State.addNode i Port.All node astFolded noAssignment
+                                     return i
+    Expr.Tuple      i items    -> do let node = Node.Expr "Tuple" (genName "tuple" i)
+                                     State.addNode i Port.All node astFolded noAssignment
+                                     itemIDs <- mapM (buildNode True Nothing) items
+                                     let numberedItemsIDs = zip [0..] itemIDs
+                                     mapM_ (\(no, argID) -> State.connect argID i no) numberedItemsIDs
+                                     return i
+    where
+        genName base num = case outName of
+            Nothing   -> OutputName.generate base num
+            Just name -> name
+
+        noAssignment = case outName of
+            Nothing -> True
+            Just _  -> False
+
+
+isRealPat :: Pat -> Bool
+isRealPat p = case p of
+    Pat.Var {}-> False
+    _         -> True
+
+
+buildPat :: Pat -> GBPass [AST.ID]
+buildPat p = case p of
+    Pat.Var      i _      -> return [i]
+    Pat.Lit      i _      -> return [i]
+    Pat.Tuple    _ items  -> List.concat <$> mapM buildPat items
+    Pat.Con      i _      -> return [i]
+    Pat.App      _ _ args -> List.concat <$> mapM buildPat args
+    Pat.Typed    _ pat _  -> buildPat pat
+    Pat.Wildcard i        -> return [i]
+
+
+-- REMOVE ME --
+dummyValue :: Int
+dummyValue = (-1)
+--------------

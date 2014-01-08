@@ -397,24 +397,31 @@ postfixM name fun       = PExpr.Postfix (L.reservedOp name *>        fun)
 -- Program
 -----------------------------------------------------------
 
-pExprTemp = do
-    out <- pExpr <* many(L.eol <* L.pSpaces) <* eof
-    id  <- getState
-    return (out, id)
+--pProgram mod = Expr.Module (Expr.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof)
+--                                           <|> pSegmentBegin pExpr 0 <* many(L.eol <* L.pSpaces) <* eof)
+
+pProgEnd = (spaces <?> "") <* eof
+
+pProgWithState p  = (,) <$> (p <* pProgEnd) <*> getState
+
+parseExpr    = parseGen (pProgWithState pExpr)
+parsePattern = parseGen (pProgWithState pPattern)
+parseType    = parseGen (pProgWithState pType)
 
 
 pProgram :: [String] -> ParsecT String ParseState.ParseState (State SourcePos) Module.Module
-pProgram mod = do
-    out <- (spaces *> pModule mod <* (spaces <?> "") <* eof)
-    s <- getParserState
-    return $ trace (show $ stateInput s) out
+pProgram mod = spaces *> pModule mod <* pProgEnd
+
 
 pResult mod = (\ast st -> (ast, view ParseState.sourceMap st)) <$> pProgram mod <*> getState
-    --ast <- pProgram
-    --st  <- getState
-    --return (ast, view ParseState.sourceMap st)
 
-parse (Source.Source mod code) = fst $ flip runState (initialPos "") $ runParserT (pResult mod) def "Luna Parser" code
+
+parse (Source.Source mod code) = parseGen (pResult mod) code def
+
+
+parseGen p src startID = fst $ flip runState (initialPos "") $ runParserT p startID "Luna Parser" src
+
+
 
 
 
