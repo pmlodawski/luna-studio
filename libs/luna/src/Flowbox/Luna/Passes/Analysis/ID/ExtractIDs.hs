@@ -16,7 +16,7 @@ import           Flowbox.Luna.Data.AST.Zipper.Focus       (Focus)
 import           Flowbox.Luna.Passes.Analysis.ID.State    (IDState)
 import qualified Flowbox.Luna.Passes.Analysis.ID.State    as State
 import qualified Flowbox.Luna.Passes.Analysis.ID.Traverse as IDTraverse
-import           Flowbox.Luna.Passes.Pass                 (Pass, PassT)
+import           Flowbox.Luna.Passes.Pass                 (Pass)
 import qualified Flowbox.Luna.Passes.Pass                 as Pass
 import           Flowbox.Prelude                          hiding (mapM, mapM_)
 import           Flowbox.System.Log.Logger

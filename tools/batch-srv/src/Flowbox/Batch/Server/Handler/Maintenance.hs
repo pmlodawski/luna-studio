@@ -15,8 +15,8 @@ import           Control.Concurrent.MVar (MVar)
 import qualified Control.Concurrent.MVar as MVar
 import qualified Data.ByteString.Lazy    as ByteString
 import           Data.IORef              (IORef)
+import qualified Data.IORef              as IORef
 
-import qualified Data.IORef                                          as IORef
 import           Flowbox.Batch.Batch                                 (Batch)
 import qualified Flowbox.Batch.Handler.Maintenance                   as BatchM
 import           Flowbox.Prelude

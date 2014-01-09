@@ -13,6 +13,7 @@ module Flowbox.Luna.Passes.Transform.Graph.Builder.Builder where
 import           Control.Applicative
 import           Control.Monad.State
 import qualified Data.List           as List
+import qualified Data.Maybe          as Maybe
 
 import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap      (GeneralVarMap)
 import           Flowbox.Luna.Data.AST.Expr                          (Expr)
@@ -24,6 +25,7 @@ import qualified Flowbox.Luna.Data.AST.Utils                         as AST
 import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
 import qualified Flowbox.Luna.Data.Graph.Graph                       as Graph
 import qualified Flowbox.Luna.Data.Graph.Node                        as Node
+import           Flowbox.Luna.Data.Graph.Port                        (InPort)
 import qualified Flowbox.Luna.Data.Graph.Port                        as Port
 import           Flowbox.Luna.Data.PropertyMap                       (PropertyMap)
 import           Flowbox.Luna.Passes.Pass                            (Pass)
@@ -79,19 +81,15 @@ parseArg (input, no) = case input of
 buildOutput :: Expr -> GBPass ()
 buildOutput expr = case expr of
     Expr.Assignment {} -> return ()
-    Expr.Tuple _ items -> do itemIDs <- mapM (buildNode True Nothing) items
-                             let numberedItemsIDs = zip [0..] itemIDs
-                             mapM_ (\(no, argID) -> State.connect argID Graph.outputID no) numberedItemsIDs
-    _                  -> do i <- buildNode True Nothing expr
-                             State.connect i Graph.outputID 0
+    Expr.Tuple _ items -> connectArgs True Nothing Graph.outputID items
+    _                  -> connectArg  True Nothing Graph.outputID (expr, 0)
 
 
 buildNode :: Bool -> Maybe String -> Expr -> GBPass AST.ID
 buildNode astFolded outName expr = case expr of
-    Expr.Accessor   i name dst -> do dstID  <- buildNode True Nothing dst
-                                     let node = Node.Expr name (genName name i)
+    Expr.Accessor   i name dst -> do let node = Node.Expr name (genName name i)
                                      State.addNode i Port.All node astFolded noAssignment
-                                     State.connect dstID i 0
+                                     connectArg True Nothing  i (dst, 0)
                                      return i
     Expr.Assignment i pat dst  -> do let patStr = Pat.lunaShow pat
                                      if isRealPat pat
@@ -110,16 +108,12 @@ buildNode astFolded outName expr = case expr of
                                                  return dummyValue
     Expr.App        _ src args -> do srcID       <- buildNode (astFolded || False) Nothing src
                                      (srcNID, _) <- State.gvmNodeMapLookUp srcID
-                                     argIDs      <- mapM (buildNode True Nothing) args
-                                     let numberedArgIDs = zip [1..] argIDs
-                                     mapM_ (\(no, argID) -> State.connect argID srcNID no) numberedArgIDs
+                                     connectArgs True Nothing srcNID args
                                      return srcID
-    Expr.Infix  i name src dst -> do srcID    <- buildNode True Nothing src
-                                     dstID    <- buildNode True Nothing dst
-                                     let node = Node.Expr name (genName name i)
+    Expr.Infix  i name src dst -> do let node = Node.Expr name (genName name i)
                                      State.addNode i Port.All node astFolded noAssignment
-                                     State.connect srcID i 0
-                                     State.connect dstID i 1
+                                     connectArg True Nothing i (src, 0)
+                                     connectArg True Nothing i (dst, 1)
                                      return i
     Expr.Var        i name     -> if astFolded
                                      then return i
@@ -135,10 +129,9 @@ buildNode astFolded outName expr = case expr of
                                      return i
     Expr.Tuple      i items    -> do let node = Node.Expr "Tuple" (genName "tuple" i)
                                      State.addNode i Port.All node astFolded noAssignment
-                                     itemIDs <- mapM (buildNode True Nothing) items
-                                     let numberedItemsIDs = zip [0..] itemIDs
-                                     mapM_ (\(no, argID) -> State.connect argID i no) numberedItemsIDs
+                                     connectArgs True Nothing i items
                                      return i
+    Expr.Wildcard   i          -> fail $ "GraphBuilder: Unexpected Expr.Wildcard with id=" ++ show i
     where
         genName base num = case outName of
             Nothing   -> OutputName.generate base num
@@ -148,6 +141,24 @@ buildNode astFolded outName expr = case expr of
             Nothing -> True
             Just _  -> False
 
+
+buildArg :: Bool -> Maybe String -> Expr -> GBPass (Maybe AST.ID)
+buildArg astFolded outName expr = case expr of
+    Expr.Wildcard _ -> return Nothing
+    _               -> Just <$> buildNode astFolded outName expr
+
+
+connectArgs :: Bool -> Maybe String -> AST.ID -> [Expr] -> GBPass ()
+connectArgs astFolded outName dstID exprs =
+    mapM_ (connectArg astFolded outName dstID) $ zip exprs [0..]
+
+
+connectArg :: Bool -> Maybe String -> AST.ID -> (Expr, InPort) -> GBPass ()
+connectArg astFolded outName dstID (expr, dstPort) = do
+    msrcID <- buildArg astFolded outName expr
+    case msrcID of
+        Nothing    -> return ()
+        Just srcID -> State.connect srcID dstID dstPort
 
 isRealPat :: Pat -> Bool
 isRealPat p = case p of
