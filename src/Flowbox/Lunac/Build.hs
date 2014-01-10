@@ -50,7 +50,7 @@ run cfg op = do
 
 
 build :: Config -> Cmd.Options -> Diagnostics -> UniPath -> IO ()
-build cfg op diag filePath = Luna.runIO $ do
+build cfg op diag filePath = do
     let name     = Cmd.libName    op
         version  = Cmd.libVersion op
         rootPath = case Cmd.rootPath op of
@@ -70,6 +70,6 @@ build cfg op diag filePath = Luna.runIO $ do
                         then BuildConfig.Library
                         else BuildConfig.Executable outputPath
         bldCfg = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag
-    ast <- fst <$> Build.parseFile rootPath filePath
-    Build.run bldCfg ast
+    ast <- Luna.runIO $ Build.parseFile rootPath filePath
+    Luna.runIO $ Build.run bldCfg $ fst ast
     return ()
