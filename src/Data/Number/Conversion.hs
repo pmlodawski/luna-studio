@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 
---module Data.Number.Conversion where
+module Data.Number.Conversion where
 
 import GHC.Float
 import Data.Word
