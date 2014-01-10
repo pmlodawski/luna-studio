@@ -144,7 +144,7 @@ addExpr nodeID e = do
     folded         <- hasFlag nodeID Attributes.astFolded
     noAssignement  <- hasFlag nodeID Attributes.astNoAssignment
     defaultNodeGen <- hasFlag nodeID Attributes.defaultNodeGenerated
-    if folded || defaultNodeGen
+    if (folded || defaultNodeGen) && (Graph.outdeg gr nodeID <= 1)
         then State.addToNodeMap (nodeID, Port.All) e
         else if noAssignement && (Graph.outdeg gr nodeID == 0)
             then do State.addToBody e
