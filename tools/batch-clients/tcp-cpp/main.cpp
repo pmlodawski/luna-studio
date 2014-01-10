@@ -252,8 +252,10 @@ makeAsk(AST, AddFunction)
 makeAsk(AST, UpdateModuleCls)
 makeAsk(AST, UpdateModuleImports)
 makeAsk(AST, UpdateModuleFields)
-makeAsk(AST, UpdateClassCls)
-makeAsk(AST, UpdateClassFields)
+makeAsk(AST, UpdateDataCls)
+makeAsk(AST, UpdateDataCons)
+makeAsk(AST, UpdateDataClasses)
+makeAsk(AST, UpdateDataMethods)
 makeAsk(AST, UpdateFunctionName)
 makeAsk(AST, UpdateFunctionPath)
 makeAsk(AST, UpdateFunctionInputs)
@@ -355,19 +357,20 @@ int main()
 			auto bc_Root = buildBreadcrumbs(crumbsRoot);
 			macro::AST::AddModule(controlSocket, module, bc_Root, library.id(), project.id());
 		}
-		{
-			auto function = new expr::Function();
-			function->set_name("test");
-			auto unknown = new type::Type;
-			unknown->set_cls(type::Type::Unknown);
-			unknown->SetAllocatedExtension(type::Unknown::ext, new type::Unknown);
-			function->set_allocated_output(unknown);
-			expr::Expr functionBase;
-			functionBase.set_cls(expr::Expr::Function);
-			functionBase.SetAllocatedExtension(expr::Function::ext, function);
-			auto bc_Main = buildBreadcrumbs(crumbsMain);
-			macro::AST::AddFunction(controlSocket, functionBase, bc_Main, library.id(), project.id());
-		}
+		// {
+		// 	auto function = new expr::Function();
+		// 	function->set_name("test");
+		// 	auto unknown = new type::Type;
+		// 	unknown->set_cls(type::Type::Unknown);
+		// 	unknown->SetAllocatedExtension(type::Unknown::ext, new type::Unknown);
+		// 	function->set_allocated_output(unknown);
+		// 	expr::Expr functionBase;
+		// 	functionBase.set_cls(expr::Expr::Function);
+		// 	functionBase.SetAllocatedExtension(expr::Function::ext, function);
+		// 	auto bc_Main = buildBreadcrumbs(crumbsMain);
+		// 	macro::AST::AddFunction(controlSocket, functionBase, bc_Main, library.id(), project.id());
+		// }
+		macro::Maintenance::Dump(controlSocket);
 		{
 			auto type = new type::Data;
 			type->set_name("A");
@@ -383,70 +386,71 @@ int main()
 			auto bc_Main = buildBreadcrumbs(crumbsMain);
 			macro::AST::AddClass(controlSocket, dataBase, bc_Main, library.id(), project.id());
 		}
-		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
-			macro::Graph::NodesGraph(controlSocket, bc_Main_test, library.id(), project.id());
-		}
-		int node45id;
-		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
-			graph::Node node;
-			node.set_cls(graph::Node::Expr);
-			node.set_expr("45"); 
-			node.set_outputname("v45"); 
-			node45id = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
-		}
-		int node90id;
-		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
-			graph::Node node;
-			node.set_cls(graph::Node::Expr);
-			node.set_expr("90"); 
-			node90id = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
-		}
-		int nodeAddid;
-		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
-			graph::Node node;
-			node.set_cls(graph::Node::Expr);
-			node.set_expr("add"); 
-			nodeAddid = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
-		}
-		int nodePrintid;
-		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
-			graph::Node node;
-			node.set_cls(graph::Node::Expr);
-			node.set_expr("print"); 
-			nodePrintid = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
-		}
-		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
-			macro::NodeDefault::SetNodeDefault(controlSocket, std::vector<int>{1}, "477", nodePrintid, bc_Main_test, library.id(), project.id());
-		}
-		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
-			macro::NodeDefault::SetNodeDefault(controlSocket, std::vector<int>{0}, "Console", nodePrintid, bc_Main_test, library.id(), project.id());
-		}
 		macro::Maintenance::Dump(controlSocket);
-		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
-			macro::Graph::Connect(controlSocket, node90id, std::vector<int>{}, nodeAddid, std::vector<int>{0}, bc_Main_test, library.id(), project.id());
-		}
-		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
-			macro::Graph::Connect(controlSocket, nodeAddid, std::vector<int>{}, 1, std::vector<int>{0}, bc_Main_test, library.id(), project.id());
-		}
-		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
-			macro::Graph::Connect(controlSocket, node45id, std::vector<int>{}, nodeAddid, std::vector<int>{1}, bc_Main_test, library.id(), project.id());
-		}
-		{
-			auto bc_Main_test = buildBreadcrumbs(crumbsMain);
-			auto r = macro::AST::ResolveDefinition(controlSocket, "A", bc_Main_test, library.id(), project.id()).astptr();
-			std::cout << "Result size: " << r.size() << std::endl;
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+		// 	macro::Graph::NodesGraph(controlSocket, bc_Main_test, library.id(), project.id());
+		// }
+		// int node45id;
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+		// 	graph::Node node;
+		// 	node.set_cls(graph::Node::Expr);
+		// 	node.set_expr("45"); 
+		// 	node.set_outputname("v45"); 
+		// 	node45id = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
+		// }
+		// int node90id;
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+		// 	graph::Node node;
+		// 	node.set_cls(graph::Node::Expr);
+		// 	node.set_expr("90"); 
+		// 	node90id = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
+		// }
+		// int nodeAddid;
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+		// 	graph::Node node;
+		// 	node.set_cls(graph::Node::Expr);
+		// 	node.set_expr("add"); 
+		// 	nodeAddid = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
+		// }
+		// int nodePrintid;
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+		// 	graph::Node node;
+		// 	node.set_cls(graph::Node::Expr);
+		// 	node.set_expr("print"); 
+		// 	nodePrintid = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
+		// }
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+		// 	macro::NodeDefault::SetNodeDefault(controlSocket, std::vector<int>{1}, "477", nodePrintid, bc_Main_test, library.id(), project.id());
+		// }
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+		// 	macro::NodeDefault::SetNodeDefault(controlSocket, std::vector<int>{0}, "Console", nodePrintid, bc_Main_test, library.id(), project.id());
+		// }
+		// macro::Maintenance::Dump(controlSocket);
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+		// 	macro::Graph::Connect(controlSocket, node90id, std::vector<int>{}, nodeAddid, std::vector<int>{0}, bc_Main_test, library.id(), project.id());
+		// }
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+		// 	macro::Graph::Connect(controlSocket, nodeAddid, std::vector<int>{}, 1, std::vector<int>{0}, bc_Main_test, library.id(), project.id());
+		// }
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+		// 	macro::Graph::Connect(controlSocket, node45id, std::vector<int>{}, nodeAddid, std::vector<int>{1}, bc_Main_test, library.id(), project.id());
+		// }
+		// {
+		// 	auto bc_Main_test = buildBreadcrumbs(crumbsMain);
+		// 	auto r = macro::AST::ResolveDefinition(controlSocket, "A", bc_Main_test, library.id(), project.id()).astptr();
+		// 	std::cout << "Result size: " << r.size() << std::endl;
 			
-		}
+		// }
 		macro::Maintenance::Dump(controlSocket);
 
 		// macro::Library::BuildLibrary(controlSocket, library.id(), project.id());

@@ -28,8 +28,8 @@ import qualified Generated.Proto.Batch.Graph.NodesGraph.Args             as Node
 import qualified Generated.Proto.Batch.Graph.NodesGraph.Result           as NodesGraph
 import qualified Generated.Proto.Batch.Graph.RemoveNode.Args             as RemoveNode
 import qualified Generated.Proto.Batch.Graph.RemoveNode.Result           as RemoveNode
-import qualified Generated.Proto.Batch.Graph.UpdateNode.Args                   as UpdateNode
-import qualified Generated.Proto.Batch.Graph.UpdateNode.Result                   as UpdateNode
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Args             as UpdateNode
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Result           as UpdateNode
 
 
 loggerIO :: LoggerIO

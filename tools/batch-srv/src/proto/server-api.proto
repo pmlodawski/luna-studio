@@ -33,8 +33,10 @@ message Request {
         AST_UpdateModuleCls      = 1104;
         AST_UpdateModuleImports  = 1105;
         AST_UpdateModuleFields   = 1106;
-        AST_UpdateClassCls       = 1107;
-        AST_UpdateClassFields    = 1108;
+        AST_UpdateDataCls        = 1107;
+        AST_UpdateDataCons       = 1108;
+        AST_UpdateDataClasses    = 1115;
+        AST_UpdateDataMethods    = 1116;
         AST_UpdateFunctionName   = 1109;
         AST_UpdateFunctionPath   = 1110;
         AST_UpdateFunctionInputs = 1111;
@@ -184,7 +186,7 @@ message AST {
         }
         message Result { extend Response { optional Result rsp = 1106; } }   
     }
-    message UpdateClassCls {
+    message UpdateDataCls {
         message Args   { extend Request  { optional Args   req = 1107; }
             required generated.proto.type.Type cls        = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
@@ -193,14 +195,32 @@ message AST {
         }
         message Result { extend Response { optional Result rsp = 1107; } }   
     }
-    message UpdateClassFields {
+    message UpdateDataCons {
         message Args   { extend Request  { optional Args   req = 1108; }
-            repeated generated.proto.expr.Expr fields     = 1;
+            repeated generated.proto.expr.Expr cons       = 1;
             required generated.proto.crumb.Breadcrumbs bc = 2;
             required int32 libraryID = 3;
             required int32 projectID = 4;
         }
         message Result { extend Response { optional Result rsp = 1108; } }   
+    }
+    message UpdateDataClasses {
+        message Args   { extend Request  { optional Args   req = 1115; }
+            repeated generated.proto.expr.Expr classes    = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libraryID = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1115; } }   
+    }
+    message UpdateDataMethods {
+        message Args   { extend Request  { optional Args   req = 1116; }
+            repeated generated.proto.expr.Expr methods    = 1;
+            required generated.proto.crumb.Breadcrumbs bc = 2;
+            required int32 libraryID = 3;
+            required int32 projectID = 4;
+        }
+        message Result { extend Response { optional Result rsp = 1116; } }   
     }
     message UpdateFunctionName {
         message Args   { extend Request  { optional Args   req = 1109; }

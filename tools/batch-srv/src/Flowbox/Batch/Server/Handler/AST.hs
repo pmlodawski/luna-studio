@@ -30,10 +30,14 @@ import qualified Generated.Proto.Batch.AST.Remove.Args                 as Remove
 import qualified Generated.Proto.Batch.AST.Remove.Result               as Remove
 import qualified Generated.Proto.Batch.AST.ResolveDefinition.Args      as ResolveDefinition
 import qualified Generated.Proto.Batch.AST.ResolveDefinition.Result    as ResolveDefinition
-import qualified Generated.Proto.Batch.AST.UpdateClassCls.Args         as UpdateClassCls
-import qualified Generated.Proto.Batch.AST.UpdateClassCls.Result       as UpdateClassCls
-import qualified Generated.Proto.Batch.AST.UpdateClassFields.Args      as UpdateClassFields
-import qualified Generated.Proto.Batch.AST.UpdateClassFields.Result    as UpdateClassFields
+import qualified Generated.Proto.Batch.AST.UpdateDataClasses.Args      as UpdateDataClasses
+import qualified Generated.Proto.Batch.AST.UpdateDataClasses.Result    as UpdateDataClasses
+import qualified Generated.Proto.Batch.AST.UpdateDataCls.Args          as UpdateDataCls
+import qualified Generated.Proto.Batch.AST.UpdateDataCls.Result        as UpdateDataCls
+import qualified Generated.Proto.Batch.AST.UpdateDataCons.Args         as UpdateDataCons
+import qualified Generated.Proto.Batch.AST.UpdateDataCons.Result       as UpdateDataCons
+import qualified Generated.Proto.Batch.AST.UpdateDataMethods.Args      as UpdateDataMethods
+import qualified Generated.Proto.Batch.AST.UpdateDataMethods.Result    as UpdateDataMethods
 import qualified Generated.Proto.Batch.AST.UpdateFunctionInputs.Args   as UpdateFunctionInputs
 import qualified Generated.Proto.Batch.AST.UpdateFunctionInputs.Result as UpdateFunctionInputs
 import qualified Generated.Proto.Batch.AST.UpdateFunctionName.Args     as UpdateFunctionName
@@ -170,30 +174,56 @@ updateModuleFields batchHandler (UpdateModuleFields.Args tfields tbc tlibID tpro
     return UpdateModuleFields.Result
 
 
-updateClassCls :: IORef Batch -> UpdateClassCls.Args -> IO UpdateClassCls.Result
-updateClassCls batchHandler (UpdateClassCls.Args tcls tbc tlibID tprojectID) = do
+updateDataCls :: IORef Batch -> UpdateDataCls.Args -> IO UpdateDataCls.Result
+updateDataCls batchHandler (UpdateDataCls.Args tcls tbc tlibID tprojectID) = do
     loggerIO info "called updateClassCls"
     cls <- decode tcls
     bc  <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    newBatch <- BatchAST.updateClassCls cls bc libID projectID batch
+    newBatch <- BatchAST.updateDataCls cls bc libID projectID batch
     IORef.writeIORef batchHandler newBatch
-    return UpdateClassCls.Result
+    return UpdateDataCls.Result
 
 
-updateClassFields :: IORef Batch -> UpdateClassFields.Args -> IO UpdateClassFields.Result
-updateClassFields batchHandler (UpdateClassFields.Args tfields tbc tlibID tprojectID) = do
-    loggerIO info "called updateClassFields"
-    fields <- decodeList tfields
-    bc     <- decode tbc
+updateDataCons :: IORef Batch -> UpdateDataCons.Args -> IO UpdateDataCons.Result
+updateDataCons batchHandler (UpdateDataCons.Args tcons tbc tlibID tprojectID) = do
+    loggerIO info "called updateClassCls"
+    cons <- decodeList tcons
+    bc   <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    newBatch <- BatchAST.updateClassFields fields bc libID projectID batch
+    newBatch <- BatchAST.updateDataCons cons bc libID projectID batch
     IORef.writeIORef batchHandler newBatch
-    return UpdateClassFields.Result
+    return UpdateDataCons.Result
+
+
+updateDataClasses :: IORef Batch -> UpdateDataClasses.Args -> IO UpdateDataClasses.Result
+updateDataClasses batchHandler (UpdateDataClasses.Args tclasses tbc tlibID tprojectID) = do
+    loggerIO info "called updateClassCls"
+    classes <- decodeList tclasses
+    bc      <- decode tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.updateDataClasses classes bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
+    return UpdateDataClasses.Result
+
+
+updateDataMethods :: IORef Batch -> UpdateDataMethods.Args -> IO UpdateDataMethods.Result
+updateDataMethods batchHandler (UpdateDataMethods.Args tmethods tbc tlibID tprojectID) = do
+    loggerIO info "called updateClassCls"
+    methods <- decodeList tmethods
+    bc      <- decode tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    batch <- IORef.readIORef batchHandler
+    newBatch <- BatchAST.updateDataMethods methods bc libID projectID batch
+    IORef.writeIORef batchHandler newBatch
+    return UpdateDataMethods.Result
 
 
 updateFunctionName :: IORef Batch -> UpdateFunctionName.Args -> IO UpdateFunctionName.Result

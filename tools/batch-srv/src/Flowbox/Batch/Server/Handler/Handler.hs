@@ -21,10 +21,14 @@ import qualified Generated.Proto.Batch.AST.Remove.Args                      as R
 import qualified Generated.Proto.Batch.AST.Remove.Result                    as Remove
 import qualified Generated.Proto.Batch.AST.ResolveDefinition.Args           as ResolveDefinition
 import qualified Generated.Proto.Batch.AST.ResolveDefinition.Result         as ResolveDefinition
-import qualified Generated.Proto.Batch.AST.UpdateClassCls.Args              as UpdateClassCls
-import qualified Generated.Proto.Batch.AST.UpdateClassCls.Result            as UpdateClassCls
-import qualified Generated.Proto.Batch.AST.UpdateClassFields.Args           as UpdateClassFields
-import qualified Generated.Proto.Batch.AST.UpdateClassFields.Result         as UpdateClassFields
+import qualified Generated.Proto.Batch.AST.UpdateDataClasses.Args           as UpdateDataClasses
+import qualified Generated.Proto.Batch.AST.UpdateDataClasses.Result         as UpdateDataClasses
+import qualified Generated.Proto.Batch.AST.UpdateDataCls.Args               as UpdateDataCls
+import qualified Generated.Proto.Batch.AST.UpdateDataCls.Result             as UpdateDataCls
+import qualified Generated.Proto.Batch.AST.UpdateDataCons.Args              as UpdateDataCons
+import qualified Generated.Proto.Batch.AST.UpdateDataCons.Result            as UpdateDataCons
+import qualified Generated.Proto.Batch.AST.UpdateDataMethods.Args           as UpdateDataMethods
+import qualified Generated.Proto.Batch.AST.UpdateDataMethods.Result         as UpdateDataMethods
 import qualified Generated.Proto.Batch.AST.UpdateFunctionInputs.Args        as UpdateFunctionInputs
 import qualified Generated.Proto.Batch.AST.UpdateFunctionInputs.Result      as UpdateFunctionInputs
 import qualified Generated.Proto.Batch.AST.UpdateFunctionName.Args          as UpdateFunctionName
@@ -65,6 +69,8 @@ import qualified Generated.Proto.Batch.Graph.NodesGraph.Args                as N
 import qualified Generated.Proto.Batch.Graph.NodesGraph.Result              as NodesGraph
 import qualified Generated.Proto.Batch.Graph.RemoveNode.Args                as RemoveNode
 import qualified Generated.Proto.Batch.Graph.RemoveNode.Result              as RemoveNode
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Args                as UpdateNode
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Result              as UpdateNode
 import qualified Generated.Proto.Batch.Library.BuildLibrary.Args            as BuildLibrary
 import qualified Generated.Proto.Batch.Library.BuildLibrary.Result          as BuildLibrary
 import qualified Generated.Proto.Batch.Library.CreateLibrary.Args           as CreateLibrary
@@ -119,8 +125,6 @@ import qualified Generated.Proto.Batch.Properties.GetProperties.Args        as G
 import qualified Generated.Proto.Batch.Properties.GetProperties.Result      as GetProperties
 import qualified Generated.Proto.Batch.Properties.SetProperties.Args        as SetProperties
 import qualified Generated.Proto.Batch.Properties.SetProperties.Result      as SetProperties
-import qualified Generated.Proto.Batch.Graph.UpdateNode.Args                   as UpdateNode
-import qualified Generated.Proto.Batch.Graph.UpdateNode.Result                   as UpdateNode
 
 
 
@@ -132,8 +136,10 @@ class Handler h where
     updateModuleCls      :: h -> UpdateModuleCls.Args      -> IO UpdateModuleCls.Result
     updateModuleImports  :: h -> UpdateModuleImports.Args  -> IO UpdateModuleImports.Result
     updateModuleFields   :: h -> UpdateModuleFields.Args   -> IO UpdateModuleFields.Result
-    updateClassCls       :: h -> UpdateClassCls.Args       -> IO UpdateClassCls.Result
-    updateClassFields    :: h -> UpdateClassFields.Args    -> IO UpdateClassFields.Result
+    updateDataCls        :: h -> UpdateDataCls.Args        -> IO UpdateDataCls.Result
+    updateDataCons       :: h -> UpdateDataCons.Args       -> IO UpdateDataCons.Result
+    updateDataClasses    :: h -> UpdateDataClasses.Args    -> IO UpdateDataClasses.Result
+    updateDataMethods    :: h -> UpdateDataMethods.Args    -> IO UpdateDataMethods.Result
     updateFunctionName   :: h -> UpdateFunctionName.Args   -> IO UpdateFunctionName.Result
     updateFunctionPath   :: h -> UpdateFunctionPath.Args   -> IO UpdateFunctionPath.Result
     updateFunctionInputs :: h -> UpdateFunctionInputs.Args -> IO UpdateFunctionInputs.Result

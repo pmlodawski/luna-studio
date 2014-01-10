@@ -48,10 +48,14 @@ import qualified Generated.Proto.Batch.AST.Remove.Args                      as R
 import qualified Generated.Proto.Batch.AST.Remove.Result                    as Remove
 import qualified Generated.Proto.Batch.AST.ResolveDefinition.Args           as ResolveDefinition
 import qualified Generated.Proto.Batch.AST.ResolveDefinition.Result         as ResolveDefinition
-import qualified Generated.Proto.Batch.AST.UpdateClassCls.Args              as UpdateClassCls
-import qualified Generated.Proto.Batch.AST.UpdateClassCls.Result            as UpdateClassCls
-import qualified Generated.Proto.Batch.AST.UpdateClassFields.Args           as UpdateClassFields
-import qualified Generated.Proto.Batch.AST.UpdateClassFields.Result         as UpdateClassFields
+import qualified Generated.Proto.Batch.AST.UpdateDataClasses.Args           as UpdateDataClasses
+import qualified Generated.Proto.Batch.AST.UpdateDataClasses.Result         as UpdateDataClasses
+import qualified Generated.Proto.Batch.AST.UpdateDataCls.Args               as UpdateDataCls
+import qualified Generated.Proto.Batch.AST.UpdateDataCls.Result             as UpdateDataCls
+import qualified Generated.Proto.Batch.AST.UpdateDataCons.Args              as UpdateDataCons
+import qualified Generated.Proto.Batch.AST.UpdateDataCons.Result            as UpdateDataCons
+import qualified Generated.Proto.Batch.AST.UpdateDataMethods.Args           as UpdateDataMethods
+import qualified Generated.Proto.Batch.AST.UpdateDataMethods.Result         as UpdateDataMethods
 import qualified Generated.Proto.Batch.AST.UpdateFunctionInputs.Args        as UpdateFunctionInputs
 import qualified Generated.Proto.Batch.AST.UpdateFunctionInputs.Result      as UpdateFunctionInputs
 import qualified Generated.Proto.Batch.AST.UpdateFunctionName.Args          as UpdateFunctionName
@@ -81,8 +85,6 @@ import qualified Generated.Proto.Batch.FileSystem.Stat.Result               as S
 import qualified Generated.Proto.Batch.FileSystem.Touch.Args                as Touch
 import qualified Generated.Proto.Batch.FileSystem.Touch.Result              as Touch
 import qualified Generated.Proto.Batch.Graph.AddNode.Args                   as AddNode
-import qualified Generated.Proto.Batch.Graph.UpdateNode.Args                   as UpdateNode
-import qualified Generated.Proto.Batch.Graph.UpdateNode.Result                   as UpdateNode
 import qualified Generated.Proto.Batch.Graph.AddNode.Result                 as AddNode
 import qualified Generated.Proto.Batch.Graph.Connect.Args                   as Connect
 import qualified Generated.Proto.Batch.Graph.Connect.Result                 as Connect
@@ -94,6 +96,8 @@ import qualified Generated.Proto.Batch.Graph.NodesGraph.Args                as N
 import qualified Generated.Proto.Batch.Graph.NodesGraph.Result              as NodesGraph
 import qualified Generated.Proto.Batch.Graph.RemoveNode.Args                as RemoveNode
 import qualified Generated.Proto.Batch.Graph.RemoveNode.Result              as RemoveNode
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Args                as UpdateNode
+import qualified Generated.Proto.Batch.Graph.UpdateNode.Result              as UpdateNode
 import qualified Generated.Proto.Batch.Library.BuildLibrary.Args            as BuildLibrary
 import qualified Generated.Proto.Batch.Library.BuildLibrary.Result          as BuildLibrary
 import qualified Generated.Proto.Batch.Library.CreateLibrary.Args           as CreateLibrary
@@ -217,8 +221,10 @@ process notifySocket handler encoded_request = case Proto.messageWithLengthGet e
         Method.AST_UpdateModuleCls      -> call request handler Handler.updateModuleCls      UpdateModuleCls.req      UpdateModuleCls.rsp
         Method.AST_UpdateModuleImports  -> call request handler Handler.updateModuleImports  UpdateModuleImports.req  UpdateModuleImports.rsp
         Method.AST_UpdateModuleFields   -> call request handler Handler.updateModuleFields   UpdateModuleFields.req   UpdateModuleFields.rsp
-        Method.AST_UpdateClassCls       -> call request handler Handler.updateClassCls       UpdateClassCls.req       UpdateClassCls.rsp
-        Method.AST_UpdateClassFields    -> call request handler Handler.updateClassFields    UpdateClassFields.req    UpdateClassFields.rsp
+        Method.AST_UpdateDataCls        -> call request handler Handler.updateDataCls        UpdateDataCls.req        UpdateDataCls.rsp
+        Method.AST_UpdateDataCons       -> call request handler Handler.updateDataCons       UpdateDataCons.req       UpdateDataCons.rsp
+        Method.AST_UpdateDataClasses    -> call request handler Handler.updateDataClasses    UpdateDataClasses.req    UpdateDataClasses.rsp
+        Method.AST_UpdateDataMethods    -> call request handler Handler.updateDataMethods    UpdateDataMethods.req    UpdateDataMethods.rsp
         Method.AST_UpdateFunctionName   -> call request handler Handler.updateFunctionName   UpdateFunctionName.req   UpdateFunctionName.rsp
         Method.AST_UpdateFunctionPath   -> call request handler Handler.updateFunctionPath   UpdateFunctionPath.req   UpdateFunctionPath.rsp
         Method.AST_UpdateFunctionInputs -> call request handler Handler.updateFunctionInputs UpdateFunctionInputs.req UpdateFunctionInputs.rsp
