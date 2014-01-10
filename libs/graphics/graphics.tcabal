@@ -46,6 +46,7 @@ Library
   Build-Depends:  containers,
                   lens,
                   bmp,
+                  ekg,
                   repa-devil,
                   accelerate              == 0.14.*,
                   accelerate-io           == 0.14.*,
