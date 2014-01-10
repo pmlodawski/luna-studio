@@ -73,13 +73,18 @@ luminance' = luminance "r" "g" "b" "luminance"
 imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
 imgtest img = do
     rgba  <- Image.reprFloat <$> RGBA.decompose img
-    lrgba <- luminance' rgba
-           >>= Image.cpChannel "luminance" "r"
-           >>= Image.cpChannel "luminance" "g"
-           >>= Image.cpChannel "luminance" "b"
+    --lrgba <- luminance' rgba
+           -- >>= Image.cpChannel "luminance" "r"
+           -- >>= Image.cpChannel "luminance" "g"
+           -- >>= Image.cpChannel "luminance" "b"
+    --lrgba <- adjustCB 2.2 0.2 "r" "g" "b" rgba
+    --let blur3x3 = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
+        --blur5x5 = [0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04]
+        --sharpen3x3 = [-1.0,-1.0,-1.0,-1.0,9.0,-1.0,-1.0,-1.0,-1.0]
+    --lrgba <- convolve "r" convolve5x5 sharpen3x3 rgba
+    hsv <- convertRGBtoHSV rgba
+    lrgba <- convertHSVtoRGB hsv
     RGBA.compose $ Image.reprWord8 lrgba
-
-
 
 -- convolution
 
@@ -87,31 +92,59 @@ convolve3x3 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil3x3 a -> A.Exp a
 convolve3x3 kernel ((a,b,c),(d,e,f),(g,h,i))
     = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i]
 
--- ?!?!?!?!?!?!?!?!
-blurChannel :: String -> [A.Exp Float] -> (Image Float) -> Either Image.Error (Image Float)
-blurChannel cname kernel img = do
+convolve3x5 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil3x5 a -> A.Exp a
+convolve3x5 kernel ((a,b,c),(d,e,f),(g,h,i),(j,k,l),(m,n,o))
+    = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o]
+
+convolve5x3 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil5x3 a -> A.Exp a
+convolve5x3 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o))
+    = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o]
+
+convolve5x5 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil5x5 a -> A.Exp a
+convolve5x5 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o),(p,q,r,s,t),(u,v,w,x,y))
+    = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y]
+
+--convolve :: Int
+--convolve :: String -> (t0 -> stencil0 -> Exp Float) -> t0 -> Image Float -> Either Image.Error (Image Float)
+convolve cname convolution kernel img = do
     channel <- Image.lookup cname img
-    let outimg = Image.insert cname channel' img
-        channel' = Channel.Acc $ A.stencil (convolve3x3 kernel) A.Clamp (Channel.accMatrix channel)
+    let outimg = Image.insert cname channel'
+               $ img
+        channel' = Channel.Acc $ A.stencil (convolution kernel) A.Clamp (Channel.accMatrix channel)
     return outimg
 
-
+--convolveRGB :: Int
+--convolveRGB :: ([Exp a2] -> A.Stencil5x5 a2 -> Exp a2) -> [Float] -> Image Float -> Either Image.Error (Image Float)
+--convolveRGB :: ([Exp a2] -> A.Stencil5x5 a2 -> Exp a2) -> [Exp Float] -> Image Float -> Either Image.Error (Image Float)
+--convolveRGB convolution kernel img = do
+--    let outimg = convolve "r" convolution kernel
+--               $ convolve "g" convolution kernel
+--               $ convolve "b" convolution kernel
+--               $ img
+--    return outimg
 
 -- brightness and contrast
 
-adjustCB :: A.Exp Float -> A.Exp Float -> String -> (Image Float) -> Either Image.Error (Image Float)
-adjustCB contrast brightness cname img = do
-    channel <- Image.lookup cname img
-    let outimg = Image.insert cname channel' img
-        channel' = Channel.Acc $ A.map adjust (Channel.accMatrix channel)
+adjustCB :: A.Exp Float -> A.Exp Float -> String -> String -> String -> (Image Float) -> Either Image.Error (Image Float)
+adjustCB contrast brightness rname gname bname img = do
+    rchannel <- Image.lookup rname img
+    gchannel <- Image.lookup gname img
+    bchannel <- Image.lookup bname img
+    let outimg = Image.insert rname rchannel'
+               $ Image.insert gname gchannel'
+               $ Image.insert bname bchannel'
+               $ img
+        rchannel' = clipValues $ Channel.Acc $ A.map adjust (Channel.accMatrix rchannel)
+        gchannel' = clipValues $ Channel.Acc $ A.map adjust (Channel.accMatrix gchannel)
+        bchannel' = clipValues $ Channel.Acc $ A.map adjust (Channel.accMatrix bchannel)
         adjust x = contrast * x + brightness
     return outimg
 
-contrast :: A.Exp Float -> String -> (Image Float) -> Either Image.Error (Image Float)
-contrast c = adjustCB c 0
+contrast :: A.Exp Float -> String -> String -> String -> (Image Float) -> Either Image.Error (Image Float)
+contrast x r g b = adjustCB x 0 r g b
 
-brightness :: A.Exp Float -> String -> (Image Float) -> Either Image.Error (Image Float)
-brightness b = adjustCB 1 b
+brightness :: A.Exp Float -> String -> String -> String -> (Image Float) -> Either Image.Error (Image Float)
+brightness x r g b = adjustCB 1 x r g b
 
 
 
@@ -120,12 +153,23 @@ brightness b = adjustCB 1 b
 clipValues :: (Channel Float) -> (Channel Float)
 clipValues channel = Channel.Acc $ A.map (P.max 0 . P.min 1) $ Channel.accMatrix channel
 
+--calculateHueFromRGB :: Exp Float -> Exp Float -> Exp Float -> Exp Float
+-- calculateHueFromRGB r g b = ((60 * (h - d / (maxRGB - minRGB))) `F.mod'` 360) / 360
 calculateHueFromRGB :: Exp Float -> Exp Float -> Exp Float -> Exp Float
-calculateHueFromRGB r g b = ((60 * (h - d / (maxRGB - minRGB))) `F.mod'` 360) / 360
-    where h      = if r == minRGB then 3 else (if b == minRGB then 1 else 5)
-          d      = if r == minRGB then g-b else (if b == minRGB then r-g else b-r)
+calculateHueFromRGB r g b = w / 6
+    --where h      = if r A.==* minRGB then 3 else (if b A.==* minRGB then 1 else 5)
+          --d      = if r A.==* minRGB then g-b else (if b A.==* minRGB then r-g else b-r)
+    --where h      = r A.==* minRGB A.? (3, (b A.==* minRGB A.? (1,5)))
+          --d      = r A.==* minRGB A.? (g-b, (b A.==* minRGB A.? (r-g,b-r)))
+           -- mod 6 ?!?!?! tam niżej
+    where w      = r A.==* maxRGB A.? (((g - b) / delta) `nonIntRem` 6,
+                   g A.==* maxRGB A.? ((b - r) / delta + 2,
+                   (r - g) / delta + 4
+                   ))
           minRGB = P.min r $ P.min g b
           maxRGB = P.max r $ P.max g b
+          delta  = maxRGB - minRGB
+          nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
 
 calculateSaturationFromRGB :: Exp Float -> Exp Float -> Exp Float -> Exp Float
 calculateSaturationFromRGB r g b = (maxRGB - minRGB) / maxRGB
@@ -137,53 +181,71 @@ calculateValueFromRGB r g b = P.max r $ P.max g b
 
 convertRGBtoHSV :: (Image Float) -> Either Image.Error (Image Float)
 convertRGBtoHSV img = do
-    r <- Image.lookup "red"   img
-    g <- Image.lookup "green" img
-    b <- Image.lookup "blue"  img
-    let outimg     = Image.insert "hue" hue
-                   $ Image.insert "saturation" saturation
-                   $ Image.insert "value" value
+    r <- Image.lookup "r" img
+    g <- Image.lookup "g" img
+    b <- Image.lookup "b" img
+    let outimg     = Image.insert "h" hue
+                   $ Image.insert "s" saturation
+                   $ Image.insert "v" value
                    $ img
-        hue        = Channel.Acc $ A.zipWith3 calculateHueFromRGB   r' g' b'
-        saturation = Channel.Acc $ A.zipWith3 calculateValueFromRGB r' g' b'
-        value      = Channel.Acc $ A.zipWith3 calculateValueFromRGB r' g' b'
-        r'         = Channel.accMatrix r
-        g'         = Channel.accMatrix g
-        b'         = Channel.accMatrix b
+        hue        = Channel.zipWith3 calculateHueFromRGB r g b
+        saturation = Channel.zipWith3 calculateSaturationFromRGB r g b
+        value      = Channel.zipWith3 calculateValueFromRGB r g b
     return outimg
 
 calculateRGBfromHSV :: Exp Float -> Exp Float -> Exp Float -> (Exp Float, Exp Float, Exp Float)
 calculateRGBfromHSV h s v = (r+m, g+m, b+m)
-    where (r, g, b) = case h' of
-                      z | 0   <= z && z < 60  -> (c, x, 0)
-                      z | 60  <= z && z < 120 -> (x, c, 0)
-                      z | 120 <= z && z < 180 -> (0, c, x)
-                      z | 180 <= z && z < 240 -> (0, x, c)
-                      z | 240 <= z && z < 300 -> (x, 0, c)
-                      z | 300 <= z && z < 360 -> (c, 0, x)
+    --where (r, g, b) = case h' of
+    --                  z | ((0   A.<=* z) A.&&* (z A.<* 60))  -> (c, x, 0)
+    --                  z | ((60  A.<=* z) A.&&* (z A.<* 120)) -> (x, c, 0)
+    --                  z | ((120 A.<=* z) A.&&* (z A.<* 180)) -> (0, c, x)
+    --                  z | ((180 A.<=* z) A.&&* (z A.<* 240)) -> (0, x, c)
+    --                  z | ((240 A.<=* z) A.&&* (z A.<* 300)) -> (x, 0, c)
+    --                  z | ((300 A.<=* z) A.&&* (z A.<* 360)) -> (c, 0, x)
+    where p = 0   A.<=* h' A.&&* h' A.<* 1/6 A.? (A.lift ((c, x, 0) :: (Exp Float, Exp Float, Exp Float)),
+              1/6 A.<=* h' A.&&* h' A.<* 1/3 A.? (A.lift ((x, c, 0) :: (Exp Float, Exp Float, Exp Float)),
+              1/3 A.<=* h' A.&&* h' A.<* 1/2 A.? (A.lift ((0, c, x) :: (Exp Float, Exp Float, Exp Float)),
+              1/2 A.<=* h' A.&&* h' A.<* 2/3 A.? (A.lift ((0, x, c) :: (Exp Float, Exp Float, Exp Float)),
+              2/3 A.<=* h' A.&&* h' A.<* 5/6 A.? (A.lift ((x, 0, c) :: (Exp Float, Exp Float, Exp Float)),
+              A.lift ((c, 0, x) :: (Exp Float, Exp Float, Exp Float))
+              )))))
+          (r, g, b) = A.unlift p :: (Exp Float, Exp Float, Exp Float)
           m  = v - c
-          x  = c * (1 - P.abs (((h' / 60) `F.mod'` 2) - 1))
+          x  = c * (1 - P.abs (((h' * 6) `nonIntRem` 2) - 1))
           c  = v * s
-          h' = (h `F.mod'` 1) * 360
+          h' = (h `nonIntRem` 1) * 360
+          nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
+
+--calculateRGBfromHSV :: Exp Float -> Exp Float -> Exp Float -> (Exp Float, Exp Float, Exp Float)
+--calculateRGBfromHSV h s v = A.unlift a :: (Exp Float, Exp Float, Exp Float)
+--    where a = hi A.==* (0::Exp Int) A.? (A.lift ((v, t, p) :: (Exp Float, Exp Float, Exp Float)),
+--              hi A.==* (1::Exp Int) A.? (A.lift ((q, v, p) :: (Exp Float, Exp Float, Exp Float)),
+--              hi A.==* (2::Exp Int) A.? (A.lift ((p, v, t) :: (Exp Float, Exp Float, Exp Float)),
+--              hi A.==* (3::Exp Int) A.? (A.lift ((p, q, v) :: (Exp Float, Exp Float, Exp Float)),
+--              hi A.==* (4::Exp Int) A.? (A.lift ((t, p, v) :: (Exp Float, Exp Float, Exp Float)),
+--              A.lift ((v, p, q) :: (Exp Float, Exp Float, Exp Float))
+--              )))))
+--          hi = A.floor (h / 60) `mod` 6
+--          f = h / 60 - (A.lift (fromIntegral A.floor(h / 60) :: Float))
+--          p = v * (1 - s)
+--          q = v * (1 - f * s)
+--          t = v * (1 - (1 - f) * s)
 
 convertHSVtoRGB :: (Image Float) -> Either Image.Error (Image Float)
 convertHSVtoRGB img = do
-    h <- Image.lookup "hue" img
-    s <- Image.lookup "saturation" img
-    v <- Image.lookup "value" img
-    let outimg = Image.insert "red" red
-               $ Image.insert "green" green
-               $ Image.insert "blue" blue
+    h <- Image.lookup "h" img
+    s <- Image.lookup "s" img
+    v <- Image.lookup "v" img
+    let outimg = Image.insert "r" red
+               $ Image.insert "g" green
+               $ Image.insert "b" blue
                $ img
-        red    = Channel.Acc $ A.zipWith3 calcR h' s' v'
-        green  = Channel.Acc $ A.zipWith3 calcG h' s' v'
-        blue   = Channel.Acc $ A.zipWith3 calcB h' s' v'
+        red    = Channel.zipWith3 calcR h s v
+        green  = Channel.zipWith3 calcG h s v
+        blue   = Channel.zipWith3 calcB h s v
         calcR  = (\a b c -> let (z, _, _) = calculateRGBfromHSV a b c in z)
         calcG  = (\a b c -> let (_, z, _) = calculateRGBfromHSV a b c in z)
         calcB  = (\a b c -> let (_, _, z) = calculateRGBfromHSV a b c in z)
-        h' = Channel.accMatrix h
-        s' = Channel.accMatrix s
-        v' = Channel.accMatrix v
     return outimg
 
 
@@ -192,6 +254,7 @@ convertHSVtoRGB img = do
 main :: IO ()
 main
   = do
+        print "--- graphic tests ---"
         Monitoring.beginMonitoring
 
         argv                    <- Env.getArgs

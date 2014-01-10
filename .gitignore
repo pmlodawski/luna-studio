@@ -53,3 +53,7 @@ cabal.sandbox.config
 
 ### DEPRECATED ###
 # cabal-dev
+
+# assets for tests
+*.bmp
+
