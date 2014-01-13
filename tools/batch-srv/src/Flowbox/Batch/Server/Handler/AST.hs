@@ -15,7 +15,7 @@ import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb   ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr    ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Focus   ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Module  ()
-import           Flowbox.Prelude                                       hiding (focus)
+import           Flowbox.Prelude                                       hiding (cons, focus)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Batch.AST.AddClass.Args               as AddClass
