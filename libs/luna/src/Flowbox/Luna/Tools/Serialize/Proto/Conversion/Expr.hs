@@ -70,9 +70,9 @@ instance Convert Expr Gen.Expr where
                                       (encodeJ cls) (encodeList cons) (encodeList classes) (encodeList methods)
         Expr.Con        i name     -> genExpr GenCls.Con_ i GenCon_.ext $ GenCon_.Con_
                                       (encodePJ name)
-        Expr.ConD       i name fields 
+        Expr.ConD       i name fields
                                    -> genExpr GenCls.ConD i GenConD.ext $ GenConD.ConD
-                                      (encodePJ name) (encodeList fields) 
+                                      (encodePJ name) (encodeList fields)
         Expr.Function   i path name inputs output body
                                    -> genExpr GenCls.Function i GenFunction.ext $ GenFunction.Function
                                       (encodeListP path) (encodePJ name) (encodeList inputs) (encodeJ output) (encodeList body)

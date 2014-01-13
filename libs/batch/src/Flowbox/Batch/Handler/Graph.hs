@@ -7,22 +7,22 @@
 
 module Flowbox.Batch.Handler.Graph where
 
-import           Flowbox.Batch.Batch                        (Batch)
-import           Flowbox.Batch.Handler.Common               (graphViewOp, noresult, readonly, readonlyNodeOp)
-import qualified Flowbox.Batch.Project.Project              as Project
-import           Flowbox.Control.Error                      (assert)
-import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs    (Breadcrumbs)
-import           Flowbox.Luna.Data.Graph.Node               (Node)
-import qualified Flowbox.Luna.Data.Graph.Node               as Node
-import           Flowbox.Luna.Data.GraphView.EdgeView       (EdgeView (EdgeView))
-import           Flowbox.Luna.Data.GraphView.GraphView      (GraphView)
-import qualified Flowbox.Luna.Data.GraphView.GraphView      as GraphView
-import           Flowbox.Luna.Data.GraphView.PortDescriptor (PortDescriptor)
-import qualified Flowbox.Luna.Data.PropertyMap              as PropertyMap
-import qualified Flowbox.Luna.Lib.Library                   as Library
-import           Flowbox.Prelude                            hiding (error)
-import           Flowbox.System.Log.Logger
+import           Flowbox.Batch.Batch                                 (Batch)
+import           Flowbox.Batch.Handler.Common                        (graphViewOp, noresult, readonly, readonlyNodeOp)
+import qualified Flowbox.Batch.Project.Project                       as Project
+import           Flowbox.Control.Error                               (assert)
+import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs             (Breadcrumbs)
+import           Flowbox.Luna.Data.Graph.Node                        (Node)
+import qualified Flowbox.Luna.Data.Graph.Node                        as Node
+import           Flowbox.Luna.Data.GraphView.EdgeView                (EdgeView (EdgeView))
+import           Flowbox.Luna.Data.GraphView.GraphView               (GraphView)
+import qualified Flowbox.Luna.Data.GraphView.GraphView               as GraphView
+import           Flowbox.Luna.Data.GraphView.PortDescriptor          (PortDescriptor)
+import qualified Flowbox.Luna.Data.PropertyMap                       as PropertyMap
+import qualified Flowbox.Luna.Lib.Library                            as Library
 import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
+import           Flowbox.Prelude                                     hiding (error)
+import           Flowbox.System.Log.Logger
 
 
 loggerIO :: LoggerIO
@@ -53,7 +53,7 @@ updateNode (nodeID, newNode) bc libID projectID = graphViewOp bc libID projectID
     let newID     = maxID + 1
         fixedNode = OutputName.fixEmpty newNode newID
         newGraph  = GraphView.replaceNode (newID, fixedNode) nodeID graph
-        newPropertyMap = case PropertyMap.lookup nodeID propertyMap of 
+        newPropertyMap = case PropertyMap.lookup nodeID propertyMap of
             Nothing -> propertyMap
             Just k  -> PropertyMap.insert newID k $ PropertyMap.delete nodeID propertyMap
     return ((newGraph, newPropertyMap), newID))

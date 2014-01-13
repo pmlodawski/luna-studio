@@ -7,8 +7,8 @@
 
 module Flowbox.Luna.Passes.Transform.Graph.Node.OutputName where
 
-import qualified Data.List as List
 import qualified Data.Char as Char
+import qualified Data.List as List
 
 import           Flowbox.Luna.Data.Graph.Node (Node)
 import qualified Flowbox.Luna.Data.Graph.Node as Node
@@ -34,7 +34,7 @@ fix node nodeID = newNode where
 
 mangle :: String -> String
 mangle name = case (List.takeWhile Char.isAlphaNum) name of
-    f:alphaNum -> if Char.isDigit f 
+    f:alphaNum -> if Char.isDigit f
                      then 'r' : f : alphaNum
                      else (Char.toLower f) : alphaNum
     []         -> "node"

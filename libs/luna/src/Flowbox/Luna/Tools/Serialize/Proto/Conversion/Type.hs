@@ -21,8 +21,8 @@ import qualified Flowbox.Luna.Data.AST.Utils                    as AST
 import           Flowbox.Prelude
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Type.App                       as GenApp
-import qualified Generated.Proto.Type.Data                      as GenData
 import qualified Generated.Proto.Type.Con_                      as GenCon_
+import qualified Generated.Proto.Type.Data                      as GenData
 import qualified Generated.Proto.Type.Lambda                    as GenLambda
 import qualified Generated.Proto.Type.Module                    as GenModule
 import qualified Generated.Proto.Type.Tuple                     as GenTuple
