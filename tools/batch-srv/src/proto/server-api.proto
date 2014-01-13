@@ -82,6 +82,9 @@ message Request {
         Parser_ParsePat       = 1701;
         Parser_ParseType      = 1702;
 
+        Process_Processes     = 2000;
+        Process_Terminate     = 2001;
+
         Project_Projects      = 1800;
         Project_ProjectByID   = 1801;
         Project_CreateProject = 1802;
@@ -478,7 +481,7 @@ message Library {
             required int32 projectID = 2;
         }
         message Result { extend Response { optional Result rsp = 1407; } 
-            required string output = 1;
+            required int32 processID = 1;
         }
     }
 }
@@ -567,6 +570,26 @@ message Parser {
         }   
     }
 }
+
+message Process {
+    message Processes {
+        message Args   { extend Request  { optional Args   req = 2000; }
+            repeated int32 projectID = 1;
+        }
+        message Result { extend Response { optional Result rsp = 2000; }
+            repeated int32 processes = 1;
+        }   
+    }
+    message Terminate {
+        message Args   { extend Request  { optional Args   req = 2001; }
+            repeated int32 projectID = 1;
+            required int32 processID = 2;
+        }
+        message Result { extend Response { optional Result rsp = 2001; }
+        }   
+    }
+}
+
 
 message Project {
     message Projects {

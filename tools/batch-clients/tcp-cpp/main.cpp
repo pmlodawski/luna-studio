@@ -450,6 +450,14 @@ int main()
 			auto r = macro::AST::ResolveDefinition(controlSocket, "A", bc_Main_test, library.id(), project.id()).astptr();
 			std::cout << "Result size: " << r.size() << std::endl;
 		}
+		{
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+			auto r = macro::Graph::NodeByID(controlSocket, -5, bc_Main_test, library.id(), project.id());
+		}
+		{
+			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
+			auto r = macro::Graph::NodeByID(controlSocket, -4, bc_Main_test, library.id(), project.id());
+		}
 		macro::Maintenance::Dump(controlSocket);
 
 		// macro::Library::BuildLibrary(controlSocket, library.id(), project.id());

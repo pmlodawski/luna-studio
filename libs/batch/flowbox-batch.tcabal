@@ -38,7 +38,7 @@ Library
                   network,
                   parsec,
                   pretty-show,
-                  process,
+                  process >= 1.2,
                   protocol-buffers,
                   protocol-buffers-descriptor,
                   text,
