@@ -92,7 +92,7 @@ buildOutput :: Node.ID -> Expr -> GBPass ()
 buildOutput outputID expr = do
     case expr of
         Expr.Assignment {} -> return ()
-        Expr.Tuple _ items -> connectArgs True Nothing outputID items
+        Expr.Tuple _ items -> connectArgs True Nothing outputID items 0
         _                  -> connectArg  True Nothing outputID (expr, 0)
 
 
@@ -119,7 +119,7 @@ buildNode astFolded outName expr = case expr of
                                                  return dummyValue
     Expr.App        _ src args -> do srcID       <- buildNode (astFolded || False) Nothing src
                                      (srcNID, _) <- State.gvmNodeMapLookUp srcID
-                                     connectArgs True Nothing srcNID args
+                                     connectArgs True Nothing srcNID args 1
                                      return srcID
     Expr.Infix  i name src dst -> do let node = Node.Expr name (genName name i)
                                      State.addNode i Port.All node astFolded noAssignment
@@ -140,7 +140,7 @@ buildNode astFolded outName expr = case expr of
                                      return i
     Expr.Tuple      i items    -> do let node = Node.Expr "Tuple" (genName "tuple" i)
                                      State.addNode i Port.All node astFolded noAssignment
-                                     connectArgs True Nothing i items
+                                     connectArgs True Nothing i items 0
                                      return i
     Expr.Wildcard   i          -> fail $ "GraphBuilder: Unexpected Expr.Wildcard with id=" ++ show i
     where
@@ -159,9 +159,9 @@ buildArg astFolded outName expr = case expr of
     _               -> Just <$> buildNode astFolded outName expr
 
 
-connectArgs :: Bool -> Maybe String -> AST.ID -> [Expr] -> GBPass ()
-connectArgs astFolded outName dstID exprs =
-    mapM_ (connectArg astFolded outName dstID) $ zip exprs [0..]
+connectArgs :: Bool -> Maybe String -> AST.ID -> [Expr] -> Int ->  GBPass ()
+connectArgs astFolded outName dstID exprs start =
+    mapM_ (connectArg astFolded outName dstID) $ zip exprs [start..]
 
 
 connectArg :: Bool -> Maybe String -> AST.ID -> (Expr, InPort) -> GBPass ()
