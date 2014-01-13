@@ -13,7 +13,6 @@ module Flowbox.Luna.Passes.Transform.Graph.Builder.Builder where
 import           Control.Applicative
 import           Control.Monad.State
 import qualified Data.List           as List
-import qualified Data.Maybe          as Maybe
 
 import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap      (GeneralVarMap)
 import           Flowbox.Luna.Data.AST.Expr                          (Expr)
@@ -21,9 +20,9 @@ import qualified Flowbox.Luna.Data.AST.Expr                          as Expr
 import qualified Flowbox.Luna.Data.AST.Lit                           as Lit
 import           Flowbox.Luna.Data.AST.Pat                           (Pat)
 import qualified Flowbox.Luna.Data.AST.Pat                           as Pat
+import qualified Flowbox.Luna.Data.AST.Type                          as Type
 import qualified Flowbox.Luna.Data.AST.Utils                         as AST
 import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
-import qualified Flowbox.Luna.Data.Graph.Graph                       as Graph
 import qualified Flowbox.Luna.Data.Graph.Node                        as Node
 import           Flowbox.Luna.Data.Graph.Port                        (InPort)
 import qualified Flowbox.Luna.Data.Graph.Port                        as Port
@@ -50,39 +49,51 @@ run gvm pm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make gvm pm) . expr2g
 
 
 expr2graph :: Expr -> GBPass (Graph, PropertyMap)
-expr2graph expr = case expr of
-    Expr.Function _ _ _ _      _ []   -> do finalize
-    Expr.Function _ _ _ inputs _ body -> do parseArgs inputs
-                                            mapM_ (buildNode False Nothing) $ init body
-                                            buildOutput $ last body
-                                            finalize
-    _                                 -> fail "expr2graph: Unsupported Expr type"
+expr2graph (Expr.Function i _ _ inputs output body) = do
+    (inputsID, outputID) <- prepareInputsOutputs i (output ^. Type.id)
+    case body of
+        [] -> do return ()
+        _  -> do parseArgs inputsID inputs
+                 mapM_ (buildNode False Nothing) $ init body
+                 buildOutput outputID $ last body
+    finalize
+expr2graph _ = fail "expr2graph: Unsupported Expr type"
+
+
+prepareInputsOutputs :: AST.ID -> AST.ID -> GBPass (Node.ID, Node.ID)
+prepareInputsOutputs functionID funOutputID = do
+    let inputsID = - functionID
+        outputID = - funOutputID
+    State.insNode (inputsID, Node.Inputs)
+    State.insNode (outputID, Node.Outputs)
+    return (inputsID, outputID)
 
 
 finalize :: GBPass (Graph, PropertyMap)
-finalize = do g <- State.getGraph
+finalize = do g  <- State.getGraph
               pm <- State.getPropertyMap
               return (g, pm)
 
 
-parseArgs :: [Expr] -> GBPass ()
-parseArgs inputs = do
+parseArgs :: Node.ID -> [Expr] -> GBPass ()
+parseArgs inputsID inputs = do
     let numberedInputs = zip inputs [0..]
-    mapM_ parseArg numberedInputs
+    mapM_ (parseArg inputsID) numberedInputs
 
 
-parseArg :: (Expr, Int) -> GBPass ()
-parseArg (input, no) = case input of
+parseArg :: Node.ID -> (Expr, Int) -> GBPass ()
+parseArg inputsID (input, no) = case input of
     Expr.Arg _ pat _ -> do [p] <- buildPat pat
-                           State.addToNodeMap p (Graph.inputsID, Port.Num no)
+                           State.addToNodeMap p (inputsID, Port.Num no)
     _                -> fail "parseArg: Wrong Expr type"
 
 
-buildOutput :: Expr -> GBPass ()
-buildOutput expr = case expr of
-    Expr.Assignment {} -> return ()
-    Expr.Tuple _ items -> connectArgs True Nothing Graph.outputID items
-    _                  -> connectArg  True Nothing Graph.outputID (expr, 0)
+buildOutput :: Node.ID -> Expr -> GBPass ()
+buildOutput outputID expr = do
+    case expr of
+        Expr.Assignment {} -> return ()
+        Expr.Tuple _ items -> connectArgs True Nothing outputID items
+        _                  -> connectArg  True Nothing outputID (expr, 0)
 
 
 buildNode :: Bool -> Maybe String -> Expr -> GBPass AST.ID
@@ -95,7 +106,7 @@ buildNode astFolded outName expr = case expr of
                                      if isRealPat pat
                                          then do patIDs <- buildPat pat
                                                  let node = Node.Expr ('=': patStr) (genName "pattern" i)
-                                                 State.insNode (i, node) astFolded noAssignment
+                                                 State.insNodeWithFlags (i, node) astFolded noAssignment
                                                  case patIDs of
                                                     [patID] -> State.addToNodeMap patID (i, Port.All)
                                                     _       -> mapM_ (\(n, patID) -> State.addToNodeMap patID (i, Port.Num n)) $ zip [0..] patIDs

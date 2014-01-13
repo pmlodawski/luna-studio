@@ -9,9 +9,9 @@ module Flowbox.Luna.Data.Graph.Graph(
     module Flowbox.Data.Graph,
     Graph,
     connect,
-    inputsID,
-    outputID,
-    make,
+    --inputsID,
+    --outputID,
+    --make,
 
     portMatches,
     isNotAlreadyConnected
@@ -33,18 +33,18 @@ connect :: Node.ID -> Node.ID -> Edge -> Graph -> Graph
 connect srcID dstID edge = insEdge (srcID, dstID, edge)
 
 
-inputsID :: Node.ID
-inputsID = 0
+--inputsID :: Node.ID
+--inputsID = 0
 
 
-outputID :: Node.ID
-outputID = 1
+--outputID :: Node.ID
+--outputID = 1
 
 
-make :: Graph
-make = insNode (inputsID, Node.mkInputs)
-     $ insNode (outputID, Node.mkOutputs)
-     $ empty
+--make :: Graph
+--make = insNode (inputsID, Node.mkInputs)
+--     $ insNode (outputID, Node.mkOutputs)
+--     $ empty
 
 
 

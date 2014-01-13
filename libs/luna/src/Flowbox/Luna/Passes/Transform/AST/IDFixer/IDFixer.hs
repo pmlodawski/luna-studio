@@ -39,24 +39,33 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer"
 type IDFixerPass result = Pass IDFixerState result
 
 
+runPass :: (Monad m, Functor m)
+        => AST.ID -> Bool -> Pass.ESRT err Pass.Info IDFixerState m result -> m (Either err result)
+runPass maxID fixAll = Pass.run_ (Pass.Info "IDFixer") $ State.make maxID fixAll
+
+
 run :: AST.ID -> Bool -> Focus -> Pass.Result Focus
 run maxID fixAll = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID fixAll) . fixFocus
 
 
 runModule :: AST.ID -> Bool -> Module -> Pass.Result Module
-runModule maxID fixAll = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID fixAll) . fixModule
+runModule maxID fixAll = (runPass maxID fixAll) . fixModule
 
 
 runExpr :: AST.ID -> Bool -> Expr -> Pass.Result Expr
-runExpr maxID fixAll = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID fixAll) . fixExpr
+runExpr maxID fixAll = (runPass maxID fixAll) . fixExpr
+
+
+runExpr' :: AST.ID -> Bool -> Expr -> Pass.Result (Expr, AST.ID)
+runExpr' maxID fixAll = (runPass maxID fixAll) . fixExpr'
 
 
 runExprs :: AST.ID -> Bool -> [Expr] -> Pass.Result [Expr]
-runExprs maxID fixAll = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID fixAll) . (mapM fixExpr)
+runExprs maxID fixAll = (runPass maxID fixAll) . (mapM fixExpr)
 
 
 runType :: AST.ID -> Bool -> Type -> Pass.Result Type
-runType maxID fixAll = (Pass.run_ (Pass.Info "IDFixer") $ State.make maxID fixAll) . fixType
+runType maxID fixAll = (runPass maxID fixAll) . fixType
 
 
 fixFocus :: Focus -> IDFixerPass Focus
@@ -66,6 +75,10 @@ fixFocus f = Focus.traverseM fixModule fixExpr f
 fixModule :: Module -> IDFixerPass Module
 fixModule m = do n <- State.fixID $ m ^. Module.id
                  Module.traverseM fixModule fixExpr fixType fixPat fixLit $ m & Module.id .~ n
+
+
+fixExpr' :: Expr -> IDFixerPass (Expr, AST.ID)
+fixExpr' e = (,) <$> fixExpr e <*> State.getMaxID
 
 
 fixExpr :: Expr -> IDFixerPass Expr

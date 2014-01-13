@@ -51,7 +51,7 @@ type GBStateM m = MonadState GBState m
 
 
 make :: GeneralVarMap -> PropertyMap -> GBState
-make = GBState Graph.make Map.empty
+make = GBState Graph.empty Map.empty
 
 
 addToNodeMap :: GBStateM m => AST.ID -> (Node.ID, OutPort) -> m ()
@@ -59,10 +59,15 @@ addToNodeMap k v = do nm <- getNodeMap
                       setNodeMap $ Map.insert k v nm
 
 
-insNode :: GBStateM m => (Node.ID, Node) -> Bool -> Bool -> m ()
-insNode n@(nodeID, _) isFolded noAssignment = do
+insNode :: GBStateM m => (Node.ID, Node) -> m ()
+insNode node = do
     g <- getGraph
-    setGraph $ Graph.insNode n g
+    setGraph $ Graph.insNode node g
+
+
+insNodeWithFlags :: GBStateM m => (Node.ID, Node) -> Bool -> Bool -> m ()
+insNodeWithFlags n@(nodeID, _) isFolded noAssignment = do
+    insNode n
     if isFolded
         then setProperty Attributes.astFolded
         else return ()
@@ -74,7 +79,7 @@ insNode n@(nodeID, _) isFolded noAssignment = do
 
 addNode :: GBStateM m => AST.ID -> OutPort -> Node -> Bool -> Bool -> m ()
 addNode astID outPort node isFolded noAssignment = do
-    insNode (astID, node) isFolded noAssignment
+    insNodeWithFlags (astID, node) isFolded noAssignment
     addToNodeMap astID (astID, outPort)
 
 
