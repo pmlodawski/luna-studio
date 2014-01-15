@@ -17,6 +17,7 @@
 
 #include "generated/server-api.pb.h"  
 #include "generated/attributes.pb.h"  
+#include "generated/descriptor.pb.h"
 
 #include <boost/asio.hpp>
 

@@ -7,6 +7,8 @@
 
 package generated.proto.batch;
 
+import "descriptor.proto";
+
 import "attributes.proto";
 import "crumb.proto";
 import "expr.proto";
@@ -21,6 +23,10 @@ import "project.proto";
 import "type.proto";
 import "focus.proto";
 
+
+extend google.protobuf.MessageOptions {
+    optional bool async = 50001;
+}
 
 
 message Request {
@@ -474,6 +480,7 @@ message Library {
             required int32 projectID = 2;
         }
         message Result { extend Response { optional Result rsp = 1406; } }
+        option (async) = true;
     }
     message RunLibrary {
         message Args   { extend Request  { optional Args   req = 1407; } 
