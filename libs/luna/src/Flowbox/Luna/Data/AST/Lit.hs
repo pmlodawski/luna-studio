@@ -9,7 +9,7 @@
 module Flowbox.Luna.Data.AST.Lit where
 
 import qualified Flowbox.Prelude                 as Prelude
-import           Flowbox.Prelude                   (Show, Eq)
+import           Flowbox.Prelude                   (Show, Eq, (++))
 import           Flowbox.Generics.Deriving.QShow   
 import           Flowbox.Luna.Data.AST.Utils       (ID)
 import           GHC.Generics                      
@@ -29,7 +29,7 @@ makeLenses (''Lit)
 
 lunaShow :: Lit -> Prelude.String
 lunaShow lit = case lit of 
-    Char    _ char' -> [char']
-    String  _ str'  -> str'
+    Char    _ char' -> '\'' : char' : "'"
+    String  _ str'  -> '\"' : str' ++ "\""
     Integer _ str'  -> str'
     Float   _ str'  -> str'
