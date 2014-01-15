@@ -574,7 +574,7 @@ message Parser {
 message Process {
     message Processes {
         message Args   { extend Request  { optional Args   req = 2000; }
-            repeated int32 projectID = 1;
+            required int32 projectID = 1;
         }
         message Result { extend Response { optional Result rsp = 2000; }
             repeated int32 processes = 1;
@@ -582,7 +582,7 @@ message Process {
     }
     message Terminate {
         message Args   { extend Request  { optional Args   req = 2001; }
-            repeated int32 projectID = 1;
+            required int32 projectID = 1;
             required int32 processID = 2;
         }
         message Result { extend Response { optional Result rsp = 2001; }

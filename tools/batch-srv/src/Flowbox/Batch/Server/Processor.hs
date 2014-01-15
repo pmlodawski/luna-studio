@@ -134,6 +134,10 @@ import qualified Generated.Proto.Batch.Parser.ParsePat.Args                 as P
 import qualified Generated.Proto.Batch.Parser.ParsePat.Result               as ParsePat
 import qualified Generated.Proto.Batch.Parser.ParseType.Args                as ParseType
 import qualified Generated.Proto.Batch.Parser.ParseType.Result              as ParseType
+import qualified Generated.Proto.Batch.Process.Processes.Args               as Processes
+import qualified Generated.Proto.Batch.Process.Processes.Result             as Processes
+import qualified Generated.Proto.Batch.Process.Terminate.Args               as Terminate
+import qualified Generated.Proto.Batch.Process.Terminate.Result             as Terminate
 import qualified Generated.Proto.Batch.Project.CloseProject.Args            as CloseProject
 import qualified Generated.Proto.Batch.Project.CloseProject.Result          as CloseProject
 import qualified Generated.Proto.Batch.Project.CreateProject.Args           as CreateProject
@@ -269,6 +273,9 @@ process notifySocket handler encoded_request = case Proto.messageWithLengthGet e
         Method.Parser_ParseExpr -> call request handler Handler.parseExpr ParseExpr.req ParseExpr.rsp
         Method.Parser_ParsePat  -> call request handler Handler.parsePat  ParsePat.req  ParsePat.rsp
         Method.Parser_ParseType -> call request handler Handler.parseType ParseType.req ParseType.rsp
+
+        Method.Process_Processes     -> call request handler Handler.processes     Processes.req     Processes.rsp
+        Method.Process_Terminate     -> call request handler Handler.terminate     Terminate.req     Terminate.rsp
 
         Method.Project_Projects      -> call request handler Handler.projects      Projects.req      Projects.rsp
         Method.Project_ProjectByID   -> call request handler Handler.projectByID   ProjectByID.req   ProjectByID.rsp

@@ -284,6 +284,9 @@ makeAsk(Maintenance, Ping)
 makeAsk(Maintenance, Dump)
 makeAsk(Maintenance, Shutdown)
 
+makeAsk(Process, Processes)
+makeAsk(Process, Terminate)
+
 makeAsk(Project, Projects)
 makeAsk(Project, ProjectByID)
 makeAsk(Project, CreateProject)

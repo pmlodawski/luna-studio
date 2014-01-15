@@ -22,13 +22,11 @@ module Flowbox.Batch.Handler.Library (
 import qualified System.Process as Process
 
 import           Flowbox.Batch.Batch                        (Batch)
-import qualified Flowbox.Batch.Batch                        as Batch
 import           Flowbox.Batch.Handler.Common               (libManagerOp, libraryOp, noresult, projectOp, readonly)
 import           Flowbox.Batch.Process.Handle               (Handle (Handle))
 import qualified Flowbox.Batch.Process.Map                  as ProcessMap
 import qualified Flowbox.Batch.Process.Process              as Process
 import qualified Flowbox.Batch.Project.Project              as Project
-import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
 import           Flowbox.Control.Error
 import qualified Flowbox.Luna.Lib.LibManager                as LibManager
 import           Flowbox.Luna.Lib.Library                   (Library)
@@ -38,6 +36,8 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform                    as Platform
 import           Flowbox.System.UniPath                     (UniPath)
+--import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
+--import qualified Flowbox.Batch.Batch                        as Batch
 --import qualified Flowbox.Luna.Passes.Build.Build            as Build
 --import           Flowbox.Luna.Passes.Build.BuildConfig      (BuildConfig (BuildConfig))
 --import qualified Flowbox.Luna.Passes.Build.BuildConfig      as BuildConfig
@@ -114,15 +114,15 @@ buildLibrary libID projectID = readonly . libraryOp libID projectID (\batch libr
 
 
 -- TODO [PM] : Needs architecture change
-runLibrary ::  Library.ID -> Project.ID -> Batch -> IO (Process.ID, Batch)
-runLibrary libID projectID = projectOp projectID (\batch project -> do
+runLibrary ::  Library.ID -> Project.ID -> Batch -> IO (Batch, Process.ID)
+runLibrary libID projectID = projectOp projectID (\_ project -> do
     let projectPath = Project.path project
         libs        = Project.libs project
         processMap  = Project.processMap project
     library <- LibManager.lab libs libID <?> "Wrong libID=" ++ (show libID)
 
-    --let name = Library.name library
-    --    command = Platform.dependent ("./" ++ name) (name ++ ".exe") ("./" ++ name)
+    let name = Library.name library
+        command = Platform.dependent ("./" ++ name) (name ++ ".exe") ("./" ++ name)
     --    noStandardInput = ""
     --    noArguments     = [] --TODO [PM] : reimplement all this method to support real programs
     --loggerIO debug $ "Running command '" ++ command ++ "'"
@@ -130,9 +130,11 @@ runLibrary libID projectID = projectOp projectID (\batch project -> do
     --let exitMsg = "Program exited with " ++ (show errorCode) ++ " code"
     --loggerIO debug exitMsg
     --return (library, stdOut ++ stdErr ++ "\n" ++ "Program exited with " ++ (show errorCode) ++ " code"))
-    handle <- Process.spawnCommand "test"
-    let processID = ProcessMap.size processMap + 1
-    return (ProcessMap.insert processID (Handle handle), processID))
+    handle <- Process.runCommand command
+    let processID     = ProcessMap.size processMap + 1
+        newProcessMap = ProcessMap.insert processID (Handle handle) processMap
+        newProject    = project { Project.processMap = newProcessMap}
+    return (newProject, processID))
 
 
 

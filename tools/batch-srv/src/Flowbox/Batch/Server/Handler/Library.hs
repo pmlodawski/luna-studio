@@ -127,6 +127,7 @@ runLibrary batchHandler (RunLibrary.Args tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    output <- BatchL.runLibrary libID projectID batch
-    return $ RunLibrary.Result $ encodeP output
+    (newBatch, processID) <- BatchL.runLibrary libID projectID batch
+    IORef.writeIORef batchHandler newBatch
+    return $ RunLibrary.Result $ encodeP processID
 

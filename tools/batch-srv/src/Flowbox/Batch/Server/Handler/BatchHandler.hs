@@ -25,6 +25,7 @@ import qualified Flowbox.Batch.Server.Handler.Library     as HLibrary
 import qualified Flowbox.Batch.Server.Handler.Maintenance as HMaintenance
 import qualified Flowbox.Batch.Server.Handler.NodeDefault as HNodeDefault
 import qualified Flowbox.Batch.Server.Handler.Parser      as HParser
+import qualified Flowbox.Batch.Server.Handler.Process     as HProcess
 import qualified Flowbox.Batch.Server.Handler.Project     as HProject
 import qualified Flowbox.Batch.Server.Handler.Properties  as HProperties
 import qualified Flowbox.Config.Config                    as Config
@@ -107,6 +108,9 @@ instance Handler BatchHandler where
     parseExpr     h = HParser.parseExpr      (batchRef h)
     parsePat      h = HParser.parsePat       (batchRef h)
     parseType     h = HParser.parseType      (batchRef h)
+
+    processes     h = HProcess.processes     (batchRef h)
+    terminate     h = HProcess.terminate     (batchRef h)
 
     projects      h = HProject.projects      (batchRef h)
     projectByID   h = HProject.projectByID   (batchRef h)

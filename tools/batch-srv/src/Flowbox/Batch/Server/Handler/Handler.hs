@@ -107,6 +107,10 @@ import qualified Generated.Proto.Batch.Parser.ParsePat.Args                 as P
 import qualified Generated.Proto.Batch.Parser.ParsePat.Result               as ParsePat
 import qualified Generated.Proto.Batch.Parser.ParseType.Args                as ParseType
 import qualified Generated.Proto.Batch.Parser.ParseType.Result              as ParseType
+import qualified Generated.Proto.Batch.Process.Processes.Args               as Processes
+import qualified Generated.Proto.Batch.Process.Processes.Result             as Processes
+import qualified Generated.Proto.Batch.Process.Terminate.Args               as Terminate
+import qualified Generated.Proto.Batch.Process.Terminate.Result             as Terminate
 import qualified Generated.Proto.Batch.Project.CloseProject.Args            as CloseProject
 import qualified Generated.Proto.Batch.Project.CloseProject.Result          as CloseProject
 import qualified Generated.Proto.Batch.Project.CreateProject.Args           as CreateProject
@@ -184,6 +188,9 @@ class Handler h where
     parseExpr :: h -> ParseExpr.Args -> IO ParseExpr.Result
     parsePat  :: h -> ParsePat.Args  -> IO ParsePat.Result
     parseType :: h -> ParseType.Args -> IO ParseType.Result
+
+    processes :: h -> Processes.Args -> IO Processes.Result
+    terminate :: h -> Terminate.Args -> IO Terminate.Result
 
     projects      :: h -> Projects.Args      -> IO Projects.Result
     projectByID   :: h -> ProjectByID.Args   -> IO ProjectByID.Result
