@@ -48,7 +48,11 @@ fromUnixString spath@(x:xs) = let
 
 
 toUnixString :: UniPath -> String
-toUnixString path = StringUtils.join "/" $ toList path
+toUnixString path = case head l of
+        "/" -> "/" ++ (join $ tail l)
+        _   -> join l
+    where l    = toList path
+          join = StringUtils.join "/"
 
 
 expand :: MonadIO m => UniPath -> m UniPath
@@ -71,7 +75,6 @@ toList :: UniPath -> [String]
 toList path = fmap str path where
     str item = case item of
             Node txt -> txt
-            Root ""  -> "/"
             Root txt -> txt
             Up       -> ".."
             Current  -> "."
@@ -93,7 +96,7 @@ dirOf path = init path
 
 toPathItem :: String -> PathItem
 toPathItem snode = case snode of
-        "/"  -> Root ""
+        "/"  -> Root "/"
         ".." -> Up
         "."  -> Current
         ""   -> Empty
