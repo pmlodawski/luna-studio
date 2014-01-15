@@ -71,6 +71,7 @@ toList :: UniPath -> [String]
 toList path = fmap str path where
     str item = case item of
             Node txt -> txt
+            Root ""  -> "/"
             Root txt -> txt
             Up       -> ".."
             Current  -> "."
