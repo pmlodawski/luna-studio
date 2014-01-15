@@ -28,7 +28,7 @@ import           Flowbox.Luna.Data.PropertyMap                   (PropertyMap)
 import qualified Flowbox.Luna.Data.PropertyMap                   as PropertyMap
 import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes  as Attributes
 import           Flowbox.Prelude                                 hiding (empty)
-
+import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
 
 
 generatedProperties :: Properties
@@ -58,7 +58,8 @@ addNodeDefault nodeID (adstPort, (defaultNodeID, defaultValue)) (graph, property
         then (newGraph2, newPropertyMap)
         else (graph, propertyMap)
     where
-      newGraph = GraphView.insNode (defaultNodeID, Node.Expr defaultValue defaultValue) graph
+      node      = Node.Expr defaultValue $ OutputName.generate defaultValue nodeID
+      newGraph  = GraphView.insNode (defaultNodeID, node) graph
       newGraph2 = GraphView.insEdge (defaultNodeID, nodeID, EdgeView [] adstPort) newGraph
       newPropertyMap = PropertyMap.insert defaultNodeID generatedProperties propertyMap
 

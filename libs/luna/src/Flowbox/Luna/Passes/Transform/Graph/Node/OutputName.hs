@@ -5,7 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Passes.Transform.Graph.Node.OutputName where
+module Flowbox.Luna.Passes.Transform.Graph.Node.OutputName (
+	fix, 
+	fixEmpty,
+    generate,
+) where
 
 import qualified Data.Char as Char
 import qualified Data.List as List
