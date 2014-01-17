@@ -10,9 +10,11 @@ from utils.colors import print_error
 
 
 cwd         = os.getcwd()
-cpp_gen_dir  = os.path.join(cwd, 'tools/batch-clients/performance/zmq/generated')
-cpp_gen_dir2 = os.path.join(cwd, 'tools/batch-clients/performance/tcp/generated')
-cpp_gen_dir3 = os.path.join(cwd, 'tools/batch-clients/tcp-cpp/generated')
+cpp_gen_dirs = [os.path.join(cwd, 'tools/batch-clients/performance/zmq/generated')
+               ,os.path.join(cwd, 'tools/batch-clients/performance/tcp/generated')
+               ,os.path.join(cwd, 'tools/batch-clients/tcp-cpp/generated')]
+
+imports = "-I /usr/include -I /usr/local/include -I libs/luna/src/proto -I libs/batch/src/proto"
 
 def main():
     proto_paths = glob('**/*.proto')
@@ -24,30 +26,26 @@ def main():
 
 def run_protoc(proto_path):
     proto_dir  = os.path.dirname(proto_path)
-    hs_gen_dir  = '../../dist/gen'
-    proto_name  = os.path.basename(proto_path)
+    hs_gen_dir = os.path.join(proto_dir, '../../dist/gen')
+    proto_name = os.path.basename(proto_path)
 
-    try_call('protoc --cpp_out=' + cpp_gen_dir  + ' -I libs/batch/src/proto -I libs/luna/src/proto -I ' + proto_dir + ' -I libs/utils/src/proto ' + proto_path)
-    try_call('protoc --cpp_out=' + cpp_gen_dir2 + ' -I libs/batch/src/proto -I libs/luna/src/proto -I ' + proto_dir + ' -I libs/utils/src/proto ' + proto_path)
-    try_call('protoc --cpp_out=' + cpp_gen_dir3 + ' -I libs/batch/src/proto -I libs/luna/src/proto -I ' + proto_dir + ' -I libs/utils/src/proto ' + proto_path)
+    args = ' ' + imports + ' -I ' + proto_dir + ' ' + proto_path
+
+    for cpp_gen_dir in cpp_gen_dirs:
+        try_call('protoc --cpp_out=' + cpp_gen_dir + args)
     
-    os.chdir(proto_dir)
-    try_call('hprotoc -d ' + hs_gen_dir + ' -I ../../../../libs/batch/src/proto -I ../../../../libs/luna/src/proto  -I ../../../../libs/utils/src/proto ' + proto_name)
-    os.chdir(cwd)
+    try_call('hprotoc -d ' + hs_gen_dir + args)
 
 def prepare_hs_dir(proto_path):
     proto_dir  = os.path.dirname(proto_path)
-    hs_gen_dir  = '../../dist/gen'
+    hs_gen_dir = '../../dist/gen'
 
     shutil.rmtree(os.path.join(proto_dir, hs_gen_dir), True)
 
 def prepare_cpp_dir():
-    shutil.rmtree(cpp_gen_dir, True)
-    os.makedirs(cpp_gen_dir)
-    shutil.rmtree(cpp_gen_dir2, True)
-    os.makedirs(cpp_gen_dir2)
-    shutil.rmtree(cpp_gen_dir3, True)
-    os.makedirs(cpp_gen_dir3)
+    for cpp_gen_dir in cpp_gen_dirs:
+        shutil.rmtree(cpp_gen_dir, True)
+        os.makedirs(cpp_gen_dir)
 
 def try_call(cmd):
     if call(cmd, shell=True): fatal()

@@ -1,6 +1,5 @@
 GEN_SRC :=  generated/attributes.pb.cc \
 			generated/crumb.pb.cc \
-			generated/descriptor.pb.cc \
 			generated/expr.pb.cc \
 			generated/file-system.pb.cc \
 			generated/focus.pb.cc \
