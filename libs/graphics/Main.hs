@@ -28,6 +28,7 @@ import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Monoid                  (Monoid, mempty)
 import qualified Data.Fixed                   as F
+import qualified Debug.Trace                  as D
 
 import System.TimeIt (timeIt)
 
@@ -43,6 +44,7 @@ import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
 
 --import           Control.Monad
 
+import qualified Data.Array.Accelerate.Interpreter      as Interp
 
 import qualified Data.Array.Repa.Eval as R
 
@@ -70,7 +72,7 @@ luminance' = luminance "r" "g" "b" "luminance"
 
 
 
-imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
+--imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
 imgtest img = do
     rgba  <- Image.reprFloat <$> RGBA.decompose img
     --lrgba <- luminance' rgba
@@ -83,8 +85,15 @@ imgtest img = do
         --sharpen3x3 = [-1.0,-1.0,-1.0,-1.0,9.0,-1.0,-1.0,-1.0,-1.0]
     --lrgba <- convolve "r" convolve5x5 sharpen3x3 rgba
     hsv <- convertRGBtoHSV rgba
-    lrgba <- convertHSVtoRGB hsv
+    h <- Image.lookup "h" hsv
+    s <- Image.lookup "s" hsv
+    v <- Image.lookup "v" hsv
+    --let hsvl = Image.insert "h" (Channel.map (mod1 . (+0.5)) h) $ hsv
+    let hsvl = Image.insert "s" (clipValues $ Channel.map (+1) s) $ hsv
+    lrgba <- convertHSVtoRGB hsvl
     RGBA.compose $ Image.reprWord8 lrgba
+    where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
+          mod1 = flip nonIntRem 1.0
 
 -- convolution
 
@@ -194,42 +203,20 @@ convertRGBtoHSV img = do
     return outimg
 
 calculateRGBfromHSV :: Exp Float -> Exp Float -> Exp Float -> (Exp Float, Exp Float, Exp Float)
-calculateRGBfromHSV h s v = (r+m, g+m, b+m)
-    --where (r, g, b) = case h' of
-    --                  z | ((0   A.<=* z) A.&&* (z A.<* 60))  -> (c, x, 0)
-    --                  z | ((60  A.<=* z) A.&&* (z A.<* 120)) -> (x, c, 0)
-    --                  z | ((120 A.<=* z) A.&&* (z A.<* 180)) -> (0, c, x)
-    --                  z | ((180 A.<=* z) A.&&* (z A.<* 240)) -> (0, x, c)
-    --                  z | ((240 A.<=* z) A.&&* (z A.<* 300)) -> (x, 0, c)
-    --                  z | ((300 A.<=* z) A.&&* (z A.<* 360)) -> (c, 0, x)
-    where p = 0   A.<=* h' A.&&* h' A.<* 1/6 A.? (A.lift ((c, x, 0) :: (Exp Float, Exp Float, Exp Float)),
-              1/6 A.<=* h' A.&&* h' A.<* 1/3 A.? (A.lift ((x, c, 0) :: (Exp Float, Exp Float, Exp Float)),
-              1/3 A.<=* h' A.&&* h' A.<* 1/2 A.? (A.lift ((0, c, x) :: (Exp Float, Exp Float, Exp Float)),
-              1/2 A.<=* h' A.&&* h' A.<* 2/3 A.? (A.lift ((0, x, c) :: (Exp Float, Exp Float, Exp Float)),
-              2/3 A.<=* h' A.&&* h' A.<* 5/6 A.? (A.lift ((x, 0, c) :: (Exp Float, Exp Float, Exp Float)),
-              A.lift ((c, 0, x) :: (Exp Float, Exp Float, Exp Float))
+calculateRGBfromHSV h s v = A.unlift a :: (Exp Float, Exp Float, Exp Float)
+    where a = i A.==* (0::Exp Int) A.? (A.lift ((v, t, p) :: (Exp Float, Exp Float, Exp Float)),
+              i A.==* (1::Exp Int) A.? (A.lift ((q, v, p) :: (Exp Float, Exp Float, Exp Float)),
+              i A.==* (2::Exp Int) A.? (A.lift ((p, v, t) :: (Exp Float, Exp Float, Exp Float)),
+              i A.==* (3::Exp Int) A.? (A.lift ((p, q, v) :: (Exp Float, Exp Float, Exp Float)),
+              i A.==* (4::Exp Int) A.? (A.lift ((t, p, v) :: (Exp Float, Exp Float, Exp Float)),
+              A.lift ((v, p, q) :: (Exp Float, Exp Float, Exp Float))
               )))))
-          (r, g, b) = A.unlift p :: (Exp Float, Exp Float, Exp Float)
-          m  = v - c
-          x  = c * (1 - P.abs (((h' * 6) `nonIntRem` 2) - 1))
-          c  = v * s
-          h' = (h `nonIntRem` 1) * 360
-          nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
-
---calculateRGBfromHSV :: Exp Float -> Exp Float -> Exp Float -> (Exp Float, Exp Float, Exp Float)
---calculateRGBfromHSV h s v = A.unlift a :: (Exp Float, Exp Float, Exp Float)
---    where a = hi A.==* (0::Exp Int) A.? (A.lift ((v, t, p) :: (Exp Float, Exp Float, Exp Float)),
---              hi A.==* (1::Exp Int) A.? (A.lift ((q, v, p) :: (Exp Float, Exp Float, Exp Float)),
---              hi A.==* (2::Exp Int) A.? (A.lift ((p, v, t) :: (Exp Float, Exp Float, Exp Float)),
---              hi A.==* (3::Exp Int) A.? (A.lift ((p, q, v) :: (Exp Float, Exp Float, Exp Float)),
---              hi A.==* (4::Exp Int) A.? (A.lift ((t, p, v) :: (Exp Float, Exp Float, Exp Float)),
---              A.lift ((v, p, q) :: (Exp Float, Exp Float, Exp Float))
---              )))))
---          hi = A.floor (h / 60) `mod` 6
---          f = h / 60 - (A.lift (fromIntegral A.floor(h / 60) :: Float))
---          p = v * (1 - s)
---          q = v * (1 - f * s)
---          t = v * (1 - (1 - f) * s)
+          hi = h * 6
+          i = A.floor hi :: Exp (A.Plain Int)
+          f = hi - (A.fromIntegral i)
+          p = v * (1 - s)
+          q = v * (1 - s * f)
+          t = v * (1 - s * (1 - f))
 
 convertHSVtoRGB :: (Image Float) -> Either Image.Error (Image Float)
 convertHSVtoRGB img = do
@@ -367,13 +354,10 @@ main
         img2 <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
         let img3 = imgtest img2
 
-
         case img3 of
             Left  err -> print err
             Right val -> do Image.writeImageToBMP (ParseArgs.run backend) fileOut val
                             return ()
-
-
 
 
         --if P.not (Label.get Cfg.configBenchmark conf)
