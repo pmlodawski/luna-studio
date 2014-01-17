@@ -32,6 +32,7 @@ import qualified Flowbox.Luna.Passes.Pass                              as Pass
 import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
 import qualified Flowbox.Luna.Passes.Source.File.Writer                as FileWriter
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
+import qualified Flowbox.Luna.Passes.Transform.Hash.Hash               as Hash
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
 import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
 import           Flowbox.Prelude
@@ -71,7 +72,9 @@ run buildConfig ast = runEitherT $ do
     Diagnostics.printVA va diag
     fp   <- hoistEither =<< FuncPool.run ast
     Diagnostics.printFP fp diag
-    ssa  <- hoistEither =<< SSA.run va ast
+    hash <- hoistEither =<< Hash.run ast
+    -- TODO Diagnostics
+    ssa  <- hoistEither =<< SSA.run va hash
     Diagnostics.printSSA ssa diag
     hast <- hoistEither =<< HASTGen.run ssa fp
     Diagnostics.printHAST hast diag

@@ -35,6 +35,7 @@ import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils
 import qualified Luna.Target.HS.Naming                               as Naming
 import           Data.String.Utils                                     (join)
 import qualified Data.Set                                            as Set
+import qualified Flowbox.Luna.Data.HAST.Deriving                     as Deriving
 
 import           Control.Monad.State                                 hiding (mapM, mapM_, join)
 
@@ -84,14 +85,14 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
     when (name == "Main") $ do
         let funcnames = map (view LExpr.name) methods
         if not $ "main" `elem` funcnames
-            then logger warning "No 'main' function defined."
+            then logger warning "No 'main' function defined." *> GenState.addFunction mainEmpty
             else GenState.addFunction mainf
     GenState.getModule
 
 
 mainf :: HExpr
-mainf = HExpr.Function "main" [] $
-        HExpr.DoBlock [   HExpr.Arrow (HExpr.Var "m")
+mainf = HExpr.Function "main" []
+      $ HExpr.DoBlock [   HExpr.Arrow (HExpr.Var "m")
                         $ HExpr.AppE (HExpr.Var "call0") 
                         $ HExpr.Var "con_Main"
                       ,   mkGetIO
@@ -99,6 +100,10 @@ mainf = HExpr.Function "main" [] $
                         $ HExpr.AppE (mkMemberGetter "main")
                         $ HExpr.Var "m"
                       ] 
+
+mainEmpty :: HExpr
+mainEmpty = HExpr.Function "main" []
+          $ HExpr.DoBlock [mkGetIO $ HExpr.AppE (HExpr.Var "val") $ HExpr.Tuple []]
 
 
 genVArgCon arglen name ccname params base = getter where
@@ -219,17 +224,16 @@ genExpr ast = case ast of
                                             return f
 
     LExpr.Lambda id inputs output body   -> do
-                                            let mname      = mkLamName $ show id
-                                                fname      = mkFuncName mname
-                                                conName    = mkConName fname
-                                                cfName     = mkCFLName mname
+                                            let fname      = Naming.mkLamName $ show id
+                                                hName      = Naming.mkHandlerFuncName fname
+                                                cfName     = mkCFLName fname
                                                 argNum     = length inputs
                                                 cgetCName  = mkCGetCName argNum
                                                 cgetName   = mkCGetName  argNum
-                                                getNName   = mkTName argNum mname
-                                                vargGetter = genVArgGetterL argNum mname cfName
+                                                getNName   = mkTName argNum fname
+                                                vargGetter = genVArgGetterL argNum fname cfName
 
-                                            GenState.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] ["Show"]
+                                            GenState.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] [Deriving.Show]
 
                                             f  <-   HExpr.Assignment (HExpr.Var fname) 
                                                     <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
@@ -237,13 +241,13 @@ genExpr ast = case ast of
                                                         )
                                             GenState.addFunction f
 
-                                            GenState.addTHExpression $ thRegisterLambda fname argNum [] 
+                                            GenState.addTHExpression $ thRegisterFunction fname argNum [] 
                                             GenState.addTHExpression $ thClsCallInsts fname argNum 0
 
                                             --GenState.addFunction vargGetter
                                             --GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
 
-                                            return $ HExpr.Var conName
+                                            return $ HExpr.Var hName
 
     LExpr.Arg _ pat _                    -> genPat pat
                                                   
@@ -277,7 +281,7 @@ genExpr ast = case ast of
                                                consTH = map snd consTuples
 
                                            --cons   <- HExpr.Con name <$> mapM genExpr fields
-                                           let dt = HExpr.DataD name params consE ["Show", "Generic"]
+                                           let dt = HExpr.DataD name params consE [Deriving.Show, Deriving.Eq, Deriving.Ord, Deriving.Generic]
                                            GenState.addDataType dt
         
                                            sequence consTH

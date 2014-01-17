@@ -107,7 +107,7 @@ buildExpr e = case e of
     HExpr.DataD    name params cons ders  -> pure $ "data " ++ name ++ params' ++ " = " ++ cons' ++ ders' 
                                              where params' = if null params then "" else " " ++ join " " params
                                                    cons'   = join " | " (fExpMap cons)
-                                                   ders'   = if null ders then "" else " deriving (" ++ sepjoin ders ++ ")"
+                                                   ders'   = if null ders then "" else " deriving (" ++ sepjoin (map show ders) ++ ")"
     HExpr.InstanceD tp decs               -> pure $ "instance " ++ (code.buildExpr) tp ++ " where { " ++ join "; " (map (code.buildExpr) decs) ++ " }"
     HExpr.NewTypeD name params con        -> pure $ "newtype " ++ name ++ params' ++ " = " ++ (code.buildExpr) con 
                                              where params' = if null params then "" else " " ++ join " " params

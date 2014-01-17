@@ -44,6 +44,7 @@ Library
                   flowbox-config,
                   flowbox-utils,
                   ghc-prim,
+                  hashable,
                   lens,
                   luna-target-hs,
                   MissingH,

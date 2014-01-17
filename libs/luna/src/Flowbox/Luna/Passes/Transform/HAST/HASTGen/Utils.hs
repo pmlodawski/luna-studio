@@ -11,6 +11,8 @@ import qualified Flowbox.Luna.Data.HAST.Expr as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit  as HLit
 import           Flowbox.Prelude             hiding (error, id)
 
+--import Data.Hashable (hash)
+
 type HExpr   = HExpr.Expr
 
 
@@ -160,3 +162,7 @@ mkMemberGetter name = HExpr.AppE (HExpr.VarE "member") (HExpr.TypedE (HExpr.AppT
 
 mkRTuple :: [HExpr] -> HExpr
 mkRTuple = foldr (\x y -> HExpr.Tuple [x,y]) (HExpr.Tuple [])
+
+
+--hashFuncName :: String -> String
+--hashFuncName name = "v_" ++ show.abs $ hash name
