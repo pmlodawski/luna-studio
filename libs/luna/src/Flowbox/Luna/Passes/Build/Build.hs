@@ -79,7 +79,8 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
     Diagnostics.printHSC hsc diag
 
     let allLibs = "base"
-                : "flowboxM-core"
+                -- : "flowboxM-core"
+                : "luna-target-hs"
                 : "template-haskell"
                 : libs
                 ++ if name /= "flowboxM-stdlib"
