@@ -48,6 +48,7 @@ fromUnixString spath@(x:xs) = let
 
 
 toUnixString :: UniPath -> String
+toUnixString []   = ""
 toUnixString path = case head l of
         "/" -> "/" ++ (join $ tail l)
         _   -> join l
