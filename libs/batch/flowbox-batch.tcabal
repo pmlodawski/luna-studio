@@ -34,6 +34,7 @@ Library
                   flowbox-luna,
                   flowbox-utils,
                   lens,
+                  MissingH,
                   mtl,
                   network,
                   parsec,

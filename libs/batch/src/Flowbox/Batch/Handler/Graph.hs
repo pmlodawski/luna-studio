@@ -7,6 +7,8 @@
 
 module Flowbox.Batch.Handler.Graph where
 
+import Data.String.Utils as Utils
+
 import           Flowbox.Batch.Batch                                 (Batch)
 import           Flowbox.Batch.Handler.Common                        (graphViewOp, noresult, readonly, readonlyNodeOp)
 import qualified Flowbox.Batch.Project.Project                       as Project
@@ -23,6 +25,7 @@ import qualified Flowbox.Luna.Lib.Library                            as Library
 import qualified Flowbox.Luna.Passes.Transform.Graph.Node.OutputName as OutputName
 import           Flowbox.Prelude                                     hiding (error)
 import           Flowbox.System.Log.Logger
+
 
 
 loggerIO :: LoggerIO
@@ -43,7 +46,8 @@ addNode :: Node
         -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Node.ID)
 addNode node bc libID projectID = graphViewOp bc libID projectID (\_ graph propertyMap maxID -> do
     let newID     = maxID + 1
-        fixedNode = OutputName.fixEmpty node newID
+        node_tmp  = node & Node.expr %~ Utils.replace "." "()."
+        fixedNode = OutputName.fixEmpty node_tmp newID
     return ((GraphView.insNode (newID, fixedNode) graph, propertyMap), newID))
 
 

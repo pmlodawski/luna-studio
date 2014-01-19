@@ -258,7 +258,8 @@ process notifySocket handler encoded_request = case Proto.messageWithLengthGet e
         Method.Library_LoadLibrary   -> call request handler Handler.loadLibrary   LoadLibrary.req   LoadLibrary.rsp
         Method.Library_UnloadLibrary -> call request handler Handler.unloadLibrary UnloadLibrary.req UnloadLibrary.rsp
         Method.Library_StoreLibrary  -> call request handler Handler.storeLibrary  StoreLibrary.req  StoreLibrary.rsp
-        Method.Library_BuildLibrary  -> async request handler Handler.buildLibrary  BuildLibrary.req  BuildLibrary.rsp notifySocket
+        Method.Library_BuildLibrary  -> call request handler Handler.buildLibrary  BuildLibrary.req  BuildLibrary.rsp
+        --Method.Library_BuildLibrary  -> async request handler Handler.buildLibrary  BuildLibrary.req  BuildLibrary.rsp notifySocket
         Method.Library_RunLibrary    -> call request handler Handler.runLibrary    RunLibrary.req    RunLibrary.rsp
 
         Method.Maintenance_Initialize -> call request handler Handler.initialize Initialize.req Initialize.rsp
