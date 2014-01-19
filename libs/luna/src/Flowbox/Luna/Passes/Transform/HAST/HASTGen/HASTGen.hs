@@ -66,7 +66,7 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
                 $ HModule.addExt HExtension.DeriveGeneric
                 $ HModule.addExt HExtension.FlexibleInstances
                 $ HModule.addExt HExtension.MultiParamTypeClasses
-                -- $ HModule.addExt HExtension.NoMonomorphismRestriction
+                $ HModule.addExt HExtension.NoMonomorphismRestriction
                 $ HModule.addExt HExtension.RebindableSyntax
                 $ HModule.addExt HExtension.ScopedTypeVariables
                 $ HModule.addExt HExtension.TemplateHaskell
