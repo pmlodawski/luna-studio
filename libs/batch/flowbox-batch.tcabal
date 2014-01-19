@@ -18,9 +18,7 @@ Library
 
   GHC-Options:    -Wall -O2
 
-  Extensions:     FlexibleInstances,
-                  NoImplicitPrelude,
-                  TypeSynonymInstances
+  Extensions:     NoImplicitPrelude
 
   Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
                    `findmodules('src', '.*\.hs', exclude='(.*Flowbox/Batch/Main\.hs)')`
@@ -44,3 +42,28 @@ Library
                   protocol-buffers-descriptor,
                   text,
                   timeit
+
+
+Executable lib-importer
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: tests
+
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2
+
+  Extensions:     NoImplicitPrelude
+
+  Build-Depends:  aeson,
+                  base,
+                  concatenative,
+                  dlist,
+                  either,
+                  flowbox-luna,
+                  flowbox-utils,
+                  lens,
+                  luna-target-hs,
+                  MissingH,
+                  mtl,
+                  timeit,
+                  transformers

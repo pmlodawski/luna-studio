@@ -43,7 +43,6 @@ import qualified Flowbox.System.UniPath                                as UniPat
 import qualified Flowbox.Text.Show.Hs                                  as ShowHs
 
 
-
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.Build.Build"
 
