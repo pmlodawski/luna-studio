@@ -43,6 +43,7 @@ buildParser = Cmd.Build <$> ( Cmd.BuildOptions <$> argument str ( metavar "INPUT
                                                <*> option    ( long "lib-version" <> value (Version [1] []) <> metavar "VERSION" <> help "library version in X.Y.Z format" )
                                                <*> strOption ( long "root-path"                <> value "" <> hidden )
                                                <*> switch    ( long "global"  <> help "compile to global library" )
+                                               <*> strOption ( long "build-dir"                <> value "" <> hidden )
 
                                                <*> switch ( long "dump-all"  <> hidden )
                                                <*> switch ( long "dump-ast"  <> hidden )

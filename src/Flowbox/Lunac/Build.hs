@@ -69,7 +69,10 @@ build cfg op diag filePath = do
         buildType  = if Cmd.library op
                         then BuildConfig.Library
                         else BuildConfig.Executable outputPath
-        bldCfg = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag
+        buildDir   = case Cmd.buildDir op of
+                        "" -> Nothing
+                        d  -> Just $ UniPath.fromUnixString d
+        bldCfg = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag buildDir
     ast <- Luna.runIO $ Build.parseFile rootPath filePath
     Luna.runIO $ Build.run bldCfg $ fst ast
     return ()
