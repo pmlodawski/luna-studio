@@ -79,4 +79,4 @@ showSrcs srcs = join "\n\n" $ map showSrc srcs
 
 showSrc :: Source.Source -> String
 showSrc src   = ">>> file '" ++ join "/" (Source.path src) ++ "':\n\n"
-              ++ hsShow (Source.code src)
+              ++ (Source.code src)
