@@ -34,5 +34,4 @@ Executable batch-srv
                     optparse-applicative,
                     protocol-buffers,
                     text,
-                    transformers,
-                    zeromq3-haskell
+                    transformers
