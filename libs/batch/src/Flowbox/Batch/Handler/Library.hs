@@ -18,32 +18,32 @@ module Flowbox.Batch.Handler.Library (
 ) where
 
 --import qualified Data.Maybe   as Maybe
---import           Data.Version (Version (Version))
+import           Data.Version (Version (Version))
 import qualified System.Process as Process
 
 import           Flowbox.Batch.Batch                        (Batch)
+import qualified Flowbox.Batch.Batch                        as Batch
 import           Flowbox.Batch.Handler.Common               (libManagerOp, libraryOp, noresult, projectOp, readonly)
 import           Flowbox.Batch.Process.Handle               (Handle (Handle))
 import qualified Flowbox.Batch.Process.Map                  as ProcessMap
 import qualified Flowbox.Batch.Process.Process              as Process
 import qualified Flowbox.Batch.Project.Project              as Project
+import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
 import           Flowbox.Control.Error
 import qualified Flowbox.Luna.Lib.LibManager                as LibManager
 import           Flowbox.Luna.Lib.Library                   (Library)
 import qualified Flowbox.Luna.Lib.Library                   as Library
+import qualified Flowbox.Luna.Passes.Build.Build            as Build
+import           Flowbox.Luna.Passes.Build.BuildConfig      (BuildConfig (BuildConfig))
+import qualified Flowbox.Luna.Passes.Build.BuildConfig      as BuildConfig
+import qualified Flowbox.Luna.Passes.Build.Diagnostics      as Diagnostics
+import qualified Flowbox.Luna.Passes.General.Luna.Luna      as Luna
 import qualified Flowbox.Luna.Tools.Serialize.Proto.Library as LibSerialization
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform                    as Platform
 import           Flowbox.System.UniPath                     (UniPath)
---import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
---import qualified Flowbox.Batch.Batch                        as Batch
---import qualified Flowbox.Luna.Passes.Build.Build            as Build
---import           Flowbox.Luna.Passes.Build.BuildConfig      (BuildConfig (BuildConfig))
---import qualified Flowbox.Luna.Passes.Build.BuildConfig      as BuildConfig
---import qualified Flowbox.Luna.Passes.Build.Diagnostics      as Diagnostics
---import qualified Flowbox.Luna.Passes.General.Luna.Luna      as Luna
---import qualified Flowbox.System.UniPath                     as UniPath
+import qualified Flowbox.System.UniPath                     as UniPath
 
 
 
@@ -87,29 +87,26 @@ storeLibrary libID projectID = readonly . libraryOp libID projectID (\_ library 
 -- TODO [PM] : More remote arguments needed
 buildLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
 buildLibrary libID projectID = readonly . libraryOp libID projectID (\batch library -> do
-    loggerIO critical "Not implemented - buildLibrary"
-    --let projManager = Batch.projectManager batch
-    --    (Just proj) = ProjectManager.lab projManager projectID
-    --    projectPath = Project.path proj
+    let projManager = Batch.projectManager batch
+        (Just proj) = ProjectManager.lab projManager projectID
+        projectPath = Project.path proj
 
-    --    defManger   = Library.defs library
-    --    rootDefID   = Library.rootDefID
-    --    rootDef     = Maybe.fromJust $ DefManager.lab defManger rootDefID
+        ast         = Library.ast library
 
-    --    name        = Library.name library
-    --    version     = Version [1][]      -- TODO [PM] : hardcoded version
-    --    cfg         = Batch.config batch
-    --    diag        = Diagnostics.none   -- TODO [PM] : hardcoded diagnostics
-    --    outputPath  = UniPath.append name projectPath
-    --    libs        = []                 -- TODO [PM] : hardcoded libs
-    --    ghcFlags    = ["-O2"]            -- TODO [PM] : hardcoded ghc flags
-    --    cabalFlags  = []                 -- TODO [PM] : hardcoded cabal flags
+        name        = Library.name library
+        version     = Version [1][]      -- TODO [PM] : hardcoded version
+        cfg         = Batch.config batch
+        diag        = Diagnostics.all   -- TODO [PM] : hardcoded diagnostics
+        outputPath  = UniPath.append name projectPath
+        libs        = []                 -- TODO [PM] : hardcoded libs
+        ghcFlags    = ["-O2"]            -- TODO [PM] : hardcoded ghc flags
+        cabalFlags  = []                 -- TODO [PM] : hardcoded cabal flags
+        buildDir    = Nothing
 
-    --    buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
-    --    bldCfg      = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag
+        buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
+        bldCfg      = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag buildDir
 
-    --Luna.runIO $ do ast <- Build.parseGraph diag defManger (rootDefID, rootDef)
-    --                Build.run bldCfg ast
+    Luna.runIO $ Build.run bldCfg ast
     return (library, ()))
 
 

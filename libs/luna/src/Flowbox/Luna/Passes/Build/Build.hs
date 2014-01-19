@@ -126,12 +126,3 @@ parseFile rootPath filePath = runEitherT $ do
     source <- hoistEither =<< FileReader.run rootPath filePath
     ast    <- hoistEither =<< TxtParser.run source
     return ast
-
-
---parseGraph :: PassMonad s m => Diagnostics -> DefManager -> (Definition.ID, Definition) -> Pass.Result m ASTModule.Module
---parseGraph diag defManager def = do
---    logger debug "Compiling graph"
---    let tmpFixed_defManager = DequalifyCalls.run defManager
---    Diagnostics.printDM tmpFixed_defManager diag
---    ast <- GraphParser.run tmpFixed_defManager def
---    return ast
