@@ -63,15 +63,15 @@ class AllProject(Project):
         return tgts
 
 
-deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'core', 'cabal-install', 'graphics', 'num-conversion', 'utils', 'markup']
+deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'target-hs', 'cabal-install', 'graphics', 'num-conversion', 'utils', 'markup']
 
 pkgs = { '@all'           : AllProject (deps = deptree)
        , 'cabal-install'  : HProject   ('cabal-install'       , os.path.join ('libs'  , 'cabal-install') , 'libs'    , []                                                  )
-       , 'core'           : HProject   ('flowboxM-core'       , os.path.join ('libs'  , 'core')          , 'libs'    , []                                                  )
+       , 'target-hs'      : HProject   ('luna-target-hs'      , os.path.join ('libs'  , 'target-hs')     , 'libs'    , []                                                  )
        , 'utils'          : HProject   ('flowbox-utils'       , os.path.join ('libs'  , 'utils')         , 'libs'    , []                                                  )
        , 'config'         : HProject   ('flowbox-config'      , os.path.join ('libs'  , 'config')        , 'libs'    , ['utils']                                           )
        , 'wrappers'       : HProject   ('flowbox-wrappers'    , os.path.join ('tools' , 'wrappers')      , 'wrappers', ['config']                                          )
-       , 'luna'           : HProject   ('flowbox-luna'        , os.path.join ('libs'  , 'luna')          , 'libs'    , ['utils', 'config', 'cabal-install', 'markup']      )
+       , 'luna'           : HProject   ('flowbox-luna'        , os.path.join ('libs'  , 'luna')          , 'libs'    , ['target-hs', 'utils', 'config', 'cabal-install', 'markup']      )
        , 'initializer'    : HProject   ('flowbox-initializer' , os.path.join ('tools' , 'initializer')   , 'tools'   , ['utils', 'config']                                 )
        , 'lunac'          : HProject   ('flowbox-lunac'       , os.path.join ('tools' , 'lunac')         , 'tools'   , ['utils', 'config', 'initializer', 'luna']          )
        , 'batch'          : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')         , 'libs'    , ['utils', 'config', 'initializer', 'luna']          )

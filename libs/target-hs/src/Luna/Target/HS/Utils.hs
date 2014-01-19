@@ -7,14 +7,15 @@
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TupleSections #-}
 
-module FlowboxM.Luna.Utils where
+module Luna.Target.HS.Utils where
 
 import           Data.Typeable (Typeable, typeOf)
 
-import FlowboxM.Luna.Base
-import FlowboxM.Luna.Data
-import FlowboxM.Luna.Imports
+import Luna.Target.HS.Base
+import Luna.Target.HS.Data
+import Luna.Target.HS.Imports
 
 ------------------------------------------------------------------------
 -- Display utils
@@ -60,7 +61,27 @@ dot8  = dot7 . (.)
 dot9  = dot8 . (.)
 dot10 = dot9 . (.)
 
+
+rTuple1 a = (a,())
+rTuple2 a = (a,) `dot1` rTuple1
+rTuple3 a = (a,) `dot2` rTuple2
+rTuple4 a = (a,) `dot3` rTuple3
+rTuple5 a = (a,) `dot4` rTuple4
+rTuple6 a = (a,) `dot5` rTuple5
+rTuple7 a = (a,) `dot6` rTuple6
+rTuple8 a = (a,) `dot7` rTuple7
+rTuple9 a = (a,) `dot8` rTuple8
+
+type RTuple1 v1 = (v1,())
+type RTuple2 v1 v2 = (v1, RTuple1 v2)
+type RTuple3 v1 v2 v3 = (v1, RTuple2 v2 v3)
+type RTuple4 v1 v2 v3 v4 = (v1, RTuple3 v2 v3 v4)
+type RTuple5 v1 v2 v3 v4 v5 = (v1, RTuple4 v2 v3 v4 v5)
+
 call v args = flattenCtx $ liftf2 callProto v (val args)
+
+member :: (MemberProto name base (Pure(Safe handler))) => proxy name -> base -> Pure (Safe (AppH handler base))
+member proxy base = fcurry base $ memberProto proxy base
 
 print' s = print s >> return (Safe ())
 
@@ -76,9 +97,14 @@ print'' s = eval s >>= print >> return (Safe ())
 (~*) = liftf2 (*)
 (~<) = liftf2 (<)
 (~>) = liftf2 (>)
-(~:) = liftf2 (:)
+--(~:) = liftf2 (:)
+
+--(~:) :: (Pure(Safe Int)) -> (Pure(Safe[(Pure(Safe Int))])) -> (Pure(Safe[(Pure(Safe Int))]))
+x ~: xs = (fmap.fmap) (x:) xs
+
+
 (~!!) = flattenCtx `dot2` liftf2 (!!)
-tuple2 = liftf2 (,)
+tuple2 = val `dot2` (,)
 
 map' = liftf2 map
 

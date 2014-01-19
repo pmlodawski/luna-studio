@@ -15,14 +15,17 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module FlowboxM.Luna.Base where
+
+--{-# LANGUAGE OverlappingInstances #-}
+
+module Luna.Target.HS.Base where
 
 import Data.Typeable
 import Control.Applicative
 import GHC.Generics        (Generic)
 import GHC.TypeLits        (Symbol)
 
-import FlowboxM.Luna.Data
+import Luna.Target.HS.Data
 
 ------------------------------------------------------------------------
 -- Bind
@@ -187,6 +190,10 @@ data MyError = MyError deriving (Show, Typeable)
 instance (Monad m) => EvalEnvProto MyError m MyError where
     evalProto = return
 
+-- IMPLEMENT ME
+instance (Monad m) => EvalEnvProto (a,b) m MyError where
+    evalProto = undefined
+
 --class EvalEnvProto a b | a -> b where
 --    EvalEnvProto :: a -> IO b
 
@@ -263,6 +270,10 @@ instance FlattenEnv IO Pure IO where
 instance FlattenEnv IO IO IO where
     flattenEnv a = do val <- a
                       val
+
+--instance a ~ Pure => FlattenEnv Pure a a where
+--    flattenEnv (Pure a) = a
+
 
 
 ------------------------------------------------------------------------
@@ -356,8 +367,12 @@ liftErr3 f a b c = liftErr (liftErr2 f a b) c
 --class Member (name :: Symbol) cls func | name cls -> func where 
 --    member :: proxy name -> cls -> func
 
-class Member (name :: Symbol) cls func | name cls -> func where 
-    member :: proxy name -> cls -> func
+--class Member (name :: Symbol) cls func | name cls -> func where 
+--    member :: proxy name -> cls -> func
+
+
+class MemberProto (name :: Symbol) cls func | name cls -> func where 
+    memberProto :: proxy name -> cls -> func
 
 
 class Call ptr args result | ptr args -> result where
@@ -381,5 +396,17 @@ class KWSet (name :: Symbol) val m where
     kwset :: proxy name -> val -> m f -> m f
 
 
+------------------------------------------------------------------------
+-- AppH
+------------------------------------------------------------------------
 
+newtype AppH func arg = AppH (func, arg) deriving Show
 
+instance (Call f (a, b) c) => Call (AppH f a) b c where
+    callProto (AppH (func, arg)) args = callProto func (arg, args)
+
+appH :: a -> b -> AppH a b
+appH a b = AppH (a,b)
+
+fcurry :: (Functor m, Functor s) => arg -> m(s func) -> m(s(AppH func arg))
+fcurry arg = (fmap.fmap) (flip appH arg)

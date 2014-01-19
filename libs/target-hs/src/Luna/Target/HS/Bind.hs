@@ -7,11 +7,11 @@
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module FlowboxM.Luna.Bind where
+module Luna.Target.HS.Bind where
 
-import Prelude hiding (fail, return, (>>), (>>=))
+import Prelude hiding ((>>=), (>>), fail, return)
 
-import FlowboxM.Luna.Base
+import Luna.Target.HS.Base
 
 (>>=) = bind
 (>>)  = bind_

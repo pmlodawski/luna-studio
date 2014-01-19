@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module FlowboxM.Luna.Imports (
-    module Data.Tuple.OneTuple
+module Luna.Target.HS.Imports (
+	module Data.Tuple.OneTuple 
 )where
 
-import Data.Tuple.OneTuple
+import Data.Tuple.OneTuple 

@@ -5,12 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE CPP                #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module FlowboxM.Luna.Data where
+module Luna.Target.HS.Data where
 
-import Data.Typeable (Typeable)
+import           Data.Typeable (Typeable)
 
 
 newtype Pure a = Pure a deriving (Typeable, Eq)

@@ -11,6 +11,8 @@ import qualified Flowbox.Luna.Data.HAST.Expr as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit  as HLit
 import           Flowbox.Prelude             hiding (error, id)
 
+type HExpr   = HExpr.Expr
+
 
 mkCFName :: String -> String
 mkCFName     = ("CF_" ++)
@@ -67,16 +69,24 @@ genTH f a b c = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var f) vars where
 genTHInst  = genTH "mkInst"
 
 
-thRegisterCon name argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerCon") vars where
-                            vars = [HExpr.Var $ mkTHVarName name, HExpr.Lit $ HLit.Int (show argNum), HExpr.ListE []]
+thRegisterCon dataName conName argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerCon")
+                                                [ HExpr.Var $ mkTHTypeName dataName
+                                                , HExpr.Var $ mkTHVarName conName
+                                                , HExpr.Lit $ HLit.Int (show argNum)
+                                                , HExpr.ListE []
+                                                ]
 
-thRegisterFunction fName clsName name argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerFunctionST") vars where
-                            vars = [ HExpr.Var $ mkTHVarName  fName
-                                   , HExpr.Var $ mkTHTypeName clsName
-                                   , HExpr.Lit $ HLit.String name 
-                                   , HExpr.Lit $ HLit.Int (show argNum)
-                                   , HExpr.ListE []
-                                   ]
+thRegisterFunction fName argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerFunc") $
+                                          [ HExpr.Var $ mkTHVarName  fName
+                                          , HExpr.Lit $ HLit.Int (show argNum)
+                                          , HExpr.ListE []
+                                          ]
+
+thRegisterMember name clsName funcName = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "mkMemInst") $
+                                       [ HExpr.Lit $ HLit.String name 
+                                       , HExpr.Var $ mkTHTypeName clsName
+                                       , HExpr.Var $ mkTHVarName  funcName
+                                       ]
 
 thRegisterLambda fName argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerLambda") vars where
                             vars = [ HExpr.Var $ mkTHVarName  fName
@@ -97,13 +107,13 @@ thSelfTyped fName clsName = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "mkSelfTyp
                                    , HExpr.Var $ mkTHTypeName clsName
                                    ]
 
-thGenerateClsGetters name = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "generateClsGetters") vars where
+thGenerateAccessors name = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "generateAccessors") vars where
                             vars = [ HExpr.Var $ mkTHTypeName name ]
 
-thRegisterClsGetters name = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerClsGetters") vars where
+thRegisterAccessors name = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerAccessors") vars where
                             vars = [ HExpr.Var $ mkTHTypeName name ]
 
-thCallInstsGetters name = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "mkCallInstsGetters") vars where
+thInstsAccessors name = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "mkInstsAccessors") vars where
                           vars = [ HExpr.Var $ mkTHTypeName name ]
 
 
@@ -146,3 +156,7 @@ emptyHExpr = mkVal (HExpr.Var "()")
 
 
 mkMemberGetter name = HExpr.AppE (HExpr.VarE "member") (HExpr.TypedE (HExpr.AppT (HExpr.ConT "P") (HExpr.LitT $ HLit.String name)) (HExpr.ConE ["P"]) )
+
+
+mkRTuple :: [HExpr] -> HExpr
+mkRTuple = foldr (\x y -> HExpr.Tuple [x,y]) (HExpr.Tuple [])

@@ -32,6 +32,7 @@ import qualified Flowbox.Luna.Passes.Pass                            as Pass
 import           Flowbox.Luna.Passes.Pass                              (Pass)
 import           Flowbox.System.Log.Logger                             
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils      
+import qualified Luna.Target.HS.Naming                               as Naming
 import           Data.String.Utils                                     (join)
 import qualified Data.Set                                            as Set
 
@@ -41,7 +42,6 @@ import           Control.Monad.State                                 hiding (map
 
 type GenPass m = Pass GenState m
 
-type HExpr   = HExpr.Expr
 type LExpr   = LExpr.Expr
 type LType   = LType.Type
 type LModule = LModule.Module
@@ -59,17 +59,18 @@ genModule :: LModule -> Pool -> GenPass HExpr
 genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do 
     let (LType.Module _ path) = cls
         --fnames  = Set.toList $ Pool.names fpool
-        mod     = HModule.addImport ["FlowboxM", "Luna", "Core"]
+        mod     = HModule.addImport ["Luna", "Target", "HS", "Core"]
                 -- $ HModule.addExt HExtension.AutoDeriveTypeable
                 $ HModule.addExt HExtension.DataKinds
+                $ HModule.addExt HExtension.DeriveDataTypeable
                 $ HModule.addExt HExtension.DeriveGeneric
                 $ HModule.addExt HExtension.FlexibleInstances
                 $ HModule.addExt HExtension.MultiParamTypeClasses
-                $ HModule.addExt HExtension.NoMonomorphismRestriction
+                -- $ HModule.addExt HExtension.NoMonomorphismRestriction
                 $ HModule.addExt HExtension.RebindableSyntax
                 $ HModule.addExt HExtension.ScopedTypeVariables
                 $ HModule.addExt HExtension.TemplateHaskell
-                $ HModule.addExt HExtension.TypeFamilies
+                -- $ HModule.addExt HExtension.TypeFamilies
                 $ HModule.addExt HExtension.UndecidableInstances 
                 $ HModule.mk path
         name    = last path
@@ -149,12 +150,13 @@ typeMethodSelf cls inputs = nargs
 
 
 --genCon :: GenMonad m => LExpr -> Pass.Result m (HExpr, m0())
-genCon (LExpr.ConD _ name fields) = do
+genCon dataName (LExpr.ConD _ conName fields) = do
     let fieldlen = length fields
-    expr  <- HExpr.Con name <$> mapM genExpr fields
-    let th =  GenState.addTHExpression (thRegisterCon name fieldlen [])
-           *> GenState.addTHExpression (thClsCallInsts name fieldlen 0)
-           -- *> GenState.addTHExpression (thGenerateClsGetters name)
+        conMemName = Naming.mkMemName dataName conName
+    expr  <- HExpr.Con conName <$> mapM genExpr fields
+    let th =  GenState.addTHExpression (thRegisterCon dataName conName fieldlen [])
+           *> GenState.addTHExpression (thClsCallInsts conMemName fieldlen 0)
+           -- *> GenState.addTHExpression (thGenerateClsGetters conName)
     return (expr, th)
 
 
@@ -176,13 +178,13 @@ genExpr ast = case ast of
                                                 --    then (typeMethodSelf cls) inputs
                                                 --    else inputs
                                                 ninputs = inputs
-                                                argNum     = length ninputs - 1
+                                                argNum     = length ninputs
                                                 mname      = mangleName clsName $ mkVarName name
-                                                vargGetter = genVArgGetter argNum mname
-                                                cgetCName  = mkCGetCName argNum
-                                                cgetName   = mkCGetName  argNum
-                                                getNName   = mkTName argNum mname
-                                                fname      = mkFuncName mname
+                                                vargGetter = genVArgGetter (argNum-1) mname
+                                                cgetCName  = mkCGetCName (argNum-1)
+                                                cgetName   = mkCGetName  (argNum-1)
+                                                getNName   = mkTName (argNum-1) mname
+                                                fname      = Naming.mkMemName clsName name
 
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
@@ -208,9 +210,11 @@ genExpr ast = case ast of
                                             
                                             ---- TH snippets
                                             --GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
-                                            GenState.addTHExpression $ thSelfTyped fname clsName
-                                            GenState.addTHExpression $ thRegisterFunction fname clsName name argNum [] 
-                                            GenState.addTHExpression $ thFuncCallInsts fname argNum 0
+                                            --GenState.addTHExpression $ thSelfTyped fname clsName
+
+                                            GenState.addTHExpression $ thRegisterFunction fname argNum [] 
+                                            GenState.addTHExpression $ thClsCallInsts fname argNum 0
+                                            GenState.addTHExpression $ thRegisterMember name clsName fname
 
                                             return f
 
@@ -268,7 +272,7 @@ genExpr ast = case ast of
                                            GenState.setCls cls
                                            
                                            -- DataType
-                                           consTuples <- mapM genCon cons
+                                           consTuples <- mapM (genCon name) cons
                                            let consE  = map fst consTuples
                                                consTH = map snd consTuples
 
@@ -308,9 +312,10 @@ genExpr ast = case ast of
           
                                            --GenState.addTHExpression $ thRegisterClass name fieldlen [] 
                                            --GenState.addTHExpression $ thClsCallInsts name fieldlen 0
-                                           GenState.addTHExpression $ thGenerateClsGetters name
-                                           GenState.addTHExpression $ thRegisterClsGetters name
-                                           GenState.addTHExpression $ thCallInstsGetters name
+                                           
+                                           GenState.addTHExpression $ thGenerateAccessors name
+                                           GenState.addTHExpression $ thRegisterAccessors name
+                                           GenState.addTHExpression $ thInstsAccessors name
          
             
                                            mapM_ genExpr methods
@@ -325,9 +330,9 @@ genExpr ast = case ast of
     LExpr.Field       _ name fcls _       -> do
                                              cls <- GenState.getCls 
                                              let clsName = view LType.name cls
-                                             genTyped HExpr.Typed fcls <*> pure (HExpr.Var $ mkFieldName clsName name)
+                                             genTyped HExpr.Typed fcls <*> pure (HExpr.Var $ Naming.mkPropertyName clsName name)
     --LExpr.App         _ src args          -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
-    LExpr.App         _ src args          -> HExpr.AppE <$> (HExpr.AppE (HExpr.Var "call") <$> genExpr src) <*> (HExpr.Tuple <$> mapM genCallExpr args)
+    LExpr.App         _ src args          -> HExpr.AppE <$> (HExpr.AppE (HExpr.Var "call") <$> genExpr src) <*> (mkRTuple <$> mapM genCallExpr args)
     LExpr.Accessor    _ name dst          -> HExpr.AppE <$> (pure $ mkMemberGetter name) <*> genExpr dst --(get0 <$> genExpr dst))
     LExpr.List        _ items             -> do
                                              let liftEl el = case el of

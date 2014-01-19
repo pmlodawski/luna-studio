@@ -1,12 +1,12 @@
-{-# LANGUAGE FlexibleInstances         #-}
-{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module FlowboxM.Luna.Std where
+module Luna.Target.HS.Std where
 
-import FlowboxM.Luna.Base
-import FlowboxM.Luna.Data
-import FlowboxM.Luna.Utils
+import Luna.Target.HS.Base
+import Luna.Target.HS.Data
+import Luna.Target.HS.Utils
 
 --instance Call (Pure a) () (Pure a) where
 --    call val _ = val
