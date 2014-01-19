@@ -286,7 +286,7 @@ lexeme p    = do
   spaces <- pSpaces
   state  <- getState
   putState (state & ParseState.lastLexeme .~ spaces)
-  return $ (trace $ "lexeme >> " ++ show res) res
+  return res
 --lexeme2 s p = p <* if s then skipMany pSpaces1 else return ()
 
 symbols    name = try $ lexeme (string name)

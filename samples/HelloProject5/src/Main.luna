@@ -1,0 +1,18 @@
+class Console:
+    def print self msg:
+        ```print' #{msg}```
+
+class Vector a:
+    Vector: x,y,z :: a
+    Scalar: a     :: a
+    def f self (x::Int):
+       1
+
+
+def main self:
+    v = Vector 1 2 3
+    g = v.f
+    g(5)
+    c = Console()
+    c.print g(5)
+
