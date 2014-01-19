@@ -49,6 +49,8 @@ data Options = VersionOptions { compiler :: Bool
                               , rootPath     :: String
                               , global       :: Bool
 
+                              , buildDir     :: String
+                              
                               , dump_all     :: Bool
                               , dump_ast     :: Bool
                               , dump_va      :: Bool

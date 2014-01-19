@@ -65,7 +65,8 @@ tmpDirPrefix = "lunac"
 
 
 run :: BuildConfig -> ASTModule.Module -> Pass.Result ()
-run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast = runEitherT $ do
+run buildConfig ast = runEitherT $ do
+    let diag = BuildConfig.diag buildConfig
     Diagnostics.printAST ast diag
     va   <- hoistEither =<< VarAlias.run ast
     Diagnostics.printVA va diag
@@ -82,23 +83,26 @@ run (BuildConfig name version libs ghcOptions cabalFlags buildType cfg diag) ast
                 -- : "flowboxM-core"
                 : "luna-target-hs"
                 : "template-haskell"
-                : libs
-                ++ if name /= "flowboxM-stdlib"
+                : BuildConfig.libs buildConfig
+                ++ if BuildConfig.name buildConfig /= "flowboxM-stdlib"
                       then ["flowboxM-stdlib"]
                       else []
+    case BuildConfig.buildDir buildConfig of
+        Nothing -> Directory.withTmpDirectory tmpDirPrefix $ buildInFolder buildConfig hsc allLibs
+        Just bd -> do liftIO $ Directory.createDirectoryIfMissing True bd
+                      buildInFolder buildConfig hsc allLibs bd
 
-    Directory.withTmpDirectory tmpDirPrefix (\tmpDir -> do
-        writeSources tmpDir hsc
-        let cabal = case buildType of
-                BuildConfig.Library       -> CabalGen.genLibrary    name version ghcOptions allLibs hsc
-                BuildConfig.Executable {} -> CabalGen.genExecutable name version ghcOptions allLibs
-        CabalStore.run cabal $ UniPath.append (name ++ cabalExt) tmpDir
-        CabalInstall.run cfg tmpDir cabalFlags
-        case buildType of
-            BuildConfig.Executable outputPath -> copyExecutable tmpDir name outputPath
-            BuildConfig.Library               -> return ()
-        )
-
+buildInFolder :: (Functor m, MonadIO m) => BuildConfig -> [Source] -> [String] -> UniPath -> m ()
+buildInFolder (BuildConfig name version _ ghcOptions cabalFlags buildType cfg _ _) hsc allLibs buildDir = do
+    writeSources buildDir hsc
+    let cabal = case buildType of
+            BuildConfig.Library       -> CabalGen.genLibrary    name version ghcOptions allLibs hsc
+            BuildConfig.Executable {} -> CabalGen.genExecutable name version ghcOptions allLibs
+    CabalStore.run cabal $ UniPath.append (name ++ cabalExt) buildDir
+    CabalInstall.run cfg buildDir cabalFlags
+    case buildType of
+        BuildConfig.Executable outputPath -> copyExecutable buildDir name outputPath
+        BuildConfig.Library               -> return ()
 
 writeSources :: (Functor m, MonadIO m) => UniPath -> [Source] -> m ()
 writeSources outputPath sources = mapM_ (writeSource outputPath) sources
