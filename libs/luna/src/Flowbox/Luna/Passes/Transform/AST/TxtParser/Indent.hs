@@ -1,21 +1,7 @@
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent (
-    -- $doc
-    
-    -- * Types
-    IndentParser, runIndent,
-    -- * Blocks
-    withBlock, withBlock', block, rawBlock, rawBlock1,
-    -- * Indentation Checking
-    indented, same, sameOrIndented, checkIndent, withPos,
-    -- * Paired characters
-    indentBrackets, indentAngles, indentBraces, indentParens,
-    -- * Line Fold Chaining
-    -- | Any chain using these combinators must used with 'withPos'
-    (<+/>), (<-/>), (<*/>), (<?/>), Optional(..)
-    ) where
+module Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent where
 
 import Flowbox.Prelude
 import           Control.Applicative
@@ -50,6 +36,15 @@ indented = do
     if biAp sourceColumn (<=) pos s then parserFail "not indented" else do
         put $ setSourceLine s (sourceLine pos)
         return ()
+
+---- | Parses only when indented past the level of the reference
+--indented' :: (Stream s (State SourcePos) z) => IndentParser s u ()
+--indented' = do
+--    pos <- getPosition
+--    s <- get
+--    if biAp sourceColumn (<) pos s then parserFail "not indented" else do
+--        put $ setSourceLine s (sourceLine pos)
+--        return ()
 
 -- | Parses only when indented past the level of the reference or on the same line
 sameOrIndented :: Stream s (State SourcePos) z => IndentParser s u ()
@@ -86,6 +81,13 @@ checkIndent = do
     s <- get
     p <- getPosition
     if biAp sourceColumn (==) p s then return () else parserFail "indentation doesn't match"
+
+-- | Ensures the current indentation level matches that of the reference
+checkIndented :: (Stream s (State SourcePos) z) => IndentParser s u ()
+checkIndented = do
+    s <- get
+    p <- getPosition
+    if biAp sourceColumn (>) p s then return () else parserFail "indentation doesn't match"
 
 -- | Run the result of an indentation sensitive parse
 runIndent :: SourceName -> State SourcePos a -> a

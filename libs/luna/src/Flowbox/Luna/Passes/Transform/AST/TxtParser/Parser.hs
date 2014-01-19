@@ -372,11 +372,11 @@ pPipeBlockBegin p = pBlockPrefix *> ((:) <$ L.pAssignment <*> (p <* blockSpaces'
 
 pBlockBegin     p = pBlockPrefix *> withPos(multiBlock1 p)
 
-pBlockPrefix      = spaces *> indented
+pBlockPrefix      = L.pSpaces *> indented
 
-blockSpaces       = try (spaces <* checkIndent) <|> pure ()
+blockSpaces       = try (L.pSpaces <* checkIndent) <|> pure mempty
 
-blockSpaces'      = try (spaces <* indented) <|> pure ()
+blockSpaces'      = try (L.pSpaces <* indented) <|> pure mempty
 
 multiBlock1     p = rawBlock1 (p <* blockSpaces)
 multiBlock      p = rawBlock  (p <* blockSpaces)
@@ -400,7 +400,7 @@ postfixM name fun       = PExpr.Postfix (L.reservedOp name *>        fun)
 --pProgram mod = Expr.Module (Expr.Path mod) <$> (try([] <$ many(L.pSpaces <* L.eol <* L.pSpaces) <* eof)
 --                                           <|> pSegmentBegin pExpr 0 <* many(L.eol <* L.pSpaces) <* eof)
 
-pProgEnd = (spaces <?> "") <* eof
+pProgEnd = (L.pSpaces <?> "") <* eof
 
 pProgWithState p  = (,) <$> (p <* pProgEnd) <*> getState
 
@@ -410,7 +410,7 @@ parseType    = parseGen (pProgWithState pType)
 
 
 pProgram :: [String] -> ParsecT String ParseState.ParseState (State SourcePos) Module.Module
-pProgram mod = spaces *> pModule mod <* pProgEnd
+pProgram mod = L.pSpaces *> pModule mod <* pProgEnd
 
 
 pResult mod = (\ast st -> (ast, view ParseState.sourceMap st)) <$> pProgram mod <*> getState

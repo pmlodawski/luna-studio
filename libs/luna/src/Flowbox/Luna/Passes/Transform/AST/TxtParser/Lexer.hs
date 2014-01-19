@@ -20,6 +20,7 @@ import Text.Parsec         hiding (many, optional, (<|>), getPosition)
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token(Token))
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
 
 import Debug.Trace
 
@@ -193,7 +194,7 @@ floatStr'       = (++) <$> decimalStr <*> fractExponentStr
 
 fractExponentStr = (++) <$> fractionStr <*> option "" exponentStr'
 
-fractionStr     = (:) <$> char '.' <*> (many1 digit <|> ("0" <$ pSpaces1) <?> "fraction") <?> "fraction"
+fractionStr     = (:) <$> char '.' <*> (many1 digit <|> ("0" <$ pSpaces1') <?> "fraction") <?> "fraction"
 
 exponentStr'    = (\a b c -> a:b:c) <$> oneOf "eE" <*> signStr <*> (decimalStr <?> "exponent") <?> "exponent"
 
@@ -283,7 +284,7 @@ isReservedName name = isReserved (sort reservedNames) name
 -----------------------------------------------------------
 lexeme p    = do
   res <- p
-  spaces <- pSpaces
+  spaces <- try(pSpaces <* checkIndented) <|> pure ""
   state  <- getState
   putState (state & ParseState.lastLexeme .~ spaces)
   return res
@@ -294,12 +295,15 @@ symbols    name = try $ lexeme (string name)
 symbol     name = lexeme (char name)
 --symbol2  s name = lexeme2 s (char name)
 
-pSpace      = satisfy (`elem` "\t\f\v ") <?> "" 
---pSpace      = satisfy (isSpace) <?> "" 
-pSpacesBase = many1 pSpace <|> try(multiLineComment) <|> oneLineComment <?> ""
-pSpaces1    = many1 pSpacesBase <?> ""
-pSpaces     = concat <$> many  pSpacesBase <?> ""
+pSpace'      = satisfy (`elem` "\t\f\v ") <?> "" 
+pSpacesBase' = many1 pSpace' <|> try(multiLineComment) <|> oneLineComment <?> ""
+pSpaces1'    = many1 pSpacesBase' <?> ""
+pSpaces'     = concat <$> many  pSpacesBase' <?> ""
 
+
+pSpaces     = concat <$> many  pSpacesBase <?> ""
+pSpacesBase = many1 pSpace <|> try(multiLineComment) <|> oneLineComment <?> ""
+pSpace      = satisfy isSpace <?> "" 
 
 oneLineComment   = try (string commentLine) *> many (satisfy (/= '\n'))
 
