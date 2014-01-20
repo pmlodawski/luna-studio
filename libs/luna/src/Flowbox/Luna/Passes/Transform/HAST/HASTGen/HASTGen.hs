@@ -35,6 +35,7 @@ import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils
 import qualified Luna.Target.HS.Naming                               as Naming
 import           Data.String.Utils                                     (join)
 import qualified Data.Set                                            as Set
+import qualified Flowbox.Luna.Data.HAST.Deriving                     as Deriving
 
 import           Control.Monad.State                                 hiding (mapM, mapM_, join)
 
@@ -232,7 +233,7 @@ genExpr ast = case ast of
                                                 getNName   = mkTName argNum fname
                                                 vargGetter = genVArgGetterL argNum fname cfName
 
-                                            GenState.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] ["Show"]
+                                            GenState.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] [Deriving.Show]
 
                                             f  <-   HExpr.Assignment (HExpr.Var fname) 
                                                     <$> ( HExpr.Lambda <$> (mapM genExpr inputs)
@@ -280,7 +281,7 @@ genExpr ast = case ast of
                                                consTH = map snd consTuples
 
                                            --cons   <- HExpr.Con name <$> mapM genExpr fields
-                                           let dt = HExpr.DataD name params consE ["Show", "Generic"]
+                                           let dt = HExpr.DataD name params consE [Deriving.Show, Deriving.Eq, Deriving.Ord, Deriving.Generic]
                                            GenState.addDataType dt
         
                                            sequence consTH

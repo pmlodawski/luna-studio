@@ -21,7 +21,7 @@ class Console:
 def List.at self index:
     ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```
 
-def List.add self l2:
+def List.+ self l2:
     ```liftf2 (++) #{self} #{l2}```
 
 def List.contains self el:
@@ -41,35 +41,46 @@ def Bool.not self:
 
 ###### Int ####################################
 
-def Int.add a b:
+def Int.+ a b:
     ```liftf2 (+) #{a} #{b}```
 
-def Int.mul a b:
+def Int.* a b:
     ```liftf2 (*) #{a} #{b}```
 
-def Int.sub a b:
+def Int./ a b:
     ```liftf2 (-) #{a} #{b}```
 
 ###### Float ##################################
 
-def Float.add a b:
+def Float.+ a b:
     ```liftf2 (+) #{a} #{b}```
 
-def Float.div a b:
+def Float./ a b:
     ```liftf2 (/) #{a} #{b}```
 
-def Float.mul a b:
+def Float.* a b:
     ```liftf2 (*) #{a} #{b}```
 
-def Float.sub a b:
+def Float.- a b:
     ```liftf2 (-) #{a} #{b}```
 
 
 ###############################################
 
+class Vector a:
+    Vector: x,y,z :: a
+    Scalar: a     :: a
+
+    def + self v2:
+        Vector (self.x()+v2.x()) (self.y()+v2.y()) (self.z()+v2.z())
+
 def main self:
+    v = Vector 1 2 3
+    s = Scalar 15
     c = Console()
     c.print "hello"
+    c.print (v+v)
+    c.print (2+2*3)
     # d = [1..10].each x:
     #    Console().print (x*2)
     # c.print d

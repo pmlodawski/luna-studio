@@ -95,9 +95,9 @@ pArg            = tok Expr.Arg      <*> pPatCon
                                     <*> ((Just <$ L.pAssignment <*> pExpr) <|> pure Nothing)
 
 pFunc           = tok Expr.Function <*  L.pDef
-                                    <*> (pExtPath       <?> "")
-                                    <*> (pVar           <?> "function name")
-                                    <*> (pArgList pArg  <?> "dunction argument list")
+                                    <*> (pExtPath            <?> "")
+                                    <*> (pVar <|> L.operator <?> "function name")
+                                    <*> (pArgList pArg       <?> "function argument list")
                                     <*> (try (L.pArrow *> pType) <|> tok Type.Unknown)
                                     <*> (pExprBlock <|> return [])
                                     <?> "function definition"
@@ -121,8 +121,8 @@ pLambda          = tok Expr.Lambda  <*> pArgListL pArg
 pData            = Expr.afterData <$> pDataT
 
 pDataT           = tok Data.mk    <*  L.pClass
-                                  <*> (tok Type.Data  <*> (pCon                 <?> "class name")
-                                                      <*> (many L.pIdentTypeVar <?> "class parameters"))
+                                  <*> (tok Type.Data <*> (pCon                 <?> "class name")
+                                                     <*> (many L.pIdentTypeVar <?> "class parameters"))
                                   <*> (tok Expr.ConD <*> pure "default" <*> pure [] ) -- default constructor
                                   <??$> pDotBlockBegin pDataBody
                                   <?> "class definition"
@@ -268,17 +268,23 @@ pEntSimpleE = choice[ try $ pCaseE
                   ]
            <?> "expression term"
 
-optableE = [ [ postfixM "::" (tok Expr.Typed <*> pType)                      ]
-           , [ binaryM  ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
-           , [ operator "^"                                  PExpr.AssocLeft ]
-           , [ operator "*"                                  PExpr.AssocLeft ]
-           , [ operator "/"                                  PExpr.AssocLeft ]
-           , [ operator "+"                                  PExpr.AssocLeft ]
-           , [ operator "-"                                  PExpr.AssocLeft ]
+optableE = [ [ postfixM  "::" (tok Expr.Typed <*> pType)                      ]
+           , [ binaryM   ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
+           , [ operator2 "^"                                  PExpr.AssocLeft ]
+           , [ operator2 "*"                                  PExpr.AssocLeft ]
+           , [ operator2 "/"                                  PExpr.AssocLeft ]
+           , [ operator2 "+"                                  PExpr.AssocLeft ]
+           , [ operator2 "-"                                  PExpr.AssocLeft ]
+           , [ operator2 "=="                                 PExpr.AssocLeft ]
            , [ binaryM  "$"  (binaryMatchE <$> tok Expr.callConstructor)      PExpr.AssocLeft ]
            ]
            where
               operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':op)))
+              --operator2 op = binaryM op (binaryMatchE <$>  ( tok Expr.App <*> (tok Expr.Accessor <*> pure "add" <*> ... ) )  )
+              operator2 op = binaryM op (binaryMatchE <$> ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 op x) [y]) <$> genID <*> genID) )
+
+
+--binaryM  name fun assoc = PExpr.Infix   (L.reservedOp name *>        fun) assoc
 
 binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 
