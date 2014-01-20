@@ -41,11 +41,11 @@ putStrLn :: MonadIO m => String -> m ()
 putStrLn = liftIO . Prelude.putStrLn
 
 
-instance (Typeable a) => Show (IO a) where
-    show e = '(' : (show . typeOf) e ++ ")"
+--instance (Typeable a) => Show (IO a) where
+--    show e = '(' : (show . typeOf) e ++ ")"
 
-instance (Typeable a, Typeable b) => Show (a -> b) where
-    show e = '(' : (show . typeOf) e ++ ")"
+--instance (Typeable a, Typeable b) => Show (a -> b) where
+--    show e = '(' : (show . typeOf) e ++ ")"
 
 -- f .: g = \x y->f (g x y)
 -- f .: g = (f .) . g
