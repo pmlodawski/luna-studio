@@ -59,7 +59,7 @@ Library
                   uu-parsinglib
 
 
-Executable luna
+Executable luna-lib
   Main-Is:        Main.hs
   Hs-Source-Dirs: tests
 
