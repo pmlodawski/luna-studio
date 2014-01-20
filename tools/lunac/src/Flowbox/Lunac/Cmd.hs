@@ -49,6 +49,8 @@ data Options = VersionOptions { compiler :: Bool
                               , rootPath     :: String
                               , global       :: Bool
 
+                              , buildDir     :: String
+                              
                               , dump_all     :: Bool
                               , dump_ast     :: Bool
                               , dump_va      :: Bool
@@ -57,11 +59,11 @@ data Options = VersionOptions { compiler :: Bool
                               , dump_hast    :: Bool
                               , dump_hsc     :: Bool
                               }
-              | ListOptions   { inputs    :: [String]
+              | ListOptions   { inputs :: [String]
                               --, installed :: Bool
-                              , json      :: Bool
-                              , simple    :: Bool
-                              , html      :: Bool
+                              , json   :: Bool
+                              , simple :: Bool
+                              , html   :: Bool
                               }
               | RepoOptions   {
 

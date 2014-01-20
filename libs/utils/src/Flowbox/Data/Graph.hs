@@ -12,6 +12,7 @@ module Flowbox.Data.Graph (
     LVertex,
 
     updateNode,
+    replaceNode,
     labs,
     labVtx,
     labVtxs,
@@ -98,6 +99,13 @@ updateNode (vid, v) graph = newGraph where
     (c_ins, c_id, _, c_outs) = context graph vid
     newContext = (c_ins, c_id, v, c_outs)
     newGraph = newContext & delNode vid graph
+
+
+replaceNode :: LVertex a -> Vertex -> Graph a b -> Graph a b
+replaceNode (vid, v) oldv graph = newGraph where
+    (c_ins, _, _, c_outs) = context graph oldv
+    newContext = (c_ins, vid, v, c_outs)
+    newGraph = newContext & delNode oldv graph
 
 
 newVtxs :: Graph a b -> [Vertex]

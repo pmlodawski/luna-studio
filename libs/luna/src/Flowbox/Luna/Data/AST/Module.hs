@@ -41,8 +41,8 @@ mk :: ID -> Type -> Module
 mk id' mod = Module id' mod [] [] [] [] []
 
 mkClass :: Module -> Expr
-mkClass (Module id' (Type.Module tid path) _ classes' fields' methods' _) =
-    Expr.Class id' (Type.Class tid (last path) []) classes' fields' methods'
+mkClass (Module id' (Type.Module tid path) _ classes' fields' methods' _) = 
+    Expr.Data id' (Type.Data tid (last path) []) [Expr.ConD 0 (last path) fields'] classes' methods'
 
 addMethod :: Expr -> Module -> Module
 addMethod method mod = mod & methods %~ (method:)
@@ -52,6 +52,9 @@ addField field mod = mod & fields %~ (field:)
 
 addClass :: Expr -> Module -> Module
 addClass ncls mod = mod & classes %~ (ncls:)
+
+addModule :: Module -> Module -> Module
+addModule submod mod = mod & modules %~ (submod:)
 
 addImport :: Expr -> Module -> Module
 addImport imp mod = mod & imports %~ (imp:)

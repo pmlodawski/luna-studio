@@ -19,7 +19,7 @@ noEdges :: [Edge]
 noEdges = []
 
 
-data Edge = Edge { src             :: Library.ID
-                             , dst :: Library.ID
-                             , cls :: EdgeCls
-                                 } deriving (Show, Read, Ord, Eq)
+data Edge = Edge { src :: Library.ID
+                 , dst :: Library.ID
+                 , cls :: EdgeCls
+                 } deriving (Show, Read, Ord, Eq)

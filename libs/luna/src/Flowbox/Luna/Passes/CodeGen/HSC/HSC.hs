@@ -2,9 +2,14 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, TupleSections #-}
+
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Flowbox.Luna.Passes.CodeGen.HSC.HSC where
 
@@ -12,7 +17,7 @@ import           Flowbox.Prelude                  hiding(cons)
 import qualified Flowbox.Luna.Data.HAST.Expr      as HExpr
 import qualified Flowbox.Luna.Data.HAST.Lit       as HLit
 import qualified Flowbox.Luna.Passes.Pass         as Pass
-import           Flowbox.Luna.Passes.Pass           (PassMonad)
+import           Flowbox.Luna.Passes.Pass           (Pass)
 import           Data.String.Utils                  (join)
 import           Flowbox.Luna.Data.Source           (Source(Source))
 import           Flowbox.Luna.Data.HAST.Extension   (Extension)
@@ -25,11 +30,12 @@ logger = getLogger "Flowbox.Luna.Passes.HSC.HSC"
 
 type HExpr = HExpr.Expr
 
-type HSCMonad m = PassMonad Pass.NoState m
+type HSCPass result = Pass Pass.NoState result
 
 
-run :: PassMonad s m => HExpr -> Pass.Result m [Source]
-run expr = (Pass.run_ (Pass.Info "HSC") Pass.NoState) (return $ genModule expr)
+
+run :: HExpr -> Pass.Result [Source]
+run expr = Pass.run_ (Pass.Info "HSC") Pass.NoState (return $ genModule expr)
 
 
 eol :: String
@@ -100,25 +106,25 @@ buildExpr e = case e of
                                                      Nothing   -> ""
     HExpr.DataD    name params cons ders  -> pure $ "data " ++ name ++ params' ++ " = " ++ cons' ++ ders' 
                                              where params' = if null params then "" else " " ++ join " " params
-                                                   cons'   = join " | " (fexpMap cons)
-                                                   ders'   = if null ders then "" else " deriving (" ++ sepjoin ders ++ ")"
+                                                   cons'   = join " | " (fExpMap cons)
+                                                   ders'   = if null ders then "" else " deriving (" ++ sepjoin (map show ders) ++ ")"
     HExpr.InstanceD tp decs               -> pure $ "instance " ++ (code.buildExpr) tp ++ " where { " ++ join "; " (map (code.buildExpr) decs) ++ " }"
     HExpr.NewTypeD name params con        -> pure $ "newtype " ++ name ++ params' ++ " = " ++ (code.buildExpr) con 
                                              where params' = if null params then "" else " " ++ join " " params
     HExpr.Con      name fields            -> pure $ name ++ body
-                                             where body = if null fields then "" else " { " ++ sepjoin (fexpMap fields) ++ " }"
-    HExpr.Typed    cls  expr              -> pure $ (code.buildExpr) expr ++ " :: " ++ (code.buildExpr) cls
+                                             where body = if null fields then "" else " { " ++ sepjoin (fExpMap fields) ++ " }"
+    HExpr.Typed    cls  expr              -> Complex $ (code.buildExpr) expr ++ " :: " ++ (code.buildExpr) cls
     HExpr.TypedP   cls  expr              -> Complex $ (code.buildExpr) expr ++ " :: " ++ (code.buildExpr) cls
     HExpr.TypedE   cls  expr              -> Complex $ (code.buildExpr) expr ++ " :: " ++ (code.buildExpr) cls
     HExpr.Function name signature expr    -> pure $ name ++ params ++ " = " ++ (code.buildExpr) expr 
                                              where params = if null signature then ""
-                                                            else " " ++ join " " (fexpMap signature)
-    HExpr.Lambda   signature expr         -> pure $ "(\\" ++ params ++ " -> " ++ (code.buildExpr) expr ++ ")"
+                                                            else " " ++ join " " (fExpMap signature)
+    HExpr.Lambda   signature expr         -> pure $ "(\\" ++ params ++ " -> " ++ (code.simplify.buildExpr) expr ++ ")"
                                              where params = if null signature then ""
-                                                            else " " ++ join " " (fexpMap signature)
-    HExpr.LetBlock exprs result           -> pure $ "let { " ++ join "; " (fexpMap exprs) ++ " } in " ++ (code.buildExpr) result 
+                                                            else " " ++ join " " (fsExpMap signature)
+    HExpr.LetBlock exprs result           -> pure $ "let { " ++ join "; " (fExpMap exprs) ++ " } in " ++ (code.buildExpr) result 
     HExpr.DoBlock  exprs                  -> pure $ "do { " ++ body ++ " }"
-                                             where body = if null exprs then "" else join "; " (fexpMap exprs) ++ ";"
+                                             where body = if null exprs then "" else join "; " (fExpMap exprs) ++ ";"
     HExpr.Infix    name src dst           -> Complex $ csBuildExpr src ++ " " ++ name ++ " " ++ csBuildExpr dst
     HExpr.NOP                             -> pure $ "NOP"
     HExpr.Assignment src dst              -> pure $ (code.buildExpr) src ++ " = " ++ (code.buildExpr) dst
@@ -128,18 +134,20 @@ buildExpr e = case e of
     HExpr.Tuple    items                  -> if length items == 1 then app (Simple "OneTuple") (buildExpr $ items!!0)
                                                                   else Simple $ "(" ++ sepjoin (map csBuildExpr items) ++ ")"
     --pure $ "(" ++ (if length items == 1 then "OneTuple" else "")
-    --                                         ++ sepjoin (fexpMap items) ++ ")"
-    HExpr.TupleP   items                  -> pure $ "(" ++ sepjoin (fexpMap items) ++ ")"
+    --                                         ++ sepjoin (fExpMap items) ++ ")"
+    HExpr.TupleP   items                  -> pure $ "(" ++ sepjoin (fExpMap items) ++ ")"
     HExpr.ConE     qname                  -> pure $ join "." qname
     HExpr.ConT     name                   -> pure $ name
     HExpr.AppT     src dst                -> app (buildExpr src) (buildExpr dst) --"(" ++ (code.buildExpr) src ++ " (" ++ (code.buildExpr) dst ++ ")" ++ ")" -- for literals, e.g. Pure (1 :: Int)
     HExpr.AppE     src dst                -> app (buildExpr src) (buildExpr dst) --"(" ++ (code.buildExpr) src ++ " " ++ (code.buildExpr) dst ++ ")"
     HExpr.Native   code                   -> pure $ code
-    HExpr.ListE    items                  -> pure $ "[" ++ sepjoin (fexpMap items) ++ "]"
+    HExpr.ListE    items                  -> pure $ "[" ++ sepjoin (fExpMap items) ++ "]"
     HExpr.Bang     expr                   -> pure $ "--->>>   " ++ (code.buildExpr) expr
     HExpr.THE      expr                   -> pure $ (code.buildExpr) expr
     where sepjoin = join ", "
-          fexpMap = map (code.buildExpr)
+          fExpMap  = map cBuildExpr
+          fsExpMap = map csBuildExpr
+          cBuildExpr  = code.buildExpr
           csBuildExpr = code.simplify.buildExpr
 
 

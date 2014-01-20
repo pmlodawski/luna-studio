@@ -17,8 +17,12 @@ import Flowbox.Prelude     hiding (op)
 import Text.Parsec         hiding (many, optional, (<|>), getPosition)
 
 
-import Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-import Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token(Token))
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token(Token))
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
+
+import Debug.Trace
 
 
 identLetter  = alphaNum
@@ -39,6 +43,7 @@ bracketL     = symbol  '['
 bracketR     = symbol  ']'
 braceL       = symbol  '{'
 braceR       = symbol  '}'
+pPipe        = symbol  '|'
 pAccessor    = symbol  '.'
 pArrow       = symbols "->"
 pTypeDecl    = symbols "::"
@@ -55,17 +60,15 @@ reservedOpNames = ["=", "::", ":", ".", "->", "<-"]
 -----------------------------------------------------------
 -- Keywords
 -----------------------------------------------------------
-reservedNames = ["def", "class", "interface", "from", "import", "as"]
+reservedNames = ["as", "case", "class", "def", "from", "interface", "import", "in"]
 
--- entities
-pDef        = reserved "def"
-pClass      = reserved "class"
-pInterface  = reserved "interface"
-
--- imports
-pFrom       = reserved "from"
-pImport     = reserved "import"
 pAs         = reserved "as"
+pCase       = reserved "case"
+pClass      = reserved "class"
+pDef        = reserved "def"
+pFrom       = reserved "from"
+pInterface  = reserved "interface"
+pImport     = reserved "import"
 
 
 -----------------------------------------------------------
@@ -191,7 +194,7 @@ floatStr'       = (++) <$> decimalStr <*> fractExponentStr
 
 fractExponentStr = (++) <$> fractionStr <*> option "" exponentStr'
 
-fractionStr     = (:) <$> char '.' <*> (many1 digit <|> ("0" <$ pSpaces1) <?> "fraction") <?> "fraction"
+fractionStr     = (:) <$> char '.' <*> (many1 digit <|> ("0" <$ pSpaces1') <?> "fraction") <?> "fraction"
 
 exponentStr'    = (\a b c -> a:b:c) <$> oneOf "eE" <*> signStr <*> (decimalStr <?> "exponent") <?> "exponent"
 
@@ -254,7 +257,7 @@ reserved name = lexeme $ try $ string name <* (notFollowedBy identLetter <?> ("e
 
 pIdentVar     = pIdentLower <?> "variable identifier"
 pIdentType    = pIdentUpper <?> "type identifier"
-pIdentTypeVar = pIdentLower <?> "identifier"
+pIdentTypeVar = pIdentLower <?> "identifier variable identifier"
 
 pIdent        = pIdentLower <|> pIdentUpper <?> "identifier"
 
@@ -279,7 +282,12 @@ isReservedName name = isReserved (sort reservedNames) name
 -----------------------------------------------------------
 -- White space & symbols
 -----------------------------------------------------------
-lexeme p    = p <* skipMany pSpaces1
+lexeme p    = do
+  res <- p
+  spaces <- try(pSpaces <* checkIndented) <|> pure ""
+  state  <- getState
+  putState (state & ParseState.lastLexeme .~ spaces)
+  return res
 --lexeme2 s p = p <* if s then skipMany pSpaces1 else return ()
 
 symbols    name = try $ lexeme (string name)
@@ -287,12 +295,15 @@ symbols    name = try $ lexeme (string name)
 symbol     name = lexeme (char name)
 --symbol2  s name = lexeme2 s (char name)
 
-pSpace      = satisfy (`elem` "\t\f\v ") <?> "" 
---pSpace      = satisfy (isSpace) <?> "" 
-pSpacesBase = many1 pSpace <|> try(multiLineComment) <|> oneLineComment <?> ""
-pSpaces1    = many1 pSpacesBase <?> ""
-pSpaces     = many  pSpacesBase <?> ""
+pSpace'      = satisfy (`elem` "\t\f\v ") <?> "" 
+pSpacesBase' = many1 pSpace' <|> try(multiLineComment) <|> oneLineComment <?> ""
+pSpaces1'    = many1 pSpacesBase' <?> ""
+pSpaces'     = concat <$> many  pSpacesBase' <?> ""
 
+
+pSpaces     = concat <$> many  pSpacesBase <?> ""
+pSpacesBase = many1 pSpace <|> try(multiLineComment) <|> oneLineComment <?> ""
+pSpace      = satisfy isSpace <?> "" 
 
 oneLineComment   = try (string commentLine) *> many (satisfy (/= '\n'))
 

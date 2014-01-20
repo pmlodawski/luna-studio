@@ -10,8 +10,9 @@
 
 module Flowbox.Luna.Passes.Build.Diagnostics where
 
-import Control.Monad     (when)
-import Data.String.Utils (join)
+import Control.Monad          (when)
+import Control.Monad.IO.Class
+import Data.String.Utils      (join)
 
 
 import qualified Flowbox.Generics.Deriving.QShow as QShow
@@ -40,35 +41,35 @@ none :: Diagnostics
 none = Diagnostics False False False False False False False
 
 
-logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.Build.Diagnostics"
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Luna.Passes.Build.Diagnostics"
 
 
-printDM :: (Show a, LogWriter m) => a -> Diagnostics -> m ()
+printDM :: (Show a, MonadIO m) => a -> Diagnostics -> m ()
 printDM   v diag = when (showDM   diag) $ logger info (PP.ppShow  v)
 
 
-printAST :: (QShow.QShow a, LogWriter m) => a -> Diagnostics -> m ()
+printAST :: (QShow.QShow a, MonadIO m) => a -> Diagnostics -> m ()
 printAST  v diag = when (showAST  diag) $ logger info (PP.ppqShow v)
 
 
-printVA :: (Show a, LogWriter m) => a -> Diagnostics -> m ()
+printVA :: (Show a, MonadIO m) => a -> Diagnostics -> m ()
 printVA   v diag = when (showVA   diag) $ logger info (PP.ppShow  v)
 
 
-printFP :: (Show a, LogWriter m) => a -> Diagnostics -> m ()
+printFP :: (Show a, MonadIO m) => a -> Diagnostics -> m ()
 printFP   v diag = when (showFP   diag) $ logger info (PP.ppShow  v)
 
 
-printSSA :: (QShow.QShow a, LogWriter m) => a -> Diagnostics -> m ()
+printSSA :: (QShow.QShow a, MonadIO m) => a -> Diagnostics -> m ()
 printSSA  v diag = when (showSSA  diag) $ logger info (PP.ppqShow v)
 
 
-printHAST :: (Show a, LogWriter m) => a -> Diagnostics -> m ()
+printHAST :: (Show a, MonadIO m) => a -> Diagnostics -> m ()
 printHAST v diag = when (showHAST diag) $ logger info (PP.ppShow  v)
 
 
-printHSC :: LogWriter m => [Source.Source] -> Diagnostics -> m ()
+printHSC :: MonadIO m => [Source.Source] -> Diagnostics -> m ()
 printHSC  v diag = when (showHSC  diag) $ logger info (showSrcs   v)
 
 
@@ -78,4 +79,4 @@ showSrcs srcs = join "\n\n" $ map showSrc srcs
 
 showSrc :: Source.Source -> String
 showSrc src   = ">>> file '" ++ join "/" (Source.path src) ++ "':\n\n"
-              ++ hsShow (Source.code src)
+              ++ (Source.code src)

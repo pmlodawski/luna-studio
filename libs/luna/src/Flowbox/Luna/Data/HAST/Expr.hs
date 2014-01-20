@@ -10,6 +10,7 @@ module Flowbox.Luna.Data.HAST.Expr where
 import           Flowbox.Luna.Data.HAST.Extension (Extension)
 import qualified Flowbox.Luna.Data.HAST.Lit       as Lit
 import           Flowbox.Prelude
+import           Flowbox.Luna.Data.HAST.Deriving  (Deriving)
 
 type Lit = Lit.Lit
 
@@ -30,7 +31,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Lambda     { paths     :: [Expr]   , expr      :: Expr                                }
           | LetBlock   { exprs     :: [Expr]   , result    :: Expr                                }
           | DoBlock    { exprs :: [Expr]                                                      }
-          | DataD      { name      :: String   , params    :: [String]    , cons      :: [Expr] , derivings :: [String]   }
+          | DataD      { name      :: String   , params    :: [String]    , cons      :: [Expr] , derivings :: [Deriving]   }
           | NewTypeD   { name      :: String   , params    :: [String]    , con       :: Expr     }
           | InstanceD  { tp        :: Expr     , decs      :: [Expr]                              }
           | Con        { name      :: String   , fields    :: [Expr]                              }

@@ -20,7 +20,8 @@ data Deriving = Eq
               | Bounded
               | Read
               | Show
-                    deriving (Show)
+              | Generic 
+              deriving (Show)
 
 
 genCode :: [Deriving] -> String

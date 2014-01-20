@@ -13,8 +13,9 @@ import           Flowbox.Luna.Data.Pass.SourceMap (SourceMap)
 import qualified Flowbox.Luna.Data.Pass.SourceMap as SourceMap
 import           Flowbox.Luna.Data.AST.Utils      (ID)
 
-data ParseState = ParseState { _id        :: Int
-                             , _sourceMap :: SourceMap
+data ParseState = ParseState { _id         :: Int
+                             , _sourceMap  :: SourceMap
+                             , _lastLexeme :: String
                              }
                 deriving (Show)
                 
@@ -30,4 +31,8 @@ registerSrc id src state = state & sourceMap %~ (SourceMap.insert id src)
 ------------------------------------------------------------------------
 
 instance Default ParseState where
-	def = ParseState 0 def
+		def = ParseState 0 def ""
+
+
+make :: ID -> ParseState
+make i = ParseState i def ""

@@ -48,7 +48,11 @@ fromUnixString spath@(x:xs) = let
 
 
 toUnixString :: UniPath -> String
-toUnixString path = StringUtils.join "/" $ toList path
+toUnixString path = case head l of
+        "/" -> "/" ++ (join $ tail l)
+        _   -> join l
+    where l    = toList path
+          join = StringUtils.join "/"
 
 
 expand :: MonadIO m => UniPath -> m UniPath

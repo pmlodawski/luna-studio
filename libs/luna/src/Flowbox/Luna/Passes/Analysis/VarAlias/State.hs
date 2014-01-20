@@ -4,9 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds           #-}
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds  #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Flowbox.Luna.Passes.Analysis.VarAlias.State where
 
@@ -15,9 +14,9 @@ import qualified Data.IntMap         as IntMap
 import           Data.Map            (Map)
 import qualified Data.Map            as Map
 
-import           Flowbox.Luna.Data.AliasAnalysis (AA)
-import qualified Flowbox.Luna.Data.AliasAnalysis as AA
-import           Flowbox.Prelude
+import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap (GeneralVarMap)
+import qualified Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap as GeneralVarMap
+import           Flowbox.Prelude                                hiding (id)
 import           Flowbox.System.Log.Logger
 
 
@@ -27,21 +26,21 @@ logger = getLogger "Flowbox.Luna.Passes.VarAlias.State"
 
 
 data LocState    = LocState { namemap :: Map String Int
-                            , varstat :: AA
+                            , varstat :: GeneralVarMap
                             } deriving (Show)
 
 type LocStateM m = MonadState LocState m
 
 
 empty :: LocState
-empty = LocState Map.empty AA.empty
+empty = LocState Map.empty GeneralVarMap.empty
 
 
-bind :: LocStateM m => Int -> Int -> m ()
+bind :: LocStateM m => Int -> Either String Int -> m ()
 bind kid vid = do
     s <- get
     let vs  = varstat s
-        nvs = vs { AA.varmap = IntMap.insert kid vid $ AA.varmap vs }
+        nvs = vs { GeneralVarMap.varmap = IntMap.insert kid vid $ GeneralVarMap.varmap vs }
     put s { varstat = nvs }
 
 
@@ -62,3 +61,11 @@ lookupVar :: LocStateM m => String -> m (Maybe Int)
 lookupVar vname = do
     s <- get
     return $ Map.lookup vname (namemap s)
+
+
+bindVar :: LocStateM m => String -> Int -> m ()
+bindVar name id = do mv <- lookupVar name
+                     case mv of
+                        Just v  -> bind id $ Right v
+                        Nothing -> do
+                                      bind id $ Left $ "Not in scope: " ++ (show name)

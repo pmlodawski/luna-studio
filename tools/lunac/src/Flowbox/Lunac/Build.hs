@@ -19,7 +19,7 @@ import qualified Flowbox.Luna.Passes.Build.BuildConfig as BuildConfig
 import           Flowbox.Luna.Passes.Build.Diagnostics (Diagnostics (Diagnostics))
 import qualified Flowbox.Luna.Passes.General.Luna.Luna as Luna
 import qualified Flowbox.Lunac.Cmd                     as Cmd
-import           Flowbox.Prelude
+import           Flowbox.Prelude                       hiding (op)
 import           Flowbox.System.Log.Logger
 import           Flowbox.System.UniPath                (UniPath)
 import qualified Flowbox.System.UniPath                as UniPath
@@ -50,7 +50,7 @@ run cfg op = do
 
 
 build :: Config -> Cmd.Options -> Diagnostics -> UniPath -> IO ()
-build cfg op diag filePath = Luna.runIO $ do
+build cfg op diag filePath = do
     let name     = Cmd.libName    op
         version  = Cmd.libVersion op
         rootPath = case Cmd.rootPath op of
@@ -69,7 +69,10 @@ build cfg op diag filePath = Luna.runIO $ do
         buildType  = if Cmd.library op
                         then BuildConfig.Library
                         else BuildConfig.Executable outputPath
-        bldCfg = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag
-    ast <- Build.parseFile rootPath filePath
-    Build.run bldCfg ast
+        buildDir   = case Cmd.buildDir op of
+                        "" -> Nothing
+                        d  -> Just $ UniPath.fromUnixString d
+        bldCfg = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag buildDir
+    ast <- Luna.runIO $ Build.parseFile rootPath filePath
+    Luna.runIO $ Build.run bldCfg $ fst ast
     return ()

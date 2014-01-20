@@ -7,8 +7,6 @@
 
 package generated.proto.graph;
 
-import "attributes.proto";
-
 
 
 message Node {
@@ -17,22 +15,20 @@ message Node {
         Inputs  = 2;
         Outputs = 3;
     }
-    required Cls    cls    = 1;
-    optional int32  nodeID = 2;
-    optional string name   = 3;
-	optional generated.proto.attributes.Flags      flags = 4;
-    optional generated.proto.attributes.Attributes attrs = 5;
+    required Cls    cls  = 1;
+    optional int32  id   = 2 [default = -1];
+    optional string expr = 3;
+    optional string outputName = 5 [default = ""];
 }
 
 message Edge {
-	optional int32 nodeSrc = 1;
-	optional int32 nodeDst = 2;
-	optional int32 portSrc = 3;
+    optional int32 nodeSrc = 1;
+    optional int32 nodeDst = 2;
+    optional int32 portSrc = 3;
     optional int32 portDst = 4;
 }
 
 message Graph {
-	repeated Node nodes = 1;
-	repeated Edge edges = 2;
+    repeated Node nodes = 1;
+    repeated Edge edges = 2;
 }
-

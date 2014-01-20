@@ -24,6 +24,7 @@ data BuildConfig = BuildConfig { name       :: String
                                , buildType  :: BuildType
                                , config     :: Config
                                , diag       :: Diagnostics
+                               , buildDir   :: Maybe UniPath
                                }
 
 data BuildType   = Executable  { outputPath :: UniPath }

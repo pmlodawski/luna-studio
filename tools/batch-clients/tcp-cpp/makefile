@@ -1,8 +1,13 @@
 GEN_SRC :=  generated/attributes.pb.cc \
+			generated/crumb.pb.cc \
 			generated/expr.pb.cc \
 			generated/file-system.pb.cc \
+			generated/focus.pb.cc \
+			generated/graph.pb.cc \
+			generated/graphview.pb.cc \
 			generated/library.pb.cc \
 			generated/lit.pb.cc \
+			generated/nodedefault.pb.cc \
 			generated/module.pb.cc \
 			generated/pat.pb.cc \
 			generated/project.pb.cc \
@@ -10,14 +15,14 @@ GEN_SRC :=  generated/attributes.pb.cc \
 			generated/type.pb.cc
 GEN_OBJ := $(patsubst %.cc,%.o, $(GEN_SRC))
 
-.PHONY: all clean hs
+.PHONY: all clean
 
 all: main 
 
 %.o: %.cc
 	$(CXX) -c  $< -o $@
 
-main.o: main.cpp
+main.o: main.cpp $(GEN_SRC) 
 	$(CXX) -std=gnu++11 -Wall -c  $< -o $@
 
 main: main.o $(GEN_OBJ) 
