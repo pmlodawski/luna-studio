@@ -7,8 +7,6 @@
 
 module Flowbox.Batch.Handler.Graph where
 
-import Data.String.Utils as Utils
-
 import           Flowbox.Batch.Batch                                 (Batch)
 import           Flowbox.Batch.Handler.Common                        (graphViewOp, noresult, readonly, readonlyNodeOp)
 import qualified Flowbox.Batch.Project.Project                       as Project
@@ -46,8 +44,7 @@ addNode :: Node
         -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Batch, Node.ID)
 addNode node bc libID projectID = graphViewOp bc libID projectID (\_ graph propertyMap maxID -> do
     let newID     = maxID + 1
-        node_tmp  = node & Node.expr %~ Utils.replace "." "()."
-        fixedNode = OutputName.fixEmpty node_tmp newID
+        fixedNode = OutputName.fixEmpty node newID
     return ((GraphView.insNode (newID, fixedNode) graph, propertyMap), newID))
 
 
