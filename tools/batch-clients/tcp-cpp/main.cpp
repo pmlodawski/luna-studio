@@ -161,7 +161,7 @@ void setField(TMessage *msg, int i, std::string value)
 template <typename TMessage>
 void setField(TMessage *msg, int i, std::vector<int> value)
 {
-	for(int index = 0 ; index < value.size() ; ++index)
+	for(size_t index = 0 ; index < value.size() ; ++index)
 		msg->GetReflection()->AddInt32(msg, TMessage::descriptor()->field(i), value[index]);
 }
 
@@ -218,7 +218,7 @@ TResult askSecondaryWrapper(tcp::socket &controlSocket, TArgs * args,
 	request.SetAllocatedExtension(TArgs::req, args);
 
 	auto response = callAndTranslateException(controlSocket, request);
-	assert(response.type() == Response_Type_Result); //exception would be translated to exception
+	assert(response.type() == Response_Type_Result || response.type() == Response_Type_Accept); //exception would be translated to exception
 	auto defaultsResponse = response.GetExtension(TResult::rsp);
 	response.Clear();
 	return defaultsResponse;
@@ -471,6 +471,9 @@ int main()
 
 		auto loadedProject = macro::Project::OpenProject(controlSocket, "/tmp/flowbox/testProject").project();
 		macro::Library::LoadLibrary(controlSocket, "/tmp/flowbox/testProject/testLibrary", loadedProject.id());
+		macro::Library::BuildLibrary(controlSocket, library.id(), project.id());
+		sleep(3);
+		macro::Library::RunLibrary(controlSocket, library.id(), project.id());
 
 		// macro::Maintenance::Dump(controlSocket);
 		macro::Project::CloseProject(controlSocket, loadedProject.id());
