@@ -52,7 +52,9 @@ pAssignment  = symbol  '='
 pNativeSym   = symbols "```"
 pRange       = symbols ".."
 
-opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
+operators    = "!#$%&*+./<=>?@\\^|-~"
+
+opStart      = oneOf operators
 opLetter     = opStart
 reservedOpNames = ["=", "::", ":", ".", "->", "<-"]
 

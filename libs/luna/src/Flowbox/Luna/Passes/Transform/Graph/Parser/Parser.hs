@@ -34,6 +34,7 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.State          as St
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
 import           Flowbox.Prelude                                           hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer as Lexer
 
 
 
@@ -68,11 +69,12 @@ parseNode inputs (nodeID, node) = do
 
 
 parseExprNode :: Node.ID -> String -> GPPass ()
-parseExprNode nodeID expr = case expr of
-    "Tuple" -> parseTupleNode nodeID
-    '=':pat -> parsePatNode   nodeID pat
-    '~':_   -> parseInfixNode nodeID expr
-    _       -> parseAppNode nodeID expr
+parseExprNode nodeID expr = if length expr == 1 && head expr `elem` Lexer.operators
+    then parseInfixNode nodeID expr
+    else case expr of
+        "Tuple" -> parseTupleNode nodeID
+        '=':pat -> parsePatNode   nodeID pat
+        _       -> parseAppNode   nodeID expr
 
 
 parseInputsNode :: Node.ID -> [Expr] -> GPPass ()
@@ -110,11 +112,14 @@ parsePatNode nodeID pat = do
 
 parseInfixNode :: Node.ID -> String -> GPPass ()
 parseInfixNode nodeID inf = do
-    srcs <- State.getNodeSrcs nodeID
-    case srcs of
-        [a, b] -> do let e = Expr.Infix nodeID inf a b
-                     addExpr nodeID e
-        _      -> fail "parseInfixNode: Wrong Infix arguments"
+    srcs   <- State.getNodeSrcs nodeID
+    let u = Expr.Wildcard IDFixer.unknownID
+    (a, b) <- case srcs of
+                    [a, b] -> return (a, b)
+                    [a]    -> return (a, u)
+                    []     -> return (u, u)
+                    _      -> fail "parseInfixNode: Wrong Infix arguments"
+    addExpr nodeID $ Expr.Infix nodeID inf a b
 
 
 parseAppNode :: Node.ID -> String -> GPPass ()

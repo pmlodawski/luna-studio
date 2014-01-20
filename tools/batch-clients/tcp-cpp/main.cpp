@@ -416,7 +416,7 @@ int main()
 			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
-			node.set_expr("add"); 
+			node.set_expr("+"); 
 			nodeAddid = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
 		}
 		int nodePrintid;
