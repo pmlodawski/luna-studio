@@ -100,11 +100,12 @@ buildLibrary libID projectID = readonly . libraryOp libID projectID (\batch libr
         outputPath  = UniPath.append name projectPath
         libs        = []                 -- TODO [PM] : hardcoded libs
         ghcFlags    = ["-O2"]            -- TODO [PM] : hardcoded ghc flags
+        cppFlags    = []                 -- TODO [PM] : hardcoded cpp flags
         cabalFlags  = []                 -- TODO [PM] : hardcoded cabal flags
         buildDir    = Nothing
 
         buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
-        bldCfg      = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag buildDir
+        bldCfg      = BuildConfig name version libs ghcFlags cppFlags cabalFlags buildType cfg diag buildDir
 
     Luna.runIO $ Build.run bldCfg ast
     return (library, ()))
