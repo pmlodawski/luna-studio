@@ -14,7 +14,7 @@
 
 class Console:
     def print self msg:
-        ```print' #{msg}```
+        ```print'' #{msg}```
 
 ###### List ###################################
 
@@ -67,24 +67,23 @@ def Float.- a b:
 
 ###############################################
 
-
-
 class Vector a:
     x,y,z :: a
+
     def test self x:
         x
 
     def + self v2:
-        Vector (self.x()+v2.x()) (self.y()+v2.y()) (self.z()+v2.z())
+        Vector (self.x() + v2.x()) (self.y() + v2.y()) (self.z() + v2.z())
 
 def main self:
-    v = Vector 1 2 3
+    # v = Vector 1 2 3
     c = Console()
-    c.print "hello"
-    c.print (v+v)
-    c.print $ 5 in [1..100]
-    a = [1..100].each x:
-        Console().print x
-    # c.print a
+    # c.print v
+    # c.print (v+v)
 
+    a = [1..10].each x:
+        Console().print x
+
+    c.print $ a.at 5
 
