@@ -20,6 +20,7 @@ data BuildConfig = BuildConfig { name       :: String
                                , version    :: Version
                                , libs       :: [String]
                                , ghcflags   :: [String]
+                               , cppflags   :: [String]
                                , cabalflags :: [String]
                                , buildType  :: BuildType
                                , config     :: Config

@@ -45,6 +45,7 @@ buildParser = Cmd.Build <$> ( Cmd.BuildOptions <$> argument str ( metavar "INPUT
                                                <*> switch    ( long "global"  <> help "compile to global library" )
                                                <*> strOption ( long "build-dir"                <> value "" <> hidden )
 
+                                               <*> switch ( long "DDEBUG"    <> hidden )
                                                <*> switch ( long "dump-all"  <> hidden )
                                                <*> switch ( long "dump-ast"  <> hidden )
                                                <*> switch ( long "dump-va"   <> hidden )

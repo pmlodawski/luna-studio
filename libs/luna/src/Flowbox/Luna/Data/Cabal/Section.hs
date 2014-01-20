@@ -16,6 +16,7 @@ import Data.String.Utils (join)
 
 data Section = Library    { exposedModules :: [String]
                           , ghcOptions     :: [String]
+                          , cppOptions     :: [String]
                           , buildDepends   :: [String]
                           , extensions     :: [Extension]
                           , hsSourceDirs   :: [String]
@@ -23,6 +24,7 @@ data Section = Library    { exposedModules :: [String]
              | Executable { name         :: String
                           , mainIs       :: String
                           , ghcOptions   :: [String]
+                          , cppOptions   :: [String]
                           , buildDepends :: [String]
                           , extensions   :: [Extension]
                           , hsSourceDirs :: [String]
@@ -35,11 +37,11 @@ mkExecutable name' = mkCommon $ Executable name' "Main.hs"
 
 
 mkLibrary :: Section
-mkLibrary = mkCommon $ Library []
+mkLibrary = mkCommon $ Library [] 
 
 
-mkCommon :: ([String] -> [String] -> [Extension] -> [String] -> Section) -> Section
-mkCommon s = s [] [] [] ["src"]
+mkCommon :: ([String] -> [String] -> [String] -> [Extension] -> [String] -> Section) -> Section
+mkCommon s = s [] [] [] [] ["src"]
 
 
 defaultIndent :: String
@@ -55,6 +57,11 @@ genFields name' vals = genField name' $ if null vals
     then ""
     else join (",\n" ++ defaultIndent) vals
 
+genArgs :: String -> [String] -> String
+genArgs name' vals = genField name' $ if null vals
+    then ""
+    else join " " vals
+
 
 genField :: String -> String -> String
 genField name' val = ident
@@ -66,7 +73,8 @@ genField name' val = ident
 genCode :: Section -> String
 genCode s = genCodeSpecific s
                ++ genFields "Hs-Source-Dirs"  (hsSourceDirs s)
-               ++ genFields "GHC-Options"     (ghcOptions s)
+               ++ genArgs   "GHC-Options"     (ghcOptions s)
+               ++ genArgs   "CPP-Options"     (cppOptions s)
                ++ genFields "Extensions"      (map show $ extensions s)
                ++ genFields "Build-Depends"   (buildDepends s)
 

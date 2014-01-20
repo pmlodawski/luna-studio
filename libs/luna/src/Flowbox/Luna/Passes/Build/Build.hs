@@ -96,11 +96,11 @@ run buildConfig ast = runEitherT $ do
                       buildInFolder buildConfig hsc allLibs bd
 
 buildInFolder :: (Functor m, MonadIO m) => BuildConfig -> [Source] -> [String] -> UniPath -> m ()
-buildInFolder (BuildConfig name version _ ghcOptions cabalFlags buildType cfg _ _) hsc allLibs buildDir = do
+buildInFolder (BuildConfig name version _ ghcOptions cppOptions cabalFlags buildType cfg _ _) hsc allLibs buildDir = do
     writeSources buildDir hsc
     let cabal = case buildType of
-            BuildConfig.Library       -> CabalGen.genLibrary    name version ghcOptions allLibs hsc
-            BuildConfig.Executable {} -> CabalGen.genExecutable name version ghcOptions allLibs
+            BuildConfig.Library       -> CabalGen.genLibrary    name version ghcOptions cppOptions allLibs hsc
+            BuildConfig.Executable {} -> CabalGen.genExecutable name version ghcOptions cppOptions allLibs
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) buildDir
     CabalInstall.run cfg buildDir cabalFlags
     case buildType of
