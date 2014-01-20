@@ -85,6 +85,7 @@ run buildConfig ast = runEitherT $ do
     let allLibs = "base"
                 -- : "flowboxM-core"
                 : "luna-target-hs"
+                -- : "flowbox-graphics"
                 : "template-haskell"
                 : BuildConfig.libs buildConfig
                 ++ if BuildConfig.name buildConfig /= "flowboxM-stdlib"

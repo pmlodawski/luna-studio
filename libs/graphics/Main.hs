@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeOperators             #-}
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE CPP           #-}
 
 import Control.Applicative
 
