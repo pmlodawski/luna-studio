@@ -1,41 +1,65 @@
 
-###### File ###################################
+# ###### File ###################################
 
-class File:
-    def readFile self name:
-        ```getIO $ liftFIO1 hsLib_System_IO_readFile #{name}```
+# class File:
+#     def readFile self name:
+#         ```getIO $ liftFIO1 hsLib_System_IO_readFile #{name}```
 
-    def writeFile self name content:
-        content = content.toString
-        ```getIO $ liftFIO2 hsLib_System_IO_writeFile #{name} #{content}```
+#     def writeFile self name content:
+#         content = content.toString
+#         ```getIO $ liftFIO2 hsLib_System_IO_writeFile #{name} #{content}```
 
 
 ###### Console ################################
 
 class Console:
-    def print self obj:
-        obj = obj.toString
-        ```liftFIO1 putStrLn #{obj}```
-        ```return #{self}```
+    def print self msg:
+        ```print' #{msg}```
 
 ###### List ###################################
 
 def List.at self index:
-    ```getIO $ liftFPure2 (!!) #{self} #{index}```
+    ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```
 
-def List.add self l2:
-    ```getIO $ liftFPure2 (++) #{self} #{l2}```
+def List.+ self l2:
+    ```liftf2 (++) #{self} #{l2}```
 
 def List.contains self el:
-    ```getIO $ liftFPure2 (elem) #{self} #{el}```
+    ```liftf2 (elem) (val #{el}) #{self}```
 
 def List.length self:
-    ```getIO $ liftFPure1 length #{self}```
-
-def List.toString self:
-    ```getIO $ liftFPure1 lrepr #{self}```
+    ```liftf1 length #{self}```
 
 def List.each self callback:
-     ```let {mymap x (Pure y) = mapM x y}```
-     ```getIO $ mymap (get1 #{callback}) #{self}```
+    ```let {mymap = liftf2 map}```
+    ```mymap (val $ call1 #{callback}) #{self}```
 
+###### Bool ####################################
+
+def Bool.not self:
+    ```liftf1 not #{self}```
+
+
+
+###############################################
+
+
+class Image:
+    def testm self x:
+        ```liftf1 testm #{x}```
+
+    def readImage self path:
+        ```flattenCtx $ liftf1 readImage #{path}```
+
+    def writeImage self path img:
+        ```flattenCtx $ liftf2 writeImage #{path} #{img}```
+
+
+class Vector a:
+    x,y,z :: a
+
+    def test self x:
+        x
+
+    def + self v2:
+        Vector (self.x() + v2.x()) (self.y() + v2.y()) (self.z() + v2.z())

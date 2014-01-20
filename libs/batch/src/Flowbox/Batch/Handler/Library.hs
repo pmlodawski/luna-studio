@@ -118,9 +118,8 @@ runLibrary libID projectID = projectOp projectID (\_ project -> do
         libs        = Project.libs project
         processMap  = Project.processMap project
     library <- LibManager.lab libs libID <?> "Wrong libID=" ++ (show libID)
-
-    let name = Library.name library
-        command = Platform.dependent ("./" ++ name) (name ++ ".exe") ("./" ++ name)
+    name <- UniPath.toUnixString <$> (UniPath.expand $ UniPath.append (Library.name library) projectPath)
+    let command = Platform.dependent name (name ++ ".exe") name
     --    noStandardInput = ""
     --    noArguments     = [] --TODO [PM] : reimplement all this method to support real programs
     --loggerIO debug $ "Running command '" ++ command ++ "'"
