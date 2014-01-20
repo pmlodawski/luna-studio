@@ -73,8 +73,9 @@ luminance' = luminance "r" "g" "b" "luminance"
 
 
 --imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
-imgtest img = do
+imgtest img imgFilter = do
     rgba  <- Image.reprFloat <$> RGBA.decompose img
+    rgbaFilter <- Image.reprFloat <$> RGBA.decompose imgFilter
     --lrgba <- luminance' rgba
            -- >>= Image.cpChannel "luminance" "r"
            -- >>= Image.cpChannel "luminance" "g"
@@ -84,13 +85,14 @@ imgtest img = do
         --blur5x5 = [0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04]
         --sharpen3x3 = [-1.0,-1.0,-1.0,-1.0,9.0,-1.0,-1.0,-1.0,-1.0]
     --lrgba <- convolve "r" convolve5x5 sharpen3x3 rgba
-    hsv <- convertRGBtoHSV rgba
-    h <- Image.lookup "h" hsv
-    s <- Image.lookup "s" hsv
-    v <- Image.lookup "v" hsv
+    --hsv <- convertRGBtoHSV rgba
+    --h <- Image.lookup "h" hsv
+    --s <- Image.lookup "s" hsv
+    --v <- Image.lookup "v" hsv
     --let hsvl = Image.insert "h" (Channel.map (mod1 . (+0.5)) h) $ hsv
     --let hsvl = Image.insert "s" (clipValues $ Channel.map (+1) s) $ hsv
-    lrgba <- convertHSVtoRGB hsv
+    --lrgba <- convertHSVtoRGB hsv
+    lrgba <- blendRGB rgba rgbaFilter (blenderAlpha 0.5) -- ...
     RGBA.compose $ Image.reprWord8 lrgba
     where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
           mod1 = flip nonIntRem 1.0
@@ -238,99 +240,139 @@ convertHSVtoRGB img = do
 
 
 -- blending
---blendC :: (Channel Float) -> (Channel Float) -> ((Exp Float) -> (Exp Float) -> (Exp Float)) -> (Channel Float)
---blendC channelA channelB blender = Channel.zipWith blender channelA channelB
+blendC :: (Channel Float) -> (Channel Float) -> ((Exp Float) -> (Exp Float) -> (Exp Float)) -> (Channel Float)
+blendC channelA channelB blender = Channel.zipWith blender channelA channelB
 
 
 
---blendRGB :: (Image Float) -> (Image Float) -> ((Exp Float) -> (Exp Float) -> (Exp Float)) -> Either Image.Error (Image Float)
---blendRGB img1 img2 blender = do
---    r1 <- Image.lookup "r" img
---    g1 <- Image.lookup "g" img
---    b1 <- Image.lookup "b" img
---    r2 <- Image.lookup "r" img
---    g2 <- Image.lookup "g" img
---    b2 <- Image.lookup "b" img
---    let outimg = Image.insert "r" r'
---               $ Image.insert "g" g'
---               $ Image.insert "b" b'
---               $ mempty ???
---        r'     = blendC r1 r2 blender
---        g'     = blendC g1 g2 blender
---        b'     = blendC b1 b2 blender
---    return outimg
+blendRGB :: (Image Float) -> (Image Float) -> ((Exp Float) -> (Exp Float) -> (Exp Float)) -> Either Image.Error (Image Float)
+blendRGB img1 img2 blender = do
+    r1 <- Image.lookup "r" img1
+    g1 <- Image.lookup "g" img1
+    b1 <- Image.lookup "b" img1
+    a1 <- Image.lookup "a" img1
+    r2 <- Image.lookup "r" img2
+    g2 <- Image.lookup "g" img2
+    b2 <- Image.lookup "b" img2
+    a2 <- Image.lookup "a" img2
+    let outimg = Image.insert "r" r'
+               $ Image.insert "g" g'
+               $ Image.insert "b" b'
+               $ Image.insert "a" a'
+               $ mempty
+        r'     = blendC r1 r2 blender
+        g'     = blendC g1 g2 blender
+        b'     = blendC b1 b2 blender
+        a'     = blendC a1 a2 blender
+    return outimg
 
 -- #define ChannelBlend_Normal(A,B)     ((uint8)(A))
---blenderNormal :: (Exp Float) -> (Exp Float) -> (Exp Float)
---blenderNormal a b = a
+blenderNormal :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderNormal a b = a
 
 -- #define ChannelBlend_Lighten(A,B)    ((uint8)((B > A) ? B:A))
---blenderLighten a b = b >* a ? (b,a)
+blenderLighten :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderLighten a b = b A.>* a A.? (b,a)
 
 -- #define ChannelBlend_Darken(A,B)     ((uint8)((B > A) ? A:B))
---blenderDarken a b = b >* a ? (a,b)
+blenderDarken :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderDarken a b = b A.>* a A.? (a,b)
 
 -- #define ChannelBlend_Multiply(A,B)   ((uint8)((A * B) / 255))
---blenderMultiply a b = (a * b) / 1
+blenderMultiply :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderMultiply a b = (a * b)
 
 -- #define ChannelBlend_Average(A,B)    ((uint8)((A + B) / 2))
---blenderAverage a b = (a + b) / 2
+blenderAverage :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderAverage a b = (a + b) / 2
 
 -- #define ChannelBlend_Add(A,B)        ((uint8)(min(255, (A + B))))
---blenderAdd a b = 1 <* (a + b) ? (1 , a + b)
+blenderAdd :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderAdd a b = 1 A.<* (a + b) A.? (1 , a + b)
 
 -- #define ChannelBlend_Subtract(A,B)   ((uint8)((A + B < 255) ? 0:(A + B - 255)))
---blenderSubtract a b = (a + b) <* 1 ? (0 , a + b - 1)
+blenderSubtract :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderSubtract a b = (a + b) A.<* 1 A.? (0 , a + b - 1)
 
 -- #define ChannelBlend_Difference(A,B) ((uint8)(abs(A - B)))
---blenderDifference a b = a >* b ? (a - b , b - a)
+blenderDifference :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderDifference a b = a A.>* b A.? (a - b , b - a)
 
 -- #define ChannelBlend_Negation(A,B)   ((uint8)(255 - abs(255 - A - B)))
---blenderNegation a b = 1 - (1 - a - b >* 0 ? (1 - a - b , -(1 - a - b)))
+blenderNegation :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderNegation a b = 1 - (1 - a - b A.>* 0 A.? (1 - a - b , -(1 - a - b)))
 
 -- #define ChannelBlend_Screen(A,B)     ((uint8)(255 - (((255 - A) * (255 - B)) >> 8)))
--- ???
+blenderScreen :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderScreen a b = 1 - (1 - a) * (1 - b)
 
 -- #define ChannelBlend_Exclusion(A,B)  ((uint8)(A + B - 2 * A * B / 255))
---blenderExclusion a b = a + b - 2 * a * b / 1
+blenderExclusion :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderExclusion a b = a + b - 2 * a * b
 
 -- #define ChannelBlend_Overlay(A,B)    ((uint8)((B < 128) ? (2 * A * B / 255):(255 - 2 * (255 - A) * (255 - B) / 255)))
---blenderOverlay a b = b <* 0.5 ? ((2 * a * b / 1) , (1 - 2 * (1 - a) * (1 - b) / 1))
+blenderOverlay :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderOverlay a b = b A.<* 0.5 A.? ((2 * a * b) , (1 - 2 * (1 - a) * (1 - b)))
 
 -- #define ChannelBlend_SoftLight(A,B)  ((uint8)((B < 128)?(2*((A>>1)+64))*((float)B/255):(255-(2*(255-((A>>1)+64))*(float)(255-B)/255))))
--- ???
+blenderSoftLight :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderSoftLight a b = b A.<* 0.5 A.? (2 * (a / 2 + 0.25) * b , 1 - 2 * (1 - (a / 2 + 0.25)) * (1-b))
 
 -- #define ChannelBlend_HardLight(A,B)  (ChannelBlend_Overlay(B,A))
---blenderHardLight = flip blenderOverlay
+blenderHardLight :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderHardLight = flip blenderOverlay
 
 -- #define ChannelBlend_ColorDodge(A,B) ((uint8)((B == 255) ? B:min(255, ((A << 8 ) / (255 - B)))))
--- ???
+blenderColorDodge :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderColorDodge a b = b A.>=* 1 A.? (b , 1 A.<* a / (1 - b) A.? (1 , a / (1 - b)))
 
 -- #define ChannelBlend_ColorBurn(A,B)  ((uint8)((B == 0) ? B:max(0, (255 - ((255 - A) << 8 ) / B))))
--- ???
+blenderColorBurn :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderColorBurn a b = b A.<=* 0 A.? (b , 0 A.>* 1 - (1 - a) / b A.? (0 , 1 - (1 - a) / b))
 
 -- #define ChannelBlend_LinearDodge(A,B)(ChannelBlend_Add(A,B))
---blenderLinearDodge = blenderAdd
+blenderLinearDodge :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderLinearDodge = blenderAdd
 
 -- #define ChannelBlend_LinearBurn(A,B) (ChannelBlend_Subtract(A,B))
---blenderLinearBurn a b = blenderSubtract
+blenderLinearBurn :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderLinearBurn = blenderSubtract
 
 -- #define ChannelBlend_LinearLight(A,B)((uint8)(B < 128)?ChannelBlend_LinearBurn(A,(2 * B)):ChannelBlend_LinearDodge(A,(2 * (B - 128))))
---blenderLinearLight a b = b <* 0.5 ? (blenderLinearBurn a (2 * b) , blenderLinearDodge a (2 * (b - 0.5)))
+blenderLinearLight :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderLinearLight a b = b A.<* 0.5 A.? (blenderLinearBurn a (2 * b) , blenderLinearDodge a (2 * (b - 0.5)))
 
 -- #define ChannelBlend_VividLight(A,B) ((uint8)(B < 128)?ChannelBlend_ColorBurn(A,(2 * B)):ChannelBlend_ColorDodge(A,(2 * (B - 128))))
---blenderVividLight a b = b <* 0.5 ? (blenderColorBurn a (2 * b) , blenderColorDodge a (2 * (b - 0.5)))
+blenderVividLight :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderVividLight a b = b A.<* 0.5 A.? (blenderColorBurn a (2 * b) , blenderColorDodge a (2 * (b - 0.5)))
 
 -- #define ChannelBlend_PinLight(A,B)   ((uint8)(B < 128)?ChannelBlend_Darken(A,(2 * B)):ChannelBlend_Lighten(A,(2 * (B - 128))))
---blenderPinLight a b = b <* 0.5 ? (blenderDarken a (2 * b) , blenderLighten a (2 * (b - 0.5)))
+blenderPinLight :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderPinLight a b = b A.<* 0.5 A.? (blenderDarken a (2 * b) , blenderLighten a (2 * (b - 0.5)))
 
 -- #define ChannelBlend_HardMix(A,B)    ((uint8)((ChannelBlend_VividLight(A,B) < 128) ? 0:255))
---blenderHardMix
+blenderHardMix :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderHardMix a b = blenderVividLight a b A.<* 0.5 A.? (0 , 1)
+
 -- #define ChannelBlend_Reflect(A,B)    ((uint8)((B == 255) ? B:min(255, (A * A / (255 - B)))))
+blenderReflect :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderReflect a b = b A.>=* 1 A.? (b , 1 A.<* a * a / (1 - b) A.? (1 , a * a / (1 - b)))
+
 -- #define ChannelBlend_Glow(A,B)       (ChannelBlend_Reflect(B,A))
+blenderGlow :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderGlow = flip blenderReflect
+
 -- #define ChannelBlend_Phoenix(A,B)    ((uint8)(min(A,B) - max(A,B) + 255))
+blenderPhoenix :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderPhoenix a b = (a A.<* b A.? (a , b)) - (a A.>* b A.? (a , b)) + 1
+
 -- #define ChannelBlend_Alpha(A,B,O)    ((uint8)(O * A + (1 - O) * B))
+blenderAlpha o a b = (o * a + (1 - o) * b)
+
 -- #define ChannelBlend_AlphaF(A,B,F,O) (ChannelBlend_Alpha(F(A,B),A,O))
+blenderAlphaF f o a b = blenderAlpha (f a b) a o
+
+
 
 -- main
 
@@ -352,7 +394,8 @@ main
         print "Reading"
 
         img2 <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
-        let img3 = imgtest img2
+        imgFilter <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP "filter.bmp"
+        let img3 = imgtest img2 imgFilter
 
         case img3 of
             Left  err -> print err
