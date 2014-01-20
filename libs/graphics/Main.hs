@@ -249,6 +249,102 @@ convertHSVtoRGB img = do
     return outimg
 
 
+
+-- blending
+--blendC :: (Channel Float) -> (Channel Float) -> ((Exp Float) -> (Exp Float) -> (Exp Float)) -> (Channel Float)
+--blendC channelA channelB blender = Channel.zipWith blender channelA channelB
+
+
+
+--blendRGB :: (Image Float) -> (Image Float) -> ((Exp Float) -> (Exp Float) -> (Exp Float)) -> Either Image.Error (Image Float)
+--blendRGB img1 img2 blender = do
+--    r1 <- Image.lookup "r" img
+--    g1 <- Image.lookup "g" img
+--    b1 <- Image.lookup "b" img
+--    r2 <- Image.lookup "r" img
+--    g2 <- Image.lookup "g" img
+--    b2 <- Image.lookup "b" img
+--    let outimg = Image.insert "r" r'
+--               $ Image.insert "g" g'
+--               $ Image.insert "b" b'
+--               $ mempty ???
+--        r'     = blendC r1 r2 blender
+--        g'     = blendC g1 g2 blender
+--        b'     = blendC b1 b2 blender
+--    return outimg
+
+-- #define ChannelBlend_Normal(A,B)     ((uint8)(A))
+--blenderNormal :: (Exp Float) -> (Exp Float) -> (Exp Float)
+--blenderNormal a b = a
+
+-- #define ChannelBlend_Lighten(A,B)    ((uint8)((B > A) ? B:A))
+--blenderLighten a b = b >* a ? (b,a)
+
+-- #define ChannelBlend_Darken(A,B)     ((uint8)((B > A) ? A:B))
+--blenderDarken a b = b >* a ? (a,b)
+
+-- #define ChannelBlend_Multiply(A,B)   ((uint8)((A * B) / 255))
+--blenderMultiply a b = (a * b) / 1
+
+-- #define ChannelBlend_Average(A,B)    ((uint8)((A + B) / 2))
+--blenderAverage a b = (a + b) / 2
+
+-- #define ChannelBlend_Add(A,B)        ((uint8)(min(255, (A + B))))
+--blenderAdd a b = 1 <* (a + b) ? (1 , a + b)
+
+-- #define ChannelBlend_Subtract(A,B)   ((uint8)((A + B < 255) ? 0:(A + B - 255)))
+--blenderSubtract a b = (a + b) <* 1 ? (0 , a + b - 1)
+
+-- #define ChannelBlend_Difference(A,B) ((uint8)(abs(A - B)))
+--blenderDifference a b = a >* b ? (a - b , b - a)
+
+-- #define ChannelBlend_Negation(A,B)   ((uint8)(255 - abs(255 - A - B)))
+--blenderNegation a b = 1 - (1 - a - b >* 0 ? (1 - a - b , -(1 - a - b)))
+
+-- #define ChannelBlend_Screen(A,B)     ((uint8)(255 - (((255 - A) * (255 - B)) >> 8)))
+-- ???
+
+-- #define ChannelBlend_Exclusion(A,B)  ((uint8)(A + B - 2 * A * B / 255))
+--blenderExclusion a b = a + b - 2 * a * b / 1
+
+-- #define ChannelBlend_Overlay(A,B)    ((uint8)((B < 128) ? (2 * A * B / 255):(255 - 2 * (255 - A) * (255 - B) / 255)))
+--blenderOverlay a b = b <* 0.5 ? ((2 * a * b / 1) , (1 - 2 * (1 - a) * (1 - b) / 1))
+
+-- #define ChannelBlend_SoftLight(A,B)  ((uint8)((B < 128)?(2*((A>>1)+64))*((float)B/255):(255-(2*(255-((A>>1)+64))*(float)(255-B)/255))))
+-- ???
+
+-- #define ChannelBlend_HardLight(A,B)  (ChannelBlend_Overlay(B,A))
+--blenderHardLight = flip blenderOverlay
+
+-- #define ChannelBlend_ColorDodge(A,B) ((uint8)((B == 255) ? B:min(255, ((A << 8 ) / (255 - B)))))
+-- ???
+
+-- #define ChannelBlend_ColorBurn(A,B)  ((uint8)((B == 0) ? B:max(0, (255 - ((255 - A) << 8 ) / B))))
+-- ???
+
+-- #define ChannelBlend_LinearDodge(A,B)(ChannelBlend_Add(A,B))
+--blenderLinearDodge = blenderAdd
+
+-- #define ChannelBlend_LinearBurn(A,B) (ChannelBlend_Subtract(A,B))
+--blenderLinearBurn a b = blenderSubtract
+
+-- #define ChannelBlend_LinearLight(A,B)((uint8)(B < 128)?ChannelBlend_LinearBurn(A,(2 * B)):ChannelBlend_LinearDodge(A,(2 * (B - 128))))
+--blenderLinearLight a b = b <* 0.5 ? (blenderLinearBurn a (2 * b) , blenderLinearDodge a (2 * (b - 0.5)))
+
+-- #define ChannelBlend_VividLight(A,B) ((uint8)(B < 128)?ChannelBlend_ColorBurn(A,(2 * B)):ChannelBlend_ColorDodge(A,(2 * (B - 128))))
+--blenderVividLight a b = b <* 0.5 ? (blenderColorBurn a (2 * b) , blenderColorDodge a (2 * (b - 0.5)))
+
+-- #define ChannelBlend_PinLight(A,B)   ((uint8)(B < 128)?ChannelBlend_Darken(A,(2 * B)):ChannelBlend_Lighten(A,(2 * (B - 128))))
+--blenderPinLight a b = b <* 0.5 ? (blenderDarken a (2 * b) , blenderLighten a (2 * (b - 0.5)))
+
+-- #define ChannelBlend_HardMix(A,B)    ((uint8)((ChannelBlend_VividLight(A,B) < 128) ? 0:255))
+--blenderHardMix
+-- #define ChannelBlend_Reflect(A,B)    ((uint8)((B == 255) ? B:min(255, (A * A / (255 - B)))))
+-- #define ChannelBlend_Glow(A,B)       (ChannelBlend_Reflect(B,A))
+-- #define ChannelBlend_Phoenix(A,B)    ((uint8)(min(A,B) - max(A,B) + 255))
+-- #define ChannelBlend_Alpha(A,B,O)    ((uint8)(O * A + (1 - O) * B))
+-- #define ChannelBlend_AlphaF(A,B,F,O) (ChannelBlend_Alpha(F(A,B),A,O))
+
 -- main
 
 main :: IO ()
