@@ -48,6 +48,7 @@ import qualified Flowbox.Graphics.Raster.Image     as Image
 import qualified Flowbox.Graphics.Raster.IO        as Image
 import           Flowbox.Graphics.Raster.IO        (writeImageToBMP)
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
+import           Flowbox.Graphics.Algorithms
 
 --import           Control.Monad
 
@@ -67,14 +68,22 @@ import           Flowbox.Prelude
 
 testm x = x*3
 
-readImage :: String -> IO (Safe(Image A.Word32))
+readImage :: String -> IO (Safe(Image Float))
 readImage fileIn = do
     print "Reading"
-    img2 <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
-    return (Safe img2)
+    img <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
+    let Right img' = RGBA.decompose img
+        rgba = Image.reprFloat img'
+    return (Safe rgba)
 
-writeImage :: FilePath -> Image A.Word32 -> IO (Safe())
+writeImage :: FilePath -> Image Float -> IO (Safe())
 writeImage file img = do
-    x <- writeImageToBMP (Interp.run) file img
+    let Right img' = RGBA.compose $ Image.reprWord8 img
+    x <- writeImageToBMP (Interp.run) file img'
     print' x
     return $ Safe ()
+
+--adjustCB :: A.Exp Float -> A.Exp Float -> Image Float -> IO (Safe(Image Float))
+--adjustCB contrast brightness img = do
+    --let Right img' = adjustCB_RGB contrast brightness img
+    --return (Safe img')

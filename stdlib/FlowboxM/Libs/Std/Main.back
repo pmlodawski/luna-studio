@@ -99,10 +99,10 @@ def main self:
     c.print $ a.at 5
     c.print $ self.testm 15
 
-    path = "small.bmp"
-    outpath = "small2.bmp"
+    path = "lena.bmp"
+    outpath = "luna.bmp"
     img = self.readImage path
-    c.print img
+    # c.print img
     self.writeImage outpath img
     # c.print img
 
