@@ -106,7 +106,7 @@ generateClsGetter clsName fieldName = do
         funcName  = Naming.mkMemGetName clsName realFName
         fVar      = mkName "a"
         fFlatten  = mkName "flattenCtx"
-        fLiftf    = mkName "liftf"
+        fLiftf    = mkName "liftf1"
         getFunc   = FunD funcName [Clause [VarP fVar] (NormalB (AppE (VarE fFlatten) (AppE (AppE (VarE fLiftf) (VarE fieldName)) (VarE fVar)))) []]
     return $ [getFunc]
 
@@ -117,6 +117,6 @@ generateClsSetter clsName fieldName = do
         aVar      = mkName "a"
         xVar      = mkName "x"
         valVar    = mkName "val"
-        fLiftf    = mkName "liftf"
+        fLiftf    = mkName "liftf1"
         setFunc   = FunD funcName [Clause [VarP aVar,VarP valVar] (NormalB (AppE (AppE (VarE fLiftf) (LamE [VarP xVar] (RecUpdE (VarE xVar) [(fieldName,VarE valVar)]))) (VarE aVar))) []]
     return [setFunc]
