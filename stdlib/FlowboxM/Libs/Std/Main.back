@@ -72,6 +72,10 @@ def testm self x:
     ```liftf1 testm #{x}```
 
 
+def readImage self path:
+    ```liftf1 readImage #{path}``` 
+
+
 class Vector a:
     x,y,z :: a
 
@@ -92,4 +96,8 @@ def main self:
 
     c.print $ a.at 5
     c.print $ self.testm 15
+    
+    path = "xing24.bmp"
+    img = self.readImage path
+    c.print img
 
