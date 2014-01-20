@@ -89,8 +89,8 @@ imgtest img = do
     s <- Image.lookup "s" hsv
     v <- Image.lookup "v" hsv
     --let hsvl = Image.insert "h" (Channel.map (mod1 . (+0.5)) h) $ hsv
-    let hsvl = Image.insert "s" (clipValues $ Channel.map (+1) s) $ hsv
-    lrgba <- convertHSVtoRGB hsvl
+    --let hsvl = Image.insert "s" (clipValues $ Channel.map (+1) s) $ hsv
+    lrgba <- convertHSVtoRGB hsv
     RGBA.compose $ Image.reprWord8 lrgba
     where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
           mod1 = flip nonIntRem 1.0
