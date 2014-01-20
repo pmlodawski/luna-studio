@@ -4,7 +4,10 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE CPP           #-}
 
-module Flowbox.Graphics.Mockup where
+module Flowbox.Graphics.Mockup (
+    module Flowbox.Graphics.Mockup,
+    writeImageToBMP,
+) where
 
 import Control.Applicative
 
@@ -43,13 +46,16 @@ import qualified Flowbox.Graphics.Raster.Channel   as Channel
 import           Flowbox.Graphics.Raster.Image     (Image)
 import qualified Flowbox.Graphics.Raster.Image     as Image
 import qualified Flowbox.Graphics.Raster.IO        as Image
+import           Flowbox.Graphics.Raster.IO        (writeImageToBMP)
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
+import           Flowbox.Graphics.Algorithms
 
 --import           Control.Monad
 
 import qualified Data.Array.Accelerate.Interpreter      as Interp
 
 import qualified Data.Array.Repa.Eval as R
+import Luna.Target.HS.Core hiding(print, return)
 
 import Data.Bits ((.&.))
 
@@ -58,12 +64,26 @@ import Data.Bits ((.&.))
 
 import Control.Monad.Trans.Either (hoistEither, runEitherT)
 
-import           Flowbox.Prelude 
+import           Flowbox.Prelude
 
 testm x = x*3
 
-readImage :: String -> IO (Image A.Word32)
+readImage :: String -> IO (Safe(Image Float))
 readImage fileIn = do
-	print "Reading"
-	img2 <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
-	return img2
+    print "Reading"
+    img <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
+    let Right img' = RGBA.decompose img
+        rgba = Image.reprFloat img'
+    return (Safe rgba)
+
+writeImage :: FilePath -> Image Float -> IO (Safe())
+writeImage file img = do
+    let Right img' = RGBA.compose $ Image.reprWord8 img
+    x <- writeImageToBMP (Interp.run) file img'
+    print' x
+    return $ Safe ()
+
+--adjustCB :: A.Exp Float -> A.Exp Float -> Image Float -> IO (Safe(Image Float))
+--adjustCB contrast brightness img = do
+    --let Right img' = adjustCB_RGB contrast brightness img
+    --return (Safe img')

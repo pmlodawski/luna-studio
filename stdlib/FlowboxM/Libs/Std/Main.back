@@ -14,7 +14,7 @@
 
 class Console:
     def print self msg:
-        ```print'' #{msg}```
+        ```print' #{msg}```
 
 ###### List ###################################
 
@@ -71,9 +71,11 @@ def Float.- a b:
 def testm self x:
     ```liftf1 testm #{x}```
 
-
 def readImage self path:
-    ```liftf1 readImage #{path}``` 
+    ```flattenCtx $ liftf1 readImage #{path}```
+
+def writeImage self path img:
+    ```flattenCtx $ liftf2 writeImage #{path} #{img}```
 
 
 class Vector a:
@@ -96,8 +98,11 @@ def main self:
 
     c.print $ a.at 5
     c.print $ self.testm 15
-    
-    path = "xing24.bmp"
+
+    path = "lena.bmp"
+    outpath = "luna.bmp"
     img = self.readImage path
-    c.print img
+    # c.print img
+    self.writeImage outpath img
+    # c.print img
 
