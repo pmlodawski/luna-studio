@@ -60,7 +60,7 @@ reservedOpNames = ["=", "::", ":", ".", "->", "<-"]
 -----------------------------------------------------------
 -- Keywords
 -----------------------------------------------------------
-reservedNames = ["as", "case", "class", "def", "from", "interface", "import"]
+reservedNames = ["as", "case", "class", "def", "from", "interface", "import", "in"]
 
 pAs         = reserved "as"
 pCase       = reserved "case"

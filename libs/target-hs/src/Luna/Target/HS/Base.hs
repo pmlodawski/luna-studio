@@ -158,6 +158,9 @@ instance (EvalEnvProto a m a2, EvalEnvProto b m b2, Functor m) => EvalEnvProto (
 instance (Monad m) => EvalEnvProto Int m Int where
     evalProto = return
 
+instance (Monad m) => EvalEnvProto Bool m Bool where
+    evalProto = return
+
 instance (Monad m) => EvalEnvProto Char m Char where
     evalProto = return
 

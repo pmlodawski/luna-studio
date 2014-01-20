@@ -276,15 +276,17 @@ optableE = [ [ postfixM  "::" (tok Expr.Typed <*> pType)                      ]
            , [ operator2 "+"                                  PExpr.AssocLeft ]
            , [ operator2 "-"                                  PExpr.AssocLeft ]
            , [ operator2 "=="                                 PExpr.AssocLeft ]
+           , [ operator3 "in"                                 PExpr.AssocLeft ]
            , [ binaryM  "$"  (binaryMatchE <$> tok Expr.callConstructor)      PExpr.AssocLeft ]
            ]
            where
               operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':op)))
               --operator2 op = binaryM op (binaryMatchE <$>  ( tok Expr.App <*> (tok Expr.Accessor <*> pure "add" <*> ... ) )  )
               operator2 op = binaryM op (binaryMatchE <$> ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 op x) [y]) <$> genID <*> genID) )
+              operator3 op = binaryM op (binaryMatchE <$> ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 "contains" y) [x]) <$> genID <*> genID) )
 
 
---binaryM  name fun assoc = PExpr.Infix   (L.reservedOp name *>        fun) assoc
+binaryM2  name fun assoc = PExpr.Infix   (L.reserved name *>        fun) assoc
 
 binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 

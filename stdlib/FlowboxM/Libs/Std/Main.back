@@ -67,23 +67,24 @@ def Float.- a b:
 
 ###############################################
 
+
+
 class Vector a:
-    Vector: x,y,z :: a
-    Scalar: a     :: a
+    x,y,z :: a
+    def test self x:
+        x
 
     def + self v2:
         Vector (self.x()+v2.x()) (self.y()+v2.y()) (self.z()+v2.z())
 
 def main self:
     v = Vector 1 2 3
-    s = Scalar 15
     c = Console()
     c.print "hello"
     c.print (v+v)
-    c.print (2+2*3)
-    # d = [1..10].each x:
-    #    Console().print (x*2)
-    # c.print d
-    # c.print $ [1..10].add [10..0]
-    # c.print $ [1..10].contains 5
-    # c.print (2.add 5)
+    c.print $ 5 in [1..100]
+    a = [1..100].each x:
+        Console().print x
+    # c.print a
+
+
