@@ -34,15 +34,16 @@ instance (Typeable a, Typeable b) => Show (a -> b) where
 val = Pure . Safe
 
 call0 a = call a ()
-call1 a v1 = call a (OneTuple v1)
-call2 a v1 v2 = call a (v1,v2)
-call3 a v1 v2 v3 = call a (v1,v2,v3)
-call4 a v1 v2 v3 v4 = call a (v1,v2,v3,v4)
-call5 a v1 v2 v3 v4 v5 = call a (v1,v2,v3,v4,v5)
-call6 a v1 v2 v3 v4 v5 v6 = call a (v1,v2,v3,v4,v5,v6)
-call7 a v1 v2 v3 v4 v5 v6 v7 = call a (v1,v2,v3,v4,v5,v6,v7)
-call8 a v1 v2 v3 v4 v5 v6 v7 v8 = call a (v1,v2,v3,v4,v5,v6,v7,v8)
-call9 a v1 v2 v3 v4 v5 v6 v7 v8 v9 = call a (v1,v2,v3,v4,v5,v6,v7,v8,v9)
+call1 a v1 = call a (v1,())
+--call1 a v1 = call a (OneTuple v1)
+--call2 a v1 v2 = call a (v1,v2)
+--call3 a v1 v2 v3 = call a (v1,v2,v3)
+--call4 a v1 v2 v3 v4 = call a (v1,v2,v3,v4)
+--call5 a v1 v2 v3 v4 v5 = call a (v1,v2,v3,v4,v5)
+--call6 a v1 v2 v3 v4 v5 v6 = call a (v1,v2,v3,v4,v5,v6)
+--call7 a v1 v2 v3 v4 v5 v6 v7 = call a (v1,v2,v3,v4,v5,v6,v7)
+--call8 a v1 v2 v3 v4 v5 v6 v7 v8 = call a (v1,v2,v3,v4,v5,v6,v7,v8)
+--call9 a v1 v2 v3 v4 v5 v6 v7 v8 v9 = call a (v1,v2,v3,v4,v5,v6,v7,v8,v9)
 
 flattenCtx a = fmap flattenErr $ (flattenEnv $ fmap flipCtx a)
 
@@ -79,6 +80,7 @@ type RTuple4 v1 v2 v3 v4 = (v1, RTuple3 v2 v3 v4)
 type RTuple5 v1 v2 v3 v4 v5 = (v1, RTuple4 v2 v3 v4 v5)
 
 call v args = flattenCtx $ liftf2 callProto v (val args)
+call' v args = liftf2 callProto v (val args)
 
 member :: (MemberProto name base (Pure(Safe handler))) => proxy name -> base -> Pure (Safe (AppH handler base))
 member proxy base = fcurry base $ memberProto proxy base

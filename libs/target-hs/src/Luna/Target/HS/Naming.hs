@@ -59,6 +59,9 @@ mkConName = withName ("con_" ++)
 mkCallName :: NameCls a => a -> a
 mkCallName = withName ("call_" ++)
 
+mkLamName :: NameCls a => a -> a
+mkLamName = withName ("l_" ++)
+
 mkMemName :: (NameCls a, NameCls b) => a -> b -> b
 mkMemName dataName memberName = withName (("m_" ++ toString dataName ++ "_") ++) memberName
 

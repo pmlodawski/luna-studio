@@ -194,8 +194,13 @@ pNative     = between L.pNativeSym L.pNativeSym (many pNativeElem)
 pNativeElem = choice [ pNativeVar
                      , pNativeCode
                      ]
-pNativeVar  = tok Expr.NativeCode <*> many1 (noneOf "`#")
-pNativeCode = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol '}'
+pNativeCode = tok Expr.NativeCode <*> ((:) <$> (noneOf "`#") <*> pNativeCodeBody)
+pNativeVar  = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol '}'
+
+pNativeCodeBody = (try(lookAhead $ string "#{")  *> pure []) 
+              <|> (try(lookAhead $ string "```") *> pure []) 
+              <|> ((++) <$> ((:) <$> anyChar <*> many (noneOf "`#")) <*> pNativeCodeBody)
+
 
 pExpr       = pExprT pEntBaseE
 
