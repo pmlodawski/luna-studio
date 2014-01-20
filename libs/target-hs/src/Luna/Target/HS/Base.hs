@@ -248,7 +248,8 @@ liftenv2 f a b   = liftenv (liftenv f a) b
 liftenv3 f a b c = liftenv (liftenv2 f a b) c
 
 
-liftf  = liftenv  . Pure . liftErr  . Safe
+liftf0 = Pure . Safe
+liftf1 = liftenv  . Pure . liftErr  . Safe
 liftf2 = liftenv2 . Pure . liftErr2 . Safe
 liftf3 = liftenv3 . Pure . liftErr3 . Safe
 

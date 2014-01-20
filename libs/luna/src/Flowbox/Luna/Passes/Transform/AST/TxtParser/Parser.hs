@@ -206,7 +206,8 @@ pExpr       = pExprT pEntBaseE
 
 pExprSimple = pExprT pEntBaseSimpleE
 
-pExprT base =   (try (tok Expr.Assignment <*> pPattern <* (L.reservedOp "=")) <*> pOpTE base)
+pExprT base =   --(try (tok Expr.RecordUpdate <*> pVar <*> many1 (L.pAccessor *> pVar) <* (L.reservedOp "=")) <*> pOpTE base)
+            (try (tok Expr.Assignment   <*> pPattern <* (L.reservedOp "=")) <*> pOpTE base)
             <|> pOpTE base
             <?> "expression"
 
@@ -247,7 +248,7 @@ pCaseBodyE = tok Expr.Match <*> pPattern <*> pExprBlock
 
 
 pEntBaseE       = pEntConsE pEntComplexE
-pEntBaseSimpleE = pEntConsE pEntBaseSimpleE
+pEntBaseSimpleE = pEntConsE pEntSimpleE
 
 pEntConsE base = choice [ try $ L.parensed (pExprT base)
                         , base

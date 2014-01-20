@@ -61,6 +61,7 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
     let (LType.Module _ path) = cls
         --fnames  = Set.toList $ Pool.names fpool
         mod     = HModule.addImport ["Luna", "Target", "HS", "Core"]
+                $ HModule.addImport ["Luna", "Target", "HS", "Mockup"]
                 -- $ HModule.addExt HExtension.AutoDeriveTypeable
                 $ HModule.addExt HExtension.DataKinds
                 $ HModule.addExt HExtension.DeriveDataTypeable
@@ -327,31 +328,32 @@ genExpr ast = case ast of
                                                        
                                            return dt
 
-    LExpr.Infix       _ name src dst      -> HExpr.Infix name <$> genExpr src <*> genExpr dst
-    LExpr.Assignment  _ pat dst           -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
-    LExpr.Lit         _ value             -> genLit value
-    LExpr.Tuple       _ items             -> mkVal . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
-    LExpr.Field       _ name fcls _       -> do
-                                             cls <- GenState.getCls 
-                                             let clsName = view LType.name cls
-                                             genTyped HExpr.Typed fcls <*> pure (HExpr.Var $ Naming.mkPropertyName clsName name)
-    --LExpr.App         _ src args          -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
-    LExpr.App         _ src args          -> HExpr.AppE <$> (HExpr.AppE (HExpr.Var "call") <$> genExpr src) <*> (mkRTuple <$> mapM genCallExpr args)
-    LExpr.Accessor    _ name dst          -> HExpr.AppE <$> (pure $ mkMemberGetter name) <*> genExpr dst --(get0 <$> genExpr dst))
-    LExpr.List        _ items             -> do
-                                             let liftEl el = case el of
-                                                     LExpr.RangeFromTo {} -> el
-                                                     LExpr.RangeFrom   {} -> el
-                                                     _                    -> LExpr.List 0 [el]
-                                                 (arrMod, elmod) = if any isRange items 
-                                                     then (HExpr.AppE (HExpr.Var "concatPure"), liftEl)
-                                                     else (Prelude.id, Prelude.id)
-                         
-                                             mkVal . arrMod . HExpr.ListE <$> mapM (genExpr . elmod) items
-    LExpr.RangeFromTo _ start end         -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
-    LExpr.RangeFrom   _ start             -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start 
-    LExpr.Native      _ segments          -> pure $ HExpr.Native (join "" $ map genNative segments)
-    --x                                     -> logger error (show x) *> return HExpr.NOP
+    LExpr.Infix        _ name src dst        -> HExpr.Infix name <$> genExpr src <*> genExpr dst
+    LExpr.Assignment   _ pat dst             -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
+    --LExpr.RecordUpdate _ name selectors expr -> HExpr.RecUpdE 
+    LExpr.Lit          _ value               -> genLit value
+    LExpr.Tuple        _ items               -> mkVal . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
+    LExpr.Field        _ name fcls _         -> do
+                                               cls <- GenState.getCls 
+                                               let clsName = view LType.name cls
+                                               genTyped HExpr.Typed fcls <*> pure (HExpr.Var $ Naming.mkPropertyName clsName name)
+    --LExpr.App          _ src args             -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
+    LExpr.App          _ src args            -> HExpr.AppE <$> (HExpr.AppE (HExpr.Var "call") <$> genExpr src) <*> (mkRTuple <$> mapM genCallExpr args)
+    LExpr.Accessor     _ name dst            -> HExpr.AppE <$> (pure $ mkMemberGetter name) <*> genExpr dst --(get0 <$> genExpr dst))
+    LExpr.List         _ items               -> do
+                                                let liftEl el = case el of
+                                                        LExpr.RangeFromTo {} -> el
+                                                        LExpr.RangeFrom   {} -> el
+                                                        _                    -> LExpr.List 0 [el]
+                                                    (arrMod, elmod) = if any isRange items 
+                                                        then (HExpr.AppE (HExpr.Var "concatPure"), liftEl)
+                                                        else (Prelude.id, Prelude.id)
+                                                
+                                                mkVal . arrMod . HExpr.ListE <$> mapM (genExpr . elmod) items
+    LExpr.RangeFromTo _ start end            -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
+    LExpr.RangeFrom   _ start                -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start 
+    LExpr.Native      _ segments             -> pure $ HExpr.Native (join "" $ map genNative segments)
+    --x                                        -> logger error (show x) *> return HExpr.NOP
     where
         getN n = HExpr.AppE (HExpr.Var $ "call" ++ show n)
         get0   = getN (0::Int)

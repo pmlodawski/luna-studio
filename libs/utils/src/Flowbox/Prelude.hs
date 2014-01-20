@@ -110,3 +110,14 @@ whenRight e f = case e of
 
 whenRight' :: (Monad m) => Either a b -> m () -> m ()
 whenRight' e f = whenRight e (\_ -> f)
+
+-- trenary operator
+data Cond a = a :? a
+
+infixl 0 ?
+infixl 1 :?
+
+(?) :: Bool -> Cond a -> a
+True  ? (x :? _) = x
+False ? (_ :? y) = y
+-- / trenaru operator

@@ -11,7 +11,7 @@ Flag gui
 
 Flag ekg
   Description:          Enable EKG remote monitoring server at <http://localhost:8000>
-  Default:              True
+  Default:              False
 
 Flag cuda
   Description:          Enable the CUDA parallel backend for NVIDIA GPUs
