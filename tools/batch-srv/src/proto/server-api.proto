@@ -87,6 +87,7 @@ message Request {
         Parser_ParseExpr      = 1700;
         Parser_ParsePat       = 1701;
         Parser_ParseType      = 1702;
+        Parser_ParseNodeExpr  = 1703;
 
         Process_Processes     = 2000;
         Process_Terminate     = 2001;
@@ -574,6 +575,14 @@ message Parser {
         }
         message Result { extend Response { optional Result rsp = 1702; }
             required generated.proto.type.Type type = 1;
+        }   
+    }
+    message ParseNodeExpr {
+        message Args   { extend Request  { optional Args   req = 1703; }
+            required string str = 1;
+        }
+        message Result { extend Response { optional Result rsp = 1703; }
+            required generated.proto.expr.Expr expr = 1;
         }   
     }
 }

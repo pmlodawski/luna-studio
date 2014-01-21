@@ -130,6 +130,8 @@ import qualified Generated.Proto.Batch.NodeDefault.SetNodeDefault.Args      as S
 import qualified Generated.Proto.Batch.NodeDefault.SetNodeDefault.Result    as SetNodeDefault
 import qualified Generated.Proto.Batch.Parser.ParseExpr.Args                as ParseExpr
 import qualified Generated.Proto.Batch.Parser.ParseExpr.Result              as ParseExpr
+import qualified Generated.Proto.Batch.Parser.ParseNodeExpr.Args            as ParseNodeExpr
+import qualified Generated.Proto.Batch.Parser.ParseNodeExpr.Result          as ParseNodeExpr
 import qualified Generated.Proto.Batch.Parser.ParsePat.Args                 as ParsePat
 import qualified Generated.Proto.Batch.Parser.ParsePat.Result               as ParsePat
 import qualified Generated.Proto.Batch.Parser.ParseType.Args                as ParseType
@@ -271,9 +273,10 @@ process notifySocket handler encoded_request = case Proto.messageWithLengthGet e
         Method.NodeDefault_SetNodeDefault    -> call request handler Handler.setNodeDefault    SetNodeDefault.req    SetNodeDefault.rsp
         Method.NodeDefault_RemoveNodeDefault -> call request handler Handler.removeNodeDefault RemoveNodeDefault.req RemoveNodeDefault.rsp
 
-        Method.Parser_ParseExpr -> call request handler Handler.parseExpr ParseExpr.req ParseExpr.rsp
-        Method.Parser_ParsePat  -> call request handler Handler.parsePat  ParsePat.req  ParsePat.rsp
-        Method.Parser_ParseType -> call request handler Handler.parseType ParseType.req ParseType.rsp
+        Method.Parser_ParseExpr     -> call request handler Handler.parseExpr     ParseExpr.req     ParseExpr.rsp
+        Method.Parser_ParsePat      -> call request handler Handler.parsePat      ParsePat.req      ParsePat.rsp
+        Method.Parser_ParseType     -> call request handler Handler.parseType     ParseType.req     ParseType.rsp
+        Method.Parser_ParseNodeExpr -> call request handler Handler.parseNodeExpr ParseNodeExpr.req ParseNodeExpr.rsp
 
         Method.Process_Processes     -> call request handler Handler.processes     Processes.req     Processes.rsp
         Method.Process_Terminate     -> call request handler Handler.terminate     Terminate.req     Terminate.rsp

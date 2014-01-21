@@ -284,6 +284,11 @@ makeAsk(Maintenance, Ping)
 makeAsk(Maintenance, Dump)
 makeAsk(Maintenance, Shutdown)
 
+makeAsk(Parser, ParseExpr)
+makeAsk(Parser, ParseType)
+makeAsk(Parser, ParsePat)
+makeAsk(Parser, ParseNodeExpr)
+
 makeAsk(Process, Processes)
 makeAsk(Process, Terminate)
 

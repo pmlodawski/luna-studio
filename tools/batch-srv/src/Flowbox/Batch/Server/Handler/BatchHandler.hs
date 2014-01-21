@@ -108,6 +108,7 @@ instance Handler BatchHandler where
     parseExpr     h = HParser.parseExpr      (batchRef h)
     parsePat      h = HParser.parsePat       (batchRef h)
     parseType     h = HParser.parseType      (batchRef h)
+    parseNodeExpr h = HParser.parseNodeExpr  (batchRef h)
 
     processes     h = HProcess.processes     (batchRef h)
     terminate     h = HProcess.terminate     (batchRef h)

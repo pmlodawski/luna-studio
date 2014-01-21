@@ -17,11 +17,12 @@ import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Batch.Parser.ParseExpr.Args        as ParseExpr
 import qualified Generated.Proto.Batch.Parser.ParseExpr.Result      as ParseExpr
+import qualified Generated.Proto.Batch.Parser.ParseNodeExpr.Args    as ParseNodeExpr
+import qualified Generated.Proto.Batch.Parser.ParseNodeExpr.Result  as ParseNodeExpr
 import qualified Generated.Proto.Batch.Parser.ParsePat.Args         as ParsePat
 import qualified Generated.Proto.Batch.Parser.ParsePat.Result       as ParsePat
 import qualified Generated.Proto.Batch.Parser.ParseType.Args        as ParseType
 import qualified Generated.Proto.Batch.Parser.ParseType.Result      as ParseType
-
 
 
 loggerIO :: LoggerIO
@@ -51,3 +52,11 @@ parseType _ (ParseType.Args tstr) = do
     let str = decodeP tstr
     pat <- BatchP.parseType str
     return $ ParseType.Result $ encode pat
+
+
+parseNodeExpr :: IORef Batch -> ParseNodeExpr.Args -> IO ParseNodeExpr.Result
+parseNodeExpr _ (ParseNodeExpr.Args tstr) = do
+    loggerIO info "called parseExpr"
+    let str = decodeP tstr
+    expr <- BatchP.parseNodeExpr str
+    return $ ParseNodeExpr.Result $ encode expr
