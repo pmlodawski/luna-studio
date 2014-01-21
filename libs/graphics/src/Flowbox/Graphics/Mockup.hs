@@ -6,7 +6,7 @@
 
 module Flowbox.Graphics.Mockup (
     module Flowbox.Graphics.Mockup,
-    writeImageToBMP,
+    writeImageToBMP
 ) where
 
 import Control.Applicative
@@ -19,7 +19,7 @@ import Control.Applicative
 
 import           Criterion.Main     (bench, bgroup, defaultMainWith, whnf)
 import qualified Data.Label         as Label
-import           Flowbox.Prelude    as P
+import qualified Flowbox.Prelude    as P
 import qualified System.Environment as Env
 import qualified System.Exit        as Exit
 
@@ -64,7 +64,7 @@ import Data.Bits ((.&.))
 
 import Control.Monad.Trans.Either (hoistEither, runEitherT)
 
-import           Flowbox.Prelude
+import           Flowbox.Prelude hiding((.))
 import           GHC.Float
 
 testm x = x*3
@@ -85,8 +85,15 @@ writeImage file img = do
     return $ Safe ()
 
 --l_adjustCB :: A.Exp Float -> A.Exp Float -> Image Float -> IO (Safe(Image Float))
-l_adjustCB :: Double -> Double -> Image Float -> IO (Safe(Image Float))
+adjustCB :: Double -> Double -> Image Float -> IO (Safe(Image Float))
 --adjustCB :: A.Exp Float -> A.Exp Float -> Image Float -> IO (Image Float)
-l_adjustCB contrast brightness img = do
+adjustCB contrast brightness img = do
     let Right img' = adjustCB_RGB (A.constant $ double2Float contrast) (A.constant $ double2Float brightness) img
+    return (Safe img')
+
+convolve :: Double -> Image Float -> IO (Safe(Image Float))
+convolve kernel img = do
+    let Right img' = convolveRGB convolve3x3 kernel' img
+        --kernel' = map (A.constant . double2Float) kernel
+        kernel' = map (A.constant . double2Float) $ replicate 9 kernel
     return (Safe img')

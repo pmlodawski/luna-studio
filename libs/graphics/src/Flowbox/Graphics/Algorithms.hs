@@ -87,29 +87,37 @@ convolve5x5 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o),(p,q,r,s,t),(u,v,w,x,y))
 
 --convolve :: Int
 --convolve :: String -> (t0 -> stencil0 -> Exp Float) -> t0 -> Image Float -> Either Image.Error (Image Float)
-convolve cname convolution kernel img = do
-    channel <- Image.lookup cname img
-    let outimg = Image.insert cname channel'
-               $ img
-        channel' = Channel.Acc $ A.stencil (convolution kernel) A.Clamp (Channel.accMatrix channel)
-    return outimg
+--convolve cname convolution kernel img = do
+--convolve channel convolution kernel img = --do
+    --channel <- Image.lookup cname img
+    --let outimg = Image.insert cname channel'
+               -- $ img
+    --let channel' =
+      --Channel.Acc $ A.stencil (convolution kernel) A.Clamp (Channel.accMatrix channel)
+    --return channel'
 
 --convolveRGB :: Int
 --convolveRGB :: ([Exp a2] -> A.Stencil5x5 a2 -> Exp a2) -> [Float] -> Image Float -> Either Image.Error (Image Float)
 --convolveRGB :: ([Exp a2] -> A.Stencil5x5 a2 -> Exp a2) -> [Exp Float] -> Image Float -> Either Image.Error (Image Float)
---convolveRGB convolution kernel img = do
---    let outimg = convolve "r" convolution kernel
---               $ convolve "g" convolution kernel
---               $ convolve "b" convolution kernel
---               $ img
---    return outimg
+convolveRGB convolution kernel img = do
+    rchannel <- Image.lookup "r" img
+    gchannel <- Image.lookup "g" img
+    bchannel <- Image.lookup "b" img
+    let outimg = Image.insert "r" r'
+               $ Image.insert "g" g'
+               $ Image.insert "b" b'
+               $ img
+        r' = clipValues $ Channel.Acc $ A.stencil (convolution kernel) A.Clamp (Channel.accMatrix rchannel)
+        g' = clipValues $ Channel.Acc $ A.stencil (convolution kernel) A.Clamp (Channel.accMatrix gchannel)
+        b' = clipValues $ Channel.Acc $ A.stencil (convolution kernel) A.Clamp (Channel.accMatrix bchannel)
+    return outimg
 
 -- brightness and contrast
 
 adjustCB_RGB :: A.Exp Float -> A.Exp Float -> (Image Float) -> Either Image.Error (Image Float)
 adjustCB_RGB = adjustCB "r" "g" "b"
 
-adjustCB ::  String -> String -> String -> A.Exp Float -> A.Exp Float -> (Image Float) -> Either Image.Error (Image Float)
+adjustCB :: String -> String -> String -> A.Exp Float -> A.Exp Float -> (Image Float) -> Either Image.Error (Image Float)
 adjustCB rname gname bname contrast brightness img = do
     rchannel <- Image.lookup rname img
     gchannel <- Image.lookup gname img

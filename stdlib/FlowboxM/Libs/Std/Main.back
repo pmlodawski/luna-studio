@@ -78,8 +78,10 @@ def writeImage self path img:
     ```flattenCtx $ liftf2 writeImage #{path} #{img}```
 
 def adjustCB self contrast brightness img:
-    ```flattenCtx $ liftf3 l_adjustCB #{contrast} #{brightness} #{img}```
+    ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{img}```
 
+def convolve self kernel img:
+    ```flattenCtx $ liftf2 convolve #{kernel} #{img}```
 
 class Vector a:
     x,y,z :: a
@@ -106,9 +108,12 @@ def main self:
     outpath = "luna.bmp"
     imgIn = self.readImage path
     # c.print img
-    c = 2.2
+    c = 1.5
     b = 0.2
-    imgOut = self.adjustCB c b imgIn
+    k = 0.1
+    # imgOut = self.adjustCB c b imgIn
+    # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
+    imgOut = self.convolve k imgIn
     self.writeImage outpath imgOut
     # c.print img
 
