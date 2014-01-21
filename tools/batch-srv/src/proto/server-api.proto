@@ -24,10 +24,6 @@ import "type.proto";
 import "focus.proto";
 
 
-extend google.protobuf.MessageOptions {
-    optional bool async = 50001;
-}
-
 
 message Request {
     required Method method = 1;
@@ -103,6 +99,7 @@ message Request {
         Properties_GetProperties = 1900;
         Properties_SetProperties = 1901;
     }
+    optional bool async = 2 [default = false];
 
     extensions 1000 to max;
 }
@@ -481,7 +478,6 @@ message Library {
             required int32 projectID = 2;
         }
         message Result { extend Response { optional Result rsp = 1406; } }
-        option (async) = true;
     }
     message RunLibrary {
         message Args   { extend Request  { optional Args   req = 1407; } 

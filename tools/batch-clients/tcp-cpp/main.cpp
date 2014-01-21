@@ -477,7 +477,6 @@ int main()
 		auto loadedProject = macro::Project::OpenProject(controlSocket, "/tmp/flowbox/testProject").project();
 		macro::Library::LoadLibrary(controlSocket, "/tmp/flowbox/testProject/testLibrary", loadedProject.id());
 		macro::Library::BuildLibrary(controlSocket, library.id(), project.id());
-		sleep(3);
 		macro::Library::RunLibrary(controlSocket, library.id(), project.id());
 
 		// macro::Maintenance::Dump(controlSocket);
