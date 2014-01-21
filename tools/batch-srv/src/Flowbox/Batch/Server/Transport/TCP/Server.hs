@@ -49,6 +49,7 @@ serve cmd handler = Socket.withSocketsDo $ do
 
 acceptAndHandle :: Handler h => Socket -> Socket -> h -> IO ()
 acceptAndHandle controlServerSocket notifyServerSocket handler = do
+    loggerIO info $ "Waiting for control connection."
     (controlSocket, controlSocketAddr) <- Socket.accept controlServerSocket
     loggerIO info $ "Control socket connected. Waiting for notify connection."
     (notifySocket , notifySocketAddr ) <- Socket.accept notifyServerSocket

@@ -173,7 +173,7 @@ response t i = Proto.messageWithLengthPut
              $ Response t i $ Extensions.ExtField Map.empty
 
 
-unsafeCall :: (WireMessage.Wire r, Reflections.ReflectDescriptor r, Show arg)
+unsafeCall :: (WireMessage.Wire r, Reflections.ReflectDescriptor r, Show arg, Show r)
      => Request -> h ->  (h -> arg -> IO r)
      -> Extensions.Key Maybe Request arg
      -> Extensions.Key Maybe Response r
@@ -184,10 +184,11 @@ unsafeCall request handler method reqkey rspkey = do
                                 method handler args
         Left   e'         -> fail $ "Error while getting extension: " ++ e'
         _                 -> fail $ "Error while getting extension"
+    loggerIO trace $ show r
     return $ responseExt ResponseType.Result Nothing r rspkey
 
 
-call :: (WireMessage.Wire r, Reflections.ReflectDescriptor r, Show arg)
+call :: (WireMessage.Wire r, Reflections.ReflectDescriptor r, Show arg, Show r)
      => Request -> h ->  (h -> arg -> IO r)
      -> Extensions.Key Maybe Request arg
      -> Extensions.Key Maybe Response r
@@ -201,7 +202,7 @@ call request handler method reqkey rspkey = do
         Right a ->    return a
 
 
-async :: (WireMessage.Wire r, Reflections.ReflectDescriptor r, Show arg)
+async :: (WireMessage.Wire r, Reflections.ReflectDescriptor r, Show arg, Show r)
       => Request -> h ->  (h -> arg -> IO r)
       -> Extensions.Key Maybe Request arg
       -> Extensions.Key Maybe Response r
