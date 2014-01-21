@@ -39,10 +39,7 @@ def List.each self callback:
 def Bool.not self:
     ```liftf1 not #{self}```
 
-
-
 ###############################################
-
 
 class Image:
     def testm self x:
@@ -59,8 +56,10 @@ class Image:
         ```flattenCtx $ liftf2 writeImage #{path} #{img}```
 
     def adjustCB self img contrast brightness:
-        ```flattenCtx $ liftf3 l_adjustCB #{contrast} #{brightness} #{img}```
+        ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{img}```
 
+    def convolve self img kernel:
+        ```flattenCtx $ liftf2 convolve #{kernel} #{img}```
 
 class Vector a:
     x,y,z :: a
