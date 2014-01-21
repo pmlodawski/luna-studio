@@ -54,6 +54,10 @@ class Image:
     def writeImage self path img:
         ```flattenCtx $ liftf2 writeImage #{path} #{img}```
 
+    def display self img:
+        path = "/tmp/flowbox/data/image.bmp"
+        ```flattenCtx $ liftf2 writeImage #{path} #{img}```
+
 
 class Vector a:
     x,y,z :: a
