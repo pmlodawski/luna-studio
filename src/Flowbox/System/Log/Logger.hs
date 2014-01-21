@@ -66,7 +66,7 @@ logIO entry = liftIO $ do
         msg   = LogEntry.msg      entry
         pri   = LogEntry.priority entry
         sgr   = case pri of
-                   TRACE       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Magenta]
+                   TRACE       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Cyan]
                    DEBUG       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Magenta]
                    INFO        -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Green  ]
                    WARNING     -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Yellow ]
