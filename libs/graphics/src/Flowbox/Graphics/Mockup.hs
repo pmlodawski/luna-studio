@@ -65,6 +65,7 @@ import Data.Bits ((.&.))
 import Control.Monad.Trans.Either (hoistEither, runEitherT)
 
 import           Flowbox.Prelude
+import           GHC.Float
 
 testm x = x*3
 
@@ -83,7 +84,9 @@ writeImage file img = do
     print' x
     return $ Safe ()
 
---adjustCB :: A.Exp Float -> A.Exp Float -> Image Float -> IO (Safe(Image Float))
---adjustCB contrast brightness img = do
-    --let Right img' = adjustCB_RGB contrast brightness img
-    --return (Safe img')
+--l_adjustCB :: A.Exp Float -> A.Exp Float -> Image Float -> IO (Safe(Image Float))
+l_adjustCB :: Double -> Double -> Image Float -> IO (Safe(Image Float))
+--adjustCB :: A.Exp Float -> A.Exp Float -> Image Float -> IO (Image Float)
+l_adjustCB contrast brightness img = do
+    let Right img' = adjustCB_RGB (A.constant $ double2Float contrast) (A.constant $ double2Float brightness) img
+    return (Safe img')

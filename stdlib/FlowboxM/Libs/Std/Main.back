@@ -77,6 +77,9 @@ def readImage self path:
 def writeImage self path img:
     ```flattenCtx $ liftf2 writeImage #{path} #{img}```
 
+def adjustCB self contrast brightness img:
+    ```flattenCtx $ liftf3 l_adjustCB #{contrast} #{brightness} #{img}```
+
 
 class Vector a:
     x,y,z :: a
@@ -101,8 +104,11 @@ def main self:
 
     path = "lena.bmp"
     outpath = "luna.bmp"
-    img = self.readImage path
+    imgIn = self.readImage path
     # c.print img
-    self.writeImage outpath img
+    c = 2.2
+    b = 0.2
+    imgOut = self.adjustCB c b imgIn
+    self.writeImage outpath imgOut
     # c.print img
 
