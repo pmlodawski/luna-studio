@@ -74,12 +74,15 @@ class Image:
     def readImage self path:
         ```flattenCtx $ liftf1 readImage #{path}```
 
-    def writeImage self path img:
+    def writeImage self img path:
         ```flattenCtx $ liftf2 writeImage #{path} #{img}```
 
     def display self img:
         path = "/tmp/flowbox/data/image.bmp"
         ```flattenCtx $ liftf2 writeImage #{path} #{img}```
+
+    def adjustCB self img contrast brightness:
+        ```flattenCtx $ liftf3 l_adjustCB #{contrast} #{brightness} #{img}```
 
 class Vector a:
     x,y,z :: a
