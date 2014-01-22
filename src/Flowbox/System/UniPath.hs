@@ -16,6 +16,7 @@ import qualified System.FilePath        as FilePath
 import Flowbox.Prelude hiding (empty)
 
 
+
 data PathItem = Node String
               | Root String
               | Var String
