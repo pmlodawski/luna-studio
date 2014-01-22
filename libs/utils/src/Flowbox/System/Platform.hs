@@ -11,6 +11,7 @@ import qualified System.Info as Info
 import Flowbox.Prelude hiding (error)
 
 
+
 data Platform = Linux
               | Windows
               | Other
