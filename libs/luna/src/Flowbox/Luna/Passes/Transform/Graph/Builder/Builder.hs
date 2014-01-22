@@ -138,11 +138,16 @@ buildNode astFolded outName expr = case expr of
                                          node = Node.Expr litStr (genName litStr i)
                                      State.addNode i Port.All node astFolded noAssignment
                                      return i
-    Expr.Tuple      i items    -> do let node = Node.Expr "Tuple" (genName "tuple" i)
-                                     State.addNode i Port.All node astFolded noAssignment
-                                     connectArgs True Nothing i items 0
-                                     return i
+    --Expr.Tuple      i items    -> do let node = Node.Expr "Tuple" (genName "tuple" i)
+    --                                 State.addNode i Port.All node astFolded noAssignment
+    --                                 connectArgs True Nothing i items 0
+    --                                 return i
     Expr.Wildcard   i          -> fail $ "GraphBuilder: Unexpected Expr.Wildcard with id=" ++ show i
+    _                          -> do let i = expr ^. Expr.id
+                                         name = showExpr expr
+                                         node = Node.Expr name (genName name i)
+                                     State.addNode i Port.All node astFolded noAssignment
+                                     return i
     where
         genName base num = case outName of
             Nothing   -> OutputName.generate base num
@@ -192,3 +197,33 @@ buildPat p = case p of
 dummyValue :: Int
 dummyValue = (-1)
 --------------
+
+showExpr :: Expr -> String
+showExpr expr = case expr of
+    --Expr.Accessor     _ name     dst                            
+    --Expr.App          _ src      args                           
+    --Expr.AppCons_     _ args     
+    --Expr.Assignment   _ pat      dst       
+    --Expr.RecordUpdate _ name     selectors expr    
+    --Expr.Data         _ cls      cons      classes methods
+    --Expr.ConD         _ name     fields    
+    --Expr.Con          _ name     
+    --Expr.Function     _ path     name      inputs  output  body
+    --Expr.Lambda       _ inputs   output    body    
+    --Expr.Import       _ path     target    rename  
+    --Expr.Infix        _ name     src       dst     
+    Expr.List         _ items        -> "[" ++ List.intercalate ", " (map showExpr items) ++ "]"
+    Expr.Lit          _ lvalue       -> Lit.lunaShow lvalue
+    Expr.Tuple        _ items        -> "{" ++ List.intercalate ", " (map showExpr items) ++ "}"
+    --Expr.Typed        _ cls      expr      
+    --Expr.Var          _ name         -> name  
+    Expr.Wildcard     _              -> "_"
+    Expr.RangeFromTo  _ start    end -> "[" ++ showExpr start ++ ".." ++ showExpr end ++ "]"
+    Expr.RangeFrom    _ start        -> "[" ++ showExpr start ++ "..]"
+    --Expr.Field        _ name     cls       value
+    --Expr.Arg          _ pat      value
+    --Expr.Native       _ segments 
+    --Expr.NativeCode   _ code     
+    --Expr.NativeVar    _ name     
+    --Expr.Case         _ expr     match
+    --Expr.Match        _ pat      body 
