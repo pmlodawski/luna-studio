@@ -136,8 +136,10 @@ example = Source.Source ["Main"] $
                         ----, "               | Scalar: a :: a"
                         ----, "               | Vector2: x :: a"
                         ----, "               | Scalar"
-                        , "class Vector a:"
-                        , "    pos :: a"
+                        --, "class Vector a:"
+                        --, "    pos :: a"
+
+
 
                         --, "class Point:"
                         --, "    x,y,z :: Int"
@@ -155,10 +157,14 @@ example = Source.Source ["Main"] $
                     --, "def f self a::Int b::Int :"
                     --, "    {a,b}"
 
-                    --, "def main self:"
+                    , "def main self:"
                     --, "   c = Console()"
                     --, "   c.print $ self.f 5 6"
-                    --, "   p = Point 1 2 3"
+                    , "   p = Point 1 2 3"
+                    , "   p.x = 0"
+                    , "   p.y = 0"
+                    , "   a_ = 10"
+                    , "   a = -10.0"
                     --, "   Point x y z = p"
                     --, "   c.print p"
                     --, "   v = Vector $ Point 1 2 3"
@@ -237,8 +243,7 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- SSA --------"
     ssa <- hoistEither =<< SSA.run va hash
-
-    --logger info $ PP.ppqShow ssa
+    logger info $ PP.ppqShow ssa
 
     logger info "\n-------- HASTGen --------"
     hast <- hoistEither =<< HASTGen.run ssa fp

@@ -25,7 +25,7 @@ import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
 import Debug.Trace
 
 
-identLetter  = alphaNum
+identLetter  = alphaNum <|> char '_'
 identStart   = letter
 commentLine  = "#"
 commentStart = "#["
@@ -192,7 +192,9 @@ exponent'       = (\f e -> power (f e)) <$ oneOf "eE" <*> sign <*> (decimal <?> 
              | otherwise  = fromInteger (10^e)
 
 
-floatStr'       = (++) <$> decimalStr <*> fractExponentStr
+floatStr'       = ((:) <$> lexeme signStr <*> floatStrBase) <|> floatStrBase
+
+floatStrBase    = (++) <$> decimalStr <*> fractExponentStr
 
 fractExponentStr = (++) <$> fractionStr <*> option "" exponentStr'
 
@@ -265,7 +267,8 @@ pIdent        = pIdentLower <|> pIdentUpper <?> "identifier"
 
 pIdentUpper   = mkIdent ((:) <$> upper <*> many identLetter) <?> "uppercase identifier"
 
-pIdentLower   = mkIdent ((:) <$> lower <*> many identLetter) <?> "lowercase identifier"
+pIdentLower   = mkIdent (((:) <$> lower <*> many identLetter) 
+                     <|> ((:) <$> char '_' <*> many1 identLetter)) <?> "lowercase identifier"
 
 mkIdent     p = lexeme $ try $ checkIf isReservedName "reserved word " p
 
