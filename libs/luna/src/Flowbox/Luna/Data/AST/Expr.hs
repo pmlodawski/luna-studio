@@ -31,10 +31,12 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 data Expr  = NOP          { _id :: ID                                                                                            }
            | Accessor     { _id :: ID, _name      :: String   , _dst       :: Expr                                               }
+           | TypeAlias    { _id :: ID, _srcType   :: Type     , _dstType   :: Type                                               }
+           | TypeDef      { _id :: ID, _srcType   :: Type     , _dstType   :: Type                                               }
            | App          { _id :: ID, _src       :: Expr     , _args      :: [Expr]                                             }
            | AppCons_     { _id :: ID, _args      :: [Expr]                                                                      }
            | Assignment   { _id :: ID, _pat       :: Pat      , _dst       :: Expr                                               }
-           | RecordUpdate { _id :: ID, _src       :: Expr     , _selectors :: [String], _expr :: Expr}
+           | RecordUpdate { _id :: ID, _src       :: Expr     , _selectors :: [String], _expr :: Expr                            }
            | Data         { _id :: ID, _cls       :: Type     , _cons      :: [Expr] , _classes   :: [Expr] , _methods :: [Expr] }
            | ConD         { _id :: ID, _name      :: String   , _fields    :: [Expr]                                             }
            | Con          { _id :: ID, _name      :: String                                                                      }
@@ -55,7 +57,7 @@ data Expr  = NOP          { _id :: ID                                           
            | Native       { _id :: ID, _segments  :: [Expr]                                                                      }
            | NativeCode   { _id :: ID, _code      :: String                                                                      }
            | NativeVar    { _id :: ID, _name      :: String                                                                      }
-           | Case         { _id :: ID, _expr      :: Expr     , _match     :: [Expr]                                            }
+           | Case         { _id :: ID, _expr      :: Expr     , _match     :: [Expr]                                             }
            | Match        { _id :: ID, _pat       :: Pat      , _body      :: [Expr]                                             }
            deriving (Show, Eq, Generic)
 

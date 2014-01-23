@@ -36,6 +36,7 @@ import qualified Luna.Target.HS.Naming                               as Naming
 import           Data.String.Utils                                     (join)
 import qualified Data.Set                                            as Set
 import qualified Flowbox.Luna.Data.HAST.Deriving                     as Deriving
+import           Flowbox.Luna.Data.HAST.Deriving                     (Deriving)
 
 import           Control.Monad.State                                 hiding (mapM, mapM_, join)
 
@@ -56,8 +57,12 @@ run :: LModule -> Pool -> Pass.Result HExpr
 run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) .: genModule
 
 
+stdDerivings :: [Deriving]
+stdDerivings = [Deriving.Show, Deriving.Eq, Deriving.Ord, Deriving.Generic]
+
+
 genModule :: LModule -> Pool -> GenPass HExpr
-genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
+genModule lmod@(LModule.Module _ cls imports classes typeAliases typeDefs fields methods _) fpool = do
     let (LType.Module _ path) = cls
         --fnames  = Set.toList $ Pool.names fpool
         mod     = HModule.addImport ["Luna", "Target", "HS", "Core"]
@@ -76,12 +81,26 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
                 $ HModule.addExt HExtension.UndecidableInstances
                 $ HModule.mk path
         name    = last path
-        modcls  = LModule.mkClass lmod
-        modclss = classes ++ [modcls]
-
+        params  = view LType.params cls
+        modCon  = LExpr.ConD 0 name fields
+    
     GenState.setModule mod
+    
+    mapM_ genExpr classes
 
-    mapM_ genExpr modclss
+    GenState.setCls    cls
+
+    -- DataType
+    (consE, consTH) <- genCon name modCon
+    GenState.addDataType $ HExpr.DataD name params [consE] stdDerivings
+    consTH
+    
+    GenState.addTHExpression $ thGenerateAccessors name
+    GenState.addTHExpression $ thRegisterAccessors name
+    GenState.addTHExpression $ thInstsAccessors name
+    
+    mapM_ genExpr methods
+    
     mapM_ (genExpr >=> GenState.addImport) imports
     when (name == "Main") $ do
         let funcnames = map (view LExpr.name) methods
@@ -173,16 +192,10 @@ genExpr ast = case ast of
     LExpr.Function _ path name
                      inputs output body  -> do
                                             cls <- GenState.getCls
-                                            let
-                                                clsName = if (null path)
-                                                    then view LType.name cls
-                                                    else (path!!0)
-                                                -- FIXME[wd]: type "self" in not extension methods
-                                                --            We should type self in extension methods also, but it needs TH to read type params
-                                                -- RELATED: COMPILER-42
-                                                --ninputs    = if (null path)
-                                                --    then (typeMethodSelf cls) inputs
-                                                --    else inputs
+                                            let clsName = if (null path)
+                                                    then LType.getNameID cls
+                                                    else (path!!0) -- FIXME[wd]: needs name resolver
+
                                                 ninputs = inputs
                                                 argNum     = length ninputs
                                                 mname      = mangleName clsName $ mkVarName name
@@ -191,7 +204,6 @@ genExpr ast = case ast of
                                                 cgetName   = mkCGetName  (argNum-1)
                                                 getNName   = mkTName (argNum-1) mname
                                                 fname      = Naming.mkMemName clsName name
-
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
 
@@ -267,64 +279,23 @@ genExpr ast = case ast of
     LExpr.Data _ cls cons classes methods -> do
                                            let name        = view LType.name   cls
                                                params      = view LType.params cls
-                                               --fieldNames  = map (view LExpr.name) fields
-                                               --fieldlen    = length fields
-                                               ----tmethods    = map (typeMethodSelf name) methods
-                                               --funcNames   = map (view LExpr.name) methods
-                                               --memberNames = fieldNames ++ funcNames
-                                               --ccname      = mkCCName name
 
                                            GenState.setCls cls
 
-                                           -- DataType
                                            consTuples <- mapM (genCon name) cons
                                            let consE  = map fst consTuples
                                                consTH = map snd consTuples
 
-                                           --cons   <- HExpr.Con name <$> mapM genExpr fields
-                                           let dt = HExpr.DataD name params consE [Deriving.Show, Deriving.Eq, Deriving.Ord, Deriving.Generic]
+                                           let dt = HExpr.DataD name params consE stdDerivings
                                            GenState.addDataType dt
 
                                            sequence consTH
-                                           ---- get0 value instance
-                                           --GenState.addInstance $ genDTGet0 name params
-
-                                           --mapM_ genExpr methods
-
-                                           ---- CONSTRUCTORS --
-
-                                           ---- CC type constructor
-                                           --let con = genCCDec ccname
-                                           --GenState.addDataType con
-
-                                           ---- constructor function
-                                           --GenState.addFunction $ genCon name ccname
-
-                                           --let test   = genVArgCon fieldlen name ccname [] (HExpr.ConE [name])
-                                           --GenState.addFunction $ test
-
-                                           -- Constructor TH snippet
-
-                                           --let conNames   = map (view LExpr.name) cons
-                                           --    conArgLens = map (length . view LExpr.fields) cons
-
-
-                                           --let arglen    = fieldlen
-                                           --    cgetCName = mkCGetCName arglen
-                                           --    cgetName  = mkCGetName  arglen
-                                           --    getNName  = mkTName arglen name
-                                           ----GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
-
-                                           --GenState.addTHExpression $ thRegisterClass name fieldlen []
-                                           --GenState.addTHExpression $ thClsCallInsts name fieldlen 0
 
                                            GenState.addTHExpression $ thGenerateAccessors name
                                            GenState.addTHExpression $ thRegisterAccessors name
                                            GenState.addTHExpression $ thInstsAccessors name
 
-
                                            mapM_ genExpr methods
-
 
                                            return dt
 
@@ -363,6 +334,7 @@ genExpr ast = case ast of
     LExpr.RangeFromTo _ start end            -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
     LExpr.RangeFrom   _ start                -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start
     LExpr.Native      _ segments             -> pure $ HExpr.Native (join "" $ map genNative segments)
+    LExpr.Typed       _ cls expr             -> Pass.fail "Typing expressions is not supported yet." -- Potrzeba uzywac hacku: matchTypes (undefined :: m1(s1(Int)))  (val (5 :: Int))
     --x                                        -> logger error (show x) *> return HExpr.NOP
     where
         getN n = HExpr.AppE (HExpr.Var $ "call" ++ show n)
@@ -395,11 +367,11 @@ genFuncBody :: [LExpr] -> LType -> GenPass [HExpr]
 genFuncBody exprs output = case exprs of
     []   -> pure []
     x:[] -> (:) <$> case x of
-                      LExpr.Assignment _ _ dst -> (genTyped HExpr.TypedE output <*> genFuncTopLevelExpr x)
+                      LExpr.Assignment _ _ dst -> (genTypedE output <*> genFuncTopLevelExpr x)
                       LExpr.Native     {}      -> genFuncTopLevelExpr x
-                      _                        -> (genTyped HExpr.TypedE output <*> genFuncTopLevelExpr x) -- mkGetIO <$>
+                      _                        -> (genTypedE output <*> genFuncTopLevelExpr x) -- mkGetIO <$>
                 <*> case x of
-                      LExpr.Assignment _ _ dst -> (:[]) <$> (genTyped HExpr.TypedE output <*> pure (mkVal $ HExpr.Tuple [])) -- . mkGetIO
+                      LExpr.Assignment _ _ dst -> (:[]) <$> (genTypedE output <*> pure (mkVal $ HExpr.Tuple [])) -- . mkGetIO
                       _                        -> pure []
     x:xs -> (:) <$> genFuncTopLevelExpr x <*> genFuncBody xs output
 
@@ -413,12 +385,18 @@ genFuncTopLevelExpr expr = case expr of
 genPat :: LPat.Pat -> GenPass HExpr
 genPat p = case p of
     LPat.Var      _ name     -> return $ HExpr.Var (mkVarName name)
-    LPat.Typed    _ pat cls  -> genTyped HExpr.TypedP cls <*> genPat pat
+    LPat.Typed    _ pat cls  -> genTypedP cls <*> genPat pat
     LPat.Tuple    _ items    -> mkPure . HExpr.TupleP <$> mapM genPat items
     LPat.Lit      _ value    -> genLit value
     LPat.Wildcard _          -> return $ HExpr.WildP
     _ -> fail $ show p
 
+
+genTypedE :: LType -> GenPass (HExpr -> HExpr)
+genTypedE = genTyped HExpr.TypedE
+
+genTypedP :: LType -> GenPass (HExpr -> HExpr)
+genTypedP = genTyped HExpr.TypedP
 
 genTyped :: (HExpr -> HExpr -> HExpr) -> LType -> GenPass (HExpr -> HExpr)
 genTyped = genTypedProto False

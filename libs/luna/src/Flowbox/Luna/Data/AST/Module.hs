@@ -24,13 +24,15 @@ import           GHC.Generics                    (Generic)
 
 type Traversal m = (Functor m, Applicative m, Monad m)
 
-data Module = Module { _id      :: ID
-                     , _cls     :: Type
-                     , _imports :: [Expr]
-                     , _classes :: [Expr]
-                     , _fields  :: [Expr]
-                     , _methods :: [Expr]
-                     , _modules :: [Module]
+data Module = Module { _id          :: ID
+                     , _cls         :: Type
+                     , _imports     :: [Expr]
+                     , _classes     :: [Expr]
+                     , _typeAliases :: [Expr]
+                     , _typeDefs    :: [Expr]
+                     , _fields      :: [Expr]
+                     , _methods     :: [Expr]
+                     , _modules     :: [Module]
                      } deriving (Show, Generic)
 
 instance QShow Module
@@ -38,10 +40,10 @@ makeLenses (''Module)
 
 
 mk :: ID -> Type -> Module
-mk id' mod = Module id' mod [] [] [] [] []
+mk id' mod = Module id' mod [] [] [] [] [] [] []
 
 mkClass :: Module -> Expr
-mkClass (Module id' (Type.Module tid path) _ classes' fields' methods' _) = 
+mkClass (Module id' (Type.Module tid path) _ classes' _ _ fields' methods' _) = 
     Expr.Data id' (Type.Data tid (last path) []) [Expr.ConD 0 (last path) fields'] classes' methods'
 
 addMethod :: Expr -> Module -> Module
@@ -59,30 +61,40 @@ addModule submod mod = mod & modules %~ (submod:)
 addImport :: Expr -> Module -> Module
 addImport imp mod = mod & imports %~ (imp:)
 
+addTypeAlias :: Expr -> Module -> Module
+addTypeAlias als mod = mod & typeAliases %~ (als:)
+
+addTypeDef :: Expr -> Module -> Module
+addTypeDef td mod = mod & typeDefs %~ (td:)
+
 
 traverseM :: Traversal m => (Module -> m Module) -> (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Module -> m Module
 traverseM fmod fexp ftype _{-fpat-} _{-flit-} mod = case mod of
-    Module     id' cls' imports' classes'
+    Module     id' cls' imports' classes' typeAliases' typeDefs'
                fields' methods' modules'     ->  Module id'
-                                                 <$> ftype cls'
-                                                 <*> fexpMap imports'
-                                                 <*> fexpMap classes'
-                                                 <*> fexpMap fields'
-                                                 <*> fexpMap methods'
-                                                 <*> fmodMap modules'
+                                             <$> ftype cls'
+                                             <*> fexpMap imports'
+                                             <*> fexpMap classes'
+                                             <*> fexpMap typeAliases'
+                                             <*> fexpMap typeDefs'
+                                             <*> fexpMap fields'
+                                             <*> fexpMap methods'
+                                             <*> fmodMap modules'
     where fexpMap = mapM fexp
           fmodMap = mapM fmod
 
 traverseM_ :: Traversal m => (Module -> m a) -> (Expr -> m b) -> (Type -> m c) -> (Pat -> m d) -> (Lit -> m e) -> Module -> m ()
 traverseM_ fmod fexp ftype _{-fpat-} _{-flit-} mod = case mod of
-    Module     _ cls' imports' classes'
+    Module     _ cls' imports' classes' typeAliases' typeDefs'
                fields' methods' modules'     -> drop
-                                                <* ftype cls'
-                                                <* fexpMap imports'
-                                                <* fexpMap classes'
-                                                <* fexpMap fields'
-                                                <* fexpMap methods'
-                                                <* fmodMap modules'
+                                             <* ftype cls'
+                                             <* fexpMap imports'
+                                             <* fexpMap classes'
+                                             <* fexpMap typeAliases'
+                                             <* fexpMap typeDefs'
+                                             <* fexpMap fields'
+                                             <* fexpMap methods'
+                                             <* fmodMap modules'
     where drop    = pure ()
           fexpMap = mapM_ fexp
           fmodMap = mapM_ fmod

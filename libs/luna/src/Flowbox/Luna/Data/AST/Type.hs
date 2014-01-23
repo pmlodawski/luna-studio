@@ -31,6 +31,14 @@ makeLenses (''Type)
 
 type Traversal m = (Functor m, Applicative m, Monad m)
 
+
+getNameID :: Type -> String
+getNameID t = case t of
+    Module {} -> last (view path t)
+    Data   {} -> view name t
+    _         -> "undefinedName"
+
+
 traverseM :: Traversal m => (Type -> m Type) -> Type -> m Type
 traverseM ftype t = case t of
     Tuple      id' items'                    -> Tuple  id' <$> ftypeMap items'

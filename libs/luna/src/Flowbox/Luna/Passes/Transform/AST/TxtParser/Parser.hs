@@ -91,6 +91,18 @@ pImport          = tok Expr.Import   <*  L.pImport
                                          )
 
 
+pTypeAlias      = tok Expr.TypeAlias <*  L.pTypeAlias
+                                     <*> pType
+                                     <*  L.pAssignment
+                                     <*> pType
+
+
+pTypeDef        = tok Expr.TypeDef   <*  L.pTypeDef
+                                     <*> pType
+                                     <*  L.pAssignment
+                                     <*> pType
+
+
 pArg            = tok Expr.Arg      <*> pArgPattern
                                     <*> ((Just <$ L.pAssignment <*> pExpr) <|> pure Nothing)
 
@@ -153,10 +165,12 @@ pDataBody       = choice [ Expr.addMethod <$> pFunc
                          ]
                 <?> "class body"
 
-pModuleBody      = choice [ Module.addMethod <$> pFunc
+pModuleBody      = choice [ Module.addMethod    <$> pFunc
                           , pCombine Module.addField pFields
-                          , Module.addClass  <$> pData
-                          , Module.addImport <$> pImport
+                          , Module.addClass     <$> pData
+                          , Module.addImport    <$> pImport
+                          , Module.addTypeAlias <$> pTypeAlias
+                          , Module.addTypeDef   <$> pTypeDef
                           ]
                 <?> "module body"
 
