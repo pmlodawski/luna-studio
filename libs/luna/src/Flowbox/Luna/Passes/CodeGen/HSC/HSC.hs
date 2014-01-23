@@ -110,13 +110,14 @@ buildExpr e = case e of
                                                    ders'   = if null ders then "" else " deriving (" ++ sepjoin (map show ders) ++ ")"
     HExpr.InstanceD tp decs               -> pure $ "instance " ++ (code.buildExpr) tp ++ " where { " ++ join "; " (map (code.buildExpr) decs) ++ " }"
     HExpr.NewTypeD name params con        -> pure $ "newtype " ++ name ++ params' ++ " = " ++ (code.buildExpr) con 
-                                             where params' = if null params then "" else " " ++ join " " params
+                                             where params' = if null params then "" else " " ++ join " " (fsExpMap params)
     HExpr.Con      name fields            -> pure $ name ++ body
                                              where body = if null fields then "" else " { " ++ sepjoin (fExpMap fields) ++ " }"
     HExpr.RecUpdE  expr name val          -> Complex $ csBuildExpr expr ++ " { " ++ name ++ " = " ++ cBuildExpr val ++ "}"
     HExpr.Typed    cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
     HExpr.TypedP   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
     HExpr.TypedE   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
+    HExpr.TySynD   name params dstType    -> Complex $ "type " ++ name ++ " " ++ spacejoin (fsExpMap params) ++ " = " ++ (code.buildExpr) dstType
     HExpr.Function name signature expr    -> pure $ name ++ params ++ " = " ++ (code.buildExpr) expr 
                                              where params = if null signature then ""
                                                             else " " ++ join " " (fExpMap signature)
@@ -145,9 +146,10 @@ buildExpr e = case e of
     HExpr.ListE    items                  -> pure $ "[" ++ sepjoin (fExpMap items) ++ "]"
     HExpr.Bang     expr                   -> pure $ "--->>>   " ++ (code.buildExpr) expr
     HExpr.THE      expr                   -> pure $ (code.buildExpr) expr
-    where sepjoin = join ", "
-          fExpMap  = map cBuildExpr
-          fsExpMap = map csBuildExpr
+    where spacejoin   = join " "
+          sepjoin     = join ", "
+          fExpMap     = map cBuildExpr
+          fsExpMap    = map csBuildExpr
           cBuildExpr  = code.buildExpr
           csBuildExpr = code.simplify.buildExpr
 

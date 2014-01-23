@@ -110,10 +110,12 @@ addCon ncon e = e & cons %~ (ncon:)
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
 traverseM fexp ftype fpat flit e = case e of
     Accessor     id' name' dst'                      -> Accessor     id' name' <$> fexp dst'
-    App          id' src' args'                      -> App          id'       <$> fexp src'  <*> fexpMap args'
-    Assignment   id' pat' dst'                       -> Assignment   id'       <$> fpat pat'  <*> fexp dst'
-    RecordUpdate id' src' selectors' expr'           -> RecordUpdate id'       <$> fexp src'  <*> pure selectors' <*> fexp expr'
-    Data         id' cls' cons' classes' methods'    -> Data         id'       <$> ftype cls' <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
+    TypeAlias    id' srcType' dstType'               -> TypeAlias    id'       <$> ftype srcType' <*> ftype dstType'
+    TypeDef      id' srcType' dstType'               -> TypeDef      id'       <$> ftype srcType' <*> ftype dstType'
+    App          id' src' args'                      -> App          id'       <$> fexp src'      <*> fexpMap args'
+    Assignment   id' pat' dst'                       -> Assignment   id'       <$> fpat pat'      <*> fexp dst'
+    RecordUpdate id' src' selectors' expr'           -> RecordUpdate id'       <$> fexp src'      <*> pure selectors' <*> fexp expr'
+    Data         id' cls' cons' classes' methods'    -> Data         id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
     ConD         id' name' fields'                   -> ConD         id' name' <$> fexpMap fields'
     Con          {}                                  -> pure e       
     Field        id' name' cls' value'               -> Field        id' name' <$> ftype cls' <*> fexpMap value'
@@ -144,6 +146,8 @@ traverseM fexp ftype fpat flit e = case e of
 traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Expr -> m ()
 traverseM_ fexp ftype fpat flit e = case e of
     Accessor     _  _ dst'                           -> drop <* fexp dst'
+    TypeAlias    _ srcType' dstType'                 -> drop <* ftype srcType' <* ftype dstType'
+    TypeDef      _ srcType' dstType'                 -> drop <* ftype srcType' <* ftype dstType'
     App          _  src' args'                       -> drop <* fexp src'  <* fexpMap args'
     Assignment   _  pat' dst'                        -> drop <* fpat pat'  <* fexp dst'
     RecordUpdate _ src' _ expr'                      -> drop <* fexp src'  <* fexp expr'

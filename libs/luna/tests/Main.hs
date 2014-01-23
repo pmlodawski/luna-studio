@@ -156,6 +156,10 @@ example = Source.Source ["Main"] $
   
                     --, "def f self a::Int b::Int :"
                     --, "    {a,b}"
+                    , "def f a::X :"
+                    , "    a"
+
+                    , "alias X = Int"
 
                     , "def main self:"
                     , "    c = Console()"
