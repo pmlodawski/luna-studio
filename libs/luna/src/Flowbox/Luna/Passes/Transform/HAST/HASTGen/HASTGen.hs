@@ -395,13 +395,19 @@ genFuncBody :: [LExpr] -> LType -> GenPass [HExpr]
 genFuncBody exprs output = case exprs of
     []   -> pure []
     x:[] -> (:) <$> case x of
-                      LExpr.Assignment _ _ dst -> (genTyped HExpr.TypedE output <*> genCallExpr x)
-                      LExpr.Native     {}      -> genCallExpr x
-                      _                        -> (genTyped HExpr.TypedE output <*> genCallExpr x) -- mkGetIO <$>
+                      LExpr.Assignment _ _ dst -> (genTyped HExpr.TypedE output <*> genFuncTopLevelExpr x)
+                      LExpr.Native     {}      -> genFuncTopLevelExpr x
+                      _                        -> (genTyped HExpr.TypedE output <*> genFuncTopLevelExpr x) -- mkGetIO <$>
                 <*> case x of
                       LExpr.Assignment _ _ dst -> (:[]) <$> (genTyped HExpr.TypedE output <*> pure (mkVal $ HExpr.Tuple [])) -- . mkGetIO
                       _                        -> pure []
-    x:xs -> (:) <$> genCallExpr x <*> genFuncBody xs output
+    x:xs -> (:) <$> genFuncTopLevelExpr x <*> genFuncBody xs output
+
+
+genFuncTopLevelExpr :: LExpr -> GenPass HExpr
+genFuncTopLevelExpr expr = case expr of
+    LExpr.RecordUpdate _ (LExpr.Var _ name) _ _ -> genFuncTopLevelExpr $ LExpr.Assignment 0 (LPat.Var 0 name) expr
+    _                                           -> genCallExpr expr
 
 
 genPat :: LPat.Pat -> GenPass HExpr
