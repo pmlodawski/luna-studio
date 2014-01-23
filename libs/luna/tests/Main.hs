@@ -51,6 +51,7 @@ import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as De
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
 import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                 as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash               as Hash
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.Desugar         as Desugar
 import           Flowbox.Prelude
 import qualified Flowbox.System.Log.LogEntry                               as LogEntry
 import           Flowbox.System.Log.Logger
@@ -156,13 +157,13 @@ example = Source.Source ["Main"] $
   
                     --, "def f self a::Int b::Int :"
                     --, "    {a,b}"
-                    , "def f a::X :"
-                    , "    a"
+                    --, "def f a::X :"
+                    --, "    a"
 
-                    , "alias X = Int"
+                    --, "alias X = Int"
 
                     , "def main self:"
-                    , "    c = Console()"
+                    , "    c = Console"
                     , "    c.print 5"
                     --, "   c = Console()"
                     --, "   c.print $ self.f 5 6"
@@ -242,12 +243,18 @@ main_inner = Luna.run $ do
     va <- hoistEither =<< VarAlias.run     ast
     logger info $ PP.ppShow va
 
+
+    logger info "\n-------- Desugar --------"
+    dast <- hoistEither =<< Desugar.run va ast
+    logger info $ PP.ppqShow dast
+  
+
     logger info "\n-------- FuncPool --------"
-    fp <- hoistEither =<< FuncPool.run ast
+    fp <- hoistEither =<< FuncPool.run dast
     logger info $ PP.ppShow fp
 
     logger info "\n-------- Hash --------"
-    hash <- hoistEither =<< Hash.run ast
+    hash <- hoistEither =<< Hash.run dast
     logger info $ PP.ppShow hash
 
     logger info "\n-------- SSA --------"
