@@ -18,10 +18,6 @@ tools/batch-clients/performance/zmq/generated
 tools/batch-clients/tcp-cpp/generated
 tools/batch-clients/dumper/generated
 
-# luna library files
-*.node
-*.graph
-
 # emacs backup files
 .\#*
 \#*\#
