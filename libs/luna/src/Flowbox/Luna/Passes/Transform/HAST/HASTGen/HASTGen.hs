@@ -346,7 +346,7 @@ genExpr ast = case ast of
     LExpr.Field        _ name fcls _         -> do
                                                cls <- GenState.getCls
                                                let clsName = view LType.name cls
-                                               genTyped HExpr.Typed fcls <*> pure (HExpr.Var $ Naming.mkPropertyName clsName name)
+                                               genTypedSafe HExpr.Typed fcls <*> pure (HExpr.Var $ Naming.mkPropertyName clsName name)
     --LExpr.App          _ src args             -> (liftM2 . foldl) HExpr.AppE (getN (length args) <$> genExpr src) (mapM genCallExpr args)
     LExpr.App          _ src args            -> HExpr.AppE <$> (HExpr.AppE (HExpr.Var "call") <$> genExpr src) <*> (mkRTuple <$> mapM genCallExpr args)
     LExpr.Accessor     _ name dst            -> HExpr.AppE <$> (pure $ mkMemberGetter name) <*> genExpr dst --(get0 <$> genExpr dst))
@@ -419,21 +419,30 @@ genPat p = case p of
     LPat.Wildcard _          -> return $ HExpr.WildP
     _ -> fail $ show p
 
-genTyped :: (HExpr -> HExpr -> HExpr) -> LType -> GenPass (HExpr -> HExpr)
-genTyped cls t = case t of
-    LType.Unknown _          -> pure Prelude.id
-    _                        -> cls <$> genType t
 
-genType :: LType -> GenPass HExpr
-genType t = case t of
-    LType.Var     _ name      -> return $ HExpr.Var (name)
-    LType.Con     id segments -> return $ HExpr.AppT (HExpr.VarT $ "m_" ++ show id)
-                                        $ HExpr.AppT (HExpr.VarT $ "s_" ++ show id)
-                                        $ HExpr.ConE segments
-    LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType items
-    LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType src) (mapM genType args)
+genTyped :: (HExpr -> HExpr -> HExpr) -> LType -> GenPass (HExpr -> HExpr)
+genTyped = genTypedProto False
+
+genTypedSafe :: (HExpr -> HExpr -> HExpr) -> LType -> GenPass (HExpr -> HExpr)
+genTypedSafe = genTypedProto True
+
+genTypedProto :: Bool -> (HExpr -> HExpr -> HExpr) -> LType -> GenPass (HExpr -> HExpr)
+genTypedProto safeTyping cls t = case t of
+    LType.Unknown _          -> pure Prelude.id
+    _                        -> cls <$> genType safeTyping t
+
+genType :: Bool -> LType -> GenPass HExpr
+genType safeTyping t = case t of
+    LType.Var     _ name      -> return $ thandler (HExpr.Var  name)
+    LType.Con     id segments -> return $ thandler (HExpr.ConE segments)
+
+    LType.Tuple   _ items    -> HExpr.Tuple <$> mapM (genType safeTyping) items
+    LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType safeTyping src) (mapM (genType safeTyping) args)
     LType.Unknown _          -> logger critical "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"
     --_                        -> fail $ show t
+    where mtype    = HExpr.VarT $ if safeTyping then "Pure" else "m_" ++ show (view LType.id t)
+          stype    = HExpr.VarT $ if safeTyping then "Safe" else "s_" ++ show (view LType.id t)
+          thandler = HExpr.AppT mtype . HExpr.AppT stype
 
 genLit :: LLit.Lit -> GenPass HExpr
 genLit lit = case lit of

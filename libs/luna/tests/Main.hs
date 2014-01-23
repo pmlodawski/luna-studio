@@ -120,9 +120,9 @@ example = Source.Source ["Main"] $
                         ----, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
                         ----, "def List.add self x:"
                         ----, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
-                        , "class Console:"
-                        , "    def print self msg:"
-                        , "        ```print' #{msg}```"
+                        --, "class Console:"
+                        --, "    def print self msg:"
+                        --, "        ```print' #{msg}```"
 
                         --, "def Int.+ a b:"
                         --, "    ```liftf2 (+) #{a} #{b}```"
@@ -139,10 +139,10 @@ example = Source.Source ["Main"] $
                         , "class Vector a:"
                         , "    pos :: a"
 
-                        , "class Point a:"
-                        , "    x,y,z :: a"
+                        --, "class Point:"
+                        --, "    x,y,z :: Int"
 
-                        , "class X"
+                        --, "class X"
                         --, "    def test self:"
                         --, "        self"
                         --, "    def + self v2:"
@@ -152,15 +152,18 @@ example = Source.Source ["Main"] $
   
                     --, "    Console.print (1.add 2)"
   
-                    , "def f self a::Int b::X :"
-                    , "    b"
+                    --, "def f self a::Int b::Int :"
+                    --, "    {a,b}"
 
-                    , "def main self:"
-                    , "   c = Console()"
-                    , "   p = Point 1 2 3"
-                    , "   c.print p"
+                    --, "def main self:"
+                    --, "   c = Console()"
+                    --, "   c.print $ self.f 5 6"
+                    --, "   p = Point 1 2 3"
+                    --, "   Point x y z = p"
+                    --, "   c.print p"
                     --, "   v = Vector $ Point 1 2 3"
-                    --, "   v.pos.x = 0"
+                    --, "   v.pos.x = v.pos.y = 0"
+                    --, "   {a,b} = {x, z} = v"
                     --, "   c.print v"
                     --, "   c.print $ self.f 5 X()"
 
