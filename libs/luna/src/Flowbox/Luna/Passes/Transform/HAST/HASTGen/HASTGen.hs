@@ -126,44 +126,44 @@ mainEmpty = HExpr.Function "main" []
           $ HExpr.DoBlock [mkGetIO $ HExpr.AppE (HExpr.Var "val") $ HExpr.Tuple []]
 
 
-genVArgCon arglen name ccname params base = getter where
-    argVars    = map (("v" ++).show) [1..arglen]
-    exprArgs   = map HExpr.Var argVars
-    t          = foldl HExpr.AppE (HExpr.Var ccname) (map HExpr.Var params)
-    selfVar    = HExpr.TypedP t $ HExpr.Var "self"
-    exprVars   = selfVar : exprArgs
-    getter     = HExpr.Function (mkTName arglen name) exprVars
-               $ mkPure (foldl HExpr.AppE base exprArgs)
+--genVArgCon arglen name ccname params base = getter where
+--    argVars    = map (("v" ++).show) [1..arglen]
+--    exprArgs   = map HExpr.Var argVars
+--    t          = foldl HExpr.AppE (HExpr.Var ccname) (map HExpr.Var params)
+--    selfVar    = HExpr.TypedP t $ HExpr.Var "self"
+--    exprVars   = selfVar : exprArgs
+--    getter     = HExpr.Function (mkTName arglen name) exprVars
+--               $ mkPure (foldl HExpr.AppE base exprArgs)
 
 
-genVArgGetter arglen mname = getter where
-    argVars    = map (("v" ++).show) [1..arglen]
-    exprArgs   = map HExpr.Var argVars
-    exprVars   = HExpr.Var "self" : exprArgs
-    getterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
-               $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName mname) (HExpr.Var "self")
-    getter     = HExpr.Function (mkTName arglen mname) exprVars
-               $ foldl HExpr.AppE getterBase exprArgs
+--genVArgGetter arglen mname = getter where
+--    argVars    = map (("v" ++).show) [1..arglen]
+--    exprArgs   = map HExpr.Var argVars
+--    exprVars   = HExpr.Var "self" : exprArgs
+--    getterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
+--               $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName mname) (HExpr.Var "self")
+--    getter     = HExpr.Function (mkTName arglen mname) exprVars
+--               $ foldl HExpr.AppE getterBase exprArgs
 
 
-genVArgGetterL arglen mname cfname = getter where
-    argVars    = map (("v" ++).show) [1..arglen]
-    exprArgs   = map HExpr.Var argVars
-    t          = mkPure $ foldl HExpr.AppE (HExpr.Var cfname) (map HExpr.Var [])
-    selfVar    = HExpr.TypedP t $ HExpr.Var "self"
-    exprVars   = selfVar : exprArgs
-    getterBase = (HExpr.Var $ mkFuncName mname)
-    getter     = HExpr.Function (mkTName arglen mname) exprVars
-               $ foldl HExpr.AppE getterBase exprArgs
+--genVArgGetterL arglen mname cfname = getter where
+--    argVars    = map (("v" ++).show) [1..arglen]
+--    exprArgs   = map HExpr.Var argVars
+--    t          = mkPure $ foldl HExpr.AppE (HExpr.Var cfname) (map HExpr.Var [])
+--    selfVar    = HExpr.TypedP t $ HExpr.Var "self"
+--    exprVars   = selfVar : exprArgs
+--    getterBase = (HExpr.Var $ mkFuncName mname)
+--    getter     = HExpr.Function (mkTName arglen mname) exprVars
+--               $ foldl HExpr.AppE getterBase exprArgs
 
 
--- generate declarations (imports, CF newtypes, THInstC)
-genFuncDecl clsname name = do
-    let vname  = mkVarName name
-        cfName = mkCFName $ mangleName clsname vname
+---- generate declarations (imports, CF newtypes, THInstC)
+--genFuncDecl clsname name = do
+--    let vname  = mkVarName name
+--        cfName = mkCFName $ mangleName clsname vname
 
-    GenState.addNewType      $ genCFDec clsname cfName
-    GenState.addTHExpression $ genTHInstMem name cfName
+--    GenState.addNewType      $ genCFDec clsname cfName
+--    GenState.addTHExpression $ genTHInstMem name cfName
 
 
 typeMethodSelf cls inputs = nargs
@@ -196,25 +196,12 @@ genExpr ast = case ast of
                                                     then LType.getNameID cls
                                                     else (path!!0) -- FIXME[wd]: needs name resolver
 
-                                                ninputs = inputs
+                                                ninputs    = inputs
                                                 argNum     = length ninputs
                                                 mname      = mangleName clsName $ mkVarName name
-                                                vargGetter = genVArgGetter (argNum-1) mname
-                                                cgetCName  = mkCGetCName (argNum-1)
-                                                cgetName   = mkCGetName  (argNum-1)
-                                                getNName   = mkTName (argNum-1) mname
                                                 fname      = Naming.mkMemName clsName name
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
-
-                                            --genFuncDecl clsName name
-
-                                            --f  <-   HExpr.Assignment (HExpr.Var fname)
-                                            --        <$> ( HExpr.AppE (HExpr.Var $ "defFunction" ++ show (argNum + 1))
-                                            --              <$> ( HExpr.Lambda <$> (mapM genExpr ninputs)
-                                            --                                 <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
-                                            --                  )
-                                            --            )
 
                                             f  <-   HExpr.Assignment (HExpr.Var fname)
                                                           <$> ( HExpr.Lambda <$> (mapM genExpr ninputs)
@@ -222,13 +209,6 @@ genExpr ast = case ast of
                                                               )
 
                                             GenState.addFunction f
-
-                                            ---- GetN functions
-                                            --GenState.addFunction vargGetter
-
-                                            ---- TH snippets
-                                            --GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
-                                            --GenState.addTHExpression $ thSelfTyped fname clsName
 
                                             GenState.addTHExpression $ thRegisterFunction fname argNum []
                                             GenState.addTHExpression $ thClsCallInsts fname argNum 0
@@ -241,10 +221,6 @@ genExpr ast = case ast of
                                                 hName      = Naming.mkHandlerFuncName fname
                                                 cfName     = mkCFLName fname
                                                 argNum     = length inputs
-                                                cgetCName  = mkCGetCName argNum
-                                                cgetName   = mkCGetName  argNum
-                                                getNName   = mkTName argNum fname
-                                                vargGetter = genVArgGetterL argNum fname cfName
 
                                             GenState.addDataType $ HExpr.DataD cfName [] [HExpr.Con cfName []] [Deriving.Show]
 
@@ -256,9 +232,6 @@ genExpr ast = case ast of
 
                                             GenState.addTHExpression $ thRegisterFunction fname argNum []
                                             GenState.addTHExpression $ thClsCallInsts fname argNum 0
-
-                                            --GenState.addFunction vargGetter
-                                            --GenState.addTHExpression $ genTHInst cgetCName getNName cgetName
 
                                             return $ HExpr.Var hName
 
