@@ -45,9 +45,18 @@ const std::string headerFile = R"(
 
 #include "../BatchIdWrappers.h"
 
+
 class %wrapper_name%
 {
 public:
+
+static size_t sendAll(boost::asio::ip::tcp::socket &s, void *data, size_t size);
+static void sendRequest(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request);
+static generated::proto::batch::Response receiveResponse(boost::asio::ip::tcp::socket &s);
+static generated::proto::batch::Response call(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request);
+static generated::proto::batch::Response callAndTranslateException(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request);
+
+
 std::function<void(const std::string&)> before;
 std::function<void(const std::string&)> success;
 std::function<void(const std::string&)> error;
@@ -70,12 +79,6 @@ generated::proto::crumb::Breadcrumbs crumbify(DefinitionId defID)
 		THROW("Failed to translate id %s to BreadCrumbs: %s.", defID, e);
 	}
 }
-
-size_t sendAll(void *data, size_t size);
-void sendRequest(const generated::proto::batch::Request& request);
-generated::proto::batch::Response receiveResponse();
-generated::proto::batch::Response call(const generated::proto::batch::Request& request);
-generated::proto::batch::Response callAndTranslateException(const generated::proto::batch::Request& request);
 
 boost::asio::ip::tcp::socket &socket;
 boost::asio::ip::tcp::socket &notifySocket;
@@ -101,19 +104,18 @@ const int BUFFER_SIZE = 10000000; // TODO [PM] : magic constant
 using boost::asio::ip::tcp;
 using Socket = tcp::socket;
 
-size_t %wrapper_name%::sendAll(void *data, size_t size)
+size_t %wrapper_name%::sendAll(boost::asio::ip::tcp::socket &s, void *data, size_t size)
 {
-	size_t sent = boost::asio::write(socket, boost::asio::buffer(data, size));
+	size_t sent = boost::asio::write(s, boost::asio::buffer(data, size));
 	assert(sent == size);
 	return sent;
 }
 
 
-void %wrapper_name%::sendRequest(const generated::proto::batch::Request& request)
+void %wrapper_name%::sendRequest(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request)
 {
-	int  requestSize = request.ByteSize() + 4;
+	int requestSize = request.ByteSize() + 4;
 	std::vector<char> requestBuf(requestSize, 0);
-	//char* requestBuf = new char[requestSize];
 
 	//write varint delimiter to buffer
 	google::protobuf::io::ArrayOutputStream arrayOut(requestBuf.data(), requestSize);
@@ -124,18 +126,15 @@ void %wrapper_name%::sendRequest(const generated::proto::batch::Request& request
 	request.SerializeToCodedStream(&codedOut);
 
 	//send buffer to client
-	sendAll(requestBuf.data(), requestSize);
-	// std::cout << "Sent: " << sent << std::flush;
-
-	//delete [] requestBuf;
+	sendAll(s, requestBuf.data(), requestSize);
 }
 
-generated::proto::batch::Response %wrapper_name%::receiveResponse()
+generated::proto::batch::Response %wrapper_name%::receiveResponse(boost::asio::ip::tcp::socket &s)
 {
 	static char buffer[BUFFER_SIZE];
 
 	generated::proto::batch::Response response;
-	size_t received = boost::asio::read(socket, boost::asio::buffer(buffer, 4));
+	size_t received = boost::asio::read(s, boost::asio::buffer(buffer, 4));
 
 	//read varint delimited protobuf object in to buffer
 	//there's no method to do this in the C++ library so here's the workaround
@@ -146,7 +145,7 @@ generated::proto::batch::Response %wrapper_name%::receiveResponse()
 	const int sizeinfoLength = headerCodedIn.CurrentPosition();
 	const int remainingToRead = packetSize + sizeinfoLength - received;
 
-	received = boost::asio::read(socket, boost::asio::buffer(buffer + received, remainingToRead));
+	received = boost::asio::read(s, boost::asio::buffer(buffer + received, remainingToRead));
 
 	google::protobuf::io::ArrayInputStream arrayIn(buffer + sizeinfoLength, packetSize);
 	google::protobuf::io::CodedInputStream codedIn(&arrayIn);
@@ -156,15 +155,15 @@ generated::proto::batch::Response %wrapper_name%::receiveResponse()
 	return response;
 }
 
-generated::proto::batch::Response %wrapper_name%::call(const generated::proto::batch::Request& request)
+generated::proto::batch::Response %wrapper_name%::call(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request)
 {
-	sendRequest(request);
-	return receiveResponse();
+	sendRequest(s, request);
+	return receiveResponse(s);
 }
 
-generated::proto::batch::Response %wrapper_name%::callAndTranslateException(const generated::proto::batch::Request& request)
+generated::proto::batch::Response %wrapper_name%::callAndTranslateException(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request)
 {
-	auto response = call(request);
+	auto response = call(s, request);
 
 	if(response.type() == generated::proto::batch::Response_Type_Exception)
 	{
@@ -180,10 +179,12 @@ generated::proto::batch::Response %wrapper_name%::callAndTranslateException(cons
 )";
 
 const std::string methodDeclaration = "%rettype% %space%_%method%(%args_list%);";
+const std::string methodDeclarationAsync = "int %space%_%method%_async(%args_list%);";
 
 const std::string methodDefinition = R"(
 %rettype% %wrapper_name%::%space%_%method%(%args_list%)
 {
+	if(!this) THROW("Attempt to call method %space%_%method% while the batch connection wasn't st up (call to nullptr)!");
 	if(before) before("%space%_%method%");
 	FINALIZE{ if(after) after("%space%_%method%"); };
 	try
@@ -196,7 +197,12 @@ const std::string methodDefinition = R"(
 		request.set_method(generated::proto::batch::Request_Method_%space%_%method%);
 		request.SetAllocatedExtension(generated::proto::batch::%space%_%method%_Args::req, args);
 
-		generated::proto::batch::Response response = callAndTranslateException(request);
+		generated::proto::batch::Response response;
+		{
+			StopWatch sw;
+			FINALIZE{ logTrace("Batch call %s took %d ms.", "%space%_%method%", sw.elapsedMs().count()); };
+			response = callAndTranslateException(socket, request);
+		}
 		assert(response.type() == generated::proto::batch::Response_Type_Result); //exception would be translated to exception
 
 		FINALIZE{ if(success) success("%space%_%method%"); };
@@ -209,6 +215,42 @@ const std::string methodDefinition = R"(
 		throw BatchException(e.what(), "%method%");
 	}
 }
+
+int %wrapper_name%::%space%_%method%_async(%args_list%)
+{
+	if(!this) THROW("Attempt to call method %space%_%method% while the batch connection wasn't st up (call to nullptr)!");
+	if(before) before("%space%_%method%");
+	FINALIZE{ if(after) after("%space%_%method%"); };
+	try
+	{
+		
+		generated::proto::batch::%space%_%method%_Args *args = new generated::proto::batch::%space%_%method%_Args();
+		%setters%
+
+		generated::proto::batch::Request request;
+		request.set_async(true);
+		request.set_method(generated::proto::batch::Request_Method_%space%_%method%);
+		request.SetAllocatedExtension(generated::proto::batch::%space%_%method%_Args::req, args);
+
+		generated::proto::batch::Response response;
+		{
+			StopWatch sw;
+			FINALIZE{ logTrace("Batch call %s tool %d ms.", "%space%_%method%", sw.elapsedMs().count()); };
+			response = callAndTranslateException(socket, request);
+		}
+		assert(response.type() == generated::proto::batch::Response_Type_Accept); //exception would be translated to exception
+
+		FINALIZE{ if(success) success("%space%_%method%"); };
+		return response.id();
+	}
+	catch(std::exception &e)
+	{
+		if(error) error("%space%_%method%");
+		//std::string msg = std::string("Call to batch method %space%::%method% triggered an exception: ") + e.what();
+		throw BatchException(e.what(), "%method%");
+	}
+}
+
 )";
 
 const std::string clsGetterMethod = R"(
@@ -339,7 +381,7 @@ struct MethodWrapper
 
 	std::string formatDecl() const
 	{
-		return format(methodDeclaration);
+		return format(methodDeclaration) + "\n" + format(methodDeclarationAsync);
 	}
 
 	std::string formatImpl() const
@@ -442,9 +484,10 @@ struct MethodWrapper
 					{
 						entry =
 							R"(	for(size_t i = 0; i < %1.size(); i++)
-										{
-									      args->set_%2(i, %1.at(i));
-										})";
+								{
+									assert(args->%2_size() == i);
+									args->add_%2(%1.at(i));
+								})";
 					}
 				}
 				else if(arg->is_optional())
