@@ -24,8 +24,8 @@ import           Flowbox.Luna.Data.AST.Pat                      (Pat)
 import qualified Flowbox.Luna.Data.AST.Pat                      as Pat
 import           Flowbox.Luna.Data.AST.Type                     (Type)
 import qualified Flowbox.Luna.Data.AST.Type                     as Type
-import           Flowbox.Luna.Passes.Analysis.VarAlias.State    (LocState)
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.State    as LocState
+import           Flowbox.Luna.Passes.Analysis.VarAlias.State    (AAState)
+import qualified Flowbox.Luna.Passes.Analysis.VarAlias.State    as AAState
 import qualified Flowbox.Luna.Passes.Pass                       as Pass
 import           Flowbox.Luna.Passes.Pass                      (Pass, PassT)
 import           Flowbox.Prelude                                hiding (error, id, mod)
@@ -37,38 +37,41 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.VarAlias.VarAlias"
 
 
-type VAPass result = Pass LocState result
+type VAPass result = Pass AA result
 
+
+--run :: Module -> Pass.Result AA
+--run = (Pass.run_ (Pass.Info "VarAlias") mempty) . gatherAndCheck
+
+
+--runGather :: Module -> Pass.Result AA
+--runGather = (Pass.run_ (Pass.Info "VarAlias") mempty) . vaMod
 
 run :: Module -> Pass.Result AA
-run = (Pass.run_ (Pass.Info "VarAlias") LocState.empty) . gatherAndCheck
+run = (Pass.run_ (Pass.Info "VarAlias") mempty) . vaMod
 
 
-runGather :: Module -> Pass.Result GeneralVarMap
-runGather = (Pass.run_ (Pass.Info "VarAlias") LocState.empty) . vaMod
+--gatherAndCheck :: Module -> VAPass AA
+--gatherAndCheck m = do gvm <- vaMod m
+--                      (AA . IntMap.fromList) <$> (mapM check $ IntMap.toList $ AA.varmap gvm)
 
 
-gatherAndCheck :: Module -> VAPass AA
-gatherAndCheck m = do gvm <- vaMod m
-                      (AA . IntMap.fromList) <$> (mapM check $ IntMap.toList $ GeneralVarMap.varmap gvm)
+--check :: (Int, Either String Int) -> VAPass (Int, Int)
+--check (id, v) = case v of
+--    Left e   -> fail e
+--    Right vi -> return (id, vi)
 
 
-check :: (Int, Either String Int) -> VAPass (Int, Int)
-check (id, v) = case v of
-    Left e   -> fail e
-    Right vi -> return (id, vi)
-
-
-runNested :: (MonadIO m, MonadState LocState m) => PassT LocState result (Pass.ResultT m) -> Pass.ResultT m LocState
+runNested :: (MonadIO m, MonadState AA m) => PassT AA result (Pass.ResultT m) -> Pass.ResultT m AA
 runNested p = do
     s <- get
     snd <$> Pass.runHoist (Pass.Info "VarAlias") s p
 
 
-vaMod :: Module -> VAPass GeneralVarMap
+vaMod :: Module -> VAPass AA
 vaMod mod = do
     Module.traverseM_ vaMod vaExpr vaType vaPat pure mod
-    LocState.varstat <$> get
+    get
 
 
 vaExpr :: Expr.Expr -> VAPass ()
@@ -77,10 +80,11 @@ vaExpr ast = case ast of
                                              s <- runNested $ do
                                                   mapM_ vaExpr inputs
                                                   vaExprMap body
-                                             LocState.updateVarStat s
+                                             --AAState.updateVarStat s
+                                             return ()
     Expr.Assignment _ pat dst             -> vaExpr dst <* vaPat pat
-    Expr.Var        id name               -> LocState.bindVar name id
-    Expr.NativeVar  id name               -> LocState.bindVar name id
+    Expr.Var        id name               -> AAState.bindVar id name
+    Expr.NativeVar  id name               -> AAState.bindVar id name
     _                                     -> continue
     where
         vaExprMap = mapM_ vaExpr
@@ -90,7 +94,7 @@ vaExpr ast = case ast of
 
 vaPat :: Pat -> VAPass ()
 vaPat pat = case pat of
-    Pat.Var     id name                 -> LocState.registerVarName (name, id)
+    Pat.Var     id name                 -> AAState.registerVarName (name, id)
     Pat.Wildcard _                      -> return ()
     _                                   -> Pat.traverseM_ vaPat vaType pure pat
 

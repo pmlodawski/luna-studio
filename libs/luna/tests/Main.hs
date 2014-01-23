@@ -142,8 +142,8 @@ example = Source.Source ["Main"] $
 
 
 
-                        --, "class Point:"
-                        --, "    x,y,z :: Int"
+                        , "class Point:"
+                        , "    x,y,z :: Int"
 
                         --, "class X"
                         --, "    def test self:"
@@ -165,6 +165,8 @@ example = Source.Source ["Main"] $
                     , "def main self:"
                     , "    c = Console"
                     , "    c.print 5"
+                    , "    p = Point 1 2 3"
+                    --, "    a = (f) 1"
                     --, "   c = Console()"
                     --, "   c.print $ self.f 5 6"
                     --, "   p = Point 1 2 3"
@@ -244,30 +246,30 @@ main_inner = Luna.run $ do
     logger info $ PP.ppShow va
 
 
-    logger info "\n-------- Desugar --------"
-    dast <- hoistEither =<< Desugar.run va ast
-    logger info $ PP.ppqShow dast
+    --logger info "\n-------- Desugar --------"
+    --dast <- hoistEither =<< Desugar.run va ast
+    --logger info $ PP.ppqShow dast
   
 
-    logger info "\n-------- FuncPool --------"
-    fp <- hoistEither =<< FuncPool.run dast
-    logger info $ PP.ppShow fp
+    --logger info "\n-------- FuncPool --------"
+    --fp <- hoistEither =<< FuncPool.run dast
+    --logger info $ PP.ppShow fp
 
-    logger info "\n-------- Hash --------"
-    hash <- hoistEither =<< Hash.run dast
-    logger info $ PP.ppShow hash
+    --logger info "\n-------- Hash --------"
+    --hash <- hoistEither =<< Hash.run dast
+    --logger info $ PP.ppShow hash
 
-    logger info "\n-------- SSA --------"
-    ssa <- hoistEither =<< SSA.run va hash
-    logger info $ PP.ppqShow ssa
+    --logger info "\n-------- SSA --------"
+    --ssa <- hoistEither =<< SSA.run va hash
+    --logger info $ PP.ppqShow ssa
 
-    logger info "\n-------- HASTGen --------"
-    hast <- hoistEither =<< HASTGen.run ssa fp
-    logger info $ PP.ppShow hast
+    --logger info "\n-------- HASTGen --------"
+    --hast <- hoistEither =<< HASTGen.run ssa fp
+    --logger info $ PP.ppShow hast
 
-    logger info "\n-------- HSC --------"
-    hsc <- hoistEither =<< HSC.run  hast
-    logger info $ join "\n\n" (map printSrc hsc)
+    --logger info "\n-------- HSC --------"
+    --hsc <- hoistEither =<< HSC.run  hast
+    --logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()
@@ -275,34 +277,34 @@ main_inner = Luna.run $ do
 
 main_graph :: IO (Either String ())
 main_graph = Luna.run $ do
-    let source  = example
-        emptyPM = PropertyMap.empty
+    --let source  = example
+    --    emptyPM = PropertyMap.empty
 
-    logger info "\n-------- TxtParser --------"
-    (ast, _) <- hoistEither =<< TxtParser.run source
-    logger info $ PP.ppqShow ast
+    --logger info "\n-------- TxtParser --------"
+    --(ast, _) <- hoistEither =<< TxtParser.run source
+    --logger info $ PP.ppqShow ast
 
-    logger info "\n-------- VarAlias --------"
-    va <- hoistEither =<< VarAlias.runGather ast
-    logger info $ PP.ppShow va
+    --logger info "\n-------- VarAlias --------"
+    --va <- hoistEither =<< VarAlias.runGather ast
+    --logger info $ PP.ppShow va
 
-    (Focus.FunctionFocus expr) <- Zipper.mk ast
-                              >>= Zipper.focusFunction "test"
-                              >>= return . Zipper.getFocus
+    --(Focus.FunctionFocus expr) <- Zipper.mk ast
+    --                          >>= Zipper.focusFunction "test"
+    --                          >>= return . Zipper.getFocus
 
-    logger info $ PP.ppShow expr
-    (graph, pm) <- hoistEither =<< GraphBuilder.run va emptyPM expr
-    let graphView = GraphView.fromGraph graph
-        (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graphView pm
-    logger warning $ show graph
-    logger warning $ PP.ppShow pm
-    --logger info $ show graphWithDefaults
-    let (newGraphView, newPM) = Defaults.removeDefaults graphWithDefaults pmWithDefaults
-    newGraph <- GraphView.toGraph newGraphView
-    --logger warning $ show newGraph
-    expr' <- hoistEither =<< GraphParser.run newGraph newPM expr
-    logger info $ PP.ppShow expr'
-    logger warning $ PP.ppShow newPM
+    --logger info $ PP.ppShow expr
+    --(graph, pm) <- hoistEither =<< GraphBuilder.run va emptyPM expr
+    --let graphView = GraphView.fromGraph graph
+    --    (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graphView pm
+    --logger warning $ show graph
+    --logger warning $ PP.ppShow pm
+    ----logger info $ show graphWithDefaults
+    --let (newGraphView, newPM) = Defaults.removeDefaults graphWithDefaults pmWithDefaults
+    --newGraph <- GraphView.toGraph newGraphView
+    ----logger warning $ show newGraph
+    --expr' <- hoistEither =<< GraphParser.run newGraph newPM expr
+    --logger info $ PP.ppShow expr'
+    --logger warning $ PP.ppShow newPM
 
     --logger info "\n-------- FuncPool --------"
     --fp <- FuncPool.run ast

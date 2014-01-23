@@ -5,24 +5,31 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE TemplateHaskell #-}
+
 module Flowbox.Luna.Data.Analysis.Alias.Alias where
 
 import Flowbox.Prelude
 
 import           Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
+import           Data.Map    (Map)
+import qualified Data.Map    as Map
 
 
--- TODO [PM]: split to separate files; rename
+type ID = Int
+
+data Error  = LookupError {key :: String}
+            deriving (Show)
 
 
-data AA     = AA  { varmap :: IntMap Int }
-                  deriving (Show)
+data AA     = AA  { _nameMap  :: Map String ID
+                  , _aliasMap :: IntMap (Either Error ID) 
+                  } 
+            deriving (Show)
+makeLenses (''AA)
 
 
-type AAGeneral = IntMap (Maybe Int)
-
-
-empty :: AA
-empty = AA IntMap.empty
+instance Monoid AA where
+	mempty = AA mempty mempty
 

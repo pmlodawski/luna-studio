@@ -41,7 +41,13 @@ desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat p
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
 desugarExpr ast = case ast of
     Expr.Con {}                           -> Expr.App 0 <$> continue <*> pure [] 
+    Expr.App {}                           -> omitNext
     _                                     -> continue
+    where continue = Expr.traverseM desugarExpr pure desugarPat pure ast
+          omitNext = Expr.traverseM omitExpr pure desugarPat pure ast
+
+omitExpr :: Expr.Expr -> DesugarPass Expr.Expr
+omitExpr ast = continue
     where continue = Expr.traverseM desugarExpr pure desugarPat pure ast
 
 
