@@ -29,20 +29,20 @@ instance Functor Safe where
 
 
 instance Show a => Show (Pure a) where
--- #ifdef DEBUG
+#ifdef DEBUG
     show (Pure a) = "Pure (" ++ child ++ ")" where
         child = show a
         content = if ' ' `elem` child then "(" ++ child ++ ")" else child
--- #else
-    --show (Pure a) = show a
--- #endif
+#else
+    show (Pure a) = show a
+#endif
 
 
 instance Show a => Show (Safe a) where
--- #ifdef DEBUG
+#ifdef DEBUG
     show (Safe a) = "Safe " ++ content where
         child = show a
         content = if ' ' `elem` child then "(" ++ child ++ ")" else child
--- #else
-    --show (Safe a) = show a
--- #endif
+#else
+    show (Safe a) = show a
+#endif

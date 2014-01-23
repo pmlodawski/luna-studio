@@ -34,7 +34,7 @@ data Expr  = NOP          { _id :: ID                                           
            | App          { _id :: ID, _src       :: Expr     , _args      :: [Expr]                                             }
            | AppCons_     { _id :: ID, _args      :: [Expr]                                                                      }
            | Assignment   { _id :: ID, _pat       :: Pat      , _dst       :: Expr                                               }
-           | RecordUpdate { _id :: ID, _name      :: String   , _selectors :: [String], _expr :: Expr}
+           | RecordUpdate { _id :: ID, _src       :: Expr     , _selectors :: [String], _expr :: Expr}
            | Data         { _id :: ID, _cls       :: Type     , _cons      :: [Expr] , _classes   :: [Expr] , _methods :: [Expr] }
            | ConD         { _id :: ID, _name      :: String   , _fields    :: [Expr]                                             }
            | Con          { _id :: ID, _name      :: String                                                                      }
@@ -110,7 +110,7 @@ traverseM fexp ftype fpat flit e = case e of
     Accessor     id' name' dst'                      -> Accessor     id' name' <$> fexp dst'
     App          id' src' args'                      -> App          id'       <$> fexp src'  <*> fexpMap args'
     Assignment   id' pat' dst'                       -> Assignment   id'       <$> fpat pat'  <*> fexp dst'
-    RecordUpdate id' name' selectors' expr'          -> RecordUpdate id' name' selectors' <$> fexp expr'
+    RecordUpdate id' src' selectors' expr'           -> RecordUpdate id'       <$> fexp src'  <*> pure selectors' <*> fexp expr'
     Data         id' cls' cons' classes' methods'    -> Data         id'       <$> ftype cls' <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
     ConD         id' name' fields'                   -> ConD         id' name' <$> fexpMap fields'
     Con          {}                                  -> pure e       
@@ -144,7 +144,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     Accessor     _  _ dst'                           -> drop <* fexp dst'
     App          _  src' args'                       -> drop <* fexp src'  <* fexpMap args'
     Assignment   _  pat' dst'                        -> drop <* fpat pat'  <* fexp dst'
-    RecordUpdate _ _ _ expr'                         -> drop <* fexp expr'
+    RecordUpdate _ src' _ expr'                      -> drop <* fexp src'  <* fexp expr'
     Data         _ cls' cons'  classes' methods'     -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
     ConD         _ _ fields'                         -> drop <* fexpMap fields'
     Con          {}                                  -> drop

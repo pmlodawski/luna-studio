@@ -62,6 +62,9 @@ mkCallName = withName ("call_" ++)
 mkLamName :: NameCls a => a -> a
 mkLamName = withName ("l_" ++)
 
+mkSetName :: NameCls a => a -> a
+mkSetName = withName ("set_" ++)
+
 mkMemName :: (NameCls a, NameCls b) => a -> b -> b
 mkMemName dataName memberName = withName (("m_" ++ toString dataName ++ "_") ++) memberName
 

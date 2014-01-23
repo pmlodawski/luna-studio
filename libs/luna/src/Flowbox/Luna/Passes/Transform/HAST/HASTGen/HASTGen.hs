@@ -61,7 +61,7 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
     let (LType.Module _ path) = cls
         --fnames  = Set.toList $ Pool.names fpool
         mod     = HModule.addImport ["Luna", "Target", "HS", "Core"]
-                $ HModule.addImport ["Flowbox", "Graphics", "Mockup"]
+                -- $ HModule.addImport ["Flowbox", "Graphics", "Mockup"]
                 -- $ HModule.addExt HExtension.AutoDeriveTypeable
                 $ HModule.addExt HExtension.DataKinds
                 $ HModule.addExt HExtension.DeriveDataTypeable
@@ -330,7 +330,17 @@ genExpr ast = case ast of
 
     LExpr.Infix        _ name src dst        -> HExpr.Infix name <$> genExpr src <*> genExpr dst
     LExpr.Assignment   _ pat dst             -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
-    --LExpr.RecordUpdate _ name selectors expr -> HExpr.RecUpdE
+    LExpr.RecordUpdate _ src selectors expr  -> genExpr $ (setSteps sels) expr
+                                                where setter sel exp val = flip (LExpr.App 0) [val]
+                                                                         $ LExpr.Accessor 0 (Naming.mkSetName sel) exp
+                                                      getter sel exp     = flip (LExpr.App 0) []
+                                                                         $ LExpr.Accessor 0 sel exp
+                                                      getSel sel           = foldl (flip($)) src (fmap getter (reverse sel))
+                                                      setStep       (x:xs) = setter x (getSel xs)
+                                                      setSteps args@(_:[]) = setStep args
+                                                      setSteps args@(_:xs) = setSteps xs . setStep args
+                                                      sels = reverse selectors
+
     LExpr.Lit          _ value               -> genLit value
     LExpr.Tuple        _ items               -> mkVal . HExpr.Tuple <$> mapM genExpr items -- zamiana na wywolanie funkcji!
     LExpr.Field        _ name fcls _         -> do

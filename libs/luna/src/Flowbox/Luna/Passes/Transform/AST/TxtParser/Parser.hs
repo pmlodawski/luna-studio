@@ -31,7 +31,7 @@ import           Flowbox.Prelude                                   hiding (id, m
 import qualified Flowbox.Prelude                                   as Prelude
 
 import Text.Parsec.Pos
-import Control.Monad.State
+import Control.Monad.State hiding (mapM)
 
 import qualified Prelude
 
@@ -215,14 +215,27 @@ pExprT base =   --(try (tok Expr.RecordUpdate <*> pVar <*> many1 (L.pAccessor *>
 pOpE       = pOpTE pEntBaseE
 pOpTE base = Expr.aftermatch <$> PExpr.buildExpressionParser optableE (pTermE base)
           
-pTermE base = base <??> (flip applyAll <$> many1 (try $ pTermBaseE base))
+pTermE base = base <??> (flip applyAll <$> many1 (pTermBaseE base))  --  many1 (try $ pTermRecUpd))
 
 
-pTermBaseE p = choice [ pDotTermE
+pTermBaseE p = choice [ try pTermRecUpd
+                      , pDotTermE
                       , pCallTermE p
                       ]
 
-pDotTermE    = tok Expr.Accessor <* L.pAccessor <*> pVar
+pDotTermBase  = (L.pAccessor *> pVar)
+
+pTermRecUpd   = tok (\id sel expr src -> Expr.RecordUpdate id src sel expr) <*> many1 pDotTermBase <* L.pAssignment <*> pExprSimple
+
+pDotTermE     = tok Expr.Accessor <*> pDotTermBase
+
+
+--pDotTermE   = do
+--    exprs   <- fmap (flip Expr.Accessor) <$> pDotTermBase
+--    exprsid <- mapM tok exprs
+--    return (\x -> foldl (flip ($)) x exprsid)
+
+
 pCallTermE p = pLastLexemeEmpty *> ((flip <$> tok Expr.App) <*> pCallList p)
 
 pLastLexeme = view ParseState.lastLexeme <$> getState
