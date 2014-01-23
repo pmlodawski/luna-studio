@@ -127,3 +127,7 @@ infixl 1 :?
 True  ? (x :? _) = x
 False ? (_ :? y) = y
 -- / trenaru operator
+
+
+($>) :: (Functor f) => a -> f b -> f b
+($>) =  fmap . (flip const)
