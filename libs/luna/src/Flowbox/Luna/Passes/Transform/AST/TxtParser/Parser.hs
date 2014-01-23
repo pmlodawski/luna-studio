@@ -91,7 +91,7 @@ pImport          = tok Expr.Import   <*  L.pImport
                                          )
 
 
-pArg            = tok Expr.Arg      <*> pPatCon
+pArg            = tok Expr.Arg      <*> pArgPattern
                                     <*> ((Just <$ L.pAssignment <*> pExpr) <|> pure Nothing)
 
 pFunc           = tok Expr.Function <*  L.pDef
@@ -324,9 +324,14 @@ pExprBlock  = pDotBlockBegin pExpr
 -----------------------------------------------------------
 -- Types
 -----------------------------------------------------------
-pType       = choice [ try $ pLambdaT
-                     , try $ pConAppT
+pTypeSingle = choice [ try $ pLambdaT
                      , pTermT
+                     ]
+              <?> "type"
+
+
+pType       = choice [ try $ pConAppT
+                     , pTypeSingle
                      ]
               <?> "type"
 
@@ -365,8 +370,12 @@ pPatCon     = choice [ try pConAppP
                      , pTermP
                      ]
 
-pTermP      = choice [ try $ L.parensed pPatCon
-                     , try (tok Pat.Typed <*> pEntP <* L.pTypeDecl <*> pType)
+pArgPattern = pTermBase pTypeSingle
+
+pTermP      = pTermBase pType
+
+pTermBase t = choice [ try $ L.parensed pPatCon
+                     , try (tok Pat.Typed <*> pEntP <* L.pTypeDecl <*> t)
                      , pEntP
                      ]
               <?> "pattern term"

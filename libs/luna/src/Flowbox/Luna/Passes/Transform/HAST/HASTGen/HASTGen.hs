@@ -427,7 +427,7 @@ genTyped cls t = case t of
 genType :: LType -> GenPass HExpr
 genType t = case t of
     LType.Var     _ name      -> return $ HExpr.Var (name)
-    LType.Con     id segments -> return $ HExpr.AppT (HExpr.VarT $ "Pure") -- it has to be pure, otherwise we get very strange type checker error
+    LType.Con     id segments -> return $ HExpr.AppT (HExpr.VarT $ "m_" ++ show id)
                                         $ HExpr.AppT (HExpr.VarT $ "s_" ++ show id)
                                         $ HExpr.ConE segments
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType items
