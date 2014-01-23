@@ -49,8 +49,8 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as Gr
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
-import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
-import qualified Flowbox.Luna.Passes.Transform.Hash.Hash                   as Hash
+import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                 as SSA
+import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash               as Hash
 import           Flowbox.Prelude
 import qualified Flowbox.System.Log.LogEntry                               as LogEntry
 import           Flowbox.System.Log.Logger

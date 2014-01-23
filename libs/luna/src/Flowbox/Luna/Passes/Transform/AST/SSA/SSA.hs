@@ -9,7 +9,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Passes.Transform.SSA.SSA where
+module Flowbox.Luna.Passes.Transform.AST.SSA.SSA where
 
 import           Control.Applicative
 import           Control.Monad.State

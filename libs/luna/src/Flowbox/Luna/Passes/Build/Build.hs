@@ -32,9 +32,9 @@ import qualified Flowbox.Luna.Passes.Pass                              as Pass
 import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
 import qualified Flowbox.Luna.Passes.Source.File.Writer                as FileWriter
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
-import qualified Flowbox.Luna.Passes.Transform.Hash.Hash               as Hash
+import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash           as Hash
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
-import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
+import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA             as SSA
 import           Flowbox.Prelude
 import qualified Flowbox.System.Directory.Directory                    as Directory
 import           Flowbox.System.Log.Logger
