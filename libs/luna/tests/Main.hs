@@ -164,6 +164,7 @@ example = Source.Source ["Main"] $
                     , "   p.x = 0"
                     , "   p.y = 0"
                     , "   a_ = 10"
+                    , "   a = -10.0"
                     --, "   Point x y z = p"
                     --, "   c.print p"
                     --, "   v = Vector $ Point 1 2 3"

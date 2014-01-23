@@ -192,7 +192,9 @@ exponent'       = (\f e -> power (f e)) <$ oneOf "eE" <*> sign <*> (decimal <?> 
              | otherwise  = fromInteger (10^e)
 
 
-floatStr'       = (++) <$> decimalStr <*> fractExponentStr
+floatStr'       = ((:) <$> lexeme signStr <*> floatStrBase) <|> floatStrBase
+
+floatStrBase    = (++) <$> decimalStr <*> fractExponentStr
 
 fractExponentStr = (++) <$> fractionStr <*> option "" exponentStr'
 
