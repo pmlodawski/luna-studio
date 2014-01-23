@@ -61,7 +61,7 @@ genModule lmod@(LModule.Module _ cls imports classes _ methods _) fpool = do
     let (LType.Module _ path) = cls
         --fnames  = Set.toList $ Pool.names fpool
         mod     = HModule.addImport ["Luna", "Target", "HS", "Core"]
-                -- $ HModule.addImport ["Flowbox", "Graphics", "Mockup"]
+                $ HModule.addImport ["Flowbox", "Graphics", "Mockup"]
                 -- $ HModule.addExt HExtension.AutoDeriveTypeable
                 $ HModule.addExt HExtension.DataKinds
                 $ HModule.addExt HExtension.DeriveDataTypeable
