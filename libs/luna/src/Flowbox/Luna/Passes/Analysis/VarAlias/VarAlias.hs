@@ -81,9 +81,10 @@ vaExpr ast = case ast of
     Expr.Assignment _ pat dst             -> vaExpr dst <* vaPat pat
     Expr.Var        id name               -> LocState.bindVar name id
     Expr.NativeVar  id name               -> LocState.bindVar name id
-    _                                     -> Expr.traverseM_ vaExpr vaType vaPat pure ast
+    _                                     -> continue
     where
         vaExprMap = mapM_ vaExpr
+        continue  = Expr.traverseM_ vaExpr vaType vaPat pure ast
 
 
 
