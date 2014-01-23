@@ -9,15 +9,15 @@
 
 module Flowbox.Batch.Server.Processor where
 
-import qualified Control.Concurrent               as Concurrent
-import           Control.Concurrent.MVar          (MVar)
-import qualified Control.Concurrent.MVar          as MVar
-import           Data.ByteString.Lazy             (ByteString)
-import qualified Data.Map                         as Map
-import           Network.Socket                   (Socket)
-import           Text.ProtocolBuffers             (Int32)
-import qualified Text.ProtocolBuffers             as Proto
-import qualified Text.ProtocolBuffers.Extensions  as Extensions
+import qualified Control.Concurrent              as Concurrent
+import           Control.Concurrent.MVar         (MVar)
+import qualified Control.Concurrent.MVar         as MVar
+import           Data.ByteString.Lazy            (ByteString)
+import qualified Data.Map                        as Map
+import           Network.Socket                  (Socket)
+import           Text.ProtocolBuffers            (Int32)
+import qualified Text.ProtocolBuffers            as Proto
+import qualified Text.ProtocolBuffers.Extensions as Extensions
 
 import           Flowbox.Batch.Server.Handler.Handler           (Handler)
 import qualified Flowbox.Batch.Server.Handler.Handler           as Handler
@@ -172,8 +172,8 @@ response t i = Proto.messageWithLengthPut
              $ Response t i $ Extensions.ExtField Map.empty
 
 
-process :: Handler h => MVar Socket -> h -> ByteString -> IO ByteString
-process notifySocket handler encoded_request = case Proto.messageWithLengthGet encoded_request of
+process :: Handler h => MVar Socket -> h -> ByteString -> Int32 -> IO ByteString
+process notifySocket handler encodedRequest requestID = case Proto.messageWithLengthGet encodedRequest of
                                      -- TODO [PM] : move messageWithLengthGet from here
     Left   e           -> fail $ "Error while decoding request: " ++ e
     Right (request, _) -> case Request.method request of
@@ -247,22 +247,24 @@ process notifySocket handler encoded_request = case Proto.messageWithLengthGet e
 
         Method.Properties_GetProperties -> call Handler.getProperties GetProperties.req GetProperties.rsp
         Method.Properties_SetProperties -> call Handler.setProperties SetProperties.req SetProperties.rsp
-        where 
+        where
             call method reqkey rspkey = if Request.async request == Just True
-                then asyncCall method reqkey rspkey
-                else syncCall  method reqkey rspkey 
+                then do loggerIO debug $ "async call " ++ show requestID
+                        asyncCall method reqkey rspkey
+                else do loggerIO debug $ "sync call " ++ show requestID
+                        syncCall  method reqkey rspkey
 
             asyncCall method reqkey rspkey = do
                 _ <- Concurrent.forkIO $ do b <- syncCall method reqkey rspkey
                                             MVar.withMVar notifySocket (\s -> TCP.sendData s b)
-                return $ response ResponseType.Accept (Just 0)
+                return $ response ResponseType.Accept (Just requestID)
 
             syncCall method reqkey rspkey = do
                 e <- runEitherT $ scriptIO $ unsafeCall method reqkey rspkey
                 case e of
                     Left  m -> do loggerIO error m
                                   let exc = Exception $ encodePJ m
-                                  return $ responseExt ResponseType.Exception Nothing exc Exception.rsp
+                                  return $ responseExt ResponseType.Exception (Just requestID) exc Exception.rsp
                     Right a ->    return a
 
             unsafeCall method reqkey rspkey = do
@@ -272,4 +274,4 @@ process notifySocket handler encoded_request = case Proto.messageWithLengthGet e
                     Left   e'         -> fail $ "Error while getting extension: " ++ e'
                     _                 -> fail $ "Error while getting extension"
                 loggerIO trace $ show r
-                return $ responseExt ResponseType.Result Nothing r rspkey
+                return $ responseExt ResponseType.Result (Just requestID) r rspkey

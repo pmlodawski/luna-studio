@@ -12,17 +12,18 @@ module Flowbox.Batch.Server.Transport.TCP.Server where
 import           Control.Concurrent.MVar (MVar)
 import qualified Control.Concurrent.MVar as MVar
 import qualified Control.Exception       as Exception
-import           Control.Monad           (forever)
+import           Control.Monad           (forM_, forever)
 import           Network.Socket          (Socket)
 import qualified Network.Socket          as Socket
 
-import           Flowbox.Batch.Server.Cmd               (Cmd)
-import qualified Flowbox.Batch.Server.Cmd               as Cmd
-import           Flowbox.Batch.Server.Handler.Handler   (Handler)
-import qualified Flowbox.Batch.Server.Processor         as Processor
-import qualified Flowbox.Batch.Server.Transport.TCP.TCP as TCP
-import           Flowbox.Prelude                        hiding (error)
+import           Flowbox.Batch.Server.Cmd                       (Cmd)
+import qualified Flowbox.Batch.Server.Cmd                       as Cmd
+import           Flowbox.Batch.Server.Handler.Handler           (Handler)
+import qualified Flowbox.Batch.Server.Processor                 as Processor
+import qualified Flowbox.Batch.Server.Transport.TCP.TCP         as TCP
+import           Flowbox.Prelude                                hiding (error)
 import           Flowbox.System.Log.Logger
+import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 
 
 
@@ -55,15 +56,11 @@ acceptAndHandle controlServerSocket notifyServerSocket handler = do
     (notifySocket , notifySocketAddr ) <- Socket.accept notifyServerSocket
     loggerIO info $ "Accepted connection from " ++ (show controlSocketAddr) ++ " / " ++ (show notifySocketAddr)
     mnotifySocket <- MVar.newMVar notifySocket
-    forever $ handleCall controlSocket mnotifySocket handler
+    forM_ [0..] $ handleCall controlSocket mnotifySocket handler
 
 
-handleCall :: Handler h => Socket -> MVar Socket -> h -> IO ()
-handleCall controlSocket notifySocket handler = do
-    loggerIO debug "handleCall: started"
+handleCall :: Handler h => Socket -> MVar Socket -> h -> Int -> IO ()
+handleCall controlSocket notifySocket handler requestID = do
     encoded_request  <- TCP.readData controlSocket
-    encoded_response <- Processor.process notifySocket handler encoded_request
-    loggerIO debug "handleCall: processing done"
+    encoded_response <- Processor.process notifySocket handler encoded_request $ encodeP requestID
     TCP.sendData controlSocket encoded_response
-    loggerIO debug "handleCall: reply sent"
-

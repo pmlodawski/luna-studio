@@ -21,6 +21,7 @@ import qualified Flowbox.Luna.Passes.General.Luna.Luna as Luna
 import qualified Flowbox.Lunac.Cmd                     as Cmd
 import           Flowbox.Prelude                       hiding (op)
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.System.Platform               as Platform
 import           Flowbox.System.UniPath                (UniPath)
 import qualified Flowbox.System.UniPath                as UniPath
 
@@ -68,7 +69,7 @@ build cfg op diag filePath = do
         cabalFlags = case Cmd.global op of
                         True  -> ["--global"]
                         False -> []
-        outputPath = UniPath.fromUnixString $ Cmd.output op
+        outputPath = fixOutputPath $ UniPath.fromUnixString $ Cmd.output op
         buildType  = if Cmd.library op
                         then BuildConfig.Library
                         else BuildConfig.Executable outputPath
@@ -79,3 +80,11 @@ build cfg op diag filePath = do
     ast <- Luna.runIO $ Build.parseFile rootPath filePath
     Luna.runIO $ Build.run bldCfg $ fst ast
     return ()
+
+
+fixOutputPath :: UniPath -> UniPath
+fixOutputPath path = Platform.dependent path windowsPath path where
+    exe = ".exe"
+    windowsPath = if UniPath.extension path == exe
+        then path
+        else UniPath.setExtension exe path
