@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap where
+module Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap {-# DEPRECATED "Use Alias's AA instead!" #-} where
 
 import Flowbox.Prelude
 

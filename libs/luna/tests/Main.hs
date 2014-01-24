@@ -121,9 +121,9 @@ example = Source.Source ["Main"] $
                         ----, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
                         ----, "def List.add self x:"
                         ----, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
-                        --, "class Console:"
-                        --, "    def print self msg:"
-                        --, "        ```print' #{msg}```"
+                        , "class Console:"
+                        , "    def print self msg:"
+                        , "        ```print' #{msg}```"
 
                         ----, "def Int.+ a b:"
                         ----, "    ```liftf2 (+) #{a} #{b}```"
@@ -247,30 +247,30 @@ main_inner = Luna.run $ do
     logger info $ PP.ppShow va
 
 
-    --logger info "\n-------- Desugar --------"
-    --dast <- hoistEither =<< Desugar.run va ast
-    --logger info $ PP.ppqShow dast
+    logger info "\n-------- Desugar --------"
+    dast <- hoistEither =<< Desugar.run va ast
+    logger info $ PP.ppqShow dast
   
 
-    --logger info "\n-------- FuncPool --------"
-    --fp <- hoistEither =<< FuncPool.run dast
-    --logger info $ PP.ppShow fp
+    logger info "\n-------- FuncPool --------"
+    fp <- hoistEither =<< FuncPool.run dast
+    logger info $ PP.ppShow fp
 
-    --logger info "\n-------- Hash --------"
-    --hash <- hoistEither =<< Hash.run dast
-    --logger info $ PP.ppShow hash
+    logger info "\n-------- Hash --------"
+    hash <- hoistEither =<< Hash.run dast
+    logger info $ PP.ppShow hash
 
-    --logger info "\n-------- SSA --------"
-    --ssa <- hoistEither =<< SSA.run va hash
-    --logger info $ PP.ppqShow ssa
+    logger info "\n-------- SSA --------"
+    ssa <- hoistEither =<< SSA.run va hash
+    logger info $ PP.ppqShow ssa
 
-    --logger info "\n-------- HASTGen --------"
-    --hast <- hoistEither =<< HASTGen.run ssa fp
+    logger info "\n-------- HASTGen --------"
+    hast <- hoistEither =<< HASTGen.run ssa fp
     --logger info $ PP.ppShow hast
 
-    --logger info "\n-------- HSC --------"
-    --hsc <- hoistEither =<< HSC.run  hast
-    --logger info $ join "\n\n" (map printSrc hsc)
+    logger info "\n-------- HSC --------"
+    hsc <- hoistEither =<< HSC.run  hast
+    logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()
