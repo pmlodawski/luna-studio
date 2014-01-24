@@ -57,7 +57,7 @@ ssaExpr vs ast = case ast of
                                                       Right nid -> return $ Expr.Var id (mkVar nid)
                                                       Left  e   -> (logger error $ "Not in scope '" ++ (show e) ++ "'.")
                                                                *> (return $ Expr.Var id name)
-    Expr.NativeVar  id name     -> case (vs ^. AA.aliasMap) ~. at id of
+    Expr.NativeVar  id name     -> case (vs ^. AA.aliasMap) ^. at id of
                                         Nothing    -> Pass.fail ("Variable not found in AA!")
                                         Just alias -> case alias of
                                                       Right nid -> return $ Expr.NativeVar id (mkVar nid)
