@@ -38,6 +38,10 @@ data AA     = AA  { _varRel    :: IntMap VarRel
 makeLenses (''AA)
 
 
+------------------------------------------------------------------------
+-- Instances
+------------------------------------------------------------------------
+
 instance Monoid VarRel where
     mempty      = VarRel mempty
     mappend a b = VarRel (mappend (a ^. nameMap)  (b ^. nameMap)) 

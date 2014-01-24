@@ -33,11 +33,6 @@ data VAState = VAState { _aa        :: AA
 
 makeLenses (''VAState)
 
-
-instance Monoid VAState where
-    mempty = VAState mempty 0
-
-
 type VAMonad m = (MonadState VAState m, Functor m)
 
 
@@ -96,52 +91,11 @@ bindVarRec id ctxID name a = case dstIDLookup of
           nameMap            = varRel ^. AA.nameMap
           updateAliasMap val = a & AA.aliasMap.at id ?~ val
 
---bind :: VAMonad m => ID -> Either AA.Error ID -> m ()
---bind srcId dst = do
---    aa <- get
---    put $ aa & AA.aliasMap %~ (IntMap.insert srcId dst)
---    --aa { AA.varmap = IntMap.insert srcId dst $ AA.varmap aa }
 
 
+------------------------------------------------------------------------
+-- Instances
+------------------------------------------------------------------------
 
-----updateVarStat :: VAMonad m => AA -> m ()
-----updateVarStat ns = do
-----    let nvs = varstat ns
-----    s <- get
-----    put $ s { varstat = nvs }
-
-
---registerVarName :: VAMonad m => String -> ID -> m ()
---registerVarName name id = do
---    st <- get
---    let a       = (st ^. aa)
---        cid     = (st ^. currentID)
---        varRel  = IntMap.findWithDefault mempty cid (a ^. AA.varRel)
---        varRel2 = varRel & AA.nameMap %~ Map.insert name id
---        a2      = a      & AA.varRel  %~ IntMap.insert cid varRel2
---        st2     = st     & aa         .~ a2
---    put st2
-
-
-
-
-
-
-        --Just pid = (a ^. AA.parentMap) ^. at cid
-        --pVarRel  = a ^. AA.varRel.ix pid
-        --nameMap  = pVarRel ^. AA.nameMap
-        --na       = a & case nameMap ^. at name of
-        --               Just dstID -> AA.aliasMap.at cid ?~ Right dstID
-        --               Nothing    -> AA.aliasMap.at cid ?~ Left (AA.LookupError name)
-
---lookupVar :: VAMonad m => String -> m (Maybe ID)
---lookupVar name = do
---    s <- get
---    return $ Map.lookup name (view AA.nameMap s)
-
-
---bindVar :: VAMonad m => ID -> String -> m ()
---bindVar id name = do target <- lookupVar name
---                     bind id $ case target of
---                        Just tid -> Right tid
---                        Nothing  -> Left $ AA.LookupError name
+instance Monoid VAState where
+    mempty = VAState mempty 0

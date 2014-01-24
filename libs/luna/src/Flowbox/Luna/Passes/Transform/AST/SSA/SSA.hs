@@ -51,21 +51,23 @@ ssaModule vs mod = Module.traverseM (ssaModule vs) (ssaExpr vs) pure ssaPat pure
 ssaExpr :: AA -> Expr.Expr -> SSAPass Expr.Expr
 ssaExpr vs ast = case ast of
     Expr.Accessor   id name dst -> Expr.Accessor id name <$> ssaExpr vs dst
-    Expr.Var        id name     -> case IntMap.lookup id (vs ^. AA.aliasMap) of
+    Expr.Var        id name     -> case (vs ^. AA.aliasMap) ^. at id of
                                         Nothing    -> Pass.fail ("Variable not found in AA!")
                                         Just alias -> case alias of
                                                       Right nid -> return $ Expr.Var id (mkVar nid)
                                                       Left  e   -> (logger error $ "Not in scope '" ++ (show e) ++ "'.")
                                                                *> (return $ Expr.Var id name)
-    Expr.NativeVar  id name     -> case IntMap.lookup id (vs ^. AA.aliasMap) of
+    Expr.NativeVar  id name     -> case (vs ^. AA.aliasMap) ~. at id of
                                         Nothing    -> Pass.fail ("Variable not found in AA!")
                                         Just alias -> case alias of
                                                       Right nid -> return $ Expr.NativeVar id (mkVar nid)
                                                       Left  e   -> Pass.fail ("Not in scope '" ++ (show e) ++ "'.")
-    _                           -> Expr.traverseM (ssaExpr vs) pure ssaPat pure ast
+    _                           -> continue
+    where continue = Expr.traverseM (ssaExpr vs) pure ssaPat pure ast
 
 
 ssaPat :: Pat -> SSAPass Pat
 ssaPat pat = case pat of
     Pat.Var  id _  -> return $ Pat.Var id (mkVar id)
-    _              -> Pat.traverseM ssaPat pure pure pat
+    _              -> continue
+    where continue = Pat.traverseM ssaPat pure pure pat
