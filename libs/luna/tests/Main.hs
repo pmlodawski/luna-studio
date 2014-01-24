@@ -166,7 +166,8 @@ example = Source.Source ["Main"] $
                     , "    c = Console"
                     , "    c.print 5"
                     , "    p = Point 1 2 3"
-                    , "    p = p"
+                    , "    p.x = 10"
+                    , "    c.print p"
                     --, "    a = (f) 1"
                     --, "   c = Console()"
                     --, "   c.print $ self.f 5 6"
@@ -242,14 +243,15 @@ main_inner = Luna.run $ do
 
     --putStrLn $ PP.ppShow zipper
 
-    logger info "\n-------- VarAlias --------"
-    va <- hoistEither =<< VarAlias.run     ast
-    logger info $ PP.ppShow va
-
-
+    
     logger info "\n-------- Desugar --------"
-    dast <- hoistEither =<< Desugar.run va ast
+    dast <- hoistEither =<< Desugar.run 1000 ast
     logger info $ PP.ppqShow dast
+
+
+    logger info "\n-------- VarAlias --------"
+    va <- hoistEither =<< VarAlias.run dast
+    logger info $ PP.ppShow va
   
 
     logger info "\n-------- FuncPool --------"
