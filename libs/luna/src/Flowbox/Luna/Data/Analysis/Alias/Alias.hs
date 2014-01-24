@@ -23,13 +23,29 @@ data Error  = LookupError {key :: String}
             deriving (Show)
 
 
-data AA     = AA  { _nameMap  :: Map String ID
-                  , _aliasMap :: IntMap (Either Error ID) 
+data VarRel = VarRel { _nameMap :: Map String ID }
+            deriving (Show)
+
+makeLenses (''VarRel)
+
+
+data AA     = AA  { _varRel    :: IntMap VarRel
+                  , _aliasMap  :: IntMap (Either Error ID) 
+                  , _parentMap :: IntMap ID
                   } 
             deriving (Show)
+
 makeLenses (''AA)
 
 
+instance Monoid VarRel where
+    mempty      = VarRel mempty
+    mappend a b = VarRel (mappend (a ^. nameMap)  (b ^. nameMap)) 
+
+
 instance Monoid AA where
-	mempty = AA mempty mempty
+    mempty      = AA mempty mempty mempty
+    mappend a b = AA (mappend (a ^. varRel)    (b ^. varRel)) 
+                     (mappend (a ^. aliasMap)  (b ^. aliasMap))
+                     (mappend (a ^. parentMap) (b ^. parentMap))
 

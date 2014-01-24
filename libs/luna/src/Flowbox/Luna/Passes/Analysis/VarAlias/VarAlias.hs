@@ -24,20 +24,20 @@ import           Flowbox.Luna.Data.AST.Pat                      (Pat)
 import qualified Flowbox.Luna.Data.AST.Pat                      as Pat
 import           Flowbox.Luna.Data.AST.Type                     (Type)
 import qualified Flowbox.Luna.Data.AST.Type                     as Type
-import           Flowbox.Luna.Passes.Analysis.VarAlias.State    (AAState)
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.State    as AAState
+import           Flowbox.Luna.Passes.Analysis.VarAlias.State    (VAState)
+import qualified Flowbox.Luna.Passes.Analysis.VarAlias.State    as VAState
 import qualified Flowbox.Luna.Passes.Pass                       as Pass
 import           Flowbox.Luna.Passes.Pass                      (Pass, PassT)
 import           Flowbox.Prelude                                hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 
-
+import qualified Debug.Trace as Debug
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.VarAlias.VarAlias"
 
 
-type VAPass result = Pass AA result
+type VAPass result = Pass VAState result
 
 
 --run :: Module -> Pass.Result AA
@@ -62,43 +62,55 @@ run = (Pass.run_ (Pass.Info "VarAlias") mempty) . vaMod
 --    Right vi -> return (id, vi)
 
 
-runNested :: (MonadIO m, MonadState AA m) => PassT AA result (Pass.ResultT m) -> Pass.ResultT m AA
-runNested p = do
-    s <- get
-    snd <$> Pass.runHoist (Pass.Info "VarAlias") s p
+--runNested :: (MonadIO m, MonadState AA m) => PassT AA result (Pass.ResultT m) -> Pass.ResultT m AA
+--runNested p = do
+--    s <- get
+--    snd <$> Pass.runHoist (Pass.Info "VarAlias") s p
 
+dtrace  = Debug.trace
+dtraceM s = Debug.trace (show s) (pure ())
 
 vaMod :: Module -> VAPass AA
 vaMod mod = do
+    VAState.switchID (mod ^. Module.id)
     Module.traverseM_ vaMod vaExpr vaType vaPat pure mod
-    get
+    VAState.getAA
 
 
 vaExpr :: Expr.Expr -> VAPass ()
-vaExpr ast = case ast of
+vaExpr el = VAState.registerID (el ^. Expr.id) *> case el of
     Expr.Function   _ _ _ inputs _ body   -> do
-                                             s <- runNested $ do
-                                                  mapM_ vaExpr inputs
-                                                  vaExprMap body
-                                             --AAState.updateVarStat s
-                                             return ()
+                                             VAState.switchID (el ^. Expr.id)
+    --                                         --s <- runNested $ do
+                                             exprMap inputs
+                                             exprMap body
+    --                                         ----VAState.updateVarStat s
+    --                                         return ()
     Expr.Assignment _ pat dst             -> vaExpr dst <* vaPat pat
-    Expr.Var        id name               -> AAState.bindVar id name
-    Expr.NativeVar  id name               -> AAState.bindVar id name
+    Expr.Var        id name               -> do
+                                             dtraceM ">>>>>"
+                                             dtraceM id
+                                             dtraceM name
+                                             s <- get
+                                             dtraceM s
+                                             VAState.bindVar id name
+    --Expr.NativeVar  id name               -> VAState.bindVar id name
     _                                     -> continue
     where
-        vaExprMap = mapM_ vaExpr
-        continue  = Expr.traverseM_ vaExpr vaType vaPat pure ast
+        exprMap  = mapM_ vaExpr
+        continue = Expr.traverseM_ vaExpr vaType vaPat pure el
 
 
 
 vaPat :: Pat -> VAPass ()
-vaPat pat = case pat of
-    Pat.Var     id name                 -> AAState.registerVarName (name, id)
-    Pat.Wildcard _                      -> return ()
-    _                                   -> Pat.traverseM_ vaPat vaType pure pat
+vaPat el = VAState.registerID (el ^. Pat.id) *> case el of
+    Pat.Var     id name                 -> do
+                                           VAState.registerVarName name id
+
+    --Pat.Wildcard _                      -> return ()
+    _                                   -> Pat.traverseM_ vaPat vaType pure el
 
 vaType :: Type -> VAPass ()
-vaType t = case t of
-    Type.Tuple  _ items                 -> mapM vaType items *> return ()
-    _                                   -> Type.traverseM_ vaType t
+vaType el = VAState.registerID (el ^. Type.id) *> case el of
+    --Type.Tuple  _ items                 -> mapM vaType items *> return ()
+    _                                   -> Type.traverseM_ vaType el
