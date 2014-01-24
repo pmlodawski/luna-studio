@@ -37,6 +37,13 @@ compute backend chan = Raw $ case chan of
     Raw m -> m
     Acc m -> backend m
 
+--shape :: (A.Elt a, A.Shape sh) => Channel a -> sh
+--shape :: Int
+shape ch = A.arrayShape $ (accMatrix ch)
+
+--generate :: Int
+--generate shape f = Acc $ A.generate shape f
+
 
 zipWith  f ch1 ch2                             = Acc $ A.zipWith  f (accMatrix ch1) (accMatrix ch2)
 zipWith3 f ch1 ch2 ch3                         = Acc $ A.zipWith3 f (accMatrix ch1) (accMatrix ch2) (accMatrix ch3)
