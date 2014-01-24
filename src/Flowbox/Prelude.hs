@@ -13,6 +13,7 @@ module Flowbox.Prelude(
     module Data.Default,
     module Data.Monoid,
     module Flowbox.Prelude,
+    module Flowbox.Debug.Debug,
     module Prelude
 ) where
 
@@ -25,6 +26,7 @@ import qualified Data.Traversable       as Traversable
 import           Data.Typeable
 import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude                as Prelude
+import           Flowbox.Debug.Debug
 
 
 
@@ -131,3 +133,4 @@ False ? (_ :? y) = y
 
 ($>) :: (Functor f) => a -> f b -> f b
 ($>) =  fmap . (flip const)
+
