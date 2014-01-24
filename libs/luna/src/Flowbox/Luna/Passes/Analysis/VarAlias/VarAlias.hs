@@ -31,7 +31,6 @@ import           Flowbox.Luna.Passes.Pass                      (Pass, PassT)
 import           Flowbox.Prelude                                hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 
-import qualified Debug.Trace as Debug
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.VarAlias.VarAlias"
@@ -67,8 +66,7 @@ run = (Pass.run_ (Pass.Info "VarAlias") mempty) . vaMod
 --    s <- get
 --    snd <$> Pass.runHoist (Pass.Info "VarAlias") s p
 
-dtrace  = Debug.trace
-dtraceM s = Debug.trace (show s) (pure ())
+
 
 vaMod :: Module -> VAPass AA
 vaMod mod = do
@@ -79,23 +77,16 @@ vaMod mod = do
 
 vaExpr :: Expr.Expr -> VAPass ()
 vaExpr el = VAState.registerID (el ^. Expr.id) *> case el of
-    Expr.Function   _ _ _ inputs _ body   -> do
-                                             VAState.switchID (el ^. Expr.id)
-    --                                         --s <- runNested $ do
-                                             exprMap inputs
-                                             exprMap body
-    --                                         ----VAState.updateVarStat s
-    --                                         return ()
-    Expr.Assignment _ pat dst             -> vaExpr dst <* vaPat pat
-    Expr.Var        id name               -> do
-                                             dtraceM ">>>>>"
-                                             dtraceM id
-                                             dtraceM name
-                                             s <- get
-                                             dtraceM s
-                                             VAState.bindVar id name
-    --Expr.NativeVar  id name               -> VAState.bindVar id name
-    _                                     -> continue
+    Expr.Function   _ _ _ inputs _ body  -> do
+                                            VAState.switchID (el ^. Expr.id)
+                                            exprMap inputs
+                                            exprMap body
+    Expr.Assignment _ pat dst            -> vaExpr dst <* vaPat pat
+    Expr.Con        id name              -> VAState.bindVar id name
+    Expr.Var        id name              -> VAState.bindVar id name
+    Expr.NativeVar  id name              -> VAState.bindVar id name
+    Expr.ConD       id name _            -> VAState.registerVarName name id
+    _                                    -> continue
     where
         exprMap  = mapM_ vaExpr
         continue = Expr.traverseM_ vaExpr vaType vaPat pure el
@@ -106,8 +97,6 @@ vaPat :: Pat -> VAPass ()
 vaPat el = VAState.registerID (el ^. Pat.id) *> case el of
     Pat.Var     id name                 -> do
                                            VAState.registerVarName name id
-
-    --Pat.Wildcard _                      -> return ()
     _                                   -> Pat.traverseM_ vaPat vaType pure el
 
 vaType :: Type -> VAPass ()

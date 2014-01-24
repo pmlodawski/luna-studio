@@ -142,8 +142,8 @@ example = Source.Source ["Main"] $
 
 
 
-                        --, "class Point:"
-                        --, "    x,y,z :: Int"
+                        , "class Point:"
+                        , "    x,y,z :: Int"
 
                         --, "class X"
                         --, "    def test self:"
@@ -166,6 +166,7 @@ example = Source.Source ["Main"] $
                     , "    c = Console"
                     , "    c.print 5"
                     , "    p = Point 1 2 3"
+                    , "    p = p"
                     --, "    a = (f) 1"
                     --, "   c = Console()"
                     --, "   c.print $ self.f 5 6"

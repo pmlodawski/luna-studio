@@ -21,7 +21,6 @@ import qualified Flowbox.Luna.Data.Analysis.Alias.Alias as AA
 import           Flowbox.Prelude                                hiding (id)
 import           Flowbox.System.Log.Logger 
 
-import qualified Debug.Trace as Debug
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.VarAlias.State"
@@ -42,11 +41,6 @@ instance Monoid VAState where
 type VAMonad m = (MonadState VAState m, Functor m)
 
 
---withState f = do
---    st <- get
---    put $ f st
-
-
 getAA :: VAMonad m => m AA
 getAA = view aa <$> get
 
@@ -58,6 +52,7 @@ putAA :: VAMonad m => AA -> m ()
 putAA naa = modify (aa .~ naa)
 
 
+modifyAA :: VAMonad m => (AA -> AA) -> m ()
 modifyAA f = do
     aa <- getAA
     putAA $ f aa
@@ -66,6 +61,40 @@ modifyAA f = do
 switchID :: VAMonad m => ID -> m ()
 switchID id = modify (currentID .~ id)
 
+
+registerID :: VAMonad m => ID -> m ()
+registerID id = do
+    cid <- getCurrentID
+    modifyAA $ AA.parentMap %~ IntMap.insert id cid
+
+
+registerVarName :: VAMonad m => String -> ID -> m ()
+registerVarName name id = do
+    a   <- getAA
+    cid <- getCurrentID
+    let varRel  = a ^. (AA.varRel . (ix cid))
+        varRel2 = varRel & AA.nameMap.at name ?~ id
+        a2      = a & AA.varRel.at cid ?~ varRel2
+    putAA a2
+
+
+bindVar :: VAMonad m => ID -> String -> m ()
+bindVar id name = do
+    cid <- getCurrentID
+    modifyAA (bindVarRec id cid name)
+
+
+bindVarRec :: ID -> ID -> String -> AA -> AA
+bindVarRec id ctxID name a = case dstIDLookup of
+    Just dstID -> updateAliasMap $ Right dstID
+    Nothing    -> case mPid of
+                  Just pid -> bindVarRec id pid name a
+                  Nothing  -> updateAliasMap $ Left (AA.LookupError name)
+    where dstIDLookup        = nameMap ^. at name
+          mPid               = (a ^. AA.parentMap) ^. at ctxID
+          varRel             = a ^. AA.varRel.ix ctxID
+          nameMap            = varRel ^. AA.nameMap
+          updateAliasMap val = a & AA.aliasMap.at id ?~ val
 
 --bind :: VAMonad m => ID -> Either AA.Error ID -> m ()
 --bind srcId dst = do
@@ -93,39 +122,7 @@ switchID id = modify (currentID .~ id)
 --        st2     = st     & aa         .~ a2
 --    put st2
 
-registerID :: VAMonad m => ID -> m ()
-registerID id = do
-    cid <- getCurrentID
-    modifyAA $ AA.parentMap %~ IntMap.insert id cid
 
-
-registerVarName :: VAMonad m => String -> ID -> m ()
-registerVarName name id = do
-    a   <- getAA
-    cid <- getCurrentID
-    let varRel  = a ^. (AA.varRel . (ix cid))
-        varRel2 = varRel & AA.nameMap.at name ?~ id
-        a2      = a & AA.varRel.at cid ?~ varRel2
-    putAA a2
-
-
-bindVar :: VAMonad m => ID -> String -> m ()
-bindVar id name = do
-    cid <- getCurrentID
-    modifyAA (bindVarRec cid name)
-
-
-bindVarRec :: ID -> String -> AA -> AA
-bindVarRec ctxID name a = case dstIDLookup of
-    Just dstID -> updateAliasMap $ Right dstID
-    Nothing    -> case mPid of
-                  Just pid -> bindVarRec pid name a
-                  Nothing  -> updateAliasMap $ Left (AA.LookupError name)
-    where dstIDLookup        = nameMap ^. at name
-          mPid               = (a ^. AA.parentMap) ^. at ctxID
-          varRel             = a ^. AA.varRel.ix ctxID
-          nameMap            = varRel ^. AA.nameMap
-          updateAliasMap val = a & AA.aliasMap.at ctxID ?~ val
 
 
 
