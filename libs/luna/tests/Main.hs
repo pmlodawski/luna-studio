@@ -163,7 +163,7 @@ example = Source.Source ["Main"] $
                     --, "alias X = Int"
 
                     , "def main self:"
-                    , "    c = Console"
+                    , "    c = Console()"
                     , "    c.print 5"
                     , "    p = Point 1 2 3"
                     , "    p.x = 10"
@@ -224,11 +224,13 @@ main_inner = Luna.run $ do
     let source = example
 
     logger info "\n-------- TxtParser --------"
-    (ast, srcMap) <- hoistEither =<< TxtParser.run source
+    (ast, srcMap, astInfo) <- hoistEither =<< TxtParser.run source
     logger info "\n>> AST"
     logger info $ PP.ppqShow ast
     logger info "\n>> Source Map"
     logger info $ PP.ppShow srcMap
+    logger info "\n>> AST Info"
+    logger info $ PP.ppShow astInfo
     --logger info (show.length $ FModule._classes ast)
     return ()
 

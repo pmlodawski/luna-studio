@@ -25,6 +25,7 @@ import           Flowbox.Luna.Passes.Build.BuildConfig                 (BuildCon
 import qualified Flowbox.Luna.Passes.Build.BuildConfig                 as BuildConfig
 import qualified Flowbox.Luna.Passes.Build.Diagnostics                 as Diagnostics
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen                 as CabalGen
+import           Flowbox.Luna.Data.Pass.ASTInfo                     (ASTInfo)
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install             as CabalInstall
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store               as CabalStore
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
@@ -123,9 +124,9 @@ copyExecutable location name outputPath = liftIO $ do
     Directory.copyFile executable outputPath
 
 
-parseFile :: UniPath -> UniPath -> Pass.Result (ASTModule.Module, SourceMap)
+parseFile :: UniPath -> UniPath -> Pass.Result (ASTModule.Module, SourceMap, ASTInfo)
 parseFile rootPath filePath = runEitherT $ do
     logger debug $ "Compiling file '" ++ UniPath.toUnixString filePath ++ "'"
     source <- hoistEither =<< FileReader.run rootPath filePath
-    ast    <- hoistEither =<< TxtParser.run source
-    return ast
+    result <- hoistEither =<< TxtParser.run source
+    return result

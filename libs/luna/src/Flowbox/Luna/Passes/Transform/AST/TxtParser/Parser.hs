@@ -19,14 +19,20 @@ import qualified Flowbox.Luna.Data.AST.Data                        as Data
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import qualified Flowbox.Luna.Data.AST.Lit                         as Lit
 import qualified Flowbox.Luna.Data.AST.Module                      as Module
+import           Flowbox.Luna.Data.AST.Module                      (Module)
 import qualified Flowbox.Luna.Data.AST.Pat                         as Pat
 import qualified Flowbox.Luna.Data.AST.Type                        as Type
 import qualified Flowbox.Luna.Data.Source                          as Source
+import           Flowbox.Luna.Data.Pass.SourceMap                  (SourceMap)
+import           Flowbox.Luna.Data.Source                          (Source(Source))
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer as L
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token as Token
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState (ParseState)
+import qualified Flowbox.Luna.Data.Pass.ASTInfo                    as ASTInfo
+import           Flowbox.Luna.Data.Pass.ASTInfo                    (ASTInfo)
 import           Flowbox.Prelude                                   hiding (id, mod)
 import qualified Flowbox.Prelude                                   as Prelude
 
@@ -66,17 +72,23 @@ pLit     = choice [ try $ pFloatL
                   , pStringL
                   ]
 
-tok a = do
-    st <- getState
-    let id = view ParseState.id st
-    setState (set ParseState.id (id+1) st)
-    a <$> pure id
+getASTInfo = view ParseState.info <$> getState
+
+putASTInfo info = modifyState (ParseState.info .~ info)
 
 genID = do
-    st <- getState
-    let id = view ParseState.id st
-    setState (set ParseState.id (id+1) st)
-    pure id
+    info <- getASTInfo
+    let ninfo = ASTInfo.incID info
+    putASTInfo ninfo
+    return $ ninfo ^. ASTInfo.lastID 
+
+tok a = a <$> genID
+
+--genID = do
+--    st <- getState
+--    let id = view ParseState.id st
+--    setState (set ParseState.id (id+1) st)
+--    pure id
 
 
 -----------------------------------------------------------
@@ -454,24 +466,24 @@ pProgEnd = (L.pSpaces <?> "") <* eof
 
 pProgWithState p  = (,) <$> (p <* pProgEnd) <*> getState
 
-parseExpr    = parseGen (pProgWithState pExpr)
-parsePattern = parseGen (pProgWithState pPattern)
-parseType    = parseGen (pProgWithState pType)
 
+type Parser input output = ParsecT input ParseState (State SourcePos) output
 
-pProgram :: [String] -> ParsecT String ParseState.ParseState (State SourcePos) Module.Module
+pProgram :: [String] -> ParsecT String ParseState (State SourcePos) Module
 pProgram mod = L.pSpaces *> pModule mod <* pProgEnd
 
 
-pResult mod = (\ast st -> (ast, view ParseState.sourceMap st)) <$> pProgram mod <*> getState
+pResult mod = (\ast st -> (ast, st ^. ParseState.sourceMap, st ^. ParseState.info )) <$> pProgram mod <*> getState
 
+parseGen :: Parser String a -> String -> ASTInfo -> Either ParseError a
+parseGen p src astInfo = fst $ flip runState (initialPos "") $ runParserT p (ParseState.mk astInfo) "Luna Parser" src
 
-parse (Source.Source mod code) = parseGen (pResult mod) code def
+parse :: Source -> Either ParseError (Module, SourceMap, ASTInfo)
+parse (Source mod code) = parseGen (pResult mod) code def
 
-
-parseGen p src startID = fst $ flip runState (initialPos "") $ runParserT p startID "Luna Parser" src
-
-
+parseExpr    = parseGen (pProgWithState pExpr)
+parsePattern = parseGen (pProgWithState pPattern)
+parseType    = parseGen (pProgWithState pType)
 
 
 
