@@ -17,8 +17,11 @@ import           Flowbox.Luna.Data.AST.Module                    (Module)
 import qualified Flowbox.Luna.Data.AST.Module                    as Module
 import           Flowbox.Luna.Data.AST.Pat                       (Pat)
 import qualified Flowbox.Luna.Data.AST.Pat                       as Pat
+import           Flowbox.Luna.Data.Pass.ASTInfo                  (ASTInfo)
+import qualified Flowbox.Luna.Data.Pass.ASTInfo                  as ASTInfo
 import           Flowbox.Luna.Passes.Pass                        (Pass)
 import qualified Flowbox.Luna.Passes.Pass                        as Pass
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.State as DesugarState
 import           Flowbox.Luna.Passes.Transform.AST.Desugar.State (DesugarState)
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.State as DS
 import           Flowbox.Prelude                                 hiding (error, id, mod)
@@ -32,8 +35,12 @@ logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.Desugar"
 type DesugarPass result = Pass DesugarState result
 
 
-run :: Int -> Module -> Pass.Result Module
-run startID = (Pass.run_ (Pass.Info "Desugar") $ DS.mk startID) . desugarModule
+run :: ASTInfo -> Module -> Pass.Result (Module, ASTInfo)
+run info = (Pass.run_ (Pass.Info "Desugar") $ DS.mk info) . desugar
+
+
+desugar :: Module -> DesugarPass (Module, ASTInfo)
+desugar mod = (,) <$> desugarModule mod <*> DesugarState.getInfo
 
 
 desugarModule :: Module -> DesugarPass Module

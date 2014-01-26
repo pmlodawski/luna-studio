@@ -247,7 +247,7 @@ main_inner = Luna.run $ do
 
 
     logger info "\n-------- Desugar --------"
-    dast <- hoistEither =<< Desugar.run 1000 ast
+    (dast, astInfo2) <- hoistEither =<< Desugar.run astInfo ast
     logger info $ PP.ppqShow dast
 
 

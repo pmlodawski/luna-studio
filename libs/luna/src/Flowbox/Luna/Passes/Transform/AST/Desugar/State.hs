@@ -11,14 +11,16 @@
 
 module Flowbox.Luna.Passes.Transform.AST.Desugar.State where
 
-import           Control.Monad.State (MonadState, get, modify, put)
-import qualified Control.Monad.State as State
-import qualified Data.IntMap         as IntMap
-import           Data.Map            (Map)
-import qualified Data.Map            as Map
+import           Control.Monad.State            (MonadState, get, modify, put)
+import qualified Control.Monad.State            as State
+import qualified Data.IntMap                    as IntMap
+import           Data.Map                       (Map)
+import qualified Data.Map                       as Map
+import           Flowbox.Luna.Data.Pass.ASTInfo (ASTInfo)
+import qualified Flowbox.Luna.Data.Pass.ASTInfo as ASTInfo
 
 import Flowbox.Prelude           hiding (id)
-import Flowbox.System.Log.Logger
+import Flowbox.System.Log.Logger hiding (info)
 
 
 logger :: Logger
@@ -26,7 +28,7 @@ logger = getLogger "Flowbox.Luna.Passes.Transform.AST.Desugar.State"
 
 type ID = Int
 
-data DesugarState = DesugarState { _id :: ID
+data DesugarState = DesugarState { _info :: ASTInfo
                                  }
                   deriving (Show)
 
@@ -35,19 +37,22 @@ makeLenses (''DesugarState)
 type DesugarMonad m = (MonadState DesugarState m, Applicative m)
 
 
+getInfo :: DesugarMonad m => m ASTInfo
+getInfo = view info <$> get
+
 incID :: DesugarMonad m => m ()
-incID = modify (id %~ (+1))
+incID = modify ((info . ASTInfo.lastID) %~ (+1))
 
 genID :: DesugarMonad m => m ID
-genID = incID *> (view id <$> get)
+genID = incID *> (view (info . ASTInfo.lastID) <$> get)
 
 
-mk :: ID -> DesugarState
-mk startID = DesugarState startID
+mk :: ASTInfo -> DesugarState
+mk info = DesugarState info
 
 ------------------------------------------------------------------------
 -- Instances
 ------------------------------------------------------------------------
 
 instance Default DesugarState where
-    def = DesugarState 0
+    def = DesugarState def
