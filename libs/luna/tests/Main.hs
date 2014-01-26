@@ -42,6 +42,9 @@ import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as Va
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.Desugar         as Desugar
+import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash               as Hash
+import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                 as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser        as Parser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
@@ -49,9 +52,6 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as Gr
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
-import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                 as SSA
-import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash               as Hash
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.Desugar         as Desugar
 import           Flowbox.Prelude
 import qualified Flowbox.System.Log.LogEntry                               as LogEntry
 import           Flowbox.System.Log.Logger
@@ -152,9 +152,9 @@ example = Source.Source ["Main"] $
                         --, "        Vector (self.x()+v2.x()) (self.y()+v2.y()) (self.z()+v2.z())"
                         ----, "    Scalar: a     :: a"
                         ----, "    def f self (x::Int):"
-  
+
                     --, "    Console.print (1.add 2)"
-  
+
                     --, "def f self a::Int b::Int :"
                     --, "    {a,b}"
                     --, "def f a::X :"
@@ -201,7 +201,7 @@ example = Source.Source ["Main"] $
 main :: IO ()
 main = do
     --DistMain.main
-    Logger.setLevel DEBUG "Flowbox" 
+    Logger.setLevel DEBUG "Flowbox"
     --let x = Parser.parse' example
     --    --x :: Int
 
@@ -245,7 +245,7 @@ main_inner = Luna.run $ do
 
     --putStrLn $ PP.ppShow zipper
 
-    
+
     logger info "\n-------- Desugar --------"
     dast <- hoistEither =<< Desugar.run 1000 ast
     logger info $ PP.ppqShow dast
@@ -254,7 +254,7 @@ main_inner = Luna.run $ do
     logger info "\n-------- VarAlias --------"
     va <- hoistEither =<< VarAlias.run dast
     logger info $ PP.ppShow va
-  
+
 
     logger info "\n-------- FuncPool --------"
     fp <- hoistEither =<< FuncPool.run dast

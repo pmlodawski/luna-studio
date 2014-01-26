@@ -7,10 +7,10 @@
 
 module Flowbox.Luna.Data.HAST.Expr where
 
+import           Flowbox.Luna.Data.HAST.Deriving  (Deriving)
 import           Flowbox.Luna.Data.HAST.Extension (Extension)
 import qualified Flowbox.Luna.Data.HAST.Lit       as Lit
 import           Flowbox.Prelude
-import           Flowbox.Luna.Data.HAST.Deriving  (Deriving)
 
 type Lit = Lit.Lit
 

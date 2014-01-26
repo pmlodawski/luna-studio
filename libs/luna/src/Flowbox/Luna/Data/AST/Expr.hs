@@ -16,10 +16,10 @@ import           Control.Applicative
 import           Flowbox.Generics.Deriving.QShow
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
 import qualified Flowbox.Luna.Data.AST.Pat       as Pat
-import qualified Flowbox.Luna.Data.AST.Type      as Type
 import           Flowbox.Luna.Data.AST.Type      (Type)
+import qualified Flowbox.Luna.Data.AST.Type      as Type
 import           Flowbox.Luna.Data.AST.Utils     (ID)
-import           Flowbox.Prelude                 hiding (Accessor, Traversal, drop, id, cons)
+import           Flowbox.Prelude                 hiding (Accessor, Traversal, cons, drop, id)
 import           GHC.Generics                    (Generic)
 
 
@@ -117,9 +117,9 @@ traverseM fexp ftype fpat flit e = case e of
     RecordUpdate id' src' selectors' expr'           -> RecordUpdate id'       <$> fexp src'      <*> pure selectors' <*> fexp expr'
     Data         id' cls' cons' classes' methods'    -> Data         id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
     ConD         id' name' fields'                   -> ConD         id' name' <$> fexpMap fields'
-    Con          {}                                  -> pure e       
+    Con          {}                                  -> pure e
     Field        id' name' cls' value'               -> Field        id' name' <$> ftype cls' <*> fexpMap value'
-    Function     id' path' name' inputs' output'                      
+    Function     id' path' name' inputs' output'
                  body'                               -> Function     id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Lambda       id' inputs' output' body'           -> Lambda       id'             <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Import       id' path' target' rename'           -> Import       id' path' <$> fexp target'  <*> pure rename'

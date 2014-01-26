@@ -85,7 +85,7 @@ thRegisterFunction fName argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExp
                                           ]
 
 thRegisterMember name clsName funcName = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "mkMemInst") $
-                                       [ HExpr.Lit $ HLit.String name 
+                                       [ HExpr.Lit $ HLit.String name
                                        , HExpr.Var $ mkTHTypeName clsName
                                        , HExpr.Var $ mkTHVarName  funcName
                                        ]

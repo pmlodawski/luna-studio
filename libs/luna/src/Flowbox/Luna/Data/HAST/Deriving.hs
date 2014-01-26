@@ -20,7 +20,7 @@ data Deriving = Eq
               | Bounded
               | Read
               | Show
-              | Generic 
+              | Generic
               deriving (Show)
 
 

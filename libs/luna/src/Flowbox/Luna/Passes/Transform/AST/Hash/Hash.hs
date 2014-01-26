@@ -13,9 +13,9 @@ module Flowbox.Luna.Passes.Transform.AST.Hash.Hash where
 
 import           Control.Applicative
 import           Control.Monad.State
+import           Data.Char           (ord)
+import           Data.Hashable       (hash)
 import qualified Data.IntMap         as IntMap
-import           Data.Hashable                          (hash)
-import           Data.Char                              (ord)
 
 import           Flowbox.Luna.Data.Analysis.Alias.Alias (AA)
 import qualified Flowbox.Luna.Data.Analysis.Alias.Alias as AA

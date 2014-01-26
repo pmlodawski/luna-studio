@@ -14,13 +14,13 @@ import Control.Applicative
 import Data.Char           (digitToInt, isSpace)
 import Data.List           (nub, sort)
 import Flowbox.Prelude     hiding (op)
-import Text.Parsec         hiding (many, optional, (<|>), getPosition)
+import Text.Parsec         hiding (getPosition, many, optional, (<|>))
 
 
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Token (Token(Token))
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Token      (Token (Token))
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
 
 import Debug.Trace
 
@@ -269,7 +269,7 @@ pIdent        = pIdentLower <|> pIdentUpper <?> "identifier"
 
 pIdentUpper   = mkIdent ((:) <$> upper <*> many identLetter) <?> "uppercase identifier"
 
-pIdentLower   = mkIdent (((:) <$> lower <*> many identLetter) 
+pIdentLower   = mkIdent (((:) <$> lower <*> many identLetter)
                      <|> ((:) <$> char '_' <*> many1 identLetter)) <?> "lowercase identifier"
 
 mkIdent     p = lexeme $ try $ checkIf isReservedName "reserved word " p
@@ -302,7 +302,7 @@ symbols    name = try $ lexeme (string name)
 symbol     name = lexeme (char name)
 --symbol2  s name = lexeme2 s (char name)
 
-pSpace'      = satisfy (`elem` "\t\f\v ") <?> "" 
+pSpace'      = satisfy (`elem` "\t\f\v ") <?> ""
 pSpacesBase' = many1 pSpace' <|> try(multiLineComment) <|> oneLineComment <?> ""
 pSpaces1'    = many1 pSpacesBase' <?> ""
 pSpaces'     = concat <$> many  pSpacesBase' <?> ""
@@ -310,7 +310,7 @@ pSpaces'     = concat <$> many  pSpacesBase' <?> ""
 
 pSpaces     = concat <$> many  pSpacesBase <?> ""
 pSpacesBase = many1 pSpace <|> try(multiLineComment) <|> oneLineComment <?> ""
-pSpace      = satisfy isSpace <?> "" 
+pSpace      = satisfy isSpace <?> ""
 
 oneLineComment   = try (string commentLine) *> many (satisfy (/= '\n'))
 

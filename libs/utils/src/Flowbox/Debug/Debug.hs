@@ -7,9 +7,9 @@
 
 module Flowbox.Debug.Debug where
 
-import qualified Debug.Trace            as Debug
+import qualified Debug.Trace as Debug
 
-import           Prelude
+import Prelude
 
 dtrace :: Show a => a -> b -> b
 dtrace  = Debug.trace . show

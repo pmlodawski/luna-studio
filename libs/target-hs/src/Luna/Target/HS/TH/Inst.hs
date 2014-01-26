@@ -8,7 +8,6 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TemplateHaskell        #-}
-{-# LANGUAGE ViewPatterns           #-}
 
 
 module Luna.Target.HS.TH.Inst where
@@ -18,10 +17,10 @@ import           Control.Monad
 import           Debug.Trace
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Lib
-import qualified Text.Show.Pretty           as PP
 import qualified Luna.Target.HS.Naming      as Naming
 import qualified Luna.Target.HS.TH.Deriving as Deriving
 import           Luna.Target.HS.TH.Utils
+import qualified Text.Show.Pretty           as PP
 
 --import qualified Language.Haskell.Meta.Syntax.Translate as LH
 --import qualified Language.Haskell.Exts.Syntax           as LH
@@ -103,7 +102,7 @@ mkFuncCallInsts fName = mkCallInsts (mkName.mkSelfTypedName.nameBase $ fName)
 
 --    concat <$> (sequence $ map (mkCallInst hname hname) callNames)
 
---mkCallInst2 ''Handler_m_Vector_Vector 'm_Vector_Vector 'call_m_Vector_Vector_3 
+--mkCallInst2 ''Handler_m_Vector_Vector 'm_Vector_Vector 'call_m_Vector_Vector_3
 --mkClsCallInsts 'Vector 3 0
 
 
@@ -144,7 +143,7 @@ mkCallInsts funcName argNum defNum = do
         callNames    = map (mkName.(\x -> nameBase callNameBase ++ "_" ++ show x)) [argNum - defNum .. argNum]
     concat <$> (sequence $ map (mkCallInst handlerName) callNames)
 
--- mkCallInst2 ''Handler_m_Vector_Vector 'call_m_Vector_Vector_3 
+-- mkCallInst2 ''Handler_m_Vector_Vector 'call_m_Vector_Vector_3
 -- produces:
 --     instance Call Handler_m_Vector_Vector (RTuple3 a a a) (Pure(Safe(Vector a))) where
 --         callProto _ = call_m_Vector_Vector_3
@@ -166,13 +165,13 @@ mkMemInst mName dataName funcName = do
     let funcHName = Naming.mkHandlerFuncName funcName
     funcT   <- getType funcHName
     dataDec <- getDec dataName
-    let 
+    let
         dataVars   = map VarT $ getDecVarNames dataDec
         baseT      = AppT Naming.mVarT
                    $ AppT Naming.sVarT
                    $ foldl AppT (ConT dataName) dataVars
         nt         = foldl AppT (ConT Naming.memberClass) [LitT (StrTyLit mName), baseT, funcT]
-        funcs      = [FunD Naming.memberClassFunc [Clause [WildP, WildP] (NormalB (VarE funcHName)) []]] 
+        funcs      = [FunD Naming.memberClassFunc [Clause [WildP, WildP] (NormalB (VarE funcHName)) []]]
         inst       = InstanceD [] nt funcs
     return  $ [inst]
 
@@ -190,9 +189,9 @@ mkMemInst mName dataName funcName = do
 --    let --(src, ret)   = getSignature t
 --        (fsrc, fret) = getSignature ft
 --        ctx          = eqCtx : getContext ft
---        eqCtx        = EqualP fhandler 
---                     $ AppT (ConT $ mkName "Pure") 
---                     $ AppT (ConT $ mkName "Safe") 
+--        eqCtx        = EqualP fhandler
+--                     $ AppT (ConT $ mkName "Pure")
+--                     $ AppT (ConT $ mkName "Safe")
 --                     $ AppT (ConT fDat) fret
 --        tcName2      = mkName "Member"
 --        funcDst2     = mkName "member"
@@ -275,7 +274,7 @@ registerFunc funcName argNum defaultsQ = do
 
 --registerLambda :: Name -> Int -> [ExpQ] -> DecsQ
 --registerLambda name argNum defaultsQ = do
---    let conName' = "Handler_" ++ nameBase name 
+--    let conName' = "Handler_" ++ nameBase name
 --        conName  = mkName conName'
 --    handler     <- mkFuncHandler conName'
 --    liftedCon   <- liftConLambda name argNum
@@ -314,7 +313,7 @@ genTuple elems = case elems of
 
 liftCon :: Name -> Int -> DecsQ
 liftCon dataName argNum = do
-    let conName  = mkName $ "Handler_" ++ nameBase dataName 
+    let conName  = mkName $ "Handler_" ++ nameBase dataName
         funcName = mkName $ "con_" ++ nameBase dataName
         dotf     = mkName $ "dot" ++ show argNum
         liftf    = mkName "val"
@@ -328,7 +327,7 @@ liftCon dataName argNum = do
 
 liftCon' :: Name -> Int -> DecsQ
 liftCon' dataName argNum = do
-    let conName  = mkName $ "Handler_" ++ nameBase dataName 
+    let conName  = mkName $ "Handler_" ++ nameBase dataName
         funcName = mkName $ "con_" ++ nameBase dataName
         liftf    = mkName "val"
         valE     = AppE (VarE liftf) $ ConE conName
@@ -338,7 +337,7 @@ liftCon' dataName argNum = do
 
 liftConLambda :: Name -> Int -> DecsQ
 liftConLambda name argNum = do
-    let conName  = mkName $ "Handler_" ++ nameBase name 
+    let conName  = mkName $ "Handler_" ++ nameBase name
         funcName = mkName $ "con_" ++ nameBase name
         dotf     = mkName $ "dot" ++ show argNum
         liftf    = mkName "val"

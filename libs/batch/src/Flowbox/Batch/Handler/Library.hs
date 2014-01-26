@@ -18,7 +18,7 @@ module Flowbox.Batch.Handler.Library (
 ) where
 
 --import qualified Data.Maybe   as Maybe
-import           Data.Version (Version (Version))
+import           Data.Version   (Version (Version))
 import qualified System.Process as Process
 
 import           Flowbox.Batch.Batch                        (Batch)

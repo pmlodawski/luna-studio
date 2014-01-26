@@ -30,9 +30,9 @@ makeLenses (''VarRel)
 
 
 data AA     = AA  { _varRel    :: IntMap VarRel
-                  , _aliasMap  :: IntMap (Either Error ID) 
+                  , _aliasMap  :: IntMap (Either Error ID)
                   , _parentMap :: IntMap ID
-                  } 
+                  }
             deriving (Show)
 
 makeLenses (''AA)
@@ -44,12 +44,12 @@ makeLenses (''AA)
 
 instance Monoid VarRel where
     mempty      = VarRel mempty
-    mappend a b = VarRel (mappend (a ^. nameMap)  (b ^. nameMap)) 
+    mappend a b = VarRel (mappend (a ^. nameMap)  (b ^. nameMap))
 
 
 instance Monoid AA where
     mempty      = AA mempty mempty mempty
-    mappend a b = AA (mappend (a ^. varRel)    (b ^. varRel)) 
+    mappend a b = AA (mappend (a ^. varRel)    (b ^. varRel))
                      (mappend (a ^. aliasMap)  (b ^. aliasMap))
                      (mappend (a ^. parentMap) (b ^. parentMap))
 

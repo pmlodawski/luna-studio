@@ -7,18 +7,18 @@
 
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Flowbox.Luna.Passes.Transform.AST.Desugar.State where
 
+import           Control.Monad.State (MonadState, get, modify, put)
 import qualified Control.Monad.State as State
-import           Control.Monad.State (MonadState, get, put, modify)
 import qualified Data.IntMap         as IntMap
 import           Data.Map            (Map)
 import qualified Data.Map            as Map
 
-import           Flowbox.Prelude                                hiding (id)
-import           Flowbox.System.Log.Logger 
+import Flowbox.Prelude           hiding (id)
+import Flowbox.System.Log.Logger
 
 
 logger :: Logger

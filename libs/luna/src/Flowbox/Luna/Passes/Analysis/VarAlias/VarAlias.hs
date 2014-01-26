@@ -4,15 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds           #-}
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE ConstraintKinds  #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE Rank2Types       #-}
 
 module Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias where
 
 import           Control.Applicative
 import           Control.Monad.State hiding (mapM, mapM_)
-import qualified Data.IntMap            as IntMap
+import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Luna.Data.Analysis.Alias.Alias         (AA (AA))
 import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap (GeneralVarMap)
@@ -26,8 +26,8 @@ import           Flowbox.Luna.Data.AST.Type                     (Type)
 import qualified Flowbox.Luna.Data.AST.Type                     as Type
 import           Flowbox.Luna.Passes.Analysis.VarAlias.State    (VAState)
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.State    as VAState
+import           Flowbox.Luna.Passes.Pass                       (Pass, PassT)
 import qualified Flowbox.Luna.Passes.Pass                       as Pass
-import           Flowbox.Luna.Passes.Pass                      (Pass, PassT)
 import           Flowbox.Prelude                                hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 

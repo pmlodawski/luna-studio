@@ -9,7 +9,7 @@
 
 module Luna.Target.HS.Bind where
 
-import Prelude hiding ((>>=), (>>), fail, return)
+import Prelude hiding (fail, return, (>>), (>>=))
 
 import Luna.Target.HS.Base
 

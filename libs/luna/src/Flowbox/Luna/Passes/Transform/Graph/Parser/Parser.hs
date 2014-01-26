@@ -26,6 +26,7 @@ import qualified Flowbox.Luna.Data.PropertyMap                             as Pr
 import           Flowbox.Luna.Passes.Pass                                  (Pass)
 import qualified Flowbox.Luna.Passes.Pass                                  as Pass
 import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.State           as IDFixer
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer         as Lexer
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser        as Parser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState    as ParseState
 import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes            as Attributes
@@ -34,7 +35,6 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.State          as St
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
 import           Flowbox.Prelude                                           hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer as Lexer
 
 
 

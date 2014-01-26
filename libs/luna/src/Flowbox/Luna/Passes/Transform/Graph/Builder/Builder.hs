@@ -200,30 +200,30 @@ dummyValue = (-1)
 
 showExpr :: Expr -> String
 showExpr expr = case expr of
-    --Expr.Accessor     _ name     dst                            
-    --Expr.App          _ src      args                           
-    --Expr.AppCons_     _ args     
-    --Expr.Assignment   _ pat      dst       
-    --Expr.RecordUpdate _ name     selectors expr    
+    --Expr.Accessor     _ name     dst
+    --Expr.App          _ src      args
+    --Expr.AppCons_     _ args
+    --Expr.Assignment   _ pat      dst
+    --Expr.RecordUpdate _ name     selectors expr
     --Expr.Data         _ cls      cons      classes methods
-    --Expr.ConD         _ name     fields    
-    --Expr.Con          _ name     
+    --Expr.ConD         _ name     fields
+    --Expr.Con          _ name
     --Expr.Function     _ path     name      inputs  output  body
-    --Expr.Lambda       _ inputs   output    body    
-    --Expr.Import       _ path     target    rename  
-    --Expr.Infix        _ name     src       dst     
+    --Expr.Lambda       _ inputs   output    body
+    --Expr.Import       _ path     target    rename
+    --Expr.Infix        _ name     src       dst
     Expr.List         _ items        -> "[" ++ List.intercalate ", " (map showExpr items) ++ "]"
     Expr.Lit          _ lvalue       -> Lit.lunaShow lvalue
     Expr.Tuple        _ items        -> "{" ++ List.intercalate ", " (map showExpr items) ++ "}"
-    --Expr.Typed        _ cls      expr      
-    --Expr.Var          _ name         -> name  
+    --Expr.Typed        _ cls      expr
+    --Expr.Var          _ name         -> name
     Expr.Wildcard     _              -> "_"
     Expr.RangeFromTo  _ start    end -> "[" ++ showExpr start ++ ".." ++ showExpr end ++ "]"
     Expr.RangeFrom    _ start        -> "[" ++ showExpr start ++ "..]"
     --Expr.Field        _ name     cls       value
     --Expr.Arg          _ pat      value
-    --Expr.Native       _ segments 
-    --Expr.NativeCode   _ code     
-    --Expr.NativeVar    _ name     
+    --Expr.Native       _ segments
+    --Expr.NativeCode   _ code
+    --Expr.NativeVar    _ name
     --Expr.Case         _ expr     match
-    --Expr.Match        _ pat      body 
+    --Expr.Match        _ pat      body

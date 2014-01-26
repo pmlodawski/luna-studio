@@ -2,21 +2,21 @@
 
 module Config where
 
-import Flowbox.Prelude hiding(set)
-import ParseArgs
 import Data.Label
+import Flowbox.Prelude hiding (set)
+import ParseArgs
 
 data Config
   = Config
   {
     -- Standard options
-    _configBackend              :: Backend
-  , _configHelp                 :: Bool
-  , _configBenchmark            :: Bool
+    _configBackend    :: Backend
+  , _configHelp       :: Bool
+  , _configBenchmark  :: Bool
 
     -- How to execute the program
-  , _configThreshLow            :: Float
-  , _configThreshHigh           :: Float
+  , _configThreshLow  :: Float
+  , _configThreshHigh :: Float
 
   }
 

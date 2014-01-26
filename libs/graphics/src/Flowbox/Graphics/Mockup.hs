@@ -1,8 +1,8 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE TypeOperators             #-}
 
+{-# LANGUAGE CPP                       #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE CPP           #-}
 
 module Flowbox.Graphics.Mockup (
     module Flowbox.Graphics.Mockup,
@@ -30,10 +30,10 @@ import qualified Data.Array.Repa              as R
 import qualified Data.Array.Repa.IO.BMP       as R
 import qualified Data.Array.Repa.IO.DevIL     as DevIL
 import qualified Data.Array.Repa.Repr.Unboxed as R
+import qualified Data.Fixed                   as F
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Monoid                  (Monoid, mempty)
-import qualified Data.Fixed                   as F
 import qualified Debug.Trace                  as D
 
 import System.TimeIt (timeIt)
@@ -41,21 +41,21 @@ import System.TimeIt (timeIt)
 import Data.Array.Repa.Eval (Target)
 import Data.Word            (Word8)
 
+import           Flowbox.Graphics.Algorithms
 import           Flowbox.Graphics.Raster.Channel   (Channel)
 import qualified Flowbox.Graphics.Raster.Channel   as Channel
 import           Flowbox.Graphics.Raster.Image     (Image)
 import qualified Flowbox.Graphics.Raster.Image     as Image
-import qualified Flowbox.Graphics.Raster.IO        as Image
 import           Flowbox.Graphics.Raster.IO        (writeImageToBMP)
+import qualified Flowbox.Graphics.Raster.IO        as Image
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
-import           Flowbox.Graphics.Algorithms
 
 --import           Control.Monad
 
-import qualified Data.Array.Accelerate.Interpreter      as Interp
+import qualified Data.Array.Accelerate.Interpreter as Interp
 
 import qualified Data.Array.Repa.Eval as R
-import Luna.Target.HS.Core hiding(print, return)
+import           Luna.Target.HS.Core  hiding (print, return)
 
 import Data.Bits ((.&.))
 
@@ -64,8 +64,8 @@ import Data.Bits ((.&.))
 
 import Control.Monad.Trans.Either (hoistEither, runEitherT)
 
-import           Flowbox.Prelude hiding((.))
-import           GHC.Float
+import Flowbox.Prelude hiding ((.))
+import GHC.Float
 
 testm x = x*3
 

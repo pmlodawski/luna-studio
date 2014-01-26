@@ -16,6 +16,7 @@ import Control.Monad.RWS   hiding (mapM, mapM_)
 
 import           Control.Monad.Trans.Either
 import qualified Flowbox.Luna.Data.AST.Module                          as ASTModule
+import           Flowbox.Luna.Data.Pass.ASTInfo                        (ASTInfo)
 import           Flowbox.Luna.Data.Pass.SourceMap                      (SourceMap)
 import           Flowbox.Luna.Data.Source                              (Source)
 import qualified Flowbox.Luna.Data.Source                              as Source
@@ -25,17 +26,16 @@ import           Flowbox.Luna.Passes.Build.BuildConfig                 (BuildCon
 import qualified Flowbox.Luna.Passes.Build.BuildConfig                 as BuildConfig
 import qualified Flowbox.Luna.Passes.Build.Diagnostics                 as Diagnostics
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen                 as CabalGen
-import           Flowbox.Luna.Data.Pass.ASTInfo                     (ASTInfo)
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install             as CabalInstall
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Store               as CabalStore
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
 import qualified Flowbox.Luna.Passes.Pass                              as Pass
 import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
 import qualified Flowbox.Luna.Passes.Source.File.Writer                as FileWriter
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash           as Hash
-import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
 import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA             as SSA
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
+import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
 import           Flowbox.Prelude
 import qualified Flowbox.System.Directory.Directory                    as Directory
 import           Flowbox.System.Log.Logger

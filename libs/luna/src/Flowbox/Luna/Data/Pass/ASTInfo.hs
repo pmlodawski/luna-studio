@@ -9,10 +9,10 @@
 
 module Flowbox.Luna.Data.Pass.ASTInfo where
 
+import           Data.Map
 import qualified Data.Map as Map
-import           Data.Map 
 
-import Flowbox.Prelude                 hiding(id)
+import Flowbox.Prelude hiding (id)
 
 
 type ID = Int

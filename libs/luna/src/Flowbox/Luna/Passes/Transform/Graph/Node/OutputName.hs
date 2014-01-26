@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Passes.Transform.Graph.Node.OutputName (
-	fix, 
-	fixEmpty,
+    fix,
+    fixEmpty,
     generate,
 ) where
 

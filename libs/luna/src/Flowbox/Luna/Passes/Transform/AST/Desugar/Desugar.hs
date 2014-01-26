@@ -19,9 +19,9 @@ import           Flowbox.Luna.Data.AST.Pat                       (Pat)
 import qualified Flowbox.Luna.Data.AST.Pat                       as Pat
 import           Flowbox.Luna.Passes.Pass                        (Pass)
 import qualified Flowbox.Luna.Passes.Pass                        as Pass
-import           Flowbox.Prelude                                 hiding (error, id, mod)
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.State as DS
 import           Flowbox.Luna.Passes.Transform.AST.Desugar.State (DesugarState)
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.State as DS
+import           Flowbox.Prelude                                 hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 
 
@@ -42,23 +42,23 @@ desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat p
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
 desugarExpr ast = case ast of
-    --Expr.Con {}                           -> Expr.App <$> DS.genID <*> continue <*> pure [] 
+    --Expr.Con {}                           -> Expr.App <$> DS.genID <*> continue <*> pure []
     --Expr.App {}                           -> omitNext
-    Expr.Function id path name inputs 
+    Expr.Function id path name inputs
                   output body             -> Expr.Function id path name <$> fexpMap inputs <*> ftype output <*> fexpTLMap body
     _                                     -> continue
     where ftype     = pure
-    	  fexpMap   = mapM desugarExpr 
-          fexpTLMap = mapM desugarFuncTLExpr 
-    	  continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
+          fexpMap   = mapM desugarExpr
+          fexpTLMap = mapM desugarFuncTLExpr
+          continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
           omitNext  = Expr.traverseM omitExpr pure desugarPat pure ast
 
 desugarFuncTLExpr :: Expr.Expr -> DesugarPass Expr.Expr
 desugarFuncTLExpr ast = case ast of
-	Expr.RecordUpdate id src selectors expr -> case src of
-											       Expr.Var _ name -> Expr.Assignment <$> DS.genID <*> (Pat.Var <$> DS.genID <*> pure name) <*> pure ast
-											       _               -> desugarExpr ast
-	_                                       -> desugarExpr ast
+    Expr.RecordUpdate id src selectors expr -> case src of
+                                                   Expr.Var _ name -> Expr.Assignment <$> DS.genID <*> (Pat.Var <$> DS.genID <*> pure name) <*> pure ast
+                                                   _               -> desugarExpr ast
+    _                                       -> desugarExpr ast
 
 omitExpr :: Expr.Expr -> DesugarPass Expr.Expr
 omitExpr ast = continue

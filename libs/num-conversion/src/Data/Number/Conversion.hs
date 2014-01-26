@@ -1,12 +1,12 @@
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module Data.Number.Conversion where
 
-import GHC.Float
-import Data.Word
-import Prelude hiding (toInteger)
+import           Data.Word
+import           GHC.Float
+import           Prelude   hiding (toInteger)
 import qualified Prelude
 
 

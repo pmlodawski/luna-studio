@@ -8,7 +8,6 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TemplateHaskell        #-}
-{-# LANGUAGE ViewPatterns           #-}
 
 
 module Luna.Target.HS.TH.Utils where
@@ -18,7 +17,7 @@ import           Control.Monad
 import           Debug.Trace
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Lib
-import qualified Text.Show.Pretty    as PP
+import qualified Text.Show.Pretty        as PP
 
 ppTrace  x   = trace ("\n\n----------\n" ++ PP.ppShow x)
 ppTraces s x = trace ("\n\n--- " ++ s ++ " ---\n" ++ PP.ppShow x)
@@ -36,7 +35,7 @@ getTyVarBndrName t = case t of
 
 getDecVarNames :: Dec -> [Name]
 getDecVarNames dec = map getTyVarBndrName vars where
-    vars = case dec of 
+    vars = case dec of
         DataD    _ _ v _ _ -> v
         NewtypeD _ _ v _ _ -> v
         ClassD   _ _ v _ _ -> v
@@ -50,7 +49,7 @@ getDecName dec = case dec of
     NewtypeD     _ n _ _ _ -> n
     TySynD       n _ _     -> n
     ClassD       _ n _ _ _ -> n
-    SigD         n _       -> n 
+    SigD         n _       -> n
     FamilyD      _ n _ _   -> n
     DataInstD    _ n _ _ _ -> n
     NewtypeInstD _ n _ _ _ -> n
