@@ -12,18 +12,21 @@ module Flowbox.Luna.Data.Pass.ASTInfo where
 import           Data.Map
 import qualified Data.Map as Map
 
-import Flowbox.Prelude hiding (id)
+import qualified Flowbox.Luna.Data.AST.Utils as AST
+import           Flowbox.Prelude             hiding (id)
 
 
-type ID = Int
-
-data ASTInfo = ASTInfo { _lastID :: ID } deriving (Show)
+data ASTInfo = ASTInfo { _lastID :: AST.ID } deriving (Show)
 
 makeLenses (''ASTInfo)
 
 
 incID :: ASTInfo -> ASTInfo
 incID = lastID %~ (+1)
+
+
+mk :: AST.ID -> ASTInfo
+mk = ASTInfo
 
 
 ------------------------------------------------------------------------

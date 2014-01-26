@@ -14,10 +14,12 @@ import "type.proto";
 
 message Module {
     optional int32 id = 1 [default = -1];
-    optional generated.proto.type.Type type    = 2;
-    repeated generated.proto.expr.Expr imports = 3;
-    repeated generated.proto.expr.Expr classes = 4;
-    repeated generated.proto.expr.Expr fields  = 5;
-    repeated generated.proto.expr.Expr methods = 6;
-    repeated Module modules = 7;
+    optional generated.proto.type.Type type        = 2;
+    repeated generated.proto.expr.Expr imports     = 3;
+    repeated generated.proto.expr.Expr classes     = 4;
+    repeated generated.proto.expr.Expr typeAliases = 5;
+    repeated generated.proto.expr.Expr typeDEfs    = 6;
+    repeated generated.proto.expr.Expr fields      = 7;
+    repeated generated.proto.expr.Expr methods     = 8;
+    repeated Module modules                        = 9;
 }

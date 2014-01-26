@@ -21,6 +21,7 @@ import qualified Flowbox.Luna.Data.Graph.Graph                             as Gr
 import           Flowbox.Luna.Data.Graph.Node                              (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                              as Node
 import qualified Flowbox.Luna.Data.Graph.Port                              as Port
+import qualified Flowbox.Luna.Data.Pass.ASTInfo                            as ASTInfo
 import           Flowbox.Luna.Data.PropertyMap                             (PropertyMap)
 import qualified Flowbox.Luna.Data.PropertyMap                             as PropertyMap
 import           Flowbox.Luna.Passes.Pass                                  (Pass)
@@ -28,7 +29,6 @@ import qualified Flowbox.Luna.Passes.Pass                                  as Pa
 import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.State           as IDFixer
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer         as Lexer
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser        as Parser
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState    as ParseState
 import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes            as Attributes
 import           Flowbox.Luna.Passes.Transform.Graph.Parser.State          (GPState)
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.State          as State
@@ -97,19 +97,17 @@ parseOutputsNode nodeID = do
     State.setOutput e
 
 
---FIXME[wd]: Piotrek nigdy nie robimy wiecej czegos takiego "ParseState.make" !
--- to jest stan parsera - nie tworzymy nigdy na zewnatrz pasow ich wewnetrznych stanow!
 parsePatNode :: Node.ID -> String -> GPPass ()
-parsePatNode nodeID pat = undefined -- do
-    --srcs <- State.getNodeSrcs nodeID
-    --case srcs of
-    --    [s] -> do p <- case Parser.parsePattern pat $ ParseState.make IDFixer.unknownID of
-    --                        Left  er     -> fail $ show er
-    --                        Right (p, _) -> return p
-    --              let e = Expr.Assignment nodeID p s
-    --              State.addToNodeMap (nodeID, Port.All) e
-    --              State.addToBody e
-    --    _      -> fail "parsePatNode: Wrong Pat arguments"
+parsePatNode nodeID pat = do
+    srcs <- State.getNodeSrcs nodeID
+    case srcs of
+        [s] -> do p <- case Parser.parsePattern pat $ ASTInfo.mk IDFixer.unknownID of
+                            Left  er     -> fail $ show er
+                            Right (p, _) -> return p
+                  let e = Expr.Assignment nodeID p s
+                  State.addToNodeMap (nodeID, Port.All) e
+                  State.addToBody e
+        _      -> fail "parsePatNode: Wrong Pat arguments"
 
 
 parseInfixNode :: Node.ID -> String -> GPPass ()
@@ -124,20 +122,18 @@ parseInfixNode nodeID inf = do
     addExpr nodeID $ Expr.Infix nodeID inf a b
 
 
---FIXME[wd]: Piotrek nigdy nie robimy wiecej czegos takiego "ParseState.make" !
--- to jest stan parsera - nie tworzymy nigdy na zewnatrz pasow ich wewnetrznych stanow!
 parseAppNode :: Node.ID -> String -> GPPass ()
-parseAppNode nodeID app = undefined --do
-    --srcs <- State.getNodeSrcs nodeID
-    --case srcs of
-    --    []  -> case Parser.parseExpr app $ ParseState.make nodeID of
-    --                Left  er     -> fail $ show er
-    --                Right (e, _) -> addExpr nodeID e
-    --    [f] -> do let e   = Expr.Accessor nodeID app f
-    --              addExpr nodeID e
-    --    f:t -> do let acc = Expr.Accessor nodeID app f
-    --                  e   = Expr.App      IDFixer.unknownID acc t
-    --              addExpr nodeID e
+parseAppNode nodeID app = do
+    srcs <- State.getNodeSrcs nodeID
+    case srcs of
+        []  -> case Parser.parseExpr app $ ASTInfo.mk nodeID of
+                    Left  er     -> fail $ show er
+                    Right (e, _) -> addExpr nodeID e
+        [f] -> do let e   = Expr.Accessor nodeID app f
+                  addExpr nodeID e
+        f:t -> do let acc = Expr.Accessor nodeID app f
+                      e   = Expr.App      IDFixer.unknownID acc t
+                  addExpr nodeID e
 
 
 parseTupleNode :: Node.ID -> GPPass ()
