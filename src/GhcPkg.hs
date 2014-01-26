@@ -32,7 +32,7 @@ main = do
 
     exitCode <- Cmd.rawSystem exec $ "--global-package-db"
                        : (Cfg.pkgDb . Cfg.base) cfg
-                       : "--global"
+                       : "--no-user-package-db"
                        : ("--package-db=" ++ (Cfg.pkgDb . Cfg.global) cfg)
                        : ("--package-db=" ++ (Cfg.pkgDb . Cfg.local) cfg)
                        : args
