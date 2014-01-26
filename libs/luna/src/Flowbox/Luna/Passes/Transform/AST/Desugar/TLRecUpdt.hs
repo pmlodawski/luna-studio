@@ -9,7 +9,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Passes.Transform.AST.Desugar.Desugar where
+module Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt where
 
 import           Flowbox.Luna.Data.Analysis.Alias.Alias          (AA (AA))
 import qualified Flowbox.Luna.Data.AST.Expr                      as Expr
@@ -29,14 +29,14 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.Desugar"
+logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.TLRecUpdt"
 
 
 type DesugarPass result = Pass DesugarState result
 
 
 run :: ASTInfo -> Module -> Pass.Result (Module, ASTInfo)
-run info = (Pass.run_ (Pass.Info "Desugar") $ DS.mk info) . desugar
+run info = (Pass.run_ (Pass.Info "Desugar.TLRecUpdt") $ DS.mk info) . desugar
 
 
 desugar :: Module -> DesugarPass (Module, ASTInfo)

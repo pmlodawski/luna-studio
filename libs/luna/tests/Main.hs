@@ -42,7 +42,8 @@ import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as Va
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.Desugar         as Desugar
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt       as Desugar.TLRecUpdt
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ExtScopeCall    as Desugar.ExtScopeCall
 import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash               as Hash
 import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                 as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser        as Parser
@@ -121,6 +122,9 @@ example = Source.Source ["Main"] $
                         ----, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
                         ----, "def List.add self x:"
                         ----, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
+                        --, "def List.sum self:"
+                        --, "    ```liftf1 sum #{self}```"
+
                         , "class Console:"
                         , "    def print self msg:"
                         , "        ```print' #{msg}```"
@@ -145,6 +149,7 @@ example = Source.Source ["Main"] $
                         , "class Point:"
                         , "    x,y,z :: Int"
 
+
                         --, "class X"
                         --, "    def test self:"
                         --, "        self"
@@ -162,12 +167,13 @@ example = Source.Source ["Main"] $
 
                     --, "alias X = Int"
 
+                    , "def foldr lst el f:"
+                    , "    lst"
+
                     , "def main self:"
                     , "    c = Console()"
-                    , "    c.print 5"
-                    , "    p = Point 1 2 3"
-                    , "    p.x = 10"
-                    , "    c.print p"
+                    , "    lst = [1,2,3]"
+                    , "    c.print lst"
                     --, "    a = (f) 1"
                     --, "   c = Console()"
                     --, "   c.print $ self.f 5 6"
@@ -246,22 +252,25 @@ main_inner = Luna.run $ do
     --putStrLn $ PP.ppShow zipper
 
 
-    logger info "\n-------- Desugar --------"
-    (dast, astInfo2) <- hoistEither =<< Desugar.run astInfo ast
-    logger info $ PP.ppqShow dast
+    logger info "\n-------- Desugar.TLRecUpdt --------"
+    (ast, astInfo) <- hoistEither =<< Desugar.TLRecUpdt.run astInfo ast
+    logger info $ PP.ppqShow ast
 
+    --logger info "\n-------- Desugar.ExtScopeCall --------"
+    --(ast, astInfo) <- hoistEither =<< Desugar.ExtScopeCall.run astInfo ast
+    --logger info $ PP.ppqShow ast
 
     logger info "\n-------- VarAlias --------"
-    va <- hoistEither =<< VarAlias.run dast
+    va <- hoistEither =<< VarAlias.run ast
     logger info $ PP.ppShow va
 
 
     logger info "\n-------- FuncPool --------"
-    fp <- hoistEither =<< FuncPool.run dast
+    fp <- hoistEither =<< FuncPool.run ast
     logger info $ PP.ppShow fp
 
     logger info "\n-------- Hash --------"
-    hash <- hoistEither =<< Hash.run dast
+    hash <- hoistEither =<< Hash.run ast
     logger info $ PP.ppShow hash
 
     logger info "\n-------- SSA --------"
