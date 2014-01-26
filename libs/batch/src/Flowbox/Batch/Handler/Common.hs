@@ -201,10 +201,10 @@ graphOp bc libID projectID operation = astOp libID projectID (\batch ast propert
     expr <- case focus of
         Focus.FunctionFocus expr -> return expr
         _                        -> fail "Breadcrumbs are not focusing on function."
-    va    <- Luna.runIO $ VarAlias.runGather ast
+    aa    <- Luna.runIO $ VarAlias.run ast
     maxID <- Luna.runIO $ MaxID.run ast
 
-    (graph, pm) <- Luna.runIO $ GraphBuilder.run va propertyMap expr
+    (graph, pm) <- Luna.runIO $ GraphBuilder.run aa propertyMap expr
 
     ((newGraph, newPM), r) <- liftIO $ operation batch graph pm maxID
 

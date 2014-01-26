@@ -39,8 +39,8 @@ main_inner :: IO (Either String ())
 main_inner = Luna.run $ do
     let rootPath = "samples/VisualStd"
         filePath = "samples/VisualStd/Std.luna"
-    (ast, _) <- hoistEither =<< Build.parseFile (UniPath.fromUnixString rootPath)
-                                                (UniPath.fromUnixString filePath)
+    (ast, _, _) <- hoistEither =<< Build.parseFile (UniPath.fromUnixString rootPath)
+                                                   (UniPath.fromUnixString filePath)
     let name = "Std"
         path = UniPath.fromUnixString "~/.flowbox/visual/stdlib.lunalib"
         library = Library name path ast PropertyMap.empty

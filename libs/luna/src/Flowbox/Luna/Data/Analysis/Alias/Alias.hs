@@ -11,27 +11,26 @@ module Flowbox.Luna.Data.Analysis.Alias.Alias where
 
 import Flowbox.Prelude
 
-import           Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
-import           Data.Map    (Map)
-import qualified Data.Map    as Map
+import           Data.IntMap                 (IntMap)
+import           Data.Map                    (Map)
+import qualified Flowbox.Luna.Data.AST.Utils as AST
 
 
-type ID = Int
+type ID = AST.ID
 
 data Error  = LookupError {key :: String}
             deriving (Show)
 
 
-data VarRel = VarRel { _nameMap :: Map String ID }
+data VarRel = VarRel { _nameMap :: Map String AST.ID }
             deriving (Show)
 
 makeLenses (''VarRel)
 
 
 data AA     = AA  { _varRel    :: IntMap VarRel
-                  , _aliasMap  :: IntMap (Either Error ID)
-                  , _parentMap :: IntMap ID
+                  , _aliasMap  :: IntMap (Either Error AST.ID)
+                  , _parentMap :: IntMap AST.ID
                   }
             deriving (Show)
 
