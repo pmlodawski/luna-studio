@@ -3,7 +3,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 module Flowbox.Batch.Server.Handler.BatchHandler where
@@ -71,13 +71,14 @@ instance Handler BatchHandler where
     remove               h = HAST.remove               (batchRef h)
     resolveDefinition    h = HAST.resolveDefinition    (batchRef h)
 
-    nodesGraph h = HGraph.nodesGraph (batchRef h)
-    nodeByID   h = HGraph.nodeByID   (batchRef h)
-    addNode    h = HGraph.addNode    (batchRef h)
-    removeNode h = HGraph.removeNode (batchRef h)
-    updateNode h = HGraph.updateNode (batchRef h)
-    connect    h = HGraph.connect    (batchRef h)
-    disconnect h = HGraph.disconnect (batchRef h)
+    nodesGraph        h = HGraph.nodesGraph        (batchRef h)
+    nodeByID          h = HGraph.nodeByID          (batchRef h)
+    addNode           h = HGraph.addNode           (batchRef h)
+    removeNode        h = HGraph.removeNode        (batchRef h)
+    updateNode        h = HGraph.updateNode        (batchRef h)
+    updateNodeInPlace h = HGraph.updateNodeInPlace (batchRef h)
+    connect           h = HGraph.connect           (batchRef h)
+    disconnect        h = HGraph.disconnect        (batchRef h)
 
     ls         h = HFileSystem.ls    (batchRef h)
     stat       h = HFileSystem.stat  (batchRef h)

@@ -3,7 +3,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -95,6 +95,8 @@ import qualified Generated.Proto.Batch.Graph.RemoveNode.Args                as R
 import qualified Generated.Proto.Batch.Graph.RemoveNode.Result              as RemoveNode
 import qualified Generated.Proto.Batch.Graph.UpdateNode.Args                as UpdateNode
 import qualified Generated.Proto.Batch.Graph.UpdateNode.Result              as UpdateNode
+import qualified Generated.Proto.Batch.Graph.UpdateNodeInPlace.Args         as UpdateNodeInPlace
+import qualified Generated.Proto.Batch.Graph.UpdateNodeInPlace.Result       as UpdateNodeInPlace
 import qualified Generated.Proto.Batch.Library.BuildLibrary.Args            as BuildLibrary
 import qualified Generated.Proto.Batch.Library.BuildLibrary.Result          as BuildLibrary
 import qualified Generated.Proto.Batch.Library.CreateLibrary.Args           as CreateLibrary
@@ -203,13 +205,14 @@ process notifySocket handler encodedRequest requestID = case Proto.messageWithLe
         Method.FileSystem_CP    -> call Handler.cp    CP.req    CP.rsp
         Method.FileSystem_MV    -> call Handler.mv    MV.req    MV.rsp
 
-        Method.Graph_NodesGraph -> call Handler.nodesGraph NodesGraph.req NodesGraph.rsp
-        Method.Graph_NodeByID   -> call Handler.nodeByID   NodeByID.req   NodeByID.rsp
-        Method.Graph_AddNode    -> call Handler.addNode    AddNode.req    AddNode.rsp
-        Method.Graph_UpdateNode -> call Handler.updateNode UpdateNode.req UpdateNode.rsp
-        Method.Graph_RemoveNode -> call Handler.removeNode RemoveNode.req RemoveNode.rsp
-        Method.Graph_Connect    -> call Handler.connect    Connect.req    Connect.rsp
-        Method.Graph_Disconnect -> call Handler.disconnect Disconnect.req Disconnect.rsp
+        Method.Graph_NodesGraph        -> call Handler.nodesGraph        NodesGraph.req        NodesGraph.rsp
+        Method.Graph_NodeByID          -> call Handler.nodeByID          NodeByID.req          NodeByID.rsp
+        Method.Graph_AddNode           -> call Handler.addNode           AddNode.req           AddNode.rsp
+        Method.Graph_UpdateNode        -> call Handler.updateNode        UpdateNode.req        UpdateNode.rsp
+        Method.Graph_UpdateNodeInPlace -> call Handler.updateNodeInPlace UpdateNodeInPlace.req UpdateNodeInPlace.rsp
+        Method.Graph_RemoveNode        -> call Handler.removeNode        RemoveNode.req        RemoveNode.rsp
+        Method.Graph_Connect           -> call Handler.connect           Connect.req           Connect.rsp
+        Method.Graph_Disconnect        -> call Handler.disconnect        Disconnect.req        Disconnect.rsp
 
         Method.Library_Libraries     -> call Handler.libraries     Libraries.req     Libraries.rsp
         Method.Library_LibraryByID   -> call Handler.libraryByID   LibraryByID.req   LibraryByID.rsp

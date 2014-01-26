@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 module Flowbox.Batch.Handler.Graph where
@@ -58,6 +58,15 @@ updateNode (nodeID, newNode) bc libID projectID = graphViewOp bc libID projectID
             Nothing -> propertyMap
             Just k  -> PropertyMap.insert newID k $ PropertyMap.delete nodeID propertyMap
     return ((newGraph, newPropertyMap), newID))
+
+
+
+updateNodeInPlace :: (Node.ID, Node)
+           -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
+updateNodeInPlace (nodeID, newNode) bc libID projectID = noresult . graphViewOp bc libID projectID (\_ graph propertyMap _ -> do
+    let fixedNode = OutputName.fixEmpty newNode nodeID
+        newGraph  = GraphView.updateNode (nodeID, fixedNode) graph
+    return ((newGraph, propertyMap), ()))
 
 
 removeNode :: Node.ID
