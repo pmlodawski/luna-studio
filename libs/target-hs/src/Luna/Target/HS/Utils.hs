@@ -31,7 +31,7 @@ instance (Typeable a, Typeable b) => Show (a -> b) where
 -- Func utils
 ------------------------------------------------------------------------
 
-val = Pure . Safe
+
 
 call0 a = call a ()
 call1 a v1 = call a (v1,())
@@ -45,6 +45,8 @@ call1 a v1 = call a (v1,())
 --call8 a v1 v2 v3 v4 v5 v6 v7 v8 = call a (v1,v2,v3,v4,v5,v6,v7,v8)
 --call9 a v1 v2 v3 v4 v5 v6 v7 v8 v9 = call a (v1,v2,v3,v4,v5,v6,v7,v8,v9)
 
+flattenCtx :: (Functor m1, Functor m3, FlipCtx s1 m2, FlattenEnv m1 m2 m3, FlattenErr s1 s2 s3) 
+           => m1(s1(m2(s2 a))) -> m3(s3 a)
 flattenCtx a = fmap flattenErr $ (flattenEnv $ fmap flipCtx a)
 
 throw :: Pure (Safe a) -> Pure b -> Pure(Either b a)
@@ -119,5 +121,17 @@ ifthenelse = liftf3 (\cond tval fval -> if cond then tval else fval)
 exIO_1 :: IO (Safe Int)
 exIO_1 = return (Safe 1)
 
+
+
+------------------------------------------------------------------------
+-- Errors catch
+------------------------------------------------------------------------
+
+--catchProto :: Either err val -> (Pure(Safe err) -> Pure(Safe val)) -> Pure(Safe val)
+catchProto f el = case el of
+    Left err -> call1 f $ val err
+    Right el -> val el
+
+catch el f = flattenEnv $ fmap (catchProto f) el
 
 

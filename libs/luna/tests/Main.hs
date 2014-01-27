@@ -42,6 +42,10 @@ import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as Va
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt       as Desugar.TLRecUpdt
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ExtScopeCall    as Desugar.ExtScopeCall
+import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash               as Hash
+import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                 as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser        as Parser
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
@@ -49,8 +53,6 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as Gr
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
-import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                     as SSA
-import qualified Flowbox.Luna.Passes.Transform.Hash.Hash                   as Hash
 import           Flowbox.Prelude
 import qualified Flowbox.System.Log.LogEntry                               as LogEntry
 import           Flowbox.System.Log.Logger
@@ -120,29 +122,44 @@ example = Source.Source ["Main"] $
                         ----, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
                         ----, "def List.add self x:"
                         ----, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
-                        --, "class Console:"
-                        --, "    def print self msg:"
-                        --, "        ```print' #{msg}```"
+                        --, "def List.sum self:"
+                        --, "    ```liftf1 sum #{self}```"
 
-                        --, "def Int.+ a b:"
-                        --, "    ```liftf2 (+) #{a} #{b}```"
+                        , "class Console:"
+                        , "    def print self msg:"
+                        , "        ```print' #{msg}```"
+
+                        ----, "def Int.+ a b:"
+                        ----, "    ```liftf2 (+) #{a} #{b}```"
                         ----, "class Vector a b c:"
                         ----, "    x :: a"
-                        ----, "class Vector a = Vector | Scalar "
-                        ----, "               | Scalar2"
-                        ----, "class Vector a = Vector: x :: a"
-                        ----, "                         y :: a"
-                        ----, "                         z :: a"
-                        ----, "               | Scalar: a :: a"
-                        ----, "               | Vector2: x :: a"
-                        ----, "               | Scalar"
-                        --, "class Vector a:"
-                        --, "    pos :: a"
+                        ------, "class Vector a = Vector | Scalar "
+                        ------, "               | Scalar2"
+                        ------, "class Vector a = Vector: x :: a"
+                        ------, "                         y :: a"
+                        ------, "                         z :: a"
+                        ------, "               | Scalar: a :: a"
+                        ------, "               | Vector2: x :: a"
+                        ------, "               | Scalar"
+                        ----, "class Vector a:"
+                        ----, "    pos :: a"
 
 
+                        ,"def Int.+ a b:"
+                        ,"    ```liftf2 (+) #{a} #{b}```"
 
-                        --, "class Point:"
-                        --, "    x,y,z :: Int"
+                        ,"def Int.< a b:"
+                        ,"    ```liftf2 (<) #{a} #{b}```"
+
+                        , "class Point:"
+                        , "    x,y,z :: Int"
+
+                        , "def raise self el err:"
+                        , "    ```raise #{el} #{err}```"
+
+                        , "def catch self el f:"
+                        , "    ```catch #{el} #{f}```"
+
 
                         --, "class X"
                         --, "    def test self:"
@@ -151,20 +168,43 @@ example = Source.Source ["Main"] $
                         --, "        Vector (self.x()+v2.x()) (self.y()+v2.y()) (self.z()+v2.z())"
                         ----, "    Scalar: a     :: a"
                         ----, "    def f self (x::Int):"
-  
+
                     --, "    Console.print (1.add 2)"
-  
+
                     --, "def f self a::Int b::Int :"
                     --, "    {a,b}"
+                    --, "def f a::X :"
+                    --, "    a"
+
+                    --, "alias X = Int"
+
+                    , "class Error:"
+                    , "    IOError: msg :: String"
+
+                    , "def foldr lst el f:"
+                    , "    lst"
 
                     , "def main self:"
+                    , "    c = Console()"
+                    , "    x = 1"
+                    , "    y = self.raise 2 (IOError \"Oh no\")"
+                    , "    z = x + y"
+                    , "    lam = x: {x,x,x}"
+                    , "    c.print $ lam 5"
+                    , "    z = self.catch z x: 0"
+                    --, "    z.catch x"
+                    , "    c.print (z)"
+                    --, "    a = (f) 1"
                     --, "   c = Console()"
                     --, "   c.print $ self.f 5 6"
-                    , "   p = Point 1 2 3"
-                    , "   p.x = 0"
-                    , "   p.y = 0"
-                    , "   a_ = 10"
-                    , "   a = -10.0"
+                    --, "   p = Point 1 2 3"
+                    --, "   p.x = 0"
+                    --, "   p.y = 0"
+                    --, "   a_ = 10"
+                    --, "   a = -10.0"
+
+                    --, "alias PathW = String"
+                    --, "type Path = String"
                     --, "   Point x y z = p"
                     --, "   c.print p"
                     --, "   v = Vector $ Point 1 2 3"
@@ -187,7 +227,7 @@ example = Source.Source ["Main"] $
 main :: IO ()
 main = do
     --DistMain.main
-    Logger.setLevel DEBUG "Flowbox" 
+    Logger.setLevel DEBUG "Flowbox"
     --let x = Parser.parse' example
     --    --x :: Int
 
@@ -210,11 +250,13 @@ main_inner = Luna.run $ do
     let source = example
 
     logger info "\n-------- TxtParser --------"
-    (ast, srcMap) <- hoistEither =<< TxtParser.run source
+    (ast, srcMap, astInfo) <- hoistEither =<< TxtParser.run source
     logger info "\n>> AST"
     logger info $ PP.ppqShow ast
     logger info "\n>> Source Map"
     logger info $ PP.ppShow srcMap
+    logger info "\n>> AST Info"
+    logger info $ PP.ppShow astInfo
     --logger info (show.length $ FModule._classes ast)
     return ()
 
@@ -229,9 +271,19 @@ main_inner = Luna.run $ do
 
     --putStrLn $ PP.ppShow zipper
 
+
+    logger info "\n-------- Desugar.TLRecUpdt --------"
+    (ast, astInfo) <- hoistEither =<< Desugar.TLRecUpdt.run astInfo ast
+    logger info $ PP.ppqShow ast
+
+    --logger info "\n-------- Desugar.ExtScopeCall --------"
+    --(ast, astInfo) <- hoistEither =<< Desugar.ExtScopeCall.run astInfo ast
+    --logger info $ PP.ppqShow ast
+
     logger info "\n-------- VarAlias --------"
-    va <- hoistEither =<< VarAlias.run     ast
+    va <- hoistEither =<< VarAlias.run ast
     logger info $ PP.ppShow va
+
 
     logger info "\n-------- FuncPool --------"
     fp <- hoistEither =<< FuncPool.run ast
@@ -247,7 +299,7 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- HASTGen --------"
     hast <- hoistEither =<< HASTGen.run ssa fp
-    logger info $ PP.ppShow hast
+    --logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------"
     hsc <- hoistEither =<< HSC.run  hast
@@ -259,34 +311,34 @@ main_inner = Luna.run $ do
 
 main_graph :: IO (Either String ())
 main_graph = Luna.run $ do
-    let source  = example
-        emptyPM = PropertyMap.empty
+    --let source  = example
+    --    emptyPM = PropertyMap.empty
 
-    logger info "\n-------- TxtParser --------"
-    (ast, _) <- hoistEither =<< TxtParser.run source
-    logger info $ PP.ppqShow ast
+    --logger info "\n-------- TxtParser --------"
+    --(ast, _) <- hoistEither =<< TxtParser.run source
+    --logger info $ PP.ppqShow ast
 
-    logger info "\n-------- VarAlias --------"
-    va <- hoistEither =<< VarAlias.runGather ast
-    logger info $ PP.ppShow va
+    --logger info "\n-------- VarAlias --------"
+    --va <- hoistEither =<< VarAlias.runGather ast
+    --logger info $ PP.ppShow va
 
-    (Focus.FunctionFocus expr) <- Zipper.mk ast
-                              >>= Zipper.focusFunction "test"
-                              >>= return . Zipper.getFocus
+    --(Focus.FunctionFocus expr) <- Zipper.mk ast
+    --                          >>= Zipper.focusFunction "test"
+    --                          >>= return . Zipper.getFocus
 
-    logger info $ PP.ppShow expr
-    (graph, pm) <- hoistEither =<< GraphBuilder.run va emptyPM expr
-    let graphView = GraphView.fromGraph graph
-        (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graphView pm
-    logger warning $ show graph
-    logger warning $ PP.ppShow pm
-    --logger info $ show graphWithDefaults
-    let (newGraphView, newPM) = Defaults.removeDefaults graphWithDefaults pmWithDefaults
-    newGraph <- GraphView.toGraph newGraphView
-    --logger warning $ show newGraph
-    expr' <- hoistEither =<< GraphParser.run newGraph newPM expr
-    logger info $ PP.ppShow expr'
-    logger warning $ PP.ppShow newPM
+    --logger info $ PP.ppShow expr
+    --(graph, pm) <- hoistEither =<< GraphBuilder.run va emptyPM expr
+    --let graphView = GraphView.fromGraph graph
+    --    (graphWithDefaults, pmWithDefaults) = Defaults.addDefaults graphView pm
+    --logger warning $ show graph
+    --logger warning $ PP.ppShow pm
+    ----logger info $ show graphWithDefaults
+    --let (newGraphView, newPM) = Defaults.removeDefaults graphWithDefaults pmWithDefaults
+    --newGraph <- GraphView.toGraph newGraphView
+    ----logger warning $ show newGraph
+    --expr' <- hoistEither =<< GraphParser.run newGraph newPM expr
+    --logger info $ PP.ppShow expr'
+    --logger warning $ PP.ppShow newPM
 
     --logger info "\n-------- FuncPool --------"
     --fp <- FuncPool.run ast

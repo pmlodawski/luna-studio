@@ -7,9 +7,9 @@
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Token where
 
-import Flowbox.Prelude
-import Flowbox.Luna.Data.AST.SourcePos (SourceRange(SourceRange), SourcePos)
+import Flowbox.Luna.Data.AST.SourcePos (SourcePos, SourceRange (SourceRange))
 import Flowbox.Luna.Data.AST.Utils     (ID)
+import Flowbox.Prelude
 
 data Token a = Token { id    :: Maybe ID
                      , value :: a
@@ -33,9 +33,9 @@ append t1 t2 = Token Nothing (value t1 : value t2) (mappend (range t1) (range t2
 ------------------------------------------------------------------------
 
 instance Monoid a => Monoid (Token a) where
-	mempty        = Token Nothing mempty mempty
-	mappend t1 t2 = Token Nothing (mappend (value t1) (value t2)) (mappend (range t1) (range t2))
+    mempty        = Token Nothing mempty mempty
+    mappend t1 t2 = Token Nothing (mappend (value t1) (value t2)) (mappend (range t1) (range t2))
 
 
 instance Functor Token where
-	fmap f tok = tok { value = f $ value tok }
+    fmap f tok = tok { value = f $ value tok }

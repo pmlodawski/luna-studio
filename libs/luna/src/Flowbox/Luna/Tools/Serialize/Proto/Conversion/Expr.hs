@@ -46,8 +46,11 @@ import qualified Generated.Proto.Expr.NativeVar                    as GenNativeV
 import qualified Generated.Proto.Expr.NOP                          as GenNOP
 import qualified Generated.Proto.Expr.RangeFrom                    as GenRangeFrom
 import qualified Generated.Proto.Expr.RangeFromTo                  as GenRangeFromTo
+import qualified Generated.Proto.Expr.RecordUpdate                 as GenRecordUpdate
 import qualified Generated.Proto.Expr.Tuple                        as GenTuple
+import qualified Generated.Proto.Expr.TypeAlias                    as GenTypeAlias
 import qualified Generated.Proto.Expr.Typed                        as GenTyped
+import qualified Generated.Proto.Expr.TypeDef                      as GenTypeDef
 import qualified Generated.Proto.Expr.Var                          as GenVar
 import qualified Generated.Proto.Expr.Wildcard                     as GenWildcard
 import qualified Text.ProtocolBuffers.Extensions                   as Extensions
@@ -59,12 +62,21 @@ instance Convert Expr Gen.Expr where
         Expr.NOP        i          -> genExpr GenCls.NOP i GenNOP.ext $ GenNOP.NOP
         Expr.Accessor   i name dst -> genExpr GenCls.Accessor i GenAccessor.ext $ GenAccessor.Accessor
                                       (encodePJ name) (encodeJ dst)
+        Expr.TypeAlias  i srcType dstType
+                                   -> genExpr GenCls.TypeAlias i GenTypeAlias.ext $ GenTypeAlias.TypeAlias
+                                      (encodeJ srcType) (encodeJ dstType)
+        Expr.TypeDef    i srcType dstType
+                                   -> genExpr GenCls.TypeDef i GenTypeDef.ext $ GenTypeDef.TypeDef
+                                      (encodeJ srcType) (encodeJ dstType)
         Expr.App        i src args -> genExpr GenCls.App i GenApp.ext $ GenApp.App
                                       (encodeJ src) (encodeList args)
         Expr.AppCons_   i args     -> genExpr GenCls.AppCons_ i GenAppCons_.ext $ GenAppCons_.AppCons_
                                       (encodeList args)
         Expr.Assignment i pat dst  -> genExpr GenCls.Assignment i GenAssignment.ext $ GenAssignment.Assignment
                                       (encodeJ pat) (encodeJ dst)
+        Expr.RecordUpdate i src selectors expr
+                                   -> genExpr GenCls.RecordUpdate i GenRecordUpdate.ext $ GenRecordUpdate.RecordUpdate
+                                      (encodeJ src) (encodeListP selectors) (encodeJ expr)
         Expr.Data       i cls cons classes methods
                                    -> genExpr GenCls.Data i GenData.ext $ GenData.Data
                                       (encodeJ cls) (encodeList cons) (encodeList classes) (encodeList methods)
@@ -135,6 +147,18 @@ instance Convert Expr Gen.Expr where
                 tname <- mtname <?> "Failed to decode Expr.Accessor: 'name' field is missing"
                 tdst  <- mtdst  <?> "Failed to decode Expr.Accessor: 'dst' field is missing"
                 Expr.Accessor i (decodeP tname) <$> (decode tdst)
+            GenCls.TypeAlias -> do
+                ext <- getExt GenTypeAlias.ext
+                (GenTypeAlias.TypeAlias mtsrcType mtdstType) <- ext <?> "Failed to decode Expr.TypeAlias: extension is missing"
+                tsrcType <- mtsrcType  <?> "Failed to decode Expr.TypeAlias: 'srcType' field is missing"
+                tdstType  <- mtdstType <?> "Failed to decode Expr.TypeAlias: 'dstType' field is missing"
+                Expr.TypeAlias i <$> (decode tsrcType) <*> (decode tdstType)
+            GenCls.TypeDef -> do
+                ext <- getExt GenTypeDef.ext
+                (GenTypeDef.TypeDef mtsrcType mtdstType) <- ext <?> "Failed to decode Expr.TypeDef: extension is missing"
+                tsrcType <- mtsrcType  <?> "Failed to decode Expr.TypeDef: 'srcType' field is missing"
+                tdstType  <- mtdstType <?> "Failed to decode Expr.TypeDef: 'dstType' field is missing"
+                Expr.TypeDef i <$> (decode tsrcType) <*> (decode tdstType)
             GenCls.App -> do
                 ext <- getExt GenApp.ext
                 (GenApp.App mtsrc targs) <- ext <?> "Failed to decode Expr.App: extension is missing"
@@ -150,6 +174,12 @@ instance Convert Expr Gen.Expr where
                 tpat <- mtpat <?> "Failed to decode Expr.Assignment: 'pat' field is missing"
                 tdst <- mtdst <?> "Failed to decode Expr.Assignment: 'dst' field is missing"
                 Expr.Assignment i <$> decode tpat <*> decode tdst
+            GenCls.RecordUpdate -> do
+                ext <- getExt GenRecordUpdate.ext
+                (GenRecordUpdate.RecordUpdate mtsrc tselectors mtexpr) <- ext <?> "Failed to decode Expr.RecordUpdate: extension is missing"
+                tsrc  <- mtsrc  <?> "Failed to decode Expr.RecordUpdate: 'src' field is missing"
+                texpr <- mtexpr <?> "Failed to decode Expr.RecordUpdate: 'expr' field is missing"
+                Expr.RecordUpdate i <$> decode tsrc <*> (pure $ decodeListP tselectors) <*> decode texpr
             GenCls.Data -> do
                 ext <- getExt GenData.ext
                 (GenData.Data mtcls tcons tclasses tmethods) <- ext <?> "Failed to decode Expr.Data: extension is missing"

@@ -16,10 +16,10 @@ import           Control.Applicative
 import           Flowbox.Generics.Deriving.QShow
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
 import qualified Flowbox.Luna.Data.AST.Pat       as Pat
-import qualified Flowbox.Luna.Data.AST.Type      as Type
 import           Flowbox.Luna.Data.AST.Type      (Type)
+import qualified Flowbox.Luna.Data.AST.Type      as Type
 import           Flowbox.Luna.Data.AST.Utils     (ID)
-import           Flowbox.Prelude                 hiding (Accessor, Traversal, drop, id, cons)
+import           Flowbox.Prelude                 hiding (Accessor, Traversal, cons, drop, id)
 import           GHC.Generics                    (Generic)
 
 
@@ -31,10 +31,12 @@ type Traversal m = (Functor m, Applicative m, Monad m)
 
 data Expr  = NOP          { _id :: ID                                                                                            }
            | Accessor     { _id :: ID, _name      :: String   , _dst       :: Expr                                               }
+           | TypeAlias    { _id :: ID, _srcType   :: Type     , _dstType   :: Type                                               }
+           | TypeDef      { _id :: ID, _srcType   :: Type     , _dstType   :: Type                                               }
            | App          { _id :: ID, _src       :: Expr     , _args      :: [Expr]                                             }
            | AppCons_     { _id :: ID, _args      :: [Expr]                                                                      }
            | Assignment   { _id :: ID, _pat       :: Pat      , _dst       :: Expr                                               }
-           | RecordUpdate { _id :: ID, _src       :: Expr     , _selectors :: [String], _expr :: Expr}
+           | RecordUpdate { _id :: ID, _src       :: Expr     , _selectors :: [String], _expr :: Expr                            }
            | Data         { _id :: ID, _cls       :: Type     , _cons      :: [Expr] , _classes   :: [Expr] , _methods :: [Expr] }
            | ConD         { _id :: ID, _name      :: String   , _fields    :: [Expr]                                             }
            | Con          { _id :: ID, _name      :: String                                                                      }
@@ -55,7 +57,7 @@ data Expr  = NOP          { _id :: ID                                           
            | Native       { _id :: ID, _segments  :: [Expr]                                                                      }
            | NativeCode   { _id :: ID, _code      :: String                                                                      }
            | NativeVar    { _id :: ID, _name      :: String                                                                      }
-           | Case         { _id :: ID, _expr      :: Expr     , _match     :: [Expr]                                            }
+           | Case         { _id :: ID, _expr      :: Expr     , _match     :: [Expr]                                             }
            | Match        { _id :: ID, _pat       :: Pat      , _body      :: [Expr]                                             }
            deriving (Show, Eq, Generic)
 
@@ -108,14 +110,16 @@ addCon ncon e = e & cons %~ (ncon:)
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
 traverseM fexp ftype fpat flit e = case e of
     Accessor     id' name' dst'                      -> Accessor     id' name' <$> fexp dst'
-    App          id' src' args'                      -> App          id'       <$> fexp src'  <*> fexpMap args'
-    Assignment   id' pat' dst'                       -> Assignment   id'       <$> fpat pat'  <*> fexp dst'
-    RecordUpdate id' src' selectors' expr'           -> RecordUpdate id'       <$> fexp src'  <*> pure selectors' <*> fexp expr'
-    Data         id' cls' cons' classes' methods'    -> Data         id'       <$> ftype cls' <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
+    TypeAlias    id' srcType' dstType'               -> TypeAlias    id'       <$> ftype srcType' <*> ftype dstType'
+    TypeDef      id' srcType' dstType'               -> TypeDef      id'       <$> ftype srcType' <*> ftype dstType'
+    App          id' src' args'                      -> App          id'       <$> fexp src'      <*> fexpMap args'
+    Assignment   id' pat' dst'                       -> Assignment   id'       <$> fpat pat'      <*> fexp dst'
+    RecordUpdate id' src' selectors' expr'           -> RecordUpdate id'       <$> fexp src'      <*> pure selectors' <*> fexp expr'
+    Data         id' cls' cons' classes' methods'    -> Data         id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
     ConD         id' name' fields'                   -> ConD         id' name' <$> fexpMap fields'
-    Con          {}                                  -> pure e       
+    Con          {}                                  -> pure e
     Field        id' name' cls' value'               -> Field        id' name' <$> ftype cls' <*> fexpMap value'
-    Function     id' path' name' inputs' output'                      
+    Function     id' path' name' inputs' output'
                  body'                               -> Function     id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Lambda       id' inputs' output' body'           -> Lambda       id'             <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Import       id' path' target' rename'           -> Import       id' path' <$> fexp target'  <*> pure rename'
@@ -142,6 +146,8 @@ traverseM fexp ftype fpat flit e = case e of
 traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Expr -> m ()
 traverseM_ fexp ftype fpat flit e = case e of
     Accessor     _  _ dst'                           -> drop <* fexp dst'
+    TypeAlias    _ srcType' dstType'                 -> drop <* ftype srcType' <* ftype dstType'
+    TypeDef      _ srcType' dstType'                 -> drop <* ftype srcType' <* ftype dstType'
     App          _  src' args'                       -> drop <* fexp src'  <* fexpMap args'
     Assignment   _  pat' dst'                        -> drop <* fpat pat'  <* fexp dst'
     RecordUpdate _ src' _ expr'                      -> drop <* fexp src'  <* fexp expr'

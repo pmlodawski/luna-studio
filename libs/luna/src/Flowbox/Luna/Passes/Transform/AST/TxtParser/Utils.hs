@@ -9,13 +9,13 @@
 
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils where
 
-import qualified Text.Parsec as Parsec
-import Control.Applicative
+import           Control.Applicative
+import qualified Text.Parsec         as Parsec
 
-import Flowbox.Prelude
-import Text.Parsec         hiding (many, optional, parse, (<|>), getPosition)
-import Flowbox.Luna.Data.AST.SourcePos (SourcePos(SourcePos))
+import           Flowbox.Luna.Data.AST.SourcePos                   (SourcePos (SourcePos))
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token as Token
+import           Flowbox.Prelude
+import           Text.Parsec                                       hiding (getPosition, many, optional, parse, (<|>))
 
 checkIf f msg p = do
         obj <- p

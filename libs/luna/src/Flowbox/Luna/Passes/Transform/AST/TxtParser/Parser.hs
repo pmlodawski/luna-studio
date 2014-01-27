@@ -11,27 +11,33 @@
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser where
 
 import           Control.Applicative
-import           Text.Parsec         hiding (many, optional, parse, (<|>), State)
+import           Text.Parsec         hiding (State, many, optional, parse, (<|>))
 import qualified Text.Parsec         as Parsec
 import qualified Text.Parsec.Expr    as PExpr
 
-import qualified Flowbox.Luna.Data.AST.Data                        as Data
-import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
-import qualified Flowbox.Luna.Data.AST.Lit                         as Lit
-import qualified Flowbox.Luna.Data.AST.Module                      as Module
-import qualified Flowbox.Luna.Data.AST.Pat                         as Pat
-import qualified Flowbox.Luna.Data.AST.Type                        as Type
-import qualified Flowbox.Luna.Data.Source                          as Source
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer as L
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
+import qualified Flowbox.Luna.Data.AST.Data                             as Data
+import qualified Flowbox.Luna.Data.AST.Expr                             as Expr
+import qualified Flowbox.Luna.Data.AST.Lit                              as Lit
+import           Flowbox.Luna.Data.AST.Module                           (Module)
+import qualified Flowbox.Luna.Data.AST.Module                           as Module
+import qualified Flowbox.Luna.Data.AST.Pat                              as Pat
+import qualified Flowbox.Luna.Data.AST.Type                             as Type
+import           Flowbox.Luna.Data.Pass.ASTInfo                         (ASTInfo)
+import qualified Flowbox.Luna.Data.Pass.ASTInfo                         as ASTInfo
+import           Flowbox.Luna.Data.Pass.SourceMap                       (SourceMap)
+import           Flowbox.Luna.Data.Source                               (Source (Source))
+import qualified Flowbox.Luna.Data.Source                               as Source
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token as Token
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer      as L
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState (ParseState)
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
-import           Flowbox.Prelude                                   hiding (id, mod)
-import qualified Flowbox.Prelude                                   as Prelude
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token      as Token
+import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
+import           Flowbox.Prelude                                        hiding (id, mod)
+import qualified Flowbox.Prelude                                        as Prelude
 
-import Text.Parsec.Pos
 import Control.Monad.State hiding (mapM)
+import Text.Parsec.Pos
 
 import qualified Prelude
 
@@ -56,27 +62,33 @@ pExtPath     = (pPath1 pCon <* L.pAccessor) <|> pure []
 -----------------------------------------------------------
 -- Literals
 -----------------------------------------------------------
-pIntL    = tok Lit.Integer <*> L.integerStr 
+pIntL    = tok Lit.Integer <*> L.integerStr
 pFloatL  = tok Lit.Float   <*> L.floatStr
 pCharL   = tok Lit.Char    <*> L.charLiteral
 pStringL = tok Lit.String  <*> L.stringLiteral
 pLit     = choice [ try $ pFloatL
                   , pIntL
-                  , pCharL 
+                  , pCharL
                   , pStringL
                   ]
 
-tok a = do
-    st <- getState
-    let id = view ParseState.id st
-    setState (set ParseState.id (id+1) st)
-    a <$> pure id
+getASTInfo = view ParseState.info <$> getState
+
+putASTInfo info = modifyState (ParseState.info .~ info)
 
 genID = do
-    st <- getState
-    let id = view ParseState.id st
-    setState (set ParseState.id (id+1) st)
-    pure id
+    info <- getASTInfo
+    let ninfo = ASTInfo.incID info
+    putASTInfo ninfo
+    return $ ninfo ^. ASTInfo.lastID
+
+tok a = a <$> genID
+
+--genID = do
+--    st <- getState
+--    let id = view ParseState.id st
+--    setState (set ParseState.id (id+1) st)
+--    pure id
 
 
 -----------------------------------------------------------
@@ -89,6 +101,18 @@ pImport          = tok Expr.Import   <*  L.pImport
                                      <*> (     try (Just <$ L.pAs <*> (L.pIdent <?> "import name"))
                                            <|> pure Nothing
                                          )
+
+
+pTypeAlias      = tok Expr.TypeAlias <*  L.pTypeAlias
+                                     <*> pType
+                                     <*  L.pAssignment
+                                     <*> pType
+
+
+pTypeDef        = tok Expr.TypeDef   <*  L.pTypeDef
+                                     <*> pType
+                                     <*  L.pAssignment
+                                     <*> pType
 
 
 pArg            = tok Expr.Arg      <*> pArgPattern
@@ -153,10 +177,12 @@ pDataBody       = choice [ Expr.addMethod <$> pFunc
                          ]
                 <?> "class body"
 
-pModuleBody      = choice [ Module.addMethod <$> pFunc
+pModuleBody      = choice [ Module.addMethod    <$> pFunc
                           , pCombine Module.addField pFields
-                          , Module.addClass  <$> pData
-                          , Module.addImport <$> pImport
+                          , Module.addClass     <$> pData
+                          , Module.addImport    <$> pImport
+                          , Module.addTypeAlias <$> pTypeAlias
+                          , Module.addTypeDef   <$> pTypeDef
                           ]
                 <?> "module body"
 
@@ -179,9 +205,9 @@ pFields        =   (\names t val -> map (tok . (mkField t val)) names )
                <*> pType
                <*> (L.pAssignment *> (Just <$> pExpr) <|> pure Nothing)
 
-pDeclaration   = choice [ pImport 
-                        , pFunc   
-                        , pData  
+pDeclaration   = choice [ pImport
+                        , pFunc
+                        , pData
                         , try $ pLambda
                         ]
 
@@ -197,8 +223,8 @@ pNativeElem = choice [ pNativeVar
 pNativeCode = tok Expr.NativeCode <*> ((:) <$> (noneOf "`#") <*> pNativeCodeBody)
 pNativeVar  = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol '}'
 
-pNativeCodeBody = (try(lookAhead $ string "#{")  *> pure []) 
-              <|> (try(lookAhead $ string "```") *> pure []) 
+pNativeCodeBody = (try(lookAhead $ string "#{")  *> pure [])
+              <|> (try(lookAhead $ string "```") *> pure [])
               <|> ((++) <$> ((:) <$> anyChar <*> many (noneOf "`#")) <*> pNativeCodeBody)
 
 
@@ -214,7 +240,7 @@ pExprT base =   --(try (tok Expr.RecordUpdate <*> pVar <*> many1 (L.pAccessor *>
 
 pOpE       = pOpTE pEntBaseE
 pOpTE base = Expr.aftermatch <$> PExpr.buildExpressionParser optableE (pTermE base)
-          
+
 pTermE base = base <??> (flip applyAll <$> many1 (pTermBaseE base))  --  many1 (try $ pTermRecUpd))
 
 
@@ -249,7 +275,7 @@ pLastLexemeEmpty = do
 --pXXX base = do
 --    res <- base
 --    st  <- getState
---    return 
+--    return
 --       $ trace "-----------"
 --       $ trace ("base: " ++ show res)
 --       $ trace ("state: " ++ show st)
@@ -289,6 +315,8 @@ optableE = [ [ postfixM  "::" (tok Expr.Typed <*> pType)                      ]
            , [ operator2 "/"                                  PExpr.AssocLeft ]
            , [ operator2 "+"                                  PExpr.AssocLeft ]
            , [ operator2 "-"                                  PExpr.AssocLeft ]
+           , [ operator2 "<"                                  PExpr.AssocLeft ]
+           , [ operator2 ">"                                  PExpr.AssocLeft ]
            , [ operator2 "=="                                 PExpr.AssocLeft ]
            , [ operator3 "in"                                 PExpr.AssocLeft ]
            , [ binaryM  "$"  (binaryMatchE <$> tok Expr.callConstructor)      PExpr.AssocLeft ]
@@ -315,7 +343,7 @@ pIdentE = choice [ pVarE
 
 pListExpr = choice [ try $ tok Expr.RangeFromTo <*> pOpE <* L.pRange <*> pOpE
                    , try $ tok Expr.RangeFrom   <*> pOpE <* L.pRange
-                   , pOpE 
+                   , pOpE
                    ]
 
 pExprBlock  = pDotBlockBegin pExpr
@@ -348,12 +376,12 @@ pTupleT     = tok Type.Tuple   <*> pTuple pType
 pWildcardT  = tok Type.Unknown <*  L.pWildcard
 --pLambdaT    i   = Type.Lambda <$> pTupleT i <*> return Type.Unknown
 
-pAppBaseT   = choice [ pVarT  
-                     , pConT  
+pAppBaseT   = choice [ pVarT
+                     , pConT
                      ]
 
-pEntT       = choice [ pVarT  
-                     , pConT  
+pEntT       = choice [ pVarT
+                     , pConT
                      , pTupleT
                      , pWildcardT
                      ]
@@ -363,7 +391,7 @@ pEntT       = choice [ pVarT
 -- Patterns
 -----------------------------------------------------------
 pPattern    = choice [ try $ tok Pat.Tuple <*> sepBy2 pPatCon L.separator
-                     , pPatCon 
+                     , pPatCon
                      ]
 
 pPatCon     = choice [ try pConAppP
@@ -387,11 +415,11 @@ pWildcardP  = tok Pat.Wildcard <*  L.pWildcard
 pConP       = tok Pat.Con      <*> pCon
 pConAppP    = tok Pat.App      <*> pConP <*> many1 pTermP
 
-pEntP = choice [ pVarP      
-               , pLitP      
-               , pTupleP    
+pEntP = choice [ pVarP
+               , pLitP
+               , pTupleP
                , pWildcardP
-               , pConP      
+               , pConP
                ]
 
 -------------------------------------------------------------
@@ -440,24 +468,24 @@ pProgEnd = (L.pSpaces <?> "") <* eof
 
 pProgWithState p  = (,) <$> (p <* pProgEnd) <*> getState
 
-parseExpr    = parseGen (pProgWithState pExpr)
-parsePattern = parseGen (pProgWithState pPattern)
-parseType    = parseGen (pProgWithState pType)
 
+type Parser input output = ParsecT input ParseState (State SourcePos) output
 
-pProgram :: [String] -> ParsecT String ParseState.ParseState (State SourcePos) Module.Module
+pProgram :: [String] -> ParsecT String ParseState (State SourcePos) Module
 pProgram mod = L.pSpaces *> pModule mod <* pProgEnd
 
 
-pResult mod = (\ast st -> (ast, view ParseState.sourceMap st)) <$> pProgram mod <*> getState
+pResult mod = (\ast st -> (ast, st ^. ParseState.sourceMap, st ^. ParseState.info )) <$> pProgram mod <*> getState
 
+parseGen :: Parser String a -> String -> ASTInfo -> Either ParseError a
+parseGen p src astInfo = fst $ flip runState (initialPos "") $ runParserT p (ParseState.mk astInfo) "Luna Parser" src
 
-parse (Source.Source mod code) = parseGen (pResult mod) code def
+parse :: Source -> Either ParseError (Module, SourceMap, ASTInfo)
+parse (Source mod code) = parseGen (pResult mod) code def
 
-
-parseGen p src startID = fst $ flip runState (initialPos "") $ runParserT p startID "Luna Parser" src
-
-
+parseExpr    = parseGen (pProgWithState pExpr)
+parsePattern = parseGen (pProgWithState pPattern)
+parseType    = parseGen (pProgWithState pType)
 
 
 

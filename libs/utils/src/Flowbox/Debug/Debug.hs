@@ -5,19 +5,14 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap where
+module Flowbox.Debug.Debug where
 
-import Flowbox.Prelude
+import qualified Debug.Trace as Debug
 
-import           Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
+import Prelude
 
+dtrace :: Show a => a -> b -> b
+dtrace  = Debug.trace . show
 
-
-data GeneralVarMap = GeneralVarMap { varmap :: IntMap (Either String Int) }
-                                   deriving (Show)
-
-
-empty :: GeneralVarMap
-empty = GeneralVarMap IntMap.empty
-
+dtraceM :: (Monad m, Show a) => a -> m ()
+dtraceM s = Debug.trace (show s) (return ())

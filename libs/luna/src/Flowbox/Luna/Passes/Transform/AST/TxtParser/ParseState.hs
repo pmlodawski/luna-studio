@@ -12,8 +12,10 @@ import           Flowbox.Luna.Data.AST.SourcePos  (SourceRange)
 import           Flowbox.Luna.Data.Pass.SourceMap (SourceMap)
 import qualified Flowbox.Luna.Data.Pass.SourceMap as SourceMap
 import           Flowbox.Luna.Data.AST.Utils      (ID)
+import qualified Flowbox.Luna.Data.Pass.ASTInfo                    as ASTInfo
+import           Flowbox.Luna.Data.Pass.ASTInfo                    (ASTInfo)
 
-data ParseState = ParseState { _id         :: Int
+data ParseState = ParseState { _info       :: ASTInfo
                              , _sourceMap  :: SourceMap
                              , _lastLexeme :: String
                              }
@@ -31,8 +33,8 @@ registerSrc id src state = state & sourceMap %~ (SourceMap.insert id src)
 ------------------------------------------------------------------------
 
 instance Default ParseState where
-		def = ParseState 0 def ""
+		def = ParseState def def ""
 
 
-make :: ID -> ParseState
-make i = ParseState i def ""
+mk :: ASTInfo -> ParseState
+mk i = def & info .~ i

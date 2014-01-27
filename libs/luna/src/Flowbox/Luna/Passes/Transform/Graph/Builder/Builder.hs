@@ -14,7 +14,7 @@ import           Control.Applicative
 import           Control.Monad.State
 import qualified Data.List           as List
 
-import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap      (GeneralVarMap)
+import           Flowbox.Luna.Data.Analysis.Alias.Alias              (AA)
 import           Flowbox.Luna.Data.AST.Expr                          (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                          as Expr
 import qualified Flowbox.Luna.Data.AST.Lit                           as Lit
@@ -44,8 +44,8 @@ logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
 type GBPass result = Pass GBState result
 
 
-run ::  GeneralVarMap -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
-run gvm pm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make gvm pm) . expr2graph
+run :: AA -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
+run aa pm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make aa pm) . expr2graph
 
 
 expr2graph :: Expr -> GBPass (Graph, PropertyMap)
@@ -200,30 +200,30 @@ dummyValue = (-1)
 
 showExpr :: Expr -> String
 showExpr expr = case expr of
-    --Expr.Accessor     _ name     dst                            
-    --Expr.App          _ src      args                           
-    --Expr.AppCons_     _ args     
-    --Expr.Assignment   _ pat      dst       
-    --Expr.RecordUpdate _ name     selectors expr    
+    --Expr.Accessor     _ name     dst
+    --Expr.App          _ src      args
+    --Expr.AppCons_     _ args
+    --Expr.Assignment   _ pat      dst
+    --Expr.RecordUpdate _ name     selectors expr
     --Expr.Data         _ cls      cons      classes methods
-    --Expr.ConD         _ name     fields    
-    --Expr.Con          _ name     
+    --Expr.ConD         _ name     fields
+    --Expr.Con          _ name
     --Expr.Function     _ path     name      inputs  output  body
-    --Expr.Lambda       _ inputs   output    body    
-    --Expr.Import       _ path     target    rename  
-    --Expr.Infix        _ name     src       dst     
+    --Expr.Lambda       _ inputs   output    body
+    --Expr.Import       _ path     target    rename
+    --Expr.Infix        _ name     src       dst
     Expr.List         _ items        -> "[" ++ List.intercalate ", " (map showExpr items) ++ "]"
     Expr.Lit          _ lvalue       -> Lit.lunaShow lvalue
     Expr.Tuple        _ items        -> "{" ++ List.intercalate ", " (map showExpr items) ++ "}"
-    --Expr.Typed        _ cls      expr      
-    --Expr.Var          _ name         -> name  
+    --Expr.Typed        _ cls      expr
+    --Expr.Var          _ name         -> name
     Expr.Wildcard     _              -> "_"
     Expr.RangeFromTo  _ start    end -> "[" ++ showExpr start ++ ".." ++ showExpr end ++ "]"
     Expr.RangeFrom    _ start        -> "[" ++ showExpr start ++ "..]"
     --Expr.Field        _ name     cls       value
     --Expr.Arg          _ pat      value
-    --Expr.Native       _ segments 
-    --Expr.NativeCode   _ code     
-    --Expr.NativeVar    _ name     
+    --Expr.Native       _ segments
+    --Expr.NativeCode   _ code
+    --Expr.NativeVar    _ name
     --Expr.Case         _ expr     match
-    --Expr.Match        _ pat      body 
+    --Expr.Match        _ pat      body

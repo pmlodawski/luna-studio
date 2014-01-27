@@ -14,34 +14,37 @@ import "type.proto";
 
 message Expr {
     enum Cls {
-        NOP         = 1;
-        Accessor    = 2;
-        App         = 3;
-        AppCons_    = 4;
-        Assignment  = 5;
-        Data        = 6;
-        ConD        = 7;
-        Con_        = 8;
-        Function    = 9;
-        Lambda      = 10;
-        Import      = 11;
-        Infix       = 12;
-        List        = 13;
-        Lit         = 14;
-        Tuple       = 15;
-        Typed       = 16;
-        Var         = 17;
-        Wildcard    = 18;
+        NOP          = 1;
+        TypeAlias    = 2;
+        TypeDef      = 3;
+        Accessor     = 4;
+        App          = 5;
+        AppCons_     = 6;
+        Assignment   = 7;
+        RecordUpdate = 8;
+        Data         = 9;
+        ConD         = 10;
+        Con_         = 11;
+        Function     = 12;
+        Lambda       = 13;
+        Import       = 14;
+        Infix        = 15;
+        List         = 16;
+        Lit          = 17;
+        Tuple        = 18;
+        Typed        = 19;
+        Var          = 20;
+        Wildcard     = 21;
 
-        RangeFromTo = 19;
-        RangeFrom   = 20;
-        Field       = 21;
-        Arg         = 22;
-        Native      = 23;
-        NativeCode  = 24;
-        NativeVar   = 25;
-        Case        = 26;
-        Match       = 27;
+        RangeFromTo  = 22;
+        RangeFrom    = 23;
+        Field        = 24;
+        Arg          = 25;
+        Native       = 26;
+        NativeCode   = 27;
+        NativeVar    = 28;
+        Case         = 29;
+        Match        = 30;
     }
     required Cls cls = 1;
     optional int32 id = 2 [default = -1];
@@ -59,6 +62,18 @@ message Accessor {
     optional Expr   dst  = 2;
 }
 
+message TypeAlias {
+    extend Expr { optional TypeAlias ext = 127; }
+    optional generated.proto.type.Type srcType = 1;
+    optional generated.proto.type.Type dstType  = 2;
+}
+
+message TypeDef {
+    extend Expr { optional TypeDef ext = 128; }
+    optional generated.proto.type.Type srcType = 1;
+    optional generated.proto.type.Type dstType  = 2;
+}
+
 message App {
     extend Expr { optional App ext = 102; }
     optional Expr  src  = 1;
@@ -74,6 +89,13 @@ message Assignment {
     extend Expr { optional Assignment ext = 104; }
     optional generated.proto.pat.Pat pat = 1;
     optional Expr  dst = 2;
+}
+
+message RecordUpdate {
+    extend Expr { optional RecordUpdate ext = 129; }
+    optional Expr src         = 1;
+    repeated string selectors = 2;
+    optional Expr expr        = 3;
 }
 
 message Data {

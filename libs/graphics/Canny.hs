@@ -12,10 +12,10 @@
 
 module Canny where
 
-import Prelude                                          as P
+import Prelude as P
 
-import Data.Array.Accelerate                            as A
-import Data.Array.Accelerate.IO                         as A
+import Data.Array.Accelerate    as A
+import Data.Array.Accelerate.IO as A
 
 
 -- Canny algorithm -------------------------------------------------------------

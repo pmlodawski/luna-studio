@@ -17,6 +17,9 @@ import GHC.Generics  (Generic)
 newtype Pure a = Pure a deriving (Eq, Ord, Generic, Typeable)
 newtype Safe a = Safe a deriving (Eq, Ord, Generic, Typeable)
 
+val :: a -> Pure(Safe a)
+val = Pure . Safe
+
 ------------------------------------------------------------------------
 -- Instances
 ------------------------------------------------------------------------

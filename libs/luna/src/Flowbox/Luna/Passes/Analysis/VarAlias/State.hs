@@ -6,17 +6,16 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Flowbox.Luna.Passes.Analysis.VarAlias.State where
 
-import           Control.Monad.State
+import           Control.Monad.State (MonadState, get, modify)
 import qualified Data.IntMap         as IntMap
-import           Data.Map            (Map)
-import qualified Data.Map            as Map
 
-import           Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap (GeneralVarMap)
-import qualified Flowbox.Luna.Data.Analysis.Alias.GeneralVarMap as GeneralVarMap
-import           Flowbox.Prelude                                hiding (id)
+import           Flowbox.Luna.Data.Analysis.Alias.Alias (AA, ID)
+import qualified Flowbox.Luna.Data.Analysis.Alias.Alias as AA
+import           Flowbox.Prelude                        hiding (id)
 import           Flowbox.System.Log.Logger
 
 
@@ -25,47 +24,76 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.VarAlias.State"
 
 
-data LocState    = LocState { namemap :: Map String Int
-                            , varstat :: GeneralVarMap
-                            } deriving (Show)
+data VAState = VAState { _aa        :: AA
+                       , _currentID :: ID
+                       }
+             deriving (Show)
 
-type LocStateM m = MonadState LocState m
+makeLenses (''VAState)
 
-
-empty :: LocState
-empty = LocState Map.empty GeneralVarMap.empty
-
-
-bind :: LocStateM m => Int -> Either String Int -> m ()
-bind kid vid = do
-    s <- get
-    let vs  = varstat s
-        nvs = vs { GeneralVarMap.varmap = IntMap.insert kid vid $ GeneralVarMap.varmap vs }
-    put s { varstat = nvs }
+type VAMonad m = (MonadState VAState m, Functor m)
 
 
-updateVarStat :: LocStateM m => LocState -> m ()
-updateVarStat ns = do
-    let nvs = varstat ns
-    s <- get
-    put $ s { varstat = nvs }
+getAA :: VAMonad m => m AA
+getAA = view aa <$> get
+
+getCurrentID :: VAMonad m => m ID
+getCurrentID = view currentID <$> get
 
 
-registerVarName :: LocStateM m => (String, Int) -> m ()
-registerVarName (alias, vname) = do
-    s <- get
-    put $ s { namemap = Map.insert alias vname $ namemap s }
+putAA :: VAMonad m => AA -> m ()
+putAA naa = modify (aa .~ naa)
 
 
-lookupVar :: LocStateM m => String -> m (Maybe Int)
-lookupVar vname = do
-    s <- get
-    return $ Map.lookup vname (namemap s)
+modifyAA :: VAMonad m => (AA -> AA) -> m ()
+modifyAA f = do
+    aa' <- getAA
+    putAA $ f aa'
 
 
-bindVar :: LocStateM m => String -> Int -> m ()
-bindVar name id = do mv <- lookupVar name
-                     case mv of
-                        Just v  -> bind id $ Right v
-                        Nothing -> do
-                                      bind id $ Left $ "Not in scope: " ++ (show name)
+switchID :: VAMonad m => ID -> m ()
+switchID id = modify (currentID .~ id)
+
+
+registerID :: VAMonad m => ID -> m ()
+registerID id = do
+    cid <- getCurrentID
+    modifyAA $ AA.parentMap %~ IntMap.insert id cid
+
+
+registerVarName :: VAMonad m => String -> ID -> m ()
+registerVarName name id = do
+    a   <- getAA
+    cid <- getCurrentID
+    let varRel  = a ^. (AA.varRel . (ix cid))
+        varRel2 = varRel & AA.nameMap.at name ?~ id
+        a2      = a & AA.varRel.at cid ?~ varRel2
+    putAA a2
+
+
+bindVar :: VAMonad m => ID -> String -> m ()
+bindVar id name = do
+    cid <- getCurrentID
+    modifyAA (bindVarRec id cid name)
+
+
+bindVarRec :: ID -> ID -> String -> AA -> AA
+bindVarRec id ctxID name a = case dstIDLookup of
+    Just dstID -> updateAliasMap $ Right dstID
+    Nothing    -> case mPid of
+                  Just pid -> bindVarRec id pid name a
+                  Nothing  -> updateAliasMap $ Left (AA.LookupError name)
+    where dstIDLookup        = nameMap ^. at name
+          mPid               = (a ^. AA.parentMap) ^. at ctxID
+          varRel             = a ^. AA.varRel.ix ctxID
+          nameMap            = varRel ^. AA.nameMap
+          updateAliasMap val = a & AA.aliasMap.at id ?~ val
+
+
+
+------------------------------------------------------------------------
+-- Instances
+------------------------------------------------------------------------
+
+instance Monoid VAState where
+    mempty = VAState mempty 0

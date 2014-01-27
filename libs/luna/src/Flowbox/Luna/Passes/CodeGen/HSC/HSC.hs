@@ -5,24 +5,24 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TupleSections             #-}
 
 module Flowbox.Luna.Passes.CodeGen.HSC.HSC where
 
-import           Flowbox.Prelude                  hiding(cons)                
+import           Data.String.Utils                (join)
 import qualified Flowbox.Luna.Data.HAST.Expr      as HExpr
+import           Flowbox.Luna.Data.HAST.Extension (Extension)
 import qualified Flowbox.Luna.Data.HAST.Lit       as HLit
+import           Flowbox.Luna.Data.Source         (Source (Source))
+import           Flowbox.Luna.Passes.Pass         (Pass)
 import qualified Flowbox.Luna.Passes.Pass         as Pass
-import           Flowbox.Luna.Passes.Pass           (Pass)
-import           Data.String.Utils                  (join)
-import           Flowbox.Luna.Data.Source           (Source(Source))
-import           Flowbox.Luna.Data.HAST.Extension   (Extension)
+import           Flowbox.Prelude                  hiding (cons)
 
-import           Flowbox.System.Log.Logger          
+import Flowbox.System.Log.Logger
 
 
 logger :: Logger
@@ -46,7 +46,7 @@ sectionHeader :: String -> String
 sectionHeader name = "-- " ++ name ++ " --\n"
 
 genSection :: String -> (a -> String) -> [a] -> String
-genSection header generator d = if null d 
+genSection header generator d = if null d
     then ""
     else sectionHeader header ++ (join "\n" $ map generator d) ++ "\n\n"
 
@@ -98,32 +98,33 @@ buildExpr e = case e of
     HExpr.Var      name                   -> pure name
     HExpr.VarE     name                   -> pure name
     HExpr.VarT     name                   -> pure name
-    HExpr.Import   q segments rename      -> pure $ "import " 
+    HExpr.Import   q segments rename      -> pure $ "import "
                                              ++ if q then "qualified " else ""
-                                             ++ join "." segments 
+                                             ++ join "." segments
                                              ++ case rename of
                                                      Just name -> " as " ++ name
                                                      Nothing   -> ""
-    HExpr.DataD    name params cons ders  -> pure $ "data " ++ name ++ params' ++ " = " ++ cons' ++ ders' 
+    HExpr.DataD    name params cons ders  -> pure $ "data " ++ name ++ params' ++ " = " ++ cons' ++ ders'
                                              where params' = if null params then "" else " " ++ join " " params
                                                    cons'   = join " | " (fExpMap cons)
                                                    ders'   = if null ders then "" else " deriving (" ++ sepjoin (map show ders) ++ ")"
     HExpr.InstanceD tp decs               -> pure $ "instance " ++ (code.buildExpr) tp ++ " where { " ++ join "; " (map (code.buildExpr) decs) ++ " }"
-    HExpr.NewTypeD name params con        -> pure $ "newtype " ++ name ++ params' ++ " = " ++ (code.buildExpr) con 
-                                             where params' = if null params then "" else " " ++ join " " params
+    HExpr.NewTypeD name params con        -> pure $ "newtype " ++ name ++ params' ++ " = " ++ (code.buildExpr) con
+                                             where params' = if null params then "" else " " ++ join " " (fsExpMap params)
     HExpr.Con      name fields            -> pure $ name ++ body
                                              where body = if null fields then "" else " { " ++ sepjoin (fExpMap fields) ++ " }"
     HExpr.RecUpdE  expr name val          -> Complex $ csBuildExpr expr ++ " { " ++ name ++ " = " ++ cBuildExpr val ++ "}"
     HExpr.Typed    cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
     HExpr.TypedP   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
     HExpr.TypedE   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
-    HExpr.Function name signature expr    -> pure $ name ++ params ++ " = " ++ (code.buildExpr) expr 
+    HExpr.TySynD   name params dstType    -> Complex $ "type " ++ name ++ " " ++ spacejoin (fsExpMap params) ++ " = " ++ (code.buildExpr) dstType
+    HExpr.Function name signature expr    -> pure $ name ++ params ++ " = " ++ (code.buildExpr) expr
                                              where params = if null signature then ""
                                                             else " " ++ join " " (fExpMap signature)
     HExpr.Lambda   signature expr         -> pure $ "(\\" ++ params ++ " -> " ++ (code.simplify.buildExpr) expr ++ ")"
                                              where params = if null signature then ""
                                                             else " " ++ join " " (fsExpMap signature)
-    HExpr.LetBlock exprs result           -> pure $ "let { " ++ join "; " (fExpMap exprs) ++ " } in " ++ (code.buildExpr) result 
+    HExpr.LetBlock exprs result           -> pure $ "let { " ++ join "; " (fExpMap exprs) ++ " } in " ++ (code.buildExpr) result
     HExpr.DoBlock  exprs                  -> pure $ "do { " ++ body ++ " }"
                                              where body = if null exprs then "" else join "; " (fExpMap exprs) ++ ";"
     HExpr.Infix    name src dst           -> Complex $ csBuildExpr src ++ " " ++ name ++ " " ++ csBuildExpr dst
@@ -145,9 +146,10 @@ buildExpr e = case e of
     HExpr.ListE    items                  -> pure $ "[" ++ sepjoin (fExpMap items) ++ "]"
     HExpr.Bang     expr                   -> pure $ "--->>>   " ++ (code.buildExpr) expr
     HExpr.THE      expr                   -> pure $ (code.buildExpr) expr
-    where sepjoin = join ", "
-          fExpMap  = map cBuildExpr
-          fsExpMap = map csBuildExpr
+    where spacejoin   = join " "
+          sepjoin     = join ", "
+          fExpMap     = map cBuildExpr
+          fsExpMap    = map csBuildExpr
           cBuildExpr  = code.buildExpr
           csBuildExpr = code.simplify.buildExpr
 

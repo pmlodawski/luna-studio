@@ -12,15 +12,15 @@
 
 module Wildfire where
 
-import Flowbox.Prelude
 import Canny
+import Flowbox.Prelude
 
-import Data.Word
-import Data.Array.Accelerate.IO                         ( A )
-import Data.Array.Repa.Repr.Unboxed                     ( U )
-import qualified Data.Array.Repa                        as R
-import qualified Data.Vector.Unboxed                    as V
-import qualified Data.Vector.Unboxed.Mutable            as VM
+import           Data.Array.Accelerate.IO     (A)
+import qualified Data.Array.Repa              as R
+import           Data.Array.Repa.Repr.Unboxed (U)
+import qualified Data.Vector.Unboxed          as V
+import qualified Data.Vector.Unboxed.Mutable  as VM
+import           Data.Word
 
 
 -- Repa component --------------------------------------------------------------

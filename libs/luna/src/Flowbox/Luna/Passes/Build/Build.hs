@@ -16,6 +16,7 @@ import Control.Monad.RWS   hiding (mapM, mapM_)
 
 import           Control.Monad.Trans.Either
 import qualified Flowbox.Luna.Data.AST.Module                          as ASTModule
+import           Flowbox.Luna.Data.Pass.ASTInfo                        (ASTInfo)
 import           Flowbox.Luna.Data.Pass.SourceMap                      (SourceMap)
 import           Flowbox.Luna.Data.Source                              (Source)
 import qualified Flowbox.Luna.Data.Source                              as Source
@@ -31,10 +32,10 @@ import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                   as HSC
 import qualified Flowbox.Luna.Passes.Pass                              as Pass
 import qualified Flowbox.Luna.Passes.Source.File.Reader                as FileReader
 import qualified Flowbox.Luna.Passes.Source.File.Writer                as FileWriter
+import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash           as Hash
+import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA             as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser as TxtParser
-import qualified Flowbox.Luna.Passes.Transform.Hash.Hash               as Hash
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen    as HASTGen
-import qualified Flowbox.Luna.Passes.Transform.SSA.SSA                 as SSA
 import           Flowbox.Prelude
 import qualified Flowbox.System.Directory.Directory                    as Directory
 import           Flowbox.System.Log.Logger
@@ -123,9 +124,9 @@ copyExecutable location name outputPath = liftIO $ do
     Directory.copyFile executable outputPath
 
 
-parseFile :: UniPath -> UniPath -> Pass.Result (ASTModule.Module, SourceMap)
+parseFile :: UniPath -> UniPath -> Pass.Result (ASTModule.Module, SourceMap, ASTInfo)
 parseFile rootPath filePath = runEitherT $ do
     logger debug $ "Compiling file '" ++ UniPath.toUnixString filePath ++ "'"
     source <- hoistEither =<< FileReader.run rootPath filePath
-    ast    <- hoistEither =<< TxtParser.run source
-    return ast
+    result <- hoistEither =<< TxtParser.run source
+    return result

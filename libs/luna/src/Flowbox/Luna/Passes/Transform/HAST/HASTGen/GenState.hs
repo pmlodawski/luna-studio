@@ -77,6 +77,18 @@ addNewType dt = do
     setModule $ m { Module.body = Module.body m ++ [dt] }
 
 
+addTypeAlias :: GenStateM m => HExpr -> m ()
+addTypeAlias el = do
+    m <- getModule
+    setModule $ m { Module.body = Module.body m ++ [el] }
+
+
+addTypeDef :: GenStateM m => HExpr -> m ()
+addTypeDef el = do
+    m <- getModule
+    setModule $ m { Module.body = Module.body m ++ [el] }
+
+
 addImport :: GenStateM m => HExpr -> m ()
 addImport imp = do
     m <- getModule

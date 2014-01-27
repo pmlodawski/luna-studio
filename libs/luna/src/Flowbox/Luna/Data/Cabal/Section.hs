@@ -37,7 +37,7 @@ mkExecutable name' = mkCommon $ Executable name' "Main.hs"
 
 
 mkLibrary :: Section
-mkLibrary = mkCommon $ Library [] 
+mkLibrary = mkCommon $ Library []
 
 
 mkCommon :: ([String] -> [String] -> [String] -> [Extension] -> [String] -> Section) -> Section

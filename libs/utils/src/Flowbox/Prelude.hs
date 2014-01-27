@@ -13,6 +13,7 @@ module Flowbox.Prelude(
     module Data.Default,
     module Data.Monoid,
     module Flowbox.Prelude,
+    module Flowbox.Debug.Debug,
     module Prelude
 ) where
 
@@ -23,6 +24,7 @@ import           Data.Default
 import           Data.Monoid            (Monoid, mappend, mempty)
 import qualified Data.Traversable       as Traversable
 import           Data.Typeable
+import           Flowbox.Debug.Debug
 import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude                as Prelude
 
@@ -127,3 +129,8 @@ infixl 1 :?
 True  ? (x :? _) = x
 False ? (_ :? y) = y
 -- / trenaru operator
+
+
+($>) :: (Functor f) => a -> f b -> f b
+($>) =  fmap . (flip const)
+

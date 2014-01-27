@@ -10,20 +10,20 @@ module ParseArgs (
 
 ) where
 
-import Flowbox.Prelude                                  hiding(set, (++))
-import Data.Char
-import Data.List
-import Data.Label
-import System.Exit
-import System.Console.GetOpt
-import qualified Criterion.Main                         as Criterion
-import qualified Criterion.Config                       as Criterion
+import qualified Criterion.Config      as Criterion
+import qualified Criterion.Main        as Criterion
+import           Data.Char
+import           Data.Label
+import           Data.List
+import           Flowbox.Prelude       hiding (set, (++))
+import           System.Console.GetOpt
+import           System.Exit
 
-import Data.Array.Accelerate                            ( Arrays, Acc )
-import qualified Data.Array.Accelerate                  as A
-import qualified Data.Array.Accelerate.Interpreter      as Interp
+import           Data.Array.Accelerate             (Acc, Arrays)
+import qualified Data.Array.Accelerate             as A
+import qualified Data.Array.Accelerate.Interpreter as Interp
 #ifdef ACCELERATE_CUDA_BACKEND
-import qualified Data.Array.Accelerate.CUDA             as CUDA
+import qualified Data.Array.Accelerate.CUDA as CUDA
 #endif
 
 

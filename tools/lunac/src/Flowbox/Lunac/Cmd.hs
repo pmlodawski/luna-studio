@@ -51,7 +51,7 @@ data Options = VersionOptions { compiler :: Bool
 
                               , buildDir     :: String
                               , ddebug       :: Bool
-                              
+
                               , dump_all     :: Bool
                               , dump_ast     :: Bool
                               , dump_va      :: Bool
