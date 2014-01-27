@@ -24,7 +24,7 @@ main = do
     --appendFile "C:\\test.txt" "\n---\n"
     --print "!!!"
     --print (show flags)
-    exitCode <- if "install" `elem` xargs
+    exitCode <- if ("install" `elem` xargs || "configure" `elem` xargs)
                     then Cmd.rawSystem exec $ ["--config-file=" ++ (Cfg.cabal . Cfg.config) cfg]
                                             ++ flags
                                             ++ xargs
