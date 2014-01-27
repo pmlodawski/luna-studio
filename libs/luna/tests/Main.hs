@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
@@ -120,12 +120,12 @@ example = Source.Source ["Main"] $
                         ----, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
                         ----, "def List.add self x:"
                         ----, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
-                        , "class Console:"
-                        , "    def print self msg:"
-                        , "        ```print' #{msg}```"
+                        --, "class Console:"
+                        --, "    def print self msg:"
+                        --, "        ```print' #{msg}```"
 
-                        , "def Int.+ a b:"
-                        , "    ```liftf2 (+) #{a} #{b}```"
+                        --, "def Int.+ a b:"
+                        --, "    ```liftf2 (+) #{a} #{b}```"
                         ----, "class Vector a b c:"
                         ----, "    x :: a"
                         ----, "class Vector a = Vector | Scalar "
@@ -136,108 +136,43 @@ example = Source.Source ["Main"] $
                         ----, "               | Scalar: a :: a"
                         ----, "               | Vector2: x :: a"
                         ----, "               | Scalar"
-                        , "class Vector a:"
-                        , "    Vector: x,y,z :: a"
-                        , "    def test self:"
-                        , "        self"
-                        , "    def + self v2:"
-                        , "        Vector (self.x()+v2.x()) (self.y()+v2.y()) (self.z()+v2.z())"
+                        --, "class Vector a:"
+                        --, "    pos :: a"
+
+
+
+                        --, "class Point:"
+                        --, "    x,y,z :: Int"
+
+                        --, "class X"
+                        --, "    def test self:"
+                        --, "        self"
+                        --, "    def + self v2:"
+                        --, "        Vector (self.x()+v2.x()) (self.y()+v2.y()) (self.z()+v2.z())"
                         ----, "    Scalar: a     :: a"
                         ----, "    def f self (x::Int):"
-                        ----, "       1"
-                        ----, "def f"
-                        ----, "def g"
-                        ----, "    def test self x: {self,5}"
-                        ----, "    def test2 self x: {self,5}"
-      
-                        ----, "def main self:"
-                        ----, "    v = Vector 1 2 3"
-                        ----, "    v"
-                        ----, "    (2+2).f"
-      
-                        ----, "def fxx (y::Int):"
-                        ----, "    a = b + (c)"
-                        ----, "    Vector"
-                        ----, "    def g:"
-                        ----, "        xxx"
-                        ----, "    b"
-                        ----, "    b x:"
-                        ----, "        x+1"
-                        ----, "def fyy x:"
-                        ----, "    b"
-                        ----, "    def h:"
-                        ----, "        yyy"
-                        ----, "    a = case x:"
-                        ----, "        a: a"
-                        ----, "        {a,b} : 1"
-                        ----, "    v.x.y"
-                        --, "def main self:"
-                        --, "    c = Console()"
-                        ----, "    d = [1..10].each x:"
-                        ----, "       Console().print (x*2)"
-                        ----, "    c.print d"
-                        --, "    c.print $ [1..100].at 5"
-                    --, "    c = Console()"
-                    --, "    p = c.print"
-                    --, "    f (5)"
-                    --, "    p = Console().print"
-                    --, "    o = [1,2,3].each x:"
-                    --, "       p.print x"
-                    --, "    p 1"
-                    --, "    p \"ala\""
-                    --, "    a.throw"
-  
-  
-                    --, "    Console().print $ v.test 1"
-                    --, "def Vector.vtest self a b:"
-                    --, "    {a,b}"
-                    --, "def test self a b:"
-                    --, "    a + b"
-                    --, "    a = x: x.add 5"
-                    --, "    v = Vector 1 2 3"
-                    --, "    Console.print ([1,2,30..0].length)"
   
                     --, "    Console.print (1.add 2)"
   
+                    --, "def f self a::Int b::Int :"
+                    --, "    {a,b}"
+
                     , "def main self:"
-                    , "   c = Console()"
-                    , "   c.print (2+2)"
-                    , "   v = Vector 1 2 3"
-                    , "   c.print (v+v)"
-                    ----, "    Console.print {1}"
-                    --, "    x = [1,2,3]"
-                    --, "    Console.print x"
-                    --, "    y = x.each el:"
-                    --, "        Console.print el"
-                    ----, "        el.add 1"
-                    --, "    Console.print \"hello\""
-  
-  
-  
-                    --, "def add self x y:"
-                    --, "   x.add y"
-  
-                    --, "def add2 self x y:"
-                    --, "   x.add y"
-                    --, "def addInts(self, x, y) -> Int:"
-                    --, "   x.add y"
-                    --, "def main self:"
-                    --, "    Console.print 1"
-                    --, "   [1..10].each x:"
-                    --, "       Console.print x"
-  
-                    --, "def main self:"
-                    --, "    Console.print (self.add 3 4)"
-                    --, "    Console.print (self.add \"Hello\" \" world!\")"
-  
-  
-                    --, "    v = Vector 0 0 0"
-                    --, "    Console.print v"
-                    --, "    Console.print v"
-                      --, "def main self:"
-                      --, "    a = x:x"
-                      ----, "    a = {a,a,a}"
-                      --, "    a 5"
+                    --, "   c = Console()"
+                    --, "   c.print $ self.f 5 6"
+                    , "   p = Point 1 2 3"
+                    , "   p.x = 0"
+                    , "   p.y = 0"
+                    , "   a_ = 10"
+                    , "   a = -10.0"
+                    --, "   Point x y z = p"
+                    --, "   c.print p"
+                    --, "   v = Vector $ Point 1 2 3"
+                    --, "   v.pos.x = v.pos.y = 0"
+                    --, "   {a,b} = {x, z} = v"
+                    --, "   c.print v"
+                    --, "   c.print $ self.f 5 X()"
+
                     ]
 
 --example :: Source
@@ -308,8 +243,7 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- SSA --------"
     ssa <- hoistEither =<< SSA.run va hash
-
-    --logger info $ PP.ppqShow ssa
+    logger info $ PP.ppqShow ssa
 
     logger info "\n-------- HASTGen --------"
     hast <- hoistEither =<< HASTGen.run ssa fp

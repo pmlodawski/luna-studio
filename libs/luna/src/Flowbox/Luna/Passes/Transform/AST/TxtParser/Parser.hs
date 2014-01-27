@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
@@ -31,7 +31,7 @@ import           Flowbox.Prelude                                   hiding (id, m
 import qualified Flowbox.Prelude                                   as Prelude
 
 import Text.Parsec.Pos
-import Control.Monad.State
+import Control.Monad.State hiding (mapM)
 
 import qualified Prelude
 
@@ -91,7 +91,7 @@ pImport          = tok Expr.Import   <*  L.pImport
                                          )
 
 
-pArg            = tok Expr.Arg      <*> pPatCon
+pArg            = tok Expr.Arg      <*> pArgPattern
                                     <*> ((Just <$ L.pAssignment <*> pExpr) <|> pure Nothing)
 
 pFunc           = tok Expr.Function <*  L.pDef
@@ -206,7 +206,8 @@ pExpr       = pExprT pEntBaseE
 
 pExprSimple = pExprT pEntBaseSimpleE
 
-pExprT base =   (try (tok Expr.Assignment <*> pPattern <* (L.reservedOp "=")) <*> pOpTE base)
+pExprT base =   --(try (tok Expr.RecordUpdate <*> pVar <*> many1 (L.pAccessor *> pVar) <* (L.reservedOp "=")) <*> pOpTE base)
+            (try (tok Expr.Assignment   <*> pPattern <* (L.reservedOp "=")) <*> pOpTE base)
             <|> pOpTE base
             <?> "expression"
 
@@ -214,14 +215,27 @@ pExprT base =   (try (tok Expr.Assignment <*> pPattern <* (L.reservedOp "=")) <*
 pOpE       = pOpTE pEntBaseE
 pOpTE base = Expr.aftermatch <$> PExpr.buildExpressionParser optableE (pTermE base)
           
-pTermE base = base <??> (flip applyAll <$> many1 (try $ pTermBaseE base))
+pTermE base = base <??> (flip applyAll <$> many1 (pTermBaseE base))  --  many1 (try $ pTermRecUpd))
 
 
-pTermBaseE p = choice [ pDotTermE
+pTermBaseE p = choice [ try pTermRecUpd
+                      , pDotTermE
                       , pCallTermE p
                       ]
 
-pDotTermE    = tok Expr.Accessor <* L.pAccessor <*> pVar
+pDotTermBase  = (L.pAccessor *> pVar)
+
+pTermRecUpd   = tok (\id sel expr src -> Expr.RecordUpdate id src sel expr) <*> many1 pDotTermBase <* L.pAssignment <*> pExprSimple
+
+pDotTermE     = tok Expr.Accessor <*> pDotTermBase
+
+
+--pDotTermE   = do
+--    exprs   <- fmap (flip Expr.Accessor) <$> pDotTermBase
+--    exprsid <- mapM tok exprs
+--    return (\x -> foldl (flip ($)) x exprsid)
+
+
 pCallTermE p = pLastLexemeEmpty *> ((flip <$> tok Expr.App) <*> pCallList p)
 
 pLastLexeme = view ParseState.lastLexeme <$> getState
@@ -247,7 +261,7 @@ pCaseBodyE = tok Expr.Match <*> pPattern <*> pExprBlock
 
 
 pEntBaseE       = pEntConsE pEntComplexE
-pEntBaseSimpleE = pEntConsE pEntBaseSimpleE
+pEntBaseSimpleE = pEntConsE pEntSimpleE
 
 pEntConsE base = choice [ try $ L.parensed (pExprT base)
                         , base
@@ -310,9 +324,14 @@ pExprBlock  = pDotBlockBegin pExpr
 -----------------------------------------------------------
 -- Types
 -----------------------------------------------------------
-pType       = choice [ try $ pLambdaT
-                     , try $ pConAppT
+pTypeSingle = choice [ try $ pLambdaT
                      , pTermT
+                     ]
+              <?> "type"
+
+
+pType       = choice [ try $ pConAppT
+                     , pTypeSingle
                      ]
               <?> "type"
 
@@ -351,8 +370,12 @@ pPatCon     = choice [ try pConAppP
                      , pTermP
                      ]
 
-pTermP      = choice [ try $ L.parensed pPatCon
-                     , try (tok Pat.Typed <*> pEntP <* L.pTypeDecl <*> pType)
+pArgPattern = pTermBase pTypeSingle
+
+pTermP      = pTermBase pType
+
+pTermBase t = choice [ try $ L.parensed pPatCon
+                     , try (tok Pat.Typed <*> pEntP <* L.pTypeDecl <*> t)
                      , pEntP
                      ]
               <?> "pattern term"

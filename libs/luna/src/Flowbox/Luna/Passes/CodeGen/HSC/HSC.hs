@@ -113,9 +113,10 @@ buildExpr e = case e of
                                              where params' = if null params then "" else " " ++ join " " params
     HExpr.Con      name fields            -> pure $ name ++ body
                                              where body = if null fields then "" else " { " ++ sepjoin (fExpMap fields) ++ " }"
-    HExpr.Typed    cls  expr              -> Complex $ (code.buildExpr) expr ++ " :: " ++ (code.buildExpr) cls
-    HExpr.TypedP   cls  expr              -> Complex $ (code.buildExpr) expr ++ " :: " ++ (code.buildExpr) cls
-    HExpr.TypedE   cls  expr              -> Complex $ (code.buildExpr) expr ++ " :: " ++ (code.buildExpr) cls
+    HExpr.RecUpdE  expr name val          -> Complex $ csBuildExpr expr ++ " { " ++ name ++ " = " ++ cBuildExpr val ++ "}"
+    HExpr.Typed    cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
+    HExpr.TypedP   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
+    HExpr.TypedE   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
     HExpr.Function name signature expr    -> pure $ name ++ params ++ " = " ++ (code.buildExpr) expr 
                                              where params = if null signature then ""
                                                             else " " ++ join " " (fExpMap signature)

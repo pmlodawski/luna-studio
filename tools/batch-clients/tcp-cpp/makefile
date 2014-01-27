@@ -17,6 +17,8 @@ GEN_OBJ := $(patsubst %.cc,%.o, $(GEN_SRC))
 
 .PHONY: all clean
 
+CXX=g++-4.7.2
+
 all: main 
 
 %.o: %.cc

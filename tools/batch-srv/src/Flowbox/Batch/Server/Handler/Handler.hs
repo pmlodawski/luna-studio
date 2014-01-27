@@ -3,7 +3,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.IO>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 module Flowbox.Batch.Server.Handler.Handler where
@@ -103,6 +103,8 @@ import qualified Generated.Proto.Batch.NodeDefault.SetNodeDefault.Args      as S
 import qualified Generated.Proto.Batch.NodeDefault.SetNodeDefault.Result    as SetNodeDefault
 import qualified Generated.Proto.Batch.Parser.ParseExpr.Args                as ParseExpr
 import qualified Generated.Proto.Batch.Parser.ParseExpr.Result              as ParseExpr
+import qualified Generated.Proto.Batch.Parser.ParseNodeExpr.Args            as ParseNodeExpr
+import qualified Generated.Proto.Batch.Parser.ParseNodeExpr.Result          as ParseNodeExpr
 import qualified Generated.Proto.Batch.Parser.ParsePat.Args                 as ParsePat
 import qualified Generated.Proto.Batch.Parser.ParsePat.Result               as ParsePat
 import qualified Generated.Proto.Batch.Parser.ParseType.Args                as ParseType
@@ -185,9 +187,10 @@ class Handler h where
     setNodeDefault    :: h -> SetNodeDefault.Args    -> IO SetNodeDefault.Result
     removeNodeDefault :: h -> RemoveNodeDefault.Args -> IO RemoveNodeDefault.Result
 
-    parseExpr :: h -> ParseExpr.Args -> IO ParseExpr.Result
-    parsePat  :: h -> ParsePat.Args  -> IO ParsePat.Result
-    parseType :: h -> ParseType.Args -> IO ParseType.Result
+    parseExpr     :: h -> ParseExpr.Args     -> IO ParseExpr.Result
+    parsePat      :: h -> ParsePat.Args      -> IO ParsePat.Result
+    parseType     :: h -> ParseType.Args     -> IO ParseType.Result
+    parseNodeExpr :: h -> ParseNodeExpr.Args -> IO ParseNodeExpr.Result
 
     processes :: h -> Processes.Args -> IO Processes.Result
     terminate :: h -> Terminate.Args -> IO Terminate.Result

@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 module Flowbox.Lunac.Cmd where
@@ -50,6 +50,7 @@ data Options = VersionOptions { compiler :: Bool
                               , global       :: Bool
 
                               , buildDir     :: String
+                              , ddebug       :: Bool
                               
                               , dump_all     :: Bool
                               , dump_ast     :: Bool

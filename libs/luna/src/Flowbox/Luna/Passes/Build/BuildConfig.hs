@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Passes.Build.BuildConfig where
@@ -20,6 +20,7 @@ data BuildConfig = BuildConfig { name       :: String
                                , version    :: Version
                                , libs       :: [String]
                                , ghcflags   :: [String]
+                               , cppflags   :: [String]
                                , cabalflags :: [String]
                                , buildType  :: BuildType
                                , config     :: Config

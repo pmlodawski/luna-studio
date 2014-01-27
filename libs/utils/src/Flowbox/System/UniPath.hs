@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 module Flowbox.System.UniPath where
@@ -14,6 +14,7 @@ import qualified System.Directory       as Directory
 import qualified System.FilePath        as FilePath
 
 import Flowbox.Prelude hiding (empty)
+
 
 
 data PathItem = Node String
@@ -48,6 +49,7 @@ fromUnixString spath@(x:xs) = let
 
 
 toUnixString :: UniPath -> String
+toUnixString []   = ""
 toUnixString path = case head l of
         "/" -> "/" ++ (join $ tail l)
         _   -> join l

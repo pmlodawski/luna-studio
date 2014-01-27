@@ -161,7 +161,7 @@ void setField(TMessage *msg, int i, std::string value)
 template <typename TMessage>
 void setField(TMessage *msg, int i, std::vector<int> value)
 {
-	for(int index = 0 ; index < value.size() ; ++index)
+	for(size_t index = 0 ; index < value.size() ; ++index)
 		msg->GetReflection()->AddInt32(msg, TMessage::descriptor()->field(i), value[index]);
 }
 
@@ -218,7 +218,7 @@ TResult askSecondaryWrapper(tcp::socket &controlSocket, TArgs * args,
 	request.SetAllocatedExtension(TArgs::req, args);
 
 	auto response = callAndTranslateException(controlSocket, request);
-	assert(response.type() == Response_Type_Result); //exception would be translated to exception
+	assert(response.type() == Response_Type_Result || response.type() == Response_Type_Accept); //exception would be translated to exception
 	auto defaultsResponse = response.GetExtension(TResult::rsp);
 	response.Clear();
 	return defaultsResponse;
@@ -283,6 +283,11 @@ makeAsk(Maintenance, Initialize)
 makeAsk(Maintenance, Ping)
 makeAsk(Maintenance, Dump)
 makeAsk(Maintenance, Shutdown)
+
+makeAsk(Parser, ParseExpr)
+makeAsk(Parser, ParseType)
+makeAsk(Parser, ParsePat)
+makeAsk(Parser, ParseNodeExpr)
 
 makeAsk(Process, Processes)
 makeAsk(Process, Terminate)
@@ -416,7 +421,7 @@ int main()
 			auto bc_Main_test = buildBreadcrumbs(crumbsTest);
 			graph::Node node;
 			node.set_cls(graph::Node::Expr);
-			node.set_expr("add"); 
+			node.set_expr("+"); 
 			nodeAddid = macro::Graph::AddNode(controlSocket, node, bc_Main_test, library.id(), project.id()).nodeid();
 		}
 		int nodePrintid;
@@ -471,6 +476,8 @@ int main()
 
 		auto loadedProject = macro::Project::OpenProject(controlSocket, "/tmp/flowbox/testProject").project();
 		macro::Library::LoadLibrary(controlSocket, "/tmp/flowbox/testProject/testLibrary", loadedProject.id());
+		macro::Library::BuildLibrary(controlSocket, library.id(), project.id());
+		macro::Library::RunLibrary(controlSocket, library.id(), project.id());
 
 		// macro::Maintenance::Dump(controlSocket);
 		macro::Project::CloseProject(controlSocket, loadedProject.id());

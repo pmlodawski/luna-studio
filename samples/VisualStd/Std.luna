@@ -1,0 +1,71 @@
+
+# ###### File ###################################
+
+# class File:
+#     def readFile self name:
+#         ```getIO $ liftFIO1 hsLib_System_IO_readFile #{name}```
+
+#     def writeFile self name content:
+#         content = content.toString
+#         ```getIO $ liftFIO2 hsLib_System_IO_writeFile #{name} #{content}```
+
+
+###### Console ################################
+
+class Console:
+    def print self msg:
+        ```print' #{msg}```
+
+###### List ###################################
+
+def List.at self index:
+    ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```
+
+def List.+ self l2:
+    ```liftf2 (++) #{self} #{l2}```
+
+def List.contains self el:
+    ```liftf2 (elem) (val #{el}) #{self}```
+
+def List.length self:
+    ```liftf1 length #{self}```
+
+def List.each self callback:
+    ```let {mymap = liftf2 map}```
+    ```mymap (val $ call1 #{callback}) #{self}```
+
+###### Bool ####################################
+
+def Bool.not self:
+    ```liftf1 not #{self}```
+
+###############################################
+
+class Image:
+    def testm self x:
+        ```liftf1 testm #{x}```
+
+    def readImage self path:
+        ```flattenCtx $ liftf1 readImage #{path}```
+
+    def writeImage self img path:
+        ```flattenCtx $ liftf2 writeImage #{path} #{img}```
+
+    def display self img:
+        path = "/tmp/flowbox/data/image.bmp"
+        ```flattenCtx $ liftf2 writeImage #{path} #{img}```
+
+    def adjustCB self img contrast brightness:
+        ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{img}```
+
+    def convolve self img kernel:
+        ```flattenCtx $ liftf2 convolve #{kernel} #{img}```
+
+class Vector a:
+    x,y,z :: a
+
+    def test self x:
+        x
+
+    def + self v2:
+        Vector (self.x() + v2.x()) (self.y() + v2.y()) (self.z() + v2.z())

@@ -63,7 +63,7 @@ class AllProject(Project):
         return tgts
 
 
-deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'target-hs', 'cabal-install', 'graphics', 'num-conversion', 'utils', 'markup']
+deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'graphics', 'target-hs', 'cabal-install', 'num-conversion', 'utils', 'markup']
 
 pkgs = { '@all'           : AllProject (deps = deptree)
        , 'cabal-install'  : HProject   ('cabal-install'       , os.path.join ('libs'  , 'cabal-install') , 'libs'    , []                                                  )

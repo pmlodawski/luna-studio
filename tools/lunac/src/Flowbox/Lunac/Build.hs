@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -21,6 +21,7 @@ import qualified Flowbox.Luna.Passes.General.Luna.Luna as Luna
 import qualified Flowbox.Lunac.Cmd                     as Cmd
 import           Flowbox.Prelude                       hiding (op)
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.System.Platform               as Platform
 import           Flowbox.System.UniPath                (UniPath)
 import qualified Flowbox.System.UniPath                as UniPath
 
@@ -62,17 +63,28 @@ build cfg op diag filePath = do
                     1 -> pure ["-O1"]
                     2 -> pure ["-O2"]
                     _ -> fail "Unsupported optimisation level"
-    let cabalFlags = case Cmd.global op of
+    let cppFlags   = if Cmd.ddebug op
+                         then ["-DDEBUG"]
+                         else []
+        cabalFlags = case Cmd.global op of
                         True  -> ["--global"]
                         False -> []
-        outputPath = UniPath.fromUnixString $ Cmd.output op
+        outputPath = fixOutputPath $ UniPath.fromUnixString $ Cmd.output op
         buildType  = if Cmd.library op
                         then BuildConfig.Library
                         else BuildConfig.Executable outputPath
         buildDir   = case Cmd.buildDir op of
                         "" -> Nothing
                         d  -> Just $ UniPath.fromUnixString d
-        bldCfg = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag buildDir
+        bldCfg = BuildConfig name version libs ghcFlags cppFlags cabalFlags buildType cfg diag buildDir
     ast <- Luna.runIO $ Build.parseFile rootPath filePath
     Luna.runIO $ Build.run bldCfg $ fst ast
     return ()
+
+
+fixOutputPath :: UniPath -> UniPath
+fixOutputPath path = Platform.dependent path windowsPath path where
+    exe = ".exe"
+    windowsPath = if UniPath.extension path == exe
+        then path
+        else UniPath.setExtension exe path

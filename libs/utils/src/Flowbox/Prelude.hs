@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
@@ -41,11 +41,11 @@ putStrLn :: MonadIO m => String -> m ()
 putStrLn = liftIO . Prelude.putStrLn
 
 
-instance (Typeable a) => Show (IO a) where
-    show e = '(' : (show . typeOf) e ++ ")"
+--instance (Typeable a) => Show (IO a) where
+--    show e = '(' : (show . typeOf) e ++ ")"
 
-instance (Typeable a, Typeable b) => Show (a -> b) where
-    show e = '(' : (show . typeOf) e ++ ")"
+--instance (Typeable a, Typeable b) => Show (a -> b) where
+--    show e = '(' : (show . typeOf) e ++ ")"
 
 -- f .: g = \x y->f (g x y)
 -- f .: g = (f .) . g
@@ -88,8 +88,14 @@ fromJust (Just x) = return x
 
 either2M :: (MonadIO m, Show a) => Either a b -> m b
 either2M f = case f of
-        Right r -> return r
-        Left  e -> fail (show e)
+    Right r -> return r
+    Left  e -> fail (show e)
+
+
+eitherString2M :: MonadIO m => Either String b -> m b
+eitherString2M f = case f of
+    Right r -> return r
+    Left  e -> fail e
 
 
 whenLeft :: (Monad m) => Either a b -> (a -> m ()) -> m ()

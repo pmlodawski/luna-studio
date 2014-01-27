@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 {-# OPTIONS_GHC -fno-warn-orphans  #-}
@@ -27,6 +27,7 @@ import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Library.Library                          as Gen
 import qualified Generated.Proto.Library.Library.PropertyMap              as Gen
 import qualified Generated.Proto.Library.Library.PropertyMap.KeyValue     as Gen
+
 
 
 instance Convert (Int, Library) Gen.Library where

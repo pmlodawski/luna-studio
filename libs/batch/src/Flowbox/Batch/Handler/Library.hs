@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 module Flowbox.Batch.Handler.Library (
@@ -100,11 +100,12 @@ buildLibrary libID projectID = readonly . libraryOp libID projectID (\batch libr
         outputPath  = UniPath.append name projectPath
         libs        = []                 -- TODO [PM] : hardcoded libs
         ghcFlags    = ["-O2"]            -- TODO [PM] : hardcoded ghc flags
+        cppFlags    = []                 -- TODO [PM] : hardcoded cpp flags
         cabalFlags  = []                 -- TODO [PM] : hardcoded cabal flags
         buildDir    = Nothing
 
         buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
-        bldCfg      = BuildConfig name version libs ghcFlags cabalFlags buildType cfg diag buildDir
+        bldCfg      = BuildConfig name version libs ghcFlags cppFlags cabalFlags buildType cfg diag buildDir
 
     Luna.runIO $ Build.run bldCfg ast
     return (library, ()))
@@ -117,9 +118,8 @@ runLibrary libID projectID = projectOp projectID (\_ project -> do
         libs        = Project.libs project
         processMap  = Project.processMap project
     library <- LibManager.lab libs libID <?> "Wrong libID=" ++ (show libID)
-
-    let name = Library.name library
-        command = Platform.dependent ("./" ++ name) (name ++ ".exe") ("./" ++ name)
+    name <- UniPath.toUnixString <$> (UniPath.expand $ UniPath.append (Library.name library) projectPath)
+    let command = Platform.dependent name (name ++ ".exe") name
     --    noStandardInput = ""
     --    noArguments     = [] --TODO [PM] : reimplement all this method to support real programs
     --loggerIO debug $ "Running command '" ++ command ++ "'"

@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
@@ -25,7 +25,7 @@ import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
 import Debug.Trace
 
 
-identLetter  = alphaNum
+identLetter  = alphaNum <|> char '_'
 identStart   = letter
 commentLine  = "#"
 commentStart = "#["
@@ -52,7 +52,9 @@ pAssignment  = symbol  '='
 pNativeSym   = symbols "```"
 pRange       = symbols ".."
 
-opStart      = oneOf "!#$%&*+./<=>?@\\^|-~"
+operators    = "!#$%&*+./<=>?@\\^|-~"
+
+opStart      = oneOf operators
 opLetter     = opStart
 reservedOpNames = ["=", "::", ":", ".", "->", "<-"]
 
@@ -190,7 +192,9 @@ exponent'       = (\f e -> power (f e)) <$ oneOf "eE" <*> sign <*> (decimal <?> 
              | otherwise  = fromInteger (10^e)
 
 
-floatStr'       = (++) <$> decimalStr <*> fractExponentStr
+floatStr'       = ((:) <$> lexeme signStr <*> floatStrBase) <|> floatStrBase
+
+floatStrBase    = (++) <$> decimalStr <*> fractExponentStr
 
 fractExponentStr = (++) <$> fractionStr <*> option "" exponentStr'
 
@@ -263,7 +267,8 @@ pIdent        = pIdentLower <|> pIdentUpper <?> "identifier"
 
 pIdentUpper   = mkIdent ((:) <$> upper <*> many identLetter) <?> "uppercase identifier"
 
-pIdentLower   = mkIdent ((:) <$> lower <*> many identLetter) <?> "lowercase identifier"
+pIdentLower   = mkIdent (((:) <$> lower <*> many identLetter) 
+                     <|> ((:) <$> char '_' <*> many1 identLetter)) <?> "lowercase identifier"
 
 mkIdent     p = lexeme $ try $ checkIf isReservedName "reserved word " p
 

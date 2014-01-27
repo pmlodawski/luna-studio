@@ -10,8 +10,8 @@ from utils.colors import print_error
 
 
 cwd         = os.getcwd()
-cpp_gen_dirs = [os.path.join(cwd, 'tools/batch-clients/performance/zmq/generated')
-               ,os.path.join(cwd, 'tools/batch-clients/performance/tcp/generated')
+cpp_gen_dirs = [os.path.join(cwd, 'tools/batch-clients/performance/tcp/generated')
+               ,os.path.join(cwd, 'tools/batch-clients/dumper/generated')
                ,os.path.join(cwd, 'tools/batch-clients/tcp-cpp/generated')]
 
 imports = "-I /usr/include -I /usr/local/include -I libs/luna/src/proto -I libs/batch/src/proto"

@@ -7,7 +7,6 @@
  -- [ ] 7) zmiany kolorow na krzywych - definiowane za pomoca datatypu, ktory okrelalby czy to jest linear, bezier cyz cos innego
  -- [ ] 8) samplowanie po kolorach
 
-
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE TypeOperators             #-}
 
@@ -61,7 +60,6 @@ import Data.Bits ((.&.))
 --import qualified Data.Array.Accelerate.CUDA             as CUDA
 
 import Control.Monad.Trans.Either (hoistEither, runEitherT)
-
 
 -- basic
 
@@ -136,6 +134,7 @@ luminance' = luminance "r" "g" "b" "luminance"
 --erosion channel = do...
 
 
+
 -- convolution
 
 convolve3x3 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil3x3 a -> A.Exp a
@@ -153,16 +152,6 @@ convolve5x3 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o))
 convolve5x5 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil5x5 a -> A.Exp a
 convolve5x5 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o),(p,q,r,s,t),(u,v,w,x,y))
     = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y]
-
-
---convolve cname convolution kernel img = do
---convolve channel convolution kernel img = --do
-    --channel <- Image.lookup cname img
-    --let outimg = Image.insert cname channel'
-               -- $ img
-    --let channel' =
-      --Channel.Acc $ A.stencil (convolution kernel) A.Clamp (Channel.accMatrix channel)
-    --return channel'
 
 convolveRGB convolution kernel img = do
     rchannel <- Image.lookup "r" img

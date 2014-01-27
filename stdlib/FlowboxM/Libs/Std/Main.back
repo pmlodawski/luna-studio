@@ -28,7 +28,7 @@ def List.contains self el:
     ```liftf2 (elem) (val #{el}) #{self}```
 
 def List.length self:
-    ```liftf length #{self}```
+    ```liftf1 length #{self}```
 
 def List.each self callback:
     ```let {mymap = liftf2 map}```
@@ -37,7 +37,7 @@ def List.each self callback:
 ###### Bool ####################################
 
 def Bool.not self:
-    ```liftf not #{self}```
+    ```liftf1 not #{self}```
 
 ###### Int ####################################
 
@@ -68,23 +68,52 @@ def Float.- a b:
 ###############################################
 
 
+def testm self x:
+    ```liftf1 testm #{x}```
+
+def readImage self path:
+    ```flattenCtx $ liftf1 readImage #{path}```
+
+def writeImage self path img:
+    ```flattenCtx $ liftf2 writeImage #{path} #{img}```
+
+def adjustCB self contrast brightness img:
+    ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{img}```
+
+def convolve self kernel img:
+    ```flattenCtx $ liftf2 convolve #{kernel} #{img}```
 
 class Vector a:
     x,y,z :: a
+
     def test self x:
         x
 
     def + self v2:
-        Vector (self.x()+v2.x()) (self.y()+v2.y()) (self.z()+v2.z())
+        Vector (self.x() + v2.x()) (self.y() + v2.y()) (self.z() + v2.z())
 
 def main self:
-    v = Vector 1 2 3
+    # v = Vector 1 2 3
     c = Console()
-    c.print "hello"
-    c.print (v+v)
-    c.print $ 5 in [1..100]
-    a = [1..100].each x:
-        Console().print x
-    # c.print a
+    # c.print v
+    # c.print (v+v)
 
+    a = [1..10].each x:
+        Console().print x
+
+    c.print $ a.at 5
+    c.print $ self.testm 15
+
+    path = "lena.bmp"
+    outpath = "luna.bmp"
+    imgIn = self.readImage path
+    # c.print img
+    c = 1.5
+    b = 0.2
+    k = 0.1
+    # imgOut = self.adjustCB c b imgIn
+    # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
+    imgOut = self.convolve k imgIn
+    self.writeImage outpath imgOut
+    # c.print img
 

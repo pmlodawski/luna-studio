@@ -21,10 +21,9 @@ import qualified Flowbox.System.Log.Logger  as Logger
 run group = runEitherT group
 
 
-runIO f = either2M =<< f
+runIO f = eitherString2M =<< f
 --runIO :: Pass.TransformerT Pass.NoState String IO b -> IO b
 --runIO f = either2io =<< (run . hoistEither) =<< f
-
 
 
 

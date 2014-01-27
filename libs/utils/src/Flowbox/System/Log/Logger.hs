@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE FlexibleContexts, NoMonomorphismRestriction, ConstraintKinds, Rank2Types #-}
@@ -66,7 +66,7 @@ logIO entry = liftIO $ do
         msg   = LogEntry.msg      entry
         pri   = LogEntry.priority entry
         sgr   = case pri of
-                   TRACE       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Magenta]
+                   TRACE       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Cyan]
                    DEBUG       -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Magenta]
                    INFO        -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Green  ]
                    WARNING     -> [ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Yellow ]

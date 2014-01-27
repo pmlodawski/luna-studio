@@ -1,9 +1,10 @@
-GEN_SRC := generated/attributes.pb.cc \
+GEN_SRC :=  generated/attributes.pb.cc \
 			generated/crumb.pb.cc \
 			generated/expr.pb.cc \
 			generated/file-system.pb.cc \
 			generated/focus.pb.cc \
 			generated/graph.pb.cc \
+			generated/graphview.pb.cc \
 			generated/library.pb.cc \
 			generated/lit.pb.cc \
 			generated/nodedefault.pb.cc \
@@ -16,13 +17,18 @@ GEN_OBJ := $(patsubst %.cc,%.o, $(GEN_SRC))
 
 .PHONY: all clean
 
+CXX=g++-4.7.2
+
 all: main 
 
-%.o: %.cpp %.cc
-	$(CXX) --std=c++11 -Wall -c $< -o $@
+%.o: %.cc
+	$(CXX) -c  $< -o $@
+
+main.o: main.cpp $(GEN_SRC) 
+	$(CXX) -std=gnu++11 -Wall -c  $< -o $@
 
 main: main.o $(GEN_OBJ) 
-	$(CXX) --std=c++11 $^ -o $@ -lprotobuf -lzmq
+	$(CXX) $^ -o $@ -lprotobuf -pthread -lboost_system
 
 clean:
 	$(RM) -r *.o generated/*.o main

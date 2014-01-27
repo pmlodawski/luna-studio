@@ -1,7 +1,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 module Flowbox.System.Platform where
@@ -9,6 +9,7 @@ module Flowbox.System.Platform where
 import qualified System.Info as Info
 
 import Flowbox.Prelude hiding (error)
+
 
 
 data Platform = Linux

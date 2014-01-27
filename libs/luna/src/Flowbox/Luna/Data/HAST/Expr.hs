@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 module Flowbox.Luna.Data.HAST.Expr where
@@ -19,7 +19,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Tuple      { items :: [Expr]                                                      }
           | TupleP     { items :: [Expr]                                                      }
           | ListE      { items :: [Expr]                                                      }
-          | StringLit  { val :: String                                                      }
+          | StringLit  { litval :: String                                                      }
           | Var        { name :: String                                                      }
           | VarE       { name :: String                                                      }
           | VarT       { name :: String                                                      }
@@ -37,6 +37,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Con        { name      :: String   , fields    :: [Expr]                              }
           | ConE       { qname :: [String]                                                    }
           | ConT       { name :: String                                                      }
+          | RecUpdE    { expr :: Expr , name :: String, val :: Expr}
           -- | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , newtypes  :: [Expr]       , datatypes :: [Expr]  , methods :: [Expr] , thexpressions :: [Expr] }
           | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , body  :: [Expr]}
           | Import     { qualified :: Bool     , segments  :: [String]    , rename    :: Maybe String                           }

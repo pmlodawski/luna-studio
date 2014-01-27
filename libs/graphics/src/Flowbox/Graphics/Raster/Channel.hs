@@ -39,7 +39,7 @@ compute backend chan = Raw $ case chan of
 
 --shape :: (A.Elt a, A.Shape sh) => Channel a -> sh
 --shape :: Int
-shape ch = A.arrayShape $ (accMatrix ch)
+--shape ch = A.arrayShape $ (accMatrix ch)
 
 --generate :: Int
 --generate shape f = Acc $ A.generate shape f

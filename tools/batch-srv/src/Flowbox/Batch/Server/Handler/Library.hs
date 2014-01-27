@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 module Flowbox.Batch.Server.Handler.Library (
     libraries,
@@ -15,9 +15,9 @@ module Flowbox.Batch.Server.Handler.Library (
     runLibrary,
 ) where
 
-import Data.IORef (IORef)
+import           Data.IORef (IORef)
+import qualified Data.IORef as IORef
 
-import qualified Data.IORef                                            as IORef
 import           Flowbox.Batch.Batch                                   (Batch)
 import qualified Flowbox.Batch.Handler.Library                         as BatchL
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Library ()
@@ -40,6 +40,7 @@ import qualified Generated.Proto.Batch.Library.StoreLibrary.Args       as StoreL
 import qualified Generated.Proto.Batch.Library.StoreLibrary.Result     as StoreLibrary
 import qualified Generated.Proto.Batch.Library.UnloadLibrary.Args      as UnloadLibrary
 import qualified Generated.Proto.Batch.Library.UnloadLibrary.Result    as UnloadLibrary
+import qualified Generated.Proto.Library.Library                       as Gen
 
 
 
@@ -48,13 +49,18 @@ loggerIO = getLoggerIO "Flowbox.Batch.Server.Handlers.Library"
 
 -------- public api -------------------------------------------------
 
+
+shrinkLibrary :: Gen.Library -> Gen.Library
+shrinkLibrary library = library { Gen.ast = Nothing, Gen.propertyMap = Nothing}
+
+
 libraries :: IORef Batch -> Libraries.Args -> IO Libraries.Result
 libraries batchHandler (Libraries.Args tprojectID) = do
     loggerIO info "called libraries"
     let projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
     libs <- BatchL.libraries projectID batch
-    return $ Libraries.Result $ encodeList libs
+    return $ Libraries.Result $ fmap shrinkLibrary $ encodeList libs
 
 
 libraryByID :: IORef Batch -> LibraryByID.Args -> IO LibraryByID.Result
@@ -64,7 +70,7 @@ libraryByID batchHandler (LibraryByID.Args tlibID tprojectID) = do
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
     library <- BatchL.libraryByID libID projectID batch
-    return $ LibraryByID.Result $ encode (libID, library)
+    return $ LibraryByID.Result $ shrinkLibrary $ encode (libID, library)
 
 
 createLibrary :: IORef Batch -> CreateLibrary.Args -> IO CreateLibrary.Result

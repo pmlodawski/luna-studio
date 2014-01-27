@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2013
+-- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE DataKinds #-}
@@ -248,7 +248,8 @@ liftenv2 f a b   = liftenv (liftenv f a) b
 liftenv3 f a b c = liftenv (liftenv2 f a b) c
 
 
-liftf  = liftenv  . Pure . liftErr  . Safe
+liftf0 = Pure . Safe
+liftf1 = liftenv  . Pure . liftErr  . Safe
 liftf2 = liftenv2 . Pure . liftErr2 . Safe
 liftf3 = liftenv3 . Pure . liftErr3 . Safe
 
