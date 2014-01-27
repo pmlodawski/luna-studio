@@ -1,6 +1,6 @@
  -- [ ] 1) lut
- -- [ ] 2) dylatacja
- -- [ ] 3) erozja
+ -- [+] 2) dylatacja
+ -- [+] 3) erozja
  -- [ ] 4) otwarcie
  -- [ ] 5) zamknięcie
  -- [ ] 6) mediana - do czysczenia np. kurzu
@@ -130,9 +130,49 @@ luminance rname gname bname outname img = do
 luminance' :: (Image Float) -> Either Image.Error (Image Float)
 luminance' = luminance "r" "g" "b" "luminance"
 
---erosion :: Channel Float -> Channel Float
---erosion channel = do...
 
+
+erosion :: Channel Float -> Channel Float
+erosion channel = Channel.stencil erode A.Mirror channel
+    where erode ((a,b,c),(d,e,f),(g,h,i)) = minimum [a,b,c,d,e,f,g,h,i]
+
+erodeImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+erodeImage names img = do
+  let (nameA,_,_) = names
+      (_,nameB,_) = names
+      (_,_,nameC) = names
+  channelA <- Image.lookup nameA img
+  channelB <- Image.lookup nameB img
+  channelC <- Image.lookup nameC img
+  let outimg = Image.insert nameA channelA'
+             $ Image.insert nameB channelB'
+             $ Image.insert nameC channelC'
+             $ img
+      channelA' = erosion channelA
+      channelB' = erosion channelB
+      channelC' = erosion channelC
+  return outimg
+
+dilation :: Channel Float -> Channel Float
+dilation channel = Channel.stencil dilate A.Mirror channel
+    where dilate ((a,b,c),(d,e,f),(g,h,i)) = maximum [a,b,c,d,e,f,g,h,i]
+
+dilateImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+dilateImage names img = do
+  let (nameA,_,_) = names
+      (_,nameB,_) = names
+      (_,_,nameC) = names
+  channelA <- Image.lookup nameA img
+  channelB <- Image.lookup nameB img
+  channelC <- Image.lookup nameC img
+  let outimg = Image.insert nameA channelA'
+             $ Image.insert nameB channelB'
+             $ Image.insert nameC channelC'
+             $ img
+      channelA' = dilation channelA
+      channelB' = dilation channelB
+      channelC' = dilation channelC
+  return outimg
 
 
 -- convolution
@@ -153,18 +193,23 @@ convolve5x5 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil5x5 a -> A.Exp a
 convolve5x5 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o),(p,q,r,s,t),(u,v,w,x,y))
     = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y]
 
-convolveRGB convolution kernel img = do
-    rchannel <- Image.lookup "r" img
-    gchannel <- Image.lookup "g" img
-    bchannel <- Image.lookup "b" img
-    let outimg = Image.insert "r" r'
-               $ Image.insert "g" g'
-               $ Image.insert "b" b'
-               $ img
-        r' = clipValues $ Channel.Acc $ A.stencil (convolution kernel) A.Clamp (Channel.accMatrix rchannel)
-        g' = clipValues $ Channel.Acc $ A.stencil (convolution kernel) A.Clamp (Channel.accMatrix gchannel)
-        b' = clipValues $ Channel.Acc $ A.stencil (convolution kernel) A.Clamp (Channel.accMatrix bchannel)
-    return outimg
+convolve names convolution kernel img = do
+  let (nameA,_,_) = names
+      (_,nameB,_) = names
+      (_,_,nameC) = names
+  channelA <- Image.lookup nameA img
+  channelB <- Image.lookup nameB img
+  channelC <- Image.lookup nameC img
+  let outimg = Image.insert nameA channelA'
+             $ Image.insert nameB channelB'
+             $ Image.insert nameC channelC'
+             $ img
+      channelA' = clipValues $ Channel.stencil (convolution kernel) A.Clamp channelA
+      channelB' = clipValues $ Channel.stencil (convolution kernel) A.Clamp channelB
+      channelC' = clipValues $ Channel.stencil (convolution kernel) A.Clamp channelC
+  return outimg
+
+convolveRGB = convolve ("r", "g", "b")
 
 -- brightness and contrast
 

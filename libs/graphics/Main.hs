@@ -80,13 +80,18 @@ imgtest img imgFilter = do
             >>= Image.cpChannel "luminance" "b"
     let f = \_ -> 1
         fBW = \x -> x A.>=* 0.5
+        rgb = ("r", "g", "b")
     --lrgba <- A.keyRGB 0.1 (0.176, 0.816, 0.145) rgba
     --lrgba <- A.keyColor ("r", "g", "b") (0.2, 0.2, 0.2) (0.055, 0.582, 0.363) f rgba
     --lrgba <- A.keyColor ("r", "g", "b") (0.1, 0.1, 0.1) (0.176, 0.816, 0.145) f rgba
     --hsv2 <- A.keyColor ("h", "s", "v") (0.1, 0.2, 0.2) (0.402, 0.85, 0.59) f hsv
     --lrgba <- A.convertHSVtoRGB hsv2
-    bw <- A.binarizeImage ("r", "g", "b") fBW lrgba
-    RGBA.compose $ Image.reprWord8 bw
+    --bw <- A.binarizeImage rgb fBW lrgba
+    --erodedBW <- A.erodeImage rgb bw
+    --dilatedBW <- A.dilateImage rgb bw
+    --erodedMono <- A.erodeImage rgb lrgba
+    dilatedMono <- A.dilateImage rgb lrgba
+    RGBA.compose $ Image.reprWord8 dilatedMono
     where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
           mod1 = flip nonIntRem 1.0
 
