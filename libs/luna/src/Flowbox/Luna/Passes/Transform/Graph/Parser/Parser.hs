@@ -69,12 +69,10 @@ parseNode inputs (nodeID, node) = do
 
 
 parseExprNode :: Node.ID -> String -> GPPass ()
-parseExprNode nodeID expr = if length expr == 1 && head expr `elem` Lexer.operators
-    then parseInfixNode nodeID expr
-    else case expr of
-        "Tuple" -> parseTupleNode nodeID
-        '=':pat -> parsePatNode   nodeID pat
-        _       -> parseAppNode   nodeID expr
+parseExprNode nodeID expr = case expr of
+    "Tuple" -> parseTupleNode nodeID
+    '=':pat -> parsePatNode   nodeID pat
+    _       -> parseAppNode   nodeID expr
 
 
 parseInputsNode :: Node.ID -> [Expr] -> GPPass ()
@@ -110,23 +108,25 @@ parsePatNode nodeID pat = do
         _      -> fail "parsePatNode: Wrong Pat arguments"
 
 
-parseInfixNode :: Node.ID -> String -> GPPass ()
-parseInfixNode nodeID inf = do
-    srcs   <- State.getNodeSrcs nodeID
-    let u = Expr.Wildcard IDFixer.unknownID
-    (a, b) <- case srcs of
-                    [a, b] -> return (a, b)
-                    [a]    -> return (a, u)
-                    []     -> return (u, u)
-                    _      -> fail "parseInfixNode: Wrong Infix arguments"
-    addExpr nodeID $ Expr.Infix nodeID inf a b
+--parseInfixNode :: Node.ID -> String -> GPPass ()
+--parseInfixNode nodeID inf = do
+--    srcs   <- State.getNodeSrcs nodeID
+--    let u = Expr.Wildcard IDFixer.unknownID
+--    (a, b) <- case srcs of
+--                    [a, b] -> return (a, b)
+--                    [a]    -> return (a, u)
+--                    []     -> return (u, u)
+--                    _      -> fail "parseInfixNode: Wrong Infix arguments"
+--    addExpr nodeID $ Expr.Infix nodeID inf a b
 
 
 parseAppNode :: Node.ID -> String -> GPPass ()
 parseAppNode nodeID app = do
     srcs <- State.getNodeSrcs nodeID
     case srcs of
-        []  -> case Parser.parseExpr app $ ASTInfo.mk nodeID of
+        []  -> if length app == 1 && head app `elem` Lexer.operators
+                 then addExpr nodeID $ Expr.Var nodeID app 
+                 else case Parser.parseExpr app $ ASTInfo.mk nodeID of
                     Left  er     -> fail $ show er
                     Right (e, _) -> addExpr nodeID e
         [f] -> do let e   = Expr.Accessor nodeID app f

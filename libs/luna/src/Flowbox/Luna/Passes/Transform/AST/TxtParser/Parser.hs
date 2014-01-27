@@ -78,9 +78,8 @@ putASTInfo info = modifyState (ParseState.info .~ info)
 
 genID = do
     info <- getASTInfo
-    let ninfo = ASTInfo.incID info
-    putASTInfo ninfo
-    return $ ninfo ^. ASTInfo.lastID
+    putASTInfo $ ASTInfo.incID info
+    return $ info ^. ASTInfo.lastID
 
 tok a = a <$> genID
 

@@ -77,8 +77,8 @@ createProject batchHandler (CreateProject.Args tname tpath tattributes) = do
     let name = decodeP tname
         path = decodeP tpath
         attributes = decodeP tattributes
-    batch        <- IORef.readIORef batchHandler
-    let (newBatch, newProject) = BatchP.createProject name path attributes batch
+    batch <- IORef.readIORef batchHandler
+    (newBatch, newProject) <- BatchP.createProject name path attributes batch
     IORef.writeIORef batchHandler newBatch
     return $ CreateProject.Result $ encode newProject ^. _1
 

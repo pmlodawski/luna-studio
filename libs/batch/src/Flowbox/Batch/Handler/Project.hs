@@ -26,6 +26,8 @@ import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerializa
 import           Flowbox.Luna.Data.Attributes                (Attributes)
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath                      (UniPath)
+import qualified Flowbox.System.UniPath                      as UniPath
+
 
 
 projects :: Batch -> [(Project.ID, Project)]
@@ -37,18 +39,21 @@ projectByID projectID = readonly . projectOp projectID (\_ project -> do
     return (project, project))
 
 
-createProject :: String -> UniPath -> Attributes -> Batch -> (Batch, (Project.ID, Project))
-createProject name path attributes batch = (newBatch, (projectID, project)) where
-    project            = Project.make name path attributes
-    pm                 = Batch.projectManager batch
-    (newpm, projectID) = ProjectManager.insNewNode project pm
-    newBatch           = batch { Batch.projectManager = newpm }
+createProject :: String -> UniPath -> Attributes -> Batch -> IO (Batch, (Project.ID, Project))
+createProject name path attributes batch = do
+    expandedPath <- UniPath.expand path
+    let project            = Project.make name expandedPath attributes
+        pm                 = Batch.projectManager batch
+        (newpm, projectID) = ProjectManager.insNewNode project pm
+        newBatch           = batch { Batch.projectManager = newpm }
+    return (newBatch, (projectID, project))
 
 
 openProject :: UniPath -> Batch -> IO (Batch, (Project.ID, Project))
-openProject ppath batch = do
+openProject path batch = do
     let aprojectManager = Batch.projectManager batch
-    (newProjectManager, newP) <- ProjectManager.openProject aprojectManager ppath
+    expandedPath              <- UniPath.expand path
+    (newProjectManager, newP) <- ProjectManager.openProject aprojectManager expandedPath
     let newBatch = batch {Batch.projectManager = newProjectManager}
     return (newBatch, newP)
 
