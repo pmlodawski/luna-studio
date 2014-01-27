@@ -245,7 +245,7 @@ pTermE base = base <??> (flip applyAll <$> many1 (pTermBaseE base))  --  many1 (
 
 
 pTermBaseE p = choice [ try pTermRecUpd
-                      , try $ pDotTermE -- needed by the syntax [1..10]
+                      , pDotTermE 
                       , pCallTermE p
                       ]
 
@@ -253,7 +253,7 @@ pDotTermBase  = (L.pAccessor *> pVar)
 
 pTermRecUpd   = tok (\id sel expr src -> Expr.RecordUpdate id src sel expr) <*> many1 pDotTermBase <* L.pAssignment <*> pExprSimple
 
-pDotTermE     = tok Expr.Accessor <*> pDotTermBase
+pDotTermE     = try(tok Expr.Accessor <*> pDotTermBase) -- needed by the syntax [1..10]
 
 
 --pDotTermE   = do

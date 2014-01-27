@@ -160,6 +160,9 @@ example = Source.Source ["Main"] $
                         , "def catch self el f:"
                         , "    ```catch #{el} #{f}```"
 
+                        , "def test self f:"
+                        , "    ```liftf test #{f}```"
+
 
                         --, "class X"
                         --, "    def test self:"
@@ -193,11 +196,7 @@ example = Source.Source ["Main"] $
                     , "    c.print $ lam 5"
                     , "    z = self.catch z x: 0"
                     --, "    z.catch x"
-                    , "    c.print (z)"
-                    --, "    a = [1..10].each x:"
-                    --, "        Console().print x"
-                    , "    a = [1..10]"
-                    , "    c.print a"
+                    , "    c.print $ self.test 5"
                     --, "    a = (f) 1"
                     --, "   c = Console()"
                     --, "   c.print $ self.f 5 6"
