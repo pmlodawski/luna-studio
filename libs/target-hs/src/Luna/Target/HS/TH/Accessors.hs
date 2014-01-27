@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TemplateHaskell        #-}
+{-# LANGUAGE ViewPatterns           #-}
 
 
 module Luna.Target.HS.TH.Accessors where
@@ -17,11 +18,11 @@ import           Control.Monad
 import           Debug.Trace
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Lib
+import qualified Text.Show.Pretty           as PP
 import qualified Luna.Target.HS.Naming      as Naming
 import qualified Luna.Target.HS.TH.Deriving as Deriving
-import           Luna.Target.HS.TH.Inst
 import           Luna.Target.HS.TH.Utils
-import qualified Text.Show.Pretty           as PP
+import           Luna.Target.HS.TH.Inst
 
 generateAccessors :: Name -> DecsQ
 generateAccessors clsName = do
@@ -47,7 +48,7 @@ getClsFieldNames clsName' = do
     nameList <- getRecNames clsName'
     let clsName    = nameBase clsName'
         fieldNames = concat $ map (\(_, fNames) -> fNames) nameList
-    return fieldNames
+    return fieldNames 
 
 
 generateGetters :: Name -> DecsQ

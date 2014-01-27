@@ -5,9 +5,9 @@
 ---------------------------------------------------------------------------
 
 module Luna.Target.HS.TH.TH (
-    module Luna.Target.HS.TH.Accessors,
-    module Luna.Target.HS.TH.Deriving,
-    module Luna.Target.HS.TH.Inst
+	module Luna.Target.HS.TH.Accessors,
+	module Luna.Target.HS.TH.Deriving,
+	module Luna.Target.HS.TH.Inst
 ) where
 
 import Luna.Target.HS.TH.Accessors

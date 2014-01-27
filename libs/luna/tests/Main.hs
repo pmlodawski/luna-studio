@@ -145,9 +145,20 @@ example = Source.Source ["Main"] $
                         ----, "    pos :: a"
 
 
+                        ,"def Int.+ a b:"
+                        ,"    ```liftf2 (+) #{a} #{b}```"
+
+                        ,"def Int.< a b:"
+                        ,"    ```liftf2 (<) #{a} #{b}```"
 
                         , "class Point:"
                         , "    x,y,z :: Int"
+
+                        , "def raise self el err:"
+                        , "    ```raise #{el} #{err}```"
+
+                        , "def catch self el f:"
+                        , "    ```catch #{el} #{f}```"
 
 
                         --, "class X"
@@ -167,13 +178,22 @@ example = Source.Source ["Main"] $
 
                     --, "alias X = Int"
 
+                    , "class Error:"
+                    , "    IOError: msg :: String"
+
                     , "def foldr lst el f:"
                     , "    lst"
 
                     , "def main self:"
                     , "    c = Console()"
-                    , "    lst = [1,2,3]"
-                    , "    c.print lst"
+                    , "    x = 1"
+                    , "    y = self.raise 2 (IOError \"Oh no\")"
+                    , "    z = x + y"
+                    , "    lam = x: {x,x,x}"
+                    , "    c.print $ lam 5"
+                    , "    z = self.catch z x: 0"
+                    --, "    z.catch x"
+                    , "    c.print (z)"
                     --, "    a = (f) 1"
                     --, "   c = Console()"
                     --, "   c.print $ self.f 5 6"

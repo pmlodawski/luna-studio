@@ -414,3 +414,21 @@ appH a b = AppH (a,b)
 
 fcurry :: (Functor m, Functor s) => arg -> m(s func) -> m(s(AppH func arg))
 fcurry arg = (fmap.fmap) (flip appH arg)
+
+
+------------------------------------------------------------------------
+-- Errors raise
+------------------------------------------------------------------------
+
+class RaiseProto a e b | a e -> b where
+    raiseProto :: a -> e -> b
+
+instance RaiseProto (m(s a)) (Safe e) (Either e a) where
+    raiseProto a (Safe e) = Left e 
+
+instance RaiseProto (m(s a)) (Either e b) (Either e b) where
+    raiseProto a e = e
+
+raise el err = fmap (raiseProto el) err
+
+

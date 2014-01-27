@@ -20,8 +20,8 @@ import           Control.Monad
 import           Debug.Trace
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Lib
-import           Luna.Target.HS.TH.Utils
 import qualified Text.Show.Pretty        as PP
+import           Luna.Target.HS.TH.Utils
 
 
 showName = mkName "Show"
@@ -41,7 +41,7 @@ instance NameCls String where
     withName f = f
     toString   = id
     toName     = mkName
-
+    
 instance NameCls Name where
     withName f = mkName.f.nameBase
     toString   = nameBase

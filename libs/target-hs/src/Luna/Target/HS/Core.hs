@@ -9,7 +9,7 @@ module Luna.Target.HS.Core (
     module Prelude,
     module Data.Typeable,
     module GHC.Generics,
-
+    
     module Luna.Target.HS.Base,
     module Luna.Target.HS.Bind,
     module Luna.Target.HS.Data,
@@ -20,9 +20,9 @@ module Luna.Target.HS.Core (
     module Luna.Target.HS.TH.TH,
 ) where
 
+import Prelude       hiding (fail, return, (>>), (>>=))
 import Data.Typeable (Typeable)
 import GHC.Generics  (Generic)
-import Prelude       hiding (fail, return, (>>), (>>=))
 
 import Luna.Target.HS.Base
 import Luna.Target.HS.Bind
@@ -30,6 +30,6 @@ import Luna.Target.HS.Data
 import Luna.Target.HS.Imports
 import Luna.Target.HS.Proxy
 import Luna.Target.HS.Std
-import Luna.Target.HS.TH.TH
 import Luna.Target.HS.Utils
+import Luna.Target.HS.TH.TH
 

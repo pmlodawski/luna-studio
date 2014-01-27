@@ -62,7 +62,7 @@ reservedOpNames = ["=", "::", ":", ".", "->", "<-"]
 -----------------------------------------------------------
 -- Keywords
 -----------------------------------------------------------
-reservedNames = ["alias", "as", "case", "class", "def", "from", "interface", "import", "in", "type"]
+reservedNames = ["alias", "as", "case", "class", "def", "from", "if", "interface", "import", "in", "type"]
 
 pTypeAlias  = reserved "alias"
 pAs         = reserved "as"

@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 
 module Luna.Target.HS.Imports (
-    module Data.Tuple.OneTuple
+	module Data.Tuple.OneTuple 
 )where
 
-import Data.Tuple.OneTuple
+import Data.Tuple.OneTuple 
