@@ -61,6 +61,68 @@ import Data.Bits ((.&.))
 
 import Control.Monad.Trans.Either (hoistEither, runEitherT)
 
+-- utils
+
+applyToImage :: (Channel Float -> Channel Float) -> (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+applyToImage f names img = do
+  let (nameA,_,_) = names
+      (_,nameB,_) = names
+      (_,_,nameC) = names
+  channelA <- Image.lookup nameA img
+  channelB <- Image.lookup nameB img
+  channelC <- Image.lookup nameC img
+  let outimg = Image.insert nameA channelA'
+             $ Image.insert nameB channelB'
+             $ Image.insert nameC channelC'
+             $ img
+      channelA' = f channelA
+      channelB' = f channelB
+      channelC' = f channelC
+  return outimg
+
+--filter' :: (a -> Exp Bool) -> [a] -> [a]
+--filter' _pred []    = []
+--filter' pred (x:xs) = pred x A.? (x : filter' pred xs , filter' pred xs)
+--  | pred x         = x : filter' pred xs
+--  | otherwise      = filter' pred xs
+
+
+
+-- different
+
+median' :: Fractional a => [a] -> Maybe a
+median' xs | null xs  = Nothing
+          | odd  len = Just $ xs !! mid
+          | even len = Just $ meanMedian
+                where  len = length xs
+                       mid = len `div` 2
+                       meanMedian = (xs !! mid + xs !! (mid+1)) / 2
+
+median :: Fractional a => [a] -> a
+median xs | odd len = xs !! mid
+          | even len = meanMedian
+              where len = length xs
+                    mid = len `div` 2
+                    meanMedian = (xs !! mid + xs !! (mid+1)) / 2
+
+
+--quicksort :: Ord a => [a] -> [a]
+--quicksort []     = []
+--quicksort (p:xs) = (quicksort lesser) A.++ [p] A.++ (quicksort greater)
+--    where
+--        lesser  = A.filter (A.<* p) xs
+--        greater = A.filter (A.>=* p) xs
+
+quicksort array = A.acond (A.null array) (A.use $ A.fromList A.Z []) (quicksort' array)
+    where quicksort' (p A.:. xs) = (quicksort $ lesser p xs) A.:. ((A.unit p) A.:. (quicksort $ greater p xs))
+          lesser  p = A.filter (A.<* p)
+          greater p = A.filter (A.>=* p)
+
+--quicksort :: Int
+--quicksort (p A.:. xs) = (lesser xs) A.:. (p A.:. (greater xs))
+--    where lesser  = A.filter (A.<* p)
+--          greater = A.filter (A.>=* p)
+
 -- basic
 
 invert :: Num a => a -> a
@@ -100,22 +162,22 @@ remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
 binarizeChannel :: (Exp Float -> Exp Bool) -> Channel Float -> Channel Float
 binarizeChannel f channel = Channel.map (\x -> f x A.? (1 , 0)) channel
 
-binarizeImage :: (String, String, String) -> (Exp Float -> Exp Bool) -> Image Float -> Either Image.Error (Image Float)
-binarizeImage names f img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
-  channelA <- Image.lookup nameA img
-  channelB <- Image.lookup nameB img
-  channelC <- Image.lookup nameC img
-  let outimg = Image.insert nameA channelA'
-             $ Image.insert nameB channelB'
-             $ Image.insert nameC channelC'
-             $ img
-      channelA' = binarizeChannel f channelA
-      channelB' = binarizeChannel f channelB
-      channelC' = binarizeChannel f channelC
-  return outimg
+binarizeImage :: (Exp Float -> Exp Bool) -> (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+binarizeImage f = applyToImage (binarizeChannel f)
+--  let (nameA,_,_) = names
+--      (_,nameB,_) = names
+--      (_,_,nameC) = names
+--  channelA <- Image.lookup nameA img
+--  channelB <- Image.lookup nameB img
+--  channelC <- Image.lookup nameC img
+--  let outimg = Image.insert nameA channelA'
+--             $ Image.insert nameB channelB'
+--             $ Image.insert nameC channelC'
+--             $ img
+--      channelA' = binarizeChannel f channelA
+--      channelB' = binarizeChannel f channelB
+--      channelC' = binarizeChannel f channelC
+--  return outimg
 
 luminance :: String -> String -> String -> String -> (Image Float) -> Either Image.Error (Image Float)
 luminance rname gname bname outname img = do
@@ -132,48 +194,55 @@ luminance' = luminance "r" "g" "b" "luminance"
 
 
 
-erosion :: Channel Float -> Channel Float
-erosion channel = Channel.stencil erode A.Mirror channel
+erodeChannel :: Channel Float -> Channel Float
+erodeChannel channel = Channel.stencil erode A.Mirror channel
     where erode ((a,b,c),(d,e,f),(g,h,i)) = minimum [a,b,c,d,e,f,g,h,i]
 
 erodeImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
-erodeImage names img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
-  channelA <- Image.lookup nameA img
-  channelB <- Image.lookup nameB img
-  channelC <- Image.lookup nameC img
-  let outimg = Image.insert nameA channelA'
-             $ Image.insert nameB channelB'
-             $ Image.insert nameC channelC'
-             $ img
-      channelA' = erosion channelA
-      channelB' = erosion channelB
-      channelC' = erosion channelC
-  return outimg
+erodeImage = applyToImage erodeChannel
+  --let (nameA,_,_) = names
+  --    (_,nameB,_) = names
+  --    (_,_,nameC) = names
+  --channelA <- Image.lookup nameA img
+  --channelB <- Image.lookup nameB img
+  --channelC <- Image.lookup nameC img
+  --let outimg = Image.insert nameA channelA'
+  --           $ Image.insert nameB channelB'
+  --           $ Image.insert nameC channelC'
+  --           $ img
+  --    channelA' = erosion channelA
+  --    channelB' = erosion channelB
+  --    channelC' = erosion channelC
+  --return outimg
 
-dilation :: Channel Float -> Channel Float
-dilation channel = Channel.stencil dilate A.Mirror channel
+dilateChannel :: Channel Float -> Channel Float
+dilateChannel channel = Channel.stencil dilate A.Mirror channel
     where dilate ((a,b,c),(d,e,f),(g,h,i)) = maximum [a,b,c,d,e,f,g,h,i]
 
 dilateImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
-dilateImage names img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
-  channelA <- Image.lookup nameA img
-  channelB <- Image.lookup nameB img
-  channelC <- Image.lookup nameC img
-  let outimg = Image.insert nameA channelA'
-             $ Image.insert nameB channelB'
-             $ Image.insert nameC channelC'
-             $ img
-      channelA' = dilation channelA
-      channelB' = dilation channelB
-      channelC' = dilation channelC
-  return outimg
+dilateImage = applyToImage dilateChannel
+--  let (nameA,_,_) = names
+--      (_,nameB,_) = names
+--      (_,_,nameC) = names
+--  channelA <- Image.lookup nameA img
+--  channelB <- Image.lookup nameB img
+--  channelC <- Image.lookup nameC img
+--  let outimg = Image.insert nameA channelA'
+--             $ Image.insert nameB channelB'
+--             $ Image.insert nameC channelC'
+--             $ img
+--      channelA' = dilation channelA
+--      channelB' = dilation channelB
+--      channelC' = dilation channelC
+--  return outimg
 
+
+--medianChannel :: Channel Float -> Channel Float
+--medianChannel channel = Channel.stencil middleValue A.Mirror channel
+--    where middleValue ((a,b,c),(d,e,f),(g,h,i)) = median $ quicksort $ A.use $ A.fromList (A.Z :. 9) [a,b,c,d,e,f,g,h,i]
+
+--medianImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+--medianImage = applyToImage medianChannel
 
 -- convolution
 

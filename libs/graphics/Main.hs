@@ -58,9 +58,9 @@ import Data.Bits ((.&.))
 import Control.Monad.Trans.Either (hoistEither, runEitherT)
 
 --imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
-imgtest img imgFilter = do
+imgtest img = do --imgFilter = do
     rgba  <- Image.reprFloat <$> RGBA.decompose img
-    rgbaFilter <- Image.reprFloat <$> RGBA.decompose imgFilter
+    --rgbaFilter <- Image.reprFloat <$> RGBA.decompose imgFilter
     --lrgba <- adjustCB 2.2 0.2 "r" "g" "b" rgba
     --let blur3x3 = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
         --blur5x5 = [0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04]
@@ -74,10 +74,10 @@ imgtest img imgFilter = do
     --let hsvl = Image.insert "s" (clipValues $ Channel.map (+1) s) $ hsv
     --lrgba <- blendRGB rgba rgbaFilter (blenderAlpha 0.5) -- ...
     --lrgba <- A.keyRGB 0.2 (0.055, 0.582, 0.363) rgba
-    lrgba <- A.luminance' rgba
-            >>= Image.cpChannel "luminance" "r"
-            >>= Image.cpChannel "luminance" "g"
-            >>= Image.cpChannel "luminance" "b"
+    --lrgba <- A.luminance' rgba
+    --        >>= Image.cpChannel "luminance" "r"
+    --        >>= Image.cpChannel "luminance" "g"
+    --        >>= Image.cpChannel "luminance" "b"
     let f = \_ -> 1
         fBW = \x -> x A.>=* 0.5
         rgb = ("r", "g", "b")
@@ -90,8 +90,10 @@ imgtest img imgFilter = do
     --erodedBW <- A.erodeImage rgb bw
     --dilatedBW <- A.dilateImage rgb bw
     --erodedMono <- A.erodeImage rgb lrgba
-    dilatedMono <- A.dilateImage rgb lrgba
-    RGBA.compose $ Image.reprWord8 dilatedMono
+    --dilatedMono <- A.dilateImage rgb lrgba
+    --medianMono <- A.medianImage rgb lrgba
+    --imgMedian <- A.medianImage rgb rgba
+    RGBA.compose $ Image.reprWord8 rgba
     where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
           mod1 = flip nonIntRem 1.0
 
@@ -115,8 +117,8 @@ main
         print "Reading"
 
         img2 <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
-        imgFilter <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP "filter.bmp"
-        let img3 = imgtest img2 imgFilter
+        --imgFilter <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP "filter.bmp"
+        let img3 = imgtest img2 --imgFilter
 
         case img3 of
             Left  err -> print err
