@@ -294,17 +294,17 @@ main_inner = Luna.run $ do
     hash <- hoistEither =<< Hash.run ast
     logger info $ PP.ppShow hash
 
-    logger info "\n-------- SSA --------"
-    ssa <- hoistEither =<< SSA.run va hash
-    logger info $ PP.ppqShow ssa
+    --logger info "\n-------- SSA --------"
+    --ssa <- hoistEither =<< SSA.run va hash
+    --logger info $ PP.ppqShow ssa
 
-    logger info "\n-------- HASTGen --------"
-    hast <- hoistEither =<< HASTGen.run ssa fp
-    --logger info $ PP.ppShow hast
+    --logger info "\n-------- HASTGen --------"
+    --hast <- hoistEither =<< HASTGen.run ssa fp
+    ----logger info $ PP.ppShow hast
 
-    logger info "\n-------- HSC --------"
-    hsc <- hoistEither =<< HSC.run  hast
-    logger info $ join "\n\n" (map printSrc hsc)
+    --logger info "\n-------- HSC --------"
+    --hsc <- hoistEither =<< HSC.run  hast
+    --logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()

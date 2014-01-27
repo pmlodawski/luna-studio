@@ -48,20 +48,16 @@ vaMod mod = VAState.withID (mod ^. Module.id) $ do
 
 vaExpr :: Expr.Expr -> VAPass ()
 vaExpr el = VAState.registerID (el ^. Expr.id) *> case el of
-    Expr.Function   id _ _ inputs _ body  -> VAState.withID id $ do
-                                             exprMap inputs
-                                             exprMap body
-    Expr.Lambda     id inputs _ body      -> VAState.withID id $ do
-                                             exprMap inputs
-                                             exprMap body
-    Expr.Assignment _ pat dst             -> vaExpr dst <* vaPat pat
-    Expr.Con        id name               -> VAState.bindVar id name
-    Expr.Var        id name               -> VAState.bindVar id name
-    Expr.NativeVar  id name               -> VAState.bindVar id name
-    Expr.ConD       id name _             -> VAState.registerVarName name id
-    _                                     -> continue
-    where exprMap  = mapM_ vaExpr
-          continue = Expr.traverseM_ vaExpr vaType vaPat pure el
+    Expr.Function   {}         -> withID continue
+    Expr.Lambda     {}         -> withID continue
+    Expr.Assignment _ pat dst  -> vaExpr dst <* vaPat pat
+    Expr.Con        id name    -> VAState.bindVar id name
+    Expr.Var        id name    -> VAState.bindVar id name
+    Expr.NativeVar  id name    -> VAState.bindVar id name
+    Expr.ConD       id name _  -> VAState.registerVarName name id
+    _                          -> continue
+    where continue = Expr.traverseM_ vaExpr vaType vaPat pure el
+          withID   = VAState.withID (el ^. Expr.id)
 
 
 vaPat :: Pat -> VAPass ()
