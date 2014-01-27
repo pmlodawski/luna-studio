@@ -245,7 +245,7 @@ pTermE base = base <??> (flip applyAll <$> many1 (pTermBaseE base))  --  many1 (
 
 
 pTermBaseE p = choice [ try pTermRecUpd
-                      , pDotTermE
+                      , try $ pDotTermE -- needed by the syntax [1..10]
                       , pCallTermE p
                       ]
 
