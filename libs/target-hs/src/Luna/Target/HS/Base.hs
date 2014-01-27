@@ -2,7 +2,7 @@
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2014
+-- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE DataKinds #-}
@@ -194,8 +194,23 @@ instance (Monad m) => EvalEnvProto MyError m MyError where
     evalProto = return
 
 -- IMPLEMENT ME
-instance (Monad m) => EvalEnvProto (a,b) m MyError where
-    evalProto = undefined
+instance (Applicative m, EvalEnvProto v1 m o1
+                       , EvalEnvProto v2 m o2) 
+         => EvalEnvProto (v1,v2) m (o1,o2) where
+    evalProto (v1,v2) = (,) <$> evalProto v1 <*> evalProto v2
+
+instance (Applicative m, EvalEnvProto v1 m o1
+                       , EvalEnvProto v2 m o2
+                       , EvalEnvProto v3 m o3) 
+         => EvalEnvProto (v1,v2,v3) m (o1,o2,o3) where
+    evalProto (v1,v2,v3) = (,,) <$> evalProto v1 <*> evalProto v2 <*> evalProto v3
+
+instance (Applicative m, EvalEnvProto v1 m o1
+                       , EvalEnvProto v2 m o2
+                       , EvalEnvProto v3 m o3
+                       , EvalEnvProto v4 m o4) 
+         => EvalEnvProto (v1,v2,v3,v4) m (o1,o2,o3,o4) where
+    evalProto (v1,v2,v3,v4) = (,,,) <$> evalProto v1 <*> evalProto v2 <*> evalProto v3 <*> evalProto v4
 
 --class EvalEnvProto a b | a -> b where
 --    EvalEnvProto :: a -> IO b

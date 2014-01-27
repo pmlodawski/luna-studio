@@ -24,21 +24,21 @@ logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.VarAlias.State"
 
 
-data VAState = VAState { _aa        :: AA
-                       , _currentID :: ID
+data VAState = VAState { _aa      :: AA
+                       , _idStack :: [ID]
                        }
              deriving (Show)
 
 makeLenses (''VAState)
 
-type VAMonad m = (MonadState VAState m, Functor m)
+type VAMonad m = (MonadState VAState m, Applicative m)
 
 
 getAA :: VAMonad m => m AA
 getAA = view aa <$> get
 
 getCurrentID :: VAMonad m => m ID
-getCurrentID = view currentID <$> get
+getCurrentID = head . view idStack <$> get
 
 
 putAA :: VAMonad m => AA -> m ()
@@ -51,8 +51,18 @@ modifyAA f = do
     putAA $ f aa'
 
 
-switchID :: VAMonad m => ID -> m ()
-switchID id = modify (currentID .~ id)
+pushID :: VAMonad m => ID -> m ()
+pushID id = modify (idStack %~ (id:))
+
+popID :: VAMonad m => m ()
+popID = modify (idStack %~ tail)
+
+
+withID :: VAMonad m => ID -> m f -> m f
+withID id f = pushID id *> f <* popID
+
+--switchID :: VAMonad m => ID -> m ()
+--switchID id = modify (currentID .~ id)
 
 
 registerID :: VAMonad m => ID -> m ()
@@ -96,4 +106,4 @@ bindVarRec id ctxID name a = case dstIDLookup of
 ------------------------------------------------------------------------
 
 instance Monoid VAState where
-    mempty = VAState mempty 0
+    mempty = VAState mempty mempty

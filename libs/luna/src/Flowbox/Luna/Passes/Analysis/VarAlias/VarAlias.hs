@@ -41,27 +41,27 @@ run = (Pass.run_ (Pass.Info "VarAlias") mempty) . vaMod
 
 
 vaMod :: Module -> VAPass AA
-vaMod mod = do
-    VAState.switchID (mod ^. Module.id)
+vaMod mod = VAState.withID (mod ^. Module.id) $ do
     Module.traverseM_ vaMod vaExpr vaType vaPat pure mod
     VAState.getAA
 
 
 vaExpr :: Expr.Expr -> VAPass ()
 vaExpr el = VAState.registerID (el ^. Expr.id) *> case el of
-    Expr.Function   _ _ _ inputs _ body  -> do
-                                            VAState.switchID (el ^. Expr.id)
-                                            exprMap inputs
-                                            exprMap body
-    Expr.Assignment _ pat dst            -> vaExpr dst <* vaPat pat
-    Expr.Con        id name              -> VAState.bindVar id name
-    Expr.Var        id name              -> VAState.bindVar id name
-    Expr.NativeVar  id name              -> VAState.bindVar id name
-    Expr.ConD       id name _            -> VAState.registerVarName name id
-    _                                    -> continue
-    where
-        exprMap  = mapM_ vaExpr
-        continue = Expr.traverseM_ vaExpr vaType vaPat pure el
+    Expr.Function   id _ _ inputs _ body  -> VAState.withID id $ do
+                                             exprMap inputs
+                                             exprMap body
+    Expr.Lambda     id inputs _ body      -> VAState.withID id $ do
+                                             exprMap inputs
+                                             exprMap body
+    Expr.Assignment _ pat dst             -> vaExpr dst <* vaPat pat
+    Expr.Con        id name               -> VAState.bindVar id name
+    Expr.Var        id name               -> VAState.bindVar id name
+    Expr.NativeVar  id name               -> VAState.bindVar id name
+    Expr.ConD       id name _             -> VAState.registerVarName name id
+    _                                     -> continue
+    where exprMap  = mapM_ vaExpr
+          continue = Expr.traverseM_ vaExpr vaType vaPat pure el
 
 
 vaPat :: Pat -> VAPass ()

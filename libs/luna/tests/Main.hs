@@ -127,7 +127,7 @@ example = Source.Source ["Main"] $
 
                         , "class Console:"
                         , "    def print self msg:"
-                        , "        ```print' #{msg}```"
+                        , "        ```print'' #{msg}```"
 
                         ----, "def Int.+ a b:"
                         ----, "    ```liftf2 (+) #{a} #{b}```"
@@ -160,8 +160,6 @@ example = Source.Source ["Main"] $
                         , "def catch self el f:"
                         , "    ```catch #{el} #{f}```"
 
-                        , "def test self f:"
-                        , "    ```liftf test #{f}```"
 
 
                         --, "class X"
@@ -192,11 +190,11 @@ example = Source.Source ["Main"] $
                     , "    x = 1"
                     , "    y = self.raise 2 (IOError \"Oh no\")"
                     , "    z = x + y"
-                    , "    lam = x: {x,x,x}"
-                    , "    c.print $ lam 5"
                     , "    z = self.catch z x: 0"
+                    , "    c.print (x<2)"
                     --, "    z.catch x"
-                    , "    c.print $ self.test 5"
+                    --, "    a = self.test 5"
+                    --, "    c.print (x<2)"
                     --, "    a = (f) 1"
                     --, "   c = Console()"
                     --, "   c.print $ self.f 5 6"
