@@ -44,7 +44,7 @@ incID :: DesugarMonad m => m ()
 incID = modify ((info . ASTInfo.lastID) %~ (+1))
 
 genID :: DesugarMonad m => m ID
-genID = incID *> (view (info . ASTInfo.lastID) <$> get)
+genID = (view (info . ASTInfo.lastID) <$> get) <* incID
 
 
 mk :: ASTInfo -> DesugarState
