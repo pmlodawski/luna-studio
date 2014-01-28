@@ -106,4 +106,6 @@ bindVarRec id ctxID name a = case dstIDLookup of
 ------------------------------------------------------------------------
 
 instance Monoid VAState where
-    mempty = VAState mempty mempty
+    mempty      = VAState mempty mempty
+    mappend a b = VAState (mappend (a ^. aa)      (b ^. aa))
+                          (mappend (a ^. idStack) (b ^. idStack))

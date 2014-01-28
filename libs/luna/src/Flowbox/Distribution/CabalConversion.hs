@@ -7,7 +7,6 @@
 
 module Flowbox.Distribution.CabalConversion where
 
-import           Data.Default                                  (def)
 import           Data.List.Split                               (splitOn)
 import           Data.Monoid
 import qualified Distribution.Client.Types                     as CliTypes

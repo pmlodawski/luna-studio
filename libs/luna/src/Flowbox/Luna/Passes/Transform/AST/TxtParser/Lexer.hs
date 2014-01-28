@@ -19,10 +19,7 @@ import Text.Parsec         hiding (getPosition, many, optional, (<|>))
 
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
-import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Token      (Token (Token))
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-
-import Debug.Trace
 
 
 identLetter  = alphaNum <|> char '_'
@@ -291,11 +288,11 @@ isReservedName name = isReserved (sort reservedNames) name
 -----------------------------------------------------------
 -- White space & symbols
 -----------------------------------------------------------
-lexeme p    = do
-  res <- p
-  spaces <- try(pSpaces <* checkIndented) <|> pure ""
-  state  <- getState
-  putState (state & ParseState.lastLexeme .~ spaces)
+lexeme p = do
+  res   <- p
+  ws    <- try(pSpaces <* checkIndented) <|> pure ""
+  state <- getState
+  putState (state & ParseState.lastLexeme .~ ws)
   return res
 --lexeme2 s p = p <* if s then skipMany pSpaces1 else return ()
 

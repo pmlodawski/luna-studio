@@ -10,12 +10,10 @@ module Flowbox.Luna.Data.Pass.SourceMap (
     module Data.Map
 )where
 
-import           Data.Map
-import qualified Data.Map as Map
+import Data.Map
 
 import Flowbox.Luna.Data.AST.SourcePos (SourceRange)
 import Flowbox.Luna.Data.AST.Utils     (ID)
-import Flowbox.Prelude                 hiding (id)
 
 
 type SourceMap = Map ID SourceRange

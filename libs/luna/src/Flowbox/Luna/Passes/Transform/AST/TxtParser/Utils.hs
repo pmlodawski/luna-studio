@@ -14,8 +14,7 @@ import qualified Text.Parsec         as Parsec
 
 import           Flowbox.Luna.Data.AST.SourcePos                        (SourcePos (SourcePos))
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token      as Token
-import           Flowbox.Prelude
+import           Flowbox.Prelude                                        hiding (pre)
 import           Text.Parsec                                            hiding (getPosition, many, optional, parse, (<|>))
 
 checkIf f msg p = do
@@ -63,7 +62,7 @@ pMaybe p = try (Just <$> p) <|> pure Nothing
 getPosition = convertSourcePos <$> Parsec.getPosition
 convertSourcePos psp = SourcePos (sourceLine psp) (sourceColumn psp)
 
-storePos p = (\pre res post -> Token.mk res pre post) <$> getPosition <*> p <*> getPosition
+--storePos p = (\pre res post -> Token.mk res pre post) <$> getPosition <*> p <*> getPosition
 
 
 pLastLexeme = view ParseState.lastLexeme <$> getState

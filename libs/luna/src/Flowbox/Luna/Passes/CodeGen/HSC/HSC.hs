@@ -83,13 +83,16 @@ instance Applicative CodeBuilder where
         Complex f -> Complex $ f (code r)
 
 
-
+genExpr :: HExpr -> String
 genExpr e = code $ buildExpr e
 
+simplify :: CodeBuilder String -> CodeBuilder String
 simplify c = case c of
     Simple {} -> c
     Complex v -> Simple $ "(" ++ v ++ ")"
 
+
+app :: CodeBuilder String -> CodeBuilder String -> CodeBuilder String
 app a b = Complex (\x y -> x ++ " " ++ y) <*> a <*> (simplify b)
 
 buildExpr :: HExpr -> CodeBuilder String
@@ -142,17 +145,23 @@ buildExpr e = case e of
     HExpr.ConT     name                   -> pure $ name
     HExpr.AppT     src dst                -> app (buildExpr src) (buildExpr dst) --"(" ++ (code.buildExpr) src ++ " (" ++ (code.buildExpr) dst ++ ")" ++ ")" -- for literals, e.g. Pure (1 :: Int)
     HExpr.AppE     src dst                -> app (buildExpr src) (buildExpr dst) --"(" ++ (code.buildExpr) src ++ " " ++ (code.buildExpr) dst ++ ")"
-    HExpr.Native   code                   -> pure $ code
+    HExpr.Native   natCode                -> pure $ natCode
     HExpr.ListE    items                  -> pure $ "[" ++ sepjoin (fExpMap items) ++ "]"
     HExpr.Bang     expr                   -> pure $ "--->>>   " ++ (code.buildExpr) expr
     HExpr.THE      expr                   -> pure $ (code.buildExpr) expr
     where spacejoin   = join " "
           sepjoin     = join ", "
 
-
+fExpMap :: [HExpr] -> [String]
 fExpMap     = map cBuildExpr
+
+fsExpMap :: [HExpr] -> [String]
 fsExpMap    = map csBuildExpr
+
+cBuildExpr :: HExpr -> String
 cBuildExpr  = code.buildExpr
+
+csBuildExpr :: HExpr -> String
 csBuildExpr = code.simplify.buildExpr
 
 buildBody :: [HExpr] -> CodeBuilder String

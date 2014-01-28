@@ -11,22 +11,19 @@
 
 module Flowbox.Luna.Passes.Transform.AST.Hash.Hash where
 
-import           Control.Applicative
-import           Control.Monad.State
-import           Data.Char           (ord)
-import           Data.Hashable       (hash)
-import qualified Data.IntMap         as IntMap
+import Control.Applicative
+import Control.Monad.State
+import Data.Char           (ord)
+--import           Data.Hashable       (hash)
 
-import           Flowbox.Luna.Data.Analysis.Alias.Alias (AA)
-import qualified Flowbox.Luna.Data.Analysis.Alias.Alias as AA
-import qualified Flowbox.Luna.Data.AST.Expr             as Expr
-import           Flowbox.Luna.Data.AST.Module           (Module)
-import qualified Flowbox.Luna.Data.AST.Module           as Module
-import           Flowbox.Luna.Data.AST.Pat              (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat              as Pat
-import           Flowbox.Luna.Passes.Pass               (Pass)
-import qualified Flowbox.Luna.Passes.Pass               as Pass
-import           Flowbox.Prelude                        hiding (error, id, mod)
+import qualified Flowbox.Luna.Data.AST.Expr   as Expr
+import           Flowbox.Luna.Data.AST.Module (Module)
+import qualified Flowbox.Luna.Data.AST.Module as Module
+import           Flowbox.Luna.Data.AST.Pat    (Pat)
+import qualified Flowbox.Luna.Data.AST.Pat    as Pat
+import           Flowbox.Luna.Passes.Pass     (Pass)
+import qualified Flowbox.Luna.Passes.Pass     as Pass
+import           Flowbox.Prelude              hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 
 
@@ -55,7 +52,7 @@ ssaExpr ast = case ast of
     Expr.Function _ _ name _ _ _    -> set Expr.name (hashMe2 name) <$> continue
     Expr.Accessor _ name _          -> set Expr.name (hashMe2 name) <$> continue
     _                                                -> continue
-    where hashMe   = show.abs.hash
+    where --hashMe   = show.abs.hash
           continue = Expr.traverseM ssaExpr pure ssaPat pure ast
 
 
@@ -64,9 +61,11 @@ ssaPat pat = case pat of
     Pat.Var  id _  -> return $ Pat.Var id (mkVar id)
     _              -> Pat.traverseM ssaPat pure pure pat
 
-
+--FIXME [wd]: some reduntant functions here
+hashMe2 :: [Char] -> [Char]
 hashMe2 = concat.(map hashMeBody)
 
+hashMeBody :: Char -> [Char]
 hashMeBody c
     | (c >= 'a' && c <='z') || (c >= 'A' && c <='Z') = [c]
     | c == '_'                                       = "__"

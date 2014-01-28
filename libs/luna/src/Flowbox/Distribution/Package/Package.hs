@@ -10,7 +10,6 @@
 module Flowbox.Distribution.Package.Package where
 
 import qualified Data.Aeson.TH as JSON
-import           Data.Default  (Default, def)
 import           GHC.Generics
 
 import Flowbox.Data.Version                    (Version)

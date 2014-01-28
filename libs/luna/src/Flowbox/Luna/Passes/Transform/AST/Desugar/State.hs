@@ -11,17 +11,13 @@
 
 module Flowbox.Luna.Passes.Transform.AST.Desugar.State where
 
-import           Control.Monad.State            (MonadState, get, modify, put)
-import qualified Control.Monad.State            as State
-import qualified Data.IntMap                    as IntMap
-import           Data.Map                       (Map)
-import qualified Data.Map                       as Map
 import           Flowbox.Luna.Data.Pass.ASTInfo (ASTInfo)
 import qualified Flowbox.Luna.Data.Pass.ASTInfo as ASTInfo
 
 import Flowbox.Prelude           hiding (id)
 import Flowbox.System.Log.Logger hiding (info)
 
+import Control.Monad.State (MonadState, get, modify)
 
 logger :: Logger
 logger = getLogger "Flowbox.Luna.Passes.Transform.AST.Desugar.State"
@@ -48,7 +44,7 @@ genID = (view (info . ASTInfo.lastID) <$> get) <* incID
 
 
 mk :: ASTInfo -> DesugarState
-mk info = DesugarState info
+mk = DesugarState
 
 ------------------------------------------------------------------------
 -- Instances

@@ -4,8 +4,7 @@
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent where
 
 import Flowbox.Prelude
-import           Control.Applicative
-import           Text.Parsec          hiding (many, optional, parse, (<|>), State)
+import Text.Parsec                hiding (many, optional, parse, (<|>), State)
 import Text.Parsec.Pos
 import Text.Parsec.Token
 import "mtl" Control.Monad.State
