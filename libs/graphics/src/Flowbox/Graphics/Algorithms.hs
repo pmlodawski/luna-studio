@@ -73,11 +73,11 @@ median xs | odd len = xs !! mid
 
 
 --quicksort :: Int
---quicksort array = (lesser xs) A.++ (A.unit p) A.++ (greater xs)
---    where p = array A.!! 1
---          xs = A.tail array
---          lesser  = A.filter (A.<* p)
---          greater = A.filter (A.>=* p)
+quicksort array = (lesser xs) A.++ (A.flatten . A.unit $ p) A.++ (greater xs)
+    where p = array A.!! 0
+          xs = A.tail array
+          lesser  = A.filter (A.<* p)
+          greater = A.filter (A.>=* p)
 
 -- basic
 
@@ -164,7 +164,8 @@ closeImage names img = do
 
 --medianChannel :: Channel Float -> Channel Float
 --medianChannel channel = Channel.stencil middleValue A.Mirror channel
---    where middleValue ((a,b,c),(d,e,f),(g,h,i)) = median $ quicksort $ A.use $ A.fromList (A.Z :. 9) [a,b,c,d,e,f,g,h,i]
+--    --where middleValue ((a,b,c),(d,e,f),(g,h,i)) = median . quicksort . A.use $ A.fromList (A.Z A.:. 9) [a,b,c,d,e,f,g,h,i]
+--    where middleValue ((a,b,c),(d,e,f),(g,h,i)) = 1 --median . quicksort . A.use $ A.fromList (A.Z A.:. 9) [a,b,c,d,e,f,g,h,i]
 
 --medianImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
 --medianImage = applyToImage medianChannel
