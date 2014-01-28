@@ -1,8 +1,8 @@
  -- [ ] 1) lut
  -- [+] 2) dylatacja
  -- [+] 3) erozja
- -- [ ] 4) otwarcie
- -- [ ] 5) zamknięcie
+ -- [+] 4) otwarcie
+ -- [+] 5) zamknięcie
  -- [ ] 6) mediana - do czysczenia np. kurzu
  -- [ ] 7) zmiany kolorow na krzywych - definiowane za pomoca datatypu, ktory okrelalby czy to jest linear, bezier cyz cos innego
  -- [ ] 8) samplowanie po kolorach
@@ -10,36 +10,35 @@
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE TypeOperators             #-}
 
+{-# LANGUAGE CPP                       #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE CPP           #-}
 
 module Flowbox.Graphics.Algorithms where
 
-import Control.Applicative
-
-import           Criterion.Main     (bench, bgroup, defaultMainWith, whnf)
-import qualified Data.Label         as Label
-import           Flowbox.Prelude    as P
-import qualified System.Environment as Env
-import qualified System.Exit        as Exit
-
-import           Data.Array.Accelerate        ((:.) (..), Acc, Exp)
-import qualified Data.Array.Accelerate        as A
-import qualified Data.Array.Accelerate.IO     as A
-import qualified Data.Array.Repa              as R
-import qualified Data.Array.Repa.IO.BMP       as R
-import qualified Data.Array.Repa.IO.DevIL     as DevIL
-import qualified Data.Array.Repa.Repr.Unboxed as R
-import           Data.Map                     (Map)
-import qualified Data.Map                     as Map
-import           Data.Monoid                  (Monoid, mempty)
-import qualified Data.Fixed                   as F
-import qualified Debug.Trace                  as D
-
-import System.TimeIt (timeIt)
-
-import Data.Array.Repa.Eval (Target)
-import Data.Word            (Word8)
+import           Control.Applicative
+import           Control.Monad.Trans.Either        (hoistEither, runEitherT)
+import           Criterion.Main                    (bench, bgroup, defaultMainWith, whnf)
+import           Data.Array.Accelerate             ((:.) (..), Acc, Exp)
+import qualified Data.Array.Accelerate             as A
+import qualified Data.Array.Accelerate.Interpreter as Interp
+import qualified Data.Array.Accelerate.IO          as A
+import qualified Data.Array.Repa                   as R
+import           Data.Array.Repa.Eval              (Target)
+import qualified Data.Array.Repa.Eval              as R
+import qualified Data.Array.Repa.IO.BMP            as R
+import qualified Data.Array.Repa.IO.DevIL          as DevIL
+import qualified Data.Array.Repa.Repr.Unboxed      as R
+import           Data.Bits                         ((.&.))
+import qualified Data.Fixed                        as F
+import qualified Data.Label                        as Label
+import           Data.Map                          (Map)
+import qualified Data.Map                          as Map
+import           Data.Monoid                       (Monoid, mempty)
+import           Data.Word                         (Word8)
+import qualified Debug.Trace                       as D
+import qualified System.Environment                as Env
+import qualified System.Exit                       as Exit
+import           System.TimeIt                     (timeIt)
 
 import           Flowbox.Graphics.Raster.Channel   (Channel)
 import qualified Flowbox.Graphics.Raster.Channel   as Channel
@@ -47,19 +46,9 @@ import           Flowbox.Graphics.Raster.Image     (Image)
 import qualified Flowbox.Graphics.Raster.Image     as Image
 import qualified Flowbox.Graphics.Raster.IO        as Image
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
-
---import           Control.Monad
-
-import qualified Data.Array.Accelerate.Interpreter      as Interp
-
-import qualified Data.Array.Repa.Eval as R
-
-import Data.Bits ((.&.))
+import           Flowbox.Prelude                   as P
 
 
---import qualified Data.Array.Accelerate.CUDA             as CUDA
-
-import Control.Monad.Trans.Either (hoistEither, runEitherT)
 
 -- utils
 
@@ -106,21 +95,12 @@ median xs | odd len = xs !! mid
                     meanMedian = (xs !! mid + xs !! (mid+1)) / 2
 
 
---quicksort :: Ord a => [a] -> [a]
---quicksort []     = []
---quicksort (p:xs) = (quicksort lesser) A.++ [p] A.++ (quicksort greater)
---    where
---        lesser  = A.filter (A.<* p) xs
---        greater = A.filter (A.>=* p) xs
-
-quicksort array = A.acond (A.null array) (A.use $ A.fromList A.Z []) (quicksort' array)
-    where quicksort' (p A.:. xs) = (quicksort $ lesser p xs) A.:. ((A.unit p) A.:. (quicksort $ greater p xs))
-          lesser  p = A.filter (A.<* p)
-          greater p = A.filter (A.>=* p)
 
 --quicksort :: Int
---quicksort (p A.:. xs) = (lesser xs) A.:. (p A.:. (greater xs))
---    where lesser  = A.filter (A.<* p)
+--quicksort array = (lesser xs) A.++ (A.unit p) A.++ (greater xs)
+--    where p = array A.!! 1
+--          xs = A.tail array
+--          lesser  = A.filter (A.<* p)
 --          greater = A.filter (A.>=* p)
 
 -- basic
@@ -236,6 +216,17 @@ dilateImage = applyToImage dilateChannel
 --      channelC' = dilation channelC
 --  return outimg
 
+openImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+openImage names img = do
+    imgA <- erodeImage names img
+    imgB <- dilateImage names imgA
+    return imgB
+
+closeImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+closeImage names img = do
+    imgA <- dilateImage names img
+    imgB <- erodeImage names imgA
+    return imgB
 
 --medianChannel :: Channel Float -> Channel Float
 --medianChannel channel = Channel.stencil middleValue A.Mirror channel
