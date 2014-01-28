@@ -9,7 +9,6 @@
 module Flowbox.Data.Version where
 
 import           Data.Aeson
-import           Data.Default      (Default, def)
 import           Data.Map          (Map)
 import qualified Data.Map          as Map
 import           Data.String.Utils (join)
