@@ -16,6 +16,7 @@ import           Flowbox.Luna.Data.AST.SourcePos                   (SourcePos (S
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token as Token
 import           Flowbox.Prelude
 import           Text.Parsec                                       hiding (getPosition, many, optional, parse, (<|>))
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
 
 checkIf f msg p = do
         obj <- p
@@ -62,3 +63,12 @@ getPosition = convertSourcePos <$> Parsec.getPosition
 convertSourcePos psp = SourcePos (sourceLine psp) (sourceColumn psp)
 
 storePos p = (\pre res post -> Token.mk res pre post) <$> getPosition <*> p <*> getPosition
+
+
+pLastLexeme = view ParseState.lastLexeme <$> getState
+
+pLastLexemeEmpty = do
+    llex <- pLastLexeme
+    case llex of
+        [] -> return ()
+        _  -> parserFail "not empty"

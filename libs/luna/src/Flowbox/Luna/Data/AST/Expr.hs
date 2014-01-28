@@ -38,8 +38,10 @@ data Expr  = NOP          { _id :: ID                                           
            | Assignment   { _id :: ID, _pat       :: Pat      , _dst       :: Expr                                               }
            | RecordUpdate { _id :: ID, _src       :: Expr     , _selectors :: [String], _expr :: Expr                            }
            | Data         { _id :: ID, _cls       :: Type     , _cons      :: [Expr] , _classes   :: [Expr] , _methods :: [Expr] }
+           -- FIXME [wd]: name clash. ConD = Constructor Declaration. Cond = Condition
            | ConD         { _id :: ID, _name      :: String   , _fields    :: [Expr]                                             }
            | Con          { _id :: ID, _name      :: String                                                                      }
+           | Cond         { _id :: ID, _cond      :: Expr     , _success   :: [Expr] , _failure   :: Maybe [Expr]                }
            | Function     { _id :: ID, _path      :: [String] , _name      :: String , _inputs    :: [Expr] , _output  :: Type   , _body    :: [Expr] }
            | Lambda       { _id :: ID, _inputs    :: [Expr]   , _output    :: Type   , _body      :: [Expr]                      }
            | Import       { _id :: ID, _path      :: [String] , _target    :: Expr   , _rename    :: Maybe String                }
@@ -118,6 +120,7 @@ traverseM fexp ftype fpat flit e = case e of
     Data         id' cls' cons' classes' methods'    -> Data         id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
     ConD         id' name' fields'                   -> ConD         id' name' <$> fexpMap fields'
     Con          {}                                  -> pure e
+    Cond         id' cond' success' failure'         -> Cond         id'       <$> fexp cond' <*> fexpMap success' <*> (mapM fexpMap) failure'
     Field        id' name' cls' value'               -> Field        id' name' <$> ftype cls' <*> fexpMap value'
     Function     id' path' name' inputs' output'
                  body'                               -> Function     id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'

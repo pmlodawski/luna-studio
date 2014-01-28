@@ -192,6 +192,9 @@ example = Source.Source ["Main"] $
                     , "    z = x + y"
                     , "    z = self.catch z x: 0"
                     , "    c.print (x<2)"
+                    , "    a = if x<2: 5 else: 4"
+                    --, "    else:   4"
+                    , "    a = 1"
                     --, "    z.catch x"
                     --, "    a = self.test 5"
                     --, "    c.print (x<2)"
@@ -273,38 +276,38 @@ main_inner = Luna.run $ do
     --putStrLn $ PP.ppShow zipper
 
 
-    logger info "\n-------- Desugar.TLRecUpdt --------"
-    (ast, astInfo) <- hoistEither =<< Desugar.TLRecUpdt.run astInfo ast
-    logger info $ PP.ppqShow ast
-
-    --logger info "\n-------- Desugar.ExtScopeCall --------"
-    --(ast, astInfo) <- hoistEither =<< Desugar.ExtScopeCall.run astInfo ast
+    --logger info "\n-------- Desugar.TLRecUpdt --------"
+    --(ast, astInfo) <- hoistEither =<< Desugar.TLRecUpdt.run astInfo ast
     --logger info $ PP.ppqShow ast
 
-    logger info "\n-------- VarAlias --------"
-    va <- hoistEither =<< VarAlias.run ast
-    logger info $ PP.ppShow va
+    ----logger info "\n-------- Desugar.ExtScopeCall --------"
+    ----(ast, astInfo) <- hoistEither =<< Desugar.ExtScopeCall.run astInfo ast
+    ----logger info $ PP.ppqShow ast
+
+    --logger info "\n-------- VarAlias --------"
+    --va <- hoistEither =<< VarAlias.run ast
+    --logger info $ PP.ppShow va
 
 
-    logger info "\n-------- FuncPool --------"
-    fp <- hoistEither =<< FuncPool.run ast
-    logger info $ PP.ppShow fp
+    --logger info "\n-------- FuncPool --------"
+    --fp <- hoistEither =<< FuncPool.run ast
+    --logger info $ PP.ppShow fp
 
-    logger info "\n-------- Hash --------"
-    hash <- hoistEither =<< Hash.run ast
-    logger info $ PP.ppShow hash
+    --logger info "\n-------- Hash --------"
+    --hash <- hoistEither =<< Hash.run ast
+    --logger info $ PP.ppShow hash
 
-    logger info "\n-------- SSA --------"
-    ssa <- hoistEither =<< SSA.run va hash
-    logger info $ PP.ppqShow ssa
+    --logger info "\n-------- SSA --------"
+    --ssa <- hoistEither =<< SSA.run va hash
+    --logger info $ PP.ppqShow ssa
 
-    logger info "\n-------- HASTGen --------"
-    hast <- hoistEither =<< HASTGen.run ssa fp
-    --logger info $ PP.ppShow hast
+    --logger info "\n-------- HASTGen --------"
+    --hast <- hoistEither =<< HASTGen.run ssa fp
+    ----logger info $ PP.ppShow hast
 
-    logger info "\n-------- HSC --------"
-    hsc <- hoistEither =<< HSC.run  hast
-    logger info $ join "\n\n" (map printSrc hsc)
+    --logger info "\n-------- HSC --------"
+    --hsc <- hoistEither =<< HSC.run  hast
+    --logger info $ join "\n\n" (map printSrc hsc)
 
 
     return ()
