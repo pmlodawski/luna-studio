@@ -4,63 +4,25 @@
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-import Control.Applicative
 
-import qualified Canny      as Canny
-import qualified Config     as Cfg
-import qualified Monitoring as Monitoring
-import qualified ParseArgs  as ParseArgs
-import qualified Wildfire   as Wildfire
+import qualified Config              as Cfg
+import           Control.Applicative
+import qualified Data.Label          as Label
+import qualified Monitoring          as Monitoring
+import qualified ParseArgs           as ParseArgs
+import qualified System.Environment  as Env
+import qualified System.Exit         as Exit
 
-import           Criterion.Main     (bench, bgroup, defaultMainWith, whnf)
-import qualified Data.Label         as Label
-import           Flowbox.Prelude    as P
-import qualified System.Environment as Env
-import qualified System.Exit        as Exit
-
-import           Data.Array.Accelerate        ((:.) (..), Acc, Exp)
-import qualified Data.Array.Accelerate        as A
-import qualified Data.Array.Accelerate.IO     as A
-import qualified Data.Array.Repa              as R
-import qualified Data.Array.Repa.IO.BMP       as R
-import qualified Data.Array.Repa.IO.DevIL     as DevIL
-import qualified Data.Array.Repa.Repr.Unboxed as R
-import qualified Data.Fixed                   as F
-import           Data.Map                     (Map)
-import qualified Data.Map                     as Map
-import           Data.Monoid                  (Monoid, mempty)
-import qualified Debug.Trace                  as D
-
-import System.TimeIt (timeIt)
-
-import Data.Array.Repa.Eval (Target)
-import Data.Word            (Word8)
-
-import           Flowbox.Graphics.Raster.Channel   (Channel)
-import qualified Flowbox.Graphics.Raster.Channel   as Channel
-import           Flowbox.Graphics.Raster.Image     (Image)
 import qualified Flowbox.Graphics.Raster.Image     as Image
 import qualified Flowbox.Graphics.Raster.IO        as Image
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
-import qualified Flowbox.Graphics.Algorithms       as A
+import           Flowbox.Prelude                   as P
 
---import           Control.Monad
-
-import qualified Data.Array.Accelerate.Interpreter as Interp
-
-import qualified Data.Array.Repa.Eval as R
-
-import Data.Bits ((.&.))
-
-
---import qualified Data.Array.Accelerate.CUDA             as CUDA
-
-import Control.Monad.Trans.Either (hoistEither, runEitherT)
 
 --imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
-imgtest img imgFilter = do
+imgtest img = do --imgFilter = do
     rgba  <- Image.reprFloat <$> RGBA.decompose img
-    rgbaFilter <- Image.reprFloat <$> RGBA.decompose imgFilter
+    --rgbaFilter <- Image.reprFloat <$> RGBA.decompose imgFilter
     --lrgba <- adjustCB 2.2 0.2 "r" "g" "b" rgba
     --let blur3x3 = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
         --blur5x5 = [0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04]
@@ -74,13 +36,13 @@ imgtest img imgFilter = do
     --let hsvl = Image.insert "s" (clipValues $ Channel.map (+1) s) $ hsv
     --lrgba <- blendRGB rgba rgbaFilter (blenderAlpha 0.5) -- ...
     --lrgba <- A.keyRGB 0.2 (0.055, 0.582, 0.363) rgba
-    lrgba <- A.luminance' rgba
-            >>= Image.cpChannel "luminance" "r"
-            >>= Image.cpChannel "luminance" "g"
-            >>= Image.cpChannel "luminance" "b"
-    let f = \_ -> 1
-        fBW = \x -> x A.>=* 0.5
-        rgb = ("r", "g", "b")
+    --lrgba <- A.luminance' rgba
+    --        >>= Image.cpChannel "luminance" "r"
+    --        >>= Image.cpChannel "luminance" "g"
+    --        >>= Image.cpChannel "luminance" "b"
+    --let f = \_ -> 1
+    --    fBW = \x -> x A.>=* 0.5
+    --    rgb = ("r", "g", "b")
     --lrgba <- A.keyRGB 0.1 (0.176, 0.816, 0.145) rgba
     --lrgba <- A.keyColor ("r", "g", "b") (0.2, 0.2, 0.2) (0.055, 0.582, 0.363) f rgba
     --lrgba <- A.keyColor ("r", "g", "b") (0.1, 0.1, 0.1) (0.176, 0.816, 0.145) f rgba
@@ -90,17 +52,18 @@ imgtest img imgFilter = do
     --erodedBW <- A.erodeImage rgb bw
     --dilatedBW <- A.dilateImage rgb bw
     --erodedMono <- A.erodeImage rgb lrgba
-    dilatedMono <- A.dilateImage rgb lrgba
-    RGBA.compose $ Image.reprWord8 dilatedMono
-    where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
-          mod1 = flip nonIntRem 1.0
+    --dilatedMono <- A.dilateImage rgb lrgba
+    --medianMono <- A.medianImage rgb lrgba
+    --imgMedian <- A.medianImage rgb rgba
+    RGBA.compose $ Image.reprWord8 rgba
+    --where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
+    --      mod1 = flip nonIntRem 1.0
 
 -- main
 
 main :: IO ()
 main
   = do
-        print "--- graphic tests ---"
         Monitoring.beginMonitoring
 
         argv                    <- Env.getArgs
@@ -112,11 +75,10 @@ main
 
         let backend     = Label.get Cfg.configBackend conf
         -- Read in the image file
-        print "Reading"
 
         img2 <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
-        imgFilter <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP "filter.bmp"
-        let img3 = imgtest img2 imgFilter
+        --imgFilter <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP "filter.bmp"
+        let img3 = imgtest img2 --imgFilter
 
         case img3 of
             Left  err -> print err

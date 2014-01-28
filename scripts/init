@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.7
 import os.path
 import sys
 from subprocess import call, Popen, PIPE
@@ -21,7 +21,7 @@ def check_install(name, args):
     (out, err) = Popen(name + " " + args, stdout=PIPE, stderr=PIPE, shell=True).communicate()
     if not out:
         print_error ("Please install '%s' to continue" % name)
-        fatal() 
+        fatal()
 
 def check_cabal_version():
     minv = '1.18.0'
@@ -41,11 +41,11 @@ check_cabal_version()
 
 print_info ("Generating Protocol Buffers files using genproto")
 path = os.path.join('scripts', 'genproto')
-try_call ('python %s' % path)
+try_call ('python2.7 %s' % path)
 
 print_info ("Generating cabal configs using gencabal")
 path = os.path.join('scripts', 'gencabal')
-try_call ('python %s' % path)
+try_call ('python2.7 %s' % path)
 
 print_info ("Initializing cabal sandbox")
 try_call('cabal sandbox init --sandbox=dist')
@@ -55,7 +55,7 @@ try_call('cabal update')
 
 print_info ("Registering Cabal-1.19.1 library")
 try_call('cabal install %s' % p_cabal)
-    
+
 # print_info ("Registering MissingH library (windows patch)")
 # try_call('cabal install %s' % p_missingh)
 
