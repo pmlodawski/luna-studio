@@ -4,22 +4,14 @@
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-import qualified Config                            as Cfg
+import qualified Config              as Cfg
 import           Control.Applicative
-import           Data.Array.Accelerate             ((:.) (..), Acc, Exp)
-import qualified Data.Array.Accelerate             as A
---import qualified Data.Array.Accelerate.Interpreter as Interp
-import qualified Data.Label                        as Label
-import qualified Monitoring                        as Monitoring
-import qualified ParseArgs                         as ParseArgs
-import qualified System.Environment                as Env
-import qualified System.Exit                       as Exit
---import           System.TimeIt                     (timeIt)
+import qualified Data.Label          as Label
+import qualified Monitoring          as Monitoring
+import qualified ParseArgs           as ParseArgs
+import qualified System.Environment  as Env
+import qualified System.Exit         as Exit
 
-import qualified Flowbox.Graphics.Algorithms       as A
---import           Flowbox.Graphics.Raster.Channel   (Channel)
-import qualified Flowbox.Graphics.Raster.Channel   as Channel
---import           Flowbox.Graphics.Raster.Image     (Image)
 import qualified Flowbox.Graphics.Raster.Image     as Image
 import qualified Flowbox.Graphics.Raster.IO        as Image
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
@@ -46,9 +38,9 @@ imgtest img = do --imgFilter = do
     --        >>= Image.cpChannel "luminance" "r"
     --        >>= Image.cpChannel "luminance" "g"
     --        >>= Image.cpChannel "luminance" "b"
-    let f = \_ -> 1
-        fBW = \x -> x A.>=* 0.5
-        rgb = ("r", "g", "b")
+    --let f = \_ -> 1
+    --    fBW = \x -> x A.>=* 0.5
+    --    rgb = ("r", "g", "b")
     --lrgba <- A.keyRGB 0.1 (0.176, 0.816, 0.145) rgba
     --lrgba <- A.keyColor ("r", "g", "b") (0.2, 0.2, 0.2) (0.055, 0.582, 0.363) f rgba
     --lrgba <- A.keyColor ("r", "g", "b") (0.1, 0.1, 0.1) (0.176, 0.816, 0.145) f rgba
@@ -62,8 +54,8 @@ imgtest img = do --imgFilter = do
     --medianMono <- A.medianImage rgb lrgba
     --imgMedian <- A.medianImage rgb rgba
     RGBA.compose $ Image.reprWord8 rgba
-    where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
-          mod1 = flip nonIntRem 1.0
+    --where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
+    --      mod1 = flip nonIntRem 1.0
 
 -- main
 
