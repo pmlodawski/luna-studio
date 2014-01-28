@@ -33,7 +33,7 @@ def run_protoc(proto_path):
 
     for cpp_gen_dir in cpp_gen_dirs:
         try_call('protoc --cpp_out=' + cpp_gen_dir + args)
-    
+
     try_call('hprotoc -d ' + hs_gen_dir + args)
 
 def prepare_hs_dir(proto_path):

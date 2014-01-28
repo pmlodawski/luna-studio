@@ -67,21 +67,33 @@ def Float.- a b:
 
 ###############################################
 
-
-def testm self x:
-    ```liftf1 testm #{x}```
-
 def readImage self path:
     ```flattenCtx $ liftf1 readImage #{path}```
 
-def writeImage self path img:
-    ```flattenCtx $ liftf2 writeImage #{path} #{img}```
+def ImgF.writeImage self path:
+    ```flattenCtx $ liftf2 writeImage #{path} #{self}```
+    self
 
-def adjustCB self contrast brightness img:
-    ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{img}```
+def ImgF.adjustCB self contrast brightness:
+    ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{self}```
 
-def convolve self kernel img:
-    ```flattenCtx $ liftf2 convolve #{kernel} #{img}```
+def ImgF.convolve self kernel:
+    ```flattenCtx $ liftf2 convolve #{kernel} #{self}```
+
+
+# class Channel:
+#     zip ...:
+#         ``` ... ```
+
+# class Channel a:
+#     Raw :: RawData a
+#     # Acc :: 
+
+# class Vector a = Vector: x :: a
+#                          y :: a
+#                          z :: a
+#                | Scalar: a :: a
+#                | Vector2: x :: a
 
 class Vector a:
     x,y,z :: a
@@ -98,22 +110,23 @@ def main self:
     # c.print v
     # c.print (v+v)
 
-    a = [1..10].each x:
-        Console().print x
+    # a = [1..10].each x:
+    #     Console().print x
 
-    c.print $ a.at 5
-    c.print $ self.testm 15
+    # c.print $ a.at 5
+    # c.print $ self.testm 15
 
     path = "lena.bmp"
     outpath = "luna.bmp"
-    imgIn = self.readImage path
+
+    img = self.readImage path
     # c.print img
     c = 1.5
     b = 0.2
     k = 0.1
-    # imgOut = self.adjustCB c b imgIn
-    # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
-    imgOut = self.convolve k imgIn
-    self.writeImage outpath imgOut
-    # c.print img
+    img = img.adjustCB c b
+    kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
+    img = img.convolve k
+    img.writeImage outpath
+    # # c.print img
 

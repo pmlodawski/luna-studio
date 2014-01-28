@@ -79,7 +79,7 @@ pkgs = { '@all'           : AllProject (deps = deptree)
        , 'num-conversion' : HProject   ('num-conversion'      , os.path.join ('libs'  , 'num-conversion'), 'libs'    , [] )
        , 'graphics'       : HProject   ('flowbox-graphics'    , os.path.join ('libs'  , 'graphics')      , 'libs'    , ['utils', 'num-conversion'] )
        , 'markup'         : HProject   ('doc-markup'          , os.path.join ('libs'  , 'markup')        , 'libs'    , []                                                  )
-       } 
+       }
 
 
 def flatten(lofl):

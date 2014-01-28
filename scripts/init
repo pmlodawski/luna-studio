@@ -21,7 +21,7 @@ def check_install(name, args):
     (out, err) = Popen(name + " " + args, stdout=PIPE, stderr=PIPE, shell=True).communicate()
     if not out:
         print_error ("Please install '%s' to continue" % name)
-        fatal() 
+        fatal()
 
 def check_cabal_version():
     minv = '1.18.0'
@@ -55,7 +55,7 @@ try_call('cabal update')
 
 print_info ("Registering Cabal-1.19.1 library")
 try_call('cabal install %s' % p_cabal)
-    
+
 # print_info ("Registering MissingH library (windows patch)")
 # try_call('cabal install %s' % p_missingh)
 
