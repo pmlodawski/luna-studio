@@ -1,3 +1,9 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
 module Flowbox.Graphics.Raster.Channel where
 
 import Flowbox.Prelude hiding (use)
@@ -13,13 +19,22 @@ data Channel a = Raw (RawData a)
                | Acc (A.Acc (RawData a))
                deriving (Show)
 
+-- FIXME[PM] Fix these instances!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1111111111111111
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+instance A.Elt a => Eq (Channel a) where 
+    a == b = undefined
+
+instance A.Elt a => Ord (Channel a) where
+    compare a b = undefined
+
 
 map :: (A.Elt a, A.Elt b) => (A.Exp a -> A.Exp b) -> Channel a -> Channel b
 map f chan = Acc $ A.map f ch
     where ch = case chan of
                Raw m -> A.use m
                Acc m -> m
-
 
 
 use :: A.Elt a => Channel a -> Channel a

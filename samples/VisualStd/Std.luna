@@ -41,25 +41,18 @@ def Bool.not self:
 
 ###############################################
 
-class Image:
-    def testm self x:
-        ```liftf1 testm #{x}```
+def readImage self path::Path:
+    ```flattenCtx $ liftf1 readImage #{path}```
 
-    def readImage self path:
-        ```flattenCtx $ liftf1 readImage #{path}```
+def ImgF.writeImage image::ImgF path::Path:
+    ```flattenCtx $ liftf2 writeImage #{path} #{image}```
+    image
 
-    def writeImage self img path:
-        ```flattenCtx $ liftf2 writeImage #{path} #{img}```
+def ImgF.adjustCB image::ImgF contrast::Float brightness::Float:
+    ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{image}```
 
-    def display self img:
-        path = "/tmp/flowbox/data/image.bmp"
-        ```flattenCtx $ liftf2 writeImage #{path} #{img}```
-
-    def adjustCB self img contrast brightness:
-        ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{img}```
-
-    def convolve self img kernel:
-        ```flattenCtx $ liftf2 convolve #{kernel} #{img}```
+def ImgF.convolve image::ImgF kernel:
+    ```flattenCtx $ liftf2 convolve #{kernel} #{self}```
 
 class Vector a:
     x,y,z :: a
