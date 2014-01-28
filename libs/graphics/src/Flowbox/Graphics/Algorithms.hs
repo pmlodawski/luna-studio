@@ -8,8 +8,8 @@
  -- [ ] 1) lut
  -- [+] 2) dylatacja
  -- [+] 3) erozja
- -- [ ] 4) otwarcie
- -- [ ] 5) zamknięcie
+ -- [+] 4) otwarcie
+ -- [+] 5) zamknięcie
  -- [ ] 6) mediana - do czysczenia np. kurzu
  -- [ ] 7) zmiany kolorow na krzywych - definiowane za pomoca datatypu, ktory okrelalby czy to jest linear, bezier cyz cos innego
  -- [ ] 8) samplowanie po kolorach
@@ -22,51 +22,62 @@
 
 module Flowbox.Graphics.Algorithms where
 
-import Control.Applicative
-
-import           Criterion.Main     (bench, bgroup, defaultMainWith, whnf)
-import qualified Data.Label         as Label
-import           Flowbox.Prelude    as P
-import qualified System.Environment as Env
-import qualified System.Exit        as Exit
-
-import           Data.Array.Accelerate        ((:.) (..), Acc, Exp)
-import qualified Data.Array.Accelerate        as A
-import qualified Data.Array.Accelerate.IO     as A
-import qualified Data.Array.Repa              as R
-import qualified Data.Array.Repa.IO.BMP       as R
-import qualified Data.Array.Repa.IO.DevIL     as DevIL
-import qualified Data.Array.Repa.Repr.Unboxed as R
-import qualified Data.Fixed                   as F
-import           Data.Map                     (Map)
-import qualified Data.Map                     as Map
-import           Data.Monoid                  (Monoid, mempty)
-import qualified Debug.Trace                  as D
-
-import System.TimeIt (timeIt)
-
-import Data.Array.Repa.Eval (Target)
-import Data.Word            (Word8)
+import           Data.Array.Accelerate             (Exp)
+import qualified Data.Array.Accelerate             as A
 
 import           Flowbox.Graphics.Raster.Channel   (Channel)
 import qualified Flowbox.Graphics.Raster.Channel   as Channel
 import           Flowbox.Graphics.Raster.Image     (Image)
 import qualified Flowbox.Graphics.Raster.Image     as Image
-import qualified Flowbox.Graphics.Raster.IO        as Image
-import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
-
---import           Control.Monad
-
-import qualified Data.Array.Accelerate.Interpreter as Interp
-
-import qualified Data.Array.Repa.Eval as R
-
-import Data.Bits ((.&.))
+import           Flowbox.Prelude                   as P
 
 
---import qualified Data.Array.Accelerate.CUDA             as CUDA
 
-import Control.Monad.Trans.Either (hoistEither, runEitherT)
+-- utils
+
+applyToImage :: (Channel Float -> Channel Float) -> (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+applyToImage f names img = do
+  let (nameA,_,_) = names
+      (_,nameB,_) = names
+      (_,_,nameC) = names
+  channelA <- Image.lookup nameA img
+  channelB <- Image.lookup nameB img
+  channelC <- Image.lookup nameC img
+  let outimg = Image.insert nameA channelA'
+             $ Image.insert nameB channelB'
+             $ Image.insert nameC channelC'
+             $ img
+      channelA' = f channelA
+      channelB' = f channelB
+      channelC' = f channelC
+  return outimg
+
+--filter' :: (a -> Exp Bool) -> [a] -> [a]
+--filter' _pred []    = []
+--filter' pred (x:xs) = pred x A.? (x : filter' pred xs , filter' pred xs)
+--  | pred x         = x : filter' pred xs
+--  | otherwise      = filter' pred xs
+
+
+
+-- different
+
+median :: Fractional a => [a] -> a
+median xs | odd len = xs !! mid
+          | even len = meanMedian
+          | otherwise = xs !! 0 -- ain't gonna happen!
+              where len = length xs
+                    mid = len `div` 2
+                    meanMedian = (xs !! mid + xs !! (mid+1)) / 2
+
+
+
+--quicksort :: Int
+--quicksort array = (lesser xs) A.++ (A.unit p) A.++ (greater xs)
+--    where p = array A.!! 1
+--          xs = A.tail array
+--          lesser  = A.filter (A.<* p)
+--          greater = A.filter (A.>=* p)
 
 -- basic
 
@@ -82,22 +93,22 @@ sign x = (2 * x) - 1
 parametrize :: Num a => a -> a -> a -> a
 parametrize lo hi x = lo + x * (hi - lo)
 
---bias :: Exp a -> Exp b -> Exp b
+bias :: (A.Elt t, A.Elt t1, A.IsNum t, A.IsIntegral t1, A.IsFloating t1) => Exp t1 -> Exp t -> Exp t
 bias b x = (b A.>* 0) A.? (x ^ (log(b) / log(0.5)) , 0)
 
---gain :: Exp a -> Exp b -> Exp a
+gain :: (A.Elt t, A.Elt t1, A.IsIntegral t1, A.IsFloating t, A.IsFloating t1) => Exp t -> Exp t1 -> Exp t
 gain g x = 0.5 * (x A.<* 0.5 A.? (bias (2 * x) (1 - g) , 2 - bias (2 - 2 * x) (1 - g)))
 
---gamma ::
+gamma :: (Fractional b, Integral b, Num a) => b -> a -> a
 gamma g x = x ^ (1 / g)
 
 compress :: Num a => a -> a -> a -> a
 compress lo hi x = (hi - lo) * x + lo
 
---expand :: Num a => a -> a -> a -> a
+expand :: (A.Elt t, A.IsFloating t) => Exp t -> Exp t -> Exp t -> Exp t
 expand lo hi x = lo A.==* hi A.? (x A.<* lo A.? (0 , 1) , (x - lo) / (hi - lo)) -- WATCH OUT! comparing Floating numbers!
 
---remap :: Num a => a -> a -> a -> a -> a -> a
+remap :: Fractional a => a -> a -> a -> a -> a -> a
 remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
 
 
@@ -107,22 +118,22 @@ remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
 binarizeChannel :: (Exp Float -> Exp Bool) -> Channel Float -> Channel Float
 binarizeChannel f channel = Channel.map (\x -> f x A.? (1 , 0)) channel
 
-binarizeImage :: (String, String, String) -> (Exp Float -> Exp Bool) -> Image Float -> Either Image.Error (Image Float)
-binarizeImage names f img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
-  channelA <- Image.lookup nameA img
-  channelB <- Image.lookup nameB img
-  channelC <- Image.lookup nameC img
-  let outimg = Image.insert nameA channelA'
-             $ Image.insert nameB channelB'
-             $ Image.insert nameC channelC'
-             $ img
-      channelA' = binarizeChannel f channelA
-      channelB' = binarizeChannel f channelB
-      channelC' = binarizeChannel f channelC
-  return outimg
+binarizeImage :: (Exp Float -> Exp Bool) -> (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+binarizeImage f = applyToImage (binarizeChannel f)
+--  let (nameA,_,_) = names
+--      (_,nameB,_) = names
+--      (_,_,nameC) = names
+--  channelA <- Image.lookup nameA img
+--  channelB <- Image.lookup nameB img
+--  channelC <- Image.lookup nameC img
+--  let outimg = Image.insert nameA channelA'
+--             $ Image.insert nameB channelB'
+--             $ Image.insert nameC channelC'
+--             $ img
+--      channelA' = binarizeChannel f channelA
+--      channelB' = binarizeChannel f channelB
+--      channelC' = binarizeChannel f channelC
+--  return outimg
 
 luminance :: String -> String -> String -> String -> (Image Float) -> Either Image.Error (Image Float)
 luminance rname gname bname outname img = do
@@ -139,48 +150,66 @@ luminance' = luminance "r" "g" "b" "luminance"
 
 
 
-erosion :: Channel Float -> Channel Float
-erosion channel = Channel.stencil erode A.Mirror channel
+erodeChannel :: Channel Float -> Channel Float
+erodeChannel channel = Channel.stencil erode A.Mirror channel
     where erode ((a,b,c),(d,e,f),(g,h,i)) = minimum [a,b,c,d,e,f,g,h,i]
 
 erodeImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
-erodeImage names img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
-  channelA <- Image.lookup nameA img
-  channelB <- Image.lookup nameB img
-  channelC <- Image.lookup nameC img
-  let outimg = Image.insert nameA channelA'
-             $ Image.insert nameB channelB'
-             $ Image.insert nameC channelC'
-             $ img
-      channelA' = erosion channelA
-      channelB' = erosion channelB
-      channelC' = erosion channelC
-  return outimg
+erodeImage = applyToImage erodeChannel
+  --let (nameA,_,_) = names
+  --    (_,nameB,_) = names
+  --    (_,_,nameC) = names
+  --channelA <- Image.lookup nameA img
+  --channelB <- Image.lookup nameB img
+  --channelC <- Image.lookup nameC img
+  --let outimg = Image.insert nameA channelA'
+  --           $ Image.insert nameB channelB'
+  --           $ Image.insert nameC channelC'
+  --           $ img
+  --    channelA' = erosion channelA
+  --    channelB' = erosion channelB
+  --    channelC' = erosion channelC
+  --return outimg
 
-dilation :: Channel Float -> Channel Float
-dilation channel = Channel.stencil dilate A.Mirror channel
+dilateChannel :: Channel Float -> Channel Float
+dilateChannel channel = Channel.stencil dilate A.Mirror channel
     where dilate ((a,b,c),(d,e,f),(g,h,i)) = maximum [a,b,c,d,e,f,g,h,i]
 
 dilateImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
-dilateImage names img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
-  channelA <- Image.lookup nameA img
-  channelB <- Image.lookup nameB img
-  channelC <- Image.lookup nameC img
-  let outimg = Image.insert nameA channelA'
-             $ Image.insert nameB channelB'
-             $ Image.insert nameC channelC'
-             $ img
-      channelA' = dilation channelA
-      channelB' = dilation channelB
-      channelC' = dilation channelC
-  return outimg
+dilateImage = applyToImage dilateChannel
+--  let (nameA,_,_) = names
+--      (_,nameB,_) = names
+--      (_,_,nameC) = names
+--  channelA <- Image.lookup nameA img
+--  channelB <- Image.lookup nameB img
+--  channelC <- Image.lookup nameC img
+--  let outimg = Image.insert nameA channelA'
+--             $ Image.insert nameB channelB'
+--             $ Image.insert nameC channelC'
+--             $ img
+--      channelA' = dilation channelA
+--      channelB' = dilation channelB
+--      channelC' = dilation channelC
+--  return outimg
 
+openImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+openImage names img = do
+    imgA <- erodeImage names img
+    imgB <- dilateImage names imgA
+    return imgB
+
+closeImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+closeImage names img = do
+    imgA <- dilateImage names img
+    imgB <- erodeImage names imgA
+    return imgB
+
+--medianChannel :: Channel Float -> Channel Float
+--medianChannel channel = Channel.stencil middleValue A.Mirror channel
+--    where middleValue ((a,b,c),(d,e,f),(g,h,i)) = median $ quicksort $ A.use $ A.fromList (A.Z :. 9) [a,b,c,d,e,f,g,h,i]
+
+--medianImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+--medianImage = applyToImage medianChannel
 
 -- convolution
 
@@ -200,6 +229,8 @@ convolve5x5 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil5x5 a -> A.Exp a
 convolve5x5 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o),(p,q,r,s,t),(u,v,w,x,y))
     = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y]
 
+convolve :: A.Stencil A.DIM2 Float stencil =>
+  (String, String, String) -> (t -> stencil -> Exp Float) -> t -> Image Float -> Either Image.Error (Image Float)
 convolve names convolution kernel img = do
   let (nameA,_,_) = names
       (_,nameB,_) = names
@@ -216,6 +247,8 @@ convolve names convolution kernel img = do
       channelC' = clipValues $ Channel.stencil (convolution kernel) A.Clamp channelC
   return outimg
 
+convolveRGB :: A.Stencil A.DIM2 Float stencil =>
+  (t -> stencil -> Exp Float) -> t -> Image Float -> Either Image.Error (Image Float)
 convolveRGB = convolve ("r", "g", "b")
 
 -- brightness and contrast
@@ -224,7 +257,7 @@ adjustCB_RGB :: A.Exp Float -> A.Exp Float -> (Image Float) -> Either Image.Erro
 adjustCB_RGB = adjustCB "r" "g" "b"
 
 adjustCB :: String -> String -> String -> A.Exp Float -> A.Exp Float -> (Image Float) -> Either Image.Error (Image Float)
-adjustCB rname gname bname contrast brightness img = do
+adjustCB rname gname bname contrastValue brightnessValue img = do
     rchannel <- Image.lookup rname img
     gchannel <- Image.lookup gname img
     bchannel <- Image.lookup bname img
@@ -235,7 +268,7 @@ adjustCB rname gname bname contrast brightness img = do
         rchannel' = clipValues $ Channel.map adjust rchannel
         gchannel' = clipValues $ Channel.map adjust gchannel
         bchannel' = clipValues $ Channel.map adjust bchannel
-        adjust x = contrast * x + brightness
+        adjust x = contrastValue * x + brightnessValue
     return outimg
 
 contrast :: A.Exp Float -> String -> String -> String -> (Image Float) -> Either Image.Error (Image Float)
@@ -350,7 +383,7 @@ blendRGB img1 img2 blender = do
 
 -- #define ChannelBlend_Normal(A,B)     ((uint8)(A))
 blenderNormal :: (Exp Float) -> (Exp Float) -> (Exp Float)
-blenderNormal a b = a
+blenderNormal a _ = a
 
 -- #define ChannelBlend_Lighten(A,B)    ((uint8)((B > A) ? B:A))
 blenderLighten :: (Exp Float) -> (Exp Float) -> (Exp Float)
@@ -449,9 +482,11 @@ blenderPhoenix :: (Exp Float) -> (Exp Float) -> (Exp Float)
 blenderPhoenix a b = (a A.<* b A.? (a , b)) - (a A.>* b A.? (a , b)) + 1
 
 -- #define ChannelBlend_Alpha(A,B,O)    ((uint8)(O * A + (1 - O) * B))
+blenderAlpha :: Num a => a -> a -> a -> a
 blenderAlpha o a b = (o * a + (1 - o) * b)
 
 -- #define ChannelBlend_AlphaF(A,B,F,O) (ChannelBlend_Alpha(F(A,B),A,O))
+blenderAlphaF :: Num a => (a -> t -> a) -> a -> a -> t -> a
 blenderAlphaF f o a b = blenderAlpha (f a b) a o
 
 

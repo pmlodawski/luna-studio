@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.7
 from utils.glob2 import glob
 import re
 from subprocess import call, Popen, PIPE
@@ -34,8 +34,8 @@ def main():
     if not out:
         print_error ("It seems 'stylish-haskell' is not installed")
         print_error ("Please run 'cabal install stylish-haskell' and try again")
-        fatal() 
-        
+        fatal()
+
     # search for files
     args = sys.argv
     print_info('Search paths: %s' % path_prefixes)
@@ -50,7 +50,7 @@ def main():
         paths = paths.split('\n')
         paths = [file[3:] for file in paths]
         paths = [path.split(' -> ')[-1] for path in paths]
-    
+
     paths = [file for file in paths if file[-3:] == '.hs']
 
     # filter paths with prefixes
