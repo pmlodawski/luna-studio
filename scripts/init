@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.7
 import os.path
 import sys
 from subprocess import call, Popen, PIPE
@@ -41,11 +41,11 @@ check_cabal_version()
 
 print_info ("Generating Protocol Buffers files using genproto")
 path = os.path.join('scripts', 'genproto')
-try_call ('python %s' % path)
+try_call ('python2.7 %s' % path)
 
 print_info ("Generating cabal configs using gencabal")
 path = os.path.join('scripts', 'gencabal')
-try_call ('python %s' % path)
+try_call ('python2.7 %s' % path)
 
 print_info ("Initializing cabal sandbox")
 try_call('cabal sandbox init --sandbox=dist')

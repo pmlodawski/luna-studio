@@ -219,6 +219,11 @@ genExpr ast = case ast of
 
                                             return f
 
+    LExpr.Cond   id cond success failure -> HExpr.CondE <$> genExpr cond <*> mapM genExpr success <*> mapM genExpr failureExprs
+                                            where failureExprs = case failure of
+                                                                 Just exprs -> exprs
+                                                                 Nothing    -> [LExpr.NOP 0]
+
     LExpr.Lambda id inputs output body   -> do
                                             let fname      = Naming.mkLamName $ show id
                                                 hName      = Naming.mkHandlerFuncName fname
@@ -317,6 +322,7 @@ genExpr ast = case ast of
     LExpr.RangeFrom   _ start                -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start
     LExpr.Native      _ segments             -> pure $ HExpr.Native (join "" $ map genNative segments)
     LExpr.Typed       _ cls expr             -> Pass.fail "Typing expressions is not supported yet." -- Potrzeba uzywac hacku: matchTypes (undefined :: m1(s1(Int)))  (val (5 :: Int))
+    LExpr.NOP         _                      -> pure HExpr.NOP
     --x                                        -> logger error (show x) *> return HExpr.NOP
     where
         getN n = HExpr.AppE (HExpr.Var $ "call" ++ show n)

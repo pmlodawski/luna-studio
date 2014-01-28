@@ -38,6 +38,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Con        { name      :: String   , fields    :: [Expr]                              }
           | ConE       { qname :: [String]                                                        }
           | ConT       { name :: String                                                           }
+          | CondE      { cond :: Expr , success :: [Expr], failure :: [Expr]                      }
           | RecUpdE    { expr :: Expr , name :: String, val :: Expr}
           -- | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , newtypes  :: [Expr]       , datatypes :: [Expr]  , methods :: [Expr] , thexpressions :: [Expr] }
           | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , body  :: [Expr]}

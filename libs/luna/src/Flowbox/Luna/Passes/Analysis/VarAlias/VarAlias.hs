@@ -50,6 +50,7 @@ vaExpr :: Expr.Expr -> VAPass ()
 vaExpr el = VAState.registerID (el ^. Expr.id) *> case el of
     Expr.Function   {}         -> withID continue
     Expr.Lambda     {}         -> withID continue
+    Expr.Cond       {}         -> withID continue
     Expr.Assignment _ pat dst  -> vaExpr dst <* vaPat pat
     Expr.Con        id name    -> VAState.bindVar id name
     Expr.Var        id name    -> VAState.bindVar id name

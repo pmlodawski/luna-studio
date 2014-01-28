@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.7
 from utils.glob2 import glob
 import re
 from subprocess import call, Popen, PIPE

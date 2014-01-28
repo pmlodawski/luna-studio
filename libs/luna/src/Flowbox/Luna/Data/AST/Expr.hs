@@ -156,6 +156,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     RecordUpdate _ src' _ expr'                      -> drop <* fexp src'  <* fexp expr'
     Data         _ cls' cons'  classes' methods'     -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
     ConD         _ _ fields'                         -> drop <* fexpMap fields'
+    Cond         _ cond' success' failure'           -> drop <* fexp cond' <* fexpMap success' <* (mapM fexpMap) failure'
     Con          {}                                  -> drop
     Field        _ _ cls' value'                     -> drop <* ftype cls' <* fexpMap value'
     Function     _ _ _ inputs' output' body'         -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'

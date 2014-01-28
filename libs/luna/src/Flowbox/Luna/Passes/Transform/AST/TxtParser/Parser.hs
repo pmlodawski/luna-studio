@@ -232,7 +232,7 @@ pTermE base = base <??> (flip applyAll <$> many1 (pTermBaseE base))  --  many1 (
 
 
 pTermBaseE p = choice [ try pTermRecUpd
-                      , pDotTermE 
+                      , pDotTermE
                       , pCallTermE p
                       ]
 
@@ -318,7 +318,7 @@ pCaseE     = tok Expr.Case <* L.pCase <*> pExprSimple <*> (pDotBlockBegin pCaseB
 pCaseBodyE = tok Expr.Match <*> pPattern <*> pExprBlock
 
 
-pCondE     = tok Expr.Cond <* L.pIf <*> pExprSimple <*> pExprBlock <*> (Just <$ blockSpacesIE <* L.pElse <*> pExprBlock)
+pCondE     = tok Expr.Cond <* L.pIf <*> pExprSimple <*> pExprBlock <*> pMaybe (blockSpacesIE *> L.pElse *> pExprBlock)
 
 
 pNative     = between L.pNativeSym L.pNativeSym (many pNativeElem)
