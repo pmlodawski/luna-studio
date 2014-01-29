@@ -5,17 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Batch.Handler.Library (
-    libraries,
-
-    libraryByID,
-    createLibrary,
-    loadLibrary,
-    unloadLibrary,
-    storeLibrary,
-    buildLibrary,
-    runLibrary,
-) where
+module Flowbox.Batch.Handler.Library where
 
 --import qualified Data.Maybe   as Maybe
 import           Data.Version   (Version (Version))
@@ -24,12 +14,15 @@ import qualified System.Process as Process
 import           Flowbox.Batch.Batch                        (Batch)
 import qualified Flowbox.Batch.Batch                        as Batch
 import           Flowbox.Batch.Handler.Common               (libManagerOp, libraryOp, noresult, projectOp, readonly)
+import qualified Flowbox.Batch.Handler.Common               as Common
 import           Flowbox.Batch.Process.Handle               (Handle (Handle))
 import qualified Flowbox.Batch.Process.Map                  as ProcessMap
 import qualified Flowbox.Batch.Process.Process              as Process
 import qualified Flowbox.Batch.Project.Project              as Project
 import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
 import           Flowbox.Control.Error
+import qualified Flowbox.Luna.Data.Source                   as Source
+import qualified Flowbox.Luna.Interpreter.Interpreter       as Interpreter
 import qualified Flowbox.Luna.Lib.LibManager                as LibManager
 import           Flowbox.Luna.Lib.Library                   (Library)
 import qualified Flowbox.Luna.Lib.Library                   as Library
@@ -118,7 +111,7 @@ runLibrary libID projectID = projectOp projectID (\_ project -> do
         libs        = Project.libs project
         processMap  = Project.processMap project
     library <- LibManager.lab libs libID <?> "Wrong libID=" ++ (show libID)
-    name <- UniPath.toUnixString <$> (UniPath.expand $ UniPath.append (Library.name library) projectPath)
+    name    <- UniPath.toUnixString <$> (UniPath.expand $ UniPath.append (Library.name library) projectPath)
     let command = Platform.dependent name (name ++ ".exe") name
     --    noStandardInput = ""
     --    noArguments     = [] --TODO [PM] : reimplement all this method to support real programs
@@ -135,3 +128,12 @@ runLibrary libID projectID = projectOp projectID (\_ project -> do
 
 
 
+interpretLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
+interpretLibrary libID projectID batch = do
+    ast <- Common.getAST libID projectID batch
+    let diag    = Diagnostics.all -- TODO [PM] : hardcoded diagnostics
+        cfg     = Batch.config batch
+        imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup"] -- TODO [PM] : hardcoded imports
+    [hsc] <- Luna.runIO $ Build.prepareSources diag ast
+    let code = unlines $ snd $ break (=="-- body --") $ lines $ Source.code hsc
+    Interpreter.runSource cfg imports code "main"

@@ -22,6 +22,7 @@ import qualified Flowbox.Config.Config as Config
 import           Flowbox.Prelude
 
 
+
 initialize :: GhcMonad m => Config -> m ()
 initialize config = do
     flags <- GHC.getSessionDynFlags
@@ -34,10 +35,6 @@ initialize config = do
                 --, GHC.verbosity = 4
                 }
     return ()
-
-
-run :: Config -> Ghc a -> IO a
-run config r = GHC.runGhc (Just $ Config.topDir $ Config.ghcS config) r
 
 
 setHardodedExtensions :: GhcMonad m => m ()
@@ -62,17 +59,29 @@ setImports :: GhcMonad m => [String] -> m ()
 setImports = GHC.setContext . map (GHC.IIDecl . GHC.simpleImportDecl . GHC.mkModuleName)
 
 
-channelLoop :: GhcMonad m => Chan String -> [String] -> m ()
-channelLoop chan imports = forever $ do
-    code <- liftIO $ Chan.readChan chan
-
+compileAndRun :: GhcMonad m => [String] -> String -> String -> m ()
+compileAndRun imports declarations stmt = do
     GHC.setTargets []
     GHC.load GHC.LoadAllTargets
-
     setImports imports
+    _ <- GHC.runDecls declarations
+    _ <- GHC.runStmt stmt GHC.RunToCompletion
+    return ()
 
-    _ <- GHC.runDecls code
-    _ <- GHC.runStmt "main" GHC.RunToCompletion
+
+run :: Config -> Ghc a -> IO a
+run config r = GHC.runGhc (Just $ Config.topDir $ Config.ghcS config) r
+
+
+runSource :: Config -> [String] -> String -> String -> IO ()
+runSource config imports declarations stmt =
+    run config $ compileAndRun imports declarations stmt
+
+
+channelLoop :: GhcMonad m => Chan String -> [String] -> m ()
+channelLoop chan imports = forever $ do
+    declarations <- liftIO $ Chan.readChan chan
+    compileAndRun imports declarations "main"
     return ()
 
 

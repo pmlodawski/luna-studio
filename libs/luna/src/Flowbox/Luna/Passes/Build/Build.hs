@@ -24,6 +24,7 @@ import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPo
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
 import           Flowbox.Luna.Passes.Build.BuildConfig                 (BuildConfig (BuildConfig))
 import qualified Flowbox.Luna.Passes.Build.BuildConfig                 as BuildConfig
+import           Flowbox.Luna.Passes.Build.Diagnostics                 (Diagnostics)
 import qualified Flowbox.Luna.Passes.Build.Diagnostics                 as Diagnostics
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Gen                 as CabalGen
 import qualified Flowbox.Luna.Passes.CodeGen.Cabal.Install             as CabalInstall
@@ -43,6 +44,7 @@ import qualified Flowbox.System.Platform                               as Platfo
 import           Flowbox.System.UniPath                                (UniPath)
 import qualified Flowbox.System.UniPath                                as UniPath
 import qualified Flowbox.Text.Show.Hs                                  as ShowHs
+
 
 
 logger :: LoggerIO
@@ -65,9 +67,8 @@ tmpDirPrefix :: String
 tmpDirPrefix = "lunac"
 
 
-run :: BuildConfig -> ASTModule.Module -> Pass.Result ()
-run buildConfig ast = runEitherT $ do
-    let diag = BuildConfig.diag buildConfig
+prepareSources :: Diagnostics -> ASTModule.Module -> Pass.Result [Source]
+prepareSources diag ast = runEitherT $ do
     Diagnostics.printAST ast diag
     va   <- hoistEither =<< VarAlias.run ast
     Diagnostics.printVA va diag
@@ -81,8 +82,13 @@ run buildConfig ast = runEitherT $ do
     Diagnostics.printHAST hast diag
     hsc  <- map (Source.transCode ShowHs.hsShow) <$> (hoistEither =<< HSC.run hast)
     Diagnostics.printHSC hsc diag
+    return hsc
 
-    let allLibs = "base"
+
+run :: BuildConfig -> ASTModule.Module -> Pass.Result ()
+run buildConfig ast = runEitherT $ do
+    let diag    = BuildConfig.diag buildConfig
+        allLibs = "base"
                 -- : "flowboxM-core"
                 : "flowbox-graphics"
                 : "luna-target-hs"
@@ -91,10 +97,12 @@ run buildConfig ast = runEitherT $ do
                 ++ if BuildConfig.name buildConfig /= "flowboxM-stdlib"
                       then ["flowboxM-stdlib"]
                       else []
+    hsc <- hoistEither =<< prepareSources diag ast
     case BuildConfig.buildDir buildConfig of
         Nothing -> Directory.withTmpDirectory tmpDirPrefix $ buildInFolder buildConfig hsc allLibs
         Just bd -> do liftIO $ Directory.createDirectoryIfMissing True bd
                       buildInFolder buildConfig hsc allLibs bd
+
 
 buildInFolder :: (Functor m, MonadIO m) => BuildConfig -> [Source] -> [String] -> UniPath -> m ()
 buildInFolder (BuildConfig name version _ ghcOptions cppOptions cabalFlags buildType cfg _ _) hsc allLibs buildDir = do
@@ -107,6 +115,7 @@ buildInFolder (BuildConfig name version _ ghcOptions cppOptions cabalFlags build
     case buildType of
         BuildConfig.Executable outputPath -> copyExecutable buildDir name outputPath
         BuildConfig.Library               -> return ()
+
 
 writeSources :: (Functor m, MonadIO m) => UniPath -> [Source] -> m ()
 writeSources outputPath sources = mapM_ (writeSource outputPath) sources

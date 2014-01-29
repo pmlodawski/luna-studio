@@ -16,7 +16,7 @@ Library
                   src
   Other-Modules:  Paths_flowbox_batch
 
-  GHC-Options:    -Wall -O2
+  GHC-Options:    -Wall -O2 -package ghc
 
   Extensions:     NoImplicitPrelude
 
@@ -50,7 +50,7 @@ Executable lib-importer
 
   if flag(debug)
     GHC-Options:  -csacc
-  GHC-Options:    -Wall -O2
+  GHC-Options:    -Wall -O2 -package ghc
 
   Extensions:     NoImplicitPrelude
 

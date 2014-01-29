@@ -123,7 +123,8 @@ buildLibrary batchHandler (BuildLibrary.Args tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    BatchL.buildLibrary libID projectID batch
+    BatchL.interpretLibrary libID projectID batch
+    --BatchL.buildLibrary libID projectID batch
     return BuildLibrary.Result
 
 
