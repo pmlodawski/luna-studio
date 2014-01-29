@@ -80,6 +80,18 @@ def ImgF.adjustCB self contrast brightness:
 def ImgF.convolve self kernel:
     ```flattenCtx $ liftf2 convolve #{kernel} #{self}```
 
+def ImgF.getChannel self name:
+    ```flattenCtx $ liftf2 imgChannelGet #{name} #{self}```
+
+def ImgF.putChannel self name channel:
+    ```flattenCtx $ liftf3 imgChannelInsert #{name} #{channel} #{self}```
+
+# def ChannelF.map self callback:
+#     ```let {mymap = liftf2 channelMap}```
+#     ```flattenCtx $ mymap (val $ call1 #{callback}) #{self}```
+
+# def ChannelF.erode self:
+#     ```flattenCtx $ liftf1 erodeChannel #{self}```
 
 # class Channel:
 #     zip ...:
@@ -87,7 +99,7 @@ def ImgF.convolve self kernel:
 
 # class Channel a:
 #     Raw :: RawData a
-#     # Acc :: 
+#     # Acc ::
 
 # class Vector a = Vector: x :: a
 #                          y :: a
@@ -124,9 +136,22 @@ def main self:
     c = 1.5
     b = 0.2
     k = 0.1
-    img = img.adjustCB c b
     kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
-    img = img.convolve k
+    # img = img.adjustCB c b
+    # img = img.convolve k
+
+    chR = img.getChannel "r"
+    chG = img.getChannel "g"
+    chB = img.getChannel "b"
+
+    # chR
+    # chR = chR.erode #map (x : x)
+    # chB = chB.map (x : 0)
+
+    # img.putChannel "r" chB
+    # img.putChannel "g" chR
+    # img.putChannel "b" chG
+
     img.writeImage outpath
     # # c.print img
 
