@@ -30,7 +30,7 @@ import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer      as L
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState (ParseState)
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-import           Flowbox.Prelude                                        hiding (id, mod, op)
+import           Flowbox.Prelude                                        hiding (id, mod, op, noneOf)
 import qualified Flowbox.Prelude                                        as Prelude
 
 import Control.Monad.State hiding (mapM)

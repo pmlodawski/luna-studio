@@ -13,7 +13,7 @@ module Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer where
 import Control.Applicative
 import Data.Char           (digitToInt, isSpace)
 import Data.List           (nub, sort)
-import Flowbox.Prelude     hiding (op)
+import Flowbox.Prelude     hiding (op, noneOf)
 import Text.Parsec         hiding (getPosition, many, optional, (<|>))
 
 
