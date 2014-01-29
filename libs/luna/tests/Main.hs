@@ -39,7 +39,7 @@ import qualified Flowbox.Luna.Data.Pass.Source                             as So
 import qualified Flowbox.Luna.Data.PropertyMap                             as PropertyMap
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool            as FuncPool
 import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                     as MaxID
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
+import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                  as Analysis.Alias
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
@@ -300,7 +300,7 @@ main_inner = Luna.run $ do
     logger info $ PP.ppqShow ast
 
     logger info "\n-------- VarAlias --------"
-    va <- hoistEither =<< VarAlias.run ast
+    va <- hoistEither =<< Analysis.Alias.run ast
     logger info "\n>> varRel:"
     logger info $ PP.ppShow (va ^. AliasInfo.varRel)
     logger info "\n>> aliasMap:"

@@ -21,7 +21,7 @@ import           Flowbox.Luna.Data.Pass.Source                         (Source)
 import qualified Flowbox.Luna.Data.Pass.Source                         as Source
 import           Flowbox.Luna.Data.Pass.SourceMap                      (SourceMap)
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPool
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
+import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias              as Analysis.Alias
 import           Flowbox.Luna.Passes.Build.BuildConfig                 (BuildConfig (BuildConfig))
 import qualified Flowbox.Luna.Passes.Build.BuildConfig                 as BuildConfig
 import qualified Flowbox.Luna.Passes.Build.Diagnostics                 as Diagnostics
@@ -69,7 +69,7 @@ run :: BuildConfig -> ASTModule.Module -> Pass.Result ()
 run buildConfig ast = runEitherT $ do
     let diag = BuildConfig.diag buildConfig
     Diagnostics.printAST ast diag
-    va   <- hoistEither =<< VarAlias.run ast
+    va   <- hoistEither =<< Analysis.Alias.run ast
     Diagnostics.printVA va diag
     fp   <- hoistEither =<< FuncPool.run ast
     Diagnostics.printFP fp diag

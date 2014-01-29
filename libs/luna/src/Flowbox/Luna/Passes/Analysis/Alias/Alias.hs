@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
 
-module Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias where
+module Flowbox.Luna.Passes.Analysis.Alias.Alias where
 
 import Control.Applicative
 
@@ -22,8 +22,8 @@ import qualified Flowbox.Luna.Data.AST.Pat                   as Pat
 import           Flowbox.Luna.Data.AST.Type                  (Type)
 import qualified Flowbox.Luna.Data.AST.Type                  as Type
 import           Flowbox.Luna.Data.Pass.AliasInfo            (AliasInfo)
-import           Flowbox.Luna.Passes.Analysis.VarAlias.State (VAState)
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.State as VAState
+import           Flowbox.Luna.Passes.Analysis.Alias.State (VAState)
+import qualified Flowbox.Luna.Passes.Analysis.Alias.State as VAState
 import           Flowbox.Luna.Passes.Pass                    (Pass)
 import qualified Flowbox.Luna.Passes.Pass                    as Pass
 import           Flowbox.Prelude                             hiding (error, id, mod)
@@ -32,14 +32,14 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.VarAlias.VarAlias"
+logger = getLoggerIO "Flowbox.Luna.Passes.Alias.Alias"
 
 
 type VAPass result = Pass VAState result
 
 
 run :: Module -> Pass.Result AliasInfo
-run = (Pass.run_ (Pass.Info "VarAlias") mempty) . vaMod
+run = (Pass.run_ (Pass.Info "Alias") mempty) . vaMod
 
 
 vaMod :: Module -> VAPass AliasInfo

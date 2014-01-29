@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
-module Flowbox.Luna.Passes.Analysis.VarAlias.State where
+module Flowbox.Luna.Passes.Analysis.Alias.State where
 
 import           Control.Monad.State (MonadState, get, modify)
 import qualified Data.IntMap         as IntMap
@@ -33,7 +33,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: Logger
-logger = getLogger "Flowbox.Luna.Passes.VarAlias.State"
+logger = getLogger "Flowbox.Luna.Passes.Alias.State"
 
 
 data VAState = VAState { _aa      :: AliasInfo
