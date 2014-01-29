@@ -38,6 +38,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Con        { name      :: String   , fields    :: [Expr]                              }
           | ConE       { qname :: [String]                                                        }
           | ConT       { name :: String                                                           }
+          | ConP       { name :: String                                                           }
           | CondE      { cond :: Expr , success :: [Expr], failure :: [Expr]                      }
           | RecUpdE    { expr :: Expr , name :: String, val :: Expr}
           -- | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , newtypes  :: [Expr]       , datatypes :: [Expr]  , methods :: [Expr] , thexpressions :: [Expr] }
@@ -45,13 +46,17 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | Import     { qualified :: Bool     , segments  :: [String]    , rename    :: Maybe String                           }
           | AppE       { src       :: Expr     , dst       :: Expr                                }
           | AppT       { src       :: Expr     , dst       :: Expr                                }
+          | AppP       { src       :: Expr     , dst       :: Expr                                }
           | Infix      { name      :: String   , src       :: Expr        , dst          :: Expr  }
           | Lit        { lval :: Lit                                                              }
           | Native     { code :: String                                                           }
           | THE        { expr :: Expr                                                             }
+          | CaseE      { expr :: Expr, matches :: [Expr]                                          }
+          | Match      { pat :: Expr, matchBody :: Expr }
           | WildP
           | NOP
           | Undefined
           | Bang Expr
           deriving (Show)
+
 

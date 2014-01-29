@@ -221,6 +221,13 @@ genExpr ast = case ast of
                                                                  Just exprs -> exprs
                                                                  Nothing    -> [LExpr.NOP 0]
 
+    LExpr.Case id expr match             -> mkFlattenCtx <$> (HExpr.AppE <$> lamFunc <*> genExpr expr)
+                                            where passVar = HExpr.VarE "a"
+                                                  body    = HExpr.CaseE passVar <$> mapM genExpr match
+                                                  lam     = HExpr.Lambda [passVar] <$> body
+                                                  lamFunc = mkLiftf1 <$> lam
+    LExpr.Match id pat body              -> HExpr.Match <$> genPat pat <*> (HExpr.DoBlock <$> mapM genExpr body)
+
     LExpr.Lambda id inputs output body   -> do
                                             let fname      = Naming.mkLamName $ show id
                                                 hName      = Naming.mkHandlerFuncName fname
@@ -368,12 +375,14 @@ genFuncTopLevelExpr expr = case expr of
 
 genPat :: LPat.Pat -> GenPass HExpr
 genPat p = case p of
+    LPat.App      _ src args -> foldl HExpr.AppP <$> genPat src <*> mapM genPat args
     LPat.Var      _ name     -> return $ HExpr.Var (mkVarName name)
     LPat.Typed    _ pat cls  -> genTypedP cls <*> genPat pat
     LPat.Tuple    _ items    -> mkPure . HExpr.TupleP <$> mapM genPat items
     LPat.Lit      _ value    -> genLit value
     LPat.Wildcard _          -> return $ HExpr.WildP
-    _ -> fail $ show p
+    LPat.Con      _ name     -> return $ HExpr.ConP name
+    --_ -> fail $ show p
 
 
 genTypedE :: LType -> GenPass (HExpr -> HExpr)

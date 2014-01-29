@@ -145,20 +145,20 @@ example = Source.Source ["Main"] $
                         ----, "    pos :: a"
 
 
-                        ,"def Int.+ a b:"
-                        ,"    ```liftf2 (+) #{a} #{b}```"
+                        --,"def Int.+ a b:"
+                        --,"    ```liftf2 (+) #{a} #{b}```"
 
                         ,"def Int.< a b:"
                         ,"    ```liftf2 (<) #{a} #{b}```"
 
-                        , "class Point:"
-                        , "    x,y,z :: Int"
+                        --, "class Point:"
+                        --, "    x,y,z :: Int"
 
-                        , "def raise self el err:"
-                        , "    ```raise #{el} #{err}```"
+                        --, "def raise self el err:"
+                        --, "    ```raise #{el} #{err}```"
 
-                        , "def catch self el f:"
-                        , "    ```catch #{el} #{f}```"
+                        --, "def catch self el f:"
+                        --, "    ```catch #{el} #{f}```"
 
 
 
@@ -185,18 +185,28 @@ example = Source.Source ["Main"] $
                     , "def foldr lst el f:"
                     , "    lst"
 
+                    , "class X:"
+                    , "    X: a::Int"
+                    , "    Y"
+
                     , "def main self:"
                     , "    c = Console()"
-                    , "    x = 1"
-                    , "    y = self.raise 2 (IOError \"Oh no\")"
-                    , "    z = x + y"
-                    , "    z = self.catch z x: 0"
-                    , "    c.print (x<2)"
-                    , "    a = if z<2:"
-                    , "            c.print 117"
-                    --, "        else:"
-                    --, "            0"
-                    , "    c.print a"
+                    , "    a = Y()"
+                    , "    b = case a:"
+                    , "       X val: val"
+                    , "       Y    : 0"
+                    , "    c.print b"
+                    , "    if 1<2: c.print 111"
+                    --, "    x = 1"
+                    --, "    y = self.raise 2 (IOError \"Oh no\")"
+                    --, "    z = x + y"
+                    --, "    z = self.catch z x: 0"
+                    --, "    c.print (x<2)"
+                    --, "    a = if z<2:"
+                    --, "            c.print 117"
+                    ----, "        else:"
+                    ----, "            0"
+                    --, "    c.print a"
                     --, "    else:   4"
                     --, "    a = 1"
                     --, "    z.catch x"
