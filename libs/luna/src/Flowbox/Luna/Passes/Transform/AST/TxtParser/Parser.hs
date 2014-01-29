@@ -390,17 +390,19 @@ pTermBase t = choice [ try $ L.parensed pPatCon
                      ]
               <?> "pattern term"
 
-pVarP       = tok Pat.Var      <*> pVar
-pLitP       = tok Pat.Lit      <*> pLit
-pTupleP     = tok Pat.Tuple    <*> pTuple pPatCon
-pWildcardP  = tok Pat.Wildcard <*  L.pWildcard
-pConP       = tok Pat.Con      <*> pCon
-pConAppP    = tok Pat.App      <*> pConP <*> many1 pTermP
+pVarP     = tok Pat.Var         <*> pVar
+pLitP     = tok Pat.Lit         <*> pLit
+pTupleP   = tok Pat.Tuple       <*> pTuple pPatCon
+pWildP    = tok Pat.Wildcard    <*  L.pWildcard
+pRecWildP = tok Pat.RecWildcard <*  L.pRecWildcard
+pConP     = tok Pat.Con         <*> pCon
+pConAppP  = tok Pat.App         <*> pConP <*> many1 pTermP
 
 pEntP = choice [ pVarP
                , pLitP
                , pTupleP
-               , pWildcardP
+               , pWildP
+               , pRecWildP
                , pConP
                ]
 

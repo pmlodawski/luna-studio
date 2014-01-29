@@ -375,13 +375,14 @@ genFuncTopLevelExpr expr = case expr of
 
 genPat :: LPat.Pat -> GenPass HExpr
 genPat p = case p of
-    LPat.App      _ src args -> foldl HExpr.AppP <$> genPat src <*> mapM genPat args
-    LPat.Var      _ name     -> return $ HExpr.Var (mkVarName name)
-    LPat.Typed    _ pat cls  -> genTypedP cls <*> genPat pat
-    LPat.Tuple    _ items    -> mkPure . HExpr.TupleP <$> mapM genPat items
-    LPat.Lit      _ value    -> genLit value
-    LPat.Wildcard _          -> return $ HExpr.WildP
-    LPat.Con      _ name     -> return $ HExpr.ConP name
+    LPat.App         _ src args -> foldl HExpr.AppP <$> genPat src <*> mapM genPat args
+    LPat.Var         _ name     -> return $ HExpr.Var (mkVarName name)
+    LPat.Typed       _ pat cls  -> genTypedP cls <*> genPat pat
+    LPat.Tuple       _ items    -> mkPure . HExpr.TupleP <$> mapM genPat items
+    LPat.Lit         _ value    -> genLit value
+    LPat.Wildcard    _          -> return $ HExpr.WildP
+    LPat.RecWildcard _          -> return $ HExpr.RecWildP
+    LPat.Con         _ name     -> return $ HExpr.ConP name
     --_ -> fail $ show p
 
 

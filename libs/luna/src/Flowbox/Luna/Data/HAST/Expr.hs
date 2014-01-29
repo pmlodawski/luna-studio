@@ -54,6 +54,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           | CaseE      { expr :: Expr, matches :: [Expr]                                          }
           | Match      { pat :: Expr, matchBody :: Expr }
           | WildP
+          | RecWildP
           | NOP
           | Undefined
           | Bang Expr

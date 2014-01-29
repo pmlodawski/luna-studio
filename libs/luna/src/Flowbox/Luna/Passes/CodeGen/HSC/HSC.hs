@@ -98,6 +98,7 @@ app a b = Complex (\x y -> x ++ " " ++ y) <*> a <*> (simplify b)
 buildExpr :: HExpr -> CodeBuilder String
 buildExpr e = case e of
     HExpr.WildP                           -> pure "_"
+    HExpr.RecWildP                        -> pure "{}"
     HExpr.Var      name                   -> pure name
     HExpr.VarE     name                   -> pure name
     HExpr.VarT     name                   -> pure name

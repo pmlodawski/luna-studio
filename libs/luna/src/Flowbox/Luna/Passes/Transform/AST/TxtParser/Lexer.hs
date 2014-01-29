@@ -31,7 +31,8 @@ commentEnd   = "#]"
 
 kDef = reserved "def"
 
-pWildcard    = symbol  '_' <?> "wildcard"
+pWildcard    = symbol  '_'   <?> "wildcard"
+pRecWildcard = symbols "..." <?> "record wildcard"
 pBlockBegin  = symbol  ':'
 separator    = symbol  ','
 parenL       = symbol  '('
