@@ -27,8 +27,8 @@ import           Flowbox.Prelude                   as P
 
 --imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
 imgtest img = do --imgFilter = do
-    rgba  <- Image.reprFloat <$> RGBA.decompose img
-    --rgbaFilter <- Image.reprFloat <$> RGBA.decompose imgFilter
+    rgba  <- Image.reprDouble <$> RGBA.decompose img
+    --rgbaFilter <- Image.reprDouble <$> RGBA.decompose imgFilter
     --lrgba <- adjustCB 2.2 0.2 "r" "g" "b" rgba
     --let blur3x3 = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
         --blur5x5 = [0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04]

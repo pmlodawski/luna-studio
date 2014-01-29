@@ -42,17 +42,17 @@ mkCallInsts 'm_Vector_Vector 3 0
 generateAccessors ''Vector
 registerAccessors ''Vector
 mkInstsAccessors ''Vector
-m_Vector_test = (\ _v_233 _v_235 -> do {
+m_Vector_test = (\ _v_207 _v_209 -> do {
      val ();
-     _v_235;
+     _v_209;
      
 })
 registerFunc 'm_Vector_test 2 []
 mkCallInsts 'm_Vector_test 2 0
 mkMemInst "test" ''Vector 'm_Vector_test
-m_Vector__43 = (\ _v_240 _v_242 -> do {
+m_Vector__43 = (\ _v_214 _v_216 -> do {
      val ();
-     call con_Vector ((call (member (P :: P "_43") (call (member (P :: P "x") _v_240) ())) ((call (member (P :: P "x") _v_242) ()), ())), ((call (member (P :: P "_43") (call (member (P :: P "y") _v_240) ())) ((call (member (P :: P "y") _v_242) ()), ())), ((call (member (P :: P "_43") (call (member (P :: P "z") _v_240) ())) ((call (member (P :: P "z") _v_242) ()), ())), ())));
+     call con_Vector ((call (member (P :: P "_43") (call (member (P :: P "x") _v_214) ())) ((call (member (P :: P "x") _v_216) ()), ())), ((call (member (P :: P "_43") (call (member (P :: P "y") _v_214) ())) ((call (member (P :: P "y") _v_216) ()), ())), ((call (member (P :: P "_43") (call (member (P :: P "z") _v_214) ())) ((call (member (P :: P "z") _v_216) ()), ())), ())));
      
 })
 registerFunc 'm_Vector__43 2 []
@@ -190,7 +190,7 @@ mkCallInsts 'm_ImgF_writeImage 2 0
 mkMemInst "writeImage" ''ImgF 'm_ImgF_writeImage
 m_ImgF_adjustCB = (\ _v_174 _v_176 _v_178 -> do {
      val ();
-     flattenCtx $ liftf3 adjustCB _v_176 _v_178 _v_174;
+     liftf3 adjustCB _v_176 _v_178 _v_174;
      
 })
 registerFunc 'm_ImgF_adjustCB 3 []
@@ -204,32 +204,16 @@ m_ImgF_convolve = (\ _v_189 _v_191 -> do {
 registerFunc 'm_ImgF_convolve 2 []
 mkCallInsts 'm_ImgF_convolve 2 0
 mkMemInst "convolve" ''ImgF 'm_ImgF_convolve
-m_ImgF_getChannel = (\ _v_200 _v_202 -> do {
+m_Main_main = (\ _v_248 -> do {
      val ();
-     flattenCtx $ liftf2 imgChannelGet _v_202 _v_200;
-     
-})
-registerFunc 'm_ImgF_getChannel 2 []
-mkCallInsts 'm_ImgF_getChannel 2 0
-mkMemInst "getChannel" ''ImgF 'm_ImgF_getChannel
-m_ImgF_putChannel = (\ _v_211 _v_213 _v_215 -> do {
-     val ();
-     flattenCtx $ liftf3 imgChannelInsert _v_213 _v_215 _v_211;
-     
-})
-registerFunc 'm_ImgF_putChannel 3 []
-mkCallInsts 'm_ImgF_putChannel 3 0
-mkMemInst "putChannel" ''ImgF 'm_ImgF_putChannel
-m_Main_main = (\ _v_274 -> do {
-     val ();
-     _v_277 <- call con_Console ();
-     _v_281 <- val ("lena.bmp" :: String);
-     _v_285 <- val ("luna.bmp" :: String);
-     _v_289 <- call (member (P :: P "readImage") _v_274) (_v_281, ());
-     _v_295 <- val (1.5 :: Double);
-     _v_299 <- val (0.2 :: Double);
-     _v_303 <- val (0.1 :: Double);
-     _v_307 <- val [val (0.2 :: Double),
+     _v_251 <- call con_Console ();
+     _v_255 <- val ("lena.bmp" :: String);
+     _v_259 <- val ("luna.bmp" :: String);
+     _v_263 <- call (member (P :: P "readImage") _v_248) (_v_255, ());
+     _v_269 <- val (1.5 :: Double);
+     _v_273 <- val (0.2 :: Double);
+     _v_277 <- val (0.1 :: Double);
+     _v_281 <- val [val (0.2 :: Double),
      val (0.2 :: Double),
      val (0.2 :: Double),
      val (0.2 :: Double),
@@ -238,10 +222,8 @@ m_Main_main = (\ _v_274 -> do {
      val (0.2 :: Double),
      val (0.2 :: Double),
      val (0.2 :: Double)];
-     _v_328 <- call (member (P :: P "getChannel") _v_289) ((val ("r" :: String)), ());
-     _v_335 <- call (member (P :: P "getChannel") _v_289) ((val ("g" :: String)), ());
-     _v_342 <- call (member (P :: P "getChannel") _v_289) ((val ("b" :: String)), ());
-     call (member (P :: P "writeImage") _v_289) (_v_285, ());
+     _v_302 <- call (member (P :: P "adjustCB") _v_263) (_v_269, (_v_273, ()));
+     call (member (P :: P "writeImage") _v_302) (_v_259, ());
      
 })
 registerFunc 'm_Main_main 1 []

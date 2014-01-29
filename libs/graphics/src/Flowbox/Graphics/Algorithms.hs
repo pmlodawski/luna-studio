@@ -35,7 +35,7 @@ import           Flowbox.Prelude                   as P
 
 -- utils
 
-applyToImage :: (Channel Float -> Channel Float) -> (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+applyToImage :: (Channel a -> Channel a) -> (String, String, String) -> Image a -> Either Image.Error (Image a)
 applyToImage f names img = do
   let (nameA,_,_) = names
       (_,nameB,_) = names
@@ -115,27 +115,13 @@ remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
 
 -- simple
 
-binarizeChannel :: (Exp Float -> Exp Bool) -> Channel Float -> Channel Float
+binarizeChannel :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> Channel a -> Channel a
 binarizeChannel f channel = Channel.map (\x -> f x A.? (1 , 0)) channel
 
-binarizeImage :: (Exp Float -> Exp Bool) -> (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+binarizeImage :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> (String, String, String) -> Image a -> Either Image.Error (Image a)
 binarizeImage f = applyToImage (binarizeChannel f)
---  let (nameA,_,_) = names
---      (_,nameB,_) = names
---      (_,_,nameC) = names
---  channelA <- Image.lookup nameA img
---  channelB <- Image.lookup nameB img
---  channelC <- Image.lookup nameC img
---  let outimg = Image.insert nameA channelA'
---             $ Image.insert nameB channelB'
---             $ Image.insert nameC channelC'
---             $ img
---      channelA' = binarizeChannel f channelA
---      channelB' = binarizeChannel f channelB
---      channelC' = binarizeChannel f channelC
---  return outimg
 
-luminance :: String -> String -> String -> String -> (Image Float) -> Either Image.Error (Image Float)
+luminance :: (A.Elt a, A.IsFloating a) => String -> String -> String -> String -> (Image a) -> Either Image.Error (Image a)
 luminance rname gname bname outname img = do
     chr <- Image.lookup rname img
     chg <- Image.lookup gname img
@@ -145,60 +131,32 @@ luminance rname gname bname outname img = do
         outimg = Image.insert outname chan img
     return outimg
 
-luminance' :: (Image Float) -> Either Image.Error (Image Float)
+luminance' :: (A.Elt a, A.IsFloating a) => (Image a) -> Either Image.Error (Image a)
 luminance' = luminance "r" "g" "b" "luminance"
 
 
 
-erodeChannel :: Channel Float -> Channel Float
+erodeChannel :: (A.Elt a, A.IsFloating a) => Channel a -> Channel a
 erodeChannel channel = Channel.stencil erode A.Mirror channel
     where erode ((a,b,c),(d,e,f),(g,h,i)) = minimum [a,b,c,d,e,f,g,h,i]
 
-erodeImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+erodeImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
 erodeImage = applyToImage erodeChannel
-  --let (nameA,_,_) = names
-  --    (_,nameB,_) = names
-  --    (_,_,nameC) = names
-  --channelA <- Image.lookup nameA img
-  --channelB <- Image.lookup nameB img
-  --channelC <- Image.lookup nameC img
-  --let outimg = Image.insert nameA channelA'
-  --           $ Image.insert nameB channelB'
-  --           $ Image.insert nameC channelC'
-  --           $ img
-  --    channelA' = erosion channelA
-  --    channelB' = erosion channelB
-  --    channelC' = erosion channelC
-  --return outimg
 
-dilateChannel :: Channel Float -> Channel Float
+dilateChannel :: (A.Elt a, A.IsFloating a) => Channel a -> Channel a
 dilateChannel channel = Channel.stencil dilate A.Mirror channel
     where dilate ((a,b,c),(d,e,f),(g,h,i)) = maximum [a,b,c,d,e,f,g,h,i]
 
-dilateImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+dilateImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
 dilateImage = applyToImage dilateChannel
---  let (nameA,_,_) = names
---      (_,nameB,_) = names
---      (_,_,nameC) = names
---  channelA <- Image.lookup nameA img
---  channelB <- Image.lookup nameB img
---  channelC <- Image.lookup nameC img
---  let outimg = Image.insert nameA channelA'
---             $ Image.insert nameB channelB'
---             $ Image.insert nameC channelC'
---             $ img
---      channelA' = dilation channelA
---      channelB' = dilation channelB
---      channelC' = dilation channelC
---  return outimg
 
-openImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+openImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
 openImage names img = do
     imgA <- erodeImage names img
     imgB <- dilateImage names imgA
     return imgB
 
-closeImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
+closeImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
 closeImage names img = do
     imgA <- dilateImage names img
     imgB <- erodeImage names imgA
@@ -229,8 +187,8 @@ convolve5x5 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil5x5 a -> A.Exp a
 convolve5x5 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o),(p,q,r,s,t),(u,v,w,x,y))
     = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y]
 
-convolve :: A.Stencil A.DIM2 Float stencil =>
-  (String, String, String) -> (t -> stencil -> Exp Float) -> t -> Image Float -> Either Image.Error (Image Float)
+convolve :: (A.Elt a, A.IsFloating a, A.Stencil A.DIM2 a stencil) =>
+  (String, String, String) -> (t -> stencil -> Exp a) -> t -> Image a -> Either Image.Error (Image a)
 convolve names convolution kernel img = do
   let (nameA,_,_) = names
       (_,nameB,_) = names
@@ -247,16 +205,16 @@ convolve names convolution kernel img = do
       channelC' = clipValues $ Channel.stencil (convolution kernel) A.Clamp channelC
   return outimg
 
-convolveRGB :: A.Stencil A.DIM2 Float stencil =>
-  (t -> stencil -> Exp Float) -> t -> Image Float -> Either Image.Error (Image Float)
+convolveRGB :: (A.Elt a, A.IsFloating a, A.Stencil A.DIM2 a stencil) =>
+  (t -> stencil -> Exp a) -> t -> Image a -> Either Image.Error (Image a)
 convolveRGB = convolve ("r", "g", "b")
 
 -- brightness and contrast
 
-adjustCB_RGB :: A.Exp Float -> A.Exp Float -> (Image Float) -> Either Image.Error (Image Float)
+adjustCB_RGB :: (A.Elt a, A.IsFloating a) => A.Exp a -> A.Exp a -> Image a -> Either Image.Error (Image a)
 adjustCB_RGB = adjustCB "r" "g" "b"
 
-adjustCB :: String -> String -> String -> A.Exp Float -> A.Exp Float -> (Image Float) -> Either Image.Error (Image Float)
+adjustCB :: (A.Elt a, A.IsFloating a) => String -> String -> String -> A.Exp a -> A.Exp a -> Image a -> Either Image.Error (Image a)
 adjustCB rname gname bname contrastValue brightnessValue img = do
     rchannel <- Image.lookup rname img
     gchannel <- Image.lookup gname img
@@ -271,20 +229,20 @@ adjustCB rname gname bname contrastValue brightnessValue img = do
         adjust x = contrastValue * x + brightnessValue
     return outimg
 
-contrast :: A.Exp Float -> String -> String -> String -> (Image Float) -> Either Image.Error (Image Float)
+contrast :: (A.Elt a, A.IsFloating a) => A.Exp a -> String -> String -> String -> Image a -> Either Image.Error (Image a)
 contrast x r g b = adjustCB r g b x 0
 
-brightness :: A.Exp Float -> String -> String -> String -> (Image Float) -> Either Image.Error (Image Float)
+brightness :: (A.Elt a, A.IsFloating a) => A.Exp a -> String -> String -> String -> Image a -> Either Image.Error (Image a)
 brightness x r g b = adjustCB r g b 1 x
 
 
 -- color conversion
 
-clipValues :: (Channel Float) -> (Channel Float)
+clipValues :: (A.Elt a, A.IsFloating a) => Channel a -> Channel a
 clipValues channel = Channel.map (P.max 0 . P.min 1) channel
 
 
-calculateHueFromRGB :: Exp Float -> Exp Float -> Exp Float -> Exp Float
+calculateHueFromRGB :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a
 calculateHueFromRGB r g b = (w A.>* 0 A.? (w , w + 6)) / 6
     where w      = delta A.==* 0 A.? (0,
                    r A.==* maxRGB A.? (((g - b) / delta) `nonIntRem` 6,
@@ -296,15 +254,15 @@ calculateHueFromRGB r g b = (w A.>* 0 A.? (w , w + 6)) / 6
           delta  = maxRGB - minRGB
           nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
 
-calculateSaturationFromRGB :: Exp Float -> Exp Float -> Exp Float -> Exp Float
+calculateSaturationFromRGB :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a
 calculateSaturationFromRGB r g b = (maxRGB - minRGB) / maxRGB
     where maxRGB = P.max r $ P.max g b
           minRGB = P.min r $ P.min g b
 
-calculateValueFromRGB :: Exp Float -> Exp Float -> Exp Float -> Exp Float
+calculateValueFromRGB :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a
 calculateValueFromRGB r g b = P.max r $ P.max g b
 
-convertRGBtoHSV :: (Image Float) -> Either Image.Error (Image Float)
+convertRGBtoHSV :: (A.Elt a, A.IsFloating a) => Image a -> Either Image.Error (Image a)
 convertRGBtoHSV img = do
     r <- Image.lookup "r" img
     g <- Image.lookup "g" img
@@ -318,16 +276,16 @@ convertRGBtoHSV img = do
         value      = Channel.zipWith3 calculateValueFromRGB r g b
     return outimg
 
-calculateRGBfromHSV :: Exp Float -> Exp Float -> Exp Float -> (Exp Float, Exp Float, Exp Float)
-calculateRGBfromHSV h s v = A.unlift a :: (Exp Float, Exp Float, Exp Float)
-    where a = i A.==* (0::Exp Int) A.? (A.lift ((v, t, p) :: (Exp Float, Exp Float, Exp Float)),
-              i A.==* (1::Exp Int) A.? (A.lift ((q, v, p) :: (Exp Float, Exp Float, Exp Float)),
-              i A.==* (2::Exp Int) A.? (A.lift ((p, v, t) :: (Exp Float, Exp Float, Exp Float)),
-              i A.==* (3::Exp Int) A.? (A.lift ((p, q, v) :: (Exp Float, Exp Float, Exp Float)),
-              i A.==* (4::Exp Int) A.? (A.lift ((t, p, v) :: (Exp Float, Exp Float, Exp Float)),
-              i A.==* (5::Exp Int) A.? (A.lift ((v, p, q) :: (Exp Float, Exp Float, Exp Float)),
-              A.lift ((v, t, p) :: (Exp Float, Exp Float, Exp Float))
-              ))))))
+calculateRGBfromHSV :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> (Exp a, Exp a, Exp a)
+calculateRGBfromHSV h s v = A.unlift res
+    where res = i A.==* (0::Exp Int) A.? (A.lift ((v, t, p)),
+                i A.==* (1::Exp Int) A.? (A.lift ((q, v, p)),
+                i A.==* (2::Exp Int) A.? (A.lift ((p, v, t)),
+                i A.==* (3::Exp Int) A.? (A.lift ((p, q, v)),
+                i A.==* (4::Exp Int) A.? (A.lift ((t, p, v)),
+                i A.==* (5::Exp Int) A.? (A.lift ((v, p, q)),
+                A.lift ((v, t, p))
+                ))))))
           hi = h * 6
           i = A.floor hi :: Exp (A.Plain Int)
           f = hi - (A.fromIntegral i)
@@ -335,7 +293,7 @@ calculateRGBfromHSV h s v = A.unlift a :: (Exp Float, Exp Float, Exp Float)
           q = v * (1 - s * f)
           t = v * (1 - s * (1 - f))
 
-convertHSVtoRGB :: (Image Float) -> Either Image.Error (Image Float)
+convertHSVtoRGB :: (A.Elt a, A.IsFloating a) => Image a -> Either Image.Error (Image a)
 convertHSVtoRGB img = do
     h <- Image.lookup "h" img
     s <- Image.lookup "s" img
@@ -355,12 +313,12 @@ convertHSVtoRGB img = do
 
 
 -- blending
-blendC :: (Channel Float) -> (Channel Float) -> ((Exp Float) -> (Exp Float) -> (Exp Float)) -> (Channel Float)
+blendC :: (A.Elt a, A.IsFloating a) => Channel a -> Channel a -> (Exp a -> Exp a -> Exp a) -> Channel a
 blendC channelA channelB blender = Channel.zipWith blender channelA channelB
 
 
 
-blendRGB :: (Image Float) -> (Image Float) -> ((Exp Float) -> (Exp Float) -> (Exp Float)) -> Either Image.Error (Image Float)
+blendRGB :: (A.Elt a, A.IsFloating a) => Image a -> Image a -> (Exp a -> Exp a -> Exp a) -> Either Image.Error (Image a)
 blendRGB img1 img2 blender = do
     r1 <- Image.lookup "r" img1
     g1 <- Image.lookup "g" img1
@@ -382,103 +340,103 @@ blendRGB img1 img2 blender = do
     return outimg
 
 -- #define ChannelBlend_Normal(A,B)     ((uint8)(A))
-blenderNormal :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderNormal :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderNormal a _ = a
 
 -- #define ChannelBlend_Lighten(A,B)    ((uint8)((B > A) ? B:A))
-blenderLighten :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderLighten :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderLighten a b = b A.>* a A.? (b,a)
 
 -- #define ChannelBlend_Darken(A,B)     ((uint8)((B > A) ? A:B))
-blenderDarken :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderDarken :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderDarken a b = b A.>* a A.? (a,b)
 
 -- #define ChannelBlend_Multiply(A,B)   ((uint8)((A * B) / 255))
-blenderMultiply :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderMultiply :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderMultiply a b = (a * b)
 
 -- #define ChannelBlend_Average(A,B)    ((uint8)((A + B) / 2))
-blenderAverage :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderAverage :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderAverage a b = (a + b) / 2
 
 -- #define ChannelBlend_Add(A,B)        ((uint8)(min(255, (A + B))))
-blenderAdd :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderAdd :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderAdd a b = 1 A.<* (a + b) A.? (1 , a + b)
 
 -- #define ChannelBlend_Subtract(A,B)   ((uint8)((A + B < 255) ? 0:(A + B - 255)))
-blenderSubtract :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderSubtract :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderSubtract a b = (a + b) A.<* 1 A.? (0 , a + b - 1)
 
 -- #define ChannelBlend_Difference(A,B) ((uint8)(abs(A - B)))
-blenderDifference :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderDifference :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderDifference a b = a A.>* b A.? (a - b , b - a)
 
 -- #define ChannelBlend_Negation(A,B)   ((uint8)(255 - abs(255 - A - B)))
-blenderNegation :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderNegation :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderNegation a b = 1 - (1 - a - b A.>* 0 A.? (1 - a - b , -(1 - a - b)))
 
 -- #define ChannelBlend_Screen(A,B)     ((uint8)(255 - (((255 - A) * (255 - B)) >> 8)))
-blenderScreen :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderScreen :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderScreen a b = 1 - (1 - a) * (1 - b)
 
 -- #define ChannelBlend_Exclusion(A,B)  ((uint8)(A + B - 2 * A * B / 255))
-blenderExclusion :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderExclusion :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderExclusion a b = a + b - 2 * a * b
 
 -- #define ChannelBlend_Overlay(A,B)    ((uint8)((B < 128) ? (2 * A * B / 255):(255 - 2 * (255 - A) * (255 - B) / 255)))
-blenderOverlay :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderOverlay :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderOverlay a b = b A.<* 0.5 A.? ((2 * a * b) , (1 - 2 * (1 - a) * (1 - b)))
 
 -- #define ChannelBlend_SoftLight(A,B)  ((uint8)((B < 128)?(2*((A>>1)+64))*((float)B/255):(255-(2*(255-((A>>1)+64))*(float)(255-B)/255))))
-blenderSoftLight :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderSoftLight :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderSoftLight a b = b A.<* 0.5 A.? (2 * (a / 2 + 0.25) * b , 1 - 2 * (1 - (a / 2 + 0.25)) * (1-b))
 
 -- #define ChannelBlend_HardLight(A,B)  (ChannelBlend_Overlay(B,A))
-blenderHardLight :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderHardLight :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderHardLight = flip blenderOverlay
 
 -- #define ChannelBlend_ColorDodge(A,B) ((uint8)((B == 255) ? B:min(255, ((A << 8 ) / (255 - B)))))
-blenderColorDodge :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderColorDodge :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderColorDodge a b = b A.>=* 1 A.? (b , 1 A.<* a / (1 - b) A.? (1 , a / (1 - b)))
 
 -- #define ChannelBlend_ColorBurn(A,B)  ((uint8)((B == 0) ? B:max(0, (255 - ((255 - A) << 8 ) / B))))
-blenderColorBurn :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderColorBurn :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderColorBurn a b = b A.<=* 0 A.? (b , 0 A.>* 1 - (1 - a) / b A.? (0 , 1 - (1 - a) / b))
 
 -- #define ChannelBlend_LinearDodge(A,B)(ChannelBlend_Add(A,B))
-blenderLinearDodge :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderLinearDodge :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderLinearDodge = blenderAdd
 
 -- #define ChannelBlend_LinearBurn(A,B) (ChannelBlend_Subtract(A,B))
-blenderLinearBurn :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderLinearBurn :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderLinearBurn = blenderSubtract
 
 -- #define ChannelBlend_LinearLight(A,B)((uint8)(B < 128)?ChannelBlend_LinearBurn(A,(2 * B)):ChannelBlend_LinearDodge(A,(2 * (B - 128))))
-blenderLinearLight :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderLinearLight :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderLinearLight a b = b A.<* 0.5 A.? (blenderLinearBurn a (2 * b) , blenderLinearDodge a (2 * (b - 0.5)))
 
 -- #define ChannelBlend_VividLight(A,B) ((uint8)(B < 128)?ChannelBlend_ColorBurn(A,(2 * B)):ChannelBlend_ColorDodge(A,(2 * (B - 128))))
-blenderVividLight :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderVividLight :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderVividLight a b = b A.<* 0.5 A.? (blenderColorBurn a (2 * b) , blenderColorDodge a (2 * (b - 0.5)))
 
 -- #define ChannelBlend_PinLight(A,B)   ((uint8)(B < 128)?ChannelBlend_Darken(A,(2 * B)):ChannelBlend_Lighten(A,(2 * (B - 128))))
-blenderPinLight :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderPinLight :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderPinLight a b = b A.<* 0.5 A.? (blenderDarken a (2 * b) , blenderLighten a (2 * (b - 0.5)))
 
 -- #define ChannelBlend_HardMix(A,B)    ((uint8)((ChannelBlend_VividLight(A,B) < 128) ? 0:255))
-blenderHardMix :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderHardMix :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderHardMix a b = blenderVividLight a b A.<* 0.5 A.? (0 , 1)
 
 -- #define ChannelBlend_Reflect(A,B)    ((uint8)((B == 255) ? B:min(255, (A * A / (255 - B)))))
-blenderReflect :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderReflect :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderReflect a b = b A.>=* 1 A.? (b , 1 A.<* a * a / (1 - b) A.? (1 , a * a / (1 - b)))
 
 -- #define ChannelBlend_Glow(A,B)       (ChannelBlend_Reflect(B,A))
-blenderGlow :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderGlow :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderGlow = flip blenderReflect
 
 -- #define ChannelBlend_Phoenix(A,B)    ((uint8)(min(A,B) - max(A,B) + 255))
-blenderPhoenix :: (Exp Float) -> (Exp Float) -> (Exp Float)
+blenderPhoenix :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
 blenderPhoenix a b = (a A.<* b A.? (a , b)) - (a A.>* b A.? (a , b)) + 1
 
 -- #define ChannelBlend_Alpha(A,B,O)    ((uint8)(O * A + (1 - O) * B))
@@ -493,8 +451,8 @@ blenderAlphaF f o a b = blenderAlpha (f a b) a o
 
 --- keying
 
-keyColor :: (String, String, String) -> (Exp Float, Exp Float, Exp Float) -> (Exp Float, Exp Float, Exp Float)
-            -> (Exp Float -> Exp Float) -> Image Float -> Either Image.Error (Image Float)
+keyColor :: (A.Elt a, A.IsFloating a) => (String, String, String) -> (Exp a, Exp a, Exp a) -> (Exp a, Exp a, Exp a)
+            -> (Exp a -> Exp a) -> Image a -> Either Image.Error (Image a)
 keyColor names epsilon value f img = do
   let (nameA,_,_) = names
       (_,nameB,_) = names
