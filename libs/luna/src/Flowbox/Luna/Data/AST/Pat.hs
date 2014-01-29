@@ -15,10 +15,10 @@ import qualified Data.List           as List
 import           GHC.Generics
 
 import           Flowbox.Generics.Deriving.QShow
+import           Flowbox.Luna.Data.AST.Common    (ID)
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
 import           Flowbox.Luna.Data.AST.Type      (Type)
 import qualified Flowbox.Luna.Data.AST.Type      as Type
-import           Flowbox.Luna.Data.AST.Utils     (ID)
 import           Flowbox.Prelude                 hiding (Traversal, drop, id)
 
 

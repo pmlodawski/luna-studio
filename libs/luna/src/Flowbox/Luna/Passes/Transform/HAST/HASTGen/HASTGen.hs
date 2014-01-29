@@ -246,10 +246,9 @@ genExpr ast = case ast of
                                             GenState.addTHExpression $ thClsCallInsts fname argNum (0::Int)
 
                                             return $ HExpr.Var hName
-
-    LExpr.Arg _ pat _                    -> genPat pat
-
-    LExpr.Import _ path target rename    -> do
+    LExpr.Grouped _ expr                 -> genExpr expr
+    LExpr.Arg     _ pat _                -> genPat pat
+    LExpr.Import  _ path target rename   -> do
                                             tname <- case target of
                                                 LExpr.Con      _ tname -> pure tname
                                                 LExpr.Var      _ tname -> pure tname

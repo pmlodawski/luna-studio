@@ -16,7 +16,7 @@ import Data.String.Utils      (join)
 
 
 import qualified Flowbox.Generics.Deriving.QShow as QShow
-import qualified Flowbox.Luna.Data.Source        as Source
+import qualified Flowbox.Luna.Data.Pass.Source   as Source
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.Show.Pretty        as PP

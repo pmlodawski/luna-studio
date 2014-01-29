@@ -11,7 +11,7 @@ module Flowbox.Luna.Data.AST.Lit where
 import qualified Flowbox.Prelude                 as Prelude
 import           Flowbox.Prelude                   (Show, Eq, (++))
 import           Flowbox.Generics.Deriving.QShow   
-import           Flowbox.Luna.Data.AST.Utils       (ID)
+import           Flowbox.Luna.Data.AST.Common      (ID)
 import           GHC.Generics                      
 import           Control.Lens                      
 

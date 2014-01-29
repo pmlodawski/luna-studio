@@ -33,16 +33,18 @@ import qualified Flowbox.Luna.Data.Cabal.Section                           as Se
 import qualified Flowbox.Luna.Data.GraphView.GraphView                     as GraphView
 import qualified Flowbox.Luna.Data.HAST.Expr                               as HExpr
 import qualified Flowbox.Luna.Data.HAST.Module                             as Module
+import qualified Flowbox.Luna.Data.Pass.AliasInfo                          as AliasInfo
+import           Flowbox.Luna.Data.Pass.Source                             (Source)
+import qualified Flowbox.Luna.Data.Pass.Source                             as Source
 import qualified Flowbox.Luna.Data.PropertyMap                             as PropertyMap
-import           Flowbox.Luna.Data.Source                                  (Source)
-import qualified Flowbox.Luna.Data.Source                                  as Source
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool            as FuncPool
 import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                     as MaxID
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ExtScopeCall    as Desugar.ExtScopeCall
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitCalls   as Desugar.ImplicitCalls
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitScopes  as Desugar.ImplicitScopes
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt       as Desugar.TLRecUpdt
 import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash               as Hash
 import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                 as SSA
@@ -125,9 +127,9 @@ example = Source.Source ["Main"] $
                         --, "def List.sum self:"
                         --, "    ```liftf1 sum #{self}```"
 
-                        , "class Console:"
-                        , "    def print self msg:"
-                        , "        ```print' #{msg}```"
+                        --, "class Console:"
+                        , "def print self msg:"
+                        , "    ```print' #{msg}```"
 
                         ----, "def Int.+ a b:"
                         ----, "    ```liftf2 (+) #{a} #{b}```"
@@ -145,8 +147,11 @@ example = Source.Source ["Main"] $
                         ----, "    pos :: a"
 
 
-                        --,"def Int.+ a b:"
-                        --,"    ```liftf2 (+) #{a} #{b}```"
+                        ,"def Int.+ a b:"
+                        ,"    ```liftf2 (+) #{a} #{b}```"
+
+                        ,"def Int.* a b:"
+                        ,"    ```liftf2 (*) #{a} #{b}```"
 
                         ,"def Int.< a b:"
                         ,"    ```liftf2 (<) #{a} #{b}```"
@@ -185,18 +190,14 @@ example = Source.Source ["Main"] $
                     , "def foldr lst el f:"
                     , "    lst"
 
-                    , "class X:"
-                    , "    X: a::Int"
-                    , "    Y"
+                    , "class Vector a:"
+                    , "    x,y,z :: a"
+                    , "    def length self:"
+                    , "        self.x*self.x + self.y*self.y + self.z*self.z"
 
                     , "def main self:"
-                    , "    c = Console()"
-                    , "    a = Y()"
-                    , "    b = case a:"
-                    , "       X ... : 1"
-                    , "       Y     : 0"
-                    , "    c.print b"
-                    , "    if 1<2: c.print 111"
+                    , "    a = Vector 1 2 3"
+                    , "    self.print (a.length)"
                     --, "    x = 1"
                     --, "    y = self.raise 2 (IOError \"Oh no\")"
                     --, "    z = x + y"
@@ -294,30 +295,37 @@ main_inner = Luna.run $ do
     (ast, astInfo) <- hoistEither =<< Desugar.TLRecUpdt.run astInfo ast
     logger info $ PP.ppqShow ast
 
-    --logger info "\n-------- Desugar.ExtScopeCall --------"
-    --(ast, astInfo) <- hoistEither =<< Desugar.ExtScopeCall.run astInfo ast
-    --logger info $ PP.ppqShow ast
+    logger info "\n-------- Desugar.ImplicitCalls --------"
+    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
+    logger info $ PP.ppqShow ast
 
     logger info "\n-------- VarAlias --------"
     va <- hoistEither =<< VarAlias.run ast
-    logger info $ PP.ppShow va
+    logger info "\n>> varRel:"
+    logger info $ PP.ppShow (va ^. AliasInfo.varRel)
+    logger info "\n>> aliasMap:"
+    logger info $ PP.ppShow (va ^. AliasInfo.aliasMap)
+
+    --logger info "\n-------- Desugar.ImplicitScopes --------"
+    --(ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo va ast
+    --logger info $ PP.ppqShow ast
 
 
     logger info "\n-------- FuncPool --------"
     fp <- hoistEither =<< FuncPool.run ast
-    logger info $ PP.ppShow fp
+    --logger info $ PP.ppShow fp
 
     logger info "\n-------- Hash --------"
     hash <- hoistEither =<< Hash.run ast
-    logger info $ PP.ppShow hash
+    --logger info $ PP.ppShow hash
 
     logger info "\n-------- SSA --------"
     ssa <- hoistEither =<< SSA.run va hash
-    logger info $ PP.ppqShow ssa
+    --logger info $ PP.ppqShow ssa
 
     logger info "\n-------- HASTGen --------"
     hast <- hoistEither =<< HASTGen.run ssa fp
-    logger info $ PP.ppShow hast
+    --logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------"
     hsc <- hoistEither =<< HSC.run  hast

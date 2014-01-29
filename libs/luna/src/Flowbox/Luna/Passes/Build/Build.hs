@@ -17,9 +17,9 @@ import Control.Monad.RWS   hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
 import qualified Flowbox.Luna.Data.AST.Module                          as ASTModule
 import           Flowbox.Luna.Data.Pass.ASTInfo                        (ASTInfo)
+import           Flowbox.Luna.Data.Pass.Source                         (Source)
+import qualified Flowbox.Luna.Data.Pass.Source                         as Source
 import           Flowbox.Luna.Data.Pass.SourceMap                      (SourceMap)
-import           Flowbox.Luna.Data.Source                              (Source)
-import qualified Flowbox.Luna.Data.Source                              as Source
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool        as FuncPool
 import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias        as VarAlias
 import           Flowbox.Luna.Passes.Build.BuildConfig                 (BuildConfig (BuildConfig))

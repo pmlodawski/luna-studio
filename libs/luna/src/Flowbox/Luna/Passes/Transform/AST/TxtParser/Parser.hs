@@ -23,8 +23,8 @@ import qualified Flowbox.Luna.Data.AST.Pat                              as Pat
 import qualified Flowbox.Luna.Data.AST.Type                             as Type
 import           Flowbox.Luna.Data.Pass.ASTInfo                         (ASTInfo)
 import qualified Flowbox.Luna.Data.Pass.ASTInfo                         as ASTInfo
+import           Flowbox.Luna.Data.Pass.Source                          (Source (Source))
 import           Flowbox.Luna.Data.Pass.SourceMap                       (SourceMap)
-import           Flowbox.Luna.Data.Source                               (Source (Source))
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer      as L
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState (ParseState)
@@ -250,7 +250,7 @@ pCallTermE p = pLastLexemeEmpty *> ((flip <$> tok Expr.App) <*> pCallList p)
 pEntBaseE       = pEntConsE pEntComplexE
 pEntBaseSimpleE = pEntConsE pEntSimpleE
 
-pEntConsE base = choice [ try $ L.parensed (pExprT base)
+pEntConsE base = choice [ try $ tok Expr.Grouped <*> L.parensed (pExprT base)
                         , base
                         ]
 
@@ -261,7 +261,7 @@ pEntComplexE = choice[ pDeclaration
 
 pEntSimpleE = choice[ pCaseE -- CHECK [wd]: removed try
                     , pCondE
-                    , try $ L.parensed pExpr
+                    , try $ tok Expr.Grouped <*> L.parensed pExpr
                     , pIdentE
                     , tok Expr.Lit    <*> pLit
                     , tok Expr.Tuple  <*> pTuple  pOpE

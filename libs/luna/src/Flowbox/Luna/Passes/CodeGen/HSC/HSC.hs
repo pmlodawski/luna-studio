@@ -17,7 +17,7 @@ import           Data.String.Utils                (join)
 import qualified Flowbox.Luna.Data.HAST.Expr      as HExpr
 import           Flowbox.Luna.Data.HAST.Extension (Extension)
 import qualified Flowbox.Luna.Data.HAST.Lit       as HLit
-import           Flowbox.Luna.Data.Source         (Source (Source))
+import           Flowbox.Luna.Data.Pass.Source    (Source (Source))
 import           Flowbox.Luna.Passes.Pass         (Pass)
 import qualified Flowbox.Luna.Passes.Pass         as Pass
 import           Flowbox.Prelude                  hiding (cons)
@@ -154,7 +154,7 @@ buildExpr e = case e of
     HExpr.THE      expr                   -> pure $ (code.buildExpr) expr
     HExpr.CaseE    expr matches           -> Complex $ "case " ++ (code.buildExpr) expr ++ " of {" ++ buildBody matches ++ "}"
     HExpr.Match    pat matchBody          -> Complex $ (code.buildExpr) pat ++ " -> " ++ (code.buildExpr) matchBody
-    --_                                     -> 
+    --_                                     ->
     where spacejoin   = join " "
           sepjoin     = join ", "
 

@@ -14,8 +14,8 @@ import           Flowbox.Luna.Data.Cabal.Config  (Config)
 import qualified Flowbox.Luna.Data.Cabal.Config  as Config
 import           Flowbox.Luna.Data.Cabal.Section (Section)
 import qualified Flowbox.Luna.Data.Cabal.Section as Section
-import           Flowbox.Luna.Data.Source        (Source)
-import qualified Flowbox.Luna.Data.Source        as Source
+import           Flowbox.Luna.Data.Pass.Source   (Source)
+import qualified Flowbox.Luna.Data.Pass.Source   as Source
 import           Flowbox.Prelude
 
 

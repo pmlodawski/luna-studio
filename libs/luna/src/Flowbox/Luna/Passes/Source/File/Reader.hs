@@ -16,11 +16,11 @@ import           Control.Applicative
 import           Control.Monad.RWS
 import qualified System.IO           as IO
 
-import           Data.String.Utils        (replace)
-import           Flowbox.Luna.Data.Source (Source (Source))
-import           Flowbox.Prelude          hiding (error, id)
-import           Flowbox.System.UniPath   (UniPath)
-import qualified Flowbox.System.UniPath   as UniPath
+import           Data.String.Utils             (replace)
+import           Flowbox.Luna.Data.Pass.Source (Source (Source))
+import           Flowbox.Prelude               hiding (error, id)
+import           Flowbox.System.UniPath        (UniPath)
+import qualified Flowbox.System.UniPath        as UniPath
 
 import           Flowbox.Luna.Passes.Pass (Pass)
 import qualified Flowbox.Luna.Passes.Pass as Pass

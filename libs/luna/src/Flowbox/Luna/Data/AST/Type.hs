@@ -13,7 +13,7 @@ import           GHC.Generics
 
 import           Flowbox.Prelude                 hiding (id, drop, Traversal)
 import           Flowbox.Generics.Deriving.QShow   
-import           Flowbox.Luna.Data.AST.Utils       (ID)
+import           Flowbox.Luna.Data.AST.Common    (ID)
 
 data Type = Unknown { _id :: ID                                               }
           | Var     { _id :: ID, _name     :: String                          }

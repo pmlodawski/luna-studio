@@ -5,9 +5,16 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.CallGraph where
+module Flowbox.Luna.Data.Pass.Source where
 
 import Flowbox.Prelude
 
-data CallGraph   = CallGraph
-                   deriving (Show)
+
+
+data Source = Source { path :: [String]
+                     , code :: String
+                     } deriving (Show)
+
+
+transCode :: (String -> String) -> Source -> Source
+transCode f src = src { code = f $ code src }

@@ -14,11 +14,11 @@ module Flowbox.Luna.Data.AST.Expr where
 
 import           Control.Applicative
 import           Flowbox.Generics.Deriving.QShow
+import           Flowbox.Luna.Data.AST.Common    (ID)
 import qualified Flowbox.Luna.Data.AST.Lit       as Lit
 import qualified Flowbox.Luna.Data.AST.Pat       as Pat
 import           Flowbox.Luna.Data.AST.Type      (Type)
 import qualified Flowbox.Luna.Data.AST.Type      as Type
-import           Flowbox.Luna.Data.AST.Utils     (ID)
 import           Flowbox.Prelude                 hiding (Accessor, Traversal, cons, drop, id)
 import           GHC.Generics                    (Generic)
 
@@ -44,6 +44,7 @@ data Expr  = NOP          { _id :: ID                                           
            | Cond         { _id :: ID, _cond      :: Expr     , _success   :: [Expr] , _failure   :: Maybe [Expr]                }
            | Function     { _id :: ID, _path      :: [String] , _name      :: String , _inputs    :: [Expr] , _output  :: Type   , _body    :: [Expr] }
            | Lambda       { _id :: ID, _inputs    :: [Expr]   , _output    :: Type   , _body      :: [Expr]                      }
+           | Grouped      { _id :: ID, _expr      :: Expr                                                                        }
            | Import       { _id :: ID, _path      :: [String] , _target    :: Expr   , _rename    :: Maybe String                }
            | Infix        { _id :: ID, _name      :: String   , _src       :: Expr   , _dst       :: Expr                        }
            | List         { _id :: ID, _items     :: [Expr]                                                                      }
@@ -125,6 +126,7 @@ traverseM fexp ftype fpat flit e = case e of
     Function     id' path' name' inputs' output'
                  body'                               -> Function     id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
     Lambda       id' inputs' output' body'           -> Lambda       id'             <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
+    Grouped      id' expr'                           -> Grouped      id'       <$> fexp expr'
     Import       id' path' target' rename'           -> Import       id' path' <$> fexp target'  <*> pure rename'
     Infix        id' name' src' dst'                 -> Infix        id' name' <$> fexp src'     <*> fexp dst'
     List         id' items'                          -> List         id'       <$> fexpMap items'
@@ -161,6 +163,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     Field        _ _ cls' value'                     -> drop <* ftype cls' <* fexpMap value'
     Function     _ _ _ inputs' output' body'         -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
     Lambda       _ inputs' output' body'             -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
+    Grouped      _ expr'                             -> drop <* fexp expr'
     Import       _ _ target' _                       -> drop <* fexp target'
     Infix        _  _ src' dst'                      -> drop <* fexp src'     <* fexp dst'
     List         _  items'                           -> drop <* fexpMap items'

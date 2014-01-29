@@ -9,7 +9,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Passes.Transform.AST.Desugar.ExtScopeCall where
+module Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitCalls where
 
 import qualified Flowbox.Luna.Data.AST.Expr                      as Expr
 import           Flowbox.Luna.Data.AST.Module                    (Module)
@@ -27,14 +27,14 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.ExtScopeCall"
+logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.ImplicitCalls"
 
 
 type DesugarPass result = Pass DesugarState result
 
 
 run :: ASTInfo -> Module -> Pass.Result (Module, ASTInfo)
-run inf = (Pass.run_ (Pass.Info "Desugar.ExtScopeCall") $ DS.mk inf) . desugar
+run inf = (Pass.run_ (Pass.Info "Desugar.ImplicitCalls") $ DS.mk inf) . desugar
 
 
 desugar :: Module -> DesugarPass (Module, ASTInfo)
@@ -47,15 +47,16 @@ desugarModule mod = Module.traverseM desugarModule desugarExpr pure desugarPat p
 
 desugarExpr :: Expr.Expr -> DesugarPass Expr.Expr
 desugarExpr ast = case ast of
-    Expr.Con {}                           -> Expr.App <$> DS.genID <*> continue <*> pure []
-    Expr.App {}                           -> omitNext
-    _                                     -> continue
+    Expr.Con      {}                           -> Expr.App <$> DS.genID <*> continue <*> pure []
+    Expr.App      id src args                  -> Expr.App id <$> omitNextExpr src <*> mapM desugarExpr args
+    Expr.Accessor id name dst                  -> Expr.App <$> DS.genID <*> continue <*> pure []
+    _                                          -> continue
     where continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
-          omitNext  = Expr.traverseM omitExpr pure desugarPat pure ast
+          omitNext  = Expr.traverseM omitNextExpr pure desugarPat pure ast
 
 
-omitExpr :: Expr.Expr -> DesugarPass Expr.Expr
-omitExpr ast = continue
+omitNextExpr :: Expr.Expr -> DesugarPass Expr.Expr
+omitNextExpr ast = continue
     where continue = Expr.traverseM desugarExpr pure desugarPat pure ast
 
 

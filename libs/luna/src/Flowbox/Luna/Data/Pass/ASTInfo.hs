@@ -9,8 +9,8 @@
 
 module Flowbox.Luna.Data.Pass.ASTInfo where
 
-import qualified Flowbox.Luna.Data.AST.Utils as AST
-import           Flowbox.Prelude             hiding (id)
+import qualified Flowbox.Luna.Data.AST.Common as AST
+import           Flowbox.Prelude              hiding (id)
 
 
 data ASTInfo = ASTInfo { _lastID :: AST.ID } deriving (Show)

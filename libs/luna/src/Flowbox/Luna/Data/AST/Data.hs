@@ -8,10 +8,10 @@
 
 module Flowbox.Luna.Data.AST.Data where
 
-import           Flowbox.Luna.Data.AST.Expr  (Expr)
-import qualified Flowbox.Luna.Data.AST.Expr  as Expr
-import           Flowbox.Luna.Data.AST.Type  (Type)
-import           Flowbox.Luna.Data.AST.Utils (ID)
+import           Flowbox.Luna.Data.AST.Common (ID)
+import           Flowbox.Luna.Data.AST.Expr   (Expr)
+import qualified Flowbox.Luna.Data.AST.Expr   as Expr
+import           Flowbox.Luna.Data.AST.Type   (Type)
 
 
 mk :: ID -> Type -> Expr -> Expr

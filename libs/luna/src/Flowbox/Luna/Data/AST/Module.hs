@@ -12,13 +12,13 @@ module Flowbox.Luna.Data.AST.Module where
 
 import           Control.Applicative
 import           Flowbox.Generics.Deriving.QShow
+import           Flowbox.Luna.Data.AST.Common    (ID)
 import           Flowbox.Luna.Data.AST.Expr      (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr      as Expr
 import           Flowbox.Luna.Data.AST.Lit       (Lit)
 import           Flowbox.Luna.Data.AST.Pat       (Pat)
 import           Flowbox.Luna.Data.AST.Type      (Type)
 import qualified Flowbox.Luna.Data.AST.Type      as Type
-import           Flowbox.Luna.Data.AST.Utils     (ID)
 import           Flowbox.Prelude                 hiding (Traversal, drop, id, mod)
 import           GHC.Generics                    (Generic)
 
