@@ -134,3 +134,8 @@ False ? (_ :? y) = y
 ($>) :: (Functor f) => a -> f b -> f b
 ($>) =  fmap . (flip const)
 
+
+withJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
+withJust a f = case a of
+    Nothing  -> return ()
+    Just val -> f val
