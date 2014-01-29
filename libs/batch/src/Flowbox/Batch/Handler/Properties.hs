@@ -13,7 +13,7 @@ module Flowbox.Batch.Handler.Properties (
 import           Flowbox.Batch.Batch                (Batch)
 import           Flowbox.Batch.Handler.Common       (astOp, noresult, readonly)
 import qualified Flowbox.Batch.Project.Project      as Project
-import qualified Flowbox.Luna.Data.AST.Utils        as AST
+import qualified Flowbox.Luna.Data.AST.Common       as AST
 import           Flowbox.Luna.Data.Graph.Properties (Properties)
 import qualified Flowbox.Luna.Data.Graph.Properties as Properties
 import qualified Flowbox.Luna.Data.PropertyMap      as PropertyMap

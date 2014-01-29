@@ -18,10 +18,10 @@ import qualified Flowbox.Batch.Project.Project                             as Pr
 import           Flowbox.Batch.Project.ProjectManager                      (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager                      as ProjectManager
 import           Flowbox.Control.Error
+import qualified Flowbox.Luna.Data.AST.Common                              as AST
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs                   (Breadcrumbs)
 import           Flowbox.Luna.Data.AST.Expr                                (Expr)
 import           Flowbox.Luna.Data.AST.Module                              (Module)
-import qualified Flowbox.Luna.Data.AST.Utils                               as AST
 import           Flowbox.Luna.Data.AST.Zipper.Focus                        (Focus)
 import qualified Flowbox.Luna.Data.AST.Zipper.Focus                        as Focus
 import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                       as Zipper
@@ -36,8 +36,8 @@ import           Flowbox.Luna.Lib.LibManager                               (LibM
 import qualified Flowbox.Luna.Lib.LibManager                               as LibManager
 import           Flowbox.Luna.Lib.Library                                  (Library)
 import qualified Flowbox.Luna.Lib.Library                                  as Library
+import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                  as Alias
 import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                     as MaxID
-import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as VarAlias
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer         as IDFixer
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
@@ -336,7 +336,7 @@ graphOp bc libID projectID operation = astOp libID projectID (\batch ast propert
     expr <- case focus of
         Focus.FunctionFocus expr -> return expr
         _                        -> fail "Breadcrumbs are not focusing on function."
-    aa    <- Luna.runIO $ VarAlias.run ast
+    aa    <- Luna.runIO $ Alias.run ast
     maxID <- Luna.runIO $ MaxID.run ast
 
     (graph, pm) <- Luna.runIO $ GraphBuilder.run aa propertyMap expr
