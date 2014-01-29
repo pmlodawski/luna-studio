@@ -13,8 +13,9 @@
 
 module Flowbox.Graphics.Mockup (
     module Flowbox.Graphics.Mockup,
-    Image
-    --erodeChannel,
+    Image,
+    Channel,
+    erodeChannel,
 ) where
 
 import qualified Data.Array.Accelerate             as A
@@ -35,41 +36,37 @@ import           Flowbox.Prelude                   hiding ((.))
 testm :: Num a => a -> a
 testm x = x*3
 
---readImage :: String -> IO (Safe(Image Float))
---readImage fileIn = do
---    img <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
---    let Right img' = RGBA.decompose img
---        rgba = Image.reprFloat img'
---    return (Safe rgba)
+readImage :: String -> IO (Safe(Image Double))
+readImage fileIn = do
+    img <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
+    let Right img' = RGBA.decompose img
+        rgba = Image.reprDouble img'
+    return (Safe rgba)
 
---writeImage :: FilePath -> Image Float -> IO (Safe())
---writeImage file img = do
---    let Right img' = RGBA.compose $ Image.reprWord8 img
---    Image.writeImageToBMP (Interp.run) file img'
---    return $ Safe ()
+writeImage :: FilePath -> Image Double -> IO (Safe())
+writeImage file img = do
+    let Right img' = RGBA.compose $ Image.reprWord8 img
+    Image.writeImageToBMP (Interp.run) file img'
+    return $ Safe ()
 
-----l_adjustCB :: A.Exp Float -> A.Exp Float -> Image Float -> IO (Safe(Image Float))
---adjustCB :: Double -> Double -> Image Float -> Image Float
-----adjustCB :: A.Exp Float -> A.Exp Float -> Image Float -> IO (Image Float)
---adjustCB contrastValue brightnessValue img = img'
---    where Right img' = adjustCB_RGB (A.constant $ double2Float contrastValue) (A.constant $ double2Float brightnessValue) img
+adjustCB :: Double -> Double -> Image Double -> Image Double
+adjustCB contrastValue brightnessValue img = img'
+    where Right img' = adjustCB_RGB (A.constant contrastValue) (A.constant brightnessValue) img
 
---convolve :: Double -> Image Float -> Image Float
---convolve kernel img = img'
---    where Right img' = convolveRGB convolve3x3 kernel' img
---          kernel' = map (A.constant . double2Float) $ replicate 9 kernel
+convolve :: Double -> Image Double -> Image Double
+convolve kernel img = img'
+    where Right img' = convolveRGB convolve3x3 kernel' img
+          kernel' = map A.constant $ replicate 9 kernel
 
---imgChannelGet :: String -> Image Float -> IO(Safe(Channel Float))
---imgChannelGet name img = do
---    let Right channel = Image.lookup name img
---    return (Safe channel)
+imgChannelGet :: String -> Image Double -> Channel Double
+imgChannelGet name img = channel
+    where Right channel = Image.lookup name img
 
---imgChannelInsert :: String -> Channel a -> Image a -> Image a
---imgChannelInsert = Image.insert
+imgChannelInsert :: String -> Channel Double -> Image Double -> Image Double
+imgChannelInsert = Image.insert
 
---channelMap :: (A.Elt a, A.Elt b) => (A.Exp a -> A.Exp b) -> Channel a -> Channel b
---channelMap = Channel.map
+channelMap :: (A.Exp Double -> A.Exp Double) -> Channel Double -> Channel Double
+channelMap = Channel.map
 
---type ImgF = Image Float
-
-type ChannelF = Channel Float
+constant :: Double -> A.Exp Double
+constant = A.constant
