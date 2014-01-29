@@ -18,7 +18,7 @@ Library
   Other-Modules:  Paths_flowbox_luna
   if flag(debug)
     GHC-Options:  -csacc
-  GHC-Options:    -Wall -O2
+  GHC-Options:    -Wall -O2 -package ghc
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
