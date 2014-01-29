@@ -8,7 +8,9 @@ module Flowbox.System.Platform where
 
 import qualified System.Info as Info
 
-import Flowbox.Prelude hiding (error)
+import           Flowbox.Prelude        hiding (error)
+import           Flowbox.System.UniPath (UniPath)
+import qualified Flowbox.System.UniPath as UniPath
 
 
 
@@ -44,3 +46,11 @@ dependent lin win other = case os of
     Linux   -> lin
     Windows -> win
     Other   -> other
+
+
+addExeOnWindows :: UniPath -> UniPath
+addExeOnWindows path = dependent path windowsPath path where
+    exe = ".exe"
+    windowsPath = if UniPath.extension path == exe
+        then path
+        else UniPath.setExtension exe path
