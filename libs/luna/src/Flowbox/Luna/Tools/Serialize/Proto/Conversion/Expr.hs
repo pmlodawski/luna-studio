@@ -14,6 +14,8 @@ module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr where
 
 import           Control.Applicative
 import qualified Data.Map                                          as Map
+import qualified Data.Foldable as F
+import qualified Data.Sequence as Seq
 import           Flowbox.Control.Error
 import           Flowbox.Luna.Data.AST.Expr                        (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
@@ -29,6 +31,7 @@ import qualified Generated.Proto.Expr.Assignment                   as GenAssignm
 import qualified Generated.Proto.Expr.Case                         as GenCase
 import qualified Generated.Proto.Expr.Con_                         as GenCon_
 import qualified Generated.Proto.Expr.ConD                         as GenConD
+import qualified Generated.Proto.Expr.Condition                         as GenCondition
 import qualified Generated.Proto.Expr.Data                         as GenData
 import qualified Generated.Proto.Expr.Expr                         as Gen
 import qualified Generated.Proto.Expr.Expr.Cls                     as GenCls
@@ -55,7 +58,7 @@ import qualified Generated.Proto.Expr.Var                          as GenVar
 import qualified Generated.Proto.Expr.Wildcard                     as GenWildcard
 import qualified Text.ProtocolBuffers.Extensions                   as Extensions
 
-
+ 
 
 instance Convert Expr Gen.Expr where
     encode t = case t of
@@ -85,6 +88,9 @@ instance Convert Expr Gen.Expr where
         Expr.ConD       i name fields
                                    -> genExpr GenCls.ConD i GenConD.ext $ GenConD.ConD
                                       (encodePJ name) (encodeList fields)
+        Expr.Cond       i cond success mfailure
+                                   -> genExpr GenCls.Condition i GenCondition.ext $ GenCondition.Condition
+                                      (encodeJ cond) (encodeList success) (encodeList $ F.concat mfailure)
         Expr.Function   i path name inputs output body
                                    -> genExpr GenCls.Function i GenFunction.ext $ GenFunction.Function
                                       (encodeListP path) (encodePJ name) (encodeList inputs) (encodeJ output) (encodeList body)
@@ -195,6 +201,13 @@ instance Convert Expr Gen.Expr where
                 (GenCon_.Con_ mtname) <- ext <?> "Failed to decode Expr.Con: extension is missing"
                 tname <- mtname <?> "Failed to decode Expr.Con: 'name' field is missing"
                 pure $ Expr.Con i (decodeP tname)
+            GenCls.Condition -> do
+                ext <- getExt GenCondition.ext
+                (GenCondition.Condition mtcond tsuccess tfailure) <- ext <?> "Failed to decode Expr.Condition: extension is missing"
+                tcond <- mtcond <?> "Failed to decode Expr.Condition: 'cond' field is missing"
+                Expr.Cond i <$> decode tcond <*> decodeList tsuccess <*> if Seq.null tfailure 
+                                                                            then pure Nothing
+                                                                            else Just <$> decodeList tfailure
             GenCls.Function -> do
                 ext <- getExt GenFunction.ext
                 (GenFunction.Function tpath mtname tinputs mtoutput tbody) <- ext <?> "Failed to decode Expr.Function: extension is missing"
@@ -264,15 +277,15 @@ instance Convert Expr Gen.Expr where
                 tname <- mtname <?> "Failed to decode Expr.Field: 'name' field is missing"
                 tcls  <- mtcls  <?> "Failed to decode Expr.Field: 'cls' field is missing"
                 Expr.Field i (decodeP tname) <$> decode tcls  <*> case mtvalue of
-                                                                Nothing     -> pure Nothing
-                                                                Just tvalue -> Just <$> decode tvalue
+                                                                      Nothing     -> pure Nothing
+                                                                      Just tvalue -> Just <$> decode tvalue
             GenCls.Arg -> do
                 ext <- getExt GenArg.ext
                 (GenArg.Arg mtpat mtvalue) <- ext <?> "Failed to decode Expr.Arg: extension is missing"
                 tpat <- mtpat <?> "Failed to decode Expr.Arg: 'pat' field is missing"
                 Expr.Arg i <$> (decode tpat) <*> case mtvalue of
-                                                                Nothing     -> pure Nothing
-                                                                Just tvalue -> Just <$> decode tvalue
+                                                    Nothing     -> pure Nothing
+                                                    Just tvalue -> Just <$> decode tvalue
             GenCls.Native -> do
                 ext <- getExt GenNative.ext
                 (GenNative.Native tsegments) <- ext <?> "Failed to decode Expr.Native: extension is missing"
