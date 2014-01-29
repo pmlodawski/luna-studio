@@ -52,6 +52,141 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Handler.Common"
 
 
+getProjectManager :: Batch -> ProjectManager
+getProjectManager = Batch.projectManager
+
+
+setProjectManager :: ProjectManager -> Batch -> Batch
+setProjectManager newProjectManager batch = batch { Batch.projectManager = newProjectManager }
+
+
+getProject :: (Applicative m, Monad m) => Project.ID -> Batch -> m Project
+getProject projectID batch  =
+    ProjectManager.lab (getProjectManager batch) projectID <?> ("Wrong 'projectID' = " ++ show projectID)
+
+
+setProject :: Project -> Project.ID -> Batch -> Batch
+setProject newProject projectID batch = newBatch where
+    projectManager    = getProjectManager batch
+    newProjectManager = ProjectManager.updateNode (projectID, newProject) projectManager
+    newBatch          = setProjectManager newProjectManager batch
+
+
+getProcessMap :: (Applicative m, Monad m) => Project.ID -> Batch -> m ProcessMap
+getProcessMap projectID batch = Project.processMap <$> getProject projectID batch
+
+
+setProcessMap :: (Applicative m, Monad m) => ProcessMap -> Project.ID -> Batch -> m Batch
+setProcessMap newProcessMap projectID batch = do
+    project <- getProject projectID batch
+    let newProject = project { Project.processMap = newProcessMap }
+    return $ setProject newProject projectID batch
+
+
+getLibManager :: (Applicative m, Monad m) => Project.ID -> Batch -> m LibManager
+getLibManager projectID batch = Project.libs <$> getProject projectID batch
+
+
+setLibManager :: (Applicative m, Monad m) => LibManager -> Project.ID -> Batch -> m Batch
+setLibManager newLibManager projectID batch = do
+    project <- getProject projectID batch
+    let newProject = project { Project.libs = newLibManager }
+    return $ setProject newProject projectID batch
+
+
+getLibrary :: (Applicative m, Monad m) => Library.ID -> Project.ID -> Batch -> m Library
+getLibrary libraryID projectID batch = do
+    libManager <- getLibManager projectID batch
+    LibManager.lab libManager libraryID <?> ("Wrong 'libraryID' = " ++ show libraryID)
+
+
+setLibrary :: (Applicative m, Monad m) => Library -> Library.ID -> Project.ID -> Batch -> m Batch
+setLibrary newLibary libraryID projectID batch = do
+    libManager <- getLibManager projectID batch
+    let newLibManager = LibManager.updateNode (libraryID, newLibary) libManager
+    setLibManager newLibManager projectID batch
+
+
+getPropertyMap :: (Applicative m, Monad m) => Library.ID -> Project.ID -> Batch -> m PropertyMap
+getPropertyMap libraryID projectID batch =
+    Library.propertyMap <$> getLibrary libraryID projectID batch
+
+
+setPropertyMap :: (Applicative m, Monad m) => PropertyMap -> Library.ID -> Project.ID -> Batch -> m Batch
+setPropertyMap newPropertyMap libraryID projectID batch = do
+    library <- getLibrary libraryID projectID batch
+    let newLibrary = library { Library.propertyMap = newPropertyMap }
+    setLibrary newLibrary libraryID projectID batch
+
+
+getAST :: (Applicative m, Monad m) => Library.ID -> Project.ID -> Batch -> m Module
+getAST libraryID projectID batch =
+    Library.ast <$> getLibrary libraryID projectID batch
+
+
+setAST :: (Applicative m, Monad m) => Module -> Library.ID -> Project.ID -> Batch -> m Batch
+setAST newModule libraryID projectID batch = do
+    library <- getLibrary libraryID projectID batch
+    let newLibrary = library { Library.ast = newModule }
+    setLibrary newLibrary libraryID projectID batch
+
+
+getFocus :: (Applicative m, Monad m) => Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Focus
+getFocus bc libraryID projectID batch = do
+    m <- getAST libraryID projectID batch
+    Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc m
+
+
+setFocus :: (Applicative m, Monad m) => Focus -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+setFocus newFocus bc libraryID projectID batch = do
+    m      <- getAST libraryID projectID batch
+    zipper <- Zipper.focusBreadcrumbs' bc m
+    newM   <- Zipper.modify (\_ -> newFocus) zipper >>= Zipper.close
+    setAST newM libraryID projectID batch
+
+
+getModuleFocus :: (Applicative m, Monad m) => Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Module
+getModuleFocus bc libraryID projectID batch = do
+    focus <- getFocus bc libraryID projectID batch
+    case focus of
+        Focus.ModuleFocus m -> return m
+        _                   -> fail "Target is not a module"
+
+
+setModuleFocus :: (Applicative m, Monad m) => Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+setModuleFocus newModule bc libraryID projectID batch =
+    setFocus (Focus.ModuleFocus newModule) bc libraryID projectID batch
+
+
+
+getFunctionFocus :: (Applicative m, Monad m) => Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Expr
+getFunctionFocus bc libraryID projectID batch = do
+    focus <- getFocus bc libraryID projectID batch
+    case focus of
+        Focus.FunctionFocus f -> return f
+        _                     -> fail "Target is not a function"
+
+
+setFunctionFocus :: (Applicative m, Monad m) => Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+setFunctionFocus newFunction bc libraryID projectID batch =
+    setFocus (Focus.FunctionFocus newFunction) bc libraryID projectID batch
+
+
+getClassFocus :: (Applicative m, Monad m) => Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Expr
+getClassFocus bc libraryID projectID batch = do
+    focus <- getFocus bc libraryID projectID batch
+    case focus of
+        Focus.ClassFocus c -> return c
+        _                  -> fail "Target is not a class"
+
+
+setClassFocus :: (Applicative m, Monad m) => Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> m Batch
+setClassFocus newClass bc libraryID projectID batch =
+    setFocus (Focus.ClassFocus newClass) bc libraryID projectID batch
+
+
+-- DEPRECATED ---------------------------------------------------------------
+
 readonly :: (Applicative m, Monad m) => m (a, r) -> m r
 readonly operation = snd <$> operation
 

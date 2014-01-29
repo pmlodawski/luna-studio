@@ -54,15 +54,13 @@ updateNode (nodeID, newNode) bc libID projectID = graphViewOp bc libID projectID
     let newID     = maxID + 1
         fixedNode = OutputName.fixEmpty newNode newID
         newGraph  = GraphView.replaceNode (newID, fixedNode) nodeID graph
-        newPropertyMap = case PropertyMap.lookup nodeID propertyMap of
-            Nothing -> propertyMap
-            Just k  -> PropertyMap.insert newID k $ PropertyMap.delete nodeID propertyMap
+        newPropertyMap = PropertyMap.move nodeID newID propertyMap
     return ((newGraph, newPropertyMap), newID))
 
 
 
 updateNodeInPlace :: (Node.ID, Node)
-           -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
+                  -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
 updateNodeInPlace (nodeID, newNode) bc libID projectID = noresult . graphViewOp bc libID projectID (\_ graph propertyMap _ -> do
     let fixedNode = OutputName.fixEmpty newNode nodeID
         newGraph  = GraphView.updateNode (nodeID, fixedNode) graph

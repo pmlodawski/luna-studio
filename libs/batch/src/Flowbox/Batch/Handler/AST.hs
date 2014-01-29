@@ -11,6 +11,7 @@ import qualified Data.IntSet as IntSet
 
 import           Flowbox.Batch.Batch                               (Batch)
 import           Flowbox.Batch.Handler.Common                      (astClassFocusOp, astFocusOp, astFunctionFocusOp, astModuleFocusOp, astOp, libManagerOp, noresult, readonly)
+import qualified Flowbox.Batch.Handler.Common                      as Common
 import qualified Flowbox.Batch.Project.Project                     as Project
 import           Flowbox.Luna.Data.AST.Crumb.Breadcrumbs           (Breadcrumbs)
 import           Flowbox.Luna.Data.AST.Expr                        (Expr)
@@ -18,12 +19,14 @@ import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
 import           Flowbox.Luna.Data.AST.Module                      (Module)
 import qualified Flowbox.Luna.Data.AST.Module                      as Module
 import           Flowbox.Luna.Data.AST.Type                        (Type)
+import qualified Flowbox.Luna.Data.AST.Type                        as Type
 import           Flowbox.Luna.Data.AST.Zipper.Focus                (Focus)
 import qualified Flowbox.Luna.Data.AST.Zipper.Focus                as Focus
 import qualified Flowbox.Luna.Data.AST.Zipper.Zipper               as Zipper
 import qualified Flowbox.Luna.Data.PropertyMap                     as PropertyMap
 import qualified Flowbox.Luna.Lib.Library                          as Library
 import qualified Flowbox.Luna.Passes.Analysis.ID.ExtractIDs        as ExtractIDs
+import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID             as MaxID
 import qualified Flowbox.Luna.Passes.Analysis.NameResolver         as NameResolver
 import qualified Flowbox.Luna.Passes.General.Luna.Luna             as Luna
 import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer as IDFixer
@@ -149,6 +152,18 @@ updateFunctionInputs inputs bc libID projectID = noresult . astFunctionFocusOp b
 
 
 updateFunctionOutput :: Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-updateFunctionOutput output bc libID projectID = noresult . astFunctionFocusOp bc libID projectID (\_ m maxID -> do
+updateFunctionOutput output bc libID projectID batch = do
+    m           <- Common.getAST libID projectID batch
+    function    <- Common.getFunctionFocus bc libID projectID batch
+    propertyMap <- Common.getPropertyMap libID projectID batch
+
+    maxID       <- Luna.runIO $ MaxID.run m
     fixedOutput <- Luna.runIO $ IDFixer.runType maxID True output
-    return (m & Expr.output .~ fixedOutput, ()))
+
+    let oldID = function ^?! Expr.output . Type.id
+        newID = fixedOutput ^. Type.id
+        newFunction    = function & Expr.output .~ fixedOutput
+        newPropertyMap = PropertyMap.move (-oldID) (-newID) propertyMap
+
+    newBatch <- Common.setFunctionFocus newFunction bc libID projectID batch
+    Common.setPropertyMap newPropertyMap libID projectID newBatch

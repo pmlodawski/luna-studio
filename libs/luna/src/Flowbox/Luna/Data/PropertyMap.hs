@@ -7,9 +7,7 @@
 
 module Flowbox.Luna.Data.PropertyMap (
     module Data.IntMap,
-    PropertyMap,
-    get,
-    set,
+    module Flowbox.Luna.Data.PropertyMap,
 ) where
 
 import           Data.IntMap
@@ -40,3 +38,9 @@ set nodeID spaceKey key value propertyMap = IntMap.insert nodeID newProperties p
                         Just properties -> properties
     newProperties = oldProperties & Properties.attrs
         %~ Attributes.set spaceKey key value
+
+
+move :: Node.ID -> Node.ID -> PropertyMap -> PropertyMap
+move current new propertyMap = case IntMap.lookup current propertyMap of
+    Nothing -> propertyMap
+    Just k  -> IntMap.insert new k $ IntMap.delete current propertyMap
