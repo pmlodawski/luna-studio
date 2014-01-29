@@ -71,13 +71,27 @@ median xs | odd len = xs !! mid
                     meanMedian = (xs !! mid + xs !! (mid+1)) / 2
 
 
-
 --quicksort :: Int
-quicksort array = (lesser xs) A.++ (A.flatten . A.unit $ p) A.++ (greater xs)
-    where p = array A.!! 0
-          xs = A.tail array
-          lesser  = A.filter (A.<* p)
-          greater = A.filter (A.>=* p)
+--quicksort (p:xs) = (lesser xs) ++ p ++ (greater xs)
+--    where lesser  = filter' (A.<* p)
+--          greater = filter' (A.>=* p)
+
+--filter' :: (Exp a -> Exp Bool) -> [Exp a] -> [Exp a]
+--filter' []
+
+--filter' :: (Exp a -> Exp Bool) -> [Exp a] -> [Exp a]
+--filter' _pred []    = []
+--filter' pred (x:xs)
+--  | pred x         = x : filter' pred xs
+--  | otherwise      = filter' pred xs
+
+--bsort :: Ord a => [a] -> [a]
+--bsort s = case _bsort s of
+--               t | t == s    -> t
+--                 | otherwise -> bsort t
+--  where _bsort (x:x2:xs) | x > x2    = x2:(_bsort (x:xs))
+--                         | otherwise = x:(_bsort (x2:xs))
+--        _bsort s = s
 
 -- basic
 
@@ -162,10 +176,27 @@ closeImage names img = do
     imgB <- erodeImage names imgA
     return imgB
 
+--dupa :: Int
+--dupa = A.unlift $ (A.use $ A.fromList (A.Z A.:. 9) arr) A.!! 0
+--  where arr = [a,b,c,d,e,f,g,h,i]
+--        a = 1 :: Exp Float
+--        b = 1 :: Exp Float
+--        c = 1 :: Exp Float
+--        d = 1 :: Exp Float
+--        e = 1 :: Exp Float
+--        f = 1 :: Exp Float
+--        g = 1 :: Exp Float
+--        h = 1 :: Exp Float
+--        i = 1 :: Exp Float
+
+
+--middleValue ::
+--middleValue ((a,b,c),(d,e,f),(g,h,i)) = [a,b,c,d,e,f,g,h,i]
+
 --medianChannel :: Channel Float -> Channel Float
 --medianChannel channel = Channel.stencil middleValue A.Mirror channel
---    --where middleValue ((a,b,c),(d,e,f),(g,h,i)) = median . quicksort . A.use $ A.fromList (A.Z A.:. 9) [a,b,c,d,e,f,g,h,i]
---    where middleValue ((a,b,c),(d,e,f),(g,h,i)) = 1 --median . quicksort . A.use $ A.fromList (A.Z A.:. 9) [a,b,c,d,e,f,g,h,i]
+    --where middleValue ((a,b,c),(d,e,f),(g,h,i)) = median . quicksort [a,b,c,d,e,f,g,h,i]
+    --where middleValue ((a,b,c),(d,e,f),(g,h,i)) = (A.use $ A.fromList (A.Z A.:. 9) [A.unlift a, A.unlift b, A.unlift c, A.unlift d, A.unlift e, A.unlift f, A.unlift g, A.unlift h, A.unlift i]) A.!! 0
 
 --medianImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
 --medianImage = applyToImage medianChannel
