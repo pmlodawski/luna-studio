@@ -197,6 +197,7 @@ example = Source.Source ["Main"] $
                     , "def main self:"
                     , "    v = Vector 1 2 3"
                     , "    print (v.length.+ 1)"
+                    --, "    print (test 1 2)"
                     --, "    a = [1..10].each x:"
                     --, "        x * 2"
                     --, "    print a"
@@ -297,9 +298,6 @@ main_inner = Luna.run $ do
     (ast, astInfo) <- hoistEither =<< Desugar.TLRecUpdt.run astInfo ast
     logger info $ PP.ppqShow ast
 
-    logger info "\n-------- Desugar.ImplicitCalls --------"
-    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
-    logger info $ PP.ppqShow ast
 
     logger info "\n-------- Analysis.Alias --------"
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast
@@ -313,6 +311,12 @@ main_inner = Luna.run $ do
     -- !!! [WARNING] INVALIDATES aliasInfo !!!
     logger info "\n-------- Desugar.ImplicitScopes --------"
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo aliasInfo ast
+    logger info $ PP.ppqShow ast
+
+
+    -- Should be run AFTER ImplicitScopes
+    logger info "\n-------- Desugar.ImplicitCalls --------"
+    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
     logger info $ PP.ppqShow ast
 
 
