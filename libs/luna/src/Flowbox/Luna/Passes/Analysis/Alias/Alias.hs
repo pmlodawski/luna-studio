@@ -44,7 +44,7 @@ run = (Pass.run_ (Pass.Info "Alias") mempty) . vaMod
 
 vaMod :: Module -> VAPass AliasInfo
 vaMod el = do VAState.registerModule el
-              withID $ do VAState.registerVarName name id
+              withID $ do VAState.registerName name id
                           continue
               VAState.getAliasInfo
            where continue = Module.traverseM_ vaMod vaExpr vaType vaPat vaLit el
@@ -55,14 +55,16 @@ vaMod el = do VAState.registerModule el
 
 vaExpr :: Expr.Expr -> VAPass ()
 vaExpr el = VAState.registerExpr el *> case el of
-    Expr.Function   {} -> VAState.registerVarName name id *> withID continue
     Expr.Lambda     {} -> withID continue
     Expr.Cond       {} -> withID continue
-    Expr.Assignment {} -> vaExpr dst <* vaPat pat
-    Expr.Con        {} -> VAState.bindVar id name
+    Expr.Data       {} -> withID continue
     Expr.Var        {} -> VAState.bindVar id name
     Expr.NativeVar  {} -> VAState.bindVar id name
-    Expr.ConD       {} -> VAState.registerVarName name id
+    Expr.Con        {} -> VAState.bindVar id name
+    Expr.ConD       {} -> VAState.registerParentName name id *> continue
+    Expr.Function   {} -> VAState.registerName name id       *> withID continue
+    Expr.Field      {} -> VAState.registerName name id       *> continue
+    Expr.Assignment {} -> vaExpr dst <* vaPat pat
     _                  -> continue
     where continue = Expr.traverseM_ vaExpr vaType vaPat vaLit el
           withID   = VAState.withID (el ^. Expr.id)
@@ -74,7 +76,7 @@ vaExpr el = VAState.registerExpr el *> case el of
 
 vaPat :: Pat -> VAPass ()
 vaPat el = VAState.registerPat el *> case el of
-    Pat.Var     id name                 -> VAState.registerVarName name id
+    Pat.Var     id name                 -> VAState.registerName name id
     _                                   -> Pat.traverseM_ vaPat vaType vaLit el
 
 

@@ -71,13 +71,11 @@ run buildConfig ast = runEitherT $ do
     Diagnostics.printAST ast diag
     va   <- hoistEither =<< Analysis.Alias.run ast
     Diagnostics.printVA va diag
-    fp   <- hoistEither =<< FuncPool.run ast
-    Diagnostics.printFP fp diag
     hash <- hoistEither =<< Hash.run ast
     -- TODO Diagnostics
     ssa  <- hoistEither =<< SSA.run va hash
     Diagnostics.printSSA ssa diag
-    hast <- hoistEither =<< HASTGen.run ssa fp
+    hast <- hoistEither =<< HASTGen.run ssa
     Diagnostics.printHAST hast diag
     hsc  <- map (Source.transCode ShowHs.hsShow) <$> (hoistEither =<< HSC.run hast)
     Diagnostics.printHSC hsc diag

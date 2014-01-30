@@ -147,11 +147,11 @@ example = Source.Source ["Main"] $
                         ----, "    pos :: a"
 
 
-                        --,"def Int.+ a b:"
-                        --,"    ```liftf2 (+) #{a} #{b}```"
+                        ,"def Int.+ a b:"
+                        ,"    ```liftf2 (+) #{a} #{b}```"
 
-                        --,"def Int.* a b:"
-                        --,"    ```liftf2 (*) #{a} #{b}```"
+                        ,"def Int.* a b:"
+                        ,"    ```liftf2 (*) #{a} #{b}```"
 
                         --,"def Int.< a b:"
                         --,"    ```liftf2 (<) #{a} #{b}```"
@@ -190,14 +190,14 @@ example = Source.Source ["Main"] $
                     --, "def foldr lst el f:"
                     --, "    lst"
 
-                    --, "class Vector a:"
-                    --, "    x,y,z :: a"
-                    --, "    def length self:"
-                    --, "        self.x*self.x + self.y*self.y + self.z*self.z"
+                    , "class Vector a:"
+                    , "    x,y,z :: a"
+                    , "    def length self:"
+                    , "        x*x + y*y + z*z"
 
                     , "def main self:"
-                    --, "    a = Vector 1 2 3"
-                    , "    print 5"
+                    , "    v = Vector 1 2 3"
+                    , "    print v.length"
                     --, "    x = 1"
                     --, "    y = self.raise 2 (IOError \"Oh no\")"
                     --, "    z = x + y"
@@ -308,13 +308,13 @@ main_inner = Luna.run $ do
     logger info "\n>> invalidMap:"
     logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
 
+    -- !!! [WARNING] INVALIDATES aliasInfo !!!
     logger info "\n-------- Desugar.ImplicitScopes --------"
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo aliasInfo ast
     logger info $ PP.ppqShow ast
 
 
-
-    logger info "\n-------- Analysis.Alias2 --------"
+    logger info "\n-------- Analysis.Alias --------"
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast
     logger info "\n>> varRel:"
     logger info $ PP.ppShow (aliasInfo ^. AliasInfo.varRel)
@@ -325,9 +325,9 @@ main_inner = Luna.run $ do
 
 
 
-    logger info "\n-------- FuncPool --------"
-    fp <- hoistEither =<< FuncPool.run ast
-    logger info $ PP.ppShow fp
+    --logger info "\n-------- FuncPool --------"
+    --fp <- hoistEither =<< FuncPool.run ast
+    --logger info $ PP.ppShow fp
 
     logger info "\n-------- Hash --------"
     hash <- hoistEither =<< Hash.run ast
@@ -338,7 +338,7 @@ main_inner = Luna.run $ do
     logger info $ PP.ppqShow ssa
 
     logger info "\n-------- HASTGen --------"
-    hast <- hoistEither =<< HASTGen.run ssa fp
+    hast <- hoistEither =<< HASTGen.run ssa
     logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------"

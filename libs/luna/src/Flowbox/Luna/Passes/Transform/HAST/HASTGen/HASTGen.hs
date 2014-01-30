@@ -26,7 +26,6 @@ import qualified Flowbox.Luna.Data.HAST.Module                       as HModule
 import qualified Flowbox.Luna.Data.HAST.Extension                    as HExtension
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState as GenState
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState   (GenState)
-import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool            (Pool)
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
 import           Flowbox.Luna.Passes.Pass                              (Pass)
 import           Flowbox.System.Log.Logger
@@ -51,18 +50,17 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen"
 
 
-run :: LModule -> Pool -> Pass.Result HExpr
-run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) .: genModule
+run :: LModule -> Pass.Result HExpr
+run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) . genModule
 
 
 stdDerivings :: [Deriving]
 stdDerivings = [Deriving.Show, Deriving.Eq, Deriving.Ord, Deriving.Generic]
 
 
-genModule :: LModule -> Pool -> GenPass HExpr
-genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields methods _) _ = do
+genModule :: LModule -> GenPass HExpr
+genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields methods _) = do
     let (LType.Module _ name path) = cls
-        --fnames  = Set.toList $ Pool.names fpool
         mod     = HModule.addImport ["Luna", "Target", "HS", "Core"]
                 $ HModule.addImport ["Flowbox", "Graphics", "Mockup"]
                 -- $ HModule.addExt HExtension.AutoDeriveTypeable
@@ -125,45 +123,6 @@ mainEmpty :: HExpr
 mainEmpty = HExpr.Function "main" []
           $ HExpr.DoBlock [mkGetIO $ HExpr.AppE (HExpr.Var "val") $ HExpr.Tuple []]
 
-
---genVArgCon arglen name ccname params base = getter where
---    argVars    = map (("v" ++).show) [1..arglen]
---    exprArgs   = map HExpr.Var argVars
---    t          = foldl HExpr.AppE (HExpr.Var ccname) (map HExpr.Var params)
---    selfVar    = HExpr.TypedP t $ HExpr.Var "self"
---    exprVars   = selfVar : exprArgs
---    getter     = HExpr.Function (mkTName arglen name) exprVars
---               $ mkPure (foldl HExpr.AppE base exprArgs)
-
-
---genVArgGetter arglen mname = getter where
---    argVars    = map (("v" ++).show) [1..arglen]
---    exprArgs   = map HExpr.Var argVars
---    exprVars   = HExpr.Var "self" : exprArgs
---    getterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
---               $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName mname) (HExpr.Var "self")
---    getter     = HExpr.Function (mkTName arglen mname) exprVars
---               $ foldl HExpr.AppE getterBase exprArgs
-
-
---genVArgGetterL arglen mname cfname = getter where
---    argVars    = map (("v" ++).show) [1..arglen]
---    exprArgs   = map HExpr.Var argVars
---    t          = mkPure $ foldl HExpr.AppE (HExpr.Var cfname) (map HExpr.Var [])
---    selfVar    = HExpr.TypedP t $ HExpr.Var "self"
---    exprVars   = selfVar : exprArgs
---    getterBase = (HExpr.Var $ mkFuncName mname)
---    getter     = HExpr.Function (mkTName arglen mname) exprVars
---               $ foldl HExpr.AppE getterBase exprArgs
-
-
----- generate declarations (imports, CF newtypes, THInstC)
---genFuncDecl clsname name = do
---    let vname  = mkVarName name
---        cfName = mkCFName $ mangleName clsname vname
-
---    GenState.addNewType      $ genCFDec clsname cfName
---    GenState.addTHExpression $ genTHInstMem name cfName
 
 
 typeMethodSelf cls inputs = nargs

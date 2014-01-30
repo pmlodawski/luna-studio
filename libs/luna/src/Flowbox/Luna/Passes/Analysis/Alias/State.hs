@@ -10,7 +10,7 @@
 
 module Flowbox.Luna.Passes.Analysis.Alias.State where
 
-import           Control.Monad.State (MonadState, get, modify)
+import           Control.Monad.State (MonadState, get, put, modify)
 import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Luna.Data.AST.AST        (AST, ID)
@@ -69,12 +69,21 @@ modifyAliasInfo f = do
 pushID :: VAMonad m => ID -> m ()
 pushID id = modify (idStack %~ (id:))
 
-popID :: VAMonad m => m ()
-popID = modify (idStack %~ tail)
+popID :: VAMonad m => m ID
+popID = do (id:ids) <- view idStack <$> get
+           modify (idStack .~ ids)
+           return id
 
 
 withID :: VAMonad m => ID -> m f -> m f
 withID id f = pushID id *> f <* popID
+
+
+withParentID :: VAMonad m => m f -> m f
+withParentID f = do pid <- popID
+                    out <- f
+                    pushID pid
+                    return out
 
 --switchID :: VAMonad m => ID -> m ()
 --switchID id = modify (currentID .~ id)
@@ -109,8 +118,8 @@ registerAST :: VAMonad m => ID -> AST -> m ()
 registerAST id ast = modifyAliasInfo $ AliasInfo.astMap %~ IntMap.insert id ast
 
 
-registerVarName :: VAMonad m => String -> ID -> m ()
-registerVarName name id = do
+registerName :: VAMonad m => String -> ID -> m ()
+registerName name id = do
     a    <- getAliasInfo
     mcid <- getCurrentID
     case mcid of
@@ -119,6 +128,10 @@ registerVarName name id = do
             where varRel  = a ^. (AliasInfo.varRel . (ix cid))
                   varRel2 = varRel & AliasInfo.nameMap.at name ?~ id
                   a2      = a & AliasInfo.varRel.at cid ?~ varRel2
+
+
+registerParentName :: VAMonad m => String -> ID -> m ()
+registerParentName = withParentID .: registerName 
 
 
 
