@@ -48,6 +48,7 @@ message Data {
 
 message Module {
     extend Type { optional Module ext = 104; }
+    optional string name     = 1;
     repeated string path     = 2;
 }
 

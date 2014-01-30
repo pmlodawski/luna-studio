@@ -105,7 +105,7 @@ run buildConfig ast astInfo = runEitherT $ do
     --Diagnostics.printAST ast diag
 
     -- Should be run AFTER ImplicitScopes
-    logger info "\n-------- Desugar.ImplicitSelf --------"
+    logger debug "\n-------- Desugar.ImplicitSelf --------"
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitSelf.run astInfo ast
     -- TODO Diagnostics
     --logger info $ PP.ppqShow ast

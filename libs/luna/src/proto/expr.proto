@@ -11,7 +11,7 @@ import "pat.proto";
 import "lit.proto";
 import "type.proto";
 
-// last used id = 31 / 131
+// last used id = 32 / 132
 
 message Expr {
     enum Cls {
@@ -29,6 +29,7 @@ message Expr {
         Condition    = 31;
         Function     = 12;
         Lambda       = 13;
+        Grouped      = 32;
         Import       = 14;
         Infix        = 15;
         List         = 16;
@@ -140,6 +141,11 @@ message Lambda {
     repeated Expr   inputs = 1;
     optional generated.proto.type.Type output = 2;
     repeated Expr   body   = 3;
+}
+
+message Grouped {
+    extend Expr { optional Grouped ext = 132; }
+    optional Expr expr = 1;
 }
 
 message Import {
