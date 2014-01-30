@@ -111,8 +111,7 @@ example = Source.Source ["Main"] $
                     --, "    ```let {mymap x (Pure y) = mapM x y}```"
                     --, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
                         --, "def List.each self callback:"
-                        --, "    ```let {mymap = liftf2 map}```"
-                        --, "    ```mymap (val $ call1 #{callback}) #{self}```"
+                        --, "    ```liftf2 map (val $ call1 #{callback}) #{self}```"
 
                         --, "def List.at self index:"
                         --, "    ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```"
@@ -198,6 +197,9 @@ example = Source.Source ["Main"] $
                     , "def main self:"
                     , "    v = Vector 1 2 3"
                     , "    print v.length"
+                    --, "    a = [1..10].each x:"
+                    --, "        x * 2"
+                    --, "    print a"
                     --, "    x = 1"
                     --, "    y = self.raise 2 (IOError \"Oh no\")"
                     --, "    z = x + y"
@@ -331,15 +333,15 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- Hash --------"
     hash <- hoistEither =<< Hash.run ast
-    logger info $ PP.ppShow hash
+    --logger info $ PP.ppShow hash
 
     logger info "\n-------- SSA --------"
     ssa <- hoistEither =<< SSA.run aliasInfo hash
-    logger info $ PP.ppqShow ssa
+    --logger info $ PP.ppqShow ssa
 
     logger info "\n-------- HASTGen --------"
     hast <- hoistEither =<< HASTGen.run ssa
-    logger info $ PP.ppShow hast
+    --logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------"
     hsc <- hoistEither =<< HSC.run  hast

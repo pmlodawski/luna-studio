@@ -19,9 +19,9 @@ import Flowbox.Luna.Data.AST.Type   (Type)
 import Flowbox.Prelude
 
 
-data AST = Module Module
-         | Expr Expr
-         | Lit Lit
-         | Pat Pat
-         | Type Type
+data AST = Module { fromModule :: Module }
+         | Expr   { fromExpr   :: Expr   }
+         | Lit    { fromLit    :: Lit    }
+         | Pat    { fromPat    :: Pat    }
+         | Type   { fromType   :: Type   }
          deriving (Show)
