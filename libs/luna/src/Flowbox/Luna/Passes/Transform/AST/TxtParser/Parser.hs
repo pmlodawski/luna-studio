@@ -12,7 +12,6 @@ module Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser where
 
 import           Control.Applicative
 import           Text.Parsec         hiding (State, many, optional, parse, (<|>))
-import qualified Text.Parsec         as Parsec
 import qualified Text.Parsec.Expr    as PExpr
 
 import qualified Flowbox.Luna.Data.AST.Data                             as Data
@@ -26,22 +25,18 @@ import           Flowbox.Luna.Data.Pass.ASTInfo                         (ASTInfo
 import qualified Flowbox.Luna.Data.Pass.ASTInfo                         as ASTInfo
 import           Flowbox.Luna.Data.Pass.SourceMap                       (SourceMap)
 import           Flowbox.Luna.Data.Source                               (Source (Source))
-import qualified Flowbox.Luna.Data.Source                               as Source
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer      as L
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState (ParseState)
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Token      as Token
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-import           Flowbox.Prelude                                        hiding (id, mod)
+import           Flowbox.Prelude                                        hiding (id, mod, op)
 import qualified Flowbox.Prelude                                        as Prelude
 
 import Control.Monad.State hiding (mapM)
 import Text.Parsec.Pos
 
 import qualified Prelude
-
-import Debug.Trace
 
 -----------------------------------------------------------
 -- Entities
@@ -215,18 +210,6 @@ pDeclaration   = choice [ pImport
 -- Expressions
 -----------------------------------------------------------
 
-pNative     = between L.pNativeSym L.pNativeSym (many pNativeElem)
-pNativeElem = choice [ pNativeVar
-                     , pNativeCode
-                     ]
-pNativeCode = tok Expr.NativeCode <*> ((:) <$> (noneOf "`#") <*> pNativeCodeBody)
-pNativeVar  = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol '}'
-
-pNativeCodeBody = (try(lookAhead $ string "#{")  *> pure [])
-              <|> (try(lookAhead $ string "```") *> pure [])
-              <|> ((++) <$> ((:) <$> anyChar <*> many (noneOf "`#")) <*> pNativeCodeBody)
-
-
 pExpr       = pExprT pEntBaseE
 
 pExprSimple = pExprT pEntBaseSimpleE
@@ -244,7 +227,7 @@ pTermE base = base <??> (flip applyAll <$> many1 (pTermBaseE base))  --  many1 (
 
 
 pTermBaseE p = choice [ try pTermRecUpd
-                      , pDotTermE 
+                      , pDotTermE
                       , pCallTermE p
                       ]
 
@@ -263,27 +246,6 @@ pDotTermE     = try(tok Expr.Accessor <*> pDotTermBase) -- needed by the syntax 
 
 pCallTermE p = pLastLexemeEmpty *> ((flip <$> tok Expr.App) <*> pCallList p)
 
-pLastLexeme = view ParseState.lastLexeme <$> getState
-
-pLastLexemeEmpty = do
-    llex <- pLastLexeme
-    case llex of
-        [] -> return ()
-        _  -> parserFail "not empty"
-
---pXXX base = do
---    res <- base
---    st  <- getState
---    return
---       $ trace "-----------"
---       $ trace ("base: " ++ show res)
---       $ trace ("state: " ++ show st)
---       $ res
-
-pCaseE     = tok Expr.Case <* L.pCase <*> pExprSimple <*> (pDotBlockBegin pCaseBodyE <|> return [])
-pCaseBodyE = tok Expr.Match <*> pPattern <*> pExprBlock
-
-
 
 pEntBaseE       = pEntConsE pEntComplexE
 pEntBaseSimpleE = pEntConsE pEntSimpleE
@@ -297,14 +259,15 @@ pEntComplexE = choice[ pDeclaration
                      ]
              <?> "expression term"
 
-pEntSimpleE = choice[ try $ pCaseE
-                  , try $ L.parensed pExpr
-                  , pIdentE
-                  , tok Expr.Lit    <*> pLit
-                  , tok Expr.Tuple  <*> pTuple  pOpE
-                  , tok Expr.List   <*> pList   pListExpr
-                  , tok Expr.Native <*> pNative
-                  ]
+pEntSimpleE = choice[ pCaseE -- CHECK [wd]: removed try
+                    , pCondE
+                    , try $ L.parensed pExpr
+                    , pIdentE
+                    , tok Expr.Lit    <*> pLit
+                    , tok Expr.Tuple  <*> pTuple  pOpE
+                    , tok Expr.List   <*> pList   pListExpr
+                    , tok Expr.Native <*> pNative
+                    ]
            <?> "expression term"
 
 optableE = [ [ postfixM  "::" (tok Expr.Typed <*> pType)                      ]
@@ -321,7 +284,7 @@ optableE = [ [ postfixM  "::" (tok Expr.Typed <*> pType)                      ]
            , [ binaryM  "$"  (binaryMatchE <$> tok Expr.callConstructor)      PExpr.AssocLeft ]
            ]
            where
-              operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':op)))
+              --operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':op)))
               --operator2 op = binaryM op (binaryMatchE <$>  ( tok Expr.App <*> (tok Expr.Accessor <*> pure "add" <*> ... ) )  )
               operator2 op = binaryM op (binaryMatchE <$> ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 op x) [y]) <$> genID <*> genID) )
               operator3 op = binaryM op (binaryMatchE <$> ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 "contains" y) [x]) <$> genID <*> genID) )
@@ -344,6 +307,26 @@ pListExpr = choice [ try $ tok Expr.RangeFromTo <*> pOpE <* L.pRange <*> pOpE
                    , try $ tok Expr.RangeFrom   <*> pOpE <* L.pRange
                    , pOpE
                    ]
+
+
+pCaseE     = tok Expr.Case <* L.pCase <*> pExprSimple <*> (pDotBlockBegin pCaseBodyE <|> return [])
+pCaseBodyE = tok Expr.Match <*> pPattern <*> pExprBlock
+
+
+pCondE     = tok Expr.Cond <* L.pIf <*> pExprSimple <*> pExprBlock <*> pMaybe (blockSpacesIE *> L.pElse *> pExprBlock)
+
+
+pNative     = between L.pNativeSym L.pNativeSym (many pNativeElem)
+pNativeElem = choice [ pNativeVar
+                     , pNativeCode
+                     ]
+pNativeCode = tok Expr.NativeCode <*> ((:) <$> (noneOf "`#") <*> pNativeCodeBody)
+pNativeVar  = tok Expr.NativeVar  <*  L.symbols "#{" <*> many (noneOf "}") <* L.symbol '}'
+
+pNativeCodeBody = (try(lookAhead $ string "#{")  *> pure [])
+              <|> (try(lookAhead $ string "```") *> pure [])
+              <|> ((++) <$> ((:) <$> anyChar <*> many (noneOf "`#")) <*> pNativeCodeBody)
+
 
 pExprBlock  = pDotBlockBegin pExpr
 
@@ -438,6 +421,8 @@ pBlockBegin     p = pBlockPrefix *> withPos(multiBlock1 p)
 pBlockPrefix      = L.pSpaces *> indented
 
 blockSpaces       = try (L.pSpaces <* checkIndent) <|> pure mempty
+
+blockSpacesIE     = try (L.pSpaces <* checkIndentedOrEqual) <|> pure mempty
 
 blockSpaces'      = try (L.pSpaces <* indented) <|> pure mempty
 

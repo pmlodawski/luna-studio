@@ -4,8 +4,7 @@
 module Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent where
 
 import Flowbox.Prelude
-import           Control.Applicative
-import           Text.Parsec          hiding (many, optional, parse, (<|>), State)
+import Text.Parsec                hiding (many, optional, parse, (<|>), State)
 import Text.Parsec.Pos
 import Text.Parsec.Token
 import "mtl" Control.Monad.State
@@ -82,12 +81,18 @@ checkIndent = do
     p <- getPosition
     if biAp sourceColumn (==) p s then return () else parserFail "indentation doesn't match"
 
--- | Ensures the current indentation level matches that of the reference
+
 checkIndented :: (Stream s (State SourcePos) z) => IndentParser s u ()
 checkIndented = do
     s <- get
     p <- getPosition
     if biAp sourceColumn (>) p s then return () else parserFail "indentation doesn't match"
+
+checkIndentedOrEqual :: (Stream s (State SourcePos) z) => IndentParser s u ()
+checkIndentedOrEqual = do
+    s <- get
+    p <- getPosition
+    if biAp sourceColumn (>=) p s then return () else parserFail "indentation doesn't match"
 
 -- | Run the result of an indentation sensitive parse
 runIndent :: SourceName -> State SourcePos a -> a

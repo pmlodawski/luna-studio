@@ -42,8 +42,8 @@ import qualified Flowbox.Luna.Passes.Analysis.VarAlias.VarAlias            as Va
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt       as Desugar.TLRecUpdt
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ExtScopeCall    as Desugar.ExtScopeCall
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt       as Desugar.TLRecUpdt
 import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash               as Hash
 import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                 as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser        as Parser
@@ -127,7 +127,7 @@ example = Source.Source ["Main"] $
 
                         , "class Console:"
                         , "    def print self msg:"
-                        , "        ```print'' #{msg}```"
+                        , "        ```print' #{msg}```"
 
                         ----, "def Int.+ a b:"
                         ----, "    ```liftf2 (+) #{a} #{b}```"
@@ -192,6 +192,13 @@ example = Source.Source ["Main"] $
                     , "    z = x + y"
                     , "    z = self.catch z x: 0"
                     , "    c.print (x<2)"
+                    , "    a = if z<2:"
+                    , "            c.print 117"
+                    --, "        else:"
+                    --, "            0"
+                    , "    c.print a"
+                    --, "    else:   4"
+                    --, "    a = 1"
                     --, "    z.catch x"
                     --, "    a = self.test 5"
                     --, "    c.print (x<2)"
@@ -300,7 +307,7 @@ main_inner = Luna.run $ do
 
     logger info "\n-------- HASTGen --------"
     hast <- hoistEither =<< HASTGen.run ssa fp
-    --logger info $ PP.ppShow hast
+    logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------"
     hsc <- hoistEither =<< HSC.run  hast

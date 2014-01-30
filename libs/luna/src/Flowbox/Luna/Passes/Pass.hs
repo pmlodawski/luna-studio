@@ -13,14 +13,12 @@
 module Flowbox.Luna.Passes.Pass where
 
 import Control.Monad.Reader
-import Control.Monad.RWS          hiding (fail)
-import Control.Monad.State        hiding (fail)
+import Control.Monad.State        hiding (fail, state)
 import Control.Monad.Trans.Either
 
 
-import           Flowbox.Prelude           hiding (error, fail)
-import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.Log.Logger as Logger
+import Flowbox.Prelude           hiding (error, fail)
+import Flowbox.System.Log.Logger
 
 
 --type PassError              = String
@@ -84,7 +82,7 @@ runIO env state pass = either2M =<< run env state pass
 runIO_ :: Show err => env -> state -> ESRT err env state IO result -> IO result
 runIO_ env state pass = fst <$> runIO env state pass
 
-
+fail :: Monad m => e -> EitherT e m a
 fail = left
 
 --run ::  PassMonad s m => Info -> state -> Transformer state b -> Result m (b, state)

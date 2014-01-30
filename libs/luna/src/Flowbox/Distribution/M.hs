@@ -4,53 +4,53 @@
 
 module Flowbox.Distribution.M where
 
-import qualified Data.Map as Map
+--import qualified Data.Map as Map
 
-import qualified Data.Aeson  as JSON
-import           Data.String (fromString)
+--import qualified Data.Aeson  as JSON
+--import           Data.String (fromString)
 
-import qualified Flowbox.Config.Config                        as Config
-import qualified Flowbox.Data.Version                         as Version
-import           Flowbox.Distribution.Package.PackageFamily   (PackageFamily)
-import qualified Flowbox.Distribution.Package.PackageFamily   as PackageFamily
-import qualified Flowbox.Distribution.Package.PackageIndex    as PackageIndex
-import           Flowbox.Prelude
-import           Flowbox.System.Console.StyledText.StyledText (StyledText)
-import qualified Flowbox.System.Console.StyledText.StyledText as StyledText
+--import qualified Flowbox.Config.Config                        as Config
+--import qualified Flowbox.Data.Version                         as Version
+--import           Flowbox.Distribution.Package.PackageFamily   (PackageFamily)
+--import qualified Flowbox.Distribution.Package.PackageFamily   as PackageFamily
+--import qualified Flowbox.Distribution.Package.PackageIndex    as PackageIndex
+--import           Flowbox.Prelude
+--import           Flowbox.System.Console.StyledText.StyledText (StyledText)
+--import qualified Flowbox.System.Console.StyledText.StyledText as StyledText
 
-import Data.String.Utils (join)
+--import Data.String.Utils (join)
 
-import           Data.List                                     (groupBy, sortBy)
-import           Debug.Trace
-import qualified Distribution.Client.Types                     as CliTypes
-import qualified Distribution.InstalledPackageInfo             as Installed
-import           Distribution.Package                          (PackageName, packageName)
-import qualified Distribution.Package                          as DistPackage
-import qualified Distribution.PackageDescription               as DistPkgDesc
-import qualified Distribution.PackageDescription.Configuration as DistConfig
-import           Distribution.Simple.Utils                     (comparing, die, equating, notice)
-import qualified Flowbox.Distribution.CabalConversion          as CabalConversion
-import           Flowbox.Distribution.Package.Package          (Package)
-import qualified Flowbox.Distribution.Package.Package          as Package
+--import           Data.List                                     (groupBy, sortBy)
+--import           Debug.Trace
+--import qualified Distribution.Client.Types                     as CliTypes
+--import qualified Distribution.InstalledPackageInfo             as Installed
+--import           Distribution.Package                          (PackageName, packageName)
+--import qualified Distribution.Package                          as DistPackage
+--import qualified Distribution.PackageDescription               as DistPkgDesc
+--import qualified Distribution.PackageDescription.Configuration as DistConfig
+--import           Distribution.Simple.Utils                     (comparing, die, equating, notice)
+--import qualified Flowbox.Distribution.CabalConversion          as CabalConversion
+--import           Flowbox.Distribution.Package.Package          (Package)
+--import qualified Flowbox.Distribution.Package.Package          as Package
 
-import qualified Data.Set as Set
+--import qualified Data.Set as Set
 
-main = do
-    cfg <- Config.load
-    srcPkgIdx  <- PackageIndex.readSrcPkgIdx cfg
-    instPkgIdx <- PackageIndex.readInstPkgIdx cfg
-    let srcPkgs    = PackageIndex.searchByNameSubstring srcPkgIdx "x"
-        instPkgs   = PackageIndex.searchByNameSubstring instPkgIdx "x"
-        srcPkgMap  = PackageIndex.partitionByName srcPkgs
-        instPkgMap = PackageIndex.partitionByName instPkgs
-        pkgMap     = PackageIndex.combinePkgMaps srcPkgMap instPkgMap
-        pkgFMap = Map.map PackageFamily.mk pkgMap
+--main = do
+--    cfg <- Config.load
+--    srcPkgIdx  <- PackageIndex.readSrcPkgIdx cfg
+--    instPkgIdx <- PackageIndex.readInstPkgIdx cfg
+--    let srcPkgs    = PackageIndex.searchByNameSubstring srcPkgIdx "x"
+--        instPkgs   = PackageIndex.searchByNameSubstring instPkgIdx "x"
+--        srcPkgMap  = PackageIndex.partitionByName srcPkgs
+--        instPkgMap = PackageIndex.partitionByName instPkgs
+--        pkgMap     = PackageIndex.combinePkgMaps srcPkgMap instPkgMap
+--        pkgFMap = Map.map PackageFamily.mk pkgMap
 
-    print "hello"
-    print $ map (view $ Package.id . Package.name) instPkgs
-    mapM_ PackageFamily.print $ Map.elems pkgFMap
+--    print "hello"
+--    print $ map (view $ Package.id . Package.name) instPkgs
+--    mapM_ PackageFamily.print $ Map.elems pkgFMap
 
-
+-----------------------------------------------------
 
 --showPF :: PackageFamily -> String
 --showPF pf =

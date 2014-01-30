@@ -11,9 +11,8 @@
 
 module Flowbox.Luna.Passes.Transform.AST.SSA.SSA where
 
-import           Control.Applicative
-import           Control.Monad.State
-import qualified Data.IntMap         as IntMap
+import Control.Applicative
+import Control.Monad.State
 
 import           Flowbox.Luna.Data.Analysis.Alias.Alias (AA)
 import qualified Flowbox.Luna.Data.Analysis.Alias.Alias as AA
@@ -57,7 +56,7 @@ ssaExpr vs ast = case ast of
                                                       Right nid -> return $ Expr.Var id (mkVar nid)
                                                       Left  e   -> (logger error $ "Not in scope '" ++ (show e) ++ "'.")
                                                                *> (return $ Expr.Var id name)
-    Expr.NativeVar  id name     -> case (vs ^. AA.aliasMap) ^. at id of
+    Expr.NativeVar  id _name     -> case (vs ^. AA.aliasMap) ^. at id of
                                         Nothing    -> Pass.fail ("Variable not found in AA!")
                                         Just alias -> case alias of
                                                       Right nid -> return $ Expr.NativeVar id (mkVar nid)

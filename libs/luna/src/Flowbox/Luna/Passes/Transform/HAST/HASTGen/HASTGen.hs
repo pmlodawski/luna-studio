@@ -14,7 +14,7 @@
 module Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen where
 
 import qualified Flowbox.Prelude                                     as Prelude
-import           Flowbox.Prelude                                     hiding (error, id, mod, simple)
+import           Flowbox.Prelude                                     hiding (error, id, mod, simple, cons, exp)
 import qualified Flowbox.Luna.Data.AST.Expr                          as LExpr
 import qualified Flowbox.Luna.Data.AST.Type                          as LType
 import qualified Flowbox.Luna.Data.AST.Pat                           as LPat
@@ -27,14 +27,12 @@ import qualified Flowbox.Luna.Data.HAST.Extension                    as HExtensi
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState as GenState
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState   (GenState)
 import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool            (Pool)
-import qualified Flowbox.Luna.Passes.Analysis.FuncPool.Pool          as Pool
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
 import           Flowbox.Luna.Passes.Pass                              (Pass)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.Utils
 import qualified Luna.Target.HS.Naming                               as Naming
 import           Data.String.Utils                                     (join)
-import qualified Data.Set                                            as Set
 import qualified Flowbox.Luna.Data.HAST.Deriving                     as Deriving
 import           Flowbox.Luna.Data.HAST.Deriving                     (Deriving)
 
@@ -62,7 +60,7 @@ stdDerivings = [Deriving.Show, Deriving.Eq, Deriving.Ord, Deriving.Generic]
 
 
 genModule :: LModule -> Pool -> GenPass HExpr
-genModule lmod@(LModule.Module _ cls imports classes typeAliases typeDefs fields methods _) fpool = do
+genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields methods _) _ = do
     let (LType.Module _ path) = cls
         --fnames  = Set.toList $ Pool.names fpool
         mod     = HModule.addImport ["Luna", "Target", "HS", "Core"]
@@ -183,7 +181,7 @@ genCon dataName (LExpr.ConD _ conName fields) = do
         conMemName = Naming.mkMemName dataName conName
     expr  <- HExpr.Con conName <$> mapM genExpr fields
     let th =  GenState.addTHExpression (thRegisterCon dataName conName fieldlen [])
-           *> GenState.addTHExpression (thClsCallInsts conMemName fieldlen 0)
+           *> GenState.addTHExpression (thClsCallInsts conMemName fieldlen (0::Int))
            -- *> GenState.addTHExpression (thGenerateClsGetters conName)
     return (expr, th)
 
@@ -201,7 +199,6 @@ genExpr ast = case ast of
 
                                                 ninputs    = inputs
                                                 argNum     = length ninputs
-                                                mname      = mangleName clsName $ mkVarName name
                                                 fname      = Naming.mkMemName clsName name
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
@@ -214,10 +211,15 @@ genExpr ast = case ast of
                                             GenState.addFunction f
 
                                             GenState.addTHExpression $ thRegisterFunction fname argNum []
-                                            GenState.addTHExpression $ thClsCallInsts fname argNum 0
+                                            GenState.addTHExpression $ thClsCallInsts fname argNum (0 :: Int)
                                             GenState.addTHExpression $ thRegisterMember name clsName fname
 
                                             return f
+
+    LExpr.Cond   _ cond success failure  -> HExpr.CondE <$> genExpr cond <*> mapM genExpr success <*> mapM genExpr failureExprs
+                                            where failureExprs = case failure of
+                                                                 Just exprs -> exprs
+                                                                 Nothing    -> [LExpr.NOP 0]
 
     LExpr.Lambda id inputs output body   -> do
                                             let fname      = Naming.mkLamName $ show id
@@ -234,7 +236,7 @@ genExpr ast = case ast of
                                             GenState.addFunction f
 
                                             GenState.addTHExpression $ thRegisterFunction fname argNum []
-                                            GenState.addTHExpression $ thClsCallInsts fname argNum 0
+                                            GenState.addTHExpression $ thClsCallInsts fname argNum (0::Int)
 
                                             return $ HExpr.Var hName
 
@@ -252,7 +254,7 @@ genExpr ast = case ast of
 
                                             return $ HExpr.Import False (["FlowboxM", "Libs"] ++ path ++ [tname]) Nothing where
 
-    LExpr.Data _ cls cons classes methods -> do
+    LExpr.Data _ cls cons _classes methods -> do
                                            let name        = view LType.name   cls
                                                params      = view LType.params cls
 
@@ -265,7 +267,7 @@ genExpr ast = case ast of
                                            let dt = HExpr.DataD name params consE stdDerivings
                                            GenState.addDataType dt
 
-                                           sequence consTH
+                                           sequence_ consTH
 
                                            GenState.addTHExpression $ thGenerateAccessors name
                                            GenState.addTHExpression $ thRegisterAccessors name
@@ -286,6 +288,7 @@ genExpr ast = case ast of
                                                       setStep       (x:xs) = setter x (getSel xs)
                                                       setSteps args@(_:[]) = setStep args
                                                       setSteps args@(_:xs) = setSteps xs . setStep args
+                                                      setSteps          [] = undefined
                                                       sels = reverse selectors
 
     LExpr.Lit          _ value               -> genLit value
@@ -316,18 +319,17 @@ genExpr ast = case ast of
     LExpr.RangeFromTo _ start end            -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
     LExpr.RangeFrom   _ start                -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start
     LExpr.Native      _ segments             -> pure $ HExpr.Native (join "" $ map genNative segments)
-    LExpr.Typed       _ cls expr             -> Pass.fail "Typing expressions is not supported yet." -- Potrzeba uzywac hacku: matchTypes (undefined :: m1(s1(Int)))  (val (5 :: Int))
+    LExpr.Typed       _ _cls _expr           -> Pass.fail "Typing expressions is not supported yet." -- Potrzeba uzywac hacku: matchTypes (undefined :: m1(s1(Int)))  (val (5 :: Int))
+    LExpr.NOP         _                      -> pure HExpr.NOP
     --x                                        -> logger error (show x) *> return HExpr.NOP
-    where
-        getN n = HExpr.AppE (HExpr.Var $ "call" ++ show n)
-        get0   = getN (0::Int)
 
+isRange :: LExpr.Expr -> Bool
 isRange e = case e of
     LExpr.RangeFromTo {} -> True
     LExpr.RangeFrom   {} -> True
     _                    -> False
 
-
+genNative :: LExpr.Expr -> String
 genNative expr = case expr of
     LExpr.NativeCode _ code -> code
     LExpr.NativeVar  _ name -> mkVarName name
@@ -342,8 +344,8 @@ genCallExpr e = trans <$> genExpr e where
         _                   -> id
         --_                   -> call0
     id     = Prelude.id
-    call0  = HExpr.AppE (HExpr.Var "call0")
-    ret    = HExpr.AppE $ HExpr.Var "return"
+    --call0  = HExpr.AppE (HExpr.Var "call0")
+    --ret    = HExpr.AppE $ HExpr.Var "return"
 
 genFuncBody :: [LExpr] -> LType -> GenPass [HExpr]
 genFuncBody exprs output = case exprs of
@@ -393,8 +395,8 @@ genTypedProto safeTyping cls t = case t of
 
 genType :: Bool -> LType -> GenPass HExpr
 genType safeTyping t = case t of
-    LType.Var     _ name      -> return $ thandler (HExpr.Var  name)
-    LType.Con     id segments -> return $ thandler (HExpr.ConE segments)
+    LType.Var     _ name     -> return $ thandler (HExpr.Var  name)
+    LType.Con     _ segments -> return $ thandler (HExpr.ConE segments)
 
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM (genType safeTyping) items
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType safeTyping src) (mapM (genType safeTyping) args)
@@ -406,8 +408,8 @@ genType safeTyping t = case t of
 
 genType' :: LType -> GenPass HExpr
 genType' t = case t of
-    LType.Var     _ name      -> return $ HExpr.Var  name
-    LType.Con     id segments -> return $ HExpr.ConE segments
+    LType.Var     _ name     -> return $ HExpr.Var  name
+    LType.Con     _ segments -> return $ HExpr.ConE segments
 
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType' items
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType' src) (mapM genType' args)

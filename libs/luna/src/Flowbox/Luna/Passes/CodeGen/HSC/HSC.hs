@@ -83,13 +83,16 @@ instance Applicative CodeBuilder where
         Complex f -> Complex $ f (code r)
 
 
-
+genExpr :: HExpr -> String
 genExpr e = code $ buildExpr e
 
+simplify :: CodeBuilder String -> CodeBuilder String
 simplify c = case c of
     Simple {} -> c
     Complex v -> Simple $ "(" ++ v ++ ")"
 
+
+app :: CodeBuilder String -> CodeBuilder String -> CodeBuilder String
 app a b = Complex (\x y -> x ++ " " ++ y) <*> a <*> (simplify b)
 
 buildExpr :: HExpr -> CodeBuilder String
@@ -113,10 +116,11 @@ buildExpr e = case e of
                                              where params' = if null params then "" else " " ++ join " " (fsExpMap params)
     HExpr.Con      name fields            -> pure $ name ++ body
                                              where body = if null fields then "" else " { " ++ sepjoin (fExpMap fields) ++ " }"
+    HExpr.CondE    cond sucess failure    -> Complex $ "if " ++ csBuildExpr cond ++ " then " ++ (code.buildBody) sucess ++ " else " ++ (code.buildBody) failure
     HExpr.RecUpdE  expr name val          -> Complex $ csBuildExpr expr ++ " { " ++ name ++ " = " ++ cBuildExpr val ++ "}"
-    HExpr.Typed    cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
-    HExpr.TypedP   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
-    HExpr.TypedE   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ (code.buildExpr) cls
+    HExpr.Typed    cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ cBuildExpr cls
+    HExpr.TypedP   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ cBuildExpr cls
+    HExpr.TypedE   cls  expr              -> Complex $ cBuildExpr expr ++ " :: " ++ cBuildExpr cls
     HExpr.TySynD   name params dstType    -> Complex $ "type " ++ name ++ " " ++ spacejoin (fsExpMap params) ++ " = " ++ (code.buildExpr) dstType
     HExpr.Function name signature expr    -> pure $ name ++ params ++ " = " ++ (code.buildExpr) expr
                                              where params = if null signature then ""
@@ -125,10 +129,9 @@ buildExpr e = case e of
                                              where params = if null signature then ""
                                                             else " " ++ join " " (fsExpMap signature)
     HExpr.LetBlock exprs result           -> pure $ "let { " ++ join "; " (fExpMap exprs) ++ " } in " ++ (code.buildExpr) result
-    HExpr.DoBlock  exprs                  -> pure $ "do { " ++ body ++ " }"
-                                             where body = if null exprs then "" else join "; " (fExpMap exprs) ++ ";"
+    HExpr.DoBlock  exprs                  -> buildBody exprs
     HExpr.Infix    name src dst           -> Complex $ csBuildExpr src ++ " " ++ name ++ " " ++ csBuildExpr dst
-    HExpr.NOP                             -> pure $ "NOP"
+    HExpr.NOP                             -> pure $ "nop"
     HExpr.Assignment src dst              -> pure $ (code.buildExpr) src ++ " = " ++ (code.buildExpr) dst
     HExpr.Arrow      src dst              -> pure $ (code.buildExpr) src ++ " <- " ++ (code.buildExpr) dst
     HExpr.Lit      val                    -> pure $ genLit val
@@ -142,16 +145,28 @@ buildExpr e = case e of
     HExpr.ConT     name                   -> pure $ name
     HExpr.AppT     src dst                -> app (buildExpr src) (buildExpr dst) --"(" ++ (code.buildExpr) src ++ " (" ++ (code.buildExpr) dst ++ ")" ++ ")" -- for literals, e.g. Pure (1 :: Int)
     HExpr.AppE     src dst                -> app (buildExpr src) (buildExpr dst) --"(" ++ (code.buildExpr) src ++ " " ++ (code.buildExpr) dst ++ ")"
-    HExpr.Native   code                   -> pure $ code
+    HExpr.Native   natCode                -> pure $ natCode
     HExpr.ListE    items                  -> pure $ "[" ++ sepjoin (fExpMap items) ++ "]"
     HExpr.Bang     expr                   -> pure $ "--->>>   " ++ (code.buildExpr) expr
     HExpr.THE      expr                   -> pure $ (code.buildExpr) expr
     where spacejoin   = join " "
           sepjoin     = join ", "
-          fExpMap     = map cBuildExpr
-          fsExpMap    = map csBuildExpr
-          cBuildExpr  = code.buildExpr
-          csBuildExpr = code.simplify.buildExpr
+
+fExpMap :: [HExpr] -> [String]
+fExpMap     = map cBuildExpr
+
+fsExpMap :: [HExpr] -> [String]
+fsExpMap    = map csBuildExpr
+
+cBuildExpr :: HExpr -> String
+cBuildExpr  = code.buildExpr
+
+csBuildExpr :: HExpr -> String
+csBuildExpr = code.simplify.buildExpr
+
+buildBody :: [HExpr] -> CodeBuilder String
+buildBody exprs = pure $ "do { " ++ body ++ " }"
+    where body  = if null exprs then "" else join "; " (fExpMap exprs) ++ ";"
 
 
 genLit :: HLit.Lit -> String

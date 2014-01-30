@@ -11,18 +11,16 @@
 
 module Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt where
 
-import           Flowbox.Luna.Data.Analysis.Alias.Alias          (AA (AA))
 import qualified Flowbox.Luna.Data.AST.Expr                      as Expr
 import           Flowbox.Luna.Data.AST.Module                    (Module)
 import qualified Flowbox.Luna.Data.AST.Module                    as Module
 import           Flowbox.Luna.Data.AST.Pat                       (Pat)
 import qualified Flowbox.Luna.Data.AST.Pat                       as Pat
 import           Flowbox.Luna.Data.Pass.ASTInfo                  (ASTInfo)
-import qualified Flowbox.Luna.Data.Pass.ASTInfo                  as ASTInfo
 import           Flowbox.Luna.Passes.Pass                        (Pass)
 import qualified Flowbox.Luna.Passes.Pass                        as Pass
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.State as DesugarState
 import           Flowbox.Luna.Passes.Transform.AST.Desugar.State (DesugarState)
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.State as DesugarState
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.State as DS
 import           Flowbox.Prelude                                 hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
@@ -36,7 +34,7 @@ type DesugarPass result = Pass DesugarState result
 
 
 run :: ASTInfo -> Module -> Pass.Result (Module, ASTInfo)
-run info = (Pass.run_ (Pass.Info "Desugar.TLRecUpdt") $ DS.mk info) . desugar
+run inf = (Pass.run_ (Pass.Info "Desugar.TLRecUpdt") $ DS.mk inf) . desugar
 
 
 desugar :: Module -> DesugarPass (Module, ASTInfo)
@@ -58,13 +56,13 @@ desugarExpr ast = case ast of
           fexpMap   = mapM desugarExpr
           fexpTLMap = mapM desugarFuncTLExpr
           continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
-          omitNext  = Expr.traverseM omitExpr pure desugarPat pure ast
+          --omitNext  = Expr.traverseM omitExpr pure desugarPat pure ast
 
 desugarFuncTLExpr :: Expr.Expr -> DesugarPass Expr.Expr
 desugarFuncTLExpr ast = case ast of
-    Expr.RecordUpdate id src selectors expr -> case src of
-                                                   Expr.Var _ name -> Expr.Assignment <$> DS.genID <*> (Pat.Var <$> DS.genID <*> pure name) <*> pure ast
-                                                   _               -> desugarExpr ast
+    Expr.RecordUpdate _id src _selectors _expr -> case src of
+                                                       Expr.Var _ name -> Expr.Assignment <$> DS.genID <*> (Pat.Var <$> DS.genID <*> pure name) <*> pure ast
+                                                       _               -> desugarExpr ast
     _                                       -> desugarExpr ast
 
 omitExpr :: Expr.Expr -> DesugarPass Expr.Expr

@@ -23,10 +23,10 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.Default
 import           Data.Monoid            (Monoid, mappend, mempty)
 import qualified Data.Traversable       as Traversable
-import           Data.Typeable
+--import           Data.Typeable
 import           Flowbox.Debug.Debug
-import           Prelude                hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
-import qualified Prelude                as Prelude
+import           Prelude             hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
+import qualified Prelude             as Prelude
 
 
 

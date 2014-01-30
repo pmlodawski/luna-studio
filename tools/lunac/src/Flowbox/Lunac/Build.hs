@@ -69,7 +69,7 @@ build cfg op diag filePath = do
         cabalFlags = case Cmd.global op of
                         True  -> ["--global"]
                         False -> []
-        outputPath = fixOutputPath $ UniPath.fromUnixString $ Cmd.output op
+        outputPath = Platform.addExeOnWindows $ UniPath.fromUnixString $ Cmd.output op
         buildType  = if Cmd.library op
                         then BuildConfig.Library
                         else BuildConfig.Executable outputPath
@@ -81,10 +81,3 @@ build cfg op diag filePath = do
     Luna.runIO $ Build.run bldCfg ast
     return ()
 
-
-fixOutputPath :: UniPath -> UniPath
-fixOutputPath path = Platform.dependent path windowsPath path where
-    exe = ".exe"
-    windowsPath = if UniPath.extension path == exe
-        then path
-        else UniPath.setExtension exe path

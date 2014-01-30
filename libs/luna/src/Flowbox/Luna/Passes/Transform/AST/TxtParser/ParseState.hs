@@ -12,7 +12,6 @@ import           Flowbox.Luna.Data.AST.SourcePos  (SourceRange)
 import           Flowbox.Luna.Data.Pass.SourceMap (SourceMap)
 import qualified Flowbox.Luna.Data.Pass.SourceMap as SourceMap
 import           Flowbox.Luna.Data.AST.Utils      (ID)
-import qualified Flowbox.Luna.Data.Pass.ASTInfo                    as ASTInfo
 import           Flowbox.Luna.Data.Pass.ASTInfo                    (ASTInfo)
 
 data ParseState = ParseState { _info       :: ASTInfo

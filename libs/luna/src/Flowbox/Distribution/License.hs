@@ -12,7 +12,6 @@ import Flowbox.Data.Version (Version)
 import Flowbox.Prelude
 
 import Data.Aeson
-import Data.Default (Default, def)
 import GHC.Generics
 
 
