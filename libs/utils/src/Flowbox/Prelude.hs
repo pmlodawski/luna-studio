@@ -8,25 +8,22 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Flowbox.Prelude(
-    module Control.Applicative,
-    module Control.Lens,
-    module Data.Default,
-    module Data.Monoid,
     module Flowbox.Prelude,
-    module Flowbox.Debug.Debug,
-    module Prelude
+    module Prelude,
+    module X
 ) where
 
-import           Control.Applicative
-import           Control.Lens
+import           Control.Applicative as X
+import           Control.Lens        as X
 import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Data.Default
-import           Data.Monoid            (Monoid, mappend, mempty)
+import           Data.Default        as X
+import           Data.Monoid         as X (Monoid, mappend, mempty)
 import qualified Data.Traversable       as Traversable
 --import           Data.Typeable
-import           Flowbox.Debug.Debug
+import           Flowbox.Debug.Debug as X
 import           Prelude             hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
-import qualified Prelude             as Prelude
+import qualified Prelude            
+import           Data.Foldable (forM_)
 
 
 
@@ -57,13 +54,13 @@ infixr 9 .
 (.) :: (Functor f) => (a -> b) -> f a -> f b
 (.) = fmap
 
-(.:)  :: (x -> y) -> (a -> b -> x) -> (a -> b -> y)
+(.:)  :: (x -> y) -> (a -> b -> x) -> a -> b -> y
 (.:)   = (.) . (.)
 
-(.:.) :: (x -> y) -> (a -> b -> c -> x) -> (a -> b -> c -> y)
+(.:.) :: (x -> y) -> (a -> b -> c -> x) -> a -> b -> c -> y
 (.:.)  = (.) . (.) . (.)
 
-(.::) :: (x -> y) -> (a -> b -> c -> d -> x) -> (a -> b -> c -> d -> y)
+(.::) :: (x -> y) -> (a -> b -> c -> d -> x) -> a -> b -> c -> d -> y
 (.::)  = (.) . (.) . (.) . (.)
 
 mapM :: (Monad m, Traversable t) => (a -> m b) -> t a -> m (t b)
@@ -107,7 +104,7 @@ whenLeft e f = case e of
 
 
 whenLeft' :: (Monad m) => Either a b -> m () -> m ()
-whenLeft' e f = whenLeft e (\_ -> f)
+whenLeft' e f = whenLeft e (const f)
 
 
 whenRight :: (Monad m) => Either a b -> (b -> m ()) -> m ()
@@ -132,10 +129,8 @@ False ? (_ :? y) = y
 
 
 ($>) :: (Functor f) => a -> f b -> f b
-($>) =  fmap . (flip const)
+($>) =  fmap . flip const
 
 
 withJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
-withJust a f = case a of
-    Nothing  -> return ()
-    Just val -> f val
+withJust = forM_
