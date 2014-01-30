@@ -34,6 +34,7 @@ import qualified Flowbox.Luna.Passes.Source.File.Reader                         
 import qualified Flowbox.Luna.Passes.Source.File.Writer                                  as FileWriter
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
 import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash                             as Hash
 import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash                             as Hash
@@ -102,6 +103,12 @@ run buildConfig ast astInfo = runEitherT $ do
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
     -- TODO Diagnostics
     --Diagnostics.printAST ast diag
+
+    -- Should be run AFTER ImplicitScopes
+    logger info "\n-------- Desugar.ImplicitSelf --------"
+    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitSelf.run astInfo ast
+    -- TODO Diagnostics
+    --logger info $ PP.ppqShow ast
 
     logger debug "\n-------- Analysis.Alias --------"
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast
