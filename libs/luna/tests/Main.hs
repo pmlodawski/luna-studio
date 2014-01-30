@@ -44,6 +44,7 @@ import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                            
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                                   as Luna
 import qualified Flowbox.Luna.Passes.Source.File.Reader                                  as FileReader
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
 import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash                             as Hash
@@ -127,7 +128,7 @@ example = Source.Source ["Main"] $
                         --, "    ```liftf1 sum #{self}```"
 
                         --, "class Console:"
-                        , "def print self msg:"
+                        , "def print msg:"
                         , "    ```print' #{msg}```"
 
                         ----, "def Int.+ a b:"
@@ -146,11 +147,11 @@ example = Source.Source ["Main"] $
                         ----, "    pos :: a"
 
 
-                        ,"def Int.+ a b:"
-                        ,"    ```liftf2 (+) #{a} #{b}```"
+                        ,"def Int.+ b:"
+                        ,"    ```liftf2 (+) #{self} #{b}```"
 
-                        ,"def Int.* a b:"
-                        ,"    ```liftf2 (*) #{a} #{b}```"
+                        ,"def Int.* b:"
+                        ,"    ```liftf2 (*) #{self} #{b}```"
 
                         --,"def Int.< a b:"
                         --,"    ```liftf2 (<) #{a} #{b}```"
@@ -191,10 +192,10 @@ example = Source.Source ["Main"] $
 
                     , "class Vector a:"
                     , "    x,y,z :: a"
-                    , "    def length self:"
+                    , "    def length:"
                     , "        x*x + y*y + z*z"
 
-                    , "def main self:"
+                    , "def main:"
                     , "    v = Vector 1 2 3"
                     , "    print (v.length.+ 1)"
                     --, "    print (test 1 2)"
@@ -317,6 +318,12 @@ main_inner = Luna.run $ do
     -- Should be run AFTER ImplicitScopes
     logger info "\n-------- Desugar.ImplicitCalls --------"
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
+    logger info $ PP.ppqShow ast
+
+
+    -- Should be run AFTER ImplicitScopes
+    logger info "\n-------- Desugar.ImplicitSelf --------"
+    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitSelf.run astInfo ast
     logger info $ PP.ppqShow ast
 
 
