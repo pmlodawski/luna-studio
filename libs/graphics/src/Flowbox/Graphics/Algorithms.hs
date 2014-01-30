@@ -52,46 +52,21 @@ applyToImage f names img = do
       channelC' = f channelC
   return outimg
 
---filter' :: (a -> Exp Bool) -> [a] -> [a]
---filter' _pred []    = []
---filter' pred (x:xs) = pred x A.? (x : filter' pred xs , filter' pred xs)
---  | pred x         = x : filter' pred xs
---  | otherwise      = filter' pred xs
+
+bsort :: (A.Elt a, A.IsScalar a) => [Exp a] -> [Exp a]
+bsort arr = bsortStep arr (length arr)
+
+bsortStep :: (A.Elt a, A.IsScalar a) => [Exp a] -> Int -> [Exp a]
+bsortStep arr 0 = arr
+bsortStep arr n = bsortStep (bsortPair arr) (n-1)
+
+bsortPair :: (A.Elt a, A.IsScalar a) => [Exp a] -> [Exp a]
+bsortPair ([])       = []
+bsortPair (a:[])     = [a]
+bsortPair (a:b:[])   = [min a b, max a b]
+bsortPair (a:b:tail) = [min a b] ++ (bsortPair $ [max a b] ++ tail)
 
 
-
--- different
-
-median :: Fractional a => [a] -> a
-median xs | odd len = xs !! mid
-          | even len = meanMedian
-          | otherwise = xs !! 0 -- ain't gonna happen!
-              where len = length xs
-                    mid = len `div` 2
-                    meanMedian = (xs !! mid + xs !! (mid+1)) / 2
-
-
---quicksort :: Int
---quicksort (p:xs) = (lesser xs) ++ p ++ (greater xs)
---    where lesser  = filter' (A.<* p)
---          greater = filter' (A.>=* p)
-
---filter' :: (Exp a -> Exp Bool) -> [Exp a] -> [Exp a]
---filter' []
-
---filter' :: (Exp a -> Exp Bool) -> [Exp a] -> [Exp a]
---filter' _pred []    = []
---filter' pred (x:xs)
---  | pred x         = x : filter' pred xs
---  | otherwise      = filter' pred xs
-
---bsort :: Ord a => [a] -> [a]
---bsort s = case _bsort s of
---               t | t == s    -> t
---                 | otherwise -> bsort t
---  where _bsort (x:x2:xs) | x > x2    = x2:(_bsort (x:xs))
---                         | otherwise = x:(_bsort (x2:xs))
---        _bsort s = s
 
 -- basic
 
@@ -164,6 +139,8 @@ dilateChannel channel = Channel.stencil dilate A.Mirror channel
 dilateImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
 dilateImage = applyToImage dilateChannel
 
+
+
 openImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
 openImage names img = do
     imgA <- erodeImage names img
@@ -176,30 +153,16 @@ closeImage names img = do
     imgB <- erodeImage names imgA
     return imgB
 
---dupa :: Int
---dupa = A.unlift $ (A.use $ A.fromList (A.Z A.:. 9) arr) A.!! 0
---  where arr = [a,b,c,d,e,f,g,h,i]
---        a = 1 :: Exp Float
---        b = 1 :: Exp Float
---        c = 1 :: Exp Float
---        d = 1 :: Exp Float
---        e = 1 :: Exp Float
---        f = 1 :: Exp Float
---        g = 1 :: Exp Float
---        h = 1 :: Exp Float
---        i = 1 :: Exp Float
 
 
---middleValue ::
---middleValue ((a,b,c),(d,e,f),(g,h,i)) = [a,b,c,d,e,f,g,h,i]
+medianChannel :: (A.Elt a, A.IsFloating a) => Channel a -> Channel a
+medianChannel channel = Channel.stencil middleValue A.Mirror channel
+    where middleValue ((a,b,c),(d,e,f),(g,h,i)) = (bsort [a,b,c,d,e,f,g,h,i]) !! 4 -- 4 is the middle index of 9 which is the length of the window
 
---medianChannel :: Channel Float -> Channel Float
---medianChannel channel = Channel.stencil middleValue A.Mirror channel
-    --where middleValue ((a,b,c),(d,e,f),(g,h,i)) = median . quicksort [a,b,c,d,e,f,g,h,i]
-    --where middleValue ((a,b,c),(d,e,f),(g,h,i)) = (A.use $ A.fromList (A.Z A.:. 9) [A.unlift a, A.unlift b, A.unlift c, A.unlift d, A.unlift e, A.unlift f, A.unlift g, A.unlift h, A.unlift i]) A.!! 0
+medianImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
+medianImage = applyToImage medianChannel
 
---medianImage :: (String, String, String) -> Image Float -> Either Image.Error (Image Float)
---medianImage = applyToImage medianChannel
+
 
 -- convolution
 
@@ -241,6 +204,8 @@ convolveRGB :: (A.Elt a, A.IsFloating a, A.Stencil A.DIM2 a stencil) =>
   (t -> stencil -> Exp a) -> t -> Image a -> Either Image.Error (Image a)
 convolveRGB = convolve ("r", "g", "b")
 
+
+
 -- brightness and contrast
 
 adjustCB_RGB :: (A.Elt a, A.IsFloating a) => A.Exp a -> A.Exp a -> Image a -> Either Image.Error (Image a)
@@ -268,10 +233,12 @@ brightness :: (A.Elt a, A.IsFloating a) => A.Exp a -> String -> String -> String
 brightness x r g b = adjustCB r g b 1 x
 
 
+
 -- color conversion
 
 clipValues :: (A.Elt a, A.IsFloating a) => Channel a -> Channel a
 clipValues channel = Channel.map (P.max 0 . P.min 1) channel
+
 
 
 calculateHueFromRGB :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a
@@ -307,6 +274,8 @@ convertRGBtoHSV img = do
         saturation = Channel.zipWith3 calculateSaturationFromRGB r g b
         value      = Channel.zipWith3 calculateValueFromRGB r g b
     return outimg
+
+
 
 calculateRGBfromHSV :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> (Exp a, Exp a, Exp a)
 calculateRGBfromHSV h s v = A.unlift res
@@ -345,9 +314,9 @@ convertHSVtoRGB img = do
 
 
 -- blending
+
 blendC :: (A.Elt a, A.IsFloating a) => Channel a -> Channel a -> (Exp a -> Exp a -> Exp a) -> Channel a
 blendC channelA channelB blender = Channel.zipWith blender channelA channelB
-
 
 
 blendRGB :: (A.Elt a, A.IsFloating a) => Image a -> Image a -> (Exp a -> Exp a -> Exp a) -> Either Image.Error (Image a)
