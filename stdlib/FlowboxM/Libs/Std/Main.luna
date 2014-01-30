@@ -70,16 +70,32 @@ def Float.- a b:
 def readImage self path:
     ```flattenCtx $ liftf1 readImage #{path}```
 
-def ImgF.writeImage self path:
+def Image.writeImage self path:
     ```flattenCtx $ liftf2 writeImage #{path} #{self}```
     self
 
-def ImgF.adjustCB self contrast brightness:
-    ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{self}```
+def Image.adjustCB self contrast brightness:
+    ```liftf3 adjustCB #{contrast} #{brightness} #{self}```
 
-def ImgF.convolve self kernel:
-    ```flattenCtx $ liftf2 convolve #{kernel} #{self}```
+def Image.convolve self kernel:
+    ```liftf2 convolve #{kernel} #{self}```
 
+def Image.getChannel self name:
+    ```liftf2 imgChannelGet #{name} #{self}```
+
+def Image.putChannel self name channel:
+    ```liftf3 imgChannelInsert #{name} #{channel} #{self}```
+
+# FIXME [wd] zrób to
+# def Channel.map self callback:
+    # ```liftf2 channelMap (val $ ((fromPure.fromSafe) `dot2` call1) #{callback}) #{self}```
+    # ```liftf2 channelMap (val $ call1 #{callback}) #{self}```
+
+def Channel.erode self:
+    ```liftf1 erodeChannel #{self}```
+
+def constant self x:
+    ```liftf1 constant #{x}```
 
 # class Channel:
 #     zip ...:
@@ -87,7 +103,7 @@ def ImgF.convolve self kernel:
 
 # class Channel a:
 #     Raw :: RawData a
-#     # Acc :: 
+#     # Acc ::
 
 # class Vector a = Vector: x :: a
 #                          y :: a
@@ -106,7 +122,7 @@ class Vector a:
 
 def main self:
     # v = Vector 1 2 3
-    c = Console()
+    console = Console()
     # c.print v
     # c.print (v+v)
 
@@ -124,9 +140,24 @@ def main self:
     c = 1.5
     b = 0.2
     k = 0.1
-    img = img.adjustCB c b
-    kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
-    img = img.convolve k
+    # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
+    # img = img.adjustCB c b
+    # img = img.convolve k
+
+    chR = img.getChannel "r"
+    chG = img.getChannel "g"
+    chB = img.getChannel "b"
+
+    # chR
+    # chR = chR.map (x : x)
+    # a = [1,2,3].each x : x+1
+    # console.print a
+    # chB = chB.map (x : Main.constant 0.0)
+
+    img = img.putChannel "r" chR.erode()
+    img = img.putChannel "g" chG.erode()
+    img = img.putChannel "b" chB.erode()
+
     img.writeImage outpath
     # # c.print img
 

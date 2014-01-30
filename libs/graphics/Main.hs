@@ -11,14 +11,16 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 
-import qualified Config              as Cfg
+import qualified Config                as Cfg
 import           Control.Applicative
-import qualified Data.Label          as Label
-import qualified Monitoring          as Monitoring
-import qualified ParseArgs           as ParseArgs
-import qualified System.Environment  as Env
-import qualified System.Exit         as Exit
+import qualified Data.Array.Accelerate as A
+import qualified Data.Label            as Label
+import qualified Monitoring            as Monitoring
+import qualified ParseArgs             as ParseArgs
+import qualified System.Environment    as Env
+import qualified System.Exit           as Exit
 
+import qualified Flowbox.Graphics.Algorithms       as G
 import qualified Flowbox.Graphics.Raster.Image     as Image
 import qualified Flowbox.Graphics.Raster.IO        as Image
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
@@ -27,41 +29,41 @@ import           Flowbox.Prelude                   as P
 
 --imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
 imgtest img = do --imgFilter = do
-    rgba  <- Image.reprFloat <$> RGBA.decompose img
-    --rgbaFilter <- Image.reprFloat <$> RGBA.decompose imgFilter
+    rgba  <- Image.reprDouble <$> RGBA.decompose img
+    --rgbaFilter <- Image.reprDouble <$> RGBA.decompose imgFilter
     --lrgba <- adjustCB 2.2 0.2 "r" "g" "b" rgba
     --let blur3x3 = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
         --blur5x5 = [0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04]
         --sharpen3x3 = [-1.0,-1.0,-1.0,-1.0,9.0,-1.0,-1.0,-1.0,-1.0]
     --lrgba <- convolve "r" convolve5x5 sharpen3x3 rgba
-    --hsv <- A.convertRGBtoHSV rgba
+    --hsv <- G.convertRGBtoHSV rgba
     --h <- Image.lookup "h" hsv
     --s <- Image.lookup "s" hsv
     --v <- Image.lookup "v" hsv
     --let hsvl = Image.insert "h" (Channel.map (mod1 . (+0.5)) h) $ hsv
     --let hsvl = Image.insert "s" (clipValues $ Channel.map (+1) s) $ hsv
     --lrgba <- blendRGB rgba rgbaFilter (blenderAlpha 0.5) -- ...
-    --lrgba <- A.keyRGB 0.2 (0.055, 0.582, 0.363) rgba
-    --lrgba <- A.luminance' rgba
+    --lrgba <- G.keyRGB 0.2 (0.055, 0.582, 0.363) rgba
+    --lrgba <- G.luminance' rgba
     --        >>= Image.cpChannel "luminance" "r"
     --        >>= Image.cpChannel "luminance" "g"
     --        >>= Image.cpChannel "luminance" "b"
-    --let f = \_ -> 1
-    --    fBW = \x -> x A.>=* 0.5
-    --    rgb = ("r", "g", "b")
-    --lrgba <- A.keyRGB 0.1 (0.176, 0.816, 0.145) rgba
-    --lrgba <- A.keyColor ("r", "g", "b") (0.2, 0.2, 0.2) (0.055, 0.582, 0.363) f rgba
-    --lrgba <- A.keyColor ("r", "g", "b") (0.1, 0.1, 0.1) (0.176, 0.816, 0.145) f rgba
-    --hsv2 <- A.keyColor ("h", "s", "v") (0.1, 0.2, 0.2) (0.402, 0.85, 0.59) f hsv
-    --lrgba <- A.convertHSVtoRGB hsv2
-    --bw <- A.binarizeImage rgb fBW lrgba
-    --erodedBW <- A.erodeImage rgb bw
-    --dilatedBW <- A.dilateImage rgb bw
-    --erodedMono <- A.erodeImage rgb lrgba
-    --dilatedMono <- A.dilateImage rgb lrgba
-    --medianMono <- A.medianImage rgb lrgba
-    --imgMedian <- A.medianImage rgb rgba
-    RGBA.compose $ Image.reprWord8 rgba
+    let f = \_ -> 1
+        fBW = \x -> x A.>=* 0.5
+        rgb = ("r", "g", "b")
+    --lrgba <- G.keyRGB 0.1 (0.176, 0.816, 0.145) rgba
+    --lrgba <- G.keyColor ("r", "g", "b") (0.2, 0.2, 0.2) (0.055, 0.582, 0.363) f rgba
+    --lrgba <- G.keyColor ("r", "g", "b") (0.1, 0.1, 0.1) (0.176, 0.816, 0.145) f rgba
+    --hsv2 <- G.keyColor ("h", "s", "v") (0.1, 0.2, 0.2) (0.402, 0.85, 0.59) f hsv
+    --lrgba <- G.convertHSVtoRGB hsv2
+    --bw <- G.binarizeImage rgb fBW lrgba
+    --erodedBW <- G.erodeImage rgb bw
+    --dilatedBW <- G.dilateImage rgb bw
+    --erodedMono <- G.erodeImage rgb lrgba
+    --dilatedMono <- G.dilateImage rgb lrgba
+    --medianMono <- G.medianImage rgb lrgba
+    imgMedian <- G.medianImage rgb rgba
+    RGBA.compose $ Image.reprWord8 imgMedian
     --where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
     --      mod1 = flip nonIntRem 1.0
 

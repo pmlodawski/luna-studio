@@ -13,8 +13,9 @@
 
 module Flowbox.Graphics.Mockup (
     module Flowbox.Graphics.Mockup,
-    writeImageToBMP,
     Image,
+    Channel,
+    erodeChannel,
 ) where
 
 import qualified Data.Array.Accelerate             as A
@@ -25,7 +26,8 @@ import           Luna.Target.HS.Core               hiding (print, return)
 import           Flowbox.Graphics.Algorithms
 import           Flowbox.Graphics.Raster.Image     (Image)
 import qualified Flowbox.Graphics.Raster.Image     as Image
-import           Flowbox.Graphics.Raster.IO        (writeImageToBMP)
+import           Flowbox.Graphics.Raster.Channel   (Channel)
+import qualified Flowbox.Graphics.Raster.Channel   as Channel
 import qualified Flowbox.Graphics.Raster.IO        as Image
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
 import           Flowbox.Prelude                   hiding ((.))
@@ -34,32 +36,37 @@ import           Flowbox.Prelude                   hiding ((.))
 testm :: Num a => a -> a
 testm x = x*3
 
-readImage :: String -> IO (Safe(Image Float))
+readImage :: String -> IO (Safe(Image Double))
 readImage fileIn = do
     img <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
     let Right img' = RGBA.decompose img
-        rgba = Image.reprFloat img'
+        rgba = Image.reprDouble img'
     return (Safe rgba)
 
-writeImage :: FilePath -> Image Float -> IO (Safe())
+writeImage :: FilePath -> Image Double -> IO (Safe())
 writeImage file img = do
     let Right img' = RGBA.compose $ Image.reprWord8 img
-    writeImageToBMP (Interp.run) file img'
+    Image.writeImageToBMP (Interp.run) file img'
     return $ Safe ()
 
---l_adjustCB :: A.Exp Float -> A.Exp Float -> Image Float -> IO (Safe(Image Float))
-adjustCB :: Double -> Double -> Image Float -> IO (Safe(Image Float))
---adjustCB :: A.Exp Float -> A.Exp Float -> Image Float -> IO (Image Float)
-adjustCB contrastValue brightnessValue img = do
-    let Right img' = adjustCB_RGB (A.constant $ double2Float contrastValue) (A.constant $ double2Float brightnessValue) img
-    return (Safe img')
+adjustCB :: Double -> Double -> Image Double -> Image Double
+adjustCB contrastValue brightnessValue img = img'
+    where Right img' = adjustCB_RGB (A.constant contrastValue) (A.constant brightnessValue) img
 
-convolve :: Double -> Image Float -> IO (Safe(Image Float))
-convolve kernel img = do
-    let Right img' = convolveRGB convolve3x3 kernel' img
-        --kernel' = map (A.constant . double2Float) kernel
-        kernel' = map (A.constant . double2Float) $ replicate 9 kernel
-    return (Safe img')
+convolve :: Double -> Image Double -> Image Double
+convolve kernel img = img'
+    where Right img' = convolveRGB convolve3x3 kernel' img
+          kernel' = map A.constant $ replicate 9 kernel
 
+imgChannelGet :: String -> Image Double -> Channel Double
+imgChannelGet name img = channel
+    where Right channel = Image.lookup name img
 
-type ImgF = Image Float
+imgChannelInsert :: String -> Channel Double -> Image Double -> Image Double
+imgChannelInsert = Image.insert
+
+channelMap :: (A.Exp Double -> A.Exp Double) -> Channel Double -> Channel Double
+channelMap = Channel.map
+
+constant :: Double -> A.Exp Double
+constant = A.constant
