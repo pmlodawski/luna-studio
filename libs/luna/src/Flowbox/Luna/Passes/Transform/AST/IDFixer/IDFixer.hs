@@ -10,6 +10,7 @@
 
 module Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer where
 
+import qualified Flowbox.Luna.Data.AST.Common                    as AST
 import           Flowbox.Luna.Data.AST.Expr                      (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                      as Expr
 import           Flowbox.Luna.Data.AST.Lit                       (Lit)
@@ -20,7 +21,6 @@ import           Flowbox.Luna.Data.AST.Pat                       (Pat)
 import qualified Flowbox.Luna.Data.AST.Pat                       as Pat
 import           Flowbox.Luna.Data.AST.Type                      (Type)
 import qualified Flowbox.Luna.Data.AST.Type                      as Type
-import qualified Flowbox.Luna.Data.AST.Utils                     as AST
 import           Flowbox.Luna.Data.AST.Zipper.Focus              (Focus)
 import qualified Flowbox.Luna.Data.AST.Zipper.Focus              as Focus
 import           Flowbox.Luna.Passes.Pass                        (Pass)

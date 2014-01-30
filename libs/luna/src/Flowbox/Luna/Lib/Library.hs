@@ -29,8 +29,8 @@ makeLenses (''Library)
 
 type ID  = Int
 
-
+--FIXME[pm]: moduleName ma zla nazwe bo zawiera path, pozatym warto to rozbic na 2 czesci jezeli jest sens w API
 make :: String -> UniPath -> [String] -> Library
 make name' path' moduleName = Library name' path' emptyModule PropertyMap.empty where
-    emptyModule = Module.mk 0 $ Type.Module 1 moduleName
+    emptyModule = Module.mk 0 $ Type.Module 1 (head moduleName) (init moduleName)
 

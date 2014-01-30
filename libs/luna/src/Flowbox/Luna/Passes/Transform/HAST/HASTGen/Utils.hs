@@ -151,7 +151,11 @@ mkGetIO  = HExpr.AppE (HExpr.Var "getIO")
 mkCall0  = HExpr.AppE (HExpr.Var "call0")
 mkIO     = HExpr.AppE (HExpr.ConE ["IO"])
 
-mkVal    = HExpr.AppE (HExpr.Var "val")
+
+mkLiftf1     = HExpr.AppE (HExpr.Var "liftf1")
+mkFlattenCtx = HExpr.AppE (HExpr.Var "flattenCtx")
+
+mkVal    = mkPure . mkSafe
 
 
 emptyHExpr = mkVal (HExpr.Var "()")

@@ -14,16 +14,16 @@ module Flowbox.Luna.Passes.Transform.AST.SSA.SSA where
 import Control.Applicative
 import Control.Monad.State
 
-import           Flowbox.Luna.Data.Analysis.Alias.Alias (AA)
-import qualified Flowbox.Luna.Data.Analysis.Alias.Alias as AA
-import qualified Flowbox.Luna.Data.AST.Expr             as Expr
-import           Flowbox.Luna.Data.AST.Module           (Module)
-import qualified Flowbox.Luna.Data.AST.Module           as Module
-import           Flowbox.Luna.Data.AST.Pat              (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat              as Pat
-import           Flowbox.Luna.Passes.Pass               (Pass)
-import qualified Flowbox.Luna.Passes.Pass               as Pass
-import           Flowbox.Prelude                        hiding (error, id, mod)
+import qualified Flowbox.Luna.Data.AST.Expr       as Expr
+import           Flowbox.Luna.Data.AST.Module     (Module)
+import qualified Flowbox.Luna.Data.AST.Module     as Module
+import           Flowbox.Luna.Data.AST.Pat        (Pat)
+import qualified Flowbox.Luna.Data.AST.Pat        as Pat
+import           Flowbox.Luna.Data.Pass.AliasInfo (AliasInfo)
+import qualified Flowbox.Luna.Data.Pass.AliasInfo as AliasInfo
+import           Flowbox.Luna.Passes.Pass         (Pass)
+import qualified Flowbox.Luna.Passes.Pass         as Pass
+import           Flowbox.Prelude                  hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 
 
@@ -39,30 +39,26 @@ mkVar :: Int -> String
 mkVar id = "v_" ++ show id
 
 
-run :: AA -> Module -> Pass.Result Module
-run vs = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . (ssaModule vs)
+run :: AliasInfo -> Module -> Pass.Result Module
+run aliasInfo = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . (ssaModule aliasInfo)
 
 
-ssaModule :: AA -> Module -> SSAPass Module
-ssaModule vs mod = Module.traverseM (ssaModule vs) (ssaExpr vs) pure ssaPat pure mod
+ssaModule :: AliasInfo -> Module -> SSAPass Module
+ssaModule aliasInfo mod = Module.traverseM (ssaModule aliasInfo) (ssaExpr aliasInfo) pure ssaPat pure mod
 
 
-ssaExpr :: AA -> Expr.Expr -> SSAPass Expr.Expr
-ssaExpr vs ast = case ast of
-    Expr.Accessor   id name dst -> Expr.Accessor id name <$> ssaExpr vs dst
-    Expr.Var        id name     -> case (vs ^. AA.aliasMap) ^. at id of
-                                        Nothing    -> Pass.fail ("Variable not found in AA!")
-                                        Just alias -> case alias of
-                                                      Right nid -> return $ Expr.Var id (mkVar nid)
-                                                      Left  e   -> (logger error $ "Not in scope '" ++ (show e) ++ "'.")
-                                                               *> (return $ Expr.Var id name)
-    Expr.NativeVar  id _name     -> case (vs ^. AA.aliasMap) ^. at id of
-                                        Nothing    -> Pass.fail ("Variable not found in AA!")
-                                        Just alias -> case alias of
-                                                      Right nid -> return $ Expr.NativeVar id (mkVar nid)
-                                                      Left  e   -> Pass.fail ("Not in scope '" ++ (show e) ++ "'.")
+ssaExpr :: AliasInfo -> Expr.Expr -> SSAPass Expr.Expr
+ssaExpr aliasInfo ast = case ast of
+    Expr.Accessor   id name dst -> Expr.Accessor id name <$> ssaExpr aliasInfo dst
+    Expr.Var        id _        -> checkVar id
+    Expr.NativeVar  id _        -> checkVar id
     _                           -> continue
-    where continue = Expr.traverseM (ssaExpr vs) pure ssaPat pure ast
+    where continue    = Expr.traverseM (ssaExpr aliasInfo) pure ssaPat pure ast
+          checkVar id = case (aliasInfo ^. AliasInfo.invalidMap) ^. at id of
+                           Just err -> (logger error $ "Not in scope '" ++ (show err) ++ "'.") *> continue
+                           Nothing  -> case (aliasInfo ^. AliasInfo.aliasMap) ^. at id of
+                                           Nothing    -> Pass.fail ("Variable not found in AliasInfo!")
+                                           Just nid -> return $ (ast & Expr.name .~ mkVar nid)
 
 
 ssaPat :: Pat -> SSAPass Pat

@@ -13,13 +13,13 @@
 module Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr where
 
 import           Control.Applicative
+import qualified Data.Foldable                                     as F
 import qualified Data.Map                                          as Map
-import qualified Data.Foldable as F
-import qualified Data.Sequence as Seq
+import qualified Data.Sequence                                     as Seq
 import           Flowbox.Control.Error
+import qualified Flowbox.Luna.Data.AST.Common                      as AST
 import           Flowbox.Luna.Data.AST.Expr                        (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                        as Expr
-import qualified Flowbox.Luna.Data.AST.Utils                       as AST
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Pat ()
 import           Flowbox.Prelude                                   hiding (cons)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -31,7 +31,7 @@ import qualified Generated.Proto.Expr.Assignment                   as GenAssignm
 import qualified Generated.Proto.Expr.Case                         as GenCase
 import qualified Generated.Proto.Expr.Con_                         as GenCon_
 import qualified Generated.Proto.Expr.ConD                         as GenConD
-import qualified Generated.Proto.Expr.Condition                         as GenCondition
+import qualified Generated.Proto.Expr.Condition                    as GenCondition
 import qualified Generated.Proto.Expr.Data                         as GenData
 import qualified Generated.Proto.Expr.Expr                         as Gen
 import qualified Generated.Proto.Expr.Expr.Cls                     as GenCls
@@ -58,7 +58,7 @@ import qualified Generated.Proto.Expr.Var                          as GenVar
 import qualified Generated.Proto.Expr.Wildcard                     as GenWildcard
 import qualified Text.ProtocolBuffers.Extensions                   as Extensions
 
- 
+
 
 instance Convert Expr Gen.Expr where
     encode t = case t of
@@ -205,7 +205,7 @@ instance Convert Expr Gen.Expr where
                 ext <- getExt GenCondition.ext
                 (GenCondition.Condition mtcond tsuccess tfailure) <- ext <?> "Failed to decode Expr.Condition: extension is missing"
                 tcond <- mtcond <?> "Failed to decode Expr.Condition: 'cond' field is missing"
-                Expr.Cond i <$> decode tcond <*> decodeList tsuccess <*> if Seq.null tfailure 
+                Expr.Cond i <$> decode tcond <*> decodeList tsuccess <*> if Seq.null tfailure
                                                                             then pure Nothing
                                                                             else Just <$> decodeList tfailure
             GenCls.Function -> do

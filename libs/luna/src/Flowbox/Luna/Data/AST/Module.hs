@@ -12,13 +12,13 @@ module Flowbox.Luna.Data.AST.Module where
 
 import           Control.Applicative
 import           Flowbox.Generics.Deriving.QShow
+import           Flowbox.Luna.Data.AST.Common    (ID)
 import           Flowbox.Luna.Data.AST.Expr      (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr      as Expr
 import           Flowbox.Luna.Data.AST.Lit       (Lit)
 import           Flowbox.Luna.Data.AST.Pat       (Pat)
 import           Flowbox.Luna.Data.AST.Type      (Type)
 import qualified Flowbox.Luna.Data.AST.Type      as Type
-import           Flowbox.Luna.Data.AST.Utils     (ID)
 import           Flowbox.Prelude                 hiding (Traversal, drop, id, mod)
 import           GHC.Generics                    (Generic)
 
@@ -40,11 +40,14 @@ makeLenses (''Module)
 
 
 mk :: ID -> Type -> Module
-mk id' mod = Module id' mod [] [] [] [] [] [] []
+mk id' cls' = Module id' cls' [] [] [] [] [] [] []
+
+--name :: Module -> String
+--name mod = lsat $ mod ^. cls ^. path
 
 mkClass :: Module -> Expr
-mkClass (Module id' (Type.Module tid path) _ classes' _ _ fields' methods' _) =
-    Expr.Data id' (Type.Data tid (last path) []) [Expr.ConD 0 (last path) fields'] classes' methods'
+mkClass (Module id' (Type.Module tid name path) _ classes' _ _ fields' methods' _) =
+    Expr.Data id' (Type.Data tid name []) [Expr.ConD 0 name fields'] classes' methods'
 
 addMethod :: Expr -> Module -> Module
 addMethod method mod = mod & methods %~ (method:)

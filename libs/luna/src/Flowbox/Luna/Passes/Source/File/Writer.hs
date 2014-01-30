@@ -15,7 +15,7 @@ module Flowbox.Luna.Passes.Source.File.Writer where
 import           Control.Monad.RWS
 import qualified System.IO         as IO
 
-import           Flowbox.Luna.Data.Source           (Source (Source))
+import           Flowbox.Luna.Data.Pass.Source      (Source (Source))
 import           Flowbox.Luna.Passes.Pass           (Pass)
 import qualified Flowbox.Luna.Passes.Pass           as Pass
 import           Flowbox.Prelude                    hiding (error, id)

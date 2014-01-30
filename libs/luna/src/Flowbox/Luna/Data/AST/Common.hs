@@ -5,16 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Luna.Data.Source where
+module Flowbox.Luna.Data.AST.Common where
 
 import Flowbox.Prelude
 
 
-
-data Source = Source { path :: [String]
-                     , code :: String
-                     } deriving (Show)
-
-
-transCode :: (String -> String) -> Source -> Source
-transCode f src = src { code = f $ code src }
+type ID = Int

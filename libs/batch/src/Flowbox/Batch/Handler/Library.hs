@@ -21,11 +21,13 @@ import qualified Flowbox.Batch.Process.Process              as Process
 import qualified Flowbox.Batch.Project.Project              as Project
 import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
 import           Flowbox.Control.Error
-import qualified Flowbox.Luna.Data.Source                   as Source
+import qualified Flowbox.Luna.Data.Pass.ASTInfo             as ASTInfo
+import qualified Flowbox.Luna.Data.Pass.Source              as Source
 import qualified Flowbox.Luna.Interpreter.Interpreter       as Interpreter
 import qualified Flowbox.Luna.Lib.LibManager                as LibManager
 import           Flowbox.Luna.Lib.Library                   (Library)
 import qualified Flowbox.Luna.Lib.Library                   as Library
+import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID      as MaxID
 import qualified Flowbox.Luna.Passes.Build.Build            as Build
 import           Flowbox.Luna.Passes.Build.BuildConfig      (BuildConfig (BuildConfig))
 import qualified Flowbox.Luna.Passes.Build.BuildConfig      as BuildConfig
@@ -100,7 +102,8 @@ buildLibrary libID projectID = readonly . libraryOp libID projectID (\batch libr
         buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
         bldCfg      = BuildConfig name version libs ghcFlags cppFlags cabalFlags buildType cfg diag buildDir
 
-    Luna.runIO $ Build.run bldCfg ast
+    maxID <- Luna.runIO $ MaxID.run ast
+    Luna.runIO $ Build.run bldCfg ast $ ASTInfo.mk maxID
     return (library, ()))
 
 
@@ -134,6 +137,7 @@ interpretLibrary libID projectID batch = do
     let diag    = Diagnostics.all -- TODO [PM] : hardcoded diagnostics
         cfg     = Batch.config batch
         imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup"] -- TODO [PM] : hardcoded imports
-    [hsc] <- Luna.runIO $ Build.prepareSources diag ast
+    maxID <- Luna.runIO $ MaxID.run ast
+    [hsc] <- Luna.runIO $ Build.prepareSources diag ast $ ASTInfo.mk maxID
     let code = unlines $ snd $ break (=="-- body --") $ lines $ Source.code hsc
     Interpreter.runSource cfg imports code "main"

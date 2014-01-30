@@ -15,8 +15,8 @@ module Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser where
 
 import           Flowbox.Luna.Data.AST.Module                       (Module)
 import           Flowbox.Luna.Data.Pass.ASTInfo                     (ASTInfo)
+import           Flowbox.Luna.Data.Pass.Source                      (Source)
 import           Flowbox.Luna.Data.Pass.SourceMap                   (SourceMap)
-import           Flowbox.Luna.Data.Source                           (Source)
 import           Flowbox.Luna.Passes.Pass                           (Pass)
 import qualified Flowbox.Luna.Passes.Pass                           as Pass
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser

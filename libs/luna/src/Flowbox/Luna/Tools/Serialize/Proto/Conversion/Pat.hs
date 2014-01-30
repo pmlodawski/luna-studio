@@ -17,9 +17,9 @@ import qualified Data.Map                        as Map
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
 import           Flowbox.Control.Error
+import qualified Flowbox.Luna.Data.AST.Common                       as AST
 import           Flowbox.Luna.Data.AST.Pat                          (Pat)
 import qualified Flowbox.Luna.Data.AST.Pat                          as Pat
-import qualified Flowbox.Luna.Data.AST.Utils                        as AST
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Lit  ()
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Type ()
 import           Flowbox.Prelude

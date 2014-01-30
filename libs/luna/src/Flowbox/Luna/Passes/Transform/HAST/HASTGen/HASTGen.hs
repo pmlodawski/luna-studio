@@ -26,7 +26,6 @@ import qualified Flowbox.Luna.Data.HAST.Module                       as HModule
 import qualified Flowbox.Luna.Data.HAST.Extension                    as HExtension
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState as GenState
 import           Flowbox.Luna.Passes.Transform.HAST.HASTGen.GenState   (GenState)
-import           Flowbox.Luna.Passes.Analysis.FuncPool.Pool            (Pool)
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
 import           Flowbox.Luna.Passes.Pass                              (Pass)
 import           Flowbox.System.Log.Logger
@@ -51,18 +50,17 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen"
 
 
-run :: LModule -> Pool -> Pass.Result HExpr
-run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) .: genModule
+run :: LModule -> Pass.Result HExpr
+run = (Pass.run_ (Pass.Info "HASTGen") GenState.empty) . genModule
 
 
 stdDerivings :: [Deriving]
 stdDerivings = [Deriving.Show, Deriving.Eq, Deriving.Ord, Deriving.Generic]
 
 
-genModule :: LModule -> Pool -> GenPass HExpr
-genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields methods _) _ = do
-    let (LType.Module _ path) = cls
-        --fnames  = Set.toList $ Pool.names fpool
+genModule :: LModule -> GenPass HExpr
+genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields methods _) = do
+    let (LType.Module _ name path) = cls
         mod     = HModule.addImport ["Luna", "Target", "HS", "Core"]
                 $ HModule.addImport ["Flowbox", "Graphics", "Mockup"]
                 -- $ HModule.addExt HExtension.AutoDeriveTypeable
@@ -77,8 +75,7 @@ genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields meth
                 $ HModule.addExt HExtension.TemplateHaskell
                 -- $ HModule.addExt HExtension.TypeFamilies
                 $ HModule.addExt HExtension.UndecidableInstances
-                $ HModule.mk path
-        name    = last path
+                $ HModule.mk (path ++ [name])
         params  = view LType.params cls
         modCon  = LExpr.ConD 0 name fields
     
@@ -127,45 +124,6 @@ mainEmpty = HExpr.Function "main" []
           $ HExpr.DoBlock [mkGetIO $ HExpr.AppE (HExpr.Var "val") $ HExpr.Tuple []]
 
 
---genVArgCon arglen name ccname params base = getter where
---    argVars    = map (("v" ++).show) [1..arglen]
---    exprArgs   = map HExpr.Var argVars
---    t          = foldl HExpr.AppE (HExpr.Var ccname) (map HExpr.Var params)
---    selfVar    = HExpr.TypedP t $ HExpr.Var "self"
---    exprVars   = selfVar : exprArgs
---    getter     = HExpr.Function (mkTName arglen name) exprVars
---               $ mkPure (foldl HExpr.AppE base exprArgs)
-
-
---genVArgGetter arglen mname = getter where
---    argVars    = map (("v" ++).show) [1..arglen]
---    exprArgs   = map HExpr.Var argVars
---    exprVars   = HExpr.Var "self" : exprArgs
---    getterBase = HExpr.AppE (HExpr.Var $ mkFuncName mname)
---               $ HExpr.AppE (HExpr.Var $ mkGetName $ mkCFName mname) (HExpr.Var "self")
---    getter     = HExpr.Function (mkTName arglen mname) exprVars
---               $ foldl HExpr.AppE getterBase exprArgs
-
-
---genVArgGetterL arglen mname cfname = getter where
---    argVars    = map (("v" ++).show) [1..arglen]
---    exprArgs   = map HExpr.Var argVars
---    t          = mkPure $ foldl HExpr.AppE (HExpr.Var cfname) (map HExpr.Var [])
---    selfVar    = HExpr.TypedP t $ HExpr.Var "self"
---    exprVars   = selfVar : exprArgs
---    getterBase = (HExpr.Var $ mkFuncName mname)
---    getter     = HExpr.Function (mkTName arglen mname) exprVars
---               $ foldl HExpr.AppE getterBase exprArgs
-
-
----- generate declarations (imports, CF newtypes, THInstC)
---genFuncDecl clsname name = do
---    let vname  = mkVarName name
---        cfName = mkCFName $ mangleName clsname vname
-
---    GenState.addNewType      $ genCFDec clsname cfName
---    GenState.addTHExpression $ genTHInstMem name cfName
-
 
 typeMethodSelf cls inputs = nargs
     where (self:args) = inputs
@@ -194,7 +152,7 @@ genExpr ast = case ast of
                      inputs output body  -> do
                                             cls <- GenState.getCls
                                             let clsName = if (null path)
-                                                    then LType.getNameID cls
+                                                    then cls ^. LType.name
                                                     else (path!!0) -- FIXME[wd]: needs name resolver
 
                                                 ninputs    = inputs
@@ -221,6 +179,13 @@ genExpr ast = case ast of
                                                                  Just exprs -> exprs
                                                                  Nothing    -> [LExpr.NOP 0]
 
+    LExpr.Case id expr match             -> mkFlattenCtx <$> (HExpr.AppE <$> lamFunc <*> genExpr expr)
+                                            where passVar = HExpr.VarE "a"
+                                                  body    = HExpr.CaseE passVar <$> mapM genExpr match
+                                                  lam     = HExpr.Lambda [passVar] <$> body
+                                                  lamFunc = mkLiftf1 <$> lam
+    LExpr.Match id pat body              -> HExpr.Match <$> genPat pat <*> (HExpr.DoBlock <$> mapM genExpr body)
+
     LExpr.Lambda id inputs output body   -> do
                                             let fname      = Naming.mkLamName $ show id
                                                 hName      = Naming.mkHandlerFuncName fname
@@ -239,10 +204,9 @@ genExpr ast = case ast of
                                             GenState.addTHExpression $ thClsCallInsts fname argNum (0::Int)
 
                                             return $ HExpr.Var hName
-
-    LExpr.Arg _ pat _                    -> genPat pat
-
-    LExpr.Import _ path target rename    -> do
+    LExpr.Grouped _ expr                 -> genExpr expr
+    LExpr.Arg     _ pat _                -> genPat pat
+    LExpr.Import  _ path target rename   -> do
                                             tname <- case target of
                                                 LExpr.Con      _ tname -> pure tname
                                                 LExpr.Var      _ tname -> pure tname
@@ -368,12 +332,15 @@ genFuncTopLevelExpr expr = case expr of
 
 genPat :: LPat.Pat -> GenPass HExpr
 genPat p = case p of
-    LPat.Var      _ name     -> return $ HExpr.Var (mkVarName name)
-    LPat.Typed    _ pat cls  -> genTypedP cls <*> genPat pat
-    LPat.Tuple    _ items    -> mkPure . HExpr.TupleP <$> mapM genPat items
-    LPat.Lit      _ value    -> genLit value
-    LPat.Wildcard _          -> return $ HExpr.WildP
-    _ -> fail $ show p
+    LPat.App         _ src args -> foldl HExpr.AppP <$> genPat src <*> mapM genPat args
+    LPat.Var         _ name     -> return $ HExpr.Var (mkVarName name)
+    LPat.Typed       _ pat cls  -> genTypedP cls <*> genPat pat
+    LPat.Tuple       _ items    -> mkPure . HExpr.TupleP <$> mapM genPat items
+    LPat.Lit         _ value    -> genLit value
+    LPat.Wildcard    _          -> return $ HExpr.WildP
+    LPat.RecWildcard _          -> return $ HExpr.RecWildP
+    LPat.Con         _ name     -> return $ HExpr.ConP name
+    --_ -> fail $ show p
 
 
 genTypedE :: LType -> GenPass (HExpr -> HExpr)

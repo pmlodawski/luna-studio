@@ -14,18 +14,18 @@ import           Control.Applicative
 import           Control.Monad.State
 import qualified Data.List           as List
 
-import           Flowbox.Luna.Data.Analysis.Alias.Alias              (AA)
+import qualified Flowbox.Luna.Data.AST.Common                        as AST
 import           Flowbox.Luna.Data.AST.Expr                          (Expr)
 import qualified Flowbox.Luna.Data.AST.Expr                          as Expr
 import qualified Flowbox.Luna.Data.AST.Lit                           as Lit
 import           Flowbox.Luna.Data.AST.Pat                           (Pat)
 import qualified Flowbox.Luna.Data.AST.Pat                           as Pat
 import qualified Flowbox.Luna.Data.AST.Type                          as Type
-import qualified Flowbox.Luna.Data.AST.Utils                         as AST
 import           Flowbox.Luna.Data.Graph.Graph                       (Graph)
 import qualified Flowbox.Luna.Data.Graph.Node                        as Node
 import           Flowbox.Luna.Data.Graph.Port                        (InPort)
 import qualified Flowbox.Luna.Data.Graph.Port                        as Port
+import           Flowbox.Luna.Data.Pass.AliasInfo                    (AliasInfo)
 import           Flowbox.Luna.Data.PropertyMap                       (PropertyMap)
 import           Flowbox.Luna.Passes.Pass                            (Pass)
 import qualified Flowbox.Luna.Passes.Pass                            as Pass
@@ -44,8 +44,8 @@ logger = getLoggerIO "Flowbox.Luna.Passes.Transform.Graph.Builder.Builder"
 type GBPass result = Pass GBState result
 
 
-run :: AA -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
-run aa pm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make aa pm) . expr2graph
+run :: AliasInfo -> PropertyMap -> Expr -> Pass.Result (Graph, PropertyMap)
+run info pm = (Pass.run_ (Pass.Info "GraphBuilder") $ State.make info pm) . expr2graph
 
 
 expr2graph :: Expr -> GBPass (Graph, PropertyMap)

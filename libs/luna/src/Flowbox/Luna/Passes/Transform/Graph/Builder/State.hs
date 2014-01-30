@@ -15,9 +15,7 @@ import           Data.Map            (Map)
 import qualified Data.Map            as Map
 
 import           Flowbox.Control.Error
-import           Flowbox.Luna.Data.Analysis.Alias.Alias         (AA)
-import qualified Flowbox.Luna.Data.Analysis.Alias.Alias         as AA
-import qualified Flowbox.Luna.Data.AST.Utils                    as AST
+import qualified Flowbox.Luna.Data.AST.Common                   as AST
 import qualified Flowbox.Luna.Data.Attributes                   as Attributes
 import           Flowbox.Luna.Data.Graph.Edge                   (Edge (Edge))
 import           Flowbox.Luna.Data.Graph.Graph                  (Graph)
@@ -25,6 +23,8 @@ import qualified Flowbox.Luna.Data.Graph.Graph                  as Graph
 import           Flowbox.Luna.Data.Graph.Node                   (Node)
 import qualified Flowbox.Luna.Data.Graph.Node                   as Node
 import           Flowbox.Luna.Data.Graph.Port                   (InPort, OutPort)
+import           Flowbox.Luna.Data.Pass.AliasInfo               (AliasInfo)
+import qualified Flowbox.Luna.Data.Pass.AliasInfo               as AliasInfo
 import           Flowbox.Luna.Data.PropertyMap                  (PropertyMap)
 import qualified Flowbox.Luna.Data.PropertyMap                  as PropertyMap
 import qualified Flowbox.Luna.Passes.Transform.Graph.Attributes as Attributes
@@ -41,7 +41,7 @@ type NodeMap = Map AST.ID (Node.ID, OutPort)
 
 data GBState = GBState { graph       :: Graph
                        , nodeMap     :: NodeMap
-                       , aa          :: AA
+                       , aa          :: AliasInfo
                        , propertyMap :: PropertyMap
                        } deriving (Show)
 
@@ -49,7 +49,7 @@ data GBState = GBState { graph       :: Graph
 type GBStateM m = MonadState GBState m
 
 
-make :: AA -> PropertyMap -> GBState
+make :: AliasInfo -> PropertyMap -> GBState
 make = GBState Graph.empty Map.empty
 
 
@@ -110,11 +110,11 @@ setNodeMap nm = do s <- get
                    put s { nodeMap = nm }
 
 
-getAAMap :: GBStateM m => m AA
+getAAMap :: GBStateM m => m AliasInfo
 getAAMap = get >>= return . aa
 
 
-setAAMap :: GBStateM m => AA -> m ()
+setAAMap :: GBStateM m => AliasInfo -> m ()
 setAAMap aa' = do s <- get
                   put s { aa = aa' }
 
@@ -127,12 +127,13 @@ setPropertyMap :: GBStateM m => PropertyMap -> m ()
 setPropertyMap pm = do s <- get
                        put s { propertyMap = pm }
 
-
+-- FIXME[pm]: zmiana layoutu AliasInfo. Zle wartosci sa teraz w invalid map
 aaLookUp :: GBStateM m => AST.ID -> m AST.ID
-aaLookUp astID = do aa' <- getAAMap
-                    case IntMap.lookup astID $ aa' ^. AA.aliasMap of
-                        Just (Right a) -> return a
-                        _              -> return astID
+aaLookUp astID = undefined
+                 --do aa' <- getAAMap
+                 --   case IntMap.lookup astID $ aa' ^. AliasInfo.aliasMap of
+                 --       Just (Right a) -> return a
+                 --       _              -> return astID
 
 
 nodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)

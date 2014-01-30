@@ -5,6 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+-- FIXME [pm]: Jezeli ten pas dostarcza danych ktore sa przesylane pomiedzy passami,
+-- powinien znajdowac sie w Flowbox.Luna.Data.Pass
 module Flowbox.Luna.Data.PropertyMap (
     module Data.IntMap,
     module Flowbox.Luna.Data.PropertyMap,

@@ -10,9 +10,9 @@
 
 module Flowbox.Luna.Passes.Analysis.ID.MaxID where
 
+import qualified Flowbox.Luna.Data.AST.Common             as AST
 import           Flowbox.Luna.Data.AST.Expr               (Expr)
 import           Flowbox.Luna.Data.AST.Module             (Module)
-import qualified Flowbox.Luna.Data.AST.Utils              as AST
 import           Flowbox.Luna.Passes.Analysis.ID.State    (IDState)
 import qualified Flowbox.Luna.Passes.Analysis.ID.State    as State
 import qualified Flowbox.Luna.Passes.Analysis.ID.Traverse as IDTraverse

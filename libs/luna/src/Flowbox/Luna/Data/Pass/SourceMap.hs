@@ -12,8 +12,8 @@ module Flowbox.Luna.Data.Pass.SourceMap (
 
 import Data.Map
 
+import Flowbox.Luna.Data.AST.Common    (ID)
 import Flowbox.Luna.Data.AST.SourcePos (SourceRange)
-import Flowbox.Luna.Data.AST.Utils     (ID)
 
 
 type SourceMap = Map ID SourceRange

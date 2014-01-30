@@ -13,13 +13,13 @@ import           GHC.Generics
 
 import           Flowbox.Prelude                 hiding (id, drop, Traversal)
 import           Flowbox.Generics.Deriving.QShow   
-import           Flowbox.Luna.Data.AST.Utils       (ID)
+import           Flowbox.Luna.Data.AST.Common    (ID)
 
 data Type = Unknown { _id :: ID                                               }
           | Var     { _id :: ID, _name     :: String                          }
           | Tuple   { _id :: ID, _items    :: [Type]                          }
           | Data    { _id :: ID, _name     :: String   , _params  :: [String] }
-          | Module  { _id :: ID, _path     :: [String]                        }
+          | Module  { _id :: ID, _name     :: String   , _path    :: [String] }
           | Lambda  { _id :: ID, _inputs   :: [Type]   , _output  :: Type     }
           | Con     { _id :: ID, _segments :: [String]                        }
           | App     { _id :: ID, _src      :: Type     , _args    :: [Type]   }
@@ -30,13 +30,6 @@ instance QShow Type
 makeLenses (''Type)
 
 type Traversal m = (Functor m, Applicative m, Monad m)
-
-
-getNameID :: Type -> String
-getNameID t = case t of
-    Module {} -> last (view path t)
-    Data   {} -> view name t
-    _         -> "undefinedName"
 
 
 traverseM :: Traversal m => (Type -> m Type) -> Type -> m Type

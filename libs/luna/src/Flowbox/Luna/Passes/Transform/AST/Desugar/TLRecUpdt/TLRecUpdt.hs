@@ -9,25 +9,24 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE Rank2Types                #-}
 
-module Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt where
+module Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt where
 
-import qualified Flowbox.Luna.Data.AST.Expr                      as Expr
-import           Flowbox.Luna.Data.AST.Module                    (Module)
-import qualified Flowbox.Luna.Data.AST.Module                    as Module
-import           Flowbox.Luna.Data.AST.Pat                       (Pat)
-import qualified Flowbox.Luna.Data.AST.Pat                       as Pat
-import           Flowbox.Luna.Data.Pass.ASTInfo                  (ASTInfo)
-import           Flowbox.Luna.Passes.Pass                        (Pass)
-import qualified Flowbox.Luna.Passes.Pass                        as Pass
-import           Flowbox.Luna.Passes.Transform.AST.Desugar.State (DesugarState)
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.State as DesugarState
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.State as DS
-import           Flowbox.Prelude                                 hiding (error, id, mod)
+import qualified Flowbox.Luna.Data.AST.Expr                              as Expr
+import           Flowbox.Luna.Data.AST.Module                            (Module)
+import qualified Flowbox.Luna.Data.AST.Module                            as Module
+import           Flowbox.Luna.Data.AST.Pat                               (Pat)
+import qualified Flowbox.Luna.Data.AST.Pat                               as Pat
+import           Flowbox.Luna.Data.Pass.ASTInfo                          (ASTInfo)
+import           Flowbox.Luna.Passes.Pass                                (Pass)
+import qualified Flowbox.Luna.Passes.Pass                                as Pass
+import           Flowbox.Luna.Passes.Transform.AST.Desugar.General.State (DesugarState)
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.General.State as DS
+import           Flowbox.Prelude                                         hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.TLRecUpdt"
+logger = getLoggerIO "Flowbox.Luna.Passes.AST.Desugar.TLRecUpdt.TLRecUpdt"
 
 
 type DesugarPass result = Pass DesugarState result
@@ -38,7 +37,7 @@ run inf = (Pass.run_ (Pass.Info "Desugar.TLRecUpdt") $ DS.mk inf) . desugar
 
 
 desugar :: Module -> DesugarPass (Module, ASTInfo)
-desugar mod = (,) <$> desugarModule mod <*> DesugarState.getInfo
+desugar mod = (,) <$> desugarModule mod <*> DS.getInfo
 
 
 desugarModule :: Module -> DesugarPass Module

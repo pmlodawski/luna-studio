@@ -23,14 +23,14 @@ import qualified Flowbox.Luna.Data.AST.Pat                              as Pat
 import qualified Flowbox.Luna.Data.AST.Type                             as Type
 import           Flowbox.Luna.Data.Pass.ASTInfo                         (ASTInfo)
 import qualified Flowbox.Luna.Data.Pass.ASTInfo                         as ASTInfo
+import           Flowbox.Luna.Data.Pass.Source                          (Source (Source))
 import           Flowbox.Luna.Data.Pass.SourceMap                       (SourceMap)
-import           Flowbox.Luna.Data.Source                               (Source (Source))
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Indent
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Lexer      as L
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState (ParseState)
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.ParseState as ParseState
 import           Flowbox.Luna.Passes.Transform.AST.TxtParser.Utils
-import           Flowbox.Prelude                                        hiding (id, mod, op)
+import           Flowbox.Prelude                                        hiding (id, mod, noneOf, op)
 import qualified Flowbox.Prelude                                        as Prelude
 
 import Control.Monad.State hiding (mapM)
@@ -51,6 +51,7 @@ pList      p = L.bracketed (sepBy p L.separator)
 pPath1     p = sepBy1_ng p L.pAccessor
 pCon         = L.pIdentType
 pVar         = L.pIdentVar
+pVarOp       = pVar <|> L.operator
 pIdent       = choice [ pCon, pVar ]
 pExtPath     = (pPath1 pCon <* L.pAccessor) <|> pure []
 
@@ -114,7 +115,7 @@ pArg            = tok Expr.Arg      <*> pArgPattern
 
 pFunc           = tok Expr.Function <*  L.pDef
                                     <*> (pExtPath            <?> "")
-                                    <*> (pVar <|> L.operator <?> "function name")
+                                    <*> (pVarOp <?> "function name")
                                     <*> (pArgList pArg       <?> "function argument list")
                                     <*> (try (L.pArrow *> pType) <|> tok Type.Unknown)
                                     <*> (pExprBlock <|> return [])
@@ -159,7 +160,7 @@ pConD            = tok Expr.ConD    <*> pCon
 pConDBody        = pCombine Expr.addField pFields
 
 
-pModule name     = tok Module.mk    <*>   (tok Type.Module <*> pure name)
+pModule name path = tok Module.mk    <*>   (tok Type.Module <*> pure name <*> pure path)
                                     <??$> withPos (multiBlock1 pModuleBody)
 
 
@@ -231,7 +232,7 @@ pTermBaseE p = choice [ try pTermRecUpd
                       , pCallTermE p
                       ]
 
-pDotTermBase  = (L.pAccessor *> pVar)
+pDotTermBase  = (L.pAccessor *> pVarOp)
 
 pTermRecUpd   = tok (\id sel expr src -> Expr.RecordUpdate id src sel expr) <*> many1 pDotTermBase <* L.pAssignment <*> pExprSimple
 
@@ -250,7 +251,7 @@ pCallTermE p = pLastLexemeEmpty *> ((flip <$> tok Expr.App) <*> pCallList p)
 pEntBaseE       = pEntConsE pEntComplexE
 pEntBaseSimpleE = pEntConsE pEntSimpleE
 
-pEntConsE base = choice [ try $ L.parensed (pExprT base)
+pEntConsE base = choice [ try $ tok Expr.Grouped <*> L.parensed (pExprT base)
                         , base
                         ]
 
@@ -261,7 +262,7 @@ pEntComplexE = choice[ pDeclaration
 
 pEntSimpleE = choice[ pCaseE -- CHECK [wd]: removed try
                     , pCondE
-                    , try $ L.parensed pExpr
+                    , try $ tok Expr.Grouped <*> L.parensed pExpr
                     , pIdentE
                     , tok Expr.Lit    <*> pLit
                     , tok Expr.Tuple  <*> pTuple  pOpE
@@ -390,17 +391,19 @@ pTermBase t = choice [ try $ L.parensed pPatCon
                      ]
               <?> "pattern term"
 
-pVarP       = tok Pat.Var      <*> pVar
-pLitP       = tok Pat.Lit      <*> pLit
-pTupleP     = tok Pat.Tuple    <*> pTuple pPatCon
-pWildcardP  = tok Pat.Wildcard <*  L.pWildcard
-pConP       = tok Pat.Con      <*> pCon
-pConAppP    = tok Pat.App      <*> pConP <*> many1 pTermP
+pVarP     = tok Pat.Var         <*> pVar
+pLitP     = tok Pat.Lit         <*> pLit
+pTupleP   = tok Pat.Tuple       <*> pTuple pPatCon
+pWildP    = tok Pat.Wildcard    <*  L.pWildcard
+pRecWildP = tok Pat.RecWildcard <*  L.pRecWildcard
+pConP     = tok Pat.Con         <*> pCon
+pConAppP  = tok Pat.App         <*> pConP <*> many1 pTermP
 
 pEntP = choice [ pVarP
                , pLitP
                , pTupleP
-               , pWildcardP
+               , pWildP
+               , pRecWildP
                , pConP
                ]
 
@@ -456,7 +459,7 @@ pProgWithState p  = (,) <$> (p <* pProgEnd) <*> getState
 type Parser input output = ParsecT input ParseState (State SourcePos) output
 
 pProgram :: [String] -> ParsecT String ParseState (State SourcePos) Module
-pProgram mod = L.pSpaces *> pModule mod <* pProgEnd
+pProgram path = L.pSpaces *> pModule (last path) (init path) <* pProgEnd
 
 
 pResult mod = (\ast st -> (ast, st ^. ParseState.sourceMap, st ^. ParseState.info )) <$> pProgram mod <*> getState
