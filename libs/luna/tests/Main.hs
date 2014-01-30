@@ -196,7 +196,7 @@ example = Source.Source ["Main"] $
 
                     , "def main self:"
                     , "    v = Vector 1 2 3"
-                    , "    print v.length"
+                    , "    print (v.length.+ 1)"
                     --, "    a = [1..10].each x:"
                     --, "        x * 2"
                     --, "    print a"

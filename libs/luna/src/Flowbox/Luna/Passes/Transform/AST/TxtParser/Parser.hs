@@ -51,6 +51,7 @@ pList      p = L.bracketed (sepBy p L.separator)
 pPath1     p = sepBy1_ng p L.pAccessor
 pCon         = L.pIdentType
 pVar         = L.pIdentVar
+pVarOp       = pVar <|> L.operator
 pIdent       = choice [ pCon, pVar ]
 pExtPath     = (pPath1 pCon <* L.pAccessor) <|> pure []
 
@@ -114,7 +115,7 @@ pArg            = tok Expr.Arg      <*> pArgPattern
 
 pFunc           = tok Expr.Function <*  L.pDef
                                     <*> (pExtPath            <?> "")
-                                    <*> (pVar <|> L.operator <?> "function name")
+                                    <*> (pVarOp <?> "function name")
                                     <*> (pArgList pArg       <?> "function argument list")
                                     <*> (try (L.pArrow *> pType) <|> tok Type.Unknown)
                                     <*> (pExprBlock <|> return [])
@@ -231,7 +232,7 @@ pTermBaseE p = choice [ try pTermRecUpd
                       , pCallTermE p
                       ]
 
-pDotTermBase  = (L.pAccessor *> pVar)
+pDotTermBase  = (L.pAccessor *> pVarOp)
 
 pTermRecUpd   = tok (\id sel expr src -> Expr.RecordUpdate id src sel expr) <*> many1 pDotTermBase <* L.pAssignment <*> pExprSimple
 
