@@ -44,6 +44,8 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform                    as Platform
 import           Flowbox.System.UniPath                     (UniPath)
 import qualified Flowbox.System.UniPath                     as UniPath
+import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                     as MaxID
+import qualified Flowbox.Luna.Data.Pass.ASTInfo as ASTInfo
 
 
 
@@ -107,7 +109,8 @@ buildLibrary libID projectID = readonly . libraryOp libID projectID (\batch libr
         buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
         bldCfg      = BuildConfig name version libs ghcFlags cppFlags cabalFlags buildType cfg diag buildDir
 
-    Luna.runIO $ Build.run bldCfg ast
+    maxID <- Luna.runIO $ MaxID.run ast
+    Luna.runIO $ Build.run bldCfg ast $ ASTInfo.mk maxID
     return (library, ()))
 
 
