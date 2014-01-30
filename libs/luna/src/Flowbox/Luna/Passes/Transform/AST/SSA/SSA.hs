@@ -40,29 +40,25 @@ mkVar id = "v_" ++ show id
 
 
 run :: AliasInfo -> Module -> Pass.Result Module
-run vs = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . (ssaModule vs)
+run aliasInfo = (Pass.run_ (Pass.Info "SSA") Pass.NoState) . (ssaModule aliasInfo)
 
 
 ssaModule :: AliasInfo -> Module -> SSAPass Module
-ssaModule vs mod = Module.traverseM (ssaModule vs) (ssaExpr vs) pure ssaPat pure mod
+ssaModule aliasInfo mod = Module.traverseM (ssaModule aliasInfo) (ssaExpr aliasInfo) pure ssaPat pure mod
 
 
 ssaExpr :: AliasInfo -> Expr.Expr -> SSAPass Expr.Expr
-ssaExpr vs ast = case ast of
-    Expr.Accessor   id name dst -> Expr.Accessor id name <$> ssaExpr vs dst
-    Expr.Var        id name     -> case (vs ^. AliasInfo.aliasMap) ^. at id of
-                                        Nothing    -> Pass.fail ("Variable not found in AliasInfo!")
-                                        Just alias -> case alias of
-                                                      Right nid -> return $ Expr.Var id (mkVar nid)
-                                                      Left  e   -> (logger error $ "Not in scope '" ++ (show e) ++ "'.")
-                                                               *> (return $ Expr.Var id name)
-    Expr.NativeVar  id _name     -> case (vs ^. AliasInfo.aliasMap) ^. at id of
-                                        Nothing    -> Pass.fail ("Variable not found in AliasInfo!")
-                                        Just alias -> case alias of
-                                                      Right nid -> return $ Expr.NativeVar id (mkVar nid)
-                                                      Left  e   -> Pass.fail ("Not in scope '" ++ (show e) ++ "'.")
+ssaExpr aliasInfo ast = case ast of
+    Expr.Accessor   id name dst -> Expr.Accessor id name <$> ssaExpr aliasInfo dst
+    Expr.Var        id _        -> checkVar id
+    Expr.NativeVar  id _        -> checkVar id
     _                           -> continue
-    where continue = Expr.traverseM (ssaExpr vs) pure ssaPat pure ast
+    where continue    = Expr.traverseM (ssaExpr aliasInfo) pure ssaPat pure ast
+          checkVar id = case (aliasInfo ^. AliasInfo.invalidMap) ^. at id of
+                           Just err -> (logger error $ "Not in scope '" ++ (show err) ++ "'.") *> continue
+                           Nothing  -> case (aliasInfo ^. AliasInfo.aliasMap) ^. at id of
+                                           Nothing    -> Pass.fail ("Variable not found in AliasInfo!")
+                                           Just nid -> return $ (ast & Expr.name .~ mkVar nid)
 
 
 ssaPat :: Pat -> SSAPass Pat

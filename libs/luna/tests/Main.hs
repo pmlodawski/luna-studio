@@ -22,46 +22,46 @@ import           Data.Version               (Version (Version))
 import           Debug.Trace
 import           System.TimeIt
 
-import qualified Flowbox.Distribution.M                                    as DistMain
-import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                         as ASTCrumb
-import qualified Flowbox.Luna.Data.AST.Expr                                as LExpr
-import qualified Flowbox.Luna.Data.AST.Module                              as FModule
-import qualified Flowbox.Luna.Data.AST.Zipper.Focus                        as Focus
-import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                       as Zipper
-import qualified Flowbox.Luna.Data.Cabal.Config                            as Config
-import qualified Flowbox.Luna.Data.Cabal.Section                           as Section
-import qualified Flowbox.Luna.Data.GraphView.GraphView                     as GraphView
-import qualified Flowbox.Luna.Data.HAST.Expr                               as HExpr
-import qualified Flowbox.Luna.Data.HAST.Module                             as Module
-import qualified Flowbox.Luna.Data.Pass.AliasInfo                          as AliasInfo
-import           Flowbox.Luna.Data.Pass.Source                             (Source)
-import qualified Flowbox.Luna.Data.Pass.Source                             as Source
-import qualified Flowbox.Luna.Data.PropertyMap                             as PropertyMap
-import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool            as FuncPool
-import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                     as MaxID
-import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                  as Analysis.Alias
-import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                       as HSC
-import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
-import qualified Flowbox.Luna.Passes.Source.File.Reader                    as FileReader
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitCalls   as Desugar.ImplicitCalls
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitScopes  as Desugar.ImplicitScopes
-import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt       as Desugar.TLRecUpdt
-import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash               as Hash
-import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                 as SSA
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser        as Parser
-import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser     as TxtParser
-import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
-import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as GraphParser
-import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
-import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
-import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen        as HASTGen
+import qualified Flowbox.Distribution.M                                                  as DistMain
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                                       as ASTCrumb
+import qualified Flowbox.Luna.Data.AST.Expr                                              as LExpr
+import qualified Flowbox.Luna.Data.AST.Module                                            as FModule
+import qualified Flowbox.Luna.Data.AST.Zipper.Focus                                      as Focus
+import qualified Flowbox.Luna.Data.AST.Zipper.Zipper                                     as Zipper
+import qualified Flowbox.Luna.Data.Cabal.Config                                          as Config
+import qualified Flowbox.Luna.Data.Cabal.Section                                         as Section
+import qualified Flowbox.Luna.Data.GraphView.GraphView                                   as GraphView
+import qualified Flowbox.Luna.Data.HAST.Expr                                             as HExpr
+import qualified Flowbox.Luna.Data.HAST.Module                                           as Module
+import qualified Flowbox.Luna.Data.Pass.AliasInfo                                        as AliasInfo
+import           Flowbox.Luna.Data.Pass.Source                                           (Source)
+import qualified Flowbox.Luna.Data.Pass.Source                                           as Source
+import qualified Flowbox.Luna.Data.PropertyMap                                           as PropertyMap
+import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                                as Analysis.Alias
+import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool                          as FuncPool
+import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                                   as MaxID
+import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                                     as HSC
+import qualified Flowbox.Luna.Passes.General.Luna.Luna                                   as Luna
+import qualified Flowbox.Luna.Passes.Source.File.Reader                                  as FileReader
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
+import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
+import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash                             as Hash
+import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                               as SSA
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser                      as Parser
+import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser                   as TxtParser
+import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder                     as GraphBuilder
+import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser                       as GraphParser
+import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults               as Defaults
+import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults               as Defaults
+import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen                      as HASTGen
 import           Flowbox.Prelude
-import qualified Flowbox.System.Log.LogEntry                               as LogEntry
+import qualified Flowbox.System.Log.LogEntry                                             as LogEntry
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.Log.Logger                                 as Logger
-import qualified Flowbox.System.UniPath                                    as UniPath
-import           Flowbox.Text.Show.Hs                                      (hsShow)
-import qualified Flowbox.Text.Show.Pretty                                  as PP
+import qualified Flowbox.System.Log.Logger                                               as Logger
+import qualified Flowbox.System.UniPath                                                  as UniPath
+import           Flowbox.Text.Show.Hs                                                    (hsShow)
+import qualified Flowbox.Text.Show.Pretty                                                as PP
 
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb as ASTCrumb
 
@@ -147,14 +147,14 @@ example = Source.Source ["Main"] $
                         ----, "    pos :: a"
 
 
-                        ,"def Int.+ a b:"
-                        ,"    ```liftf2 (+) #{a} #{b}```"
+                        --,"def Int.+ a b:"
+                        --,"    ```liftf2 (+) #{a} #{b}```"
 
-                        ,"def Int.* a b:"
-                        ,"    ```liftf2 (*) #{a} #{b}```"
+                        --,"def Int.* a b:"
+                        --,"    ```liftf2 (*) #{a} #{b}```"
 
-                        ,"def Int.< a b:"
-                        ,"    ```liftf2 (<) #{a} #{b}```"
+                        --,"def Int.< a b:"
+                        --,"    ```liftf2 (<) #{a} #{b}```"
 
                         --, "class Point:"
                         --, "    x,y,z :: Int"
@@ -184,20 +184,20 @@ example = Source.Source ["Main"] $
 
                     --, "alias X = Int"
 
-                    , "class Error:"
-                    , "    IOError: msg :: String"
+                    --, "class Error:"
+                    --, "    IOError: msg :: String"
 
-                    , "def foldr lst el f:"
-                    , "    lst"
+                    --, "def foldr lst el f:"
+                    --, "    lst"
 
-                    , "class Vector a:"
-                    , "    x,y,z :: a"
-                    , "    def length self:"
-                    , "        self.x*self.x + self.y*self.y + self.z*self.z"
+                    --, "class Vector a:"
+                    --, "    x,y,z :: a"
+                    --, "    def length self:"
+                    --, "        self.x*self.x + self.y*self.y + self.z*self.z"
 
                     , "def main self:"
-                    , "    a = Vector 1 2 3"
-                    , "    self.print (a.length)"
+                    --, "    a = Vector 1 2 3"
+                    , "    print 5"
                     --, "    x = 1"
                     --, "    y = self.raise 2 (IOError \"Oh no\")"
                     --, "    z = x + y"
@@ -299,33 +299,47 @@ main_inner = Luna.run $ do
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
     logger info $ PP.ppqShow ast
 
-    logger info "\n-------- VarAlias --------"
-    va <- hoistEither =<< Analysis.Alias.run ast
+    logger info "\n-------- Analysis.Alias --------"
+    aliasInfo <- hoistEither =<< Analysis.Alias.run ast
     logger info "\n>> varRel:"
-    logger info $ PP.ppShow (va ^. AliasInfo.varRel)
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.varRel)
     logger info "\n>> aliasMap:"
-    logger info $ PP.ppShow (va ^. AliasInfo.aliasMap)
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.aliasMap)
+    logger info "\n>> invalidMap:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
 
-    --logger info "\n-------- Desugar.ImplicitScopes --------"
-    --(ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo va ast
-    --logger info $ PP.ppqShow ast
+    logger info "\n-------- Desugar.ImplicitScopes --------"
+    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo aliasInfo ast
+    logger info $ PP.ppqShow ast
+
+
+
+    logger info "\n-------- Analysis.Alias2 --------"
+    aliasInfo <- hoistEither =<< Analysis.Alias.run ast
+    logger info "\n>> varRel:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.varRel)
+    logger info "\n>> aliasMap:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.aliasMap)
+    logger info "\n>> invalidMap:"
+    logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
+
 
 
     logger info "\n-------- FuncPool --------"
     fp <- hoistEither =<< FuncPool.run ast
-    --logger info $ PP.ppShow fp
+    logger info $ PP.ppShow fp
 
     logger info "\n-------- Hash --------"
     hash <- hoistEither =<< Hash.run ast
-    --logger info $ PP.ppShow hash
+    logger info $ PP.ppShow hash
 
     logger info "\n-------- SSA --------"
-    ssa <- hoistEither =<< SSA.run va hash
-    --logger info $ PP.ppqShow ssa
+    ssa <- hoistEither =<< SSA.run aliasInfo hash
+    logger info $ PP.ppqShow ssa
 
     logger info "\n-------- HASTGen --------"
     hast <- hoistEither =<< HASTGen.run ssa fp
-    --logger info $ PP.ppShow hast
+    logger info $ PP.ppShow hast
 
     logger info "\n-------- HSC --------"
     hsc <- hoistEither =<< HSC.run  hast

@@ -33,14 +33,14 @@ import qualified Generated.Proto.Type.Var                       as GenVar
 import qualified Text.ProtocolBuffers.Extensions                as Extensions
 
 
-
+--FIXME[pm]: Type.Module has changed signature
 instance Convert Type Gen.Type where
     encode t = case t of
         Type.Unknown i               -> genType GenCls.Unknown i GenUnknown.ext $ GenUnknown.Unknown
         Type.Var     i name          -> genType GenCls.Var     i GenVar.ext     $ GenVar.Var         (Just $ encodeP name)
         Type.Tuple   i items         -> genType GenCls.Tuple   i GenTuple.ext   $ GenTuple.Tuple     (encodeList items)
         Type.Data    i name params   -> genType GenCls.Data    i GenData.ext    $ GenData.Data     (Just $ encodeP name) (encodeListP params)
-        Type.Module  i path          -> genType GenCls.Module  i GenModule.ext  $ GenModule.Module   (encodeListP path)
+        --Type.Module  i path          -> genType GenCls.Module  i GenModule.ext  $ GenModule.Module   (encodeListP path)
         Type.Lambda  i inputs output -> genType GenCls.Lambda  i GenLambda.ext  $ GenLambda.Lambda   (encodeList inputs) (Just $ encode output)
         Type.Con     i segments      -> genType GenCls.Con_    i GenCon_.ext    $ GenCon_.Con_       (encodeListP segments)
         Type.App     i src args      -> genType GenCls.App     i GenApp.ext     $ GenApp.App         (Just $ encode src) (encodeList args)
@@ -66,9 +66,9 @@ instance Convert Type Gen.Type where
                                  (GenData.Data mtname tparams) <- ext <?> "Failed to decode Type.Data: extension is missing"
                                  tname <- mtname <?> "Failed to decode Type.Data: 'name' field is missing"
                                  pure $ Type.Data i (decodeP tname) (decodeListP tparams)
-            GenCls.Module  -> do ext <- getExt GenModule.ext
-                                 (GenModule.Module tpath) <- ext <?> "Failed to decode Type.Module: extension is missing"
-                                 pure $ Type.Module i (decodeListP tpath)
+            --GenCls.Module  -> do ext <- getExt GenModule.ext
+            --                     (GenModule.Module tpath) <- ext <?> "Failed to decode Type.Module: extension is missing"
+            --                     pure $ Type.Module i (decodeListP tpath)
             GenCls.Lambda  -> do ext <- getExt GenLambda.ext
                                  (GenLambda.Lambda tinputs mtoutput) <- ext <?> "Failed to decode Type.Lambda: extension is missing"
                                  toutput <- mtoutput <?> "Failed to decode Type.Lambda: 'output' field is missing"

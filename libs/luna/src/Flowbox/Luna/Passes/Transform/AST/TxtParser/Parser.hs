@@ -159,7 +159,7 @@ pConD            = tok Expr.ConD    <*> pCon
 pConDBody        = pCombine Expr.addField pFields
 
 
-pModule name     = tok Module.mk    <*>   (tok Type.Module <*> pure name)
+pModule name path = tok Module.mk    <*>   (tok Type.Module <*> pure name <*> pure path)
                                     <??$> withPos (multiBlock1 pModuleBody)
 
 
@@ -458,7 +458,7 @@ pProgWithState p  = (,) <$> (p <* pProgEnd) <*> getState
 type Parser input output = ParsecT input ParseState (State SourcePos) output
 
 pProgram :: [String] -> ParsecT String ParseState (State SourcePos) Module
-pProgram mod = L.pSpaces *> pModule mod <* pProgEnd
+pProgram path = L.pSpaces *> pModule (last path) (init path) <* pProgEnd
 
 
 pResult mod = (\ast st -> (ast, st ^. ParseState.sourceMap, st ^. ParseState.info )) <$> pProgram mod <*> getState

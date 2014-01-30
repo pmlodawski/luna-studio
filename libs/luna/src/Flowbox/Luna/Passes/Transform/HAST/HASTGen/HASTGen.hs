@@ -61,7 +61,7 @@ stdDerivings = [Deriving.Show, Deriving.Eq, Deriving.Ord, Deriving.Generic]
 
 genModule :: LModule -> Pool -> GenPass HExpr
 genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields methods _) _ = do
-    let (LType.Module _ path) = cls
+    let (LType.Module _ name path) = cls
         --fnames  = Set.toList $ Pool.names fpool
         mod     = HModule.addImport ["Luna", "Target", "HS", "Core"]
                 $ HModule.addImport ["Flowbox", "Graphics", "Mockup"]
@@ -77,8 +77,7 @@ genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields meth
                 $ HModule.addExt HExtension.TemplateHaskell
                 -- $ HModule.addExt HExtension.TypeFamilies
                 $ HModule.addExt HExtension.UndecidableInstances
-                $ HModule.mk path
-        name    = last path
+                $ HModule.mk (path ++ [name])
         params  = view LType.params cls
         modCon  = LExpr.ConD 0 name fields
     
@@ -194,7 +193,7 @@ genExpr ast = case ast of
                      inputs output body  -> do
                                             cls <- GenState.getCls
                                             let clsName = if (null path)
-                                                    then LType.getNameID cls
+                                                    then cls ^. LType.name
                                                     else (path!!0) -- FIXME[wd]: needs name resolver
 
                                                 ninputs    = inputs

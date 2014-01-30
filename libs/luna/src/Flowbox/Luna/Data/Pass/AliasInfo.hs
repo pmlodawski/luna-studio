@@ -27,10 +27,11 @@ data VarRel = VarRel { _nameMap :: Map String AST.ID }
 makeLenses (''VarRel)
 
 
-data AliasInfo = AliasInfo  { _varRel    :: IntMap VarRel
-                            , _aliasMap  :: IntMap (Either Error AST.ID)
-                            , _parentMap :: IntMap AST.ID
-                            , _astMap    :: IntMap AST
+data AliasInfo = AliasInfo  { _varRel     :: IntMap VarRel
+                            , _aliasMap   :: IntMap AST.ID
+                            , _invalidMap :: IntMap Error
+                            , _parentMap  :: IntMap AST.ID
+                            , _astMap     :: IntMap AST
                             }
                deriving (Show)
 
@@ -47,9 +48,10 @@ instance Monoid VarRel where
 
 
 instance Monoid AliasInfo where
-    mempty      = AliasInfo mempty mempty mempty mempty
-    mappend a b = AliasInfo (mappend (a ^. varRel)    (b ^. varRel))
-                            (mappend (a ^. aliasMap)  (b ^. aliasMap))
-                            (mappend (a ^. parentMap) (b ^. parentMap))
-                            (mappend (a ^. astMap)    (b ^. astMap))
+    mempty      = AliasInfo mempty mempty mempty mempty mempty
+    mappend a b = AliasInfo (mappend (a ^. varRel)     (b ^. varRel))
+                            (mappend (a ^. aliasMap)   (b ^. aliasMap))
+                            (mappend (a ^. invalidMap) (b ^. invalidMap))
+                            (mappend (a ^. parentMap)  (b ^. parentMap))
+                            (mappend (a ^. astMap)     (b ^. astMap))
 

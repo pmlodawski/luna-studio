@@ -40,11 +40,14 @@ makeLenses (''Module)
 
 
 mk :: ID -> Type -> Module
-mk id' mod = Module id' mod [] [] [] [] [] [] []
+mk id' cls' = Module id' cls' [] [] [] [] [] [] []
+
+--name :: Module -> String
+--name mod = lsat $ mod ^. cls ^. path
 
 mkClass :: Module -> Expr
-mkClass (Module id' (Type.Module tid path) _ classes' _ _ fields' methods' _) =
-    Expr.Data id' (Type.Data tid (last path) []) [Expr.ConD 0 (last path) fields'] classes' methods'
+mkClass (Module id' (Type.Module tid name path) _ classes' _ _ fields' methods' _) =
+    Expr.Data id' (Type.Data tid name []) [Expr.ConD 0 name fields'] classes' methods'
 
 addMethod :: Expr -> Module -> Module
 addMethod method mod = mod & methods %~ (method:)

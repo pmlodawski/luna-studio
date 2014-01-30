@@ -127,12 +127,13 @@ setPropertyMap :: GBStateM m => PropertyMap -> m ()
 setPropertyMap pm = do s <- get
                        put s { propertyMap = pm }
 
-
+-- FIXME[pm]: zmiana layoutu AliasInfo. Zle wartosci sa teraz w invalid map
 aaLookUp :: GBStateM m => AST.ID -> m AST.ID
-aaLookUp astID = do aa' <- getAAMap
-                    case IntMap.lookup astID $ aa' ^. AliasInfo.aliasMap of
-                        Just (Right a) -> return a
-                        _              -> return astID
+aaLookUp astID = undefined 
+                 --do aa' <- getAAMap
+                 --   case IntMap.lookup astID $ aa' ^. AliasInfo.aliasMap of
+                 --       Just (Right a) -> return a
+                 --       _              -> return astID
 
 
 nodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)

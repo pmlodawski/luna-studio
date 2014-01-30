@@ -91,8 +91,8 @@ searchLib path library =
 -- FIXME: added typeAliases
 -- FIXME: added typeDefs
 searchModule :: [String] -> Breadcrumbs -> Module -> [Breadcrumbs]
-searchModule path bc (Module.Module _ (Type.Module _ name) _ classes _typeAliases _typeDefs _ methods modules) =
-    if length path > 0 && last name == head path
+searchModule path bc (Module.Module _ (Type.Module _ name _) _ classes _typeAliases _typeDefs _ methods modules) =
+    if length path > 0 && name == head path
         then if length path == 1
                 then [currentBc]
                 else (List.concat $ map (searchExpr   (tail path) currentBc) $ classes ++ methods)

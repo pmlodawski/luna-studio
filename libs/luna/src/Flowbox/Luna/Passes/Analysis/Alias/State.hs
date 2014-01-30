@@ -46,8 +46,8 @@ makeLenses (''VAState)
 type VAMonad m = (MonadState VAState m, Applicative m)
 
 
-getAA :: VAMonad m => m AliasInfo
-getAA = view aa <$> get
+getAliasInfo :: VAMonad m => m AliasInfo
+getAliasInfo = view aa <$> get
 
 getCurrentID :: VAMonad m => m (Maybe ID)
 getCurrentID = do stack <- view idStack <$> get
@@ -56,14 +56,14 @@ getCurrentID = do stack <- view idStack <$> get
                       (x:_) -> Just x
 
 
-putAA :: VAMonad m => AliasInfo -> m ()
-putAA naa = modify (aa .~ naa)
+putAliasInfo :: VAMonad m => AliasInfo -> m ()
+putAliasInfo naa = modify (aa .~ naa)
 
 
-modifyAA :: VAMonad m => (AliasInfo -> AliasInfo) -> m ()
-modifyAA f = do
-    aa' <- getAA
-    putAA $ f aa'
+modifyAliasInfo :: VAMonad m => (AliasInfo -> AliasInfo) -> m ()
+modifyAliasInfo f = do
+    aa' <- getAliasInfo
+    putAliasInfo $ f aa'
 
 
 pushID :: VAMonad m => ID -> m ()
@@ -80,43 +80,42 @@ withID id f = pushID id *> f <* popID
 --switchID id = modify (currentID .~ id)
 
 registerModule :: VAMonad m => Module -> m ()
-registerModule el = registerAST id (AST.Module el) *> registerID id
-    where id = (el ^. Module.id)
+registerModule = registerElBy AST.Module Module.id
 
 registerExpr :: VAMonad m => Expr -> m ()
-registerExpr el = registerAST id (AST.Expr el) *> registerID id
-    where id = (el ^. Expr.id)
+registerExpr = registerElBy AST.Expr Expr.id
 
 registerLit :: VAMonad m => Lit -> m ()
-registerLit el = registerAST id (AST.Lit el) *> registerID id
-    where id = (el ^. Lit.id)
+registerLit = registerElBy AST.Lit Lit.id
 
 registerPat :: VAMonad m => Pat -> m ()
-registerPat el = registerAST id (AST.Pat el) *> registerID id
-    where id = (el ^. Pat.id)
+registerPat = registerElBy AST.Pat Pat.id
 
 registerType :: VAMonad m => Type -> m ()
-registerType el = registerAST id (AST.Type el) *> registerID id
-    where id = (el ^. Type.id)
+registerType = registerElBy AST.Type Type.id
+
+
+registerElBy fCon fID el = registerAST id (fCon el) *> registerID id
+    where id = (el ^. fID)
 
 
 registerID :: VAMonad m => ID -> m ()
 registerID id = do
     mcid <- getCurrentID
-    withJust mcid (\cid -> modifyAA $ AliasInfo.parentMap %~ IntMap.insert id cid)
+    withJust mcid (\cid -> modifyAliasInfo $ AliasInfo.parentMap %~ IntMap.insert id cid)
 
 
 registerAST :: VAMonad m => ID -> AST -> m ()
-registerAST id ast = modifyAA $ AliasInfo.astMap %~ IntMap.insert id ast
+registerAST id ast = modifyAliasInfo $ AliasInfo.astMap %~ IntMap.insert id ast
 
 
 registerVarName :: VAMonad m => String -> ID -> m ()
 registerVarName name id = do
-    a    <- getAA
+    a    <- getAliasInfo
     mcid <- getCurrentID
     case mcid of
-        Nothing  -> return ()
-        Just cid -> putAA a2
+        Nothing  -> fail "Unable to get current id"
+        Just cid -> putAliasInfo a2
             where varRel  = a ^. (AliasInfo.varRel . (ix cid))
                   varRel2 = varRel & AliasInfo.nameMap.at name ?~ id
                   a2      = a & AliasInfo.varRel.at cid ?~ varRel2
@@ -126,20 +125,21 @@ registerVarName name id = do
 bindVar :: VAMonad m => ID -> String -> m ()
 bindVar id name = do
     mcid <- getCurrentID
-    withJust mcid (\cid -> modifyAA (bindVarRec id cid name))
+    withJust mcid (\cid -> modifyAliasInfo (bindVarRec id cid name))
 
 
 bindVarRec :: ID -> ID -> String -> AliasInfo -> AliasInfo
 bindVarRec id ctxID name a = case dstIDLookup of
-    Just dstID -> updateAliasMap $ Right dstID
+    Just dstID -> updateAliasMap dstID
     Nothing    -> case mPid of
                   Just pid -> bindVarRec id pid name a
-                  Nothing  -> updateAliasMap $ Left (AliasInfo.LookupError name)
-    where dstIDLookup        = nameMap ^. at name
-          mPid               = (a ^. AliasInfo.parentMap) ^. at ctxID
-          varRel             = a ^. AliasInfo.varRel.ix ctxID
-          nameMap            = varRel ^. AliasInfo.nameMap
-          updateAliasMap val = a & AliasInfo.aliasMap.at id ?~ val
+                  Nothing  -> updateInvalidMap $ AliasInfo.LookupError name
+    where dstIDLookup          = nameMap ^. at name
+          mPid                 = (a ^. AliasInfo.parentMap) ^. at ctxID
+          varRel               = a ^. AliasInfo.varRel.ix ctxID
+          nameMap              = varRel ^. AliasInfo.nameMap
+          updateAliasMap val   = a & AliasInfo.aliasMap.at id ?~ val
+          updateInvalidMap val = a & AliasInfo.invalidMap.at id ?~ val
 
 
 
