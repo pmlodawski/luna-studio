@@ -23,6 +23,7 @@ import qualified Luna.Target.HS.Naming      as Naming
 import qualified Luna.Target.HS.TH.Deriving as Deriving
 import           Luna.Target.HS.TH.Utils
 import           Luna.Target.HS.TH.Inst
+import           Data.List (nub)
 
 generateAccessors :: Name -> DecsQ
 generateAccessors clsName = do
@@ -48,13 +49,15 @@ getClsFieldNames clsName' = do
     nameList <- getRecNames clsName'
     let clsName    = nameBase clsName'
         fieldNames = concat $ map (\(_, fNames) -> fNames) nameList
-    return fieldNames 
+    return $ uniqueNames fieldNames 
 
+uniqueNames :: [Name] -> [Name]
+uniqueNames names = map mkName $ nub $ map nameBase names
 
 generateGetters :: Name -> DecsQ
 generateGetters clsName' = do
     fieldNames <- getClsFieldNames clsName'
-    concat <$> mapM (generateClsGetter clsName') fieldNames
+    ppTrace (nub $ map nameBase fieldNames) (concat <$> mapM (generateClsGetter clsName') fieldNames)
 
 generateSetters :: Name -> DecsQ
 generateSetters clsName' = do

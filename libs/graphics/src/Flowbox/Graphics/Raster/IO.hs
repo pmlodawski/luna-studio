@@ -20,11 +20,30 @@ import qualified Flowbox.Graphics.Raster.Channel as Channel
 import           Flowbox.Graphics.Raster.Image   (Image)
 import qualified Flowbox.Graphics.Raster.Image   as Image
 
+import Control.Monad.Trans.Either
+import Control.Error.Util
 
+
+data MyIOError = MyIOError deriving (Show)
 
 readImageFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image A.Word32))
 readImageFromBMP file = liftIO(fmap mkChan <$> A.readImageFromBMP file) where
     mkChan chdata = Image.insert "rgba" (Channel.Raw chdata) mempty
+
+
+readImageFromBMP2 :: FilePath -> IO (Either MyIOError (Image A.Word32))
+readImageFromBMP2 file = do
+    img  <- runEitherT (tryIO $ A.readImageFromBMP file)
+    img2 <- case img of
+        Left err  -> return $ Left MyIOError
+        Right val -> case val of
+            Left _ -> return $ Left MyIOError
+            Right val2 -> return $ Right val2
+    return $ fmap mkChan img2
+    where mkChan chdata = Image.insert "rgba" (Channel.Raw chdata) mempty
+    
+    --liftIO(fmap mkChan <$> A.readImageFromBMP file) where
+    --mkChan chdata = Image.insert "rgba" (Channel.Raw chdata) mempty
 
 
 

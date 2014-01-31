@@ -76,6 +76,13 @@ run buildConfig ast astInfo = runEitherT $ do
     let diag = BuildConfig.diag buildConfig
     Diagnostics.printAST ast diag
 
+    -- Should be run BEFORE Analysis.Alias
+    logger debug "\n-------- Desugar.ImplicitSelf --------"
+    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitSelf.run astInfo ast
+    -- TODO Diagnostics
+    --logger info $ PP.ppqShow ast
+
+
     logger debug "\n-------- Desugar.TLRecUpdt --------"
     (ast, astInfo) <- hoistEither =<< Desugar.TLRecUpdt.run astInfo ast
     -- TODO Diagnostics
@@ -104,11 +111,6 @@ run buildConfig ast astInfo = runEitherT $ do
     -- TODO Diagnostics
     --Diagnostics.printAST ast diag
 
-    -- Should be run AFTER ImplicitScopes
-    logger debug "\n-------- Desugar.ImplicitSelf --------"
-    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitSelf.run astInfo ast
-    -- TODO Diagnostics
-    --logger info $ PP.ppqShow ast
 
     logger debug "\n-------- Analysis.Alias --------"
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast

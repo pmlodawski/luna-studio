@@ -16,6 +16,9 @@ module Flowbox.Graphics.Mockup (
     Image,
     Channel,
     erodeChannel,
+    exitFailure,
+    exitSuccess,
+    toDouble
 ) where
 
 import qualified Data.Array.Accelerate             as A
@@ -31,6 +34,16 @@ import qualified Flowbox.Graphics.Raster.Channel   as Channel
 import qualified Flowbox.Graphics.Raster.IO        as Image
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
 import           Flowbox.Prelude                   hiding ((.))
+import qualified Codec.BMP                as BMP
+
+import qualified System.Exit as Exit
+
+import Data.Number.Conversion
+
+
+exitFailure = Exit.exitFailure *> return (Safe ())
+
+exitSuccess = Exit.exitSuccess *> return (Safe ())
 
 
 testm :: Num a => a -> a
@@ -42,6 +55,12 @@ readImage fileIn = do
     let Right img' = RGBA.decompose img
         rgba = Image.reprDouble img'
     return (Safe rgba)
+
+
+readImage2 :: String -> IO (Either Image.MyIOError (Image A.Word32))
+readImage2 fileIn = do
+    img <- Image.readImageFromBMP2 fileIn
+    return img
 
 writeImage :: FilePath -> Image Double -> IO (Safe())
 writeImage file img = do

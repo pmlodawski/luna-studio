@@ -43,58 +43,109 @@ def Bool.not:
 def Int.+ a:
     ```liftf2 (+) #{self} #{a}```
 
+def Int.- a:
+    ```liftf2 (-) #{self} #{a}```
+
 def Int.* a:
     ```liftf2 (*) #{self} #{a}```
 
 def Int./ a:
-    ```liftf2 (-) #{self} #{a}```
+    ```liftf2 (\a b -> toDouble a / toDouble b) #{self} #{a}```
 
-###### Float ##################################
+def Int.< a:
+    ```liftf2 (<) #{self} #{a}```
 
-def Float.+ a:
+def Int.> a:
+    ```liftf2 (>) #{self} #{a}```
+
+def Int.sqrt:
+    ```liftf1 (sqrt.toDouble) #{self}```
+
+def Int.next:
+    ```liftf1 (+1) #{self}```
+
+def Int.prev:
+    ```liftf1 (-1) #{self}```
+
+###### Double ##################################
+
+def Double.+ a:
     ```liftf2 (+) #{self} #{a}```
 
-def Float./ a:
+def Double.- a:
+    ```liftf2 (-) #{self} #{a}```
+
+def Double.* a:
+    ```liftf2 (*) #{self} #{a}```
+    
+def Double./ a:
     ```liftf2 (/) #{self} #{a}```
 
-def Float.* a:
-    ```liftf2 (*) #{self} #{a}```
+def Double.< a:
+    ```liftf2 (<) #{self} #{a}```
 
-def Float.- a:
-    ```liftf2 (-) #{self} #{a}```
+def Double.> a:
+    ```liftf2 (>) #{self} #{a}```
+
+def Double.sqrt:
+    ```liftf1 sqrt #{self}```
+
+def Double.next:
+    ```liftf1 (+1) #{self}```
+
+def Double.prev:
+    ```liftf1 (-1) #{self}```
+
+
+
+def raise el err:
+    ```raise #{el} #{err}```
+
+def catch el f:
+    ```catch #{el} #{f}```
+
+def isError a:
+    ```isError #{a}```
+
+
+class Sys:
+    def exitSuccess:
+        ```exitSuccess```
+    def exitFailure:
+        ```exitFailure```
 
 
 ###############################################
 
-def readImage path:
-    ```flattenCtx $ liftf1 readImage #{path}```
+# def readImage path:
+#     ```flattenCtx $ liftf1 readImage #{path}```
 
-def Image.writeImage path:
-    ```flattenCtx $ liftf2 writeImage #{path} #{self}```
-    self
+# def Image.writeImage path:
+#     ```flattenCtx $ liftf2 writeImage #{path} #{self}```
+#     self
 
-def Image.adjustCB contrast brightness:
-    ```liftf3 adjustCB #{contrast} #{brightness} #{self}```
+# def Image.adjustCB contrast brightness:
+#     ```liftf3 adjustCB #{contrast} #{brightness} #{self}```
 
-def Image.convolve kernel:
-    ```liftf2 convolve #{kernel} #{self}```
+# def Image.convolve kernel:
+#     ```liftf2 convolve #{kernel} #{self}```
 
-def Image.getChannel name:
-    ```liftf2 imgChannelGet #{name} #{self}```
+# def Image.getChannel name:
+#     ```liftf2 imgChannelGet #{name} #{self}```
 
-def Image.putChannel name channel:
-    ```liftf3 imgChannelInsert #{name} #{channel} #{self}```
+# def Image.putChannel name channel:
+#     ```liftf3 imgChannelInsert #{name} #{channel} #{self}```
 
-# FIXME [wd] zrób to
-# def Channel.map self callback:
-    # ```liftf2 channelMap (val $ ((fromPure.fromSafe) `dot2` call1) #{callback}) #{self}```
-    # ```liftf2 channelMap (val $ call1 #{callback}) #{self}```
+# # FIXME [wd] zrób to
+# # def Channel.map self callback:
+#     # ```liftf2 channelMap (val $ ((fromPure.fromSafe) `dot2` call1) #{callback}) #{self}```
+#     # ```liftf2 channelMap (val $ call1 #{callback}) #{self}```
 
-def Channel.erode:
-    ```liftf1 erodeChannel #{self}```
+# def Channel.erode:
+#     ```liftf1 erodeChannel #{self}```
 
-def constant x:
-    ```liftf1 constant #{x}```
+# def constant x:
+#     ```liftf1 constant #{x}```
 
 # class Channel:
 #     zip ...:
@@ -110,18 +161,32 @@ def constant x:
 #                | Scalar: a :: a
 #                | Vector2: x :: a
 
+
+def readImage path:
+    ```flattenCtx $ liftf1 readImage2 #{path}```
+
 class Vector a:
     x,y,z :: a
 
-    def test x:
-        x
+    def + v:
+        Vector (x + v.x) (y + v.y) (z + v.z)
 
-    def + v2:
-        Vector (x + v2.x) (y + v2.y) (z + v2.z)
+    def length:
+        (x*x + y*y + z*z).sqrt
+
+    def normalize:
+        Vector (x/length) (y/length) (z/length)
 
 def main:
-    # v = Vector 1 2 3
-    # c.print v
+    v = Vector 1 2 3
+    print v
+    print (v + v)
+    print v.length
+    print v.normalize
+    print $ v.normalize + v.normalize
+    # v2 = Vector 0.5 0.5 0.5
+
+    # print ((v2) + (v2))
     # c.print (v+v)
 
     # a = [1..10].each x:
@@ -130,33 +195,40 @@ def main:
     # c.print $ a.at 5
     # c.print $ self.testm 15
 
-    path = "lena.bmp"
-    outpath = "luna.bmp"
+        # path = "lena.bmp"
+        # outpath = "luna.bmp"
+        # img = readImage path
 
-    print path
-    img = readImage path
-    # c.print img
-    c = 1.5
-    b = 0.2
-    k = 0.1
-    # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
-    # img = img.adjustCB c b
-    # img = img.convolve k
-
-    chR = img.getChannel "r"
-    chG = img.getChannel "g"
-    chB = img.getChannel "b"
-
-    # chR
-    # chR = chR.map (x : x)
-    # a = [1,2,3].each x : x+1
-    # console.print a
-    # chB = chB.map (x : Main.constant 0.0)
-
-    img = img.putChannel "r" chR.erode()
-    img = img.putChannel "g" chG.erode()
-    img = img.putChannel "b" chB.erode()
-
-    img.writeImage outpath
+        # if isError img:
+        #     print "oh no!"
+        #     Sys.exitFailure
+        
+        # print path
+        # print img
+    # print path
+    # img = readImage path
     # # c.print img
+    # c = 1.5
+    # b = 0.2
+    # k = 0.1
+    # # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
+    # # img = img.adjustCB c b
+    # # img = img.convolve k
+
+    # chR = img.getChannel "r"
+    # chG = img.getChannel "g"
+    # chB = img.getChannel "b"
+
+    # # chR
+    # # chR = chR.map (x : x)
+    # # a = [1,2,3].each x : x+1
+    # # console.print a
+    # # chB = chB.map (x : Main.constant 0.0)
+
+    # img = img.putChannel "r" chR.erode()
+    # img = img.putChannel "g" chG.erode()
+    # img = img.putChannel "b" chB.erode()
+
+    # img.writeImage outpath
+    # # # c.print img
 

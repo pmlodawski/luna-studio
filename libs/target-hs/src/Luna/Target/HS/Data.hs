@@ -11,11 +11,12 @@
 
 module Luna.Target.HS.Data where
 
-import Data.Typeable (Typeable)
-import GHC.Generics  (Generic)
+import Data.Typeable       (Typeable)
+import GHC.Generics        (Generic)
+import Control.Applicative
 
-newtype Pure a = Pure {fromPure :: a} deriving (Eq, Ord, Generic, Typeable)
-newtype Safe a = Safe {fromSafe :: a} deriving (Eq, Ord, Generic, Typeable)
+newtype Pure a = Pure a deriving (Eq, Ord, Generic, Typeable)
+newtype Safe a = Safe a deriving (Eq, Ord, Generic, Typeable)
 
 val :: a -> Pure(Safe a)
 val = Pure . Safe
@@ -50,3 +51,10 @@ instance Show a => Show (Safe a) where
 #else
     show (Safe a) = show a
 #endif
+
+
+instance Applicative Safe where
+    pure = Safe
+    (Safe f) <*> (Safe a) = Safe (f a) 
+    _ *> b = b
+    a <* _ = a
