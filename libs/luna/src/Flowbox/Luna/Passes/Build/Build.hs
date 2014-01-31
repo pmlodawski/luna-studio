@@ -73,13 +73,15 @@ tmpDirPrefix :: String
 tmpDirPrefix = "lunac"
 
 
-prepareSources :: Diagnostics -> ASTModule.Module -> ASTInfo -> Pass.Result [Source]
-prepareSources diag ast astInfo = runEitherT $ do
+prepareSources :: Diagnostics -> ASTModule.Module -> ASTInfo -> Bool -> Pass.Result [Source]
+prepareSources diag ast astInfo implicitSelf = runEitherT $ do
     Diagnostics.printAST ast diag
 
     -- Should be run BEFORE Analysis.Alias
-    logger debug "\n-------- Desugar.ImplicitSelf --------"
-    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitSelf.run astInfo ast
+    (ast, astInfo) <- if implicitSelf
+        then do logger debug "\n-------- Desugar.ImplicitSelf --------"
+                hoistEither =<< Desugar.ImplicitSelf.run astInfo ast
+        else return (ast, astInfo)
     -- TODO Diagnostics
     --logger info $ PP.ppqShow ast
 
@@ -154,7 +156,7 @@ run buildConfig ast astInfo = runEitherT $ do
                 ++ if BuildConfig.name buildConfig /= "flowboxM-stdlib"
                       then ["flowboxM-stdlib"]
                       else []
-    hsc <- hoistEither =<< prepareSources diag ast astInfo
+    hsc <- hoistEither =<< prepareSources diag ast astInfo True
     case BuildConfig.buildDir buildConfig of
         Nothing -> Directory.withTmpDirectory tmpDirPrefix $ buildInFolder buildConfig hsc allLibs
         Just bd -> do liftIO $ Directory.createDirectoryIfMissing True bd
