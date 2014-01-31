@@ -5,12 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
- -- [ ] 1) lut
+ -- [+] 1) lut
  -- [+] 2) dylatacja
  -- [+] 3) erozja
  -- [+] 4) otwarcie
  -- [+] 5) zamknięcie
- -- [ ] 6) mediana - do czysczenia np. kurzu
+ -- [+] 6) mediana - do czysczenia np. kurzu
  -- [ ] 7) zmiany kolorow na krzywych - definiowane za pomoca datatypu, ktory okrelalby czy to jest linear, bezier cyz cos innego
  -- [ ] 8) samplowanie po kolorach
 
@@ -51,6 +51,15 @@ applyToImage f names img = do
       channelB' = f channelB
       channelC' = f channelC
   return outimg
+
+
+-- works assuming we have a sorted array
+median' :: Fractional a => [a] -> a
+median' xs | odd  len = xs !! mid
+           | even len = meanMedian
+                 where  len = length xs
+                        mid = len `div` 2
+                        meanMedian = (xs !! mid + xs !! (mid+1)) / 2
 
 
 bsort :: (A.Elt a, A.IsScalar a) => [Exp a] -> [Exp a]
@@ -103,6 +112,21 @@ remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
 
 
 -- simple
+
+lutExp :: (A.Elt a, A.IsFloating a) => [(Exp a, Exp a)] -> Exp a -> Exp a
+lutExp [] x = x
+lut ((_,x):[]) _ = x
+lut ((a,b):c@((p,q):arr)) x = (x A.<* a) A.? ( b
+                                           , (a A.<=* x A.&&* x A.<* p) A.?
+                                             ( b + (x-a) / (p-a) * ((q-p))
+                                             , lut c x ))
+
+lutChannel :: (A.Elt a, A.IsFloating a) => [(Exp a, Exp a)] -> Channel a -> Channel a
+lutChannel table channel = Channel.map (lutExp table) channel
+
+lutImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> [(Exp a, Exp a)] -> Image a -> Either Image.Error (Image a)
+lutImage names table = applyToImage (lutChannel table) names
+
 
 binarizeChannel :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> Channel a -> Channel a
 binarizeChannel f channel = Channel.map (\x -> f x A.? (1 , 0)) channel
@@ -479,4 +503,34 @@ keyColor names epsilon value f img = do
       (valueA,_,_) = value
       (_,valueB,_) = value
       (_,_,valueC) = value
+  return outimg
+
+
+
+-- extracting background
+
+extractBackground :: (A.Elt a, A.IsFloating a) => (String, String, String) -> [Image a] -> Either Image.Error (Image a)
+extractBackground names images = do
+  let (nameA,_,_) = names
+      (_,nameB,_) = names
+      (_,_,nameC) = names
+      firstImg    = images !! 0
+  channelsA <- sequence $ fmap (Image.lookup nameA) images
+  channelsB <- sequence $ fmap (Image.lookup nameB) images
+  channelsC <- sequence $ fmap (Image.lookup nameC) images
+  tmpChannel <- Image.lookup "a" firstImg
+  let outimg = Image.insert nameA channelA'
+             $ Image.insert nameB channelB'
+             $ Image.insert nameC channelC'
+             $ Image.insert "a" tmpChannel
+             $ mempty
+      exampleChannel = channelsA !! 0
+      channelShape = Channel.shape exampleChannel
+      channelA' = Channel.generate channelShape (getMedian channelsA)
+      channelB' = Channel.generate channelShape (getMedian channelsB)
+      channelC' = Channel.generate channelShape (getMedian channelsC)
+      getMedian channels ix = let
+                                (A.Z A.:. i A.:. j) = A.unlift ix
+                              in
+                                median' $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
   return outimg
