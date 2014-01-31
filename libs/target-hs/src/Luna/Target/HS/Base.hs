@@ -320,6 +320,15 @@ instance FlattenErr (Either e) (Either e) (Either e) where
             Left e    -> Left e
             Right val -> Right val
 
+--data
+
+--instance FlattenErr (Either e1) (Either e2) (Either e2) where
+--    flattenErr a = case a of
+--        Left  e -> Left e
+--        Right b -> case b of
+--            Left e    -> Left e
+--            Right val -> Right val
+
 
 --type family FlattenErrResult a b where
 --    FlattenErrResult Safe       Safe       = Safe

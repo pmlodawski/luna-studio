@@ -49,24 +49,24 @@ exitSuccess = Exit.exitSuccess *> return (Safe ())
 testm :: Num a => a -> a
 testm x = x*3
 
-readImage :: String -> IO (Safe(Image Double))
+--readImage :: String -> IO (Safe(Image Double))
+--readImage fileIn = do
+--    img <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
+--    let Right img' = RGBA.decompose img
+--        rgba = Image.reprDouble img'
+--    return (Safe rgba)
+
+
+readImage :: String -> IO (Either Image.MyIOError (Image A.Word32))
 readImage fileIn = do
-    img <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
-    let Right img' = RGBA.decompose img
-        rgba = Image.reprDouble img'
-    return (Safe rgba)
-
-
-readImage2 :: String -> IO (Either Image.MyIOError (Image A.Word32))
-readImage2 fileIn = do
     img <- Image.readImageFromBMP2 fileIn
     return img
 
-writeImage :: FilePath -> Image Double -> IO (Safe())
+-- UNSAFE ERROR
+writeImage :: FilePath -> Image (A.Word32) -> IO (Safe ())
 writeImage file img = do
-    let Right img' = RGBA.compose $ Image.reprWord8 img
-    Image.writeImageToBMP (Interp.run) file img'
-    return $ Safe ()
+    Image.writeImageToBMP (Interp.run) file img
+    return (Safe ())
 
 adjustCB :: Double -> Double -> Image Double -> Image Double
 adjustCB contrastValue brightnessValue img = img'

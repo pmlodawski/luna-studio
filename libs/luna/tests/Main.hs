@@ -128,6 +128,7 @@ example = Source.Source ["Main"] $
                         --, "    ```liftf1 sum #{self}```"
 
                         --, "class Console:"
+                        , "import Std:All"
                         , "def print msg:"
                         , "    ```print' #{msg}```"
 
@@ -150,8 +151,8 @@ example = Source.Source ["Main"] $
                         ,"def Int.+ b:"
                         ,"    ```liftf2 (+) #{self} #{b}```"
 
-                        ,"def Int./ b:"
-                        ,"    ```liftf2 (-) #{self} #{b}```"
+                        --,"def Int./ b:"
+                        --,"    ```liftf2 (-) #{self} #{b}```"
 
                         --,"def Int.* b:"
                         --,"    ```liftf2 (*) #{self} #{b}```"
@@ -162,11 +163,11 @@ example = Source.Source ["Main"] $
                         ----, "class Point:"
                         ----, "    x,y,z :: Int"
 
-                        --, "def raise el err:"
-                        --, "    ```raise #{el} #{err}```"
+                        , "def raise el err:"
+                        , "    ```raise #{el} #{err}```"
 
-                        --, "def catch el f:"
-                        --, "    ```catch #{el} #{f}```"
+                        , "def catch el f:"
+                        , "    ```catch #{el} #{f}```"
 
 
 
@@ -187,22 +188,26 @@ example = Source.Source ["Main"] $
 
                     --, "alias X = Int"
 
-                    --, "class Error:"
-                    --, "    IOError: msg :: String"
+                    , "class Error:"
+                    , "    Error"
 
                     --, "def foldr lst el f:"
                     --, "    lst"
 
-                    , "class Scalar a:"
-                    , "    x :: a"
-                    , "    def length:"
-                    , "        1"
-                    , "    def normalize:"
-                    , "        Scalar (x/length)"
+                    --, "class Scalar a:"
+                    --, "    x :: a"
+                    --, "    def length:"
+                    --, "        1"
+                    --, "    def normalize:"
+                    --, "        Scalar (x/length)"
+
+                    , "def Int.test:"
+                    , "        12"
 
                     , "def main:"
-                    , "    a = Scalar 1"
-                    , "    print a.normalize"
+                    , "    a = raise 1 Error"
+                    --, "    a = 1"
+                    , "    print a.test"
                     --, "    a = raise 1 (IOError \"Oh no\")"
                     --, "    catch a x:"
                     --, "        raise a x"
