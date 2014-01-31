@@ -16,7 +16,7 @@ Library
                   src
   Other-Modules:  Paths_flowbox_batch
 
-  GHC-Options:    -Wall -O2 -package ghc
+  GHC-Options:    -Wall -O2
 
   Extensions:     NoImplicitPrelude
 

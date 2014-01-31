@@ -22,7 +22,6 @@ import           Data.Version               (Version (Version))
 import           Debug.Trace
 import           System.TimeIt
 
-import qualified Flowbox.Distribution.M                                                  as DistMain
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                                       as ASTCrumb
 import qualified Flowbox.Luna.Data.AST.Expr                                              as LExpr
 import qualified Flowbox.Luna.Data.AST.Module                                            as FModule
@@ -68,7 +67,6 @@ import qualified Flowbox.Luna.Data.AST.Crumb.Crumb as ASTCrumb
 
 import Control.Lens hiding (Zipper)
 
-import qualified Flowbox.Distribution.M as DistMain
 
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.Parser as Parser
 

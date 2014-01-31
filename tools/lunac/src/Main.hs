@@ -11,7 +11,7 @@ import qualified Options.Applicative as Opt
 
 import qualified Flowbox.Config.Config            as Config
 import           Flowbox.Control.Applicative
-import qualified Flowbox.Distribution.Client.List as DistList
+--import qualified Flowbox.Distribution.Client.List as DistList
 import qualified Flowbox.Lunac.Build              as Build
 import qualified Flowbox.Lunac.Cmd                as Cmd
 import qualified Flowbox.Lunac.Version            as Version
@@ -108,8 +108,8 @@ run prog = case Cmd.cmd prog of
     Cmd.Build   op -> do rootLogger setIntLevel $ Cmd.verbose prog
                          cfg <- Config.load
                          Build.run cfg op
-    Cmd.Repo  scmd -> case scmd of
-                      Cmd.List op -> list (Cmd.simple op) (Cmd.inputs op)
-                                     where list = if (Cmd.json op) then DistList.listJSON (Cmd.html op) else DistList.list
+    --Cmd.Repo  scmd -> case scmd of
+    --                  Cmd.List op -> list (Cmd.simple op) (Cmd.inputs op)
+    --                                 where list = if (Cmd.json op) then DistList.listJSON (Cmd.html op) else DistList.list
     _              -> putStrLn "Sorry, the command is not implemented yet."
 

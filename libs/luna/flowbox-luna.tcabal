@@ -18,7 +18,7 @@ Library
   Other-Modules:  Paths_flowbox_luna
   if flag(debug)
     GHC-Options:  -csacc
-  GHC-Options:    -Wall -O2 -package ghc
+  GHC-Options:    -Wall -O2
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
@@ -26,13 +26,13 @@ Library
                   OverloadedStrings
 
   Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`,
-                   `findmodules('src', '.*\.hs')`
+                   `findmodules('src', '.*\.hs', exclude='.*Distribution.*')`
 
   Build-Depends:  aeson,
                   base,
                   bytestring,
-                  Cabal,
-                  cabal-install,
+                  -- Cabal,
+                  -- cabal-install,
                   concatenative,
                   containers,
                   data-default,
@@ -43,6 +43,7 @@ Library
                   fgl,
                   flowbox-config,
                   flowbox-utils,
+                  ghc,
                   ghc-prim,
                   hashable,
                   lens,
