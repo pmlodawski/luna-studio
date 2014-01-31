@@ -128,6 +128,7 @@ example = Source.Source ["Main"] $
                         --, "    ```liftf1 sum #{self}```"
 
                         --, "class Console:"
+                        , "import Std:All"
                         , "def print msg:"
                         , "    ```print' #{msg}```"
 
