@@ -272,6 +272,7 @@ pEntSimpleE = choice[ pCaseE -- CHECK [wd]: removed try
            <?> "expression term"
 
 optableE = [ [ postfixM  "::" (tok Expr.Typed <*> pType)                      ]
+           , [ prefixM   "@"  (tok Expr.Ref)                                  ]
            , [ binaryM   ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
            , [ operator2 "^"                                  PExpr.AssocLeft ]
            , [ operator2 "*"                                  PExpr.AssocLeft ]

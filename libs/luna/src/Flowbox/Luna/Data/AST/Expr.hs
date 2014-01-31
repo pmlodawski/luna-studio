@@ -60,6 +60,7 @@ data Expr  = NOP          { _id :: ID                                           
            | Native       { _id :: ID, _segments  :: [Expr]                                                                      }
            | NativeCode   { _id :: ID, _code      :: String                                                                      }
            | NativeVar    { _id :: ID, _name      :: String                                                                      }
+           | Ref          { _id :: ID, _dst       :: Expr                                                                        }
            | Case         { _id :: ID, _expr      :: Expr     , _match     :: [Expr]                                             }
            | Match        { _id :: ID, _pat       :: Pat      , _body      :: [Expr]                                             }
            deriving (Show, Eq, Generic)
@@ -112,76 +113,78 @@ addCon ncon e = e & cons %~ (ncon:)
 
 traverseM :: Traversal m => (Expr -> m Expr) -> (Type -> m Type) -> (Pat -> m Pat) -> (Lit -> m Lit) -> Expr -> m Expr
 traverseM fexp ftype fpat flit e = case e of
-    Accessor     id' name' dst'                      -> Accessor     id' name' <$> fexp dst'
-    TypeAlias    id' srcType' dstType'               -> TypeAlias    id'       <$> ftype srcType' <*> ftype dstType'
-    TypeDef      id' srcType' dstType'               -> TypeDef      id'       <$> ftype srcType' <*> ftype dstType'
-    App          id' src' args'                      -> App          id'       <$> fexp src'      <*> fexpMap args'
-    Assignment   id' pat' dst'                       -> Assignment   id'       <$> fpat pat'      <*> fexp dst'
-    RecordUpdate id' src' selectors' expr'           -> RecordUpdate id'       <$> fexp src'      <*> pure selectors' <*> fexp expr'
-    Data         id' cls' cons' classes' methods'    -> Data         id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
-    ConD         id' name' fields'                   -> ConD         id' name' <$> fexpMap fields'
-    Con          {}                                  -> pure e
-    Cond         id' cond' success' failure'         -> Cond         id'       <$> fexp cond' <*> fexpMap success' <*> (mapM fexpMap) failure'
-    Field        id' name' cls' value'               -> Field        id' name' <$> ftype cls' <*> fexpMap value'
-    Function     id' path' name' inputs' output'
-                 body'                               -> Function     id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
-    Lambda       id' inputs' output' body'           -> Lambda       id'             <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
-    Grouped      id' expr'                           -> Grouped      id'       <$> fexp expr'
-    Import       id' path' target' rename'           -> Import       id' path' <$> fexp target'  <*> pure rename'
-    Infix        id' name' src' dst'                 -> Infix        id' name' <$> fexp src'     <*> fexp dst'
-    List         id' items'                          -> List         id'       <$> fexpMap items'
-    Lit          id' val'                            -> Lit          id'       <$> flit val'
-    Tuple        id' items'                          -> Tuple        id'       <$> fexpMap items'
-    Typed        id' cls' expr'                      -> Typed        id'       <$> ftype cls' <*> fexp expr'
-    Native       id' segments'                       -> Native       id'       <$> fexpMap segments'
-    RangeFromTo  id' start' end'                     -> RangeFromTo  id'       <$> fexp start' <*> fexp end'
-    RangeFrom    id' start'                          -> RangeFrom    id'       <$> fexp start'
-    Case         id' expr' match'                    -> Case         id'       <$> fexp expr' <*> fexpMap match'
-    Match        id' pat' body'                      -> Match        id'       <$> fpat pat' <*> fexpMap body'
-    NativeCode   {}                                  -> pure e
-    NativeVar    {}                                  -> pure e
-    Var          {}                                  -> pure e
-    Wildcard     {}                                  -> pure e
-    NOP          {}                                  -> pure e
-    AppCons_     {}                                  -> pure e
-    Arg          id' pat' value'                     -> Arg          id'       <$> fpat pat' <*> fexpMap value'
+    Accessor     id' name' dst'                    -> Accessor     id' name' <$> fexp dst'
+    TypeAlias    id' srcType' dstType'             -> TypeAlias    id'       <$> ftype srcType' <*> ftype dstType'
+    TypeDef      id' srcType' dstType'             -> TypeDef      id'       <$> ftype srcType' <*> ftype dstType'
+    App          id' src' args'                    -> App          id'       <$> fexp src'      <*> fexpMap args'
+    Assignment   id' pat' dst'                     -> Assignment   id'       <$> fpat pat'      <*> fexp dst'
+    RecordUpdate id' src' selectors' expr'         -> RecordUpdate id'       <$> fexp src'      <*> pure selectors' <*> fexp expr'
+    Data         id' cls' cons' classes' methods'  -> Data         id'       <$> ftype cls'     <*> fexpMap cons' <*> fexpMap classes' <*> fexpMap methods'
+    ConD         id' name' fields'                 -> ConD         id' name' <$> fexpMap fields'
+    Con          {}                                -> pure e
+    Cond         id' cond' success' failure'       -> Cond         id'       <$> fexp cond' <*> fexpMap success' <*> (mapM fexpMap) failure'
+    Field        id' name' cls' value'             -> Field        id' name' <$> ftype cls' <*> fexpMap value'
+    Function     id' path' name' inputs' output'   
+                 body'                             -> Function     id' path' name' <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
+    Lambda       id' inputs' output' body'         -> Lambda       id'             <$> fexpMap inputs' <*> ftype output' <*> fexpMap body'
+    Grouped      id' expr'                         -> Grouped      id'       <$> fexp expr'
+    Import       id' path' target' rename'         -> Import       id' path' <$> fexp target'  <*> pure rename'
+    Infix        id' name' src' dst'               -> Infix        id' name' <$> fexp src'     <*> fexp dst'
+    List         id' items'                        -> List         id'       <$> fexpMap items'
+    Lit          id' val'                          -> Lit          id'       <$> flit val'
+    Tuple        id' items'                        -> Tuple        id'       <$> fexpMap items'
+    Typed        id' cls' expr'                    -> Typed        id'       <$> ftype cls' <*> fexp expr'
+    Native       id' segments'                     -> Native       id'       <$> fexpMap segments'
+    RangeFromTo  id' start' end'                   -> RangeFromTo  id'       <$> fexp start' <*> fexp end'
+    RangeFrom    id' start'                        -> RangeFrom    id'       <$> fexp start'
+    Case         id' expr' match'                  -> Case         id'       <$> fexp expr' <*> fexpMap match'
+    Match        id' pat' body'                    -> Match        id'       <$> fpat pat' <*> fexpMap body'
+    NativeCode   {}                                -> pure e
+    NativeVar    {}                                -> pure e
+    Ref          id' dst'                          -> Ref          id'       <$> fexp dst'
+    Var          {}                                -> pure e
+    Wildcard     {}                                -> pure e
+    NOP          {}                                -> pure e
+    AppCons_     {}                                -> pure e
+    Arg          id' pat' value'                   -> Arg          id'       <$> fpat pat' <*> fexpMap value'
     where fexpMap = mapM fexp
 
 
 traverseM_ :: Traversal m => (Expr -> m a) -> (Type -> m b) -> (Pat -> m c) -> (Lit -> m d) -> Expr -> m ()
 traverseM_ fexp ftype fpat flit e = case e of
-    Accessor     _  _ dst'                           -> drop <* fexp dst'
-    TypeAlias    _ srcType' dstType'                 -> drop <* ftype srcType' <* ftype dstType'
-    TypeDef      _ srcType' dstType'                 -> drop <* ftype srcType' <* ftype dstType'
-    App          _  src' args'                       -> drop <* fexp src'  <* fexpMap args'
-    Assignment   _  pat' dst'                        -> drop <* fpat pat'  <* fexp dst'
-    RecordUpdate _ src' _ expr'                      -> drop <* fexp src'  <* fexp expr'
-    Data         _ cls' cons'  classes' methods'     -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
-    ConD         _ _ fields'                         -> drop <* fexpMap fields'
-    Cond         _ cond' success' failure'           -> drop <* fexp cond' <* fexpMap success' <* (mapM fexpMap) failure'
-    Con          {}                                  -> drop
-    Field        _ _ cls' value'                     -> drop <* ftype cls' <* fexpMap value'
-    Function     _ _ _ inputs' output' body'         -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
-    Lambda       _ inputs' output' body'             -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
-    Grouped      _ expr'                             -> drop <* fexp expr'
-    Import       _ _ target' _                       -> drop <* fexp target'
-    Infix        _  _ src' dst'                      -> drop <* fexp src'     <* fexp dst'
-    List         _  items'                           -> drop <* fexpMap items'
-    Lit          _  val'                             -> drop <* flit val'
-    Tuple        _  items'                           -> drop <* fexpMap items'
-    Typed        _  cls' _expr'                      -> drop <* ftype cls' <* fexp _expr'
-    Native       _ segments'                         -> drop <* fexpMap segments'
-    RangeFromTo  _ start' end'                       -> drop <* fexp start' <* fexp end'
-    RangeFrom    _ start'                            -> drop <* fexp start'
-    Case         _ expr' match'                      -> drop <* fexp expr' <* fexpMap match'
-    Match        _ pat' body'                        -> drop <* fpat pat'  <* fexpMap body'
-    NativeCode   {}                                  -> drop
-    NativeVar    {}                                  -> drop
-    Var          {}                                  -> drop
-    Wildcard     {}                                  -> drop
-    NOP          {}                                  -> drop
-    AppCons_     {}                                  -> drop
-    Arg          _ pat' value'                       -> drop <* fpat pat' <* fexpMap value'
+    Accessor     _  _ dst'                         -> drop <* fexp dst'
+    TypeAlias    _ srcType' dstType'               -> drop <* ftype srcType' <* ftype dstType'
+    TypeDef      _ srcType' dstType'               -> drop <* ftype srcType' <* ftype dstType'
+    App          _  src' args'                     -> drop <* fexp src'  <* fexpMap args'
+    Assignment   _  pat' dst'                      -> drop <* fpat pat'  <* fexp dst'
+    RecordUpdate _ src' _ expr'                    -> drop <* fexp src'  <* fexp expr'
+    Data         _ cls' cons'  classes' methods'   -> drop <* ftype cls' <* fexpMap cons' <* fexpMap classes' <* fexpMap methods'
+    ConD         _ _ fields'                       -> drop <* fexpMap fields'
+    Cond         _ cond' success' failure'         -> drop <* fexp cond' <* fexpMap success' <* (mapM fexpMap) failure'
+    Con          {}                                -> drop
+    Field        _ _ cls' value'                   -> drop <* ftype cls' <* fexpMap value'
+    Function     _ _ _ inputs' output' body'       -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
+    Lambda       _ inputs' output' body'           -> drop <* fexpMap inputs' <* ftype output' <* fexpMap body'
+    Grouped      _ expr'                           -> drop <* fexp expr'
+    Import       _ _ target' _                     -> drop <* fexp target'
+    Infix        _  _ src' dst'                    -> drop <* fexp src'     <* fexp dst'
+    List         _  items'                         -> drop <* fexpMap items'
+    Lit          _  val'                           -> drop <* flit val'
+    Tuple        _  items'                         -> drop <* fexpMap items'
+    Typed        _  cls' _expr'                    -> drop <* ftype cls' <* fexp _expr'
+    Native       _ segments'                       -> drop <* fexpMap segments'
+    RangeFromTo  _ start' end'                     -> drop <* fexp start' <* fexp end'
+    RangeFrom    _ start'                          -> drop <* fexp start'
+    Case         _ expr' match'                    -> drop <* fexp expr' <* fexpMap match'
+    Match        _ pat' body'                      -> drop <* fpat pat'  <* fexpMap body'
+    NativeCode   {}                                -> drop
+    NativeVar    {}                                -> drop
+    Ref          _ dst'                            -> drop <* fexp dst'
+    Var          {}                                -> drop
+    Wildcard     {}                                -> drop
+    NOP          {}                                -> drop
+    AppCons_     {}                                -> drop
+    Arg          _ pat' value'                     -> drop <* fpat pat' <* fexpMap value'
     where drop    = pure ()
           fexpMap = mapM_ fexp
 
