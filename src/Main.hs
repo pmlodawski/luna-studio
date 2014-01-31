@@ -48,12 +48,13 @@ buildParser = Cmd.Build <$> ( Cmd.BuildOptions <$> argument str ( metavar "INPUT
                                                <*> switch ( long "DDEBUG"    <> hidden )
                                                <*> switch ( long "dump-all"  <> hidden )
                                                <*> switch ( long "dump-ast"  <> hidden )
-                                               <*> switch ( long "dump-va"   <> hidden )
-                                               <*> switch ( long "dump-fp"   <> hidden )
+                                               <*> switch ( long "dump-aa"   <> hidden )
                                                <*> switch ( long "dump-ssa"  <> hidden )
+                                               <*> switch ( long "dump-hash" <> hidden )
                                                <*> switch ( long "dump-hast" <> hidden )
                                                <*> switch ( long "dump-hsc"  <> hidden )
                             )
+
 
 listParser :: Opt.Parser Cmd.Command
 listParser = Cmd.List <$> ( Cmd.ListOptions <$> many (argument str ( metavar "PATTERNS" ))
