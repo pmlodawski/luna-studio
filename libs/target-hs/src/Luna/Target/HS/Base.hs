@@ -320,6 +320,15 @@ instance FlattenErr (Either e) (Either e) (Either e) where
             Left e    -> Left e
             Right val -> Right val
 
+--data
+
+--instance FlattenErr (Either e1) (Either e2) (Either e2) where
+--    flattenErr a = case a of
+--        Left  e -> Left e
+--        Right b -> case b of
+--            Left e    -> Left e
+--            Right val -> Right val
+
 
 --type family FlattenErrResult a b where
 --    FlattenErrResult Safe       Safe       = Safe
@@ -447,3 +456,19 @@ instance RaiseProto (m(s a)) (Either e b) (Either e b) where
 raise el err = fmap (raiseProto el) err
 
 
+------------------------------------------------------------------------
+-- Errors check
+------------------------------------------------------------------------
+
+class IsErrorProto a where
+     isErrorProto :: a -> Bool
+
+instance IsErrorProto (Safe a) where
+     isErrorProto _ = False
+
+instance IsErrorProto (Either a b) where
+     isErrorProto e = case e of
+         Left  _ -> True
+         Right _ -> False
+
+isError = fmap (Safe . isErrorProto)

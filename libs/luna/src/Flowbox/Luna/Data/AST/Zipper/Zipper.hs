@@ -76,7 +76,7 @@ focusFunction name zipper@(env, _) = case env of
 
 focusModule :: (Applicative m, Monad m) => String -> Zipper -> m Zipper
 focusModule name zipper@(env, _) = case env of
-    ModuleFocus mod -> focusListElem Module.modules (Module.cls . Type.path . (to last))
+    ModuleFocus mod -> focusListElem Module.modules (Module.cls . Type.name)
                        ModuleFocus ModuleFocus mod name zipper
     _               -> fail $ "Cannot focus on " ++ (show name)
 
@@ -96,7 +96,7 @@ focusBreadcrumbs bc zipper = case bc of
 
 focusModule' :: (Applicative m, Monad m) => String -> Module -> m Zipper
 focusModule' name m = do
-    assert (m ^. Module.cls . Type.path . (to last) == name) $ "Cannot focus on " ++ (show name)
+    assert (m ^. Module.cls . Type.name == name) $ "Cannot focus on " ++ (show name)
     mk m
 
 

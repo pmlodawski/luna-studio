@@ -53,8 +53,13 @@ insert name chan img = img & channels %~ (Map.insert name chan)
 reprFloat :: Image A.Word8 -> Image A.Float
 reprFloat img = map (\c -> A.fromIntegral c / 255) img
 
-reprWord8 :: Image A.Float -> Image A.Word8
+reprDouble :: Image A.Word8 -> Image A.Double
+reprDouble img = map (\c -> A.fromIntegral c / 255) img
+
+reprWord8 :: (A.Elt a, A.IsFloating a) => Image a -> Image A.Word8
 reprWord8 img = map (\c -> A.truncate $ c * 255) img
+
+
 
 ------------------------------------------------------------------------
 -- INSTANCES

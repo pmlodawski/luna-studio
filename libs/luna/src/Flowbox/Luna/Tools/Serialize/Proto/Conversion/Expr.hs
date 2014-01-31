@@ -40,6 +40,7 @@ import qualified Generated.Proto.Expr.Function                     as GenFunctio
 import qualified Generated.Proto.Expr.Import                       as GenImport
 import qualified Generated.Proto.Expr.Infix                        as GenInfix
 import qualified Generated.Proto.Expr.Lambda                       as GenLambda
+import qualified Generated.Proto.Expr.Grouped                       as GenGrouped
 import qualified Generated.Proto.Expr.List                         as GenList
 import qualified Generated.Proto.Expr.Lit                          as GenLit
 import qualified Generated.Proto.Expr.Match                        as GenMatch
@@ -83,11 +84,11 @@ instance Convert Expr Gen.Expr where
         Expr.Data       i cls cons classes methods
                                    -> genExpr GenCls.Data i GenData.ext $ GenData.Data
                                       (encodeJ cls) (encodeList cons) (encodeList classes) (encodeList methods)
-        Expr.Con        i name     -> genExpr GenCls.Con_ i GenCon_.ext $ GenCon_.Con_
-                                      (encodePJ name)
         Expr.ConD       i name fields
                                    -> genExpr GenCls.ConD i GenConD.ext $ GenConD.ConD
                                       (encodePJ name) (encodeList fields)
+        Expr.Con        i name     -> genExpr GenCls.Con_ i GenCon_.ext $ GenCon_.Con_
+                                      (encodePJ name)
         Expr.Cond       i cond success mfailure
                                    -> genExpr GenCls.Condition i GenCondition.ext $ GenCondition.Condition
                                       (encodeJ cond) (encodeList success) (encodeList $ F.concat mfailure)
@@ -97,6 +98,8 @@ instance Convert Expr Gen.Expr where
         Expr.Lambda     i inputs output body
                                    -> genExpr GenCls.Lambda i GenLambda.ext $ GenLambda.Lambda
                                       (encodeList inputs) (encodeJ output) (encodeList body)
+        Expr.Grouped    i expr     -> genExpr GenCls.Grouped i GenGrouped.ext $ GenGrouped.Grouped
+                                      (encodeJ expr)
         Expr.Import     i path target rename
                                    -> genExpr GenCls.Import i GenImport.ext $ GenImport.Import
                                       (encodeListP path) (encodeJ target) (fmap encodeP rename)
@@ -219,6 +222,11 @@ instance Convert Expr Gen.Expr where
                 (GenLambda.Lambda tinputs mtoutput tbody) <- ext <?> "Failed to decode Expr.Lambda: extension is missing"
                 toutput <- mtoutput <?> "Failed to decode Expr.Lambda: 'output' field is missing"
                 Expr.Lambda i <$> decodeList tinputs <*> decode toutput <*> decodeList tbody
+            GenCls.Grouped -> do
+                ext <- getExt GenGrouped.ext
+                (GenGrouped.Grouped mtexpr) <- ext <?> "Failed to decode Expr.Grouped: extension is missing"
+                texpr <- mtexpr <?> "Failed to decode Expr.Grouped: 'expr' field is missing"
+                Expr.Grouped i <$> decode texpr
             GenCls.Import -> do
                 ext <- getExt GenImport.ext
                 (GenImport.Import tpath mttarget mtrename) <- ext <?> "Failed to decode Expr.Import: extension is missing"

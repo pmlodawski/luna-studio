@@ -128,6 +128,7 @@ example = Source.Source ["Main"] $
                         --, "    ```liftf1 sum #{self}```"
 
                         --, "class Console:"
+                        , "import Std:All"
                         , "def print msg:"
                         , "    ```print' #{msg}```"
 
@@ -150,20 +151,23 @@ example = Source.Source ["Main"] $
                         ,"def Int.+ b:"
                         ,"    ```liftf2 (+) #{self} #{b}```"
 
-                        ,"def Int.* b:"
-                        ,"    ```liftf2 (*) #{self} #{b}```"
+                        --,"def Int./ b:"
+                        --,"    ```liftf2 (-) #{self} #{b}```"
 
-                        --,"def Int.< a b:"
-                        --,"    ```liftf2 (<) #{a} #{b}```"
+                        --,"def Int.* b:"
+                        --,"    ```liftf2 (*) #{self} #{b}```"
 
-                        --, "class Point:"
-                        --, "    x,y,z :: Int"
+                        --,"def Int.< b:"
+                        --,"    ```liftf2 (<) #{self} #{b}```"
 
-                        --, "def raise self el err:"
-                        --, "    ```raise #{el} #{err}```"
+                        ----, "class Point:"
+                        ----, "    x,y,z :: Int"
 
-                        --, "def catch self el f:"
-                        --, "    ```catch #{el} #{f}```"
+                        , "def raise el err:"
+                        , "    ```raise #{el} #{err}```"
+
+                        , "def catch el f:"
+                        , "    ```catch #{el} #{f}```"
 
 
 
@@ -184,20 +188,34 @@ example = Source.Source ["Main"] $
 
                     --, "alias X = Int"
 
-                    --, "class Error:"
-                    --, "    IOError: msg :: String"
+                    , "class Error:"
+                    , "    Error"
 
                     --, "def foldr lst el f:"
                     --, "    lst"
 
-                    , "class Vector a:"
-                    , "    x,y,z :: a"
-                    , "    def length:"
-                    , "        x*x + y*y + z*z"
+                    --, "class Scalar a:"
+                    --, "    x :: a"
+                    --, "    def length:"
+                    --, "        1"
+                    --, "    def normalize:"
+                    --, "        Scalar (x/length)"
+
+                    , "def Int.test:"
+                    , "        12"
 
                     , "def main:"
-                    , "    v = Vector 1 2 3"
-                    , "    print (v.length.+ 1)"
+                    , "    a = raise 1 Error"
+                    --, "    a = 1"
+                    , "    print a.test"
+                    --, "    a = raise 1 (IOError \"Oh no\")"
+                    --, "    catch a x:"
+                    --, "        raise a x"
+                    --, "    print a"
+                    --, "    if 1<2:"
+                    --, "        print 13"
+                    --, "    else:"
+                    --, "        print 15"
                     --, "    print (test 1 2)"
                     --, "    a = [1..10].each x:"
                     --, "        x * 2"
@@ -295,6 +313,12 @@ main_inner = Luna.run $ do
     --putStrLn $ PP.ppShow zipper
 
 
+    -- Should be run BEFORE Analysis.Alias
+    logger info "\n-------- Desugar.ImplicitSelf --------"
+    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitSelf.run astInfo ast
+    logger info $ PP.ppqShow ast
+
+
     logger info "\n-------- Desugar.TLRecUpdt --------"
     (ast, astInfo) <- hoistEither =<< Desugar.TLRecUpdt.run astInfo ast
     logger info $ PP.ppqShow ast
@@ -318,12 +342,6 @@ main_inner = Luna.run $ do
     -- Should be run AFTER ImplicitScopes
     logger info "\n-------- Desugar.ImplicitCalls --------"
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
-    logger info $ PP.ppqShow ast
-
-
-    -- Should be run AFTER ImplicitScopes
-    logger info "\n-------- Desugar.ImplicitSelf --------"
-    (ast, astInfo) <- hoistEither =<< Desugar.ImplicitSelf.run astInfo ast
     logger info $ PP.ppqShow ast
 
 

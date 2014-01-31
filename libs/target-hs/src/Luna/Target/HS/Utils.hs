@@ -11,7 +11,8 @@
 
 module Luna.Target.HS.Utils where
 
-import           Data.Typeable (Typeable, typeOf)
+import Control.Applicative
+import Data.Typeable (Typeable, typeOf)
 
 import Luna.Target.HS.Base
 import Luna.Target.HS.Data
@@ -115,13 +116,14 @@ map' = liftf2 map
 each' a f = do
     map' f a
 
-ifthenelse = liftf3 (\cond tval fval -> if cond then tval else fval)
+--ifThenElse = liftf3 (\cond tval fval -> if cond then tval else fval)
 
+ifThenElse cond tval fval = flattenCtx $ (fmap.fmap) (\c -> if c then tval else fval) cond
 
 exIO_1 :: IO (Safe Int)
 exIO_1 = return (Safe 1)
 
-
+nop = (pure.pure) ()
 
 ------------------------------------------------------------------------
 -- Errors catch

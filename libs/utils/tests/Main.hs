@@ -26,8 +26,8 @@ logger   = getLogger "MyApp.BuggyComponent"
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "MyApp.BuggyComponent"
 
-test_logger :: IO ()
-test_logger = runLogger $ do
+testLogger :: IO ()
+testLogger = runLogger $ do
     logger debug      "debug"
     logger info       "info"
     logger warning    "warning"
@@ -44,13 +44,13 @@ main = do
     putStrLn $ fshow f t
 
     logger setLevel DEBUG
-    test_logger
+    testLogger
     loggerIO error "IO error"
 
     print ("colored text test" :: String)
     let x = "ala"
         y = Text.green "ola"
-        txt = (x ++ y ++ x)
+        txt = x ++ y ++ x
     Text.print txt
     Text.print $ Text.clearFormatting txt
     print $ Text.toText txt

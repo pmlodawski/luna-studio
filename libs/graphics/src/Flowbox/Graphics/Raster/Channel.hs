@@ -23,11 +23,11 @@ data Channel a = Raw (RawData a)
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-instance A.Elt a => Eq (Channel a) where 
-    a == b = undefined
+instance A.Elt a => Eq (Channel a) where
+    _ == _ = undefined
 
 instance A.Elt a => Ord (Channel a) where
-    compare a b = undefined
+    compare _ _ = undefined
 
 
 map :: (A.Elt a, A.Elt b) => (A.Exp a -> A.Exp b) -> Channel a -> Channel b
