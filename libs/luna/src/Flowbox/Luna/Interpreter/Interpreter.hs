@@ -75,7 +75,9 @@ run config r = GHC.runGhc (Just $ Config.topDir $ Config.ghcS config) r
 
 runSource :: Config -> [String] -> String -> String -> IO ()
 runSource config imports declarations stmt =
-    run config $ compileAndRun imports declarations stmt
+    run config $ do initialize config
+                    setHardodedExtensions
+                    compileAndRun imports declarations stmt
 
 
 channelLoop :: GhcMonad m => Chan String -> [String] -> m ()
