@@ -47,7 +47,7 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform                                                 as Platform
 import           Flowbox.System.UniPath                                                  (UniPath)
 import qualified Flowbox.System.UniPath                                                  as UniPath
-import qualified Flowbox.Text.Show.Hs                                                    as ShowHs
+import           Flowbox.Text.Show.Hs                                                    (hsShow)
 
 
 
@@ -99,7 +99,6 @@ run buildConfig ast astInfo = runEitherT $ do
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
     Diagnostics.printAST ast diag
 
-
     logger debug "\n-------- Analysis.Alias --------"
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast
     Diagnostics.printAA aliasInfo diag
@@ -117,8 +116,10 @@ run buildConfig ast astInfo = runEitherT $ do
     Diagnostics.printHAST hast diag
 
     logger debug "\n-------- HSC --------"
-    hsc <- hoistEither =<< HSC.run hast
-    Diagnostics.printHSC hsc diag
+    hsc' <- hoistEither =<< HSC.run hast
+    Diagnostics.printHSC hsc' diag
+
+    let hsc = map formatSource hsc'
 
     let allLibs = "base"
                 -- : "flowboxM-core"
@@ -152,8 +153,7 @@ writeSources outputPath sources = mapM_ (writeSource outputPath) sources
 
 writeSource :: UniPath -> Source -> Pass.Result ()
 writeSource outputPath source = FileWriter.run path hsExt source where
-    path = UniPath.append srcFolder outputPath
-
+    path     = UniPath.append srcFolder outputPath
 
 copyExecutable :: MonadIO m => UniPath -> String -> UniPath -> m ()
 copyExecutable location name outputPath = liftIO $ do
@@ -168,3 +168,6 @@ parseFile rootPath filePath = runEitherT $ do
     source <- hoistEither =<< FileReader.run rootPath filePath
     result <- hoistEither =<< TxtParser.run source
     return result
+
+formatSource :: Source -> Source
+formatSource s = s { Source.code = hsShow $ Source.code s }

@@ -117,22 +117,43 @@ class Sys:
 
 ###############################################
 
-# def readImage path:
-#     ```flattenCtx $ liftf1 readImage #{path}```
+def cuda:
+    ```liftf0 cuda```
+
+def interp:
+    ```liftf0 interp```
 
 
+def readImage path:
+    ```flattenCtx $ liftf1 readImage #{path}```
 
-# def Image.adjustCB contrast brightness:
-#     ```liftf3 adjustCB #{contrast} #{brightness} #{self}```
+def Image.write path backend:
+    ```flattenCtx $ liftf3 writeImage #{self} #{path} #{backend}```
+    self
 
-# def Image.convolve kernel:
-#     ```liftf2 convolve #{kernel} #{self}```
+def Image.compose:
+    ```flattenCtx $ liftf1 compose #{self}```
 
-# def Image.getChannel name:
-#     ```liftf2 imgChannelGet #{name} #{self}```
+def Image.decompose:
+    ```flattenCtx $ liftf1 decompose #{self}```
 
-# def Image.putChannel name channel:
-#     ```liftf3 imgChannelInsert #{name} #{channel} #{self}```
+def Image.reprDouble:
+    ```liftf1 reprDouble #{self}```
+
+def Image.reprWord8:
+    ```liftf1 reprWord8 #{self}```
+
+def Image.adjustCB contrast brightness:
+    ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{self}```
+
+def Image.convolve kernel:
+    ```flattenCtx $ liftf2 convolve #{kernel} #{self}```
+
+def Image.getChannel name:
+    ```flattenCtx $ liftf2 imgChannelGet #{name} #{self}```
+
+def Image.putChannel name channel:
+    ```liftf3 imgChannelInsert #{name} #{channel} #{self}```
 
 # # FIXME [wd] zrób to
 # # def Channel.map self callback:
@@ -140,7 +161,7 @@ class Sys:
 #     # ```liftf2 channelMap (val $ call1 #{callback}) #{self}```
 
 # def Channel.erode:
-#     ```liftf1 erodeChannel #{self}```
+#    ```liftf1 erodeChannel #{self}```
 
 # def constant x:
 #     ```liftf1 constant #{x}```
@@ -160,12 +181,7 @@ class Sys:
 #                | Vector2: x :: a
 
 
-def readImage path:
-    ```flattenCtx $ liftf1 readImage #{path}```
 
-def Image.write path:
-    ```flattenCtx $ liftf2 writeImage #{path} #{self}```
-    self
 
 class Vector a:
     x,y,z :: a
@@ -186,6 +202,7 @@ def main:
     print v.length
     print v.normalize
     print $ v.normalize + v.normalize
+    backend = interp
     # v2 = Vector 0.5 0.5 0.5
 
     # print ((v2) + (v2))
@@ -206,17 +223,26 @@ def main:
         Sys.exitFailure
     
     print path
-    img.write outpath
+    print "=========="
+    img.write outpath backend
+    print "=========="
+    img = img.decompose.reprDouble
     # print img
 
     # print path
     # img = readImage path
     # # c.print img
-    # c = 1.5
-    # b = 0.2
-    # k = 0.1
+    c = 1.5
+    b = 0.2
+    k = 0.1
     # # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
-    # # img = img.adjustCB c b
+    img = img.adjustCB c b
+    img = img.reprWord8.compose
+    
+    outpath2 = "luna2.bmp"
+    print "=========="
+    img.write outpath2 backend
+    
     # # img = img.convolve k
 
     # chR = img.getChannel "r"
