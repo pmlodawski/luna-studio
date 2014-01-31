@@ -171,6 +171,9 @@ example = Source.Source ["Main"] $
 
 
 
+                        , "def List.foldr f el:"
+                        , "    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```"
+
                         --, "class X"
                         --, "    def test self:"
                         --, "        self"
@@ -186,13 +189,13 @@ example = Source.Source ["Main"] $
                     --, "def f a::X :"
                     --, "    a"
 
-                    , "def test x: x+1"
+                    , "def test x y: x+y"
 
                     , "def main:"
                     , "    a = [1,2,3,4]"
                     --, "    a = 1"
                     , "    f = @test"
-                    , "    print $ f 1"
+                    , "    print $ a.foldr f 0"
                     --, "    print a"
                     --, "    print $ a.each x:"
                     --, "        x*2"
