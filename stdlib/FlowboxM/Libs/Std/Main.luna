@@ -120,9 +120,7 @@ class Sys:
 # def readImage path:
 #     ```flattenCtx $ liftf1 readImage #{path}```
 
-# def Image.writeImage path:
-#     ```flattenCtx $ liftf2 writeImage #{path} #{self}```
-#     self
+
 
 # def Image.adjustCB contrast brightness:
 #     ```liftf3 adjustCB #{contrast} #{brightness} #{self}```
@@ -163,7 +161,11 @@ class Sys:
 
 
 def readImage path:
-    ```flattenCtx $ liftf1 readImage2 #{path}```
+    ```flattenCtx $ liftf1 readImage #{path}```
+
+def Image.write path:
+    ```flattenCtx $ liftf2 writeImage #{path} #{self}```
+    self
 
 class Vector a:
     x,y,z :: a
@@ -195,16 +197,18 @@ def main:
     # c.print $ a.at 5
     # c.print $ self.testm 15
 
-        # path = "lena.bmp"
-        # outpath = "luna.bmp"
-        # img = readImage path
+    path = "lena.bmp"
+    outpath = "luna.bmp"
+    img = readImage path
 
-        # if isError img:
-        #     print "oh no!"
-        #     Sys.exitFailure
-        
-        # print path
-        # print img
+    if isError img:
+        print "oh no!"
+        Sys.exitFailure
+    
+    print path
+    img.write outpath
+    # print img
+
     # print path
     # img = readImage path
     # # c.print img
