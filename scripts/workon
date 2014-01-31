@@ -77,7 +77,7 @@ pkgs = { '@all'           : AllProject (deps = deptree)
        , 'batch'          : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')         , 'libs'    , ['utils', 'config', 'initializer', 'luna']          )
        , 'batch-srv'      : HProject   ('flowbox-batch-srv'   , os.path.join ('tools' , 'batch-srv')     , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
        , 'num-conversion' : HProject   ('num-conversion'      , os.path.join ('libs'  , 'num-conversion'), 'libs'    , [] )
-       , 'graphics'       : HProject   ('flowbox-graphics'    , os.path.join ('libs'  , 'graphics')      , 'libs'    , ['utils', 'num-conversion'] )
+       , 'graphics'       : HProject   ('flowbox-graphics'    , os.path.join ('libs'  , 'graphics')      , 'libs'    , ['target-hs', 'utils', 'num-conversion'] )
        , 'markup'         : HProject   ('doc-markup'          , os.path.join ('libs'  , 'markup')        , 'libs'    , []                                                  )
        }
 
