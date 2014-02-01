@@ -2,11 +2,16 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Luna.Target.HS.Std where
+module Luna.Target.HS.Std (
+	module Luna.Target.HS.Std,
+	module Data.List
+)where
 
 import Luna.Target.HS.Base
 import Luna.Target.HS.Data
 import Luna.Target.HS.Utils
+
+import Data.List
 
 --instance Call (Pure a) () (Pure a) where
 --    call val _ = val
