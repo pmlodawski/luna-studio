@@ -111,8 +111,8 @@ example = Source.Source ["Main"] $
                     --, "def List.each self callback:"
                     --, "    ```let {mymap x (Pure y) = mapM x y}```"
                     --, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
-                        , "def List.each callback:"
-                        , "    ```liftf2 map (val $ call1 #{callback}) #{self}```"
+                        --, "def List.each callback:"
+                        --, "    ```liftf2 map (val $ call1 #{callback}) #{self}```"
 
                         --, "def List.at self index:"
                         --, "    ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```"
@@ -151,11 +151,14 @@ example = Source.Source ["Main"] $
                         ,"def Int.+ b:"
                         ,"    ```liftf2 (+) #{self} #{b}```"
 
+                        ,"def Int.- b:"
+                        ,"    ```liftf2 (-) #{self} #{b}```"
+
                         --,"def Int./ b:"
                         --,"    ```liftf2 (-) #{self} #{b}```"
 
-                        ,"def Int.* b:"
-                        ,"    ```liftf2 (*) #{self} #{b}```"
+                        --,"def Int.* b:"
+                        --,"    ```liftf2 (*) #{self} #{b}```"
 
                         --,"def Int.< b:"
                         --,"    ```liftf2 (<) #{self} #{b}```"
@@ -163,16 +166,16 @@ example = Source.Source ["Main"] $
                         ----, "class Point:"
                         ----, "    x,y,z :: Int"
 
-                        , "def raise el err:"
-                        , "    ```raise #{el} #{err}```"
+                        --, "def raise el err:"
+                        --, "    ```raise #{el} #{err}```"
 
-                        , "def catch el f:"
-                        , "    ```catch #{el} #{f}```"
+                        --, "def catch el f:"
+                        --, "    ```catch #{el} #{f}```"
 
 
 
-                        , "def List.foldr f el:"
-                        , "    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```"
+                        --, "def List.foldr f el:"
+                        --, "    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```"
 
                         --, "class X"
                         --, "    def test self:"
@@ -189,13 +192,29 @@ example = Source.Source ["Main"] $
                     --, "def f a::X :"
                     --, "    a"
 
-                    , "def test x y: x+y"
+                    --, "class X a:"
+                    --, "    x :: a"
+                    --, "    def test a:"
+                    --, "        a + 1"
+
+                    --, "def test2 x y: x"
+                    --, "def +++ a b: a"
+
+                    --, "def add x y: x.+y"
+
+                    , "def + x y: x.+ y"
 
                     , "def main:"
-                    , "    a = [1,2,3,4]"
+                    --, "    print $ 1 + 2"
+                    , "    print $ @Int.+ 1 2"
+                    --, "    a = [1,2,3,4]"
                     --, "    a = 1"
-                    , "    f = @test"
-                    , "    print $ a.foldr f 0"
+                    --, "    f = @test"
+                    --, "    x = X 1"
+                    --, "    print $ x.test 1"
+                    --, "    print $ @test2 1 2"
+                    --, "    print $ @X.test x 2"
+                    --, "    print $ (+++) 1 2"
                     --, "    print a"
                     --, "    print $ a.each x:"
                     --, "        x*2"

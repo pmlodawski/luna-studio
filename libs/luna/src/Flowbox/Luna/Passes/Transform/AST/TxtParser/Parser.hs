@@ -264,28 +264,33 @@ pEntSimpleE = choice[ pCaseE -- CHECK [wd]: removed try
                     , pCondE
                     , try $ tok Expr.Grouped <*> L.parensed pExpr
                     , pIdentE
-                    , tok Expr.Lit    <*> pLit
-                    , tok Expr.Tuple  <*> pTuple  pOpE
-                    , tok Expr.List   <*> pList   pListExpr
-                    , tok Expr.Native <*> pNative
+                    , try (tok Expr.RefType <*  L.pRef <*> pCon) <* L.pAccessor <*> pVarOp
+                    , tok Expr.Ref     <*  L.pRef <*> pEntSimpleE
+                    , tok Expr.Lit     <*> pLit
+                    , tok Expr.Tuple   <*> pTuple  pOpE
+                    , tok Expr.List    <*> pList   pListExpr
+                    , tok Expr.Native  <*> pNative
                     ]
            <?> "expression term"
 
 optableE = [ [ postfixM  "::" (tok Expr.Typed <*> pType)                      ]
-           , [ prefixM   "@"  (tok Expr.Ref)                                  ]
+           --, [ prefixM   "@"  (tok Expr.Ref)                                  ]
            , [ binaryM   ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
-           , [ operator2 "^"                                  PExpr.AssocLeft ]
-           , [ operator2 "*"                                  PExpr.AssocLeft ]
-           , [ operator2 "/"                                  PExpr.AssocLeft ]
-           , [ operator2 "+"                                  PExpr.AssocLeft ]
-           , [ operator2 "-"                                  PExpr.AssocLeft ]
-           , [ operator2 "<"                                  PExpr.AssocLeft ]
-           , [ operator2 ">"                                  PExpr.AssocLeft ]
+           , [ operator4 "^"                                  PExpr.AssocLeft ]
+           , [ operator4 "*"                                  PExpr.AssocLeft ]
+           , [ operator4 "/"                                  PExpr.AssocLeft ]
+           , [ operator4 "+"                                  PExpr.AssocLeft ]
+           , [ operator4 "-"                                  PExpr.AssocLeft ]
+           , [ operator4 "<"                                  PExpr.AssocLeft ]
+           , [ operator4 ">"                                  PExpr.AssocLeft ]
            , [ operator2 "=="                                 PExpr.AssocLeft ]
-           , [ operator3 "in"                                 PExpr.AssocLeft ]
+           , [ operator4 "in"                                 PExpr.AssocLeft ]
            , [ binaryM  "$"  (binaryMatchE <$> tok Expr.callConstructor)      PExpr.AssocLeft ]
            ]
            where
+              --operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure op))
+              --operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure op))
+              operator4 op = binaryM op (binaryMatchE <$> ( (\id1 id2 x y -> Expr.App id1 (Expr.Var id2 op) [x, y]) <$> genID <*> genID) )
               --operator op = binaryM op (binaryMatchE <$> (tok Expr.Infix <*> pure ('~':op)))
               --operator2 op = binaryM op (binaryMatchE <$>  ( tok Expr.App <*> (tok Expr.Accessor <*> pure "add" <*> ... ) )  )
               operator2 op = binaryM op (binaryMatchE <$> ( (\id1 id2 x y -> Expr.App id1 (Expr.Accessor id2 op x) [y]) <$> genID <*> genID) )
@@ -299,10 +304,12 @@ binaryMatchE  f p q = f   (Expr.aftermatch p) (Expr.aftermatch q)
 
 
 pVarE   = tok Expr.Var <*> pVar
+pVarOpE = tok Expr.Var <*> L.parensed pVarOp
 pConE   = tok Expr.Con <*> pCon
 
 pIdentE = choice [ pVarE
                  , pConE
+                 , pVarOpE
                  ]
 
 pListExpr = choice [ try $ tok Expr.RangeFromTo <*> pOpE <* L.pRange <*> pOpE
