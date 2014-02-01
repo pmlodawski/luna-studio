@@ -315,11 +315,12 @@ genFuncBody :: [LExpr] -> LType -> GenPass [HExpr]
 genFuncBody exprs output = case exprs of
     []   -> pure []
     x:[] -> (:) <$> case x of
-                      LExpr.Assignment _ _ dst -> (genTypedE output <*> genFuncTopLevelExpr x)
+                      --FIXME[wd]: error when f.e func output type of unknown
+                      LExpr.Assignment _ _ dst -> genFuncTopLevelExpr x --(genTypedE output <*> genFuncTopLevelExpr x)
                       LExpr.Native     {}      -> genFuncTopLevelExpr x
-                      _                        -> (genTypedE output <*> genFuncTopLevelExpr x) -- mkGetIO <$>
+                      _                        -> genFuncTopLevelExpr x --(genTypedE output <*> genFuncTopLevelExpr x) -- mkGetIO <$>
                 <*> case x of
-                      LExpr.Assignment _ _ dst -> (:[]) <$> (genTypedE output <*> pure (mkVal $ HExpr.Tuple [])) -- . mkGetIO
+                      LExpr.Assignment _ _ dst -> (:[]) <$> pure (mkVal $ HExpr.Tuple []) --(genTypedE output <*> pure (mkVal $ HExpr.Tuple [])) -- . mkGetIO
                       _                        -> pure []
     x:xs -> (:) <$> genFuncTopLevelExpr x <*> genFuncBody xs output
 
@@ -367,7 +368,7 @@ genType safeTyping t = case t of
 
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM (genType safeTyping) items
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType safeTyping src) (mapM (genType safeTyping) args)
-    LType.Unknown _          -> logger critical "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"
+    LType.Unknown _          -> logger critical "Cannot generate code for unknown type1" *> Pass.fail "Cannot generate code for unknown type"
     --_                        -> fail $ show t
     where mtype    = HExpr.VarT $ if safeTyping then "Pure" else "m_" ++ show (view LType.id t)
           stype    = HExpr.VarT $ if safeTyping then "Safe" else "s_" ++ show (view LType.id t)
@@ -380,7 +381,7 @@ genType' t = case t of
 
     LType.Tuple   _ items    -> HExpr.Tuple <$> mapM genType' items
     LType.App     _ src args -> (liftM2 . foldl) (HExpr.AppT) (genType' src) (mapM genType' args)
-    LType.Unknown _          -> logger critical "Cannot generate code for unknown type" *> Pass.fail "Cannot generate code for unknown type"
+    LType.Unknown _          -> logger critical "Cannot generate code for unknown type2" *> Pass.fail "Cannot generate code for unknown type"
     --_                        -> fail $ show t
 
 genLit :: LLit.Lit -> GenPass HExpr
