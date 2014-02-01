@@ -117,7 +117,7 @@ remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
 lutExp :: (A.Elt a, A.IsFloating a) => [(Exp a, Exp a)] -> Exp a -> Exp a
 lutExp [] x = x
 lutExp ((_,x):[]) _ = x
-lutExp ((a,b):c@((p,q):arr)) x = (x A.<* a) A.? ( b
+lutExp ((a,b):c@((p,q):_)) x = (x A.<* a) A.? ( b
                                            , (a A.<=* x A.&&* x A.<* p) A.?
                                              ( b + (x-a) / (p-a) * ((q-p))
                                              , lutExp c x ))
