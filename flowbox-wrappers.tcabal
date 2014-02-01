@@ -4,7 +4,7 @@ build-type:         Simple
 cabal-version:      >=1.8
 
 
-executable cabal
+executable cabal-wrapper
   hs-source-dirs:   src
   main-is:          Cabal.hs
   ghc-options:      -O2 -main-is Cabal
