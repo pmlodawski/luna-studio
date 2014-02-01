@@ -302,7 +302,7 @@ convertRGBtoHSV img = do
 
 
 
-calculateRGBfromHSV :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> Exp3
+calculateRGBfromHSV :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> Exp3 a
 calculateRGBfromHSV h s v = A.unlift res
     where res = i A.==* (0::Exp Int) A.? (A.lift ((v, t, p)),
                 i A.==* (1::Exp Int) A.? (A.lift ((q, v, p)),
@@ -477,21 +477,18 @@ blenderAlphaF f o a b = blenderAlpha (f a b) a o
 
 --- keying
 
-keyColor :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 -> Exp3
+keyColor :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 a -> Exp3 a
             -> (Exp a -> Exp a) -> Image a -> Either Image.Error (Image a)
 keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
   channelA <- Image.lookup nameA img
   channelB <- Image.lookup nameB img
   channelC <- Image.lookup nameC img
-  let outimg = Image.insert nameA channelA'
-             $ Image.insert nameB channelB'
-             $ Image.insert nameC channelC'
+  let outimg = Image.insert nameA (match channelA)
+             $ Image.insert nameB (match channelB)
+             $ Image.insert nameC (match channelC)
              $ img
-      channelA' = match channelA
-      channelB' = match channelB
-      channelC' = match channelC
-      match c = Channel.zipWith4 (\p q r s -> (matched p q r) A.? (f s , s)) channelA channelB channelC c
-      matched a b c = (epsilon a valA epsA) A.&&* (epsilon b valB epsB) A.&&* (epsilon c valC epsC)
+      match c = Channel.zipWith (\a b -> b A.? (f a , a)) c matched
+      matched = Channel.zipWith3 (\a b c -> (epsilon a valA epsA) A.&&* (epsilon b valB epsB) A.&&* (epsilon c valC epsC)) channelA channelB channelC
   return outimg
 
 
@@ -541,7 +538,7 @@ extractBackground (nameA, nameB, nameC) images = do
 
 -- cut out from background
 
-cutOut :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 -> (Exp a -> Exp a)
+cutOut :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 a -> (Exp a -> Exp a)
           -> Image a -> Image a -> Either Image.Error (Image a)
 cutOut (nameA, nameB, nameC) (epsA, epsB, epsC) f imgIn imgBackground = do
   channelA1 <- Image.lookup nameA imgIn
