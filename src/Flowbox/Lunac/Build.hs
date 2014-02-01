@@ -58,12 +58,15 @@ build cfg op diag filePath = do
                         "" -> UniPath.basePath filePath
                         rp -> UniPath.fromUnixString rp
         libs     = Cmd.link op
-    ghcFlags <- case Cmd.optimisation op of
+    ghcFlags' <- case Cmd.optimisation op of
                     0 -> pure ["-O0"]
                     1 -> pure ["-O1"]
                     2 -> pure ["-O2"]
                     _ -> fail "Unsupported optimisation level"
-    let cppFlags   = if Cmd.ddebug op
+    let ccFlags  = if Cmd.ddebug op
+                         then ["\"-DDEBUG\""]
+                         else []
+        ghcFlags = if Cmd.ddebug op
                          then ["-DDEBUG"]
                          else []
         cabalFlags = case Cmd.global op of
@@ -76,6 +79,6 @@ build cfg op diag filePath = do
         buildDir   = case Cmd.buildDir op of
                         "" -> Nothing
                         d  -> Just $ UniPath.fromUnixString d
-        bldCfg = BuildConfig name version libs ghcFlags cppFlags cabalFlags buildType cfg diag buildDir
+        bldCfg = BuildConfig name version libs ghcFlags ccFlags cabalFlags buildType cfg diag buildDir
     (ast, _, astInfo) <- Luna.runIO $ Build.parseFile rootPath filePath
     Luna.runIO $ Build.run bldCfg ast astInfo
