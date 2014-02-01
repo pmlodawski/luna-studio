@@ -78,6 +78,7 @@ data LunaBackend = LunaCUDA
 cuda :: LunaBackend
 cuda = LunaCUDA
 
+
 interp :: LunaBackend
 interp = LunaInterpreter
 
@@ -105,6 +106,7 @@ compose = Pure . RGBA.compose
 adjustCB :: Double -> Double -> Image Double -> Pure (Either Image.Error (Image Double))
 adjustCB contrastValue brightnessValue img = 
     Pure $ Alg.adjustCB_RGB (A.constant contrastValue) (A.constant brightnessValue) img
+
 
 convolve :: Double -> Image Double -> Pure (Either Image.Error (Image Double))
 convolve kernel img = Pure $ Alg.convolveRGB Alg.convolve3x3 kernel' img where
