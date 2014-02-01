@@ -51,7 +51,9 @@ pNativeSym   = symbols "```"
 pRange       = symbols ".."
 pRef         = symbol  '@'
 
-operators    = "!#$%&*+./<=>?@\\^|-~"
+--FIXME[wd]
+--deleted @, because code like "f @g" does not work
+operators    = "!#$%&*+./<=>?\\^|-~" 
 
 opStart      = oneOf operators
 opLetter     = opStart
