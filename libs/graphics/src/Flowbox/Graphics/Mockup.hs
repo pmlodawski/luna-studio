@@ -112,11 +112,18 @@ convolve kernel img = Pure $ Alg.convolveRGB Alg.convolve3x3 kernel' img where
     kernel' = map A.constant $ replicate 9 kernel
 
 
+convertRGBtoHSV :: (A.Elt a, A.IsFloating a) => Image a -> Pure (Either Image.Error (Image a))
+convertRGBtoHSV = Pure . Alg.convertRGBtoHSV
+
+
+convertHSVtoRGB :: (A.Elt a, A.IsFloating a) => Image a -> Pure (Either Image.Error (Image a))
+convertHSVtoRGB = Pure . Alg.convertHSVtoRGB
+
+-- Channel ---------------------------------------------------------------
 imgChannelGet :: String -> Image Double -> Pure (Either Image.Error (Channel Double))
 imgChannelGet name img = Pure $ Image.lookup name img
 
 
--- Channel ---------------------------------------------------------------
 imgChannelInsert :: String -> Channel Double -> Image Double -> Image Double
 imgChannelInsert = Image.insert
 
@@ -127,3 +134,4 @@ channelMap = Channel.map
 
 constant :: Double -> A.Exp Double
 constant = A.constant
+
