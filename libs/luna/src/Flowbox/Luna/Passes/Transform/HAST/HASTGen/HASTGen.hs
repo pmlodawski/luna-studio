@@ -241,7 +241,8 @@ genExpr ast = case ast of
 
                                            return dt
 
-    LExpr.Infix        _ name src dst        -> HExpr.Infix name <$> genExpr src <*> genExpr dst
+    LExpr.Infix        id name src dst       -> genExpr (LExpr.App id (LExpr.Var 0 name) [src, dst])
+                                                --HExpr.Infix name <$> genExpr src <*> genExpr dst
     LExpr.Assignment   _ pat dst             -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
     LExpr.RecordUpdate _ src selectors expr  -> genExpr $ (setSteps sels) expr
                                                 where setter sel exp val = flip (LExpr.App 0) [val]
@@ -283,6 +284,7 @@ genExpr ast = case ast of
     LExpr.RangeFromTo _ start end            -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
     LExpr.RangeFrom   _ start                -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start
     LExpr.Ref         _ dst                  -> genExpr dst
+    LExpr.RefType     _ typeName name        -> pure $ thTypeRef typeName name
     LExpr.Native      _ segments             -> pure $ HExpr.Native (join "" $ map genNative segments)
     LExpr.Typed       _ _cls _expr           -> Pass.fail "Typing expressions is not supported yet." -- Potrzeba uzywac hacku: matchTypes (undefined :: m1(s1(Int)))  (val (5 :: Int))
     LExpr.NOP         _                      -> pure HExpr.NOP

@@ -98,6 +98,38 @@ def Double.prev:
 
 
 
+def Double.invert:
+    ```liftf1 invert #{self}```
+
+def Double.invert_:
+    ```liftf1 invert' #{self}```
+
+def Double.sign:
+    ```liftf1 sign #{self}```
+
+def Double.parametrize lo hi:
+    ```liftf3 parametrize #{lo} #{hi} #{self}```
+
+def Double.bias b:
+    ```liftf2 bias #{b} #{self}```
+
+def Double.gain g:
+    ```liftf2 gain #{g} #{self}```
+
+def Double.gamma g:
+    ```liftf2 gamma #{g} #{self}```
+
+def Double.compress lo hi:
+    ```liftf3 gamma #{lo} #{hi} #{self}```
+
+def Double.expand lo hi:
+    ```liftf3 expand #{lo} #{hi} #{self}```
+
+def Double.remap loA hiA loB hiB:
+    ```liftf5 remap #{loA} #{hiA} #{loB} #{hiB} #{self}```
+
+
+
 def raise el err:
     ```raise #{el} #{err}```
 
@@ -115,7 +147,7 @@ class Sys:
         ```exitFailure```
 
 
-###############################################
+## Backend ####################################
 
 def cuda:
     ```liftf0 cuda```
@@ -123,6 +155,7 @@ def cuda:
 def interp:
     ```liftf0 interp```
 
+## Image ######################################
 
 def readImageWord8 path:
     ```flattenCtx $ liftf1 readImage #{path}```
@@ -156,11 +189,20 @@ def Image.adjustCB contrast brightness:
 def Image.convolve kernel:
     ```flattenCtx $ liftf2 convolve #{kernel} #{self}```
 
+def Image.convertRGBtoHSV:
+    ```liftf1 convertRGBtoHSV #{self}```
+
+def Image.convertHSVtoRGB:
+    ```liftf1 convertHSVtoRGB #{self}```
+
 def Image.getChannel name:
     ```flattenCtx $ liftf2 imgChannelGet #{name} #{self}```
 
 def Image.putChannel name channel:
     ```liftf3 imgChannelInsert #{name} #{channel} #{self}```
+
+## Channel ####################################
+
 
 # # FIXME [wd] zrób to
 # # def Channel.map self callback:
@@ -172,21 +214,6 @@ def Image.putChannel name channel:
 
 # def constant x:
 #     ```liftf1 constant #{x}```
-
-# class Channel:
-#     zip ...:
-#         ``` ... ```
-
-# class Channel a:
-#     Raw :: RawData a
-#     # Acc ::
-
-# class Vector a = Vector: x :: a
-#                          y :: a
-#                          z :: a
-#                | Scalar: a :: a
-#                | Vector2: x :: a
-
 
 
 
@@ -201,7 +228,7 @@ class Vector a:
 
     def normalize:
         Vector (x/length) (y/length) (z/length)
-
+    
 def main:
     v = Vector 1 2 3
     print v
@@ -246,6 +273,7 @@ def main:
     
     outpath2 = "luna2.bmp"
     print "=========="
+    img.convertRGBtoHSV.convertHSVtoRGB
     img.write outpath2 backend
     
     # # img = img.convolve k
@@ -266,4 +294,5 @@ def main:
 
     # img.writeImage outpath
     # # # c.print img
+
 

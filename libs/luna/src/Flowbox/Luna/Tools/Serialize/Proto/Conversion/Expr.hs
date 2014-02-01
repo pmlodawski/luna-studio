@@ -58,6 +58,7 @@ import qualified Generated.Proto.Expr.TypeDef                      as GenTypeDef
 import qualified Generated.Proto.Expr.Var                          as GenVar
 import qualified Generated.Proto.Expr.Wildcard                     as GenWildcard
 import qualified Generated.Proto.Expr.Ref                     as GenRef
+import qualified Generated.Proto.Expr.RefType                     as GenRefType
 import qualified Text.ProtocolBuffers.Extensions                   as Extensions
 
 
@@ -137,6 +138,9 @@ instance Convert Expr Gen.Expr where
                                       (encodePJ name)
         Expr.Ref        i dst      -> genExpr GenCls.Ref i GenRef.ext $ GenRef.Ref
                                       (encodeJ dst)
+        Expr.RefType    i typename name
+                                   -> genExpr GenCls.RefType i GenRefType.ext $ GenRefType.RefType
+                                      (encodePJ typename) (encodePJ name)
         Expr.Case  i expr match    -> genExpr GenCls.Case i GenCase.ext $ GenCase.Case
                                       (encodeJ expr) (encodeList match)
         Expr.Match i pat body      -> genExpr GenCls.Match i GenMatch.ext $ GenMatch.Match
@@ -316,6 +320,12 @@ instance Convert Expr Gen.Expr where
                 (GenRef.Ref mtdst) <- ext <?> "Failed to decode Expr.Ref: extension is missing"
                 tdst <- mtdst <?> "Failed to decode Expr.Ref: 'dst' field is missing"
                 Expr.Ref i <$> decode tdst
+            GenCls.RefType -> do
+                ext <- getExt GenRefType.ext
+                (GenRefType.RefType mttypename mtname) <- ext <?> "Failed to decode Expr.RefType: extension is missing"
+                ttypename <- mttypename <?> "Failed to decode Expr.Ref: 'typename' field is missing"
+                tname <- mtname <?> "Failed to decode Expr.RefType: 'name' field is missing"
+                pure $ Expr.RefType i (decodeP ttypename) (decodeP tname)
             GenCls.Case -> do
                 ext <- getExt GenCase.ext
                 (GenCase.Case mtexpr tmatch) <- ext <?> "Failed to decode Expr.Case: extension is missing"
