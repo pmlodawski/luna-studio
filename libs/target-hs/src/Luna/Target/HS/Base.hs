@@ -324,15 +324,6 @@ instance FlattenErr (Either e) (Either e) (Either e) where
             Left e    -> Left e
             Right val -> Right val
 
---data
-
---instance FlattenErr (Either e1) (Either e2) (Either e2) where
---    flattenErr a = case a of
---        Left  e -> Left e
---        Right b -> case b of
---            Left e    -> Left e
---            Right val -> Right val
-
 
 --type family FlattenErrResult a b where
 --    FlattenErrResult Safe       Safe       = Safe
@@ -369,6 +360,9 @@ instance FlipCtx (Either e) IO where
 -- LiftErr
 ------------------------------------------------------------------------
 
+--data EitherError a b val = JustError   a
+--                         | EitherError (Either b val)
+--                         deriving (Show)
 
 class LiftErr m1 m2 m3 | m1 m2 -> m3 where
     liftErr :: m1 (a -> b) -> m2 a -> m3 b
@@ -381,6 +375,16 @@ instance LiftErr Safe (Either e) (Either e) where
 
 instance LiftErr (Either e) (Either e) (Either e) where
     liftErr f a = f <*> a
+
+--instance LiftErr (Either e1) (Either e2) (EitherError e1 e2) where
+--    liftErr a b = case a of
+--        Left e    -> JustError e
+--        Right val -> EitherError (val <$> b)
+
+--instance LiftErr (Either e1) (EitherError e2 e3) where
+--    liftErr a b = case a of
+--        Left e    -> JustError e
+--        Right val -> EitherError (val <$> b)
 
 instance LiftErr (Either e) Safe (Either e) where
     liftErr f (Safe a) = f <*> pure a 

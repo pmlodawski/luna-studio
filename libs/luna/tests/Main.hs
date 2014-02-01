@@ -148,11 +148,11 @@ example = Source.Source ["Main"] $
                         ----, "    pos :: a"
 
 
-                        ,"def Int.+ b:"
-                        ,"    ```liftf2 (+) #{self} #{b}```"
+                        --,"def Int.+ b:"
+                        --,"    ```liftf2 (+) #{self} #{b}```"
 
-                        ,"def Int.- b:"
-                        ,"    ```liftf2 (-) #{self} #{b}```"
+                        --,"def Int.- b:"
+                        --,"    ```liftf2 (-) #{self} #{b}```"
 
                         --,"def Int./ b:"
                         --,"    ```liftf2 (-) #{self} #{b}```"
@@ -202,11 +202,27 @@ example = Source.Source ["Main"] $
 
                     --, "def add x y: x.+y"
 
-                    , "def + x y: x.+ y"
+                    --, "def + x y: x.+ y"
 
+                    --, "def main:"
+
+
+                    --, "def Int.+ a:"
+                    --, "    ```liftf2 (+) #{self} #{a}```"
+
+                    , "def Int.test:"
+                    , "    {self, self}"
+                    
+                    , "def fun x:"
+                    , "    x.test"
+                    
                     , "def main:"
-                    --, "    print $ 1 + 2"
-                    , "    print $ @Int.+ 1 2"
+                    , "    fun 5"
+                    --, "    f = @(+)"
+                    --, "    print $ (+) 1 2"
+                    --, "    print $ @Int.+ 1 2"
+                            --, "    a = [1,2,3,4,5]"
+                            --, "    print $ a.foldr @(+) 0"
                     --, "    a = [1,2,3,4]"
                     --, "    a = 1"
                     --, "    f = @test"
