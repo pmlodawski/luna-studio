@@ -31,8 +31,8 @@ import           Flowbox.Prelude                   as P
 --imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
 imgtest img imgBack = do --imgFilter = do
     let getDouble image = Image.reprDouble <$> RGBA.decompose image
-    rgba  <- getDouble img
-    --rgba  <- sequence $ fmap getDouble img
+    --rgba  <- getDouble img
+    rgba  <- sequence $ fmap getDouble img
     rgbaBack <- getDouble imgBack
     --rgbaFilter <- Image.reprDouble <$> RGBA.decompose imgFilter
     --lrgba <- adjustCB 2.2 0.2 "r" "g" "b" rgba
@@ -68,12 +68,12 @@ imgtest img imgBack = do --imgFilter = do
     --dilatedMono <- G.dilateImage rgb lrgba
     --medianMono <- G.medianImage rgb lrgba
     --imgMedian <- G.medianImage rgb rgba
-    --imgBackground <- G.extractBackground rgb rgba
-    imgBackgroundHSV <- G.convertRGBtoHSV rgbaBack
-    frameHSV <- G.convertRGBtoHSV rgba
-    imgCutHSV <- G.cutOut hsv (0.3, 0.4, 0.4) f frameHSV imgBackgroundHSV
-    imgCut <- G.convertHSVtoRGB imgCutHSV
-    RGBA.compose $ Image.reprWord8 imgCut
+    imgBackground <- G.extractBackground rgb rgba
+    --imgBackgroundHSV <- G.convertRGBtoHSV rgbaBack
+    --frameHSV <- G.convertRGBtoHSV rgba
+    --imgCutHSV <- G.cutOut hsv (0.3, 0.4, 0.4) f frameHSV imgBackgroundHSV
+    --imgCut <- G.convertHSVtoRGB imgCutHSV
+    RGBA.compose $ Image.reprWord8 imgBackground
     --where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
     --      mod1 = flip nonIntRem 1.0
 
@@ -92,7 +92,7 @@ main
                   >> Exit.exitSuccess
 
         let backend     = Label.get Cfg.configBackend conf
-            frameNames  = fmap (\x -> (T.printf "frame-%03d.bmp" x) :: String) ([112..129] :: [Int])
+            frameNames  = fmap (\x -> (T.printf "frame-%03d.bmp" x) :: String) ([237..250] :: [Int])
             getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
         -- Read in the image file
 
@@ -104,7 +104,7 @@ main
         frameFiles <- sequence $ fmap getImage frameNames
 
         --imgFilter <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP "filter.bmp"
-        let img3 = imgtest imgFrame imgBack -- frameFiles -- img2 -- imgFilter
+        let img3 = imgtest frameFiles imgBack -- frameFiles -- img2 -- imgFilter
 
         case img3 of
             Left  err -> print err

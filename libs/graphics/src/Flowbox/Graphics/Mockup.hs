@@ -39,9 +39,8 @@ import           GHC.Float
 import qualified System.Exit           as Exit
 #ifdef ACCELERATE_CUDA_BACKEND
 import qualified Data.Array.Accelerate.CUDA as CUDA
-#else
-import qualified Data.Array.Accelerate.Interpreter as Interpreter
 #endif
+import qualified Data.Array.Accelerate.Interpreter as Interpreter
 
 import           Data.Number.Conversion
 import qualified Flowbox.Graphics.Algorithms as Alg
@@ -104,7 +103,7 @@ compose = Pure . RGBA.compose
 
 
 adjustCB :: Double -> Double -> Image Double -> Pure (Either Image.Error (Image Double))
-adjustCB contrastValue brightnessValue img = 
+adjustCB contrastValue brightnessValue img =
     Pure $ Alg.adjustCB_RGB (A.constant contrastValue) (A.constant brightnessValue) img
 
 
