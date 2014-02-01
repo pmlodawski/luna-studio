@@ -33,6 +33,7 @@ import           Flowbox.Prelude                   as P
 
 
 type String3 = (String, String, String)
+type Exp3 a  = (Exp a, Exp a, Exp a)
 
 -- utils
 
@@ -301,7 +302,7 @@ convertRGBtoHSV img = do
 
 
 
-calculateRGBfromHSV :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> (Exp a, Exp a, Exp a)
+calculateRGBfromHSV :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> Exp3
 calculateRGBfromHSV h s v = A.unlift res
     where res = i A.==* (0::Exp Int) A.? (A.lift ((v, t, p)),
                 i A.==* (1::Exp Int) A.? (A.lift ((q, v, p)),
@@ -476,7 +477,7 @@ blenderAlphaF f o a b = blenderAlpha (f a b) a o
 
 --- keying
 
-keyColor :: (A.Elt a, A.IsFloating a) => String3 -> (Exp a, Exp a, Exp a) -> (Exp a, Exp a, Exp a)
+keyColor :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 -> Exp3
             -> (Exp a -> Exp a) -> Image a -> Either Image.Error (Image a)
 keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
   channelA <- Image.lookup nameA img
@@ -540,7 +541,7 @@ extractBackground (nameA, nameB, nameC) images = do
 
 -- cut out from background
 
-cutOut :: (A.Elt a, A.IsFloating a) => String3 -> (Exp a, Exp a, Exp a) -> (Exp a -> Exp a)
+cutOut :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 -> (Exp a -> Exp a)
           -> Image a -> Image a -> Either Image.Error (Image a)
 cutOut (nameA, nameB, nameC) (epsA, epsB, epsC) f imgIn imgBackground = do
   channelA1 <- Image.lookup nameA imgIn
