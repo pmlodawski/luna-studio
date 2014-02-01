@@ -47,7 +47,7 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform                                                 as Platform
 import           Flowbox.System.UniPath                                                  (UniPath)
 import qualified Flowbox.System.UniPath                                                  as UniPath
-import qualified Flowbox.Text.Show.Hs                                                    as ShowHs
+import           Flowbox.Text.Show.Hs                                                    (hsShow)
 
 
 
@@ -79,53 +79,33 @@ run buildConfig ast astInfo = runEitherT $ do
     -- Should be run BEFORE Analysis.Alias
     logger debug "\n-------- Desugar.ImplicitSelf --------"
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitSelf.run astInfo ast
-    -- TODO Diagnostics
-    --logger info $ PP.ppqShow ast
-
+    Diagnostics.printAST ast diag
 
     logger debug "\n-------- Desugar.TLRecUpdt --------"
     (ast, astInfo) <- hoistEither =<< Desugar.TLRecUpdt.run astInfo ast
-    -- TODO Diagnostics
-    --Diagnostics.printAST ast diag
+    Diagnostics.printAST ast diag
 
     logger debug "\n-------- Analysis.Alias --------"
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast
-    --Diagnostics.printVA aliasInfo diag
-    -- TODO Diagnostics
-    --logger info "\n>> varRel:"
-    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.varRel)
-    --logger info "\n>> aliasMap:"
-    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.aliasMap)
-    --logger info "\n>> invalidMap:"
-    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
+    Diagnostics.printAA aliasInfo diag
 
     -- !!! [WARNING] INVALIDATES aliasInfo !!!
     logger debug "\n-------- Desugar.ImplicitScopes --------"
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo aliasInfo ast
-    -- TODO Diagnostics
-    --Diagnostics.printAST ast diag
+    Diagnostics.printAST ast diag
 
     -- Should be run AFTER ImplicitScopes
     logger debug "\n-------- Desugar.ImplicitCalls --------"
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitCalls.run astInfo ast
-    -- TODO Diagnostics
-    --Diagnostics.printAST ast diag
-
+    Diagnostics.printAST ast diag
 
     logger debug "\n-------- Analysis.Alias --------"
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast
-    -- TODO Diagnostics
-    --logger info "\n>> varRel:"
-    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.varRel)
-    --logger info "\n>> aliasMap:"
-    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.aliasMap)
-    --logger info "\n>> invalidMap:"
-    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
+    Diagnostics.printAA aliasInfo diag
 
     logger debug "\n-------- Hash --------"
     hash <- hoistEither =<< Hash.run ast
-    -- TODO Diagnostics
-    --logger info $ PP.ppShow hash
+    Diagnostics.printHash hash diag
 
     logger debug "\n-------- SSA --------"
     ssa <- hoistEither =<< SSA.run aliasInfo hash
@@ -136,8 +116,10 @@ run buildConfig ast astInfo = runEitherT $ do
     Diagnostics.printHAST hast diag
 
     logger debug "\n-------- HSC --------"
-    hsc <- hoistEither =<< HSC.run  hast
-    Diagnostics.printHSC hsc diag
+    hsc' <- hoistEither =<< HSC.run hast
+    Diagnostics.printHSC hsc' diag
+
+    let hsc = map formatSource hsc'
 
     let allLibs = "base"
                 -- : "flowboxM-core"
@@ -171,8 +153,7 @@ writeSources outputPath sources = mapM_ (writeSource outputPath) sources
 
 writeSource :: UniPath -> Source -> Pass.Result ()
 writeSource outputPath source = FileWriter.run path hsExt source where
-    path = UniPath.append srcFolder outputPath
-
+    path     = UniPath.append srcFolder outputPath
 
 copyExecutable :: MonadIO m => UniPath -> String -> UniPath -> m ()
 copyExecutable location name outputPath = liftIO $ do
@@ -187,3 +168,6 @@ parseFile rootPath filePath = runEitherT $ do
     source <- hoistEither =<< FileReader.run rootPath filePath
     result <- hoistEither =<< TxtParser.run source
     return result
+
+formatSource :: Source -> Source
+formatSource s = s { Source.code = hsShow $ Source.code s }

@@ -5,12 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
- -- [ ] 1) lut
+ -- [+] 1) lut
  -- [+] 2) dylatacja
  -- [+] 3) erozja
  -- [+] 4) otwarcie
  -- [+] 5) zamknięcie
- -- [ ] 6) mediana - do czysczenia np. kurzu
+ -- [+] 6) mediana - do czysczenia np. kurzu
  -- [ ] 7) zmiany kolorow na krzywych - definiowane za pomoca datatypu, ktory okrelalby czy to jest linear, bezier cyz cos innego
  -- [ ] 8) samplowanie po kolorach
 
@@ -32,25 +32,39 @@ import qualified Flowbox.Graphics.Raster.Image     as Image
 import           Flowbox.Prelude                   as P
 
 
+type String3 = (String, String, String)
+type Exp3 a  = (Exp a, Exp a, Exp a)
 
 -- utils
 
-applyToImage :: (Channel a -> Channel a) -> (String, String, String) -> Image a -> Either Image.Error (Image a)
-applyToImage f names img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
+epsilon :: (A.Elt a, A.IsNum a) => Exp a -> Exp a -> Exp a -> Exp Bool
+epsilon a b eps = ((delta A.>=* 0) A.&&* (delta A.<* eps)) A.||* ((delta A.<* 0) A.&&* (delta A.>* -eps))
+           A.? (A.constant True , A.constant False)
+         where delta = a - b
+
+epsilon' :: (A.Elt a, A.IsNum a) => Exp a -> Exp a -> Exp Bool
+epsilon' delta eps = ((delta A.>=* 0) A.&&* (delta A.<* eps)) A.||* ((delta A.<* 0) A.&&* (delta A.>* -eps))
+           A.? (A.constant True , A.constant False)
+
+applyToImage :: (Channel a -> Channel a) -> String3 -> Image a -> Either Image.Error (Image a)
+applyToImage f (nameA, nameB, nameC) img = do
   channelA <- Image.lookup nameA img
   channelB <- Image.lookup nameB img
   channelC <- Image.lookup nameC img
-  let outimg = Image.insert nameA channelA'
-             $ Image.insert nameB channelB'
-             $ Image.insert nameC channelC'
+  let outimg = Image.insert nameA (f channelA)
+             $ Image.insert nameB (f channelB)
+             $ Image.insert nameC (f channelC)
              $ img
-      channelA' = f channelA
-      channelB' = f channelB
-      channelC' = f channelC
   return outimg
+
+
+-- works assuming we have a sorted array
+median' :: Fractional a => [a] -> a
+median' xs | odd  len = xs !! mid
+           | even len = meanMedian
+                 where  len = length xs
+                        mid = len `div` 2
+                        meanMedian = (xs !! mid + xs !! (mid+1)) / 2
 
 
 bsort :: (A.Elt a, A.IsScalar a) => [Exp a] -> [Exp a]
@@ -61,10 +75,10 @@ bsortStep arr 0 = arr
 bsortStep arr n = bsortStep (bsortPair arr) (n-1)
 
 bsortPair :: (A.Elt a, A.IsScalar a) => [Exp a] -> [Exp a]
-bsortPair ([])       = []
-bsortPair (a:[])     = [a]
-bsortPair (a:b:[])   = [min a b, max a b]
-bsortPair (a:b:tail) = [min a b] ++ (bsortPair $ [max a b] ++ tail)
+bsortPair ([])     = []
+bsortPair (a:[])   = [a]
+bsortPair (a:b:[]) = [min a b, max a b]
+bsortPair (a:b:t)  = [min a b] ++ (bsortPair $ [max a b] ++ t)
 
 
 
@@ -104,14 +118,29 @@ remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
 
 -- simple
 
+lutExp :: (A.Elt a, A.IsFloating a) => [(Exp a, Exp a)] -> Exp a -> Exp a
+lutExp [] x = x
+lutExp ((_,x):[]) _ = x
+lutExp ((a,b):c@((p,q):_)) x = (x A.<* a) A.? ( b
+                                           , (a A.<=* x A.&&* x A.<* p) A.?
+                                             ( b + (x-a) / (p-a) * ((q-p))
+                                             , lutExp c x ))
+
+lutChannel :: (A.Elt a, A.IsFloating a) => [(Exp a, Exp a)] -> Channel a -> Channel a
+lutChannel table channel = Channel.map (lutExp table) channel
+
+lutImage :: (A.Elt a, A.IsFloating a) => String3 -> [(Exp a, Exp a)] -> Image a -> Either Image.Error (Image a)
+lutImage names table = applyToImage (lutChannel table) names
+
+
 binarizeChannel :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> Channel a -> Channel a
 binarizeChannel f channel = Channel.map (\x -> f x A.? (1 , 0)) channel
 
-binarizeImage :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> (String, String, String) -> Image a -> Either Image.Error (Image a)
+binarizeImage :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> String3 -> Image a -> Either Image.Error (Image a)
 binarizeImage f = applyToImage (binarizeChannel f)
 
-luminance :: (A.Elt a, A.IsFloating a) => String -> String -> String -> String -> (Image a) -> Either Image.Error (Image a)
-luminance rname gname bname outname img = do
+luminance :: (A.Elt a, A.IsFloating a) => String3 -> String -> (Image a) -> Either Image.Error (Image a)
+luminance (rname, gname, bname) outname img = do
     chr <- Image.lookup rname img
     chg <- Image.lookup gname img
     chb <- Image.lookup bname img
@@ -121,7 +150,7 @@ luminance rname gname bname outname img = do
     return outimg
 
 luminance' :: (A.Elt a, A.IsFloating a) => (Image a) -> Either Image.Error (Image a)
-luminance' = luminance "r" "g" "b" "luminance"
+luminance' = luminance ("r", "g", "b") "luminance"
 
 
 
@@ -129,25 +158,25 @@ erodeChannel :: (A.Elt a, A.IsFloating a) => Channel a -> Channel a
 erodeChannel channel = Channel.stencil erode A.Mirror channel
     where erode ((a,b,c),(d,e,f),(g,h,i)) = minimum [a,b,c,d,e,f,g,h,i]
 
-erodeImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
+erodeImage :: (A.Elt a, A.IsFloating a) => String3 -> Image a -> Either Image.Error (Image a)
 erodeImage = applyToImage erodeChannel
 
 dilateChannel :: (A.Elt a, A.IsFloating a) => Channel a -> Channel a
 dilateChannel channel = Channel.stencil dilate A.Mirror channel
     where dilate ((a,b,c),(d,e,f),(g,h,i)) = maximum [a,b,c,d,e,f,g,h,i]
 
-dilateImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
+dilateImage :: (A.Elt a, A.IsFloating a) => String3 -> Image a -> Either Image.Error (Image a)
 dilateImage = applyToImage dilateChannel
 
 
 
-openImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
+openImage :: (A.Elt a, A.IsFloating a) => String3 -> Image a -> Either Image.Error (Image a)
 openImage names img = do
     imgA <- erodeImage names img
     imgB <- dilateImage names imgA
     return imgB
 
-closeImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
+closeImage :: (A.Elt a, A.IsFloating a) => String3 -> Image a -> Either Image.Error (Image a)
 closeImage names img = do
     imgA <- dilateImage names img
     imgB <- erodeImage names imgA
@@ -159,7 +188,7 @@ medianChannel :: (A.Elt a, A.IsFloating a) => Channel a -> Channel a
 medianChannel channel = Channel.stencil middleValue A.Mirror channel
     where middleValue ((a,b,c),(d,e,f),(g,h,i)) = (bsort [a,b,c,d,e,f,g,h,i]) !! 4 -- 4 is the middle index of 9 which is the length of the window
 
-medianImage :: (A.Elt a, A.IsFloating a) => (String, String, String) -> Image a -> Either Image.Error (Image a)
+medianImage :: (A.Elt a, A.IsFloating a) => String3 -> Image a -> Either Image.Error (Image a)
 medianImage = applyToImage medianChannel
 
 
@@ -183,11 +212,8 @@ convolve5x5 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o),(p,q,r,s,t),(u,v,w,x,y))
     = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y]
 
 convolve :: (A.Elt a, A.IsFloating a, A.Stencil A.DIM2 a stencil) =>
-  (String, String, String) -> (t -> stencil -> Exp a) -> t -> Image a -> Either Image.Error (Image a)
-convolve names convolution kernel img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
+  String3 -> (t -> stencil -> Exp a) -> t -> Image a -> Either Image.Error (Image a)
+convolve (nameA, nameB, nameC) convolution kernel img = do
   channelA <- Image.lookup nameA img
   channelB <- Image.lookup nameB img
   channelC <- Image.lookup nameC img
@@ -209,10 +235,10 @@ convolveRGB = convolve ("r", "g", "b")
 -- brightness and contrast
 
 adjustCB_RGB :: (A.Elt a, A.IsFloating a) => A.Exp a -> A.Exp a -> Image a -> Either Image.Error (Image a)
-adjustCB_RGB = adjustCB "r" "g" "b"
+adjustCB_RGB = adjustCB ("r", "g", "b")
 
-adjustCB :: (A.Elt a, A.IsFloating a) => String -> String -> String -> A.Exp a -> A.Exp a -> Image a -> Either Image.Error (Image a)
-adjustCB rname gname bname contrastValue brightnessValue img = do
+adjustCB :: (A.Elt a, A.IsFloating a) => String3 -> A.Exp a -> A.Exp a -> Image a -> Either Image.Error (Image a)
+adjustCB (rname, gname, bname) contrastValue brightnessValue img = do
     rchannel <- Image.lookup rname img
     gchannel <- Image.lookup gname img
     bchannel <- Image.lookup bname img
@@ -226,12 +252,11 @@ adjustCB rname gname bname contrastValue brightnessValue img = do
         adjust x = contrastValue * x + brightnessValue
     return outimg
 
-contrast :: (A.Elt a, A.IsFloating a) => A.Exp a -> String -> String -> String -> Image a -> Either Image.Error (Image a)
-contrast x r g b = adjustCB r g b x 0
+contrast :: (A.Elt a, A.IsFloating a) => A.Exp a -> String3 -> Image a -> Either Image.Error (Image a)
+contrast x rgb = adjustCB rgb x 0
 
-brightness :: (A.Elt a, A.IsFloating a) => A.Exp a -> String -> String -> String -> Image a -> Either Image.Error (Image a)
-brightness x r g b = adjustCB r g b 1 x
-
+brightness :: (A.Elt a, A.IsFloating a) => A.Exp a -> String3 -> Image a -> Either Image.Error (Image a)
+brightness x rgb = adjustCB rgb 1 x
 
 
 -- color conversion
@@ -277,7 +302,7 @@ convertRGBtoHSV img = do
 
 
 
-calculateRGBfromHSV :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> (Exp a, Exp a, Exp a)
+calculateRGBfromHSV :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> Exp3 a
 calculateRGBfromHSV h s v = A.unlift res
     where res = i A.==* (0::Exp Int) A.? (A.lift ((v, t, p)),
                 i A.==* (1::Exp Int) A.? (A.lift ((q, v, p)),
@@ -452,31 +477,83 @@ blenderAlphaF f o a b = blenderAlpha (f a b) a o
 
 --- keying
 
-keyColor :: (A.Elt a, A.IsFloating a) => (String, String, String) -> (Exp a, Exp a, Exp a) -> (Exp a, Exp a, Exp a)
+keyColor :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 a -> Exp3 a
             -> (Exp a -> Exp a) -> Image a -> Either Image.Error (Image a)
-keyColor names epsilon value f img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
+keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
   channelA <- Image.lookup nameA img
   channelB <- Image.lookup nameB img
   channelC <- Image.lookup nameC img
+  let outimg = Image.insert nameA (match channelA)
+             $ Image.insert nameB (match channelB)
+             $ Image.insert nameC (match channelC)
+             $ img
+      match c = Channel.zipWith (\a b -> b A.? (f a , a)) c matched
+      matched = Channel.zipWith3 (\a b c -> (epsilon a valA epsA) A.&&* (epsilon b valB epsB) A.&&* (epsilon c valC epsC)) channelA channelB channelC
+  return outimg
+
+
+
+-- extracting background
+
+--generateHistList result [] = result
+--generateHistList result@((x,y):xs) (val:arr) =
+--  if val A.==* x
+--    then generateHistList arr ([(x,y+1)] ++ xs)
+--    else generateHistList arr ([(val,1)] ++ result)
+
+--findMostFrequent eps arr = findMostFrequent' [] eps arr
+--findMostFrequent arr = arr !! 0
+
+--findMostFrequent' result _ [] = result
+--findMostFrequent' result eps arr@((x,_):xs) = findMostFrequent (val A.>* result A.? (val,result)) eps xs
+--  where val = step 0 arr
+--        step res [] = res
+--        step res ((a,b):rest) =
+
+extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> [Image a] -> Either Image.Error (Image a)
+extractBackground (nameA, nameB, nameC) images = do
+  let firstImg    = images !! 0
+  channelsA <- sequence $ fmap (Image.lookup nameA) images
+  channelsB <- sequence $ fmap (Image.lookup nameB) images
+  channelsC <- sequence $ fmap (Image.lookup nameC) images
+  tmpChannel <- Image.lookup "a" firstImg
   let outimg = Image.insert nameA channelA'
              $ Image.insert nameB channelB'
              $ Image.insert nameC channelC'
-             $ img
-      channelA' = match channelA
-      channelB' = match channelB
-      channelC' = match channelC
-      match c = Channel.zipWith4 (\p q r s -> (matched p q r) A.? (f s , s)) channelA channelB channelC c
-      matched a b c = (test a valueA epsilonA) A.&&* (test b valueB epsilonB) A.&&* (test c valueC epsilonC)
-      test x y z = (delta A.>* 0 A.&&* delta A.<* z) A.||* (delta A.<* 0 A.&&* delta A.>* -z)
-                 A.? (A.constant True , A.constant False)
-               where delta = x - y
-      (epsilonA,_,_) = epsilon
-      (_,epsilonB,_) = epsilon
-      (_,_,epsilonC) = epsilon
-      (valueA,_,_) = value
-      (_,valueB,_) = value
-      (_,_,valueC) = value
+             $ Image.insert "a" tmpChannel
+             $ mempty
+      exampleChannel = channelsA !! 0
+      channelShape = Channel.shape exampleChannel
+      channelA' = Channel.generate channelShape (getMostFreq channelsA)
+      channelB' = Channel.generate channelShape (getMostFreq channelsB)
+      channelC' = Channel.generate channelShape (getMostFreq channelsC)
+      getMostFreq channels ix = let
+                                (A.Z A.:. i A.:. j) = A.unlift ix
+                              in
+                                --findMostFrequent $ (generateHistList []) $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
+                                median' $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
+  return outimg
+
+
+
+-- cut out from background
+
+cutOut :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 a -> (Exp a -> Exp a)
+          -> Image a -> Image a -> Either Image.Error (Image a)
+cutOut (nameA, nameB, nameC) (epsA, epsB, epsC) f imgIn imgBackground = do
+  channelA1 <- Image.lookup nameA imgIn
+  channelB1 <- Image.lookup nameB imgIn
+  channelC1 <- Image.lookup nameC imgIn
+  channelA2 <- Image.lookup nameA imgBackground
+  channelB2 <- Image.lookup nameB imgBackground
+  channelC2 <- Image.lookup nameC imgBackground
+  let outimg = Image.insert nameA (match channelA1)
+             $ Image.insert nameB (match channelB1)
+             $ Image.insert nameC (match channelC1)
+             $ imgIn
+      match cha = Channel.zipWith (\a b -> b A.? (f a , a)) cha matched
+      matched   = Channel.zipWith3 (\a b c -> (epsilon' a epsA) A.&&* (epsilon' b epsB) A.&&* (epsilon' c epsC)) epsilonsA epsilonsB epsilonsC
+      epsilonsA = Channel.zipWith (-) channelA1 channelA2
+      epsilonsB = Channel.zipWith (-) channelB1 channelB2
+      epsilonsC = Channel.zipWith (-) channelC1 channelC2
   return outimg

@@ -34,11 +34,11 @@ logger = getLogger "Flowbox.Lunac.Build"
 
 run :: Config -> Cmd.Options -> IO ()
 run cfg op = do
-    let diag = Diagnostics False
+    let diag = Diagnostics 
                          ( Cmd.dump_ast  op || Cmd.dump_all op )
-                         ( Cmd.dump_va   op || Cmd.dump_all op )
-                         ( Cmd.dump_fp   op || Cmd.dump_all op )
+                         ( Cmd.dump_aa   op || Cmd.dump_all op )
                          ( Cmd.dump_ssa  op || Cmd.dump_all op )
+                         ( Cmd.dump_hash op || Cmd.dump_all op )
                          ( Cmd.dump_hast op || Cmd.dump_all op )
                          ( Cmd.dump_hsc  op || Cmd.dump_all op )
 

@@ -29,6 +29,17 @@ instance A.Elt a => Eq (Channel a) where
 instance A.Elt a => Ord (Channel a) where
     compare _ _ = undefined
 
+at :: A.Elt a => Channel a -> A.Exp A.DIM2 -> A.Exp a
+at channel = (A.!) (accMatrix channel)
+
+at' :: A.Elt a => Channel a -> A.Exp Int -> A.Exp a
+at' channel = (A.!!) (accMatrix channel)
+
+shape :: A.Elt a => Channel a -> A.Exp A.DIM2
+shape channel = A.shape (accMatrix channel)
+
+generate :: A.Elt a => A.Exp A.DIM2 -> (A.Exp A.DIM2 -> A.Exp a) -> Channel a
+generate shape f = Acc $ A.generate shape f
 
 map :: (A.Elt a, A.Elt b) => (A.Exp a -> A.Exp b) -> Channel a -> Channel b
 map f chan = Acc $ A.map f ch

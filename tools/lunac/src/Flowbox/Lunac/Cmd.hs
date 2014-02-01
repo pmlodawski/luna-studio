@@ -54,9 +54,9 @@ data Options = VersionOptions { compiler :: Bool
 
                               , dump_all     :: Bool
                               , dump_ast     :: Bool
-                              , dump_va      :: Bool
-                              , dump_fp      :: Bool
+                              , dump_aa      :: Bool
                               , dump_ssa     :: Bool
+                              , dump_hash    :: Bool
                               , dump_hast    :: Bool
                               , dump_hsc     :: Bool
                               }
@@ -70,4 +70,3 @@ data Options = VersionOptions { compiler :: Bool
 
                               }
              deriving Show
-
