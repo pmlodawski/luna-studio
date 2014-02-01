@@ -494,13 +494,13 @@ keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
 -- extracting background
 
 --generateHistList result [] = result
---generateHistList result@((x,y):xs) (val:arr) = generateHistList arr (val A.==* x A.? (,))
-  --if val A.==* x
-    --then generateHistList arr ([(x,y+1)] ++ xs)
-    --else generateHistList arr ([(val,1)] ++ result)
+--generateHistList result@((x,y):xs) (val:arr) =
+--  if val A.==* x
+--    then generateHistList arr ([(x,y+1)] ++ xs)
+--    else generateHistList arr ([(val,1)] ++ result)
 
 --findMostFrequent eps arr = findMostFrequent' [] eps arr
-findMostFrequent arr = arr !! 0
+--findMostFrequent arr = arr !! 0
 
 --findMostFrequent' result _ [] = result
 --findMostFrequent' result eps arr@((x,_):xs) = findMostFrequent (val A.>* result A.? (val,result)) eps xs
@@ -529,7 +529,7 @@ extractBackground (nameA, nameB, nameC) images = do
                                 (A.Z A.:. i A.:. j) = A.unlift ix
                               in
                                 --findMostFrequent $ (generateHistList []) $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
-                                findMostFrequent $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
+                                median' $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
   return outimg
 
 
