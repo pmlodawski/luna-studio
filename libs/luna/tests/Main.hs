@@ -109,8 +109,8 @@ example = Source.Source ["Main"] $
                     --, "def List.each self callback:"
                     --, "    ```let {mymap x (Pure y) = mapM x y}```"
                     --, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
-                        , "def List.each callback:"
-                        , "    ```liftf2 map (val $ call1 #{callback}) #{self}```"
+                        --, "def List.each callback:"
+                        --, "    ```liftf2 map (val $ call1 #{callback}) #{self}```"
 
                         --, "def List.at self index:"
                         --, "    ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```"
@@ -149,11 +149,14 @@ example = Source.Source ["Main"] $
                         ,"def Int.+ b:"
                         ,"    ```liftf2 (+) #{self} #{b}```"
 
+                        --,"def Int.- b:"
+                        --,"    ```liftf2 (-) #{self} #{b}```"
+
                         --,"def Int./ b:"
                         --,"    ```liftf2 (-) #{self} #{b}```"
 
-                        ,"def Int.* b:"
-                        ,"    ```liftf2 (*) #{self} #{b}```"
+                        --,"def Int.* b:"
+                        --,"    ```liftf2 (*) #{self} #{b}```"
 
                         --,"def Int.< b:"
                         --,"    ```liftf2 (<) #{self} #{b}```"
@@ -161,16 +164,29 @@ example = Source.Source ["Main"] $
                         ----, "class Point:"
                         ----, "    x,y,z :: Int"
 
-                        , "def raise el err:"
-                        , "    ```raise #{el} #{err}```"
+                        --, "def raise el err:"
+                        --, "    ```raise #{el} #{err}```"
 
-                        , "def catch el f:"
-                        , "    ```catch #{el} #{f}```"
+                        --, "def catch el f:"
+                        --, "    ```catch #{el} #{f}```"
 
+                    , "def + x y: x+y"
 
+                    , "def List.foldr f el:"
+                    , "    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```"
+                    
+                    , "def List.sum:"
+                    , "    self.foldr ((x,y):x+y) 0"
 
-                        , "def List.foldr f el:"
-                        , "    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```"
+                    , "def List.sort:"
+                    , "    #FIXME[wd]: very dirty hack for Pure Safe values."
+                    , "    ```(fmap.fmap.fmap) val $ liftf1 sort ((fmap.fmap.fmap) (fromSafe.fromPure) #{self})```"
+
+                    , "def List.head:"
+                    , "    ```flattenCtx $ liftf1 head #{self}```"
+
+                    , "def List.min:"
+                    , "    self.sort.head"
 
                         --, "class X"
                         --, "    def test self:"
@@ -187,13 +203,62 @@ example = Source.Source ["Main"] $
                     --, "def f a::X :"
                     --, "    a"
 
-                    , "def test x y: x+y"
+                    --, "class X a:"
+                    --, "    x :: a"
+                    --, "    def test a:"
+                    --, "        a + 1"
 
+                    --, "def test2 x y: x"
+                    --, "def +++ a b: a"
+
+                    --, "def add x y: x.+y"
+
+                    --, "def + x y: x.+ y"
+                    ----, "def * x y: x.* y"
+                    ----, "def / x y: x./ y"
+
+                    ----, "def main:"
+                    --, "class Vector a:"
+                    --, "    x :: a"
+ 
+                    ----, "    def + v:"
+                    ----, "        Vector (x + v.x) (y + v.y) (z + v.z)"
+
+
+                    --, "    def + v:"
+                    --, "        print 111"
+                    --, "        x + v.x"
+
+                    --, "def Int.+ a:"
+                    --, "    ```liftf2 (+) #{self} #{a}```"
+
+                    --, "def Int.test:"
+                    --, "    {self, self}"
+                    
+                    --, "def fun x:"
+                    --, "    x.test"
+                    
                     , "def main:"
-                    , "    a = [1,2,3,4]"
+                    --, "    v = Vector 1"
+                    --, "    print (v + v)"
+                    --, "    f = @(+)"
+                    --, "    print $ (+) 1 2"
+                    --, "    print $ @Int.+ 1 2"
+                    , "    a = [1,5,3,4,2]"
+                    , "    print a"
+                    , "    print (a.sum)"
+                    , "    print (a.sort)"
+                    , "    print (a.min)"
+                    --, "    print a.sort"
+                    --, "    print $ a.foldr @(+) 0"
+                    --, "    a = [1,2,3,4]"
                     --, "    a = 1"
-                    , "    f = @test"
-                    , "    print $ a.foldr f 0"
+                    --, "    f = @test"
+                    --, "    x = X 1"
+                    --, "    print $ x.test 1"
+                    --, "    print $ @test2 1 2"
+                    --, "    print $ @X.test x 2"
+                    --, "    print $ (+++) 1 2"
                     --, "    print a"
                     --, "    print $ a.each x:"
                     --, "        x*2"
@@ -321,6 +386,8 @@ main_inner = Luna.run $ do
     logger info $ PP.ppShow (aliasInfo ^. AliasInfo.aliasMap)
     logger info "\n>> invalidMap:"
     logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
+    --logger info "\n>> parentMap"
+    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
 
     -- !!! [WARNING] INVALIDATES aliasInfo !!!
     logger info "\n-------- Desugar.ImplicitScopes --------"

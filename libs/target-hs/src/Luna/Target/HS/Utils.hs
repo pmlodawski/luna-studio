@@ -36,6 +36,7 @@ instance (Typeable a, Typeable b) => Show (a -> b) where
 
 call0 a = call a ()
 call1 a v1 = call a (v1,())
+call2 a v1 v2 = call a (v1,(v2,()))
 --call1 a v1 = call a (OneTuple v1)
 --call2 a v1 v2 = call a (v1,v2)
 --call3 a v1 v2 v3 = call a (v1,v2,v3)

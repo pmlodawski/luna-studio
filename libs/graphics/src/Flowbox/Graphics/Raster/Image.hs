@@ -12,21 +12,36 @@ module Flowbox.Graphics.Raster.Image (
 ) where
 
 import           Control.Error
-import           Data.Array.Accelerate (Exp)
-import qualified Data.Array.Accelerate as A
-import           Data.Map              (Map)
-import qualified Data.Map              as Map
+import           Data.Array.Accelerate             (Exp)
+import qualified Data.Array.Accelerate             as A
+import qualified Data.Array.Repa                   as R
+import qualified Data.Array.Repa.Algorithms.Matrix as M
+import           Data.Map                          (Map)
+import qualified Data.Map                          as Map
 
 import           Flowbox.Graphics.Raster.Channel (Channel)
 import qualified Flowbox.Graphics.Raster.Channel as Channel
 import           Flowbox.Graphics.Raster.Error   (Error (ChannelLookupError, TmpError))
 import           Flowbox.Prelude                 hiding (lookup, map)
 
+
+type Matrix = R.Array R.U R.DIM2 Double
+
 data Image a = Image { _channels :: Map String (Channel a)
                      }
              deriving (Show, Eq, Ord)
 
+data Transformed a = Transformed { src :: a
+                                 , trans :: Matrix
+                                 }
+           deriving (Show)
+
+instance Functor Transformed where
+    --fmap :: (a -> b) -> Transformed a -> Transformed b
+    fmap f (Transformed src trans) = Transformed (f src) trans
+
 makeLenses ''Image
+
 
 
 compute :: Channel.Backend a -> Image a -> Image a
@@ -58,6 +73,34 @@ reprDouble img = map (\c -> A.fromIntegral c / 255) img
 
 reprWord8 :: (A.Elt a, A.IsFloating a) => Image a -> Image A.Word8
 reprWord8 img = map (\c -> A.truncate $ c * 255) img
+
+
+
+-- transformations
+
+--toTransform a = Transformed a mempty
+
+translate :: Double -> Double -> Transformed (Image a) -> Transformed (Image a)
+translate x y (Transformed img trans) = Transformed img trans'
+    where trans' = M.mmultS trans t
+          t = R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ 1, 0, x
+                                                    , 0, 1, y
+                                                    , 0, 0, 1 ]
+
+rotate :: Double -> Transformed (Image a) -> Transformed (Image a)
+rotate theta (Transformed img trans) = Transformed img trans'
+    where trans' = M.mmultS trans t
+          t = R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [   cos theta , sin theta, 0
+                                                    , -(sin theta), cos theta, 0
+                                                    , 0           , 0        , 1]
+
+-- ?
+scale :: Double -> Double -> Transformed (Image a) -> Transformed (Image a)
+scale x y (Transformed img trans) = Transformed img trans'
+    where trans' = M.mmultS trans t
+          t = R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ x, 0, 0
+                                                    , 0, y, 0
+                                                    , 0, 0, 1]
 
 
 

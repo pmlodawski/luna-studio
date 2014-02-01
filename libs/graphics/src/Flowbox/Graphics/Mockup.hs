@@ -39,9 +39,8 @@ import           GHC.Float
 import qualified System.Exit           as Exit
 #ifdef ACCELERATE_CUDA_BACKEND
 import qualified Data.Array.Accelerate.CUDA as CUDA
-#else
-import qualified Data.Array.Accelerate.Interpreter as Interpreter
 #endif
+import qualified Data.Array.Accelerate.Interpreter as Interpreter
 
 import           Data.Number.Conversion
 import qualified Flowbox.Graphics.Algorithms as Alg
@@ -55,19 +54,19 @@ import           Flowbox.Prelude                   hiding ((.))
 import           Luna.Target.HS.Core               hiding (print, return)
 
 
-
-runBackend :: A.Elt a => LunaBackend -> Channel.Backend a
-#ifdef ACCELERATE_CUDA_BACKEND
-runBackend LunaCUDA = CUDA.run
-#endif
-runBackend LunaInterpreter = Interpreter.run
-
-
+-- System ----------------------------------------------------------------
 exitFailure :: IO (Safe ())
 exitFailure = Exit.exitFailure *> return (Safe ())
 
 exitSuccess :: IO (Safe ())
 exitSuccess = Exit.exitSuccess *> return (Safe ())
+
+-- Backends --------------------------------------------------------------
+runBackend :: A.Elt a => LunaBackend -> Channel.Backend a
+#ifdef ACCELERATE_CUDA_BACKEND
+runBackend LunaCUDA = CUDA.run
+#endif
+runBackend LunaInterpreter = Interpreter.run
 
 
 data LunaBackend = LunaCUDA
@@ -82,13 +81,13 @@ cuda = LunaCUDA
 interp :: LunaBackend
 interp = LunaInterpreter
 
-
+-- Image -----------------------------------------------------------------
 readImage :: String -> IO (Either Image.Error (Image A.Word32))
 readImage fileIn = do
     img <- Image.readImageFromBMP2 fileIn
     return img
 
--- UNSAFE ERROR
+-- FIXME[wd]: UNSAFE ERROR
 writeImage :: Image (A.Word32) -> FilePath -> LunaBackend -> IO (Safe ())
 writeImage img path backend = do
     Image.writeImageToBMP (runBackend backend) path img
@@ -104,7 +103,7 @@ compose = Pure . RGBA.compose
 
 
 adjustCB :: Double -> Double -> Image Double -> Pure (Either Image.Error (Image Double))
-adjustCB contrastValue brightnessValue img = 
+adjustCB contrastValue brightnessValue img =
     Pure $ Alg.adjustCB_RGB (A.constant contrastValue) (A.constant brightnessValue) img
 
 
@@ -113,6 +112,14 @@ convolve kernel img = Pure $ Alg.convolveRGB Alg.convolve3x3 kernel' img where
     kernel' = map A.constant $ replicate 9 kernel
 
 
+convertRGBtoHSV :: (A.Elt a, A.IsFloating a) => Image a -> Pure (Either Image.Error (Image a))
+convertRGBtoHSV = Pure . Alg.convertRGBtoHSV
+
+
+convertHSVtoRGB :: (A.Elt a, A.IsFloating a) => Image a -> Pure (Either Image.Error (Image a))
+convertHSVtoRGB = Pure . Alg.convertHSVtoRGB
+
+-- Channel ---------------------------------------------------------------
 imgChannelGet :: String -> Image Double -> Pure (Either Image.Error (Channel Double))
 imgChannelGet name img = Pure $ Image.lookup name img
 
@@ -127,3 +134,4 @@ channelMap = Channel.map
 
 constant :: Double -> A.Exp Double
 constant = A.constant
+

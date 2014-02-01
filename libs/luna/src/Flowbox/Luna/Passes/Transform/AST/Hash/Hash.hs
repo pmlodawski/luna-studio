@@ -49,10 +49,12 @@ ssaModule mod = Module.traverseM ssaModule ssaExpr pure ssaPat pure mod
 
 ssaExpr :: Expr.Expr -> HashPass Expr.Expr
 ssaExpr ast = case ast of
-    Expr.Function _ _ name _ _ _    -> set Expr.name (hashMe2 name) <$> continue
-    Expr.Accessor _ name _          -> set Expr.name (hashMe2 name) <$> continue
-    _                                                -> continue
-    where --hashMe   = show.abs.hash
+    Expr.Function {} -> hashMe
+    Expr.Infix    {} -> hashMe
+    Expr.Accessor {} -> hashMe
+    Expr.RefType  {} -> hashMe
+    _                -> continue
+    where hashMe   = set Expr.name (hashMe2 $ view Expr.name ast) <$> continue
           continue = Expr.traverseM ssaExpr pure ssaPat pure ast
 
 

@@ -57,7 +57,7 @@ uniqueNames names = map mkName $ nub $ map nameBase names
 generateGetters :: Name -> DecsQ
 generateGetters clsName' = do
     fieldNames <- getClsFieldNames clsName'
-    ppTrace (nub $ map nameBase fieldNames) (concat <$> mapM (generateClsGetter clsName') fieldNames)
+    concat <$> mapM (generateClsGetter clsName') fieldNames
 
 generateSetters :: Name -> DecsQ
 generateSetters clsName' = do

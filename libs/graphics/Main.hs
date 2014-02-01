@@ -29,18 +29,18 @@ import           Flowbox.Prelude                   as P
 
 
 --imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
-imgtest img imgBack = do --imgFilter = do
+imgtest img = do --imgFilter = do
     let getDouble image = Image.reprDouble <$> RGBA.decompose image
     rgba  <- getDouble img
     --rgba  <- sequence $ fmap getDouble img
-    rgbaBack <- getDouble imgBack
+    --rgbaBack <- getDouble imgBack
     --rgbaFilter <- Image.reprDouble <$> RGBA.decompose imgFilter
     --lrgba <- adjustCB 2.2 0.2 "r" "g" "b" rgba
     --let blur3x3 = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
         --blur5x5 = [0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04]
         --sharpen3x3 = [-1.0,-1.0,-1.0,-1.0,9.0,-1.0,-1.0,-1.0,-1.0]
     --lrgba <- convolve "r" convolve5x5 sharpen3x3 rgba
-    --hsv <- G.convertRGBtoHSV rgba
+    imgHSV <- G.convertRGBtoHSV rgba
     --h <- Image.lookup "h" hsv
     --s <- Image.lookup "s" hsv
     --v <- Image.lookup "v" hsv
@@ -52,7 +52,7 @@ imgtest img imgBack = do --imgFilter = do
     --        >>= Image.cpChannel "luminance" "r"
     --        >>= Image.cpChannel "luminance" "g"
     --        >>= Image.cpChannel "luminance" "b"
-    let f = \_ -> 1
+    let f = \_ -> 0
         fBW = \x -> x A.>=* 0.5
         rgb = ("r", "g", "b")
         hsv = ("h", "s", "v")
@@ -69,11 +69,14 @@ imgtest img imgBack = do --imgFilter = do
     --medianMono <- G.medianImage rgb lrgba
     --imgMedian <- G.medianImage rgb rgba
     --imgBackground <- G.extractBackground rgb rgba
-    imgBackgroundHSV <- G.convertRGBtoHSV rgbaBack
-    frameHSV <- G.convertRGBtoHSV rgba
-    imgCutHSV <- G.cutOut hsv (0.3, 0.4, 0.4) f frameHSV imgBackgroundHSV
-    imgCut <- G.convertHSVtoRGB imgCutHSV
-    RGBA.compose $ Image.reprWord8 imgCut
+    --imgBackgroundHSV <- G.convertRGBtoHSV rgbaBack
+    --frameHSV <- G.convertRGBtoHSV rgba
+    --imgCutHSV <- G.cutOut hsv (0.2, 0.3, 0.3) f frameHSV imgBackgroundHSV
+    --imgCut <- G.cutOut rgb (0.2, 0.2, 0.2) f rgba rgbaBack
+    --imgCut <- G.convertHSVtoRGB imgCutHSV
+    imgKeyedHSV <- G.keyColor hsv (0.15, 0.3, 0.3) (0.402, 0.85, 0.59) f imgHSV
+    imgKeyed <- G.convertHSVtoRGB imgKeyedHSV
+    RGBA.compose $ Image.reprWord8 imgKeyed
     --where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
     --      mod1 = flip nonIntRem 1.0
 
@@ -92,19 +95,19 @@ main
                   >> Exit.exitSuccess
 
         let backend     = Label.get Cfg.configBackend conf
-            frameNames  = fmap (\x -> (T.printf "frame-%03d.bmp" x) :: String) ([112..129] :: [Int])
+            frameNames  = fmap (\x -> (T.printf "frame-%03d.bmp" x) :: String) ([237..250] :: [Int])
             getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
         -- Read in the image file
 
         --img2 <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
 
         img2 <- getImage fileIn
-        imgBack <- getImage "background.bmp"
-        imgFrame <- getImage "frame-121.bmp"
+        --imgBack <- getImage "background.bmp"
+        --imgFrame <- getImage "frame-249.bmp"
         frameFiles <- sequence $ fmap getImage frameNames
 
         --imgFilter <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP "filter.bmp"
-        let img3 = imgtest imgFrame imgBack -- frameFiles -- img2 -- imgFilter
+        let img3 = imgtest img2 -- imgBack
 
         case img3 of
             Left  err -> print err
