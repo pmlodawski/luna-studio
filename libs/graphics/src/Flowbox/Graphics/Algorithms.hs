@@ -518,3 +518,37 @@ extractBackground (nameA, nameB, nameC) images = do
                               in
                                 median' $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
   return outimg
+
+
+
+-- cut out from background
+
+cutOut :: (A.Elt a, A.IsFloating a) => (String, String, String) -> (Exp a, Exp a, Exp a) -> (Exp a -> Exp a)
+          -> Image a -> Image a -> Either Image.Error (Image a)
+cutOut names epsilons f imgIn imgBackground = do
+  let (nameA,_,_) = names
+      (_,nameB,_) = names
+      (_,_,nameC) = names
+  channelA1 <- Image.lookup nameA imgIn
+  channelB1 <- Image.lookup nameB imgIn
+  channelC1 <- Image.lookup nameC imgIn
+  channelA2 <- Image.lookup nameA imgBackground
+  channelB2 <- Image.lookup nameB imgBackground
+  channelC2 <- Image.lookup nameC imgBackground
+  let outimg = Image.insert nameA channelA'
+             $ Image.insert nameB channelB'
+             $ Image.insert nameC channelC'
+             $ imgIn
+      channelA' = match channelA1
+      channelB' = match channelB1
+      channelC' = match channelC1
+      -- TODO: rethink this part, I think it doesn't work exactly as I thought it did
+      match c = Channel.zipWith7 (\p1 q1 r1 p2 q2 r2 s -> (matched p1 q1 r1 p2 q2 r2) A.? (f s , s)) channelA1 channelB1 channelC1 channelA2 channelB2 channelC2 c
+      matched a1 b1 c1 a2 b2 c2 = (test a1 a2 epsilonA) A.&&* (test b1 b2 epsilonB) A.&&* (test c1 c2 epsilonC)
+      test x y z = (delta A.>* 0 A.&&* delta A.<* z) A.||* (delta A.<* 0 A.&&* delta A.>* -z)
+                 A.? (A.constant True , A.constant False)
+               where delta = x - y
+      (epsilonA,_,_) = epsilons
+      (_,epsilonB,_) = epsilons
+      (_,_,epsilonC) = epsilons
+  return outimg
