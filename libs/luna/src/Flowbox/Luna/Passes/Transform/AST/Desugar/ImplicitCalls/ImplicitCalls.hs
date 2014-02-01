@@ -50,16 +50,22 @@ desugarExpr ast = case ast of
     Expr.App      id src args                  -> Expr.App id <$> omitNextExpr src <*> mapM desugarExpr args
     Expr.Accessor id name dst                  -> Expr.App <$> DS.genID <*> continue <*> pure []
     Expr.Import   {}                           -> omitAll
-    Expr.Ref      {}                           -> omitNext
     _                                          -> continue
-    where continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
+    where continue  = desugarExprGeneral ast
           omitNext  = Expr.traverseM omitNextExpr pure desugarPat pure ast
           omitAll   = Expr.traverseM omitAllExpr pure desugarPat pure ast
 
 
 omitNextExpr :: Expr.Expr -> DesugarPass Expr.Expr
 omitNextExpr ast = continue
-    where continue = Expr.traverseM desugarExpr pure desugarPat pure ast
+    where continue = desugarExprGeneral ast
+
+desugarExprGeneral :: Expr.Expr -> DesugarPass Expr.Expr
+desugarExprGeneral ast = case ast of
+	Expr.Ref      {}                           -> omitAll
+	_                                          -> continue
+	where continue  = Expr.traverseM desugarExpr pure desugarPat pure ast
+	      omitAll   = Expr.traverseM omitAllExpr pure desugarPat pure ast
 
 omitAllExpr :: Expr.Expr -> DesugarPass Expr.Expr
 omitAllExpr ast = continue

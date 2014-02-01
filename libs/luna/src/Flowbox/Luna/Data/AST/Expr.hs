@@ -61,6 +61,7 @@ data Expr  = NOP          { _id :: ID                                           
            | NativeCode   { _id :: ID, _code      :: String                                                                      }
            | NativeVar    { _id :: ID, _name      :: String                                                                      }
            | Ref          { _id :: ID, _dst       :: Expr                                                                        }
+           | RefType      { _id :: ID, _typeName  :: String   , _name      :: String                                             }
            | Case         { _id :: ID, _expr      :: Expr     , _match     :: [Expr]                                             }
            | Match        { _id :: ID, _pat       :: Pat      , _body      :: [Expr]                                             }
            deriving (Show, Eq, Generic)
@@ -142,6 +143,7 @@ traverseM fexp ftype fpat flit e = case e of
     NativeCode   {}                                -> pure e
     NativeVar    {}                                -> pure e
     Ref          id' dst'                          -> Ref          id'       <$> fexp dst'
+    RefType      {}                                -> pure e
     Var          {}                                -> pure e
     Wildcard     {}                                -> pure e
     NOP          {}                                -> pure e
@@ -180,6 +182,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     NativeCode   {}                                -> drop
     NativeVar    {}                                -> drop
     Ref          _ dst'                            -> drop <* fexp dst'
+    RefType      {}                                -> drop
     Var          {}                                -> drop
     Wildcard     {}                                -> drop
     NOP          {}                                -> drop

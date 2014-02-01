@@ -264,15 +264,17 @@ pEntSimpleE = choice[ pCaseE -- CHECK [wd]: removed try
                     , pCondE
                     , try $ tok Expr.Grouped <*> L.parensed pExpr
                     , pIdentE
-                    , tok Expr.Lit    <*> pLit
-                    , tok Expr.Tuple  <*> pTuple  pOpE
-                    , tok Expr.List   <*> pList   pListExpr
-                    , tok Expr.Native <*> pNative
+                    , try (tok Expr.RefType <*  L.pRef <*> pCon) <* L.pAccessor <*> pVar
+                    , tok Expr.Ref     <*  L.pRef <*> pEntSimpleE
+                    , tok Expr.Lit     <*> pLit
+                    , tok Expr.Tuple   <*> pTuple  pOpE
+                    , tok Expr.List    <*> pList   pListExpr
+                    , tok Expr.Native  <*> pNative
                     ]
            <?> "expression term"
 
 optableE = [ [ postfixM  "::" (tok Expr.Typed <*> pType)                      ]
-           , [ prefixM   "@"  (tok Expr.Ref)                                  ]
+           --, [ prefixM   "@"  (tok Expr.Ref)                                  ]
            , [ binaryM   ""   (tok Expr.callConstructor)      PExpr.AssocLeft ]
            , [ operator2 "^"                                  PExpr.AssocLeft ]
            , [ operator2 "*"                                  PExpr.AssocLeft ]
