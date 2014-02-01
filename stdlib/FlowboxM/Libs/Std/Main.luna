@@ -98,6 +98,38 @@ def Double.prev:
 
 
 
+def Double.invert:
+    ```liftf1 invert #{self}```
+
+def Double.invert_:
+    ```liftf1 invert' #{self}```
+
+def Double.sign:
+    ```liftf1 sign #{self}```
+
+def Double.parametrize lo hi:
+    ```liftf3 parametrize #{lo} #{hi} #{self}```
+
+def Double.bias b:
+    ```liftf2 bias #{b} #{self}```
+
+def Double.gain g:
+    ```liftf2 gain #{g} #{self}```
+
+def Double.gamma g:
+    ```liftf2 gamma #{g} #{self}```
+
+def Double.compress lo hi:
+    ```liftf3 gamma #{lo} #{hi} #{self}```
+
+def Double.expand lo hi:
+    ```liftf3 expand #{lo} #{hi} #{self}```
+
+def Double.remap loA hiA loB hiB:
+    ```liftf5 remap #{loA} #{hiA} #{loB} #{hiB} #{self}```
+
+
+
 def raise el err:
     ```raise #{el} #{err}```
 
@@ -161,37 +193,6 @@ def Image.getChannel name:
 
 def Image.putChannel name channel:
     ```liftf3 imgChannelInsert #{name} #{channel} #{self}```
-
-
-def Double.invert:
-    ```liftf1 invert #{self}```
-
-def Double.invert_:
-    ```liftf1 invert' #{self}```
-
-def Double.sign:
-    ```liftf1 sign #{self}```
-
-def Double.parametrize lo hi:
-    ```liftf3 parametrize #{lo} #{hi} #{self}```
-
-def Double.bias b:
-    ```liftf2 bias #{b} #{self}```
-
-def Double.gain g:
-    ```liftf2 gain #{g} #{self}```
-
-def Double.gamma g:
-    ```liftf2 gamma #{g} #{self}```
-
-def Double.compress lo hi:
-    ```liftf3 gamma #{lo} #{hi} #{self}```
-
-def Double.expand lo hi:
-    ```liftf3 expand #{lo} #{hi} #{self}```
-
-def Double.remap loA hiA loB hiB:
-    ```liftf5 remap #{loA} #{hiA} #{loB} #{hiB} #{self}```
 
 
 # # FIXME [wd] zrób to
