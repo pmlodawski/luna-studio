@@ -26,6 +26,10 @@ import           Luna.Target.HS.TH.Utils
 --import qualified Language.Haskell.Meta.Syntax.Translate as LH
 --import qualified Language.Haskell.Exts.Syntax           as LH
 
+typeRef :: String -> String -> ExpQ
+typeRef clsName mName = varE.mkName
+                      $ Naming.mkHandlerFuncName 
+                      $ Naming.mkMemName clsName mName
 
 mkSelfTypedName :: String -> String
 mkSelfTypedName = (++ "_ST")
