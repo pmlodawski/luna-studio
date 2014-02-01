@@ -42,20 +42,14 @@ epsilon a b eps = ((delta A.>* 0) A.&&* (delta A.<* eps)) A.||* ((delta A.<* 0) 
          where delta = a - b
 
 applyToImage :: (Channel a -> Channel a) -> String3 -> Image a -> Either Image.Error (Image a)
-applyToImage f names img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
+applyToImage f (nameA, nameB, nameC) img = do
   channelA <- Image.lookup nameA img
   channelB <- Image.lookup nameB img
   channelC <- Image.lookup nameC img
-  let outimg = Image.insert nameA channelA'
-             $ Image.insert nameB channelB'
-             $ Image.insert nameC channelC'
+  let outimg = Image.insert nameA (f channelA)
+             $ Image.insert nameB (f channelB)
+             $ Image.insert nameC (f channelC)
              $ img
-      channelA' = f channelA
-      channelB' = f channelB
-      channelC' = f channelC
   return outimg
 
 
@@ -544,10 +538,7 @@ extractBackground (nameA, nameB, nameC) images = do
 
 cutOut :: (A.Elt a, A.IsFloating a) => String3 -> (Exp a, Exp a, Exp a) -> (Exp a -> Exp a)
           -> Image a -> Image a -> Either Image.Error (Image a)
-cutOut names epsilons f imgIn imgBackground = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
+cutOut (nameA, nameB, nameC) (epsA, epsB, epsC) f imgIn imgBackground = do
   channelA1 <- Image.lookup nameA imgIn
   channelB1 <- Image.lookup nameB imgIn
   channelC1 <- Image.lookup nameC imgIn
@@ -563,6 +554,5 @@ cutOut names epsilons f imgIn imgBackground = do
       channelC' = match channelC1
       -- TODO: rethink this part, I think it doesn't work exactly as I thought it did
       match c = Channel.zipWith7 (\p1 q1 r1 p2 q2 r2 s -> (matched p1 q1 r1 p2 q2 r2) A.? (f s , s)) channelA1 channelB1 channelC1 channelA2 channelB2 channelC2 c
-      matched a1 b1 c1 a2 b2 c2 = (epsilon a1 a2 epsilonA) A.&&* (epsilon b1 b2 epsilonB) A.&&* (epsilon c1 c2 epsilonC)
-      (epsilonA,epsilonB,epsilonC) = epsilons
+      matched a1 b1 c1 a2 b2 c2 = (epsilon a1 a2 epsA) A.&&* (epsilon b1 b2 epsB) A.&&* (epsilon c1 c2 epsC)
   return outimg
