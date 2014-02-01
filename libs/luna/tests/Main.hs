@@ -109,8 +109,8 @@ example = Source.Source ["Main"] $
                     --, "def List.each self callback:"
                     --, "    ```let {mymap x (Pure y) = mapM x y}```"
                     --, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
-                        --, "def List.each self callback:"
-                        --, "    ```liftf2 map (val $ call1 #{callback}) #{self}```"
+                        , "def List.each callback:"
+                        , "    ```liftf2 map (val $ call1 #{callback}) #{self}```"
 
                         --, "def List.at self index:"
                         --, "    ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```"
@@ -126,7 +126,7 @@ example = Source.Source ["Main"] $
                         --, "    ```liftf1 sum #{self}```"
 
                         --, "class Console:"
-                        , "import Std:All"
+                        --, "import Std:All"
                         , "def print msg:"
                         , "    ```print' #{msg}```"
 
@@ -152,8 +152,8 @@ example = Source.Source ["Main"] $
                         --,"def Int./ b:"
                         --,"    ```liftf2 (-) #{self} #{b}```"
 
-                        --,"def Int.* b:"
-                        --,"    ```liftf2 (*) #{self} #{b}```"
+                        ,"def Int.* b:"
+                        ,"    ```liftf2 (*) #{self} #{b}```"
 
                         --,"def Int.< b:"
                         --,"    ```liftf2 (<) #{self} #{b}```"
@@ -168,6 +168,9 @@ example = Source.Source ["Main"] $
                         , "    ```catch #{el} #{f}```"
 
 
+
+                        , "def List.foldr f el:"
+                        , "    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```"
 
                         --, "class X"
                         --, "    def test self:"
@@ -184,28 +187,16 @@ example = Source.Source ["Main"] $
                     --, "def f a::X :"
                     --, "    a"
 
-                    --, "alias X = Int"
-
-                    , "class Error:"
-                    , "    Error"
-
-                    --, "def foldr lst el f:"
-                    --, "    lst"
-
-                    --, "class Scalar a:"
-                    --, "    x :: a"
-                    --, "    def length:"
-                    --, "        1"
-                    --, "    def normalize:"
-                    --, "        Scalar (x/length)"
-
-                    , "def Int.test:"
-                    , "        12"
+                    , "def test x y: x+y"
 
                     , "def main:"
-                    , "    a = raise 1 Error"
+                    , "    a = [1,2,3,4]"
                     --, "    a = 1"
-                    , "    print a.test"
+                    , "    f = @test"
+                    , "    print $ a.foldr f 0"
+                    --, "    print a"
+                    --, "    print $ a.each x:"
+                    --, "        x*2"
                     --, "    a = raise 1 (IOError \"Oh no\")"
                     --, "    catch a x:"
                     --, "        raise a x"
