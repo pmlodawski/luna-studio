@@ -68,10 +68,10 @@ possiblePath elements (Expr.Import _ path (Expr.Con _ name) rename) =
 
 
 currentScope :: Breadcrumbs -> [String]
-currentScope ((Crumb.ModuleCrumb   m):t) = m:(currentScope t)
-currentScope ((Crumb.ClassCrumb    c):t) = c:(currentScope t)
-currentScope ((Crumb.FunctionCrumb _):_) = []
-currentScope []                          = []
+currentScope ((Crumb.ModuleCrumb   m  ):t) = m:(currentScope t)
+currentScope ((Crumb.ClassCrumb    c  ):t) = c:(currentScope t)
+currentScope ((Crumb.FunctionCrumb _ _):_) = []
+currentScope []                            = []
 
 
 searchLibManager :: [String] -> LibManager -> [(Breadcrumbs, Library.ID)]
@@ -103,8 +103,8 @@ searchModule path bc (Module.Module _ (Type.Module _ name _) _ classes _typeAlia
 
 searchExpr :: [String] -> Breadcrumbs -> Expr -> [Breadcrumbs]
 searchExpr path bc expr = case expr of
-    Expr.Function _ _ name _ _ _        -> if length path == 1 && head path == name
-                                              then [bc ++ [Crumb.FunctionCrumb name]]
+    Expr.Function _ path name _ _ _        -> if length path == 1 && head path == name
+                                              then [bc ++ [Crumb.FunctionCrumb name path]]
                                               else []
     Expr.Data _ (Type.Data _ name _) _ _ _ -> if length path == 1 && head path == name
                                               then [bc ++ [Crumb.ClassCrumb name]]

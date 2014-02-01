@@ -17,6 +17,7 @@ message Crumb {
     }
     required Cls    cls  = 1;
     optional string name = 2;
+    repeated string path = 3;
 }
 
 message Breadcrumbs {
