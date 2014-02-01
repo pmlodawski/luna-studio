@@ -29,11 +29,11 @@ import           Flowbox.Prelude                   as P
 
 
 --imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
-imgtest img imgBack = do --imgFilter = do
+imgtest img = do --imgFilter = do
     let getDouble image = Image.reprDouble <$> RGBA.decompose image
     rgba  <- getDouble img
     --rgba  <- sequence $ fmap getDouble img
-    rgbaBack <- getDouble imgBack
+    --rgbaBack <- getDouble imgBack
     --rgbaFilter <- Image.reprDouble <$> RGBA.decompose imgFilter
     --lrgba <- adjustCB 2.2 0.2 "r" "g" "b" rgba
     --let blur3x3 = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
@@ -102,12 +102,12 @@ main
         --img2 <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
 
         img2 <- getImage fileIn
-        imgBack <- getImage "background.bmp"
-        imgFrame <- getImage "frame-249.bmp"
+        --imgBack <- getImage "background.bmp"
+        --imgFrame <- getImage "frame-249.bmp"
         frameFiles <- sequence $ fmap getImage frameNames
 
         --imgFilter <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP "filter.bmp"
-        let img3 = imgtest img2 imgBack -- frameFiles -- img2 -- imgFilter
+        let img3 = imgtest img2 -- imgBack
 
         case img3 of
             Left  err -> print err
