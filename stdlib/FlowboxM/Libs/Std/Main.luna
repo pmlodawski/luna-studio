@@ -26,12 +26,31 @@ def List.+ l2:
 def List.contains el:
     ```liftf2 (elem) (val #{el}) #{self}```
 
-def List.length:
-    ```liftf1 length #{self}```
-
 def List.each callback:
     ```let {mymap = liftf2 map}```
     ```mymap (val $ call1 #{callback}) #{self}```
+
+def List.foldr f el:
+    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```
+
+def List.head:
+    ```flattenCtx $ liftf1 head #{self}```
+
+def List.length:
+    ```liftf1 length #{self}```
+
+def List.sort:
+    #FIXME[wd]: very dirty hack for Pure Safe values.
+    ```(fmap.fmap.fmap) val $ liftf1 sort ((fmap.fmap.fmap) (fromSafe.fromPure) #{self})```
+
+def List.min:
+    self.sort.head
+
+def List.sum:
+    self.foldr ((x,y):x+y) 0
+
+
+
 
 ###### Bool ####################################
 
@@ -190,10 +209,10 @@ def Image.convolve kernel:
     ```flattenCtx $ liftf2 convolve #{kernel} #{self}```
 
 def Image.convertRGBtoHSV:
-    ```liftf1 convertRGBtoHSV #{self}```
+    ```flattenCtx $ liftf1 convertRGBtoHSV #{self}```
 
 def Image.convertHSVtoRGB:
-    ```liftf1 convertHSVtoRGB #{self}```
+    ```flattenCtx $ liftf1 convertHSVtoRGB #{self}```
 
 def Image.getChannel name:
     ```flattenCtx $ liftf2 imgChannelGet #{name} #{self}```
@@ -230,6 +249,7 @@ class Vector a:
         Vector (x/length) (y/length) (z/length)
     
 def main:
+    print $ [3,2,1].min
     v = Vector 1 2 3
     print v
     print (v + v)
@@ -273,7 +293,7 @@ def main:
     
     outpath2 = "luna2.bmp"
     print "=========="
-    img.convertRGBtoHSV.convertHSVtoRGB
+    img = img.convertRGBtoHSV.convertHSVtoRGB
     img.write outpath2 backend
     
     # # img = img.convolve k
