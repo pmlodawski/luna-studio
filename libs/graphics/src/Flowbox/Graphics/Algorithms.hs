@@ -37,9 +37,13 @@ type String3 = (String, String, String)
 -- utils
 
 epsilon :: (A.Elt a, A.IsNum a) => Exp a -> Exp a -> Exp a -> Exp Bool
-epsilon a b eps = ((delta A.>* 0) A.&&* (delta A.<* eps)) A.||* ((delta A.<* 0) A.&&* (delta A.>* -eps))
+epsilon a b eps = ((delta A.>=* 0) A.&&* (delta A.<* eps)) A.||* ((delta A.<* 0) A.&&* (delta A.>* -eps))
            A.? (A.constant True , A.constant False)
          where delta = a - b
+
+epsilon' :: (A.Elt a, A.IsNum a) => Exp a -> Exp a -> Exp Bool
+epsilon' delta eps = ((delta A.>=* 0) A.&&* (delta A.<* eps)) A.||* ((delta A.<* 0) A.&&* (delta A.>* -eps))
+           A.? (A.constant True , A.constant False)
 
 applyToImage :: (Channel a -> Channel a) -> String3 -> Image a -> Either Image.Error (Image a)
 applyToImage f (nameA, nameB, nameC) img = do
@@ -545,14 +549,13 @@ cutOut (nameA, nameB, nameC) (epsA, epsB, epsC) f imgIn imgBackground = do
   channelA2 <- Image.lookup nameA imgBackground
   channelB2 <- Image.lookup nameB imgBackground
   channelC2 <- Image.lookup nameC imgBackground
-  let outimg = Image.insert nameA channelA'
-             $ Image.insert nameB channelB'
-             $ Image.insert nameC channelC'
+  let outimg = Image.insert nameA (match channelA1)
+             $ Image.insert nameB (match channelB1)
+             $ Image.insert nameC (match channelC1)
              $ imgIn
-      channelA' = match channelA1
-      channelB' = match channelB1
-      channelC' = match channelC1
-      -- TODO: rethink this part, I think it doesn't work exactly as I thought it did
-      match c = Channel.zipWith7 (\p1 q1 r1 p2 q2 r2 s -> (matched p1 q1 r1 p2 q2 r2) A.? (f s , s)) channelA1 channelB1 channelC1 channelA2 channelB2 channelC2 c
-      matched a1 b1 c1 a2 b2 c2 = (epsilon a1 a2 epsA) A.&&* (epsilon b1 b2 epsB) A.&&* (epsilon c1 c2 epsC)
+      match cha = Channel.zipWith (\a b -> b A.? (f a , a)) cha matched
+      matched   = Channel.zipWith3 (\a b c -> (epsilon' a epsA) A.&&* (epsilon' b epsB) A.&&* (epsilon' c epsC)) epsilonsA epsilonsB epsilonsC
+      epsilonsA = Channel.zipWith (-) channelA1 channelA2
+      epsilonsB = Channel.zipWith (-) channelB1 channelB2
+      epsilonsC = Channel.zipWith (-) channelC1 channelC2
   return outimg
