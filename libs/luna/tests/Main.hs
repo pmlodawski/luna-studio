@@ -151,6 +151,9 @@ example = Source.Source ["Main"] $
                         ,"def Int.+ b:"
                         ,"    ```liftf2 (+) #{self} #{b}```"
 
+                        ,"def Int.- b:"
+                        ,"    ```liftf2 (-) #{self} #{b}```"
+
                         --,"def Int./ b:"
                         --,"    ```liftf2 (-) #{self} #{b}```"
 
@@ -189,21 +192,29 @@ example = Source.Source ["Main"] $
                     --, "def f a::X :"
                     --, "    a"
 
-                    , "class X a:"
-                    , "    x :: a"
-                    , "    def test a:"
-                    , "        a + 1"
+                    --, "class X a:"
+                    --, "    x :: a"
+                    --, "    def test a:"
+                    --, "        a + 1"
 
-                    , "def test2 x y: x+y"
+                    --, "def test2 x y: x"
+                    --, "def +++ a b: a"
+
+                    --, "def add x y: x.+y"
+
+                    , "def + x y: x.+ y"
 
                     , "def main:"
+                    --, "    print $ 1 + 2"
+                    , "    print $ @Int.+ 1 2"
                     --, "    a = [1,2,3,4]"
                     --, "    a = 1"
                     --, "    f = @test"
-                    , "    x = X 1"
+                    --, "    x = X 1"
                     --, "    print $ x.test 1"
-                    , "    print $ @test2 1 2"
-                    , "    print $ @X.test x 2"
+                    --, "    print $ @test2 1 2"
+                    --, "    print $ @X.test x 2"
+                    --, "    print $ (+++) 1 2"
                     --, "    print a"
                     --, "    print $ a.each x:"
                     --, "        x*2"
