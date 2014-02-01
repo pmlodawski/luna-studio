@@ -88,8 +88,10 @@ connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstI
 
 connect :: GBStateM m => AST.ID -> Node.ID -> InPort -> m ()
 connect srcID dstNID dstPort = do
-    (srcNID, srcPort) <- gvmNodeMapLookUp srcID
-    connectNodes srcNID dstNID $ Edge srcPort dstPort
+    src <- gvmNodeMapLookUp srcID
+    case src of 
+        Just (srcNID, srcPort) -> connectNodes srcNID dstNID $ Edge srcPort dstPort
+        Nothing                -> return ()
 
 
 getGraph :: GBStateM m => m Graph
@@ -135,11 +137,10 @@ aaLookUp astID = do aa' <- getAAMap
                         _      -> return astID
 
 
-nodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
+nodeMapLookUp :: GBStateM m => AST.ID -> m (Maybe (Node.ID, OutPort))
 nodeMapLookUp astID = do nm <- getNodeMap
-                         Map.lookup astID nm <?> ("Cannot find " ++ (show astID) ++ " in nodeMap")
+                         return $ Map.lookup astID nm
 
 
-
-gvmNodeMapLookUp :: GBStateM m => AST.ID -> m (Node.ID, OutPort)
+gvmNodeMapLookUp :: GBStateM m => AST.ID -> m (Maybe (Node.ID, OutPort))
 gvmNodeMapLookUp astID = aaLookUp astID >>= nodeMapLookUp

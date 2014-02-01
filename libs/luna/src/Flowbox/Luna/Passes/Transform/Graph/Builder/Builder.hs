@@ -118,8 +118,10 @@ buildNode astFolded outName expr = case expr of
                                                  State.addToNodeMap p (j, Port.All)
                                                  return dummyValue
     Expr.App        _ src args -> do srcID       <- buildNode (astFolded || False) Nothing src
-                                     (srcNID, _) <- State.gvmNodeMapLookUp srcID
-                                     connectArgs True Nothing srcNID args 1
+                                     s <- State.gvmNodeMapLookUp srcID
+                                     case s of
+                                        Just (srcNID, _) -> connectArgs True Nothing srcNID args 1
+                                        Nothing          -> return ()
                                      return srcID
     Expr.Infix  i name src dst -> do let node = Node.Expr name (genName name i)
                                      State.addNode i Port.All node astFolded noAssignment
