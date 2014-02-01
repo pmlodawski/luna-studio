@@ -214,9 +214,8 @@ example = Source.Source ["Main"] $
                     --, "        Vector (x + v.x) (y + v.y) (z + v.z)"
 
 
-                    , "    def test v:"
+                    , "    def + v:"
                     , "        x + v.x"
-                    , "        x.+ v.x"
 
                     --, "def Int.+ a:"
                     --, "    ```liftf2 (+) #{self} #{a}```"
@@ -229,7 +228,7 @@ example = Source.Source ["Main"] $
                     
                     , "def main:"
                     , "    v = Vector 1"
-                    , "    print (v.test v)"
+                    , "    print (v + v)"
                     --, "    f = @(+)"
                     --, "    print $ (+) 1 2"
                     --, "    print $ @Int.+ 1 2"

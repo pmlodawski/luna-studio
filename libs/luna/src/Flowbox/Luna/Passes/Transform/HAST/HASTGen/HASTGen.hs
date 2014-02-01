@@ -81,8 +81,7 @@ genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields meth
     
     GenState.setModule mod
     
-    -- register classes, because global functions should have access to them
-    mapM_ registerClasses classes
+    mapM_ genExpr classes
 
     GenState.setCls    cls
 
@@ -101,11 +100,6 @@ genModule (LModule.Module _ cls imports classes typeAliases typeDefs fields meth
     mapM_ genExpr methods
     
     mapM_ (genExpr >=> GenState.addImport) imports
-
-    -- generate classes after global functions to be sure, they have got access to them
-    mapM_ genExpr classes
-
-
     when (name == "Main") $ do
         let funcnames = map (view LExpr.name) methods
         if not $ "main" `elem` funcnames
@@ -148,23 +142,6 @@ genCon dataName (LExpr.ConD _ conName fields) = do
            *> GenState.addTHExpression (thClsCallInsts conMemName fieldlen (0::Int))
            -- *> GenState.addTHExpression (thGenerateClsGetters conName)
     return (expr, th)
-
-
-registerClasses :: LExpr -> GenPass ()
-registerClasses (LExpr.Data _ cls cons _classes methods) = do
-    let name        = view LType.name   cls
-        params      = view LType.params cls
-    
-    GenState.setCls cls
-    
-    consTuples <- mapM (genCon name) cons
-    let consE  = map fst consTuples
-        consTH = map snd consTuples
-    
-    let dt = HExpr.DataD name params consE stdDerivings
-    GenState.addDataType dt
-    
-    sequence_ consTH
 
 
 genExpr :: LExpr -> GenPass HExpr
@@ -247,14 +224,14 @@ genExpr ast = case ast of
 
                                            GenState.setCls cls
 
-                                           --consTuples <- mapM (genCon name) cons
-                                           --let consE  = map fst consTuples
-                                           --    consTH = map snd consTuples
+                                           consTuples <- mapM (genCon name) cons
+                                           let consE  = map fst consTuples
+                                               consTH = map snd consTuples
 
-                                           --let dt = HExpr.DataD name params consE stdDerivings
-                                           --GenState.addDataType dt
+                                           let dt = HExpr.DataD name params consE stdDerivings
+                                           GenState.addDataType dt
 
-                                           --sequence_ consTH
+                                           sequence_ consTH
 
                                            GenState.addTHExpression $ thGenerateAccessors name
                                            GenState.addTHExpression $ thRegisterAccessors name
@@ -262,8 +239,7 @@ genExpr ast = case ast of
 
                                            mapM_ genExpr methods
 
-                                           --return dt
-                                           return HExpr.NOP
+                                           return dt
 
     LExpr.Infix        id name src dst       -> genExpr (LExpr.App id (LExpr.Var 0 name) [src, dst])
                                                 --HExpr.Infix name <$> genExpr src <*> genExpr dst
