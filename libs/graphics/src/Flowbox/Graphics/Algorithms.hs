@@ -208,10 +208,7 @@ convolve5x5 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o),(p,q,r,s,t),(u,v,w,x,y))
 
 convolve :: (A.Elt a, A.IsFloating a, A.Stencil A.DIM2 a stencil) =>
   (String, String, String) -> (t -> stencil -> Exp a) -> t -> Image a -> Either Image.Error (Image a)
-convolve names convolution kernel img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
+convolve (nameA, nameB, nameC) convolution kernel img = do
   channelA <- Image.lookup nameA img
   channelB <- Image.lookup nameB img
   channelC <- Image.lookup nameC img
@@ -233,10 +230,10 @@ convolveRGB = convolve ("r", "g", "b")
 -- brightness and contrast
 
 adjustCB_RGB :: (A.Elt a, A.IsFloating a) => A.Exp a -> A.Exp a -> Image a -> Either Image.Error (Image a)
-adjustCB_RGB = adjustCB "r" "g" "b"
+adjustCB_RGB = adjustCB ("r", "g", "b")
 
-adjustCB :: (A.Elt a, A.IsFloating a) => String -> String -> String -> A.Exp a -> A.Exp a -> Image a -> Either Image.Error (Image a)
-adjustCB rname gname bname contrastValue brightnessValue img = do
+adjustCB :: (A.Elt a, A.IsFloating a) => (String, String, String) -> A.Exp a -> A.Exp a -> Image a -> Either Image.Error (Image a)
+adjustCB (rname, gname, bname) contrastValue brightnessValue img = do
     rchannel <- Image.lookup rname img
     gchannel <- Image.lookup gname img
     bchannel <- Image.lookup bname img
@@ -250,12 +247,11 @@ adjustCB rname gname bname contrastValue brightnessValue img = do
         adjust x = contrastValue * x + brightnessValue
     return outimg
 
-contrast :: (A.Elt a, A.IsFloating a) => A.Exp a -> String -> String -> String -> Image a -> Either Image.Error (Image a)
-contrast x r g b = adjustCB r g b x 0
+contrast :: (A.Elt a, A.IsFloating a) => A.Exp a -> (String, String, String) -> Image a -> Either Image.Error (Image a)
+contrast x rgb = adjustCB rgb x 0
 
-brightness :: (A.Elt a, A.IsFloating a) => A.Exp a -> String -> String -> String -> Image a -> Either Image.Error (Image a)
-brightness x r g b = adjustCB r g b 1 x
-
+brightness :: (A.Elt a, A.IsFloating a) => A.Exp a -> (String, String, String) -> Image a -> Either Image.Error (Image a)
+brightness x rgb = adjustCB rgb 1 x
 
 
 -- color conversion
@@ -478,10 +474,7 @@ blenderAlphaF f o a b = blenderAlpha (f a b) a o
 
 keyColor :: (A.Elt a, A.IsFloating a) => (String, String, String) -> (Exp a, Exp a, Exp a) -> (Exp a, Exp a, Exp a)
             -> (Exp a -> Exp a) -> Image a -> Either Image.Error (Image a)
-keyColor names epsilon value f img = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
+keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
   channelA <- Image.lookup nameA img
   channelB <- Image.lookup nameB img
   channelC <- Image.lookup nameC img
@@ -493,16 +486,10 @@ keyColor names epsilon value f img = do
       channelB' = match channelB
       channelC' = match channelC
       match c = Channel.zipWith4 (\p q r s -> (matched p q r) A.? (f s , s)) channelA channelB channelC c
-      matched a b c = (test a valueA epsilonA) A.&&* (test b valueB epsilonB) A.&&* (test c valueC epsilonC)
+      matched a b c = (test a valA epsA) A.&&* (test b valB epsB) A.&&* (test c valC epsC)
       test x y z = (delta A.>* 0 A.&&* delta A.<* z) A.||* (delta A.<* 0 A.&&* delta A.>* -z)
                  A.? (A.constant True , A.constant False)
                where delta = x - y
-      (epsilonA,_,_) = epsilon
-      (_,epsilonB,_) = epsilon
-      (_,_,epsilonC) = epsilon
-      (valueA,_,_) = value
-      (_,valueB,_) = value
-      (_,_,valueC) = value
   return outimg
 
 
@@ -510,11 +497,8 @@ keyColor names epsilon value f img = do
 -- extracting background
 
 extractBackground :: (A.Elt a, A.IsFloating a) => (String, String, String) -> [Image a] -> Either Image.Error (Image a)
-extractBackground names images = do
-  let (nameA,_,_) = names
-      (_,nameB,_) = names
-      (_,_,nameC) = names
-      firstImg    = images !! 0
+extractBackground (nameA, nameB, nameC) images = do
+  let firstImg    = images !! 0
   channelsA <- sequence $ fmap (Image.lookup nameA) images
   channelsB <- sequence $ fmap (Image.lookup nameB) images
   channelsC <- sequence $ fmap (Image.lookup nameC) images

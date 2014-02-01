@@ -17,11 +17,23 @@ module Flowbox.Graphics.Mockup (
     Image.reprDouble,
     Image.reprWord8,
     Channel,
-    erodeChannel,
-    toDouble
+
+    Alg.invert,
+    Alg.invert',
+    Alg.sign,
+    Alg.parametrize,
+    Alg.bias,
+    Alg.gain,
+    Alg.gamma,
+    Alg.compress,
+    Alg.expand,
+    Alg.remap,
+
+    Alg.erodeChannel,
+    toDouble,
+
 ) where
 
-import qualified Codec.BMP             as BMP
 import qualified Data.Array.Accelerate as A
 import           GHC.Float
 import qualified System.Exit           as Exit
@@ -31,9 +43,8 @@ import qualified Data.Array.Accelerate.CUDA as CUDA
 import qualified Data.Array.Accelerate.Interpreter as Interpreter
 #endif
 
-
 import           Data.Number.Conversion
-import           Flowbox.Graphics.Algorithms
+import qualified Flowbox.Graphics.Algorithms as Alg
 import           Flowbox.Graphics.Raster.Channel   (Channel)
 import qualified Flowbox.Graphics.Raster.Channel   as Channel
 import           Flowbox.Graphics.Raster.Image     (Image)
@@ -44,11 +55,13 @@ import           Flowbox.Prelude                   hiding ((.))
 import           Luna.Target.HS.Core               hiding (print, return)
 
 
+
 runBackend :: A.Elt a => LunaBackend -> Channel.Backend a
 #ifdef ACCELERATE_CUDA_BACKEND
 runBackend LunaCUDA = CUDA.run
 #endif
 runBackend LunaInterpreter = Interpreter.run
+
 
 exitFailure :: IO (Safe ())
 exitFailure = Exit.exitFailure *> return (Safe ())
@@ -91,10 +104,10 @@ compose = Pure . RGBA.compose
 
 adjustCB :: Double -> Double -> Image Double -> Pure (Either Image.Error (Image Double))
 adjustCB contrastValue brightnessValue img = 
-    Pure $ adjustCB_RGB (A.constant contrastValue) (A.constant brightnessValue) img
+    Pure $ Alg.adjustCB_RGB (A.constant contrastValue) (A.constant brightnessValue) img
 
 convolve :: Double -> Image Double -> Pure (Either Image.Error (Image Double))
-convolve kernel img = Pure $ convolveRGB convolve3x3 kernel' img where
+convolve kernel img = Pure $ Alg.convolveRGB Alg.convolve3x3 kernel' img where
     kernel' = map A.constant $ replicate 9 kernel
 
 
