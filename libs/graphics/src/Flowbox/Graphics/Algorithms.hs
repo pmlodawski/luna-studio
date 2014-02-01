@@ -36,6 +36,11 @@ type String3 = (String, String, String)
 
 -- utils
 
+epsilon :: (A.Elt a, A.IsNum a) => Exp a -> Exp a -> Exp a -> Exp Bool
+epsilon a b eps = ((delta A.>* 0) A.&&* (delta A.<* eps)) A.||* ((delta A.<* 0) A.&&* (delta A.>* -eps))
+           A.? (A.constant True , A.constant False)
+         where delta = a - b
+
 applyToImage :: (Channel a -> Channel a) -> String3 -> Image a -> Either Image.Error (Image a)
 applyToImage f names img = do
   let (nameA,_,_) = names
@@ -487,15 +492,27 @@ keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
       channelB' = match channelB
       channelC' = match channelC
       match c = Channel.zipWith4 (\p q r s -> (matched p q r) A.? (f s , s)) channelA channelB channelC c
-      matched a b c = (test a valA epsA) A.&&* (test b valB epsB) A.&&* (test c valC epsC)
-      test x y z = (delta A.>* 0 A.&&* delta A.<* z) A.||* (delta A.<* 0 A.&&* delta A.>* -z)
-                 A.? (A.constant True , A.constant False)
-               where delta = x - y
+      matched a b c = (epsilon a valA epsA) A.&&* (epsilon b valB epsB) A.&&* (epsilon c valC epsC)
   return outimg
 
 
 
 -- extracting background
+
+--generateHistList result [] = result
+--generateHistList result@((x,y):xs) (val:arr) = generateHistList arr (val A.==* x A.? (,))
+  --if val A.==* x
+    --then generateHistList arr ([(x,y+1)] ++ xs)
+    --else generateHistList arr ([(val,1)] ++ result)
+
+--findMostFrequent eps arr = findMostFrequent' [] eps arr
+findMostFrequent arr = arr !! 0
+
+--findMostFrequent' result _ [] = result
+--findMostFrequent' result eps arr@((x,_):xs) = findMostFrequent (val A.>* result A.? (val,result)) eps xs
+--  where val = step 0 arr
+--        step res [] = res
+--        step res ((a,b):rest) =
 
 extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> [Image a] -> Either Image.Error (Image a)
 extractBackground (nameA, nameB, nameC) images = do
@@ -511,13 +528,14 @@ extractBackground (nameA, nameB, nameC) images = do
              $ mempty
       exampleChannel = channelsA !! 0
       channelShape = Channel.shape exampleChannel
-      channelA' = Channel.generate channelShape (getMedian channelsA)
-      channelB' = Channel.generate channelShape (getMedian channelsB)
-      channelC' = Channel.generate channelShape (getMedian channelsC)
-      getMedian channels ix = let
+      channelA' = Channel.generate channelShape (getMostFreq channelsA)
+      channelB' = Channel.generate channelShape (getMostFreq channelsB)
+      channelC' = Channel.generate channelShape (getMostFreq channelsC)
+      getMostFreq channels ix = let
                                 (A.Z A.:. i A.:. j) = A.unlift ix
                               in
-                                median' $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
+                                --findMostFrequent $ (generateHistList []) $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
+                                findMostFrequent $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
   return outimg
 
 
@@ -545,11 +563,6 @@ cutOut names epsilons f imgIn imgBackground = do
       channelC' = match channelC1
       -- TODO: rethink this part, I think it doesn't work exactly as I thought it did
       match c = Channel.zipWith7 (\p1 q1 r1 p2 q2 r2 s -> (matched p1 q1 r1 p2 q2 r2) A.? (f s , s)) channelA1 channelB1 channelC1 channelA2 channelB2 channelC2 c
-      matched a1 b1 c1 a2 b2 c2 = (test a1 a2 epsilonA) A.&&* (test b1 b2 epsilonB) A.&&* (test c1 c2 epsilonC)
-      test x y z = (delta A.>* 0 A.&&* delta A.<* z) A.||* (delta A.<* 0 A.&&* delta A.>* -z)
-                 A.? (A.constant True , A.constant False)
-               where delta = x - y
-      (epsilonA,_,_) = epsilons
-      (_,epsilonB,_) = epsilons
-      (_,_,epsilonC) = epsilons
+      matched a1 b1 c1 a2 b2 c2 = (epsilon a1 a2 epsilonA) A.&&* (epsilon b1 b2 epsilonB) A.&&* (epsilon c1 c2 epsilonC)
+      (epsilonA,epsilonB,epsilonC) = epsilons
   return outimg
