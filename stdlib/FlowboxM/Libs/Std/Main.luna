@@ -124,12 +124,19 @@ def interp:
     ```liftf0 interp```
 
 
-def readImage path:
+def readImageWord8 path:
     ```flattenCtx $ liftf1 readImage #{path}```
 
-def Image.write path backend:
+def readImage path:
+    (readImageWord8 path).decompose.reprDouble
+
+
+def Image.writeWord8 path backend:
     ```flattenCtx $ liftf3 writeImage #{self} #{path} #{backend}```
     self
+
+def Image.write path backend:
+    self.reprWord8.compose.writeWord8 path backend
 
 def Image.compose:
     ```flattenCtx $ liftf1 compose #{self}```
@@ -226,7 +233,6 @@ def main:
     print "=========="
     img.write outpath backend
     print "=========="
-    img = img.decompose.reprDouble
     # print img
 
     # print path
@@ -237,7 +243,6 @@ def main:
     k = 0.1
     # # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
     img = img.adjustCB c b
-    img = img.reprWord8.compose
     
     outpath2 = "luna2.bmp"
     print "=========="
