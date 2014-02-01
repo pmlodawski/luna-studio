@@ -57,6 +57,7 @@ import qualified Generated.Proto.Expr.Typed                        as GenTyped
 import qualified Generated.Proto.Expr.TypeDef                      as GenTypeDef
 import qualified Generated.Proto.Expr.Var                          as GenVar
 import qualified Generated.Proto.Expr.Wildcard                     as GenWildcard
+import qualified Generated.Proto.Expr.Ref                     as GenRef
 import qualified Text.ProtocolBuffers.Extensions                   as Extensions
 
 
@@ -134,6 +135,8 @@ instance Convert Expr Gen.Expr where
                                       (encodePJ code)
         Expr.NativeVar  i name     -> genExpr GenCls.NativeVar i GenNativeVar.ext $ GenNativeVar.NativeVar
                                       (encodePJ name)
+        Expr.Ref        i dst      -> genExpr GenCls.Ref i GenRef.ext $ GenRef.Ref
+                                      (encodeJ dst)
         Expr.Case  i expr match    -> genExpr GenCls.Case i GenCase.ext $ GenCase.Case
                                       (encodeJ expr) (encodeList match)
         Expr.Match i pat body      -> genExpr GenCls.Match i GenMatch.ext $ GenMatch.Match
@@ -308,6 +311,11 @@ instance Convert Expr Gen.Expr where
                 (GenNativeVar.NativeVar mtname) <- ext <?> "Failed to decode Expr.NativeVar: extension is missing"
                 tname <- mtname <?> "Failed to decode Expr.NativeVar: 'name' field is missing"
                 pure $ Expr.NativeVar i (decodeP tname)
+            GenCls.Ref -> do
+                ext <- getExt GenRef.ext
+                (GenRef.Ref mtdst) <- ext <?> "Failed to decode Expr.Ref: extension is missing"
+                tdst <- mtdst <?> "Failed to decode Expr.Ref: 'dst' field is missing"
+                Expr.Ref i <$> decode tdst
             GenCls.Case -> do
                 ext <- getExt GenCase.ext
                 (GenCase.Case mtexpr tmatch) <- ext <?> "Failed to decode Expr.Case: extension is missing"

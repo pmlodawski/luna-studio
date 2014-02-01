@@ -19,7 +19,7 @@ import qualified Data.Map              as Map
 
 import           Flowbox.Graphics.Raster.Channel (Channel)
 import qualified Flowbox.Graphics.Raster.Channel as Channel
-import           Flowbox.Graphics.Raster.Error   (Error (ChannelLookupError))
+import           Flowbox.Graphics.Raster.Error   (Error (ChannelLookupError, TmpError))
 import           Flowbox.Prelude                 hiding (lookup, map)
 
 data Image a = Image { _channels :: Map String (Channel a)

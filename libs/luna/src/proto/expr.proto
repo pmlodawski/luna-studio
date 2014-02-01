@@ -11,7 +11,7 @@ import "pat.proto";
 import "lit.proto";
 import "type.proto";
 
-// last used id = 32 / 132
+// last used id = 33 / 133
 
 message Expr {
     enum Cls {
@@ -46,6 +46,7 @@ message Expr {
         Native       = 26;
         NativeCode   = 27;
         NativeVar    = 28;
+        Ref          = 33;
         Case         = 29;
         Match        = 30;
     }
@@ -229,6 +230,11 @@ message NativeCode {
 message NativeVar {
     extend Expr { optional NativeVar ext = 123; }
     optional string name = 1;
+}
+
+message Ref {
+    extend Expr { optional Ref ext = 133; }
+    optional Expr dst = 1;
 }
 
 message Case {

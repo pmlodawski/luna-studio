@@ -49,6 +49,7 @@ pImportAll   = symbol  '*'
 pAssignment  = symbol  '='
 pNativeSym   = symbols "```"
 pRange       = symbols ".."
+pRef         = symbol  '@'
 
 operators    = "!#$%&*+./<=>?@\\^|-~"
 
