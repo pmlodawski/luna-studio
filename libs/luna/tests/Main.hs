@@ -148,8 +148,8 @@ example = Source.Source ["Main"] $
                         ----, "    pos :: a"
 
 
-                        --,"def Int.+ b:"
-                        --,"    ```liftf2 (+) #{self} #{b}```"
+                        ,"def Int.+ b:"
+                        ,"    ```liftf2 (+) #{self} #{b}```"
 
                         --,"def Int.- b:"
                         --,"    ```liftf2 (-) #{self} #{b}```"
@@ -202,22 +202,34 @@ example = Source.Source ["Main"] $
 
                     --, "def add x y: x.+y"
 
-                    --, "def + x y: x.+ y"
+                    , "def + x y: x.+ y"
+                    --, "def * x y: x.* y"
+                    --, "def / x y: x./ y"
 
                     --, "def main:"
+                    , "class Vector a:"
+                    , "    x :: a"
+ 
+                    --, "    def + v:"
+                    --, "        Vector (x + v.x) (y + v.y) (z + v.z)"
 
+
+                    , "    def test v:"
+                    , "        x + v.x"
+                    , "        x.+ v.x"
 
                     --, "def Int.+ a:"
                     --, "    ```liftf2 (+) #{self} #{a}```"
 
-                    , "def Int.test:"
-                    , "    {self, self}"
+                    --, "def Int.test:"
+                    --, "    {self, self}"
                     
-                    , "def fun x:"
-                    , "    x.test"
+                    --, "def fun x:"
+                    --, "    x.test"
                     
                     , "def main:"
-                    , "    fun 5"
+                    , "    v = Vector 1"
+                    , "    print (v.test v)"
                     --, "    f = @(+)"
                     --, "    print $ (+) 1 2"
                     --, "    print $ @Int.+ 1 2"
@@ -358,6 +370,8 @@ main_inner = Luna.run $ do
     logger info $ PP.ppShow (aliasInfo ^. AliasInfo.aliasMap)
     logger info "\n>> invalidMap:"
     logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
+    --logger info "\n>> parentMap"
+    --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
 
     -- !!! [WARNING] INVALIDATES aliasInfo !!!
     logger info "\n-------- Desugar.ImplicitScopes --------"

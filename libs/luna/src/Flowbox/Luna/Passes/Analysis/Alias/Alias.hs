@@ -8,6 +8,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
 
+{-# LANGUAGE NoMonomorphismRestriction #-}
+
 module Flowbox.Luna.Passes.Analysis.Alias.Alias where
 
 import Control.Applicative
@@ -43,14 +45,49 @@ run = (Pass.run_ (Pass.Info "Alias") mempty) . vaMod
 
 
 vaMod :: Module -> VAPass AliasInfo
-vaMod el = do VAState.registerModule el
-              withID $ do VAState.registerName name id
-                          continue
-              VAState.getAliasInfo
-           where continue = Module.traverseM_ vaMod vaExpr vaType vaPat vaLit el
-                 withID   = VAState.withID id
-                 id       = el ^. Module.id
-                 name     = el ^. Module.cls ^. Type.name
+vaMod el@(Module.Module id cls imports classes typeAliases typeDefs fields methods modules) = do 
+    VAState.registerModule el
+    withID $ do VAState.registerName name id
+                continue
+    VAState.getAliasInfo
+    where continue =  pure ()
+                   -- <* mapM registerDataCons classes -- register just data constructors before functions
+                   <* mapM registerFuncHeaders methods
+
+                   <* vaType cls
+                   <* fexpMap imports
+                   <* fexpMap classes -- register functions before data member functions
+                   <* fexpMap typeAliases
+                   <* fexpMap typeDefs
+                   <* fexpMap fields
+                   <* fexpMap methods
+                   <* fmodMap modules
+          withID   = VAState.withID id
+          id       = el ^. Module.id
+          name     = el ^. Module.cls ^. Type.name
+          fexpMap  = mapM vaExpr
+          fmodMap  = mapM vaMod
+
+
+registerDataCons :: Expr.Expr -> VAPass ()
+registerDataCons el = VAState.registerExpr el *> case el of
+    Expr.Data       {} -> withID continue
+    Expr.ConD       {} -> VAState.registerParentName name id *> continue
+    _                  -> continue
+    where continue = Expr.traverseM_ registerDataCons vaType vaPat vaLit el
+          withID   = VAState.withID (el ^. Expr.id)
+          id       = el ^.  Expr.id
+          name     = el ^.  Expr.name
+
+
+registerFuncHeaders :: Expr.Expr -> VAPass ()
+registerFuncHeaders el = VAState.registerExpr el *> case el of
+    Expr.Function   {} -> VAState.registerName name id       *> withID continue
+    _                  -> continue
+    where continue = Expr.traverseM_ registerFuncHeaders vaType vaPat vaLit el
+          withID   = VAState.withID (el ^. Expr.id)
+          id       = el ^.  Expr.id
+          name     = el ^.  Expr.name
 
 
 vaExpr :: Expr.Expr -> VAPass ()
