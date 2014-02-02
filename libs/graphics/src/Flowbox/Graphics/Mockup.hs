@@ -56,12 +56,6 @@ import           Flowbox.Prelude                   hiding ((.))
 import           Luna.Target.HS.Core               hiding (print, return)
 
 
--- System ----------------------------------------------------------------
-exitFailure :: IO (Safe ())
-exitFailure = Exit.exitFailure *> return (Safe ())
-
-exitSuccess :: IO (Safe ())
-exitSuccess = Exit.exitSuccess *> return (Safe ())
 
 -- Backends --------------------------------------------------------------
 runBackend :: A.Elt a => LunaBackend -> Channel.Backend a
@@ -84,25 +78,12 @@ interp :: LunaBackend
 interp = LunaInterpreter
 
 -- Image -----------------------------------------------------------------
-readImage :: String -> IO (Either Image.Error (Image A.Word32))
-readImage fileIn = do
-    img <- Image.readImageFromBMP2 fileIn
-    return img
 
 -- FIXME[wd]: UNSAFE ERROR
 writeImage :: Image (A.Word32) -> FilePath -> LunaBackend -> IO (Safe ())
 writeImage img path backend = do
     Image.writeImageToBMP (runBackend backend) path img
     return (Safe ())
-
-
-decompose :: Image A.Word32 -> Pure (Either Image.Error (Image A.Word8))
-decompose = Pure . RGBA.decompose
-
-
-compose :: Image A.Word8 -> Pure (Either Image.Error (Image A.Word32))
-compose = Pure . RGBA.compose
-
 
 adjustCB :: Double -> Double -> Image Double -> Pure (Either Image.Error (Image Double))
 adjustCB contrastValue brightnessValue img =
@@ -113,27 +94,4 @@ convolve :: Double -> Image Double -> Pure (Either Image.Error (Image Double))
 convolve kernel img = Pure $ Alg.convolveRGB Alg.convolve3x3 kernel' img where
     kernel' = map A.constant $ replicate 9 kernel
 
-
-convertRGBtoHSV :: (A.Elt a, A.IsFloating a) => Image a -> Pure (Either Image.Error (Image a))
-convertRGBtoHSV = Pure . Alg.convertRGBtoHSV
-
-
-convertHSVtoRGB :: (A.Elt a, A.IsFloating a) => Image a -> Pure (Either Image.Error (Image a))
-convertHSVtoRGB = Pure . Alg.convertHSVtoRGB
-
--- Channel ---------------------------------------------------------------
-imgChannelGet :: String -> Image Double -> Pure (Either Image.Error (Channel Double))
-imgChannelGet name img = Pure $ Image.lookup name img
-
-
-imgChannelInsert :: String -> Channel Double -> Image Double -> Image Double
-imgChannelInsert = Image.insert
-
-
-channelMap :: (A.Exp Double -> A.Exp Double) -> Channel Double -> Channel Double
-channelMap = Channel.map
-
-
-constant :: Double -> A.Exp Double
-constant = A.constant
 

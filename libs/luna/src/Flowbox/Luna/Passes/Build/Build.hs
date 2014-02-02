@@ -126,6 +126,7 @@ run buildConfig ast astInfo = runEitherT $ do
                 : "flowbox-graphics"
                 : "luna-target-hs"
                 : "template-haskell"
+                : "accelerate"
                 : BuildConfig.libs buildConfig
                 ++ if BuildConfig.name buildConfig /= "flowboxM-stdlib"
                       then ["flowboxM-stdlib"]

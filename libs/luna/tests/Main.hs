@@ -129,6 +129,7 @@ example = Source.Source ["Main"] $
 
                         --, "class Console:"
                         --, "import Std:All"
+                        , "import ```Data.Accelerate```"
                         , "def print msg:"
                         , "    ```print' #{msg}```"
 
