@@ -66,9 +66,11 @@ build cfg op diag filePath = do
     let ccFlags  = if Cmd.ddebug op
                          then ["\"-DDEBUG\""]
                          else []
-        ghcFlags = if Cmd.ddebug op
+        -- FIXME[pm]: Why it BLOWS UP when we enable -Wall?
+        ghcFlags = ["-threaded", "-Odph", "-optlo-O3"] ++ (if Cmd.ddebug op
                          then ["-DDEBUG"]
-                         else []
+                         else [] 
+                   )
         cabalFlags = case Cmd.global op of
                         True  -> ["--global"]
                         False -> []

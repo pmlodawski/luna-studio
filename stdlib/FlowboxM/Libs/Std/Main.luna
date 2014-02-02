@@ -214,26 +214,38 @@ def Image.convertRGBtoHSV:
 def Image.convertHSVtoRGB:
     ```flattenCtx $ liftf1 convertHSVtoRGB #{self}```
 
-def Image.getChannel name:
+def Image.get name:
     ```flattenCtx $ liftf2 imgChannelGet #{name} #{self}```
 
-def Image.putChannel name channel:
+def Image.put name channel:
     ```liftf3 imgChannelInsert #{name} #{channel} #{self}```
 
 ## Channel ####################################
 
 
 # # FIXME [wd] zrób to
-# # def Channel.map self callback:
-#     # ```liftf2 channelMap (val $ ((fromPure.fromSafe) `dot2` call1) #{callback}) #{self}```
+def Channel.map callback:
+    ```liftf2 channelMap (val $ (\x -> (fromSafe.fromPure) (call1 #{callback} (val x)))) #{self}```
 #     # ```liftf2 channelMap (val $ call1 #{callback}) #{self}```
 
 # def Channel.erode:
 #    ```liftf1 erodeChannel #{self}```
 
-# def constant x:
-#     ```liftf1 constant #{x}```
+def constant x:
+    ```liftf1 constant #{x}```
 
+
+def Exp.+ a:
+    ```liftf2 (+) #{self} #{a}```
+
+def Exp.- a:
+    ```liftf2 (-) #{self} #{a}```
+
+def Exp.* a:
+    ```liftf2 (*) #{self} #{a}```
+
+def Exp./ a:
+    ```liftf2 (/) #{self} #{a}```
 
 
 class Vector a:
@@ -256,7 +268,7 @@ def main:
     print v.length
     print v.normalize
     print $ v.normalize + v.normalize
-    backend = interp
+    backend = cuda
     # v2 = Vector 0.5 0.5 0.5
 
     # print ((v2) + (v2))
@@ -278,6 +290,9 @@ def main:
     
     print path
     print "=========="
+    chR = img.get "r"
+    chR = chR.map (x : x * x)
+    img = img.put "r" chR
     img.write outpath backend
     print "=========="
     # print img
@@ -295,20 +310,22 @@ def main:
     print "=========="
     img = img.convertRGBtoHSV.convertHSVtoRGB
     img.write outpath2 backend
+
+
     
     # # img = img.convolve k
 
-    # chR = img.getChannel "r"
+    
     # chG = img.getChannel "g"
     # chB = img.getChannel "b"
 
     # # chR
-    # # chR = chR.map (x : x)
+    
     # # a = [1,2,3].each x : x+1
     # # console.print a
     # # chB = chB.map (x : Main.constant 0.0)
 
-    # img = img.putChannel "r" chR.erode()
+    
     # img = img.putChannel "g" chG.erode()
     # img = img.putChannel "b" chB.erode()
 

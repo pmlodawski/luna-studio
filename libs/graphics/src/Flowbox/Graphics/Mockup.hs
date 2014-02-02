@@ -31,10 +31,12 @@ module Flowbox.Graphics.Mockup (
 
     Alg.erodeChannel,
     toDouble,
+    Exp,
 
 ) where
 
 import qualified Data.Array.Accelerate as A
+import           Data.Array.Accelerate (Exp)
 import           GHC.Float
 import qualified System.Exit           as Exit
 #ifdef ACCELERATE_CUDA_BACKEND
