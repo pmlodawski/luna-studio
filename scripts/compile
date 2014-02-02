@@ -42,7 +42,7 @@ def main():
         os.environ['PATH'] = mingwPath + os.pathsep + os.environ['PATH']
 
     print_info("Running gencabal")
-    ret = call('python scripts/gencabal', shell=True)
+    ret = call('python2.7 scripts/gencabal', shell=True)
     handle_ret(ret)
 
     cwd = os.getcwd()
