@@ -111,12 +111,12 @@ example = Source.Source ["Main"] $
                         , "def Int.+ b:"
                         , "    ```liftf2 (+) #{self} #{b}```"
 
-                        , "def fun x::Int:"
-                        , "    x+1"
+                        , "def fun {a,b}:"
+                        , "    a+b"
 
                     
                     , "def main:"
-                    , "    print $ fun 1"
+                    , "    print $ fun {1,2}"
 
                     ]
 

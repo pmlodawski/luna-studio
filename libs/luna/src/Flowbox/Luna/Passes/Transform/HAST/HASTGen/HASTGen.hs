@@ -168,7 +168,7 @@ genExpr ast = case ast of
                                             sigTerms <- mapM genFuncSig inputs
                                             let hInputs   = map fst sigTerms
                                             let typeHints = concat $ map snd sigTerms
-                                            logger error (show typeHints)
+                                            --logger error (show typeHints)
 
                                             let mkTypeHint (id,e) = HExpr.AppE (HExpr.AppE (HExpr.VarE "typeMatch") (HExpr.VarE $ "_v_" ++ show id))
                                                                                (HExpr.Typed e $ HExpr.VarE "undefined")
@@ -372,7 +372,9 @@ genPatSig :: LPat.Pat -> GenPass (HExpr, [(Int, HExpr)])
 genPatSig p = case p of
     --LPat.App         _ src args -> foldl HExpr.AppP <$> genPat src <*> mapM genPat args
     LPat.Var         _ name     -> purePat $ pure $ HExpr.Var (mkVarName name)
-    LPat.Typed       id pat cls  -> (\(hexp, binds) bind -> (hexp, (pat ^. LPat.id,bind):binds)) <$> genPatSig pat <*> genType False cls
+    LPat.Typed       id pat cls -> (\(hexp, binds) bind -> (hexp, (pat ^. LPat.id,bind):binds)) <$> genPatSig pat <*> genType False cls
+    LPat.Tuple       _ items    -> (\psigs -> ((mkPure . mkSafe . HExpr.TupleP $ map fst psigs), (concat $ map snd psigs))) <$> mapM genPatSig items
+                                    --mkPure . HExpr.TupleP <$> mapM genPat items
     --LPat.Tuple       _ items    -> mkPure . HExpr.TupleP <$> mapM genPat items
     LPat.Lit         _ value    -> purePat $ genLit value
     --LPat.Wildcard    _          -> return $ HExpr.WildP
