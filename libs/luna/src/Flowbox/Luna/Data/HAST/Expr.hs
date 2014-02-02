@@ -44,6 +44,7 @@ data Expr = Assignment { src       :: Expr     , dst       :: Expr              
           -- | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , newtypes  :: [Expr]       , datatypes :: [Expr]  , methods :: [Expr] , thexpressions :: [Expr] }
           | Module     { path      :: [String] , ext       :: [Extension] , imports   :: [Expr]   , body  :: [Expr]}
           | Import     { qualified :: Bool     , segments  :: [String]    , rename    :: Maybe String                           }
+          | ImportNative { code    :: String                                                      }
           | AppE       { src       :: Expr     , dst       :: Expr                                }
           | AppT       { src       :: Expr     , dst       :: Expr                                }
           | AppP       { src       :: Expr     , dst       :: Expr                                }

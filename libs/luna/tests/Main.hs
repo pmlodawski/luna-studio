@@ -127,6 +127,7 @@ example = Source.Source ["Main"] $
 
                         --, "class Console:"
                         --, "import Std:All"
+                        , "import ```Data.Accelerate```"
                         , "def print msg:"
                         , "    ```print' #{msg}```"
 
@@ -170,10 +171,23 @@ example = Source.Source ["Main"] $
                         --, "def catch el f:"
                         --, "    ```catch #{el} #{f}```"
 
+                    , "def + x y: x+y"
 
+                    , "def List.foldr f el:"
+                    , "    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```"
+                    
+                    , "def List.sum:"
+                    , "    self.foldr ((x,y):x+y) 0"
 
-                        --, "def List.foldr f el:"
-                        --, "    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```"
+                    , "def List.sort:"
+                    , "    #FIXME[wd]: very dirty hack for Pure Safe values."
+                    , "    ```(fmap.fmap.fmap) val $ liftf1 sort ((fmap.fmap.fmap) (fromSafe.fromPure) #{self})```"
+
+                    , "def List.head:"
+                    , "    ```flattenCtx $ liftf1 head #{self}```"
+
+                    , "def List.min:"
+                    , "    self.sort.head"
 
                         --, "class X"
                         --, "    def test self:"
@@ -200,20 +214,21 @@ example = Source.Source ["Main"] $
 
                     --, "def add x y: x.+y"
 
-                    , "def + x y: x.+ y"
-                    --, "def * x y: x.* y"
-                    --, "def / x y: x./ y"
+                    --, "def + x y: x.+ y"
+                    ----, "def * x y: x.* y"
+                    ----, "def / x y: x./ y"
 
-                    --, "def main:"
-                    , "class Vector a:"
-                    , "    x :: a"
+                    ----, "def main:"
+                    --, "class Vector a:"
+                    --, "    x :: a"
  
+                    ----, "    def + v:"
+                    ----, "        Vector (x + v.x) (y + v.y) (z + v.z)"
+
+
                     --, "    def + v:"
-                    --, "        Vector (x + v.x) (y + v.y) (z + v.z)"
-
-
-                    , "    def + v:"
-                    , "        x + v.x"
+                    --, "        print 111"
+                    --, "        x + v.x"
 
                     --, "def Int.+ a:"
                     --, "    ```liftf2 (+) #{self} #{a}```"
@@ -225,13 +240,18 @@ example = Source.Source ["Main"] $
                     --, "    x.test"
                     
                     , "def main:"
-                    , "    v = Vector 1"
-                    , "    print (v + v)"
+                    --, "    v = Vector 1"
+                    --, "    print (v + v)"
                     --, "    f = @(+)"
                     --, "    print $ (+) 1 2"
                     --, "    print $ @Int.+ 1 2"
-                            --, "    a = [1,2,3,4,5]"
-                            --, "    print $ a.foldr @(+) 0"
+                    , "    a = [1,5,3,4,2]"
+                    , "    print a"
+                    , "    print (a.sum)"
+                    , "    print (a.sort)"
+                    , "    print (a.min)"
+                    --, "    print a.sort"
+                    --, "    print $ a.foldr @(+) 0"
                     --, "    a = [1,2,3,4]"
                     --, "    a = 1"
                     --, "    f = @test"

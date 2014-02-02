@@ -41,6 +41,8 @@ Library
                   TemplateHaskell,
                   OverloadedStrings
 
+  CPP-options:    -DACCELERATE_CUDA_BACKEND
+
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  containers,
@@ -63,7 +65,8 @@ Library
                   timeit,
                   transformers,
                   luna-target-hs,
-                  num-conversion
+                  num-conversion,
+                  accelerate-cuda         == 0.14.*
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
@@ -76,6 +79,8 @@ Library
 
 Executable test
   Main-is:              Main.hs
+
+  CPP-options:        -DACCELERATE_CUDA_BACKEND
 
   ghc-options:          -Wall -threaded -Odph -optlo-O3
   ghc-prof-options:     -auto-all
@@ -119,4 +124,5 @@ Executable test
                       vector                  >= 0.7          && < 0.11,
                       timeit,
                       transformers,
-                      luna-target-hs
+                      luna-target-hs,
+                      accelerate-cuda         == 0.14.*

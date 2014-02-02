@@ -98,6 +98,9 @@ pImport          = tok Expr.Import   <*  L.pImport
                                          )
 
 
+pImportNative   = tok Expr.ImportNative  <*  L.pImport <*> pNative
+
+
 pTypeAlias      = tok Expr.TypeAlias <*  L.pTypeAlias
                                      <*> pType
                                      <*  L.pAssignment
@@ -175,6 +178,7 @@ pDataBody       = choice [ Expr.addMethod <$> pFunc
 pModuleBody      = choice [ Module.addMethod    <$> pFunc
                           , pCombine Module.addField pFields
                           , Module.addClass     <$> pData
+                          , Module.addImport    <$> try(pImportNative)
                           , Module.addImport    <$> pImport
                           , Module.addTypeAlias <$> pTypeAlias
                           , Module.addTypeDef   <$> pTypeDef

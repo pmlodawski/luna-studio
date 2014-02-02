@@ -206,6 +206,7 @@ genExpr ast = case ast of
                                             return $ HExpr.Var hName
     LExpr.Grouped _ expr                 -> genExpr expr
     LExpr.Arg     _ pat _                -> genPat pat
+    LExpr.ImportNative _ segments        -> pure $ HExpr.ImportNative (join "" $ map genNative segments)
     LExpr.Import  _ path target rename   -> do
                                             tname <- case target of
                                                 LExpr.Con      _ tname -> pure tname

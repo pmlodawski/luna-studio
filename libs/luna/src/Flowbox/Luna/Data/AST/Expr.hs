@@ -46,6 +46,7 @@ data Expr  = NOP          { _id :: ID                                           
            | Lambda       { _id :: ID, _inputs    :: [Expr]   , _output    :: Type   , _body      :: [Expr]                      }
            | Grouped      { _id :: ID, _expr      :: Expr                                                                        }
            | Import       { _id :: ID, _path      :: [String] , _target    :: Expr   , _rename    :: Maybe String                }
+           | ImportNative { _id :: ID, _segments  :: [Expr]                                                                      }
            | Infix        { _id :: ID, _name      :: String   , _src       :: Expr   , _dst       :: Expr                        }
            | List         { _id :: ID, _items     :: [Expr]                                                                      }
            | Lit          { _id :: ID, _lvalue    :: Lit                                                                         }
@@ -140,6 +141,7 @@ traverseM fexp ftype fpat flit e = case e of
     RangeFrom    id' start'                        -> RangeFrom    id'       <$> fexp start'
     Case         id' expr' match'                  -> Case         id'       <$> fexp expr' <*> fexpMap match'
     Match        id' pat' body'                    -> Match        id'       <$> fpat pat' <*> fexpMap body'
+    ImportNative {}                                -> pure e
     NativeCode   {}                                -> pure e
     NativeVar    {}                                -> pure e
     Ref          id' dst'                          -> Ref          id'       <$> fexp dst'
@@ -179,6 +181,7 @@ traverseM_ fexp ftype fpat flit e = case e of
     RangeFrom    _ start'                          -> drop <* fexp start'
     Case         _ expr' match'                    -> drop <* fexp expr' <* fexpMap match'
     Match        _ pat' body'                      -> drop <* fpat pat'  <* fexpMap body'
+    ImportNative {}                                -> drop
     NativeCode   {}                                -> drop
     NativeVar    {}                                -> drop
     Ref          _ dst'                            -> drop <* fexp dst'

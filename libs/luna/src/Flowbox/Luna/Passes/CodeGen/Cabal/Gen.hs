@@ -25,20 +25,20 @@ getModuleName source = List.intercalate "." $ Source.path source
 
 
 genLibrary :: String -> Version -> [String] -> [String] -> [String] -> [Source] -> Config
-genLibrary name version ghcOptions cppOptions libs sources = genCommon sectionBase name version ghcOptions cppOptions libs where
+genLibrary name version ghcOptions ccOptions libs sources = genCommon sectionBase name version ghcOptions ccOptions libs where
     sectionBase = Section.mkLibrary { Section.exposedModules = map getModuleName sources }
 
 
 genExecutable :: String -> Version -> [String] -> [String] -> [String] -> Config
-genExecutable name version ghcOptions cppOptions libs = genCommon sectionBase name version ghcOptions cppOptions libs where
+genExecutable name version ghcOptions ccOptions libs = genCommon sectionBase name version ghcOptions ccOptions libs where
     sectionBase = Section.mkExecutable name
 
 
 genCommon :: Section -> String -> Version -> [String] -> [String] -> [String] -> Config
-genCommon sectionBase name version ghcOptions cppOptions libs = conf where
+genCommon sectionBase name version ghcOptions ccOptions libs = conf where
     section = sectionBase { Section.buildDepends = libs
                           , Section.ghcOptions   = ghcOptions
-                          , Section.cppOptions   = cppOptions
+                          , Section.ccOptions    = ccOptions
                           }
     conf = Config.addSection section
          $ Config.make name version
