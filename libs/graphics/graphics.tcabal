@@ -41,8 +41,6 @@ Library
                   TemplateHaskell,
                   OverloadedStrings
 
-  CPP-options:    -DACCELERATE_CUDA_BACKEND
-
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  containers,
@@ -65,16 +63,15 @@ Library
                   timeit,
                   transformers,
                   luna-target-hs,
-                  num-conversion,
-                  accelerate-cuda         == 0.14.*
+                  num-conversion
 
-  --if flag(cuda)
-  --  CPP-options:        -DACCELERATE_CUDA_BACKEND
-  --  build-depends:      accelerate-cuda         == 0.14.*
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    build-depends:      accelerate-cuda         == 0.14.*
 
-  --if flag(opencl)
-  --  CPP-options:        -DACCELERATE_OPENCL_BACKEND
-  --  build-depends:      accelerate-opencl       == 0.1.*
+  if flag(opencl)
+    CPP-options:        -DACCELERATE_OPENCL_BACKEND
+    build-depends:      accelerate-opencl       == 0.1.*
 
 
 Executable test
@@ -91,18 +88,18 @@ Executable test
                   OverloadedStrings
 
 
-  --if flag(cuda)
-  --  CPP-options:        -DACCELERATE_CUDA_BACKEND
-  --  build-depends:      accelerate-cuda         == 0.14.*
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    build-depends:      accelerate-cuda         == 0.14.*
 
-  --if flag(opencl)
-  --  CPP-options:        -DACCELERATE_OPENCL_BACKEND
-  --  build-depends:      accelerate-opencl       == 0.1.*
+  if flag(opencl)
+    CPP-options:        -DACCELERATE_OPENCL_BACKEND
+    build-depends:      accelerate-opencl       == 0.1.*
 
-  --if flag(ekg)
-  --  CPP-options:        -DACCELERATE_ENABLE_EKG
-  --  build-depends:      ekg                     >= 0.3          && < 0.4
-  --  ghc-options:        -with-rtsopts=-T
+  if flag(ekg)
+    CPP-options:        -DACCELERATE_ENABLE_EKG
+    build-depends:      ekg                     >= 0.3          && < 0.4
+    ghc-options:        -with-rtsopts=-T
 
   build-depends:      containers,
                       lens,
@@ -122,5 +119,4 @@ Executable test
                       vector                  >= 0.7          && < 0.11,
                       timeit,
                       transformers,
-                      luna-target-hs,
-                      accelerate-cuda         == 0.14.*
+                      luna-target-hs
