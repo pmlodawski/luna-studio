@@ -117,6 +117,8 @@ example = Source.Source ["Main"] $
                     
                     , "def main:"
                     , "    print $ fun {1,2}"
+                    , "    a = {1,2}"
+                    , "    {b,c} = a"
 
                     ]
 

@@ -117,3 +117,5 @@ getContext :: Type -> [Pred]
 getContext t = case t of
                ForallT _ c _ -> c
                _             -> []
+
+
