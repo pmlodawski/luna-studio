@@ -138,3 +138,9 @@ catchProto f el = case el of
 catch el f = flattenEnv $ fmap (catchProto f) el
 
 
+------------------------------------------------------------------------
+-- Type hinting
+------------------------------------------------------------------------
+
+typeMatch :: a -> a -> Pure(Safe())
+typeMatch _ _ = val ()
