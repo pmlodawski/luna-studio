@@ -1,22 +1,36 @@
-def Int.+ a:
-    ```liftf2 (+) #{self} #{a}```
-
-def Int.* a:
-    ```liftf2 (*) #{self} #{a}```
-
-def Int./ a:
-    ```liftf2 (-) #{self} #{a}```
 
 ###### Float ##################################
 
-def Float.+ a:
+import ```           Control.Applicative                          ```
+import ``` qualified Data.Array.Accelerate             as A       ```
+import ``` qualified Flowbox.Graphics.Raster.Channel   as Channel ```
+import ``` qualified Flowbox.Graphics.Raster.Image     as Image   ```
+import ``` qualified Flowbox.Graphics.Raster.IO        as Image   ```
+import ``` qualified Flowbox.Graphics.Algorithms       as Alg     ```
+import ``` qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA    ```
+import ``` qualified System.Exit                       as Exit    ```
+
+
+def Float.+ self a:
     ```liftf2 (+) #{self} #{a}```
 
-def Float./ a:
+def Float./ self a:
     ```liftf2 (/) #{self} #{a}```
 
-def Float.* a:
+def Float.* self a:
     ```liftf2 (*) #{self} #{a}```
 
-def Float.- a:
+def Float.- self a:
     ```liftf2 (-) #{self} #{a}```
+
+def Int.+ self a:
+    ```liftf2 (+) #{self} #{a}```
+
+def Int.* self a:
+    ```liftf2 (*) #{self} #{a}```
+
+def Int./ self a:
+    ```liftf2 (-) #{self} #{a}```
+
+def print self msg:
+    ```print' #{msg}```
