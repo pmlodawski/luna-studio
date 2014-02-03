@@ -93,6 +93,9 @@ def Int.next:
 def Int.prev:
     ```liftf1 (-1) #{self}```
 
+def Int.str:
+    ```liftf1 show #{self}```
+
 ###### Double ##################################
 
 def Double.+ a:
@@ -122,7 +125,8 @@ def Double.next:
 def Double.prev:
     ```liftf1 (-1) #{self}```
 
-
+def Double.str:
+    ```liftf1 show #{self}```
 
 def Double.invert:
     ```liftf1 invert #{self}```
@@ -228,6 +232,9 @@ def Image.get name:
 def Image.put name channel:
     ```liftf3 Image.insert #{name} #{channel} #{self}```
 
+def extractBackground images:
+    ```flattenCtx $ liftf1 (Pure . (Alg.extractBackground ("r", "g", "b"))) #{images}```
+
 ## Channel ####################################
 
 
@@ -267,8 +274,35 @@ class Vector a:
 
     def normalize:
         Vector (x/length) (y/length) (z/length)
-    
+
+
+# def loadImages path:
+#     x
+
+def eval v:
+    # ```print' #{v}```
+    y = ```liftf1 sequence #{v}```
+    # ```print' #{y}```
+    y
+
+def readImages paths:
+    ```liftf0 $ sequence . fmap $ map (reprDouble . RGBA.decompose . Image.readImageFromBMP2) $ map (\i -> "../video/frame-" + (show i) + ".bmp") [0..3]```
+    paths
+
 def main:
+    print "start!"
+    backend = cuda
+    paths = [0..3].each i : "../video/frame-" + i.str + ".bmp"
+    imgs = readImages paths
+    outpath = "luna.bmp"
+    # img = extractBackground imgs
+    # img.write outpath backend
+    print "a"
+
+    # i = loadImages "../video/frame-"
+    # print x
+
+def main2:
     print $ [3,2,1].min
     v = Vector 1 2 3
     print v
