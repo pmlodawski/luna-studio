@@ -279,28 +279,26 @@ class Vector a:
 # def loadImages path:
 #     x
 
-def eval v:
-    # ```print' #{v}```
-    y = ```liftf1 sequence #{v}```
-    # ```print' #{y}```
-    y
+def evalArr v:
+    ```flattenCtx $ (fmap.fmap) (fmap sequence . sequence) #{v}```
 
-def readImages paths:
-    ```liftf0 $ sequence . fmap $ map (reprDouble . RGBA.decompose . Image.readImageFromBMP2) $ map (\i -> "../video/frame-" + (show i) + ".bmp") [0..3]```
-    paths
+# def readImages paths:
+#     ```liftf0 $ sequence . fmap $ map (reprDouble . RGBA.decompose . Image.readImageFromBMP2) $ map (\i -> "../video/frame-" + (show i) + ".bmp") [0..3]```
+#     paths
 
 def main:
     print "start!"
     backend = cuda
-    paths = [0..3].each i : "../video/frame-" + i.str + ".bmp"
-    imgs = readImages paths
     outpath = "luna.bmp"
-    # img = extractBackground imgs
-    # img.write outpath backend
-    print "a"
-
+    imgs = [0..20].each i : readImage $ "../video/frame-" + i.str + ".bmp"
+    # # img.write outpath backend
+    # print "a"
+    x = evalArr imgs
+    img = extractBackground x
+    img.write outpath backend
     # i = loadImages "../video/frame-"
     # print x
+
 
 def main2:
     print $ [3,2,1].min
