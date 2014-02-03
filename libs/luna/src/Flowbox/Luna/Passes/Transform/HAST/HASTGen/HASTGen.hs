@@ -155,16 +155,33 @@ genExpr ast = case ast of
                                                     then cls ^. LType.name
                                                     else (path!!0) -- FIXME[wd]: needs name resolver
 
-                                                ninputs    = inputs
-                                                argNum     = length ninputs
+                                                argNum     = length inputs
                                                 fname      = Naming.mkMemName clsName name
 
                                             when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
 
+
+                                            -----------------------------------------
+                                            -- FIXME[wd]: genFuncSig is naive, it should not handle such cases as (a::Int)::Int
+                                            --            it should be implemented using State monad, so HASTGen has to change
+                                            --            the architecture a little bit
+                                            sigTerms <- mapM genFuncSig inputs
+                                            let hInputs   = map fst sigTerms
+                                            let typeHints = concat $ map snd sigTerms
+                                            --logger error (show typeHints)
+
+                                            let mkTypeHint (id,e) = HExpr.AppE (HExpr.AppE (HExpr.VarE "typeMatch") (HExpr.VarE $ "_v_" ++ show id))
+                                                                               (HExpr.Typed e $ HExpr.VarE "undefined")
+                                                hTypeHints = map mkTypeHint typeHints
+                                            -----------------------------------------
+
+                                            let fBody = (((emptyHExpr : hTypeHints) ++ ) <$> genFuncBody body output)
+
                                             f  <-   HExpr.Assignment (HExpr.Var fname)
-                                                          <$> ( HExpr.Lambda <$> (mapM genExpr ninputs)
-                                                                             <*> (HExpr.DoBlock <$> ((emptyHExpr :) <$> genFuncBody body output))
+                                                          <$> ( HExpr.Lambda <$> pure hInputs
+                                                                             <*> (HExpr.DoBlock <$> fBody)
                                                               )
+
 
                                             GenState.addFunction f
 
@@ -206,6 +223,7 @@ genExpr ast = case ast of
                                             return $ HExpr.Var hName
     LExpr.Grouped _ expr                 -> genExpr expr
     LExpr.Arg     _ pat _                -> genPat pat
+    LExpr.ImportNative _ segments        -> pure $ HExpr.ImportNative (join "" $ map genNative segments)
     LExpr.Import  _ path target rename   -> do
                                             tname <- case target of
                                                 LExpr.Con      _ tname -> pure tname
@@ -241,7 +259,8 @@ genExpr ast = case ast of
 
                                            return dt
 
-    LExpr.Infix        _ name src dst        -> HExpr.Infix name <$> genExpr src <*> genExpr dst
+    LExpr.Infix        id name src dst       -> genExpr (LExpr.App id (LExpr.Var 0 name) [src, dst])
+                                                --HExpr.Infix name <$> genExpr src <*> genExpr dst
     LExpr.Assignment   _ pat dst             -> HExpr.Arrow <$> genPat pat <*> genCallExpr dst
     LExpr.RecordUpdate _ src selectors expr  -> genExpr $ (setSteps sels) expr
                                                 where setter sel exp val = flip (LExpr.App 0) [val]
@@ -283,6 +302,7 @@ genExpr ast = case ast of
     LExpr.RangeFromTo _ start end            -> HExpr.AppE . HExpr.AppE (HExpr.Var "rangeFromTo") <$> genExpr start <*> genExpr end
     LExpr.RangeFrom   _ start                -> HExpr.AppE (HExpr.Var "rangeFrom") <$> genExpr start
     LExpr.Ref         _ dst                  -> genExpr dst
+    LExpr.RefType     _ typeName name        -> pure $ thTypeRef typeName name
     LExpr.Native      _ segments             -> pure $ HExpr.Native (join "" $ map genNative segments)
     LExpr.Typed       _ _cls _expr           -> Pass.fail "Typing expressions is not supported yet." -- Potrzeba uzywac hacku: matchTypes (undefined :: m1(s1(Int)))  (val (5 :: Int))
     LExpr.NOP         _                      -> pure HExpr.NOP
@@ -343,6 +363,25 @@ genPat p = case p of
     LPat.RecWildcard _          -> return $ HExpr.RecWildP
     LPat.Con         _ name     -> return $ HExpr.ConP name
     --_ -> fail $ show p
+
+
+genFuncSig ::LExpr.Expr -> GenPass (HExpr, [(Int, HExpr)])
+genFuncSig (LExpr.Arg _ pat _) = genPatSig pat
+
+genPatSig :: LPat.Pat -> GenPass (HExpr, [(Int, HExpr)])
+genPatSig p = case p of
+    --LPat.App         _ src args -> foldl HExpr.AppP <$> genPat src <*> mapM genPat args
+    LPat.Var         _ name     -> purePat $ pure $ HExpr.Var (mkVarName name)
+    LPat.Typed       id pat cls -> (\(hexp, binds) bind -> (hexp, (pat ^. LPat.id,bind):binds)) <$> genPatSig pat <*> genType False cls
+    LPat.Tuple       _ items    -> (\psigs -> ((mkPure . mkSafe . HExpr.TupleP $ map fst psigs), (concat $ map snd psigs))) <$> mapM genPatSig items
+                                    --mkPure . HExpr.TupleP <$> mapM genPat items
+    --LPat.Tuple       _ items    -> mkPure . HExpr.TupleP <$> mapM genPat items
+    LPat.Lit         _ value    -> purePat $ genLit value
+    --LPat.Wildcard    _          -> return $ HExpr.WildP
+    --LPat.RecWildcard _          -> return $ HExpr.RecWildP
+    --LPat.Con         _ name     -> return $ HExpr.ConP name
+    --_ -> fail $ show p
+    where purePat p = (,) <$> p <*> pure []
 
 
 genTypedE :: LType -> GenPass (HExpr -> HExpr)

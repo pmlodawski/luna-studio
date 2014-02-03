@@ -102,6 +102,7 @@ buildExpr e = case e of
     HExpr.Var      name                   -> pure name
     HExpr.VarE     name                   -> pure name
     HExpr.VarT     name                   -> pure name
+    HExpr.ImportNative code               -> pure $ "import " ++ code
     HExpr.Import   q segments rename      -> pure $ "import "
                                              ++ if q then "qualified " else ""
                                              ++ join "." segments
@@ -151,7 +152,7 @@ buildExpr e = case e of
     HExpr.Native   natCode                -> pure $ natCode
     HExpr.ListE    items                  -> pure $ "[" ++ sepjoin (fExpMap items) ++ "]"
     HExpr.Bang     expr                   -> pure $ "--->>>   " ++ (code.buildExpr) expr
-    HExpr.THE      expr                   -> pure $ (code.buildExpr) expr
+    HExpr.THE      expr                   -> pure $ "$(" ++ (code.buildExpr) expr ++ ")"
     HExpr.CaseE    expr matches           -> Complex $ "case " ++ (code.buildExpr) expr ++ " of {" ++ buildBody matches ++ "}"
     HExpr.Match    pat matchBody          -> Complex $ (code.buildExpr) pat ++ " -> " ++ (code.buildExpr) matchBody
     --_                                     ->

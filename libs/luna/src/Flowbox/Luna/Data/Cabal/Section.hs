@@ -16,7 +16,7 @@ import Data.String.Utils (join)
 
 data Section = Library    { exposedModules :: [String]
                           , ghcOptions     :: [String]
-                          , cppOptions     :: [String]
+                          , ccOptions     :: [String]
                           , buildDepends   :: [String]
                           , extensions     :: [Extension]
                           , hsSourceDirs   :: [String]
@@ -24,7 +24,7 @@ data Section = Library    { exposedModules :: [String]
              | Executable { name         :: String
                           , mainIs       :: String
                           , ghcOptions   :: [String]
-                          , cppOptions   :: [String]
+                          , ccOptions   :: [String]
                           , buildDepends :: [String]
                           , extensions   :: [Extension]
                           , hsSourceDirs :: [String]
@@ -74,7 +74,7 @@ genCode :: Section -> String
 genCode s = genCodeSpecific s
                ++ genFields "Hs-Source-Dirs"  (hsSourceDirs s)
                ++ genArgs   "GHC-Options"     (ghcOptions s)
-               ++ genArgs   "CPP-Options"     (cppOptions s)
+               ++ genArgs   "CC-Options"      (ccOptions s)
                ++ genFields "Extensions"      (map show $ extensions s)
                ++ genFields "Build-Depends"   (buildDepends s)
 

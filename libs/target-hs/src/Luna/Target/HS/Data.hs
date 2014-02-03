@@ -15,8 +15,8 @@ import Data.Typeable       (Typeable)
 import GHC.Generics        (Generic)
 import Control.Applicative
 
-newtype Pure a = Pure a deriving (Eq, Ord, Generic, Typeable)
-newtype Safe a = Safe a deriving (Eq, Ord, Generic, Typeable)
+newtype Pure a = Pure { fromPure :: a } deriving (Eq, Ord, Generic, Typeable)
+newtype Safe a = Safe { fromSafe :: a } deriving (Eq, Ord, Generic, Typeable)
 
 val :: a -> Pure(Safe a)
 val = Pure . Safe

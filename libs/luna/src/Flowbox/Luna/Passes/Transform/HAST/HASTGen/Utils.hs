@@ -78,6 +78,10 @@ thRegisterCon dataName conName argNum _defaults = HExpr.THE $ foldl (HExpr.AppE)
                                                 , HExpr.ListE []
                                                 ]
 
+
+thTypeRef clsName mName = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "typeRef")
+                                    $ map (HExpr.Lit . HLit.String) [clsName, mName]
+
 thRegisterFunction fName argNum _defaults = HExpr.THE $ foldl (HExpr.AppE) (HExpr.Var "registerFunc") $
                                           [ HExpr.Var $ mkTHVarName  fName
                                           , HExpr.Lit $ HLit.Int (show argNum)
