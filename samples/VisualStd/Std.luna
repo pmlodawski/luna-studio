@@ -1,80 +1,22 @@
+def Int.+ a:
+    ```liftf2 (+) #{self} #{a}```
 
-# ###### File ###################################
+def Int.* a:
+    ```liftf2 (*) #{self} #{a}```
 
-# class File:
-#     def readFile self name:
-#         ```getIO $ liftFIO1 hsLib_System_IO_readFile #{name}```
+def Int./ a:
+    ```liftf2 (-) #{self} #{a}```
 
-#     def writeFile self name content:
-#         content = content.toString
-#         ```getIO $ liftFIO2 hsLib_System_IO_writeFile #{name} #{content}```
+###### Float ##################################
 
+def Float.+ a:
+    ```liftf2 (+) #{self} #{a}```
 
-###### Console ################################
+def Float./ a:
+    ```liftf2 (/) #{self} #{a}```
 
-def print self msg::String:
-    ```print' #{msg}```
+def Float.* a:
+    ```liftf2 (*) #{self} #{a}```
 
-###### List ###################################
-
-def List.at self index::Int:
-    ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```
-
-def List.+ self l2:
-    ```liftf2 (++) #{self} #{l2}```
-
-def List.contains self el:
-    ```liftf2 (elem) (val #{el}) #{self}```
-
-def List.length self:
-    ```liftf1 length #{self}```
-
-def List.each self callback:
-    ```let {mymap = liftf2 map}```
-    ```mymap (val $ call1 #{callback}) #{self}```
-
-###### Bool ####################################
-
-def Bool.not self:
-    ```liftf1 not #{self}```
-
-###############################################
-
-def readImage self path::Path:
-    ```flattenCtx $ liftf1 readImage #{path}```
-
-def Image.writeImage self path::Path:
-    ```flattenCtx $ liftf2 writeImage #{path} #{self}```
-    self
-
-def Image.adjustCB self contrast::Float brightness::Float:
-    ```liftf3 adjustCB #{contrast} #{brightness} #{self}```
-
-def Image.convolve self kernel:
-    ```liftf2 convolve #{kernel} #{self}```
-
-def Image.getChannel self name::String:
-    ```liftf2 imgChannelGet #{name} #{self}```
-
-def Image.putChannel self name::String channel:
-    ```liftf3 imgChannelInsert #{name} #{channel} #{self}```
-
-# FIXME [wd] zrób to
-# def Channel.map self callback:
-    # ```liftf2 channelMap (val $ ((fromPure.fromSafe) `dot2` call1) #{callback}) #{self}```
-    # ```liftf2 channelMap (val $ call1 #{callback}) #{self}```
-
-def Channel.erode self:
-    ```liftf1 erodeChannel #{self}```
-
-def constant self x:
-    ```liftf1 constant #{x}```
-
-class Vector a:
-    x,y,z :: a
-
-    def test self x:
-        x
-
-    def + self v2:
-        Vector (x + v2.x) (y + v2.y) (z + v2.z)
+def Float.- a:
+    ```liftf2 (-) #{self} #{a}```
