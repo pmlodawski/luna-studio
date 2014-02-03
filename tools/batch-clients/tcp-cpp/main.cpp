@@ -360,7 +360,7 @@ int main()
 			auto moduleTypeBase = module.mutable_type();
 			moduleTypeBase->set_cls(type::Type::Module);
 			auto moduleType = new type::Module();
-			moduleType->add_path("Main");
+			moduleType->set_name("Main");
 			moduleTypeBase->SetAllocatedExtension(type::Module::ext, moduleType);
 			auto bc_Root = buildBreadcrumbs(crumbsRoot);
 			macro::AST::AddModule(controlSocket, module, bc_Root, library.id(), project.id());
@@ -476,8 +476,8 @@ int main()
 
 		auto loadedProject = macro::Project::OpenProject(controlSocket, "/tmp/flowbox/testProject").project();
 		macro::Library::LoadLibrary(controlSocket, "/tmp/flowbox/testProject/testLibrary", loadedProject.id());
-		macro::Library::BuildLibrary(controlSocket, library.id(), project.id());
-		macro::Library::RunLibrary(controlSocket, library.id(), project.id());
+		// macro::Library::BuildLibrary(controlSocket, library.id(), project.id());
+		// macro::Library::RunLibrary(controlSocket, library.id(), project.id());
 
 		// macro::Maintenance::Dump(controlSocket);
 		macro::Project::CloseProject(controlSocket, loadedProject.id());

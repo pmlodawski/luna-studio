@@ -71,6 +71,7 @@ message Request {
         Library_StoreLibrary  = 1405;
         Library_BuildLibrary  = 1406;
         Library_RunLibrary    = 1407;
+        Library_InterpretLibrary = 1408;
 
         Maintenance_Initialize = 1500;
         Maintenance_Ping       = 1501;
@@ -498,6 +499,13 @@ message Library {
         message Result { extend Response { optional Result rsp = 1407; } 
             required int32 processID = 1;
         }
+    }
+    message InterpretLibrary {
+        message Args   { extend Request  { optional Args   req = 1408; } 
+            required int32 libraryID = 1;
+            required int32 projectID = 2;
+        }
+        message Result { extend Response { optional Result rsp = 1408; } }
     }
 }
 
