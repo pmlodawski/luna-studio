@@ -102,6 +102,7 @@ buildExpr e = case e of
     HExpr.Var      name                   -> pure name
     HExpr.VarE     name                   -> pure name
     HExpr.VarT     name                   -> pure name
+    HExpr.ImportNative code               -> pure $ "import " ++ code
     HExpr.Import   q segments rename      -> pure $ "import "
                                              ++ if q then "qualified " else ""
                                              ++ join "." segments

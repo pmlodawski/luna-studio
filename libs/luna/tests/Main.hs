@@ -103,220 +103,24 @@ logger = getLoggerIO "Flowbox"
 example :: Source
 example = Source.Source ["Main"] $
         concat $ replicate 1 $ unlines [ ""
-                    --, "import Std:Vector"
-                    --, "def List.length self:"
-                    --, "    ```getIO $ liftFPure1 length #{self}```"
-                    --, "def List.each self callback:"
-                    --, "    ```let {mymap x (Pure y) = mapM x y}```"
-                    --, "    ```getIO $ mymap (get1 #{callback}) #{self}```"
-                        --, "def List.each callback:"
-                        --, "    ```liftf2 map (val $ call1 #{callback}) #{self}```"
 
-                        --, "def List.at self index:"
-                        --, "    ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```"
-                        ----, "def Int.add a b:"
-                        ----, "    ```getIO $ liftFPure2 (+) #{a} #{b}```"
-                        ----, "def Int.sub a b:"
-                        ----, "    ```getIO $ liftFPure2 (-) #{a} #{b}```"
-                        ----, "def Int.mul a b:"
-                        ----, "    ```getIO $ liftFPure2 (*) #{a} #{b}```"
-                        ----, "def List.add self x:"
-                        ----, "    ```getIO $ liftFPure2 (++) #{self} #{x}```"
-                        --, "def List.sum self:"
-                        --, "    ```liftf1 sum #{self}```"
-
-                        --, "class Console:"
-                        --, "import Std:All"
                         , "def print msg:"
                         , "    ```print' #{msg}```"
 
-                        ----, "def Int.+ a b:"
-                        ----, "    ```liftf2 (+) #{a} #{b}```"
-                        ----, "class Vector a b c:"
-                        ----, "    x :: a"
-                        ------, "class Vector a = Vector | Scalar "
-                        ------, "               | Scalar2"
-                        ------, "class Vector a = Vector: x :: a"
-                        ------, "                         y :: a"
-                        ------, "                         z :: a"
-                        ------, "               | Scalar: a :: a"
-                        ------, "               | Vector2: x :: a"
-                        ------, "               | Scalar"
-                        ----, "class Vector a:"
-                        ----, "    pos :: a"
 
+                        , "def Int.+ b:"
+                        , "    ```liftf2 (+) #{self} #{b}```"
 
-                        ,"def Int.+ b:"
-                        ,"    ```liftf2 (+) #{self} #{b}```"
+                        , "def fun {a,b}:"
+                        , "    a+b"
 
-                        --,"def Int.- b:"
-                        --,"    ```liftf2 (-) #{self} #{b}```"
-
-                        --,"def Int./ b:"
-                        --,"    ```liftf2 (-) #{self} #{b}```"
-
-                        --,"def Int.* b:"
-                        --,"    ```liftf2 (*) #{self} #{b}```"
-
-                        --,"def Int.< b:"
-                        --,"    ```liftf2 (<) #{self} #{b}```"
-
-                        ----, "class Point:"
-                        ----, "    x,y,z :: Int"
-
-                        --, "def raise el err:"
-                        --, "    ```raise #{el} #{err}```"
-
-                        --, "def catch el f:"
-                        --, "    ```catch #{el} #{f}```"
-
-                    , "def + x y: x+y"
-
-                    , "def List.foldr f el:"
-                    , "    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```"
-                    
-                    , "def List.sum:"
-                    , "    self.foldr ((x,y):x+y) 0"
-
-                    , "def List.sort:"
-                    , "    #FIXME[wd]: very dirty hack for Pure Safe values."
-                    , "    ```(fmap.fmap.fmap) val $ liftf1 sort ((fmap.fmap.fmap) (fromSafe.fromPure) #{self})```"
-
-                    , "def List.head:"
-                    , "    ```flattenCtx $ liftf1 head #{self}```"
-
-                    , "def List.min:"
-                    , "    self.sort.head"
-
-                        --, "class X"
-                        --, "    def test self:"
-                        --, "        self"
-                        --, "    def + self v2:"
-                        --, "        Vector (self.x()+v2.x()) (self.y()+v2.y()) (self.z()+v2.z())"
-                        ----, "    Scalar: a     :: a"
-                        ----, "    def f self (x::Int):"
-
-                    --, "    Console.print (1.add 2)"
-
-                    --, "def f self a::Int b::Int :"
-                    --, "    {a,b}"
-                    --, "def f a::X :"
-                    --, "    a"
-
-                    --, "class X a:"
-                    --, "    x :: a"
-                    --, "    def test a:"
-                    --, "        a + 1"
-
-                    --, "def test2 x y: x"
-                    --, "def +++ a b: a"
-
-                    --, "def add x y: x.+y"
-
-                    --, "def + x y: x.+ y"
-                    ----, "def * x y: x.* y"
-                    ----, "def / x y: x./ y"
-
-                    ----, "def main:"
-                    --, "class Vector a:"
-                    --, "    x :: a"
- 
-                    ----, "    def + v:"
-                    ----, "        Vector (x + v.x) (y + v.y) (z + v.z)"
-
-
-                    --, "    def + v:"
-                    --, "        print 111"
-                    --, "        x + v.x"
-
-                    --, "def Int.+ a:"
-                    --, "    ```liftf2 (+) #{self} #{a}```"
-
-                    --, "def Int.test:"
-                    --, "    {self, self}"
-                    
-                    --, "def fun x:"
-                    --, "    x.test"
                     
                     , "def main:"
-                    --, "    v = Vector 1"
-                    --, "    print (v + v)"
-                    --, "    f = @(+)"
-                    --, "    print $ (+) 1 2"
-                    --, "    print $ @Int.+ 1 2"
-                    , "    a = [1,5,3,4,2]"
-                    , "    print a"
-                    , "    print (a.sum)"
-                    , "    print (a.sort)"
-                    , "    print (a.min)"
-                    --, "    print a.sort"
-                    --, "    print $ a.foldr @(+) 0"
-                    --, "    a = [1,2,3,4]"
-                    --, "    a = 1"
-                    --, "    f = @test"
-                    --, "    x = X 1"
-                    --, "    print $ x.test 1"
-                    --, "    print $ @test2 1 2"
-                    --, "    print $ @X.test x 2"
-                    --, "    print $ (+++) 1 2"
-                    --, "    print a"
-                    --, "    print $ a.each x:"
-                    --, "        x*2"
-                    --, "    a = raise 1 (IOError \"Oh no\")"
-                    --, "    catch a x:"
-                    --, "        raise a x"
-                    --, "    print a"
-                    --, "    if 1<2:"
-                    --, "        print 13"
-                    --, "    else:"
-                    --, "        print 15"
-                    --, "    print (test 1 2)"
-                    --, "    a = [1..10].each x:"
-                    --, "        x * 2"
-                    --, "    print a"
-                    --, "    x = 1"
-                    --, "    y = self.raise 2 (IOError \"Oh no\")"
-                    --, "    z = x + y"
-                    --, "    z = self.catch z x: 0"
-                    --, "    c.print (x<2)"
-                    --, "    a = if z<2:"
-                    --, "            c.print 117"
-                    ----, "        else:"
-                    ----, "            0"
-                    --, "    c.print a"
-                    --, "    else:   4"
-                    --, "    a = 1"
-                    --, "    z.catch x"
-                    --, "    a = self.test 5"
-                    --, "    c.print (x<2)"
-                    --, "    a = (f) 1"
-                    --, "   c = Console()"
-                    --, "   c.print $ self.f 5 6"
-                    --, "   p = Point 1 2 3"
-                    --, "   p.x = 0"
-                    --, "   p.y = 0"
-                    --, "   a_ = 10"
-                    --, "   a = -10.0"
-
-                    --, "alias PathW = String"
-                    --, "type Path = String"
-                    --, "   Point x y z = p"
-                    --, "   c.print p"
-                    --, "   v = Vector $ Point 1 2 3"
-                    --, "   v.pos.x = v.pos.y = 0"
-                    --, "   {a,b} = {x, z} = v"
-                    --, "   c.print v"
-                    --, "   c.print $ self.f 5 X()"
+                    , "    print $ fun {1,2}"
 
                     ]
 
---example :: Source
---example = Source.Source ["Main"]
---        $ unlines [ ""
 
---                  , "class Vector a:"
---                  , "    x,y,z :: a"
---                  ]
 
 
 main :: IO ()

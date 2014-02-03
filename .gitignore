@@ -56,4 +56,5 @@ cabal.sandbox.config
 
 # assets for tests
 *.bmp
+*.jpg
 

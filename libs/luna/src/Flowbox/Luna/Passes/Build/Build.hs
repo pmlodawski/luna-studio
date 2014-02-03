@@ -134,6 +134,7 @@ run buildConfig ast astInfo = runEitherT $ do
                 : "flowbox-graphics"
                 : "luna-target-hs"
                 : "template-haskell"
+                : "accelerate"
                 : BuildConfig.libs buildConfig
                 ++ if BuildConfig.name buildConfig /= "flowboxM-stdlib"
                       then ["flowboxM-stdlib"]
@@ -146,11 +147,11 @@ run buildConfig ast astInfo = runEitherT $ do
 
 
 buildInFolder :: (Functor m, MonadIO m) => BuildConfig -> [Source] -> [String] -> UniPath -> m ()
-buildInFolder (BuildConfig name version _ ghcOptions cppOptions cabalFlags buildType cfg _ _) hsc allLibs buildDir = do
+buildInFolder (BuildConfig name version _ ghcOptions ccOptions cabalFlags buildType cfg _ _) hsc allLibs buildDir = do
     writeSources buildDir hsc
     let cabal = case buildType of
-            BuildConfig.Library       -> CabalGen.genLibrary    name version ghcOptions cppOptions allLibs hsc
-            BuildConfig.Executable {} -> CabalGen.genExecutable name version ghcOptions cppOptions allLibs
+            BuildConfig.Library       -> CabalGen.genLibrary    name version ghcOptions ccOptions allLibs hsc
+            BuildConfig.Executable {} -> CabalGen.genExecutable name version ghcOptions ccOptions allLibs
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) buildDir
     CabalInstall.run cfg buildDir cabalFlags
     case buildType of

@@ -261,8 +261,8 @@ instance LiftEnv IO IO IO where
 
 liftenv2 f a b       = liftenv (liftenv f a) b
 liftenv3 f a b c     = liftenv (liftenv2 f a b) c
-liftenv4 f a b c d   = liftenv (liftenv3 f a b c) d
-liftenv5 f a b c d e = liftenv (liftenv4 f a b c d) e
+liftenv4 f a b c d   = liftenv (liftenv2 f a b c) d
+liftenv5 f a b c d e = liftenv (liftenv2 f a b c d) e
 
 
 liftf0 = Pure . Safe
@@ -391,9 +391,8 @@ instance LiftErr (Either e) Safe (Either e) where
 
 liftErr2 f a b       = liftErr (liftErr f a) b
 liftErr3 f a b c     = liftErr (liftErr2 f a b) c
-liftErr4 f a b c d   = liftErr (liftErr3 f a b c) d
-liftErr5 f a b c d e = liftErr (liftErr4 f a b c d) e
-
+liftErr4 f a b c d   = liftErr (liftErr2 f a b c) d
+liftErr5 f a b c d e = liftErr (liftErr2 f a b c d) e
 
 
 ------------------------------------------------------------------------

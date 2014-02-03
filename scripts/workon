@@ -118,7 +118,7 @@ def check_deps(name):
 def workon(name):
     if not os.path.exists("cabal.sandbox.config"):
         print_info ("It seems that sandbox is not initialized. Running scripts/init first.")
-        try_call("python scripts/init")
+        try_call("python2.7 scripts/init")
 
 
     unregister_all()

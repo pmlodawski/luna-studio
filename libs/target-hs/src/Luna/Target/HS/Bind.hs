@@ -9,11 +9,15 @@
 
 module Luna.Target.HS.Bind where
 
-import Prelude hiding ((>>=), (>>), fail, return)
+import           Prelude hiding ((>>=), (>>), fail, return)
+import qualified Prelude 
 
 import Luna.Target.HS.Base
 
 (>>=) = bind
 (>>)  = bind_
 fail = ()
-return a = a
+return = Prelude.return
+
+returnIO :: a -> IO a
+returnIO = return

@@ -9,6 +9,15 @@
 #         content = content.toString
 #         ```getIO $ liftFIO2 hsLib_System_IO_writeFile #{name} #{content}```
 
+import ```           Control.Applicative                          ```
+import ``` qualified Data.Array.Accelerate             as A       ```
+import ``` qualified Flowbox.Graphics.Raster.Channel   as Channel ```
+import ``` qualified Flowbox.Graphics.Raster.Image     as Image   ```
+import ``` qualified Flowbox.Graphics.Raster.IO        as Image   ```
+import ``` qualified Flowbox.Graphics.Algorithms       as Alg     ```
+import ``` qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA    ```
+import ``` qualified System.Exit                       as Exit    ```
+
 
 ###### Console ################################
 
@@ -48,8 +57,6 @@ def List.min:
 
 def List.sum:
     self.foldr ((x,y):x+y) 0
-
-
 
 
 ###### Bool ####################################
@@ -161,9 +168,9 @@ def isError a:
 
 class Sys:
     def exitSuccess:
-        ```exitSuccess```
+        ```Exit.exitSuccess *> return (Safe ())```
     def exitFailure:
-        ```exitFailure```
+        ```Exit.exitFailure *> return (Safe ())```
 
 
 ## Backend ####################################
@@ -177,24 +184,25 @@ def interp:
 ## Image ######################################
 
 def readImageWord8 path:
-    ```flattenCtx $ liftf1 readImage #{path}```
+    ```flattenCtx $ liftf1 (Image.readImageFromBMP2) #{path}```
 
 def readImage path:
     (readImageWord8 path).decompose.reprDouble
 
-
+# FIXME[wd]: UNSAFE ERROR
 def Image.writeWord8 path backend:
     ```flattenCtx $ liftf3 writeImage #{self} #{path} #{backend}```
     self
+
 
 def Image.write path backend:
     self.reprWord8.compose.writeWord8 path backend
 
 def Image.compose:
-    ```flattenCtx $ liftf1 compose #{self}```
+    ```flattenCtx $ liftf1 (Pure . RGBA.compose) #{self}```
 
 def Image.decompose:
-    ```flattenCtx $ liftf1 decompose #{self}```
+    ```flattenCtx $ liftf1 (Pure . RGBA.decompose) #{self}```
 
 def Image.reprDouble:
     ```liftf1 reprDouble #{self}```
@@ -209,31 +217,43 @@ def Image.convolve kernel:
     ```flattenCtx $ liftf2 convolve #{kernel} #{self}```
 
 def Image.convertRGBtoHSV:
-    ```flattenCtx $ liftf1 convertRGBtoHSV #{self}```
+    ```flattenCtx $ liftf1 (Pure . Alg.convertRGBtoHSV) #{self}```
 
 def Image.convertHSVtoRGB:
-    ```flattenCtx $ liftf1 convertHSVtoRGB #{self}```
+    ```flattenCtx $ liftf1 (Pure . Alg.convertHSVtoRGB) #{self}```
 
-def Image.getChannel name:
-    ```flattenCtx $ liftf2 imgChannelGet #{name} #{self}```
+def Image.get name:
+    ```flattenCtx $ liftf2 (Pure `dot2` Image.lookup) #{name} #{self}```
 
-def Image.putChannel name channel:
-    ```liftf3 imgChannelInsert #{name} #{channel} #{self}```
+def Image.put name channel:
+    ```liftf3 Image.insert #{name} #{channel} #{self}```
 
 ## Channel ####################################
 
 
 # # FIXME [wd] zrób to
-# # def Channel.map self callback:
-#     # ```liftf2 channelMap (val $ ((fromPure.fromSafe) `dot2` call1) #{callback}) #{self}```
+def Channel.map callback:
+    ```liftf2 Channel.map (val $ (\x -> (fromSafe.fromPure) (call1 #{callback} (val x)))) #{self}```
 #     # ```liftf2 channelMap (val $ call1 #{callback}) #{self}```
 
 # def Channel.erode:
 #    ```liftf1 erodeChannel #{self}```
 
-# def constant x:
-#     ```liftf1 constant #{x}```
+def constant x:
+    ```liftf1 A.constant #{x}```
 
+
+def Exp.+ a:
+    ```liftf2 (+) #{self} #{a}```
+
+def Exp.- a:
+    ```liftf2 (-) #{self} #{a}```
+
+def Exp.* a:
+    ```liftf2 (*) #{self} #{a}```
+
+def Exp./ a:
+    ```liftf2 (/) #{self} #{a}```
 
 
 class Vector a:
@@ -256,7 +276,7 @@ def main:
     print v.length
     print v.normalize
     print $ v.normalize + v.normalize
-    backend = interp
+    backend = cuda
     # v2 = Vector 0.5 0.5 0.5
 
     # print ((v2) + (v2))
@@ -278,6 +298,9 @@ def main:
     
     print path
     print "=========="
+    chR = img.get "r"
+    chR = chR.map (x : x * x)
+    img = img.put "r" chR
     img.write outpath backend
     print "=========="
     # print img
@@ -295,20 +318,22 @@ def main:
     print "=========="
     img = img.convertRGBtoHSV.convertHSVtoRGB
     img.write outpath2 backend
+
+
     
     # # img = img.convolve k
 
-    # chR = img.getChannel "r"
+    
     # chG = img.getChannel "g"
     # chB = img.getChannel "b"
 
     # # chR
-    # # chR = chR.map (x : x)
+    
     # # a = [1,2,3].each x : x+1
     # # console.print a
     # # chB = chB.map (x : Main.constant 0.0)
 
-    # img = img.putChannel "r" chR.erode()
+    
     # img = img.putChannel "g" chG.erode()
     # img = img.putChannel "b" chB.erode()
 
