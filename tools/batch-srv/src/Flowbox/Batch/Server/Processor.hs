@@ -101,6 +101,8 @@ import qualified Generated.Proto.Batch.Library.BuildLibrary.Args            as B
 import qualified Generated.Proto.Batch.Library.BuildLibrary.Result          as BuildLibrary
 import qualified Generated.Proto.Batch.Library.CreateLibrary.Args           as CreateLibrary
 import qualified Generated.Proto.Batch.Library.CreateLibrary.Result         as CreateLibrary
+import qualified Generated.Proto.Batch.Library.InterpretLibrary.Args        as InterpretLibrary
+import qualified Generated.Proto.Batch.Library.InterpretLibrary.Result      as InterpretLibrary
 import qualified Generated.Proto.Batch.Library.Libraries.Args               as Libraries
 import qualified Generated.Proto.Batch.Library.Libraries.Result             as Libraries
 import qualified Generated.Proto.Batch.Library.LibraryByID.Args             as LibraryByID
@@ -222,6 +224,7 @@ process notifySocket handler encodedRequest requestID = case Proto.messageWithLe
         Method.Library_StoreLibrary  -> call Handler.storeLibrary  StoreLibrary.req  StoreLibrary.rsp
         Method.Library_BuildLibrary  -> call Handler.buildLibrary  BuildLibrary.req  BuildLibrary.rsp
         Method.Library_RunLibrary    -> call Handler.runLibrary    RunLibrary.req    RunLibrary.rsp
+        Method.Library_InterpretLibrary  -> call Handler.interpretLibrary InterpretLibrary.req  InterpretLibrary.rsp
 
         Method.Maintenance_Initialize -> call Handler.initialize Initialize.req Initialize.rsp
         Method.Maintenance_Ping       -> call Handler.ping       Ping.req       Ping.rsp

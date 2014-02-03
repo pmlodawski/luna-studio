@@ -4,16 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Batch.Server.Handler.Library (
-    libraries,
-    libraryByID,
-    createLibrary,
-    loadLibrary,
-    unloadLibrary,
-    storeLibrary,
-    buildLibrary,
-    runLibrary,
-) where
+module Flowbox.Batch.Server.Handler.Library where
 
 import           Data.IORef (IORef)
 import qualified Data.IORef as IORef
@@ -28,6 +19,8 @@ import qualified Generated.Proto.Batch.Library.BuildLibrary.Args       as BuildL
 import qualified Generated.Proto.Batch.Library.BuildLibrary.Result     as BuildLibrary
 import qualified Generated.Proto.Batch.Library.CreateLibrary.Args      as CreateLibrary
 import qualified Generated.Proto.Batch.Library.CreateLibrary.Result    as CreateLibrary
+import qualified Generated.Proto.Batch.Library.InterpretLibrary.Args   as InterpretLibrary
+import qualified Generated.Proto.Batch.Library.InterpretLibrary.Result as InterpretLibrary
 import qualified Generated.Proto.Batch.Library.Libraries.Args          as Libraries
 import qualified Generated.Proto.Batch.Library.Libraries.Result        as Libraries
 import qualified Generated.Proto.Batch.Library.LibraryByID.Args        as LibraryByID
@@ -41,7 +34,6 @@ import qualified Generated.Proto.Batch.Library.StoreLibrary.Result     as StoreL
 import qualified Generated.Proto.Batch.Library.UnloadLibrary.Args      as UnloadLibrary
 import qualified Generated.Proto.Batch.Library.UnloadLibrary.Result    as UnloadLibrary
 import qualified Generated.Proto.Library.Library                       as Gen
-
 
 
 loggerIO :: LoggerIO
@@ -123,8 +115,7 @@ buildLibrary batchHandler (BuildLibrary.Args tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef batchHandler
-    BatchL.interpretLibrary libID projectID batch
-    --BatchL.buildLibrary libID projectID batch
+    BatchL.buildLibrary libID projectID batch
     return BuildLibrary.Result
 
 
@@ -138,3 +129,12 @@ runLibrary batchHandler (RunLibrary.Args tlibID tprojectID) = do
     IORef.writeIORef batchHandler newBatch
     return $ RunLibrary.Result $ encodeP processID
 
+
+interpretLibrary :: IORef Batch -> InterpretLibrary.Args -> IO InterpretLibrary.Result
+interpretLibrary batchHandler (InterpretLibrary.Args tlibID tprojectID) = do
+    loggerIO info "called interpretLibrary"
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    batch <- IORef.readIORef batchHandler
+    BatchL.interpretLibrary libID projectID batch
+    return InterpretLibrary.Result

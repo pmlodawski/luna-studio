@@ -95,6 +95,7 @@ instance Handler BatchHandler where
     unloadLibrary h = HLibrary.unloadLibrary (batchRef h)
     storeLibrary  h = HLibrary.storeLibrary  (batchRef h)
     buildLibrary  h = HLibrary.buildLibrary  (batchRef h)
+    interpretLibrary h = HLibrary.interpretLibrary  (batchRef h)
     runLibrary    h = HLibrary.runLibrary    (batchRef h)
 
     initialize h = HMaintenance.initialize (batchRef h)

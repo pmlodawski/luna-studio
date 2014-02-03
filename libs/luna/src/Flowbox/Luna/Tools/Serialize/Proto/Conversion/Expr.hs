@@ -37,10 +37,11 @@ import qualified Generated.Proto.Expr.Expr                         as Gen
 import qualified Generated.Proto.Expr.Expr.Cls                     as GenCls
 import qualified Generated.Proto.Expr.Field                        as GenField
 import qualified Generated.Proto.Expr.Function                     as GenFunction
+import qualified Generated.Proto.Expr.Grouped                      as GenGrouped
 import qualified Generated.Proto.Expr.Import                       as GenImport
+import qualified Generated.Proto.Expr.ImportNative                 as GenImportNative
 import qualified Generated.Proto.Expr.Infix                        as GenInfix
 import qualified Generated.Proto.Expr.Lambda                       as GenLambda
-import qualified Generated.Proto.Expr.Grouped                       as GenGrouped
 import qualified Generated.Proto.Expr.List                         as GenList
 import qualified Generated.Proto.Expr.Lit                          as GenLit
 import qualified Generated.Proto.Expr.Match                        as GenMatch
@@ -51,14 +52,14 @@ import qualified Generated.Proto.Expr.NOP                          as GenNOP
 import qualified Generated.Proto.Expr.RangeFrom                    as GenRangeFrom
 import qualified Generated.Proto.Expr.RangeFromTo                  as GenRangeFromTo
 import qualified Generated.Proto.Expr.RecordUpdate                 as GenRecordUpdate
+import qualified Generated.Proto.Expr.Ref                          as GenRef
+import qualified Generated.Proto.Expr.RefType                      as GenRefType
 import qualified Generated.Proto.Expr.Tuple                        as GenTuple
 import qualified Generated.Proto.Expr.TypeAlias                    as GenTypeAlias
 import qualified Generated.Proto.Expr.Typed                        as GenTyped
 import qualified Generated.Proto.Expr.TypeDef                      as GenTypeDef
 import qualified Generated.Proto.Expr.Var                          as GenVar
 import qualified Generated.Proto.Expr.Wildcard                     as GenWildcard
-import qualified Generated.Proto.Expr.Ref                     as GenRef
-import qualified Generated.Proto.Expr.RefType                     as GenRefType
 import qualified Text.ProtocolBuffers.Extensions                   as Extensions
 
 
@@ -105,6 +106,9 @@ instance Convert Expr Gen.Expr where
         Expr.Import     i path target rename
                                    -> genExpr GenCls.Import i GenImport.ext $ GenImport.Import
                                       (encodeListP path) (encodeJ target) (fmap encodeP rename)
+        Expr.ImportNative i segments
+                                   -> genExpr GenCls.ImportNative i GenImportNative.ext $ GenImportNative.ImportNative
+                                      (encodeList segments)
         Expr.Infix      i name src dst
                                    -> genExpr GenCls.Infix i GenInfix.ext $ GenInfix.Infix
                                       (encodePJ name) (encodeJ src) (encodeJ dst)
@@ -240,6 +244,10 @@ instance Convert Expr Gen.Expr where
                 ttarget <- mttarget <?> "Failed to decode Expr.Import: 'target' field is missing"
                 Expr.Import i (decodeListP tpath) <$> decode ttarget
                                                               <*> (pure $ fmap decodeP mtrename)
+            GenCls.ImportNative -> do
+                ext <- getExt GenImportNative.ext
+                (GenImportNative.ImportNative tsegments) <- ext <?> "Failed to decode Expr.ImportNative: extension is missing"
+                Expr.ImportNative i <$> decodeList tsegments
             GenCls.Infix -> do
                 ext <- getExt GenInfix.ext
                 (GenInfix.Infix mtname mtsrc mtdst) <- ext <?> "Failed to decode Expr.Infix: extension is missing"
