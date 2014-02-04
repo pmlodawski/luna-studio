@@ -235,6 +235,7 @@ def Image.displayP name:
 ## Channel ####################################
 
 
+
 # # FIXME [wd] zrób to
 def Channel.map callback:
     ```liftf2 Channel.map (val $ (\x -> (fromSafe.fromPure) (call1 #{callback} (val x)))) #{self}```

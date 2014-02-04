@@ -17,6 +17,7 @@ module Flowbox.Graphics.Mockup (
     Image.reprDouble,
     Image.reprWord8,
     Channel,
+    Image.Transformed,
 
     Alg.invert,
     Alg.invert',

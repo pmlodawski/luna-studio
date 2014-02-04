@@ -251,6 +251,32 @@ def Channel.map callback:
 # def Channel.erode:
 #    ```liftf1 erodeChannel #{self}```
 
+## Transformed ################################
+
+
+def Image.transform:
+    ```liftf1 Image.transform #{self}```
+
+def Transformed.rasterize:
+    ```liftf1 Image.rasterize #{self}```
+
+def Transformed.translate x y:
+    ```liftf3 Image.translate #{x} #{y} #{self}```
+
+def Transformed.rotate angle:
+    ```liftf2 Image.rotate #{angle} #{self}```
+
+def Transformed.rotateAt angle x y:
+    ```liftf4 Image.rotateAt #{angle} #{x} #{y} #{self}```
+
+def Transformed.scale x y:
+    ```liftf3 Image.scale #{self} #{x} #{y}```
+
+def Transformed.scaleAt sx sy x y:
+    ```liftf5 Image.scaleAt #{self} #{sx} #{sy} #{x} #{y}```
+
+###############################################
+
 def constant x:
     ```liftf1 A.constant #{x}```
 
