@@ -228,6 +228,9 @@ def Image.get name:
 def Image.put name channel:
     ```liftf3 Image.insert #{name} #{channel} #{self}```
 
+def Image.displayP name:
+    self.write name
+
 ## Channel ####################################
 
 
