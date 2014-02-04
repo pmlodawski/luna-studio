@@ -50,7 +50,7 @@ import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer         as ID
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as GraphParser
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
-import           Flowbox.Prelude                                           hiding (error, focus, zipper)
+import           Flowbox.Prelude                                           hiding (error)
 import           Flowbox.System.Log.Logger
 
 
@@ -69,7 +69,7 @@ interpretLibrary libID projectID batch = do
     ast <- getAST libID projectID batch
     let diag    = Diagnostics.all -- TODO [PM] : hardcoded diagnostics
         cfg     = Batch.config batch
-        imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup", "FlowboxM.Libs.Std.All"] -- TODO [PM] : hardcoded imports
+        imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup", "FlowboxM.Libs.Flowbox.Std"] -- TODO [PM] : hardcoded imports
     maxID <- Luna.runIO $ MaxID.run ast
     [hsc] <- Luna.runIO $ Build.prepareSources diag ast (ASTInfo.mk maxID) False
     let code = unlines $ snd $ break (=="-- body --") $ lines $ Source.code hsc
@@ -210,17 +210,16 @@ setClassFocus newClass bc libraryID projectID batch =
 
 
 getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Graph, PropertyMap)
-getGraph bc libraryID projectID batch = do 
+getGraph bc libraryID projectID batch = do
     ast         <- getAST libraryID projectID batch
     propertyMap <- getPropertyMap libraryID projectID batch
     expr        <- getFunctionFocus bc libraryID projectID batch
-    aa    <- Luna.runIO $ Alias.run ast
-    maxID <- Luna.runIO $ MaxID.run ast
+    aa          <- Luna.runIO $ Alias.run ast
     Luna.runIO $ GraphBuilder.run aa propertyMap expr
 
 
 setGraph :: (Graph, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
-setGraph (newGraph, newPM) bc libraryID projectID batch = do 
+setGraph (newGraph, newPM) bc libraryID projectID batch = do
     expr <- getFunctionFocus bc libraryID projectID batch
     ast  <- Luna.runIO $ GraphParser.run newGraph newPM expr
 
@@ -230,8 +229,22 @@ setGraph (newGraph, newPM) bc libraryID projectID batch = do
     loggerIO debug $ show newGraph
     loggerIO debug $ show newPM
     loggerIO debug $ ppShow fixedAst
-    setFunctionFocus fixedAst bc libraryID projectID batch
+    batch <- setFunctionFocus fixedAst bc libraryID projectID batch
     setPropertyMap newPM libraryID projectID batch
+
+
+getGraphView :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (GraphView, PropertyMap)
+getGraphView bc libraryID projectID batch = do
+    (graph, propertyMap) <- getGraph bc libraryID projectID batch
+    let graphView = GraphView.fromGraph graph
+    return $ Defaults.removeDefaults graphView propertyMap
+
+
+setGraphView :: (GraphView, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
+setGraphView (newGraphView', newPM') bc libraryID projectID batch = do
+    let (newGraphView, newPM) = Defaults.addDefaults newGraphView' newPM'
+    newGraph <- GraphView.toGraph newGraphView
+    setGraph (newGraph, newPM) bc libraryID projectID batch
 
 -- DEPRECATED ---------------------------------------------------------------
 

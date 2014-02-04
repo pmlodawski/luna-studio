@@ -22,7 +22,6 @@ import qualified Flowbox.Batch.Project.Project              as Project
 import qualified Flowbox.Batch.Project.ProjectManager       as ProjectManager
 import           Flowbox.Control.Error
 import qualified Flowbox.Luna.Data.Pass.ASTInfo             as ASTInfo
-import qualified Flowbox.Luna.Data.Pass.Source              as Source
 import qualified Flowbox.Luna.Lib.LibManager                as LibManager
 import           Flowbox.Luna.Lib.Library                   (Library)
 import qualified Flowbox.Luna.Lib.Library                   as Library
