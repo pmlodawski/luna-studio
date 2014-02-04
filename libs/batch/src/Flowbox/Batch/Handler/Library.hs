@@ -136,7 +136,7 @@ interpretLibrary libID projectID batch = do
     ast <- Common.getAST libID projectID batch
     let diag    = Diagnostics.all -- TODO [PM] : hardcoded diagnostics
         cfg     = Batch.config batch
-        imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup", "FlowboxM.Libs.Std.All"] -- TODO [PM] : hardcoded imports
+        imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup", "FlowboxM.Libs.Flowbox.Std"] -- TODO [PM] : hardcoded imports
     maxID <- Luna.runIO $ MaxID.run ast
     [hsc] <- Luna.runIO $ Build.prepareSources diag ast (ASTInfo.mk maxID) False
     let code = unlines $ snd $ break (=="-- body --") $ lines $ Source.code hsc

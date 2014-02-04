@@ -1,7 +1,6 @@
 
 ###### Float ##################################
 
-class All
 
 def Float.+ self a:
     ```liftf2 (+) #{self} #{a}```

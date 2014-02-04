@@ -286,11 +286,14 @@ def evalArr v:
 #     ```liftf0 $ sequence . fmap $ map (reprDouble . RGBA.decompose . Image.readImageFromBMP2) $ map (\i -> "../video/frame-" + (show i) + ".bmp") [0..3]```
 #     paths
 
-def main:
+def xxx i:
+    readImage $ "../video/frame-" + i.str + ".bmp"
+
+def main2:
     print "start!"
     backend = cuda
     outpath = "luna.bmp"
-    imgs = [0..20].each i : readImage $ "../video/frame-" + i.str + ".bmp"
+    imgs = [0..20].each @xxx
     # # img.write outpath backend
     # print "a"
     x = evalArr imgs
@@ -300,7 +303,7 @@ def main:
     # print x
 
 
-def main2:
+def main:
     print $ [3,2,1].min
     v = Vector 1 2 3
     print v
