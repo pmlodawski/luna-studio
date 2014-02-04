@@ -233,11 +233,13 @@ def Image.put name channel:
     ```liftf3 Image.insert #{name} #{channel} #{self}```
 
 def Image.displayP name:
-    self.write name
+    b = interp
+    self.write name b
 
 def extractBackground images:
     ```flattenCtx $ liftf1 (Pure . (Alg.extractBackground ("r", "g", "b"))) #{images}```
 
+    
 ## Channel ####################################
 
 
