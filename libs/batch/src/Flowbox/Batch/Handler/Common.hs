@@ -10,6 +10,8 @@ module Flowbox.Batch.Handler.Common where
 import Control.Monad.RWS
 import Text.Show.Pretty
 
+import           Control.Exception                                         (IOException)
+import qualified Control.Exception                                         as Exception
 import           Flowbox.Batch.Batch                                       (Batch)
 import qualified Flowbox.Batch.Batch                                       as Batch
 import           Flowbox.Batch.Process.Map                                 (ProcessMap)
@@ -31,25 +33,47 @@ import           Flowbox.Luna.Data.Graph.Node                              (Node
 import qualified Flowbox.Luna.Data.Graph.Node                              as Node
 import           Flowbox.Luna.Data.GraphView.GraphView                     (GraphView)
 import qualified Flowbox.Luna.Data.GraphView.GraphView                     as GraphView
+import qualified Flowbox.Luna.Data.Pass.ASTInfo                            as ASTInfo
+import qualified Flowbox.Luna.Data.Pass.Source                             as Source
 import           Flowbox.Luna.Data.PropertyMap                             (PropertyMap)
+import qualified Flowbox.Luna.Interpreter.Interpreter                      as Interpreter
 import           Flowbox.Luna.Lib.LibManager                               (LibManager)
 import qualified Flowbox.Luna.Lib.LibManager                               as LibManager
 import           Flowbox.Luna.Lib.Library                                  (Library)
 import qualified Flowbox.Luna.Lib.Library                                  as Library
 import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                  as Alias
 import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                     as MaxID
+import qualified Flowbox.Luna.Passes.Build.Build                           as Build
+import qualified Flowbox.Luna.Passes.Build.Diagnostics                     as Diagnostics
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                     as Luna
 import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer         as IDFixer
 import qualified Flowbox.Luna.Passes.Transform.Graph.Builder.Builder       as GraphBuilder
 import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as GraphParser
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
-import           Flowbox.Prelude                                           hiding (focus, zipper)
+import           Flowbox.Prelude                                           hiding (error, focus, zipper)
 import           Flowbox.System.Log.Logger
-
 
 
 loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Batch.Handler.Common"
+
+
+safeInterpretLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
+safeInterpretLibrary libID projectID batch =
+    Exception.catch (interpretLibrary libID projectID batch)
+                    (\e -> loggerIO error $ "Interpret failed: " ++ show (e :: IOException))
+
+
+interpretLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
+interpretLibrary libID projectID batch = do
+    ast <- getAST libID projectID batch
+    let diag    = Diagnostics.all -- TODO [PM] : hardcoded diagnostics
+        cfg     = Batch.config batch
+        imports = ["Luna.Target.HS.Core", "Flowbox.Graphics.Mockup", "FlowboxM.Libs.Std.All"] -- TODO [PM] : hardcoded imports
+    maxID <- Luna.runIO $ MaxID.run ast
+    [hsc] <- Luna.runIO $ Build.prepareSources diag ast (ASTInfo.mk maxID) False
+    let code = unlines $ snd $ break (=="-- body --") $ lines $ Source.code hsc
+    Interpreter.runSource cfg imports code "main"
 
 
 getProjectManager :: Batch -> ProjectManager
@@ -184,6 +208,30 @@ setClassFocus :: (Applicative m, Monad m) => Expr -> Breadcrumbs -> Library.ID -
 setClassFocus newClass bc libraryID projectID batch =
     setFocus (Focus.ClassFocus newClass) bc libraryID projectID batch
 
+
+getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO (Graph, PropertyMap)
+getGraph bc libraryID projectID batch = do 
+    ast         <- getAST libraryID projectID batch
+    propertyMap <- getPropertyMap libraryID projectID batch
+    expr        <- getFunctionFocus bc libraryID projectID batch
+    aa    <- Luna.runIO $ Alias.run ast
+    maxID <- Luna.runIO $ MaxID.run ast
+    Luna.runIO $ GraphBuilder.run aa propertyMap expr
+
+
+setGraph :: (Graph, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch -> IO Batch
+setGraph (newGraph, newPM) bc libraryID projectID batch = do 
+    expr <- getFunctionFocus bc libraryID projectID batch
+    ast  <- Luna.runIO $ GraphParser.run newGraph newPM expr
+
+    newMaxID <- Luna.runIO $ MaxID.runExpr ast
+    fixedAst <- Luna.runIO $ IDFixer.runExpr newMaxID False ast
+
+    loggerIO debug $ show newGraph
+    loggerIO debug $ show newPM
+    loggerIO debug $ ppShow fixedAst
+    setFunctionFocus fixedAst bc libraryID projectID batch
+    setPropertyMap newPM libraryID projectID batch
 
 -- DEPRECATED ---------------------------------------------------------------
 
