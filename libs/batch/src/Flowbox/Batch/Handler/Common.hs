@@ -53,7 +53,7 @@ import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as De
 import           Flowbox.Prelude                                           hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Control.Concurrent as Concurrent
-
+import qualified System.Environment as Environment
 
 
 loggerIO :: LoggerIO
@@ -61,11 +61,14 @@ loggerIO = getLoggerIO "Flowbox.Batch.Handler.Common"
 
 
 safeInterpretLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-safeInterpretLibrary libID projectID batch = do
-    _ <- Concurrent.forkIO $ Exception.catch
+safeInterpretLibrary libID projectID batch = do 
+    args <- Environment.getArgs
+    if "--no-auto-interpreter" `elem` args
+        then return ()
+        else do _ <- Concurrent.forkIO $ Exception.catch
                                  (interpretLibrary libID projectID batch)
                                  (\e -> loggerIO error $ "Interpret failed: " ++ show (e :: IOException))
-    return ()
+                return ()
 
 
 interpretLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
