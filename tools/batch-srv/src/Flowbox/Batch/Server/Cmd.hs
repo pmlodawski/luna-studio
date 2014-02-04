@@ -18,6 +18,7 @@ data Cmd = Serve { address            :: String
                  , noColor            :: Bool
 
                  , shutdownWithClient :: Bool
+                 , noAutoInterpreter  :: Bool
                  }
          | Version
          deriving Show
