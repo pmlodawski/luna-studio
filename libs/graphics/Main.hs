@@ -15,6 +15,7 @@ import qualified Config                as Cfg
 import           Control.Applicative
 import qualified Data.Array.Accelerate as A
 import qualified Data.Label            as Label
+--import qualified Debug.Trace           as Dbg
 import qualified Monitoring            as Monitoring
 import qualified ParseArgs             as ParseArgs
 import qualified System.Environment    as Env
@@ -31,8 +32,8 @@ import           Flowbox.Prelude                   as P
 --imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
 imgtest img = do --imgFilter = do
     let getDouble image = Image.reprDouble <$> RGBA.decompose image
-    --rgba  <- getDouble img
-    rgba  <- sequence $ fmap getDouble img
+    rgba  <- getDouble img
+    --rgba  <- sequence $ fmap getDouble img
     --rgbaBack <- getDouble imgBack
     --rgbaFilter <- Image.reprDouble <$> RGBA.decompose imgFilter
     --lrgba <- adjustCB 2.2 0.2 "r" "g" "b" rgba
@@ -53,9 +54,18 @@ imgtest img = do --imgFilter = do
     --        >>= Image.cpChannel "luminance" "g"
     --        >>= Image.cpChannel "luminance" "b"
     let f = \_ -> 0
-        fBW = \x -> x A.>=* 0.5
+    --    fBW = \x -> x A.>=* 0.5
         rgb = ("r", "g", "b")
     --    hsv = ("h", "s", "v")
+        rgbaTransformed = Image.rotateAt (pi/3) 128 128
+                        -- $ Image.scaleAt 2 3 128 128
+                        $ Image.rotateAt (pi/3) 128 128
+                        $ Image.rotateAt (pi/3) 128 128
+                        $ Image.rotateAt (pi/3) 128 128
+                        $ Image.rotateAt (pi/3) 128 128
+                        $ Image.rotateAt (pi/3) 128 128
+                        $ Image.transform rgba
+        rgbaRasterized = Image.rasterize rgbaTransformed
     --lrgba <- G.keyRGB 0.1 (0.176, 0.816, 0.145) rgba
     --lrgba <- G.keyColor ("r", "g", "b") (0.2, 0.2, 0.2) (0.055, 0.582, 0.363) f rgba
     --lrgba <- G.keyColor ("r", "g", "b") (0.1, 0.1, 0.1) (0.176, 0.816, 0.145) f rgba
@@ -68,7 +78,7 @@ imgtest img = do --imgFilter = do
     --dilatedMono <- G.dilateImage rgb lrgba
     --medianMono <- G.medianImage rgb lrgba
     --imgMedian <- G.medianImage rgb rgba
-    imgBackground <- G.extractBackground rgb rgba
+    --imgBackground <- G.extractBackground rgb rgba
     --imgBackgroundHSV <- G.convertRGBtoHSV rgbaBack
     --frameHSV <- G.convertRGBtoHSV rgba
     --imgCutHSV <- G.cutOut hsv (0.2, 0.3, 0.3) f frameHSV imgBackgroundHSV
@@ -76,7 +86,7 @@ imgtest img = do --imgFilter = do
     --imgCut <- G.convertHSVtoRGB imgCutHSV
     --imgKeyedHSV <- G.keyColor hsv (0.15, 0.3, 0.3) (0.402, 0.85, 0.59) f imgHSV
     --imgKeyed <- G.convertHSVtoRGB imgKeyedHSV
-    RGBA.compose $ Image.reprWord8 imgBackground
+    RGBA.compose $ Image.reprWord8 rgbaRasterized
     --where nonIntRem x y = x - (y * (A.fromIntegral $ (A.truncate (x / y) :: Exp Int)))
     --      mod1 = flip nonIntRem 1.0
 
@@ -95,20 +105,20 @@ main
                   >> Exit.exitSuccess
 
         let backend     = Label.get Cfg.configBackend conf
-            frameNames  = fmap (\x -> (T.printf "../video/frame-%d.bmp" x) :: String) ([0..10] :: [Int])
+            frameNames  = fmap (\x -> (T.printf "small-frame-%03d.bmp" x) :: String) ([125,130..315] :: [Int])
             getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
         -- Read in the image file
 
         --img2 <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
 
-        --img2 <- getImage fileIn
+        img2 <- getImage fileIn
         --imgBack <- getImage "background.bmp"
         --imgFrame <- getImage "frame-249.bmp"
-        frameFiles <- sequence $ fmap getImage frameNames
+        --frameFiles <- sequence $ fmap getImage frameNames
 
         --imgFilter <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP "filter.bmp"
         --let img3 = imgtest img2 -- imgBack
-        let img3 = imgtest frameFiles -- imgBack -- frameFiles -- img2 -- imgFilter
+        let img3 = imgtest img2 -- imgFilter
 
         case img3 of
             Left  err -> print err
