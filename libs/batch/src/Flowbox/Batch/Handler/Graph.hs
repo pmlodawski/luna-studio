@@ -52,6 +52,7 @@ addNode node bc libID projectID batch = do
         fixedNode = OutputName.fixEmpty node newID
         newGraph  = GraphView.insNode (newID, fixedNode) graph
     batch <- Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
+    Common.safeInterpretLibrary libID projectID batch
     return (batch, newID)
 
 
@@ -65,7 +66,8 @@ updateNode (nodeID, newNode) bc libID projectID batch = do
         fixedNode = OutputName.fixEmpty newNode newID
         newGraph  = GraphView.replaceNode (newID, fixedNode) nodeID graph
         newPropertyMap = PropertyMap.move nodeID newID propertyMap
-    batch <- Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
+    batch <- Common.setGraphView (newGraph, newPropertyMap) bc libID projectID batch
+    Common.safeInterpretLibrary libID projectID batch
     return (batch, newID)
 
 
@@ -86,7 +88,9 @@ removeNode nodeID bc libID projectID batch = do
     GraphView.gelem nodeID graph `assert` ("Wrong 'nodeID' = " ++ show nodeID)
     let newGraph = GraphView.delNode nodeID graph
         newPropertyMap = PropertyMap.delete nodeID propertyMap
-    Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
+    batch <- Common.setGraphView (newGraph, newPropertyMap) bc libID projectID batch
+    Common.safeInterpretLibrary libID projectID batch
+    return batch
 
 
 connect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor
@@ -97,7 +101,9 @@ connect srcNodeID srcPort dstNodeID dstPort bc libID projectID batch = do
     GraphView.gelem dstNodeID graph `assert` ("Unable to connect: Wrong 'dstNodeID' = " ++ show dstNodeID)
     GraphView.isNotAlreadyConnected graph dstNodeID dstPort `assert` "Unable to connect: Port is already connected"
     let newGraph = GraphView.insEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) graph
-    Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
+    batch <- Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
+    Common.safeInterpretLibrary libID projectID batch
+    return batch
 
 
 disconnect :: Node.ID -> PortDescriptor -> Node.ID -> PortDescriptor
@@ -107,4 +113,6 @@ disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID batch = do
     GraphView.gelem srcNodeID graph `assert` ("Wrong 'srcNodeID' = " ++ show srcNodeID)
     GraphView.gelem dstNodeID graph `assert` ("Wrong 'dstNodeID' = " ++ show dstNodeID)
     let newGraph = GraphView.delLEdge (srcNodeID, dstNodeID, EdgeView srcPort dstPort) graph
-    Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
+    batch <- Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
+    Common.safeInterpretLibrary libID projectID batch
+    return batch
