@@ -14,10 +14,12 @@ module Flowbox.Graphics.Raster.Image (
 import           Control.Error
 import           Data.Array.Accelerate             (Exp)
 import qualified Data.Array.Accelerate             as A
+import qualified Data.Array.Accelerate.IO          as A
 import qualified Data.Array.Repa                   as R
 import qualified Data.Array.Repa.Algorithms.Matrix as M
 import           Data.Map                          (Map)
 import qualified Data.Map                          as Map
+--import qualified Debug.Trace                       as Dbg
 
 import           Flowbox.Graphics.Raster.Channel (Channel)
 import qualified Flowbox.Graphics.Raster.Channel as Channel
@@ -25,20 +27,24 @@ import           Flowbox.Graphics.Raster.Error   (Error (ChannelLookupError, Tmp
 import           Flowbox.Prelude                 hiding (lookup, map)
 
 
-type Matrix = R.Array R.U R.DIM2 Double
+type String3 = (String, String, String)
+
+--type Transformation = R.Array R.U R.DIM2 Double
+data Transformation = Transformation (R.Array R.U R.DIM2 Double)
+            deriving (Show)
 
 data Image a = Image { _channels :: Map String (Channel a)
                      }
              deriving (Show, Eq, Ord)
 
 data Transformed a = Transformed { src :: a
-                                 , trans :: Matrix
+                                 , trans :: Transformation
                                  }
            deriving (Show)
 
 instance Functor Transformed where
     --fmap :: (a -> b) -> Transformed a -> Transformed b
-    fmap f (Transformed src trans) = Transformed (f src) trans
+    fmap f (Transformed s t) = Transformed (f s) t
 
 makeLenses ''Image
 
@@ -57,9 +63,9 @@ lookup name img = justErr (ChannelLookupError name) $ Map.lookup name (view chan
 
 
 cpChannel :: String -> String -> Image a -> Either Error (Image a)
-cpChannel src dst img = do
-    chan <- lookup src img
-    return $ img & channels %~ (Map.insert dst chan)
+cpChannel source destination img = do
+    chan <- lookup source img
+    return $ img & channels %~ (Map.insert destination chan)
 
 
 insert :: String -> Channel a -> Image a -> Image a
@@ -78,30 +84,65 @@ reprWord8 img = map (\c -> A.truncate $ c * 255) img
 
 -- transformations
 
---toTransform a = Transformed a mempty
+transform :: a -> Transformed a
+transform x = Transformed x mempty
+
+rasterizeChannel :: (A.Elt a, A.IsFloating a) => Transformation -> Channel a -> Channel a
+rasterizeChannel (Transformation t) ch = Channel.generate sh f
+    where sh = Channel.shape ch
+          (A.Z A.:. y A.:. x) = A.unlift sh
+          inShape b a = ((a A.>=* 0) A.&&* (a A.<* x)) A.&&* ((b A.>=* 0) A.&&* (b A.<* y))
+          f ix = let
+                    (A.Z A.:. j A.:. i) = A.unlift ix
+                    mat = ( A.constant $ t R.! (R.Z R.:. 0 R.:. 0)
+                          , A.constant $ t R.! (R.Z R.:. 0 R.:. 1)
+                          , A.constant $ t R.! (R.Z R.:. 0 R.:. 2)
+                          , A.constant $ t R.! (R.Z R.:. 1 R.:. 0)
+                          , A.constant $ t R.! (R.Z R.:. 1 R.:. 1)
+                          , A.constant $ t R.! (R.Z R.:. 1 R.:. 2)
+                          , A.constant $ t R.! (R.Z R.:. 2 R.:. 0)
+                          , A.constant $ t R.! (R.Z R.:. 2 R.:. 1)
+                          , A.constant $ t R.! (R.Z R.:. 2 R.:. 2))
+                    (t00, t01, t02, t10, t11, t12, _, _, _) = mat
+
+                    i' = A.fromIntegral i
+                    j' = A.fromIntegral j
+                    it = i' * t00 + j' * t01 + t02
+                    jt = i' * t10 + j' * t11 + t12
+                in
+                    (inShape (A.round jt) (A.round it)) A.? (Channel.at ch (A.index2 (A.round jt) (A.round it)), 0)
+
+rasterize :: (A.Elt a, A.IsFloating a) => Transformed (Image a) -> Image a
+rasterize (Transformed img t) = Image $ Map.map (rasterizeChannel t) $ view channels img
+
 
 translate :: Double -> Double -> Transformed (Image a) -> Transformed (Image a)
-translate x y (Transformed img trans) = Transformed img trans'
-    where trans' = M.mmultS trans t
-          t = R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ 1, 0, x
-                                                    , 0, 1, y
-                                                    , 0, 0, 1 ]
+translate x y (Transformed img transposition) = Transformed img transposition'
+    where transposition' = mappend t transposition
+          t = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ 1, 0, -x
+                                                                    , 0, 1, -y
+                                                                    , 0, 0, 1 ])
 
 rotate :: Double -> Transformed (Image a) -> Transformed (Image a)
-rotate theta (Transformed img trans) = Transformed img trans'
-    where trans' = M.mmultS trans t
-          t = R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [   cos theta , sin theta, 0
-                                                    , -(sin theta), cos theta, 0
-                                                    , 0           , 0        , 1]
+rotate theta (Transformed img transposition) = Transformed img transposition'
+    where transposition' = mappend t transposition
+          t = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [   cos (-theta) , sin (-theta), 0
+                                                                    , -(sin (-theta)), cos (-theta), 0
+                                                                    , 0           , 0        , 1])
+
+rotateAt :: Double -> Double -> Double -> Transformed (Image a) -> Transformed (Image a)
+rotateAt theta x y = (translate (-x) (-y)) . (rotate theta) . (translate x y)
 
 -- ?
 scale :: Double -> Double -> Transformed (Image a) -> Transformed (Image a)
-scale x y (Transformed img trans) = Transformed img trans'
-    where trans' = M.mmultS trans t
-          t = R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ x, 0, 0
-                                                    , 0, y, 0
-                                                    , 0, 0, 1]
+scale x y (Transformed img transposition) = Transformed img transposition'
+    where transposition' = mappend t transposition
+          t = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ 1/x, 0  , 0
+                                                                    , 0  , 1/y, 0
+                                                                    , 0  , 0  , 1])
 
+scaleAt :: Double -> Double -> Double -> Double -> Transformed (Image a) -> Transformed (Image a)
+scaleAt sx sy x y = (translate (-x) (-y)) . (scale sx sy) . (translate x y)
 
 
 ------------------------------------------------------------------------
@@ -111,3 +152,9 @@ scale x y (Transformed img trans) = Transformed img trans'
 instance Monoid (Image a) where
     mempty        = Image mempty
     a `mappend` b = Image $ (view channels a) `mappend` (view channels b)
+
+instance Monoid Transformation where
+    mempty = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ 1, 0, 0
+                                                                   , 0, 1, 0
+                                                                   , 0, 0, 1])
+    (Transformation a) `mappend` (Transformation b) = Transformation (M.mmultS a b)
