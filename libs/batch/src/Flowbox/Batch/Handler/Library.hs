@@ -103,7 +103,7 @@ buildLibrary libID projectID = readonly . libraryOp libID projectID (\batch libr
         bldCfg      = BuildConfig name version libs ghcFlags cppFlags cabalFlags buildType cfg diag buildDir
 
     maxID <- Luna.runIO $ MaxID.run ast
-    Luna.runIO $ Build.run bldCfg ast $ ASTInfo.mk maxID
+    Luna.runIO $ Build.run bldCfg ast (ASTInfo.mk maxID) False
     return (library, ()))
 
 
