@@ -4,6 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+-- {-# LANGUAGE FlexibleContexts #-}
+
 module Flowbox.Graphics.Raster.Channel where
 
 import qualified Data.Array.Accelerate as A
@@ -71,6 +73,8 @@ compute backend chan = Raw $ case chan of
 --generate shape f = Acc $ A.generate shape f
 
 --stencil :: (A.Stencil A.DIM2 a1 stencil, A.Elt a) => (stencil -> A.Exp a) -> A.Boundary a1 -> Channel a1 -> Channel a
+--stencil :: Int
+--stencil :: (A.Elt a0, A.Elt a1, A.Stencil A.DIM2 a1 stencil0) => (stencil0 -> A.Exp a0) -> A.Boundary a1 -> Channel a1 -> Channel a0
 stencil f b ch = Acc $ A.stencil f b (accMatrix ch)
 
 zipWith :: (A.Elt a1, A.Elt b, A.Elt a) =>

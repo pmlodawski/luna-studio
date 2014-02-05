@@ -29,6 +29,9 @@ import           Flowbox.Prelude                 hiding (lookup, map)
 
 type String3 = (String, String, String)
 
+type Stencil3x1 a       = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
+type Stencil1x3 a       = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
+
 --type Transformation = R.Array R.U R.DIM2 Double
 data Transformation = Transformation (R.Array R.U R.DIM2 Double)
             deriving (Show)
@@ -87,9 +90,21 @@ reprWord8 img = map (\c -> A.truncate $ c * 255) img
 transform :: a -> Transformed a
 transform x = Transformed x mempty
 
+convolve3x1 :: (A.Elt a, A.IsNum a) => [Exp a] -> Stencil3x1 a -> Exp a
+convolve3x1 kernel (_, (a,b,c), _)
+  = sum $ zipWith (*) kernel [a,b,c]
+
+convolve1x3 :: (A.Elt a, A.IsNum a) => [Exp a] -> Stencil1x3 a -> Exp a
+convolve1x3 kernel ((_,a,_), (_,b,_), (_,c,_))
+  = sum $ zipWith (*) kernel [a,b,c]
+
 rasterizeChannel :: (A.Elt a, A.IsFloating a) => Transformation -> Channel a -> Channel a
-rasterizeChannel (Transformation t) ch = Channel.generate sh f
-    where sh = Channel.shape ch
+rasterizeChannel (Transformation t) ch =
+    Channel.stencil (convolve3x1 kernel) A.Clamp $
+    Channel.stencil (convolve1x3 kernel) A.Clamp $
+    Channel.generate sh f
+    where kernel = [1/6,2/3,1/6]
+          sh = Channel.shape ch
           (A.Z A.:. y A.:. x) = A.unlift sh
           inShape b a = ((a A.>=* 0) A.&&* (a A.<* x)) A.&&* ((b A.>=* 0) A.&&* (b A.<* y))
           f ix = let

@@ -58,12 +58,12 @@ imgtest img = do --imgFilter = do
         rgb = ("r", "g", "b")
     --    hsv = ("h", "s", "v")
         rgbaTransformed = Image.rotateAt (pi/3) 128 128
-                        -- $ Image.scaleAt 2 3 128 128
+                        --Image.scaleAt 0.5 0.75 127 127
                         $ Image.rotateAt (pi/3) 128 128
-                        $ Image.rotateAt (pi/3) 128 128
-                        $ Image.rotateAt (pi/3) 128 128
-                        $ Image.rotateAt (pi/3) 128 128
-                        $ Image.rotateAt (pi/3) 128 128
+                        -- $ Image.rotateAt (pi/3) 128 128
+--                        $ Image.rotateAt (pi/3) 128 128
+--                        $ Image.rotateAt (pi/3) 128 128
+--                        $ Image.rotateAt (pi/3) 128 128
                         $ Image.transform rgba
         rgbaRasterized = Image.rasterize rgbaTransformed
     --lrgba <- G.keyRGB 0.1 (0.176, 0.816, 0.145) rgba
@@ -105,7 +105,7 @@ main
                   >> Exit.exitSuccess
 
         let backend     = Label.get Cfg.configBackend conf
-            frameNames  = fmap (\x -> (T.printf "small-frame-%03d.bmp" x) :: String) ([125,130..315] :: [Int])
+            frameNames  = fmap (\x -> (T.printf "frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
             getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
         -- Read in the image file
 
@@ -114,7 +114,7 @@ main
         img2 <- getImage fileIn
         --imgBack <- getImage "background.bmp"
         --imgFrame <- getImage "frame-249.bmp"
-        --frameFiles <- sequence $ fmap getImage frameNames
+        frameFiles <- sequence $ fmap getImage frameNames
 
         --imgFilter <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP "filter.bmp"
         --let img3 = imgtest img2 -- imgBack

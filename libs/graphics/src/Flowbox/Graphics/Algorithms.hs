@@ -193,6 +193,35 @@ medianImage = applyToImage medianChannel
 
 
 
+premultiply :: (A.Elt a, A.IsFloating a) => Image a -> Either Image.Error (Image a)
+premultiply img = do
+    channelR <- Image.lookup "r" img
+    channelG <- Image.lookup "g" img
+    channelB <- Image.lookup "b" img
+    channelA <- Image.lookup "a" img
+    let outimg = Image.insert "r" (premultiplyChannel channelR channelA)
+               $ Image.insert "r" (premultiplyChannel channelG channelA)
+               $ Image.insert "r" (premultiplyChannel channelB channelA)
+               $ img
+        premultiplyChannel = Channel.zipWith (\x a -> x * a)
+    return outimg
+
+
+unpremultiply :: (A.Elt a, A.IsFloating a) => Image a -> Either Image.Error (Image a)
+unpremultiply img = do
+    channelR <- Image.lookup "r" img
+    channelG <- Image.lookup "g" img
+    channelB <- Image.lookup "b" img
+    channelA <- Image.lookup "a" img
+    let outimg = Image.insert "r" (unpremultiplyChannel channelR channelA)
+               $ Image.insert "r" (unpremultiplyChannel channelG channelA)
+               $ Image.insert "r" (unpremultiplyChannel channelB channelA)
+               $ img
+        unpremultiplyChannel = Channel.zipWith (\x a -> x / a)
+    return outimg
+
+
+
 -- convolution
 
 convolve3x3 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil3x3 a -> A.Exp a
