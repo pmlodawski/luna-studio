@@ -168,9 +168,9 @@ def isError a:
 
 class Sys:
     def exitSuccess:
-        ```Exit.exitSuccess *> return (Safe ())```
+        ```Exit.exitSuccess *> returnIO (Safe ())```
     def exitFailure:
-        ```Exit.exitFailure *> return (Safe ())```
+        ```Exit.exitFailure *> returnIO (Safe ())```
 
 
 ## Backend ####################################

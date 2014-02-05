@@ -144,3 +144,6 @@ catch el f = flattenEnv $ fmap (catchProto f) el
 
 typeMatch :: a -> a -> Pure(Safe())
 typeMatch _ _ = val ()
+
+returnIO :: a -> IO a
+returnIO = Prelude.return
