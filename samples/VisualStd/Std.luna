@@ -144,32 +144,31 @@ def catch self el f:
 def isError self a:
     ```isError #{a}```
 
-
 class Sys:
     def exitSuccess self:
-        ```Exit.exitSuccess *> return (Safe ())```
+        ```Exit.exitSuccess *> returnIO (Safe ())```
     def exitFailure self:
-        ```Exit.exitFailure *> return (Safe ())```
+        ```Exit.exitFailure *> returnIO (Safe ())```
 
 
 ## Backend ####################################
 
-def cuda self:
+def cuda self::Std:
     ```liftf0 cuda```
 
-def interp self:
+def interp self::Std:
     ```liftf0 interp```
 
 ## Image ######################################
 
-def readImageWord8 self path::Path:
+def readImageWord8 self::Std path::Path:
     ```flattenCtx $ liftf1 (Image.readImageFromBMP2) #{path}```
 
-def readImage self path::Path:
+def readImage self::Std path::Path:
     (readImageWord8 path).decompose.reprDouble
 
 # FIXME[wd]: UNSAFE ERROR
-def Image.writeWord8 self path::Path backend:
+def Image.writeWord8 self::Std path::Path backend:
     ```flattenCtx $ liftf3 writeImage #{self} #{path} #{backend}```
     self
 
@@ -184,16 +183,16 @@ def Image.decompose self:
     ```flattenCtx $ liftf1 (Pure . RGBA.decompose) #{self}```
 
 def Image.reprDouble self:
-    ```liftf1 reprDouble #{self}```
+    ```liftf1 Image.reprDouble #{self}```
 
 def Image.reprWord8 self:
-    ```liftf1 reprWord8 #{self}```
+    ```liftf1 Image.reprWord8 #{self}```
 
 def Image.adjustCB self contrast::Float brightness::Float:
-    ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{self}```
+    ```flattenCtx $ liftf3 Mockup.adjustCB #{contrast} #{brightness} #{self}```
 
-def Image.convolve self kernel:
-    ```flattenCtx $ liftf2 convolve #{kernel} #{self}```
+def Image.convolve self kernel::Float:
+    ```flattenCtx $ liftf2 Mockup.convolve #{kernel} #{self}```
 
 def Image.convertRGBtoHSV self:
     ```flattenCtx $ liftf1 (Pure . Alg.convertRGBtoHSV) #{self}```
@@ -201,16 +200,20 @@ def Image.convertRGBtoHSV self:
 def Image.convertHSVtoRGB self:
     ```flattenCtx $ liftf1 (Pure . Alg.convertHSVtoRGB) #{self}```
 
-def Image.get self name::Name:
+def Image.get self name::String:
     ```flattenCtx $ liftf2 (Pure `dot2` Image.lookup) #{name} #{self}```
 
-def Image.put self name::Name channel:
+def Image.put self name::String channel:
     ```liftf3 Image.insert #{name} #{channel} #{self}```
 
 def Image.displayP self name::Path:
     b = interp
     self.write name b
 
+def extractBackground self images:
+    ```flattenCtx $ liftf1 (Pure . (Alg.extractBackground ("r", "g", "b"))) #{images}```
+
+    
 ## Channel ####################################
 
 
@@ -222,31 +225,43 @@ def Channel.map self callback:
 # def Channel.erode:
 #    ```liftf1 erodeChannel #{self}```
 
+## Transformed ################################
+
+
+def Image.transform self:
+    ```val $ Image.transform #{self}```
+
+def Transformed.rasterize self:
+    ```flattenCtx $ liftf1 Mockup.rasterize' #{self}```
+
+def Transformed.translate self x::Float y::Float:
+    ```liftf3 Image.translate #{x} #{y} #{self}```
+
+def Transformed.rotate self angle::Float:
+    ```liftf2 Image.rotate #{angle} #{self}```
+
+def Transformed.rotateAt self angle::Float x::Float y::Float:
+    ```liftf4 Image.rotateAt #{angle} #{x} #{y} #{self}```
+
+def Transformed.scale self x::Float y::Float:
+    ```liftf3 Image.scale #{self} #{x} #{y}```
+
+def Transformed.scaleAt self sx::Float sy::Float x::Float y::Float:
+    ```liftf5 Image.scaleAt #{self} #{sx} #{sy} #{x} #{y}```
+
+def Transformed.adjustCB self contrast::Float brightness::Float:
+    ```let { f1 c b self = call2 (member (P :: P "adjustCB") self) c b}```
+    ```let { f2 self c b = (fmap.fmap.fmap) (f1 c b) self}```
+    ```f2 #{self} #{contrast} #{brightness} ```
+
+def Transformed.convolve self kernel::Float:
+    ```let { f1 k self = call1 (member (P :: P "convolve") self) k}```
+    ```let { f2 self k = (fmap.fmap.fmap) (f1 k) self}```
+    ```f2 #{self} #{kernel} ```
+
+###############################################
+
 def constant self x:
     ```liftf1 A.constant #{x}```
 
 
-def Exp.+ self a:
-    ```liftf2 (+) #{self} #{a}```
-
-def Exp.- self a:
-    ```liftf2 (-) #{self} #{a}```
-
-def Exp.* self a:
-    ```liftf2 (*) #{self} #{a}```
-
-def Exp./ self a:
-    ```liftf2 (/) #{self} #{a}```
-
-
-class Vector a:
-    x,y,z :: a
-
-    def + self v:
-        Vector (x + v.x) (y + v.y) (z + v.z)
-
-    def length self:
-        (x*x + y*y + z*z).sqrt
-
-    def normalize self:
-        Vector (x/length) (y/length) (z/length)
