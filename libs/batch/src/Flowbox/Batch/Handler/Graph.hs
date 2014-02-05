@@ -52,7 +52,9 @@ addNode node bc libID projectID batch = do
         fixedNode = OutputName.fixEmpty node newID
         newGraph  = GraphView.insNode (newID, fixedNode) graph
     batch <- Common.setGraphView (newGraph, propertyMap) bc libID projectID batch
-    Common.safeInterpretLibrary libID projectID batch
+    if node ^. Node.expr == "displayP"
+        then return ()
+        else Common.safeInterpretLibrary libID projectID batch
     return (batch, newID)
 
 
