@@ -11,10 +11,11 @@
 
 import ```           Control.Applicative                          ```
 import ``` qualified Data.Array.Accelerate             as A       ```
+import ``` qualified Flowbox.Graphics.Algorithms       as Alg     ```
+import ``` qualified Flowbox.Graphics.Mockup           as Mockup  ```
 import ``` qualified Flowbox.Graphics.Raster.Channel   as Channel ```
 import ``` qualified Flowbox.Graphics.Raster.Image     as Image   ```
 import ``` qualified Flowbox.Graphics.Raster.IO        as Image   ```
-import ``` qualified Flowbox.Graphics.Algorithms       as Alg     ```
 import ``` qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA    ```
 import ``` qualified System.Exit                       as Exit    ```
 
@@ -255,10 +256,10 @@ def Channel.map callback:
 
 
 def Image.transform:
-    ```liftf1 Image.transform #{self}```
+    ```val $ Image.transform #{self}```
 
 def Transformed.rasterize:
-    ```liftf1 Image.rasterize #{self}```
+    ```flattenCtx $ liftf1 Mockup.rasterize' #{self}```
 
 def Transformed.translate x y:
     ```liftf3 Image.translate #{x} #{y} #{self}```
@@ -274,6 +275,11 @@ def Transformed.scale x y:
 
 def Transformed.scaleAt sx sy x y:
     ```liftf5 Image.scaleAt #{self} #{sx} #{sy} #{x} #{y}```
+
+def Transformed.adjustCB contrast brightness:
+    ```let { adj c b self = call2 (member (P :: P "adjustCB") self) c b}```
+    ```let { f self c b = (fmap.fmap.fmap) (adj c b) self}```
+    ```f #{self} #{contrast} #{brightness} ```
 
 ###############################################
 
@@ -306,6 +312,9 @@ class Vector a:
     def normalize:
         Vector (x/length) (y/length) (z/length)
 
+
+def fmapme f obj:
+    ``` liftf1 (fmap (call1 #{f})) #{obj}```
 
 # def loadImages path:
 #     x
@@ -342,7 +351,7 @@ def main:
     print v.length
     print v.normalize
     print $ v.normalize + v.normalize
-    backend = cuda
+    backend = interp
     # v2 = Vector 0.5 0.5 0.5
 
     # print ((v2) + (v2))
@@ -378,11 +387,14 @@ def main:
     b = 0.2
     k = 0.1
     # # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
-    img = img.adjustCB c b
-    
+
+    t = img.transform
+    t = t.rotate 0.5
+    t = t.adjustCB c b
+    img = t.rasterize    
     outpath2 = "luna2.bmp"
     print "=========="
-    # img = img.convertRGBtoHSV.convertHSVtoRGB
+
     img.write outpath2 backend
 
 

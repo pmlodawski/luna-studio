@@ -36,8 +36,8 @@ module Flowbox.Graphics.Mockup (
 
 ) where
 
-import qualified Data.Array.Accelerate as A
 import           Data.Array.Accelerate (Exp)
+import qualified Data.Array.Accelerate as A
 import           GHC.Float
 import qualified System.Exit           as Exit
 #ifdef ACCELERATE_CUDA_BACKEND
@@ -45,11 +45,12 @@ import qualified Data.Array.Accelerate.CUDA as CUDA
 #endif
 import qualified Data.Array.Accelerate.Interpreter as Interpreter
 
+import qualified Data.Map                          as Map
 import           Data.Number.Conversion
-import qualified Flowbox.Graphics.Algorithms as Alg
+import qualified Flowbox.Graphics.Algorithms       as Alg
 import           Flowbox.Graphics.Raster.Channel   (Channel)
 import qualified Flowbox.Graphics.Raster.Channel   as Channel
-import           Flowbox.Graphics.Raster.Image     (Image)
+import           Flowbox.Graphics.Raster.Image     (Image (Image))
 import qualified Flowbox.Graphics.Raster.Image     as Image
 import qualified Flowbox.Graphics.Raster.IO        as Image
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
@@ -95,3 +96,8 @@ convolve :: Double -> Image Double -> Pure (Either Image.Error (Image Double))
 convolve kernel img = Pure $ Alg.convolveRGB Alg.convolve3x3 kernel' img where
     kernel' = map A.constant $ replicate 9 kernel
 
+
+rasterize' :: (A.Elt a, A.IsFloating a, Functor m, Functor n) =>
+              Image.Transformed (m ( n( Image a))) -> m (n (Image a))
+rasterize' (Image.Transformed img t) =
+    (fmap.fmap) (\i -> Image $ Map.map (Image.rasterizeChannel t) $ view Image.channels i) img

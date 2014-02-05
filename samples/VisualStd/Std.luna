@@ -74,63 +74,63 @@ def Int.prev self::Int:
 
 ###### Double ##################################
 
-def Double.+ self::Double a::Double:
+def Double.+ self::Float a::Float:
     ```liftf2 (+) #{self} #{a}```
 
-def Double.- self::Double a::Double:
+def Double.- self::Float a::Float:
     ```liftf2 (-) #{self} #{a}```
 
-def Double.* self::Double a::Double:
+def Double.* self::Float a::Float:
     ```liftf2 (*) #{self} #{a}```
     
-def Double./ self::Double a::Double:
+def Double./ self::Float a::Float:
     ```liftf2 (/) #{self} #{a}```
 
-def Double.< self::Double a::Double:
+def Double.< self::Float a::Float:
     ```liftf2 (<) #{self} #{a}```
 
-def Double.> self::Double a::Double:
+def Double.> self::Float a::Float:
     ```liftf2 (>) #{self} #{a}```
 
-def Double.sqrt self::Double:
+def Double.sqrt self::Float:
     ```liftf1 sqrt #{self}```
 
-def Double.next self::Double:
+def Double.next self::Float:
     ```liftf1 (+1) #{self}```
 
-def Double.prev self::Double:
+def Double.prev self::Float:
     ```liftf1 (-1) #{self}```
 
 
 
-def Double.invert self::Double:
+def Double.invert self::Float:
     ```liftf1 invert #{self}```
 
-def Double.invert_ self::Double:
+def Double.invert_ self::Float:
     ```liftf1 invert' #{self}```
 
-def Double.sign self::Double:
+def Double.sign self::Float:
     ```liftf1 sign #{self}```
 
-def Double.parametrize self::Double lo::Double hi::Double:
+def Double.parametrize self::Float lo::Float hi::Float:
     ```liftf3 parametrize #{lo} #{hi} #{self}```
 
-def Double.bias self::Double b::Double:
+def Double.bias self::Float b::Float:
     ```liftf2 bias #{b} #{self}```
 
-def Double.gain self::Double g::Double:
+def Double.gain self::Float g::Float:
     ```liftf2 gain #{g} #{self}```
 
-def Double.gamma self::Double g::Double:
+def Double.gamma self::Float g::Float:
     ```liftf2 gamma #{g} #{self}```
 
-def Double.compress self::Double lo::Double hi::Double:
+def Double.compress self::Float lo::Float hi::Float:
     ```liftf3 gamma #{lo} #{hi} #{self}```
 
-def Double.expand self::Double lo::Double hi::Double:
+def Double.expand self::Float lo::Float hi::Float:
     ```liftf3 expand #{lo} #{hi} #{self}```
 
-def Double.remap self::Double loA::Double hiA::Double loB::Double hiB::Double:
+def Double.remap self::Float loA::Float hiA::Float loB::Float hiB::Float:
     ```liftf5 remap #{loA} #{hiA} #{loB} #{hiB} #{self}```
 
 
@@ -169,7 +169,7 @@ def readImage self path::Path:
     (readImageWord8 path).decompose.reprDouble
 
 # FIXME[wd]: UNSAFE ERROR
-def Image.writeWord8 self path backend:
+def Image.writeWord8 self path::Path backend:
     ```flattenCtx $ liftf3 writeImage #{self} #{path} #{backend}```
     self
 
@@ -189,7 +189,7 @@ def Image.reprDouble self:
 def Image.reprWord8 self:
     ```liftf1 reprWord8 #{self}```
 
-def Image.adjustCB self contrast brightness:
+def Image.adjustCB self contrast::Float brightness::Float:
     ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{self}```
 
 def Image.convolve self kernel:
