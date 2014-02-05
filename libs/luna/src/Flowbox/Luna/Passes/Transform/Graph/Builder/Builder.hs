@@ -133,7 +133,7 @@ buildNode astFolded outName expr = case expr of
                                      else do let node = Node.Expr name (genName name i)
                                              State.addNode i Port.All node astFolded noAssignment
                                              return i
-    Expr.Con        i name     -> do let node = Node.Expr (name ++ "()") (genName name i)
+    Expr.Con        i name     -> do let node = Node.Expr name (genName name i)
                                      State.addNode i Port.All node astFolded noAssignment
                                      return i
     Expr.Lit        i lvalue   -> do let litStr = Lit.lunaShow lvalue
@@ -211,7 +211,6 @@ showExpr expr = case expr of
     --Expr.ConD         _ name     fields
     --Expr.Con          _ name
     --Expr.Function     _ path     name      inputs  output  body
-    --Expr.Lambda       _ inputs   output    body
     --Expr.Import       _ path     target    rename
     --Expr.Infix        _ name     src       dst
     Expr.List         _ items        -> "[" ++ List.intercalate ", " (map showExpr items) ++ "]"

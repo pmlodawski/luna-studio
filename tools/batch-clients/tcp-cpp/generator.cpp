@@ -46,15 +46,138 @@ const std::string headerFile = R"(
 #include "../BatchIdWrappers.h"
 
 
+template <typename T>
+struct AsyncBatchRequest;
+
+template <typename T>
+struct AsyncBatchRequest
+{
+	typedef boost::variant<T, BatchException> Variant;
+	typedef Maybe<Variant> MaybeResp; //response is either T or exception
+	SharedCondVariable<MaybeResp> response;
+
+	std::function<void(Variant &)> callback;
+
+public:
+	void setResponse(const T &Response)
+	{
+		auto lock = boost::make_unique_lock(response.mx);
+		response.data = Variant(Response);
+		if(callback)
+			callback(*response.data);
+	}
+	void setException(const BatchException &Response)
+	{
+		//TODO? unify with the function above?
+		auto lock = boost::make_unique_lock(response.mx);
+		response.data = Variant(Response);
+		if(callback)
+			callback(*response.data);
+	}
+
+	generated::proto::batch::Response getResponse() //syncs
+	{
+		response.waitUntil([](const MaybeResp & r) { return (bool)r; });
+		return response.access([](const MaybeResp &r) 
+		{
+			auto &hlp = *r;
+			if(auto e = boost::get<BatchException>(&hlp))
+			{
+				logWarning("Rethrowing batch exception %s", e);
+				throw e;
+			}
+			else if(auto t = boost::get<T>(&hlp))
+			{
+				return t;
+			}
+			THROW("Broken request structure");
+		});
+	}
+
+
+	void setCallback(const std::function<void(Variant&)> &Callback)
+	{
+		auto lock = boost::make_unique_lock(response.mx);
+		if(response.data)
+			Callback(*response.data);
+		else
+			callback = Callback;
+	}
+};
+
+
+template <>
+struct AsyncBatchRequest<void>
+{
+	typedef boost::variant<int, BatchException> Variant;
+	typedef Maybe<Variant> MaybeResp; //response is either T or exception
+	SharedCondVariable<MaybeResp> response;
+
+	std::function<void(Variant &)> callback;
+
+public:
+	void setResponse()
+	{
+		auto lock = boost::make_unique_lock(response.mx);
+		response.data = Variant(0);
+		if(callback)
+			callback(*response.data);
+	}
+	void setException(const BatchException &Response)
+	{
+		//TODO? unify with the function above?
+		auto lock = boost::make_unique_lock(response.mx);
+		response.data = Variant(Response);
+		if(callback)
+			callback(*response.data);
+	}
+
+	void getResponse() //syncs
+	{
+		response.waitUntil([](const MaybeResp & r) { return (bool)r; });
+		return response.access([](const MaybeResp &r) 
+		{
+			auto &hlp = *r;
+			if(auto e = boost::get<BatchException>(&hlp))
+			{
+				logWarning("Rethrowing batch exception %s", e);
+				throw e;
+			}
+
+			return;
+		});
+	}
+
+
+	void setCallback(const std::function<void(Variant &)> &Callback)
+	{
+		auto lock = boost::make_unique_lock(response.mx);
+		if(response.data)
+			Callback(*response.data);
+		else
+			callback = Callback;
+	}
+};
+
+struct AsynchronousCallbacks
+{
+	typedef std::function<void(std::unique_ptr<generated::proto::batch::Response>)> TCallback;
+	std::map<int, TCallback> unmatchedCallbacks;
+	std::map<int, std::unique_ptr<generated::proto::batch::Response>> unmatchedRespones;
+
+	void addCallback(int id, const TCallback &cb);
+	void addResponse(std::unique_ptr<generated::proto::batch::Response> response);
+};
+
 class %wrapper_name%
 {
 public:
 
 static size_t sendAll(boost::asio::ip::tcp::socket &s, void *data, size_t size);
 static void sendRequest(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request);
-static generated::proto::batch::Response receiveResponse(boost::asio::ip::tcp::socket &s);
-static generated::proto::batch::Response call(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request);
-static generated::proto::batch::Response callAndTranslateException(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request);
+static std::unique_ptr<generated::proto::batch::Response> receiveResponse(boost::asio::ip::tcp::socket &s);
+static std::unique_ptr<generated::proto::batch::Response> call(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request);
+static std::unique_ptr<generated::proto::batch::Response> callAndTranslateException(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request);
 
 
 std::function<void(const std::string&)> before;
@@ -82,6 +205,10 @@ generated::proto::crumb::Breadcrumbs crumbify(DefinitionId defID)
 
 boost::asio::ip::tcp::socket &socket;
 boost::asio::ip::tcp::socket &notifySocket;
+
+SharedCondVariable<AsynchronousCallbacks> requestsInfo;
+	
+void handleNotificationSocket();
 
 %wrapper_name%(boost::asio::ip::tcp::socket &socket, boost::asio::ip::tcp::socket &notifySocket) : socket(socket), notifySocket(notifySocket) {}
 %method_decls%
@@ -129,13 +256,13 @@ void %wrapper_name%::sendRequest(boost::asio::ip::tcp::socket &s, const generate
 	sendAll(s, requestBuf.data(), requestSize);
 }
 
-generated::proto::batch::Response %wrapper_name%::receiveResponse(boost::asio::ip::tcp::socket &s)
+std::unique_ptr<generated::proto::batch::Response> %wrapper_name%::receiveResponse(boost::asio::ip::tcp::socket &s)
 {
 	static char buffer[BUFFER_SIZE];
-
-	generated::proto::batch::Response response;
+	
+	std::unique_ptr<generated::proto::batch::Response> response = std::unique_ptr<generated::proto::batch::Response>(new generated::proto::batch::Response());
 	size_t received = boost::asio::read(s, boost::asio::buffer(buffer, 4));
-
+	
 	//read varint delimited protobuf object in to buffer
 	//there's no method to do this in the C++ library so here's the workaround
 	google::protobuf::io::ArrayInputStream headerArrayIn(buffer, received);
@@ -144,30 +271,30 @@ generated::proto::batch::Response %wrapper_name%::receiveResponse(boost::asio::i
 	headerCodedIn.ReadVarint32(&packetSize);
 	const int sizeinfoLength = headerCodedIn.CurrentPosition();
 	const int remainingToRead = packetSize + sizeinfoLength - received;
-
+	
 	received = boost::asio::read(s, boost::asio::buffer(buffer + received, remainingToRead));
-
+	
 	google::protobuf::io::ArrayInputStream arrayIn(buffer + sizeinfoLength, packetSize);
 	google::protobuf::io::CodedInputStream codedIn(&arrayIn);
 	google::protobuf::io::CodedInputStream::Limit msgLimit = codedIn.PushLimit(packetSize);
-	response.ParseFromCodedStream(&codedIn);
+	response->ParseFromCodedStream(&codedIn);
 	codedIn.PopLimit(msgLimit);
 	return response;
 }
 
-generated::proto::batch::Response %wrapper_name%::call(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request)
+std::unique_ptr<generated::proto::batch::Response> %wrapper_name%::call(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request)
 {
 	sendRequest(s, request);
 	return receiveResponse(s);
 }
 
-generated::proto::batch::Response %wrapper_name%::callAndTranslateException(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request)
+std::unique_ptr<generated::proto::batch::Response> %wrapper_name%::callAndTranslateException(boost::asio::ip::tcp::socket &s, const generated::proto::batch::Request& request)
 {
 	auto response = call(s, request);
 
-	if(response.type() == generated::proto::batch::Response_Type_Exception)
+	if(response->type() == generated::proto::batch::Response_Type_Exception)
 	{
-		const auto exc = response.GetExtension(generated::proto::batch::Exception::rsp);
+		const auto exc = response->GetExtension(generated::proto::batch::Exception::rsp);
 		const auto msg = exc.message();
 		throw std::runtime_error(msg);
 	}
@@ -176,10 +303,78 @@ generated::proto::batch::Response %wrapper_name%::callAndTranslateException(boos
 }
 
 %method_impls%
+
+void BatchClient::handleNotificationSocket()
+{
+	while(true)
+	{
+		try
+		{
+			requestsInfo.waitUntil([](const AsynchronousCallbacks &m)
+			{
+				return m.unmatchedCallbacks.size();
+			});
+
+			auto response = receiveResponse(notifySocket);
+			if(!response->has_id())
+				THROW("Received a response on notification socket that has no id!");
+
+			logTrace("Notification socket got a reply for request %d", response->id());
+			int id = response->id();
+			requestsInfo.access([&](AsynchronousCallbacks &m)
+			{
+				m.addResponse(std::move(response));
+			});
+		}
+		catch(std::exception &e)
+		{
+			logError("Encountered an exception when listening to notification socket: %s", e);
+			if(!notifySocket.is_open())
+			{
+				logWarning("Notification socket has been closed, ending notification listener thread.");
+				return;
+			}
+		}
+	}
+}
+
+void AsynchronousCallbacks::addCallback(int id, const TCallback &cb)
+{
+	if(unmatchedRespones.count(id))
+	{
+		logTrace("Already got response for query %d", id);
+		cb(std::move(unmatchedRespones.at(id)));
+		unmatchedRespones.erase(id);
+	}
+	else
+	{
+		logTrace("Queuing callback for query %d", id);
+		assert(!unmatchedCallbacks.count(id));
+		unmatchedCallbacks[id] = cb;
+	}
+}
+
+void AsynchronousCallbacks::addResponse(std::unique_ptr<generated::proto::batch::Response> response)
+{
+	int id = response->id();
+	if(!unmatchedCallbacks.count(id))
+	{
+		logWarning("Received a response on notification socket with id=%d that cannot be paired with any unanswered request!", id);
+		assert(!unmatchedRespones.count(id));
+		unmatchedRespones[id] = std::move(response);
+	}
+	else
+	{
+		logTrace("Notifying callback for query %d", id);
+		unmatchedCallbacks.at(id)(std::move(response));
+		unmatchedCallbacks.erase(id);
+	}
+}
+
 )";
 
 const std::string methodDeclaration = "%rettype% %space%_%method%(%args_list%);";
-const std::string methodDeclarationAsync = "int %space%_%method%_async(%args_list%);";
+const std::string methodDeclarationAsync = "shared_ptr<AsyncBatchRequest<%async_rettype%>> %space%_%method%_async(%args_list%);";
 
 const std::string methodDefinition = R"(
 %rettype% %wrapper_name%::%space%_%method%(%args_list%)
@@ -197,13 +392,13 @@ const std::string methodDefinition = R"(
 		request.set_method(generated::proto::batch::Request_Method_%space%_%method%);
 		request.SetAllocatedExtension(generated::proto::batch::%space%_%method%_Args::req, args);
 
-		generated::proto::batch::Response response;
+		std::unique_ptr<generated::proto::batch::Response> response;
 		{
 			StopWatch sw;
 			FINALIZE{ logTrace("Batch call %s took %d ms.", "%space%_%method%", sw.elapsedMs().count()); };
 			response = callAndTranslateException(socket, request);
 		}
-		assert(response.type() == generated::proto::batch::Response_Type_Result); //exception would be translated to exception
+		assert(response->type() == generated::proto::batch::Response_Type_Result); //exception would be translated to exception
 
 		FINALIZE{ if(success) success("%space%_%method%"); };
 		%epilogue%
@@ -216,11 +411,11 @@ const std::string methodDefinition = R"(
 	}
 }
 
-int %wrapper_name%::%space%_%method%_async(%args_list%)
+shared_ptr<AsyncBatchRequest<%async_rettype%>> %wrapper_name%::%space%_%method%_async(%args_list%)
 {
-	if(!this) THROW("Attempt to call method %space%_%method% while the batch connection wasn't st up (call to nullptr)!");
-	if(before) before("%space%_%method%");
-	FINALIZE{ if(after) after("%space%_%method%"); };
+	if(!this) THROW("Attempt to call method %space%_%method%_async while the batch connection wasn't st up (call to nullptr)!");
+	if(before) before("%space%_%method%_async");
+	FINALIZE{ if(after) after("%space%_%method%_async"); };
 	try
 	{
 		
@@ -232,16 +427,41 @@ int %wrapper_name%::%space%_%method%_async(%args_list%)
 		request.set_method(generated::proto::batch::Request_Method_%space%_%method%);
 		request.SetAllocatedExtension(generated::proto::batch::%space%_%method%_Args::req, args);
 
-		generated::proto::batch::Response response;
+		std::unique_ptr<generated::proto::batch::Response> response;
 		{
 			StopWatch sw;
-			FINALIZE{ logTrace("Batch call %s tool %d ms.", "%space%_%method%", sw.elapsedMs().count()); };
+			FINALIZE{ logTrace("Batch call %s tool %d ms (just making the request).", "%space%_%method%_async", sw.elapsedMs().count()); };
 			response = callAndTranslateException(socket, request);
 		}
-		assert(response.type() == generated::proto::batch::Response_Type_Accept); //exception would be translated to exception
+		assert(response->type() == generated::proto::batch::Response_Type_Accept); //exception would be translated to exception
+		assert(response->has_id());
+		const int requestID = response->id();
 
-		FINALIZE{ if(success) success("%space%_%method%"); };
-		return response.id();
+		FINALIZE{ if(success) success("%space%_%method%_async"); };
+		auto retAsync = make_shared<AsyncBatchRequest<%async_rettype%>>();
+
+		auto onResponseReceived = [=](std::unique_ptr<generated::proto::batch::Response> response)
+		{
+			if(response->type() == generated::proto::batch::Response_Type_Exception)
+			{
+				const auto exc = response->GetExtension(generated::proto::batch::Exception::rsp);
+				BatchException e = BatchException(exc.message(), "%space%_%method%_async");
+				retAsync->setException(e);
+			}
+			else
+			{
+				%prepare_ret%
+				retAsync->setResponse(%async_use_ret%);
+			}
+		};
+
+
+		requestsInfo.access([=](AsynchronousCallbacks &m)
+		{
+			m.addCallback(requestID, onResponseReceived);
+		});
+
+		return retAsync;
 	}
 	catch(std::exception &e)
 	{
@@ -340,7 +560,8 @@ struct MethodWrapper
 
 	std::string space, name;
 
-	std::string returnedType, epilogue, arguments, setters;
+	std::string returnedType, returnedTypeAsync, epilogue, arguments, setters;
+	std::string prepareRet, returnRet, useRet, useRetAsync;
 
 	std::vector<int> collapsedArgs;
 	std::string collapsedName; 
@@ -375,6 +596,11 @@ struct MethodWrapper
 		boost::replace_all(ret, "%setters%", setters);
 		boost::replace_all(ret, "%epilogue%", epilogue);
 		boost::replace_all(ret, "%rettype%", returnedType);
+		boost::replace_all(ret, "%async_rettype%", returnedTypeAsync);
+		boost::replace_all(ret, "%prepare_ret%", prepareRet);
+		boost::replace_all(ret, "%use_ret%", useRet);
+		boost::replace_all(ret, "%async_use_ret%", useRetAsync);
+
 		//boost::replace_all(ret, "%rettype%", returnedType);
 		return ret;
 	}
@@ -511,31 +737,64 @@ struct MethodWrapper
 		if(result->field_count() == 0)
 		{
 			returnedType = "void";
-			epilogue = "return;";
+			prepareRet = "";
+			returnRet = "return;";
+			useRet = "";
 		}
 		else if(result->field_count() == 1)
 		{
 			auto field = result->field(0);
-			returnedType = ArgWrapper(result->field(0)).translateType(true);
-			epilogue = resultPack + " result = response.GetExtension(" + resultPack + "::rsp);\n";
+			ArgWrapper arg(field);
+
+			returnedType = arg.translateType(true);
+			if(!field->is_repeated()  &&  !field->is_optional()  &&  field->type() == FieldDescriptor::TYPE_MESSAGE)
+			{
+				returnedTypeAsync = returnedType;
+				useRetAsync = "*ret";
+				returnedType = "std::unique_ptr<" + returnedType + ">";
+			}
+
+			prepareRet = resultPack + " & result = *response->MutableExtension(" + resultPack + "::rsp);\n";
 			
 			if(field->is_repeated())
 			{
-				epilogue += returnedType + " ret;\n";
-				epilogue += "for(int i = 0; i < result."+field->lowercase_name()+"_size(); i++)\n{\n";
-				epilogue += "ret.push_back(result."+field->lowercase_name()+"(i));\n}\n";
-				epilogue += "return ret;";
+				prepareRet += returnedType + " ret;\n";
+				prepareRet += "for(int i = 0; i < result."+field->lowercase_name()+"_size(); i++)\n{\n";
+				prepareRet += "ret.push_back(result."+field->lowercase_name()+"(i));\n}\n";
+			}
+			else if(field->is_optional())
+			{
+				prepareRet += returnedType + " ret;\n";
+				prepareRet += "if(result.has_" + field->lowercase_name() + "()) \n{\n";
+				prepareRet += returnedType + " ret = result." + field->lowercase_name() + "();\n}\n";
+			}
+			else if(field->type() == FieldDescriptor::TYPE_MESSAGE)
+			{
+				prepareRet += "auto retHlp = result.release_" + field->lowercase_name() + "();\n";
+				prepareRet += returnedType + " ret = " + returnedType + "(retHlp);\n";
 			}
 			else
 			{
-				epilogue += "return result." + field->lowercase_name() + "();";
+				prepareRet += returnedType + " ret = result." + field->lowercase_name() + "();\n";
 			}
+			returnRet = "return ret;";
+			useRet = "ret";
 		}
 		else
 		{
 			returnedType = "generated::proto::batch::" + space + "_" + name + "_Result";
-			epilogue = "return response.GetExtension(" + returnedType + "::rsp);";
+			prepareRet = returnedType + " ret;\n";
+			prepareRet += "ret = response->GetExtension(" + returnedType + "::rsp);";
+			returnRet = "return ret;";
+			useRet = "ret";
 		}
+
+		if(returnedTypeAsync.empty())
+			returnedTypeAsync = returnedType;
+		if(useRetAsync.empty())
+			useRetAsync = useRet;
+
+		epilogue = prepareRet + "\n" + returnRet;
 	}
 };
 

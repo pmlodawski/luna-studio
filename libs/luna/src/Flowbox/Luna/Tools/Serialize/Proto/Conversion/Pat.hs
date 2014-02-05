@@ -33,6 +33,7 @@ import qualified Generated.Proto.Pat.Tuple                          as GenTuple
 import qualified Generated.Proto.Pat.Typed                          as GenTyped
 import qualified Generated.Proto.Pat.Var                            as GenVar
 import qualified Generated.Proto.Pat.Wildcard                       as GenWildcard
+import qualified Generated.Proto.Pat.RecWildcard                       as GenRecWildcard
 
 
 
@@ -44,7 +45,8 @@ instance Convert Pat Gen.Pat where
         Pat.Con   i name     -> genPat GenCls.Con_  i GenCon_.ext  $ GenCon_.Con_   (encodePJ name)
         Pat.App   i src args -> genPat GenCls.App   i GenApp.ext   $ GenApp.App     (encodeJ src) (encodeList args)
         Pat.Typed i pat cls  -> genPat GenCls.Typed i GenTyped.ext $ GenTyped.Typed (encodeJ pat) (encodeJ cls)
-        Pat.Wildcard i       -> genPat GenCls.Wildcard i GenWildcard.ext $ GenWildcard.Wildcard
+        Pat.Wildcard i       -> genPat GenCls.Wildcard    i GenWildcard.ext    $ GenWildcard.Wildcard
+        Pat.RecWildcard i    -> genPat GenCls.RecWildcard i GenRecWildcard.ext $ GenRecWildcard.RecWildcard
         where
             genPat :: GenCls.Cls -> AST.ID -> Extensions.Key Maybe Gen.Pat v -> v -> Gen.Pat
             genPat cls i key ext = Extensions.putExt key (Just ext)
@@ -80,6 +82,10 @@ instance Convert Pat Gen.Pat where
            GenCls.Wildcard -> do ext <- getExt GenWildcard.ext
                                  GenWildcard.Wildcard <- ext <?> "Failed to decode Pat.Wildcard: extension is missing"
                                  pure $ Pat.Wildcard i
+           GenCls.RecWildcard -> do 
+                                 ext <- getExt GenRecWildcard.ext
+                                 GenRecWildcard.RecWildcard <- ext <?> "Failed to decode Pat.RecWildcard: extension is missing"
+                                 pure $ Pat.RecWildcard i
        where getExt k = case Extensions.getExt k p of
                                 Right a -> return a
                                 Left m  -> fail m

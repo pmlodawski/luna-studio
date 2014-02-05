@@ -143,8 +143,8 @@ prepareSources diag ast astInfo implicitSelf = runEitherT $ do
     return $ map formatSource hsc
 
 
-run :: BuildConfig -> ASTModule.Module -> ASTInfo -> Pass.Result ()
-run buildConfig ast astInfo = runEitherT $ do
+run :: BuildConfig -> ASTModule.Module -> ASTInfo -> Bool -> Pass.Result ()
+run buildConfig ast astInfo implicitSelf = runEitherT $ do
     let diag    = BuildConfig.diag buildConfig
         allLibs = "base"
                 -- : "flowboxM-core"
@@ -156,7 +156,7 @@ run buildConfig ast astInfo = runEitherT $ do
                 ++ if BuildConfig.name buildConfig /= "flowboxM-stdlib"
                       then ["flowboxM-stdlib"]
                       else []
-    hsc <- hoistEither =<< prepareSources diag ast astInfo True
+    hsc <- hoistEither =<< prepareSources diag ast astInfo implicitSelf
     case BuildConfig.buildDir buildConfig of
         Nothing -> Directory.withTmpDirectory tmpDirPrefix $ buildInFolder buildConfig hsc allLibs
         Just bd -> do liftIO $ Directory.createDirectoryIfMissing True bd

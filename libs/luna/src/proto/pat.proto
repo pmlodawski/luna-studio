@@ -14,13 +14,14 @@ import "type.proto";
 
 message Pat {
     enum Cls {
-        Var      = 1;
-        Lit      = 2;
-        Tuple    = 3;
-        Con_     = 4;
-        App      = 5;
-        Typed    = 6;
-        Wildcard = 7;
+        Var         = 1;
+        Lit         = 2;
+        Tuple       = 3;
+        Con_        = 4;
+        App         = 5;
+        Typed       = 6;
+        Wildcard    = 7;
+        RecWildcard = 8;
     }
     required Cls   cls = 1;
     optional int32 id  = 2;
@@ -62,4 +63,9 @@ message Typed {
 
 message Wildcard {
     extend Pat { optional Wildcard ext = 106; }
+}
+
+
+message RecWildcard {
+    extend Pat { optional RecWildcard ext = 107; }
 }

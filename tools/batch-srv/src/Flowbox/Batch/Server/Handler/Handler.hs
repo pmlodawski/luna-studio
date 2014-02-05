@@ -77,6 +77,8 @@ import qualified Generated.Proto.Batch.Library.BuildLibrary.Args            as B
 import qualified Generated.Proto.Batch.Library.BuildLibrary.Result          as BuildLibrary
 import qualified Generated.Proto.Batch.Library.CreateLibrary.Args           as CreateLibrary
 import qualified Generated.Proto.Batch.Library.CreateLibrary.Result         as CreateLibrary
+import qualified Generated.Proto.Batch.Library.InterpretLibrary.Args        as InterpretLibrary
+import qualified Generated.Proto.Batch.Library.InterpretLibrary.Result      as InterpretLibrary
 import qualified Generated.Proto.Batch.Library.Libraries.Args               as Libraries
 import qualified Generated.Proto.Batch.Library.Libraries.Result             as Libraries
 import qualified Generated.Proto.Batch.Library.LibraryByID.Args             as LibraryByID
@@ -135,7 +137,6 @@ import qualified Generated.Proto.Batch.Properties.SetProperties.Args        as S
 import qualified Generated.Proto.Batch.Properties.SetProperties.Result      as SetProperties
 
 
-
 class Handler h where
     addModule            :: h -> AddModule.Args            -> IO AddModule.Result
     addClass             :: h -> AddClass.Args             -> IO AddClass.Result
@@ -179,6 +180,7 @@ class Handler h where
     unloadLibrary :: h -> UnloadLibrary.Args -> IO UnloadLibrary.Result
     storeLibrary  :: h -> StoreLibrary.Args  -> IO StoreLibrary.Result
     buildLibrary  :: h -> BuildLibrary.Args  -> IO BuildLibrary.Result
+    interpretLibrary :: h -> InterpretLibrary.Args  -> IO InterpretLibrary.Result
     runLibrary    :: h -> RunLibrary.Args    -> IO RunLibrary.Result
 
     initialize :: h -> Initialize.Args -> IO Initialize.Result

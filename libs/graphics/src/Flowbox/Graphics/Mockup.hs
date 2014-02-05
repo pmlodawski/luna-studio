@@ -17,6 +17,7 @@ module Flowbox.Graphics.Mockup (
     Image.reprDouble,
     Image.reprWord8,
     Channel,
+    Image.Transformed,
 
     Alg.invert,
     Alg.invert',
@@ -93,5 +94,4 @@ adjustCB contrastValue brightnessValue img =
 convolve :: Double -> Image Double -> Pure (Either Image.Error (Image Double))
 convolve kernel img = Pure $ Alg.convolveRGB Alg.convolve3x3 kernel' img where
     kernel' = map A.constant $ replicate 9 kernel
-
 

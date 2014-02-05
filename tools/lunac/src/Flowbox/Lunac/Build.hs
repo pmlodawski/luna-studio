@@ -83,4 +83,4 @@ build cfg op diag filePath = do
                         d  -> Just $ UniPath.fromUnixString d
         bldCfg = BuildConfig name version libs ghcFlags ccFlags cabalFlags buildType cfg diag buildDir
     (ast, _, astInfo) <- Luna.runIO $ Build.parseFile rootPath filePath
-    Luna.runIO $ Build.run bldCfg ast astInfo
+    Luna.runIO $ Build.run bldCfg ast astInfo True

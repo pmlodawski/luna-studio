@@ -11,6 +11,7 @@ import qualified Options.Applicative as Opt
 
 import qualified Flowbox.Config.Config            as Config
 import           Flowbox.Control.Applicative
+--FIXME[pm]: re-enable Flowbox.Distribution
 --import qualified Flowbox.Distribution.Client.List as DistList
 import qualified Flowbox.Lunac.Build              as Build
 import qualified Flowbox.Lunac.Cmd                as Cmd
@@ -109,6 +110,7 @@ run prog = case Cmd.cmd prog of
     Cmd.Build   op -> do rootLogger setIntLevel $ Cmd.verbose prog
                          cfg <- Config.load
                          Build.run cfg op
+    --FIXME[pm]: re-enable Cmd.Repo
     --Cmd.Repo  scmd -> case scmd of
     --                  Cmd.List op -> list (Cmd.simple op) (Cmd.inputs op)
     --                                 where list = if (Cmd.json op) then DistList.listJSON (Cmd.html op) else DistList.list

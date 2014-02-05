@@ -26,7 +26,7 @@ def print msg:
 
 ###### List ###################################
 
-def List.at index:
+def List.at index::Int:
     ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```
 
 def List.+ l2:
@@ -93,6 +93,9 @@ def Int.next:
 def Int.prev:
     ```liftf1 (-1) #{self}```
 
+def Int.str:
+    ```liftf1 show #{self}```
+
 ###### Double ##################################
 
 def Double.+ a:
@@ -122,7 +125,8 @@ def Double.next:
 def Double.prev:
     ```liftf1 (-1) #{self}```
 
-
+def Double.str:
+    ```liftf1 show #{self}```
 
 def Double.invert:
     ```liftf1 invert #{self}```
@@ -228,6 +232,14 @@ def Image.get name:
 def Image.put name channel:
     ```liftf3 Image.insert #{name} #{channel} #{self}```
 
+def Image.displayP name:
+    b = interp
+    self.write name b
+
+def extractBackground images:
+    ```flattenCtx $ liftf1 (Pure . (Alg.extractBackground ("r", "g", "b"))) #{images}```
+
+    
 ## Channel ####################################
 
 
@@ -238,6 +250,32 @@ def Channel.map callback:
 
 # def Channel.erode:
 #    ```liftf1 erodeChannel #{self}```
+
+## Transformed ################################
+
+
+def Image.transform:
+    ```liftf1 Image.transform #{self}```
+
+def Transformed.rasterize:
+    ```liftf1 Image.rasterize #{self}```
+
+def Transformed.translate x y:
+    ```liftf3 Image.translate #{x} #{y} #{self}```
+
+def Transformed.rotate angle:
+    ```liftf2 Image.rotate #{angle} #{self}```
+
+def Transformed.rotateAt angle x y:
+    ```liftf4 Image.rotateAt #{angle} #{x} #{y} #{self}```
+
+def Transformed.scale x y:
+    ```liftf3 Image.scale #{self} #{x} #{y}```
+
+def Transformed.scaleAt sx sy x y:
+    ```liftf5 Image.scaleAt #{self} #{sx} #{sy} #{x} #{y}```
+
+###############################################
 
 def constant x:
     ```liftf1 A.constant #{x}```
@@ -267,7 +305,35 @@ class Vector a:
 
     def normalize:
         Vector (x/length) (y/length) (z/length)
-    
+
+
+# def loadImages path:
+#     x
+
+def evalArr v:
+    ```flattenCtx $ (fmap.fmap) (fmap sequence . sequence) #{v}```
+
+# def readImages paths:
+#     ```liftf0 $ sequence . fmap $ map (reprDouble . RGBA.decompose . Image.readImageFromBMP2) $ map (\i -> "../video/frame-" + (show i) + ".bmp") [0..3]```
+#     paths
+
+def xxx i:
+    readImage $ "../video/frame-" + i.str + ".bmp"
+
+def main2:
+    print "start!"
+    backend = cuda
+    outpath = "luna.bmp"
+    imgs = [0..20].each @xxx
+    # # img.write outpath backend
+    # print "a"
+    x = evalArr imgs
+    img = extractBackground x
+    img.write outpath backend
+    # i = loadImages "../video/frame-"
+    # print x
+
+
 def main:
     print $ [3,2,1].min
     v = Vector 1 2 3
@@ -316,7 +382,7 @@ def main:
     
     outpath2 = "luna2.bmp"
     print "=========="
-    img = img.convertRGBtoHSV.convertHSVtoRGB
+    # img = img.convertRGBtoHSV.convertHSVtoRGB
     img.write outpath2 backend
 
 
