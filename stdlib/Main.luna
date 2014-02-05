@@ -258,8 +258,15 @@ def Channel.map callback:
 def Image.transform:
     ```val $ Image.transform #{self}```
 
+def Image.rasterize:
+    self
+
+def Transformed.transform:
+    self
+
 def Transformed.rasterize:
     ```flattenCtx $ liftf1 Mockup.rasterize' #{self}```
+
 
 def Transformed.translate x y:
     ```liftf3 Image.translate #{x} #{y} #{self}```
@@ -285,6 +292,25 @@ def Transformed.convolve kernel:
     ```let { f1 k self = call1 (member (P :: P "convolve") self) k}```
     ```let { f2 self k = (fmap.fmap.fmap) (f1 k) self}```
     ```f2 #{self} #{kernel} ```
+
+def Transformed.displayP name:
+    b = interp
+    self.rasterize.write name b
+
+def Image.translate x y:
+    self.transform.translate x y
+
+def Image.rotate angle:
+    self.transform.rotate angle
+
+def Image.rotateAt angle x y:
+    self.transform.rotateAt angle x y
+
+def Image.scale x y:
+    self.transform.scale x y
+
+def Image.scaleAt sx sy x y:
+    self.transform.scaleAt sx sy x y
 
 ###############################################
 
