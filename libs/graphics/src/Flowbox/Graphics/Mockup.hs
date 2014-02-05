@@ -14,26 +14,10 @@
 module Flowbox.Graphics.Mockup (
     module Flowbox.Graphics.Mockup,
     Image,
-    Image.reprDouble,
-    Image.reprWord8,
     Channel,
     Image.Transformed,
-
-    Alg.invert,
-    Alg.invert',
-    Alg.sign,
-    Alg.parametrize,
-    Alg.bias,
-    Alg.gain,
-    Alg.gamma,
-    Alg.compress,
-    Alg.expand,
-    Alg.remap,
-
-    Alg.erodeChannel,
-    toDouble,
     Exp,
-
+    toDouble
 ) where
 
 import           Data.Array.Accelerate (Exp)
