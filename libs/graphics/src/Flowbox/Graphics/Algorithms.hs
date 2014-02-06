@@ -148,10 +148,15 @@ remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
 lutExp :: (A.Elt a, A.IsFloating a) => [(Exp a, Exp a)] -> Exp a -> Exp a
 lutExp [] x = x
 lutExp ((_,x):[]) _ = x
-lutExp ((a,b):c@((p,q):_)) x = (x A.<* a) A.? ( b
-                                           , (a A.<=* x A.&&* x A.<* p) A.?
-                                             ( b + (x-a) / (p-a) * ((q-p))
-                                             , lutExp c x ))
+--lutExp ((a,b):c@((p,q):_)) x = (x A.<* a) A.? ( b
+--                                           , (a A.<=* x A.&&* x A.<* p) A.?
+--                                             ( b + (x-a) / (p-a) * ((q-b))
+--                                             , lutExp c x ))
+lutExp ((a,b):c@((p,q):_)) x = A.cond (x A.<* a)
+                                  b $
+                                  A.cond (a A.<=* x A.&&* x A.<* p)
+                                      (b + (x-a) / (p-a) * (q-p)) $
+                                      lutExp c x
 
 lutChannel :: (A.Elt a, A.IsFloating a) => [(Exp a, Exp a)] -> Channel a -> Channel a
 lutChannel table channel = Channel.map (lutExp table) channel
