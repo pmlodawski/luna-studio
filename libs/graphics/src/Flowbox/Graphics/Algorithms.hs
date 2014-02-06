@@ -163,6 +163,7 @@ lutImage names table = applyToImage (lutChannel table) names
 binarizeChannel :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> Channel a -> Channel a
 binarizeChannel f channel = Channel.map (\x -> f x A.? (1 , 0)) channel
 
+-- FIXME: probably makes no sense, binarization should be done taking into account all 3 channel values, or work on a gray-scale image
 binarizeImage :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> String3 -> Image a -> Either Image.Error (Image a)
 binarizeImage f = applyToImage (binarizeChannel f)
 

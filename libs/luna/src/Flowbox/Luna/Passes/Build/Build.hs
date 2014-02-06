@@ -147,6 +147,7 @@ run :: BuildConfig -> ASTModule.Module -> ASTInfo -> Bool -> Pass.Result ()
 run buildConfig ast astInfo implicitSelf = runEitherT $ do
     let diag    = BuildConfig.diag buildConfig
         allLibs = "base"
+                : "containers"
                 -- : "flowboxM-core"
                 : "flowbox-graphics"
                 : "luna-target-hs"

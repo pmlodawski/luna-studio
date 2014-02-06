@@ -11,6 +11,8 @@
 
 import ```           Control.Applicative                          ```
 import ``` qualified Data.Array.Accelerate             as A       ```
+import ```           Data.Map.Lazy                     (Map)      ```
+import ``` qualified Data.Map.Lazy                     as Map     ```
 import ``` qualified Flowbox.Graphics.Algorithms       as Alg     ```
 import ``` qualified Flowbox.Graphics.Mockup           as Mockup  ```
 import ``` qualified Flowbox.Graphics.Raster.Channel   as Channel ```
@@ -59,6 +61,15 @@ def List.min:
 def List.sum:
     self.foldr ((x,y):x+y) 0
 
+###### Map ####################################
+
+def Map.each f:
+    ```let {mymap = liftf2 Map.map}```
+    ```mymap (val $ call #{f}) #{self}```
+
+def Map.eachWithKey f:
+    ```let {mymapK = liftf2 Map.mapWithKey}```
+    ```mymapK (val $ call1 #{f}) #{self}```
 
 ###### Bool ####################################
 
@@ -107,7 +118,7 @@ def Double.- a:
 
 def Double.* a:
     ```liftf2 (*) #{self} #{a}```
-    
+
 def Double./ a:
     ```liftf2 (/) #{self} #{a}```
 
@@ -215,6 +226,39 @@ def Image.reprDouble:
 def Image.reprWord8:
     ```liftf1 Image.reprWord8 #{self}```
 
+def Image.getChannels:
+    ```liftf1 getChannels #{self}```
+
+def Image.setChannels channels:
+    ```liftf1 setChannels #{channels}```
+
+def Image.each f:
+    self.setChannels (self.getChannels.eachWithKey f)
+
+# def Image.erode channelNames:
+#     self.each (chanName, channel):
+#         if chanName in channelNames
+#             then channel.erode
+#             else channel
+
+# def Image.dilate channelNames:
+#     self.each (chanName, channel):
+#         if chanName in channelNames
+#             then channel.dilate
+#             else channel
+
+# def Image.open channelNames:
+#     (self.erode channelNames).dilate channelNames
+#     self.each chan:
+#         if chan.name in names then chan.erode
+#                               else chan
+
+    # self.channels.each
+
+# def Image.close channelNames:
+#     (self.dilate channelNames).erode channelNames
+
+
 def Image.adjustCB contrast brightness:
     ```flattenCtx $ liftf3 Mockup.adjustCB #{contrast} #{brightness} #{self}```
 
@@ -240,9 +284,11 @@ def Image.displayP name:
 def extractBackground images:
     ```flattenCtx $ liftf1 (Pure . (Alg.extractBackground ("r", "g", "b"))) #{images}```
 
-    
+
 ## Channel ####################################
 
+def Channel.erode:
+    ```liftf1 Alg.erodeChannel #{self}```
 
 # # FIXME [wd] zrób to
 def Channel.map callback:
@@ -401,11 +447,12 @@ def main:
     if isError img:
         print "oh no!"
         Sys.exitFailure
-    
+
     print path
     print "=========="
     chR = img.get "r"
     chR = chR.map (x : x * x)
+    # ch0 = chR.map (x : x - x)
     img = img.put "r" chR
     img.write outpath backend
     print "=========="
@@ -423,27 +470,27 @@ def main:
     t = t.rotate 0.5
     t = t.adjustCB c b
     t = t.convolve k
-    img = t.rasterize    
+    img = t.rasterize
     outpath2 = "luna2.bmp"
     print "=========="
 
     img.write outpath2 backend
 
 
-    
+
     # # img = img.convolve k
 
-    
+
     # chG = img.getChannel "g"
     # chB = img.getChannel "b"
 
     # # chR
-    
+
     # # a = [1,2,3].each x : x+1
     # # console.print a
     # # chB = chB.map (x : Main.constant 0.0)
 
-    
+
     # img = img.putChannel "g" chG.erode()
     # img = img.putChannel "b" chB.erode()
 
