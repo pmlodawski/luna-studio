@@ -94,3 +94,8 @@ getChannels img = fmap val (view Image.channels img)
 
 setChannels :: Map.Map String (Pure(Safe(Channel a))) -> Image a
 setChannels channels = Image $ fmap (fromSafe.fromPure) channels
+
+lutChannel :: (A.Elt a, A.IsFloating a) => Channel a -> [Pure(Safe (Pure(Safe(a)), Pure(Safe(a))) )] -> Channel a
+lutChannel channel arr = Alg.lutChannel (fmap (extractTuple.fromSafe.fromPure) arr) channel
+    where extractTuple (a,b) = (A.constant $ (fromSafe.fromPure) a, A.constant $ (fromSafe.fromPure) b)
+
