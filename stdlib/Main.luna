@@ -282,14 +282,24 @@ def Image.displayP name:
 def extractBackground images:
     ```flattenCtx $ liftf1 (Pure . (Alg.extractBackground ("r", "g", "b"))) #{images}```
 
+def Image.premultiply:
+    ```liftf1 Alg.premultiply #{self}```
+
+def Image.unpremultiply:
+    ```liftf1 Alg.unpremultiply #{self}```
+
 
 ## Channel ####################################
 
 def Channel.map callback:
     ```liftf2 Channel.map (val $ (\x -> (fromSafe.fromPure) (call1 #{callback} (val x)))) #{self}```
 
+def Channel.clip:
+    ```liftf1 Alg.clipValues #{self}```
+
 def Channel.lut arr:
-    ```liftf2 Alg.lutChannel #{arr} #{self}```
+    # ```liftf2 Alg.lutChannel (fmap (\(a,b) -> ((fromSafe.fromPure) a, (fromSafe.fromPure) b)) #{arr}) #{self}```
+    ```liftf2 Mockup.lutChannel #{self} #{arr}```
 
 def Channel.erode:
     ```liftf1 Alg.erodeChannel #{self}```
@@ -332,6 +342,21 @@ def Transformed.adjustCB contrast brightness:
     ```let { f1 c b self = call2 (member (P :: P "adjustCB") self) c b}```
     ```let { f2 self c b = (fmap.fmap.fmap) (f1 c b) self}```
     ```f2 #{self} #{contrast} #{brightness} ```
+
+# def Transformed.erode: # channelNames:
+#     ```let { f1 c b self = call2 (member (P :: P "adjustCB") self) c b}```
+#     ```let { f2 self c b = (fmap.fmap.fmap) (f1 c b) self}```
+#     ```f2 #{self} #{contrast} #{brightness} ```
+#     self.each channel : channel.erode
+
+# def Transformed.dilate: # channelNames:
+#     self.each channel : channel.dilate
+
+# def Transformed.open: # channelNames:
+#     self.erode.dilate
+
+# def Transformed.close: # channelNames:
+#     self.dilate.erode
 
 def Transformed.convolve kernel:
     ```let { f1 k self = call1 (member (P :: P "convolve") self) k}```
@@ -458,7 +483,12 @@ def main:
     # chBE = chB.erode
     # ch0 = chR.map (x : x - x)
     # img = img.put "r" chR
-    img = img.close
+    # img = img.close
+    # lut = [{0.0, 0.0}, {0.5, 1.0}, {1.0, 0.0}]
+    # img = img.each channel : channel.lut Main.lut
+    img = img.each channel : channel.lut [{0.0, 0.0}, {0.5, 1.0}, {1.0, 0.0}]
+    img = img.each channel : channel.clip
+
     # img = img.put "r" chRE
     # img = img.put "g" chGE
     # img = img.put "b" chBE
