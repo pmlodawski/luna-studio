@@ -193,6 +193,35 @@ medianImage = applyToImage medianChannel
 
 
 
+premultiply :: (A.Elt a, A.IsFloating a) => Image a -> Either Image.Error (Image a)
+premultiply img = do
+    channelR <- Image.lookup "r" img
+    channelG <- Image.lookup "g" img
+    channelB <- Image.lookup "b" img
+    channelA <- Image.lookup "a" img
+    let outimg = Image.insert "r" (premultiplyChannel channelR channelA)
+               $ Image.insert "g" (premultiplyChannel channelG channelA)
+               $ Image.insert "b" (premultiplyChannel channelB channelA)
+               $ img
+        premultiplyChannel = Channel.zipWith (\x a -> x * a)
+    return outimg
+
+
+unpremultiply :: (A.Elt a, A.IsFloating a) => Image a -> Either Image.Error (Image a)
+unpremultiply img = do
+    channelR <- Image.lookup "r" img
+    channelG <- Image.lookup "g" img
+    channelB <- Image.lookup "b" img
+    channelA <- Image.lookup "a" img
+    let outimg = Image.insert "r" (unpremultiplyChannel channelR channelA)
+               $ Image.insert "r" (unpremultiplyChannel channelG channelA)
+               $ Image.insert "r" (unpremultiplyChannel channelB channelA)
+               $ img
+        unpremultiplyChannel = Channel.zipWith (\x a -> x / a)
+    return outimg
+
+
+
 -- convolution
 
 convolve3x3 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil3x3 a -> A.Exp a
@@ -344,26 +373,49 @@ blendC :: (A.Elt a, A.IsFloating a) => Channel a -> Channel a -> (Exp a -> Exp a
 blendC channelA channelB blender = Channel.zipWith blender channelA channelB
 
 
-blendRGB :: (A.Elt a, A.IsFloating a) => Image a -> Image a -> (Exp a -> Exp a -> Exp a) -> Either Image.Error (Image a)
-blendRGB img1 img2 blender = do
+--blendRGB :: (A.Elt a, A.IsFloating a) => Image a -> Image a -> (Exp a -> Exp a -> Exp a) -> Either Image.Error (Image a)
+--blendRGB img1 img2 blender = do
+--    r1 <- Image.lookup "r" img1
+--    g1 <- Image.lookup "g" img1
+--    b1 <- Image.lookup "b" img1
+--    a1 <- Image.lookup "a" img1
+--    r2 <- Image.lookup "r" img2
+--    g2 <- Image.lookup "g" img2
+--    b2 <- Image.lookup "b" img2
+--    a2 <- Image.lookup "a" img2
+--    let outimg = Image.insert "r" r'
+--               $ Image.insert "g" g'
+--               $ Image.insert "b" b'
+--               $ Image.insert "a" a'
+--               $ mempty
+--        r'     = blendC r1 r2 blender
+--        g'     = blendC g1 g2 blender
+--        b'     = blendC b1 b2 blender
+--        a'     = blendC a1 a2 blender
+--    return outimg
+
+blendAlpha :: (A.Elt a, A.IsFloating a) => Image a -> Image a -> Either Image.Error (Image a)
+blendAlpha img1 img2 = do
+    a2 <- Image.lookup "a" img2
+    outimg <- blendAlpha' img1 img2 a2
+    return outimg
+
+blendAlpha' :: (A.Elt a, A.IsFloating a) => Image a -> Image a -> Channel a -> Either Image.Error (Image a)
+blendAlpha' img1 img2 a = do
     r1 <- Image.lookup "r" img1
     g1 <- Image.lookup "g" img1
     b1 <- Image.lookup "b" img1
-    a1 <- Image.lookup "a" img1
     r2 <- Image.lookup "r" img2
     g2 <- Image.lookup "g" img2
     b2 <- Image.lookup "b" img2
-    a2 <- Image.lookup "a" img2
-    let outimg = Image.insert "r" r'
-               $ Image.insert "g" g'
-               $ Image.insert "b" b'
-               $ Image.insert "a" a'
-               $ mempty
-        r'     = blendC r1 r2 blender
-        g'     = blendC g1 g2 blender
-        b'     = blendC b1 b2 blender
-        a'     = blendC a1 a2 blender
+    let outimg = Image.insert "r" (blend r1 r2)
+               $ Image.insert "g" (blend g1 g2)
+               $ Image.insert "b" (blend b1 b2)
+               $ img1
+        blend = Channel.zipWith3 blenderAlpha a
     return outimg
+
+--blendAlphaF =
 
 -- #define ChannelBlend_Normal(A,B)     ((uint8)(A))
 blenderNormal :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a
