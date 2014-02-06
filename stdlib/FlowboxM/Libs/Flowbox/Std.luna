@@ -234,7 +234,7 @@ def Image.put name channel:
     ```liftf3 Image.insert #{name} #{channel} #{self}```
 
 def Image.displayP name:
-    b = interp
+    b = cuda
     self.write name b
 
 def extractBackground images:
@@ -294,7 +294,7 @@ def Transformed.convolve kernel:
     ```f2 #{self} #{kernel} ```
 
 def Transformed.displayP name:
-    b = interp
+    b = cuda
     self.rasterize.write name b
 
 def Image.translate x y:
@@ -356,98 +356,3 @@ def evalArr v:
 # def readImages paths:
 #     ```liftf0 $ sequence . fmap $ map (reprDouble . RGBA.decompose . Image.readImageFromBMP2) $ map (\i -> "../video/frame-" + (show i) + ".bmp") [0..3]```
 #     paths
-
-def xxx i:
-    readImage $ "../video/frame-" + i.str + ".bmp"
-
-def main2:
-    print "start!"
-    backend = cuda
-    outpath = "luna.bmp"
-    imgs = [0..20].each @xxx
-    # # img.write outpath backend
-    # print "a"
-    x = evalArr imgs
-    img = extractBackground x
-    img.write outpath backend
-    # i = loadImages "../video/frame-"
-    # print x
-
-
-def main:
-    print $ [3,2,1].min
-    v = Vector 1 2 3
-    print v
-    print (v + v)
-    print v.length
-    print v.normalize
-    print $ v.normalize + v.normalize
-    backend = interp
-    # v2 = Vector 0.5 0.5 0.5
-
-    # print ((v2) + (v2))
-    # c.print (v+v)
-
-    # a = [1..10].each x:
-    #     Console().print x
-
-    # c.print $ a.at 5
-    # c.print $ self.testm 15
-
-    path = "lena.bmp"
-    outpath = "luna.bmp"
-    img = readImage path
-
-    if isError img:
-        print "oh no!"
-        Sys.exitFailure
-    
-    print path
-    print "=========="
-    chR = img.get "r"
-    chR = chR.map (x : x * x)
-    img = img.put "r" chR
-    img.write outpath backend
-    print "=========="
-    # print img
-
-    # print path
-    # img = readImage path
-    # # c.print img
-    c = 1.5
-    b = 0.2
-    k = 0.1
-    # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
-
-    t = img.transform
-    t = t.rotate 0.5
-    t = t.adjustCB c b
-    t = t.convolve k
-    img = t.rasterize    
-    outpath2 = "luna2.bmp"
-    print "=========="
-
-    img.write outpath2 backend
-
-
-    
-    # # img = img.convolve k
-
-    
-    # chG = img.getChannel "g"
-    # chB = img.getChannel "b"
-
-    # # chR
-    
-    # # a = [1,2,3].each x : x+1
-    # # console.print a
-    # # chB = chB.map (x : Main.constant 0.0)
-
-    
-    # img = img.putChannel "g" chG.erode()
-    # img = img.putChannel "b" chB.erode()
-
-    # img.writeImage outpath
-    # # # c.print img
-
-
