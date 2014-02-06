@@ -278,7 +278,7 @@ def Image.put name channel:
     ```liftf3 Image.insert #{name} #{channel} #{self}```
 
 def Image.displayP name:
-    b = interp
+    b = cuda
     self.write name b
 
 def extractBackground images:
@@ -340,7 +340,7 @@ def Transformed.convolve kernel:
     ```f2 #{self} #{kernel} ```
 
 def Transformed.displayP name:
-    b = interp
+    b = cuda
     self.rasterize.write name b
 
 def Image.translate x y:
@@ -428,7 +428,7 @@ def main:
     print v.length
     print v.normalize
     print $ v.normalize + v.normalize
-    backend = interp
+    backend = cuda
     # v2 = Vector 0.5 0.5 0.5
 
     # print ((v2) + (v2))
