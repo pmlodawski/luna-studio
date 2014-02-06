@@ -59,12 +59,21 @@ applyToImage f (nameA, nameB, nameC) img = do
 
 
 -- works assuming we have a sorted array
-median' :: Fractional a => [a] -> a
-median' xs | odd  len = xs !! mid
+median :: Fractional a => [a] -> a
+median xs | odd  len = xs !! mid
            | even len = meanMedian
                  where  len = length xs
                         mid = len `div` 2
                         meanMedian = (xs !! mid + xs !! (mid+1)) / 2
+
+median' :: (A.Elt a, A.IsFloating a) => A.Acc (A.Vector a) -> Exp a
+median' arr = A.cond (A.odd len)
+    (arr A.!! mid)
+    (meanMedian)
+    where len = A.size arr
+          mid = A.floor $ (A.fromIntegral len :: Exp Double) / 2
+          meanMedian = ((arr A.!! mid) + (arr A.!! (mid+1))) / 2
+
 
 
 bsort :: (A.Elt a, A.IsScalar a) => [Exp a] -> [Exp a]
@@ -77,8 +86,26 @@ bsortStep arr n = bsortStep (bsortPair arr) (n-1)
 bsortPair :: (A.Elt a, A.IsScalar a) => [Exp a] -> [Exp a]
 bsortPair ([])     = []
 bsortPair (a:[])   = [a]
-bsortPair (a:b:[]) = [min a b, max a b]
+--bsortPair (a:b:[]) = [min a b, max a b]
 bsortPair (a:b:t)  = [min a b] ++ (bsortPair $ [max a b] ++ t)
+
+bsort' :: (A.Elt a, A.IsScalar a) => A.Acc (A.Vector a) -> A.Acc (A.Vector a)
+bsort' arr = bsortStep' arr $ A.size arr
+
+bsortStep' :: (A.Elt a, A.IsScalar a) => A.Acc (A.Vector a) -> Exp Int -> A.Acc (A.Vector a)
+bsortStep' arr n = A.acond (n A.==* 0)
+    arr $
+    bsortStep' (bsortPair' arr) (n-1)
+
+bsortPair' :: (A.Elt a, A.IsScalar a) => A.Acc (A.Vector a) -> A.Acc (A.Vector a)
+bsortPair' arr =
+    A.acond (A.null arr)
+        (A.take 0 arr) $
+        A.acond ((A.size arr) A.==* 1)
+          (A.take 1 arr) $
+          ((A.flatten . A.minimum) head) A.++ (bsortPair' $ ((A.flatten . A.maximum) head) A.++ tail)
+          where head = A.take 2 arr
+                tail = A.drop 2 arr
 
 
 
@@ -558,9 +585,16 @@ extractBackground (nameA, nameB, nameC) images = do
       channelC' = Channel.generate channelShape (getMostFreq channelsC)
       getMostFreq channels ix = let
                                 (A.Z A.:. i A.:. j) = A.unlift ix
+                                --empty :: A.Acc (A.Array A.DIM1 a)
+                                empty = A.use $ A.fromList (A.Z A.:. 0) []
+                                --empty = (A.use $ A.fromList (A.index1 0) [])
+                                --folder :: Exp a -> A.Acc (A.Vector a) -> A.Acc (A.Vector a)
+                                folder x acc = acc A.++ (A.flatten $ A.unit x)
+                                result = median' $ bsort' $ foldr folder empty $ fmap ((flip (Channel.at)) (A.index2 i j)) channels
                               in
                                 --findMostFrequent $ (generateHistList []) $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
-                                median' $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
+                                --median $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
+                                result
   return outimg
 
 
