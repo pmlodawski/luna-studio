@@ -608,16 +608,12 @@ extractBackground (nameA, nameB, nameC) images = do
       channelC' = Channel.generate channelShape (getMostFreq channelsC)
       getMostFreq channels ix = let
                                 (A.Z A.:. i A.:. j) = A.unlift ix
-                                --empty :: A.Acc (A.Array A.DIM1 a)
-                                empty = A.use $ A.fromList (A.Z A.:. 0) []
-                                --empty = (A.use $ A.fromList (A.index1 0) [])
-                                --folder :: Exp a -> A.Acc (A.Vector a) -> A.Acc (A.Vector a)
-                                folder x acc = acc A.++ (A.flatten $ A.unit x)
-                                result = median' $ bsort' $ foldr folder empty $ fmap ((flip (Channel.at)) (A.index2 i j)) channels
+                                --empty = A.use $ A.fromList (A.Z A.:. 0) []
+                                --folder x acc = acc A.++ (A.flatten $ A.unit x)
+                                --result = median' $ bsort' $ foldr folder empty $ fmap ((flip (Channel.at)) (A.index2 i j)) channels
                               in
                                 --findMostFrequent $ (generateHistList []) $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
-                                --median $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
-                                result
+                                median $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
   return outimg
 
 
