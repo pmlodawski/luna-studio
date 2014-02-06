@@ -32,19 +32,19 @@ import           Flowbox.Prelude                   as P
 
 
 --imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
-imgtest img imgFilter = do
+imgtest img = do --imgFilter = do
     let getDouble image = Image.reprDouble <$> RGBA.decompose image
     --rgba  <- getDouble img
     rgba  <- sequence $ fmap getDouble img
     --rgbaBack <- getDouble imgBack
-    rgbaFilter <- getDouble imgFilter
+    --rgbaFilter <- getDouble imgFilter
     --lrgba <- adjustCB 2.2 0.2 "r" "g" "b" rgba
     --let blur3x3 = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
         --blur5x5 = [0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04,0.04]
         --sharpen3x3 = [-1.0,-1.0,-1.0,-1.0,9.0,-1.0,-1.0,-1.0,-1.0]
     --lrgba <- convolve "r" convolve5x5 sharpen3x3 rgba
     --imgHSV <- G.convertRGBtoHSV rgba
-    --h <- Image.lookup "h" hsv
+    --h <- Image.lookup "h" hsvframeFile
     --s <- Image.lookup "s" hsv
     --v <- Image.lookup "v" hsv
     --let hsvl = Image.insert "h" (Channel.map (mod1 . (+0.5)) h) $ hsv
@@ -55,7 +55,7 @@ imgtest img imgFilter = do
     --        >>= Image.cpChannel "luminance" "r"
     --        >>= Image.cpChannel "luminance" "g"
     --        >>= Image.cpChannel "luminance" "b"
-    exampleChannel <- Image.lookup "r" rgba
+    --exampleChannel <- Image.lookup "r" rgba
     let f = \_ -> 0
     --    fBW = \x -> x A.>=* 0.5
         rgb = ("r", "g", "b")
@@ -112,7 +112,7 @@ main
                   >> Exit.exitSuccess
 
         let backend     = Label.get Cfg.configBackend conf
-            --frameNames  = fmap (\x -> (T.printf "frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
+            frameNames  = fmap (\x -> (T.printf "frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
             getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
         -- Read in the image file
 
@@ -121,7 +121,7 @@ main
         img2 <- getImage fileIn
         --imgBack <- getImage "background.bmp"
         --imgFrame <- getImage "frame-249.bmp"
-        --frameFiles <- sequence $ fmap getImage frameNames
+        frameFiles <- sequence $ fmap getImage frameNames
 
         imgFilter <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP "filter.bmp"
         --let img3 = imgtest img2 -- imgBack
