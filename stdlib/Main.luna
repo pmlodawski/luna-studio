@@ -257,6 +257,9 @@ def Image.close: # channelNames:
     self.dilate.erode
     # (self.dilate channelNames).erode channelNames
 
+def Image.median:
+    self.each channel : channel.median
+
 def Image.adjustCB contrast brightness:
     ```flattenCtx $ liftf3 Mockup.adjustCB #{contrast} #{brightness} #{self}```
 
@@ -306,6 +309,9 @@ def Channel.erode:
 
 def Channel.dilate:
     ```liftf1 Alg.dilateChannel #{self}```
+
+def Channel.median:
+    ```liftf1 Alg.medianChannel #{self}```
 
 ## Transformed ################################
 
@@ -465,6 +471,8 @@ def main:
     # c.print $ self.testm 15
 
     path = "lena.bmp"
+    path = "dragon_summon.bmp"
+    path = "a_big.bmp"
     outpath = "luna.bmp"
     img = readImage path
 
@@ -486,8 +494,9 @@ def main:
     # img = img.close
     # lut = [{0.0, 0.0}, {0.5, 1.0}, {1.0, 0.0}]
     # img = img.each channel : channel.lut Main.lut
-    img = img.each channel : channel.lut [{0.0, 0.0}, {0.5, 1.0}, {1.0, 0.0}]
-    img = img.each channel : channel.clip
+    # img = img.each channel : channel.lut [{0.0, 0.0}, {0.5, 1.0}, {1.0, 0.0}]
+    # img = img.each channel : channel.clip
+    img = img.median
 
     # img = img.put "r" chRE
     # img = img.put "g" chGE
