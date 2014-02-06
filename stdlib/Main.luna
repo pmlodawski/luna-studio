@@ -277,6 +277,7 @@ def Image.put name channel:
 
 def Image.displayP name:
     b = cuda
+    self = self.each channel : channel.clip
     self.write name b
 
 def extractBackground images:
@@ -333,10 +334,10 @@ def Transformed.rotateAt angle x y:
     ```liftf4 Image.rotateAt #{angle} #{x} #{y} #{self}```
 
 def Transformed.scale x y:
-    ```liftf3 Image.scale #{self} #{x} #{y}```
+    ```liftf3 Image.scale #{x} #{y} #{self}```
 
 def Transformed.scaleAt sx sy x y:
-    ```liftf5 Image.scaleAt #{self} #{sx} #{sy} #{x} #{y}```
+    ```liftf5 Image.scaleAt #{sx} #{sy} #{x} #{y} #{self}```
 
 def Transformed.adjustCB contrast brightness:
     ```let { f1 c b self = call2 (member (P :: P "adjustCB") self) c b}```
@@ -365,7 +366,8 @@ def Transformed.convolve kernel:
 
 def Transformed.displayP name:
     b = cuda
-    self.rasterize.write name b
+    self = self.rasterize.each channel : channel.clip
+    self.write name b
 
 def Image.translate x y:
     self.transform.translate x y
