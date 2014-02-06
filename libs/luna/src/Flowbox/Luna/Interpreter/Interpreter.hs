@@ -17,10 +17,15 @@ import           GHC                     (Ghc, GhcMonad)
 import qualified GHC                     as GHC
 import           MonadUtils              (liftIO)
 
-import           Flowbox.Config.Config (Config)
-import qualified Flowbox.Config.Config as Config
-import           Flowbox.Prelude
+import           Flowbox.Config.Config     (Config)
+import qualified Flowbox.Config.Config     as Config
+import           Flowbox.Prelude           hiding (error)
+import           Flowbox.System.Log.Logger
 
+
+
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Luna.Passes.Build.Build"
 
 
 initialize :: GhcMonad m => Config -> m ()
@@ -34,7 +39,6 @@ initialize config = do
                 , GHC.ghcLink   = GHC.LinkInMemory
                 --, GHC.verbosity = 4
                 }
-    liftIO $ print $ GHC.rtsOpts flags 
     return ()
 
 
@@ -67,9 +71,11 @@ compileAndRun imports declarations stmt = do
     _ <- GHC.runDecls declarations
     rr <- GHC.runStmt stmt GHC.RunToCompletion
     case rr of
-            GHC.RunOk _        -> liftIO $ putStrLn "runOk"
-            GHC.RunException e -> do liftIO $ putStrLn $ "Exception: " ++ (show e)
-            GHC.RunBreak {}    -> liftIO $ putStrLn "runBreak"
+            GHC.RunOk _        -> liftIO $ logger info "runOk"
+            GHC.RunException e -> do let errStr = "Exception: " ++ (show e)
+                                     liftIO $ logger error errStr
+                                     fail errStr
+            GHC.RunBreak {}    -> liftIO $ logger info "runBreak"
     return ()
 
 
