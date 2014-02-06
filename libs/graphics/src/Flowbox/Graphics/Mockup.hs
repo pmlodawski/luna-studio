@@ -86,11 +86,11 @@ rasterize' :: (A.Elt a, A.IsFloating a, Functor m, Functor n) =>
 rasterize' (Image.Transformed img t) =
     (fmap.fmap) (\i -> Image $ Map.map (Image.rasterizeChannel t) $ view Image.channels i) img
 
-getChannels :: Image a -> Map.Map String (Channel a)
-getChannels img = view Image.channels img
+getChannels :: Image a -> Map.Map String (Pure(Safe(Channel a)))
+getChannels img = fmap val (view Image.channels img)
 
 --setChannels :: Image a -> Map.Map String (Channel a) -> Image a
 --setChannels img channels = Image $ channels
 
-setChannels :: Map.Map String (Channel a) -> Image a
-setChannels channels = Image $ channels
+setChannels :: Map.Map String (Pure(Safe(Channel a))) -> Image a
+setChannels channels = Image $ fmap (fromSafe.fromPure) channels

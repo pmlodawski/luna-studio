@@ -39,8 +39,7 @@ def List.contains el:
     ```liftf2 (elem) (val #{el}) #{self}```
 
 def List.each callback:
-    ```let {mymap = liftf2 map}```
-    ```mymap (val $ call1 #{callback}) #{self}```
+    ```liftf2 map (val $ call1 #{callback}) #{self}```
 
 def List.foldr f el:
     ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```
@@ -64,12 +63,10 @@ def List.sum:
 ###### Map ####################################
 
 def Map.each f:
-    ```let {mymap = liftf2 Map.map}```
-    ```mymap (val $ call #{f}) #{self}```
+    ```liftf2 Map.map (val $ call1 #{f}) #{self}```
 
 def Map.eachWithKey f:
-    ```let {mymapK = liftf2 Map.mapWithKey}```
-    ```mymapK (val $ call1 #{f}) #{self}```
+    ```liftf2 Map.mapWithKey (val $ call2 #{f}) #{self}```
 
 ###### Bool ####################################
 
@@ -233,31 +230,32 @@ def Image.setChannels channels:
     ```liftf1 setChannels #{channels}```
 
 def Image.each f:
+    self.setChannels (self.getChannels.each f)
+
+def Image.eachWithKey f:
     self.setChannels (self.getChannels.eachWithKey f)
 
-# def Image.erode channelNames:
-#     self.each (chanName, channel):
-#         if chanName in channelNames
-#             then channel.erode
-#             else channel
+def Image.erode: # channelNames:
+    self.each channel : channel.erode
+    # self.each (chanName, channel):
+        # if chanName in channelNames
+            # then channel.erode
+            # else channel
 
-# def Image.dilate channelNames:
-#     self.each (chanName, channel):
-#         if chanName in channelNames
-#             then channel.dilate
-#             else channel
+def Image.dilate: # channelNames:
+    self.each channel : channel.dilate
+    # self.each (chanName, channel):
+    #     if chanName in channelNames
+    #         then channel.dilate
+    #         else channel
 
-# def Image.open channelNames:
-#     (self.erode channelNames).dilate channelNames
-#     self.each chan:
-#         if chan.name in names then chan.erode
-#                               else chan
+def Image.open: # channelNames:
+    self.erode.dilate
+    # (self.erode channelNames).dilate channelNames
 
-    # self.channels.each
-
-# def Image.close channelNames:
-#     (self.dilate channelNames).erode channelNames
-
+def Image.close: # channelNames:
+    self.dilate.erode
+    # (self.dilate channelNames).erode channelNames
 
 def Image.adjustCB contrast brightness:
     ```flattenCtx $ liftf3 Mockup.adjustCB #{contrast} #{brightness} #{self}```
@@ -287,16 +285,17 @@ def extractBackground images:
 
 ## Channel ####################################
 
+def Channel.map callback:
+    ```liftf2 Channel.map (val $ (\x -> (fromSafe.fromPure) (call1 #{callback} (val x)))) #{self}```
+
+def Channel.lut arr:
+    ```liftf2 Alg.lutChannel #{arr} #{self}```
+
 def Channel.erode:
     ```liftf1 Alg.erodeChannel #{self}```
 
-# # FIXME [wd] zrób to
-def Channel.map callback:
-    ```liftf2 Channel.map (val $ (\x -> (fromSafe.fromPure) (call1 #{callback} (val x)))) #{self}```
-#     # ```liftf2 channelMap (val $ call1 #{callback}) #{self}```
-
-# def Channel.erode:
-#    ```liftf1 erodeChannel #{self}```
+def Channel.dilate:
+    ```liftf1 Alg.dilateChannel #{self}```
 
 ## Transformed ################################
 
@@ -451,9 +450,18 @@ def main:
     print path
     print "=========="
     chR = img.get "r"
-    chR = chR.map (x : x * x)
+    chG = img.get "g"
+    chB = img.get "b"
+    # chR = chR.map (x : x * x)
+    # chRE = chR.erode
+    # chGE = chG.erode
+    # chBE = chB.erode
     # ch0 = chR.map (x : x - x)
-    img = img.put "r" chR
+    # img = img.put "r" chR
+    img = img.close
+    # img = img.put "r" chRE
+    # img = img.put "g" chGE
+    # img = img.put "b" chBE
     img.write outpath backend
     print "=========="
     # print img
@@ -466,15 +474,15 @@ def main:
     k = 0.1
     # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
 
-    t = img.transform
-    t = t.rotate 0.5
-    t = t.adjustCB c b
-    t = t.convolve k
-    img = t.rasterize
-    outpath2 = "luna2.bmp"
-    print "=========="
+    # t = img.transform
+    # t = t.rotate 0.5
+    # t = t.adjustCB c b
+    # t = t.convolve k
+    # img = t.rasterize
+    # outpath2 = "luna2.bmp"
+    # print "=========="
 
-    img.write outpath2 backend
+    # img.write outpath2 backend
 
 
 
