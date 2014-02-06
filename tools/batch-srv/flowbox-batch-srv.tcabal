@@ -17,7 +17,7 @@ Executable batch-srv
     Other-Modules:  Paths_flowbox_batch_srv
     Main-Is:        Main.hs
 
-    GHC-Options:    -Wall -O2
+    GHC-Options:    -Wall -O2 -threaded
 
     Extensions:     NoImplicitPrelude
 

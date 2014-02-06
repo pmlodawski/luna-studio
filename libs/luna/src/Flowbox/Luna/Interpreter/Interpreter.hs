@@ -34,14 +34,14 @@ initialize config = do
                 , GHC.ghcLink   = GHC.LinkInMemory
                 --, GHC.verbosity = 4
                 }
+    liftIO $ print $ GHC.rtsOpts flags 
     return ()
 
 
 setHardodedExtensions :: GhcMonad m => m ()
 setHardodedExtensions = do
     flags <- GHC.getSessionDynFlags
-    let f = foldl F.xopt_set flags [ F.Opt_TemplateHaskell,
-                                     F.Opt_DataKinds,
+    let f = foldl F.xopt_set flags [ F.Opt_DataKinds,
                                      F.Opt_DeriveDataTypeable,
                                      F.Opt_DeriveGeneric,
                                      F.Opt_FlexibleInstances,
@@ -65,7 +65,11 @@ compileAndRun imports declarations stmt = do
     GHC.load GHC.LoadAllTargets
     setImports imports
     _ <- GHC.runDecls declarations
-    _ <- GHC.runStmt stmt GHC.RunToCompletion
+    rr <- GHC.runStmt stmt GHC.RunToCompletion
+    case rr of
+            GHC.RunOk _        -> liftIO $ putStrLn "runOk"
+            GHC.RunException e -> do liftIO $ putStrLn $ "Exception: " ++ (show e)
+            GHC.RunBreak {}    -> liftIO $ putStrLn "runBreak"
     return ()
 
 

@@ -1,6 +1,6 @@
 ###### Console ################################
 
-def print self msg::String:
+def print self::Std msg::String:
     ```print' #{msg}```
 
 ###### List ###################################
@@ -145,9 +145,9 @@ def isError self a:
     ```isError #{a}```
 
 class Sys:
-    def exitSuccess self:
+    def exitSuccess self::Std:
         ```Exit.exitSuccess *> returnIO (Safe ())```
-    def exitFailure self:
+    def exitFailure self::Std:
         ```Exit.exitFailure *> returnIO (Safe ())```
 
 
