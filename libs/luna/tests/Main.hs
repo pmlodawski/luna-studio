@@ -39,9 +39,11 @@ import qualified Flowbox.Luna.Data.PropertyMap                                  
 import qualified Flowbox.Luna.Passes.Analysis.Alias.Alias                                as Analysis.Alias
 import qualified Flowbox.Luna.Passes.Analysis.FuncPool.FuncPool                          as FuncPool
 import qualified Flowbox.Luna.Passes.Analysis.ID.MaxID                                   as MaxID
+import qualified Flowbox.Luna.Passes.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
 import qualified Flowbox.Luna.Passes.CodeGen.HSC.HSC                                     as HSC
 import qualified Flowbox.Luna.Passes.General.Luna.Luna                                   as Luna
 import qualified Flowbox.Luna.Passes.Source.File.Reader                                  as FileReader
+import qualified Flowbox.Luna.Passes.Transform.AST.DepSort.DepSort                       as Transform.DepSort
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
 import qualified Flowbox.Luna.Passes.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
@@ -108,17 +110,19 @@ example = Source.Source ["Main"] $
                         , "    ```print' #{msg}```"
 
 
-                        , "def Int.+ b:"
-                        , "    ```liftf2 (+) #{self} #{b}```"
+                    
 
-                        , "def fun {a,b}:"
-                        , "    a+b"
+                    , "def main:"
+                    , "    print $ test2 1"
 
                     
-                    , "def main:"
-                    , "    print $ fun {1,2}"
-                    , "    a = {1,2}"
-                    , "    {b,c} = a"
+
+                    , "def test2 a:"
+                    , "    test1 a"
+
+
+                    , "def test1 a:"
+                    , "    {a,a}"
 
                     ]
 
@@ -195,6 +199,20 @@ main_inner = Luna.run $ do
     --logger info "\n>> parentMap"
     --logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
 
+    -----------------------------------------
+    -- !!! CallGraph and DepSort are mockup passes !!!
+    -- They are working right now only with not self typed variables
+    logger info "\n-------- Analysis.CallGraph --------"
+    callGraph <- hoistEither =<< Analysis.CallGraph.run aliasInfo ast
+    logger info $ PP.ppShow callGraph
+
+
+    logger info "\n-------- Transform.DepSort --------"
+    ast <- hoistEither =<< Transform.DepSort.run callGraph aliasInfo ast
+    logger info $ PP.ppShow ast
+    -----------------------------------------
+
+
     -- !!! [WARNING] INVALIDATES aliasInfo !!!
     logger info "\n-------- Desugar.ImplicitScopes --------"
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo aliasInfo ast
@@ -216,6 +234,8 @@ main_inner = Luna.run $ do
     logger info "\n>> invalidMap:"
     logger info $ PP.ppShow (aliasInfo ^. AliasInfo.invalidMap)
 
+
+    
 
 
     --logger info "\n-------- FuncPool --------"

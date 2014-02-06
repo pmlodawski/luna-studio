@@ -40,7 +40,7 @@ data Image a = Image { _channels :: Map String (Channel a)
                      }
              deriving (Show, Eq, Ord)
 
-data Transformed a = Transformed { src :: a
+data Transformed a = Transformed { src   :: a
                                  , trans :: Transformation
                                  }
            deriving (Show)
@@ -130,33 +130,32 @@ rasterizeChannel (Transformation t) ch =
 rasterize :: (A.Elt a, A.IsFloating a) => Transformed (Image a) -> Image a
 rasterize (Transformed img t) = Image $ Map.map (rasterizeChannel t) $ view channels img
 
-
-translate :: Double -> Double -> Transformed (Image a) -> Transformed (Image a)
+translate :: Double -> Double -> Transformed a -> Transformed a
 translate x y (Transformed img transposition) = Transformed img transposition'
     where transposition' = mappend t transposition
           t = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ 1, 0, -x
                                                                     , 0, 1, -y
                                                                     , 0, 0, 1 ])
 
-rotate :: Double -> Transformed (Image a) -> Transformed (Image a)
+rotate :: Double -> Transformed a -> Transformed a
 rotate theta (Transformed img transposition) = Transformed img transposition'
     where transposition' = mappend t transposition
           t = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [   cos (-theta) , sin (-theta), 0
                                                                     , -(sin (-theta)), cos (-theta), 0
                                                                     , 0           , 0        , 1])
 
-rotateAt :: Double -> Double -> Double -> Transformed (Image a) -> Transformed (Image a)
+rotateAt :: Double -> Double -> Double -> Transformed a -> Transformed a
 rotateAt theta x y = (translate (-x) (-y)) . (rotate theta) . (translate x y)
 
 -- ?
-scale :: Double -> Double -> Transformed (Image a) -> Transformed (Image a)
+scale :: Double -> Double -> Transformed a -> Transformed a
 scale x y (Transformed img transposition) = Transformed img transposition'
     where transposition' = mappend t transposition
           t = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ 1/x, 0  , 0
                                                                     , 0  , 1/y, 0
                                                                     , 0  , 0  , 1])
 
-scaleAt :: Double -> Double -> Double -> Double -> Transformed (Image a) -> Transformed (Image a)
+scaleAt :: Double -> Double -> Double -> Double -> Transformed a -> Transformed a
 scaleAt sx sy x y = (translate (-x) (-y)) . (scale sx sy) . (translate x y)
 
 

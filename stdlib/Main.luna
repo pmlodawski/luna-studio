@@ -11,10 +11,11 @@
 
 import ```           Control.Applicative                          ```
 import ``` qualified Data.Array.Accelerate             as A       ```
+import ``` qualified Flowbox.Graphics.Algorithms       as Alg     ```
+import ``` qualified Flowbox.Graphics.Mockup           as Mockup  ```
 import ``` qualified Flowbox.Graphics.Raster.Channel   as Channel ```
 import ``` qualified Flowbox.Graphics.Raster.Image     as Image   ```
 import ``` qualified Flowbox.Graphics.Raster.IO        as Image   ```
-import ``` qualified Flowbox.Graphics.Algorithms       as Alg     ```
 import ``` qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA    ```
 import ``` qualified System.Exit                       as Exit    ```
 
@@ -129,34 +130,34 @@ def Double.str:
     ```liftf1 show #{self}```
 
 def Double.invert:
-    ```liftf1 invert #{self}```
+    ```liftf1 Alg.invert #{self}```
 
 def Double.invert_:
-    ```liftf1 invert' #{self}```
+    ```liftf1 Alg.invert' #{self}```
 
 def Double.sign:
-    ```liftf1 sign #{self}```
+    ```liftf1 Alg.sign #{self}```
 
 def Double.parametrize lo hi:
-    ```liftf3 parametrize #{lo} #{hi} #{self}```
+    ```liftf3 Alg.parametrize #{lo} #{hi} #{self}```
 
 def Double.bias b:
-    ```liftf2 bias #{b} #{self}```
+    ```liftf2 Alg.bias #{b} #{self}```
 
 def Double.gain g:
-    ```liftf2 gain #{g} #{self}```
+    ```liftf2 Alg.gain #{g} #{self}```
 
 def Double.gamma g:
-    ```liftf2 gamma #{g} #{self}```
+    ```liftf2 Alg.gamma #{g} #{self}```
 
 def Double.compress lo hi:
-    ```liftf3 gamma #{lo} #{hi} #{self}```
+    ```liftf3 Alg.compress #{lo} #{hi} #{self}```
 
 def Double.expand lo hi:
-    ```liftf3 expand #{lo} #{hi} #{self}```
+    ```liftf3 Alg.expand #{lo} #{hi} #{self}```
 
 def Double.remap loA hiA loB hiB:
-    ```liftf5 remap #{loA} #{hiA} #{loB} #{hiB} #{self}```
+    ```liftf5 Alg.remap #{loA} #{hiA} #{loB} #{hiB} #{self}```
 
 
 
@@ -172,9 +173,9 @@ def isError a:
 
 class Sys:
     def exitSuccess:
-        ```Exit.exitSuccess *> return (Safe ())```
+        ```Exit.exitSuccess *> returnIO (Safe ())```
     def exitFailure:
-        ```Exit.exitFailure *> return (Safe ())```
+        ```Exit.exitFailure *> returnIO (Safe ())```
 
 
 ## Backend ####################################
@@ -209,16 +210,16 @@ def Image.decompose:
     ```flattenCtx $ liftf1 (Pure . RGBA.decompose) #{self}```
 
 def Image.reprDouble:
-    ```liftf1 reprDouble #{self}```
+    ```liftf1 Image.reprDouble #{self}```
 
 def Image.reprWord8:
-    ```liftf1 reprWord8 #{self}```
+    ```liftf1 Image.reprWord8 #{self}```
 
 def Image.adjustCB contrast brightness:
-    ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{self}```
+    ```flattenCtx $ liftf3 Mockup.adjustCB #{contrast} #{brightness} #{self}```
 
 def Image.convolve kernel:
-    ```flattenCtx $ liftf2 convolve #{kernel} #{self}```
+    ```flattenCtx $ liftf2 Mockup.convolve #{kernel} #{self}```
 
 def Image.convertRGBtoHSV:
     ```flattenCtx $ liftf1 (Pure . Alg.convertRGBtoHSV) #{self}```
@@ -251,6 +252,68 @@ def Channel.map callback:
 # def Channel.erode:
 #    ```liftf1 erodeChannel #{self}```
 
+## Transformed ################################
+
+
+def Image.transform:
+    ```val $ Image.transform #{self}```
+
+def Image.rasterize:
+    self
+
+def Transformed.transform:
+    self
+
+def Transformed.rasterize:
+    ```flattenCtx $ liftf1 Mockup.rasterize' #{self}```
+
+
+def Transformed.translate x y:
+    ```liftf3 Image.translate #{x} #{y} #{self}```
+
+def Transformed.rotate angle:
+    ```liftf2 Image.rotate #{angle} #{self}```
+
+def Transformed.rotateAt angle x y:
+    ```liftf4 Image.rotateAt #{angle} #{x} #{y} #{self}```
+
+def Transformed.scale x y:
+    ```liftf3 Image.scale #{self} #{x} #{y}```
+
+def Transformed.scaleAt sx sy x y:
+    ```liftf5 Image.scaleAt #{self} #{sx} #{sy} #{x} #{y}```
+
+def Transformed.adjustCB contrast brightness:
+    ```let { f1 c b self = call2 (member (P :: P "adjustCB") self) c b}```
+    ```let { f2 self c b = (fmap.fmap.fmap) (f1 c b) self}```
+    ```f2 #{self} #{contrast} #{brightness} ```
+
+def Transformed.convolve kernel:
+    ```let { f1 k self = call1 (member (P :: P "convolve") self) k}```
+    ```let { f2 self k = (fmap.fmap.fmap) (f1 k) self}```
+    ```f2 #{self} #{kernel} ```
+
+def Transformed.displayP name:
+    b = interp
+    self.rasterize.write name b
+
+def Image.translate x y:
+    self.transform.translate x y
+
+def Image.rotate angle:
+    self.transform.rotate angle
+
+def Image.rotateAt angle x y:
+    self.transform.rotateAt angle x y
+
+def Image.scale x y:
+    self.transform.scale x y
+
+def Image.scaleAt sx sy x y:
+    self.transform.scaleAt sx sy x y
+
+###############################################
+
 def constant x:
     ```liftf1 A.constant #{x}```
 
@@ -280,6 +343,9 @@ class Vector a:
     def normalize:
         Vector (x/length) (y/length) (z/length)
 
+
+def fmapme f obj:
+    ``` liftf1 (fmap (call1 #{f})) #{obj}```
 
 # def loadImages path:
 #     x
@@ -316,7 +382,7 @@ def main:
     print v.length
     print v.normalize
     print $ v.normalize + v.normalize
-    backend = cuda
+    backend = interp
     # v2 = Vector 0.5 0.5 0.5
 
     # print ((v2) + (v2))
@@ -351,12 +417,16 @@ def main:
     c = 1.5
     b = 0.2
     k = 0.1
-    # # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
-    img = img.adjustCB c b
-    
+    # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
+
+    t = img.transform
+    t = t.rotate 0.5
+    t = t.adjustCB c b
+    t = t.convolve k
+    img = t.rasterize    
     outpath2 = "luna2.bmp"
     print "=========="
-    # img = img.convertRGBtoHSV.convertHSVtoRGB
+
     img.write outpath2 backend
 
 
