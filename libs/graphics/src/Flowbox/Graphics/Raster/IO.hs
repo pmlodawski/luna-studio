@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns     #-}
 
 module Flowbox.Graphics.Raster.IO where
 
@@ -28,6 +28,15 @@ readImageFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image A.Word32
 readImageFromBMP file = liftIO(fmap mkChan <$> A.readImageFromBMP file) where
     mkChan chdata = Image.insert "rgba" (Channel.Raw chdata) mempty
 
+--readImageSequenceFromBMP :: MonadIO m => [FilePath] -> m (Either BMP.Error (ImageSequence A.Word32))
+--readImageSequenceFromBMP paths = liftIO (fmap mkChanSequence <$> prepareSequence paths) where
+--    mkChanSequence chsdata = Image.insert' "rgba" (Channel.AccSequence chsdata) mempty
+--    prepareSequence (file:[]) = (fmap lift2Dto3D) <$> A.readImageFromBMP file
+--    prepareSequence (file:files) = (liftA2.liftA2) (A.++) (fmap lift2Dto3D <$> A.readImageFromBMP file) (prepareSequence files)
+--    lift2Dto3D rawArray = let
+--                            array = A.use rawArray
+--                            (A.Z A.:. a A.:. b) = A.unlift $ A.shape array
+--                        in A.reshape (Channel.index3 a b 1) array
 
 readImageFromBMP2 :: FilePath -> IO (Either Image.Error (Image A.Word32))
 readImageFromBMP2 file = do

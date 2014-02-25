@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
--- {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeOperators    #-}
 
 module Flowbox.Graphics.Raster.Channel where
 
@@ -14,12 +15,23 @@ import Flowbox.Prelude hiding (use)
 
 
 type RawData a = A.Array A.DIM2 a
+type RawDataSequence a = A.Array A.DIM3 a
 
 type Backend a = A.Acc (RawData a) -> (RawData a)
 
 data Channel a = Raw (RawData a)
                | Acc (A.Acc (RawData a))
+               | RawSequence (RawDataSequence a)
+               | AccSequence (A.Acc (RawDataSequence a))
                deriving (Show)
+
+--data ChannelSequence a = RawSequence (RawDataSequence a)
+--                       | AccSequence (A.Acc (RawDataSequence a))
+--                       deriving (Show)
+
+--data ChannelData a = Channel a
+--                   | ChannelSequence a
+--                   deriving (Show)
 
 -- FIXME[PM] Fix these instances!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1111111111111111
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -41,7 +53,7 @@ shape :: A.Elt a => Channel a -> A.Exp A.DIM2
 shape channel = A.shape (accMatrix channel)
 
 generate :: A.Elt a => A.Exp A.DIM2 -> (A.Exp A.DIM2 -> A.Exp a) -> Channel a
-generate shape f = Acc $ A.generate shape f
+generate sh f = Acc $ A.generate sh f
 
 map :: (A.Elt a, A.Elt b) => (A.Exp a -> A.Exp b) -> Channel a -> Channel b
 map f chan = Acc $ A.map f ch
@@ -49,15 +61,37 @@ map f chan = Acc $ A.map f ch
                Raw m -> A.use m
                Acc m -> m
 
+--map'
+
+
+--(++) :: A.Elt a => Channel a -> Channel a -> Channel a
+--(++) cs1 cs2 = AccSequence $ (accMatrix' cs1) A.++ (accMatrix' cs2)
+
+index3 :: (A.Elt i, A.Slice (A.Z A.:. i), A.Slice (A.Z A.:. i A.:. i))
+       => A.Exp i -> A.Exp i -> A.Exp i -> A.Exp (A.Z A.:. i A.:. i A.:. i)
+index3 i j k = A.lift (A.Z A.:. i A.:. j A.:. k)
+
+--lift2Dto3D :: A.Elt a =>
+
 
 use :: A.Elt a => Channel a -> Channel a
 use chan = case chan of
     Raw m -> Acc $ A.use m
     Acc m -> Acc m
+    RawSequence m -> AccSequence $ A.use m
+    AccSequence m -> AccSequence m
+
+--use' :: A.Elt a => Channel a -> Channel a
+--use' chanseq = case chanseq of
+--    RawSequence m -> AccSequence $ A.use m
+--    AccSequence m -> AccSequence m
 
 
 accMatrix :: A.Elt a => Channel a -> A.Acc(RawData a)
 accMatrix chan = m where Acc m = use chan
+
+--accMatrix' :: A.Elt a => Channel a -> A.Acc (RawDataSequence a)
+--accMatrix' chanseq = m where AccSequence m = use' chanseq
 
 
 compute :: Backend a -> Channel a -> Channel a

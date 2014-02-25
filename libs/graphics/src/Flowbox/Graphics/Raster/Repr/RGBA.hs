@@ -28,6 +28,9 @@ decompose img = do chan <- Image.lookup "rgba" img
                                  $ mempty
                    return outimg
 
+--decompose' :: ImageSequence A.Word32 -> Either Image.Error (ImageSequence A.Word8)
+--decompose' img = do chan <- Image.lookup "rgba" img
+--                     let dchan = Channel.map
 
 compose :: Image A.Word8 -> Either Image.Error (Image A.Word32)
 compose img = do r <- Image.lookup "r" img

@@ -40,6 +40,14 @@ data Image a = Image { _channels :: Map String (Channel a)
                      }
              deriving (Show, Eq, Ord)
 
+--data ImageSequence a = ImageSequence { _channelSequences :: Map String (ChannelSequence a)
+--                                     }
+--                     deriving (Show)
+
+--data ImageData a = ImageDataSingle (Image a)
+--                 | ImageDataSequence (ImageSequence a)
+--                 deriving (Show)
+
 data Transformed a = Transformed { src :: a
                                  , trans :: Transformation
                                  }
@@ -50,6 +58,7 @@ instance Functor Transformed where
     fmap f (Transformed s t) = Transformed (f s) t
 
 makeLenses ''Image
+--makeLenses ''ImageSequence
 
 
 
@@ -73,6 +82,9 @@ cpChannel source destination img = do
 
 insert :: String -> Channel a -> Image a -> Image a
 insert name chan img = img & channels %~ (Map.insert name chan)
+
+--insert' :: String -> ChannelSequence a -> ImageSequence a -> ImageSequence a
+--insert' name chan img = img & channelSequences %~ (Map.insert name chan)
 
 reprFloat :: Image A.Word8 -> Image A.Float
 reprFloat img = map (\c -> A.fromIntegral c / 255) img
@@ -167,6 +179,10 @@ scaleAt sx sy x y = (translate (-x) (-y)) . (scale sx sy) . (translate x y)
 instance Monoid (Image a) where
     mempty        = Image mempty
     a `mappend` b = Image $ (view channels a) `mappend` (view channels b)
+
+--instance Monoid (ImageSequence a) where
+--    mempty        = ImageSequence mempty
+--    a `mappend` b = ImageSequence $ (view channelSequences a) `mappend` (view channelSequences b)
 
 instance Monoid Transformation where
     mempty = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ 1, 0, 0

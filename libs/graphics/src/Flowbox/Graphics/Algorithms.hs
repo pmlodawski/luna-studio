@@ -589,37 +589,53 @@ keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
 --        step res [] = res
 --        step res ((a,b):rest) =
 
+--extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> [Image a] -> Either Image.Error (Image a)
+--extractBackground (nameA, nameB, nameC) images = do
+--  let firstImg    = images !! 0
+--  channelsA <- sequence $ fmap (Image.lookup nameA) images
+--  channelsB <- sequence $ fmap (Image.lookup nameB) images
+--  channelsC <- sequence $ fmap (Image.lookup nameC) images
+--  tmpChannel <- Image.lookup "a" firstImg
+--  let outimg = Image.insert nameA channelA'
+--             $ Image.insert nameB channelB'
+--             $ Image.insert nameC channelC'
+--             $ Image.insert "a" tmpChannel
+--             $ mempty
+--      exampleChannel = channelsA !! 0
+--      channelShape = Channel.shape exampleChannel
+--      channelA' = Channel.generate channelShape (getMostFreq channelsA)
+--      channelB' = Channel.generate channelShape (getMostFreq channelsB)
+--      channelC' = Channel.generate channelShape (getMostFreq channelsC)
+--      getMostFreq channels ix = let
+--                                (A.Z A.:. i A.:. j) = A.unlift ix
+--                                empty = A.use $ A.fromList (A.Z A.:. 0) []
+--                                folder x acc = acc A.++ (A.flatten $ A.unit x)
+--                                result = median' $ bsort' $ foldr folder empty $ fmap ((flip (Channel.at)) (A.index2 i j)) channels
+--                              in
+--                                --findMostFrequent $ (generateHistList []) $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
+--                                --median $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
+--                                result
+--  return outimg
+
 extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> [Image a] -> Either Image.Error (Image a)
 extractBackground (nameA, nameB, nameC) images = do
-  let firstImg    = images !! 0
-  channelsA <- sequence $ fmap (Image.lookup nameA) images
-  channelsB <- sequence $ fmap (Image.lookup nameB) images
-  channelsC <- sequence $ fmap (Image.lookup nameC) images
-  tmpChannel <- Image.lookup "a" firstImg
-  let outimg = Image.insert nameA channelA'
-             $ Image.insert nameB channelB'
-             $ Image.insert nameC channelC'
-             $ Image.insert "a" tmpChannel
-             $ mempty
-      exampleChannel = channelsA !! 0
-      channelShape = Channel.shape exampleChannel
-      channelA' = Channel.generate channelShape (getMostFreq channelsA)
-      channelB' = Channel.generate channelShape (getMostFreq channelsB)
-      channelC' = Channel.generate channelShape (getMostFreq channelsC)
-      getMostFreq channels ix = let
-                                (A.Z A.:. i A.:. j) = A.unlift ix
-                                --empty :: A.Acc (A.Array A.DIM1 a)
-                                empty = A.use $ A.fromList (A.Z A.:. 0) []
-                                --empty = (A.use $ A.fromList (A.index1 0) [])
-                                --folder :: Exp a -> A.Acc (A.Vector a) -> A.Acc (A.Vector a)
-                                folder x acc = acc A.++ (A.flatten $ A.unit x)
-                                result = median' $ bsort' $ foldr folder empty $ fmap ((flip (Channel.at)) (A.index2 i j)) channels
-                              in
-                                --findMostFrequent $ (generateHistList []) $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
-                                --median $ bsort (fmap ((flip (Channel.at)) (A.index2 i j)) channels)
-                                result
-  return outimg
-
+    --channelsA :: Int
+    channelsA <- sequence $ fmap (Image.lookup nameA) images
+    let outimg = mempty
+        matricesA = fmap (Channel.accMatrix) channelsA
+        exampleM = matricesA !! 0
+        x :: Exp Int
+        y :: Exp Int
+        (A.Z A.:. y A.:. x) = A.unlift $ (A.index2 3 5)-- A.shape exampleM
+        exampleShape = A.lift (A.Z A.:. y A.:. x A.:. (A.constant $ length matricesA))
+        --bigA =
+        makeBig channels = A.generate exampleShape $ \ ix ->
+            let (A.Z A.:. j A.:. i A.:. k) = A.unlift ix
+                i :: Exp Int
+                j :: Exp Int
+                k :: Exp Int
+            in A.fromIntegral k
+    return outimg
 
 
 -- cut out from background
