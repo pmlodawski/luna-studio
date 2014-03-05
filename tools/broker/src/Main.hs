@@ -7,17 +7,18 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import           Flowbox.Broker.Cmd             (Cmd)
-import qualified Flowbox.Broker.Cmd             as Cmd
-import qualified Flowbox.Broker.Control.Control as Control
-import qualified Flowbox.Broker.Proxy           as Proxy
-import qualified Flowbox.Broker.Version         as Version
-import           Flowbox.Options.Applicative    hiding (info)
-import qualified Flowbox.Options.Applicative    as Opt
-import           Flowbox.Prelude                hiding (error)
-import           Flowbox.System.Log.Logger
 import qualified Control.Concurrent as Concurrent
 
+import           Flowbox.Broker.Cmd                           (Cmd)
+import qualified Flowbox.Broker.Cmd                           as Cmd
+import qualified Flowbox.Broker.Control.Handler.BrokerHandler as BrokerHandler
+import qualified Flowbox.Broker.Control.Server                as Control
+import qualified Flowbox.Broker.Proxy                         as Proxy
+import qualified Flowbox.Broker.Version                       as Version
+import           Flowbox.Options.Applicative                  hiding (info)
+import qualified Flowbox.Options.Applicative                  as Opt
+import           Flowbox.Prelude                              hiding (error)
+import           Flowbox.System.Log.Logger
 
 
 rootLogger :: Logger
@@ -65,4 +66,5 @@ run cmd = case cmd of
         logger info "Starting proxy service"
         _ <- Concurrent.forkIO $ Proxy.run (Cmd.pullEndPoint cmd) (Cmd.pubEndPoint cmd)
         logger info "Starting control service"
-        Control.run $ Cmd.ctrlEndPoint cmd
+        h <- BrokerHandler.empty
+        Control.run (Cmd.ctrlEndPoint cmd) h

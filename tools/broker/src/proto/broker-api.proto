@@ -13,7 +13,7 @@ message Request {
     enum Method {
         ID_New = 1001;
     }
-    optional bool async = 2 [default = false];
+    // optional bool async = 2 [default = false];
 
     extensions 1000 to max;
 }

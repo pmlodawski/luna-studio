@@ -22,6 +22,8 @@ Executable broker
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
+                    bytestring,
+                    containers,
                     flowbox-utils,
                     protocol-buffers,
                     zeromq4-haskell
