@@ -16,6 +16,7 @@ import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as A
 
 import           Control.Monad.Trans.Either      (hoistEither, runEitherT)
+import           Flowbox.Graphics.Raster.Channel (RawData, RawDataSeq)
 import qualified Flowbox.Graphics.Raster.Channel as Channel
 import           Flowbox.Graphics.Raster.Image   (Image)
 import qualified Flowbox.Graphics.Raster.Image   as Image
@@ -24,9 +25,9 @@ import Control.Error.Util
 import Control.Monad.Trans.Either
 
 
---readImageFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image A.Word32))
---readImageFromBMP file = liftIO(fmap mkChan <$> A.readImageFromBMP file) where
---    mkChan chdata = Image.insert "rgba" (Channel.Raw chdata) mempty
+readImageFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image (RawData A.Word32)))
+readImageFromBMP file = liftIO(fmap mkChan <$> A.readImageFromBMP file) where
+    mkChan chdata = Image.insert "rgba" (Channel.Raw chdata) mempty
 
 ----readImageSequenceFromBMP :: MonadIO m => [FilePath] -> m (Either BMP.Error (ImageSequence A.Word32))
 ----readImageSequenceFromBMP paths = liftIO (fmap mkChanSequence <$> prepareSequence paths) where

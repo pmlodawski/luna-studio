@@ -14,21 +14,17 @@ import qualified Data.Array.Accelerate as A
 import Flowbox.Prelude hiding (use)
 
 
---type RawData a = A.Array A.DIM2 a
---type RawDataSeq a = A.Array A.DIM3 a
+type RawData a = A.Array A.DIM2 a
+type RawDataSeq a = A.Array A.DIM3 a
 
---type Backend a = A.Acc (RawData a) -> (RawData a)
+type Backend ix a = A.Acc (A.Array ix a) -> (A.Array ix a)
 
 data Channel a = Raw (a)
                | Acc (A.Acc (a))
                deriving (Show)
 
---data ChannelSeq a = RawSeq (RawDataSeq a)
---                  | AccSeq (A.Acc (RawDataSeq a))
---                  deriving (Show)
-
-type Channel2 a = Channel (A.Array A.DIM2 a)
-type Channel3 a = Channel (A.Array A.DIM3 a)
+type Channel2 a = Channel (RawData a)
+type Channel3 a = Channel (RawDataSeq a)
 
 -- FIXME[PM] Fix these instances!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1111111111111111
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -40,11 +36,15 @@ instance A.Elt a => Eq (Channel a) where
 instance A.Elt a => Ord (Channel a) where
     compare _ _ = undefined
 
-accMatrix :: (A.Arrays a) => Channel a -> A.Acc a
+accMatrix :: A.Arrays a => Channel a -> A.Acc a
 accMatrix chan = case chan of
     Raw m -> A.use m
     Acc m -> m
 
+compute :: Backend ix e -> Channel (A.Array ix e) -> Channel (A.Array ix e)
+compute backend chan = Raw $ case chan of
+    Raw m -> m
+    Acc m -> backend m
 
 ---- Accessors
 
@@ -75,7 +75,7 @@ shapeSize = A.shapeSize
 
 -- Introduction
 
-use :: (A.Arrays a) => Channel a -> Channel a
+use :: A.Arrays a => Channel a -> Channel a
 use chan = case chan of
     Raw m -> Acc $ A.use m
     Acc m -> Acc m
@@ -356,19 +356,3 @@ stencil2 f b1 ch1 b2 ch2 = Acc $ A.stencil2 f b1 (accMatrix ch1) b2 (accMatrix c
 index3 :: (A.Elt i, A.Slice (A.Z A.:. i), A.Slice (A.Z A.:. i A.:. i))
     => A.Exp i -> A.Exp i -> A.Exp i -> A.Exp (A.Z A.:. i A.:. i A.:. i)
 index3 i j k = A.lift (A.Z A.:. i A.:. j A.:. k)
-
-
-
-
-
---compute :: Backend a -> Channel a -> Channel a
---compute backend chan = Raw $ case chan of
---    Raw m -> m
---    Acc m -> backend m
-
---shape :: (A.Elt a, A.Shape sh) => Channel a -> sh
---shape :: Int
---shape ch = A.arrayShape $ (accMatrix ch)
-
---generate :: Int
---generate shape f = Acc $ A.generate shape f
