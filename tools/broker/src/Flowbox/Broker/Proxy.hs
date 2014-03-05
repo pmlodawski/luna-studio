@@ -20,11 +20,8 @@ run pullAddr pubAddr = ZMQ.runZMQ $ serve pullAddr pubAddr
 
 serve :: String -> String -> ZMQ z ()
 serve pullAddr pubAddr = do
-    pull      <- ZMQ.socket ZMQ.Pull
+    pull <- ZMQ.socket ZMQ.Pull
+    pub  <- ZMQ.socket ZMQ.Pub
     ZMQ.bind pull pullAddr
-
-    pub <- ZMQ.socket ZMQ.Pub
-    --setSendHighWM (restrict nbOfUpdate) publisher
     ZMQ.bind pub pubAddr
-
     ZMQ.proxy pull pub Nothing

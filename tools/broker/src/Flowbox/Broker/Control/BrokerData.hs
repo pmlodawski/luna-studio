@@ -5,14 +5,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts #-}
 
-module Flowbox.Broker.Control.Handler.Handler where
+module Flowbox.Broker.Control.BrokerData where
 
-import           Flowbox.Prelude                      hiding (error)
-import qualified Generated.Proto.Broker.ID.New.Args   as ID_New
-import qualified Generated.Proto.Broker.ID.New.Result as ID_New
+import           Control.Applicative
+import           Data.IORef          (IORef)
+import qualified Data.IORef          as IORef
+
+import Flowbox.Prelude
 
 
-class Handler h where
-    newID :: h -> ID_New.Args -> IO ID_New.Result
+
+newtype BrokerData = BrokerData { nextSenderID :: IORef Int }
+
+
+empty :: IO BrokerData
+empty = BrokerData <$> IORef.newIORef 0

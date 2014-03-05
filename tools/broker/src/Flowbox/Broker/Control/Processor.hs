@@ -17,8 +17,8 @@ import           Text.ProtocolBuffers            (Int32)
 import qualified Text.ProtocolBuffers            as Proto
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
-import           Flowbox.Broker.Control.Handler.Handler         (Handler)
-import qualified Flowbox.Broker.Control.Handler.Handler         as Handler
+import           Flowbox.Broker.Control.BrokerData              (BrokerData)
+import qualified Flowbox.Broker.Control.Handler.ID              as HandlerID
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                                hiding (error)
 import           Flowbox.System.Log.Logger
@@ -45,16 +45,11 @@ responseExt t i r rspkey = ByteString.toStrict $ Proto.messagePut
                          $ Response t i $ Extensions.ExtField Map.empty
 
 
---response :: ResponseType.Type -> Maybe Int32 -> ByteString
---response t i = ByteString.toStrict $ Proto.messagePut
---             $ Response t i $ Extensions.ExtField Map.empty
-
-
-process :: Handler h => h -> ByteString -> Int32 -> ZMQ z ByteString
-process handler encodedRequest requestID = case Proto.messageGet $ ByteString.fromStrict encodedRequest of
+process :: BrokerData -> ByteString -> Int32 -> ZMQ z ByteString
+process brokerData encodedRequest requestID = case Proto.messageGet $ ByteString.fromStrict encodedRequest of
     Left   e           -> fail $ "Error while decoding request: " ++ e
     Right (request, _) -> case Request.method request of
-        Method.ID_New     -> call Handler.newID ID_New.req ID_New.rsp
+        Method.ID_New     -> call HandlerID.new ID_New.req ID_New.rsp
         where
             call method reqkey rspkey = do
                 e <- runEitherT $ scriptIO $ unsafeCall method reqkey rspkey
@@ -67,8 +62,8 @@ process handler encodedRequest requestID = case Proto.messageGet $ ByteString.fr
             unsafeCall method reqkey rspkey = do
                 r <- case Extensions.getExt reqkey request of
                     Right (Just args) -> do loggerIO debug $ show args
-                                            method handler args
+                                            method brokerData args
+                    Right Nothing     -> fail $ "Error while getting extension"
                     Left   e'         -> fail $ "Error while getting extension: " ++ e'
-                    _                 -> fail $ "Error while getting extension"
                 loggerIO trace $ show r
                 return $ responseExt ResponseType.Result (Just requestID) r rspkey

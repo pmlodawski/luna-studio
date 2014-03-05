@@ -12,7 +12,7 @@ import           Control.Monad       (forM_)
 import           System.ZMQ4.Monadic (ZMQ)
 import qualified System.ZMQ4.Monadic as ZMQ
 
-import           Flowbox.Broker.Control.Handler.Handler         (Handler)
+import           Flowbox.Broker.Control.BrokerData              (BrokerData)
 import qualified Flowbox.Broker.Control.Processor               as Processor
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -24,26 +24,26 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.Broker.Control.Server"
 
 
-run :: Handler h => String -> h -> IO ()
-run ctrlAddr handler = ZMQ.runZMQ $ serve ctrlAddr handler
+run :: String -> BrokerData -> IO ()
+run ctrlAddr bd = ZMQ.runZMQ $ serve ctrlAddr bd
 --run  = ZMQ.runZMQ . serve
 
 
-serve :: Handler h => String -> h -> ZMQ z ()
-serve ctrlAddr handler = do
+serve :: String -> BrokerData -> ZMQ z ()
+serve ctrlAddr bd = do
     rep <- ZMQ.socket ZMQ.Rep
     ZMQ.bind rep ctrlAddr
-    acceptAndHandle rep handler
+    acceptAndHandle rep bd
 
 
-acceptAndHandle :: (ZMQ.Receiver t, ZMQ.Sender t, Handler h)
-                => ZMQ.Socket z t -> h -> ZMQ z ()
-acceptAndHandle socket handler = forM_ [0..] $ handleCall socket handler
+acceptAndHandle :: (ZMQ.Receiver t, ZMQ.Sender t)
+                => ZMQ.Socket z t -> BrokerData -> ZMQ z ()
+acceptAndHandle socket bd = forM_ [0..] $ handleCall socket bd
 
 
-handleCall :: (ZMQ.Receiver t, ZMQ.Sender t, Handler h)
-           => ZMQ.Socket z t -> h -> Int -> ZMQ z ()
-handleCall socket handler requestID = do
+handleCall :: (ZMQ.Receiver t, ZMQ.Sender t)
+           => ZMQ.Socket z t -> BrokerData -> Int -> ZMQ z ()
+handleCall socket bd requestID = do
     encoded_request  <- ZMQ.receive socket
-    encoded_response <- Processor.process handler encoded_request $ encodeP requestID
+    encoded_response <- Processor.process bd encoded_request $ encodeP requestID
     ZMQ.send socket [] encoded_response
