@@ -349,12 +349,16 @@ stencil2 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Stencil ix a stencil1, A.S
 stencil2 f b1 ch1 b2 ch2 = Acc $ A.stencil2 f b1 (accMatrix ch1) b2 (accMatrix ch2)
 
 
+---- Operations
+
+-- Shape Manipulation
+
+index3 :: (A.Elt i, A.Slice (A.Z A.:. i), A.Slice (A.Z A.:. i A.:. i))
+    => A.Exp i -> A.Exp i -> A.Exp i -> A.Exp (A.Z A.:. i A.:. i A.:. i)
+index3 i j k = A.lift (A.Z A.:. i A.:. j A.:. k)
 
 
 
---index3 :: (A.Elt i, A.Slice (A.Z A.:. i), A.Slice (A.Z A.:. i A.:. i))
---       => A.Exp i -> A.Exp i -> A.Exp i -> A.Exp (A.Z A.:. i A.:. i A.:. i)
---index3 i j k = A.lift (A.Z A.:. i A.:. j A.:. k)
 
 
 --compute :: Backend a -> Channel a -> Channel a
