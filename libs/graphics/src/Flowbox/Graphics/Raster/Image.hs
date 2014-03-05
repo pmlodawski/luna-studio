@@ -21,7 +21,7 @@ import           Data.Map                          (Map)
 import qualified Data.Map                          as Map
 --import qualified Debug.Trace                       as Dbg
 
-import           Flowbox.Graphics.Raster.Channel (Channel, Channel2, Channel3, RawData, RawDataSeq)
+import           Flowbox.Graphics.Raster.Channel (Channel, Channel2, Channel3, RawData2D, RawData3D)
 import qualified Flowbox.Graphics.Raster.Channel as Channel
 import           Flowbox.Graphics.Raster.Error   (Error (ChannelLookupError, TmpError))
 import           Flowbox.Prelude                 hiding (lookup, map)
@@ -126,7 +126,7 @@ rasterizeChannel (Transformation t) ch =
                     (inShape (A.round jt) (A.round it)) A.? (ch Channel.! (A.index2 (A.round jt) (A.round it)), 0)
                     --ch Channel.!! 0
 
-rasterize :: (A.Elt a, A.IsFloating a) => Transformed (Image (RawData a)) -> Image (RawData a)
+rasterize :: (A.Elt a, A.IsFloating a) => Transformed (Image (RawData2D a)) -> Image (RawData2D a)
 rasterize (Transformed img t) = Image $ Map.map (rasterizeChannel t) $ view channels img
 
 

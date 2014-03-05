@@ -103,22 +103,21 @@ import           Flowbox.Prelude                   as P
 main :: IO ()
 main
   = do
-    return ()
---        Monitoring.beginMonitoring
+        Monitoring.beginMonitoring
 
---        argv                    <- Env.getArgs
---        (conf, cconf, nops)     <- ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer argv
---        (fileIn, fileOut)       <- case nops of
---          (i:o:_) -> return (i,o)
---          _       -> ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer ("--help":argv)
---                  >> Exit.exitSuccess
+        argv                    <- Env.getArgs
+        (conf, cconf, nops)     <- ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer argv
+        (fileIn, fileOut)       <- case nops of
+          (i:o:_) -> return (i,o)
+          _       -> ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer ("--help":argv)
+                  >> Exit.exitSuccess
 
---        let backend     = Label.get Cfg.configBackend conf
---            frameNames  = fmap (\x -> (T.printf "frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
---            getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
---            --getSequence locations = fmap (either (\_ -> mempty) id) (Image.readImageSequenceFromBMP locations)
---        -- Read in the image file
+        let backend     = Label.get Cfg.configBackend conf
+            --frameNames  = fmap (\x -> (T.printf "frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
+            getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
+            --getSequence locations = fmap (either (\_ -> mempty) id) (Image.readImageSequenceFromBMP locations)
 
+        -- Read in the image file
 --        --img2 <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
 
 --        img2 <- getImage fileIn
@@ -136,6 +135,7 @@ main
 --            Right val -> do Image.writeImageToBMP (ParseArgs.run backend) fileOut val
 --                            return ()
 
+        return ()
 
         --if P.not (Label.get Cfg.configBenchmark conf)
         --   then do

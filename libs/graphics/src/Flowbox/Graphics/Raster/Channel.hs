@@ -14,8 +14,8 @@ import qualified Data.Array.Accelerate as A
 import Flowbox.Prelude hiding (use)
 
 
-type RawData a = A.Array A.DIM2 a
-type RawDataSeq a = A.Array A.DIM3 a
+type RawData2D a = A.Array A.DIM2 a
+type RawData3D a = A.Array A.DIM3 a
 
 type Backend ix a = A.Acc (A.Array ix a) -> (A.Array ix a)
 
@@ -23,8 +23,8 @@ data Channel a = Raw (a)
                | Acc (A.Acc (a))
                deriving (Show)
 
-type Channel2 a = Channel (RawData a)
-type Channel3 a = Channel (RawDataSeq a)
+type Channel2 a = Channel (RawData2D a)
+type Channel3 a = Channel (RawData3D a)
 
 -- FIXME[PM] Fix these instances!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1111111111111111
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
