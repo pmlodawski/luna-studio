@@ -118,9 +118,7 @@ main
             --getSequence locations = fmap (either (\_ -> mempty) id) (Image.readImageSequenceFromBMP locations)
 
         -- Read in the image file
---        --img2 <- either (\_ -> mempty) id `fmap` Image.readImageFromBMP fileIn
-
---        img2 <- getImage fileIn
+        img2 <- getImage fileIn
 --        --imgBack <- getImage "background.bmp"
 --        --imgFrame <- getImage "frame-249.bmp"
 --        frameFiles <- sequence $ fmap getImage frameNames
@@ -134,6 +132,8 @@ main
 --            Left  err -> print err
 --            Right val -> do Image.writeImageToBMP (ParseArgs.run backend) fileOut val
 --                            return ()
+
+        Image.writeImageToBMP (ParseArgs.run backend) fileOut img2
 
         return ()
 
