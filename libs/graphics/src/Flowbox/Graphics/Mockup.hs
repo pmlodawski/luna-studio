@@ -13,25 +13,25 @@
 
 module Flowbox.Graphics.Mockup (
     module Flowbox.Graphics.Mockup,
-    Image,
-    Image.reprDouble,
-    Image.reprWord8,
-    Channel,
+    --Image,
+    --Image.reprDouble,
+    --Image.reprWord8,
+    --Channel,
 
-    Alg.invert,
-    Alg.invert',
-    Alg.sign,
-    Alg.parametrize,
-    Alg.bias,
-    Alg.gain,
-    Alg.gamma,
-    Alg.compress,
-    Alg.expand,
-    Alg.remap,
+    --Alg.invert,
+    --Alg.invert',
+    --Alg.sign,
+    --Alg.parametrize,
+    --Alg.bias,
+    --Alg.gain,
+    --Alg.gamma,
+    --Alg.compress,
+    --Alg.expand,
+    --Alg.remap,
 
-    Alg.erodeChannel,
-    toDouble,
-    Exp,
+    --Alg.erodeChannel,
+    --toDouble,
+    --Exp,
 
 ) where
 
@@ -58,39 +58,39 @@ import           Luna.Target.HS.Core               hiding (print, return)
 
 
 -- Backends --------------------------------------------------------------
-runBackend :: A.Elt a => LunaBackend -> Channel.Backend a
+--runBackend :: A.Elt a => LunaBackend -> Channel.Backend a
 #ifdef ACCELERATE_CUDA_BACKEND
-runBackend LunaCUDA = CUDA.run
+--runBackend LunaCUDA = CUDA.run
 #endif
-runBackend LunaInterpreter = Interpreter.run
+--runBackend LunaInterpreter = Interpreter.run
 
 
-data LunaBackend = LunaCUDA
-                 | LunaInterpreter
-                 deriving(Show)
+--data LunaBackend = LunaCUDA
+--                 | LunaInterpreter
+--                 deriving(Show)
 
 
-cuda :: LunaBackend
-cuda = LunaCUDA
+--cuda :: LunaBackend
+--cuda = LunaCUDA
 
 
-interp :: LunaBackend
-interp = LunaInterpreter
+--interp :: LunaBackend
+--interp = LunaInterpreter
 
--- Image -----------------------------------------------------------------
+---- Image -----------------------------------------------------------------
 
--- FIXME[wd]: UNSAFE ERROR
-writeImage :: Image (A.Word32) -> FilePath -> LunaBackend -> IO (Safe ())
-writeImage img path backend = do
-    Image.writeImageToBMP (runBackend backend) path img
-    return (Safe ())
+---- FIXME[wd]: UNSAFE ERROR
+--writeImage :: Image (A.Word32) -> FilePath -> LunaBackend -> IO (Safe ())
+--writeImage img path backend = do
+--    Image.writeImageToBMP (runBackend backend) path img
+--    return (Safe ())
 
-adjustCB :: Double -> Double -> Image Double -> Pure (Either Image.Error (Image Double))
-adjustCB contrastValue brightnessValue img =
-    Pure $ Alg.adjustCB_RGB (A.constant contrastValue) (A.constant brightnessValue) img
+--adjustCB :: Double -> Double -> Image Double -> Pure (Either Image.Error (Image Double))
+--adjustCB contrastValue brightnessValue img =
+--    Pure $ Alg.adjustCB_RGB (A.constant contrastValue) (A.constant brightnessValue) img
 
 
-convolve :: Double -> Image Double -> Pure (Either Image.Error (Image Double))
-convolve kernel img = Pure $ Alg.convolveRGB Alg.convolve3x3 kernel' img where
-    kernel' = map A.constant $ replicate 9 kernel
+--convolve :: Double -> Image Double -> Pure (Either Image.Error (Image Double))
+--convolve kernel img = Pure $ Alg.convolveRGB Alg.convolve3x3 kernel' img where
+--    kernel' = map A.constant $ replicate 9 kernel
 
