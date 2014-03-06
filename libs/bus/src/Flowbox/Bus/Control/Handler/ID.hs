@@ -4,28 +4,28 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Broker.Control.Handler.ID where
+module Flowbox.Bus.Control.Handler.ID where
 
 import qualified Data.IORef as IORef
 
-import           Flowbox.Broker.Control.BrokerCtx               (BrokerCtx)
-import qualified Flowbox.Broker.Control.BrokerCtx               as BrokerCtx
+import           Flowbox.Bus.Control.BusCtx                     (BusCtx)
+import qualified Flowbox.Bus.Control.BusCtx                     as BusCtx
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Broker.ID.New.Args             as ID_New
-import qualified Generated.Proto.Broker.ID.New.Result           as ID_New
+import qualified Generated.Proto.Bus.ID.New.Args                as ID_New
+import qualified Generated.Proto.Bus.ID.New.Result              as ID_New
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Broker.Control.Handler.ID"
+logger = getLoggerIO "Flowbox.Bus.Control.Handler.ID"
 
 -------- public api -------------------------------------------------
 
-new :: BrokerCtx -> ID_New.Args -> IO ID_New.Result
+new :: BusCtx -> ID_New.Args -> IO ID_New.Result
 new ctx ID_New.Args = do
     logger info "called ID::new"
-    let senderID = BrokerCtx.nextSenderID ctx
+    let senderID = BusCtx.nextSenderID ctx
     IORef.atomicModifyIORef senderID (\i -> let newID = i + 1
                                             in (newID, ID_New.Result $ encodeP newID))
 

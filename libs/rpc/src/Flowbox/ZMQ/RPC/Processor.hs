@@ -12,7 +12,6 @@
 module Flowbox.ZMQ.RPC.Processor where
 
 import           Data.ByteString                 (ByteString)
-import qualified Data.Map                        as Map
 import           System.ZMQ4.Monadic             (ZMQ)
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
@@ -37,7 +36,7 @@ loggerIO = getLoggerIO "Flowbox.ZMQ.RPC.Processor"
 responseExt :: ResponseType.Type -> Maybe Int32 -> rsp -> Extensions.Key Maybe Response rsp -> ByteString
 responseExt rspType rspId rsp rspKey = Proto.messagePut'
                                      $ Extensions.putExt rspKey (Just rsp)
-                                     $ Response rspType rspId $ Extensions.ExtField Map.empty
+                                     $ Response rspType rspId Proto.mkExtField
 
 
 process :: Serializable request

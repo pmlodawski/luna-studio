@@ -12,8 +12,7 @@ Flag Debug
 
 
 Executable broker
-    Hs-Source-Dirs: src,
-                    dist/gen
+    Hs-Source-Dirs: src
     Other-Modules:  Paths_flowbox_broker
     Main-Is:        Main.hs
 
@@ -25,6 +24,7 @@ Executable broker
                     bytestring,
                     containers,
                     flowbox-rpc,
+                    flowbox-bus,
                     flowbox-utils,
                     transformers,
                     protocol-buffers,

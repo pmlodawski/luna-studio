@@ -6,7 +6,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Broker.Control.BrokerCtx where
+module Flowbox.Bus.Control.BusCtx where
 
 import           Control.Applicative
 import           Data.IORef          (IORef)
@@ -16,8 +16,8 @@ import Flowbox.Prelude
 
 
 
-newtype BrokerCtx = BrokerCtx { nextSenderID :: IORef Int }
+newtype BusCtx = BusCtx { nextSenderID :: IORef Int }
 
 
-empty :: IO BrokerCtx
-empty = BrokerCtx <$> IORef.newIORef 0
+empty :: IO BusCtx
+empty = BusCtx <$> IORef.newIORef 0

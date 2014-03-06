@@ -6,7 +6,25 @@
 ---------------------------------------------------------------------------
 
 module Flowbox.Broker.Config (
-    module Paths_flowbox_broker
+    module Paths_flowbox_broker,
+    defaultCtrlEndPoint,
+    defaultPullEndPoint,
+    defaultPubEndPoint,
 ) where
 
 import Paths_flowbox_broker (version)
+
+import Flowbox.Prelude
+
+
+
+defaultCtrlEndPoint :: String
+defaultCtrlEndPoint = "tcp://*:30530"
+
+
+defaultPullEndPoint :: String
+defaultPullEndPoint = "tcp://*:30531"
+
+
+defaultPubEndPoint :: String
+defaultPubEndPoint  = "tcp://*:30532"

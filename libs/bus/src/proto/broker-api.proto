@@ -5,7 +5,7 @@
 // Flowbox Team <contact@flowbox.io>, 2014
 ///////////////////////////////////////////////////////////////////////////
 
-package generated.proto.broker;
+package generated.proto.bus;
 
 import "rpc.proto";
 

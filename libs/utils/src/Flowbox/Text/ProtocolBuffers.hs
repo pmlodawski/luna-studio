@@ -13,10 +13,12 @@ module Flowbox.Text.ProtocolBuffers (
     getExt',
     messagePut',
     messageGet',
+    mkExtField,
 ) where
 
 import           Data.ByteString                 (ByteString)
 import qualified Data.ByteString.Lazy            as ByteString
+import qualified Data.Map                        as Map
 import           Text.ProtocolBuffers            as Proto
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
@@ -39,3 +41,7 @@ messagePut' = ByteString.toStrict . Proto.messagePut
 
 messageGet' :: Serializable msg => ByteString -> Either String msg
 messageGet' msg = fmap fst $ Proto.messageGet $ ByteString.fromStrict msg
+
+
+mkExtField :: Extensions.ExtField
+mkExtField = Extensions.ExtField Map.empty

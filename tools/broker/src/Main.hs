@@ -9,18 +9,18 @@ module Main where
 
 import qualified Control.Concurrent as Concurrent
 
-import           Flowbox.Broker.Cmd                     (Cmd)
-import qualified Flowbox.Broker.Cmd                     as Cmd
-import qualified Flowbox.Broker.Control.BrokerCtx       as BrokerCtx
-import qualified Flowbox.Broker.Control.Handler.Handler as Handler
-import qualified Flowbox.Broker.Proxy                   as Proxy
-import qualified Flowbox.Broker.Version                 as Version
-import           Flowbox.Options.Applicative            hiding (info)
-import qualified Flowbox.Options.Applicative            as Opt
-import           Flowbox.Prelude                        hiding (error)
+import           Flowbox.Broker.Cmd                  (Cmd)
+import qualified Flowbox.Broker.Cmd                  as Cmd
+import qualified Flowbox.Broker.Config               as Config
+import qualified Flowbox.Broker.Proxy                as Proxy
+import qualified Flowbox.Broker.Version              as Version
+import qualified Flowbox.Bus.Control.BusCtx          as BusCtx
+import qualified Flowbox.Bus.Control.Handler.Handler as Handler
+import           Flowbox.Options.Applicative         hiding (info)
+import qualified Flowbox.Options.Applicative         as Opt
+import           Flowbox.Prelude                     hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.ZMQ.RPC.Server                 as RPC
-
+import qualified Flowbox.ZMQ.RPC.Server              as RPC
 
 
 rootLogger :: Logger
@@ -31,22 +31,12 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Broker"
 
 
-defaultCtrlEndPoint :: String
-defaultCtrlEndPoint = "tcp://*:30530"
-
-defaultPullEndPoint :: String
-defaultPullEndPoint = "tcp://*:30531"
-
-defaultPubEndPoint :: String
-defaultPubEndPoint  = "tcp://*:30532"
-
-
 parser :: Parser Cmd
 parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Serve
-           <$> strOption ( long "ctrl-addr" <> short 'c' <> value defaultCtrlEndPoint <> metavar "endpoint" <> help "Server control endpoint" )
-           <*> strOption ( long "pull-addr" <> short 'l' <> value defaultPullEndPoint <> metavar "endpoint" <> help "Server pull endpoint"    )
-           <*> strOption ( long "pub-addr"  <> short 'b' <> value defaultPubEndPoint  <> metavar "endpoint" <> help "Server publish endpoint" )
+           <$> strOption ( long "ctrl-addr" <> short 'c' <> value Config.defaultCtrlEndPoint <> metavar "endpoint" <> help "Server control endpoint" )
+           <*> strOption ( long "pull-addr" <> short 'l' <> value Config.defaultPullEndPoint <> metavar "endpoint" <> help "Server pull endpoint"    )
+           <*> strOption ( long "pub-addr"  <> short 'b' <> value Config.defaultPubEndPoint  <> metavar "endpoint" <> help "Server publish endpoint" )
            <*> optIntFlag (Just "verbose") 'v' 2 3          "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"          <> help "Disable color output" )
 
@@ -68,5 +58,5 @@ run cmd = case cmd of
         logger info "Starting proxy service"
         _ <- Concurrent.forkIO $ Proxy.run (Cmd.pullEndPoint cmd) (Cmd.pubEndPoint cmd)
         logger info "Starting control service"
-        ctx <- BrokerCtx.empty
+        ctx <- BusCtx.empty
         RPC.run (Cmd.ctrlEndPoint cmd) Handler.handler ctx
