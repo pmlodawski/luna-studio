@@ -56,8 +56,11 @@ compute :: Channel.Backend ix a -> Image (A.Array ix a) -> Image (A.Array ix a)
 compute backend img = Image $ Map.map (Channel.compute backend) $ view channels img
 
 
-map :: (A.Shape ix, A.Elt a, A.Elt b) => (Exp a -> Exp b) -> Image (A.Array ix a) -> Image (A.Array ix b)
-map f img = Image $ Map.map (Channel.map f) $ view channels img
+map :: (A.Shape ix, A.Elt a, A.Elt b) => (Channel (A.Array ix a) -> Channel (A.Array ix b)) -> Image (A.Array ix a) -> Image (A.Array ix b)
+map f img = Image $ Map.map f $ view channels img
+
+map' :: (A.Shape ix, A.Elt a, A.Elt b) => (Exp a -> Exp b) -> Image (A.Array ix a) -> Image (A.Array ix b)
+map' f img = Image $ Map.map (Channel.map f) $ view channels img
 
 
 lookup :: String -> Image (A.Array ix a) -> Either Error (Channel (A.Array ix a))
@@ -73,17 +76,17 @@ cpChannel source destination img = do
 insert :: String -> Channel (A.Array ix a) -> Image (A.Array ix a) -> Image (A.Array ix a)
 insert name chan img = img & channels %~ (Map.insert name chan)
 
---reprFloat :: A.Shape ix => Image (A.Array ix A.Word8) -> Image (A.Array ix A.Float)
---reprFloat img = map (\c -> A.fromIntegral c / 255) img
+reprFloat :: A.Shape ix => Image (A.Array ix A.Word8) -> Image (A.Array ix A.Float)
+reprFloat img = map' (\c -> A.fromIntegral c / 255) img
 
---reprDouble :: A.Shape ix => Image (A.Array ix A.Word8) -> Image (A.Array ix A.Double)
---reprDouble img = map (\c -> A.fromIntegral c / 255) img
+reprDouble :: A.Shape ix => Image (A.Array ix A.Word8) -> Image (A.Array ix A.Double)
+reprDouble img = map' (\c -> A.fromIntegral c / 255) img
 
 reprFloating :: (A.Shape ix, A.Elt a) => A.IsFloating a => Image (A.Array ix A.Word8) -> Image (A.Array ix a)
-reprFloating img = map (\c -> A.fromIntegral c / 255) img
+reprFloating img = map' (\c -> A.fromIntegral c / 255) img
 
 reprWord8 :: (A.Shape ix, A.Elt a, A.IsFloating a) => Image (A.Array ix a) -> Image (A.Array ix A.Word8)
-reprWord8 img = map (\c -> A.truncate $ c * 255) img
+reprWord8 img = map' (\c -> A.truncate $ c * 255) img
 
 
 
