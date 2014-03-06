@@ -18,7 +18,7 @@ import qualified Flowbox.Graphics.Raster.Image   as Image
 import           Flowbox.Prelude                 hiding (map)
 
 
-decompose :: Image (RawData2D A.Word32) -> Either Image.Error (Image (RawData2D A.Word8))
+decompose :: (A.Shape ix) => Image (A.Array ix A.Word32) -> Either Image.Error (Image (A.Array ix A.Word8))
 decompose img = do chan <- Image.lookup "rgba" img
                    let dchan = Channel.map unpack32 chan
                        (r,g,b,a) = Channel.unzip4 dchan
@@ -29,7 +29,7 @@ decompose img = do chan <- Image.lookup "rgba" img
                                  $ mempty
                    return outimg
 
-compose :: Image (RawData2D A.Word8) -> Either Image.Error (Image (RawData2D A.Word32))
+compose :: (A.Shape ix) => Image (A.Array ix A.Word8) -> Either Image.Error (Image (A.Array ix A.Word32))
 compose img = do r <- Image.lookup "r" img
                  g <- Image.lookup "g" img
                  b <- Image.lookup "b" img

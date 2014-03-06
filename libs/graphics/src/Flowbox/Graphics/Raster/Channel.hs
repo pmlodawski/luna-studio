@@ -70,6 +70,13 @@ size channel = A.size $ accMatrix channel
 shapeSize :: A.Shape ix => A.Exp ix -> A.Exp Int
 shapeSize = A.shapeSize
 
+-- Extracting sub-arrays
+
+slice :: (A.Slice slix, A.Elt e) => Channel (A.Array (A.FullShape slix) e) -> A.Exp slix -> Channel (A.Array (A.SliceShape slix) e)
+slice channel parts = Acc $ A.slice (accMatrix channel) parts
+
+slice' :: (A.Slice slix, A.Elt e) => A.Exp slix -> Channel (A.Array (A.FullShape slix) e) -> Channel (A.Array (A.SliceShape slix) e)
+slice' parts channel = Acc $ A.slice (accMatrix channel) parts
 
 ---- Construction
 
@@ -111,20 +118,20 @@ enumFromStepN sh n s = Acc $ A.enumFromStepN sh n s
 (++) chan1 chan2 = Acc $ (accMatrix chan1) A.++ (accMatrix chan2)
 
 
----- Modifying Arrays
+---- Modifying arrays
 
--- Shape Manipulation
+-- Shape manipulation
 
 reshape :: (A.Shape ix, A.Shape ix', A.Elt e) => A.Exp ix -> Channel (A.Array ix' e) -> Channel (A.Array ix e)
 reshape sh chan = Acc $ A.reshape sh (accMatrix chan)
 
--- Specialised Permutations
+-- Specialised permutations
 
 transpose :: A.Elt e => Channel2 e -> Channel2 e
 transpose chan = Acc $ accMatrix chan
 
 
--- Element-wise Operations
+-- Element-wise operations
 
 -- Mapping
 
@@ -351,7 +358,7 @@ stencil2 f b1 ch1 b2 ch2 = Acc $ A.stencil2 f b1 (accMatrix ch1) b2 (accMatrix c
 
 ---- Operations
 
--- Shape Manipulation
+-- Shape manipulation
 
 index3 :: (A.Elt i, A.Slice (A.Z A.:. i), A.Slice (A.Z A.:. i A.:. i))
     => A.Exp i -> A.Exp i -> A.Exp i -> A.Exp (A.Z A.:. i A.:. i A.:. i)

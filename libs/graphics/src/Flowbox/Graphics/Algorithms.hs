@@ -16,6 +16,7 @@
 
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
@@ -594,6 +595,25 @@ keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
 ----  where val = step 0 arr
 ----        step res [] = res
 ----        step res ((a,b):rest) =
+
+extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData3D a) -> Either Image.Error (Image (RawData2D a))
+extractBackground (nameA, nameB, nameC) images = do
+  channelSeqA <- Image.lookup nameA images
+  channelSeqB <- Image.lookup nameB images
+  channelSeqC <- Image.lookup nameC images
+  let sh = Channel.shape channelSeqA
+      (A.Z A.:. (y :: A.Exp Int) A.:. (x :: A.Exp Int) A.:. (z :: A.Exp Int)) = A.unlift sh
+      sh' = (A.index2 y x)
+      outimg = Image.insert nameA (Channel.generate sh' $ getMostFreqPixel channelSeqA)
+             $ Image.insert nameB (Channel.generate sh' $ getMostFreqPixel channelSeqB)
+             $ Image.insert nameC (Channel.generate sh' $ getMostFreqPixel channelSeqC)
+             $ Image.insert "a"   (Channel.fill     sh' 1)
+             $ mempty
+      getMostFreqPixel channels ix = let
+              (A.Z A.:. (j :: A.Exp Int) A.:. (i :: A.Exp Int)) = A.unlift ix
+              --pixels = Channel.accMatrix $ Channel.slice channels $ A.lift (A.Z A.:.j A.:. i A.:. (A.All))
+          in 1 -- pixels A.!! 0
+  return outimg
 
 ----extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> [Image a] -> Either Image.Error (Image a)
 ----extractBackground (nameA, nameB, nameC) images = do
