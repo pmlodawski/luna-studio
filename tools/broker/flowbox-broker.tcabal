@@ -24,6 +24,8 @@ Executable broker
     Build-Depends:  base,
                     bytestring,
                     containers,
+                    flowbox-rpc,
                     flowbox-utils,
+                    transformers,
                     protocol-buffers,
                     zeromq4-haskell

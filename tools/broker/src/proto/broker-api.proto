@@ -7,38 +7,24 @@
 
 package generated.proto.broker;
 
+import "rpc.proto";
+
 
 message Request {
     required Method method = 1;
     enum Method {
-        ID_New = 1001;
+        ID_New  = 1001;
     }
     // optional bool async = 2 [default = false];
 
     extensions 1000 to max;
 }
 
-message Response {
-    required Type type = 1;
-    optional int32 id  = 2;
-    
-    enum Type {
-        Result    = 0;
-        Exception = 1;
-        Accept    = 2;
-    }
-    extensions 1000 to max;
-}
-
-message Exception { extend Response { optional Exception rsp = 1000; }
-    optional string message = 1;
-}
-
 
 message ID {
     message New {
         message Args   { extend Request  { optional Args   req = 1001; } }
-        message Result { extend Response { optional Result rsp = 1001; }
+        message Result { extend generated.proto.rpc.Response { optional Result rsp = 1001; }
             required int32 id = 1;
         }   
     }

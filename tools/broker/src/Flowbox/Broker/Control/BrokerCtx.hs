@@ -6,7 +6,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Broker.Control.BrokerData where
+module Flowbox.Broker.Control.BrokerCtx where
 
 import           Control.Applicative
 import           Data.IORef          (IORef)
@@ -16,8 +16,8 @@ import Flowbox.Prelude
 
 
 
-newtype BrokerData = BrokerData { nextSenderID :: IORef Int }
+newtype BrokerCtx = BrokerCtx { nextSenderID :: IORef Int }
 
 
-empty :: IO BrokerData
-empty = BrokerData <$> IORef.newIORef 0
+empty :: IO BrokerCtx
+empty = BrokerCtx <$> IORef.newIORef 0

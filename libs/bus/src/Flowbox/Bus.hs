@@ -6,14 +6,14 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 ---------------------------------------------------------------------------
-{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE PackageImports            #-}
 
-import "mtl" Control.Monad.Reader
-import Control.Monad.IO.Class
-
+import           Control.Monad.IO.Class
+import           "mtl" Control.Monad.Reader
+import qualified System.ZMQ4.Monadic    as ZMQ
 
 
 data BusEnv = BusEnv { controlEndPoint :: String
@@ -26,11 +26,15 @@ type BusMonad m = (MonadIO m, MonadReader BusEnv m)
 
 
 runBus :: MonadIO m => ReaderT s m a -> s -> m a
-runBus f env = do
+runBus f env = ZMQ.runZMQ $ do
     liftIO $ print "opening"
     out <- runReaderT f env
     liftIO $ print "closing"
     return out
+
+
+--getSenderID ::
+--getSenderID
 
 
 incBus = do

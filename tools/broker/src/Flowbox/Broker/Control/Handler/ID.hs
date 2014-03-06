@@ -8,8 +8,8 @@ module Flowbox.Broker.Control.Handler.ID where
 
 import qualified Data.IORef as IORef
 
-import           Flowbox.Broker.Control.BrokerData              (BrokerData)
-import qualified Flowbox.Broker.Control.BrokerData              as BrokerData
+import           Flowbox.Broker.Control.BrokerCtx               (BrokerCtx)
+import qualified Flowbox.Broker.Control.BrokerCtx               as BrokerCtx
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
@@ -17,15 +17,15 @@ import qualified Generated.Proto.Broker.ID.New.Args             as ID_New
 import qualified Generated.Proto.Broker.ID.New.Result           as ID_New
 
 
-
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Broker.Control.Handler.ID"
 
 -------- public api -------------------------------------------------
 
-new :: BrokerData -> ID_New.Args -> IO ID_New.Result
-new brokerData ID_New.Args = do
+new :: BrokerCtx -> ID_New.Args -> IO ID_New.Result
+new ctx ID_New.Args = do
     logger info "called ID::new"
-    let senderID = BrokerData.nextSenderID brokerData
+    let senderID = BrokerCtx.nextSenderID ctx
     IORef.atomicModifyIORef senderID (\i -> let newID = i + 1
                                             in (newID, ID_New.Result $ encodeP newID))
+
