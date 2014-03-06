@@ -16,9 +16,10 @@ import qualified System.ZMQ4.Monadic as ZMQ
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.Text.ProtocolBuffers                   as Proto
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Flowbox.ZMQ.RPC.Processor                      as Processor
-import           Flowbox.ZMQ.RPC.RPCHandler                     (ProtoSerializable, RPCHandler)
+import           Flowbox.ZMQ.RPC.RPCHandler                     (RPCHandler)
 
 
 
@@ -26,12 +27,12 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.ZMQ.RPC.Server"
 
 
-run :: ProtoSerializable request
+run :: Proto.Serializable request
     => String -> RPCHandler ctx request -> ctx -> IO ()
 run ctrlAddr handler ctx = ZMQ.runZMQ $ serve ctrlAddr handler ctx
 
 
-serve :: ProtoSerializable request
+serve :: Proto.Serializable request
       => String -> RPCHandler ctx request -> ctx -> ZMQ z ()
 serve ctrlAddr handler ctx = do
     rep <- ZMQ.socket ZMQ.Rep
@@ -39,12 +40,12 @@ serve ctrlAddr handler ctx = do
     acceptAndHandle rep handler ctx
 
 
-acceptAndHandle :: (ZMQ.Receiver t, ZMQ.Sender t, ProtoSerializable request)
+acceptAndHandle :: (ZMQ.Receiver t, ZMQ.Sender t, Proto.Serializable request)
                 => ZMQ.Socket z t -> RPCHandler ctx request -> ctx -> ZMQ z ()
 acceptAndHandle socket handler ctx = forM_ [0..] $ handleCall socket handler ctx
 
 
-handleCall :: (ZMQ.Receiver t, ZMQ.Sender t, ProtoSerializable request)
+handleCall :: (ZMQ.Receiver t, ZMQ.Sender t, Proto.Serializable request)
            => ZMQ.Socket z t -> RPCHandler ctx request -> ctx -> Int -> ZMQ z ()
 handleCall socket handler ctx requestID = do
     encoded_request  <- ZMQ.receive socket
