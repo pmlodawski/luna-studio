@@ -24,5 +24,12 @@ Library
                    `findmodules('src', '.*\.hs')`
                    
   Build-Depends:  base,
-                  protocol-buffers
+                  either,
+                  flowbox-rpc,
+                  flowbox-utils,
+                  mtl,
+                  protocol-buffers,
+                  protocol-buffers-descriptor,
+                  transformers,
+                  zeromq4-haskell
 
