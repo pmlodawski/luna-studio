@@ -49,6 +49,7 @@ parser = Opt.flag' Cmd.Version (long "version" <> hidden)
            <*> optIntFlag (Just "verbose") 'v' 2 3          "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"          <> help "Disable color output" )
            <*> switch    ( long "shutdown-with-client" <> hidden                                                                   )
+           <*> switch    ( long "no-auto-interpreter" <> hidden                                                                   )
 
 
 opts :: ParserInfo Cmd

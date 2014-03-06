@@ -60,7 +60,7 @@ main
                   >> Exit.exitSuccess
 
         let backend     = Label.get Cfg.configBackend conf
-            --frameNames  = fmap (\x -> (T.printf "frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
+            frameNames  = fmap (\x -> (T.printf "frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
             getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
             getDouble image = Image.reprFloat <$> RGBA.decompose image
 

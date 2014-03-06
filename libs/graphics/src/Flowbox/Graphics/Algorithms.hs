@@ -60,8 +60,8 @@ applyToImage f (nameA, nameB, nameC) img = do
 
 ---- works assuming we have a sorted array
 median :: Fractional a => [a] -> a
-median xs | odd  len = xs !! mid
-           | even len = meanMedian
+median xs | odd  len  = xs !! mid
+          | otherwise = meanMedian
                  where  len = length xs
                         mid = len `div` 2
                         meanMedian = (xs !! mid + xs !! (mid+1)) / 2
@@ -148,10 +148,15 @@ remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
 lutExp :: (A.Elt a, A.IsFloating a) => [(Exp a, Exp a)] -> Exp a -> Exp a
 lutExp [] x = x
 lutExp ((_,x):[]) _ = x
-lutExp ((a,b):c@((p,q):_)) x = (x A.<* a) A.? ( b
-                                           , (a A.<=* x A.&&* x A.<* p) A.?
-                                             ( b + (x-a) / (p-a) * ((q-p))
-                                             , lutExp c x ))
+--lutExp ((a,b):c@((p,q):_)) x = (x A.<* a) A.? ( b
+--                                           , (a A.<=* x A.&&* x A.<* p) A.?
+--                                             ( b + (x-a) / (p-a) * ((q-b))
+--                                             , lutExp c x ))
+lutExp ((a,b):c@((p,q):_)) x = A.cond (x A.<* a)
+                                  b $
+                                  A.cond (a A.<=* x A.&&* x A.<* p)
+                                      (b + (x-a) / (p-a) * (q-p)) $
+                                      lutExp c x
 
 lutChannel :: (A.Elt a, A.IsFloating a) => [(Exp a, Exp a)] -> Channel2 a -> Channel2 a
 lutChannel table channel = Channel.map (lutExp table) channel
@@ -163,6 +168,7 @@ lutImage names table = applyToImage (lutChannel table) names
 binarizeChannel :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> Channel2 a -> Channel2 a
 binarizeChannel f channel = Channel.map (\x -> f x A.? (1 , 0)) channel
 
+-- FIXME: probably makes no sense, binarization should be done taking into account all 3 channel values, or work on a gray-scale image
 binarizeImage :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 binarizeImage f = applyToImage (binarizeChannel f)
 

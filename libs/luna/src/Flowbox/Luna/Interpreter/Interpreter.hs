@@ -17,10 +17,15 @@ import           GHC                     (Ghc, GhcMonad)
 import qualified GHC                     as GHC
 import           MonadUtils              (liftIO)
 
-import           Flowbox.Config.Config (Config)
-import qualified Flowbox.Config.Config as Config
-import           Flowbox.Prelude
+import           Flowbox.Config.Config     (Config)
+import qualified Flowbox.Config.Config     as Config
+import           Flowbox.Prelude           hiding (error)
+import           Flowbox.System.Log.Logger
 
+
+
+logger :: LoggerIO
+logger = getLoggerIO "Flowbox.Luna.Passes.Build.Build"
 
 
 initialize :: GhcMonad m => Config -> m ()
@@ -40,8 +45,7 @@ initialize config = do
 setHardodedExtensions :: GhcMonad m => m ()
 setHardodedExtensions = do
     flags <- GHC.getSessionDynFlags
-    let f = foldl F.xopt_set flags [ F.Opt_TemplateHaskell,
-                                     F.Opt_DataKinds,
+    let f = foldl F.xopt_set flags [ F.Opt_DataKinds,
                                      F.Opt_DeriveDataTypeable,
                                      F.Opt_DeriveGeneric,
                                      F.Opt_FlexibleInstances,
@@ -65,7 +69,13 @@ compileAndRun imports declarations stmt = do
     GHC.load GHC.LoadAllTargets
     setImports imports
     _ <- GHC.runDecls declarations
-    _ <- GHC.runStmt stmt GHC.RunToCompletion
+    rr <- GHC.runStmt stmt GHC.RunToCompletion
+    case rr of
+            GHC.RunOk _        -> liftIO $ logger info "runOk"
+            GHC.RunException e -> do let errStr = "Exception: " ++ (show e)
+                                     liftIO $ logger error errStr
+                                     fail errStr
+            GHC.RunBreak {}    -> liftIO $ logger info "runBreak"
     return ()
 
 

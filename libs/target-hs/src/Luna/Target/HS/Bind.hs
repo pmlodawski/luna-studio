@@ -13,11 +13,12 @@ import           Prelude hiding ((>>=), (>>), fail, return)
 import qualified Prelude 
 
 import Luna.Target.HS.Base
+import Luna.Target.HS.Data 
 
 (>>=) = bind
 (>>)  = bind_
-fail = ()
-return = Prelude.return
+fail _ = undefined
+return = id
 
-returnIO :: a -> IO a
-returnIO = return
+--returnIO :: a -> IO a
+--returnIO = return

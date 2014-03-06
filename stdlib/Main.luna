@@ -11,10 +11,13 @@
 
 import ```           Control.Applicative                          ```
 import ``` qualified Data.Array.Accelerate             as A       ```
+import ```           Data.Map.Lazy                     (Map)      ```
+import ``` qualified Data.Map.Lazy                     as Map     ```
+import ``` qualified Flowbox.Graphics.Algorithms       as Alg     ```
+import ``` qualified Flowbox.Graphics.Mockup           as Mockup  ```
 import ``` qualified Flowbox.Graphics.Raster.Channel   as Channel ```
 import ``` qualified Flowbox.Graphics.Raster.Image     as Image   ```
 import ``` qualified Flowbox.Graphics.Raster.IO        as Image   ```
-import ``` qualified Flowbox.Graphics.Algorithms       as Alg     ```
 import ``` qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA    ```
 import ``` qualified System.Exit                       as Exit    ```
 
@@ -36,8 +39,7 @@ def List.contains el:
     ```liftf2 (elem) (val #{el}) #{self}```
 
 def List.each callback:
-    ```let {mymap = liftf2 map}```
-    ```mymap (val $ call1 #{callback}) #{self}```
+    ```liftf2 map (val $ call1 #{callback}) #{self}```
 
 def List.foldr f el:
     ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```
@@ -58,6 +60,13 @@ def List.min:
 def List.sum:
     self.foldr ((x,y):x+y) 0
 
+###### Map ####################################
+
+def Map.each f:
+    ```liftf2 Map.map (val $ call1 #{f}) #{self}```
+
+def Map.eachWithKey f:
+    ```liftf2 Map.mapWithKey (val $ call2 #{f}) #{self}```
 
 ###### Bool ####################################
 
@@ -106,7 +115,7 @@ def Double.- a:
 
 def Double.* a:
     ```liftf2 (*) #{self} #{a}```
-    
+
 def Double./ a:
     ```liftf2 (/) #{self} #{a}```
 
@@ -129,34 +138,34 @@ def Double.str:
     ```liftf1 show #{self}```
 
 def Double.invert:
-    ```liftf1 invert #{self}```
+    ```liftf1 Alg.invert #{self}```
 
 def Double.invert_:
-    ```liftf1 invert' #{self}```
+    ```liftf1 Alg.invert' #{self}```
 
 def Double.sign:
-    ```liftf1 sign #{self}```
+    ```liftf1 Alg.sign #{self}```
 
 def Double.parametrize lo hi:
-    ```liftf3 parametrize #{lo} #{hi} #{self}```
+    ```liftf3 Alg.parametrize #{lo} #{hi} #{self}```
 
 def Double.bias b:
-    ```liftf2 bias #{b} #{self}```
+    ```liftf2 Alg.bias #{b} #{self}```
 
 def Double.gain g:
-    ```liftf2 gain #{g} #{self}```
+    ```liftf2 Alg.gain #{g} #{self}```
 
 def Double.gamma g:
-    ```liftf2 gamma #{g} #{self}```
+    ```liftf2 Alg.gamma #{g} #{self}```
 
 def Double.compress lo hi:
-    ```liftf3 gamma #{lo} #{hi} #{self}```
+    ```liftf3 Alg.compress #{lo} #{hi} #{self}```
 
 def Double.expand lo hi:
-    ```liftf3 expand #{lo} #{hi} #{self}```
+    ```liftf3 Alg.expand #{lo} #{hi} #{self}```
 
 def Double.remap loA hiA loB hiB:
-    ```liftf5 remap #{loA} #{hiA} #{loB} #{hiB} #{self}```
+    ```liftf5 Alg.remap #{loA} #{hiA} #{loB} #{hiB} #{self}```
 
 
 
@@ -172,9 +181,9 @@ def isError a:
 
 class Sys:
     def exitSuccess:
-        ```Exit.exitSuccess *> return (Safe ())```
+        ```Exit.exitSuccess *> returnIO (Safe ())```
     def exitFailure:
-        ```Exit.exitFailure *> return (Safe ())```
+        ```Exit.exitFailure *> returnIO (Safe ())```
 
 
 ## Backend ####################################
@@ -209,16 +218,53 @@ def Image.decompose:
     ```flattenCtx $ liftf1 (Pure . RGBA.decompose) #{self}```
 
 def Image.reprDouble:
-    ```liftf1 reprDouble #{self}```
+    ```liftf1 Image.reprDouble #{self}```
 
 def Image.reprWord8:
-    ```liftf1 reprWord8 #{self}```
+    ```liftf1 Image.reprWord8 #{self}```
+
+def Image.getChannels:
+    ```liftf1 getChannels #{self}```
+
+def Image.setChannels channels:
+    ```liftf1 setChannels #{channels}```
+
+def Image.each f:
+    self.setChannels (self.getChannels.each f)
+
+def Image.eachWithKey f:
+    self.setChannels (self.getChannels.eachWithKey f)
+
+def Image.erode: # channelNames:
+    self.each channel : channel.erode
+    # self.each (chanName, channel):
+        # if chanName in channelNames
+            # then channel.erode
+            # else channel
+
+def Image.dilate: # channelNames:
+    self.each channel : channel.dilate
+    # self.each (chanName, channel):
+    #     if chanName in channelNames
+    #         then channel.dilate
+    #         else channel
+
+def Image.open: # channelNames:
+    self.erode.dilate
+    # (self.erode channelNames).dilate channelNames
+
+def Image.close: # channelNames:
+    self.dilate.erode
+    # (self.dilate channelNames).erode channelNames
+
+def Image.median:
+    self.each channel : channel.median
 
 def Image.adjustCB contrast brightness:
-    ```flattenCtx $ liftf3 adjustCB #{contrast} #{brightness} #{self}```
+    ```flattenCtx $ liftf3 Mockup.adjustCB #{contrast} #{brightness} #{self}```
 
 def Image.convolve kernel:
-    ```flattenCtx $ liftf2 convolve #{kernel} #{self}```
+    ```flattenCtx $ liftf2 Mockup.convolve #{kernel} #{self}```
 
 def Image.convertRGBtoHSV:
     ```flattenCtx $ liftf1 (Pure . Alg.convertRGBtoHSV) #{self}```
@@ -233,23 +279,118 @@ def Image.put name channel:
     ```liftf3 Image.insert #{name} #{channel} #{self}```
 
 def Image.displayP name:
-    b = interp
+    b = cuda
+    self = self.each channel : channel.clip
     self.write name b
 
 def extractBackground images:
     ```flattenCtx $ liftf1 (Pure . (Alg.extractBackground ("r", "g", "b"))) #{images}```
 
-    
+def Image.premultiply:
+    ```liftf1 Alg.premultiply #{self}```
+
+def Image.unpremultiply:
+    ```liftf1 Alg.unpremultiply #{self}```
+
+
 ## Channel ####################################
 
-
-# # FIXME [wd] zrób to
 def Channel.map callback:
     ```liftf2 Channel.map (val $ (\x -> (fromSafe.fromPure) (call1 #{callback} (val x)))) #{self}```
-#     # ```liftf2 channelMap (val $ call1 #{callback}) #{self}```
 
-# def Channel.erode:
-#    ```liftf1 erodeChannel #{self}```
+def Channel.clip:
+    ```liftf1 Alg.clipValues #{self}```
+
+def Channel.lut arr:
+    # ```liftf2 Alg.lutChannel (fmap (\(a,b) -> ((fromSafe.fromPure) a, (fromSafe.fromPure) b)) #{arr}) #{self}```
+    ```liftf2 Mockup.lutChannel #{self} #{arr}```
+
+def Channel.erode:
+    ```liftf1 Alg.erodeChannel #{self}```
+
+def Channel.dilate:
+    ```liftf1 Alg.dilateChannel #{self}```
+
+def Channel.median:
+    ```liftf1 Alg.medianChannel #{self}```
+
+## Transformed ################################
+
+
+def Image.transform:
+    ```val $ Image.transform #{self}```
+
+def Image.rasterize:
+    self
+
+def Transformed.transform:
+    self
+
+def Transformed.rasterize:
+    ```flattenCtx $ liftf1 Mockup.rasterize' #{self}```
+
+
+def Transformed.translate x y:
+    ```liftf3 Image.translate #{x} #{y} #{self}```
+
+def Transformed.rotate angle:
+    ```liftf2 Image.rotate #{angle} #{self}```
+
+def Transformed.rotateAt angle x y:
+    ```liftf4 Image.rotateAt #{angle} #{x} #{y} #{self}```
+
+def Transformed.scale x y:
+    ```liftf3 Image.scale #{x} #{y} #{self}```
+
+def Transformed.scaleAt sx sy x y:
+    ```liftf5 Image.scaleAt #{sx} #{sy} #{x} #{y} #{self}```
+
+def Transformed.adjustCB contrast brightness:
+    ```let { f1 c b self = call2 (member (P :: P "adjustCB") self) c b}```
+    ```let { f2 self c b = (fmap.fmap.fmap) (f1 c b) self}```
+    ```f2 #{self} #{contrast} #{brightness} ```
+
+# def Transformed.erode: # channelNames:
+#     ```let { f1 c b self = call2 (member (P :: P "adjustCB") self) c b}```
+#     ```let { f2 self c b = (fmap.fmap.fmap) (f1 c b) self}```
+#     ```f2 #{self} #{contrast} #{brightness} ```
+#     self.each channel : channel.erode
+
+# def Transformed.dilate: # channelNames:
+#     self.each channel : channel.dilate
+
+# def Transformed.open: # channelNames:
+#     self.erode.dilate
+
+# def Transformed.close: # channelNames:
+#     self.dilate.erode
+
+def Transformed.convolve kernel:
+    ```let { f1 k self = call1 (member (P :: P "convolve") self) k}```
+    ```let { f2 self k = (fmap.fmap.fmap) (f1 k) self}```
+    ```f2 #{self} #{kernel} ```
+
+def Transformed.displayP name:
+    b = cuda
+    self = self.rasterize.each channel : channel.clip
+    self.write name b
+
+def Image.translate x y:
+    self.transform.translate x y
+
+def Image.rotate angle:
+    self.transform.rotate angle
+
+def Image.rotateAt angle x y:
+    self.transform.rotateAt angle x y
+
+def Image.scale x y:
+    self.transform.scale x y
+
+def Image.scaleAt sx sy x y:
+    self.transform.scaleAt sx sy x y
+
+###############################################
 
 def constant x:
     ```liftf1 A.constant #{x}```
@@ -280,6 +421,9 @@ class Vector a:
     def normalize:
         Vector (x/length) (y/length) (z/length)
 
+
+def fmapme f obj:
+    ``` liftf1 (fmap (call1 #{f})) #{obj}```
 
 # def loadImages path:
 #     x
@@ -329,18 +473,36 @@ def main:
     # c.print $ self.testm 15
 
     path = "lena.bmp"
+    path = "dragon_summon.bmp"
+    path = "a_big.bmp"
     outpath = "luna.bmp"
     img = readImage path
 
     if isError img:
         print "oh no!"
         Sys.exitFailure
-    
+
     print path
     print "=========="
     chR = img.get "r"
-    chR = chR.map (x : x * x)
-    img = img.put "r" chR
+    chG = img.get "g"
+    chB = img.get "b"
+    # chR = chR.map (x : x * x)
+    # chRE = chR.erode
+    # chGE = chG.erode
+    # chBE = chB.erode
+    # ch0 = chR.map (x : x - x)
+    # img = img.put "r" chR
+    # img = img.close
+    # lut = [{0.0, 0.0}, {0.5, 1.0}, {1.0, 0.0}]
+    # img = img.each channel : channel.lut Main.lut
+    # img = img.each channel : channel.lut [{0.0, 0.0}, {0.5, 1.0}, {1.0, 0.0}]
+    # img = img.each channel : channel.clip
+    img = img.median
+
+    # img = img.put "r" chRE
+    # img = img.put "g" chGE
+    # img = img.put "b" chBE
     img.write outpath backend
     print "=========="
     # print img
@@ -351,29 +513,33 @@ def main:
     c = 1.5
     b = 0.2
     k = 0.1
-    # # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
-    img = img.adjustCB c b
-    
-    outpath2 = "luna2.bmp"
-    print "=========="
-    # img = img.convertRGBtoHSV.convertHSVtoRGB
-    img.write outpath2 backend
+    # kernel = [0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]
+
+    # t = img.transform
+    # t = t.rotate 0.5
+    # t = t.adjustCB c b
+    # t = t.convolve k
+    # img = t.rasterize
+    # outpath2 = "luna2.bmp"
+    # print "=========="
+
+    # img.write outpath2 backend
 
 
-    
+
     # # img = img.convolve k
 
-    
+
     # chG = img.getChannel "g"
     # chB = img.getChannel "b"
 
     # # chR
-    
+
     # # a = [1,2,3].each x : x+1
     # # console.print a
     # # chB = chB.map (x : Main.constant 0.0)
 
-    
+
     # img = img.putChannel "g" chG.erode()
     # img = img.putChannel "b" chB.erode()
 

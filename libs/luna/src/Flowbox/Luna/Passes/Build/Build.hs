@@ -42,6 +42,8 @@ import qualified Flowbox.Luna.Passes.Transform.AST.Hash.Hash                    
 import qualified Flowbox.Luna.Passes.Transform.AST.SSA.SSA                               as SSA
 import qualified Flowbox.Luna.Passes.Transform.AST.TxtParser.TxtParser                   as TxtParser
 import qualified Flowbox.Luna.Passes.Transform.HAST.HASTGen.HASTGen                      as HASTGen
+import qualified Flowbox.Luna.Passes.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
+import qualified Flowbox.Luna.Passes.Transform.AST.DepSort.DepSort                       as Transform.DepSort
 import           Flowbox.Prelude
 import qualified Flowbox.System.Directory.Directory                                      as Directory
 import           Flowbox.System.Log.Logger
@@ -93,6 +95,21 @@ prepareSources diag ast astInfo implicitSelf = runEitherT $ do
     aliasInfo <- hoistEither =<< Analysis.Alias.run ast
     Diagnostics.printAA aliasInfo diag
 
+
+    -----------------------------------------
+    -- !!! CallGraph and DepSort are mockup passes !!!
+    -- They are working right now only with not self typed variables
+    logger debug "\n-------- Analysis.CallGraph --------"
+    callGraph <- hoistEither =<< Analysis.CallGraph.run aliasInfo ast
+    --logger info $ PP.ppShow callGraph
+
+
+    logger debug "\n-------- Transform.DepSort --------"
+    ast <- hoistEither =<< Transform.DepSort.run callGraph aliasInfo ast
+    --logger info $ PP.ppShow ast
+    -----------------------------------------
+
+
     -- !!! [WARNING] INVALIDATES aliasInfo !!!
     logger debug "\n-------- Desugar.ImplicitScopes --------"
     (ast, astInfo) <- hoistEither =<< Desugar.ImplicitScopes.run astInfo aliasInfo ast
@@ -130,6 +147,7 @@ run :: BuildConfig -> ASTModule.Module -> ASTInfo -> Bool -> Pass.Result ()
 run buildConfig ast astInfo implicitSelf = runEitherT $ do
     let diag    = BuildConfig.diag buildConfig
         allLibs = "base"
+                : "containers"
                 -- : "flowboxM-core"
                 : "flowbox-graphics"
                 : "luna-target-hs"

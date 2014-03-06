@@ -31,7 +31,7 @@ import qualified Flowbox.Luna.Passes.Analysis.NameResolver         as NameResolv
 import qualified Flowbox.Luna.Passes.General.Luna.Luna             as Luna
 import qualified Flowbox.Luna.Passes.Transform.AST.IDFixer.IDFixer as IDFixer
 import qualified Flowbox.Luna.Passes.Transform.AST.Shrink          as Shrink
-import           Flowbox.Prelude                                   hiding (cons, focus)
+import           Flowbox.Prelude                                   hiding (cons)
 import           Flowbox.System.Log.Logger
 
 

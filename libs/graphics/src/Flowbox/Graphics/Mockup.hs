@@ -13,30 +13,16 @@
 
 module Flowbox.Graphics.Mockup (
     module Flowbox.Graphics.Mockup,
-    --Image,
-    --Image.reprDouble,
-    --Image.reprWord8,
-    --Channel,
 
-    --Alg.invert,
-    --Alg.invert',
-    --Alg.sign,
-    --Alg.parametrize,
-    --Alg.bias,
-    --Alg.gain,
-    --Alg.gamma,
-    --Alg.compress,
-    --Alg.expand,
-    --Alg.remap,
-
-    --Alg.erodeChannel,
-    --toDouble,
-    --Exp,
-
+    Image,
+    Channel,
+    Image.Transformed,
+    Exp,
+    toDouble
 ) where
 
-import qualified Data.Array.Accelerate as A
 import           Data.Array.Accelerate (Exp)
+import qualified Data.Array.Accelerate as A
 import           GHC.Float
 import qualified System.Exit           as Exit
 #ifdef ACCELERATE_CUDA_BACKEND
@@ -44,11 +30,12 @@ import qualified Data.Array.Accelerate.CUDA as CUDA
 #endif
 import qualified Data.Array.Accelerate.Interpreter as Interpreter
 
+import qualified Data.Map                          as Map
 import           Data.Number.Conversion
-import qualified Flowbox.Graphics.Algorithms as Alg
+import qualified Flowbox.Graphics.Algorithms       as Alg
 import           Flowbox.Graphics.Raster.Channel   (Channel)
 import qualified Flowbox.Graphics.Raster.Channel   as Channel
-import           Flowbox.Graphics.Raster.Image     (Image)
+import           Flowbox.Graphics.Raster.Image     (Image (Image))
 import qualified Flowbox.Graphics.Raster.Image     as Image
 import qualified Flowbox.Graphics.Raster.IO        as Image
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
@@ -93,4 +80,23 @@ import           Luna.Target.HS.Core               hiding (print, return)
 --convolve :: Double -> Image Double -> Pure (Either Image.Error (Image Double))
 --convolve kernel img = Pure $ Alg.convolveRGB Alg.convolve3x3 kernel' img where
 --    kernel' = map A.constant $ replicate 9 kernel
+
+
+--rasterize' :: (A.Elt a, A.IsFloating a, Functor m, Functor n) =>
+--              Image.Transformed (m ( n( Image a))) -> m (n (Image a))
+--rasterize' (Image.Transformed img t) =
+--    (fmap.fmap) (\i -> Image $ Map.map (Image.rasterizeChannel t) $ view Image.channels i) img
+
+--getChannels :: Image a -> Map.Map String (Pure(Safe(Channel a)))
+--getChannels img = fmap val (view Image.channels img)
+
+----setChannels :: Image a -> Map.Map String (Channel a) -> Image a
+----setChannels img channels = Image $ channels
+
+--setChannels :: Map.Map String (Pure(Safe(Channel a))) -> Image a
+--setChannels channels = Image $ fmap (fromSafe.fromPure) channels
+
+--lutChannel :: (A.Elt a, A.IsFloating a) => Channel a -> [Pure(Safe (Pure(Safe(a)), Pure(Safe(a))) )] -> Channel a
+--lutChannel channel arr = Alg.lutChannel (fmap (extractTuple.fromSafe.fromPure) arr) channel
+--    where extractTuple (a,b) = (A.constant $ (fromSafe.fromPure) a, A.constant $ (fromSafe.fromPure) b)
 
