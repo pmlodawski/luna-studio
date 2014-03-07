@@ -610,9 +610,18 @@ extractBackground (nameA, nameB, nameC) images = do
              $ Image.insert "a"   (Channel.fill     sh' 1)
              $ mempty
       getMostFreqPixel channels ix = let
-              (A.Z A.:. (j :: A.Exp Int) A.:. (i :: A.Exp Int)) = A.unlift ix
+              --(A.Z A.:. (j :: A.Exp Int) A.:. (i :: A.Exp Int)) = A.unlift ix
+              --(A.Z A.:. (j) A.:. (i)) = A.unlift ix
+              --(A.Z A.:. (j) A.:. (i)) = A.unlift ix :: (A.Z A.:. Int A.:. Int)
+              --(A.Z A.:. (j :: Int) A.:. (i :: Int)) = A.unlift ix
+              --pixels = Channel.accMatrix $ Channel.slice channels $ A.constant (A.Z A.:.j A.:. i A.:. A.All)
               --pixels = Channel.accMatrix $ Channel.slice channels $ A.lift (A.Z A.:.j A.:. i A.:. (A.All))
+              --pixels = Channel.accMatrix $ Channel.slice channels $ Channel.index3 0 0 0 -- $ A.lift (A.Z A.:.j A.:. i A.:. i)
+              --pixels = A.generate (A.index1 z) $ getVector channels i j
           in 1 -- pixels A.!! 0
+      getVector channels x y ix = let
+              (A.Z A.:. (z :: A.Exp Int)) = A.unlift ix
+          in channels Channel.! (Channel.index3 y x z)
   return outimg
 
 ----extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> [Image a] -> Either Image.Error (Image a)
@@ -685,3 +694,9 @@ cutOut (nameA, nameB, nameC) (epsA, epsB, epsC) f imgIn imgBackground = do
       epsilonsB = Channel.zipWith (-) channelB1 channelB2
       epsilonsC = Channel.zipWith (-) channelC1 channelC2
   return outimg
+
+
+
+---- types for defining color lookup
+
+type Point a = (a, a)
