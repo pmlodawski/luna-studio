@@ -694,9 +694,3 @@ cutOut (nameA, nameB, nameC) (epsA, epsB, epsC) f imgIn imgBackground = do
       epsilonsB = Channel.zipWith (-) channelB1 channelB2
       epsilonsC = Channel.zipWith (-) channelC1 channelC2
   return outimg
-
-
-
----- types for defining color lookup
-
-type Point a = (a, a)
