@@ -10,6 +10,7 @@ module Flowbox.ZMQ.RPC.Client where
 
 import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
+import           Control.Monad.Trans.Either
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
 import           Flowbox.Control.Error
@@ -20,7 +21,7 @@ import qualified Generated.Proto.Rpc.Exception                  as Exception
 import           Generated.Proto.Rpc.Response                   (Response)
 import qualified Generated.Proto.Rpc.Response                   as Response
 import qualified Generated.Proto.Rpc.Response.Type              as Type
-
+import Control.Monad.Trans.Class (lift)
 
 
 type Error = String
@@ -30,19 +31,18 @@ query :: (ZMQ.Sender t, ZMQ.Receiver t, Proto.Serializable request, Proto.Serial
       => ZMQ.Socket z t
       -> request
       -> Extensions.Key Maybe Response result
-      -> ZMQ z (Either Error result)
+      -> EitherT String (ZMQ z) result
 query socket request rspKey = do
     response <- query_raw socket request
-    return $ do r <- response
-                processResponse rspKey r
+    hoistEither $ processResponse rspKey response
 
 
 query_raw :: (ZMQ.Sender t, ZMQ.Receiver t, Proto.Serializable request)
-          => ZMQ.Socket z t -> request -> ZMQ z (Either Error Response)
+          => ZMQ.Socket z t -> request -> EitherT String (ZMQ z) Response
 query_raw socket request = do
-    ZMQ.send socket [] $ Proto.messagePut' request
-    encoded_response <- ZMQ.receive socket
-    return $ Proto.messageGet' encoded_response
+    lift $ ZMQ.send socket [] $ Proto.messagePut' request
+    encoded_response <- lift $ ZMQ.receive socket
+    hoistEither $ Proto.messageGet' encoded_response
 
 
 processResponse :: Proto.Serializable result

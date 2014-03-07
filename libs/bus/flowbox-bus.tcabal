@@ -33,3 +33,23 @@ Library
                   transformers,
                   zeromq4-haskell
 
+
+
+Executable bus-test
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: test
+
+  GHC-Options:    -Wall -O2
+
+  Extensions:     NoImplicitPrelude
+
+  Build-Depends:  base,
+                  either,
+                  flowbox-bus,
+                  flowbox-rpc,
+                  flowbox-utils,
+                  mtl,
+                  protocol-buffers,
+                  protocol-buffers-descriptor,
+                  transformers,
+                  zeromq4-haskell
