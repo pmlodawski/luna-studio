@@ -24,6 +24,7 @@ Library
   Build-Depends:  base,
                   bytestring,
                   containers,
+                  either,
                   flowbox-utils,
                   mtl,
                   protocol-buffers,
