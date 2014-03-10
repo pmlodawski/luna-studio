@@ -24,6 +24,7 @@ Library
                    `findmodules('src', '.*\.hs')`
                    
   Build-Depends:  base,
+                  bytestring,
                   either,
                   flowbox-rpc,
                   flowbox-utils,
@@ -32,7 +33,6 @@ Library
                   protocol-buffers-descriptor,
                   transformers,
                   zeromq4-haskell
-
 
 
 Executable bus-test
