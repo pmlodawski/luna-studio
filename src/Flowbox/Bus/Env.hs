@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 module Flowbox.Bus.Env where
 
+import qualified System.ZMQ4.Monadic as ZMQ
+
+import qualified Flowbox.Bus.Message as Message
 import           Flowbox.Prelude
-import qualified Flowbox.Text.ProtocolBuffers       as Proto
 
 
-
-type ClientID = Proto.Int32
 
 type EndPoint = String
 
@@ -20,8 +20,9 @@ data BusEndPoints = BusEndPoints { controlEndPoint :: EndPoint
                                  , pubEndPoint     :: EndPoint
                                  } deriving (Read, Show, Eq)
 
-data BusEnv = BusEnv { endPoints :: BusEndPoints
-                     , clientID  :: ClientID
-                     } deriving (Read, Show, Eq)
+data BusEnv z = BusEnv { subSocket  :: ZMQ.Socket z ZMQ.Sub
+                       , pushSocket :: ZMQ.Socket z ZMQ.Push
+                       , clientID   :: Message.ClientID
+                       }
 
 

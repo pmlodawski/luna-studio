@@ -12,13 +12,18 @@
 module Flowbox.Bus.Bus where
 
 import           Control.Monad.Reader
+import           Control.Monad.Trans.Either
+import           Data.ByteString                 (ByteString)
+import qualified Data.ByteString.Char8           as Char8
 import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
-import           Control.Monad.Trans.Either
 import           Flowbox.Bus.Env                    (BusEnv (BusEnv))
 import qualified Flowbox.Bus.Env                    as Env
+import           Flowbox.Bus.MessageFrame           (MessageFrame)
+import qualified Flowbox.Bus.MessageFrame           as MessageFrame
+import qualified Flowbox.Bus.Message           as Message
 import           Flowbox.Prelude
 import qualified Flowbox.Text.ProtocolBuffers       as Proto
 import qualified Flowbox.ZMQ.RPC.Client             as Client
@@ -31,12 +36,11 @@ import qualified Generated.Proto.Bus.Request.Method as Method
 
 type Error = String
 
-type Bus a = forall z. ReaderT BusEnv (EitherT Error (ZMQ z)) a
+type Bus a = forall z. ReaderT (BusEnv z) (EitherT Error (ZMQ z)) a
 
 
-
-getClientID :: Env.EndPoint -> EitherT Error (ZMQ z) Env.ClientID
-getClientID addr = do
+requestClientID :: Env.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
+requestClientID addr = do
     socket <- lift $ ZMQ.socket ZMQ.Req
     lift $ ZMQ.connect socket addr
     let request = Extensions.putExt ID_New.req (Just ID_New.Args)
@@ -46,31 +50,86 @@ getClientID addr = do
     return $ ID_New.id response
 
 
-runBus :: ReaderT BusEnv (EitherT Error (ZMQ z)) a
+runBus :: ReaderT (BusEnv z) (EitherT Error (ZMQ z)) a
        -> Env.BusEndPoints
        -> ZMQ z (Either Error a)
 runBus fun endPoints = runEitherT $ runBus' fun endPoints
 
 
-runBus' :: ReaderT BusEnv (EitherT Error (ZMQ z)) a
+runBus' :: ReaderT (BusEnv z) (EitherT Error (ZMQ z)) a
         -> Env.BusEndPoints -> EitherT Error (ZMQ z) a
 runBus' fun endPoints = do
-    clientID <- getClientID $ Env.controlEndPoint endPoints
-    runReaderT fun $ BusEnv endPoints clientID
+    clientID <- requestClientID $ Env.controlEndPoint endPoints
+    subSocket  <- lift $ ZMQ.socket ZMQ.Sub
+    pushSocket <- lift $ ZMQ.socket ZMQ.Push
+    lift $ ZMQ.connect subSocket  $ Env.pubEndPoint  endPoints
+    lift $ ZMQ.connect pushSocket $ Env.pullEndPoint endPoints
+    runReaderT fun $ BusEnv subSocket pushSocket clientID
 
 
-test :: Bus Int
+getClientID :: Bus Message.ClientID
+getClientID = Env.clientID <$> ask
+
+
+getPushSocket :: (Functor f, MonadReader (BusEnv z) f) => f (ZMQ.Socket z ZMQ.Push)
+getPushSocket = Env.pushSocket <$> ask
+
+
+getSubSocket :: (Functor f, MonadReader (BusEnv z) f) => f (ZMQ.Socket z ZMQ.Sub)
+getSubSocket  = Env.subSocket <$> ask
+
+
+send :: MessageFrame -> Bus ()
+send = send' . MessageFrame.toByteString
+
+
+receive :: Bus (Either String MessageFrame)
+receive = MessageFrame.fromByteString <$> receive'
+
+
+send' :: ByteString -> Bus ()
+send' msg = do
+    push <- getPushSocket
+    lift $ lift $ ZMQ.send push [] msg
+
+
+receive' :: Bus ByteString
+receive' = do
+    sub <- getSubSocket
+    lift $ lift $ ZMQ.receive sub
+
+
+subscribe :: ByteString -> Bus ()
+subscribe topic = do
+    sub <- getSubSocket
+    lift $ lift $ ZMQ.subscribe sub topic
+
+
+unsubscribe :: ByteString -> Bus ()
+unsubscribe topic = do
+    sub <- getSubSocket
+    lift $ lift $ ZMQ.unsubscribe sub topic
+
+
+test :: Bus ()
 test = do
-    socket <- (lift . lift) $ ZMQ.socket ZMQ.Req
-    print "test"
-    x <- ask
-    print x
-    return 5
+    subscribe $ Char8.pack ""
+    putStrLn "sending.."
+    send' $ Char8.pack "test test"
+    _ <- forever $ do
+        putStrLn "receiving.."
+        x <- receive'
+        return ()
+    putStrLn "finishing"
+    return ()
 
 
 main :: IO ()
 main = do
-    x <- ZMQ.runZMQ $ runBus test (Env.BusEndPoints "tcp://127.0.0.1:30530" "" "")
+    x <- ZMQ.runZMQ $ runBus test (Env.BusEndPoints "tcp://127.0.0.1:30530"
+                                                    "tcp://127.0.0.1:30531"
+                                                    "tcp://127.0.0.1:30532"
+                                  )
     print x
     return ()
 
