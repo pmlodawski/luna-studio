@@ -4,10 +4,9 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds           #-}
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE ConstraintKinds  #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes       #-}
 
 module Flowbox.Bus.Bus where
 
@@ -21,9 +20,9 @@ import qualified Text.ProtocolBuffers.Extensions as Extensions
 
 import           Flowbox.Bus.Env                    (BusEnv (BusEnv))
 import qualified Flowbox.Bus.Env                    as Env
+import qualified Flowbox.Bus.Message                as Message
 import           Flowbox.Bus.MessageFrame           (MessageFrame)
 import qualified Flowbox.Bus.MessageFrame           as MessageFrame
-import qualified Flowbox.Bus.Message           as Message
 import           Flowbox.Prelude
 import qualified Flowbox.Text.ProtocolBuffers       as Proto
 import qualified Flowbox.ZMQ.RPC.Client             as Client
