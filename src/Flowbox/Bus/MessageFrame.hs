@@ -25,6 +25,8 @@ data MessageFrame = MessageFrame { message     :: Message
 separator :: Char
 separator = ' '
 
+separator' :: ByteString
+separator' = Char8.singleton separator
 
 encode :: (Show a, Read a) => a -> ByteString
 encode = Char8.pack . show
@@ -39,7 +41,7 @@ toByteString (MessageFrame (Message topic message')
                            (M.CorrelationID clientID messageID)
                            senderID'
              ) =
-    ByteString.intercalate ( Char8.singleton separator )
+    ByteString.intercalate separator'
                            [ topic
                                , encode clientID
                                , encode messageID
@@ -49,9 +51,17 @@ toByteString (MessageFrame (Message topic message')
 
 
 fromByteString :: ByteString -> Either String MessageFrame
-fromByteString bs = case Char8.split separator bs of
+fromByteString bs = case splitFirsts 5 separator bs of
     [topic, clientID, messageID, senderID', message']
-        -> Right $ MessageFrame (Message topic message')
-                                (M.CorrelationID (decode clientID) (decode messageID))
-                                (decode senderID')
-    _   -> Left "Cannot parse message"
+          -> Right $ MessageFrame (Message topic message')
+                                  (M.CorrelationID (decode clientID) (decode messageID))
+                                  (decode senderID')
+    wrong -> Left $ "Cannot parse message" ++ show wrong
+
+
+splitFirsts :: Int -> Char -> ByteString -> [ByteString]
+splitFirsts count sep list = 
+    if count > 1
+        then a : (splitFirsts (count - 1) sep $ Char8.tail b)
+        else [list]
+    where (a, b) = Char8.break (== sep) list

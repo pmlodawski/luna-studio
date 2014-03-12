@@ -45,6 +45,7 @@ Executable bus-test
   Extensions:     NoImplicitPrelude
 
   Build-Depends:  base,
+                  bytestring,
                   either,
                   flowbox-bus,
                   flowbox-rpc,
