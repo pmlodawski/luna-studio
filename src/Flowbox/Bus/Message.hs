@@ -9,6 +9,7 @@ module Flowbox.Bus.Message where
 import           Data.ByteString              (ByteString)
 import qualified Flowbox.Text.ProtocolBuffers as Proto
 
+import Flowbox.Bus.Topic (Topic)
 import Flowbox.Prelude
 
 
@@ -24,6 +25,6 @@ data CorrelationID = CorrelationID { clientID  :: ClientID
                                    } deriving (Read, Show, Eq)
 
 
-data Message = Message { topic   :: ByteString
+data Message = Message { topic   :: Topic
                        , message :: ByteString
                        } deriving (Read, Show, Eq)
