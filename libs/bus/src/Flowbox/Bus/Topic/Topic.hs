@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Bus.Topic where
+module Flowbox.Bus.Topic.Topic where
 
 import           Data.ByteString       (ByteString)
 import           Data.ByteString.Char8 (pack, unpack)
@@ -29,3 +29,10 @@ fromTopic = Read.readEither . unwords . map capitalize . words . replaceDots . u
 toTopic :: (Show a, Read a) => a -> Topic
 toTopic = pack . map toLower . replaceSpace . show
   where replaceSpace = replace " " "."
+
+
+mk :: String -> Topic
+mk = pack
+
+str :: Topic -> String
+str = unpack
