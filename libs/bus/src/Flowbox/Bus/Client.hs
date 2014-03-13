@@ -24,18 +24,17 @@ import           Flowbox.System.Log.Logger
 
 
 
-
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Bus.Client"
 
 
-run :: Env.BusEndPoints -> Topic -> (Message -> IO Message) -> IO (Either String ())
-run endPoints topic process = Bus.runBus (handleLoop topic process) endPoints
+run :: Env.BusEndPoints -> [Topic] -> (Message -> IO Message) -> IO (Either String ())
+run endPoints topics process = Bus.runBus (handleLoop topics process) endPoints
 
 
-handleLoop :: Topic -> (Message -> IO Message) -> Bus ()
-handleLoop topic process = do
-    Bus.subscribe topic
+handleLoop :: [Topic] -> (Message -> IO Message) -> Bus ()
+handleLoop topics process = do
+    mapM_ Bus.subscribe topics
     _ <- forever $ handle process
     return ()
 

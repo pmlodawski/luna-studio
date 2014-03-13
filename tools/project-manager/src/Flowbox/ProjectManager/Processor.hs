@@ -20,8 +20,8 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.ProjectManager.Processor"
 
 
-topic :: Topic
-topic = "project"
+topics :: [Topic]
+topics = ["project"]
 
 
 process :: ctx -> Message -> IO Message
