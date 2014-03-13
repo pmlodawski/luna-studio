@@ -39,8 +39,8 @@ responseExt rspType rspId rsp rspKey = Proto.messagePut'
 
 
 process :: Serializable request
-        => RPCHandler ctx request -> ctx -> ByteString -> Int32 -> ZMQ z ByteString
-process handler ctx encodedRequest requestID = case Proto.messageGet' encodedRequest of
+        => RPCHandler request -> ByteString -> Int32 -> ZMQ z ByteString
+process handler encodedRequest requestID = case Proto.messageGet' encodedRequest of
     Left  er      -> fail $ "Error while decoding request: " ++ er
     Right request -> handler call request
         where
@@ -55,7 +55,7 @@ process handler ctx encodedRequest requestID = case Proto.messageGet' encodedReq
             unsafeCall method reqKey rspKey = do
                 rsp <- case Proto.getExt' reqKey request of
                        Right args -> do loggerIO debug $ show args
-                                        method ctx args
+                                        method args
                        Left  e    -> fail e
                 loggerIO trace $ show rsp
                 return $ responseExt ResponseType.Result (Just requestID) rsp rspKey
