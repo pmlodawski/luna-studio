@@ -1,22 +1,22 @@
 module Main where
 
 import           Control.Monad.Reader
-import qualified Data.ByteString.Char8           as Char8
-import qualified Flowbox.Bus.Bus                 as Bus
+import qualified Data.ByteString.Char8 as Char8
+import qualified Flowbox.Bus.Bus       as Bus
 import           Flowbox.Prelude
-import qualified System.ZMQ4.Monadic             as ZMQ
+import qualified System.ZMQ4.Monadic   as ZMQ
 
-import qualified Flowbox.Bus.Env                    as Env
-import qualified Flowbox.Bus.Message                as Message
-import  Flowbox.Bus.Bus  (Bus)
+import           Flowbox.Bus.Bus     (Bus)
+import qualified Flowbox.Bus.Env     as Env
+import qualified Flowbox.Bus.Message as Message
 
 
 test :: Bus ()
 test = do
     Bus.subscribe $ Char8.pack ""
-    Bus.send ( Message.Message (Char8.pack "project.open.request") (Char8.pack "some data")
-             , Message.CorrelationID 45 66
-             )
+    Bus.reply ( Message.Message (Char8.pack "project.open.request") (Char8.pack "some data")
+              , Message.CorrelationID 45 66
+              )
     putStrLn "sent"
     _ <- forever $ do
         _ <- Bus.receive

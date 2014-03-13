@@ -10,7 +10,7 @@
 
 module Flowbox.Bus.Bus where
 
-import           Control.Monad.Reader
+import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import           Data.ByteString                 (ByteString)
 import           System.ZMQ4.Monadic             (ZMQ)
@@ -35,7 +35,7 @@ import qualified Generated.Proto.Bus.Request.Method as Method
 
 type Error = String
 
-type Bus a = forall z. ReaderT (BusEnv z) (EitherT Error (ZMQ z)) a
+type Bus a = forall z. StateT (BusEnv z) (EitherT Error (ZMQ z)) a
 
 
 requestClientID :: Env.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
@@ -49,13 +49,13 @@ requestClientID addr = do
     return $ ID_New.id response
 
 
-runBus :: ReaderT (BusEnv z) (EitherT Error (ZMQ z)) a
+runBus :: StateT (BusEnv z) (EitherT Error (ZMQ z)) a
        -> Env.BusEndPoints
        -> ZMQ z (Either Error a)
 runBus fun endPoints = runEitherT $ runBus' fun endPoints
 
 
-runBus' :: ReaderT (BusEnv z) (EitherT Error (ZMQ z)) a
+runBus' :: StateT (BusEnv z) (EitherT Error (ZMQ z)) a
         -> Env.BusEndPoints -> EitherT Error (ZMQ z) a
 runBus' fun endPoints = do
     clientID <- requestClientID $ Env.controlEndPoint endPoints
@@ -63,25 +63,41 @@ runBus' fun endPoints = do
     pushSocket <- lift $ ZMQ.socket ZMQ.Push
     lift $ ZMQ.connect subSocket  $ Env.pubEndPoint  endPoints
     lift $ ZMQ.connect pushSocket $ Env.pullEndPoint endPoints
-    runReaderT fun $ BusEnv subSocket pushSocket clientID
+    fst <$> (runStateT fun $ BusEnv subSocket pushSocket clientID 0)
 
 
 getClientID :: Bus Message.ClientID
-getClientID = Env.clientID <$> ask
+getClientID = Env.clientID <$> get
 
 
-getPushSocket :: (Functor f, MonadReader (BusEnv z) f) => f (ZMQ.Socket z ZMQ.Push)
-getPushSocket = Env.pushSocket <$> ask
+getPushSocket :: (Functor f, MonadState (BusEnv z) f) => f (ZMQ.Socket z ZMQ.Push)
+getPushSocket = Env.pushSocket <$> get
 
 
-getSubSocket :: (Functor f, MonadReader (BusEnv z) f) => f (ZMQ.Socket z ZMQ.Sub)
-getSubSocket  = Env.subSocket <$> ask
+getSubSocket :: (Functor f, MonadState (BusEnv z) f) => f (ZMQ.Socket z ZMQ.Sub)
+getSubSocket  = Env.subSocket <$> get
 
 
-send :: (Message, Message.CorrelationID) -> Bus ()
-send (msg, crlID) = do
+getNewRequestID :: Bus Message.RequestID
+getNewRequestID = do s <- get 
+                     let requestID = Env.requestID s
+                     put $ s { Env.requestID = requestID + 1 }
+                     return requestID
+
+
+reply :: (Message, Message.CorrelationID) -> Bus ()
+reply (msg, crlID) = do
     clientID <- getClientID
     send' $ MessageFrame.toByteString $ MessageFrame msg crlID clientID
+
+
+send :: Message -> Bus Message.CorrelationID
+send msg = do
+    requestID <- getNewRequestID
+    clientID  <- getClientID
+    let correlationID = Message.CorrelationID clientID requestID
+    reply (msg, correlationID)
+    return correlationID
 
 
 receive :: Bus (Either String MessageFrame)

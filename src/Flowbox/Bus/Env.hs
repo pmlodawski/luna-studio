@@ -23,6 +23,7 @@ data BusEndPoints = BusEndPoints { controlEndPoint :: EndPoint
 data BusEnv z = BusEnv { subSocket  :: ZMQ.Socket z ZMQ.Sub
                        , pushSocket :: ZMQ.Socket z ZMQ.Push
                        , clientID   :: Message.ClientID
+                       , requestID  :: Message.RequestID
                        }
 
 

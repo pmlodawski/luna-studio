@@ -16,12 +16,12 @@ import Flowbox.Prelude
 
 type ID = Proto.Int32
 
-type MessageID = ID
+type RequestID = ID
 type ClientID  = ID
 
 
 data CorrelationID = CorrelationID { clientID  :: ClientID
-                                   , messageID :: MessageID
+                                   , messageID :: RequestID
                                    } deriving (Read, Show, Eq)
 
 
