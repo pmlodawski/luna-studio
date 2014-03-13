@@ -6,9 +6,10 @@
 ---------------------------------------------------------------------------
 module Main where
 
+import qualified Flowbox.Bus.Client               as Client
 import qualified Flowbox.Bus.Env                  as Env
 import           Flowbox.Prelude
-import qualified Flowbox.ProjectManager.BusClient as BusClient
+import qualified Flowbox.ProjectManager.Processor as Processor
 import           Flowbox.System.Log.Logger
 
 
@@ -25,6 +26,6 @@ ep = Env.BusEndPoints "tcp://127.0.0.1:30530"
 
 main :: IO ()
 main = do rootLogger setLevel TRACE
-          r <- BusClient.run ep
+          r <- Client.run ep Processor.topic Processor.process
           print r
 
