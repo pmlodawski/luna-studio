@@ -13,17 +13,18 @@ module Flowbox.Prelude(
     module X
 ) where
 
-import           Control.Applicative as X
-import           Control.Lens        as X
+import           Control.Applicative    as X
+import           Control.Lens           as X
 import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Data.Default        as X
-import           Data.Monoid         as X (Monoid, mappend, mempty)
+import           Data.Default           as X
+import           Data.Monoid            as X (Monoid, mappend, mempty)
 import qualified Data.Traversable       as Traversable
 --import           Data.Typeable
+import           Control.Monad.Trans (lift)
+import           Data.Foldable       (forM_)
 import           Flowbox.Debug.Debug as X
 import           Prelude             hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
-import qualified Prelude            
-import           Data.Foldable (forM_)
+import qualified Prelude
 
 
 
@@ -134,3 +135,5 @@ False ? (_ :? y) = y
 
 withJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
 withJust = forM_
+
+lift2 = lift . lift

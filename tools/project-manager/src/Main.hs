@@ -26,6 +26,6 @@ ep = Env.BusEndPoints "tcp://127.0.0.1:30530"
 
 main :: IO ()
 main = do rootLogger setLevel TRACE
-          r <- Client.run ep Processor.topic Processor.process
+          r <- Client.run ep Processor.topic (Processor.process 0)
           print r
 

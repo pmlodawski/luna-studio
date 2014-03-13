@@ -28,26 +28,26 @@ loggerIO = getLoggerIO "Flowbox.ZMQ.RPC.Server"
 
 
 run :: Proto.Serializable request
-    => String -> RPCHandler ctx request -> ctx -> IO ()
-run ctrlAddr handler ctx = ZMQ.runZMQ $ serve ctrlAddr handler ctx
+    => String -> RPCHandler request -> IO ()
+run ctrlAddr handler = ZMQ.runZMQ $ serve ctrlAddr handler
 
 
 serve :: Proto.Serializable request
-      => String -> RPCHandler ctx request -> ctx -> ZMQ z ()
-serve ctrlAddr handler ctx = do
+      => String -> RPCHandler request -> ZMQ z ()
+serve ctrlAddr handler = do
     rep <- ZMQ.socket ZMQ.Rep
     ZMQ.bind rep ctrlAddr
-    acceptAndHandle rep handler ctx
+    acceptAndHandle rep handler
 
 
 acceptAndHandle :: (ZMQ.Receiver t, ZMQ.Sender t, Proto.Serializable request)
-                => ZMQ.Socket z t -> RPCHandler ctx request -> ctx -> ZMQ z ()
-acceptAndHandle socket handler ctx = forM_ [0..] $ handleCall socket handler ctx
+                => ZMQ.Socket z t -> RPCHandler request -> ZMQ z ()
+acceptAndHandle socket handler = forM_ [0..] $ handleCall socket handler
 
 
 handleCall :: (ZMQ.Receiver t, ZMQ.Sender t, Proto.Serializable request)
-           => ZMQ.Socket z t -> RPCHandler ctx request -> ctx -> Int -> ZMQ z ()
-handleCall socket handler ctx requestID = do
+           => ZMQ.Socket z t -> RPCHandler request -> Int -> ZMQ z ()
+handleCall socket handler requestID = do
     encoded_request  <- ZMQ.receive socket
-    encoded_response <- Processor.process handler ctx encoded_request $ encodeP requestID
+    encoded_response <- Processor.process handler encoded_request $ encodeP requestID
     ZMQ.send socket [] encoded_response

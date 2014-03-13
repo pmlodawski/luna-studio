@@ -59,4 +59,4 @@ run cmd = case cmd of
         _ <- Concurrent.forkIO $ Proxy.run (Cmd.pullEndPoint cmd) (Cmd.pubEndPoint cmd)
         logger info "Starting control service"
         ctx <- BusCtx.empty
-        RPC.run (Cmd.ctrlEndPoint cmd) Handler.handler ctx
+        RPC.run (Cmd.ctrlEndPoint cmd) (Handler.handler ctx)
