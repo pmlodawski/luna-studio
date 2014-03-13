@@ -13,10 +13,9 @@ import qualified Flowbox.Bus.Message as Message
 
 test :: Bus ()
 test = do
-    Bus.subscribe $ Char8.pack ""
-    Bus.reply ( Message.Message (Char8.pack "project.open.request") (Char8.pack "some data")
-              , Message.CorrelationID 45 66
-              )
+    Bus.subscribe ""
+    Bus.reply (Message.CorrelationID 45 66)
+              (Message.Message "project.open.request" (Char8.pack "some data"))
     putStrLn "sent"
     _ <- forever $ do
         _ <- Bus.receive

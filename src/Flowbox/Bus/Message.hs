@@ -9,7 +9,7 @@ module Flowbox.Bus.Message where
 import           Data.ByteString              (ByteString)
 import qualified Flowbox.Text.ProtocolBuffers as Proto
 
-import Flowbox.Bus.Topic.Topic (Topic)
+import Flowbox.Bus.Topic (Topic)
 import Flowbox.Prelude
 
 

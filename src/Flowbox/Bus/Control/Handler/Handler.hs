@@ -21,6 +21,6 @@ import qualified Generated.Proto.Bus.Request.Method as Method
 
 
 
-handler :: RPCHandler BusCtx Request
-handler callback request = case Request.method request of
-    Method.ID_New  -> callback HandlerID.new  ID_New.req  ID_New.rsp
+handler :: BusCtx -> RPCHandler Request
+handler ctx callback request = case Request.method request of
+    Method.ID_New -> callback (HandlerID.new ctx) ID_New.req ID_New.rsp

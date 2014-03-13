@@ -4,9 +4,10 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes       #-}
+{-# LANGUAGE ConstraintKinds    #-}
+{-# LANGUAGE FlexibleContexts   #-}
+{-# LANGUAGE ImpredicativeTypes #-}
+{-# LANGUAGE RankNTypes         #-}
 
 module Flowbox.Bus.Bus where
 
@@ -23,6 +24,8 @@ import           Flowbox.Bus.Message                (Message)
 import qualified Flowbox.Bus.Message                as Message
 import           Flowbox.Bus.MessageFrame           (MessageFrame (MessageFrame))
 import qualified Flowbox.Bus.MessageFrame           as MessageFrame
+import           Flowbox.Bus.Topic                  (Topic)
+import qualified Flowbox.Bus.Topic                  as Topic
 import           Flowbox.Prelude
 import qualified Flowbox.Text.ProtocolBuffers       as Proto
 import qualified Flowbox.ZMQ.RPC.Client             as Client
@@ -30,7 +33,6 @@ import qualified Generated.Proto.Bus.ID.New.Args    as ID_New
 import qualified Generated.Proto.Bus.ID.New.Result  as ID_New
 import           Generated.Proto.Bus.Request        (Request (Request))
 import qualified Generated.Proto.Bus.Request.Method as Method
-
 
 
 type Error = String
@@ -49,16 +51,9 @@ requestClientID addr = do
     return $ ID_New.id response
 
 
-runBus :: StateT (BusEnv z) (EitherT Error (ZMQ z)) a
-       -> Env.BusEndPoints
-       -> ZMQ z (Either Error a)
-runBus fun endPoints = runEitherT $ runBus' fun endPoints
-
-
-runBus' :: StateT (BusEnv z) (EitherT Error (ZMQ z)) a
-        -> Env.BusEndPoints -> EitherT Error (ZMQ z) a
-runBus' fun endPoints = do
-    clientID <- requestClientID $ Env.controlEndPoint endPoints
+runBus :: MonadIO m => Bus a -> Env.BusEndPoints -> m (Either Error a)
+runBus fun endPoints = ZMQ.runZMQ $ runEitherT $ do
+    clientID   <- requestClientID $ Env.controlEndPoint endPoints
     subSocket  <- lift $ ZMQ.socket ZMQ.Sub
     pushSocket <- lift $ ZMQ.socket ZMQ.Push
     lift $ ZMQ.connect subSocket  $ Env.pubEndPoint  endPoints
@@ -79,16 +74,15 @@ getSubSocket  = Env.subSocket <$> get
 
 
 getNewRequestID :: Bus Message.RequestID
-getNewRequestID = do s <- get 
-                     let requestID = Env.requestID s
-                     put $ s { Env.requestID = requestID + 1 }
-                     return requestID
+getNewRequestID = do
+    s <- get
+    let requestID = Env.requestID s
+    put $ s { Env.requestID = requestID + 1 }
+    return requestID
 
 
-reply :: (Message, Message.CorrelationID) -> Bus ()
-reply (msg, crlID) = do
-    clientID <- getClientID
-    send' $ MessageFrame.toByteString $ MessageFrame msg crlID clientID
+reply :: Message.CorrelationID -> Message -> Bus ()
+reply crlID msg = sendByteString . MessageFrame.toByteString . MessageFrame msg crlID =<< getClientID
 
 
 send :: Message -> Bus Message.CorrelationID
@@ -96,34 +90,34 @@ send msg = do
     requestID <- getNewRequestID
     clientID  <- getClientID
     let correlationID = Message.CorrelationID clientID requestID
-    reply (msg, correlationID)
+    reply correlationID msg
     return correlationID
 
 
 receive :: Bus (Either String MessageFrame)
-receive = MessageFrame.fromByteString <$> receive'
+receive = MessageFrame.fromByteString <$> receiveByteString
 
 
-send' :: ByteString -> Bus ()
-send' msg = do
+sendByteString :: ByteString -> Bus ()
+sendByteString msg = do
     push <- getPushSocket
-    lift $ lift $ ZMQ.send push [] msg
+    lift2 $ ZMQ.send push [] msg
 
 
-receive' :: Bus ByteString
-receive' = do
+receiveByteString :: Bus ByteString
+receiveByteString = do
     sub <- getSubSocket
-    lift $ lift $ ZMQ.receive sub
+    lift2 $ ZMQ.receive sub
 
 
-subscribe :: ByteString -> Bus ()
+subscribe :: Topic -> Bus ()
 subscribe topic = do
     sub <- getSubSocket
-    lift $ lift $ ZMQ.subscribe sub topic
+    lift2 $ ZMQ.subscribe sub $ Topic.toByteString topic
 
 
 unsubscribe :: ByteString -> Bus ()
 unsubscribe topic = do
     sub <- getSubSocket
-    lift $ lift $ ZMQ.unsubscribe sub topic
+    lift2 $ ZMQ.unsubscribe sub topic
 
