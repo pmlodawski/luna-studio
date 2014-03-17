@@ -51,8 +51,8 @@ requestClientID addr = do
     return $ ID_New.id response
 
 
-runBus :: MonadIO m => Bus a -> Env.BusEndPoints -> m (Either Error a)
-runBus fun endPoints = ZMQ.runZMQ $ runEitherT $ do
+runBus :: MonadIO m => Env.BusEndPoints -> Bus a -> m (Either Error a)
+runBus endPoints fun = ZMQ.runZMQ $ runEitherT $ do
     clientID   <- requestClientID $ Env.controlEndPoint endPoints
     subSocket  <- lift $ ZMQ.socket ZMQ.Sub
     pushSocket <- lift $ ZMQ.socket ZMQ.Push

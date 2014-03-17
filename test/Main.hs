@@ -14,21 +14,24 @@ import qualified Flowbox.Bus.Message as Message
 test :: Bus ()
 test = do
     Bus.subscribe ""
-    Bus.reply (Message.CorrelationID 45 66)
+    clientID <- Bus.getClientID
+    Bus.reply (Message.CorrelationID clientID 0)
               (Message.Message "project.open.request" (Char8.pack "some data"))
     putStrLn "sent"
-    _ <- forever $ do
-        _ <- Bus.receive
-        putStrLn "received"
+    _ <- Bus.receive
+    putStrLn "received"
     return ()
+
+
+endPoints :: Env.BusEndPoints
+endPoints = Env.BusEndPoints "tcp://127.0.0.1:30530"
+                             "tcp://127.0.0.1:30531"
+                             "tcp://127.0.0.1:30532"
 
 
 main :: IO ()
 main = do
-    x <- ZMQ.runZMQ $ Bus.runBus test (Env.BusEndPoints "tcp://127.0.0.1:30530"
-                                                        "tcp://127.0.0.1:30531"
-                                                        "tcp://127.0.0.1:30532"
-                                      )
+    x <- ZMQ.runZMQ $ Bus.runBus endPoints test
     print x
     return ()
 
