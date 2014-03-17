@@ -5,8 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Broker.Config (
-    module Paths_flowbox_broker,
+module Flowbox.ProjectManager.Config (
+    module Paths_flowbox_project_manager,
 ) where
 
-import Paths_flowbox_broker (version)
+import Paths_flowbox_project_manager (version)
+
+

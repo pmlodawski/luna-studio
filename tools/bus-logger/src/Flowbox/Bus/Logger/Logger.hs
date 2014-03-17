@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Bus.Logger where
+module Flowbox.Bus.Logger.Logger where
 
 import           Control.Monad             (forever)
 import qualified Data.List                 as List
@@ -20,11 +20,12 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.Bus.Logger"
+logger = getLoggerIO "Flowbox.Bus.Logger.Logger"
 
 
 run :: Env.BusEndPoints -> [Topic] -> IO (Either Bus.Error ())
-run ep topics = Bus.runBus ep $ do mapM_ Bus.subscribe topics
+run ep topics = Bus.runBus ep $ do logger info $ "Subscribing to topics: " ++ show topics
+                                   mapM_ Bus.subscribe topics
                                    forever $ logMessage
 
 

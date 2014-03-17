@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Broker.Config (
-    module Paths_flowbox_broker,
+module Flowbox.Bus.Logger.Config (
+    module Paths_flowbox_bus_logger,
 ) where
 
-import Paths_flowbox_broker (version)
+import Paths_flowbox_bus_logger (version)

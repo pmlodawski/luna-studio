@@ -5,8 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.Broker.Config (
-    module Paths_flowbox_broker,
-) where
+module Flowbox.Bus.Logger.Version where
 
-import Paths_flowbox_broker (version)
+import qualified Data.Version as Version
+
+import qualified Flowbox.Bus.Logger.Config as Config
+import           Flowbox.Prelude
+
+
+
+full :: Bool -> String
+full = logger
+
+
+logger :: Bool -> String
+logger numeric = (if numeric then "" else "Flowbox bus logger version ") ++ Version.showVersion Config.version
