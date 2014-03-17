@@ -33,14 +33,14 @@ import qualified Generated.Proto.Bus.ID.New.Args    as ID_New
 import qualified Generated.Proto.Bus.ID.New.Result  as ID_New
 import           Generated.Proto.Bus.Request        (Request (Request))
 import qualified Generated.Proto.Bus.Request.Method as Method
-
+import qualified Flowbox.Bus.EndPoint as EP
 
 type Error = String
 
 type Bus a = forall z. StateT (BusEnv z) (EitherT Error (ZMQ z)) a
 
 
-requestClientID :: Env.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
+requestClientID :: EP.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
 requestClientID addr = do
     socket <- lift $ ZMQ.socket ZMQ.Req
     lift $ ZMQ.connect socket addr
@@ -51,13 +51,13 @@ requestClientID addr = do
     return $ ID_New.id response
 
 
-runBus :: MonadIO m => Env.BusEndPoints -> Bus a -> m (Either Error a)
+runBus :: MonadIO m => EP.BusEndPoints -> Bus a -> m (Either Error a)
 runBus endPoints fun = ZMQ.runZMQ $ runEitherT $ do
-    clientID   <- requestClientID $ Env.controlEndPoint endPoints
+    clientID   <- requestClientID $ EP.controlEndPoint endPoints
     subSocket  <- lift $ ZMQ.socket ZMQ.Sub
     pushSocket <- lift $ ZMQ.socket ZMQ.Push
-    lift $ ZMQ.connect subSocket  $ Env.pubEndPoint  endPoints
-    lift $ ZMQ.connect pushSocket $ Env.pullEndPoint endPoints
+    lift $ ZMQ.connect subSocket  $ EP.pubEndPoint  endPoints
+    lift $ ZMQ.connect pushSocket $ EP.pullEndPoint endPoints
     fst <$> (runStateT fun $ BusEnv subSocket pushSocket clientID 0)
 
 

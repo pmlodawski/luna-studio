@@ -14,7 +14,7 @@ import Control.Monad.Trans
 import           Control.Monad.Trans.Either
 import           Flowbox.Bus.Bus            (Bus)
 import qualified Flowbox.Bus.Bus            as Bus
-import qualified Flowbox.Bus.Env            as Env
+import           Flowbox.Bus.EndPoint       (BusEndPoints)
 import           Flowbox.Bus.Message        (Message)
 import qualified Flowbox.Bus.Message        as Message
 import           Flowbox.Bus.MessageFrame   (MessageFrame (MessageFrame))
@@ -28,7 +28,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Bus.Client"
 
 
-run :: Env.BusEndPoints -> [Topic] -> (Message -> IO Message) -> IO (Either String ())
+run :: BusEndPoints -> [Topic] -> (Message -> IO Message) -> IO (Either String ())
 run endPoints topics process = Bus.runBus endPoints $ handleLoop topics process
 
 
