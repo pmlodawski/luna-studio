@@ -10,7 +10,7 @@ import           Control.Monad             (forever)
 import qualified Data.List                 as List
 import           Flowbox.Bus.Bus           (Bus)
 import qualified Flowbox.Bus.Bus           as Bus
-import qualified Flowbox.Bus.Env           as Env
+import           Flowbox.Bus.EndPoint      (BusEndPoints)
 import qualified Flowbox.Bus.Message       as Message
 import           Flowbox.Bus.MessageFrame  (MessageFrame (MessageFrame))
 import           Flowbox.Bus.Topic         (Topic)
@@ -23,7 +23,7 @@ logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Bus.Logger.Logger"
 
 
-run :: Env.BusEndPoints -> [Topic] -> IO (Either Bus.Error ())
+run :: BusEndPoints -> [Topic] -> IO (Either Bus.Error ())
 run ep topics = Bus.runBus ep $ do logger info $ "Subscribing to topics: " ++ show topics
                                    mapM_ Bus.subscribe topics
                                    forever $ logMessage

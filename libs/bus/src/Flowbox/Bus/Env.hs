@@ -9,16 +9,8 @@ module Flowbox.Bus.Env where
 import qualified System.ZMQ4.Monadic as ZMQ
 
 import qualified Flowbox.Bus.Message as Message
-import           Flowbox.Prelude
 
 
-
-type EndPoint = String
-
-data BusEndPoints = BusEndPoints { controlEndPoint :: EndPoint
-                                 , pullEndPoint    :: EndPoint
-                                 , pubEndPoint     :: EndPoint
-                                 } deriving (Read, Show, Eq)
 
 data BusEnv z = BusEnv { subSocket  :: ZMQ.Socket z ZMQ.Sub
                        , pushSocket :: ZMQ.Socket z ZMQ.Push

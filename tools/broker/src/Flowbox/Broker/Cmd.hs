@@ -11,13 +11,8 @@ import Flowbox.Prelude
 
 
 
-data Cmd = Serve { ctrlEndPoint :: String
-                 , pullEndPoint :: String
-                 , pubEndPoint  :: String
-
-                 , verbose      :: Int
-                 , noColor      :: Bool
-
+data Cmd = Serve { verbose :: Int
+                 , noColor :: Bool
                  }
          | Version
          deriving Show

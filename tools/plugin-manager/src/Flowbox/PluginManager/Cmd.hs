@@ -7,23 +7,12 @@
 
 module Flowbox.PluginManager.Cmd where
 
-import qualified Flowbox.Bus.Env as Env
-import           Flowbox.Prelude
+import Flowbox.Prelude
 
 
 
-data Cmd = Run { ctrlEndPoint :: String
-               , pullEndPoint :: String
-               , pubEndPoint  :: String
-
-               , verbose      :: Int
-               , noColor      :: Bool
+data Cmd = Run { verbose :: Int
+               , noColor :: Bool
                }
          | Version
          deriving Show
-
-
-endPoints :: Cmd -> Env.BusEndPoints
-endPoints cmd = Env.BusEndPoints (ctrlEndPoint cmd)
-                                 (pullEndPoint cmd)
-                                 (pubEndPoint  cmd)

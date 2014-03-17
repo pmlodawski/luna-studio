@@ -63,7 +63,10 @@ class AllProject(Project):
         return tgts
 
 
-deptree = ['project-manager', 'batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'broker', 'bus', 'rpc', 'graphics', 'target-hs', 'cabal-install', 'num-conversion', 'utils', 'markup']
+deptree = [ 'project-manager', 'batch-srv', 'batch', 'lunac', 'initializer'
+          , 'wrappers', 'luna', 'plugin-manager', 'bus-logger'
+          , 'broker', 'bus', 'config', 'rpc', 'graphics' , 'target-hs'
+          , 'cabal-install', 'num-conversion', 'utils', 'markup']
 
 pkgs = { '@all'            : AllProject (deps = deptree)
        , 'cabal-install'   : HProject   ('cabal-install'           , os.path.join ('libs'  , 'cabal-install')  , 'libs'    , []                                                  )
@@ -71,9 +74,9 @@ pkgs = { '@all'            : AllProject (deps = deptree)
        , 'utils'           : HProject   ('flowbox-utils'           , os.path.join ('libs'  , 'utils')          , 'libs'    , []                                                  )
        , 'config'          : HProject   ('flowbox-config'          , os.path.join ('libs'  , 'config')         , 'libs'    , ['utils']                                           )
        , 'rpc'             : HProject   ('flowbox-rpc'             , os.path.join ('libs'  , 'rpc')            , 'libs'    , ['utils']                                           )
-       , 'bus'             : HProject   ('flowbox-bus'             , os.path.join ('libs'  , 'bus')            , 'libs'    , ['utils', 'rpc']                                    )
-       , 'broker'          : HProject   ('flowbox-broker'          , os.path.join ('tools' , 'broker')         , 'tools'   , ['utils', 'rpc', 'bus']                             )
-       , 'bus-logger'      : HProject   ('flowbox-bus-logger'      , os.path.join ('tools' , 'bus-logger')     , 'tools'   , ['utils', 'rpc', 'bus']                             )
+       , 'bus'             : HProject   ('flowbox-bus'             , os.path.join ('libs'  , 'bus')            , 'libs'    , ['utils', 'config', 'rpc']                          )
+       , 'broker'          : HProject   ('flowbox-broker'          , os.path.join ('tools' , 'broker')         , 'tools'   , ['utils', 'config', 'rpc', 'bus']                   )
+       , 'bus-logger'      : HProject   ('flowbox-bus-logger'      , os.path.join ('tools' , 'bus-logger')     , 'tools'   , ['utils', 'config', 'rpc', 'bus']                   )
        , 'plugin-manager'  : HProject   ('flowbox-plugin-manager'  , os.path.join ('tools' , 'plugin-manager') , 'tools'   , ['utils', 'config', 'rpc', 'bus']                   )
        , 'wrappers'        : HProject   ('flowbox-wrappers'        , os.path.join ('tools' , 'wrappers')       , 'wrappers', ['config']                                          )
        , 'luna'            : HProject   ('flowbox-luna'            , os.path.join ('libs'  , 'luna')           , 'libs'    , ['target-hs', 'utils', 'config', 'cabal-install', 'markup'])

@@ -26,6 +26,7 @@ Executable bus-logger
                     either,
                     errors,
                     flowbox-bus,
+                    flowbox-config,
                     flowbox-utils,
                     mtl,
                     optparse-applicative,

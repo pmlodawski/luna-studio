@@ -6,9 +6,10 @@ import qualified Flowbox.Bus.Bus       as Bus
 import           Flowbox.Prelude
 import qualified System.ZMQ4.Monadic   as ZMQ
 
-import           Flowbox.Bus.Bus     (Bus)
-import qualified Flowbox.Bus.Env     as Env
-import qualified Flowbox.Bus.Message as Message
+import           Flowbox.Bus.Bus      (Bus)
+import           Flowbox.Bus.EndPoint (BusEndPoints (BusEndPoints))
+import qualified Flowbox.Bus.Message  as Message
+
 
 
 test :: Bus ()
@@ -23,10 +24,10 @@ test = do
     return ()
 
 
-endPoints :: Env.BusEndPoints
-endPoints = Env.BusEndPoints "tcp://127.0.0.1:30530"
-                             "tcp://127.0.0.1:30531"
-                             "tcp://127.0.0.1:30532"
+endPoints :: BusEndPoints
+endPoints = BusEndPoints "tcp://127.0.0.1:30530"
+                         "tcp://127.0.0.1:30531"
+                         "tcp://127.0.0.1:30532"
 
 
 main :: IO ()

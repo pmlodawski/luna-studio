@@ -7,7 +7,7 @@
 module Main where
 
 import qualified Flowbox.Bus.Client            as Client
-import qualified Flowbox.Bus.Defaults          as Defaults
+import qualified Flowbox.Config.Config         as Config
 import           Flowbox.Options.Applicative   hiding (info)
 import qualified Flowbox.Options.Applicative   as Opt
 import           Flowbox.PluginManager.Cmd     (Cmd)
@@ -25,10 +25,7 @@ rootLogger = getLogger "Flowbox"
 parser :: Parser Cmd
 parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Run
-           <$> strOption ( long "ctrl-addr" <> short 'c' <> value Defaults.defaultCtrlEndPoint <> metavar "endpoint" <> help "Server control endpoint" )
-           <*> strOption ( long "pull-addr" <> short 'l' <> value Defaults.defaultPullEndPoint <> metavar "endpoint" <> help "Server pull endpoint"    )
-           <*> strOption ( long "pub-addr"  <> short 'b' <> value Defaults.defaultPubEndPoint  <> metavar "endpoint" <> help "Server publish endpoint" )
-           <*> optIntFlag (Just "verbose") 'v' 2 3          "Verbose level (level range is 0-5, default level is 3)"
+           <$> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
            <*> switch    ( long "no-color"          <> help "Disable color output" )
 
 
@@ -45,5 +42,6 @@ run :: Cmd -> IO ()
 run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
     Cmd.Run {}  -> do
+          cfg <- Config.load
           putStrLn "Not implemented"
 

@@ -7,25 +7,15 @@
 
 module Flowbox.Bus.Logger.Cmd where
 
-import qualified Flowbox.Bus.Env as Env
-import           Flowbox.Prelude
+import Flowbox.Prelude
 
 
 
-data Cmd = Run { topics       :: [String]
+data Cmd = Run { topics  :: [String]
 
-               , ctrlEndPoint :: String
-               , pullEndPoint :: String
-               , pubEndPoint  :: String
-
-               , verbose      :: Int
-               , noColor      :: Bool
+               , verbose :: Int
+               , noColor :: Bool
                }
          | Version
          deriving Show
 
-
-endPoints :: Cmd -> Env.BusEndPoints
-endPoints cmd = Env.BusEndPoints (ctrlEndPoint cmd)
-                                 (pullEndPoint cmd)
-                                 (pubEndPoint  cmd)

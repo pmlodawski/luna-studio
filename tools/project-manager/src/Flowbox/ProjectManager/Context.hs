@@ -11,12 +11,13 @@ import qualified Data.IORef as IORef
 
 import           Flowbox.Batch.Batch   (Batch)
 import qualified Flowbox.Batch.Batch   as Batch
-import qualified Flowbox.Config.Config as Config
+import           Flowbox.Config.Config (Config)
 import           Flowbox.Prelude       hiding (Context)
 
 
 
 type Context = IORef Batch
 
-empty :: IO Context
-empty = Batch.make <$> Config.load >>= IORef.newIORef
+
+mk :: Config -> IO Context
+mk cfg = IORef.newIORef $ Batch.make cfg

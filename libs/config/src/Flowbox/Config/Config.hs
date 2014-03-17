@@ -28,6 +28,7 @@ data Config = Config      { root      :: Section
                           , wrappers  :: Section
                           , bins      :: Section
                           , ghcS      :: Section
+                          , bus       :: Section
                           }
             deriving (Show)
 
@@ -77,6 +78,13 @@ data Section = Root       { path :: String
                           }
              | GHC        { ver    :: String
                           , topDir :: String
+                          }
+             | Bus        {  serverControlEndPoint :: String
+                          ,  serverPullEndPoint    :: String
+                          ,  serverPubEndPointt    :: String
+                          ,  clientControlEndPoint :: String
+                          ,  clientPullEndPoint    :: String
+                          ,  clientPubEndPointt    :: String
                           }
              deriving (Show)
 
@@ -146,7 +154,13 @@ load = do
            <*> ( GHC      <$> readConf "ghc.version"
                           <*> readConf "ghc.topDir"
                )
-
+           <*> ( Bus      <$> readConf "bus.serverControlEndPoint"
+                          <*> readConf "bus.serverPullEndPoint"
+                          <*> readConf "bus.serverPubEndPointt"
+                          <*> readConf "bus.clientControlEndPoint"
+                          <*> readConf "bus.clientPullEndPoint"
+                          <*> readConf "bus.clientPubEndPointt"
+               )
 
 -- TODO[wd]: (?) Lunac powinien czytac config i jezli nie da sie go odczytac (np zmienna srodowiskowa nie istnieje, powinien zalozyc, ze zyje w $HOME/.flowbox - defaultowy config?)
 
