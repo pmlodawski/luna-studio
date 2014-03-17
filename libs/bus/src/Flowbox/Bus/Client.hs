@@ -29,7 +29,7 @@ logger = getLoggerIO "Flowbox.Bus.Client"
 
 
 run :: Env.BusEndPoints -> [Topic] -> (Message -> IO Message) -> IO (Either String ())
-run endPoints topics process = Bus.runBus (handleLoop topics process) endPoints
+run endPoints topics process = Bus.runBus endPoints $ handleLoop topics process
 
 
 handleLoop :: [Topic] -> (Message -> IO Message) -> Bus ()
@@ -42,10 +42,7 @@ handleLoop topics process = do
 handle :: (Message -> IO Message) -> Bus ()
 handle process = do
     request <- Bus.receive
-    r <- lift $ hoistEither request
-    case r of
-        (MessageFrame msg crlID _) -> do
-            liftIO $ logger debug $ "Received request: " ++ Message.topic msg
-            response <- liftIO $ process msg
-            Bus.reply crlID response
-
+    (MessageFrame msg crlID _) <- lift $ hoistEither request
+    liftIO $ logger debug $ "Received request: " ++ Message.topic msg
+    response <- liftIO $ process msg
+    Bus.reply crlID response

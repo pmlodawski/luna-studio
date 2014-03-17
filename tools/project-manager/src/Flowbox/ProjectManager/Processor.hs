@@ -89,5 +89,5 @@ process context msg = case topic of
 
 constructMessage :: Proto.Serializable msg => Topic -> String ->  msg -> Message
 constructMessage topic type_  data_ = Message newTopic $ Proto.messagePut' data_ where
-    newTopic = (List.intercalate "." . (++) [type_] . init . Utils.split ".") topic
+    newTopic = (List.intercalate "." . flip (++) [type_] . init . Utils.split ".") topic
 
