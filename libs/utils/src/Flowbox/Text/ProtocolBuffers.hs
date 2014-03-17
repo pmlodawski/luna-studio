@@ -25,7 +25,7 @@ import qualified Text.ProtocolBuffers.Extensions as Extensions
 import Flowbox.Prelude
 
 
-type Serializable request = (Proto.ReflectDescriptor request, Proto.Wire request)
+type Serializable msg = (Proto.ReflectDescriptor msg, Proto.Wire msg)
 
 
 getExt' :: Extensions.Key Maybe msg val -> msg -> Either String val
