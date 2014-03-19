@@ -15,6 +15,8 @@
 import qualified Config                as Cfg
 import           Control.Applicative
 import qualified Data.Array.Accelerate as A
+import qualified Data.Array.Accelerate.CUDA as CUDA
+import qualified Data.Array.Accelerate.Interpreter as Interp
 import qualified Data.Label            as Label
 --import qualified Debug.Trace           as Dbg
 import qualified Monitoring            as Monitoring
@@ -24,6 +26,8 @@ import qualified System.Exit           as Exit
 import qualified Text.Printf           as T
 
 import qualified Flowbox.Graphics.Algorithms       as G
+import           Flowbox.Graphics.Color            (Color (..))
+import qualified Flowbox.Graphics.Color            as C
 import           Flowbox.Graphics.Raster.Channel   (Channel, Channel2, Channel3, RawData2D, RawData3D)
 import qualified Flowbox.Graphics.Raster.Channel   as Channel
 import           Flowbox.Graphics.Raster.Image     (Image)
@@ -34,16 +38,17 @@ import           Flowbox.Prelude                   as P
 
 
 ----imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
-imgtest img frames = do
+imgtest img = do --frames = do
     let getDouble image = Image.reprDouble <$> RGBA.decompose image
         rgb = ("r", "g", "b")
 
     imageRGBA <- getDouble img
-    framesRGBA <- getDouble frames
+    --framesRGBA <- getDouble frames
 
-    imageBackground <- G.extractBackground rgb framesRGBA
+    --imageBackground <- G.extractBackground rgb framesRGBA
+    imageCB <- G.adjustCB rgb 1.5 0.2 imageRGBA
 
-    let imageOut = imageBackground
+    let imageOut = imageCB
     RGBA.compose $ Image.reprWord8 $ Image.map G.clipValues imageOut
 
 ---- main
@@ -60,22 +65,40 @@ main
           _       -> ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer ("--help":argv)
                   >> Exit.exitSuccess
 
-        let backend     = Label.get Cfg.configBackend conf
-            frameNames  = fmap (\x -> (T.printf "frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
-            getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
-            getImages locations = fmap (either (\_ -> mempty) id) (Image.readImageSequenceFromBMP locations)
-            getDouble image = Image.reprFloat <$> RGBA.decompose image
+        --let backend     = Label.get Cfg.configBackend conf
+        --    --frameNames  = fmap (\x -> (T.printf "frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
+        --    getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
+        --    getImages locations = fmap (either (\_ -> mempty) id) (Image.readImageSequenceFromBMP locations)
+        --    getDouble image = Image.reprFloat <$> RGBA.decompose image
 
-        -- Read in the image file
-        imageIn <- getImage fileIn
-        framesIn <- getImages frameNames
+        ---- Read in the image file
+        --imageIn <- getImage fileIn
+        ----framesIn <- getImages frameNames
 
-        let imageOut = imgtest imageIn framesIn
+        --let imageOut = imgtest imageIn --framesIn
 
-        case imageOut of
-            Left err -> print err
-            Right val -> do Image.writeImageToBMP (ParseArgs.run backend) fileOut val
-                            return ()
+        --case imageOut of
+        --    Left err -> print err
+        --    Right val -> do Image.writeImageToBMP (ParseArgs.run backend) fileOut val
+        --                    return ()
+
+
+        -- COLOR TESTS
+
+        let x = 0.5 :: A.Exp Double
+            y = 0.3 :: A.Exp Double
+            z = 0.2 :: A.Exp Double
+            rgb  = RGB x y z
+            rgba = C.toRGBA rgb
+            hsv  = C.toHSV rgba
+            hsl  = C.toHSL hsv
+            cmy  = C.toCMY hsl
+            cmyk = C.toCMYK cmy
+            rgb' = C.toRGB cmyk
+            (RGB r g b) = rgb'
+
+        print $ Interp.run $ A.unit $ A.lift (r, g, b)
+
 
         --if P.not (Label.get Cfg.configBenchmark conf)
         --   then do
