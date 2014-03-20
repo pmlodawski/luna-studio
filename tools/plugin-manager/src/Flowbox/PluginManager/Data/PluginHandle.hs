@@ -22,6 +22,10 @@ data PluginHandle = PluginHandle { plugin :: Plugin
                                  , handle :: Maybe ProcessHandle
                                  }
 
+mk :: Plugin -> PluginHandle
+mk = flip PluginHandle Nothing
+
+
 info :: PluginHandle -> IO PluginInfo
 info ph = PluginInfo (plugin ph) <$> case handle ph of
     Nothing -> return PluginInfo.Stopped

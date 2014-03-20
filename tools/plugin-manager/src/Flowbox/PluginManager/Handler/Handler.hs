@@ -24,15 +24,19 @@ logger = getLoggerIO "Flowbox.PluginManager.Processor"
 
 
 topics :: [Topic]
-topics = [ "plugin.list.request"
+topics = [ "plugin.add.request"
+         , "plugin.remove.request"
+         , "plugin.list.request"
          , "plugin.lookup.request"
-         , "plugin.create.request"
-         , "plugin.open.request"
+         , "plugin.start.request"
+         , "plugin.stop.request"
          ]
 
 
 handler :: ContextRef -> BusRPCHandler
 handler ctx callback topic = case topic of
+    "plugin.add.request"    -> callback P.update $ PluginHandler.add    ctx
+    "plugin.remove.request" -> callback P.update $ PluginHandler.remove ctx
     "plugin.list.request"   -> callback P.status $ PluginHandler.list   ctx
     "plugin.lookup.request" -> callback P.status $ PluginHandler.lookup ctx
     "plugin.start.request"  -> callback P.update $ PluginHandler.start  ctx

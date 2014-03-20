@@ -12,6 +12,20 @@ import "plugin.proto";
 
 
 message Plugin {
+    message Add {
+        message Args { 
+            required generated.proto.plugin.Plugin plugin = 1;
+        }
+        message Result { 
+            required int32 id = 1;
+        }
+    }
+    message Remove {
+        message Args { 
+            required int32 id = 1;
+        }
+        message Result { }
+    }
     message Start {
         message Args { 
             required int32 id = 1;

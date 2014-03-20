@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 module Flowbox.PluginManager.Handler.Plugin where
 
-import qualified Data.IORef as IORef
-import qualified Data.Map   as Map
+import qualified Data.IORef                           as IORef
+import qualified Flowbox.PluginManager.Data.PluginMap as PluginMap
 
 import           Flowbox.Control.Error
 import           Flowbox.PluginManager.Context                      (ContextRef)
@@ -19,10 +19,14 @@ import           Flowbox.PluginManager.Proto.Plugin                 ()
 import           Flowbox.Prelude                                    hiding (error, id)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import qualified Generated.Proto.PluginManager.Plugin.Add.Args      as Add
+import qualified Generated.Proto.PluginManager.Plugin.Add.Result    as Add
 import qualified Generated.Proto.PluginManager.Plugin.List.Args     as List
 import qualified Generated.Proto.PluginManager.Plugin.List.Result   as List
 import qualified Generated.Proto.PluginManager.Plugin.Lookup.Args   as Lookup
 import qualified Generated.Proto.PluginManager.Plugin.Lookup.Result as Lookup
+import qualified Generated.Proto.PluginManager.Plugin.Remove.Args   as Remove
+import qualified Generated.Proto.PluginManager.Plugin.Remove.Result as Remove
 import qualified Generated.Proto.PluginManager.Plugin.Start.Args    as Start
 import qualified Generated.Proto.PluginManager.Plugin.Start.Result  as Start
 import qualified Generated.Proto.PluginManager.Plugin.Stop.Args     as Stop
@@ -35,12 +39,31 @@ logger = getLoggerIO "Flowbox.PluginManager.Handler.Plugin"
 
 -------- public api -------------------------------------------------
 
+add :: ContextRef -> Add.Args -> IO Add.Result
+add ctxRef (Add.Args tplugin) = do
+    ctx <- IORef.readIORef ctxRef
+    let plugins = Context.plugins ctx
+        id      = PluginMap.uniqueID plugins
+    plugin <- decode tplugin
+    IORef.writeIORef ctxRef ctx { Context.plugins = PluginMap.insert id (PluginHandle.mk plugin) plugins}
+    return $ Add.Result $ encodeP id
+
+
+remove :: ContextRef -> Remove.Args -> IO Remove.Result
+remove ctxRef (Remove.Args tid) = do
+    ctx <- IORef.readIORef ctxRef
+    let id      = decodeP tid
+        plugins = Context.plugins ctx
+    IORef.writeIORef ctxRef ctx { Context.plugins = PluginMap.delete id plugins}
+    return Remove.Result
+
+
 list :: ContextRef -> List.Args -> IO List.Result
 list ctxRef List.Args = do
     ctx <- IORef.readIORef ctxRef
     let plugins = Context.plugins ctx
-    pluginInfos <- mapM PluginHandle.info $ Map.elems plugins
-    return $ List.Result $ encodeList $ zip (Map.keys plugins) pluginInfos
+    pluginInfos <- mapM PluginHandle.info $ PluginMap.elems plugins
+    return $ List.Result $ encodeList $ zip (PluginMap.keys plugins) pluginInfos
 
 
 -- TODO [PM] : Duplikacja kodu
@@ -49,7 +72,7 @@ lookup ctxRef (Lookup.Args tid) = do
     ctx <- IORef.readIORef ctxRef
     let id      = decodeP tid
         plugins = Context.plugins ctx
-    pluginHandle <- Map.lookup id plugins <?> "Cannot find plugin with id=" ++ show id
+    pluginHandle <- PluginMap.lookup id plugins <?> "Cannot find plugin with id=" ++ show id
     pluginInfo   <- PluginHandle.info pluginHandle
     return $ Lookup.Result $ encode (id, pluginInfo)
 
@@ -72,7 +95,7 @@ withPluginHandle :: ContextRef -> Plugin.ID -> (PluginHandle -> IO PluginHandle)
 withPluginHandle ctxRef id operation = do
     ctx <- IORef.readIORef ctxRef
     let plugins = Context.plugins ctx
-    pluginHandle    <- Map.lookup id plugins <?> "Cannot find plugin with id=" ++ show id
+    pluginHandle    <- PluginMap.lookup id plugins <?> "Cannot find plugin with id=" ++ show id
     newPluginHandle <- operation pluginHandle
-    IORef.writeIORef ctxRef ctx { Context.plugins = Map.insert id newPluginHandle plugins}
+    IORef.writeIORef ctxRef ctx { Context.plugins = PluginMap.insert id newPluginHandle plugins}
     return newPluginHandle
