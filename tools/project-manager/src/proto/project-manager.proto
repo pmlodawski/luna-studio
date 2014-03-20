@@ -8,8 +8,13 @@
 package generated.proto.projectManager;
 
 import "attributes.proto";
+import "crumb.proto";
+import "expr.proto";
+import "focus.proto";
 import "library.proto";
+import "module.proto";
 import "project.proto";
+import "type.proto";
 
 
 
@@ -24,7 +29,7 @@ message Project {
         message Args {
             required int32 projectID = 1;
         }
-        message Result { 
+        message Result {
             required generated.proto.project.Project project = 1;
         }   
     }
@@ -67,54 +72,233 @@ message Project {
 
     message Library {
         message List {
-            message Args { 
+            message Args {
                 required int32 projectID = 1;
             }
-            message Result { 
+            message Result {
                 repeated generated.proto.library.Library libraries = 1;
             }
         }
         message Lookup {
-            message Args { 
+            message Args {
                 required int32 libraryID = 1;
                 required int32 projectID = 2;
             }
-            message Result { 
+            message Result {
                 required generated.proto.library.Library library = 1;
             }
         }
         message Create {
-            message Args { 
+            message Args {
                 required string name      = 1;
                 required string path      = 2;
                 required int32  projectID = 3;
             }
-            message Result { 
+            message Result {
                 required generated.proto.library.Library library = 1;
             }
         }
         message Load {
-            message Args { 
+            message Args {
                 required string path      = 1;
                 required int32  projectID = 2;
             }
-            message Result { 
+            message Result {
                 required generated.proto.library.Library library = 1;
             }
         }
         message Unload {
-            message Args { 
+            message Args {
                 required int32 libraryID = 1;
                 required int32 projectID = 2;
             }
             message Result { }
         }
         message Store {
-            message Args { 
+            message Args {
                 required int32 libraryID = 1;
                 required int32 projectID = 2;
             }
             message Result { }
+        }
+
+        message AST {
+            message Get {
+                message Args {
+                    optional int32 maxDepth  = 1;
+                    required generated.proto.crumb.Breadcrumbs bc = 2;
+                    required int32 libraryID = 3;
+                    required int32 projectID = 4;
+                }
+                message Result {
+                    required generated.proto.focus.Focus focus = 1;
+                }   
+            }
+            message Module {
+                message Add {
+                    message Args {
+                        required generated.proto.module.Module module = 1;
+                        required generated.proto.crumb.Breadcrumbs parentbc = 2;
+                        required int32 libraryID = 3;
+                        required int32 projectID = 4;
+                    }
+                    message Result {
+                        required generated.proto.module.Module module = 1;
+                    }   
+                }
+                message Update {
+                    message Cls {
+                        message Args {
+                            required generated.proto.type.Type cls        = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result { }
+                    }
+                    message Imports {
+                        message Args {
+                            repeated generated.proto.expr.Expr imports    = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result { }
+                    }
+                    message Fields {
+                        message Args {
+                            repeated generated.proto.expr.Expr fields     = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result { }
+                    }
+                }
+                
+            }
+            message Data {
+                message Add {
+                    message Args {
+                        required generated.proto.expr.Expr class_      = 1;
+                        required generated.proto.crumb.Breadcrumbs parentbc = 2;
+                        required int32 libraryID = 3;
+                        required int32 projectID = 4;
+                    }
+                    message Result {
+                        required generated.proto.expr.Expr class_      = 1;
+                    }   
+                }
+                message Update {
+                    message Cls {
+                        message Args {
+                            required generated.proto.type.Type cls        = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result { }
+                    }
+                    message Cons {
+                        message Args {
+                            repeated generated.proto.expr.Expr cons       = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result { }
+                    }
+                    message Classes {
+                        message Args {
+                            repeated generated.proto.expr.Expr classes    = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result { }
+                    }
+                    message Methods {
+                        message Args {
+                            repeated generated.proto.expr.Expr methods    = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result { }
+                    }
+                    
+                }
+            }
+            message Function {
+                message Add {
+                    message Args {
+                        required generated.proto.expr.Expr function   = 1;
+                        required generated.proto.crumb.Breadcrumbs parentbc = 2;
+                        required int32 libraryID = 3;
+                        required int32 projectID = 4;
+                    }
+                    message Result {
+                        required generated.proto.expr.Expr function   = 1;
+                    }   
+                }
+                message Update {
+                    message Name {
+                        message Args {
+                            required string name     = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result { }
+                    }
+                    message Path {
+                        message Args {
+                            repeated string path     = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result { }
+                    }
+                    message Inputs {
+                        message Args {
+                            repeated generated.proto.expr.Expr inputs     = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result { }
+                    }
+                    message Output {
+                        message Args {
+                            required generated.proto.type.Type output     = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result { }
+                    }
+                }
+            }
+            message Remove {
+                message Args {
+                    required generated.proto.crumb.Breadcrumbs bc = 1;
+                    required int32 libraryID = 2;
+                    required int32 projectID = 3;
+                }
+                message Result { }
+            }
+            message ResolveDefinition {
+                message Args {
+                    required string name = 1;
+                    required generated.proto.crumb.Breadcrumbs parentbc = 2;
+                    required int32 libraryID = 3;
+                    required int32 projectID = 4;
+                }
+                message Result {
+                    repeated generated.proto.crumb.ASTPtr astptr = 1;
+                }   
+            }
         }
     }
 }
