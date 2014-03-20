@@ -16,8 +16,8 @@ import qualified Flowbox.Batch.Project.Project                            as Pro
 import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project   ()
 import qualified Flowbox.Luna.Lib.LibManager                              as LibManager
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Attributes ()
-import           Flowbox.Prelude                                          hiding (Context)
-import           Flowbox.ProjectManager.Context                           (Context)
+import           Flowbox.Prelude
+import           Flowbox.ProjectManager.Context                           (ContextRef)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.ProjectManager.Project.Close.Args        as Close
@@ -43,64 +43,64 @@ loggerIO = getLoggerIO "Flowbox.ProjectManager.Handler.Project"
 ------ public api -------------------------------------------------
 
 
-list :: Context -> List.Args -> IO List.Result
-list context _ = do
-    batch <- IORef.readIORef context
+list :: ContextRef -> List.Args -> IO List.Result
+list ctx _ = do
+    batch <- IORef.readIORef ctx
     let aprojects       = BatchP.projects batch
         tprojects       = map (\a -> encode a ^. _1) aprojects
         tprojectsVector = Sequence.fromList tprojects
     return $ List.Result tprojectsVector
 
 
-lookup :: Context -> Lookup.Args -> IO Lookup.Result
-lookup context (Lookup.Args tprojectID) = do
+lookup :: ContextRef -> Lookup.Args -> IO Lookup.Result
+lookup ctx (Lookup.Args tprojectID) = do
     let projectID = decodeP tprojectID
-    batch     <- IORef.readIORef context
+    batch     <- IORef.readIORef ctx
     project   <- BatchP.projectByID projectID batch
     return $ Lookup.Result $ encode (projectID, project) ^. _1
 
 
-create :: Context -> Create.Args -> IO Create.Result
-create context (Create.Args tname tpath tattributes) = do
+create :: ContextRef -> Create.Args -> IO Create.Result
+create ctx (Create.Args tname tpath tattributes) = do
     let name = decodeP tname
         path = decodeP tpath
         attributes = decodeP tattributes
-    batch <- IORef.readIORef context
+    batch <- IORef.readIORef ctx
     (newBatch, newProject) <- BatchP.createProject name path attributes batch
-    IORef.writeIORef context newBatch
+    IORef.writeIORef ctx newBatch
     return $ Create.Result $ encode newProject ^. _1
 
 
-open :: Context -> Open.Args -> IO Open.Result
-open context (Open.Args tpath) = do
+open :: ContextRef -> Open.Args -> IO Open.Result
+open ctx (Open.Args tpath) = do
     let upath = decodeP tpath
-    batch <- IORef.readIORef context
+    batch <- IORef.readIORef ctx
     (newBatch, (projectID, aproject)) <- BatchP.openProject upath batch
-    IORef.writeIORef context newBatch
+    IORef.writeIORef ctx newBatch
     return $ Open.Result $ encode (projectID, aproject) ^. _1
 
 
-update :: Context -> Update.Args -> IO Update.Result
-update context  (Update.Args tproject) = do
+update :: ContextRef -> Update.Args -> IO Update.Result
+update ctx  (Update.Args tproject) = do
     project <- (decode (tproject, LibManager.empty, ProcessMap.empty) :: IO (Project.ID, Project))
-    batch   <- IORef.readIORef context
+    batch   <- IORef.readIORef ctx
     newBatch <-  BatchP.updateProject project batch
-    IORef.writeIORef context newBatch
+    IORef.writeIORef ctx newBatch
     return Update.Result
 
 
-close :: Context -> Close.Args -> IO Close.Result
-close context (Close.Args tprojectID) = do
+close :: ContextRef -> Close.Args -> IO Close.Result
+close ctx (Close.Args tprojectID) = do
     let projectID = decodeP tprojectID
-    batch <- IORef.readIORef context
+    batch <- IORef.readIORef ctx
     let newBatch = BatchP.closeProject projectID batch
-    IORef.writeIORef context newBatch
+    IORef.writeIORef ctx newBatch
     return Close.Result
 
 
-store :: Context -> Store.Args -> IO Store.Result
-store context (Store.Args tprojectID) = do
+store :: ContextRef -> Store.Args -> IO Store.Result
+store ctx (Store.Args tprojectID) = do
     let projectID = decodeP tprojectID
-    batch <- IORef.readIORef context
+    batch <- IORef.readIORef ctx
     BatchP.storeProject projectID batch
     return Store.Result

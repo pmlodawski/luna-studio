@@ -6,13 +6,16 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import qualified Flowbox.Bus.Client            as Client
-import qualified Flowbox.Config.Config         as Config
-import           Flowbox.Options.Applicative   hiding (info)
-import qualified Flowbox.Options.Applicative   as Opt
-import           Flowbox.PluginManager.Cmd     (Cmd)
-import qualified Flowbox.PluginManager.Cmd     as Cmd
-import qualified Flowbox.PluginManager.Version as Version
+import qualified Flowbox.Bus.EndPoint                  as EP
+import qualified Flowbox.Bus.RPC.Client                as Client
+import qualified Flowbox.Config.Config                 as Config
+import           Flowbox.Options.Applicative           hiding (info)
+import qualified Flowbox.Options.Applicative           as Opt
+import           Flowbox.PluginManager.Cmd             (Cmd)
+import qualified Flowbox.PluginManager.Cmd             as Cmd
+import qualified Flowbox.PluginManager.Context         as Context
+import qualified Flowbox.PluginManager.Handler.Handler as Handler
+import qualified Flowbox.PluginManager.Version         as Version
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -43,5 +46,7 @@ run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
     Cmd.Run {}  -> do
           cfg <- Config.load
-          putStrLn "Not implemented"
+          ctx <- Context.mk cfg
+          r <- Client.run (EP.clientFromConfig cfg) Handler.topics $ Handler.handler ctx
+          print r
 

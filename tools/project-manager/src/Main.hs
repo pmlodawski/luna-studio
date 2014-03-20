@@ -6,17 +6,17 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import qualified Flowbox.Bus.Client               as Client
-import qualified Flowbox.Bus.EndPoint             as EP
-import qualified Flowbox.Config.Config            as Config
-import           Flowbox.Options.Applicative      hiding (info)
-import qualified Flowbox.Options.Applicative      as Opt
+import qualified Flowbox.Bus.EndPoint                   as EP
+import qualified Flowbox.Bus.RPC.Client                 as Client
+import qualified Flowbox.Config.Config                  as Config
+import           Flowbox.Options.Applicative            hiding (info)
+import qualified Flowbox.Options.Applicative            as Opt
 import           Flowbox.Prelude
-import           Flowbox.ProjectManager.Cmd       (Cmd)
-import qualified Flowbox.ProjectManager.Cmd       as Cmd
-import qualified Flowbox.ProjectManager.Context   as Context
-import qualified Flowbox.ProjectManager.Processor as Processor
-import qualified Flowbox.ProjectManager.Version   as Version
+import           Flowbox.ProjectManager.Cmd             (Cmd)
+import qualified Flowbox.ProjectManager.Cmd             as Cmd
+import qualified Flowbox.ProjectManager.Context         as Context
+import qualified Flowbox.ProjectManager.Handler.Handler as Handler
+import qualified Flowbox.ProjectManager.Version         as Version
 import           Flowbox.System.Log.Logger
 
 
@@ -47,6 +47,6 @@ run cmd = case cmd of
     Cmd.Run {} -> do
           cfg <- Config.load
           ctx <- Context.mk cfg
-          r <- Client.run (EP.clientFromConfig cfg) Processor.topics (Processor.process ctx)
+          r <- Client.run (EP.clientFromConfig cfg) Handler.topics $ Handler.handler ctx
           print r
 

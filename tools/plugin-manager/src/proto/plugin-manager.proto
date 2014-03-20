@@ -1,0 +1,56 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.pluginManager;
+
+import "plugin.proto";
+
+
+
+message Plugin {
+    message Start {
+        message Args { 
+            required int32 id = 1;
+        }
+        message Result { }
+    }
+    message Stop {
+        message Args { 
+            required int32 id = 1;
+        }
+        message Result { }
+    }
+    message Lookup {
+        message Args { 
+            required int32 id = 1;
+        }
+        message Result { 
+            required generated.proto.plugin.PluginInfo pluginInfo = 1;
+        }
+    }
+    message List {
+        message Args { }
+        message Result { 
+            repeated generated.proto.plugin.PluginInfo list = 1;
+        }
+    }
+}
+/*
+Status { Running, Stopped }
+Plugin { name, command }
+PluginInfo { id, plugin, status}
+
+plugin
+    start :: ID -> ()
+    stop :: ID -> ()
+    lookup :: ID -> PluginInfo
+    list :: [PluginInfo]
+    repo
+        list  
+        install
+        uninstall
+*/

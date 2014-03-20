@@ -10,8 +10,8 @@ import qualified Data.IORef as IORef
 
 import qualified Flowbox.Batch.Handler.Library                                as BatchL
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Library        ()
-import           Flowbox.Prelude                                              hiding (Context)
-import           Flowbox.ProjectManager.Context                               (Context)
+import           Flowbox.Prelude
+import           Flowbox.ProjectManager.Context                               (ContextRef)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Library.Library                              as Gen
@@ -40,59 +40,59 @@ shrinkLibrary :: Gen.Library -> Gen.Library
 shrinkLibrary library = library { Gen.ast = Nothing, Gen.propertyMap = Nothing}
 
 
-list :: Context -> List.Args -> IO List.Result
-list context (List.Args tprojectID) = do
+list :: ContextRef -> List.Args -> IO List.Result
+list ctx (List.Args tprojectID) = do
     let projectID = decodeP tprojectID
-    batch <- IORef.readIORef context
+    batch <- IORef.readIORef ctx
     libs <- BatchL.libraries projectID batch
     return $ List.Result $ fmap shrinkLibrary $ encodeList libs
 
 
-lookup :: Context -> Lookup.Args -> IO Lookup.Result
-lookup context (Lookup.Args tlibID tprojectID) = do
+lookup :: ContextRef -> Lookup.Args -> IO Lookup.Result
+lookup ctx (Lookup.Args tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef context
+    batch <- IORef.readIORef ctx
     library <- BatchL.libraryByID libID projectID batch
     return $ Lookup.Result $ shrinkLibrary $ encode (libID, library)
 
 
-create :: Context -> Create.Args -> IO Create.Result
-create context (Create.Args tname tpath tprojectID) = do
+create :: ContextRef -> Create.Args -> IO Create.Result
+create ctx (Create.Args tname tpath tprojectID) = do
     let projectID = decodeP tprojectID
         name      = decodeP tname
         path      = decodeP tpath
-    batch <- IORef.readIORef context
+    batch <- IORef.readIORef ctx
     (newBatch, newLibrary) <-  BatchL.createLibrary name path projectID batch
-    IORef.writeIORef context newBatch
+    IORef.writeIORef ctx newBatch
     return $ Create.Result $ encode newLibrary
 
 
-load :: Context -> Load.Args -> IO Load.Result
-load context (Load.Args tpath tprojectID) = do
+load :: ContextRef -> Load.Args -> IO Load.Result
+load ctx (Load.Args tpath tprojectID) = do
     let path      = decodeP tpath
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef context
+    batch <- IORef.readIORef ctx
     (newBatch, (newLibID, newLibrary)) <- BatchL.loadLibrary path projectID batch
-    IORef.writeIORef context newBatch
+    IORef.writeIORef ctx newBatch
     return $ Load.Result $ encode (newLibID, newLibrary)
 
 
-unload :: Context -> Unload.Args -> IO Unload.Result
-unload context (Unload.Args tlibID tprojectID) = do
+unload :: ContextRef -> Unload.Args -> IO Unload.Result
+unload ctx (Unload.Args tlibID tprojectID) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef context
+    batch <- IORef.readIORef ctx
     newBatch <- BatchL.unloadLibrary libID projectID batch
-    IORef.writeIORef context newBatch
+    IORef.writeIORef ctx newBatch
     return Unload.Result
 
 
-store :: Context -> Store.Args -> IO Store.Result
-store context (Store.Args tlibID tprojectID) =  do
+store :: ContextRef -> Store.Args -> IO Store.Result
+store ctx (Store.Args tlibID tprojectID) =  do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    batch <- IORef.readIORef context
+    batch <- IORef.readIORef ctx
     BatchL.storeLibrary libID projectID batch
     return Store.Result
 
