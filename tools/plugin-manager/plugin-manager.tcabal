@@ -33,5 +33,6 @@ Executable plugin-manager
                     mtl,
                     optparse-applicative,
                     protocol-buffers,
+                    process,
                     transformers,
                     zeromq4-haskell

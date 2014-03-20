@@ -13,8 +13,10 @@
 module Flowbox.PluginManager.Proto.Plugin where
 
 import           Flowbox.Control.Error
-import           Flowbox.PluginManager.Plugin                   (Plugin (Plugin))
-import qualified Flowbox.PluginManager.Plugin                   as Plugin
+import           Flowbox.PluginManager.Data.Plugin              (Plugin (Plugin))
+import qualified Flowbox.PluginManager.Data.Plugin              as Plugin
+import           Flowbox.PluginManager.Data.PluginInfo          (PluginInfo (PluginInfo))
+import qualified Flowbox.PluginManager.Data.PluginInfo          as PluginInfo
 import           Flowbox.Prelude                                hiding (id)
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
 import qualified Generated.Proto.Plugin.Plugin                  as Gen
@@ -33,15 +35,15 @@ instance Convert Plugin Gen.Plugin where
         return $ Plugin name command
 
 
-instance ConvertPure Plugin.Status Gen.Status where
-    encodeP Plugin.Running = Gen.Running
-    encodeP Plugin.Stopped = Gen.Stopped
-    decodeP Gen.Running = Plugin.Running
-    decodeP Gen.Stopped = Plugin.Stopped
+instance ConvertPure PluginInfo.Status Gen.Status where
+    encodeP PluginInfo.Running = Gen.Running
+    encodeP PluginInfo.Stopped = Gen.Stopped
+    decodeP Gen.Running = PluginInfo.Running
+    decodeP Gen.Stopped = PluginInfo.Stopped
 
 
-instance Convert Plugin.PluginInfo Gen.PluginInfo where
-    encode (Plugin.PluginInfo id plugin status) = Gen.PluginInfo tid tplugin tstatus where
+instance Convert (Plugin.ID, PluginInfo) Gen.PluginInfo where
+    encode (id, PluginInfo plugin status) = Gen.PluginInfo tid tplugin tstatus where
         tid     = encodePJ id
         tplugin = encodeJ  plugin
         tstatus = encodePJ status
@@ -49,4 +51,4 @@ instance Convert Plugin.PluginInfo Gen.PluginInfo where
         id     <- decodeP <$> mtid     <?> "Failed to decode PluginInfo: 'id' field is missing"
         plugin <- decode  =<< mtplugin <?> "Failed to decode PluginInfo: 'plugin' field is missing"
         status <- decodeP <$> mtstatus <?> "Failed to decode PluginInfo: 'status' field is missing"
-        return $ Plugin.PluginInfo id plugin status
+        return $ (id, PluginInfo plugin status)

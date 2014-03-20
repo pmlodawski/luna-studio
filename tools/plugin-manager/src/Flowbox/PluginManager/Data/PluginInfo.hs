@@ -5,15 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.PluginManager.Plugin where
+module Flowbox.PluginManager.Data.PluginInfo where
 
+import Flowbox.PluginManager.Data.Plugin (Plugin)
 import Flowbox.Prelude
 
-
-
-data Plugin = Plugin { name    :: String
-                     , command :: String
-                     } deriving (Read, Show)
 
 
 data Status = Running
@@ -21,7 +17,6 @@ data Status = Running
             deriving (Read, Show)
 
 
-data PluginInfo = PluginInfo { id     :: Int
-                             , plugin :: Plugin
+data PluginInfo = PluginInfo { plugin :: Plugin
                              , status :: Status
                              } deriving (Read, Show)
