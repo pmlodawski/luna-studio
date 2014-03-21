@@ -8,18 +8,18 @@ import           Flowbox.Prelude        as P
 
 
 
-data Color a = RGB  {rgbR  :: a, rgbG  :: a, rgbB  :: a}
-             | RGBA {rgbaR :: a, rgbaG :: a, rgbaB :: a, rgbaA :: a}
-             | HSV  {hsvH  :: a, hsvS  :: a, hsvV  :: a}
-             | HSL  {hslH  :: a, hslS  :: a, hslL  :: a}
-             | CMY  {cmyC  :: a, cmyM  :: a, cmyY  :: a}
-             | CMYK {cmykC :: a, cmykM :: a, cmykY :: a, cmykK :: a}
+data Color a = RGB  {r :: a, g :: a, b :: a}
+             | RGBA {r :: a, g :: a, b :: a, a :: a}
+             | HSV  {h :: a, s :: a, v :: a}
+             | HSL  {h :: a, s :: a, v :: a}
+             | CMY  {c :: a, m :: a, y :: a}
+             | CMYK {c :: a, m :: a, y :: a, k :: a}
              deriving (Show)
 
 
 
 toRGB :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
-toRGB color@(RGB _ _ _) = color
+toRGB color@(RGB{}) = color
 toRGB (RGBA r g b _) = RGB r g b
 toRGB (HSV  h s v) = RGB (r+m) (g+m) (b+m)
     where (r, g, b) = A.unlift res
@@ -62,13 +62,13 @@ toRGB (CMYK c m y k) = RGB r g b
 
 
 toRGBA :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
-toRGBA color@(RGBA _ _ _ _) = color
+toRGBA color@(RGBA{}) = color
 toRGBA (RGB r g b) = RGBA r g b (r-r+1)
 toRGBA color = toRGBA . toRGB $ color
 
 
 toHSV :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
-toHSV color@(HSV _ _ _) = color
+toHSV color@(HSV{}) = color
 toHSV (RGB r g b) = HSV h' s v
     where h' = (h A.>* 0 A.? (h , h + 6)) / 6
           h = delta A.==* 0 A.? (0,
@@ -85,7 +85,7 @@ toHSV color = toHSV . toRGB $ color
 
 
 toHSL :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
-toHSL color@(HSL _ _ _) = color
+toHSL color@(HSL{}) = color
 toHSL (RGB r g b) = HSL h' s l
     where h' = (h A.>* 0 A.? (h , h + 6)) / 6
           h = delta A.==* 0 A.? (0,
@@ -102,7 +102,7 @@ toHSL color = toHSL . toRGB $ color
 
 
 toCMY :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
-toCMY color@(CMY _ _ _) = color
+toCMY color@(CMY{}) = color
 toCMY (RGB r g b) = CMY c m y
     where c = 1 - r
           m = 1 - g
@@ -111,7 +111,7 @@ toCMY color = toCMY . toRGB $ color
 
 
 toCMYK :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
-toCMYK color@(CMYK _ _ _ _) = color
+toCMYK color@(CMYK{}) = color
 toCMYK (RGB r g b) = CMYK c m y k
     where c = (1 - r - k) / (1 - k)
           m = (1 - g - k) / (1 - k)

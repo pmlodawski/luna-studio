@@ -38,12 +38,12 @@ import           Flowbox.Prelude                   as P
 
 
 ----imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
-imgtest img = do --frames = do
+imgtest img frames = do
     let getDouble image = Image.reprDouble <$> RGBA.decompose image
         rgb = ("r", "g", "b")
 
     imageRGBA <- getDouble img
-    --framesRGBA <- getDouble frames
+    framesRGBA <- getDouble frames
 
     --imageBackground <- G.extractBackground rgb framesRGBA
     imageCB <- G.adjustCB rgb 1.5 0.2 imageRGBA
@@ -65,22 +65,23 @@ main
           _       -> ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer ("--help":argv)
                   >> Exit.exitSuccess
 
-        --let backend     = Label.get Cfg.configBackend conf
-        --    --frameNames  = fmap (\x -> (T.printf "frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
-        --    getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
-        --    getImages locations = fmap (either (\_ -> mempty) id) (Image.readImageSequenceFromBMP locations)
-        --    getDouble image = Image.reprFloat <$> RGBA.decompose image
+        let backend     = ParseArgs.Interpreter --Label.get Cfg.configBackend conf
+            frameNames  = replicate 5 "lena.bmp"
+            --frameNames  = fmap (\x -> (T.printf "frames/frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
+            getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
+            getImages locations = fmap (either (\_ -> mempty) id) (Image.readImageSequenceFromBMP locations)
+            getDouble image = Image.reprFloat <$> RGBA.decompose image
 
-        ---- Read in the image file
-        --imageIn <- getImage fileIn
-        ----framesIn <- getImages frameNames
+        -- Read in the image file
+        imageIn <- getImage fileIn
+        framesIn <- getImages frameNames
 
-        --let imageOut = imgtest imageIn --framesIn
+        let imageOut = imgtest imageIn framesIn
 
-        --case imageOut of
-        --    Left err -> print err
-        --    Right val -> do Image.writeImageToBMP (ParseArgs.run backend) fileOut val
-        --                    return ()
+        case imageOut of
+            Left err -> print err
+            Right val -> do Image.writeImageToBMP (ParseArgs.run backend) fileOut val
+                            return ()
 
 
         -- COLOR TESTS

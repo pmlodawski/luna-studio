@@ -62,6 +62,9 @@ map' :: (A.Shape ix, A.Elt a, A.Elt b) => (Exp a -> Exp b) -> Image (A.Array ix 
 map' f img = Image $ Map.map (Channel.map f) $ view channels img
 
 
+
+-- handling channels
+
 lookup :: String -> Image (A.Array ix a) -> Either Error (Channel (A.Array ix a))
 lookup name img = justErr (ChannelLookupError name) $ Map.lookup name (view channels img)
 
@@ -71,9 +74,12 @@ cpChannel source destination img = do
     chan <- lookup source img
     return $ img & channels %~ (Map.insert destination chan)
 
-
 insert :: String -> Channel (A.Array ix a) -> Image (A.Array ix a) -> Image (A.Array ix a)
 insert name chan img = img & channels %~ (Map.insert name chan)
+
+
+
+-- conversion between numeric types
 
 reprFloat :: A.Shape ix => Image (A.Array ix A.Word8) -> Image (A.Array ix A.Float)
 reprFloat img = map' (\c -> A.fromIntegral c / 255) img

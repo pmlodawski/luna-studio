@@ -258,19 +258,19 @@ unpremultiply img = do
 
 ---- convolution
 
-convolve3x3 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil3x3 a -> A.Exp a
+convolve3x3 :: (A.Elt a, A.IsNum a) => [Exp a] -> A.Stencil3x3 a -> Exp a
 convolve3x3 kernel ((a,b,c),(d,e,f),(g,h,i))
     = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i]
 
-convolve3x5 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil3x5 a -> A.Exp a
+convolve3x5 :: (A.Elt a, A.IsNum a) => [Exp a] -> A.Stencil3x5 a -> Exp a
 convolve3x5 kernel ((a,b,c),(d,e,f),(g,h,i),(j,k,l),(m,n,o))
     = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o]
 
-convolve5x3 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil5x3 a -> A.Exp a
+convolve5x3 :: (A.Elt a, A.IsNum a) => [Exp a] -> A.Stencil5x3 a -> Exp a
 convolve5x3 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o))
     = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o]
 
-convolve5x5 :: (A.Elt a, A.IsNum a) => [A.Exp a] -> A.Stencil5x5 a -> A.Exp a
+convolve5x5 :: (A.Elt a, A.IsNum a) => [Exp a] -> A.Stencil5x5 a -> Exp a
 convolve5x5 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o),(p,q,r,s,t),(u,v,w,x,y))
     = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y]
 
@@ -297,10 +297,10 @@ convolveRGB = convolve ("r", "g", "b")
 
 ---- brightness and contrast
 
---adjustCB_RGB :: (A.Elt a, A.IsFloating a) => A.Exp a -> A.Exp a -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+--adjustCB_RGB :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 --adjustCB_RGB = adjustCB ("r", "g", "b")
 
-adjustCB :: (A.Elt a, A.IsFloating a) => String3 -> A.Exp a -> A.Exp a -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+adjustCB :: (A.Elt a, A.IsFloating a) => String3 -> Exp a -> Exp a -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 adjustCB (rname, gname, bname) contrastValue brightnessValue img = do
     rchannel <- Image.lookup rname img
     gchannel <- Image.lookup gname img
@@ -315,10 +315,10 @@ adjustCB (rname, gname, bname) contrastValue brightnessValue img = do
         adjust x = contrastValue * x + brightnessValue
     return outimg
 
-contrast :: (A.Elt a, A.IsFloating a) => A.Exp a -> String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+contrast :: (A.Elt a, A.IsFloating a) => Exp a -> String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 contrast x rgb = adjustCB rgb x 0
 
-brightness :: (A.Elt a, A.IsFloating a) => A.Exp a -> String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+brightness :: (A.Elt a, A.IsFloating a) => Exp a -> String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 brightness x rgb = adjustCB rgb 1 x
 
 
@@ -602,7 +602,7 @@ extractBackground (nameA, nameB, nameC) images = do
   channelSeqB <- Image.lookup nameB images
   channelSeqC <- Image.lookup nameC images
   let sh = Channel.shape channelSeqA
-      (A.Z A.:. (y :: A.Exp Int) A.:. (x :: A.Exp Int) A.:. (z :: A.Exp Int)) = A.unlift sh
+      (A.Z A.:. (y :: Exp Int) A.:. (x :: Exp Int) A.:. (z :: Exp Int)) = A.unlift sh
       sh' = (A.index2 y x)
       outimg = Image.insert nameA (Channel.generate sh' $ getMostFreqPixel channelSeqA)
              $ Image.insert nameB (Channel.generate sh' $ getMostFreqPixel channelSeqB)
@@ -610,7 +610,7 @@ extractBackground (nameA, nameB, nameC) images = do
              $ Image.insert "a"   (Channel.fill     sh' 1)
              $ mempty
       getMostFreqPixel channels ix = let
-              --(A.Z A.:. (j :: A.Exp Int) A.:. (i :: A.Exp Int)) = A.unlift ix
+              (A.Z A.:. (j :: Exp Int) A.:. (i :: Exp Int)) = A.unlift ix
               --(A.Z A.:. (j) A.:. (i)) = A.unlift ix
               --(A.Z A.:. (j) A.:. (i)) = A.unlift ix :: (A.Z A.:. Int A.:. Int)
               --(A.Z A.:. (j :: Int) A.:. (i :: Int)) = A.unlift ix
@@ -618,9 +618,38 @@ extractBackground (nameA, nameB, nameC) images = do
               --pixels = Channel.accMatrix $ Channel.slice channels $ A.lift (A.Z A.:.j A.:. i A.:. (A.All))
               --pixels = Channel.accMatrix $ Channel.slice channels $ Channel.index3 0 0 0 -- $ A.lift (A.Z A.:.j A.:. i A.:. i)
               --pixels = A.generate (A.index1 z) $ getVector channels i j
-          in 1 -- pixels A.!! 0
+              --discretizeValue :: (A.Elt e, A.IsFloating e) => Exp e -> Exp Int
+              discretizeValue = A.floor
+              --generateVect :: Exp Int -> Exp (A.Z A.:. Int) -> Exp (A.Plain (Exp Int, Exp Int))
+              generateVect val index = let
+                      (A.Z A.:. (k :: Exp Int)) = A.unlift index
+                  in A.lift (discretizeValue (channels Channel.! (Channel.index3 j i 0)) :: Exp Int, val)
+              --sumValues :: Exp (A.Plain (Exp Int, Exp Int)) -> Exp (A.Plain (Exp Int, Exp Int)) -> Exp (A.Plain (Exp Int, Exp Int))
+              sumValues a b = let
+                      (k :: Exp Int, x :: Exp Int) = A.unlift a
+                      (_ :: Exp Int, y :: Exp Int) = A.unlift b
+                  in A.lift (k, x + y)
+              --zeros     = A.generate (A.index1 z) (const 0)
+              --ones      = A.generate (A.index1 z) (const 1)
+              zeros     = A.generate (A.index1 z) $ generateVect (A.constant 0)
+              ones      = A.generate (A.index1 z) $ generateVect (A.constant 1)
+              --histogram = A.permute (+) zeros (\k -> A.index1 (discretizeValue (channels Channel.! (Channel.index3 j i k)) :: Exp Int)) ones
+              --calcIndex :: Exp (A.Z A.:. Int) -> Exp (A.Z A.:. Int)
+              calcIndex index = let
+                      (A.Z A.:. (k :: Exp Int)) = A.unlift index
+                  in A.index1 (discretizeValue (channels Channel.! (Channel.index3 j i k)) :: Exp Int)
+              histogram = A.permute sumValues zeros calcIndex ones
+              --bigger :: Exp (A.Plain (Exp Int, Exp Int)) -> Exp (A.Plain (Exp Int, Exp Int)) -> Exp (A.Plain (Exp Int, Exp Int))
+              bigger a b = let
+                      (p :: Exp Int, x :: Exp Int) = A.unlift a
+                      (q :: Exp Int, y :: Exp Int) = A.unlift b
+                  in x A.>* y A.? (a, b)
+              --(result, _) = A.unlift $ (A.fold1 bigger histogram) A.!! 0
+              maxPair = (A.fold1 bigger histogram) A.!! 0
+              (result :: Exp Int, _ :: Exp Int) = A.unlift maxPair
+          in 1 -- A.fromIntegral result -- pixels A.!! 0
       getVector channels x y ix = let
-              (A.Z A.:. (z :: A.Exp Int)) = A.unlift ix
+              (A.Z A.:. (z :: Exp Int)) = A.unlift ix
           in channels Channel.! (Channel.index3 y x z)
   return outimg
 
