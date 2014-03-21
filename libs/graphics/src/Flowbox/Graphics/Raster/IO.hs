@@ -57,6 +57,6 @@ readImageSequenceFromBMP paths = liftIO (fmap mkChanSequence <$> prepareSequence
 
 writeImageToBMP :: MonadIO m => Channel.Backend A.DIM2 A.Word32 -> FilePath -> Image (RawData2D A.Word32) -> m (Either Image.Error ())
 writeImageToBMP backend file img = runEitherT $ do
-    chan <- hoistEither $ Image.lookup "rgba" img
+    chan <- hoistEither $ Image.get "rgba" img
     let Channel.Raw mdata = Channel.compute backend chan
     liftIO $ A.writeImageToBMP file mdata

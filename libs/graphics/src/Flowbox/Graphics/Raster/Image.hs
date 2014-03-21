@@ -20,7 +20,7 @@ import           Data.Map                          (Map)
 import qualified Data.Map                          as Map
 --import qualified Debug.Trace                       as Dbg
 
-import           Flowbox.Graphics.Raster.Channel (Channel, Channel2, Channel3, RawData2D, RawData3D)
+import           Flowbox.Graphics.Raster.Channel (Channel2, Channel3, RawData2D, RawData3D)
 import qualified Flowbox.Graphics.Raster.Channel as Channel
 import           Flowbox.Graphics.Raster.Error   (Error (ChannelLookupError, TmpError))
 import           Flowbox.Prelude                 hiding (lookup, map)
@@ -34,9 +34,15 @@ type Stencil1x3 a       = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
 data Transformation = Transformation (R.Array R.U R.DIM2 Double)
             deriving (Show)
 
-data Image a = Image { _channels :: Map String (Channel a)
+
+data Image a = Image { _channels :: Map String (Channel.Channel a)
                      }
              deriving (Show, Eq, Ord)
+
+type ChannelName = String
+type Channel ix a = Channel.Channel (A.Array ix a)
+type ImageT ix a = Image (A.Array ix a)
+
 
 data Transformed a = Transformed { src   :: a
                                  , trans :: Transformation
@@ -51,52 +57,75 @@ makeLenses ''Image
 
 
 
-compute :: Channel.Backend ix a -> Image (A.Array ix a) -> Image (A.Array ix a)
+compute :: Channel.Backend ix a -> ImageT ix a -> ImageT ix a
 compute backend img = Image $ Map.map (Channel.compute backend) $ view channels img
 
 
-map :: (A.Shape ix, A.Elt a, A.Elt b) => (Channel (A.Array ix a) -> Channel (A.Array ix b)) -> Image (A.Array ix a) -> Image (A.Array ix b)
+map :: (A.Shape ix, A.Elt a, A.Elt b) => (Channel ix a -> Channel ix b) -> ImageT ix a -> ImageT ix b
 map f img = Image $ Map.map f $ view channels img
 
-map' :: (A.Shape ix, A.Elt a, A.Elt b) => (Exp a -> Exp b) -> Image (A.Array ix a) -> Image (A.Array ix b)
+map' :: (A.Shape ix, A.Elt a, A.Elt b) => (Exp a -> Exp b) -> ImageT ix a -> ImageT ix b
 map' f img = Image $ Map.map (Channel.map f) $ view channels img
 
 
 
 -- handling channels
 
-lookup :: String -> Image (A.Array ix a) -> Either Error (Channel (A.Array ix a))
-lookup name img = justErr (ChannelLookupError name) $ Map.lookup name (view channels img)
-
-
-cpChannel :: String -> String -> Image (A.Array ix a) -> Either Error (Image (A.Array ix a))
-cpChannel source destination img = do
-    chan <- lookup source img
-    return $ img & channels %~ (Map.insert destination chan)
-
-insert :: String -> Channel (A.Array ix a) -> Image (A.Array ix a) -> Image (A.Array ix a)
+insert :: ChannelName -> Channel ix a -> ImageT ix a -> ImageT ix a
 insert name chan img = img & channels %~ (Map.insert name chan)
+
+get :: ChannelName -> ImageT ix a -> Either Error (Channel ix a)
+get name img = justErr (ChannelLookupError name) $ Map.lookup name (view channels img)
+
+remove :: ChannelName -> ImageT ix a -> ImageT ix a
+remove name img = img & channels %~ (Map.delete name)
+
+adjust :: (Channel ix a -> Channel ix a) -> String -> ImageT ix a -> ImageT ix a
+adjust f name img = img & channels %~ (Map.adjust f name)
+
+adjustWithKey :: (ChannelName -> Channel ix a -> Channel ix a) -> String -> ImageT ix a -> ImageT ix a
+adjustWithKey f name img = img & channels %~ (Map.adjustWithKey f name)
+
+update :: (Channel ix a -> Maybe (Channel ix a)) -> ChannelName -> ImageT ix a -> ImageT ix a
+update f name img = img & channels %~ (Map.update f name)
+
+updateWithKey :: (ChannelName -> Channel ix a -> Maybe (Channel ix a)) -> String -> ImageT ix a -> ImageT ix a
+updateWithKey f name img = img & channels %~ (Map.updateWithKey f name)
+
+alter :: (Maybe (Channel ix a) -> Maybe (Channel ix a)) -> ChannelName -> ImageT ix a -> ImageT ix a
+alter f name img = img & channels %~ (Map.alter f name)
+
+cpChannel :: ChannelName -> ChannelName -> ImageT ix a -> Either Error (ImageT ix a)
+cpChannel source destination img = do
+    chan <- get source img
+    return $ img & channels %~ (Map.insert destination chan)
 
 
 
 -- conversion between numeric types
 
-reprFloat :: A.Shape ix => Image (A.Array ix A.Word8) -> Image (A.Array ix A.Float)
+reprFloat :: A.Shape ix => ImageT ix A.Word8 -> ImageT ix A.Float
 reprFloat img = map' (\c -> A.fromIntegral c / 255) img
 
-reprDouble :: A.Shape ix => Image (A.Array ix A.Word8) -> Image (A.Array ix A.Double)
+reprDouble :: A.Shape ix => ImageT ix A.Word8 -> ImageT ix A.Double
 reprDouble img = map' (\c -> A.fromIntegral c / 255) img
 
-reprFloating :: (A.Shape ix, A.Elt a) => A.IsFloating a => Image (A.Array ix A.Word8) -> Image (A.Array ix a)
+reprFloating :: (A.Shape ix, A.Elt a) => A.IsFloating a => ImageT ix A.Word8 -> ImageT ix a
 reprFloating img = map' (\c -> A.fromIntegral c / 255) img
 
-reprWord8 :: (A.Shape ix, A.Elt a, A.IsFloating a) => Image (A.Array ix a) -> Image (A.Array ix A.Word8)
+reprWord8 :: (A.Shape ix, A.Elt a, A.IsFloating a) => ImageT ix a -> ImageT ix A.Word8
 reprWord8 img = map' (\c -> A.truncate $ c * 255) img
 
 
+-- creating rasters
 
--- transformations
+constant :: (A.Elt a, A.IsFloating a, A.Shape ix) => Exp ix -> [(ChannelName, Exp a)] -> ImageT ix a
+constant sh = foldr appendChannel mempty
+    where appendChannel (name, value) img = insert name (Channel.generate sh (const value)) img
 
+
+
+-- TRANSFORMATIONS
 transform :: a -> Transformed a
 transform x = Transformed x mempty
 

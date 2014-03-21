@@ -19,7 +19,7 @@ import           Flowbox.Prelude                 hiding (map)
 
 
 decompose :: (A.Shape ix) => Image (A.Array ix A.Word32) -> Either Image.Error (Image (A.Array ix A.Word8))
-decompose img = do chan <- Image.lookup "rgba" img
+decompose img = do chan <- Image.get "rgba" img
                    let dchan = Channel.map unpack32 chan
                        (r,g,b,a) = Channel.unzip4 dchan
                        outimg    = Image.insert "r" r
@@ -30,10 +30,10 @@ decompose img = do chan <- Image.lookup "rgba" img
                    return outimg
 
 compose :: (A.Shape ix) => Image (A.Array ix A.Word8) -> Either Image.Error (Image (A.Array ix A.Word32))
-compose img = do r <- Image.lookup "r" img
-                 g <- Image.lookup "g" img
-                 b <- Image.lookup "b" img
-                 a <- Image.lookup "a" img
+compose img = do r <- Image.get "r" img
+                 g <- Image.get "g" img
+                 b <- Image.get "b" img
+                 a <- Image.get "a" img
 
                  let rgba = Channel.map pack32 (Channel.zip4 r g b a)
                  return $ Image.insert "rgba" rgba mempty

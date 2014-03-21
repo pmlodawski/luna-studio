@@ -49,9 +49,9 @@ epsilon' delta eps = ((delta A.>=* 0) A.&&* (delta A.<* eps)) A.||* ((delta A.<*
 
 applyToImage :: (Channel2 a -> Channel2 a) -> String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 applyToImage f (nameA, nameB, nameC) img = do
-  channelA <- Image.lookup nameA img
-  channelB <- Image.lookup nameB img
-  channelC <- Image.lookup nameC img
+  channelA <- Image.get nameA img
+  channelB <- Image.get nameB img
+  channelC <- Image.get nameC img
   let outimg = Image.insert nameA (f channelA)
              $ Image.insert nameB (f channelB)
              $ Image.insert nameC (f channelC)
@@ -175,9 +175,9 @@ binarizeImage f = applyToImage (binarizeChannel f)
 
 luminance :: (A.Elt a, A.IsFloating a) => String3 -> String -> (Image (RawData2D a)) -> Either Image.Error (Image (RawData2D a))
 luminance (rname, gname, bname) outname img = do
-    chr <- Image.lookup rname img
-    chg <- Image.lookup gname img
-    chb <- Image.lookup bname img
+    chr <- Image.get rname img
+    chg <- Image.get gname img
+    chb <- Image.get bname img
     let chan = Channel.zipWith3 colormix chr chg chb
         colormix r g b = 0.3 * r + 0.59 * g + 0.11 * b
         outimg = Image.insert outname chan img
@@ -229,10 +229,10 @@ medianImage = applyToImage medianChannel
 
 premultiply :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 premultiply img = do
-    channelR <- Image.lookup "r" img
-    channelG <- Image.lookup "g" img
-    channelB <- Image.lookup "b" img
-    channelA <- Image.lookup "a" img
+    channelR <- Image.get "r" img
+    channelG <- Image.get "g" img
+    channelB <- Image.get "b" img
+    channelA <- Image.get "a" img
     let outimg = Image.insert "r" (premultiplyChannel channelR channelA)
                $ Image.insert "g" (premultiplyChannel channelG channelA)
                $ Image.insert "b" (premultiplyChannel channelB channelA)
@@ -243,10 +243,10 @@ premultiply img = do
 
 unpremultiply :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 unpremultiply img = do
-    channelR <- Image.lookup "r" img
-    channelG <- Image.lookup "g" img
-    channelB <- Image.lookup "b" img
-    channelA <- Image.lookup "a" img
+    channelR <- Image.get "r" img
+    channelG <- Image.get "g" img
+    channelB <- Image.get "b" img
+    channelA <- Image.get "a" img
     let outimg = Image.insert "r" (unpremultiplyChannel channelR channelA)
                $ Image.insert "r" (unpremultiplyChannel channelG channelA)
                $ Image.insert "r" (unpremultiplyChannel channelB channelA)
@@ -277,9 +277,9 @@ convolve5x5 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o),(p,q,r,s,t),(u,v,w,x,y))
 convolve :: (A.Elt a, A.IsFloating a, A.Stencil A.DIM2 a stencil) =>
   String3 -> (t -> stencil -> Exp a) -> t -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 convolve (nameA, nameB, nameC) convolution kernel img = do
-  channelA <- Image.lookup nameA img
-  channelB <- Image.lookup nameB img
-  channelC <- Image.lookup nameC img
+  channelA <- Image.get nameA img
+  channelB <- Image.get nameB img
+  channelC <- Image.get nameC img
   let outimg = Image.insert nameA channelA'
              $ Image.insert nameB channelB'
              $ Image.insert nameC channelC'
@@ -302,9 +302,9 @@ convolveRGB = convolve ("r", "g", "b")
 
 adjustCB :: (A.Elt a, A.IsFloating a) => String3 -> Exp a -> Exp a -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 adjustCB (rname, gname, bname) contrastValue brightnessValue img = do
-    rchannel <- Image.lookup rname img
-    gchannel <- Image.lookup gname img
-    bchannel <- Image.lookup bname img
+    rchannel <- Image.get rname img
+    gchannel <- Image.get gname img
+    bchannel <- Image.get bname img
     let outimg = Image.insert rname rchannel'
                $ Image.insert gname gchannel'
                $ Image.insert bname bchannel'
@@ -351,9 +351,9 @@ calculateValueFromRGB r g b = P.max r $ P.max g b
 
 convertRGBtoHSV :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 convertRGBtoHSV img = do
-    r <- Image.lookup "r" img
-    g <- Image.lookup "g" img
-    b <- Image.lookup "b" img
+    r <- Image.get "r" img
+    g <- Image.get "g" img
+    b <- Image.get "b" img
     let outimg     = Image.insert "h" hue
                    $ Image.insert "s" saturation
                    $ Image.insert "v" value
@@ -384,9 +384,9 @@ calculateRGBfromHSV h s v = A.unlift res
 
 convertHSVtoRGB :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 convertHSVtoRGB img = do
-    h <- Image.lookup "h" img
-    s <- Image.lookup "s" img
-    v <- Image.lookup "v" img
+    h <- Image.get "h" img
+    s <- Image.get "s" img
+    v <- Image.get "v" img
     let outimg = Image.insert "r" red
                $ Image.insert "g" green
                $ Image.insert "b" blue
@@ -409,14 +409,14 @@ blendC channelA channelB blender = Channel.zipWith blender channelA channelB
 
 --blendRGB :: (A.Elt a, A.IsFloating a) => Image a -> Image a -> (Exp a -> Exp a -> Exp a) -> Either Image.Error (Image a)
 --blendRGB img1 img2 blender = do
---    r1 <- Image.lookup "r" img1
---    g1 <- Image.lookup "g" img1
---    b1 <- Image.lookup "b" img1
---    a1 <- Image.lookup "a" img1
---    r2 <- Image.lookup "r" img2
---    g2 <- Image.lookup "g" img2
---    b2 <- Image.lookup "b" img2
---    a2 <- Image.lookup "a" img2
+--    r1 <- Image.get "r" img1
+--    g1 <- Image.get "g" img1
+--    b1 <- Image.get "b" img1
+--    a1 <- Image.get "a" img1
+--    r2 <- Image.get "r" img2
+--    g2 <- Image.get "g" img2
+--    b2 <- Image.get "b" img2
+--    a2 <- Image.get "a" img2
 --    let outimg = Image.insert "r" r'
 --               $ Image.insert "g" g'
 --               $ Image.insert "b" b'
@@ -430,18 +430,18 @@ blendC channelA channelB blender = Channel.zipWith blender channelA channelB
 
 blendAlpha :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 blendAlpha img1 img2 = do
-    a2 <- Image.lookup "a" img2
+    a2 <- Image.get "a" img2
     outimg <- blendAlpha' img1 img2 a2
     return outimg
 
 blendAlpha' :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Image (RawData2D a) -> Channel2 a -> Either Image.Error (Image (RawData2D a))
 blendAlpha' img1 img2 a = do
-    r1 <- Image.lookup "r" img1
-    g1 <- Image.lookup "g" img1
-    b1 <- Image.lookup "b" img1
-    r2 <- Image.lookup "r" img2
-    g2 <- Image.lookup "g" img2
-    b2 <- Image.lookup "b" img2
+    r1 <- Image.get "r" img1
+    g1 <- Image.get "g" img1
+    b1 <- Image.get "b" img1
+    r2 <- Image.get "r" img2
+    g2 <- Image.get "g" img2
+    b2 <- Image.get "b" img2
     let outimg = Image.insert "r" (blend r1 r2)
                $ Image.insert "g" (blend g1 g2)
                $ Image.insert "b" (blend b1 b2)
@@ -566,9 +566,9 @@ blenderAlphaF f o a b = blenderAlpha (f a b) a o
 keyColor :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 a -> Exp3 a
             -> (Exp a -> Exp a) -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
-  channelA <- Image.lookup nameA img
-  channelB <- Image.lookup nameB img
-  channelC <- Image.lookup nameC img
+  channelA <- Image.get nameA img
+  channelB <- Image.get nameB img
+  channelC <- Image.get nameC img
   let outimg = Image.insert nameA (match channelA)
              $ Image.insert nameB (match channelB)
              $ Image.insert nameC (match channelC)
@@ -598,9 +598,9 @@ keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
 
 extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData3D a) -> Either Image.Error (Image (RawData2D a))
 extractBackground (nameA, nameB, nameC) images = do
-  channelSeqA <- Image.lookup nameA images
-  channelSeqB <- Image.lookup nameB images
-  channelSeqC <- Image.lookup nameC images
+  channelSeqA <- Image.get nameA images
+  channelSeqB <- Image.get nameB images
+  channelSeqC <- Image.get nameC images
   let sh = Channel.shape channelSeqA
       (A.Z A.:. (y :: Exp Int) A.:. (x :: Exp Int) A.:. (z :: Exp Int)) = A.unlift sh
       sh' = (A.index2 y x)
@@ -656,10 +656,10 @@ extractBackground (nameA, nameB, nameC) images = do
 ----extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> [Image a] -> Either Image.Error (Image a)
 ----extractBackground (nameA, nameB, nameC) images = do
 ----  let firstImg    = images !! 0
-----  channelsA <- sequence $ fmap (Image.lookup nameA) images
-----  channelsB <- sequence $ fmap (Image.lookup nameB) images
-----  channelsC <- sequence $ fmap (Image.lookup nameC) images
-----  tmpChannel <- Image.lookup "a" firstImg
+----  channelsA <- sequence $ fmap (Image.get nameA) images
+----  channelsB <- sequence $ fmap (Image.get nameB) images
+----  channelsC <- sequence $ fmap (Image.get nameC) images
+----  tmpChannel <- Image.get "a" firstImg
 ----  let outimg = Image.insert nameA channelA'
 ----             $ Image.insert nameB channelB'
 ----             $ Image.insert nameC channelC'
@@ -684,7 +684,7 @@ extractBackground (nameA, nameB, nameC) images = do
 --extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> [Image a] -> Either Image.Error (Image a)
 --extractBackground (nameA, nameB, nameC) images = do
 --    --channelsA :: Int
---    channelsA <- sequence $ fmap (Image.lookup nameA) images
+--    channelsA <- sequence $ fmap (Image.get nameA) images
 --    let outimg = mempty
 --        matricesA = fmap (Channel.accMatrix) channelsA
 --        exampleM = matricesA !! 0
@@ -707,12 +707,12 @@ extractBackground (nameA, nameB, nameC) images = do
 cutOut :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 a -> (Exp a -> Exp a)
           -> Image (RawData2D a) -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 cutOut (nameA, nameB, nameC) (epsA, epsB, epsC) f imgIn imgBackground = do
-  channelA1 <- Image.lookup nameA imgIn
-  channelB1 <- Image.lookup nameB imgIn
-  channelC1 <- Image.lookup nameC imgIn
-  channelA2 <- Image.lookup nameA imgBackground
-  channelB2 <- Image.lookup nameB imgBackground
-  channelC2 <- Image.lookup nameC imgBackground
+  channelA1 <- Image.get nameA imgIn
+  channelB1 <- Image.get nameB imgIn
+  channelC1 <- Image.get nameC imgIn
+  channelA2 <- Image.get nameA imgBackground
+  channelB2 <- Image.get nameB imgBackground
+  channelC2 <- Image.get nameC imgBackground
   let outimg = Image.insert nameA (match channelA1)
              $ Image.insert nameB (match channelB1)
              $ Image.insert nameC (match channelC1)
