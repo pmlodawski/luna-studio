@@ -46,9 +46,9 @@ imgtest img frames = do
     framesRGBA <- getDouble frames
 
     --imageBackground <- G.extractBackground rgb framesRGBA
-    imageCB <- G.adjustCB rgb 1.5 0.2 imageRGBA
+    let imageConstant = Image.constant (A.index2 256 256) [("r", A.constant 1), ("g", A.constant 0), ("b", A.constant 1), ("a", A.constant 1)]
 
-    let imageOut = imageCB
+    let imageOut = imageConstant
     RGBA.compose $ Image.reprWord8 $ Image.map G.clipValues imageOut
 
 ---- main
