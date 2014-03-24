@@ -30,8 +30,15 @@ def check_cabal_version():
     out = out.lstrip().rstrip()
     if not LooseVersion(out) >= LooseVersion(minv):
         print_error ("Your cabal is too old (%s)" % out)
+        # answer = ""
+        # while answer not in ["Y", "n"]:
+        #     answer = raw_input("Should I update it? (cabal install cabal-install) [Y/n]")
+        # if answer == "Y":
+        #     (out, err) = Popen("cd && cabal install cabal-install", stdout=PIPE, stderr=PIPE, shell=True).communicate()
+
         print_error ("Please update your cabal to version '%s' or greater." % minv)
         fatal()
+
 
 def try_call(cmd):
     if call(cmd, shell=True): fatal()
@@ -39,6 +46,7 @@ def try_call(cmd):
 check_install("cabal", "-V")
 check_cabal_version()
 check_install("hprotoc")
+check_install("c2hs")
 
 print_info ("Generating Protocol Buffers files using genproto")
 path = os.path.join('scripts', 'genproto')
