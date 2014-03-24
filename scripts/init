@@ -16,7 +16,7 @@ def fatal():
     print_error ("ERROR")
     sys.exit(1)
 
-def check_install(name, args):
+def check_install(name, args=""):
     print_info ("Checking if '%s' is installed" % name)
     (out, err) = Popen(name + " " + args, stdout=PIPE, stderr=PIPE, shell=True).communicate()
     if not out:
@@ -38,6 +38,7 @@ def try_call(cmd):
 
 check_install("cabal", "-V")
 check_cabal_version()
+check_install("hprotoc")
 
 print_info ("Generating Protocol Buffers files using genproto")
 path = os.path.join('scripts', 'genproto')
