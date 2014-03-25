@@ -113,15 +113,15 @@ handler ctx callback topic = case topic of
     "project.library.ast.function.update.name.request"   -> callback P.update $ ASTHandler.functionNameUpdate ctx
     "project.library.ast.function.update.output.request" -> callback P.update $ ASTHandler.functionOutputUpdate ctx
     "project.library.ast.function.update.path.request"   -> callback P.update $ ASTHandler.functionPathUpdate ctx
-    "project.library.ast.function.graph.get.request"                -> callback P.update $ GraphHandler.getGraph ctx
+    "project.library.ast.function.graph.get.request"                -> callback P.status $ GraphHandler.getGraph ctx
     "project.library.ast.function.graph.connect.request"            -> callback P.update $ GraphHandler.connect ctx
     "project.library.ast.function.graph.disconnect.request"         -> callback P.update $ GraphHandler.disconnect ctx
-    "project.library.ast.function.graph.lookup.request"             -> callback P.update $ GraphHandler.lookup ctx
+    "project.library.ast.function.graph.lookup.request"             -> callback P.status $ GraphHandler.lookup ctx
     "project.library.ast.function.graph.node.add.request"           -> callback P.update $ GraphHandler.nodeAdd ctx
     "project.library.ast.function.graph.node.remove.request"        -> callback P.update $ GraphHandler.nodeRemove ctx
     "project.library.ast.function.graph.node.update.request"        -> callback P.update $ GraphHandler.nodeUpdate ctx
     "project.library.ast.function.graph.node.updateInPlace.request" -> callback P.update $ GraphHandler.nodeUpdateInPlace ctx
-    "project.library.ast.function.graph.node.default.get.request"    -> callback P.update $ NodeDefaultHandler.get ctx
+    "project.library.ast.function.graph.node.default.get.request"    -> callback P.status $ NodeDefaultHandler.get ctx
     "project.library.ast.function.graph.node.default.remove.request" -> callback P.update $ NodeDefaultHandler.remove ctx
     "project.library.ast.function.graph.node.default.set.request"    -> callback P.update $ NodeDefaultHandler.set ctx
     unsupported             -> do let errMsg = "Unknown topic: " ++ show unsupported
