@@ -53,18 +53,3 @@ message Plugin {
         }
     }
 }
-/*
-Status { Running, Stopped }
-Plugin { name, command }
-PluginInfo { id, plugin, status}
-
-plugin
-    start :: ID -> ()
-    stop :: ID -> ()
-    lookup :: ID -> PluginInfo
-    list :: [PluginInfo]
-    repo
-        list  
-        install
-        uninstall
-*/

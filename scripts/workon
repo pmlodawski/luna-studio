@@ -64,7 +64,7 @@ class AllProject(Project):
 
 
 deptree = [ 'project-manager', 'batch-srv', 'batch', 'lunac', 'initializer'
-          , 'wrappers', 'luna', 'plugin-manager', 'bus-logger'
+          , 'wrappers', 'luna', 'plugin-manager', 'file-manager', 'bus-logger'
           , 'broker', 'bus', 'config', 'rpc', 'graphics' , 'target-hs'
           , 'cabal-install', 'num-conversion', 'utils', 'markup']
 
@@ -77,6 +77,7 @@ pkgs = { '@all'            : AllProject (deps = deptree)
        , 'bus'             : HProject   ('flowbox-bus'             , os.path.join ('libs'  , 'bus')            , 'libs'    , ['utils', 'config', 'rpc']                          )
        , 'broker'          : HProject   ('flowbox-broker'          , os.path.join ('tools' , 'broker')         , 'tools'   , ['utils', 'config', 'rpc', 'bus']                   )
        , 'bus-logger'      : HProject   ('flowbox-bus-logger'      , os.path.join ('tools' , 'bus-logger')     , 'tools'   , ['utils', 'config', 'rpc', 'bus']                   )
+       , 'file-manager'    : HProject   ('flowbox-file-manager'    , os.path.join ('tools' , 'file-manager')   , 'tools'   , ['utils', 'config', 'rpc', 'bus']                   )
        , 'plugin-manager'  : HProject   ('flowbox-plugin-manager'  , os.path.join ('tools' , 'plugin-manager') , 'tools'   , ['utils', 'config', 'rpc', 'bus']                   )
        , 'wrappers'        : HProject   ('flowbox-wrappers'        , os.path.join ('tools' , 'wrappers')       , 'wrappers', ['config']                                          )
        , 'luna'            : HProject   ('flowbox-luna'            , os.path.join ('libs'  , 'luna')           , 'libs'    , ['target-hs', 'utils', 'config', 'cabal-install', 'markup'])

@@ -1,0 +1,62 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.fileManager;
+
+import "file-system.proto";
+
+
+message FileSystem {
+    message LS {
+        message Args {
+            required string path = 1;
+        }
+        message Result {
+            repeated generated.proto.filesystem.Item items = 1;
+        }
+    }
+    message Stat {
+        message Args {
+            required string path = 1;
+        }
+        message Result {
+            required generated.proto.filesystem.Item item = 1;
+        }
+    }
+    message MkDir {
+        message Args {
+            required string path = 1;
+        }
+        message Result { }
+    }
+    message Touch {
+        message Args {
+            required string path = 1;
+        }
+        message Result { }
+    }
+    message RM {
+        message Args { 
+            required string path = 1;
+        }
+        message Result { }
+    }
+    message CP {
+        message Args {
+            required string src = 1;
+            required string dst = 2;
+        }
+        message Result { }
+    }
+    message MV {
+        message Args {
+            required string src = 1;
+            required string dst = 2;
+        }
+        message Result { }
+    }
+}
