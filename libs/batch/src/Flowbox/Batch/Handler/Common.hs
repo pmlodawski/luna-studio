@@ -10,6 +10,7 @@ module Flowbox.Batch.Handler.Common where
 import Control.Monad.RWS
 import Text.Show.Pretty
 
+import qualified Control.Concurrent                                        as Concurrent
 import           Control.Exception                                         (IOException)
 import qualified Control.Exception                                         as Exception
 import           Flowbox.Batch.Batch                                       (Batch)
@@ -52,8 +53,7 @@ import qualified Flowbox.Luna.Passes.Transform.Graph.Parser.Parser         as Gr
 import qualified Flowbox.Luna.Passes.Transform.GraphView.Defaults.Defaults as Defaults
 import           Flowbox.Prelude                                           hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Control.Concurrent as Concurrent
-import qualified System.Environment as Environment
+import qualified System.Environment                                        as Environment
 
 
 loggerIO :: LoggerIO
@@ -61,7 +61,7 @@ loggerIO = getLoggerIO "Flowbox.Batch.Handler.Common"
 
 
 safeInterpretLibrary :: Library.ID -> Project.ID -> Batch -> IO ()
-safeInterpretLibrary libID projectID batch = do 
+safeInterpretLibrary libID projectID batch = do
     args <- Environment.getArgs
     if "--no-auto-interpreter" `elem` args
         then return ()

@@ -11,8 +11,11 @@ import "attributes.proto";
 import "crumb.proto";
 import "expr.proto";
 import "focus.proto";
+import "graph.proto";
+import "graphview.proto";
 import "library.proto";
 import "module.proto";
+import "nodedefault.proto";
 import "project.proto";
 import "type.proto";
 
@@ -23,7 +26,7 @@ message Project {
         message Args { }
         message Result {
             repeated generated.proto.project.Project projects = 1;
-        }   
+        }
     }
     message Lookup {
         message Args {
@@ -31,7 +34,7 @@ message Project {
         }
         message Result {
             required generated.proto.project.Project project = 1;
-        }   
+        }
     }
     message Create {
         message Args {
@@ -41,7 +44,7 @@ message Project {
         }
         message Result {
             required generated.proto.project.Project project = 1;
-        }   
+        }
     }
     message Open {
         message Args {
@@ -49,25 +52,25 @@ message Project {
         }
         message Result {
             required generated.proto.project.Project project = 1;
-        }   
+        }
     }
     message Update {
         message Args {
             required generated.proto.project.Project project = 1;
         }
-        message Result { }   
-    }    
+        message Result { }
+    }
     message Close {
         message Args {
             required int32 projectID = 1;
         }
-        message Result { }   
+        message Result { }
     }
     message Store {
         message Args {
             required int32 projectID = 1;
         }
-        message Result { }   
+        message Result { }
     }
 
     message Library {
@@ -132,7 +135,7 @@ message Project {
                 }
                 message Result {
                     required generated.proto.focus.Focus focus = 1;
-                }   
+                }
             }
             message Module {
                 message Add {
@@ -144,7 +147,7 @@ message Project {
                     }
                     message Result {
                         required generated.proto.module.Module module = 1;
-                    }   
+                    }
                 }
                 message Update {
                     message Cls {
@@ -175,7 +178,7 @@ message Project {
                         message Result { }
                     }
                 }
-                
+
             }
             message Data {
                 message Add {
@@ -187,7 +190,7 @@ message Project {
                     }
                     message Result {
                         required generated.proto.expr.Expr class_      = 1;
-                    }   
+                    }
                 }
                 message Update {
                     message Cls {
@@ -226,7 +229,7 @@ message Project {
                         }
                         message Result { }
                     }
-                    
+
                 }
             }
             message Function {
@@ -239,7 +242,7 @@ message Project {
                     }
                     message Result {
                         required generated.proto.expr.Expr function   = 1;
-                    }   
+                    }
                 }
                 message Update {
                     message Name {
@@ -279,6 +282,130 @@ message Project {
                         message Result { }
                     }
                 }
+                message Graph {
+                    message Get {
+                        message Args {
+                            required generated.proto.crumb.Breadcrumbs bc = 1;
+                            required int32 libraryID = 2;
+                            required int32 projectID = 3;
+                        }
+                        message Result {
+                            required generated.proto.graphview.GraphView graph = 1;
+                        }
+                    }
+                    message Lookup {
+                        message Args {
+                            required int32 nodeID    = 1;
+                            required generated.proto.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                        }
+                        message Result {
+                            required generated.proto.graph.Node node = 1;
+                        }
+                    }
+                    message Node {
+                        message Add {
+                            message Args {
+                                required generated.proto.graph.Node node      = 1;
+                                required generated.proto.crumb.Breadcrumbs bc = 2;
+                                required int32 libraryID = 3;
+                                required int32 projectID = 4;
+                            }
+                            message Result {
+                                required int32 nodeID = 1;
+                            }
+                        }
+                        message Update {
+                            message Args {
+                                required generated.proto.graph.Node node      = 1;
+                                required generated.proto.crumb.Breadcrumbs bc = 2;
+                                required int32 libraryID = 3;
+                                required int32 projectID = 4;
+                            }
+                            message Result {
+                                required int32 nodeID = 1;
+                            }
+                        }
+                        message UpdateInPlace {
+                            message Args {
+                                required generated.proto.graph.Node node      = 1;
+                                required generated.proto.crumb.Breadcrumbs bc = 2;
+                                required int32 libraryID = 3;
+                                required int32 projectID = 4;
+                            }
+                            message Result {
+                            }
+                        }
+                        message Remove {
+                            message Args {
+                                required int32 nodeID    = 1;
+                                required generated.proto.crumb.Breadcrumbs bc = 2;
+                                required int32 libraryID = 3;
+                                required int32 projectID = 4;
+                            }
+                            message Result { }
+                        }
+                        message Default {
+                            message Get {
+                                message Args {
+                                    required int32 nodeID    = 1;
+                                    required generated.proto.crumb.Breadcrumbs bc = 2;
+                                    required int32 libraryID = 3;
+                                    required int32 projectID = 4;
+                                }
+                                message Result {
+                                    required generated.proto.nodedefault.DefaultsMap defaultsMap = 1;
+                                }
+                            }
+                            message Set {
+                                message Args {
+                                    repeated int32 inPort    = 1;
+                                    required string value    = 2;
+                                    required int32 nodeID    = 3;
+                                    required generated.proto.crumb.Breadcrumbs bc = 4;
+                                    required int32 libraryID = 5;
+                                    required int32 projectID = 6;
+                                }
+                                message Result { }
+                            }
+                            message Remove {
+                                message Args {
+                                    repeated int32 inPort    = 1;
+                                    required int32 nodeID    = 2;
+                                    required generated.proto.crumb.Breadcrumbs bc = 3;
+                                    required int32 libraryID = 4;
+                                    required int32 projectID = 5;
+                                }
+                                message Result { }
+                            }
+                        }
+                    }
+                    message Connect {
+                        message Args {
+                            required int32 srcNodeID = 1;
+                            repeated int32 srcPort   = 2;
+                            required int32 dstNodeID = 3;
+                            repeated int32 dstPort   = 4;
+                            required generated.proto.crumb.Breadcrumbs bc = 5;
+                            required int32 libraryID = 6;
+                            required int32 projectID = 7;
+                        }
+                        message Result { }
+                    }
+                    message Disconnect {
+                        message Args {
+                            required int32 srcNodeID = 1;
+                            repeated int32 srcPort   = 2;
+                            required int32 dstNodeID = 3;
+                            repeated int32 dstPort   = 4;
+                            required generated.proto.crumb.Breadcrumbs bc = 5;
+                            required int32 libraryID = 6;
+                            required int32 projectID = 7;
+                        }
+                        message Result { }
+                    }
+                }
             }
             message Remove {
                 message Args {
@@ -288,7 +415,7 @@ message Project {
                 }
                 message Result { }
             }
-            message ResolveDefinition {
+            message Resolve {
                 message Args {
                     required string name = 1;
                     required generated.proto.crumb.Breadcrumbs parentbc = 2;
@@ -297,7 +424,7 @@ message Project {
                 }
                 message Result {
                     repeated generated.proto.crumb.ASTPtr astptr = 1;
-                }   
+                }
             }
         }
     }
