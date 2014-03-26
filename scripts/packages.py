@@ -80,5 +80,6 @@ pkgDb = { '@all'                : AllProject ('@all', deps = [])
        , 'tools/bus-logger'     : HProject   ('flowbox-bus-logger'     , os.path.join ('tools' , 'bus-logger')     , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'tools/file-manager'   : HProject   ('flowbox-file-manager'   , os.path.join ('tools' , 'file-manager')   , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'tools/plugin-manager' : HProject   ('flowbox-plugin-manager' , os.path.join ('tools' , 'plugin-manager') , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
+       , 'libs/repo-manager'    : HProject   ('flowbox-repo-manager'   , os.path.join ('libs'  , 'repo-manager')   , 'libs'    , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'tools/project-manager': HProject   ('flowbox-project-manager', os.path.join ('tools' , 'project-manager'), 'tools'   , ['libs/utils', 'libs/config', 'libs/luna', 'libs/bus', 'libs/batch']    )
        }
