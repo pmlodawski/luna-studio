@@ -117,13 +117,6 @@ reprWord8 :: (A.Shape ix, A.Elt a, A.IsFloating a) => ImageT ix a -> ImageT ix A
 reprWord8 img = map' (\c -> A.truncate $ c * 255) img
 
 
--- creating rasters
-
-constant :: (A.Elt a, A.IsFloating a, A.Shape ix) => Exp ix -> [(ChannelName, Exp a)] -> ImageT ix a
-constant sh = foldr appendChannel mempty
-    where appendChannel (name, value) img = insert name (Channel.generate sh (const value)) img
-
-
 
 -- TRANSFORMATIONS
 transform :: a -> Transformed a

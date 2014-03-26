@@ -22,18 +22,18 @@ decompose :: (A.Shape ix) => Image (A.Array ix A.Word32) -> Either Image.Error (
 decompose img = do chan <- Image.get "rgba" img
                    let dchan = Channel.map unpack32 chan
                        (r,g,b,a) = Channel.unzip4 dchan
-                       outimg    = Image.insert "r" r
-                                 $ Image.insert "g" g
-                                 $ Image.insert "b" b
-                                 $ Image.insert "a" a
+                       outimg    = Image.insert "rgba.r" r
+                                 $ Image.insert "rgba.g" g
+                                 $ Image.insert "rgba.b" b
+                                 $ Image.insert "rgba.a" a
                                  $ mempty
                    return outimg
 
 compose :: (A.Shape ix) => Image (A.Array ix A.Word8) -> Either Image.Error (Image (A.Array ix A.Word32))
-compose img = do r <- Image.get "r" img
-                 g <- Image.get "g" img
-                 b <- Image.get "b" img
-                 a <- Image.get "a" img
+compose img = do r <- Image.get "rgba.r" img
+                 g <- Image.get "rgba.g" img
+                 b <- Image.get "rgba.b" img
+                 a <- Image.get "rgba.a" img
 
                  let rgba = Channel.map pack32 (Channel.zip4 r g b a)
                  return $ Image.insert "rgba" rgba mempty

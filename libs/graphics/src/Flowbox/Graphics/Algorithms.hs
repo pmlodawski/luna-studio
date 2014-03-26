@@ -184,7 +184,7 @@ luminance (rname, gname, bname) outname img = do
     return outimg
 
 luminance' :: (A.Elt a, A.IsFloating a) => (Image (RawData2D a)) -> Either Image.Error (Image (RawData2D a))
-luminance' = luminance ("r", "g", "b") "luminance"
+luminance' = luminance ("rgba.r", "rgba.g", "rgba.b") "luminance"
 
 
 
@@ -229,13 +229,13 @@ medianImage = applyToImage medianChannel
 
 premultiply :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 premultiply img = do
-    channelR <- Image.get "r" img
-    channelG <- Image.get "g" img
-    channelB <- Image.get "b" img
-    channelA <- Image.get "a" img
-    let outimg = Image.insert "r" (premultiplyChannel channelR channelA)
-               $ Image.insert "g" (premultiplyChannel channelG channelA)
-               $ Image.insert "b" (premultiplyChannel channelB channelA)
+    channelR <- Image.get "rgba.r" img
+    channelG <- Image.get "rgba.g" img
+    channelB <- Image.get "rgba.b" img
+    channelA <- Image.get "rgba.a" img
+    let outimg = Image.insert "rgba.r" (premultiplyChannel channelR channelA)
+               $ Image.insert "rgba.g" (premultiplyChannel channelG channelA)
+               $ Image.insert "rgba.b" (premultiplyChannel channelB channelA)
                $ img
         premultiplyChannel = Channel.zipWith (\x a -> x * a)
     return outimg
@@ -243,13 +243,13 @@ premultiply img = do
 
 unpremultiply :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 unpremultiply img = do
-    channelR <- Image.get "r" img
-    channelG <- Image.get "g" img
-    channelB <- Image.get "b" img
-    channelA <- Image.get "a" img
-    let outimg = Image.insert "r" (unpremultiplyChannel channelR channelA)
-               $ Image.insert "r" (unpremultiplyChannel channelG channelA)
-               $ Image.insert "r" (unpremultiplyChannel channelB channelA)
+    channelR <- Image.get "rgba.r" img
+    channelG <- Image.get "rgba.g" img
+    channelB <- Image.get "rgba.b" img
+    channelA <- Image.get "rgba.a" img
+    let outimg = Image.insert "rgba.r" (unpremultiplyChannel channelR channelA)
+               $ Image.insert "rgba.g" (unpremultiplyChannel channelG channelA)
+               $ Image.insert "rgba.b" (unpremultiplyChannel channelB channelA)
                $ img
         unpremultiplyChannel = Channel.zipWith (\x a -> x / a)
     return outimg
@@ -291,14 +291,14 @@ convolve (nameA, nameB, nameC) convolution kernel img = do
 
 convolveRGB :: (A.Elt a, A.IsFloating a, A.Stencil A.DIM2 a stencil) =>
   (t -> stencil -> Exp a) -> t -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
-convolveRGB = convolve ("r", "g", "b")
+convolveRGB = convolve ("rgba.r", "rgba.g", "rgba.b")
 
 
 
 ---- brightness and contrast
 
 --adjustCB_RGB :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
---adjustCB_RGB = adjustCB ("r", "g", "b")
+--adjustCB_RGB = adjustCB ("rgba.r", "rgba.g", "rgba.b")
 
 adjustCB :: (A.Elt a, A.IsFloating a) => String3 -> Exp a -> Exp a -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 adjustCB (rname, gname, bname) contrastValue brightnessValue img = do
@@ -351,12 +351,12 @@ calculateValueFromRGB r g b = P.max r $ P.max g b
 
 convertRGBtoHSV :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 convertRGBtoHSV img = do
-    r <- Image.get "r" img
-    g <- Image.get "g" img
-    b <- Image.get "b" img
-    let outimg     = Image.insert "h" hue
-                   $ Image.insert "s" saturation
-                   $ Image.insert "v" value
+    r <- Image.get "rgba.r" img
+    g <- Image.get "rgba.g" img
+    b <- Image.get "rgba.b" img
+    let outimg     = Image.insert "hsv.h" hue
+                   $ Image.insert "hsv.s" saturation
+                   $ Image.insert "hsv.v" value
                    $ img
         hue        = Channel.zipWith3 calculateHueFromRGB r g b
         saturation = Channel.zipWith3 calculateSaturationFromRGB r g b
@@ -384,12 +384,12 @@ calculateRGBfromHSV h s v = A.unlift res
 
 convertHSVtoRGB :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 convertHSVtoRGB img = do
-    h <- Image.get "h" img
-    s <- Image.get "s" img
-    v <- Image.get "v" img
-    let outimg = Image.insert "r" red
-               $ Image.insert "g" green
-               $ Image.insert "b" blue
+    h <- Image.get "hsv.h" img
+    s <- Image.get "hsv.s" img
+    v <- Image.get "hsv.v" img
+    let outimg = Image.insert "rgba.r" red
+               $ Image.insert "rgba.g" green
+               $ Image.insert "rgba.b" blue
                $ img
         red    = Channel.zipWith3 calcR h s v
         green  = Channel.zipWith3 calcG h s v
@@ -409,18 +409,18 @@ blendC channelA channelB blender = Channel.zipWith blender channelA channelB
 
 --blendRGB :: (A.Elt a, A.IsFloating a) => Image a -> Image a -> (Exp a -> Exp a -> Exp a) -> Either Image.Error (Image a)
 --blendRGB img1 img2 blender = do
---    r1 <- Image.get "r" img1
---    g1 <- Image.get "g" img1
---    b1 <- Image.get "b" img1
---    a1 <- Image.get "a" img1
---    r2 <- Image.get "r" img2
---    g2 <- Image.get "g" img2
---    b2 <- Image.get "b" img2
---    a2 <- Image.get "a" img2
---    let outimg = Image.insert "r" r'
---               $ Image.insert "g" g'
---               $ Image.insert "b" b'
---               $ Image.insert "a" a'
+--    r1 <- Image.get "rgba.r" img1
+--    g1 <- Image.get "rgba.g" img1
+--    b1 <- Image.get "rgba.b" img1
+--    a1 <- Image.get "rgba.a" img1
+--    r2 <- Image.get "rgba.r" img2
+--    g2 <- Image.get "rgba.g" img2
+--    b2 <- Image.get "rgba.b" img2
+--    a2 <- Image.get "rgba.a" img2
+--    let outimg = Image.insert "rgba.r" r'
+--               $ Image.insert "rgba.g" g'
+--               $ Image.insert "rgba.b" b'
+--               $ Image.insert "rgba.a" a'
 --               $ mempty
 --        r'     = blendC r1 r2 blender
 --        g'     = blendC g1 g2 blender
@@ -430,21 +430,21 @@ blendC channelA channelB blender = Channel.zipWith blender channelA channelB
 
 blendAlpha :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
 blendAlpha img1 img2 = do
-    a2 <- Image.get "a" img2
+    a2 <- Image.get "rgba.a" img2
     outimg <- blendAlpha' img1 img2 a2
     return outimg
 
 blendAlpha' :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Image (RawData2D a) -> Channel2 a -> Either Image.Error (Image (RawData2D a))
 blendAlpha' img1 img2 a = do
-    r1 <- Image.get "r" img1
-    g1 <- Image.get "g" img1
-    b1 <- Image.get "b" img1
-    r2 <- Image.get "r" img2
-    g2 <- Image.get "g" img2
-    b2 <- Image.get "b" img2
-    let outimg = Image.insert "r" (blend r1 r2)
-               $ Image.insert "g" (blend g1 g2)
-               $ Image.insert "b" (blend b1 b2)
+    r1 <- Image.get "rgba.r" img1
+    g1 <- Image.get "rgba.g" img1
+    b1 <- Image.get "rgba.b" img1
+    r2 <- Image.get "rgba.r" img2
+    g2 <- Image.get "rgba.g" img2
+    b2 <- Image.get "rgba.b" img2
+    let outimg = Image.insert "rgba.r" (blend r1 r2)
+               $ Image.insert "rgba.g" (blend g1 g2)
+               $ Image.insert "rgba.b" (blend b1 b2)
                $ img1
         blend = Channel.zipWith3 blenderAlpha a
     return outimg
@@ -607,7 +607,7 @@ extractBackground (nameA, nameB, nameC) images = do
       outimg = Image.insert nameA (Channel.generate sh' $ getMostFreqPixel channelSeqA)
              $ Image.insert nameB (Channel.generate sh' $ getMostFreqPixel channelSeqB)
              $ Image.insert nameC (Channel.generate sh' $ getMostFreqPixel channelSeqC)
-             $ Image.insert "a"   (Channel.fill     sh' 1)
+             $ Image.insert "rgba.a"   (Channel.fill     sh' 1)
              $ mempty
       getMostFreqPixel channels ix = let
               (A.Z A.:. (j :: Exp Int) A.:. (i :: Exp Int)) = A.unlift ix
@@ -659,11 +659,11 @@ extractBackground (nameA, nameB, nameC) images = do
 ----  channelsA <- sequence $ fmap (Image.get nameA) images
 ----  channelsB <- sequence $ fmap (Image.get nameB) images
 ----  channelsC <- sequence $ fmap (Image.get nameC) images
-----  tmpChannel <- Image.get "a" firstImg
+----  tmpChannel <- Image.get "rgba.a" firstImg
 ----  let outimg = Image.insert nameA channelA'
 ----             $ Image.insert nameB channelB'
 ----             $ Image.insert nameC channelC'
-----             $ Image.insert "a" tmpChannel
+----             $ Image.insert "rgba.a" tmpChannel
 ----             $ mempty
 ----      exampleChannel = channelsA !! 0
 ----      channelShape = Channel.shape exampleChannel

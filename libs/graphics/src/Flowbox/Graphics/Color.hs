@@ -1,3 +1,9 @@
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
 module Flowbox.Graphics.Color where
 
 import           Data.Array.Accelerate (Exp)
@@ -8,17 +14,17 @@ import           Flowbox.Prelude        as P
 
 
 
-data Color a = RGB  {r :: a, g :: a, b :: a}
-             | RGBA {r :: a, g :: a, b :: a, a :: a}
-             | HSV  {h :: a, s :: a, v :: a}
-             | HSL  {h :: a, s :: a, v :: a}
-             | CMY  {c :: a, m :: a, y :: a}
-             | CMYK {c :: a, m :: a, y :: a, k :: a}
+data Color a = RGB  {r :: Exp a, g :: Exp a, b :: Exp a}
+             | RGBA {r :: Exp a, g :: Exp a, b :: Exp a, a :: Exp a}
+             | HSV  {h :: Exp a, s :: Exp a, v :: Exp a}
+             | HSL  {h :: Exp a, s :: Exp a, v :: Exp a}
+             | CMY  {c :: Exp a, m :: Exp a, y :: Exp a}
+             | CMYK {c :: Exp a, m :: Exp a, y :: Exp a, k :: Exp a}
              deriving (Show)
 
 
 
-toRGB :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
+toRGB :: (A.Elt a, A.IsFloating a) => Color a -> Color a
 toRGB color@(RGB{}) = color
 toRGB (RGBA r g b _) = RGB r g b
 toRGB (HSV  h s v) = RGB (r+m) (g+m) (b+m)
@@ -61,13 +67,13 @@ toRGB (CMYK c m y k) = RGB r g b
           b = (1 - y) * (1 - k)
 
 
-toRGBA :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
+toRGBA :: (A.Elt a, A.IsFloating a) => Color a -> Color a
 toRGBA color@(RGBA{}) = color
 toRGBA (RGB r g b) = RGBA r g b (r-r+1)
 toRGBA color = toRGBA . toRGB $ color
 
 
-toHSV :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
+toHSV :: (A.Elt a, A.IsFloating a) => Color a -> Color a
 toHSV color@(HSV{}) = color
 toHSV (RGB r g b) = HSV h' s v
     where h' = (h A.>* 0 A.? (h , h + 6)) / 6
@@ -84,7 +90,7 @@ toHSV (RGB r g b) = HSV h' s v
 toHSV color = toHSV . toRGB $ color
 
 
-toHSL :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
+toHSL :: (A.Elt a, A.IsFloating a) => Color a -> Color a
 toHSL color@(HSL{}) = color
 toHSL (RGB r g b) = HSL h' s l
     where h' = (h A.>* 0 A.? (h , h + 6)) / 6
@@ -101,7 +107,7 @@ toHSL (RGB r g b) = HSL h' s l
 toHSL color = toHSL . toRGB $ color
 
 
-toCMY :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
+toCMY :: (A.Elt a, A.IsFloating a) => Color a -> Color a
 toCMY color@(CMY{}) = color
 toCMY (RGB r g b) = CMY c m y
     where c = 1 - r
@@ -110,7 +116,7 @@ toCMY (RGB r g b) = CMY c m y
 toCMY color = toCMY . toRGB $ color
 
 
-toCMYK :: (A.Elt a, A.IsFloating a) => Color (Exp a) -> Color (Exp a)
+toCMYK :: (A.Elt a, A.IsFloating a) => Color a -> Color a
 toCMYK color@(CMYK{}) = color
 toCMYK (RGB r g b) = CMYK c m y k
     where c = (1 - r - k) / (1 - k)

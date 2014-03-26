@@ -14,6 +14,7 @@
 
 import qualified Config                as Cfg
 import           Control.Applicative
+import           Data.Array.Accelerate (Exp)
 import qualified Data.Array.Accelerate as A
 import qualified Data.Array.Accelerate.CUDA as CUDA
 import qualified Data.Array.Accelerate.Interpreter as Interp
@@ -30,26 +31,40 @@ import           Flowbox.Graphics.Color            (Color (..))
 import qualified Flowbox.Graphics.Color            as C
 import           Flowbox.Graphics.Raster.Channel   (Channel, Channel2, Channel3, RawData2D, RawData3D)
 import qualified Flowbox.Graphics.Raster.Channel   as Channel
-import           Flowbox.Graphics.Raster.Image     (Image)
-import qualified Flowbox.Graphics.Raster.Image     as Image
-import qualified Flowbox.Graphics.Raster.IO        as Image
+import           Flowbox.Graphics.Raster.Image     (Image, ImageT)
+import qualified Flowbox.Graphics.Raster.Image     as Img
+import qualified Flowbox.Graphics.Raster.IO        as Img
+import qualified Flowbox.Graphics.Raster.Raster    as Img
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
 import           Flowbox.Prelude                   as P
 
 
-----imgtest :: Image A.Word32 -> Either Image.Error (Image A.Word32)
+--imgtest :: (A.Shape ix, A.Shape ix1) =>
+--          Image (A.Array ix A.Word32)
+--          -> Image (A.Array ix1 A.Word32)
+--          -> Either Img.Error (Image (A.Array A.DIM2 A.Word32))
 imgtest img frames = do
-    let getDouble image = Image.reprDouble <$> RGBA.decompose image
-        rgb = ("r", "g", "b")
+    let getDouble image = Img.reprDouble <$> RGBA.decompose image
+        rgb = ("rgba.r", "rgba.g", "rgba.b")
+        red = RGB (A.constant 1) (A.constant 0) (A.constant 0)
+        green = RGB (A.constant 0) (A.constant 1) (A.constant 0)
+        blue = RGB (A.constant 0) (A.constant 0) (A.constant 1)
+        white = RGB (A.constant 1) (A.constant 1) (A.constant 1)
+        black = RGB (A.constant 0) (A.constant 0) (A.constant 0)
+        gray = RGB (A.constant 0.5) (A.constant 0.5) (A.constant 0.5)
+        yellow = RGB (A.constant 1) (A.constant 1) (A.constant 0)
 
     imageRGBA <- getDouble img
     framesRGBA <- getDouble frames
 
     --imageBackground <- G.extractBackground rgb framesRGBA
-    let imageConstant = Image.constant (A.index2 256 256) [("r", A.constant 1), ("g", A.constant 0), ("b", A.constant 1), ("a", A.constant 1)]
+    let imageConstant :: ImageT A.DIM2 Double
+        imageConstant = Img.constant (A.index2 256 256) [("rgba.r", A.constant 1), ("rgba.g", A.constant 0), ("rgba.b", A.constant 1), ("rgba.a", A.constant 1)]
+        --imageCheckerboard :: ImageT A.DIM2 Double
+        imageCheckerboard = Img.checkerboard (A.index2 (256::Exp Int) (256::Exp Int)) (A.constant 32) (green, blue, white, gray) (red, A.constant 1.5) (yellow, A.constant 2)
 
-    let imageOut = imageConstant
-    RGBA.compose $ Image.reprWord8 $ Image.map G.clipValues imageOut
+    let imageOut = imageCheckerboard
+    RGBA.compose $ Img.reprWord8 $ Img.map G.clipValues imageOut
 
 ---- main
 
@@ -68,9 +83,9 @@ main
         let backend     = ParseArgs.Interpreter --Label.get Cfg.configBackend conf
             frameNames  = replicate 5 "lena.bmp"
             --frameNames  = fmap (\x -> (T.printf "frames/frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
-            getImage location = fmap (either (\_ -> mempty) id) (Image.readImageFromBMP location)
-            getImages locations = fmap (either (\_ -> mempty) id) (Image.readImageSequenceFromBMP locations)
-            getDouble image = Image.reprFloat <$> RGBA.decompose image
+            getImage location = fmap (either (\_ -> mempty) id) (Img.readImageFromBMP location)
+            getImages locations = fmap (either (\_ -> mempty) id) (Img.readImageSequenceFromBMP locations)
+            getDouble image = Img.reprFloat <$> RGBA.decompose image
 
         -- Read in the image file
         imageIn <- getImage fileIn
@@ -80,7 +95,7 @@ main
 
         case imageOut of
             Left err -> print err
-            Right val -> do Image.writeImageToBMP (ParseArgs.run backend) fileOut val
+            Right val -> do Img.writeImageToBMP (ParseArgs.run backend) fileOut val
                             return ()
 
 
