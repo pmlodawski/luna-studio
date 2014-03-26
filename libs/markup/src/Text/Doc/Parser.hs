@@ -93,10 +93,11 @@ pToken = try pElement
 
 pProgram = foldr (++) mempty <$> many pToken <* many(L.eol <* L.pSpaces) <* eof
 
-
-addJSLibs html = do
+-- add html structure and js scripts to highlight code snippets
+addJSLibs html = HTML.docTypeHtml $ do
     HTML.head $ do
         HTML.title "Markup"
+        HTML.meta ! Attr.httpEquiv "Content-Type" ! Attr.content "text/html; charset=utf-8"
         HTML.script "" ! Attr.type_ "text/javascript" ! Attr.src "https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"
         HTML.link ! Attr.type_ "text/css" ! Attr.rel "stylesheet" ! Attr.href "libs/markup/include/prettify/prettify.css"
     HTML.body html
