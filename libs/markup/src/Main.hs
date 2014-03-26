@@ -56,8 +56,16 @@ code = unlines [ ""
 
 main :: IO ()
 main = do
-         -- print $ Markup.parse code
-         BS.writeFile "test.html" $ lazyToStrictBS $ Markup.parse code
+--<<<<<<< HEAD
+--         -- print $ Markup.parse code
+--         BS.writeFile "test.html" $ lazyToStrictBS $ Markup.parse code
+--=======
+     case Markup.parse code of
+          Left err -> print err
+          Right result -> putStrLn result
+         --print $ Markup.parse code
+         -- writeFile "test.html" $ Markup.parse code
+-->>>>>>> f406e1359a1886e2f5f5d2c3d2f2ef86400802de
          -- writeFile "test.html" (show $ Markup.parse code)
 
 lazyToStrictBS :: LBS.ByteString -> BS.ByteString

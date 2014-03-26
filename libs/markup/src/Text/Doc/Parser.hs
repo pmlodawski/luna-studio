@@ -6,10 +6,11 @@ module Text.Doc.Parser where
 
 import           Control.Applicative
 import           Data.Monoid
-import           Data.String                    as S    
+import           Data.String                    as S
 import           Data.Either                   (rights)
 import           Prelude                       hiding ((++))
-import qualified Text.Blaze.Html.Renderer.Utf8 as HTML
+--import qualified Text.Blaze.Html.Renderer.Utf8 as HTML
+import qualified Text.Blaze.Html.Renderer.String as HTML
 import           Text.Blaze.Html5              ((!))
 import qualified Text.Blaze.Html5              as HTML
 import qualified Text.Blaze.Html5.Attributes   as Attr
@@ -96,25 +97,37 @@ pProgram = foldr (++) mempty <$> many pToken <* many(L.eol <* L.pSpaces) <* eof
 
 addJSLibs html = do
     HTML.head $ do
-        
+
         HTML.title "Markup"
         HTML.script "" ! Attr.type_ (fromString "text/javascript") ! Attr.src (fromString "libs/markup/include/sh_main.min.js")
         HTML.script "" ! Attr.type_ (fromString "text/javascript") ! Attr.src (fromString "libs/markup/include/sh_haskell.min.js")
         -- HTML.link ! Attr.type_ (fromString "text/css") ! Attr.rel (fromString "stylesheet") ! Attr.href (fromString )
-        
+
     HTML.body html ! Attr.onload (fromString "sh_highlightDocument();")
 
-parse markup = let 
-                   --parsed :: Int 
-                   parsed = rights [Parsec.runParser pProgram (0::Int) "Flowbox Markup Parser" markup]
-                   parsedWithJSLibs = fmap addJSLibs parsed
-                   --content :: Int
-                   [content] = fmap (HTML.renderHtml) parsedWithJSLibs 
-               in content
+--<<<<<<< HEAD
+--parse markup = let 
+--                   --parsed :: Int 
+--                   parsed = rights [Parsec.runParser pProgram (0::Int) "Flowbox Markup Parser" markup]
+--                   parsedWithJSLibs = fmap addJSLibs parsed
+--                   --content :: Int
+--                   [content] = fmap (HTML.renderHtml) parsedWithJSLibs 
+--               in content
+--=======
+parse markup = fmap (HTML.renderHtml)
+             $ Parsec.runParser pProgram (0::Int) "Flowbox Markup Parser"
+             $ markup
+
+--parse markup = let
+--                   --parsed :: Int
+--                   parsed = rights [Parsec.runParser pProgram (0::Int) "Flowbox Markup Parser" markup]
+--                   parsedWithJSLibs = fmap addJSLibs parsed
+--               in fmap (HTML.renderHtml) parsedWithJSLibs
+-->>>>>>> f406e1359a1886e2f5f5d2c3d2f2ef86400802de
 {-let
                  -- parsed :: Int
                   parsed = M.join $ Parsec.runParser pProgram (0::Int) "Flowbox Markup Parser" markup
                in case parsed of
                     Right content -> let parsedWithJSLibs = fmap addJSLibs (rights [content])
-                                     in fmap (HTML.renderHtml) parsedWithJSLibs 
+                                     in fmap (HTML.renderHtml) parsedWithJSLibs
                     Left error_ -> error_-}

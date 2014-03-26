@@ -1,1 +1,41 @@
-[{"homepage":"","installedVersions":[],"dependencies":[],"authors":["Flowbox \u003ccontact@flowbox.io\u003e"],"license":{"contents":[],"tag":"AllRightsReserved"},"availableVersions":[{"branch":[0,1],"tags":[]}],"maintainers":["Flowbox \u003ccontact@flowbox.io\u003e"],"copyright":"","bugReports":"","name":"flowbox-luna","tags":[""],"description":"\"\u003ch1\u003e Heading1 \u003c/h1\u003e\\n\u003ch2\u003e Heading2 \u003c/h2\u003e\\n\u003ch3\u003e Heading3 \u003c/h3\u003e\\n\\nKod zaczyna sie po 4 wcieciach\\nJezeli taki blok poprzedza\\197\\130a linia zawierajaca tylko biale znaki\\nPo zakonczeniu bloku kodu tez powinna byc pusta linia\\n\\nKod inline zamieszcza sie pomiedzy baktikami \u003cspan style=\\\"font-family: monospace;\\\"\u003ejak np tu\u003c/span\u003e\\n\\ndla testu sprawdzimy &gt; cytatu wewn\\196\\133trz tekstu :D\\noraz    kod wewn\\196\\133trz tekstu\\n\u003cblockquote\u003eCytaty rozpoczynaja sie od ptaszkow\\nCytaty rozpoczynaja sie od ptaszkow\\nCytaty rozpoczynaja sie od ptaszkow\\nCytaty rozpoczynaja sie od ptaszkow\\n\u003c/blockquote\u003e\\nPogrubiony tekst znajduje sie pomiedzy \u003cb\u003epojedynczymi gwaizdkami\u003c/b\u003e\\nKursywa znajduje sie pomiedzy \u003ci\u003epodwojnymi gwiazdkami\u003c/i\u003e\\nPogrubienie i kursywa znajduja sie pomiedzy \u003cb\u003e\u003ci\u003epotrojnymi gwiazdkami\u003c/i\u003e\u003c/b\u003e\\n\\nLinki moga byc zapisane tak \u003ca href=\\\"http://link\\\"\u003eNazwa linku\u003c/a\u003e\\nAlbo tak: [Nazwa linku][1]\\na na samym dole dokumentu znajduja sie rozwiniecia linkow, jak np:\\n[1]: http:/link\\n\\nJezeli w tekscie znajduje sie link, jak np tu \u003ca href=\\\"http://google.pl\\\"\u003ehttp://google.pl\u003c/a\u003e to rowniez jest zamieniany na elementklikalny&quot;\\n\\nPotrojna pauza to horizontal rule\\n\\nListy bullet zaczynaja sie od pauz ze spacja po nich\u003cul\u003e\u003cli\u003ejakas lista elementow\u003c/li\u003e\u003cli\u003einny element\u003c/li\u003e\u003cli\u003ezagniezdzony element\u003c/li\u003e\u003c/ul\u003e\\nListy numerowane zaczynaja sie znakiem #. Zagniezdzone zamieniaja sie na numerowania a - z:\u003col\u003e\u003cli\u003epierwszy element\u003c/li\u003e\u003cli\u003edrugi element\u003c/li\u003e\u003cli\u003eelement 2.a\u003c/li\u003e\u003c/ol\u003e\\nObrazki zamieszcza sie jak linki, tlyko z wykrzyknikiem na poczatku:\\n\u003cimg src=\\\"http://w3.org/Icons/valid-xhtml10\\\" alt=\\\"Valid XHTML\\\"\u003e.\\nW wersji zaawansowanej mozemy wspierac tagi html w tekscie.\"","url":"","licenseFile":null,"synopsis":""},{"homepage":"","installedVersions":[],"dependencies":[],"authors":["Flowbox \u003ccontact@flowbox.io\u003e"],"license":{"contents":[],"tag":"AllRightsReserved"},"availableVersions":[{"branch":[0,1],"tags":[]}],"maintainers":["Flowbox \u003ccontact@flowbox.io\u003e"],"copyright":"","bugReports":"","name":"flowbox-lunac","tags":[""],"description":"\"\"","url":"","licenseFile":null,"synopsis":""}]
+<head><title>Markup</title><script type="text/javascript" src="libs/markup/include/sh_main.min.js"></script><script type="text/javascript" src="libs/markup/include/sh_haskell.min.js"></script></head><body onload="sh_highlightDocument();">
+<h1> Heading1 </h1>
+<h2> Heading2 </h2>
+<h3> Heading3 </h3>
+<pre class="sh_haskell">Kod zaczyna sie po 4 wcieciach
+Jezeli taki blok poprzedzała linia zawierajaca tylko biale znaki
+Po zakonczeniu bloku kodu tez powinna byc pusta linia
+fibs :: [Int]
+fibs = 0 : 1 : zipWith (+) fibs (tail fibs)
+</pre>
+Kod inline zamieszcza sie pomiedzy baktikami <span style="font-family: monospace;">jak np tu</span>
+
+dla testu sprawdzimy &gt; cytatu wewnątrz tekstu :D
+oraz    kod wewnątrz tekstu
+<blockquote>Cytaty rozpoczynaja sie od ptaszkow
+Cytaty rozpoczynaja sie od ptaszkow
+Cytaty rozpoczynaja sie od ptaszkow
+Cytaty rozpoczynaja sie od ptaszkow
+</blockquote>
+Pogrubiony tekst znajduje sie pomiedzy <b>pojedynczymi gwaizdkami</b>
+Kursywa znajduje sie pomiedzy <i>podwojnymi gwiazdkami</i>
+Pogrubienie i kursywa znajduja sie pomiedzy <b><i>potrojnymi gwiazdkami</i></b>
+
+Linki moga byc zapisane tak <a href="http://link">Nazwa linku</a>
+Albo tak: [Nazwa linku][1]
+a na samym dole dokumentu znajduja sie rozwiniecia linkow, jak np:
+[1]: http:/link
+
+Jezeli w tekscie znajduje sie link, jak np tu <a href="http://google.pl">http://google.pl</a> to rowniez jest zamieniany na element klikalny
+
+Potrojna pauza to horizontal rule
+<hr>
+
+Listy bullet zaczynaja sie od pauz ze spacja po nich<ul><li>jakas lista elementow</li><li>inny element</li></ul>    - zagniezdzony element
+
+Listy numerowane zaczynaja sie znakiem #. Zagniezdzone zamieniaja sie na numerowania a - z:<ol><li>pierwszy element</li><li>drugi element</li></ol>    # element 2.a
+
+Obrazki zamieszcza sie jak linki, tlyko z wykrzyknikiem na poczatku:
+<img src="http://w3.org/Icons/valid-xhtml10" alt="Valid XHTML">.
+W wersji zaawansowanej mozemy wspierac tagi html w tekscie.
+</body>
