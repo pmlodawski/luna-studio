@@ -53,6 +53,9 @@ code = unlines [ ""
 
 main :: IO ()
 main = do
-         print $ Markup.parse code
+     case Markup.parse code of
+          Left err -> print err
+          Right result -> putStrLn result
+         --print $ Markup.parse code
          -- writeFile "test.html" $ Markup.parse code
          -- writeFile "test.html" (show $ Markup.parse code)
