@@ -46,14 +46,15 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  containers,
-                  lens,
+                  lens             ,
+                  accelerate       == 0.14.*,
+                  accelerate-io    == 0.14.*,
+                  accelerate-cuda  == 0.14.*,
+                  criterion        >= 0.8.0.1 && < 0.9,
                   bmp,
                   --ekg,
                   repa-devil,
-                  accelerate,
-                  accelerate-io,
                   base                    == 4.6.*,
-                  criterion,
                   either,
                   errors,
                   fclabels                >= 2.0          && < 2.1,
@@ -65,8 +66,7 @@ Library
                   timeit,
                   transformers,
                   luna-target-hs,
-                  num-conversion,
-                  accelerate-cuda
+                  num-conversion
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
@@ -107,13 +107,14 @@ Executable test
     ghc-options:        -with-rtsopts=-T
 
   build-depends:      containers,
-                      lens,
+                      lens             ,
+                      accelerate       == 0.14.*,
+                      accelerate-io    == 0.14.*,
+                      accelerate-cuda  == 0.14.*,
+                      criterion        >= 0.8.0.1 && < 0.9,
                       bmp,
                       repa-devil,
-                      accelerate,
-                      accelerate-io,
                       base                    == 4.6.*,
-                      criterion,
                       either,
                       errors,
                       fclabels                >= 2.0          && < 2.1,
@@ -124,5 +125,4 @@ Executable test
                       vector,
                       timeit,
                       transformers,
-                      luna-target-hs,
-                      accelerate-cuda
+                      luna-target-hs

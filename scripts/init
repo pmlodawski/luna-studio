@@ -9,6 +9,8 @@ from distutils.version import LooseVersion
 from utils.colors import print_info, print_error, putInfo, formatQuestion
 
 
+rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
 dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 third_party = os.path.join(dir, 'third-party')
 p_cabal    = os.path.join(third_party,  'Cabal-1.19.1')
@@ -115,25 +117,29 @@ checkCabalPkg("hprotoc")
 checkCabalPkg("c2hs", version="0.16.5")
 
 print_info ("Generating Protocol Buffers files using genproto")
-path = os.path.join('scripts', 'genproto')
+path = os.path.join(rootPath, 'scripts', 'genproto')
 try_call ('python2.7 %s' % path)
 
 print_info ("Generating cabal configs using gencabal")
-path = os.path.join('scripts', 'gencabal')
+path = os.path.join(rootPath, 'scripts', 'gencabal')
 try_call ('python2.7 %s' % path)
 
-print_info ("Initializing cabal sandbox")
-try_call('cabal sandbox init --sandbox=%s' % sboxName)
+distPath = os.path.join(rootPath,"dist")
+if not os.path.exists(distPath):
+    os.mkdir(distPath)
+
+# print_info ("Initializing cabal sandbox")
+# try_call('cabal sandbox init --sandbox=%s' % sboxName)
 
 
-print_info ("Registering accelerate-0.15 library")
-try_call('cabal sandbox add-source %s' % p_acc)
+# print_info ("Registering accelerate-0.15 library")
+# try_call('cabal sandbox add-source %s' % p_acc)
 
-print_info ("Registering accelerate-cuda-0.15 library")
-try_call('cabal sandbox add-source %s' % p_acc_cuda)
+# print_info ("Registering accelerate-cuda-0.15 library")
+# try_call('cabal sandbox add-source %s' % p_acc_cuda)
 
-print_info ("Registering accelerate-io-0.15 library")
-try_call('cabal sandbox add-source %s' % p_acc_io)
+# print_info ("Registering accelerate-io-0.15 library")
+# try_call('cabal sandbox add-source %s' % p_acc_io)
 
 # print_info ("Registering Cabal-1.19.1 library")
 # try_call('cabal install %s' % p_cabal)

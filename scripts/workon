@@ -7,80 +7,25 @@ from utils.colors import print_info, print_error, print_warning
 from itertools import chain
 from collections import deque
 import ConfigParser
+from copy import copy, deepcopy
+
+from packages import pkgDb
+
+rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+cwd = os.getcwd()
+os.chdir(rootPath)
 
 
-class Project(object):
-    def __init__(self, name='', path='', binpath='', deps=None):
-        if deps == None: deps = []
-        self.name    = name
-        self.path    = path
-        self.binpath = binpath
-        self.deps    = set(deps)
-
-    def install(self):   pass
-
-    def uninstall(self): pass
-
-    def targets(self):
-        return [self]
-
-    def target_binpaths(self):
-        paths = []
-        for target in self.targets():
-            paths.append(target.binpath)
-        return paths
-
-    def target_names(self):
-        names = []
-        for target in self.targets():
-            names.append(target.name)
-        return names
-
-class HProject(Project):
-    def install(self):
-        cmd = 'cabal sandbox add-source %s' % self.path
-        (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
-        handle_error(err)
-        return out
-
-    def uninstall(self):
-        cmd = 'cabal sandbox hc-pkg unregister %s' % self.name
-        (out, err) = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True).communicate()
-        if err:
-            err = err.replace('.exe', '')
-            if not err.startswith('ghc-pkg: cannot find package'):
-                handle_error(err)
-        return out
 
 def try_call(cmd):
     if call(cmd, shell=True): fatal()
 
-class AllProject(Project):
-    def targets(self):
-        tgts = []
-        for pname in reversed(deptree):
-            tgts.append(pkgs[pname])
-        return tgts
+
 
 
 deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'broker', 'graphics', 'target-hs', 'cabal-install', 'num-conversion', 'utils', 'markup']
 
-pkgs = { '@all'           : AllProject (deps = deptree)
-       , 'cabal-install'  : HProject   ('cabal-install'       , os.path.join ('libs'  , 'cabal-install') , 'libs'    , []                                                  )
-       , 'target-hs'      : HProject   ('luna-target-hs'      , os.path.join ('libs'  , 'target-hs')     , 'libs'    , []                                                  )
-       , 'utils'          : HProject   ('flowbox-utils'       , os.path.join ('libs'  , 'utils')         , 'libs'    , []                                                  )
-       , 'config'         : HProject   ('flowbox-config'      , os.path.join ('libs'  , 'config')        , 'libs'    , ['utils']                                           )
-       , 'broker'         : HProject   ('flowbox-broker'      , os.path.join ('tools' , 'broker')        , 'tools'   , ['utils']                                           )
-       , 'wrappers'       : HProject   ('flowbox-wrappers'    , os.path.join ('tools' , 'wrappers')      , 'wrappers', ['config']                                          )
-       , 'luna'           : HProject   ('flowbox-luna'        , os.path.join ('libs'  , 'luna')          , 'libs'    , ['target-hs', 'utils', 'config', 'cabal-install', 'markup']      )
-       , 'initializer'    : HProject   ('flowbox-initializer' , os.path.join ('tools' , 'initializer')   , 'tools'   , ['utils', 'config']                                 )
-       , 'lunac'          : HProject   ('flowbox-lunac'       , os.path.join ('tools' , 'lunac')         , 'tools'   , ['utils', 'config', 'initializer', 'luna']          )
-       , 'batch'          : HProject   ('flowbox-batch'       , os.path.join ('libs'  , 'batch')         , 'libs'    , ['utils', 'config', 'initializer', 'luna']          )
-       , 'batch-srv'      : HProject   ('flowbox-batch-srv'   , os.path.join ('tools' , 'batch-srv')     , 'tools'   , ['utils', 'config', 'initializer', 'luna', 'batch'] )
-       , 'num-conversion' : HProject   ('num-conversion'      , os.path.join ('libs'  , 'num-conversion'), 'libs'    , []                                                  )
-       , 'graphics'       : HProject   ('flowbox-graphics'    , os.path.join ('libs'  , 'graphics')      , 'libs'    , ['target-hs', 'utils', 'num-conversion']            )
-       , 'markup'         : HProject   ('doc-markup'          , os.path.join ('libs'  , 'markup')        , 'libs'    , []                                                  )
-       }
+
 
 
 def flatten(lofl):
@@ -96,51 +41,77 @@ def handle_error(e):
         fatal()
 
 def print_usage():
-    print_info ("Usage: workon {%s} [ARGS]" % ", ".join(sorted(pkgs.keys())))
+    print_info ("Usage: workon {%s} [ARGS]" % ", ".join(sorted(pkgDb.keys())))
     sys.exit(0)
 
 def main():
     args = sys.argv
     if len(args) < 2 : print_usage()
-    target = sys.argv[1]
-    if not target in pkgs:
+    targetStr = sys.argv[1]
+    targetSegments = filter(bool, targetStr.replace('\\','/').split('/'))
+    target = '/'.join(targetSegments)
+    print target
+    if not target in pkgDb:
         print_error ("Unrecognized target '%s'" % target)
         print_usage ()
     workon(target)
 
-def check_deps(name):
-    pkg  = pkgs[name]
-    deps = pkg.deps
+def check_deps(pkg):
+    deps = deepcopy(pkg.deps)
     for dep in pkg.deps:
-        deps = deps.union(check_deps(dep))
+        dpkg = pkgDb[dep]
+        deps = deepcopy(deps).union(check_deps(dpkg))
     return deps
 
 
 def workon(name):
-    if not os.path.exists("cabal.sandbox.config"):
+    if not os.path.exists('dist'):
         print_info ("It seems that sandbox is not initialized. Running scripts/init first.")
-        try_call("python2.7 scripts/init")
+        try_call('python2.7 scripts/init')
 
+    cabalConf = "cabal.config"
+    targets   = []
+    project   = pkgDb[name]
+    pkgs      = project.targets()
+    for pkg in pkgs:
 
-    unregister_all()
-    pnames = check_deps(name)
-    pnames.add(name)
-    for pname in pnames:
-        register(pname)
+        print_info("Setting environment for '%s' development" % pkg.name)
+        sbox = os.path.join(rootPath, 'dist', pkg.path)
+        targets.append(pkg.path)
 
-    pkg = pkgs[name]
+        if not os.path.exists(sbox):
+            os.makedirs(sbox)
+            os.chdir(sbox)
+            try_call('cabal sandbox init --sandbox=.')
 
-    config = ConfigParser.RawConfigParser()
-    config.add_section('Target')
-    config.set('Target', 'names'   , ','.join(pkg.target_names()))
-    config.set('Target', 'binpaths', ','.join(pkg.target_binpaths()))
-    with open('.build.config', 'wb') as configfile:
-        config.write(configfile)
+            pnames = check_deps(pkg)
+            pkg = deepcopy(pkg)
+            pnames.add(pkg.path)
+            for pname in pnames:
+                register(pname)
+
+            os.symlink('../../../' + cabalConf, os.path.join(sbox, cabalConf))
+            
+
+    os.environ["FDEV_TARGETS"] = ':'.join(targets)
+    # os.environ["PS1"] = "${ret_status}%{$fg_bold[green]%}%p %{$fg[cyan]%}%c %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%} % %{$reset_color%} DUPA> "
+
+    if not '--no-shell' in sys.argv:
+        os.chdir(cwd)
+        call("bash")
+    
+
+    # config = ConfigParser.RawConfigParser()
+    # config.add_section('Target')
+    # config.set('Target', 'names'   , ','.join(pkg.target_names()))
+    # config.set('Target', 'binpaths', ','.join(pkg.target_binpaths()))
+    # with open('.build.config', 'wb') as configfile:
+    #     config.write(configfile)
 
 
 def register(name):
     print_info("Registering %s" % name)
-    pkg = pkgs[name]
+    pkg = pkgDb[name]
     pkg.install()
 
 
@@ -151,7 +122,7 @@ def unregister_all():
 
 def unregister(name):
     print_info("Unregistering %s" % name)
-    pkg = pkgs[name]
+    pkg = pkgDb[name]
     pkg.uninstall()
 
 

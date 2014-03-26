@@ -5,19 +5,24 @@ import sys
 from utils.glob2 import glob
 from subprocess import call
 import shutil
-from utils.colors import print_error
+from utils.colors import print_error, print_info
+
+rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+cpp_gen_dirs = [os.path.join(rootPath, 'tools/batch-clients/performance/tcp/generated')
+               ,os.path.join(rootPath, 'tools/batch-clients/dumper/generated')
+               ,os.path.join(rootPath, 'tools/batch-clients/tcp-cpp/generated')]
 
 
-
-cwd         = os.getcwd()
-cpp_gen_dirs = [os.path.join(cwd, 'tools/batch-clients/performance/tcp/generated')
-               ,os.path.join(cwd, 'tools/batch-clients/dumper/generated')
-               ,os.path.join(cwd, 'tools/batch-clients/tcp-cpp/generated')]
-
-imports = "-I /usr/include -I /usr/local/include -I libs/luna/src/proto -I libs/batch/src/proto"
+importPaths = [ '/usr/include'
+              , '/usr/local/include'
+              , os.path.join(rootPath, 'libs/luna/src/proto')
+              , os.path.join(rootPath, 'libs/batch/src/proto')
+              ]
+imports = "-I " + ' -I '.join(importPaths)
 
 def main():
-    proto_paths = glob('**/*.proto')
+    proto_paths = [os.path.realpath(path) for path in glob(rootPath + '/**/*.proto')]
     prepare_cpp_dir()
     for path in proto_paths:
         prepare_hs_dir(path)
@@ -48,6 +53,7 @@ def prepare_cpp_dir():
         os.makedirs(cpp_gen_dir)
 
 def try_call(cmd):
+    print_info("Running '%s'" % cmd)
     if call(cmd, shell=True): fatal()
 
 def fatal():
