@@ -116,6 +116,7 @@ checkInstall("cabal", "cd && cabal install cabal-install", checkCabalVersion)
 checkCabalPkg("hprotoc")
 checkCabalPkg("c2hs", version="0.16.5")
 
+
 print_info ("Generating Protocol Buffers files using genproto")
 path = os.path.join(rootPath, 'scripts', 'genproto')
 try_call ('python2.7 %s' % path)
