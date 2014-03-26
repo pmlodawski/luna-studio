@@ -4,9 +4,10 @@ import sys
 import shutil
 import platform
 import subprocess
-from subprocess import call, Popen, PIPE
+from subprocess        import call, Popen, PIPE
 from distutils.version import LooseVersion
-from utils.colors import print_info, print_error, putInfo, formatQuestion
+from utils.colors      import print_info, print_error, putInfo, formatQuestion
+from utils.errors      import fatal
 
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -20,11 +21,6 @@ p_acc_cuda = os.path.join(third_party,  'accelerate-cuda-0.15')
 p_acc_io   = os.path.join(third_party,  'accelerate-io-0.15')
 
 sboxName = "dist"
-
-
-def fatal():
-    print_error ("ERROR")
-    sys.exit(1)
 
 
 def assertInstall(name):

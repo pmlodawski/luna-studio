@@ -1,5 +1,7 @@
 import os
 from subprocess import call, Popen, PIPE
+from utils.colors import print_error
+from utils.errors import fatal
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -80,4 +82,3 @@ pkgDb = { '@all'                : AllProject ('@all', deps = [])
        , 'tools/plugin-manager' : HProject   ('flowbox-plugin-manager' , os.path.join ('tools' , 'plugin-manager') , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus'])
        , 'tools/project-manager': HProject   ('flowbox-project-manager', os.path.join ('tools' , 'project-manager'), 'tools'   , ['libs/utils', 'libs/config', 'libs/luna', 'libs/bus', 'libs/batch']    )
        }
-

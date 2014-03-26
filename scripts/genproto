@@ -2,10 +2,12 @@
 import os.path
 import os
 import sys
-from utils.glob2 import glob
-from subprocess import call
 import shutil
+from subprocess   import call
+from utils.glob2  import glob
 from utils.colors import print_error, print_info
+from utils.errors import fatal
+
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -56,10 +58,6 @@ def prepare_cpp_dir():
 def try_call(cmd):
     print_info("Running '%s'" % cmd)
     if call(cmd, shell=True): fatal()
-
-def fatal():
-    print_error ("ERROR")
-    sys.exit(1)
 
 main()
 
