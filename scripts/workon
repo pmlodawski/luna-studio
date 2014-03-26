@@ -2,14 +2,14 @@
 import sys
 import os.path
 import sys
-from subprocess import call, Popen, PIPE
-from utils.colors import print_info, print_error, print_warning
-from itertools import chain
-from collections import deque
 import ConfigParser
-from copy import copy, deepcopy
-
-from packages import pkgDb
+from collections  import deque
+from copy         import copy, deepcopy
+from itertools    import chain
+from subprocess   import call, Popen, PIPE
+from packages     import pkgDb
+from utils.colors import print_info, print_error, print_warning
+from utils.errors import fatal
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 cwd = os.getcwd()
@@ -21,19 +21,8 @@ def try_call(cmd):
     if call(cmd, shell=True): fatal()
 
 
-
-
-deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'broker', 'graphics', 'target-hs', 'cabal-install', 'num-conversion', 'utils', 'markup']
-
-
-
-
 def flatten(lofl):
     return [val for subl in lofl for val in subl]
-
-def fatal():
-    print_error ("ERROR")
-    sys.exit(1)
 
 def handle_error(e):
     if e:
@@ -115,15 +104,15 @@ def register(name):
     pkg.install()
 
 
-def unregister_all():
-    for pkg in deptree:
-        unregister(pkg)
+# def unregister_all():
+#     for pkg in deptree:
+#         unregister(pkg)
 
 
-def unregister(name):
-    print_info("Unregistering %s" % name)
-    pkg = pkgDb[name]
-    pkg.uninstall()
+# def unregister(name):
+#     print_info("Unregistering %s" % name)
+#     pkg = pkgDb[name]
+#     pkg.uninstall()
 
 
 main()
