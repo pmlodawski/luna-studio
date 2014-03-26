@@ -1,0 +1,411 @@
+
+# ###### File ###################################
+
+# class File:
+#     def readFile self name:
+#         ```getIO $ liftFIO1 hsLib_System_IO_readFile #{name}```
+
+#     def writeFile self name content:
+#         content = content.toString
+#         ```getIO $ liftFIO2 hsLib_System_IO_writeFile #{name} #{content}```
+
+import ```           Control.Applicative                          ```
+import ``` qualified Data.Array.Accelerate             as A       ```
+import ```           Data.Map.Lazy                     (Map)      ```
+import ``` qualified Data.Map.Lazy                     as Map     ```
+import ``` qualified Flowbox.Graphics.Algorithms       as Alg     ```
+import ``` qualified Flowbox.Graphics.Mockup           as Mockup  ```
+import ``` qualified Flowbox.Graphics.Raster.Channel   as Channel ```
+import ``` qualified Flowbox.Graphics.Raster.Image     as Image   ```
+import ``` qualified Flowbox.Graphics.Raster.IO        as Image   ```
+import ``` qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA    ```
+import ``` qualified System.Exit                       as Exit    ```
+
+
+###### Console ################################
+
+def print msg:
+    ```print' #{msg}```
+
+###### List ###################################
+
+def List.at index::Int:
+    ```(flattenCtx `dot2` liftf2 (!!)) #{self} #{index}```
+
+def List.+ l2:
+    ```liftf2 (++) #{self} #{l2}```
+
+def List.contains el:
+    ```liftf2 (elem) (val #{el}) #{self}```
+
+def List.each callback:
+    ```liftf2 map (val $ call1 #{callback}) #{self}```
+
+def List.foldr f el:
+    ```flattenCtx $ (fmap.fmap) (foldr (call2 #{f}) #{el}) #{self}```
+
+def List.head:
+    ```flattenCtx $ liftf1 head #{self}```
+
+def List.length:
+    ```liftf1 length #{self}```
+
+def List.sort:
+    #FIXME[wd]: very dirty hack for Pure Safe values.
+    ```(fmap.fmap.fmap) val $ liftf1 sort ((fmap.fmap.fmap) (fromSafe.fromPure) #{self})```
+
+def List.min:
+    self.sort.head
+
+def List.sum:
+    self.foldr ((x,y):x+y) 0
+
+###### Map ####################################
+
+def Map.each f:
+    ```liftf2 Map.map (val $ call1 #{f}) #{self}```
+
+def Map.eachWithKey f:
+    ```liftf2 Map.mapWithKey (val $ call2 #{f}) #{self}```
+
+###### Bool ####################################
+
+def Bool.not:
+    ```liftf1 not #{self}```
+
+###### Int ####################################
+
+def Int.+ a:
+    ```liftf2 (+) #{self} #{a}```
+
+def Int.- a:
+    ```liftf2 (-) #{self} #{a}```
+
+def Int.* a:
+    ```liftf2 (*) #{self} #{a}```
+
+def Int./ a:
+    ```liftf2 (\a b -> toDouble a / toDouble b) #{self} #{a}```
+
+def Int.< a:
+    ```liftf2 (<) #{self} #{a}```
+
+def Int.> a:
+    ```liftf2 (>) #{self} #{a}```
+
+def Int.sqrt:
+    ```liftf1 (sqrt.toDouble) #{self}```
+
+def Int.next:
+    ```liftf1 (+1) #{self}```
+
+def Int.prev:
+    ```liftf1 (-1) #{self}```
+
+def Int.str:
+    ```liftf1 show #{self}```
+
+###### Double ##################################
+
+def Double.+ a:
+    ```liftf2 (+) #{self} #{a}```
+
+def Double.- a:
+    ```liftf2 (-) #{self} #{a}```
+
+def Double.* a:
+    ```liftf2 (*) #{self} #{a}```
+
+def Double./ a:
+    ```liftf2 (/) #{self} #{a}```
+
+def Double.< a:
+    ```liftf2 (<) #{self} #{a}```
+
+def Double.> a:
+    ```liftf2 (>) #{self} #{a}```
+
+def Double.sqrt:
+    ```liftf1 sqrt #{self}```
+
+def Double.next:
+    ```liftf1 (+1) #{self}```
+
+def Double.prev:
+    ```liftf1 (-1) #{self}```
+
+def Double.str:
+    ```liftf1 show #{self}```
+
+def Double.invert:
+    ```liftf1 Alg.invert #{self}```
+
+def Double.invert_:
+    ```liftf1 Alg.invert' #{self}```
+
+def Double.sign:
+    ```liftf1 Alg.sign #{self}```
+
+def Double.parametrize lo hi:
+    ```liftf3 Alg.parametrize #{lo} #{hi} #{self}```
+
+def Double.bias b:
+    ```liftf2 Alg.bias #{b} #{self}```
+
+def Double.gain g:
+    ```liftf2 Alg.gain #{g} #{self}```
+
+def Double.gamma g:
+    ```liftf2 Alg.gamma #{g} #{self}```
+
+def Double.compress lo hi:
+    ```liftf3 Alg.compress #{lo} #{hi} #{self}```
+
+def Double.expand lo hi:
+    ```liftf3 Alg.expand #{lo} #{hi} #{self}```
+
+def Double.remap loA hiA loB hiB:
+    ```liftf5 Alg.remap #{loA} #{hiA} #{loB} #{hiB} #{self}```
+
+
+
+def raise el err:
+    ```raise #{el} #{err}```
+
+def catch el f:
+    ```catch #{el} #{f}```
+
+def isError a:
+    ```isError #{a}```
+
+
+class Sys:
+    def exitSuccess:
+        ```Exit.exitSuccess *> returnIO (Safe ())```
+    def exitFailure:
+        ```Exit.exitFailure *> returnIO (Safe ())```
+
+
+## Backend ####################################
+
+def cuda:
+    ```liftf0 cuda```
+
+def interp:
+    ```liftf0 interp```
+
+## Image ######################################
+
+def readImageWord8 path:
+    ```flattenCtx $ liftf1 (Image.readImageFromBMP2) #{path}```
+
+def readImage path:
+    (readImageWord8 path).decompose.reprDouble
+
+# FIXME[wd]: UNSAFE ERROR
+def Image.writeWord8 path backend:
+    ```flattenCtx $ liftf3 writeImage #{self} #{path} #{backend}```
+    self
+
+
+def Image.write path backend:
+    self.reprWord8.compose.writeWord8 path backend
+
+def Image.compose:
+    ```flattenCtx $ liftf1 (Pure . RGBA.compose) #{self}```
+
+def Image.decompose:
+    ```flattenCtx $ liftf1 (Pure . RGBA.decompose) #{self}```
+
+def Image.reprDouble:
+    ```liftf1 Image.reprDouble #{self}```
+
+def Image.reprWord8:
+    ```liftf1 Image.reprWord8 #{self}```
+
+def Image.getChannels:
+    ```liftf1 getChannels #{self}```
+
+def Image.setChannels channels:
+    ```liftf1 setChannels #{channels}```
+
+def Image.each f:
+    self.setChannels (self.getChannels.each f)
+
+def Image.eachWithKey f:
+    self.setChannels (self.getChannels.eachWithKey f)
+
+def Image.erode: # channelNames:
+    self.each channel : channel.erode
+    # self.each (chanName, channel):
+        # if chanName in channelNames
+            # then channel.erode
+            # else channel
+
+def Image.dilate: # channelNames:
+    self.each channel : channel.dilate
+    # self.each (chanName, channel):
+    #     if chanName in channelNames
+    #         then channel.dilate
+    #         else channel
+
+def Image.open: # channelNames:
+    self.erode.dilate
+    # (self.erode channelNames).dilate channelNames
+
+def Image.close: # channelNames:
+    self.dilate.erode
+    # (self.dilate channelNames).erode channelNames
+
+def Image.median:
+    self.each channel : channel.median
+
+def Image.adjustCB contrast brightness:
+    ```flattenCtx $ liftf3 Mockup.adjustCB #{contrast} #{brightness} #{self}```
+
+def Image.convolve kernel:
+    ```flattenCtx $ liftf2 Mockup.convolve #{kernel} #{self}```
+
+def Image.convertRGBtoHSV:
+    ```flattenCtx $ liftf1 (Pure . Alg.convertRGBtoHSV) #{self}```
+
+def Image.convertHSVtoRGB:
+    ```flattenCtx $ liftf1 (Pure . Alg.convertHSVtoRGB) #{self}```
+
+def Image.get name:
+    ```flattenCtx $ liftf2 (Pure `dot2` Image.lookup) #{name} #{self}```
+
+def Image.put name channel:
+    ```liftf3 Image.insert #{name} #{channel} #{self}```
+
+def Image.displayP name:
+    b = cuda
+    self = self.each channel : channel.clip
+    self.write name b
+
+def extractBackground images:
+    ```flattenCtx $ liftf1 (Pure . (Alg.extractBackground ("r", "g", "b"))) #{images}```
+
+def Image.premultiply:
+    ```liftf1 Alg.premultiply #{self}```
+
+def Image.unpremultiply:
+    ```liftf1 Alg.unpremultiply #{self}```
+
+
+## Channel ####################################
+
+def Channel.map callback:
+    ```liftf2 Channel.map (val $ (\x -> (fromSafe.fromPure) (call1 #{callback} (val x)))) #{self}```
+
+def Channel.clip:
+    ```liftf1 Alg.clipValues #{self}```
+
+def Channel.lut arr:
+    # ```liftf2 Alg.lutChannel (fmap (\(a,b) -> ((fromSafe.fromPure) a, (fromSafe.fromPure) b)) #{arr}) #{self}```
+    ```liftf2 Mockup.lutChannel #{self} #{arr}```
+
+def Channel.erode:
+    ```liftf1 Alg.erodeChannel #{self}```
+
+def Channel.dilate:
+    ```liftf1 Alg.dilateChannel #{self}```
+
+def Channel.median:
+    ```liftf1 Alg.medianChannel #{self}```
+
+## Transformed ################################
+
+
+def Image.transform:
+    ```val $ Image.transform #{self}```
+
+def Image.rasterize:
+    self
+
+def Transformed.transform:
+    self
+
+def Transformed.rasterize:
+    ```flattenCtx $ liftf1 Mockup.rasterize' #{self}```
+
+
+def Transformed.translate x y:
+    ```liftf3 Image.translate #{x} #{y} #{self}```
+
+def Transformed.rotate angle:
+    ```liftf2 Image.rotate #{angle} #{self}```
+
+def Transformed.rotateAt angle x y:
+    ```liftf4 Image.rotateAt #{angle} #{x} #{y} #{self}```
+
+def Transformed.scale x y:
+    ```liftf3 Image.scale #{x} #{y} #{self}```
+
+def Transformed.scaleAt sx sy x y:
+    ```liftf5 Image.scaleAt #{sx} #{sy} #{x} #{y} #{self}```
+
+def Transformed.adjustCB contrast brightness:
+    ```let { f1 c b self = call2 (member (P :: P "adjustCB") self) c b}```
+    ```let { f2 self c b = (fmap.fmap.fmap) (f1 c b) self}```
+    ```f2 #{self} #{contrast} #{brightness} ```
+
+# def Transformed.erode: # channelNames:
+#     ```let { f1 c b self = call2 (member (P :: P "adjustCB") self) c b}```
+#     ```let { f2 self c b = (fmap.fmap.fmap) (f1 c b) self}```
+#     ```f2 #{self} #{contrast} #{brightness} ```
+#     self.each channel : channel.erode
+
+# def Transformed.dilate: # channelNames:
+#     self.each channel : channel.dilate
+
+# def Transformed.open: # channelNames:
+#     self.erode.dilate
+
+# def Transformed.close: # channelNames:
+#     self.dilate.erode
+
+def Transformed.convolve kernel:
+    ```let { f1 k self = call1 (member (P :: P "convolve") self) k}```
+    ```let { f2 self k = (fmap.fmap.fmap) (f1 k) self}```
+    ```f2 #{self} #{kernel} ```
+
+def Transformed.displayP name:
+    b = cuda
+    self = self.rasterize.each channel : channel.clip
+    self.write name b
+
+def Image.translate x y:
+    self.transform.translate x y
+
+def Image.rotate angle:
+    self.transform.rotate angle
+
+def Image.rotateAt angle x y:
+    self.transform.rotateAt angle x y
+
+def Image.scale x y:
+    self.transform.scale x y
+
+def Image.scaleAt sx sy x y:
+    self.transform.scaleAt sx sy x y
+
+###############################################
+
+def constant x:
+    ```liftf1 A.constant #{x}```
+
+
+def Exp.+ a:
+    ```liftf2 (+) #{self} #{a}```
+
+def Exp.- a:
+    ```liftf2 (-) #{self} #{a}```
+
+def Exp.* a:
+    ```liftf2 (*) #{self} #{a}```
+
+def Exp./ a:
+    ```liftf2 (/) #{self} #{a}```
+
+

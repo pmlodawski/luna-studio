@@ -46,14 +46,14 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  containers,
-                  lens,
+                  lens                    == 4.0.7,
                   bmp,
                   --ekg,
                   repa-devil,
                   accelerate              == 0.14.*,
                   accelerate-io           == 0.14.*,
                   base                    == 4.6.*,
-                  criterion               >= 0.5          && < 0.9,
+                  criterion               >= 0.8.0.1      && < 0.9,
                   either,
                   errors,
                   fclabels                >= 2.0          && < 2.1,
@@ -107,13 +107,13 @@ Executable test
     ghc-options:        -with-rtsopts=-T
 
   build-depends:      containers,
-                      lens,
+                      lens                    == 4.0.7,
                       bmp,
                       repa-devil,
                       accelerate              == 0.14.*,
                       accelerate-io           == 0.14.*,
                       base                    == 4.6.*,
-                      criterion               >= 0.5          && < 0.9,
+                      criterion               >= 0.8.0.1      && < 0.9,
                       either,
                       errors,
                       fclabels                >= 2.0          && < 2.1,
