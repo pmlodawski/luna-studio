@@ -1,4 +1,7 @@
 import qualified Text.Doc.Markup as Markup
+import Data.ByteString as BS
+import Data.ByteString.Lazy as LBS
+
 
 code :: String
 code = unlines [ ""
@@ -53,6 +56,9 @@ code = unlines [ ""
 
 main :: IO ()
 main = do
-         print $ Markup.parse code
-         -- writeFile "test.html" $ Markup.parse code
+         -- print $ Markup.parse code
+         BS.writeFile "test.html" $ lazyToStrictBS $ Markup.parse code
          -- writeFile "test.html" (show $ Markup.parse code)
+
+lazyToStrictBS :: LBS.ByteString -> BS.ByteString
+lazyToStrictBS x = BS.concat $ LBS.toChunks x

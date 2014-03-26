@@ -108,7 +108,9 @@ parse markup = let
                    --parsed :: Int 
                    parsed = rights [Parsec.runParser pProgram (0::Int) "Flowbox Markup Parser" markup]
                    parsedWithJSLibs = fmap addJSLibs parsed
-               in fmap (HTML.renderHtml) parsedWithJSLibs 
+                   --content :: Int
+                   [content] = fmap (HTML.renderHtml) parsedWithJSLibs 
+               in content
 {-let
                  -- parsed :: Int
                   parsed = M.join $ Parsec.runParser pProgram (0::Int) "Flowbox Markup Parser" markup
