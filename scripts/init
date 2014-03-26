@@ -46,7 +46,7 @@ def try_call(cmd):
 check_install("cabal", "-V")
 check_cabal_version()
 check_install("hprotoc")
-check_install("c2hs")
+check_install("c2hs", "-v")
 
 print_info ("Generating Protocol Buffers files using genproto")
 path = os.path.join('scripts', 'genproto')
