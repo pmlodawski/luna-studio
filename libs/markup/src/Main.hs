@@ -31,6 +31,7 @@ code = unlines [ ""
                          , ""
                          , "Linki moga byc zapisane tak [Nazwa linku](http://link)"
                          , "Albo tak: [Nazwa linku][1]"
+                         , "A to link wewnątrz dokumentu [Heading1](#Heading1)"
                          , "a na samym dole dokumentu znajduja sie rozwiniecia linkow, jak np:"
                          , "[1]: http:/link"
                          , ""
@@ -56,7 +57,7 @@ code = unlines [ ""
 
 main :: IO ()
 main = do
-         BS.writeFile "test.html" $ lazyToStrictBS $ Markup.parse code
+     BS.writeFile "test.html" $ lazyToStrictBS $ Markup.parse code
 
 lazyToStrictBS :: LBS.ByteString -> BS.ByteString
 lazyToStrictBS x = BS.concat $ LBS.toChunks x

@@ -22,9 +22,16 @@ import           Text.Doc.Utils
 -- HEADINGS
 pHeadings = choice [ try pH1, try pH2, pH3 ] <?> "heading"
 
-pH1 = HTML.h1 . HTML.toHtml <$> surround L.pH1 L.headingTxt
-pH2 = HTML.h2 . HTML.toHtml <$> surround L.pH2 L.headingTxt
-pH3 = HTML.h3 . HTML.toHtml <$> surround L.pH3 L.headingTxt
+anchor text = fromString $ [x | x <- text, x /= ' ']
+
+pAddAnchor :: String -> HTML.Html
+pAddAnchor headingText = do-- 
+                            (HTML.a ! Attr.name (anchor headingText) $ HTML.toHtml ("" :: String))
+                            HTML.toHtml (headingText :: String)
+
+pH1 = HTML.h1 . pAddAnchor <$> surround L.pH1 L.headingTxt
+pH2 = HTML.h2 . pAddAnchor <$> surround L.pH2 L.headingTxt
+pH3 = HTML.h3 . pAddAnchor <$> surround L.pH3 L.headingTxt
 
 -- FORMATTED TEXT
 pFormattedText = choice [ try pTextBoldItalic, try pTextItalic, pTextBold ] <?> "formatted text"
