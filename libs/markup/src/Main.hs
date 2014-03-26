@@ -1,6 +1,6 @@
-import qualified Text.Doc.Markup as Markup
-import Data.ByteString as BS
-import Data.ByteString.Lazy as LBS
+import           Data.ByteString      as BS
+import           Data.ByteString.Lazy as LBS
+import qualified Text.Doc.Markup      as Markup
 
 
 code :: String
@@ -56,17 +56,7 @@ code = unlines [ ""
 
 main :: IO ()
 main = do
---<<<<<<< HEAD
---         -- print $ Markup.parse code
---         BS.writeFile "test.html" $ lazyToStrictBS $ Markup.parse code
---=======
-     case Markup.parse code of
-          Left err -> print err
-          Right result -> putStrLn result
-         --print $ Markup.parse code
-         -- writeFile "test.html" $ Markup.parse code
--->>>>>>> f406e1359a1886e2f5f5d2c3d2f2ef86400802de
-         -- writeFile "test.html" (show $ Markup.parse code)
+         BS.writeFile "test.html" $ lazyToStrictBS $ Markup.parse code
 
 lazyToStrictBS :: LBS.ByteString -> BS.ByteString
 lazyToStrictBS x = BS.concat $ LBS.toChunks x
