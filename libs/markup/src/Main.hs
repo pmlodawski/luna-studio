@@ -9,6 +9,8 @@ code = unlines [ ""
                          , "    Kod zaczyna sie po 4 wcieciach"
                          , "    Jezeli taki blok poprzedzała linia zawierajaca tylko biale znaki"
                          , "    Po zakonczeniu bloku kodu tez powinna byc pusta linia"
+                         , "    fibs :: [Int]"
+                         , "    fibs = 0 : 1 : zipWith (+) fibs (tail fibs)"
                          , ""
                          , "Kod inline zamieszcza sie pomiedzy baktikami `jak np tu`"
                          , ""
@@ -51,4 +53,5 @@ code = unlines [ ""
 
 main :: IO ()
 main = do
-        print $ Markup.parse code
+         print $ Markup.parse code
+         -- writeFile "test.html" (show $ Markup.parse code)
