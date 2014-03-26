@@ -1,69 +1,149 @@
 #!/usr/bin/python2.7
 import os.path
 import sys
+import shutil
+import platform
+import subprocess
 from subprocess import call, Popen, PIPE
 from distutils.version import LooseVersion
-from utils.colors import print_info, print_error
+from utils.colors import print_info, print_error, putInfo, formatQuestion
 
+
+rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 third_party = os.path.join(dir, 'third-party')
 p_cabal    = os.path.join(third_party,  'Cabal-1.19.1')
 p_missingh = os.path.join(third_party,  'MissingH-1.2.0.0-winpatch')
+p_acc      = os.path.join(third_party,  'accelerate-0.15')
+p_acc_cuda = os.path.join(third_party,  'accelerate-cuda-0.15')
+p_acc_io   = os.path.join(third_party,  'accelerate-io-0.15')
+
+sboxName = "dist"
 
 
 def fatal():
     print_error ("ERROR")
     sys.exit(1)
 
-def check_install(name, args=""):
-    print_info ("Checking if '%s' is installed" % name)
-    (out, err) = Popen(name + " " + args, stdout=PIPE, stderr=PIPE, shell=True).communicate()
-    if not out:
+
+def assertInstall(name):
+    if not checkAvailable(name):
         print_error ("Please install '%s' to continue" % name)
         fatal()
 
-def check_cabal_version():
+def checkAvailable(name):
+    putInfo ("Checking if '%s' is available ... " % name)
+    cmd = "where" if platform.system() == "Windows" else "command -v"
+    if call(cmd + " " + name, shell=True): 
+        print_info("no")
+        return False
+    else:
+        print_info("yes")
+        return True
+
+
+# def check_cabal_version():
+#     minv = '1.18.0'
+#     print_info ("Checking cabal version (>= %s)" % minv)
+#     (out, err) = Popen("cabal --numeric-version", stdout=PIPE, shell=True).communicate()
+#     out = out.lstrip().rstrip()
+#     if not LooseVersion(out) >= LooseVersion(minv):
+#         print_error ("Your cabal is too old (%s)" % out)
+#         answer = ""
+#         while answer not in ["Y", "n"]:
+#             answer = raw_input("Should I update it? (cabal update && cd && cabal install cabal-install) [Y/n] ")
+#         if answer == "Y":
+#             try_call("cabal update")
+#             try_call("cd && cabal install cabal-install")
+
+#         print_error ("Please update your cabal to version '%s' or greater to continue." % minv)
+#         fatal()
+
+def checkCabalPkg(name, version=""):
+    if not checkAvailable(name):
+        if ask ("Cabal binary '%s' is not available. Should I install it?" % name):
+            pkg = name
+            if version: pkg += "-%s" % version
+            try_call("cd && cabal install %s" % pkg)
+        else: fatal ()
+
+def checkCabalVersion():
     minv = '1.18.0'
     print_info ("Checking cabal version (>= %s)" % minv)
     (out, err) = Popen("cabal --numeric-version", stdout=PIPE, shell=True).communicate()
     out = out.lstrip().rstrip()
-    if not LooseVersion(out) >= LooseVersion(minv):
-        print_error ("Your cabal is too old (%s)" % out)
-        # answer = ""
-        # while answer not in ["Y", "n"]:
-        #     answer = raw_input("Should I update it? (cabal install cabal-install) [Y/n]")
-        # if answer == "Y":
-        #     (out, err) = Popen("cd && cabal install cabal-install", stdout=PIPE, stderr=PIPE, shell=True).communicate()
+    if not LooseVersion(out) >= LooseVersion(minv): return (False, "Your %s version is too old (%s)" % ("cabal", out))
+    else: return (True, None)
 
-        print_error ("Please update your cabal to version '%s' or greater." % minv)
-        fatal()
-
+def checkInstall(name, installCmd, chckf):
+    (ok, err) = chckf()
+    if not ok:
+        print_error (err)
+        if ask("Should I install it? (%s)" % installCmd):
+            try_call(installCmd)
+        else: fatal()
 
 def try_call(cmd):
+    print_info ("Running '%s'" % cmd)
     if call(cmd, shell=True): fatal()
 
-check_install("cabal", "-V")
-check_cabal_version()
-check_install("hprotoc")
-check_install("c2hs", "-v")
+
+def ask(question):
+    answer = None
+    while True:
+        ansRaw = raw_input(formatQuestion(question) + " [Y/n] ")
+        ans = ansRaw.lower()
+        if ans not in ["", "y", "yes", "n", "no"]:
+            print_error("'%s' is not a valid answer, please choose beetween YES or NO." % ansRaw)
+        else: break
+    if ans in ["", "y", "yes"]: return True
+    else:                       return False
+
+
+if os.path.exists(sboxName):
+    if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?"):
+        shutil.rmtree(sboxName)
+        os.remove("cabal.sandbox.config")
+
+assertInstall("cabal")
+
+print_info ("Updating cabal package cache")
+try_call('cd && cabal update')
+
+checkInstall("cabal", "cd && cabal install cabal-install", checkCabalVersion)
+
+checkCabalPkg("hprotoc")
+checkCabalPkg("c2hs", version="0.16.5")
+
 
 print_info ("Generating Protocol Buffers files using genproto")
-path = os.path.join('scripts', 'genproto')
+path = os.path.join(rootPath, 'scripts', 'genproto')
 try_call ('python2.7 %s' % path)
 
 print_info ("Generating cabal configs using gencabal")
-path = os.path.join('scripts', 'gencabal')
+path = os.path.join(rootPath, 'scripts', 'gencabal')
 try_call ('python2.7 %s' % path)
 
-print_info ("Initializing cabal sandbox")
-try_call('cabal sandbox init --sandbox=dist')
+distPath = os.path.join(rootPath,"dist")
+if not os.path.exists(distPath):
+    os.mkdir(distPath)
 
-print_info ("Updating cabal package cache")
-try_call('cabal update')
+# print_info ("Initializing cabal sandbox")
+# try_call('cabal sandbox init --sandbox=%s' % sboxName)
 
-print_info ("Registering Cabal-1.19.1 library")
-try_call('cabal install %s' % p_cabal)
+
+# print_info ("Registering accelerate-0.15 library")
+# try_call('cabal sandbox add-source %s' % p_acc)
+
+# print_info ("Registering accelerate-cuda-0.15 library")
+# try_call('cabal sandbox add-source %s' % p_acc_cuda)
+
+# print_info ("Registering accelerate-io-0.15 library")
+# try_call('cabal sandbox add-source %s' % p_acc_io)
+
+# print_info ("Registering Cabal-1.19.1 library")
+# try_call('cabal install %s' % p_cabal)
 
 # print_info ("Registering MissingH library (windows patch)")
 # try_call('cabal install %s' % p_missingh)
