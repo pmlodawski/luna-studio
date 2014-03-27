@@ -1,7 +1,6 @@
 #!/usr/bin/python2.7
 import sys
 import os.path
-import sys
 import ConfigParser
 
 from copy            import copy, deepcopy
@@ -11,7 +10,9 @@ from packages        import pkgDb
 from utils.colors    import print_info, print_error, print_warning
 from utils.errors    import fatal
 
-rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+myPath = os.path.dirname(os.path.realpath(__file__))
+rootPath = os.path.dirname(myPath)
+shellConfPath = os.path.join(myPath, 'shell')
 cwd = os.getcwd()
 os.chdir(rootPath)
 
@@ -82,16 +83,36 @@ def workon(name):
                 register(pname)
 
             os.symlink('../../../' + cabalConf, os.path.join(sbox, cabalConf))
-            
+    
 
+    fdevWorkon  = os.environ.get("FDEV_WORKON", "")
+    fdevHistory = os.environ.get("FDEV_WORKON_HISTORY", "")
+    
+    if fdevHistory: fdevHistory += " > "
+    fdevHistory += name
+
+
+    os.environ["FDEV_WORKON"] = name
+    os.environ["FDEV_WORKON_HISTORY"] = fdevHistory
     os.environ["FDEV_TARGETS"] = ':'.join(targets)
 
 
     if not '--no-shell' in sys.argv:
         os.chdir(cwd)
         shell = os.readlink('/proc/%d/exe' % os.getppid())
+        if shell == '/bin/zsh':
+            if not os.environ.has_key('ZDOTDIR_ORIG'):
+                if os.environ.has_key('ZDOTDIR'):
+                    zdotdir = os.environ['ZDOTDIR']
+                else:
+                    zdotdir = os.path.expanduser('~')
+                os.environ['ZDOTDIR_ORIG'] = zdotdir
+            os.environ['ZDOTDIR'] = shellConfPath
+        else:
+            print_error("Unsupported shell '%s'. There will be no fancy effects :(" % shell)
+
         print_info("Executing new flowbox '%s' shell" % shell)
-        call(shell)
+        call(shell, shell=True)
     
 
 
