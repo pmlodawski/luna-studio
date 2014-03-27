@@ -21,6 +21,7 @@ Library
                   containers,
                   parsec,
                   blaze-html,
+                  blaze-markup,
                   bytestring
 
 Executable markup
@@ -34,4 +35,5 @@ Executable markup
                   containers,
                   parsec,
                   blaze-html,
+                  blaze-markup,
                   bytestring

@@ -16,6 +16,10 @@ pTextItalic         = string "**"
 pTextBold                 = string "*"
 formattedText = many $ noneOf "*\n\r"
 
+pCodeLangBegin          = string $ "{{"
+pCodeLang              = many $ noneOf "}"
+pCodeLangEnd            = string "}}"
+
 pCodeLineBegin         = string $ replicate 4 ' '
 pCodeInline         = string "`"
 inlineCode = many $ noneOf "`"

@@ -12,12 +12,14 @@ code = unlines [ ""
                          , "    Kod zaczyna sie po 4 wcieciach"
                          , "    Jezeli taki blok poprzedzała linia zawierajaca tylko biale znaki"
                          , "    Po zakonczeniu bloku kodu tez powinna byc pusta linia"
+                         , ""
+                         , "    {{lang_hs}}"
                          , "    fibs :: [Int]"
                          , "    fibs = 0 : 1 : zipWith (+) fibs (tail fibs)"
                          , ""
                          , "Kod inline zamieszcza sie pomiedzy baktikami `jak np tu`"
                          , ""
-                         , "dla testu sprawdzimy > cytatu wewnątrz tekstu :D"
+                         , "dla testu sprawdzimy > cytaty wewnątrz tekstu :D"
                          , "oraz    kod wewnątrz tekstu"
                          , ""
                          , "> Cytaty rozpoczynaja sie od ptaszkow"
@@ -45,6 +47,7 @@ code = unlines [ ""
                          , "- inny element"
                          , "    - zagniezdzony element"
                          , ""
+                         , ""
                          , "Listy numerowane zaczynaja sie znakiem #. Zagniezdzone zamieniaja sie na numerowania a - z:"
                          , "# pierwszy element"
                          , "# drugi element"
@@ -55,9 +58,20 @@ code = unlines [ ""
                          , "W wersji zaawansowanej mozemy wspierac tagi html w tekscie."
                          ]
 
+code_test = unlines [ 
+                    --, ""
+                      "    {{haskell}}"
+                    --, "    ala"
+                    , "    s"
+                    , "    wspaniały kod"
+                    ]
+
 main :: IO ()
 main = do
-     BS.writeFile "test.html" $ lazyToStrictBS $ Markup.parse code
-
-lazyToStrictBS :: LBS.ByteString -> BS.ByteString
+          --print $ Markup.parse_test code_test
+          case Markup.parse code of
+               Left parseError -> print parseError
+               Right parsed -> do print parsed; BS.writeFile "test.html" $ lazyToStrictBS parsed
+     
+--lazyToStrictBS :: LBS.ByteString -> BS.ByteString
 lazyToStrictBS x = BS.concat $ LBS.toChunks x
