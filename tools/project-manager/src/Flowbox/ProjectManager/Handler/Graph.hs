@@ -7,29 +7,29 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Flowbox.ProjectManager.Handler.Graph where
 
-import qualified Data.IORef                                                                                  as IORef
-import qualified Flowbox.Batch.Handler.Graph                                                                 as BatchG
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.GraphView                                     ()
+import qualified Data.IORef                                                                                   as IORef
+import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.GraphView                                      ()
 import           Flowbox.Prelude
-import           Flowbox.ProjectManager.Context                                                              (ContextRef)
+import           Flowbox.ProjectManager.Context                                                               (ContextRef)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Args              as Connect
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Result            as Connect
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Args           as Disconnect
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Result         as Disconnect
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Args                  as GetGraph
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Result                as GetGraph
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Lookup.Args               as Lookup
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Lookup.Result             as Lookup
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Args             as NodeAdd
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Result           as NodeAdd
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Args          as NodeRemove
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Result        as NodeRemove
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Update.Args          as NodeUpdate
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Update.Result        as NodeUpdate
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.UpdateInPlace.Args   as NodeUpdateInPlace
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.UpdateInPlace.Result as NodeUpdateInPlace
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request            as Connect
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Update             as Connect
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Request         as Disconnect
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Update          as Disconnect
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Request                as GetGraph
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Status                 as GetGraph
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Lookup.Request             as Lookup
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Lookup.Status              as Lookup
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request           as NodeAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update            as NodeAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Update.Request        as NodeUpdate
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Update.Update         as NodeUpdate
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.UpdateInPlace.Request as NodeUpdateInPlace
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.UpdateInPlace.Update  as NodeUpdateInPlace
 
 
 
@@ -37,29 +37,29 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO "Flowbox.ProjectManager.Handlers.Graph"
 
 
-getGraph :: ContextRef -> GetGraph.Args -> IO GetGraph.Result
-getGraph ctxRef (GetGraph.Args tbc tlibID tprojectID) = do
+get :: ContextRef -> GetGraph.Request -> IO GetGraph.Status
+get ctxRef (GetGraph.Request tbc tlibID tprojectID) = do
     bc <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef ctxRef
-    ng <- BatchG.nodesGraph bc libID projectID batch
-    return $ GetGraph.Result $ encode ng
+    graph <- BatchG.nodesGraph bc libID projectID batch
+    return $ GetGraph.Status (encode graph) tbc tlibID tprojectID
 
 
-lookup :: ContextRef -> Lookup.Args -> IO Lookup.Result
-lookup ctxRef (Lookup.Args tnodeID tbc tlibID tprojectID) = do
+lookup :: ContextRef -> Lookup.Request -> IO Lookup.Status
+lookup ctxRef (Lookup.Request tnodeID tbc tlibID tprojectID) = do
     bc <- decode tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef ctxRef
     node  <- BatchG.nodeByID nodeID bc libID projectID batch
-    return $ Lookup.Result $ encode (nodeID, node)
+    return $ Lookup.Status (encode (nodeID, node)) tbc tlibID tprojectID
 
 
-nodeAdd :: ContextRef -> NodeAdd.Args -> IO NodeAdd.Result
-nodeAdd ctxRef (NodeAdd.Args tnode tbc tlibID tprojectID) = do
+nodeAdd :: ContextRef -> NodeAdd.Request -> IO NodeAdd.Update
+nodeAdd ctxRef (NodeAdd.Request tnode tbc tlibID tprojectID) = do
     bc <- decode tbc
     (_ :: Int, node) <- decode tnode
     let libID     = decodeP tlibID
@@ -67,11 +67,11 @@ nodeAdd ctxRef (NodeAdd.Args tnode tbc tlibID tprojectID) = do
     batch <- IORef.readIORef ctxRef
     (newBatch, newNodeID) <- BatchG.addNode node bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return $ NodeAdd.Result $ encodeP newNodeID
+    return $ NodeAdd.Update (encode (newNodeID, node)) tbc tlibID tprojectID
 
 
-nodeUpdate :: ContextRef -> NodeUpdate.Args -> IO NodeUpdate.Result
-nodeUpdate ctxRef (NodeUpdate.Args tnode tbc tlibID tprojectID) = do
+nodeUpdate :: ContextRef -> NodeUpdate.Request -> IO NodeUpdate.Update
+nodeUpdate ctxRef (NodeUpdate.Request tnode tbc tlibID tprojectID) = do
     bc <- decode tbc
     nodeWithId <- decode tnode
     let libID     = decodeP tlibID
@@ -79,11 +79,11 @@ nodeUpdate ctxRef (NodeUpdate.Args tnode tbc tlibID tprojectID) = do
     batch <- IORef.readIORef ctxRef
     (newBatch, newNodeID) <- BatchG.updateNode nodeWithId bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return $ NodeUpdate.Result $ encodeP newNodeID
+    return $ NodeUpdate.Update (encode $ nodeWithId & _1 .~ newNodeID) tbc tlibID tprojectID
 
 
-nodeUpdateInPlace :: ContextRef -> NodeUpdateInPlace.Args -> IO NodeUpdateInPlace.Result
-nodeUpdateInPlace ctxRef (NodeUpdateInPlace.Args tnode tbc tlibID tprojectID) = do
+nodeUpdateInPlace :: ContextRef -> NodeUpdateInPlace.Request -> IO NodeUpdateInPlace.Update
+nodeUpdateInPlace ctxRef (NodeUpdateInPlace.Request tnode tbc tlibID tprojectID) = do
     bc <- decode tbc
     nodeWithId <- decode tnode
     let libID     = decodeP tlibID
@@ -91,11 +91,11 @@ nodeUpdateInPlace ctxRef (NodeUpdateInPlace.Args tnode tbc tlibID tprojectID) = 
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchG.updateNodeInPlace nodeWithId bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return NodeUpdateInPlace.Result
+    return $ NodeUpdateInPlace.Update tnode tbc tlibID tprojectID
 
 
-nodeRemove :: ContextRef -> NodeRemove.Args -> IO NodeRemove.Result
-nodeRemove ctxRef (NodeRemove.Args tnodeID tbc tlibID tprojectID) = do
+nodeRemove :: ContextRef -> NodeRemove.Request -> IO NodeRemove.Update
+nodeRemove ctxRef (NodeRemove.Request tnodeID tbc tlibID tprojectID) = do
     bc <- decode tbc
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
@@ -103,11 +103,11 @@ nodeRemove ctxRef (NodeRemove.Args tnodeID tbc tlibID tprojectID) = do
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchG.removeNode nodeID bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return NodeRemove.Result
+    return $ NodeRemove.Update tnodeID tbc tlibID tprojectID
 
 
-connect :: ContextRef -> Connect.Args -> IO Connect.Result
-connect ctxRef (Connect.Args tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
+connect :: ContextRef -> Connect.Request -> IO Connect.Update
+connect ctxRef (Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
     bc <- decode tbc
     let srcNodeID = decodeP tsrcNodeID
         srcPort   = decodeListP tsrcPort
@@ -118,11 +118,11 @@ connect ctxRef (Connect.Args tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID 
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchG.connect srcNodeID srcPort dstNodeID dstPort bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return Connect.Result
+    return $ Connect.Update tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID
 
 
-disconnect :: ContextRef -> Disconnect.Args -> IO Disconnect.Result
-disconnect ctxRef (Disconnect.Args tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
+disconnect :: ContextRef -> Disconnect.Request -> IO Disconnect.Update
+disconnect ctxRef (Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID) = do
     bc <- decode tbc
     let srcNodeID = decodeP tsrcNodeID
         srcPort   = decodeListP tsrcPort
@@ -133,4 +133,4 @@ disconnect ctxRef (Disconnect.Args tsrcNodeID tsrcPort tdstNodeID tdstPort tbc t
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchG.disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return Disconnect.Result
+    return $ Disconnect.Update tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID

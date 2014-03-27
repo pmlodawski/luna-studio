@@ -6,51 +6,54 @@
 ---------------------------------------------------------------------------
 module Flowbox.ProjectManager.Handler.AST where
 
-import qualified Data.IORef                                                                       as IORef
-import qualified Flowbox.Batch.Handler.AST                                                        as BatchAST
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb                              ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr                               ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Focus                              ()
-import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Module                             ()
-import           Flowbox.Prelude                                                                  hiding (cons)
-import           Flowbox.ProjectManager.Context                                                   (ContextRef)
+import qualified Data.IORef                                                                        as IORef
+import qualified Flowbox.Batch.Handler.AST                                                         as BatchAST
+import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                                                 as Crumb
+import qualified Flowbox.Luna.Data.AST.Module                                                      as Module
+import qualified Flowbox.Luna.Data.AST.Type                                                        as Type
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb                               ()
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Expr                                ()
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Focus                               ()
+import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Module                              ()
+import           Flowbox.Prelude                                                                   hiding (cons)
+import           Flowbox.ProjectManager.Context                                                    (ContextRef)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Args                 as AddClass
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Result               as AddClass
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Classes.Args      as UpdateDataClasses
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Classes.Result    as UpdateDataClasses
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Cls.Args          as UpdateDataCls
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Cls.Result        as UpdateDataCls
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Cons.Args         as UpdateDataCons
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Cons.Result       as UpdateDataCons
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Methods.Args      as UpdateDataMethods
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Methods.Result    as UpdateDataMethods
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Args             as AddFunction
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Result           as AddFunction
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Inputs.Args   as UpdateFunctionInputs
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Inputs.Result as UpdateFunctionInputs
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Name.Args     as UpdateFunctionName
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Name.Result   as UpdateFunctionName
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Output.Args   as UpdateFunctionOutput
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Output.Result as UpdateFunctionOutput
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Path.Args     as UpdateFunctionPath
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Path.Result   as UpdateFunctionPath
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Args                      as Definitions
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Result                    as Definitions
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Add.Args               as AddModule
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Add.Result             as AddModule
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Cls.Args        as UpdateModuleCls
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Cls.Result      as UpdateModuleCls
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Fields.Args     as UpdateModuleFields
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Fields.Result   as UpdateModuleFields
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Imports.Args    as UpdateModuleImports
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Imports.Result  as UpdateModuleImports
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Args                   as Remove
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Result                 as Remove
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Args                  as ResolveDefinition
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Result                as ResolveDefinition
-
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Request               as AddData
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Update                as AddData
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Classes.Request    as UpdateDataClasses
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Classes.Update     as UpdateDataClasses
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Cls.Request        as UpdateDataCls
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Cls.Update         as UpdateDataCls
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Cons.Request       as UpdateDataCons
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Cons.Update        as UpdateDataCons
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Methods.Request    as UpdateDataMethods
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Update.Methods.Update     as UpdateDataMethods
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Request           as AddFunction
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Update            as AddFunction
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Inputs.Request as UpdateFunctionInputs
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Inputs.Update  as UpdateFunctionInputs
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Name.Request   as UpdateFunctionName
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Name.Update    as UpdateFunctionName
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Output.Request as UpdateFunctionOutput
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Output.Update  as UpdateFunctionOutput
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Path.Request   as UpdateFunctionPath
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Update.Path.Update    as UpdateFunctionPath
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Request                    as Definitions
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Status                     as Definitions
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Add.Request             as AddModule
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Add.Update              as AddModule
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Cls.Request      as UpdateModuleCls
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Cls.Update       as UpdateModuleCls
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Fields.Request   as UpdateModuleFields
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Fields.Update    as UpdateModuleFields
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Imports.Request  as UpdateModuleImports
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Update.Imports.Update   as UpdateModuleImports
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Request                 as Remove
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Update                  as Remove
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Request                as ResolveDefinition
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                 as ResolveDefinition
+import qualified Flowbox.Luna.Data.AST.Expr as Expr
 
 
 loggerIO :: LoggerIO
@@ -58,19 +61,19 @@ loggerIO = getLoggerIO "Flowbox.ProjectManager.Handler.AST"
 
 -------- public api -------------------------------------------------
 
-get :: ContextRef -> Definitions.Args -> IO Definitions.Result
-get ctxRef (Definitions.Args mtmaxDepth tbc tlibID tprojectID) = do
+get :: ContextRef -> Definitions.Request -> IO Definitions.Status
+get ctxRef (Definitions.Request mtmaxDepth tbc tlibID tprojectID) = do
     bc  <- decode tbc
     let mmaxDepth = fmap decodeP mtmaxDepth
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef ctxRef
     focus <- BatchAST.definitions mmaxDepth bc libID projectID batch
-    return $ Definitions.Result $ encode focus
+    return $ Definitions.Status (encode focus) tbc tlibID tprojectID
 
 
-moduleAdd :: ContextRef -> AddModule.Args -> IO AddModule.Result
-moduleAdd ctxRef (AddModule.Args tnewModule tbcParent tlibID tprojectID) = do
+moduleAdd :: ContextRef -> AddModule.Request -> IO AddModule.Update
+moduleAdd ctxRef (AddModule.Request tnewModule tbcParent tlibID tprojectID) = do
     newModule <- decode tnewModule
     bcParent  <- decode tbcParent
     let libID     = decodeP tlibID
@@ -78,23 +81,25 @@ moduleAdd ctxRef (AddModule.Args tnewModule tbcParent tlibID tprojectID) = do
     batch <- IORef.readIORef ctxRef
     (newBatch, addedModule) <- BatchAST.addModule newModule bcParent libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return $ AddModule.Result $ encode addedModule
+    let newBC = bcParent ++ [Crumb.ModuleCrumb $ addedModule ^. Module.cls . Type.name]
+    return $ AddModule.Update (encode addedModule) (encode newBC) tlibID tprojectID
 
 
-dataAdd :: ContextRef -> AddClass.Args -> IO AddClass.Result
-dataAdd ctxRef (AddClass.Args tnewClass tbcParent tlibID tprojectID) = do
-    newClass <- decode tnewClass
+dataAdd :: ContextRef -> AddData.Request -> IO AddData.Update
+dataAdd ctxRef (AddData.Request tnewData tbcParent tlibID tprojectID) = do
+    newData  <- decode tnewData
     bcParent <- decode tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef ctxRef
-    (newBatch, addedClass) <- BatchAST.addClass newClass bcParent libID projectID batch
+    (newBatch, addedData) <- BatchAST.addClass newData bcParent libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return $ AddClass.Result $ encode addedClass
+    let newBC = bcParent ++ [Crumb.ClassCrumb $ addedData ^. Expr.cls . Type.name]
+    return $ AddData.Update (encode addedData) (encode newBC) tlibID tprojectID
 
 
-functionAdd :: ContextRef -> AddFunction.Args -> IO AddFunction.Result
-functionAdd ctxRef (AddFunction.Args tnewFunction tbcParent tlibID tprojectID) = do
+functionAdd :: ContextRef -> AddFunction.Request -> IO AddFunction.Update
+functionAdd ctxRef (AddFunction.Request tnewFunction tbcParent tlibID tprojectID) = do
     newFunction <- decode tnewFunction
     bcParent    <- decode tbcParent
     let libID     = decodeP tlibID
@@ -102,33 +107,34 @@ functionAdd ctxRef (AddFunction.Args tnewFunction tbcParent tlibID tprojectID) =
     batch <- IORef.readIORef ctxRef
     (newBatch, addedFunction) <- BatchAST.addFunction newFunction bcParent libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return $ AddFunction.Result $ encode addedFunction
+    let newBC = bcParent ++ [Crumb.FunctionCrumb (addedFunction ^. Expr.name) (addedFunction ^. Expr.path)]
+    return $ AddFunction.Update (encode addedFunction) (encode newBC) tlibID tprojectID
 
 
-remove :: ContextRef -> Remove.Args -> IO Remove.Result
-remove ctxRef (Remove.Args tbc tlibID tprojectID) = do
+remove :: ContextRef -> Remove.Request -> IO Remove.Update
+remove ctxRef (Remove.Request tbc tlibID tprojectID) = do
     bc  <- decode tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.remove bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return Remove.Result
+    return $ Remove.Update tbc tlibID tprojectID
 
 
-resolve :: ContextRef -> ResolveDefinition.Args -> IO ResolveDefinition.Result
-resolve ctxRef (ResolveDefinition.Args tname tbc tlibID tprojectID) = do
+resolve :: ContextRef -> ResolveDefinition.Request -> IO ResolveDefinition.Status
+resolve ctxRef (ResolveDefinition.Request tname tbc tlibID tprojectID) = do
     bc  <- decode tbc
     let name      = decodeP tname
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef ctxRef
     results <- BatchAST.resolveDefinition name bc libID projectID batch
-    return $ ResolveDefinition.Result $ encodeList results
+    return $ ResolveDefinition.Status (encodeList results) tbc tlibID tprojectID
 
 
-moduleClsUpdate :: ContextRef -> UpdateModuleCls.Args -> IO UpdateModuleCls.Result
-moduleClsUpdate ctxRef (UpdateModuleCls.Args tcls tbc tlibID tprojectID) = do
+moduleClsUpdate :: ContextRef -> UpdateModuleCls.Request -> IO UpdateModuleCls.Update
+moduleClsUpdate ctxRef (UpdateModuleCls.Request tcls tbc tlibID tprojectID) = do
     cls <- decode tcls
     bc  <- decode tbc
     let libID     = decodeP tlibID
@@ -136,11 +142,11 @@ moduleClsUpdate ctxRef (UpdateModuleCls.Args tcls tbc tlibID tprojectID) = do
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.updateModuleCls cls bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return UpdateModuleCls.Result
+    return $ UpdateModuleCls.Update tcls tbc tlibID tprojectID
 
 
-moduleImportsUpdate :: ContextRef -> UpdateModuleImports.Args -> IO UpdateModuleImports.Result
-moduleImportsUpdate ctxRef (UpdateModuleImports.Args timports tbc tlibID tprojectID) = do
+moduleImportsUpdate :: ContextRef -> UpdateModuleImports.Request -> IO UpdateModuleImports.Update
+moduleImportsUpdate ctxRef (UpdateModuleImports.Request timports tbc tlibID tprojectID) = do
     imports <- decodeList timports
     bc      <- decode tbc
     let libID     = decodeP tlibID
@@ -148,11 +154,11 @@ moduleImportsUpdate ctxRef (UpdateModuleImports.Args timports tbc tlibID tprojec
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.updateModuleImports imports bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return UpdateModuleImports.Result
+    return $ UpdateModuleImports.Update timports tbc tlibID tprojectID
 
 
-moduleFieldsUpdate :: ContextRef -> UpdateModuleFields.Args -> IO UpdateModuleFields.Result
-moduleFieldsUpdate ctxRef (UpdateModuleFields.Args tfields tbc tlibID tprojectID) = do
+moduleFieldsUpdate :: ContextRef -> UpdateModuleFields.Request -> IO UpdateModuleFields.Update
+moduleFieldsUpdate ctxRef (UpdateModuleFields.Request tfields tbc tlibID tprojectID) = do
     fields <- decodeList tfields
     bc     <- decode tbc
     let libID     = decodeP tlibID
@@ -160,11 +166,11 @@ moduleFieldsUpdate ctxRef (UpdateModuleFields.Args tfields tbc tlibID tprojectID
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.updateModuleFields fields bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return UpdateModuleFields.Result
+    return $ UpdateModuleFields.Update tfields tbc tlibID tprojectID
 
 
-dataClsUpdate :: ContextRef -> UpdateDataCls.Args -> IO UpdateDataCls.Result
-dataClsUpdate ctxRef (UpdateDataCls.Args tcls tbc tlibID tprojectID) = do
+dataClsUpdate :: ContextRef -> UpdateDataCls.Request -> IO UpdateDataCls.Update
+dataClsUpdate ctxRef (UpdateDataCls.Request tcls tbc tlibID tprojectID) = do
     cls <- decode tcls
     bc  <- decode tbc
     let libID     = decodeP tlibID
@@ -172,11 +178,11 @@ dataClsUpdate ctxRef (UpdateDataCls.Args tcls tbc tlibID tprojectID) = do
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.updateDataCls cls bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return UpdateDataCls.Result
+    return $ UpdateDataCls.Update tcls tbc tlibID tprojectID
 
 
-dataConsUpdate :: ContextRef -> UpdateDataCons.Args -> IO UpdateDataCons.Result
-dataConsUpdate ctxRef (UpdateDataCons.Args tcons tbc tlibID tprojectID) = do
+dataConsUpdate :: ContextRef -> UpdateDataCons.Request -> IO UpdateDataCons.Update
+dataConsUpdate ctxRef (UpdateDataCons.Request tcons tbc tlibID tprojectID) = do
     cons <- decodeList tcons
     bc   <- decode tbc
     let libID     = decodeP tlibID
@@ -184,11 +190,11 @@ dataConsUpdate ctxRef (UpdateDataCons.Args tcons tbc tlibID tprojectID) = do
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.updateDataCons cons bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return UpdateDataCons.Result
+    return $ UpdateDataCons.Update tcons tbc tlibID tprojectID
 
 
-dataClassesUpdate :: ContextRef -> UpdateDataClasses.Args -> IO UpdateDataClasses.Result
-dataClassesUpdate ctxRef (UpdateDataClasses.Args tclasses tbc tlibID tprojectID) = do
+dataClassesUpdate :: ContextRef -> UpdateDataClasses.Request -> IO UpdateDataClasses.Update
+dataClassesUpdate ctxRef (UpdateDataClasses.Request tclasses tbc tlibID tprojectID) = do
     classes <- decodeList tclasses
     bc      <- decode tbc
     let libID     = decodeP tlibID
@@ -196,11 +202,11 @@ dataClassesUpdate ctxRef (UpdateDataClasses.Args tclasses tbc tlibID tprojectID)
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.updateDataClasses classes bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return UpdateDataClasses.Result
+    return $ UpdateDataClasses.Update tclasses tbc tlibID tprojectID
 
 
-dataMethodsUpdate :: ContextRef -> UpdateDataMethods.Args -> IO UpdateDataMethods.Result
-dataMethodsUpdate ctxRef (UpdateDataMethods.Args tmethods tbc tlibID tprojectID) = do
+dataMethodsUpdate :: ContextRef -> UpdateDataMethods.Request -> IO UpdateDataMethods.Update
+dataMethodsUpdate ctxRef (UpdateDataMethods.Request tmethods tbc tlibID tprojectID) = do
     methods <- decodeList tmethods
     bc      <- decode tbc
     let libID     = decodeP tlibID
@@ -208,11 +214,11 @@ dataMethodsUpdate ctxRef (UpdateDataMethods.Args tmethods tbc tlibID tprojectID)
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.updateDataMethods methods bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return UpdateDataMethods.Result
+    return $ UpdateDataMethods.Update tmethods tbc tlibID tprojectID
 
 
-functionNameUpdate :: ContextRef -> UpdateFunctionName.Args -> IO UpdateFunctionName.Result
-functionNameUpdate ctxRef (UpdateFunctionName.Args tname tbc tlibID tprojectID) = do
+functionNameUpdate :: ContextRef -> UpdateFunctionName.Request -> IO UpdateFunctionName.Update
+functionNameUpdate ctxRef (UpdateFunctionName.Request tname tbc tlibID tprojectID) = do
     bc <- decode tbc
     let name      = decodeP tname
         libID     = decodeP tlibID
@@ -220,11 +226,11 @@ functionNameUpdate ctxRef (UpdateFunctionName.Args tname tbc tlibID tprojectID) 
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.updateFunctionName name bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return UpdateFunctionName.Result
+    return $ UpdateFunctionName.Update tname tbc tlibID tprojectID
 
 
-functionPathUpdate :: ContextRef -> UpdateFunctionPath.Args -> IO UpdateFunctionPath.Result
-functionPathUpdate ctxRef (UpdateFunctionPath.Args tpath tbc tlibID tprojectID) = do
+functionPathUpdate :: ContextRef -> UpdateFunctionPath.Request -> IO UpdateFunctionPath.Update
+functionPathUpdate ctxRef (UpdateFunctionPath.Request tpath tbc tlibID tprojectID) = do
     bc <- decode tbc
     let path      = decodeListP tpath
         libID     = decodeP tlibID
@@ -232,11 +238,11 @@ functionPathUpdate ctxRef (UpdateFunctionPath.Args tpath tbc tlibID tprojectID) 
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.updateFunctionPath path bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return UpdateFunctionPath.Result
+    return $ UpdateFunctionPath.Update tpath tbc tlibID tprojectID
 
 
-functionInputsUpdate :: ContextRef -> UpdateFunctionInputs.Args -> IO UpdateFunctionInputs.Result
-functionInputsUpdate ctxRef (UpdateFunctionInputs.Args tinputs tbc tlibID tprojectID) = do
+functionInputsUpdate :: ContextRef -> UpdateFunctionInputs.Request -> IO UpdateFunctionInputs.Update
+functionInputsUpdate ctxRef (UpdateFunctionInputs.Request tinputs tbc tlibID tprojectID) = do
     inputs <- decodeList tinputs
     bc     <- decode tbc
     let libID     = decodeP tlibID
@@ -244,11 +250,11 @@ functionInputsUpdate ctxRef (UpdateFunctionInputs.Args tinputs tbc tlibID tproje
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.updateFunctionInputs inputs bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return UpdateFunctionInputs.Result
+    return $ UpdateFunctionInputs.Update tinputs tbc tlibID tprojectID
 
 
-functionOutputUpdate :: ContextRef -> UpdateFunctionOutput.Args -> IO UpdateFunctionOutput.Result
-functionOutputUpdate ctxRef (UpdateFunctionOutput.Args toutput tbc tlibID tprojectID) = do
+functionOutputUpdate :: ContextRef -> UpdateFunctionOutput.Request -> IO UpdateFunctionOutput.Update
+functionOutputUpdate ctxRef (UpdateFunctionOutput.Request toutput tbc tlibID tprojectID) = do
     output <- decode toutput
     bc     <- decode tbc
     let libID     = decodeP tlibID
@@ -256,4 +262,4 @@ functionOutputUpdate ctxRef (UpdateFunctionOutput.Args toutput tbc tlibID tproje
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchAST.updateFunctionOutput output bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return UpdateFunctionOutput.Result
+    return $ UpdateFunctionOutput.Update toutput tbc tlibID tprojectID

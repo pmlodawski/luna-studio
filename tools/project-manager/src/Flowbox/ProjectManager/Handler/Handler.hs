@@ -116,7 +116,7 @@ handler ctx callback topic = case topic of
     "project.library.ast.function.update.name.request"   -> callback P.update $ ASTHandler.functionNameUpdate ctx
     "project.library.ast.function.update.output.request" -> callback P.update $ ASTHandler.functionOutputUpdate ctx
     "project.library.ast.function.update.path.request"   -> callback P.update $ ASTHandler.functionPathUpdate ctx
-    "project.library.ast.function.graph.get.request"                -> callback P.status $ GraphHandler.getGraph ctx
+    "project.library.ast.function.graph.get.request"                -> callback P.status $ GraphHandler.get ctx
     "project.library.ast.function.graph.connect.request"            -> callback P.update $ GraphHandler.connect ctx
     "project.library.ast.function.graph.disconnect.request"         -> callback P.update $ GraphHandler.disconnect ctx
     "project.library.ast.function.graph.lookup.request"             -> callback P.status $ GraphHandler.lookup ctx
