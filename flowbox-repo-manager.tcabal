@@ -25,7 +25,6 @@ Library
   Build-Depends:  base,
                   bytestring,
                   either,
-                  exceptions < 0.4,
                   flowbox-config,
                   flowbox-rpc,
                   flowbox-utils,
@@ -34,7 +33,7 @@ Library
                   protocol-buffers,
                   protocol-buffers-descriptor,
                   transformers,
-                  zeromq4-haskell
+                  zeromq4-haskell >= 0.4
 
 
 Executable repo-manager-test
@@ -55,8 +54,4 @@ Executable repo-manager-test
                   protocol-buffers,
                   protocol-buffers-descriptor,
                   transformers,
-                  zeromq4-haskell
-
-
--- exceptions == 0.3.3.1 added as a workaround to a problem while compiling flowbox-broker.
--- That is a (reported) bug in ZeroMQ 0.4, that shall be fixed by some guy soon. 'Soon'
+                  zeromq4-haskell >= 0.4
