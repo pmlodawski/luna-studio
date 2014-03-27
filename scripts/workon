@@ -97,7 +97,8 @@ def workon(name):
     if not '--no-shell' in sys.argv:
         os.chdir(cwd)
         shell = os.readlink('/proc/%d/exe' % os.getppid())
-        if shell == '/bin/zsh':
+        shellPath = shell.split('/')
+        if 'zsh' in shellPath:
             if not os.environ.has_key('ZDOTDIR_ORIG'):
                 if os.environ.has_key('ZDOTDIR'):
                     zdotdir = os.environ['ZDOTDIR']
