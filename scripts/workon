@@ -81,22 +81,21 @@ def workon(name):
             os.symlink('../../../' + cabalConf, os.path.join(sbox, cabalConf))
     
 
-    fdevWorkon  = os.environ.get("FDEV_WORKON", "")
-    fdevHistory = os.environ.get("FDEV_WORKON_HISTORY", "")
-    
-    if fdevHistory: fdevHistory += " > "
-    fdevHistory += name
-
-
-    os.environ["FDEV_WORKON"] = name
-    os.environ["FDEV_WORKON_HISTORY"] = fdevHistory
-    os.environ["FDEV_TARGETS"] = ':'.join(targets)
-
 
     if not '--no-shell' in sys.argv:
-        os.chdir(cwd)
+        fdevWorkon  = os.environ.get("FDEV_WORKON", "")
+        fdevHistory = os.environ.get("FDEV_WORKON_HISTORY", "")
+        
+        if fdevHistory: fdevHistory += " > "
+        fdevHistory += name
+
+        os.environ["FDEV_WORKON"] = name
+        os.environ["FDEV_WORKON_HISTORY"] = fdevHistory
+        os.environ["FDEV_TARGETS"] = ':'.join(targets)
+
         shell = os.readlink('/proc/%d/exe' % os.getppid())
         shellPath = shell.split('/')
+        shellOpts = ""
         if 'zsh' in shellPath:
             if not os.environ.has_key('ZDOTDIR_ORIG'):
                 if os.environ.has_key('ZDOTDIR'):
@@ -105,11 +104,14 @@ def workon(name):
                     zdotdir = os.path.expanduser('~')
                 os.environ['ZDOTDIR_ORIG'] = zdotdir
             os.environ['ZDOTDIR'] = shellConfPath
+        elif 'bash' in shellPath:
+            shellOpts = "--rcfile " + os.path.join(shellConfPath, '.bashrc')
         else:
             print_error("Unsupported shell '%s'. There will be no fancy effects :(" % shell)
 
         print_info("Executing new flowbox '%s' shell" % shell)
-        call(shell, shell=True)
+        os.chdir(cwd)
+        call(shell + " " + shellOpts, shell=True)
     
 
 
