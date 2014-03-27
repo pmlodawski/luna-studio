@@ -5,8 +5,15 @@ import qualified Text.Doc.Markup      as Markup
 
 code :: String
 code = unlines [ ""
+                         -- , "{{font}}"
+                         , "=== Heading1 ==="
                          , "=== Heading1 ==="
                          , "== Heading2 =="
+                         , "= Heading3 ="
+                         , "== Heading2 =="
+                         , "= Heading3 ="
+                         , "= Heading3 ="
+                         , "=== Heading1 ==="
                          , "= Heading3 ="
                          , ""
                          , "    Kod zaczyna sie po 4 wcieciach"
@@ -59,9 +66,9 @@ code = unlines [ ""
                          ]
 
 code_test = unlines [ 
-                    --, ""
-                      "    {{haskell}}"
-                    --, "    ala"
+                      ""
+                    , "    {{haskell}}"
+                    , "    ala"
                     , "    s"
                     , "    wspaniały kod"
                     ]

@@ -20,6 +20,7 @@ pCodeLangBegin          = string $ "{{"
 pCodeLang              = many $ noneOf "}"
 pCodeLangEnd            = string "}}"
 
+pBlockBegin     = eol
 pCodeLineBegin         = string $ replicate 4 ' '
 pCodeInline         = string "`"
 inlineCode = many $ noneOf "`"

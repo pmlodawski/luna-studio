@@ -1,12 +1,14 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE ScopedTypeVariables         #-}
+{-# LANGUAGE TemplateHaskell         #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Text.Doc.Parser where
 
 import           Control.Applicative
 -- import           Data.Either                   (rights)
+import           Data.Default
 import           Data.Monoid
 import           Data.String                   as S
 import           Prelude                       hiding ((++))
@@ -15,6 +17,7 @@ import           Text.Blaze.Html5              ((!))
 import qualified Text.Blaze.Html5              as HTML
 import qualified Text.Blaze.Html5.Attributes   as Attr
 import           Text.Parsec                   hiding (many, optional, parse, (<|>))
+import           Control.Lens                  hiding(noneOf)
 -- import qualified Text.Parsec                   
 
 import qualified Text.Doc.Lexer as L
@@ -23,19 +26,31 @@ import          Text.Blaze.Internal as Blaze (stringValue)
 
 data Language = Unknown | String
 
+
+data TextPosition = TextPosition { _h1 :: Int
+                                 , _h2 :: Int
+                                 , _h3 :: Int
+                                 }
+
+makeLenses ''TextPosition
+
+data ParserState = ParserState { _pos :: TextPosition }
+
+makeLenses ''ParserState
+
+instance Default ParserState where
+  def = ParserState def
+
+instance Default TextPosition where
+  def = TextPosition def def def
+
+
 -- HEADINGS
 pHeadings = choice [ try pH1, try pH2, pH3 ] <?> "heading"
 
-anchor text = fromString $ [x | x <- text, x /= ' ']
-
-pAddAnchor :: String -> HTML.Html
-pAddAnchor headingText = do
-                            (HTML.a ! Attr.name (anchor headingText) $ HTML.toHtml ("" :: String))
-                            HTML.toHtml (headingText :: String)
-
-pH1 = HTML.h1 . pAddAnchor <$> surround L.pH1 L.headingTxt
-pH2 = HTML.h2 . pAddAnchor <$> surround L.pH2 L.headingTxt
-pH3 = HTML.h3 . pAddAnchor <$> surround L.pH3 L.headingTxt
+pH1 = HTML.h1 . pAddAnchor <$> surround L.pH1 (incH1 *> enumarateH1 L.headingTxt)
+pH2 = HTML.h2 . pAddAnchor <$> surround L.pH2 (incH2 *> (enumarateH1.enumarateH2) L.headingTxt)
+pH3 = HTML.h3 . pAddAnchor <$> surround L.pH3 (incH3 *> (enumarateH1.enumarateH2.enumarateH3) L.headingTxt)
 
 -- FORMATTED TEXT
 pFormattedText = choice [ try pTextBoldItalic, try pTextItalic, pTextBold ] <?> "formatted text"
@@ -47,38 +62,32 @@ pTextBold       = HTML.b . HTML.toHtml          <$> surround L.pTextBold        
 -- CODE
 pCode = choice [ try pCodeSnippet, pCodeInline ] <?> "code snippet"
 
+-- block code
 pBlockLine  p   = p *> (many $ noneOf "\n\r") <* L.eol
 pBlock      p   = unlines  <$> (many1 p)
 
 pCodeLine       = pBlockLine L.pCodeLineBegin
-
---pCodeSnippet    = (try pCodeLang <*> generateBlockCode <$> pBlock pCodeLine)
---                  <|> (generateBlockCode <$> pBlock pCodeLine)
-
+pBlockBegin     = L.eol *> L.pCodeLineBegin
 -- <*> :: m (a->b) -> m a -> m b
 -- <$> :: (a->b) -> m a -> m b
 
-pCodeSnippet    = generateBlockCode <$> pCodeLangLine <*>  pBlock pCodeLine                    
---pCodeSnippet    = (generateBlockCode "lang_haskell") <*>  pBlock pCodeLine   
-
-pCodeInline     = generateInlineCode <$> (surround L.pCodeInline L.inlineCode)
-
--- pCodeLang :: ParsecT s0 u0 m0 [Char]
---pCodeLangLine  = try (L.pCodeLineBegin *> many noneOf "\n" <* L.eol) <|> pure "default"
---pCodeLangLine    = L.pCodeLineBegin *> (many $ noneOf "\n\r") <* L.eol
---pCodeLangLine  = try ((many $ noneOf "\n\r") <* L.eol) <|> pure "default"
-pCodeLangLine  =  try (L.pCodeLineBegin *> (between L.pCodeLangBegin L.pCodeLangEnd L.pCodeLang) <* L.eol) <|> pure ""
-
-generateInlineCode content = HTML.div ! Attr.style "display: inline-block" ! Attr.class_ "inline" $
-                             HTML.pre ! Attr.class_ "prettyprint" $
-                             HTML.toHtml content --Attr.style "font-family: monospace;"
-
+pCodeSnippet    = 
+                  (try pBlockBegin) *>
+                  (generateBlockCode <$>
+                  pCodeLangLine <*> 
+                  pBlock pCodeLine                    )
 
 generateBlockCode ::  String -> String -> HTML.Html
 generateBlockCode  lang content = HTML.pre ! Attr.class_ ( Blaze.stringValue ("prettyprint " ++ lang) ) $ HTML.toHtml content
---generateBlockCode lang content = HTML.pre ! Attr.class_ (("prettyprint " ++ whatLang lang)) $ HTML.toHtml content
 
-whatLang _ = "haskell"
+-- inline code
+pCodeInline     = generateInlineCode <$> (surround L.pCodeInline L.inlineCode)
+
+pCodeLangLine  =  try ((between L.pCodeLangBegin L.pCodeLangEnd L.pCodeLang) <* L.eol) <|> pure ""
+
+generateInlineCode content = HTML.div ! Attr.style "display: inline-block" ! Attr.class_ "inline" $
+                             HTML.pre ! Attr.class_ "prettyprint" $
+                             HTML.toHtml content
 
 -- QUOTE
 pQuote = try pQuoteBlock <?> "quote"
@@ -132,19 +141,73 @@ addJSLibs html = HTML.docTypeHtml $ do
     HTML.head $ do
         HTML.title "Markup"
         HTML.meta ! Attr.httpEquiv "Content-Type" ! Attr.content "text/html; charset=utf-8"
-        HTML.link ! Attr.type_ "text/css" ! Attr.rel "stylesheet" ! Attr.href "libs/markup/include/prettify/desert.css"
+        HTML.link
+            ! Attr.href "http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,300italic,700&subset=latin,latin-ext"
+            ! Attr.rel "stylesheet" 
+            ! Attr.type_ "text/css"
+        HTML.link ! Attr.type_ "text/css" ! Attr.rel "stylesheet" ! Attr.href "libs/markup/include/prettify/prettify.css"
         HTML.script "" ! Attr.type_ "text/javascript" ! Attr.src "https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"
+        HTML.link ! Attr.type_ "text/css" ! Attr.rel "stylesheet" ! Attr.href "libs/markup/include/markup.css"
     HTML.body html
 
-parse markup = fmap (HTML.renderHtml . addJSLibs) (runParser pProgram (0::Int) "Flowbox Markup Parser" markup)
+parse markup = fmap (HTML.renderHtml . addJSLibs) (runParser pProgram (def::ParserState) "Flowbox Markup Parser" markup)
 
---pProgram_test = pCodeLangLine
-pProgram_test                   = generateBlockCode <$>
-                                  pCodeLangLine <*>
-                                  (unlines  <$> 
-                                      (L.eol *> 
-                                      many1 (L.pCodeLineBegin *> (many $ noneOf "\n\r") <* L.eol))
-                                  )
+-- testing by hand
+pProgram_test = generateBlockCode <$>
+              pCodeLangLine <*>
+              (unlines  <$> 
+                  (L.eol *> 
+                  many1 (L.pCodeLineBegin *> (many $ noneOf "\n\r") <* L.eol))
+              )
 parse_test markup = 
                     fmap (HTML.renderHtml) 
-                    (runParser pProgram_test (0::Int) "Flowbox Markup Parser" markup)
+                    (runParser pCodeSnippet (0::Int) "Flowbox Markup Parser" markup)
+
+-- header numbering and anchoring
+anchor text = fromString $ [x | x <- text, x /= ' ']
+
+pAddAnchor :: String -> HTML.Html
+pAddAnchor headingText = do
+                            (HTML.a ! Attr.name (anchor headingText) $ HTML.toHtml ("" :: String))
+                            HTML.toHtml (headingText :: String)
+
+incH1 = do
+    s <- getState
+    let nh1 = view (pos.h1) s + 1
+    --setState $ s { _pos = (_pos s) {_h1 = nh1, _h2 = def, _h3 = def}}
+    setState $ s & set (pos.h1) nh1
+                 & set (pos.h2) def
+                 & set (pos.h3) def 
+             
+    return nh1
+
+incH2 = do
+    s <- getState
+    let nh2 = view (pos.h2) s + 1
+    --setState $ s { _pos = (_pos s) {_h2 = nh2, _h3 = def}}
+    setState $ s & set (pos.h2) nh2
+                 & set (pos.h3) def 
+             
+    return nh2
+
+
+incH3 = do
+    s <- getState
+    let nh3 = view (pos.h3) s + 1
+    setState (s & set (pos.h3) nh3)
+    --setState $ s { _pos = (_pos s) {_h3 = nh3}}
+    return nh3
+
+
+--getH1 :: Int
+getH1 = ((flip (++) ".").show._h1._pos) <$> getState
+--getH1 = do
+--    s <- getState
+--    let sn = ((show.h1.pos) <$> s)
+--    return sn
+getH2 = ((flip (++) ".").show._h2._pos) <$> getState
+getH3 = ((flip (++) ".").show._h3._pos) <$> getState
+
+enumarateH1 p = (++) <$> getH1 <*> p
+enumarateH2 p = (++) <$> getH2 <*> p
+enumarateH3 p = (++) <$> getH3 <*> p
