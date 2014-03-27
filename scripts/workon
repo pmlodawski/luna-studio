@@ -39,7 +39,6 @@ def main():
     targetStr = sys.argv[1]
     targetSegments = filter(bool, targetStr.replace('\\','/').split('/'))
     target = '/'.join(targetSegments)
-    print target
     if not target in pkgDb:
         print_error ("Unrecognized target '%s'" % target)
         print_usage ()
