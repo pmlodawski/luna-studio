@@ -2,14 +2,14 @@
 import sys
 import os.path
 import sys
+from subprocess import call, Popen, PIPE
+from utils.colors import print_info, print_error, print_warning
+from itertools import chain
+from collections import deque
 import ConfigParser
+from copy import copy, deepcopy
 
-from copy            import copy, deepcopy
 from config.packages import pkgDb
-from subprocess      import call, Popen, PIPE
-from packages        import pkgDb
-from utils.colors    import print_info, print_error, print_warning
-from utils.errors    import fatal
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 cwd = os.getcwd()
@@ -22,6 +22,10 @@ def try_call(cmd):
 
 def flatten(lofl):
     return [val for subl in lofl for val in subl]
+
+def fatal():
+    print_error ("ERROR")
+    sys.exit(1)
 
 def handle_error(e):
     if e:
@@ -102,7 +106,6 @@ def unregister(name):
     print_info("Unregistering %s" % name)
     pkg = pkgDb[name]
     pkg.uninstall()
-
 
 
 main()

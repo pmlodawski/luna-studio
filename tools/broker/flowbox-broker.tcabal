@@ -24,9 +24,8 @@ Executable broker
     Build-Depends:  base,
                     bytestring,
                     containers,
+                    exceptions == 0.3.3.1,
                     flowbox-utils,
                     protocol-buffers,
-                    zeromq4-haskell,
-                    exceptions == 0.3.3.1
+                    zeromq4-haskell
 
--- fixing zeromq4-haskell deps

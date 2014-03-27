@@ -1,5 +1,7 @@
 import os
 from subprocess import call, Popen, PIPE
+from utils.colors import print_error
+from utils.errors import fatal
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
