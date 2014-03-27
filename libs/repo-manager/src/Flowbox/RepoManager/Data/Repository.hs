@@ -4,11 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Main where
+module Flowbox.RepoManager.Data.Repository where
 
 import Flowbox.Prelude
+import Flowbox.RepoManager.Data.Item.Item (Item)
 
 
 
-main :: IO ()
-main = putStrLn "Hello World"
+data Repository = Repository { items :: [Item]
+                             } deriving (Show)
+
+
+data World = World { installed :: [Item]
+                   , selected  :: [Item]
+                   } deriving (Show)

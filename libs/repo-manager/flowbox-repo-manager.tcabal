@@ -24,6 +24,7 @@ Library
                    
   Build-Depends:  base,
                   bytestring,
+                  containers,
                   either,
                   flowbox-config,
                   flowbox-rpc,
@@ -46,6 +47,7 @@ Executable repo-manager-test
 
   Build-Depends:  base,
                   bytestring,
+                  containers,
                   either,
                   flowbox-bus,
                   flowbox-rpc,

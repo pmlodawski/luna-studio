@@ -4,11 +4,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Main where
+module Flowbox.RepoManager.Data.Item.Name where
 
 import Flowbox.Prelude
 
 
 
-main :: IO ()
-main = putStrLn "Hello World"
+type Name = String

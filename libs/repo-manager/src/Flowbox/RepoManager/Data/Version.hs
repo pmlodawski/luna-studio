@@ -4,11 +4,21 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Main where
+module Flowbox.RepoManager.Data.Version where
 
 import Flowbox.Prelude
 
 
 
-main :: IO ()
-main = putStrLn "Hello World"
+type Version = [Int]
+
+
+data Range = Range { max :: Maybe Version
+                   , min :: Maybe Version
+                   } deriving (Show)
+
+
+data Constrain = Include Version
+               | Exclude Version
+               deriving (Show)
+

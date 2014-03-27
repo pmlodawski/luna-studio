@@ -4,11 +4,20 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Main where
+module Flowbox.RepoManager.Data.Environment where
+
 
 import Flowbox.Prelude
 
 
 
-main :: IO ()
-main = putStrLn "Hello World"
+type Architecture = String
+type Command      = String
+
+
+--TODO [PM] : Move to proper location
+data URI = Local  String
+         | Remote String
+         deriving (Show)
+
+
