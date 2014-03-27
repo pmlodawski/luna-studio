@@ -69,7 +69,7 @@ def checkCabalPkg(name, version=""):
         else: fatal ()
 
 def checkCabalVersion():
-    minv = '1.18.0'
+    minv = '1.19.2'
     print_info ("Checking cabal version (>= %s)" % minv)
     (out, err) = Popen("cabal --numeric-version", stdout=PIPE, shell=True).communicate()
     out = out.lstrip().rstrip()
@@ -111,7 +111,7 @@ assertInstall("cabal")
 print_info ("Updating cabal package cache")
 try_call('cd && cabal update')
 
-checkInstall("cabal", "cd && cabal install cabal-install", checkCabalVersion)
+checkInstall("cabal", "cd third-party/cabal-1.19.2/Cabal && cabal install && cd ../cabal-install && cabal install", checkCabalVersion)
 
 checkCabalPkg("hprotoc")
 checkCabalPkg("c2hs", version="0.16.5")
