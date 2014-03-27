@@ -426,6 +426,29 @@ message Project {
                     repeated generated.proto.crumb.ASTPtr astptr = 1;
                 }
             }
+
+            message Properties {
+                message Get {
+                    message Args   { 
+                        required int32 nodeID    = 1;
+                        required int32 libraryID = 2;
+                        required int32 projectID = 3;
+                    }
+                    message Result { 
+                        required generated.proto.attributes.Properties properties = 1;
+                    }   
+                }
+                message Set {
+                    message Args   { 
+                        required generated.proto.attributes.Properties properties = 1;
+                        required int32 nodeID    = 2;
+                        required int32 libraryID = 3;
+                        required int32 projectID = 4;
+                    }
+                    message Result { }
+                }
+            }
+
         }
     }
 }

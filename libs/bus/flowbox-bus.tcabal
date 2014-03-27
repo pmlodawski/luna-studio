@@ -34,7 +34,7 @@ Library
                   protocol-buffers,
                   protocol-buffers-descriptor,
                   transformers,
-                  zeromq4-haskell
+                  zeromq4-haskell >= 0.4
 
 
 Executable bus-test
@@ -56,3 +56,4 @@ Executable bus-test
                   protocol-buffers-descriptor,
                   transformers,
                   zeromq4-haskell
+

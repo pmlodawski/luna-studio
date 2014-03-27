@@ -26,11 +26,7 @@ Executable broker
                     flowbox-bus,
                     flowbox-rpc,
                     flowbox-config,
-                    exceptions == 0.3.3.1,
                     flowbox-utils,
                     transformers,
                     protocol-buffers,
-                    zeromq4-haskell
-
--- exceptions == 0.3.3.1 added as a workaround to a problem while compiling flowbox-broker.
--- That is a (reported) bug in ZeroMQ 0.4, that shall be fixed by some guy soon. 'Soon'
+                    zeromq4-haskell >= 0.4

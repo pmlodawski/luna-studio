@@ -19,6 +19,7 @@ import qualified Flowbox.ProjectManager.Handler.Graph       as GraphHandler
 import qualified Flowbox.ProjectManager.Handler.Library     as LibraryHandler
 import qualified Flowbox.ProjectManager.Handler.NodeDefault as NodeDefaultHandler
 import qualified Flowbox.ProjectManager.Handler.Project     as ProjectHandler
+import qualified Flowbox.ProjectManager.Handler.Properties  as PropertiesHandler
 import           Flowbox.System.Log.Logger
 
 
@@ -78,6 +79,8 @@ topics = [ "project.list.request"
          , "project.library.ast.function.graph.node.default.get.request"
          , "project.library.ast.function.graph.node.default.remove.request"
          , "project.library.ast.function.graph.node.default.set.request"
+         , "project.library.ast.properties.get.request"
+         , "project.library.ast.properties.set.request"
          ]
 
 
@@ -124,6 +127,8 @@ handler ctx callback topic = case topic of
     "project.library.ast.function.graph.node.default.get.request"    -> callback P.status $ NodeDefaultHandler.get ctx
     "project.library.ast.function.graph.node.default.remove.request" -> callback P.update $ NodeDefaultHandler.remove ctx
     "project.library.ast.function.graph.node.default.set.request"    -> callback P.update $ NodeDefaultHandler.set ctx
+    "project.library.ast.properties.get.request"                     -> callback P.update $ PropertiesHandler.get ctx
+    "project.library.ast.properties.set.request"                     -> callback P.update $ PropertiesHandler.set ctx
     unsupported             -> do let errMsg = "Unknown topic: " ++ show unsupported
                                   logger error errMsg
                                   return $ P.respondError topic errMsg
