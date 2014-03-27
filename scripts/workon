@@ -9,23 +9,15 @@ from collections import deque
 import ConfigParser
 from copy import copy, deepcopy
 
-from packages import pkgDb
+from config.packages import pkgDb
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 cwd = os.getcwd()
 os.chdir(rootPath)
 
 
-
 def try_call(cmd):
     if call(cmd, shell=True): fatal()
-
-
-
-
-deptree = ['batch-srv', 'batch', 'lunac', 'initializer', 'wrappers', 'luna', 'config', 'broker', 'graphics', 'target-hs', 'cabal-install', 'num-conversion', 'utils', 'markup']
-
-
 
 
 def flatten(lofl):
@@ -94,30 +86,20 @@ def workon(name):
             
 
     os.environ["FDEV_TARGETS"] = ':'.join(targets)
-    # os.environ["PS1"] = "${ret_status}%{$fg_bold[green]%}%p %{$fg[cyan]%}%c %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%} % %{$reset_color%} DUPA> "
+
 
     if not '--no-shell' in sys.argv:
         os.chdir(cwd)
-        call("bash")
+        shell = os.readlink('/proc/%d/exe' % os.getppid())
+        print_info("Executing new flowbox '%s' shell" % shell)
+        call(shell)
     
-
-    # config = ConfigParser.RawConfigParser()
-    # config.add_section('Target')
-    # config.set('Target', 'names'   , ','.join(pkg.target_names()))
-    # config.set('Target', 'binpaths', ','.join(pkg.target_binpaths()))
-    # with open('.build.config', 'wb') as configfile:
-    #     config.write(configfile)
 
 
 def register(name):
     print_info("Registering %s" % name)
     pkg = pkgDb[name]
     pkg.install()
-
-
-def unregister_all():
-    for pkg in deptree:
-        unregister(pkg)
 
 
 def unregister(name):

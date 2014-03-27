@@ -42,24 +42,6 @@ def checkAvailable(name):
         print_info("yes")
         return True
 
-
-# def check_cabal_version():
-#     minv = '1.18.0'
-#     print_info ("Checking cabal version (>= %s)" % minv)
-#     (out, err) = Popen("cabal --numeric-version", stdout=PIPE, shell=True).communicate()
-#     out = out.lstrip().rstrip()
-#     if not LooseVersion(out) >= LooseVersion(minv):
-#         print_error ("Your cabal is too old (%s)" % out)
-#         answer = ""
-#         while answer not in ["Y", "n"]:
-#             answer = raw_input("Should I update it? (cabal update && cd && cabal install cabal-install) [Y/n] ")
-#         if answer == "Y":
-#             try_call("cabal update")
-#             try_call("cd && cabal install cabal-install")
-
-#         print_error ("Please update your cabal to version '%s' or greater to continue." % minv)
-#         fatal()
-
 def checkCabalPkg(name, version=""):
     if not checkAvailable(name):
         if ask ("Cabal binary '%s' is not available. Should I install it?" % name):
@@ -127,25 +109,6 @@ try_call ('python2.7 %s' % path)
 distPath = os.path.join(rootPath,"dist")
 if not os.path.exists(distPath):
     os.mkdir(distPath)
-
-# print_info ("Initializing cabal sandbox")
-# try_call('cabal sandbox init --sandbox=%s' % sboxName)
-
-
-# print_info ("Registering accelerate-0.15 library")
-# try_call('cabal sandbox add-source %s' % p_acc)
-
-# print_info ("Registering accelerate-cuda-0.15 library")
-# try_call('cabal sandbox add-source %s' % p_acc_cuda)
-
-# print_info ("Registering accelerate-io-0.15 library")
-# try_call('cabal sandbox add-source %s' % p_acc_io)
-
-# print_info ("Registering Cabal-1.19.1 library")
-# try_call('cabal install %s' % p_cabal)
-
-# print_info ("Registering MissingH library (windows patch)")
-# try_call('cabal install %s' % p_missingh)
 
 
 print_info ("Success")
