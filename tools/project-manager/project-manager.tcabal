@@ -36,4 +36,4 @@ Executable project-manager
                     optparse-applicative,
                     protocol-buffers,
                     transformers,
-                    zeromq4-haskell
+                    zeromq4-haskell >= 0.4

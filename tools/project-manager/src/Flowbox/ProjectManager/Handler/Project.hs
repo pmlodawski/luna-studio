@@ -20,20 +20,20 @@ import           Flowbox.Prelude
 import           Flowbox.ProjectManager.Context                           (ContextRef)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.ProjectManager.Project.Close.Args        as Close
-import qualified Generated.Proto.ProjectManager.Project.Close.Result      as Close
-import qualified Generated.Proto.ProjectManager.Project.Create.Args       as Create
-import qualified Generated.Proto.ProjectManager.Project.Create.Result     as Create
-import qualified Generated.Proto.ProjectManager.Project.List.Args         as List
-import qualified Generated.Proto.ProjectManager.Project.List.Result       as List
-import qualified Generated.Proto.ProjectManager.Project.Lookup.Args       as Lookup
-import qualified Generated.Proto.ProjectManager.Project.Lookup.Result     as Lookup
-import qualified Generated.Proto.ProjectManager.Project.Open.Args         as Open
-import qualified Generated.Proto.ProjectManager.Project.Open.Result       as Open
-import qualified Generated.Proto.ProjectManager.Project.Store.Args        as Store
-import qualified Generated.Proto.ProjectManager.Project.Store.Result      as Store
-import qualified Generated.Proto.ProjectManager.Project.Update.Args       as Update
-import qualified Generated.Proto.ProjectManager.Project.Update.Result     as Update
+import qualified Generated.Proto.ProjectManager.Project.Close.Request     as Close
+import qualified Generated.Proto.ProjectManager.Project.Close.Update      as Close
+import qualified Generated.Proto.ProjectManager.Project.Create.Request    as Create
+import qualified Generated.Proto.ProjectManager.Project.Create.Update     as Create
+import qualified Generated.Proto.ProjectManager.Project.List.Request      as List
+import qualified Generated.Proto.ProjectManager.Project.List.Status       as List
+import qualified Generated.Proto.ProjectManager.Project.Lookup.Request    as Lookup
+import qualified Generated.Proto.ProjectManager.Project.Lookup.Status     as Lookup
+import qualified Generated.Proto.ProjectManager.Project.Open.Request      as Open
+import qualified Generated.Proto.ProjectManager.Project.Open.Update       as Open
+import qualified Generated.Proto.ProjectManager.Project.Store.Request     as Store
+import qualified Generated.Proto.ProjectManager.Project.Store.Status      as Store
+import qualified Generated.Proto.ProjectManager.Project.Update.Request    as Update
+import qualified Generated.Proto.ProjectManager.Project.Update.Update     as Update
 
 
 
@@ -43,64 +43,64 @@ loggerIO = getLoggerIO "Flowbox.ProjectManager.Handler.Project"
 ------ public api -------------------------------------------------
 
 
-list :: ContextRef -> List.Args -> IO List.Result
+list :: ContextRef -> List.Request -> IO List.Status
 list ctx _ = do
     batch <- IORef.readIORef ctx
     let aprojects       = BatchP.projects batch
         tprojects       = map (\a -> encode a ^. _1) aprojects
         tprojectsVector = Sequence.fromList tprojects
-    return $ List.Result tprojectsVector
+    return $ List.Status tprojectsVector
 
 
-lookup :: ContextRef -> Lookup.Args -> IO Lookup.Result
-lookup ctx (Lookup.Args tprojectID) = do
+lookup :: ContextRef -> Lookup.Request -> IO Lookup.Status
+lookup ctx (Lookup.Request tprojectID) = do
     let projectID = decodeP tprojectID
     batch     <- IORef.readIORef ctx
     project   <- BatchP.projectByID projectID batch
-    return $ Lookup.Result $ encode (projectID, project) ^. _1
+    return $ Lookup.Status $ encode (projectID, project) ^. _1
 
 
-create :: ContextRef -> Create.Args -> IO Create.Result
-create ctx (Create.Args tname tpath tattributes) = do
+create :: ContextRef -> Create.Request -> IO Create.Update
+create ctx (Create.Request tname tpath tattributes) = do
     let name = decodeP tname
         path = decodeP tpath
         attributes = decodeP tattributes
     batch <- IORef.readIORef ctx
     (newBatch, newProject) <- BatchP.createProject name path attributes batch
     IORef.writeIORef ctx newBatch
-    return $ Create.Result $ encode newProject ^. _1
+    return $ Create.Update $ encode newProject ^. _1
 
 
-open :: ContextRef -> Open.Args -> IO Open.Result
-open ctx (Open.Args tpath) = do
+open :: ContextRef -> Open.Request -> IO Open.Update
+open ctx (Open.Request tpath) = do
     let upath = decodeP tpath
     batch <- IORef.readIORef ctx
-    (newBatch, (projectID, aproject)) <- BatchP.openProject upath batch
+    (newBatch, (projectID, project)) <- BatchP.openProject upath batch
     IORef.writeIORef ctx newBatch
-    return $ Open.Result $ encode (projectID, aproject) ^. _1
+    return $ Open.Update $ encode (projectID, project) ^. _1
 
 
-update :: ContextRef -> Update.Args -> IO Update.Result
-update ctx  (Update.Args tproject) = do
-    project <- (decode (tproject, LibManager.empty, ProcessMap.empty) :: IO (Project.ID, Project))
-    batch   <- IORef.readIORef ctx
-    newBatch <-  BatchP.updateProject project batch
+update :: ContextRef -> Update.Request -> IO Update.Update
+update ctx  (Update.Request tproject) = do
+    projectWithID <- (decode (tproject, LibManager.empty, ProcessMap.empty) :: IO (Project.ID, Project))
+    batch         <- IORef.readIORef ctx
+    newBatch      <-  BatchP.updateProject projectWithID batch
     IORef.writeIORef ctx newBatch
-    return Update.Result
+    return $ Update.Update tproject
 
 
-close :: ContextRef -> Close.Args -> IO Close.Result
-close ctx (Close.Args tprojectID) = do
+close :: ContextRef -> Close.Request -> IO Close.Update
+close ctx (Close.Request tprojectID) = do
     let projectID = decodeP tprojectID
     batch <- IORef.readIORef ctx
     let newBatch = BatchP.closeProject projectID batch
     IORef.writeIORef ctx newBatch
-    return Close.Result
+    return $ Close.Update tprojectID
 
 
-store :: ContextRef -> Store.Args -> IO Store.Result
-store ctx (Store.Args tprojectID) = do
+store :: ContextRef -> Store.Request -> IO Store.Status
+store ctx (Store.Request tprojectID) = do
     let projectID = decodeP tprojectID
     batch <- IORef.readIORef ctx
     BatchP.storeProject projectID batch
-    return Store.Result
+    return $ Store.Status tprojectID

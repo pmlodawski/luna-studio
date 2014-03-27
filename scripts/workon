@@ -1,20 +1,27 @@
 #!/usr/bin/python2.7
+
+###########################################################################
+## Copyright (C) Flowbox, Inc / All Rights Reserved
+## Unauthorized copying of this file, via any medium is strictly prohibited
+## Proprietary and confidential
+## Flowbox Team <contact@flowbox.io>, 2014
+###########################################################################
+
 import sys
 import os.path
-import sys
 import ConfigParser
-from collections  import deque
-from copy         import copy, deepcopy
-from itertools    import chain
-from subprocess   import call, Popen, PIPE
-from packages     import pkgDb
-from utils.colors import print_info, print_error, print_warning
-from utils.errors import fatal
 
-rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+from copy            import copy, deepcopy
+from config.packages import pkgDb
+from subprocess      import call, Popen, PIPE
+from utils.colors    import print_info, print_error, print_warning
+from utils.errors    import fatal
+
+myPath = os.path.dirname(os.path.realpath(__file__))
+rootPath = os.path.dirname(myPath)
+shellConfPath = os.path.join(myPath, 'shell')
 cwd = os.getcwd()
 os.chdir(rootPath)
-
 
 
 def try_call(cmd):
@@ -39,7 +46,6 @@ def main():
     targetStr = sys.argv[1]
     targetSegments = filter(bool, targetStr.replace('\\','/').split('/'))
     target = '/'.join(targetSegments)
-    print target
     if not target in pkgDb:
         print_error ("Unrecognized target '%s'" % target)
         print_usage ()
@@ -83,22 +89,40 @@ def workon(name):
                 register(pname)
 
             os.symlink('../../../' + cabalConf, os.path.join(sbox, cabalConf))
-            
-
-    os.environ["FDEV_TARGETS"] = ':'.join(targets)
-    # os.environ["PS1"] = "${ret_status}%{$fg_bold[green]%}%p %{$fg[cyan]%}%c %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%} % %{$reset_color%} DUPA> "
-
-    if not '--no-shell' in sys.argv:
-        os.chdir(cwd)
-        call("bash")
     
 
-    # config = ConfigParser.RawConfigParser()
-    # config.add_section('Target')
-    # config.set('Target', 'names'   , ','.join(pkg.target_names()))
-    # config.set('Target', 'binpaths', ','.join(pkg.target_binpaths()))
-    # with open('.build.config', 'wb') as configfile:
-    #     config.write(configfile)
+
+    if not '--no-shell' in sys.argv:
+        fdevWorkon  = os.environ.get("FDEV_WORKON", "")
+        fdevHistory = os.environ.get("FDEV_WORKON_HISTORY", "")
+        
+        if fdevHistory: fdevHistory += " > "
+        fdevHistory += name
+
+        os.environ["FDEV_WORKON"] = name
+        os.environ["FDEV_WORKON_HISTORY"] = fdevHistory
+        os.environ["FDEV_TARGETS"] = ':'.join(targets)
+
+        shell = os.readlink('/proc/%d/exe' % os.getppid())
+        shellPath = shell.split('/')
+        shellOpts = ""
+        if 'zsh' in shellPath:
+            if not os.environ.has_key('ZDOTDIR_ORIG'):
+                if os.environ.has_key('ZDOTDIR'):
+                    zdotdir = os.environ['ZDOTDIR']
+                else:
+                    zdotdir = os.path.expanduser('~')
+                os.environ['ZDOTDIR_ORIG'] = zdotdir
+            os.environ['ZDOTDIR'] = shellConfPath
+        elif 'bash' in shellPath:
+            shellOpts = "--rcfile " + os.path.join(shellConfPath, '.bashrc')
+        else:
+            print_error("Unsupported shell '%s'. There will be no fancy effects :(" % shell)
+
+        print_info("Executing new flowbox '%s' shell" % shell)
+        os.chdir(cwd)
+        call(shell + " " + shellOpts, shell=True)
+    
 
 
 def register(name):
@@ -107,15 +131,11 @@ def register(name):
     pkg.install()
 
 
-# def unregister_all():
-#     for pkg in deptree:
-#         unregister(pkg)
+def unregister(name):
+    print_info("Unregistering %s" % name)
+    pkg = pkgDb[name]
+    pkg.uninstall()
 
-
-# def unregister(name):
-#     print_info("Unregistering %s" % name)
-#     pkg = pkgDb[name]
-#     pkg.uninstall()
 
 
 main()
