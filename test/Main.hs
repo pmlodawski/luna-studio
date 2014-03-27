@@ -8,6 +8,7 @@ module Main where
 
 import Flowbox.Prelude
 
+main :: IO ()
 main = putStrLn "Hello World"
 
 
