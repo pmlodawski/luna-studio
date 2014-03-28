@@ -4,12 +4,12 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Bus.Message where
+module Flowbox.Bus.Data.Message where
 
 import           Data.ByteString              (ByteString)
 import qualified Flowbox.Text.ProtocolBuffers as Proto
 
-import Flowbox.Bus.Topic (Topic)
+import Flowbox.Bus.Data.Topic (Topic)
 import Flowbox.Prelude
 
 

@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-module Flowbox.Bus.Topic where
+module Flowbox.Bus.Data.Topic where
 
 import Data.ByteString       (ByteString)
 import Data.ByteString.Char8 (pack, unpack)

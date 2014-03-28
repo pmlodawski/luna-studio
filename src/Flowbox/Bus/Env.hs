@@ -8,7 +8,7 @@ module Flowbox.Bus.Env where
 
 import qualified System.ZMQ4.Monadic as ZMQ
 
-import qualified Flowbox.Bus.Message as Message
+import qualified Flowbox.Bus.Data.Message as Message
 
 
 
