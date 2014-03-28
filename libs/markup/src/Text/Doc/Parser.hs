@@ -7,7 +7,6 @@
 module Text.Doc.Parser where
 
 import           Control.Applicative
--- import           Data.Either                   (rights)
 import           Data.Default
 import           Data.Monoid
 import           Data.String                   as S
@@ -18,7 +17,6 @@ import qualified Text.Blaze.Html5              as HTML
 import qualified Text.Blaze.Html5.Attributes   as Attr
 import           Text.Parsec                   hiding (many, optional, parse, (<|>))
 import           Control.Lens                  hiding(noneOf)
--- import qualified Text.Parsec                   
 
 import qualified Text.Doc.Lexer as L
 import           Text.Doc.Utils
@@ -68,14 +66,11 @@ pBlock      p   = unlines  <$> (many1 p)
 
 pCodeLine       = pBlockLine L.pCodeLineBegin
 pBlockBegin     = L.eol *> L.pCodeLineBegin
--- <*> :: m (a->b) -> m a -> m b
--- <$> :: (a->b) -> m a -> m b
 
-pCodeSnippet    = 
-                  (try pBlockBegin) *>
-                  (generateBlockCode <$>
-                  pCodeLangLine <*> 
-                  pBlock pCodeLine                    )
+pCodeSnippet    = try pBlockBegin *> ( generateBlockCode <$>
+                                       pCodeLangLine     <*> 
+                                       pBlock pCodeLine
+                                     )
 
 generateBlockCode ::  String -> String -> HTML.Html
 generateBlockCode  lang content = HTML.pre ! Attr.class_ ( Blaze.stringValue ("prettyprint " ++ lang) ) $ HTML.toHtml content
@@ -174,7 +169,6 @@ pAddAnchor headingText = do
 incH1 = do
     s <- getState
     let nh1 = view (pos.h1) s + 1
-    --setState $ s { _pos = (_pos s) {_h1 = nh1, _h2 = def, _h3 = def}}
     setState $ s & set (pos.h1) nh1
                  & set (pos.h2) def
                  & set (pos.h3) def 
@@ -184,7 +178,6 @@ incH1 = do
 incH2 = do
     s <- getState
     let nh2 = view (pos.h2) s + 1
-    --setState $ s { _pos = (_pos s) {_h2 = nh2, _h3 = def}}
     setState $ s & set (pos.h2) nh2
                  & set (pos.h3) def 
              
@@ -195,7 +188,6 @@ incH3 = do
     s <- getState
     let nh3 = view (pos.h3) s + 1
     setState (s & set (pos.h3) nh3)
-    --setState $ s { _pos = (_pos s) {_h3 = nh3}}
     return nh3
 
 
