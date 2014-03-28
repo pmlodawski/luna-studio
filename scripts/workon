@@ -14,7 +14,6 @@ import ConfigParser
 from copy            import copy, deepcopy
 from config.packages import pkgDb
 from subprocess      import call, Popen, PIPE
-from packages        import pkgDb
 from utils.colors    import print_info, print_error, print_warning
 from utils.errors    import fatal
 
