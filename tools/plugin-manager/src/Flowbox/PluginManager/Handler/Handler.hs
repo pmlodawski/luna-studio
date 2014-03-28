@@ -20,7 +20,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.PluginManager.Processor"
+logger = getLoggerIO "Flowbox.PluginManager.Handler"
 
 
 topics :: [Topic]

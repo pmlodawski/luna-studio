@@ -24,7 +24,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.ProjectManager.Processor"
+logger = getLoggerIO "Flowbox.ProjectManager.Handler"
 
 
 -- {-# LANGUAGE ImpredicativeTypes #-}

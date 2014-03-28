@@ -19,15 +19,15 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO "Flowbox.FileManager.Processor"
+logger = getLoggerIO "Flowbox.FileManager.Handler"
 
 
 topics :: [Topic]
-topics = [ "filesystem.ls.request"   
-         , "filesystem.stat.request" 
+topics = [ "filesystem.ls.request"
+         , "filesystem.stat.request"
          , "filesystem.mkdir.request"
          , "filesystem.touch.request"
-         , "filesystem.rm.request"   
+         , "filesystem.rm.request"
          , "filesystem.cp.request"
          ]
 

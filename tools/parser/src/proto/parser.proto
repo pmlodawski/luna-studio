@@ -1,0 +1,49 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.parser;
+
+import "expr.proto";
+import "pat.proto";
+import "type.proto";
+
+
+
+message Parse {
+    message Expr {
+        message Request   {
+            required string str = 1;
+        }
+        message Status {
+            required generated.proto.expr.Expr expr = 1;
+        }   
+    }
+    message Pat {
+        message Request   {
+            required string str = 1;
+        }
+        message Status {
+            required generated.proto.pat.Pat pat = 1;
+        }   
+    }
+    message Type {
+        message Request   {
+            required string str = 1;
+        }
+        message Status {
+            required generated.proto.type.Type type = 1;
+        }   
+    }
+    message NodeExpr {
+        message Request   {
+            required string str = 1;
+        }
+        message Status {
+            required generated.proto.expr.Expr expr = 1;
+        }   
+    }
+}
