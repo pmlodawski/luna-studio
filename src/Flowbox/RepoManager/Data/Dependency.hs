@@ -12,6 +12,6 @@ import qualified Flowbox.RepoManager.Data.Version   as Version
 
 
 
-data Dependency = Dependency { name       :: Item.Name
-                             , constrains :: [Version.Constrain]
+data Dependency = Dependency { name        :: Item.Name
+                             , constraints :: [Version.Constraint]
                              } deriving (Show)
