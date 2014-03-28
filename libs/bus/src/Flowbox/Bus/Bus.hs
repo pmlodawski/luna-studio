@@ -18,14 +18,15 @@ import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
+import           Flowbox.Bus.Data.Message           (Message)
+import qualified Flowbox.Bus.Data.Message           as Message
+import           Flowbox.Bus.Data.MessageFrame      (MessageFrame (MessageFrame), LastFrameMarker)
+import qualified Flowbox.Bus.Data.MessageFrame      as MessageFrame
+import           Flowbox.Bus.Data.Topic             (Topic)
+import qualified Flowbox.Bus.Data.Topic             as Topic
+import qualified Flowbox.Bus.EndPoint               as EP
 import           Flowbox.Bus.Env                    (BusEnv (BusEnv))
 import qualified Flowbox.Bus.Env                    as Env
-import           Flowbox.Bus.Message                (Message)
-import qualified Flowbox.Bus.Message                as Message
-import           Flowbox.Bus.MessageFrame           (MessageFrame (MessageFrame))
-import qualified Flowbox.Bus.MessageFrame           as MessageFrame
-import           Flowbox.Bus.Topic                  (Topic)
-import qualified Flowbox.Bus.Topic                  as Topic
 import           Flowbox.Prelude
 import qualified Flowbox.Text.ProtocolBuffers       as Proto
 import qualified Flowbox.ZMQ.RPC.Client             as Client
@@ -33,7 +34,8 @@ import qualified Generated.Proto.Bus.ID.New.Args    as ID_New
 import qualified Generated.Proto.Bus.ID.New.Result  as ID_New
 import           Generated.Proto.Bus.Request        (Request (Request))
 import qualified Generated.Proto.Bus.Request.Method as Method
-import qualified Flowbox.Bus.EndPoint as EP
+
+
 
 type Error = String
 
@@ -81,16 +83,15 @@ getNewRequestID = do
     return requestID
 
 
-reply :: Message.CorrelationID -> Message -> Bus ()
-reply crlID msg = sendByteString . MessageFrame.toByteString . MessageFrame msg crlID =<< getClientID
+reply :: Message.CorrelationID -> LastFrameMarker -> Message -> Bus ()
+reply crlID lfm msg = do clientID <- getClientID 
+                         sendByteString $ MessageFrame.toByteString $ MessageFrame msg crlID clientID lfm
 
 
-send :: Message -> Bus Message.CorrelationID
-send msg = do
-    requestID <- getNewRequestID
-    clientID  <- getClientID
-    let correlationID = Message.CorrelationID clientID requestID
-    reply correlationID msg
+send :: LastFrameMarker -> Message -> Bus Message.CorrelationID
+send lfm msg= do
+    correlationID <- Message.CorrelationID <$> getClientID <*> getNewRequestID
+    reply correlationID lfm msg
     return correlationID
 
 

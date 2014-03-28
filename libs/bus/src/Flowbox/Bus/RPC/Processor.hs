@@ -13,10 +13,10 @@ import qualified Data.List         as List
 import qualified Data.String.Utils as Utils
 
 import           Flowbox.Bus.Data.Exception                     (Exception (Exception))
-import           Flowbox.Bus.Message                            (Message (Message))
-import qualified Flowbox.Bus.Message                            as Message
+import           Flowbox.Bus.Data.Message                       (Message (Message))
+import qualified Flowbox.Bus.Data.Message                       as Message
+import           Flowbox.Bus.Data.Topic                         (Topic)
 import           Flowbox.Bus.RPC.BusRPCHandler                  (BusRPCHandler)
-import           Flowbox.Bus.Topic                              (Topic)
 import           Flowbox.Control.Error                          hiding (err)
 import           Flowbox.Prelude                                hiding (error)
 import           Flowbox.System.Log.Logger
@@ -37,15 +37,15 @@ update :: String
 update = "update"
 
 
-process :: BusRPCHandler -> Message -> IO Message
+process :: BusRPCHandler -> Message -> IO [Message]
 process handler msg = handler call topic where
     call type_ method = case Proto.messageGet' $ Message.message msg of
         Left err   -> do logger error err
-                         return $ respondError topic err
-        Right args -> do result <- runEitherT $ scriptIO $ method args
-                         return $ case result of
-                            Left err -> respondError topic $ "Unhandled error: " ++ err
-                            Right ok -> respond type_ ok
+                         return [respondError topic err]
+        Right args -> do results <- runEitherT $ scriptIO $ method args
+                         return $ case results of
+                            Left err -> [respondError topic $ "Unhandled error: " ++ err]
+                            Right ok -> map (respond type_) ok
 
     topic = Message.topic msg
 

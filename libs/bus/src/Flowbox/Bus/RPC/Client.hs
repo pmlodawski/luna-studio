@@ -10,10 +10,10 @@
 module Flowbox.Bus.RPC.Client where
 
 import qualified Flowbox.Bus.Client            as Client
+import           Flowbox.Bus.Data.Topic        (Topic)
 import           Flowbox.Bus.EndPoint          (BusEndPoints)
 import           Flowbox.Bus.RPC.BusRPCHandler (BusRPCHandler)
 import qualified Flowbox.Bus.RPC.Processor     as Processor
-import           Flowbox.Bus.Topic             (Topic)
 import           Flowbox.Prelude               hiding (error)
 import           Flowbox.System.Log.Logger
 

@@ -9,12 +9,12 @@
 
 module Flowbox.Bus.RPC.BusRPCHandler where
 
-import           Flowbox.Bus.Message          (Message)
-import           Flowbox.Bus.Topic            (Topic)
+import           Flowbox.Bus.Data.Message     (Message)
+import           Flowbox.Bus.Data.Topic       (Topic)
 import           Flowbox.Prelude
 import qualified Flowbox.Text.ProtocolBuffers as Proto
 
 
 type BusRPCHandler = (forall args result. (Proto.Serializable args, Proto.Serializable result)
-                       => String -> (args -> IO result) -> IO Message)
-                   -> Topic -> IO Message
+                       => String -> (args -> IO [result]) -> IO [Message])
+                   -> Topic -> IO [Message]

@@ -6,9 +6,9 @@ import qualified Flowbox.Bus.Bus       as Bus
 import           Flowbox.Prelude
 import qualified System.ZMQ4.Monadic   as ZMQ
 
-import           Flowbox.Bus.Bus      (Bus)
-import           Flowbox.Bus.EndPoint (BusEndPoints (BusEndPoints))
-import qualified Flowbox.Bus.Message  as Message
+import           Flowbox.Bus.Bus          (Bus)
+import qualified Flowbox.Bus.Data.Message as Message
+import           Flowbox.Bus.EndPoint     (BusEndPoints (BusEndPoints))
 
 
 
@@ -16,7 +16,7 @@ test :: Bus ()
 test = do
     Bus.subscribe ""
     clientID <- Bus.getClientID
-    Bus.reply (Message.CorrelationID clientID 0)
+    Bus.reply (Message.CorrelationID clientID 0) True
               (Message.Message "project.open.request" (Char8.pack "some data"))
     putStrLn "sent"
     _ <- Bus.receive
