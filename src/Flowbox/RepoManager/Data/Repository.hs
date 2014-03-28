@@ -6,15 +6,21 @@
 ---------------------------------------------------------------------------
 module Flowbox.RepoManager.Data.Repository where
 
-import Flowbox.Prelude
-import Flowbox.RepoManager.Data.Item.Item (Item)
+import Data.Map (Map)
+
+import           Flowbox.Prelude
+import           Flowbox.RepoManager.Data.Item.Family.Available (AvailableFamilies)
+import           Flowbox.RepoManager.Data.Item.Family.Installed (InstalledFamilies)
+import qualified Flowbox.RepoManager.Data.Item.Item             as Item
 
 
 
-data Repository = Repository { items :: [Item]
+data Repository = Repository { items :: Map Item.Name AvailableFamilies
                              } deriving (Show)
 
 
-data World = World { installed :: [Item]
-                   , selected  :: [Item]
+data World = World { installed :: Map Item.Name InstalledFamilies
+                   , selected  :: Map Item.Name InstalledFamilies
                    } deriving (Show)
+
+
