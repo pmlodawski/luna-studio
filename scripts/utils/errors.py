@@ -5,7 +5,8 @@
 ## Flowbox Team <contact@flowbox.io>, 2014
 ###########################################################################
 
-import os
+import sys
+from utils.colors import print_error
 
 def fatal():
     print_error ("ERROR")
