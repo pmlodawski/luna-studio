@@ -9,9 +9,8 @@ module Flowbox.RepoManager.Data.Repository where
 import Data.Map (Map)
 
 import           Flowbox.Prelude
-import           Flowbox.RepoManager.Data.Item.Family.Available (AvailableFamilies)
-import           Flowbox.RepoManager.Data.Item.Family.Installed (InstalledFamilies)
-import qualified Flowbox.RepoManager.Data.Item.Item             as Item
+import           Flowbox.RepoManager.Data.Item.Family (InstalledFamilies, AvailableFamilies)
+import qualified Flowbox.RepoManager.Data.Item.Name             as Item
 
 
 

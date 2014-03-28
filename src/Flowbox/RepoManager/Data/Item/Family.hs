@@ -11,7 +11,7 @@ import Data.Map (Map)
 import           Flowbox.Prelude
 import           Flowbox.RepoManager.Data.Item.Item    (Item)
 import qualified Flowbox.RepoManager.Data.Item.Name    as Item
-import           Flowbox.RepoManager.Data.Item.Version (Version)
+import           Flowbox.RepoManager.Data.Version (Version)
 
 
 
