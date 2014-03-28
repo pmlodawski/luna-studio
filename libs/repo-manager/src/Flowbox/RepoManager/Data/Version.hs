@@ -4,21 +4,28 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.RepoManager.Data.Version where
+module Flowbox.RepoManager.Data.Version (
+    module Data.Version,
+    Range(..),
+    Constraint(..),
+) where
+
+import Data.Version
 
 import Flowbox.Prelude
 
 
 
-type Version = [Int]
 
-
-data Range = Range { max :: Maybe Version
-                   , min :: Maybe Version
+data Range = Range { min :: Maybe Version
+                   , max :: Maybe Version
                    } deriving (Show)
 
 
-data Constrain = Include Version
-               | Exclude Version
-               deriving (Show)
+data Constraint = Include Range
+                | Exclude Range
+                deriving (Show)
+
+
+
 
