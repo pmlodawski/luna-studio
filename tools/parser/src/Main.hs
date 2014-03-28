@@ -44,7 +44,8 @@ run :: Cmd -> IO ()
 run cmd = case cmd of
     Cmd.Version -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
     Cmd.Run {}  -> do
-          cfg <- Config.load
-          r <- Client.run (EP.clientFromConfig cfg) Handler.topics Handler.handler
-          print r
+        rootLogger setIntLevel $ Cmd.verbose cmd
+        endPoints <- EP.clientFromConfig <$> Config.load
+        r <- Client.run endPoints Handler.topics Handler.handler
+        print r
 
