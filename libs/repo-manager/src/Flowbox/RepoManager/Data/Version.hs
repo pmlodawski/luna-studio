@@ -16,7 +16,6 @@ import Flowbox.Prelude
 
 
 
-
 data Range = Range { min :: Maybe Version
                    , max :: Maybe Version
                    } deriving (Show)
