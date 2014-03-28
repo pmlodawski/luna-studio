@@ -19,18 +19,18 @@ import           Flowbox.PluginManager.Proto.Plugin                 ()
 import           Flowbox.Prelude                                    hiding (error, id)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.PluginManager.Plugin.Add.Args      as Add
-import qualified Generated.Proto.PluginManager.Plugin.Add.Result    as Add
-import qualified Generated.Proto.PluginManager.Plugin.List.Args     as List
-import qualified Generated.Proto.PluginManager.Plugin.List.Result   as List
-import qualified Generated.Proto.PluginManager.Plugin.Lookup.Args   as Lookup
-import qualified Generated.Proto.PluginManager.Plugin.Lookup.Result as Lookup
-import qualified Generated.Proto.PluginManager.Plugin.Remove.Args   as Remove
-import qualified Generated.Proto.PluginManager.Plugin.Remove.Result as Remove
-import qualified Generated.Proto.PluginManager.Plugin.Start.Args    as Start
-import qualified Generated.Proto.PluginManager.Plugin.Start.Result  as Start
-import qualified Generated.Proto.PluginManager.Plugin.Stop.Args     as Stop
-import qualified Generated.Proto.PluginManager.Plugin.Stop.Result   as Stop
+import qualified Generated.Proto.PluginManager.Plugin.Add.Request      as Add
+import qualified Generated.Proto.PluginManager.Plugin.Add.Update    as Add
+import qualified Generated.Proto.PluginManager.Plugin.List.Request     as List
+import qualified Generated.Proto.PluginManager.Plugin.List.Status   as List
+import qualified Generated.Proto.PluginManager.Plugin.Lookup.Request   as Lookup
+import qualified Generated.Proto.PluginManager.Plugin.Lookup.Status as Lookup
+import qualified Generated.Proto.PluginManager.Plugin.Remove.Request   as Remove
+import qualified Generated.Proto.PluginManager.Plugin.Remove.Update as Remove
+import qualified Generated.Proto.PluginManager.Plugin.Start.Request    as Start
+import qualified Generated.Proto.PluginManager.Plugin.Start.Update  as Start
+import qualified Generated.Proto.PluginManager.Plugin.Stop.Request     as Stop
+import qualified Generated.Proto.PluginManager.Plugin.Stop.Update   as Stop
 
 
 
@@ -39,56 +39,56 @@ logger = getLoggerIO "Flowbox.PluginManager.Handler.Plugin"
 
 -------- public api -------------------------------------------------
 
-add :: ContextRef -> Add.Args -> IO Add.Result
-add ctxRef (Add.Args tplugin) = do
+add :: ContextRef -> Add.Request -> IO Add.Update
+add ctxRef (Add.Request tplugin) = do
     ctx <- IORef.readIORef ctxRef
     let plugins = Context.plugins ctx
         id      = PluginMap.uniqueID plugins
     plugin <- decode tplugin
     IORef.writeIORef ctxRef ctx { Context.plugins = PluginMap.insert id (PluginHandle.mk plugin) plugins}
-    return $ Add.Result $ encodeP id
+    return $ Add.Update (tplugin) (encodeP id)
 
 
-remove :: ContextRef -> Remove.Args -> IO Remove.Result
-remove ctxRef (Remove.Args tid) = do
+remove :: ContextRef -> Remove.Request -> IO Remove.Update
+remove ctxRef (Remove.Request tid) = do
     ctx <- IORef.readIORef ctxRef
     let id      = decodeP tid
         plugins = Context.plugins ctx
     IORef.writeIORef ctxRef ctx { Context.plugins = PluginMap.delete id plugins}
-    return Remove.Result
+    return $ Remove.Update tid
 
 
-list :: ContextRef -> List.Args -> IO List.Result
-list ctxRef List.Args = do
+list :: ContextRef -> List.Request -> IO List.Status
+list ctxRef List.Request = do
     ctx <- IORef.readIORef ctxRef
     let plugins = Context.plugins ctx
     pluginInfos <- mapM PluginHandle.info $ PluginMap.elems plugins
-    return $ List.Result $ encodeList $ zip (PluginMap.keys plugins) pluginInfos
+    return $ List.Status (encodeList $ zip (PluginMap.keys plugins) pluginInfos)
 
 
 -- TODO [PM] : Duplikacja kodu
-lookup :: ContextRef -> Lookup.Args -> IO Lookup.Result
-lookup ctxRef (Lookup.Args tid) = do
+lookup :: ContextRef -> Lookup.Request -> IO Lookup.Status
+lookup ctxRef (Lookup.Request tid) = do
     ctx <- IORef.readIORef ctxRef
     let id      = decodeP tid
         plugins = Context.plugins ctx
     pluginHandle <- PluginMap.lookup id plugins <?> "Cannot find plugin with id=" ++ show id
     pluginInfo   <- PluginHandle.info pluginHandle
-    return $ Lookup.Result $ encode (id, pluginInfo)
+    return $ Lookup.Status (encode (id, pluginInfo)) tid
 
 
-start :: ContextRef -> Start.Args -> IO Start.Result
-start ctxRef (Start.Args tid) = do
+start :: ContextRef -> Start.Request -> IO Start.Update
+start ctxRef (Start.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle ctxRef id (PluginHandle.start . PluginHandle.plugin)
-    return Start.Result
+    return $ Start.Update tid
 
 
-stop :: ContextRef -> Stop.Args -> IO Stop.Result
-stop ctxRef (Stop.Args tid) = do
+stop :: ContextRef -> Stop.Request -> IO Stop.Update
+stop ctxRef (Stop.Request tid) = do
     let id = decodeP tid
     _ <- withPluginHandle ctxRef id PluginHandle.stop
-    return Stop.Result
+    return $ Stop.Update tid
 
 
 withPluginHandle :: ContextRef -> Plugin.ID -> (PluginHandle -> IO PluginHandle) -> IO PluginHandle

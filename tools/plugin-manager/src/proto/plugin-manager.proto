@@ -13,42 +13,50 @@ import "plugin.proto";
 
 message Plugin {
     message Add {
-        message Args { 
+        message Request { 
             required generated.proto.plugin.Plugin plugin = 1;
         }
-        message Result { 
-            required int32 id = 1;
+        message Update { 
+            required generated.proto.plugin.Plugin plugin = 1;
+            required int32 id = 2;
         }
     }
     message Remove {
-        message Args { 
+        message Request { 
             required int32 id = 1;
         }
-        message Result { }
+        message Update { 
+            required int32 id = 1;
+        }
     }
     message Start {
-        message Args { 
+        message Request { 
             required int32 id = 1;
         }
-        message Result { }
+        message Update {
+            required int32 id = 1;
+        }
     }
     message Stop {
-        message Args { 
+        message Request { 
             required int32 id = 1;
         }
-        message Result { }
+        message Update { 
+            required int32 id = 1;
+        }
     }
     message Lookup {
-        message Args { 
+        message Request { 
             required int32 id = 1;
         }
-        message Result { 
+        message Status { 
             required generated.proto.plugin.PluginInfo pluginInfo = 1;
+            required int32 id = 2;
         }
     }
     message List {
-        message Args { }
-        message Result { 
+        message Request { }
+        message Status { 
             repeated generated.proto.plugin.PluginInfo list = 1;
         }
     }

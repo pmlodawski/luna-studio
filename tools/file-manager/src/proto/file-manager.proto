@@ -12,51 +12,65 @@ import "file-system.proto";
 
 message FileSystem {
     message LS {
-        message Args {
+        message Request {
             required string path = 1;
         }
-        message Result {
+        message Status {
             repeated generated.proto.filesystem.Item items = 1;
+            required string path = 2;
         }
     }
     message Stat {
-        message Args {
+        message Request {
             required string path = 1;
         }
-        message Result {
+        message Status {
             required generated.proto.filesystem.Item item = 1;
+            required string path = 2;
         }
     }
     message MkDir {
-        message Args {
+        message Request {
             required string path = 1;
         }
-        message Result { }
+        message Update { 
+            required string path = 1;
+        }
     }
     message Touch {
-        message Args {
+        message Request {
             required string path = 1;
         }
-        message Result { }
+        message Update { 
+            required string path = 1;
+        }
     }
     message RM {
-        message Args { 
+        message Request { 
             required string path = 1;
         }
-        message Result { }
+        message Update { 
+            required string path = 1;
+        }
     }
     message CP {
-        message Args {
+        message Request {
             required string src = 1;
             required string dst = 2;
         }
-        message Result { }
+        message Update { 
+            required string src = 1;
+            required string dst = 2;
+        }
     }
     message MV {
-        message Args {
+        message Request {
             required string src = 1;
             required string dst = 2;
         }
-        message Result { }
+        message Update { 
+            required string src = 1;
+            required string dst = 2;
+        }
     }
 }

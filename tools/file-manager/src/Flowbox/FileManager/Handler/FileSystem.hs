@@ -6,25 +6,25 @@
 ---------------------------------------------------------------------------
 module Flowbox.FileManager.Handler.FileSystem where
 
-import qualified Flowbox.Batch.Handler.FileSystem                    as BatchFS
-import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Item ()
+import qualified Flowbox.Batch.Handler.FileSystem                     as BatchFS
+import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Item  ()
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.FileManager.FileSystem.CP.Args      as CP
-import qualified Generated.Proto.FileManager.FileSystem.CP.Result    as CP
-import qualified Generated.Proto.FileManager.FileSystem.LS.Args      as LS
-import qualified Generated.Proto.FileManager.FileSystem.LS.Result    as LS
-import qualified Generated.Proto.FileManager.FileSystem.MkDir.Args   as MkDir
-import qualified Generated.Proto.FileManager.FileSystem.MkDir.Result as MkDir
-import qualified Generated.Proto.FileManager.FileSystem.MV.Args      as MV
-import qualified Generated.Proto.FileManager.FileSystem.MV.Result    as MV
-import qualified Generated.Proto.FileManager.FileSystem.RM.Args      as RM
-import qualified Generated.Proto.FileManager.FileSystem.RM.Result    as RM
-import qualified Generated.Proto.FileManager.FileSystem.Stat.Args    as Stat
-import qualified Generated.Proto.FileManager.FileSystem.Stat.Result  as Stat
-import qualified Generated.Proto.FileManager.FileSystem.Touch.Args   as Touch
-import qualified Generated.Proto.FileManager.FileSystem.Touch.Result as Touch
+import qualified Generated.Proto.FileManager.FileSystem.CP.Request    as CP
+import qualified Generated.Proto.FileManager.FileSystem.CP.Update     as CP
+import qualified Generated.Proto.FileManager.FileSystem.LS.Request    as LS
+import qualified Generated.Proto.FileManager.FileSystem.LS.Status     as LS
+import qualified Generated.Proto.FileManager.FileSystem.MkDir.Request as MkDir
+import qualified Generated.Proto.FileManager.FileSystem.MkDir.Update  as MkDir
+import qualified Generated.Proto.FileManager.FileSystem.MV.Request    as MV
+import qualified Generated.Proto.FileManager.FileSystem.MV.Update     as MV
+import qualified Generated.Proto.FileManager.FileSystem.RM.Request    as RM
+import qualified Generated.Proto.FileManager.FileSystem.RM.Update     as RM
+import qualified Generated.Proto.FileManager.FileSystem.Stat.Request  as Stat
+import qualified Generated.Proto.FileManager.FileSystem.Stat.Status   as Stat
+import qualified Generated.Proto.FileManager.FileSystem.Touch.Request as Touch
+import qualified Generated.Proto.FileManager.FileSystem.Touch.Update  as Touch
 
 
 
@@ -33,52 +33,52 @@ loggerIO = getLoggerIO "Flowbox.FileManager.Handler.FileSystem"
 
 ------ public api -------------------------------------------------
 
-ls :: LS.Args -> IO LS.Result
-ls (LS.Args tpath) = do
+ls :: LS.Request -> IO LS.Status
+ls (LS.Request tpath) = do
     let path = decodeP tpath
     items <- BatchFS.ls path
-    return $ LS.Result $ encodeList items
+    return $ LS.Status (encodeList items) tpath
 
 
-stat :: Stat.Args -> IO Stat.Result
-stat (Stat.Args tpath) = do
+stat :: Stat.Request -> IO Stat.Status
+stat (Stat.Request tpath) = do
     let path = decodeP tpath
     item  <- BatchFS.stat path
-    return $ Stat.Result $ encode item
+    return $ Stat.Status (encode item) tpath
 
 
-mkdir :: MkDir.Args -> IO MkDir.Result
-mkdir (MkDir.Args tpath) = do
+mkdir :: MkDir.Request -> IO MkDir.Update
+mkdir (MkDir.Request tpath) = do
     let path = decodeP tpath
     BatchFS.mkdir path
-    return MkDir.Result
+    return $ MkDir.Update tpath
 
 
-touch :: Touch.Args -> IO Touch.Result
-touch (Touch.Args tpath) = do
+touch :: Touch.Request -> IO Touch.Update
+touch (Touch.Request tpath) = do
     let path = decodeP tpath
     BatchFS.touch path
-    return Touch.Result
+    return $ Touch.Update tpath
 
 
-rm :: RM.Args -> IO RM.Result
-rm (RM.Args tpath) = do
+rm :: RM.Request -> IO RM.Update
+rm (RM.Request tpath) = do
     let path = decodeP tpath
     BatchFS.rm path
-    return RM.Result
+    return $ RM.Update tpath
 
 
-cp :: CP.Args -> IO CP.Result
-cp (CP.Args tsrc tdst) = do
+cp :: CP.Request -> IO CP.Update
+cp (CP.Request tsrc tdst) = do
     let usrc = decodeP tsrc
     let udst = decodeP tdst
     BatchFS.cp usrc udst
-    return CP.Result
+    return $ CP.Update tsrc tdst
 
 
-mv :: MV.Args -> IO MV.Result
-mv (MV.Args tsrc tdst) = do
+mv :: MV.Request -> IO MV.Update
+mv (MV.Request tsrc tdst) = do
     let usrc = decodeP tsrc
     let udst = decodeP tdst
     BatchFS.mv usrc udst
-    return MV.Result
+    return $ MV.Update tsrc tdst
