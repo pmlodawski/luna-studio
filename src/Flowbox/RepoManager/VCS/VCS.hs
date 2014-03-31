@@ -1,24 +1,23 @@
 module Flowbox.RepoManager.VCS.VCS where
 
-import Flowbox.RepoManager.VCS.Git.Git as Git 
-import Data.List as L
-import System.FilePath (pathSeparator)
-import Flowbox.RepoManager.VCS.Type as Type
+import qualified Data.List                    as List
+import           Flowbox.Prelude
+import qualified Flowbox.RepoManager.VCS.Type as VCS
+import           System.FilePath              (pathSeparator)
+import           System.Process               (ProcessHandle)
 
 
-create Type.Git repoPath name remote = do 
-                                                let vcs = Type.VCS { type_ = Type.Git
-                                                                   , local = repoPath
-                                                                   , name = name
-                                                                   , remote = remote
-                                                                   }
-                                                Git.clone vcs
+data VCS = VCS { cls        :: VCS.Type
+               , name       :: String
+               , localPath  :: String
+               , remotePath :: String
+               , clone      :: VCS -> IO VCS
+               , update     :: VCS -> IO VCS
+               , remove     :: VCS -> IO ProcessHandle
+               }
 
-update repo = Git.pull repo
-
-remove repo = Git.remove repo
-                                        
-path directories = L.intercalate [pathSeparator] directories
+path :: [String] -> String
+path directories = List.intercalate [pathSeparator] directories
 
 
 

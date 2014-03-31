@@ -6,19 +6,41 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import Flowbox.Prelude
-import Flowbox.RepoManager.VCS.VCS as VCS
-import Flowbox.RepoManager.VCS.Type as VCS.Type
+import           Flowbox.Prelude
+import qualified Flowbox.RepoManager.VCS.Git.Git as Git
+import qualified Flowbox.RepoManager.VCS.Type    as VCS
+import qualified Flowbox.RepoManager.VCS.VCS  as VCS
+
+import qualified           System.Environment              as Environment
+import Flowbox.RepoManager.Data.Repository as Repository
 
 main :: IO ()
-main = do 
-          --args <- getArgs
-          --let (path, ) case args of
-          --  ()
-          vcs <- VCS.create VCS.Type.Git (VCS.path ["repo"]) "name" "git@github.com:dobry/packages.git"
-          VCS.update vcs
-          print (VCS.path ["repo"])
-          print vcs
-          --print exists
-          --VCS.createRepository "repo/packages" "git@github.com:dobry/packages.git" 
-          --VCS.updateRepository "repo/packages" "git@github.com:dobry/packages.git" 
+
+
+main = do
+          args <- Environment.getArgs
+          case args of
+            []         -> Main.clone
+            "update":_ -> Main.update
+            "remove":_ -> Main.remove
+            "clone": _ -> Main.clone
+            _other     -> Main.clone
+
+create ::  VCS.VCS
+create = Git.createVCS VCS.Git "repo" "packages" "git@github.com:dobry/packages.git"
+
+clone :: IO ()
+clone = do 
+           _ <- Git.clone create
+           return ()
+
+update :: IO ()
+update = do
+            _ <- Git.update create
+            return ()
+
+remove :: IO ()
+remove = do 
+            _ <- Git.remove create
+            return ()
+
