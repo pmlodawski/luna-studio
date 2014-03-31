@@ -1,36 +1,47 @@
 module Flowbox.RepoManager.VCS.Git.Git where
 
-import  System.Directory as F 
-import System.Process as P
+import  System.Directory as Directory
+import System.Process (runCommand)
 import Data.Bool 
 import Data.List (concat)
 import Flowbox.Prelude
+import System.FilePath (pathSeparator)
+import Flowbox.RepoManager.VCS.Type as Type
 
 
 --import Git.Libgit2.Repository as LG
 --import  Data.Maybe
 
 
---initRepository repoPath = do
---                             repo   <- openOrCreateRepository repoPath False
+--initRepository local = do
+--                             repo   <- openOrCreateRepository local False
 --                             ref    <- resolveRef repo "HEAD"
 
 --                             -- commit <- maybe (return Nothing) (lookupCommit repo) ref
  
-removeRepository repoPath = do exists <- F.doesDirectoryExist repoPath
-                               let result = case exists of
-                                                True -> Just $ P.runCommand $ concat ["rm -fR ", repoPath]
-                                                False -> Nothing
-                               return exists
+remove repo = do exists <- Directory.doesDirectoryExist $ concat [(Type.local repo), [pathSeparator], (Type.name repo)]
+                 let result = case exists of
+                            True -> Just $ runCommand $ concat ["rm -fR ", Type.local repo , [pathSeparator], Type.name repo]
+                            False -> Nothing
+                 return repo
 
 -- catch exceptions
-cloneRepository repoPath remote = do   
-                                       F.createDirectoryIfMissing True repoPath
-                                       current <- getCurrentDirectory
-                                       F.setCurrentDirectory repoPath
-                                       P.runCommand $ concat ["git clone ", remote]
-                                       F.setCurrentDirectory current
+-- fatal: destination path 'packages' already exists and is not an empty directory.
+clone repo = do   
+               Directory.createDirectoryIfMissing True (Type.local repo)
+               current <- getCurrentDirectory
+               Directory.setCurrentDirectory (Type.local repo)
+               runCommand $ concat ["git clone ", (Type.remote repo)] -- ADD --quiet?
+               Directory.setCurrentDirectory current
+               return repo
 
-pullRepository repoPath remote = do P.runCommand $ concat ["git pull ", remote, " ", repoPath]
+pull repo = do    
+               current <- getCurrentDirectory
+               Directory.setCurrentDirectory (concat [Type.local repo, [pathSeparator], Type.name repo])
+               runCommand $ concat ["git pull ", Type.remote repo] -- ADD --quiet?
+               Directory.setCurrentDirectory current
+               return repo
                                      
---removeRepository repoPath = F.doesDirectoryExist repoPath
+
+
+                                     

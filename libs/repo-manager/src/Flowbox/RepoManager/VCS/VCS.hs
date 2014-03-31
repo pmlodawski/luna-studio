@@ -3,17 +3,20 @@ module Flowbox.RepoManager.VCS.VCS where
 import Flowbox.RepoManager.VCS.Git.Git as Git 
 import Data.List as L
 import System.FilePath (pathSeparator)
+import Flowbox.RepoManager.VCS.Type as Type
 
---updateRepository localPath remote
---    - no repo? -> clone
---    - exists? -> pull
 
---Add. windows file manipulations?
-createRepository localPath remote = Git.cloneRepository localPath remote
+create Type.Git repoPath name remote = do 
+                                                let vcs = Type.VCS { type_ = Type.Git
+                                                                   , local = repoPath
+                                                                   , name = name
+                                                                   , remote = remote
+                                                                   }
+                                                Git.clone vcs
 
-updateRepository localPath remote = Git.pullRepository localPath remote 
+update repo = Git.pull repo
 
-removeRepository repoPath = Git.removeRepository repoPath
+remove repo = Git.remove repo
                                         
 path directories = L.intercalate [pathSeparator] directories
 
