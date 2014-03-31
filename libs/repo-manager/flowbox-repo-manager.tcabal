@@ -35,7 +35,10 @@ Library
                   protocol-buffers-descriptor,
                   transformers,
                   zeromq4-haskell >= 0.4,
-                  gitlib
+                  gitlib,
+                  directory,
+                  process,
+                  filepath
 
 
 Executable repo-manager-test
@@ -58,4 +61,8 @@ Executable repo-manager-test
                   protocol-buffers-descriptor,
                   transformers,
                   zeromq4-haskell >= 0.4,
-                  gitlib
+                  gitlib,
+                  directory,
+                  process,
+                  flowbox-repo-manager,
+                  filepath
