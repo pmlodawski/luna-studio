@@ -6,7 +6,6 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds    #-}
 {-# LANGUAGE FlexibleContexts   #-}
-{-# LANGUAGE ImpredicativeTypes #-}
 {-# LANGUAGE RankNTypes         #-}
 
 module Flowbox.Bus.Bus where
@@ -18,9 +17,10 @@ import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
+import           Flowbox.Bus.Data.Flag              (Flag)
 import           Flowbox.Bus.Data.Message           (Message)
 import qualified Flowbox.Bus.Data.Message           as Message
-import           Flowbox.Bus.Data.MessageFrame      (MessageFrame (MessageFrame), LastFrameMarker)
+import           Flowbox.Bus.Data.MessageFrame      (MessageFrame (MessageFrame))
 import qualified Flowbox.Bus.Data.MessageFrame      as MessageFrame
 import           Flowbox.Bus.Data.Topic             (Topic)
 import qualified Flowbox.Bus.Data.Topic             as Topic
@@ -83,15 +83,16 @@ getNewRequestID = do
     return requestID
 
 
-reply :: Message.CorrelationID -> LastFrameMarker -> Message -> Bus ()
-reply crlID lfm msg = do clientID <- getClientID 
-                         sendByteString $ MessageFrame.toByteString $ MessageFrame msg crlID clientID lfm
+reply :: Message.CorrelationID -> Flag -> Message -> Bus ()
+reply crlID lastFrame msg = do
+    clientID <- getClientID
+    sendByteString $ MessageFrame.toByteString $ MessageFrame msg crlID clientID lastFrame
 
 
-send :: LastFrameMarker -> Message -> Bus Message.CorrelationID
-send lfm msg= do
+send :: Flag -> Message -> Bus Message.CorrelationID
+send lastFrame msg = do
     correlationID <- Message.CorrelationID <$> getClientID <*> getNewRequestID
-    reply correlationID lfm msg
+    reply correlationID lastFrame msg
     return correlationID
 
 

@@ -33,12 +33,12 @@ logMessage :: Bus ()
 logMessage = do msgFrame <- Bus.receive
                 case msgFrame of
                     Left err -> logger error $ "Unparseable message: " ++ err
-                    Right (MessageFrame msg crlID lastFrame senderID) -> do
+                    Right (MessageFrame msg crlID senderID lastFrame) -> do
                         let topic  = Message.topic msg
                             logMsg = show senderID
                                    ++ " -> "
                                    ++ show crlID
-                                   ++ " ("
+                                   ++ " (last = "
                                    ++ show lastFrame
                                    ++ ")"
                                    ++ "\t:: "
