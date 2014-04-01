@@ -28,43 +28,55 @@ data World = World { installed :: Map Item.Name InstalledFamilies
 
 type FileName = String
 
-build repoPath = do files <- Files.getDirectoryContents repoPath
-                    let cat = List.foldl category Repository {} files
-                    return ()
+--build repoPath = do files <- Files.getDirectoryContents repoPath
+--                    let cat = List.foldl category Repository {} files
+--                    return ()
 
 isProper :: String -> Bool
 isProper file = not (file `elem` [".git", "README.md", "..", "."])
 
---category :: FileName -> FileName
-category :: FilePath -> Map Item.Name AvailableFamilies -> Map Item.Name AvailableFamilies
-category categoryDir repo = case isProper categoryDir of
+
+category :: IO (IO (Map Item.Name AvailableFamilies)) -> String -> IO (IO (Map Item.Name AvailableFamilies))
+category repo categoryDir = case isProper categoryDir of
                                     False -> repo
-                                    True  -> do files <- Files.getDirectoryContents categoryDir
-                                                Map.insert (List.foldl package Map.empty files)
+                                    True  -> let 
+                                        
+                                                 folder = \m1 m2 -> Map.union <$> m1 <*> m2
+                                                 packList = List.map <$> package <$> repo <*> Files.getDirectoryContents categoryDir
+                                                 packeges = List.foldl folder (return Map.empty) <$> packList
+                                             in packeges
+                                        
+                                        
 
-package :: FilePath -> Map Item.Name AvailableFamilies -> Map Item.Name AvailableFamilies
-package packageDir repo = case isProper packageDir of
+
+
+
+package :: IO (Map Item.Name AvailableFamilies) -> FilePath -> IO (Map Item.Name AvailableFamilies)
+package repo directory = case isProper directory of
                             False -> repo
-                            True  -> 
-                                     do packageFiles <- Files.getDirectoryContents packageDir
-                                        let newPackage = List.foldl versions Map.empty packageFiles
-                                        Map.insert packageDir newPackage repo
+                            True  -> Map.insert directory <$> (package' <$> Files.getDirectoryContents directory) <*> repo
+                                     
+package' :: [FilePath] -> Map Version.Version Item.Item
+package' packageFiles = (Map.fromList $ List.map version packageFiles)
 
-versions  :: FilePath -> Map Version.Version Item.Item
-versions  file versions' = let version' = Version.versionBranch [1,2,3,4]
-                               name' = "Item.Name"
-                               source' = Map.singleton "x86" (URI.Local "local/uri")
-                               dependancies' = [Dependency.Dependency { Dependency.name = "dependancy1"
-                                                                      , Dependency.constraints = []
-                                                                      }]
-                               item = Item.Item { Item.name            = name'
-                                                , Item.version         = version'
-                                                , Item.source          = source'
-                                                , Item.installScript   = ["script"]
-                                                , Item.uninstallScript = ["script"]
-                                                , Item.dependencies    = dependancies'
-                                                }
-                           in Map.insert $ name' Map.singleton name' item versions'
+version :: FilePath ->  (Version.Version, Item.Item)
+version file = let 
+                     -- parse version file, build item
+                     version' = Version.Version [1,2,3,4] ["ole"]
+                     name' = file
+                     source' = Map.singleton "x86" (URI.Local "local/uri")
+                     dependancies' = [Dependency.Dependency { Dependency.name = "dependancy1"
+                                                          , Dependency.constraints = []
+                                                          }]
+                     item = Item.Item { Item.name            = name'
+                                      , Item.version         = version'
+                                      , Item.source          = source'
+                                      , Item.installScript   = ["script"]
+                                      , Item.uninstallScript = ["script"]
+                                      , Item.dependencies    = dependancies'
+                                      }
+                     in (version', item)
+                     
                         
 
                              
