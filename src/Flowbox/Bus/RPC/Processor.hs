@@ -41,10 +41,10 @@ process :: BusRPCHandler -> Message -> IO [Message]
 process handler msg = handler call topic where
     call type_ method = case Proto.messageGet' $ Message.message msg of
         Left err   -> do logger error err
-                         return [respondError topic err]
+                         return $ respondError topic err
         Right args -> do results <- runEitherT $ scriptIO $ method args
                          return $ case results of
-                            Left err -> [respondError topic $ "Unhandled error: " ++ err]
+                            Left err -> respondError topic $ "Unhandled error: " ++ err
                             Right ok -> map (respond type_) ok
 
     topic = Message.topic msg
@@ -53,7 +53,7 @@ process handler msg = handler call topic where
     respond = constructMessage topic
 
 
-respondError :: Topic -> String -> Message
+respondError :: Topic -> String -> [Message]
 respondError topic = constructMessage topic "error" . encodeP . Exception . Just
 
 
