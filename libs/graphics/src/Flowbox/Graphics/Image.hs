@@ -31,8 +31,8 @@ data Image a = Image { _channels :: Map Channel.Name (Channel.Channel a)
 
 type ImageAcc ix a = Image (A.Array ix a)
 
-type Stencil3x1 a       = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
-type Stencil1x3 a       = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
+type Stencil3x1 a = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
+type Stencil1x3 a = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
 
 
 makeLenses ''Image
@@ -107,6 +107,15 @@ cpChannel source destination img = do
 filterByName :: [Channel.Name] -> ImageAcc ix a -> ImageAcc ix a
 filterByName names img = img & channels %~ (Map.filterWithKey nameMatches)
     where nameMatches cname _ = cname `elem` names
+
+channelIntersection :: ImageAcc ix a -> ImageAcc ix b -> ImageAcc ix a
+channelIntersection imgA imgB = Image $ Map.intersection (imgA ^. channels) (imgB ^. channels)
+
+channelIntersectionWith :: (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix c) -> ImageAcc ix a -> ImageAcc ix b -> ImageAcc ix c
+channelIntersectionWith f imgA imgB = Image $ Map.intersectionWith f (imgA ^. channels) (imgB ^. channels)
+
+channelIntersectionWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix c) -> ImageAcc ix a -> ImageAcc ix b -> ImageAcc ix c
+channelIntersectionWithKey f imgA imgB = Image $ Map.intersectionWithKey f (imgA ^. channels) (imgB ^. channels)
 
 -- conversion between numeric types
 

@@ -29,6 +29,8 @@ import qualified Flowbox.Graphics.Color                 as C
 import qualified Flowbox.Graphics.Deprecated.Algorithms as G
 import           Flowbox.Graphics.Image                 (ImageAcc)
 import qualified Flowbox.Graphics.Image                 as Img
+import           Flowbox.Graphics.Image.Composition     (Mask (..))
+import qualified Flowbox.Graphics.Image.Composition     as Comp
 import qualified Flowbox.Graphics.Image.Color           as Img
 import qualified Flowbox.Graphics.Image.IO              as Img
 import qualified Flowbox.Graphics.Image.Raster          as Img
@@ -62,13 +64,12 @@ imgtest img frames = do
     framesRGBA <- getDouble frames
 
     --imageBackground <- G.extractBackground rgb framesRGBA
-    let imageConstant :: ImageAcc A.DIM2 Double
-        imageConstant = Img.constant (A.index2 256 256) [("rgba.r", A.constant 1), ("rgba.g", A.constant 0), ("rgba.b", A.constant 1), ("rgba.a", A.constant 1)]
-        --imageCheckerboard :: ImageAcc A.DIM2 Double
-        imageCheckerboard = Img.checkerboard (A.index2 (256::Exp Int) (256::Exp Int)) (A.constant 32) (green, blue, white, gray) (red, A.constant 1.5) (yellow, A.constant 2)
-        imageGamma = Img.gamma imageRGBA gammaMap Nothing Nothing 1
-        imageClamp = Img.clamp imageRGBA clampMap Nothing Nothing 1
-        imageClipTest = Img.clipTest imageRGBA clipMap Nothing Nothing 0.3
+    let imageConstant = Img.constant (A.index2 (512::Exp Int) (512::Exp Int)) [("rgba.r", A.constant 1), ("rgba.g", A.constant 0), ("rgba.b", A.constant 1), ("rgba.a", A.constant 1)]
+        imageCheckerboard = Img.checkerboard (A.index2 (512::Exp Int) (512::Exp Int)) (A.constant 32) (black, white, black, white) (red, A.constant 0) (yellow, A.constant 0)
+        imageMask = ImageMask "rgba.r" Nothing (A.constant False) imageCheckerboard
+        --imageGamma = Img.gamma imageRGBA gammaMap Nothing Nothing 1
+        --imageClamp = Img.clamp imageRGBA clampMap Nothing Nothing 1
+    imageClipTest <- Img.clipTest imageRGBA clipMap (Just imageMask) Nothing 0.3
 
     let imageOut = imageClipTest
     RGBA.compose $ Img.toWord8 $ Img.map G.clipValues imageOut

@@ -75,47 +75,47 @@ hsl img = do
 
 math :: (A.Elt a, A.IsNum a, A.Shape ix)
     => (Exp a -> Exp a -> Exp a) -> ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Exp a
-    -> ImageAcc ix a
-math f img values mask premultiply mix =
-    Image.mapWithKey handleChan img
+    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
+    -> Either Image.Error (ImageAcc ix a)
+math f img values mask premultiply mix = do
+    return $ Image.mapWithKey handleChan img
     where
-        _ = (mask, premultiply, mix) -- FIXME: make a use of those
+        _ = (mask, premultiply) -- FIXME: make a use of those
         handleChan name chan = case Map.lookup name values of
             Nothing -> chan
-            Just value -> Channel.map (\x -> (Comp.handleMix mix x (f value x))) chan
+            Just value -> Channel.map (\x -> (Comp.mix mix x (f value x))) chan
 
 offset :: (A.Elt a, A.IsNum a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Exp a
-    -> ImageAcc ix a
+    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
+    -> Either Image.Error (ImageAcc ix a)
 offset = math (+)
 
 multiply :: (A.Elt a, A.IsNum a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Exp a
-    -> ImageAcc ix a
+    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
+    -> Either Image.Error (ImageAcc ix a)
 multiply = math (*)
 
 gamma :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Exp a
-    -> ImageAcc ix a
+    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
+    -> Either Image.Error (ImageAcc ix a)
 gamma = math (\v -> (**(1/v)))
 
 -- TODO: test this comparing to nuke, there are some differences atm
 -- probably the result in nuke is being calculated based on an AND|OR relation between all input channels
 clamp :: (A.Shape ix, A.Elt a, A.IsNum a)
     => ImageAcc ix a -> Map Channel.Name (U.Range (Exp a), Maybe (U.Range (Exp a)))
-    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Exp a
-    -> ImageAcc ix a
-clamp img ranges mask premultiply mix =
-    Image.mapWithKey handleChan img
+    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
+    -> Either Image.Error (ImageAcc ix a)
+clamp img ranges mask premultiply mix = do
+    return $ Image.mapWithKey handleChan img
     where
-        _ = (mask, premultiply, mix) -- FIXME: make a use of those
+        _ = (mask, premultiply) -- FIXME: make a use of those
         handleChan name chan = case Map.lookup name ranges of
             Nothing -> chan
-            Just value -> Channel.map (\x -> Comp.handleMix mix x (clip value x)) chan
+            Just value -> Channel.map (\x -> Comp.mix mix x (clip value x)) chan
         clip (U.Range lo hi, clampTo) v = case clampTo of
             Nothing -> v A.<* lo A.? (lo, v A.>* hi A.? (hi, v))
             Just (U.Range lo' hi') -> v A.<* lo A.? (lo', v A.>* hi A.? (hi', v))
@@ -124,16 +124,16 @@ clamp img ranges mask premultiply mix =
 -- soooooo....... either fuck it and do it our way or... focus on it later on
 clipTest :: (A.Shape ix, A.Elt a, A.IsNum a)
     => ImageAcc ix a -> Map Channel.Name (U.Range (Exp a))
-    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Exp a
-    -> ImageAcc ix a
+    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
+    -> Either Image.Error (ImageAcc ix a)
 clipTest img ranges mask premultiply mix =
-    Image.mapWithKey handleChan img
+    Comp.combineWithMask (Image.mapWithKey handleChan img) img mask
     where
-        _ = (mask, premultiply, mix) -- FIXME: make a use of those
+        _ = (premultiply) -- FIXME: make a use of those
         handleChan name chan = case Map.lookup name ranges of
             Nothing -> chan
             Just _ -> Channel.zipWith zebraStripes chan matched
-        zebraStripes x b = b A.? (Comp.handleMix mix x ((( 1 ))), x) -- TODO: this should make stripes, not constant color 1 ;]
+        zebraStripes x b = b A.? (Comp.mix mix x ((( 1 ))), x) -- TODO: this should make stripes, not constant color 1 ;]
         matched = Image.foldrWithKey fold initialAcc filteredChans
         fold name chan acc = let Just (U.Range lo hi) = Map.lookup name ranges in Channel.zipWith (A.||*) acc (Channel.map (withinRange lo hi) chan)
         withinRange lo hi x = x A.<* lo A.||* x A.>* hi
