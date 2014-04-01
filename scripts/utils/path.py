@@ -6,6 +6,7 @@
 ###########################################################################
 
 import os
+import tarfile
 
 def write_if_changed(path, s):
     if os.path.exists(path):
@@ -14,3 +15,17 @@ def write_if_changed(path, s):
                 return
     with open(path, 'w') as file:
         file.write(s)
+
+def make_dirs_if_needed(path):
+    if not os.path.exists(os.path.dirname(path)):
+        os.makedirs(path)
+
+
+def extract(rootdir, path):
+    tar = tarfile.open(path)
+    for tarinfo in tar:
+        path = os.path.join(rootdir, tarinfo.name)
+        if os.path.exists(path):
+            print_info("File %s already exists. Skipping extraction." % path)
+            break
+        tar.extractall(rootdir, [tarinfo])
