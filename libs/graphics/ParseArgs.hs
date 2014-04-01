@@ -16,8 +16,6 @@ module ParseArgs (
 
 ) where
 
-import qualified Criterion.Config      as Criterion
-import qualified Criterion.Main        as Criterion
 import           Data.Char
 import           Data.Label
 import           Data.List
@@ -118,8 +116,7 @@ stripShortOpts = map strip
 
 
 -- | Process the command line arguments and return a tuple consisting of the
--- options structure, options for Criterion, and a list of unrecognised and
--- non-options.
+-- options structure and a list of unrecognised and non-options.
 --
 -- We drop any command line arguments following a "--".
 --
@@ -130,19 +127,17 @@ parseArgs :: (config :-> Bool)                  -- ^ access a help flag from the
           -> [String]                           -- ^ header text
           -> [String]                           -- ^ footer text
           -> [String]                           -- ^ command line arguments
-          -> IO (config, Criterion.Config, [String])
+          -> IO (config, [String])
 parseArgs help backend (withBackends backend -> options) config header footer (takeWhile (/= "--") -> argv) =
   let
-      criterionOptions = stripShortOpts Criterion.defaultOptions
 
       helpMsg err = concat err
         ++ usageInfo (unlines header)               options
-        ++ usageInfo "\nGeneric criterion options:" criterionOptions
 
   in do
 
   -- Process options for the main program. Any non-options will be split out
-  -- here. Unrecognised options get passed to criterion.
+  -- here.
   --
   (conf,non,u)  <- case getOpt' Permute options argv of
       (opts,n,u,[]) -> case foldr id config opts of
@@ -152,12 +147,10 @@ parseArgs help backend (withBackends backend -> options) config header footer (t
       --
       (_,_,_,err) -> error (helpMsg err)
 
-  -- Criterion
   --
   -- TODO: don't bail on unrecognised options. Print to screen, or return for
   --       further processing (e.g. test-framework).
   --
-  (cconf, _)    <- Criterion.parseArgs Criterion.defaultConfig criterionOptions u
 
-  return (conf, cconf, non)
+  return (conf, non)
 

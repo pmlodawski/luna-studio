@@ -21,7 +21,10 @@ Library
                   containers,
                   parsec,
                   blaze-html,
-                  bytestring
+                  blaze-markup,
+                  bytestring,
+                  data-default,
+                  lens
 
 Executable markup
   Main-Is:        Main.hs
@@ -34,4 +37,7 @@ Executable markup
                   containers,
                   parsec,
                   blaze-html,
-                  bytestring
+                  blaze-markup,
+                  bytestring,
+                  data-default,
+                  lens
