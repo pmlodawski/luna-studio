@@ -16,7 +16,7 @@ module Flowbox.Graphics.Mockup (
 
     Image,
     Channel,
-    Image.Transformed,
+    Transformed,
     Exp,
     toDouble
 ) where
@@ -39,6 +39,7 @@ import           Flowbox.Graphics.Image.Channel         (Channel)
 import qualified Flowbox.Graphics.Image.Channel         as Channel
 import qualified Flowbox.Graphics.Image.IO              as Image
 import qualified Flowbox.Graphics.Image.Repr            as RGBA
+import           Flowbox.Graphics.Transform 			(Transformed)
 import           Flowbox.Prelude                        hiding ((.))
 import           Luna.Target.HS.Core                    hiding (print, return)
 

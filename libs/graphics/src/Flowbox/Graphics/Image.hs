@@ -15,15 +15,14 @@ import           Control.Error
 import           Data.Array.Accelerate             (Exp)
 import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Repa                   as R
-import qualified Data.Array.Repa.Algorithms.Matrix as M
 import           Data.Map                          (Map)
 import qualified Data.Map                          as Map
---import qualified Debug.Trace                       as Dbg
 
 import           Flowbox.Graphics.Image.Channel (ChannelAcc, Channel2, RawData2)
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Graphics.Image.Error   (Error (ChannelLookupError))
-import           Flowbox.Prelude                 hiding (lookup, map)
+import           Flowbox.Graphics.Transform     (Transformation(..), Transformed(..))
+import           Flowbox.Prelude                hiding (lookup, map)
 
 
 data Image a = Image { _channels :: Map Channel.Name (Channel.Channel a)
@@ -35,27 +34,6 @@ type ImageAcc ix a = Image (A.Array ix a)
 type Stencil3x1 a       = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
 type Stencil1x3 a       = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
 
--- FIXME [km]: move to a new module "Transformation" vvv
-
-type RepaMatrix2 a = R.Array R.U R.DIM2 a
-data Transformation = Transformation (RepaMatrix2 Double)
-            deriving (Show)
-
-data Transformed a = Transformed { src   :: a
-                                 , trans :: Transformation
-                                 }
-           deriving (Show)
-
-instance Functor Transformed where
-    --fmap :: (a -> b) -> Transformed a -> Transformed b
-    fmap f (Transformed s t) = Transformed (f s) t
-
--- FIXME: move to module Composition vvv
-data Premultiply = Premultiply {name :: String, invert :: Bool}
-                 | Unpremultiply {name:: String, invert :: Bool}
-
--- TODO: finish this data type
-data Mask = Mask
 
 makeLenses ''Image
 
@@ -68,9 +46,8 @@ compute backend img = Image $ Map.map (Channel.compute backend) $ view channels 
 map :: (ChannelAcc ix a -> ChannelAcc ix b) -> ImageAcc ix a -> ImageAcc ix b
 map f img = Image $ Map.map f $ view channels img
 
--- FIXME: rename to sth, ie. mapByElement
-map' :: (A.Shape ix, A.Elt a, A.Elt b) => (Exp a -> Exp b) -> ImageAcc ix a -> ImageAcc ix b
-map' f img = Image $ Map.map (Channel.map f) $ view channels img
+mapChannels :: (A.Shape ix, A.Elt a, A.Elt b) => (Exp a -> Exp b) -> ImageAcc ix a -> ImageAcc ix b
+mapChannels f img = Image $ Map.map (Channel.map f) $ view channels img
 
 mapWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b) -> ImageAcc ix a -> ImageAcc ix b
 mapWithKey f img = Image $ Map.mapWithKey f $ view channels img
@@ -134,22 +111,20 @@ filterByName names img = img & channels %~ (Map.filterWithKey nameMatches)
 -- conversion between numeric types
 
 toFloat :: A.Shape ix => ImageAcc ix A.Word8 -> ImageAcc ix A.Float
-toFloat img = map' (\c -> A.fromIntegral c / 255) img
+toFloat img = mapChannels (\c -> A.fromIntegral c / 255) img
 
 toDouble :: A.Shape ix => ImageAcc ix A.Word8 -> ImageAcc ix A.Double
-toDouble img = map' (\c -> A.fromIntegral c / 255) img
+toDouble img = mapChannels (\c -> A.fromIntegral c / 255) img
 
 toFloating :: (A.Shape ix, A.Elt a) => A.IsFloating a => ImageAcc ix A.Word8 -> ImageAcc ix a
-toFloating img = map' (\c -> A.fromIntegral c / 255) img
+toFloating img = mapChannels (\c -> A.fromIntegral c / 255) img
 
 toWord8 :: (A.Shape ix, A.Elt a, A.IsFloating a) => ImageAcc ix a -> ImageAcc ix A.Word8
-toWord8 img = map' (\c -> A.truncate $ c * 255) img
+toWord8 img = mapChannels (\c -> A.truncate $ c * 255) img
 
 
 
 -- TRANSFORMATIONS
-transform :: a -> Transformed a
-transform x = Transformed x mempty
 
 -- FIXME: find a better way of resampling after rasterization
 -- czysty kod kurwa
@@ -190,33 +165,6 @@ rasterizeChannel (Transformation t) ch =
 rasterize :: (A.Elt a, A.IsFloating a) => Transformed (Image (RawData2 a)) -> Image (RawData2 a)
 rasterize (Transformed img t) = Image $ Map.map (rasterizeChannel t) $ view channels img
 
-translate :: Double -> Double -> Transformed a -> Transformed a
-translate x y (Transformed img transposition) = Transformed img transposition'
-    where transposition' = mappend t transposition
-          t = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ 1, 0, -x
-                                                                    , 0, 1, -y
-                                                                    , 0, 0, 1 ])
-
-rotate :: Double -> Transformed a -> Transformed a
-rotate theta (Transformed img transposition) = Transformed img transposition'
-    where transposition' = mappend t transposition
-          t = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [   cos (-theta) , sin (-theta), 0
-                                                                    , -(sin (-theta)), cos (-theta), 0
-                                                                    , 0           , 0        , 1])
-
-rotateAt :: Double -> Double -> Double -> Transformed a -> Transformed a
-rotateAt theta x y = (translate (-x) (-y)) . (rotate theta) . (translate x y)
-
-scale :: Double -> Double -> Transformed a -> Transformed a
-scale x y (Transformed img transposition) = Transformed img transposition'
-    where transposition' = mappend t transposition
-          t = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ 1/x, 0  , 0
-                                                                    , 0  , 1/y, 0
-                                                                    , 0  , 0  , 1])
-
-scaleAt :: Double -> Double -> Double -> Double -> Transformed a -> Transformed a
-scaleAt sx sy x y = (translate (-x) (-y)) . (scale sx sy) . (translate x y)
-
 
 --------------------------------------------------------------------------
 ---- INSTANCES
@@ -225,9 +173,3 @@ scaleAt sx sy x y = (translate (-x) (-y)) . (scale sx sy) . (translate x y)
 instance Monoid (Image a) where
     mempty        = Image mempty
     a `mappend` b = Image $ (view channels a) `mappend` (view channels b)
-
-instance Monoid Transformation where
-    mempty = Transformation (R.fromListUnboxed (R.Z R.:. 3 R.:. 3) [ 1, 0, 0
-                                                                   , 0, 1, 0
-                                                                   , 0, 0, 1])
-    (Transformation a) `mappend` (Transformation b) = Transformation (M.mmultS a b)

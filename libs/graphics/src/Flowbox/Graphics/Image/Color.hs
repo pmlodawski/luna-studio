@@ -13,12 +13,13 @@ import qualified Data.Array.Accelerate as A
 import           Data.Map              (Map)
 import qualified Data.Map              as Map
 
-import qualified Flowbox.Graphics.Color         as Color
-import           Flowbox.Graphics.Image         (ImageAcc)
-import qualified Flowbox.Graphics.Image         as Image
-import qualified Flowbox.Graphics.Image.Channel as Channel
-import qualified Flowbox.Graphics.Utils         as U
-import           Flowbox.Prelude                as P
+import qualified Flowbox.Graphics.Color             as Color
+import           Flowbox.Graphics.Image             (ImageAcc)
+import qualified Flowbox.Graphics.Image             as Image
+import qualified Flowbox.Graphics.Image.Channel     as Channel
+import qualified Flowbox.Graphics.Image.Composition as Comp
+import qualified Flowbox.Graphics.Utils             as U
+import           Flowbox.Prelude                    as P
 
 
 -- TODO: discuss whether those functions should require rgb color space or should it look
@@ -74,7 +75,7 @@ hsl img = do
 
 math :: (A.Elt a, A.IsNum a, A.Shape ix)
     => (Exp a -> Exp a -> Exp a) -> ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe Image.Mask -> Maybe Image.Premultiply -> Double
+    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Double
     -> ImageAcc ix a
 math f img values mask premultiply mix =
     Image.mapWithKey handleChan img
@@ -86,19 +87,19 @@ math f img values mask premultiply mix =
 
 offset :: (A.Elt a, A.IsNum a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe Image.Mask -> Maybe Image.Premultiply -> Double
+    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Double
     -> ImageAcc ix a
 offset = math (+)
 
 multiply :: (A.Elt a, A.IsNum a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe Image.Mask -> Maybe Image.Premultiply -> Double
+    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Double
     -> ImageAcc ix a
 multiply = math (*)
 
 gamma :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe Image.Mask -> Maybe Image.Premultiply -> Double
+    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Double
     -> ImageAcc ix a
 gamma = math (\v -> (**(1/v)))
 
@@ -106,7 +107,7 @@ gamma = math (\v -> (**(1/v)))
 -- probably the result in nuke is being calculated based on an AND|OR relation between all input channels
 clamp :: (A.Shape ix, A.Elt a, A.IsScalar a)
     => ImageAcc ix a -> Map Channel.Name (U.Range (Exp a), Maybe (U.Range (Exp a)))
-    -> Maybe Image.Mask -> Maybe Image.Premultiply -> Double
+    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Double
     -> ImageAcc ix a
 clamp img ranges mask premultiply mix =
     Image.mapWithKey handleChan img
@@ -123,7 +124,7 @@ clamp img ranges mask premultiply mix =
 -- soooooo....... either fuck it and do it our way or... focus on it later on
 clipTest :: (A.Shape ix, A.Elt a, A.IsNum a)
     => ImageAcc ix a -> Map Channel.Name (U.Range (Exp a))
-    -> Maybe Image.Mask -> Maybe Image.Premultiply -> Double
+    -> Maybe Comp.Mask -> Maybe Comp.Premultiply -> Double
     -> ImageAcc ix a
 clipTest img ranges mask premultiply mix =
     Image.mapWithKey handleChan img
