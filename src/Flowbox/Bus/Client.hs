@@ -14,6 +14,7 @@ import Control.Monad.Trans
 import           Control.Monad.Trans.Either
 import           Flowbox.Bus.Bus               (Bus)
 import qualified Flowbox.Bus.Bus               as Bus
+import qualified Flowbox.Bus.Data.Flag         as Flag
 import           Flowbox.Bus.Data.Message      (Message)
 import qualified Flowbox.Bus.Data.Message      as Message
 import           Flowbox.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
@@ -46,6 +47,6 @@ handle process = do
     liftIO $ logger debug $ "Received request: " ++ Message.topic msg
     response <- liftIO $ process msg
     if not $ null response
-        then do mapM_ (Bus.reply crlID False) (init response)
-                Bus.reply crlID True $ last response
+        then do mapM_ (Bus.reply crlID Flag.Disable) (init response)
+                Bus.reply crlID Flag.Enable $ last response
         else return ()
