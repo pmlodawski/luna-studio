@@ -37,6 +37,10 @@ update :: String
 update = "update"
 
 
+singleResult :: (a -> IO b) -> a -> IO [b]
+singleResult f a = mkList <$> f a
+
+
 process :: BusRPCHandler -> Message -> IO [Message]
 process handler msg = handler call topic where
     call type_ method = case Proto.messageGet' $ Message.message msg of
@@ -54,7 +58,7 @@ process handler msg = handler call topic where
 
 
 respondError :: Topic -> String -> [Message]
-respondError topic = constructMessage topic "error" . encodeP . Exception . Just
+respondError topic = mkList . constructMessage topic "error" . encodeP . Exception . Just
 
 
 constructMessage :: Proto.Serializable msg => Topic -> String ->  msg -> Message
