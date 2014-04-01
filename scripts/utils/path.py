@@ -8,6 +8,10 @@
 import os
 import tarfile
 
+from colors import print_info
+
+
+
 def write_if_changed(path, s):
     if os.path.exists(path):
         with open(path, 'r') as file:

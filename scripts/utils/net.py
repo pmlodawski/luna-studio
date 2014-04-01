@@ -1,9 +1,18 @@
+###########################################################################
+## Copyright (C) Flowbox, Inc / All Rights Reserved
+## Unauthorized copying of this file, via any medium is strictly prohibited
+## Proprietary and confidential
+## Flowbox Team <contact@flowbox.io>, 2014
+###########################################################################
+
 import urllib2
 import os
 import sys
 
 from colors import print_info
 from path   import make_dirs_if_needed
+
+
 
 def sizeof_fmt(num):
     for x in ['bytes','KB','MB','GB']:
