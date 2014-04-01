@@ -105,7 +105,7 @@ main
         Monitoring.beginMonitoring
 
         argv                    <- Env.getArgs
-        (conf, cconf, nops)     <- ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer argv
+        (conf, nops)            <- ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer argv
         (fileIn, fileOut)       <- case nops of
           (i:o:_) -> return (i,o)
           _       -> ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer ("--help":argv)
