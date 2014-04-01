@@ -4,13 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Graphics.Raster.Error where
+module Flowbox.Graphics.Image.Error where
 
 import Flowbox.Prelude hiding (lookup, map)
 
 
 data Error = ChannelLookupError { name :: String }
-           | TmpError
 
 ------------------------------------------------------------------------
 -- INSTANCES
@@ -19,4 +18,3 @@ data Error = ChannelLookupError { name :: String }
 instance Show Error where
     show err = case err of
         ChannelLookupError name -> "Channel lookup error: channel '" ++ name ++ "' not found"
-        TmpError                -> "TmpError"

@@ -4,37 +4,37 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE TypeOperators        #-}
 
-{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE CPP                  #-}
 -- {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ExtendedDefaultRules      #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 
-import qualified Config                as Cfg
+import qualified Config                            as Cfg
 import           Control.Applicative
-import           Data.Array.Accelerate (Exp)
-import qualified Data.Array.Accelerate as A
+import           Data.Array.Accelerate             (Exp)
+import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Accelerate.Interpreter as Interp
-import qualified Data.Map              as Map
+import qualified Data.Map                          as Map
 --import qualified Debug.Trace           as Dbg
-import qualified Monitoring            as Monitoring
-import qualified ParseArgs             as ParseArgs
-import qualified System.Environment    as Env
-import qualified System.Exit           as Exit
+import qualified Monitoring         as Monitoring
+import qualified ParseArgs          as ParseArgs
+import qualified System.Environment as Env
+import qualified System.Exit        as Exit
 
+import           Flowbox.Graphics.Color                 (Color (..))
+import qualified Flowbox.Graphics.Color                 as C
 import qualified Flowbox.Graphics.Deprecated.Algorithms as G
-import           Flowbox.Graphics.Color            (Color (..))
-import qualified Flowbox.Graphics.Color            as C
-import qualified Flowbox.Graphics.Image.Color      as Img
-import           Flowbox.Graphics.Raster.Image     (ImageAcc)
-import qualified Flowbox.Graphics.Raster.Image     as Img
-import qualified Flowbox.Graphics.Raster.IO        as Img
-import qualified Flowbox.Graphics.Raster.Raster    as Img
-import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
-import qualified Flowbox.Graphics.Utils            as U
-import           Flowbox.Prelude                   as P
+import           Flowbox.Graphics.Image                 (ImageAcc)
+import qualified Flowbox.Graphics.Image                 as Img
+import qualified Flowbox.Graphics.Image.Color           as Img
+import qualified Flowbox.Graphics.Image.IO              as Img
+import qualified Flowbox.Graphics.Image.Raster          as Img
+import qualified Flowbox.Graphics.Image.Repr            as RGBA
+import qualified Flowbox.Graphics.Utils                 as U
+import           Flowbox.Prelude                        as P
 
 
 --imgtest :: (A.Shape ix, A.Shape ix1) =>
@@ -90,8 +90,8 @@ main
         let backend     = ParseArgs.Interpreter --Label.get Cfg.configBackend conf
             frameNames  = replicate 5 "lena.bmp"
             --frameNames  = fmap (\x -> (T.printf "frames/frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
-            getImage location = fmap (either (\_ -> mempty) id) (Img.readImageFromBMP location)
-            getImages locations = fmap (either (\_ -> mempty) id) (Img.readImageSequenceFromBMP locations)
+            getImage location = fmap (either (\_ -> mempty) id) (Img.readFromBMP location)
+            getImages locations = fmap (either (\_ -> mempty) id) (Img.readSequenceFromBMP locations)
             getDouble image = Img.toFloat <$> RGBA.decompose image
 
         -- Read in the image file
@@ -102,7 +102,7 @@ main
 
         case imageOut of
             Left err -> print err
-            Right val -> do Img.writeImageToBMP (ParseArgs.run backend) fileOut val
+            Right val -> do Img.writeToBMP (ParseArgs.run backend) fileOut val
                             return ()
 
 

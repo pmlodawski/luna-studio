@@ -16,17 +16,16 @@ import           Flowbox.Prelude        as P
 
 
 
-data Color a = RGB  { r :: a, g :: a, b :: a             }
+data Color a = RGB  { r :: a, g :: a, b :: a         }
              | RGBA { r :: a, g :: a, b :: a, a :: a }
-             | HSV  { h :: a, s :: a, v :: a             }
-             | HSL  { h :: a, s :: a, v :: a             }
-             | CMY  { c :: a, m :: a, y :: a             }
+             | HSV  { h :: a, s :: a, v :: a         }
+             | HSL  { h :: a, s :: a, v :: a         }
+             | CMY  { c :: a, m :: a, y :: a         }
              | CMYK { c :: a, m :: a, y :: a, k :: a }
              deriving (Show)
 
 
 type ColorAcc a = Color (Exp a)
--- FIXME: fix the types ^
 
 --helperHsvHsl :: Exp Int -> Exp a -> Exp a -> Int
 helperHsvHsl :: (A.Elt a, A.Elt (A.Plain b), A.IsNum a, A.IsScalar a, A.Lift Exp b, Num b) => Exp a -> b -> b -> Exp (A.Plain b, A.Plain b, A.Plain b)
@@ -78,7 +77,6 @@ toHSV :: (A.Elt a, A.IsFloating a) => ColorAcc a -> ColorAcc a
 toHSV color@(HSV{}) = color
 toHSV (RGB r' g' b')   = HSV h'' s' v'
     where h'' = (h' A.>* 0 A.? (h' , h' + 6)) / 6
-          -- FIXME: rename for shadowing
           h' = A.cond (delta A.==* 0) 0
              $ A.cond (r' A.==* maxRGB) (((g' - b') / delta) `nonIntRem` 6)
              $ A.cond (g' A.==* maxRGB) ((b' - r') / delta + 2)

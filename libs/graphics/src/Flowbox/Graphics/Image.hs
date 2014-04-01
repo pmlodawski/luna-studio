@@ -6,10 +6,8 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
--- FIXME: rearrange modules (Flowbox.Graphics.Image isntead of Flowbox.Graphics.Raster.Image)
-
-module Flowbox.Graphics.Raster.Image (
-    module Flowbox.Graphics.Raster.Image,
+module Flowbox.Graphics.Image (
+    module Flowbox.Graphics.Image,
     Error(..)
 ) where
 
@@ -22,9 +20,9 @@ import           Data.Map                          (Map)
 import qualified Data.Map                          as Map
 --import qualified Debug.Trace                       as Dbg
 
-import           Flowbox.Graphics.Raster.Channel (ChannelAcc, Channel2, Channel3, RawData2, RawData3)
-import qualified Flowbox.Graphics.Raster.Channel as Channel
-import           Flowbox.Graphics.Raster.Error   (Error (ChannelLookupError, TmpError))
+import           Flowbox.Graphics.Image.Channel (ChannelAcc, Channel2, RawData2)
+import qualified Flowbox.Graphics.Image.Channel as Channel
+import           Flowbox.Graphics.Image.Error   (Error (ChannelLookupError))
 import           Flowbox.Prelude                 hiding (lookup, map)
 
 
@@ -99,28 +97,28 @@ elementAt :: Int -> ImageAcc ix a -> (Channel.Name, ChannelAcc ix a)
 elementAt pos img = Map.elemAt pos $ view channels img
 
 insert :: Channel.Name -> ChannelAcc ix a -> ImageAcc ix a -> ImageAcc ix a
-insert name chan img = img & channels %~ (Map.insert name chan)
+insert cname chan img = img & channels %~ (Map.insert cname chan)
 
 get :: Channel.Name -> ImageAcc ix a -> Either Error (ChannelAcc ix a)
-get name img = justErr (ChannelLookupError name) $ Map.lookup name (view channels img)
+get cname img = justErr (ChannelLookupError cname) $ Map.lookup cname (view channels img)
 
 remove :: Channel.Name -> ImageAcc ix a -> ImageAcc ix a
-remove name img = img & channels %~ (Map.delete name)
+remove cname img = img & channels %~ (Map.delete cname)
 
 adjust :: (ChannelAcc ix a -> ChannelAcc ix a) -> String -> ImageAcc ix a -> ImageAcc ix a
-adjust f name img = img & channels %~ (Map.adjust f name)
+adjust f cname img = img & channels %~ (Map.adjust f cname)
 
 adjustWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix a) -> String -> ImageAcc ix a -> ImageAcc ix a
-adjustWithKey f name img = img & channels %~ (Map.adjustWithKey f name)
+adjustWithKey f cname img = img & channels %~ (Map.adjustWithKey f cname)
 
 update :: (ChannelAcc ix a -> Maybe (ChannelAcc ix a)) -> Channel.Name -> ImageAcc ix a -> ImageAcc ix a
-update f name img = img & channels %~ (Map.update f name)
+update f cname img = img & channels %~ (Map.update f cname)
 
 updateWithKey :: (Channel.Name -> ChannelAcc ix a -> Maybe (ChannelAcc ix a)) -> String -> ImageAcc ix a -> ImageAcc ix a
-updateWithKey f name img = img & channels %~ (Map.updateWithKey f name)
+updateWithKey f cname img = img & channels %~ (Map.updateWithKey f cname)
 
 alter :: (Maybe (ChannelAcc ix a) -> Maybe (ChannelAcc ix a)) -> Channel.Name -> ImageAcc ix a -> ImageAcc ix a
-alter f name img = img & channels %~ (Map.alter f name)
+alter f cname img = img & channels %~ (Map.alter f cname)
 
 cpChannel :: Channel.Name -> Channel.Name -> ImageAcc ix a -> Either Error (ImageAcc ix a)
 cpChannel source destination img = do
@@ -131,7 +129,7 @@ cpChannel source destination img = do
 -- and implement filterByname using filterWithName
 filterByName :: [Channel.Name] -> ImageAcc ix a -> ImageAcc ix a
 filterByName names img = img & channels %~ (Map.filterWithKey nameMatches)
-    where nameMatches name _ = name `elem` names
+    where nameMatches cname _ = cname `elem` names
 
 -- conversion between numeric types
 
@@ -157,10 +155,10 @@ transform x = Transformed x mempty
 -- czysty kod kurwa
 rasterizeChannel :: (A.Elt a, A.IsFloating a) => Transformation -> Channel2 a -> Channel2 a
 rasterizeChannel (Transformation t) ch =
-    Channel.stencil (convolve3x1 kernel) A.Clamp $
-    Channel.stencil (convolve1x3 kernel) A.Clamp $
+    Channel.stencil (convolve3x1 initialKernel) A.Clamp $
+    Channel.stencil (convolve1x3 initialKernel) A.Clamp $
     Channel.generate sh f
-    where kernel = [1/6,2/3,1/6]
+    where initialKernel = [1/6,2/3,1/6]
           convolve3x1 :: (A.Elt a, A.IsNum a) => [Exp a] -> Stencil3x1 a -> Exp a
           convolve3x1 kernel (_, (a,b,c), _) = sum $ zipWith (*) kernel [a,b,c]
           convolve1x3 :: (A.Elt a, A.IsNum a) => [Exp a] -> Stencil1x3 a -> Exp a

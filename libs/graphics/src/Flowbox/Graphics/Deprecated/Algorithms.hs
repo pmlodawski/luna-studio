@@ -23,14 +23,14 @@
 
 module Flowbox.Graphics.Deprecated.Algorithms where
 
-import           Data.Array.Accelerate             (Exp)
-import qualified Data.Array.Accelerate             as A
+import           Data.Array.Accelerate (Exp)
+import qualified Data.Array.Accelerate as A
 
-import           Flowbox.Graphics.Raster.Channel   (Channel, Channel2, Channel3, RawData2, RawData3)
-import qualified Flowbox.Graphics.Raster.Channel   as Channel
-import           Flowbox.Graphics.Raster.Image     (Image)
-import qualified Flowbox.Graphics.Raster.Image     as Image
-import           Flowbox.Prelude                   as P
+import           Flowbox.Graphics.Image.Channel (Channel, Channel2, Channel3, RawData2, RawData3)
+import qualified Flowbox.Graphics.Image.Channel as Channel
+import           Flowbox.Graphics.Image         (Image)
+import qualified Flowbox.Graphics.Image         as Image
+import           Flowbox.Prelude                as P
 
 
 type String3 = (String, String, String)

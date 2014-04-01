@@ -4,21 +4,21 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Graphics.Image.Color where
 
 import           Data.Array.Accelerate (Exp)
 import qualified Data.Array.Accelerate as A
-import           Data.Map                          (Map)
-import qualified Data.Map                          as Map
+import           Data.Map              (Map)
+import qualified Data.Map              as Map
 
-import qualified Flowbox.Graphics.Color            as Color
-import qualified Flowbox.Graphics.Raster.Channel   as Channel
-import           Flowbox.Graphics.Raster.Image     (ImageAcc)
-import qualified Flowbox.Graphics.Raster.Image     as Image
-import qualified Flowbox.Graphics.Utils            as U
-import           Flowbox.Prelude                   as P
+import qualified Flowbox.Graphics.Color         as Color
+import           Flowbox.Graphics.Image         (ImageAcc)
+import qualified Flowbox.Graphics.Image         as Image
+import qualified Flowbox.Graphics.Image.Channel as Channel
+import qualified Flowbox.Graphics.Utils         as U
+import           Flowbox.Prelude                as P
 
 
 -- TODO: discuss whether those functions should require rgb color space or should it look

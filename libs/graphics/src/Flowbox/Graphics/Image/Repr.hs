@@ -4,18 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.Graphics.Raster.Repr.RGBA where
+module Flowbox.Graphics.Image.Repr where
 
 import           Data.Array.Accelerate    (Exp)
 import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as A
 import           Data.Bits                ((.&.))
 
-import           Flowbox.Graphics.Raster.Channel (RawData2, RawData3)
-import qualified Flowbox.Graphics.Raster.Channel as Channel
-import           Flowbox.Graphics.Raster.Image   (Image)
-import qualified Flowbox.Graphics.Raster.Image   as Image
-import           Flowbox.Prelude                 hiding (map)
+import           Flowbox.Graphics.Image         (Image)
+import qualified Flowbox.Graphics.Image         as Image
+import qualified Flowbox.Graphics.Image.Channel as Channel
+import           Flowbox.Prelude                hiding (map)
 
 
 decompose :: (A.Shape ix) => Image (A.Array ix A.Word32) -> Either Image.Error (Image (A.Array ix A.Word8))

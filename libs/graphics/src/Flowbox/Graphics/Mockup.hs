@@ -30,17 +30,17 @@ import qualified Data.Array.Accelerate.CUDA as CUDA
 #endif
 import qualified Data.Array.Accelerate.Interpreter as Interpreter
 
-import qualified Data.Map                          as Map
+import qualified Data.Map                               as Map
 import           Data.Number.Conversion
 import qualified Flowbox.Graphics.Deprecated.Algorithms as Alg
-import           Flowbox.Graphics.Raster.Channel   (Channel)
-import qualified Flowbox.Graphics.Raster.Channel   as Channel
-import           Flowbox.Graphics.Raster.Image     (Image (Image))
-import qualified Flowbox.Graphics.Raster.Image     as Image
-import qualified Flowbox.Graphics.Raster.IO        as Image
-import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
-import           Flowbox.Prelude                   hiding ((.))
-import           Luna.Target.HS.Core               hiding (print, return)
+import           Flowbox.Graphics.Image                 (Image (Image))
+import qualified Flowbox.Graphics.Image                 as Image
+import           Flowbox.Graphics.Image.Channel         (Channel)
+import qualified Flowbox.Graphics.Image.Channel         as Channel
+import qualified Flowbox.Graphics.Image.IO              as Image
+import qualified Flowbox.Graphics.Image.Repr            as RGBA
+import           Flowbox.Prelude                        hiding ((.))
+import           Luna.Target.HS.Core                    hiding (print, return)
 
 
 

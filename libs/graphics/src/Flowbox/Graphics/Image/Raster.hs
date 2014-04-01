@@ -4,23 +4,22 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators       #-}
 
-module Flowbox.Graphics.Raster.Raster where
+module Flowbox.Graphics.Image.Raster where
 
-import           Data.Array.Accelerate  (Exp)
-import qualified Data.Array.Accelerate  as A
+import           Data.Array.Accelerate (Exp)
+import qualified Data.Array.Accelerate as A
 
-import           Flowbox.Graphics.Color             (ColorAcc)
-import qualified Flowbox.Graphics.Color             as Color
-import qualified Flowbox.Graphics.Raster.Channel    as Channel
-import           Flowbox.Graphics.Raster.Image      (ImageAcc)
-import qualified Flowbox.Graphics.Raster.Image      as Img
-import qualified Flowbox.Graphics.Utils             as U
-import           Flowbox.Prelude                    as P
+import           Flowbox.Graphics.Color         (ColorAcc)
+import qualified Flowbox.Graphics.Color         as Color
+import           Flowbox.Graphics.Image         (ImageAcc)
+import qualified Flowbox.Graphics.Image         as Img
+import qualified Flowbox.Graphics.Image.Channel as Channel
+import qualified Flowbox.Graphics.Utils         as U
+import           Flowbox.Prelude                as P
 
--- FIXME: move to Image, contemplate module name
 
 constant :: (A.Elt a, A.IsFloating a, A.Shape ix) => Exp ix -> [(Channel.Name, Exp a)] -> ImageAcc ix a
 constant sh = foldr appendChannel mempty

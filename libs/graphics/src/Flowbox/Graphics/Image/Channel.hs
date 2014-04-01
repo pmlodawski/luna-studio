@@ -7,7 +7,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators    #-}
 
-module Flowbox.Graphics.Raster.Channel where
+module Flowbox.Graphics.Image.Channel where
 
 import qualified Data.Array.Accelerate as A
 
@@ -77,10 +77,6 @@ shapeSize = A.shapeSize
 slice :: (A.Slice slix, A.Elt e) => ChannelAcc (A.FullShape slix) e -> A.Exp slix -> ChannelAcc (A.SliceShape slix) e
 slice channel parts = Acc $ A.slice (accMatrix channel) parts
 
--- FIXME: find the usage and change to (flip slice)
-slice' :: (A.Slice slix, A.Elt e) => A.Exp slix -> ChannelAcc (A.FullShape slix) e -> ChannelAcc (A.SliceShape slix) e
-slice' = flip slice
-
 -- == Construction ==
 
 -- = Introduction =
@@ -105,7 +101,7 @@ replicate sh m = Acc $ A.replicate sh $ accMatrix m
 fill :: (A.Shape ix, A.Elt e) => A.Exp ix -> A.Exp e -> ChannelAcc ix e
 fill sh x = Acc $ A.fill sh x
 
--- Enumeration
+-- = Enumeration =
 
 enumFromN :: (A.Shape ix, A.Elt e, A.IsNum e) => A.Exp ix -> A.Exp e -> ChannelAcc ix e
 enumFromN sh n = Acc $ A.enumFromN sh n
@@ -114,42 +110,40 @@ enumFromStepN :: (A.Shape ix, A.Elt e, A.IsNum e)
     => A.Exp ix -> A.Exp e -> A.Exp e -> ChannelAcc ix e
 enumFromStepN sh n s = Acc $ A.enumFromStepN sh n s
 
--- Concatenation
+-- = Concatenation =
 
--- (++) :: (A.Shape ix, A.Elt e) => ChannelAcc ix e -> ChannelAcc ix e -> ChannelAcc ix e
 (++) :: (A.Slice ix, A.Shape ix, A.Elt e) => ChannelAcc (ix A.:. Int) e -> ChannelAcc (ix A.:. Int) e -> ChannelAcc (ix A.:. Int) e
 (++) chan1 chan2 = Acc $ (accMatrix chan1) A.++ (accMatrix chan2)
 
 
----- Modifying arrays
+-- == Modifying arrays ==
 
--- Shape manipulation
+-- = Shape manipulation =
 
 reshape :: (A.Shape ix, A.Shape ix', A.Elt e) => A.Exp ix -> ChannelAcc ix' e -> ChannelAcc ix e
 reshape sh chan = Acc $ A.reshape sh (accMatrix chan)
 
--- Specialised permutations
+-- = Specialised permutations =
 
 transpose :: A.Elt e => Channel2 e -> Channel2 e
 transpose chan = Acc $ accMatrix chan
 
 
--- Element-wise operations
+-- = Element-wise operations =
 
--- Mapping
+-- = Mapping =
 
 map :: (A.Shape ix, A.Elt a, A.Elt b)
     => (A.Exp a -> A.Exp b) -> ChannelAcc ix a -> ChannelAcc ix b
 map f channel = Acc $ A.map f (accMatrix channel)
 
--- Zipping
+-- = Zipping =
 
--- FIXME: change name to multiplyBy and divideBy OR remove alltogether
-premultiply :: (A.Shape ix, A.Elt a, A.IsNum a) => ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a
-premultiply = zipWith (*)
+multiply :: (A.Shape ix, A.Elt a, A.IsNum a) => ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a
+multiply = zipWith (*)
 
-unpremultiply :: (A.Shape ix, A.Elt a, A.IsFloating a) => ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a
-unpremultiply = zipWith (/)
+divide :: (A.Shape ix, A.Elt a, A.IsFloating a) => ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a
+divide = zipWith (/)
 
 zipWith :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c)
     => (A.Exp a -> A.Exp b -> A.Exp c)
@@ -355,7 +349,7 @@ unzip9 :: (A.Shape ix, A.Elt a)
 unzip9 chan = over each Acc $ A.unzip9 (accMatrix chan)
 
 
----- Stencil
+-- == Stencil ==
 
 stencil :: (A.Shape ix, A.Elt a, A.Elt b, A.Stencil ix a stencil)
     => (stencil -> A.Exp b) -> A.Boundary a -> ChannelAcc ix a -> ChannelAcc ix b
@@ -366,17 +360,10 @@ stencil2 :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c, A.Stencil ix a stencil1, A.S
 stencil2 f b1 ch1 b2 ch2 = Acc $ A.stencil2 f b1 (accMatrix ch1) b2 (accMatrix ch2)
 
 
----- Operations
+-- == Operations ==
 
--- Shape manipulation
+-- = Shape manipulation =
 
 index3 :: (A.Elt i, A.Slice (A.Z A.:. i), A.Slice (A.Z A.:. i A.:. i))
     => A.Exp i -> A.Exp i -> A.Exp i -> A.Exp (A.Z A.:. i A.:. i A.:. i)
 index3 i j k = A.lift (A.Z A.:. i A.:. j A.:. k)
-
-
----- Graphics related
-
---clamp ::
---clamp ranges
--- WARN: in case someone wants to do this here: make it in another module, ie. Composition
