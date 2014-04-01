@@ -33,22 +33,25 @@ build repoPath = do contents <- Files.getDirectoryContents repoPath
                     categories <- mapM (category Map.empty) contents
                     return Repository {items = List.foldl Map.union Map.empty categories}
 
-isProper :: String -> Bool
-isProper file = not (file `elem` [".git", "README.md", "..", "."])
+isProper :: String -> IO Bool
+isProper file = do isDirectory <- Files.doesDirectoryExist file
+                   return $ not (file `elem` [".git", "README.md", "..", "."]) && isDirectory
 
 category :: Map Item.Name AvailableFamilies -> String -> IO (Map Item.Name AvailableFamilies)
-category repo categoryDir = case isProper categoryDir of
-                                False -> return repo
-                                True  -> do contents <- Files.getDirectoryContents categoryDir
-                                            packList <- mapM (package repo) contents 
-                                            return $ List.foldl Map.union Map.empty packList
+category repo categoryDir = do proper <- isProper categoryDir
+                               case proper of
+                                    False -> return repo
+                                    True  -> do contents <- Files.getDirectoryContents categoryDir
+                                                packList <- mapM (package repo) contents 
+                                                return $ List.foldl Map.union Map.empty packList
 
 package :: Map Item.Name AvailableFamilies -> FilePath -> IO (Map Item.Name AvailableFamilies)
-package repo directory = case isProper directory of
-                            False -> return repo
-                            True  -> do contents <- Files.getDirectoryContents directory
-                                        let family = packageFamily contents
-                                        return $ Map.insert directory family repo
+package repo directory = do proper <- isProper directory
+                            case proper of
+                                False -> return repo
+                                True  -> do contents <- Files.getDirectoryContents directory
+                                            let family = packageFamily contents
+                                            return $ Map.insert directory family repo
                                      
 packageFamily :: [FilePath] -> AvailableFamilies
 packageFamily packageFiles = (Map.fromList $ List.map version packageFiles)
