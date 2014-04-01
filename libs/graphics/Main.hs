@@ -66,9 +66,9 @@ imgtest img frames = do
         imageConstant = Img.constant (A.index2 256 256) [("rgba.r", A.constant 1), ("rgba.g", A.constant 0), ("rgba.b", A.constant 1), ("rgba.a", A.constant 1)]
         --imageCheckerboard :: ImageAcc A.DIM2 Double
         imageCheckerboard = Img.checkerboard (A.index2 (256::Exp Int) (256::Exp Int)) (A.constant 32) (green, blue, white, gray) (red, A.constant 1.5) (yellow, A.constant 2)
-        imageGamma = Img.gamma imageRGBA gammaMap Nothing Nothing 0
-        imageClamp = Img.clamp imageRGBA clampMap Nothing Nothing 0
-        imageClipTest = Img.clipTest imageRGBA clipMap Nothing Nothing 0
+        imageGamma = Img.gamma imageRGBA gammaMap Nothing Nothing 1
+        imageClamp = Img.clamp imageRGBA clampMap Nothing Nothing 1
+        imageClipTest = Img.clipTest imageRGBA clipMap Nothing Nothing 0.3
 
     let imageOut = imageClipTest
     RGBA.compose $ Img.toWord8 $ Img.map G.clipValues imageOut
