@@ -12,10 +12,11 @@ import           Flowbox.Prelude
 --import qualified Flowbox.RepoManager.VCS.VCS  as VCS
 
 --import qualified           System.Environment              as Environment
-import Flowbox.RepoManager.Data.Repository as Repository
+--import Flowbox.RepoManager.Data.Repository as Repository
 
 main :: IO ()
-main = Repository.build "repo/packages"
+main = print "hello"
+--main = Repository.build "repo/packages"
 
 --main = do
 --          args <- Environment.getArgs
