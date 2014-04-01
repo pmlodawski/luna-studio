@@ -26,9 +26,6 @@ cwd = os.getcwd()
 os.chdir(rootPath)
 
 
-thirdPartPath = os.path.join(rootPath, 'third-party')
-criterionPath = os.path.join(thirdPartPath,  'criterion-0.10.0.0')
-
 def try_call(cmd):
     print_info("Calling: %s" % cmd)
     if call(cmd, shell=True): fatal()
@@ -86,7 +83,6 @@ def workon(name):
             os.makedirs(sbox)
             os.chdir(sbox)
             try_call('cabal sandbox init --sandbox=.')
-            try_call('cabal sandbox add-source %s' % criterionPath)
 
             pnames = check_deps(pkg)
             pkg = deepcopy(pkg)
