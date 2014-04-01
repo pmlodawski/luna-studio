@@ -11,7 +11,7 @@ module Flowbox.FileManager.Handler.Handler where
 
 import           Flowbox.Bus.RPC.BusRPCHandler          (BusRPCHandler)
 import qualified Flowbox.Bus.RPC.Processor              as P
-import           Flowbox.Bus.Topic                      (Topic)
+import           Flowbox.Bus.Data.Topic                      (Topic)
 import qualified Flowbox.FileManager.Handler.FileSystem as FSHandler
 import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger
@@ -31,15 +31,20 @@ topics = [ "filesystem.ls.request"
          , "filesystem.cp.request"
          ]
 
+mkList :: a -> [a]
+mkList a = [a]
+
+singleResult f a = mkList <$> f a
+
 
 handler :: BusRPCHandler
-handler  callback topic = case topic of
-    "filesystem.ls.request"    -> callback P.update FSHandler.ls
-    "filesystem.stat.request"  -> callback P.update FSHandler.stat
-    "filesystem.mkdir.request" -> callback P.status FSHandler.mkdir
-    "filesystem.touch.request" -> callback P.status FSHandler.touch
-    "filesystem.rm.request"    -> callback P.update FSHandler.rm
-    "filesystem.cp.request"    -> callback P.update FSHandler.cp
+handler callback topic = case topic of
+    "filesystem.ls.request"    -> callback P.update $ singleResult FSHandler.ls
+    "filesystem.stat.request"  -> callback P.update $ singleResult FSHandler.stat
+    "filesystem.mkdir.request" -> callback P.status $ singleResult FSHandler.mkdir
+    "filesystem.touch.request" -> callback P.status $ singleResult FSHandler.touch
+    "filesystem.rm.request"    -> callback P.update $ singleResult FSHandler.rm
+    "filesystem.cp.request"    -> callback P.update $ singleResult FSHandler.cp
     unsupported             -> do let errMsg = "Unknown topic: " ++ show unsupported
                                   logger error errMsg
                                   return $ P.respondError topic errMsg
