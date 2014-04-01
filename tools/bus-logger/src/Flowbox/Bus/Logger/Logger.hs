@@ -6,15 +6,15 @@
 ---------------------------------------------------------------------------
 module Flowbox.Bus.Logger.Logger where
 
-import           Control.Monad             (forever)
-import qualified Data.List                 as List
-import           Flowbox.Bus.Bus           (Bus)
-import qualified Flowbox.Bus.Bus           as Bus
-import           Flowbox.Bus.EndPoint      (BusEndPoints)
-import qualified Flowbox.Bus.Message       as Message
-import           Flowbox.Bus.MessageFrame  (MessageFrame (MessageFrame))
-import           Flowbox.Bus.Topic         (Topic)
-import           Flowbox.Prelude           hiding (error)
+import           Control.Monad                 (forever)
+import qualified Data.List                     as List
+import           Flowbox.Bus.Bus               (Bus)
+import qualified Flowbox.Bus.Bus               as Bus
+import qualified Flowbox.Bus.Data.Message      as Message
+import           Flowbox.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
+import           Flowbox.Bus.Data.Topic        (Topic)
+import           Flowbox.Bus.EndPoint          (BusEndPoints)
+import           Flowbox.Prelude               hiding (error)
 import           Flowbox.System.Log.Logger
 
 
@@ -33,9 +33,16 @@ logMessage :: Bus ()
 logMessage = do msgFrame <- Bus.receive
                 case msgFrame of
                     Left err -> logger error $ "Unparseable message: " ++ err
-                    Right (MessageFrame msg crlID senderID) -> do
+                    Right (MessageFrame msg crlID lastFrame senderID) -> do
                         let topic  = Message.topic msg
-                            logMsg = show senderID ++ " -> " ++ show crlID ++ "\t:: " ++ topic
+                            logMsg = show senderID
+                                   ++ " -> "
+                                   ++ show crlID
+                                   ++ " ("
+                                   ++ show lastFrame
+                                   ++ ")"
+                                   ++ "\t:: "
+                                   ++ topic
                         if List.isSuffixOf "error" topic
                             then logger error logMsg
                             else logger info  logMsg

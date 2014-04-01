@@ -8,11 +8,12 @@
 
 module Flowbox.ZMQ.RPC.Client where
 
+import           Control.Monad.Trans.Either
 import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
-import           Control.Monad.Trans.Either
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
+import           Control.Monad.Trans.Class                      (lift)
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
@@ -21,7 +22,6 @@ import qualified Generated.Proto.Rpc.Exception                  as Exception
 import           Generated.Proto.Rpc.Response                   (Response)
 import qualified Generated.Proto.Rpc.Response                   as Response
 import qualified Generated.Proto.Rpc.Response.Type              as Type
-import Control.Monad.Trans.Class (lift)
 
 
 type Error = String

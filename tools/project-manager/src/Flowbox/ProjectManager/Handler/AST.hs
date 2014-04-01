@@ -9,6 +9,7 @@ module Flowbox.ProjectManager.Handler.AST where
 import qualified Data.IORef                                                                        as IORef
 import qualified Flowbox.Batch.Handler.AST                                                         as BatchAST
 import qualified Flowbox.Luna.Data.AST.Crumb.Crumb                                                 as Crumb
+import qualified Flowbox.Luna.Data.AST.Expr                                                        as Expr
 import qualified Flowbox.Luna.Data.AST.Module                                                      as Module
 import qualified Flowbox.Luna.Data.AST.Type                                                        as Type
 import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Crumb                               ()
@@ -53,7 +54,6 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Reque
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Update                  as Remove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Request                as ResolveDefinition
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                 as ResolveDefinition
-import qualified Flowbox.Luna.Data.AST.Expr as Expr
 
 
 loggerIO :: LoggerIO

@@ -15,14 +15,14 @@ import           Flowbox.Luna.Tools.Serialize.Proto.Conversion.Pat  ()
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
-import qualified Generated.Proto.Parser.Parse.Expr.Request        as ParseExpr
-import qualified Generated.Proto.Parser.Parse.Expr.Status      as ParseExpr
-import qualified Generated.Proto.Parser.Parse.NodeExpr.Request    as ParseNodeExpr
-import qualified Generated.Proto.Parser.Parse.NodeExpr.Status  as ParseNodeExpr
-import qualified Generated.Proto.Parser.Parse.Pat.Request         as ParsePat
-import qualified Generated.Proto.Parser.Parse.Pat.Status       as ParsePat
-import qualified Generated.Proto.Parser.Parse.Type.Request        as ParseType
-import qualified Generated.Proto.Parser.Parse.Type.Status      as ParseType
+import qualified Generated.Proto.Parser.Parse.Expr.Request          as ParseExpr
+import qualified Generated.Proto.Parser.Parse.Expr.Status           as ParseExpr
+import qualified Generated.Proto.Parser.Parse.NodeExpr.Request      as ParseNodeExpr
+import qualified Generated.Proto.Parser.Parse.NodeExpr.Status       as ParseNodeExpr
+import qualified Generated.Proto.Parser.Parse.Pat.Request           as ParsePat
+import qualified Generated.Proto.Parser.Parse.Pat.Status            as ParsePat
+import qualified Generated.Proto.Parser.Parse.Type.Request          as ParseType
+import qualified Generated.Proto.Parser.Parse.Type.Status           as ParseType
 
 
 

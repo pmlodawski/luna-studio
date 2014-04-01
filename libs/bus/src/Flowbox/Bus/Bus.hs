@@ -72,7 +72,7 @@ getPushSocket = Env.pushSocket <$> get
 
 
 getSubSocket :: (Functor f, MonadState (BusEnv z) f) => f (ZMQ.Socket z ZMQ.Sub)
-getSubSocket  = Env.subSocket <$> get
+getSubSocket = Env.subSocket <$> get
 
 
 getNewRequestID :: Bus Message.RequestID

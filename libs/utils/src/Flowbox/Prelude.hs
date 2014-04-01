@@ -72,6 +72,9 @@ mapM_ f as = do
     _ <- mapM f as
     return ()
 
+mkList :: a -> [a]
+mkList a = [a]
+
 isLeft :: Either a b -> Bool
 isLeft (Left _) = True
 isLeft _        = False

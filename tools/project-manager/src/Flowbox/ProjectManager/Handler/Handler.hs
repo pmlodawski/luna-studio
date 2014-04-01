@@ -9,9 +9,9 @@
 
 module Flowbox.ProjectManager.Handler.Handler where
 
+import           Flowbox.Bus.Data.Topic                     (Topic)
 import           Flowbox.Bus.RPC.BusRPCHandler              (BusRPCHandler)
 import qualified Flowbox.Bus.RPC.Processor                  as P
-import           Flowbox.Bus.Topic                          (Topic)
 import           Flowbox.Prelude                            hiding (error)
 import           Flowbox.ProjectManager.Context             (ContextRef)
 import qualified Flowbox.ProjectManager.Handler.AST         as ASTHandler
@@ -34,7 +34,7 @@ logger = getLoggerIO "Flowbox.ProjectManager.Handler"
 
 --handlerItems :: ContextRef -> [HandlerItem]
 --handlerItems ctxRef =
---    [ ("project.list.request",   P.status, ProjectHandler.list   ctxRef) ]
+--    [ ("project.list.request",   P.status $ P.singleResult , ProjectHandler.list   ctxRef) ]
 
 
 topics :: [Topic]
@@ -86,49 +86,49 @@ topics = [ "project.list.request"
 
 handler :: ContextRef -> BusRPCHandler
 handler ctx callback topic = case topic of
-    "project.list.request"           -> callback P.status $ ProjectHandler.list ctx
-    "project.lookup.request"         -> callback P.status $ ProjectHandler.lookup ctx
-    "project.create.request"         -> callback P.update $ ProjectHandler.create ctx
-    "project.open.request"           -> callback P.update $ ProjectHandler.open ctx
-    "project.update.request"         -> callback P.update $ ProjectHandler.update ctx
-    "project.close.request"          -> callback P.update $ ProjectHandler.close ctx
-    "project.store.request"          -> callback P.status $ ProjectHandler.store ctx
-    "project.library.list.request"   -> callback P.status $ LibraryHandler.list ctx
-    "project.library.lookup.request" -> callback P.status $ LibraryHandler.lookup ctx
-    "project.library.create.request" -> callback P.update $ LibraryHandler.create ctx
-    "project.library.load.request"   -> callback P.update $ LibraryHandler.load ctx
-    "project.library.unload.request" -> callback P.update $ LibraryHandler.unload ctx
-    "project.library.store.request"  -> callback P.status $ LibraryHandler.store ctx
-    "project.library.ast.get.request"                    -> callback P.status $ ASTHandler.get ctx
-    "project.library.ast.remove.request"                 -> callback P.update $ ASTHandler.remove ctx
-    "project.library.ast.resolve.request"                -> callback P.status $ ASTHandler.resolve ctx
-    "project.library.ast.module.add.request"             -> callback P.update $ ASTHandler.moduleAdd ctx
-    "project.library.ast.module.update.cls.request"      -> callback P.update $ ASTHandler.moduleClsUpdate ctx
-    "project.library.ast.module.update.fields.request"   -> callback P.update $ ASTHandler.moduleFieldsUpdate ctx
-    "project.library.ast.module.update.imports.request"  -> callback P.update $ ASTHandler.moduleImportsUpdate ctx
-    "project.library.ast.data.add.request"               -> callback P.update $ ASTHandler.dataAdd ctx
-    "project.library.ast.data.update.classes.request"    -> callback P.update $ ASTHandler.dataClassesUpdate ctx
-    "project.library.ast.data.update.cls.request"        -> callback P.update $ ASTHandler.dataClsUpdate ctx
-    "project.library.ast.data.update.cons.request"       -> callback P.update $ ASTHandler.dataConsUpdate ctx
-    "project.library.ast.data.update.methods.request"    -> callback P.update $ ASTHandler.dataMethodsUpdate ctx
-    "project.library.ast.function.add.request"           -> callback P.update $ ASTHandler.functionAdd ctx
-    "project.library.ast.function.update.inputs.request" -> callback P.update $ ASTHandler.functionInputsUpdate ctx
-    "project.library.ast.function.update.name.request"   -> callback P.update $ ASTHandler.functionNameUpdate ctx
-    "project.library.ast.function.update.output.request" -> callback P.update $ ASTHandler.functionOutputUpdate ctx
-    "project.library.ast.function.update.path.request"   -> callback P.update $ ASTHandler.functionPathUpdate ctx
-    "project.library.ast.function.graph.get.request"                -> callback P.status $ GraphHandler.get ctx
-    "project.library.ast.function.graph.connect.request"            -> callback P.update $ GraphHandler.connect ctx
-    "project.library.ast.function.graph.disconnect.request"         -> callback P.update $ GraphHandler.disconnect ctx
-    "project.library.ast.function.graph.lookup.request"             -> callback P.status $ GraphHandler.lookup ctx
-    "project.library.ast.function.graph.node.add.request"           -> callback P.update $ GraphHandler.nodeAdd ctx
-    "project.library.ast.function.graph.node.remove.request"        -> callback P.update $ GraphHandler.nodeRemove ctx
-    "project.library.ast.function.graph.node.update.request"        -> callback P.update $ GraphHandler.nodeUpdate ctx
-    "project.library.ast.function.graph.node.updateInPlace.request" -> callback P.update $ GraphHandler.nodeUpdateInPlace ctx
-    "project.library.ast.function.graph.node.default.get.request"    -> callback P.status $ NodeDefaultHandler.get ctx
-    "project.library.ast.function.graph.node.default.remove.request" -> callback P.update $ NodeDefaultHandler.remove ctx
-    "project.library.ast.function.graph.node.default.set.request"    -> callback P.update $ NodeDefaultHandler.set ctx
-    "project.library.ast.properties.get.request"                     -> callback P.update $ PropertiesHandler.get ctx
-    "project.library.ast.properties.set.request"                     -> callback P.update $ PropertiesHandler.set ctx
+    "project.list.request"           -> callback P.status $ P.singleResult $ ProjectHandler.list ctx
+    "project.lookup.request"         -> callback P.status $ P.singleResult $ ProjectHandler.lookup ctx
+    "project.create.request"         -> callback P.update $ P.singleResult $ ProjectHandler.create ctx
+    "project.open.request"           -> callback P.update $ P.singleResult $ ProjectHandler.open ctx
+    "project.update.request"         -> callback P.update $ P.singleResult $ ProjectHandler.update ctx
+    "project.close.request"          -> callback P.update $ P.singleResult $ ProjectHandler.close ctx
+    "project.store.request"          -> callback P.status $ P.singleResult $ ProjectHandler.store ctx
+    "project.library.list.request"   -> callback P.status $ P.singleResult $ LibraryHandler.list ctx
+    "project.library.lookup.request" -> callback P.status $ P.singleResult $ LibraryHandler.lookup ctx
+    "project.library.create.request" -> callback P.update $ P.singleResult $ LibraryHandler.create ctx
+    "project.library.load.request"   -> callback P.update $ P.singleResult $ LibraryHandler.load ctx
+    "project.library.unload.request" -> callback P.update $ P.singleResult $ LibraryHandler.unload ctx
+    "project.library.store.request"  -> callback P.status $ P.singleResult $ LibraryHandler.store ctx
+    "project.library.ast.get.request"                    -> callback P.status $ P.singleResult $ ASTHandler.get ctx
+    "project.library.ast.remove.request"                 -> callback P.update $ P.singleResult $ ASTHandler.remove ctx
+    "project.library.ast.resolve.request"                -> callback P.status $ P.singleResult $ ASTHandler.resolve ctx
+    "project.library.ast.module.add.request"             -> callback P.update $ P.singleResult $ ASTHandler.moduleAdd ctx
+    "project.library.ast.module.update.cls.request"      -> callback P.update $ P.singleResult $ ASTHandler.moduleClsUpdate ctx
+    "project.library.ast.module.update.fields.request"   -> callback P.update $ P.singleResult $ ASTHandler.moduleFieldsUpdate ctx
+    "project.library.ast.module.update.imports.request"  -> callback P.update $ P.singleResult $ ASTHandler.moduleImportsUpdate ctx
+    "project.library.ast.data.add.request"               -> callback P.update $ P.singleResult $ ASTHandler.dataAdd ctx
+    "project.library.ast.data.update.classes.request"    -> callback P.update $ P.singleResult $ ASTHandler.dataClassesUpdate ctx
+    "project.library.ast.data.update.cls.request"        -> callback P.update $ P.singleResult $ ASTHandler.dataClsUpdate ctx
+    "project.library.ast.data.update.cons.request"       -> callback P.update $ P.singleResult $ ASTHandler.dataConsUpdate ctx
+    "project.library.ast.data.update.methods.request"    -> callback P.update $ P.singleResult $ ASTHandler.dataMethodsUpdate ctx
+    "project.library.ast.function.add.request"           -> callback P.update $ P.singleResult $ ASTHandler.functionAdd ctx
+    "project.library.ast.function.update.inputs.request" -> callback P.update $ P.singleResult $ ASTHandler.functionInputsUpdate ctx
+    "project.library.ast.function.update.name.request"   -> callback P.update $ P.singleResult $ ASTHandler.functionNameUpdate ctx
+    "project.library.ast.function.update.output.request" -> callback P.update $ P.singleResult $ ASTHandler.functionOutputUpdate ctx
+    "project.library.ast.function.update.path.request"   -> callback P.update $ P.singleResult $ ASTHandler.functionPathUpdate ctx
+    "project.library.ast.function.graph.get.request"                -> callback P.status $ P.singleResult $ GraphHandler.get ctx
+    "project.library.ast.function.graph.connect.request"            -> callback P.update $ P.singleResult $ GraphHandler.connect ctx
+    "project.library.ast.function.graph.disconnect.request"         -> callback P.update $ P.singleResult $ GraphHandler.disconnect ctx
+    "project.library.ast.function.graph.lookup.request"             -> callback P.status $ P.singleResult $ GraphHandler.lookup ctx
+    "project.library.ast.function.graph.node.add.request"           -> callback P.update $ P.singleResult $ GraphHandler.nodeAdd ctx
+    "project.library.ast.function.graph.node.remove.request"        -> callback P.update $ P.singleResult $ GraphHandler.nodeRemove ctx
+    "project.library.ast.function.graph.node.update.request"        -> callback P.update $ P.singleResult $ GraphHandler.nodeUpdate ctx
+    "project.library.ast.function.graph.node.updateInPlace.request" -> callback P.update $ P.singleResult $ GraphHandler.nodeUpdateInPlace ctx
+    "project.library.ast.function.graph.node.default.get.request"    -> callback P.status $ P.singleResult $ NodeDefaultHandler.get ctx
+    "project.library.ast.function.graph.node.default.remove.request" -> callback P.update $ P.singleResult $ NodeDefaultHandler.remove ctx
+    "project.library.ast.function.graph.node.default.set.request"    -> callback P.update $ P.singleResult $ NodeDefaultHandler.set ctx
+    "project.library.ast.properties.get.request"                     -> callback P.update $ P.singleResult $ PropertiesHandler.get ctx
+    "project.library.ast.properties.set.request"                     -> callback P.update $ P.singleResult $ PropertiesHandler.set ctx
     unsupported             -> do let errMsg = "Unknown topic: " ++ show unsupported
                                   logger error errMsg
                                   return $ P.respondError topic errMsg

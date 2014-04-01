@@ -9,9 +9,9 @@
 
 module Flowbox.PluginManager.Handler.Handler where
 
+import           Flowbox.Bus.Data.Topic               (Topic)
 import           Flowbox.Bus.RPC.BusRPCHandler        (BusRPCHandler)
 import qualified Flowbox.Bus.RPC.Processor            as P
-import           Flowbox.Bus.Topic                    (Topic)
 import           Flowbox.PluginManager.Context        (ContextRef)
 import qualified Flowbox.PluginManager.Handler.Plugin as PluginHandler
 import           Flowbox.Prelude                      hiding (error)
@@ -35,12 +35,12 @@ topics = [ "plugin.add.request"
 
 handler :: ContextRef -> BusRPCHandler
 handler ctx callback topic = case topic of
-    "plugin.add.request"    -> callback P.update $ PluginHandler.add    ctx
-    "plugin.remove.request" -> callback P.update $ PluginHandler.remove ctx
-    "plugin.list.request"   -> callback P.status $ PluginHandler.list   ctx
-    "plugin.lookup.request" -> callback P.status $ PluginHandler.lookup ctx
-    "plugin.start.request"  -> callback P.update $ PluginHandler.start  ctx
-    "plugin.stop.request"   -> callback P.update $ PluginHandler.stop   ctx
+    "plugin.add.request"    -> callback P.update $ P.singleResult $ PluginHandler.add    ctx
+    "plugin.remove.request" -> callback P.update $ P.singleResult $ PluginHandler.remove ctx
+    "plugin.list.request"   -> callback P.status $ P.singleResult $ PluginHandler.list   ctx
+    "plugin.lookup.request" -> callback P.status $ P.singleResult $ PluginHandler.lookup ctx
+    "plugin.start.request"  -> callback P.update $ P.singleResult $ PluginHandler.start  ctx
+    "plugin.stop.request"   -> callback P.update $ P.singleResult $ PluginHandler.stop   ctx
     unsupported             -> do let errMsg = "Unknown topic: " ++ show unsupported
                                   logger error errMsg
                                   return $ P.respondError topic errMsg

@@ -9,11 +9,11 @@
 
 module Flowbox.Parser.Handler.Handler where
 
-import           Flowbox.Bus.RPC.BusRPCHandler          (BusRPCHandler)
-import qualified Flowbox.Bus.RPC.Processor              as P
-import           Flowbox.Bus.Topic                      (Topic)
+import           Flowbox.Bus.Data.Topic        (Topic)
+import           Flowbox.Bus.RPC.BusRPCHandler (BusRPCHandler)
+import qualified Flowbox.Bus.RPC.Processor     as P
 import qualified Flowbox.Parser.Handler.Parser as ParserHandler
-import           Flowbox.Prelude                        hiding (error)
+import           Flowbox.Prelude               hiding (error)
 import           Flowbox.System.Log.Logger
 
 
@@ -23,19 +23,19 @@ logger = getLoggerIO "Flowbox.Parser.Handler"
 
 
 topics :: [Topic]
-topics = [ "parser.parse.expr.request"     
-         , "parser.parse.pat.request"      
-         , "parser.parse.type.request"     
+topics = [ "parser.parse.expr.request"
+         , "parser.parse.pat.request"
+         , "parser.parse.type.request"
          , "parser.parse.nodeexpr.request"
          ]
 
 
 handler :: BusRPCHandler
 handler  callback topic = case topic of
-    "parser.parse.expr.request"     -> callback P.update ParserHandler.parseExpr
-    "parser.parse.pat.request"      -> callback P.update ParserHandler.parsePat
-    "parser.parse.type.request"     -> callback P.update ParserHandler.parseType
-    "parser.parse.nodeexpr.request" -> callback P.update ParserHandler.parseNodeExpr
+    "parser.parse.expr.request"     -> callback P.update $ P.singleResult ParserHandler.parseExpr
+    "parser.parse.pat.request"      -> callback P.update $ P.singleResult ParserHandler.parsePat
+    "parser.parse.type.request"     -> callback P.update $ P.singleResult ParserHandler.parseType
+    "parser.parse.nodeexpr.request" -> callback P.update $ P.singleResult ParserHandler.parseNodeExpr
     unsupported -> do let errMsg = "Unknown topic: " ++ show unsupported
                       logger error errMsg
                       return $ P.respondError topic errMsg
