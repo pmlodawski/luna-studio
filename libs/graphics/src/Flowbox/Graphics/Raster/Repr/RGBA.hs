@@ -11,7 +11,7 @@ import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as A
 import           Data.Bits                ((.&.))
 
-import           Flowbox.Graphics.Raster.Channel (RawData2D, RawData3D)
+import           Flowbox.Graphics.Raster.Channel (RawData2, RawData3)
 import qualified Flowbox.Graphics.Raster.Channel as Channel
 import           Flowbox.Graphics.Raster.Image   (Image)
 import qualified Flowbox.Graphics.Raster.Image   as Image

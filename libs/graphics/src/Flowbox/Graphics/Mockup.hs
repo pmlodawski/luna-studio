@@ -32,7 +32,7 @@ import qualified Data.Array.Accelerate.Interpreter as Interpreter
 
 import qualified Data.Map                          as Map
 import           Data.Number.Conversion
-import qualified Flowbox.Graphics.Algorithms       as Alg
+import qualified Flowbox.Graphics.Deprecated.Algorithms as Alg
 import           Flowbox.Graphics.Raster.Channel   (Channel)
 import qualified Flowbox.Graphics.Raster.Channel   as Channel
 import           Flowbox.Graphics.Raster.Image     (Image (Image))

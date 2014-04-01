@@ -16,26 +16,24 @@ import qualified Config                as Cfg
 import           Control.Applicative
 import           Data.Array.Accelerate (Exp)
 import qualified Data.Array.Accelerate as A
-import qualified Data.Array.Accelerate.CUDA as CUDA
 import qualified Data.Array.Accelerate.Interpreter as Interp
-import qualified Data.Label            as Label
+import qualified Data.Map              as Map
 --import qualified Debug.Trace           as Dbg
 import qualified Monitoring            as Monitoring
 import qualified ParseArgs             as ParseArgs
 import qualified System.Environment    as Env
 import qualified System.Exit           as Exit
-import qualified Text.Printf           as T
 
-import qualified Flowbox.Graphics.Algorithms       as G
+import qualified Flowbox.Graphics.Deprecated.Algorithms as G
 import           Flowbox.Graphics.Color            (Color (..))
 import qualified Flowbox.Graphics.Color            as C
-import           Flowbox.Graphics.Raster.Channel   (Channel, Channel2, Channel3, RawData2D, RawData3D)
-import qualified Flowbox.Graphics.Raster.Channel   as Channel
-import           Flowbox.Graphics.Raster.Image     (Image, ImageT)
+import qualified Flowbox.Graphics.Image.Color      as Img
+import           Flowbox.Graphics.Raster.Image     (ImageAcc)
 import qualified Flowbox.Graphics.Raster.Image     as Img
 import qualified Flowbox.Graphics.Raster.IO        as Img
 import qualified Flowbox.Graphics.Raster.Raster    as Img
 import qualified Flowbox.Graphics.Raster.Repr.RGBA as RGBA
+import qualified Flowbox.Graphics.Utils            as U
 import           Flowbox.Prelude                   as P
 
 
@@ -44,8 +42,7 @@ import           Flowbox.Prelude                   as P
 --          -> Image (A.Array ix1 A.Word32)
 --          -> Either Img.Error (Image (A.Array A.DIM2 A.Word32))
 imgtest img frames = do
-    let getDouble image = Img.reprDouble <$> RGBA.decompose image
-        rgb = ("rgba.r", "rgba.g", "rgba.b")
+    let getDouble image = Img.toDouble <$> RGBA.decompose image
         red = RGB (A.constant 1) (A.constant 0) (A.constant 0)
         green = RGB (A.constant 0) (A.constant 1) (A.constant 0)
         blue = RGB (A.constant 0) (A.constant 0) (A.constant 1)
@@ -53,18 +50,28 @@ imgtest img frames = do
         black = RGB (A.constant 0) (A.constant 0) (A.constant 0)
         gray = RGB (A.constant 0.5) (A.constant 0.5) (A.constant 0.5)
         yellow = RGB (A.constant 1) (A.constant 1) (A.constant 0)
+        gammaMap = Map.fromList [("rgba.r", 0.5), ("rgba.g", 0.5), ("rgba.b", 0.5)]
+        clampMap = Map.fromList [("rgba.r", (U.Range 0.25 0.75, Just (U.Range 1 0)))
+                                ,("rgba.g", (U.Range 0.25 0.75, Just (U.Range 0 1)))
+                                ,("rgba.b", (U.Range 0.25 0.75, Just (U.Range 0 0)))]
+        clipMap = Map.fromList [("rgba.r", U.Range 0.19 1)
+                               ,("rgba.g", U.Range 0.19 1)
+                               ,("rgba.b", U.Range 0.19 1)]
 
     imageRGBA <- getDouble img
     framesRGBA <- getDouble frames
 
     --imageBackground <- G.extractBackground rgb framesRGBA
-    let imageConstant :: ImageT A.DIM2 Double
+    let imageConstant :: ImageAcc A.DIM2 Double
         imageConstant = Img.constant (A.index2 256 256) [("rgba.r", A.constant 1), ("rgba.g", A.constant 0), ("rgba.b", A.constant 1), ("rgba.a", A.constant 1)]
-        --imageCheckerboard :: ImageT A.DIM2 Double
+        --imageCheckerboard :: ImageAcc A.DIM2 Double
         imageCheckerboard = Img.checkerboard (A.index2 (256::Exp Int) (256::Exp Int)) (A.constant 32) (green, blue, white, gray) (red, A.constant 1.5) (yellow, A.constant 2)
+        imageGamma = Img.gamma imageRGBA gammaMap Nothing Nothing 0
+        imageClamp = Img.clamp imageRGBA clampMap Nothing Nothing 0
+        imageClipTest = Img.clipTest imageRGBA clipMap Nothing Nothing 0
 
-    let imageOut = imageCheckerboard
-    RGBA.compose $ Img.reprWord8 $ Img.map G.clipValues imageOut
+    let imageOut = imageClipTest
+    RGBA.compose $ Img.toWord8 $ Img.map G.clipValues imageOut
 
 ---- main
 
@@ -85,7 +92,7 @@ main
             --frameNames  = fmap (\x -> (T.printf "frames/frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
             getImage location = fmap (either (\_ -> mempty) id) (Img.readImageFromBMP location)
             getImages locations = fmap (either (\_ -> mempty) id) (Img.readImageSequenceFromBMP locations)
-            getDouble image = Img.reprFloat <$> RGBA.decompose image
+            getDouble image = Img.toFloat <$> RGBA.decompose image
 
         -- Read in the image file
         imageIn <- getImage fileIn

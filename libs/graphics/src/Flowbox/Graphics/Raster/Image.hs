@@ -6,6 +6,8 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
+-- FIXME: rearrange modules (Flowbox.Graphics.Image isntead of Flowbox.Graphics.Raster.Image)
+
 module Flowbox.Graphics.Raster.Image (
     module Flowbox.Graphics.Raster.Image,
     Error(..)
@@ -20,29 +22,26 @@ import           Data.Map                          (Map)
 import qualified Data.Map                          as Map
 --import qualified Debug.Trace                       as Dbg
 
-import           Flowbox.Graphics.Raster.Channel (Channel2, Channel3, RawData2D, RawData3D)
+import           Flowbox.Graphics.Raster.Channel (ChannelAcc, Channel2, Channel3, RawData2, RawData3)
 import qualified Flowbox.Graphics.Raster.Channel as Channel
 import           Flowbox.Graphics.Raster.Error   (Error (ChannelLookupError, TmpError))
 import           Flowbox.Prelude                 hiding (lookup, map)
 
 
-type String3 = (String, String, String)
+data Image a = Image { _channels :: Map Channel.Name (Channel.Channel a)
+                     }
+             deriving (Show, Eq, Ord)
+
+type ImageAcc ix a = Image (A.Array ix a)
 
 type Stencil3x1 a       = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
 type Stencil1x3 a       = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
 
-data Transformation = Transformation (R.Array R.U R.DIM2 Double)
+-- FIXME [km]: move to a new module "Transformation" vvv
+
+type RepaMatrix2 a = R.Array R.U R.DIM2 a
+data Transformation = Transformation (RepaMatrix2 Double)
             deriving (Show)
-
-
-data Image a = Image { _channels :: Map String (Channel.Channel a)
-                     }
-             deriving (Show, Eq, Ord)
-
-type ChannelName = String
-type Channel ix a = Channel.Channel (A.Array ix a)
-type ImageT ix a = Image (A.Array ix a)
-
 
 data Transformed a = Transformed { src   :: a
                                  , trans :: Transformation
@@ -53,68 +52,100 @@ instance Functor Transformed where
     --fmap :: (a -> b) -> Transformed a -> Transformed b
     fmap f (Transformed s t) = Transformed (f s) t
 
+-- FIXME: move to module Composition vvv
+data Premultiply = Premultiply {name :: String, invert :: Bool}
+                 | Unpremultiply {name:: String, invert :: Bool}
+
+-- TODO: finish this data type
+data Mask = Mask
+
 makeLenses ''Image
 
 
 
-compute :: Channel.Backend ix a -> ImageT ix a -> ImageT ix a
+compute :: Channel.Backend ix a -> ImageAcc ix a -> ImageAcc ix a
 compute backend img = Image $ Map.map (Channel.compute backend) $ view channels img
 
 
-map :: (A.Shape ix, A.Elt a, A.Elt b) => (Channel ix a -> Channel ix b) -> ImageT ix a -> ImageT ix b
+map :: (ChannelAcc ix a -> ChannelAcc ix b) -> ImageAcc ix a -> ImageAcc ix b
 map f img = Image $ Map.map f $ view channels img
 
-map' :: (A.Shape ix, A.Elt a, A.Elt b) => (Exp a -> Exp b) -> ImageT ix a -> ImageT ix b
+-- FIXME: rename to sth, ie. mapByElement
+map' :: (A.Shape ix, A.Elt a, A.Elt b) => (Exp a -> Exp b) -> ImageAcc ix a -> ImageAcc ix b
 map' f img = Image $ Map.map (Channel.map f) $ view channels img
 
+mapWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b) -> ImageAcc ix a -> ImageAcc ix b
+mapWithKey f img = Image $ Map.mapWithKey f $ view channels img
 
+-- TODO: think about how to make this function work in regard to mapWithKey in a similar way map' works in reagard to map
+--mapWithKey' :: (A.Shape ix, A.Elt a, A.Elt b) => (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b) -> ImageAcc ix a -> ImageAcc ix b
+--mapWithKey' f img = Image $ Map.mapWithKey f $ view channels img
+
+foldr :: (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix b) -> ChannelAcc ix b -> ImageAcc ix a -> ChannelAcc ix b
+foldr f acc img = Map.foldr f acc $ view channels img
+
+foldl :: (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix a) -> ChannelAcc ix a -> ImageAcc ix b -> ChannelAcc ix a
+foldl f acc img = Map.foldl f acc $ view channels img
+
+foldrWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix b) -> ChannelAcc ix b -> ImageAcc ix a -> ChannelAcc ix b
+foldrWithKey f acc img = Map.foldrWithKey f acc $ view channels img
+
+foldlWithKey :: (ChannelAcc ix a -> Channel.Name -> ChannelAcc ix b -> ChannelAcc ix a) -> ChannelAcc ix a -> ImageAcc ix b -> ChannelAcc ix a
+foldlWithKey f acc img = Map.foldlWithKey f acc $ view channels img
 
 -- handling channels
 
-insert :: ChannelName -> Channel ix a -> ImageT ix a -> ImageT ix a
+elementAt :: Int -> ImageAcc ix a -> (Channel.Name, ChannelAcc ix a)
+elementAt pos img = Map.elemAt pos $ view channels img
+
+insert :: Channel.Name -> ChannelAcc ix a -> ImageAcc ix a -> ImageAcc ix a
 insert name chan img = img & channels %~ (Map.insert name chan)
 
-get :: ChannelName -> ImageT ix a -> Either Error (Channel ix a)
+get :: Channel.Name -> ImageAcc ix a -> Either Error (ChannelAcc ix a)
 get name img = justErr (ChannelLookupError name) $ Map.lookup name (view channels img)
 
-remove :: ChannelName -> ImageT ix a -> ImageT ix a
+remove :: Channel.Name -> ImageAcc ix a -> ImageAcc ix a
 remove name img = img & channels %~ (Map.delete name)
 
-adjust :: (Channel ix a -> Channel ix a) -> String -> ImageT ix a -> ImageT ix a
+adjust :: (ChannelAcc ix a -> ChannelAcc ix a) -> String -> ImageAcc ix a -> ImageAcc ix a
 adjust f name img = img & channels %~ (Map.adjust f name)
 
-adjustWithKey :: (ChannelName -> Channel ix a -> Channel ix a) -> String -> ImageT ix a -> ImageT ix a
+adjustWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix a) -> String -> ImageAcc ix a -> ImageAcc ix a
 adjustWithKey f name img = img & channels %~ (Map.adjustWithKey f name)
 
-update :: (Channel ix a -> Maybe (Channel ix a)) -> ChannelName -> ImageT ix a -> ImageT ix a
+update :: (ChannelAcc ix a -> Maybe (ChannelAcc ix a)) -> Channel.Name -> ImageAcc ix a -> ImageAcc ix a
 update f name img = img & channels %~ (Map.update f name)
 
-updateWithKey :: (ChannelName -> Channel ix a -> Maybe (Channel ix a)) -> String -> ImageT ix a -> ImageT ix a
+updateWithKey :: (Channel.Name -> ChannelAcc ix a -> Maybe (ChannelAcc ix a)) -> String -> ImageAcc ix a -> ImageAcc ix a
 updateWithKey f name img = img & channels %~ (Map.updateWithKey f name)
 
-alter :: (Maybe (Channel ix a) -> Maybe (Channel ix a)) -> ChannelName -> ImageT ix a -> ImageT ix a
+alter :: (Maybe (ChannelAcc ix a) -> Maybe (ChannelAcc ix a)) -> Channel.Name -> ImageAcc ix a -> ImageAcc ix a
 alter f name img = img & channels %~ (Map.alter f name)
 
-cpChannel :: ChannelName -> ChannelName -> ImageT ix a -> Either Error (ImageT ix a)
+cpChannel :: Channel.Name -> Channel.Name -> ImageAcc ix a -> Either Error (ImageAcc ix a)
 cpChannel source destination img = do
     chan <- get source img
     return $ img & channels %~ (Map.insert destination chan)
 
-
+-- TODO: filter, filterWithKey/filterWithName : naive implementation using Map.toAscList and Map.fromAscList
+-- and implement filterByname using filterWithName
+filterByName :: [Channel.Name] -> ImageAcc ix a -> ImageAcc ix a
+filterByName names img = img & channels %~ (Map.filterWithKey nameMatches)
+    where nameMatches name _ = name `elem` names
 
 -- conversion between numeric types
 
-reprFloat :: A.Shape ix => ImageT ix A.Word8 -> ImageT ix A.Float
-reprFloat img = map' (\c -> A.fromIntegral c / 255) img
+toFloat :: A.Shape ix => ImageAcc ix A.Word8 -> ImageAcc ix A.Float
+toFloat img = map' (\c -> A.fromIntegral c / 255) img
 
-reprDouble :: A.Shape ix => ImageT ix A.Word8 -> ImageT ix A.Double
-reprDouble img = map' (\c -> A.fromIntegral c / 255) img
+toDouble :: A.Shape ix => ImageAcc ix A.Word8 -> ImageAcc ix A.Double
+toDouble img = map' (\c -> A.fromIntegral c / 255) img
 
-reprFloating :: (A.Shape ix, A.Elt a) => A.IsFloating a => ImageT ix A.Word8 -> ImageT ix a
-reprFloating img = map' (\c -> A.fromIntegral c / 255) img
+toFloating :: (A.Shape ix, A.Elt a) => A.IsFloating a => ImageAcc ix A.Word8 -> ImageAcc ix a
+toFloating img = map' (\c -> A.fromIntegral c / 255) img
 
-reprWord8 :: (A.Shape ix, A.Elt a, A.IsFloating a) => ImageT ix a -> ImageT ix A.Word8
-reprWord8 img = map' (\c -> A.truncate $ c * 255) img
+toWord8 :: (A.Shape ix, A.Elt a, A.IsFloating a) => ImageAcc ix a -> ImageAcc ix A.Word8
+toWord8 img = map' (\c -> A.truncate $ c * 255) img
 
 
 
@@ -122,6 +153,8 @@ reprWord8 img = map' (\c -> A.truncate $ c * 255) img
 transform :: a -> Transformed a
 transform x = Transformed x mempty
 
+-- FIXME: find a better way of resampling after rasterization
+-- czysty kod kurwa
 rasterizeChannel :: (A.Elt a, A.IsFloating a) => Transformation -> Channel2 a -> Channel2 a
 rasterizeChannel (Transformation t) ch =
     Channel.stencil (convolve3x1 kernel) A.Clamp $
@@ -156,7 +189,7 @@ rasterizeChannel (Transformation t) ch =
                     (inShape (A.round jt) (A.round it)) A.? (ch Channel.! (A.index2 (A.round jt) (A.round it)), 0)
                     --ch Channel.!! 0
 
-rasterize :: (A.Elt a, A.IsFloating a) => Transformed (Image (RawData2D a)) -> Image (RawData2D a)
+rasterize :: (A.Elt a, A.IsFloating a) => Transformed (Image (RawData2 a)) -> Image (RawData2 a)
 rasterize (Transformed img t) = Image $ Map.map (rasterizeChannel t) $ view channels img
 
 translate :: Double -> Double -> Transformed a -> Transformed a

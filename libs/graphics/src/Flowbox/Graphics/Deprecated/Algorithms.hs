@@ -21,12 +21,12 @@
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Flowbox.Graphics.Algorithms where
+module Flowbox.Graphics.Deprecated.Algorithms where
 
 import           Data.Array.Accelerate             (Exp)
 import qualified Data.Array.Accelerate             as A
 
-import           Flowbox.Graphics.Raster.Channel   (Channel, Channel2, Channel3, RawData2D, RawData3D)
+import           Flowbox.Graphics.Raster.Channel   (Channel, Channel2, Channel3, RawData2, RawData3)
 import qualified Flowbox.Graphics.Raster.Channel   as Channel
 import           Flowbox.Graphics.Raster.Image     (Image)
 import qualified Flowbox.Graphics.Raster.Image     as Image
@@ -47,7 +47,7 @@ epsilon' :: (A.Elt a, A.IsNum a) => Exp a -> Exp a -> Exp Bool
 epsilon' delta eps = ((delta A.>=* 0) A.&&* (delta A.<* eps)) A.||* ((delta A.<* 0) A.&&* (delta A.>* -eps))
            A.? (A.constant True , A.constant False)
 
-applyToImage :: (Channel2 a -> Channel2 a) -> String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+applyToImage :: (Channel2 a -> Channel2 a) -> String3 -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 applyToImage f (nameA, nameB, nameC) img = do
   channelA <- Image.get nameA img
   channelB <- Image.get nameB img
@@ -112,35 +112,35 @@ bsortPair (a:b:t)  = [min a b] ++ (bsortPair $ [max a b] ++ t)
 
 ---- basic
 
-invert :: Num a => a -> a
-invert x = 1 - x
+--invert :: Num a => a -> a
+--invert x = 1 - x
 
-invert' :: Num a => a -> a
-invert' x = -x
+--invert' :: Num a => a -> a
+--invert' x = -x
 
-sign :: Num a => a -> a
-sign x = (2 * x) - 1
+--sign :: Num a => a -> a
+--sign x = (2 * x) - 1
 
-parametrize :: Num a => a -> a -> a -> a
-parametrize lo hi x = lo + x * (hi - lo)
+--parametrize :: Num a => a -> a -> a -> a
+--parametrize lo hi x = lo + x * (hi - lo)
 
-bias :: (A.Elt t, A.Elt t1, A.IsNum t, A.IsIntegral t1, A.IsFloating t1) => Exp t1 -> Exp t -> Exp t
-bias b x = (b A.>* 0) A.? (x ^ (log(b) / log(0.5)) , 0)
+--bias :: (A.Elt t, A.Elt t1, A.IsNum t, A.IsIntegral t1, A.IsFloating t1) => Exp t1 -> Exp t -> Exp t
+--bias b x = (b A.>* 0) A.? (x ^ (log(b) / log(0.5)) , 0)
 
-gain :: (A.Elt t, A.Elt t1, A.IsIntegral t1, A.IsFloating t, A.IsFloating t1) => Exp t -> Exp t1 -> Exp t
-gain g x = 0.5 * (x A.<* 0.5 A.? (bias (2 * x) (1 - g) , 2 - bias (2 - 2 * x) (1 - g)))
+--gain :: (A.Elt t, A.Elt t1, A.IsIntegral t1, A.IsFloating t, A.IsFloating t1) => Exp t -> Exp t1 -> Exp t
+--gain g x = 0.5 * (x A.<* 0.5 A.? (bias (2 * x) (1 - g) , 2 - bias (2 - 2 * x) (1 - g)))
 
-gamma :: (Fractional b, Integral b, Num a) => b -> a -> a
-gamma g x = x ^ (1 / g)
+--gamma :: (Fractional b, Integral b, Num a) => b -> a -> a
+--gamma g x = x ^ (1 / g)
 
-compress :: Num a => a -> a -> a -> a
-compress lo hi x = (hi - lo) * x + lo
+--compress :: Num a => a -> a -> a -> a
+--compress lo hi x = (hi - lo) * x + lo
 
-expand :: (A.Elt t, A.IsFloating t) => Exp t -> Exp t -> Exp t -> Exp t
-expand lo hi x = lo A.==* hi A.? (x A.<* lo A.? (0 , 1) , (x - lo) / (hi - lo)) -- WATCH OUT! comparing Floating numbers!
+--expand :: (A.Elt t, A.IsFloating t) => Exp t -> Exp t -> Exp t -> Exp t
+--expand lo hi x = lo A.==* hi A.? (x A.<* lo A.? (0 , 1) , (x - lo) / (hi - lo)) -- WATCH OUT! comparing Floating numbers!
 
-remap :: Fractional a => a -> a -> a -> a -> a -> a
-remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
+--remap :: Fractional a => a -> a -> a -> a -> a -> a
+--remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
 
 
 
@@ -162,7 +162,7 @@ lutExp ((a,b):c@((p,q):_)) x = A.cond (x A.<* a)
 lutChannel :: (A.Elt a, A.IsFloating a) => [(Exp a, Exp a)] -> Channel2 a -> Channel2 a
 lutChannel table channel = Channel.map (lutExp table) channel
 
-lutImage :: (A.Elt a, A.IsFloating a) => String3 -> [(Exp a, Exp a)] -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+lutImage :: (A.Elt a, A.IsFloating a) => String3 -> [(Exp a, Exp a)] -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 lutImage names table = applyToImage (lutChannel table) names
 
 
@@ -170,10 +170,10 @@ binarizeChannel :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> Channel2 a -> 
 binarizeChannel f channel = Channel.map (\x -> f x A.? (1 , 0)) channel
 
 -- FIXME: probably makes no sense, binarization should be done taking into account all 3 channel values, or work on a gray-scale image
-binarizeImage :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+binarizeImage :: (A.Elt a, A.IsNum a) => (Exp a -> Exp Bool) -> String3 -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 binarizeImage f = applyToImage (binarizeChannel f)
 
-luminance :: (A.Elt a, A.IsFloating a) => String3 -> String -> (Image (RawData2D a)) -> Either Image.Error (Image (RawData2D a))
+luminance :: (A.Elt a, A.IsFloating a) => String3 -> String -> (Image (RawData2 a)) -> Either Image.Error (Image (RawData2 a))
 luminance (rname, gname, bname) outname img = do
     chr <- Image.get rname img
     chg <- Image.get gname img
@@ -183,7 +183,7 @@ luminance (rname, gname, bname) outname img = do
         outimg = Image.insert outname chan img
     return outimg
 
-luminance' :: (A.Elt a, A.IsFloating a) => (Image (RawData2D a)) -> Either Image.Error (Image (RawData2D a))
+luminance' :: (A.Elt a, A.IsFloating a) => (Image (RawData2 a)) -> Either Image.Error (Image (RawData2 a))
 luminance' = luminance ("rgba.r", "rgba.g", "rgba.b") "luminance"
 
 
@@ -192,25 +192,25 @@ erodeChannel :: (A.Elt a, A.IsFloating a) => Channel2 a -> Channel2 a
 erodeChannel channel = Channel.stencil erode A.Mirror channel
     where erode ((a,b,c),(d,e,f),(g,h,i)) = minimum [a,b,c,d,e,f,g,h,i]
 
-erodeImage :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+erodeImage :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 erodeImage = applyToImage erodeChannel
 
 dilateChannel :: (A.Elt a, A.IsFloating a) => Channel2 a -> Channel2 a
 dilateChannel channel = Channel.stencil dilate A.Mirror channel
     where dilate ((a,b,c),(d,e,f),(g,h,i)) = maximum [a,b,c,d,e,f,g,h,i]
 
-dilateImage :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+dilateImage :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 dilateImage = applyToImage dilateChannel
 
 
 
-openImage :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+openImage :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 openImage names img = do
     imgA <- erodeImage names img
     imgB <- dilateImage names imgA
     return imgB
 
-closeImage :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+closeImage :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 closeImage names img = do
     imgA <- dilateImage names img
     imgB <- erodeImage names imgA
@@ -222,12 +222,12 @@ medianChannel :: (A.Elt a, A.IsFloating a) => Channel2 a -> Channel2 a
 medianChannel channel = Channel.stencil middleValue A.Mirror channel
     where middleValue ((a,b,c),(d,e,f),(g,h,i)) = (bsort [a,b,c,d,e,f,g,h,i]) !! 4 -- 4 is the middle index of 9 which is the length of the window
 
-medianImage :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+medianImage :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 medianImage = applyToImage medianChannel
 
 
 
-premultiply :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+premultiply :: (A.Elt a, A.IsFloating a) => Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 premultiply img = do
     channelR <- Image.get "rgba.r" img
     channelG <- Image.get "rgba.g" img
@@ -241,7 +241,7 @@ premultiply img = do
     return outimg
 
 
-unpremultiply :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+unpremultiply :: (A.Elt a, A.IsFloating a) => Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 unpremultiply img = do
     channelR <- Image.get "rgba.r" img
     channelG <- Image.get "rgba.g" img
@@ -275,7 +275,7 @@ convolve5x5 kernel ((a,b,c,d,e),(f,g,h,i,j),(k,l,m,n,o),(p,q,r,s,t),(u,v,w,x,y))
     = P.sum $ P.zipWith (*) kernel [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y]
 
 convolve :: (A.Elt a, A.IsFloating a, A.Stencil A.DIM2 a stencil) =>
-  String3 -> (t -> stencil -> Exp a) -> t -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+  String3 -> (t -> stencil -> Exp a) -> t -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 convolve (nameA, nameB, nameC) convolution kernel img = do
   channelA <- Image.get nameA img
   channelB <- Image.get nameB img
@@ -290,17 +290,17 @@ convolve (nameA, nameB, nameC) convolution kernel img = do
   return outimg
 
 convolveRGB :: (A.Elt a, A.IsFloating a, A.Stencil A.DIM2 a stencil) =>
-  (t -> stencil -> Exp a) -> t -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+  (t -> stencil -> Exp a) -> t -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 convolveRGB = convolve ("rgba.r", "rgba.g", "rgba.b")
 
 
 
 ---- brightness and contrast
 
---adjustCB_RGB :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+--adjustCB_RGB :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 --adjustCB_RGB = adjustCB ("rgba.r", "rgba.g", "rgba.b")
 
-adjustCB :: (A.Elt a, A.IsFloating a) => String3 -> Exp a -> Exp a -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+adjustCB :: (A.Elt a, A.IsFloating a) => String3 -> Exp a -> Exp a -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 adjustCB (rname, gname, bname) contrastValue brightnessValue img = do
     rchannel <- Image.get rname img
     gchannel <- Image.get gname img
@@ -315,10 +315,10 @@ adjustCB (rname, gname, bname) contrastValue brightnessValue img = do
         adjust x = contrastValue * x + brightnessValue
     return outimg
 
-contrast :: (A.Elt a, A.IsFloating a) => Exp a -> String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+contrast :: (A.Elt a, A.IsFloating a) => Exp a -> String3 -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 contrast x rgb = adjustCB rgb x 0
 
-brightness :: (A.Elt a, A.IsFloating a) => Exp a -> String3 -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+brightness :: (A.Elt a, A.IsFloating a) => Exp a -> String3 -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 brightness x rgb = adjustCB rgb 1 x
 
 
@@ -349,7 +349,7 @@ calculateSaturationFromRGB r g b = (maxRGB - minRGB) / maxRGB
 calculateValueFromRGB :: (A.Elt a, A.IsFloating a) => Exp a -> Exp a -> Exp a -> Exp a
 calculateValueFromRGB r g b = P.max r $ P.max g b
 
-convertRGBtoHSV :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+convertRGBtoHSV :: (A.Elt a, A.IsFloating a) => Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 convertRGBtoHSV img = do
     r <- Image.get "rgba.r" img
     g <- Image.get "rgba.g" img
@@ -382,7 +382,7 @@ calculateRGBfromHSV h s v = A.unlift res
           q = v * (1 - s * f)
           t = v * (1 - s * (1 - f))
 
-convertHSVtoRGB :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+convertHSVtoRGB :: (A.Elt a, A.IsFloating a) => Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 convertHSVtoRGB img = do
     h <- Image.get "hsv.h" img
     s <- Image.get "hsv.s" img
@@ -428,13 +428,13 @@ blendC channelA channelB blender = Channel.zipWith blender channelA channelB
 --        a'     = blendC a1 a2 blender
 --    return outimg
 
-blendAlpha :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+blendAlpha :: (A.Elt a, A.IsFloating a) => Image (RawData2 a) -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 blendAlpha img1 img2 = do
     a2 <- Image.get "rgba.a" img2
     outimg <- blendAlpha' img1 img2 a2
     return outimg
 
-blendAlpha' :: (A.Elt a, A.IsFloating a) => Image (RawData2D a) -> Image (RawData2D a) -> Channel2 a -> Either Image.Error (Image (RawData2D a))
+blendAlpha' :: (A.Elt a, A.IsFloating a) => Image (RawData2 a) -> Image (RawData2 a) -> Channel2 a -> Either Image.Error (Image (RawData2 a))
 blendAlpha' img1 img2 a = do
     r1 <- Image.get "rgba.r" img1
     g1 <- Image.get "rgba.g" img1
@@ -564,7 +564,7 @@ blenderAlphaF f o a b = blenderAlpha (f a b) a o
 ----- keying
 
 keyColor :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 a -> Exp3 a
-            -> (Exp a -> Exp a) -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+            -> (Exp a -> Exp a) -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
   channelA <- Image.get nameA img
   channelB <- Image.get nameB img
@@ -596,7 +596,7 @@ keyColor (nameA, nameB, nameC) (epsA, epsB, epsC) (valA, valB, valC) f img = do
 ----        step res [] = res
 ----        step res ((a,b):rest) =
 
-extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData3D a) -> Either Image.Error (Image (RawData2D a))
+extractBackground :: (A.Elt a, A.IsFloating a) => String3 -> Image (RawData3 a) -> Either Image.Error (Image (RawData2 a))
 extractBackground (nameA, nameB, nameC) images = do
   channelSeqA <- Image.get nameA images
   channelSeqB <- Image.get nameB images
@@ -705,7 +705,7 @@ extractBackground (nameA, nameB, nameC) images = do
 ---- cut out from background
 
 cutOut :: (A.Elt a, A.IsFloating a) => String3 -> Exp3 a -> (Exp a -> Exp a)
-          -> Image (RawData2D a) -> Image (RawData2D a) -> Either Image.Error (Image (RawData2D a))
+          -> Image (RawData2 a) -> Image (RawData2 a) -> Either Image.Error (Image (RawData2 a))
 cutOut (nameA, nameB, nameC) (epsA, epsB, epsC) f imgIn imgBackground = do
   channelA1 <- Image.get nameA imgIn
   channelB1 <- Image.get nameB imgIn

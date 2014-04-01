@@ -30,3 +30,5 @@ instance Curve Bezier where
         (xB, yB) = handleBegin curve
         (xC, yC) = handleEnd   curve
         (xD, yD) = end         curve
+
+-- TODO: research vector libraries for haskell + OpenVG

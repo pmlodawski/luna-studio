@@ -16,7 +16,7 @@ import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as A
 
 import           Control.Monad.Trans.Either      (hoistEither, runEitherT)
-import           Flowbox.Graphics.Raster.Channel (RawData2D, RawData3D)
+import           Flowbox.Graphics.Raster.Channel (RawData2, RawData3)
 import qualified Flowbox.Graphics.Raster.Channel as Channel
 import           Flowbox.Graphics.Raster.Image   (Image)
 import qualified Flowbox.Graphics.Raster.Image   as Image
@@ -25,11 +25,12 @@ import Control.Error.Util
 import Control.Monad.Trans.Either
 
 
-readImageFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image (RawData2D A.Word32)))
+-- FIXME: slowo Image zbedne - refaktoryzacja
+readImageFromBMP :: MonadIO m => FilePath -> m (Either BMP.Error (Image (RawData2 A.Word32)))
 readImageFromBMP file = liftIO(fmap mkChan <$> A.readImageFromBMP file) where
     mkChan chdata = Image.insert "rgba" (Channel.Raw chdata) mempty
 
-readImageSequenceFromBMP :: MonadIO m => [FilePath] -> m (Either BMP.Error (Image (RawData3D A.Word32)))
+readImageSequenceFromBMP :: MonadIO m => [FilePath] -> m (Either BMP.Error (Image (RawData3 A.Word32)))
 readImageSequenceFromBMP paths = liftIO (fmap mkChanSequence <$> prepareSequence paths) where
     mkChanSequence chsdata = Image.insert "rgba" (Channel.Acc chsdata) mempty
     prepareSequence (file:[]) = fmap lift2Dto3D <$> A.readImageFromBMP file
@@ -55,7 +56,7 @@ readImageSequenceFromBMP paths = liftIO (fmap mkChanSequence <$> prepareSequence
 
 
 
-writeImageToBMP :: MonadIO m => Channel.Backend A.DIM2 A.Word32 -> FilePath -> Image (RawData2D A.Word32) -> m (Either Image.Error ())
+writeImageToBMP :: MonadIO m => Channel.Backend A.DIM2 A.Word32 -> FilePath -> Image (RawData2 A.Word32) -> m (Either Image.Error ())
 writeImageToBMP backend file img = runEitherT $ do
     chan <- hoistEither $ Image.get "rgba" img
     let Channel.Raw mdata = Channel.compute backend chan
