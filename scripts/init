@@ -16,20 +16,14 @@ from subprocess        import call, Popen, PIPE
 from distutils.version import LooseVersion
 from utils.colors      import print_info, print_error, putInfo, formatQuestion
 from utils.errors      import fatal
-
+from utils.net         import download
+from utils.system      import platformFix
 
 rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
-third_party = os.path.join(dir, 'third-party')
-p_cabal    = os.path.join(third_party,  'Cabal-1.19.1')
-p_missingh = os.path.join(third_party,  'MissingH-1.2.0.0-winpatch')
-p_acc      = os.path.join(third_party,  'accelerate-0.15')
-p_acc_cuda = os.path.join(third_party,  'accelerate-cuda-0.15')
-p_acc_io   = os.path.join(third_party,  'accelerate-io-0.15')
-
 sboxName = "dist"
 
+os.chdir(rootPath)
 
 def assertInstall(name):
     if not checkAvailable(name):
@@ -55,7 +49,7 @@ def checkCabalPkg(name, version=""):
         else: fatal ()
 
 def checkCabalVersion():
-    minv = '1.19.2'
+    minv = '1.19.1'
     print_info ("Checking cabal version (>= %s)" % minv)
     (out, err) = Popen("cabal --numeric-version", stdout=PIPE, shell=True).communicate()
     out = out.lstrip().rstrip()
@@ -68,12 +62,15 @@ def checkInstall(name, installCmd, chckf):
         print_error (err)
         if ask("Should I install it? (%s)" % installCmd):
             try_call(installCmd)
+            (ok, err) = chckf()
+            if not ok:
+                print_error("Running install command didn't fix the issue!")
+                fatal()
         else: fatal()
 
 def try_call(cmd):
     print_info ("Running '%s'" % cmd)
     if call(cmd, shell=True): fatal()
-
 
 def ask(question):
     answer = None
@@ -87,10 +84,19 @@ def ask(question):
     else:                       return False
 
 
+def removeIfExists(pathToRemove):
+    if os.path.exists(pathToRemove):
+        os.remove(pathToRemove)
+
 if os.path.exists(sboxName):
     if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?"):
         shutil.rmtree(sboxName)
-        os.remove("cabal.sandbox.config")
+        removeIfExists("cabal.sandbox.config")
+
+if not os.path.exists(sboxName):
+    os.mkdir(sboxName)
+
+platformFix(sboxName)
 
 assertInstall("cabal")
 
@@ -110,10 +116,6 @@ try_call ('python2.7 %s' % path)
 print_info ("Generating cabal configs using gencabal")
 path = os.path.join(rootPath, 'scripts', 'gencabal')
 try_call ('python2.7 %s' % path)
-
-distPath = os.path.join(rootPath,"dist")
-if not os.path.exists(distPath):
-    os.mkdir(distPath)
 
 
 print_info ("Success")

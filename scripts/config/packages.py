@@ -9,6 +9,7 @@ import os
 from subprocess import call, Popen, PIPE
 from utils.colors import print_error
 from utils.errors import fatal
+from utils.system import PathDict
 
 rootPath = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -64,9 +65,10 @@ class HProject(Project):
 
 class AllProject(Project):
     def targets(self):
-        return pkgDb.values()
+        # It is needed to ommit non-project entries with no path (like @all)
+        return [project for project in pkgDb.baseDict.values() if project.path]  
 
-pkgDb = { '@all'               : AllProject ('@all', deps = [])
+pkgDb = PathDict({ '@all'               : AllProject ('@all', deps = [])
        , 'libs/cabal-install'  : HProject   ('cabal-install'       , os.path.join ('libs'  , 'cabal-install') , 'libs'    , []                                                  )
        , 'libs/target-hs'      : HProject   ('luna-target-hs'      , os.path.join ('libs'  , 'target-hs')     , 'libs'    , []                                                  )
        , 'libs/utils'          : HProject   ('flowbox-utils'       , os.path.join ('libs'  , 'utils')         , 'libs'    , []                                                  )
@@ -81,4 +83,4 @@ pkgDb = { '@all'               : AllProject ('@all', deps = [])
        , 'libs/num-conversion' : HProject   ('num-conversion'      , os.path.join ('libs'  , 'num-conversion'), 'libs'    , []                                                  )
        , 'libs/graphics'       : HProject   ('flowbox-graphics'    , os.path.join ('libs'  , 'graphics')      , 'libs'    , ['libs/target-hs', 'libs/utils', 'libs/num-conversion']            )
        , 'libs/markup'         : HProject   ('doc-markup'          , os.path.join ('libs'  , 'markup')        , 'libs'    , []                                                  )
-       }
+       })
