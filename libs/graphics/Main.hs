@@ -29,7 +29,7 @@ import qualified Flowbox.Graphics.Color                 as C
 import qualified Flowbox.Graphics.Deprecated.Algorithms as G
 import           Flowbox.Graphics.Image                 (ImageAcc)
 import qualified Flowbox.Graphics.Image                 as Img
-import           Flowbox.Graphics.Image.Composition     (Mask (..))
+import           Flowbox.Graphics.Image.Composition     (Mask (..), Premultiply (..))
 import qualified Flowbox.Graphics.Image.Composition     as Comp
 import qualified Flowbox.Graphics.Image.Color           as Img
 import qualified Flowbox.Graphics.Image.IO              as Img
@@ -67,9 +67,15 @@ imgtest img frames = do
     let imageConstant = Img.constant (A.index2 (512::Exp Int) (512::Exp Int)) [("rgba.r", A.constant 1), ("rgba.g", A.constant 0), ("rgba.b", A.constant 1), ("rgba.a", A.constant 1)]
         imageCheckerboard = Img.checkerboard (A.index2 (512::Exp Int) (512::Exp Int)) (A.constant 32) (black, white, black, white) (red, A.constant 0) (yellow, A.constant 0)
         imageMask = ImageMask "rgba.r" Nothing (A.constant False) imageCheckerboard
-        --imageGamma = Img.gamma imageRGBA gammaMap Nothing Nothing 1
-        --imageClamp = Img.clamp imageRGBA clampMap Nothing Nothing 1
-    imageClipTest <- Img.clipTest imageRGBA clipMap (Just imageMask) Nothing 0.3
+
+    maskChannel <- Img.get "rgba.r" imageCheckerboard
+
+    let imageRGBAwithMask = Img.insert "mask.a" maskChannel imageRGBA
+        premultiply = Premultiply "mask.a" (A.constant True)
+
+    imageGamma    <- Img.gamma imageRGBAwithMask gammaMap (Just imageMask) (Just premultiply) 1
+    imageClamp    <- Img.clamp imageRGBA clampMap Nothing Nothing 1
+    imageClipTest <- Img.clipTest imageRGBAwithMask clipMap (Just imageMask) (Just premultiply) 0.3
 
     let imageOut = imageClipTest
     RGBA.compose $ Img.toWord8 $ Img.map G.clipValues imageOut

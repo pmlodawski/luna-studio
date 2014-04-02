@@ -70,28 +70,27 @@ hsl img = do
                 Color.HSL h s l = Color.toHSL $ Color.RGB r' g' b'
     return outimg
 
--- TODO: handle mask input
--- TODO: handle premultiplication and mix
 
-math :: (A.Elt a, A.IsNum a, A.Shape ix)
+math :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => (Exp a -> Exp a -> Exp a) -> ImageAcc ix a -> Map Channel.Name (Exp a)
     -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
     -> Either Image.Error (ImageAcc ix a)
 math f img values mask premultiply mix = do
-    return $ Image.mapWithKey handleChan img
+    unpremultiplied <- Comp.unpremultiply img premultiply
+    result <- Comp.combineWithMask (Image.mapWithKey handleChan unpremultiplied) unpremultiplied mask
+    Comp.premultiply result premultiply
     where
-        _ = (mask, premultiply) -- FIXME: make a use of those
         handleChan name chan = case Map.lookup name values of
             Nothing -> chan
             Just value -> Channel.map (\x -> (Comp.mix mix x (f value x))) chan
 
-offset :: (A.Elt a, A.IsNum a, A.Shape ix)
+offset :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
     -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
     -> Either Image.Error (ImageAcc ix a)
 offset = math (+)
 
-multiply :: (A.Elt a, A.IsNum a, A.Shape ix)
+multiply :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
     -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
     -> Either Image.Error (ImageAcc ix a)
@@ -105,14 +104,15 @@ gamma = math (\v -> (**(1/v)))
 
 -- TODO: test this comparing to nuke, there are some differences atm
 -- probably the result in nuke is being calculated based on an AND|OR relation between all input channels
-clamp :: (A.Shape ix, A.Elt a, A.IsNum a)
+clamp :: (A.Shape ix, A.Elt a, A.IsFloating a)
     => ImageAcc ix a -> Map Channel.Name (U.Range (Exp a), Maybe (U.Range (Exp a)))
     -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
     -> Either Image.Error (ImageAcc ix a)
 clamp img ranges mask premultiply mix = do
-    return $ Image.mapWithKey handleChan img
+    unpremultiplied <- Comp.unpremultiply img premultiply
+    result <- Comp.combineWithMask (Image.mapWithKey handleChan unpremultiplied) unpremultiplied mask
+    Comp.premultiply result premultiply
     where
-        _ = (mask, premultiply) -- FIXME: make a use of those
         handleChan name chan = case Map.lookup name ranges of
             Nothing -> chan
             Just value -> Channel.map (\x -> Comp.mix mix x (clip value x)) chan
@@ -122,14 +122,15 @@ clamp img ranges mask premultiply mix = do
 
 -- INFO: in Nuke this does not have the OR relation between channels, it has something pretty weird
 -- soooooo....... either fuck it and do it our way or... focus on it later on
-clipTest :: (A.Shape ix, A.Elt a, A.IsNum a)
+clipTest :: (A.Shape ix, A.Elt a, A.IsFloating a)
     => ImageAcc ix a -> Map Channel.Name (U.Range (Exp a))
     -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
     -> Either Image.Error (ImageAcc ix a)
-clipTest img ranges mask premultiply mix =
-    Comp.combineWithMask (Image.mapWithKey handleChan img) img mask
+clipTest img ranges mask premultiply mix = do
+    unpremultiplied <- Comp.unpremultiply img premultiply
+    result <- Comp.combineWithMask (Image.mapWithKey handleChan unpremultiplied) unpremultiplied mask
+    Comp.premultiply result premultiply
     where
-        _ = (premultiply) -- FIXME: make a use of those
         handleChan name chan = case Map.lookup name ranges of
             Nothing -> chan
             Just _ -> Channel.zipWith zebraStripes chan matched

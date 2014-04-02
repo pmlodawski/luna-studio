@@ -139,12 +139,6 @@ map f channel = Acc $ A.map f (accMatrix channel)
 
 -- = Zipping =
 
-multiply :: (A.Shape ix, A.Elt a, A.IsNum a) => ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a
-multiply = zipWith (*)
-
-divide :: (A.Shape ix, A.Elt a, A.IsFloating a) => ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a
-divide = zipWith (/)
-
 zipWith :: (A.Shape ix, A.Elt a, A.Elt b, A.Elt c)
     => (A.Exp a -> A.Exp b -> A.Exp c)
     -> ChannelAcc ix a
