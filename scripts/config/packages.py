@@ -91,4 +91,4 @@ pkgDb = PathDict({ '@all'               : AllProject ('@all', deps = [])
        , 'tools/file-manager'   : HProject   ('flowbox-file-manager'   , os.path.join ('tools' , 'file-manager')   , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna', 'libs/batch'])
        , 'tools/project-manager': HProject   ('flowbox-project-manager', os.path.join ('tools' , 'project-manager'), 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna', 'libs/batch'])
        , 'tools/parser'         : HProject   ('flowbox-parser'         , os.path.join ('tools' , 'parser')         , 'tools'   , ['libs/utils', 'libs/config', 'libs/rpc', 'libs/bus', 'libs/luna', 'libs/batch'])
-       }
+       })
