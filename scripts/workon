@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python2.7
 
 ###########################################################################
 ## Copyright (C) Flowbox, Inc / All Rights Reserved
@@ -11,12 +11,13 @@ import sys
 import os.path
 import ConfigParser
 
+import psutil
 from copy            import copy, deepcopy
 from config.packages import pkgDb
 from subprocess      import call, Popen, PIPE
 from utils.colors    import print_info, print_error, print_warning
 from utils.errors    import fatal
-from utils.system    import platformFix, system, systems
+from utils.system    import platformFix, system, systems, osname
 
 myPath = os.path.dirname(os.path.realpath(__file__))
 rootPath = os.path.dirname(myPath)
@@ -63,6 +64,7 @@ def check_deps(pkg):
         deps = deepcopy(deps).union(check_deps(dpkg))
     return deps
 
+zdotdir = None  # see notes for system.DARWIN in workon(name) below (grep for OSXWORKAROUND_01)
 
 def workon(name):
     if not os.path.exists('dist'):
@@ -106,10 +108,11 @@ def workon(name):
         print_info("The targets are %s" % targets)
 
         os.chdir(cwd)
+        shell = None
         if system == systems.WINDOWS:
             shell     = "cmd.exe"
             shellOpts = "/K prompt ["+fdevHistory+"] %prompt%"
-        else:
+        elif system == systems.LINUX:
             shell = os.readlink('/proc/%d/exe' % os.getppid())
             shellPath = shell.split('/')
             shellOpts = ""
@@ -125,10 +128,44 @@ def workon(name):
                 shellOpts = "--rcfile " + os.path.join(shellConfPath, '.bashrc')
             else:
                 print_error("Unsupported shell '%s'. There will be no fancy effects :(" % shell)
+        elif system == systems.DARWIN:
+            shell = psutil.Process(os.getppid()).name()
+            shellOpts = ""
+            if shell == 'zsh':
 
-        print_info("Executing new flowbox '%s' shell" % shell)
-        call(shell + " " + shellOpts, shell=True)
-    
+                if not os.environ.has_key('ZDOTDIR_ORIG'):
+                    if os.environ.has_key('ZDOTDIR'):
+                        zdotdir = os.environ['ZDOTDIR']
+                    else:
+                        zdotdir = os.path.expanduser('~')
+                    os.putenv('ZDOTDIR_ORIG', zdotdir)
+                os.putenv('ZDOTDIR', shellConfPath)
+                
+                # =====[ OSXWORKAROUND_01 ]=====
+                # From Python 2.7 documentation:
+                # NOTE
+                #      On some platforms, including FreeBSD and Mac OS X, setting environ may cause memory leaks. Refer to
+                #      the system documentation for putenv.
+                #
+                # From OS X manual:
+                # COMPATIBILITY
+                #      putenv() no longer copies its input buffer.  This often appears in crash logs as a crash in getenv().
+                #      Avoid passing local buffers or freeing the memory that is passed to putenv().  Use setenv(), which
+                #      still makes an internal copy of its buffers.
+                #
+                # So. As long as we don't allow GC to free `shellConfPath` and `zdotdir`, we shall be fine (note that
+                # `shellConfPath` is global). That's why there is `zdotdir = None` at global scope.
+
+            else:
+                print_error("Unsupported shell '%s'. There will be no fancy effects :(" % shell)
+        else:
+            print_error("Unsupported platform '%s'. There will be no fancy effects :(" % osname)
+        
+        if shell:
+            print_info("Executing new flowbox '%s' shell" % shell)
+            call(shell + " " + shellOpts, shell=True)
+        else:
+            print_info("NOT executing flowbox shell")
 
 
 def register(name):
