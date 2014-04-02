@@ -10,12 +10,12 @@ import           Flowbox.Prelude
 --import qualified Flowbox.RepoManager.VCS.Git.Git as Git
 --import qualified Flowbox.RepoManager.VCS.Type    as VCS
 --import qualified Flowbox.RepoManager.VCS.VCS  as VCS
-
+import qualified Flowbox.RepoManager.Config.Config as Config
 --import qualified           System.Environment              as Environment
 --import Flowbox.RepoManager.Data.Repository as Repository
 
 main :: IO ()
-main = print "hello"
+main = Config.load "libs/repo-manager/test/test.config" -- print "hello"
 --main = Repository.build "repo/packages"
 
 --main = do

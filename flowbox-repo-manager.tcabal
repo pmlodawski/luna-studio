@@ -38,7 +38,9 @@ Library
                   gitlib,
                   directory,
                   process,
-                  filepath
+                  filepath,
+                  configurator,
+                  text
 
 
 Executable repo-manager-test
@@ -65,4 +67,6 @@ Executable repo-manager-test
                   directory,
                   process,
                   flowbox-repo-manager,
-                  filepath
+                  filepath,
+                  configurator,
+                  text
