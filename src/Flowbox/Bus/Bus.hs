@@ -30,8 +30,8 @@ import qualified Flowbox.Bus.Env                    as Env
 import           Flowbox.Prelude
 import qualified Flowbox.Text.ProtocolBuffers       as Proto
 import qualified Flowbox.ZMQ.RPC.Client             as Client
-import qualified Generated.Proto.Bus.ID.New.Args    as ID_New
-import qualified Generated.Proto.Bus.ID.New.Result  as ID_New
+import qualified Generated.Proto.Bus.ID.Create.Args    as ID_Create
+import qualified Generated.Proto.Bus.ID.Create.Result  as ID_Create
 import           Generated.Proto.Bus.Request        (Request (Request))
 import qualified Generated.Proto.Bus.Request.Method as Method
 
@@ -46,11 +46,11 @@ requestClientID :: EP.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
 requestClientID addr = do
     socket <- lift $ ZMQ.socket ZMQ.Req
     lift $ ZMQ.connect socket addr
-    let request = Extensions.putExt ID_New.req (Just ID_New.Args)
-                $ Request Method.ID_New Proto.mkExtField
-    response <- Client.query socket request ID_New.rsp
+    let request = Extensions.putExt ID_Create.req (Just ID_Create.Args)
+                $ Request Method.ID_Create Proto.mkExtField
+    response <- Client.query socket request ID_Create.rsp
     lift $ ZMQ.close socket
-    return $ ID_New.id response
+    return $ ID_Create.id response
 
 
 runBus :: MonadIO m => EP.BusEndPoints -> Bus a -> m (Either Error a)
