@@ -1,11 +1,30 @@
+###########################################################################
+## Copyright (C) Flowbox, Inc / All Rights Reserved
+## Unauthorized copying of this file, via any medium is strictly prohibited
+## Proprietary and confidential
+## Flowbox Team <contact@flowbox.io>, 2014
+###########################################################################
+
+import sys
 from utils.colorama import Fore, init
 init()
 
+
+def disable(self):
+        self.HEADER = ''
+        self.BLUE = ''
+        self.INFO = ''
+        self.WARNING = ''
+        self.ERROR = ''
+        self.RESET = ''
+
+
 class bcolors:
-    INFO    = Fore.GREEN
-    WARNING = Fore.YELLOW
-    ERROR   = Fore.RED 
-    RESET   = Fore.RESET
+    INFO     = Fore.GREEN
+    WARNING  = Fore.YELLOW
+    ERROR    = Fore.RED 
+    RESET    = Fore.RESET
+    QUESTION = Fore.BLUE
 
     def disable(self):
         self.INFO = ''
@@ -18,6 +37,12 @@ def format_info(s):
 
 def format_warning(s):
     return bcolors.WARNING + s + bcolors.RESET
+
+def formatQuestion(s):
+    return bcolors.QUESTION + s + bcolors.RESET
+
+def putInfo(s):
+    sys.stdout.write(format_info(s))
 
 def print_info(s):
     print format_info(s)

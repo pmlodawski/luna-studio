@@ -1,6 +1,16 @@
 #!/usr/bin/python2.7
+
+###########################################################################
+## Copyright (C) Flowbox, Inc / All Rights Reserved
+## Unauthorized copying of this file, via any medium is strictly prohibited
+## Proprietary and confidential
+## Flowbox Team <contact@flowbox.io>, 2014
+###########################################################################
+
 import sys
 import os.path
+import os
+import shutil
 import sys
 import platform
 from subprocess import call, Popen, PIPE
@@ -8,8 +18,14 @@ from utils.colors import print_info, print_error, print_warning
 from itertools import chain
 from collections import deque
 import ConfigParser
-import os.path
+from config.packages import pkgDb
+from utils.system import platformFix
 
+
+rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sboxName = 'dist'
+cabalConf = "cabal.config"
+os.chdir(rootPath)
 
 def handle_ret(ret):
     if ret != 0:
@@ -34,41 +50,56 @@ def getHaskellPlatformRoot():
     path = os.path.dirname(val)
     return path
 
+sboxEnv = "FDEV_TARGETS"
+
+class Target:
+    def __init__(self, name, sbox):
+        self.name = name
+        self.sbox = sbox
+
+    def __str__(self):
+        return "Target %s (%s)" % (self.name, self.sbox)
+
 def main():
-    # We have to put Haskells mingw on the beginning of the Path not to use system one
-    if platform.system() == "Windows":
-        root = getHaskellPlatformRoot()
-        mingwPath = os.path.join(root, "mingw", "bin")
-        os.environ['PATH'] = mingwPath + os.pathsep + os.environ['PATH']
+    platformFix(sboxName)
+    pkgNames = []
+    args = []
+    for arg in sys.argv[1:]:
+        if arg.startswith('--pkgs='):
+            pkgNames = arg[7:].split(',')
+        else: args.append(arg)
+
+    if not pkgNames:
+        if not os.environ.has_key(sboxEnv):
+            print_error("Flowbox development environment not initialized.")
+            sys.exit(1)
+
+        pkgNames = os.environ[sboxEnv].split(":")
+    
+    pkgs = [pkgDb[name] for name in pkgNames]
 
     print_info("Running gencabal")
     ret = call('python2.7 scripts/gencabal', shell=True)
     handle_ret(ret)
 
     cwd = os.getcwd()
-    dist_dir = os.path.join(cwd, 'dist')
+
+    dist_dir = os.path.join(rootPath, 'dist')
     bin_dir = os.path.join(dist_dir, 'bin')
 
-    cfgname = '.build.config'
-    if not os.path.isfile(cfgname):
-        print_error("No build configuration file found. Run 'workon' script.")
-        sys.exit(1)
+    for pkg in pkgs:
+        print_info ("Compiling %s" % pkg.name)
 
-    config = ConfigParser.RawConfigParser()
-    config.read(cfgname)
+        os.chdir(pkg.sbox)
 
-    print_info("Binary path is set to '%s'" % bin_dir)
+        cabalConfigSrc = os.path.join(rootPath, cabalConf) 
+        dstConfigCopy = pkg.sbox
+        shutil.copy(cabalConfigSrc, dstConfigCopy)
 
-    names    = config.get('Target', 'names').split(',')
-    binpaths = config.get('Target', 'binpaths').split(',')
-    for (name, path) in zip(names, binpaths):
-        inst_path = os.path.join(bin_dir, path)
-        print_info("Compiling %s [-> %s]" % (name, path))
-        #ret = call(['cabal', 'install', '--reinstall', '--bindir=%s'%inst_path, name] + sys.argv[1:])
-        ret = call('cabal install --reinstall --bindir=%s %s %s' % (inst_path, name, ' '.join(sys.argv[1:])), shell=True)
+        instPath = os.path.join(dist_dir, 'bin', pkg.binpath)
+        ret = call('cabal install --reinstall --bindir=%s %s %s' % (instPath, pkg.name, ' '.join(args)), shell=True)
         handle_ret(ret)
 
-    sys.exit(0)
 
 main()
 

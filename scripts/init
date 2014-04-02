@@ -1,63 +1,121 @@
 #!/usr/bin/python2.7
+
+###########################################################################
+## Copyright (C) Flowbox, Inc / All Rights Reserved
+## Unauthorized copying of this file, via any medium is strictly prohibited
+## Proprietary and confidential
+## Flowbox Team <contact@flowbox.io>, 2014
+###########################################################################
+
 import os.path
 import sys
-from subprocess import call, Popen, PIPE
+import shutil
+import platform
+import subprocess
+from subprocess        import call, Popen, PIPE
 from distutils.version import LooseVersion
-from utils.colors import print_info, print_error
+from utils.colors      import print_info, print_error, putInfo, formatQuestion
+from utils.errors      import fatal
+from utils.net         import download
+from utils.system      import platformFix
 
+rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
-third_party = os.path.join(dir, 'third-party')
-p_cabal    = os.path.join(third_party,  'Cabal-1.19.1')
-p_missingh = os.path.join(third_party,  'MissingH-1.2.0.0-winpatch')
+sboxName = "dist"
 
+os.chdir(rootPath)
 
-def fatal():
-    print_error ("ERROR")
-    sys.exit(1)
-
-def check_install(name, args):
-    print_info ("Checking if '%s' is installed" % name)
-    (out, err) = Popen(name + " " + args, stdout=PIPE, stderr=PIPE, shell=True).communicate()
-    if not out:
+def assertInstall(name):
+    if not checkAvailable(name):
         print_error ("Please install '%s' to continue" % name)
         fatal()
 
-def check_cabal_version():
-    minv = '1.18.0'
+def checkAvailable(name):
+    putInfo ("Checking if '%s' is available ... " % name)
+    cmd = "where" if platform.system() == "Windows" else "command -v"
+    if call(cmd + " " + name, shell=True): 
+        print_info("no")
+        return False
+    else:
+        print_info("yes")
+        return True
+
+def checkCabalPkg(name, version=""):
+    if not checkAvailable(name):
+        if ask ("Cabal binary '%s' is not available. Should I install it?" % name):
+            pkg = name
+            if version: pkg += "-%s" % version
+            try_call("cd && cabal install %s" % pkg)
+        else: fatal ()
+
+def checkCabalVersion():
+    minv = '1.19.1'
     print_info ("Checking cabal version (>= %s)" % minv)
     (out, err) = Popen("cabal --numeric-version", stdout=PIPE, shell=True).communicate()
     out = out.lstrip().rstrip()
-    if not LooseVersion(out) >= LooseVersion(minv):
-        print_error ("Your cabal is too old (%s)" % out)
-        print_error ("Please update your cabal to version '%s' or greater." % minv)
-        fatal()
+    if not LooseVersion(out) >= LooseVersion(minv): return (False, "Your %s version is too old (%s)" % ("cabal", out))
+    else: return (True, None)
+
+def checkInstall(name, installCmd, chckf):
+    (ok, err) = chckf()
+    if not ok:
+        print_error (err)
+        if ask("Should I install it? (%s)" % installCmd):
+            try_call(installCmd)
+            (ok, err) = chckf()
+            if not ok:
+                print_error("Running install command didn't fix the issue!")
+                fatal()
+        else: fatal()
 
 def try_call(cmd):
+    print_info ("Running '%s'" % cmd)
     if call(cmd, shell=True): fatal()
 
-check_install("cabal", "-V")
-check_cabal_version()
+def ask(question):
+    answer = None
+    while True:
+        ansRaw = raw_input(formatQuestion(question) + " [Y/n] ")
+        ans = ansRaw.lower()
+        if ans not in ["", "y", "yes", "n", "no"]:
+            print_error("'%s' is not a valid answer, please choose beetween YES or NO." % ansRaw)
+        else: break
+    if ans in ["", "y", "yes"]: return True
+    else:                       return False
+
+
+def removeIfExists(pathToRemove):
+    if os.path.exists(pathToRemove):
+        os.remove(pathToRemove)
+
+if os.path.exists(sboxName):
+    if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?"):
+        shutil.rmtree(sboxName)
+        removeIfExists("cabal.sandbox.config")
+
+if not os.path.exists(sboxName):
+    os.mkdir(sboxName)
+
+platformFix(sboxName)
+
+assertInstall("cabal")
+
+print_info ("Updating cabal package cache")
+try_call('cd && cabal update')
+
+checkInstall("cabal", "cd third-party/cabal-1.19.2/Cabal && cabal install && cd ../cabal-install && cabal install", checkCabalVersion)
+
+checkCabalPkg("hprotoc")
+checkCabalPkg("c2hs", version="0.16.5")
+
 
 print_info ("Generating Protocol Buffers files using genproto")
-path = os.path.join('scripts', 'genproto')
+path = os.path.join(rootPath, 'scripts', 'genproto')
 try_call ('python2.7 %s' % path)
 
 print_info ("Generating cabal configs using gencabal")
-path = os.path.join('scripts', 'gencabal')
+path = os.path.join(rootPath, 'scripts', 'gencabal')
 try_call ('python2.7 %s' % path)
-
-print_info ("Initializing cabal sandbox")
-try_call('cabal sandbox init --sandbox=dist')
-
-print_info ("Updating cabal package cache")
-try_call('cabal update')
-
-print_info ("Registering Cabal-1.19.1 library")
-try_call('cabal install %s' % p_cabal)
-
-# print_info ("Registering MissingH library (windows patch)")
-# try_call('cabal install %s' % p_missingh)
 
 
 print_info ("Success")
