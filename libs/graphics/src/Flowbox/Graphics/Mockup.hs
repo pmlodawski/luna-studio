@@ -73,12 +73,12 @@ import           Luna.Target.HS.Core                    hiding (print, return)
 --    Image.writeImageToBMP (runBackend backend) path img
 --    return (Safe ())
 
---adjustCB :: Double -> Double -> Image Double -> Pure (Either Image.Error (Image Double))
+--adjustCB :: Double -> Double -> Image Double -> Pure (Image.Result (Image Double))
 --adjustCB contrastValue brightnessValue img =
 --    Pure $ Alg.adjustCB_RGB (A.constant contrastValue) (A.constant brightnessValue) img
 
 
---convolve :: Double -> Image Double -> Pure (Either Image.Error (Image Double))
+--convolve :: Double -> Image Double -> Pure (Image.Result (Image Double))
 --convolve kernel img = Pure $ Alg.convolveRGB Alg.convolve3x3 kernel' img where
 --    kernel' = map A.constant $ replicate 9 kernel
 

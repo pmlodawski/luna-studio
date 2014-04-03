@@ -17,10 +17,11 @@ import           Flowbox.Prelude       as P
 
 
 
-data Size a = Size {w :: a, h :: a}
-data Range a = Range {lo :: a, hi :: a}
+data Size a = Size {sizeW :: a, sizeH :: a}
+data Range a = Range {rangeLo :: a, rangeHi :: a}
 
 
+-- THINK[2]: about invert and invert' and their names
 invert :: Num a => a -> a
 invert x = 1 - x
 
@@ -51,6 +52,10 @@ expand lo hi x = lo A.==* hi A.? (x A.<* lo A.? (0 , 1) , (x - lo) / (hi - lo)) 
 remap :: Fractional a => a -> a -> a -> a -> a -> a
 remap loA hiA loB hiB x = (x * (hiB-loB) - loA*hiB + hiA*loB) / (hiA-loA)
 
+clamp :: (A.Elt a, A.IsScalar a) => Range (Exp a) -> Maybe (Range (Exp a)) -> Exp a -> Exp a
+clamp (Range thresholdLo thresholdHi) clampTo v = (v A.<* thresholdLo A.?) $ case clampTo of
+    Nothing                      -> (thresholdLo, v A.>* thresholdHi A.? (thresholdHi, v))
+    Just (Range clampLo clampHi) -> (clampLo,     v A.>* thresholdHi A.? (clampHi,     v))
 
 
 nonIntRem :: (A.Elt e, A.IsFloating e) => Exp e -> Exp e -> Exp e

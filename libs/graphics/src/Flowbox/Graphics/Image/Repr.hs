@@ -17,7 +17,7 @@ import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Prelude                hiding (map)
 
 
-decompose :: (A.Shape ix) => Image (A.Array ix A.Word32) -> Either Image.Error (Image (A.Array ix A.Word8))
+decompose :: (A.Shape ix) => Image (A.Array ix A.Word32) -> Image.Result (Image (A.Array ix A.Word8))
 decompose img = do chan <- Image.get "rgba" img
                    let dchan = Channel.map unpack32 chan
                        (r,g,b,a) = Channel.unzip4 dchan
@@ -28,7 +28,7 @@ decompose img = do chan <- Image.get "rgba" img
                                  $ mempty
                    return outimg
 
-compose :: (A.Shape ix) => Image (A.Array ix A.Word8) -> Either Image.Error (Image (A.Array ix A.Word32))
+compose :: (A.Shape ix) => Image (A.Array ix A.Word8) -> Image.Result (Image (A.Array ix A.Word32))
 compose img = do r <- Image.get "rgba.r" img
                  g <- Image.get "rgba.g" img
                  b <- Image.get "rgba.b" img

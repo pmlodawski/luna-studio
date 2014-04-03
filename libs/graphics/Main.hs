@@ -18,23 +18,27 @@ import           Data.Array.Accelerate             (Exp)
 import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Accelerate.Interpreter as Interp
 import qualified Data.Map                          as Map
---import qualified Debug.Trace           as Dbg
 import qualified Monitoring         as Monitoring
 import qualified ParseArgs          as ParseArgs
 import qualified System.Environment as Env
 import qualified System.Exit        as Exit
+
+--import qualified Debug.Trace           as Dbg
 
 import           Flowbox.Graphics.Color                 (Color (..))
 import qualified Flowbox.Graphics.Color                 as C
 import qualified Flowbox.Graphics.Deprecated.Algorithms as G
 import           Flowbox.Graphics.Image                 (ImageAcc)
 import qualified Flowbox.Graphics.Image                 as Img
+import           Flowbox.Graphics.Image.Channel         (Select(..))
+import qualified Flowbox.Graphics.Image.Channel         as Channel
 import           Flowbox.Graphics.Image.Composition     (Mask (..), Premultiply (..))
 import qualified Flowbox.Graphics.Image.Composition     as Comp
 import qualified Flowbox.Graphics.Image.Color           as Img
 import qualified Flowbox.Graphics.Image.IO              as Img
 import qualified Flowbox.Graphics.Image.Raster          as Img
 import qualified Flowbox.Graphics.Image.Repr            as RGBA
+import           Flowbox.Graphics.Utils                 (Range(..))
 import qualified Flowbox.Graphics.Utils                 as U
 import           Flowbox.Prelude                        as P
 
@@ -45,39 +49,43 @@ import           Flowbox.Prelude                        as P
 --          -> Either Img.Error (Image (A.Array A.DIM2 A.Word32))
 imgtest img frames = do
     let getDouble image = Img.toDouble <$> RGBA.decompose image
-        red = RGB (A.constant 1) (A.constant 0) (A.constant 0)
-        green = RGB (A.constant 0) (A.constant 1) (A.constant 0)
-        blue = RGB (A.constant 0) (A.constant 0) (A.constant 1)
-        white = RGB (A.constant 1) (A.constant 1) (A.constant 1)
-        black = RGB (A.constant 0) (A.constant 0) (A.constant 0)
-        gray = RGB (A.constant 0.5) (A.constant 0.5) (A.constant 0.5)
-        yellow = RGB (A.constant 1) (A.constant 1) (A.constant 0)
-        gammaMap = Map.fromList [("rgba.r", 0.5), ("rgba.g", 0.5), ("rgba.b", 0.5)]
-        clampMap = Map.fromList [("rgba.r", (U.Range 0.25 0.75, Just (U.Range 1 0)))
-                                ,("rgba.g", (U.Range 0.25 0.75, Just (U.Range 0 1)))
-                                ,("rgba.b", (U.Range 0.25 0.75, Just (U.Range 0 0)))]
-        clipMap = Map.fromList [("rgba.r", U.Range 0.19 1)
-                               ,("rgba.g", U.Range 0.19 1)
-                               ,("rgba.b", U.Range 0.19 1)]
+        red       = RGB (A.constant 1) (A.constant 0) (A.constant 0)
+        green     = RGB (A.constant 0) (A.constant 1) (A.constant 0)
+        blue      = RGB (A.constant 0) (A.constant 0) (A.constant 1)
+        white     = RGB (A.constant 1) (A.constant 1) (A.constant 1)
+        black     = RGB (A.constant 0) (A.constant 0) (A.constant 0)
+        gray      = RGB (A.constant 0.5) (A.constant 0.5) (A.constant 0.5)
+        yellow    = RGB (A.constant 1) (A.constant 1) (A.constant 0)
+        gammaMap  = Map.fromList [ ("rgba.r", 0.5), ("rgba.g", 0.5), ("rgba.b", 0.5) ]
+        clampMap  = Map.fromList [ ("rgba.r", (Range 0.25 0.75, Just (Range 1 0)))
+                                 , ("rgba.g", (Range 0.25 0.75, Just (Range 0 1)))
+                                 , ("rgba.b", (Range 0.25 0.75, Just (Range 0 0))) ]
+        clipMap   = Map.fromList [ ("rgba.r", Range 0.19 1)
+                                 , ("rgba.g", Range 0.19 1)
+                                 , ("rgba.b", Range 0.19 1) ]
+        selection = ChannelList  [ "rgba.r", "rgba.g", "rgba.b" ]
 
     imageRGBA <- getDouble img
     framesRGBA <- getDouble frames
 
     --imageBackground <- G.extractBackground rgb framesRGBA
-    let imageConstant = Img.constant (A.index2 (512::Exp Int) (512::Exp Int)) [("rgba.r", A.constant 1), ("rgba.g", A.constant 0), ("rgba.b", A.constant 1), ("rgba.a", A.constant 1)]
+    let imageConstant     = Img.constant (A.index2 (512::Exp Int) (512::Exp Int)) [("rgba.r", A.constant 1), ("rgba.g", A.constant 0), ("rgba.b", A.constant 1), ("rgba.a", A.constant 1)]
         imageCheckerboard = Img.checkerboard (A.index2 (512::Exp Int) (512::Exp Int)) (A.constant 32) (black, white, black, white) (red, A.constant 0) (yellow, A.constant 0)
-        imageMask = ImageMask "rgba.r" Nothing (A.constant False) imageCheckerboard
+        imageMask         = ImageMask "rgba.r" Nothing (A.constant False) imageCheckerboard
 
     maskChannel <- Img.get "rgba.r" imageCheckerboard
 
     let imageRGBAwithMask = Img.insert "mask.a" maskChannel imageRGBA
-        premultiply = Premultiply "mask.a" (A.constant True)
+        premultiply = Premultiply "mask.a" (A.constant False)
 
-    imageGamma    <- Img.gamma imageRGBAwithMask gammaMap (Just imageMask) (Just premultiply) 1
-    imageClamp    <- Img.clamp imageRGBA clampMap Nothing Nothing 1
-    imageClipTest <- Img.clipTest imageRGBAwithMask clipMap (Just imageMask) (Just premultiply) 0.3
+    imageGamma    <- Img.gamma    imageRGBAwithMask gammaMap (Just imageMask) (Just premultiply) 1
+    imageClamp    <- Img.clamp    imageRGBAwithMask clampMap Nothing Nothing 1
+    imageClipTest <- Img.clipTest imageRGBAwithMask clipMap (Just imageMask) (Just premultiply) 1
+    --imageInvert   <- Img.invert   imageRGBAwithMask selection (Just (Range 0.4 0.6, Nothing)) (Just imageMask) (Just premultiply) 0.7
+    imageInvert   <- Img.invert   imageRGBAwithMask selection Nothing Nothing Nothing 1
 
-    let imageOut = imageClipTest
+    let imageOut = imageInvert
+
     RGBA.compose $ Img.toWord8 $ Img.map G.clipValues imageOut
 
 ---- main

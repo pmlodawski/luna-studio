@@ -8,7 +8,8 @@
 
 module Flowbox.Graphics.Image (
     module Flowbox.Graphics.Image,
-    Error(..)
+    Error(..),
+    Result
 ) where
 
 import           Control.Error
@@ -20,7 +21,7 @@ import qualified Data.Map                          as Map
 
 import           Flowbox.Graphics.Image.Channel (ChannelAcc, Channel2, RawData2)
 import qualified Flowbox.Graphics.Image.Channel as Channel
-import           Flowbox.Graphics.Image.Error   (Error (ChannelLookupError))
+import           Flowbox.Graphics.Image.Error   (Error (ChannelLookupError), Result)
 import           Flowbox.Graphics.Transform     (Transformation(..), Transformed(..))
 import           Flowbox.Prelude                hiding (lookup, map)
 
@@ -76,7 +77,7 @@ elementAt pos img = Map.elemAt pos $ view channels img
 insert :: Channel.Name -> ChannelAcc ix a -> ImageAcc ix a -> ImageAcc ix a
 insert cname chan img = img & channels %~ (Map.insert cname chan)
 
-get :: Channel.Name -> ImageAcc ix a -> Either Error (ChannelAcc ix a)
+get :: Channel.Name -> ImageAcc ix a -> Result (ChannelAcc ix a)
 get cname img = justErr (ChannelLookupError cname) $ Map.lookup cname (view channels img)
 
 remove :: Channel.Name -> ImageAcc ix a -> ImageAcc ix a
@@ -97,7 +98,7 @@ updateWithKey f cname img = img & channels %~ (Map.updateWithKey f cname)
 alter :: (Maybe (ChannelAcc ix a) -> Maybe (ChannelAcc ix a)) -> Channel.Name -> ImageAcc ix a -> ImageAcc ix a
 alter f cname img = img & channels %~ (Map.alter f cname)
 
-cpChannel :: Channel.Name -> Channel.Name -> ImageAcc ix a -> Either Error (ImageAcc ix a)
+cpChannel :: Channel.Name -> Channel.Name -> ImageAcc ix a -> Result (ImageAcc ix a)
 cpChannel source destination img = do
     chan <- get source img
     return $ img & channels %~ (Map.insert destination chan)

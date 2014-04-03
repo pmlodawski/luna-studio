@@ -29,6 +29,9 @@ type Channel3 a = Channel (RawData3 a)
 
 type Name = String
 
+data Select = AllChannels
+            | ChannelList [Name]
+
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 -- FIXME[PM] Fix these instances
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

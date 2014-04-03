@@ -13,11 +13,15 @@ import qualified Data.Array.Accelerate as A
 import           Data.Map              (Map)
 import qualified Data.Map              as Map
 
+--import qualified Debug.Trace as Dbg
+
 import qualified Flowbox.Graphics.Color             as Color
 import           Flowbox.Graphics.Image             (ImageAcc)
 import qualified Flowbox.Graphics.Image             as Image
 import qualified Flowbox.Graphics.Image.Channel     as Channel
+import           Flowbox.Graphics.Image.Composition (Premultiply(..), Mask(..), Clamp)
 import qualified Flowbox.Graphics.Image.Composition as Comp
+import           Flowbox.Graphics.Utils             (Range(..))
 import qualified Flowbox.Graphics.Utils             as U
 import           Flowbox.Prelude                    as P
 
@@ -30,7 +34,7 @@ import           Flowbox.Prelude                    as P
 -- img.rgb.r
 -- should those functions encapsulate the Image type in something holding the info about the color space, so u can use the line above?
 
-hsv :: (A.Elt a, A.IsFloating a, A.Shape ix) => ImageAcc ix a -> Either Image.Error (ImageAcc ix a)
+hsv :: (A.Elt a, A.IsFloating a, A.Shape ix) => ImageAcc ix a -> Image.Result (ImageAcc ix a)
 hsv img = do
     r <- Image.get "rgba.r" img
     g <- Image.get "rgba.g" img
@@ -50,7 +54,7 @@ hsv img = do
                 Color.HSV h s v = Color.toHSV $ Color.RGB r' g' b'
     return outimg
 
-hsl :: (A.Elt a, A.IsFloating a, A.Shape ix) => ImageAcc ix a -> Either Image.Error (ImageAcc ix a)
+hsl :: (A.Elt a, A.IsFloating a, A.Shape ix) => ImageAcc ix a -> Image.Result (ImageAcc ix a)
 hsl img = do
     r <- Image.get "rgba.r" img
     g <- Image.get "rgba.g" img
@@ -65,80 +69,92 @@ hsl img = do
         rgb = A.zip3 (Channel.accMatrix r) (Channel.accMatrix g) (Channel.accMatrix b)
         hsl' = A.map convertToHSL rgb
         convertToHSL rgb' = A.lift (h, s, l)
-            where
-                (r',g',b') = A.unlift rgb'
-                Color.HSL h s l = Color.toHSL $ Color.RGB r' g' b'
+            where (r',g',b')      = A.unlift rgb'
+                  Color.HSL h s l = Color.toHSL $ Color.RGB r' g' b'
     return outimg
 
 
 math :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => (Exp a -> Exp a -> Exp a) -> ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
-    -> Either Image.Error (ImageAcc ix a)
+    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a -- TODO: add to wiki why this line is separated from others
+    -> Image.Result (ImageAcc ix a)
 math f img values mask premultiply mix = do
     unpremultiplied <- Comp.unpremultiply img premultiply
-    result <- Comp.combineWithMask (Image.mapWithKey handleChan unpremultiplied) unpremultiplied mask
-    Comp.premultiply result premultiply
-    where
-        handleChan name chan = case Map.lookup name values of
-            Nothing -> chan
-            Just value -> Channel.map (\x -> (Comp.mix mix x (f value x))) chan
+    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultiply
+    Comp.maskWith result img mask
+    where handleChan name chan = case Map.lookup name values of
+              Nothing    -> chan
+              Just value -> Channel.map (\x -> (Comp.mix mix x (f value x))) chan
 
 offset :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
-    -> Either Image.Error (ImageAcc ix a)
+    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (ImageAcc ix a)
 offset = math (+)
 
 multiply :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
-    -> Either Image.Error (ImageAcc ix a)
+    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (ImageAcc ix a)
 multiply = math (*)
 
 gamma :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
-    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
-    -> Either Image.Error (ImageAcc ix a)
+    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (ImageAcc ix a)
 gamma = math (\v -> (**(1/v)))
 
 -- TODO: test this comparing to nuke, there are some differences atm
 -- probably the result in nuke is being calculated based on an AND|OR relation between all input channels
 clamp :: (A.Shape ix, A.Elt a, A.IsFloating a)
-    => ImageAcc ix a -> Map Channel.Name (U.Range (Exp a), Maybe (U.Range (Exp a)))
-    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
-    -> Either Image.Error (ImageAcc ix a)
+    => ImageAcc ix a -> Map Channel.Name (Clamp (Exp a))
+    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (ImageAcc ix a)
 clamp img ranges mask premultiply mix = do
     unpremultiplied <- Comp.unpremultiply img premultiply
-    result <- Comp.combineWithMask (Image.mapWithKey handleChan unpremultiplied) unpremultiplied mask
-    Comp.premultiply result premultiply
-    where
-        handleChan name chan = case Map.lookup name ranges of
-            Nothing -> chan
-            Just value -> Channel.map (\x -> Comp.mix mix x (clip value x)) chan
-        clip (U.Range lo hi, clampTo) v = case clampTo of
-            Nothing -> v A.<* lo A.? (lo, v A.>* hi A.? (hi, v))
-            Just (U.Range lo' hi') -> v A.<* lo A.? (lo', v A.>* hi A.? (hi', v))
+    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultiply
+    Comp.maskWith result img mask
+    where handleChan name chan = case Map.lookup name ranges of
+              Nothing    -> chan
+              Just value -> let (thresholds, clampTo) = value
+                            in Channel.map (\x -> Comp.mix mix x (U.clamp thresholds clampTo x)) chan
 
 -- INFO: in Nuke this does not have the OR relation between channels, it has something pretty weird
 -- soooooo....... either fuck it and do it our way or... focus on it later on
 clipTest :: (A.Shape ix, A.Elt a, A.IsFloating a)
-    => ImageAcc ix a -> Map Channel.Name (U.Range (Exp a))
-    -> Maybe (Comp.Mask ix a) -> Maybe Comp.Premultiply -> Exp a
-    -> Either Image.Error (ImageAcc ix a)
+    => ImageAcc ix a -> Map Channel.Name (Range (Exp a))
+    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (ImageAcc ix a)
 clipTest img ranges mask premultiply mix = do
     unpremultiplied <- Comp.unpremultiply img premultiply
-    result <- Comp.combineWithMask (Image.mapWithKey handleChan unpremultiplied) unpremultiplied mask
-    Comp.premultiply result premultiply
-    where
-        handleChan name chan = case Map.lookup name ranges of
-            Nothing -> chan
-            Just _ -> Channel.zipWith zebraStripes chan matched
-        zebraStripes x b = b A.? (Comp.mix mix x ((( 1 ))), x) -- TODO: this should make stripes, not constant color 1 ;]
-        matched = Image.foldrWithKey fold initialAcc filteredChans
-        fold name chan acc = let Just (U.Range lo hi) = Map.lookup name ranges in Channel.zipWith (A.||*) acc (Channel.map (withinRange lo hi) chan)
-        withinRange lo hi x = x A.<* lo A.||* x A.>* hi
-        initialAcc = Channel.fill shape $ A.constant False
-        shape = let (_, chan) = Image.elementAt 0 filteredChans in Channel.shape $ chan
-        filteredChans = Image.filterByName (Map.keys ranges) img
+    result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultiply
+    Comp.maskWith result img mask
+    where handleChan name chan = case Map.lookup name ranges of
+              Nothing -> chan
+              Just _  -> Channel.zipWith zebraStripes chan matched
+          zebraStripes x b      = b A.? (Comp.mix mix x ((( 1 ))), x) -- TODO: this should make stripes, not constant color 1 ;]
+          matched               = Image.foldrWithKey fold initialAcc filteredChans
+          fold name chan acc    = let Just (Range lo hi) = Map.lookup name ranges -- this works because we've limited the choice to only names in the `ranges` through `fitleredChans`
+                                  in Channel.zipWith (A.||*) acc (Channel.map (withinRange lo hi) chan)
+          withinRange lo hi x   = x A.<* lo A.||* x A.>* hi
+          initialAcc            = Channel.fill shape $ A.constant False
+          shape = Channel.shape $ snd $ Image.elementAt 0 filteredChans
+          filteredChans         = Image.filterByName (Map.keys ranges) img
 
+invert :: (A.Shape ix, A.Elt a, A.IsFloating a)
+    => ImageAcc ix a -> Channel.Select -> Maybe (Clamp (Exp a))
+    -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
+    -> Image.Result (ImageAcc ix a)
+invert img channels clampVal mask premultiply mix = do
+    unpremultiplied <- Comp.unpremultiply img premultiply
+    result          <- Comp.premultiply (handleInvert unpremultiplied) premultiply
+    Comp.maskWith result img mask
+    where handleInvert img' = case channels of
+              Channel.AllChannels      -> Image.mapChannels invertAndClamp img'
+              Channel.ChannelList list -> Image.mapWithKey (invertChan list) img'
+          invertChan list name chan = if name `elem` list
+                                          then Channel.map invertAndClamp chan
+                                          else chan
+          invertAndClamp x = Comp.mix mix x $ case clampVal of
+              Nothing                         -> U.invert x
+              Just (clampThresholds, clampTo) -> U.clamp clampThresholds clampTo $ U.invert $ x

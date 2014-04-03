@@ -38,7 +38,7 @@ readSequenceFromBMP paths = liftIO (fmap mkChanSequence <$> prepareSequence path
             (A.Z A.:. a A.:. b) = A.unlift $ A.shape array
         in A.reshape (Channel.index3 a b 1) array
 
---readImageFromBMP2 :: FilePath -> IO (Either Image.Error (Image A.Word32))
+--readImageFromBMP2 :: FilePath -> IO (Image.Result (Image A.Word32))
 --readImageFromBMP2 file = do
 --    img  <- runEitherT (tryIO $ A.readImageFromBMP file)
 --    img2 <- case img of
@@ -54,7 +54,7 @@ readSequenceFromBMP paths = liftIO (fmap mkChanSequence <$> prepareSequence path
 
 
 
-writeToBMP :: MonadIO m => Channel.Backend A.DIM2 A.Word32 -> FilePath -> Image (RawData2 A.Word32) -> m (Either Image.Error ())
+writeToBMP :: MonadIO m => Channel.Backend A.DIM2 A.Word32 -> FilePath -> Image (RawData2 A.Word32) -> m (Image.Result ())
 writeToBMP backend file img = runEitherT $ do
     chan <- hoistEither $ Image.get "rgba" img
     let Channel.Raw mdata = Channel.compute backend chan

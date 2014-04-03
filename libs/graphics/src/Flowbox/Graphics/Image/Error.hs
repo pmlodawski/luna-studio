@@ -18,3 +18,5 @@ data Error = ChannelLookupError { name :: String }
 instance Show Error where
     show err = case err of
         ChannelLookupError name -> "Channel lookup error: channel '" ++ name ++ "' not found"
+
+type Result a = Either Error a
