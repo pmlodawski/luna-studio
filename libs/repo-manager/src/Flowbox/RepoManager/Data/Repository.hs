@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables         #-}
 ---------------------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
@@ -12,11 +13,15 @@ import           Flowbox.Prelude
 import           Flowbox.RepoManager.Data.Item.Family (InstalledFamilies, AvailableFamilies)
 import qualified Flowbox.RepoManager.Data.Item.Name             as Item
 import qualified System.Directory as Files
+import qualified System.FilePath as Files (pathSeparator)
 import qualified Data.Version as Version
 import qualified Data.List as List
+import qualified Data.Text as Text
 import qualified Flowbox.RepoManager.Data.Item.Item as Item
 import qualified Flowbox.RepoManager.Data.Dependency as Dependency
 import qualified Flowbox.RepoManager.Data.Environment as URI
+import qualified Flowbox.RepoManager.Data.Item.Config as Item
+import qualified Data.String as String (fromString)
 
 data Repository = Repository { items :: Map Item.Name AvailableFamilies
                              } deriving (Show)
@@ -30,49 +35,38 @@ type FileName = String
 
 build :: FilePath -> IO Repository
 build repoPath = do contents <- Files.getDirectoryContents repoPath
-                    categories <- mapM (category Map.empty) contents
+                    --print contents
+                    categories <- mapM (category Map.empty repoPath) (proper contents)
                     return Repository {items = List.foldl Map.union Map.empty categories}
 
-isProper :: String -> IO Bool
-isProper file = do isDirectory <- Files.doesDirectoryExist file
-                   return $ not (file `elem` [".git", "README.md", "..", "."]) && isDirectory
+proper :: [FilePath] -> [FilePath]
+proper files = files List.\\ [".git", "README.md", "..", "."]
 
-category :: Map Item.Name AvailableFamilies -> String -> IO (Map Item.Name AvailableFamilies)
-category repo categoryDir = do proper <- isProper categoryDir
-                               case proper of
-                                    False -> return repo
-                                    True  -> do contents <- Files.getDirectoryContents categoryDir
-                                                packList <- mapM (package repo) contents 
-                                                return $ List.foldl Map.union Map.empty packList
+category :: Map Item.Name AvailableFamilies -> FilePath -> FilePath -> IO (Map Item.Name AvailableFamilies)
+category repo repoPath categoryDir =  do let categoryPath = concat [repoPath, [Files.pathSeparator], categoryDir]
+                                         --print ("cat: " ++ categoryPath)
+                                         contents <- Files.getDirectoryContents categoryPath
+                                         packList <- mapM (package repo categoryPath) (proper contents)
+                                         return $ List.foldl Map.union Map.empty packList
 
-package :: Map Item.Name AvailableFamilies -> FilePath -> IO (Map Item.Name AvailableFamilies)
-package repo directory = do proper <- isProper directory
-                            case proper of
-                                False -> return repo
-                                True  -> do contents <- Files.getDirectoryContents directory
-                                            let family = packageFamily contents
-                                            return $ Map.insert directory family repo
-                                     
-packageFamily :: [FilePath] -> AvailableFamilies
-packageFamily packageFiles = (Map.fromList $ List.map version packageFiles)
+package :: Map Item.Name AvailableFamilies -> FilePath -> FilePath -> IO (Map Item.Name AvailableFamilies)
+package repo categoryPath directory = do let directoryPath = concat [categoryPath, [Files.pathSeparator], directory]
+                                         --print ("dir: " ++ directoryPath)
+                                         contents <- Files.getDirectoryContents directoryPath
+                                         family <- packageFamily (proper contents) directoryPath
+                                         return $ Map.insert directory family repo
 
-version :: FilePath ->  (Version.Version, Item.Item)
-version file = let 
-                 -- parse version file, build item
-                 version' = Version.Version [1,2,3,4] ["ole"]
-                 name' = file
-                 source' = Map.singleton "x86" (URI.Local "local/uri")
-                 dependancies' = [Dependency.Dependency { Dependency.name = "dependancy1"
-                                                      , Dependency.constraints = []
-                                                      }]
-                 item = Item.Item { Item.name            = name'
-                                  , Item.version         = version'
-                                  , Item.source          = source'
-                                  , Item.installScript   = ["script"]
-                                  , Item.uninstallScript = ["script"]
-                                  , Item.dependencies    = dependancies'
-                                  }
-                 in (version', item)
+packageFamily :: [FilePath] -> FilePath -> IO AvailableFamilies
+packageFamily packageFiles directoryPath = do versionsList  <- mapM (version directoryPath) packageFiles
+                                              --print "versions:"
+                                              --print versionsList
+                                              return (Map.fromList versionsList)
+
+
+version :: FilePath ->  FilePath ->  IO (Version.Version, Item.Item)
+version directoryPath file = do item <- Item.loadItem $ concat [directoryPath, [Files.pathSeparator], file]
+                                return (Item.version item, item)                 
+              
                      
                         
 
