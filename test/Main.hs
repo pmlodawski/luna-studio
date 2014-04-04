@@ -20,17 +20,21 @@ main = do
           --print =<< Config.loadItem "test/test.config"
           
           let vcs = Git.createVCS VCS.Git "repo/packages" "git@github.com:dobry/packages.git" 
-          print =<< Repository.buildRepository vcs
+          --print =<< Repository.buildRepository vcs
 
           Git.remove vcs
 
-          repo <- Repository.initRepository "repo/packages" "git@github.com:dobry/packages.git"
-
+          repo <- Repository.initRepository vcs
           print repo 
+
+          --Git.remove vcs
+
+          newRepo <- Repository.updateRepository vcs
+          print newRepo
 
           print $ Repository.searchRepository repo "c"
           print $ Repository.searchRepository repo "^c"
-          print $ Repository.searchRepository repo "pac"
+          print $ Repository.searchRepository repo "(not|man)"
           
 
 
