@@ -67,12 +67,15 @@ readVersion :: FilePath ->  FilePath ->  IO (Version.Version, Item.Item)
 readVersion directoryPath file = do item <- Item.loadItem $ Utils.concatPath [directoryPath, file]
                                     return (Item.version item, item)
 
-initRepository :: FilePath -> String -> IO Repository
-initRepository filePath remotePath = do let vcs = Git.createVCS VCS.Git filePath remotePath
-                                        exists <- Files.doesDirectoryExist $ Utils.concatPath [filePath, ".git"]
-                                        if exists
-                                            then buildRepository vcs
-                                            else Git.clone vcs >>= buildRepository
+initRepository :: VCS.VCS -> IO Repository
+initRepository vcs = do let localPath = VCS.localPath vcs
+                        exists <- Files.doesDirectoryExist $ Utils.concatPath [localPath, ".git"]
+                        if exists
+                            then buildRepository vcs
+                            else Git.clone vcs >>= buildRepository
+
+updateRepository :: VCS.VCS -> IO Repository
+updateRepository vcs = Git.update vcs >>= buildRepository
 
 searchRepository :: Repository -> String -> [Item.Name]
 searchRepository repo expression = Map.keys $ Map.filterWithKey match repoItems
@@ -81,6 +84,5 @@ searchRepository repo expression = Map.keys $ Map.filterWithKey match repoItems
 
 --installPackage :: Item.Name
 --installPackage name = 
-
 
 

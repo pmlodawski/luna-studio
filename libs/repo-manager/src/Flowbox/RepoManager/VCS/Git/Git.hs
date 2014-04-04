@@ -34,7 +34,7 @@ clone repo = do Directory.createDirectoryIfMissing True (VCS.localPath repo)
 
 update :: VCS.VCS -> IO VCS.VCS
 update repo = do current <- Directory.getCurrentDirectory
-                 Directory.setCurrentDirectory (Utils.concatPath [VCS.localPath repo, VCS.name repo])
+                 Directory.setCurrentDirectory (VCS.localPath repo)
                  runCommand $ concat ["git pull --quiet ", VCS.remotePath repo] -- ADD --quiet?
                  Directory.setCurrentDirectory current
                  return repo
