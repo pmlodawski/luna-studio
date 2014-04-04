@@ -21,6 +21,9 @@ import qualified System.Directory                     as Files
 import qualified System.FilePath                      as Files   (pathSeparator)
 import qualified Flowbox.RepoManager.Utils.Utils      as Utils   (concatPath)
 import qualified Flowbox.RepoManager.VCS.VCS  as VCS
+import qualified Flowbox.RepoManager.VCS.Type  as VCS
+import qualified Flowbox.RepoManager.VCS.Git.Git  as Git
+import qualified Text.Regex.Posix as Regex
 
 data Repository = Repository { items :: Map Item.Name AvailableFamilies
                              , getVCS :: VCS.VCS
@@ -64,7 +67,20 @@ readVersion :: FilePath ->  FilePath ->  IO (Version.Version, Item.Item)
 readVersion directoryPath file = do item <- Item.loadItem $ Utils.concatPath [directoryPath, file]
                                     return (Item.version item, item)
 
+initRepository :: FilePath -> String -> IO Repository
+initRepository filePath remotePath = do let vcs = Git.createVCS VCS.Git filePath remotePath
+                                        exists <- Files.doesDirectoryExist $ Utils.concatPath [filePath, ".git"]
+                                        if exists
+                                            then buildRepository vcs
+                                            else Git.clone vcs >>= buildRepository
 
+searchRepository :: Repository -> String -> [Item.Name]
+searchRepository repo expression = Map.keys $ Map.filterWithKey match repoItems
+    where match key _value = key Regex.=~ expression :: Bool
+          repoItems = items repo
+
+--installPackage :: Item.Name
+--installPackage name = 
 
 
 
