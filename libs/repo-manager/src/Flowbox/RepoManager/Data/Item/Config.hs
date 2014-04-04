@@ -43,20 +43,16 @@ loadItem file = do
                    let readConf fieldName = Exception.onException (fromJust =<< (Configurator.lookup cfgFile fieldName :: IO (Maybe Value)))
                                      $ logger error ("Error reading config variable '" ++ show fieldName)
 
-                   itemName     <- fromString      <$> readConf "name"
-                   version      <- getVersion      <$> readConf "version"
-                   source       <- getSources      <$> readConf "source"
-                   install      <- getScript       <$> readConf "install"
-                   uninstall    <- getScript       <$> readConf "uninstall"
-                   dependencies <- getDependencies <$> readConf "dependencies"
-                   let item = Item.Item { Item.name            = Text.unpack itemName
-                                        , Item.version         = version
-                                        , Item.source          = source
-                                        , Item.installScript   = install
-                                        , Item.uninstallScript = uninstall
-                                        , Item.dependencies    = dependencies
-                                        }
-                   return item
+                   Item.Item <$> (getItemName     <$> readConf "name")
+                             <*> (getVersion      <$> readConf "version")
+                             <*> (getSources      <$> readConf "source")
+                             <*> (getScript       <$> readConf "install")
+                             <*> (getScript       <$> readConf "uninstall")
+                             <*> (getDependencies <$> readConf "dependencies")
+                                 
+
+getItemName :: Value -> String
+getItemName nameString = Text.unpack $ fromString nameString
 
 getVersion :: Value -> Version.Version
 getVersion versionString = Prelude.head [x | (x,"") <- ReadP.readP_to_S Version.parseVersion $ Text.unpack $ fromString versionString]
