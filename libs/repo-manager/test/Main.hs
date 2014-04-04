@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import           Flowbox.Prelude
+import Flowbox.Prelude
 --import qualified Flowbox.RepoManager.VCS.Git.Git as Git
 --import qualified Flowbox.RepoManager.VCS.Type    as VCS
 --import qualified Flowbox.RepoManager.VCS.VCS  as VCS
-import qualified Flowbox.RepoManager.Data.Item.Config as Config
+import qualified Flowbox.RepoManager.Data.Item.Config ()
 --import qualified           System.Environment              as Environment
 import qualified Flowbox.RepoManager.Data.Repository as Repository
 
@@ -19,7 +19,7 @@ main = do
           --print =<< Config.loadItem "repo/packages/games-action/pacman/pacman-0.1.1.config"
           --print =<< Config.loadItem "test/test.config"
           --print "\n\n"
-          print =<< Repository.build "repo/packages"
+          print =<< Repository.buildRepository "repo/packages"
 
 
 --main = do
@@ -35,7 +35,7 @@ main = do
 --create = Git.createVCS VCS.Git "repo" "packages" "git@github.com:dobry/packages.git"
 
 --clone :: IO ()
---clone = do 
+--clone = do
 --           _ <- Git.clone create
 --           return ()
 
@@ -45,7 +45,7 @@ main = do
 --            return ()
 
 --remove :: IO ()
---remove = do 
+--remove = do
 --            _ <- Git.remove create
 --            return ()
 

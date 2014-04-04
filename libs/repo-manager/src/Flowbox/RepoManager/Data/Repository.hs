@@ -1,28 +1,25 @@
-{-# LANGUAGE ScopedTypeVariables         #-}
 ---------------------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Flowbox.RepoManager.Data.Repository where
 
 import Data.Map as Map
 
+import qualified Data.List                            as List
+import qualified Data.Version                         as Version
 import           Flowbox.Prelude
-import           Flowbox.RepoManager.Data.Item.Family (InstalledFamilies, AvailableFamilies)
-import qualified Flowbox.RepoManager.Data.Item.Name             as Item
-import qualified System.Directory as Files
-import qualified System.FilePath as Files (pathSeparator)
-import qualified Data.Version as Version
-import qualified Data.List as List
-import qualified Data.Text as Text
-import qualified Flowbox.RepoManager.Data.Item.Item as Item
-import qualified Flowbox.RepoManager.Data.Dependency as Dependency
-import qualified Flowbox.RepoManager.Data.Environment as URI
 import qualified Flowbox.RepoManager.Data.Item.Config as Item
-import qualified Data.String as String (fromString)
-
+import           Flowbox.RepoManager.Data.Item.Family            (AvailableFamilies, InstalledFamilies)
+import qualified Flowbox.RepoManager.Data.Item.Item   as Item
+import qualified Flowbox.RepoManager.Data.Item.Name   as Item
+import qualified System.Directory                     as Files
+import qualified System.FilePath                      as Files   (pathSeparator)
+import qualified Flowbox.RepoManager.Utils.Utils      as Utils   (concatPath)
 data Repository = Repository { items :: Map Item.Name AvailableFamilies
                              } deriving (Show)
 
@@ -33,41 +30,35 @@ data World = World { installed :: Map Item.Name InstalledFamilies
 
 type FileName = String
 
-build :: FilePath -> IO Repository
-build repoPath = do contents <- Files.getDirectoryContents repoPath
-                    --print contents
-                    categories <- mapM (category Map.empty repoPath) (proper contents)
-                    return Repository {items = List.foldl Map.union Map.empty categories}
+getRelevant :: [FilePath] -> [FilePath]
+getRelevant files = files List.\\ [".git", "README.md", "..", "."]
 
-proper :: [FilePath] -> [FilePath]
-proper files = files List.\\ [".git", "README.md", "..", "."]
+buildRepository :: FilePath -> IO Repository
+buildRepository repoPath = do contents <- Files.getDirectoryContents repoPath
+                              categories <- mapM (readCategory Map.empty repoPath) (getRelevant contents)
+                              return Repository {items = List.foldl Map.union Map.empty categories}
 
-category :: Map Item.Name AvailableFamilies -> FilePath -> FilePath -> IO (Map Item.Name AvailableFamilies)
-category repo repoPath categoryDir =  do let categoryPath = concat [repoPath, [Files.pathSeparator], categoryDir]
-                                         --print ("cat: " ++ categoryPath)
-                                         contents <- Files.getDirectoryContents categoryPath
-                                         packList <- mapM (package repo categoryPath) (proper contents)
-                                         return $ List.foldl Map.union Map.empty packList
+readCategory :: Map Item.Name AvailableFamilies -> FilePath -> FilePath -> IO (Map Item.Name AvailableFamilies)
+readCategory repo repoPath categoryDir =  do let categoryPath = Utils.concatPath [repoPath, categoryDir]
+                                             contents <- Files.getDirectoryContents categoryPath
+                                             packList <- mapM (readPackage repo categoryPath) (getRelevant contents)
+                                             return $ List.foldl Map.union Map.empty packList
 
-package :: Map Item.Name AvailableFamilies -> FilePath -> FilePath -> IO (Map Item.Name AvailableFamilies)
-package repo categoryPath directory = do let directoryPath = concat [categoryPath, [Files.pathSeparator], directory]
-                                         --print ("dir: " ++ directoryPath)
-                                         contents <- Files.getDirectoryContents directoryPath
-                                         family <- packageFamily (proper contents) directoryPath
-                                         return $ Map.insert directory family repo
+readPackage :: Map Item.Name AvailableFamilies -> FilePath -> FilePath -> IO (Map Item.Name AvailableFamilies)
+readPackage repo categoryPath directory = do let directoryPath = Utils.concatPath [categoryPath, directory]
+                                             contents <- Files.getDirectoryContents directoryPath
+                                             family  <- readPackageFamily (getRelevant contents) directoryPath
+                                             return $ Map.insert directory family repo
 
-packageFamily :: [FilePath] -> FilePath -> IO AvailableFamilies
-packageFamily packageFiles directoryPath = do versionsList  <- mapM (version directoryPath) packageFiles
-                                              --print "versions:"
-                                              --print versionsList
-                                              return (Map.fromList versionsList)
+readPackageFamily :: [FilePath] -> FilePath -> IO AvailableFamilies
+readPackageFamily packageFiles directoryPath = do versionsList  <- mapM (readVersion directoryPath) packageFiles
+                                                  return (Map.fromList versionsList)
+
+readVersion :: FilePath ->  FilePath ->  IO (Version.Version, Item.Item)
+readVersion directoryPath file = do item <- Item.loadItem $ Utils.concatPath [directoryPath, file]
+                                    return (Item.version item, item)
 
 
-version :: FilePath ->  FilePath ->  IO (Version.Version, Item.Item)
-version directoryPath file = do item <- Item.loadItem $ concat [directoryPath, [Files.pathSeparator], file]
-                                return (Item.version item, item)                 
-              
-                     
-                        
 
-                             
+
+
