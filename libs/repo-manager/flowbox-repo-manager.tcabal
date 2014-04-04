@@ -40,7 +40,8 @@ Library
                   process,
                   filepath,
                   configurator,
-                  text
+                  text,
+                  regex-posix
 
 
 Executable repo-manager-test
@@ -69,4 +70,5 @@ Executable repo-manager-test
                   flowbox-repo-manager,
                   filepath,
                   configurator,
-                  text
+                  text,
+                  regex-posix
