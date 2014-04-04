@@ -16,8 +16,10 @@ data VCS = VCS { cls        :: VCS.Type
                , remove     :: VCS -> IO ProcessHandle
                }
 
-path :: [String] -> String
-path directories = List.intercalate [pathSeparator] directories
 
-
-
+instance  Show VCS where
+    show (VCS cls name localPath remotePath _ _ _) = "VCS {type = " ++ (show cls)
+                                                     ++ ", name = " ++ (show name)
+                                                     ++ ", path = " ++ (show localPath)
+                                                     ++ ", uri = "  ++ (show remotePath)
+                                                     ++ "}"
