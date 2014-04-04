@@ -20,7 +20,10 @@ import qualified Flowbox.RepoManager.Data.Item.Name   as Item
 import qualified System.Directory                     as Files
 import qualified System.FilePath                      as Files   (pathSeparator)
 import qualified Flowbox.RepoManager.Utils.Utils      as Utils   (concatPath)
+import qualified Flowbox.RepoManager.VCS.VCS  as VCS
+
 data Repository = Repository { items :: Map Item.Name AvailableFamilies
+                             , getVCS :: VCS.VCS
                              } deriving (Show)
 
 
@@ -33,10 +36,13 @@ type FileName = String
 getRelevant :: [FilePath] -> [FilePath]
 getRelevant files = files List.\\ [".git", "README.md", "..", "."]
 
-buildRepository :: FilePath -> IO Repository
-buildRepository repoPath = do contents <- Files.getDirectoryContents repoPath
-                              categories <- mapM (readCategory Map.empty repoPath) (getRelevant contents)
-                              return Repository {items = List.foldl Map.union Map.empty categories}
+buildRepository :: VCS.VCS -> IO Repository
+buildRepository vcs = do let repoPath = VCS.localPath vcs
+                         contents <- Files.getDirectoryContents repoPath
+                         categories <- mapM (readCategory Map.empty repoPath) (getRelevant contents)
+                         return Repository { items = List.foldl Map.union Map.empty categories
+                                           , getVCS = vcs
+                                           }
 
 readCategory :: Map Item.Name AvailableFamilies -> FilePath -> FilePath -> IO (Map Item.Name AvailableFamilies)
 readCategory repo repoPath categoryDir =  do let categoryPath = Utils.concatPath [repoPath, categoryDir]

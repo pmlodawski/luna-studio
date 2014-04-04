@@ -7,19 +7,31 @@
 module Main where
 
 import Flowbox.Prelude
---import qualified Flowbox.RepoManager.VCS.Git.Git as Git
---import qualified Flowbox.RepoManager.VCS.Type    as VCS
+import qualified Flowbox.RepoManager.VCS.Git.Git as Git
+import qualified Flowbox.RepoManager.VCS.Type    as VCS
 --import qualified Flowbox.RepoManager.VCS.VCS  as VCS
 import qualified Flowbox.RepoManager.Data.Item.Config ()
 --import qualified           System.Environment              as Environment
 import qualified Flowbox.RepoManager.Data.Repository as Repository
+import qualified Flowbox.RepoManager.RepoManager as RepoManager
 
 main :: IO ()
 main = do
-          --print =<< Config.loadItem "repo/packages/games-action/pacman/pacman-0.1.1.config"
-          --print =<< Config.loadItem "test/test.config"
-          --print "\n\n"
-          print =<< Repository.buildRepository "repo/packages"
+          print =<< Config.loadItem "repo/packages/games-action/pacman/pacman-0.1.1.config"
+          print =<< Config.loadItem "test/test.config"
+          
+          let vcs = Git.createVCS VCS.Git "repo/packages" "git@github.com:dobry/packages.git" 
+          print =<< Repository.buildRepository vcs
+
+          Git.remove vcs
+
+          repo <- RepoManager.initRepository "repo/packages" "git@github.com:dobry/packages.git"
+
+          print repo 
+
+          print $ RepoManager.searchRepository repo "c"
+          print $ RepoManager.searchRepository repo "pac"
+          
 
 
 --main = do
