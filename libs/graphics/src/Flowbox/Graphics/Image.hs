@@ -39,10 +39,14 @@ type Stencil1x3 a = (A.Stencil3 a, A.Stencil3 a, A.Stencil3 a)
 makeLenses ''Image
 
 
+-- ==== Computation
 
 compute :: Channel.Backend ix a -> ImageAcc ix a -> ImageAcc ix a
 compute backend img = Image $ Map.map (Channel.compute backend) $ view channels img
 
+-- ==== Traversal
+
+-- == Map
 
 map :: (ChannelAcc ix a -> ChannelAcc ix b) -> ImageAcc ix a -> ImageAcc ix b
 map f img = Image $ Map.map f $ view channels img
@@ -57,6 +61,18 @@ mapWithKey f img = Image $ Map.mapWithKey f $ view channels img
 --mapWithKey' :: (A.Shape ix, A.Elt a, A.Elt b) => (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b) -> ImageAcc ix a -> ImageAcc ix b
 --mapWithKey' f img = Image $ Map.mapWithKey f $ view channels img
 
+--mapAccum :: (a -> b -> (a, c)) -> a -> Map k b -> (a, Map k c)
+mapAccum :: (a -> ChannelAcc ix b -> (a, ChannelAcc ix c)) -> a -> ImageAcc ix b -> (a, ImageAcc ix c)
+mapAccum f acc img = (fst result, Image $ snd result)
+    where result = Map.mapAccum f acc (img ^. channels)
+
+--mapAccumWithKey :: (a -> k -> b -> (a, c)) -> a -> Map k b -> (a, Map k c)
+mapAccumWithKey :: (a -> Channel.Name -> ChannelAcc ix b -> (a, ChannelAcc ix c)) -> a -> ImageAcc ix b -> (a, ImageAcc ix c)
+mapAccumWithKey f acc img = (fst result, Image $ snd result)
+    where result = Map.mapAccumWithKey f acc (img ^. channels)
+
+-- == Folds
+
 foldr :: (ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix b) -> ChannelAcc ix b -> ImageAcc ix a -> ChannelAcc ix b
 foldr f acc img = Map.foldr f acc $ view channels img
 
@@ -69,16 +85,20 @@ foldrWithKey f acc img = Map.foldrWithKey f acc $ view channels img
 foldlWithKey :: (ChannelAcc ix a -> Channel.Name -> ChannelAcc ix b -> ChannelAcc ix a) -> ChannelAcc ix a -> ImageAcc ix b -> ChannelAcc ix a
 foldlWithKey f acc img = Map.foldlWithKey f acc $ view channels img
 
--- handling channels
+-- ==== Accessors
+
+-- == Getters
 
 elementAt :: Int -> ImageAcc ix a -> (Channel.Name, ChannelAcc ix a)
 elementAt pos img = Map.elemAt pos $ view channels img
 
-insert :: Channel.Name -> ChannelAcc ix a -> ImageAcc ix a -> ImageAcc ix a
-insert cname chan img = img & channels %~ (Map.insert cname chan)
-
 get :: Channel.Name -> ImageAcc ix a -> Result (ChannelAcc ix a)
 get cname img = justErr (ChannelLookupError cname) $ Map.lookup cname (view channels img)
+
+-- == Setters
+
+insert :: Channel.Name -> ChannelAcc ix a -> ImageAcc ix a -> ImageAcc ix a
+insert cname chan img = img & channels %~ (Map.insert cname chan)
 
 remove :: Channel.Name -> ImageAcc ix a -> ImageAcc ix a
 remove cname img = img & channels %~ (Map.delete cname)
@@ -103,11 +123,20 @@ cpChannel source destination img = do
     chan <- get source img
     return $ img & channels %~ (Map.insert destination chan)
 
--- TODO: filter, filterWithKey/filterWithName : naive implementation using Map.toAscList and Map.fromAscList
--- and implement filterByname using filterWithName
-filterByName :: [Channel.Name] -> ImageAcc ix a -> ImageAcc ix a
-filterByName names img = img & channels %~ (Map.filterWithKey nameMatches)
-    where nameMatches cname _ = cname `elem` names
+-- ==== Combine
+
+-- == Union
+
+channelUnion :: ImageAcc ix a -> ImageAcc ix a -> ImageAcc ix a
+channelUnion imgA imgB = Image $ Map.union (imgA ^. channels) (imgB ^. channels)
+
+channelUnionWith :: (ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a) -> ImageAcc ix a -> ImageAcc ix a -> ImageAcc ix a
+channelUnionWith f imgA imgB = Image $ Map.unionWith f (imgA ^. channels) (imgB ^. channels)
+
+channelUnionWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix a -> ChannelAcc ix a) -> ImageAcc ix a -> ImageAcc ix a -> ImageAcc ix a
+channelUnionWithKey f imgA imgB = Image $ Map.unionWithKey f (imgA ^. channels) (imgB ^. channels)
+
+-- == Intersection
 
 channelIntersection :: ImageAcc ix a -> ImageAcc ix b -> ImageAcc ix a
 channelIntersection imgA imgB = Image $ Map.intersection (imgA ^. channels) (imgB ^. channels)
@@ -118,7 +147,20 @@ channelIntersectionWith f imgA imgB = Image $ Map.intersectionWith f (imgA ^. ch
 channelIntersectionWithKey :: (Channel.Name -> ChannelAcc ix a -> ChannelAcc ix b -> ChannelAcc ix c) -> ImageAcc ix a -> ImageAcc ix b -> ImageAcc ix c
 channelIntersectionWithKey f imgA imgB = Image $ Map.intersectionWithKey f (imgA ^. channels) (imgB ^. channels)
 
--- conversion between numeric types
+-- ==== Filter
+
+-- TODO: filter, filterWithKey/filterWithName : naive implementation using Map.toAscList and Map.fromAscList
+-- and implement filterByname using filterWithName
+filterByName :: [Channel.Name] -> ImageAcc ix a -> ImageAcc ix a
+filterByName names img = img & channels %~ (Map.filterWithKey nameMatches)
+    where nameMatches cname _ = cname `elem` names
+
+selectChannels :: Channel.Select -> ImageAcc ix a -> ImageAcc ix a
+selectChannels channels img = case channels of
+    Channel.AllChannels      -> img
+    Channel.ChannelList list -> filterByName list img
+
+-- ==== Conversion between numeric types
 
 toFloat :: A.Shape ix => ImageAcc ix A.Word8 -> ImageAcc ix A.Float
 toFloat img = mapChannels (\c -> A.fromIntegral c / 255) img
@@ -134,7 +176,7 @@ toWord8 img = mapChannels (\c -> A.truncate $ c * 255) img
 
 
 
--- TRANSFORMATIONS
+-- ==== TRANSFORMATIONS
 
 -- FIXME: find a better way of resampling after rasterization
 -- czysty kod kurwa
