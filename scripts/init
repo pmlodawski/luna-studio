@@ -12,7 +12,7 @@ import sys
 import shutil
 import platform
 import subprocess
-from subprocess        import call, Popen, PIPE
+from subprocess        import call, Popen, PIPE, check_output, CalledProcessError
 from distutils.version import LooseVersion
 from utils.colors      import print_info, print_error, putInfo, formatQuestion
 from utils.errors      import fatal
@@ -68,6 +68,30 @@ def checkInstall(name, installCmd, chckf):
                 fatal()
         else: fatal()
 
+def checkPythonPkg(package, version=None):
+    if version:
+        install_cmd = "pip install {package}=={version}".format(**locals())
+    else:
+        install_cmd = "pip install {package}".format(**locals())
+
+    try:
+        res = subprocess.check_output("pip freeze", shell=True)
+        for line in res.splitlines():
+            if package in line:
+                _, installed_ver = line.split('==')
+                if version and installed_ver <= version:
+                    ask("Python package '{package}' too old: {installed_ver} available, {version} required. "\
+                        "Should I upgrade it?".format(**locals())) or fatal()
+                    try_call(install_cmd)
+                break
+        else:
+            ask("Python package '{package}' not installed. Should I install it?".format(**locals())) or fatal()
+            try_call(install_cmd)
+    except CalledProcessError, e:
+        retcode = e.returncode
+        print_error("Sorry, but `pip freeze` returned code {retcode}".format(**locals()))
+        fatal()
+
 def try_call(cmd):
     print_info ("Running '%s'" % cmd)
     if call(cmd, shell=True): fatal()
@@ -116,6 +140,8 @@ try_call ('python2.7 %s' % path)
 print_info ("Generating cabal configs using gencabal")
 path = os.path.join(rootPath, 'scripts', 'gencabal')
 try_call ('python2.7 %s' % path)
+
+checkPythonPkg("psutil")
 
 
 print_info ("Success")
