@@ -21,6 +21,7 @@ import qualified Flowbox.Graphics.Image             as Image
 import qualified Flowbox.Graphics.Image.Channel     as Channel
 import           Flowbox.Graphics.Image.Composition (Premultiply(..), Mask(..), Clamp)
 import qualified Flowbox.Graphics.Image.Composition as Comp
+import qualified Flowbox.Graphics.Image.Merge       as Merge
 import           Flowbox.Graphics.Utils             (Range(..))
 import qualified Flowbox.Graphics.Utils             as U
 import           Flowbox.Prelude                    as P
@@ -78,13 +79,14 @@ math :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => (Exp a -> Exp a -> Exp a) -> ImageAcc ix a -> Map Channel.Name (Exp a)
     -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a -- TODO: add to wiki why this line is separated from others
     -> Image.Result (ImageAcc ix a)
-math f img values mask premultiply mix = do
+math f img values maskInfo premultiply mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultiply
     result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultiply
-    Comp.maskWith result img mask
+    resultMixed     <- Merge.mix' img result mixValue
+    Merge.mask resultMixed img maskInfo
     where handleChan name chan = case Map.lookup name values of
               Nothing    -> chan
-              Just value -> Channel.map (\x -> (Comp.mix mix x (f value x))) chan
+              Just value -> Channel.map (\x -> f value x) chan
 
 offset :: (A.Elt a, A.IsFloating a, A.Shape ix)
     => ImageAcc ix a -> Map Channel.Name (Exp a)
@@ -110,14 +112,15 @@ clamp :: (A.Shape ix, A.Elt a, A.IsFloating a)
     => ImageAcc ix a -> Map Channel.Name (Clamp (Exp a))
     -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
     -> Image.Result (ImageAcc ix a)
-clamp img ranges mask premultiply mix = do
+clamp img ranges maskInfo premultiply mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultiply
     result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultiply
-    Comp.maskWith result img mask
+    resultMixed     <- Merge.mix' img result mixValue
+    Merge.mask resultMixed img maskInfo
     where handleChan name chan = case Map.lookup name ranges of
               Nothing    -> chan
               Just value -> let (thresholds, clampTo) = value
-                            in Channel.map (\x -> Comp.mix mix x (U.clamp thresholds clampTo x)) chan
+                            in Channel.map (\x -> U.clamp thresholds clampTo x) chan
 
 -- INFO: in Nuke this does not have the OR relation between channels, it has something pretty weird
 -- soooooo....... either fuck it and do it our way or... focus on it later on
@@ -125,14 +128,15 @@ clipTest :: (A.Shape ix, A.Elt a, A.IsFloating a)
     => ImageAcc ix a -> Map Channel.Name (Range (Exp a))
     -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
     -> Image.Result (ImageAcc ix a)
-clipTest img ranges mask premultiply mix = do
+clipTest img ranges maskInfo premultiply mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultiply
     result          <- Comp.premultiply (Image.mapWithKey handleChan unpremultiplied) premultiply
-    Comp.maskWith result img mask
+    resultMixed     <- Merge.mix' img result mixValue
+    Merge.mask resultMixed img maskInfo
     where handleChan name chan = case Map.lookup name ranges of
               Nothing -> chan
               Just _  -> Channel.zipWith zebraStripes chan matched
-          zebraStripes x b      = b A.? (Comp.mix mix x ((( 1 ))), x) -- TODO: this should make stripes, not constant color 1 ;]
+          zebraStripes x b      = b A.? (1, x) -- TODO: this should make stripes, not constant color 1 ;]
           matched               = Image.foldrWithKey fold initialAcc filteredChans
           fold name chan acc    = let Just (Range lo hi) = Map.lookup name ranges -- this works because we've limited the choice to only names in the `ranges` through `fitleredChans`
                                   in Channel.zipWith (A.||*) acc (Channel.map (withinRange lo hi) chan)
@@ -145,16 +149,17 @@ invert :: (A.Shape ix, A.Elt a, A.IsFloating a)
     => ImageAcc ix a -> Channel.Select -> Maybe (Clamp (Exp a))
     -> Maybe (Mask ix a) -> Maybe Premultiply -> Exp a
     -> Image.Result (ImageAcc ix a)
-invert img channels clampVal mask premultiply mix = do
+invert img channels clampVal maskInfo premultiply mixValue = do
     unpremultiplied <- Comp.unpremultiply img premultiply
     result          <- Comp.premultiply (handleInvert unpremultiplied) premultiply
-    Comp.maskWith result img mask
+    resultMixed     <- Merge.mix' img result mixValue
+    Merge.mask resultMixed img maskInfo
     where handleInvert img' = case channels of
               Channel.AllChannels      -> Image.mapChannels invertAndClamp img'
               Channel.ChannelList list -> Image.mapWithKey (invertChan list) img'
           invertChan list name chan = if name `elem` list
                                           then Channel.map invertAndClamp chan
                                           else chan
-          invertAndClamp x = Comp.mix mix x $ case clampVal of
+          invertAndClamp x = case clampVal of
               Nothing                         -> U.invert x
               Just (clampThresholds, clampTo) -> U.clamp clampThresholds clampTo $ U.invert $ x

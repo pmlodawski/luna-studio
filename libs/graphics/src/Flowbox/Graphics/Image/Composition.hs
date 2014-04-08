@@ -33,9 +33,6 @@ data Mask ix a = ChannelMask { maskChanName :: Channel.Name, injectMask :: Injec
 
 type Clamp a = (Range a, Maybe (Range a))
 
-mix :: (A.Elt a, A.IsNum a) => Exp a -> Exp a -> Exp a -> Exp a
-mix value oldValue newValue = (U.invert value) * oldValue + value * newValue
-
 invert :: (A.Elt a, A.IsNum a) => Exp Bool -> Exp a -> Exp a
 invert p x = p A.? (U.invert x, x)
 
@@ -43,18 +40,6 @@ inject :: Inject -> ChannelAcc ix a -> ImageAcc ix a -> ImageAcc ix a
 inject injection chan img = case injection of
     Nothing   -> img
     Just name -> Image.insert name chan img
-
-maskWith :: (A.Shape ix, A.Elt a, A.IsNum a) => ImageAcc ix a -> ImageAcc ix a -> Maybe (Mask ix a) -> Image.Result (ImageAcc ix a)
-maskWith imgA _ Nothing = Right imgA
-maskWith imgA imgB (Just theMask) = do
-    maskChan <- Image.get name maskImg
-    let applyMask chanA chanB = Channel.zipWith3 (calculateMask invertFlag) maskChan chanA chanB
-        calculateMask i m a b = A.cond (m A.>* 0) (i A.? (b, a)) (i A.? (a, b))
-    return $ inject injection maskChan
-           $ Image.channelIntersectionWith applyMask imgA imgB
-    where (name, injection, invertFlag, maskImg) = case theMask of
-              ChannelMask name' injection' invertFlag'          -> (name', injection', invertFlag', imgA)
-              ImageMask   name' injection' invertFlag' maskImg' -> (name', injection', invertFlag', maskImg')
 
 premultiply :: (A.Elt a, A.IsFloating a, A.Shape ix) => ImageAcc ix a -> Maybe Premultiply -> Image.Result (ImageAcc ix a)
 premultiply img Nothing = Right img

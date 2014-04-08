@@ -57,6 +57,9 @@ clamp (Range thresholdLo thresholdHi) clampTo v = (v A.<* thresholdLo A.?) $ cas
     Nothing                      -> (thresholdLo, v A.>* thresholdHi A.? (thresholdHi, v))
     Just (Range clampLo clampHi) -> (clampLo,     v A.>* thresholdHi A.? (clampHi,     v))
 
+mix :: (A.Elt a, A.IsNum a) => Exp a -> Exp a -> Exp a -> Exp a
+mix amount oldValue newValue = (invert amount) * oldValue + amount * newValue
+
 
 nonIntRem :: (A.Elt e, A.IsFloating e) => Exp e -> Exp e -> Exp e
 nonIntRem x y = x - (y * (A.fromIntegral (A.truncate (x / y) :: Exp Int)))
