@@ -1,0 +1,39 @@
+Name:               flowbox-account-manager
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Simple
+
+Flag Debug
+    Description:    Enable debug support
+    Default:        False
+
+
+Executable account-manager
+    Hs-Source-Dirs: dist/gen
+                    src
+    Other-Modules:  Paths_flowbox_account_manager
+    Main-Is:        Main.hs
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws == 0.8.5,
+                    aws-sdk,
+                    base,
+                    bytestring,
+                    containers,
+                    conduit == 1.0.17,
+                    exceptions < 0.4,
+                    errors,
+                    flowbox-utils,
+                    network,
+                    optparse-applicative,
+                    protocol-buffers,
+                    text,
+                    transformers
+
+    -- TODO [PM] : remove temporary fix (aws == 0.8.5, conduit == 1.0.17, exceptions < 0.4) fixing dependency mismatch between aws and aws-sdk
