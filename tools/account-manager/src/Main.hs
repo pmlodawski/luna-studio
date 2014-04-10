@@ -4,7 +4,6 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-
 module Main where
 
 import           Flowbox.AccountManager.Cmd             (Cmd)
