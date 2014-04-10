@@ -29,6 +29,7 @@ Executable account-manager
                     conduit == 1.0.17,
                     exceptions < 0.4,
                     errors,
+                    flowbox-rpc,
                     flowbox-utils,
                     network,
                     optparse-applicative,
