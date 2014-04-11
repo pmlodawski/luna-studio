@@ -33,7 +33,7 @@ void formatOutput(std::ostream &out, std::string contents)
 
 	}
 
-	out << outtxt;
+	out << outtxt << std::endl;
 }
 
 
@@ -42,13 +42,14 @@ const std::string headerFile = R"(
 
 
 #include "../BatchIdWrappers.h"
+#include "../bus/BusLibrary.h"
 
 class BusHandler;
 
 class %wrapper_name%
 {
 public:
-	BusHandler *bh;
+	shared_ptr<BusHandler> bh;
 
 	void sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback);
 
@@ -75,7 +76,7 @@ public:
 		}
 	}
 
-	%wrapper_name%(BusHandler *bh) : bh(bh) {}
+	%wrapper_name%(shared_ptr<BusHandler> bh) : bh(bh) {}
 	%method_decls%
 };
 
@@ -85,8 +86,7 @@ public:
 
 const std::string sourceFile = R"(
 #include "stdafx.h"
-#include "BusLibrary.h"
-#include "BatchClient.h"
+#include "%wrapper_name%.h"
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
@@ -185,7 +185,9 @@ const std::string methodDefinition = R"(
 	b.wait();
 
 	if(errorMessage.size())
-		THROW("Request %s failed: %s", "project.create", topic, errorMessage);
+	{
+		THROW("Request %s failed: %s", topic, errorMessage);
+	}
 
 	return ret;
 
@@ -311,6 +313,7 @@ struct MethodWrapper
 		result = top->FindNestedTypeByName("Status");
 		if(!result) result = top->FindNestedTypeByName("Update");
 		
+		if(!args) return;
 		for(int i = 0; i < args->field_count(); i++)
 			argsFields.push_back(args->field(i));
 
@@ -580,11 +583,8 @@ std::string extToClsCovnersions()
 	return ret;
 }
 
-void generate(const std::string &outputFile)
+std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeafs = false)
 {
-	std::string methodImpls;
-	std::string methodDecls;
-
 	std::vector<MethodWrapper> methods;
 	auto fileDescriptor = generated::proto::projectManager::Project::descriptor()->file();
 	std::function<void(std::string, std::string, const google::protobuf::Descriptor *)> addMethodsRecursively =
@@ -601,9 +601,16 @@ void generate(const std::string &outputFile)
 			nameSoFar = d->name();
 		}
 
-		if(d->FindNestedTypeByName("Request"))
-			methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d);
-
+		if(finalLeafs)
+		{
+			if(d->name() == "Request" || d->name() == "Status" || d->name() == "Update")
+				methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d);
+		}
+		else
+		{
+			if(d->FindNestedTypeByName("Request"))
+				methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d);
+		}
 		for(int i = 0; i < d->nested_type_count(); i++)
 		{
 			auto nested = d->nested_type(i);
@@ -612,8 +619,15 @@ void generate(const std::string &outputFile)
 	};
 
 	addMethodsRecursively("", "", generated::proto::projectManager::Project::descriptor());
+	return methods;
+}
 
-
+void generate(const std::string &outputFile)
+{
+	std::string methodImpls;
+	std::string methodDecls;
+	
+	auto methods = prepareMethodWrappers();
 
 // 	auto methodsDescriptor = Request::Method_descriptor();
 	for(auto &method : methods)
@@ -640,17 +654,155 @@ void generate(const std::string &outputFile)
 		std::ofstream out(outputFile + ".h");
 		formatOutput(out, formatFile(headerFile));
 	}
+}
 
-	for(int i = 0; i < fileDescriptor->message_type_count(); i++)
+void generateDeserializers()
+{
+	static const std::string header = R"(
+#pragma once 
+
+struct PackageDeserializer
+{
+	static std::unique_ptr<google::protobuf::Message> deserialize(const BusMessage &message);
+};
+)";
+	std::string body = R"(
+
+#include "../bus/BusLibrary.h"
+#include "Deserializer.h"
+#include <google/protobuf/message.h>
+
+
+typedef std::unique_ptr<google::protobuf::Message> MessagePtr;
+
+std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(const BusMessage &message)
+{
+	static const std::map<std::string, std::function<MessagePtr(crstring)>> deserializers = 
 	{
-		auto messageDescriptor = fileDescriptor->message_type(i);
-		int g = 4;
+%deserializers%
+	};
+
+	auto deserializerItr = deserializers.find(message.topic);
+	if(deserializerItr != deserializers.end())
+		return deserializerItr->second(message.contents);
+
+	if(boost::algorithm::ends_with(message.topic, ".error"))
+	{
+		auto ret = make_unique<generated::proto::rpc::Exception>();
+		ret->set_message(message.contents);
+//TODO //FIXME Why move is needed?
+		return std::move(ret);
 	}
+
+
+	THROW("Error: I don't know how to deserialize message with topic %s.", message.topic);
+}
+
+)";
+	std::string deserialize = R"(
+		{ "%topic%", 
+		  [](crstring contents)
+		  {
+			auto ret = make_unique<%namespace%::%method%>();
+			ret->ParseFromString(contents);
+			return ret;
+		  }
+		},
+)";
+	
+	std::string entries;
+
+	auto methods = prepareMethodWrappers(true);
+	for (auto &method : methods)
+	{
+		std::string hlp = deserialize;
+		boost::replace_all(hlp, "%namespace%", "generated::proto::projectManager");
+		boost::replace_all(hlp, "%topic%", method.topic);
+		boost::replace_all(hlp, "%method%", method.name);
+		entries += hlp;
+	}
+
+	std::string output = body;
+	boost::replace_all(output, "%deserializers%", entries);
+
+	std::ofstream outcpp("generated/Deserializer.cpp");
+	std::ofstream outh("generated/Deserializer.h");
+	formatOutput(outh, header);
+	formatOutput(outcpp, output);
+}
+
+void generateDispatcher()
+{
+	std::string source = R"(
+
+	{
+		static const std::map<std::string, std::function<void(const BusMessage &, T &dispatchee)>> deserializers =
+		{
+%elements%
+		};
+
+		auto deserializerItr = deserializers.find(message.topic);
+		if(deserializerItr != deserializers.end())
+			return deserializerItr->second(message.contents);
+
+		if(boost::algorithm::ends_with(message.topic, ".error"))
+		{
+			auto ret = make_unique<generated::proto::rpc::Exception>();
+			ret->set_message(message.contents);
+			//TODO //FIXME Why move is needed?
+			return std::move(ret);
+		}
+	}
+)";
+
+	std::string header = R"(
+#pragma one
+
+struct MessageDispatcher
+{
+	static void dispatch(const BusMessage &message, IDispatchee &dispatchee);
+};
+)";
+	std::string entry = R"(
+			{ 
+				"%topic%",
+				[](const BusMessage &message, T &dispatchee)
+				{
+					typedef %namespace%::%method% MyMsg;
+					dispatchee.handle(std::dynamic_pointer_cast<MyMsg>(message.msg));
+				}
+			},
+)";
+
+	std::string entries;
+	std::string handlers = "class IDispatchee \n{ public:\n";
+	for(auto &method : prepareMethodWrappers(true))
+	{
+		std::string hlp = entry;
+		boost::replace_all(hlp, "%namespace%", "generated::proto::projectManager");
+		boost::replace_all(hlp, "%topic%", method.topic);
+		boost::replace_all(hlp, "%method%", method.name);
+		entries += hlp;
+		handlers += "virtual void handle(const std::shared_ptr<generated::proto::projectManager::"+method.name+"> &ptr) {};\n";
+	}
+	handlers += "}; \n";
+
+	boost::replace_all(header, "%elements%", entries);
+
+	std::ofstream outcpp("generated/MessageDispatcher.cpp");
+	std::ofstream outh("generated/MessageDispatcher.h");
+	formatOutput(outh, handlers + "\n\n\n\n" + header);
+	formatOutput(outcpp, R"(#include "MessageDispatcher.h")");
+	//topic project.library.ast.properties.set.update
+	//method Project_Library_AST_Properties_Set_Update
+
 }
 
 int main()
 {
 //	extToClsCovnersions();
 	generate("generated/ProjectManager");
+	generateDeserializers();
+	generateDispatcher();
 	return EXIT_SUCCESS;
 }
