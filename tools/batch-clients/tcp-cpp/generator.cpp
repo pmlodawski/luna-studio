@@ -524,8 +524,8 @@ struct MethodWrapper
 		else
 		{
 			returnedType = "generated::proto::projectManager::" + name + "_" + result->name();
-			returnedType = "std::unique_ptr<" + returnedType + ">";
-			prepareRet = returnedType + " ret;\n";
+ 			returnedType = "std::unique_ptr<" + returnedType + ">";
+// 			prepareRet = returnedType + " retHlp;\n";
 			prepareRet += "ret = std::move(answer);";
 			returnRet = "return ret;";
 			useRet = "ret";
@@ -734,29 +734,34 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 void generateDispatcher()
 {
 	std::string source = R"(
+#include "MessageDispatcher.h"
+#include "../bus/BusLibrary.h"
 
+
+	void MessageDispatcher::dispatch(const BusMessage &message, IDispatchee &dispatchee)
 	{
-		static const std::map<std::string, std::function<void(const BusMessage &, T &dispatchee)>> deserializers =
+		static const std::map<std::string, std::function<void(const BusMessage &, IDispatchee &dispatchee)>> deserializers =
 		{
 %elements%
 		};
 
 		auto deserializerItr = deserializers.find(message.topic);
 		if(deserializerItr != deserializers.end())
-			return deserializerItr->second(message.contents);
-
-		if(boost::algorithm::ends_with(message.topic, ".error"))
 		{
-			auto ret = make_unique<generated::proto::rpc::Exception>();
-			ret->set_message(message.contents);
-			//TODO //FIXME Why move is needed?
-			return std::move(ret);
+			deserializerItr->second(message, dispatchee);
+			return;
 		}
+
+		logWarning("Not dispatching message %s.", message.topic);
 	}
 )";
 
 	std::string header = R"(
-#pragma one
+#pragma once
+
+struct BusMessage;
+
+%dispatchee%
 
 struct MessageDispatcher
 {
@@ -766,33 +771,37 @@ struct MessageDispatcher
 	std::string entry = R"(
 			{ 
 				"%topic%",
-				[](const BusMessage &message, T &dispatchee)
+				[](const BusMessage &message, IDispatchee &dispatchee)
 				{
 					typedef %namespace%::%method% MyMsg;
-					dispatchee.handle(std::dynamic_pointer_cast<MyMsg>(message.msg));
+					dispatchee.on_%method%(message, std::dynamic_pointer_cast<const MyMsg>(message.msg));
 				}
 			},
 )";
 
 	std::string entries;
-	std::string handlers = "class IDispatchee \n{ public:\n";
+	std::string dispatchee = "class IDispatchee \n{\n public:\n";
 	for(auto &method : prepareMethodWrappers(true))
-	{
+{	
+		if(!boost::ends_with(method.topic, "update")  &&  !boost::ends_with(method.topic, "status"))
+			continue;
+
 		std::string hlp = entry;
 		boost::replace_all(hlp, "%namespace%", "generated::proto::projectManager");
 		boost::replace_all(hlp, "%topic%", method.topic);
 		boost::replace_all(hlp, "%method%", method.name);
 		entries += hlp;
-		handlers += "virtual void handle(const std::shared_ptr<generated::proto::projectManager::"+method.name+"> &ptr) {};\n";
+		dispatchee += "virtual void on_"+method.name+"(const BusMessage &message, const std::shared_ptr<const generated::proto::projectManager::"+method.name+"> &ptr) {};\n";
 	}
-	handlers += "}; \n";
+	dispatchee += "}; \n";
 
-	boost::replace_all(header, "%elements%", entries);
+	boost::replace_all(header, "%dispatchee%", dispatchee);
+	boost::replace_all(source, "%elements%", entries);
 
 	std::ofstream outcpp("generated/MessageDispatcher.cpp");
 	std::ofstream outh("generated/MessageDispatcher.h");
-	formatOutput(outh, handlers + "\n\n\n\n" + header);
-	formatOutput(outcpp, R"(#include "MessageDispatcher.h")");
+	formatOutput(outh, header);
+	formatOutput(outcpp, source);
 	//topic project.library.ast.properties.set.update
 	//method Project_Library_AST_Properties_Set_Update
 
