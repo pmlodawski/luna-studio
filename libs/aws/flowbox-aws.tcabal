@@ -57,6 +57,7 @@ Executable aws-test
                   errors,
                   flowbox-rpc,
                   flowbox-utils,
+                  mtl,
                   network,
                   optparse-applicative,
                   pretty-show,
