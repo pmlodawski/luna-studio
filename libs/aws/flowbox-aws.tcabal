@@ -22,13 +22,13 @@ Library
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
                    
-  Build-Depends:  aws == 0.8.5,
-                  aws-sdk,
+  Build-Depends:  aws,
+                  aws-sdk >= 0.12.4,
                   base,
                   bytestring,
                   containers,
-                  conduit == 1.0.17,
-                  exceptions < 0.4,
+                  conduit >= 1.1.0,
+                  exceptions,
                   errors,
                   flowbox-rpc,
                   flowbox-utils,
@@ -46,13 +46,14 @@ Executable aws-test
 
   Extensions:     NoImplicitPrelude
 
-  Build-Depends:  aws == 0.8.5,
-                  aws-sdk,
+  Build-Depends:  aws,
+                  aws-sdk >= 0.12.4,
                   base,
                   bytestring,
                   containers,
-                  conduit == 1.0.17,
-                  exceptions < 0.4,
+                  conduit >= 1.1.0,
+                  resourcet >= 1.1.0,
+                  exceptions,
                   errors,
                   flowbox-rpc,
                   flowbox-utils,
@@ -63,4 +64,3 @@ Executable aws-test
                   text,
                   transformers
 
-  -- TODO [PM] : remove temporary fix (aws == 0.8.5, conduit == 1.0.17, exceptions < 0.4) fixing dependency mismatch between aws and aws-sdk
