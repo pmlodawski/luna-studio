@@ -8,14 +8,14 @@ module Main where
 
 import Flowbox.Prelude
 
-import qualified AWS              as AWS
-import qualified AWS.EC2          as EC2
-import qualified AWS.EC2.Types    as Types
-import qualified AWS.EC2.Util     as Util
-import qualified Data.Conduit     as Conduit
-import           Data.Text        (Text)
-import qualified Data.Text        as Text
-import           Text.Show.Pretty (ppShow)
+import qualified AWS                          as AWS
+import qualified AWS.EC2                      as EC2
+import qualified AWS.EC2.Types                as Types
+import qualified AWS.EC2.Util                 as Util
+import qualified Control.Monad.Trans.Resource as Resource
+import           Data.Text                    (Text)
+import qualified Data.Text                    as Text
+import           Text.Show.Pretty             (ppShow)
 
 
 
@@ -29,7 +29,7 @@ userTag = Text.pack "tag:user"
 main :: IO ()
 main = do
     credential <- AWS.loadCredential
-    let runEC2   = Conduit.runResourceT . EC2.runEC2 credential
+    let runEC2   = Resource.runResourceT . EC2.runEC2 credential
         userName = Text.pack "zenon"
         region   = Text.pack "eu-west-1"
     result <- runEC2 $ do EC2.setRegion region
