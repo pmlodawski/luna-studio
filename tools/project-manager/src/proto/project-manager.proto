@@ -416,10 +416,11 @@ message Project {
                                 required int32 projectID = 4;
                             }
                             message Update {
-                                required generated.proto.graph.Node node      = 1;
-                                required generated.proto.crumb.Breadcrumbs bc = 2;
-                                required int32 libraryID = 3;
-                                required int32 projectID = 4;
+                                required int32 oldNodeID = 1;
+                                required generated.proto.graph.Node node      = 2;
+                                required generated.proto.crumb.Breadcrumbs bc = 3;
+                                required int32 libraryID = 4;
+                                required int32 projectID = 5;
                             }
                         }
                         message ModifyInPlace {

@@ -24,12 +24,12 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Lookup.Status              as Lookup
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request           as NodeAdd
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update            as NodeAdd
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Request        as NodeModify
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Update         as NodeModify
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Request as NodeModifyInPlace
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Update  as NodeModifyInPlace
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
 
 
 
@@ -73,13 +73,13 @@ nodeAdd ctxRef (NodeAdd.Request tnode tbc tlibID tprojectID) = do
 nodeModify :: ContextRef -> NodeModify.Request -> IO NodeModify.Update
 nodeModify ctxRef (NodeModify.Request tnode tbc tlibID tprojectID) = do
     bc <- decode tbc
-    nodeWithId <- decode tnode
+    (nodeID, node) <- decode tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     batch <- IORef.readIORef ctxRef
-    (newBatch, newNodeID) <- BatchG.updateNode nodeWithId bc libID projectID batch
+    (newBatch, newNodeID) <- BatchG.updateNode (nodeID, node) bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return $ NodeModify.Update (encode $ nodeWithId & _1 .~ newNodeID) tbc tlibID tprojectID
+    return $ NodeModify.Update (encodeP nodeID) (encode (newNodeID, node)) tbc tlibID tprojectID
 
 
 nodeModifyInPlace :: ContextRef -> NodeModifyInPlace.Request -> IO NodeModifyInPlace.Update
