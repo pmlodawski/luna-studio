@@ -32,8 +32,8 @@ import qualified Generated.Proto.ProjectManager.Project.Open.Request      as Ope
 import qualified Generated.Proto.ProjectManager.Project.Open.Update       as Open
 import qualified Generated.Proto.ProjectManager.Project.Store.Request     as Store
 import qualified Generated.Proto.ProjectManager.Project.Store.Status      as Store
-import qualified Generated.Proto.ProjectManager.Project.Update.Request    as Update
-import qualified Generated.Proto.ProjectManager.Project.Update.Update     as Update
+import qualified Generated.Proto.ProjectManager.Project.Modify.Request    as Modify
+import qualified Generated.Proto.ProjectManager.Project.Modify.Update     as Modify
 
 
 
@@ -80,13 +80,13 @@ open ctx (Open.Request tpath) = do
     return $ Open.Update $ encode (projectID, project) ^. _1
 
 
-update :: ContextRef -> Update.Request -> IO Update.Update
-update ctx  (Update.Request tproject) = do
+modify :: ContextRef -> Modify.Request -> IO Modify.Update
+modify ctx  (Modify.Request tproject) = do
     projectWithID <- (decode (tproject, LibManager.empty, ProcessMap.empty) :: IO (Project.ID, Project))
     batch         <- IORef.readIORef ctx
     newBatch      <-  BatchP.updateProject projectWithID batch
     IORef.writeIORef ctx newBatch
-    return $ Update.Update tproject
+    return $ Modify.Update tproject
 
 
 close :: ContextRef -> Close.Request -> IO Close.Update

@@ -26,10 +26,10 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update            as NodeAdd
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Update.Request        as NodeUpdate
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Update.Update         as NodeUpdate
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.UpdateInPlace.Request as NodeUpdateInPlace
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.UpdateInPlace.Update  as NodeUpdateInPlace
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Request        as NodeModify
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Update         as NodeModify
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Request as NodeModifyInPlace
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Update  as NodeModifyInPlace
 
 
 
@@ -70,8 +70,8 @@ nodeAdd ctxRef (NodeAdd.Request tnode tbc tlibID tprojectID) = do
     return $ NodeAdd.Update (encode (newNodeID, node)) tbc tlibID tprojectID
 
 
-nodeUpdate :: ContextRef -> NodeUpdate.Request -> IO NodeUpdate.Update
-nodeUpdate ctxRef (NodeUpdate.Request tnode tbc tlibID tprojectID) = do
+nodeModify :: ContextRef -> NodeModify.Request -> IO NodeModify.Update
+nodeModify ctxRef (NodeModify.Request tnode tbc tlibID tprojectID) = do
     bc <- decode tbc
     nodeWithId <- decode tnode
     let libID     = decodeP tlibID
@@ -79,11 +79,11 @@ nodeUpdate ctxRef (NodeUpdate.Request tnode tbc tlibID tprojectID) = do
     batch <- IORef.readIORef ctxRef
     (newBatch, newNodeID) <- BatchG.updateNode nodeWithId bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return $ NodeUpdate.Update (encode $ nodeWithId & _1 .~ newNodeID) tbc tlibID tprojectID
+    return $ NodeModify.Update (encode $ nodeWithId & _1 .~ newNodeID) tbc tlibID tprojectID
 
 
-nodeUpdateInPlace :: ContextRef -> NodeUpdateInPlace.Request -> IO NodeUpdateInPlace.Update
-nodeUpdateInPlace ctxRef (NodeUpdateInPlace.Request tnode tbc tlibID tprojectID) = do
+nodeModifyInPlace :: ContextRef -> NodeModifyInPlace.Request -> IO NodeModifyInPlace.Update
+nodeModifyInPlace ctxRef (NodeModifyInPlace.Request tnode tbc tlibID tprojectID) = do
     bc <- decode tbc
     nodeWithId <- decode tnode
     let libID     = decodeP tlibID
@@ -91,7 +91,7 @@ nodeUpdateInPlace ctxRef (NodeUpdateInPlace.Request tnode tbc tlibID tprojectID)
     batch <- IORef.readIORef ctxRef
     newBatch <- BatchG.updateNodeInPlace nodeWithId bc libID projectID batch
     IORef.writeIORef ctxRef newBatch
-    return $ NodeUpdateInPlace.Update tnode tbc tlibID tprojectID
+    return $ NodeModifyInPlace.Update tnode tbc tlibID tprojectID
 
 
 nodeRemove :: ContextRef -> NodeRemove.Request -> IO NodeRemove.Update

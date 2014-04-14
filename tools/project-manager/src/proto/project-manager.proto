@@ -54,7 +54,7 @@ message Project {
             required generated.proto.project.Project project = 1;
         }
     }
-    message Update {
+    message Modify {
         message Request {
             required generated.proto.project.Project project = 1;
         }
@@ -171,7 +171,7 @@ message Project {
                         required int32 projectID = 4;
                     }
                 }
-                message Update {
+                message Modify {
                     message Cls {
                         message Request {
                             required generated.proto.type.Type cls        = 1;
@@ -232,7 +232,7 @@ message Project {
                         required int32 projectID = 4;
                     }
                 }
-                message Update {
+                message Modify {
                     message Cls {
                         message Request {
                             required generated.proto.type.Type cls        = 1;
@@ -307,7 +307,7 @@ message Project {
                         required int32 projectID = 4;
                     }
                 }
-                message Update {
+                message Modify {
                     message Name {
                         message Request {
                             required string name     = 1;
@@ -408,7 +408,7 @@ message Project {
                                 required int32 projectID = 4;
                             }
                         }
-                        message Update {
+                        message Modify {
                             message Request {
                                 required generated.proto.graph.Node node      = 1;
                                 required generated.proto.crumb.Breadcrumbs bc = 2;
@@ -422,7 +422,7 @@ message Project {
                                 required int32 projectID = 4;
                             }
                         }
-                        message UpdateInPlace {
+                        message ModifyInPlace {
                             message Request {
                                 required generated.proto.graph.Node node      = 1;
                                 required generated.proto.crumb.Breadcrumbs bc = 2;
