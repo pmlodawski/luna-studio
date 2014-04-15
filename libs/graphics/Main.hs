@@ -7,9 +7,9 @@
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE TypeOperators        #-}
 
-{-# LANGUAGE CPP                  #-}
--- {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ExtendedDefaultRules      #-}
 
 
 import qualified Config                            as Cfg
@@ -22,6 +22,8 @@ import qualified Monitoring         as Monitoring
 import qualified ParseArgs          as ParseArgs
 import qualified System.Environment as Env
 import qualified System.Exit        as Exit
+
+import           Diagrams.Prelude as Diag
 
 --import qualified Debug.Trace           as Dbg
 
@@ -37,18 +39,17 @@ import qualified Flowbox.Graphics.Image.Composition     as Comp
 import qualified Flowbox.Graphics.Image.Color           as Img
 import qualified Flowbox.Graphics.Image.IO              as Img
 import qualified Flowbox.Graphics.Image.Raster          as Img
-import qualified Flowbox.Graphics.Image.Repr            as RGBA
+import qualified Flowbox.Graphics.Image.Repr            as Repr
+import qualified Flowbox.Graphics.Shape                 as Shape
 import           Flowbox.Graphics.Utils                 (Range(..))
 import qualified Flowbox.Graphics.Utils                 as U
 import           Flowbox.Prelude                        as P
 
 
---imgtest :: (A.Shape ix, A.Shape ix1) =>
---          Image (A.Array ix A.Word32)
---          -> Image (A.Array ix1 A.Word32)
---          -> Either Img.Error (Image (A.Array A.DIM2 A.Word32))
+diag = square 1 Diag.# fcA (goldenrod `withOpacity` 0.5)
+
 imgtest img frames = do
-    let getDouble image = Img.toDouble <$> RGBA.decompose image
+    let getDouble image = Img.toDouble <$> Repr.decompose image
         red       = RGB (A.constant 1) (A.constant 0) (A.constant 0)
         green     = RGB (A.constant 0) (A.constant 1) (A.constant 0)
         blue      = RGB (A.constant 0) (A.constant 0) (A.constant 1)
@@ -81,12 +82,11 @@ imgtest img frames = do
     imageGamma    <- Img.gamma    imageRGBAwithMask gammaMap (Just imageMask) (Just premultiply) 1
     imageClamp    <- Img.clamp    imageRGBAwithMask clampMap Nothing Nothing 1
     imageClipTest <- Img.clipTest imageRGBAwithMask clipMap (Just imageMask) (Just premultiply) 1
-    --imageInvert   <- Img.invert   imageRGBAwithMask selection (Just (Range 0.4 0.6, Nothing)) (Just imageMask) (Just premultiply) 0.7
     imageInvert   <- Img.invert   imageRGBAwithMask selection Nothing Nothing Nothing 1
 
     let imageOut = imageInvert
 
-    RGBA.compose $ Img.toWord8 $ Img.map G.clipValues imageOut
+    Repr.compose $ Img.toWord8 $ Img.map G.clipValues imageOut
 
 ---- main
 
@@ -107,16 +107,22 @@ main
             --frameNames  = fmap (\x -> (T.printf "frames/frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
             getImage location = fmap (either (\_ -> mempty) id) (Img.readFromBMP location)
             getImages locations = fmap (either (\_ -> mempty) id) (Img.readSequenceFromBMP locations)
-            getDouble image = Img.toFloat <$> RGBA.decompose image
+            getDouble image = Img.toFloat <$> Repr.decompose image
 
         -- Read in the image file
         imageIn <- getImage fileIn
         framesIn <- getImages frameNames
 
-        let imageOut = imgtest imageIn framesIn
+        diagram       <- Shape.rasterize 5 7 0 1 (Diag.Width 3) diag
+        let dupa =  Img.toWord8 $ Img.map G.clipValues diagram
+
+        let imageOut = case Repr.compose dupa of
+                Left err  -> Right mempty
+                Right val -> Right val
+        --let imageOut = imgtest imageIn framesIn
 
         case imageOut of
-            Left err -> print err
+            Left err  -> print err
             Right val -> do Img.writeToBMP (ParseArgs.run backend) fileOut val
                             return ()
 
