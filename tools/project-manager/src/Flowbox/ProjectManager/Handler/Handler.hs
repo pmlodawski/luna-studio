@@ -127,7 +127,7 @@ handler ctx callback topic = case topic of
     "project.library.ast.function.graph.node.default.get.request"    -> callback P.status $ P.singleResult $ NodeDefaultHandler.get ctx
     "project.library.ast.function.graph.node.default.remove.request" -> callback P.update $ P.singleResult $ NodeDefaultHandler.remove ctx
     "project.library.ast.function.graph.node.default.set.request"    -> callback P.update $ P.singleResult $ NodeDefaultHandler.set ctx
-    "project.library.ast.properties.get.request"                     -> callback P.update $ P.singleResult $ PropertiesHandler.get ctx
+    "project.library.ast.properties.get.request"                     -> callback P.status $ P.singleResult $ PropertiesHandler.get ctx
     "project.library.ast.properties.set.request"                     -> callback P.update $ P.singleResult $ PropertiesHandler.set ctx
     unsupported             -> do let errMsg = "Unknown topic: " ++ show unsupported
                                   logger error errMsg
