@@ -31,19 +31,15 @@ rasterize w h x y size diagram = do
     pixels <- liftIO makeElements
 
     let converted = fmap convert pixels
-        red       = fmap (\(r, _, _, _) -> r) converted
-        green     = fmap (\(_, g, _, _) -> g) converted
-        blue      = fmap (\(_, _, b, _) -> b) converted
-        alpha     = fmap (\(_, _, _, a) -> a) converted
-        redAcc    = channelAcc red
-        greenAcc  = channelAcc green
-        blueAcc   = channelAcc blue
-        alphaAcc  = channelAcc alpha
+        red       = channelAcc $ fmap (\(r, _, _, _) -> r) converted
+        green     = channelAcc $ fmap (\(_, g, _, _) -> g) converted
+        blue      = channelAcc $ fmap (\(_, _, b, _) -> b) converted
+        alpha     = channelAcc $ fmap (\(_, _, _, a) -> a) converted
 
-    return $ Image.insert "rgba.r" redAcc
-           $ Image.insert "rgba.g" greenAcc
-           $ Image.insert "rgba.b" blueAcc
-           $ Image.insert "rgba.a" alphaAcc
+    return $ Image.insert "rgba.r" red
+           $ Image.insert "rgba.g" green
+           $ Image.insert "rgba.b" blue
+           $ Image.insert "rgba.a" alpha
            $ mempty
     where makeElements = do
               let (_, render) = Diag.renderDia Diag.Cairo (Diag.CairoOptions "" size RenderOnly False) diagram
