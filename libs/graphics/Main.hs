@@ -23,7 +23,8 @@ import qualified ParseArgs          as ParseArgs
 import qualified System.Environment as Env
 import qualified System.Exit        as Exit
 
-import           Diagrams.Prelude as Diag
+import           Diagrams.Prelude            as Diag
+import           Diagrams.TwoD.Path.Metafont
 
 --import qualified Debug.Trace           as Dbg
 
@@ -45,10 +46,20 @@ import           Flowbox.Graphics.Utils                 (Range(..))
 import qualified Flowbox.Graphics.Utils                 as U
 import           Flowbox.Prelude                        as P
 
+import Control.Lens as L
+--diag = square 1 Diag.# fcA (goldenrod `withOpacity` 0.5)
+z1 = p2 (0,1)
+z2 = p2 (1,1)
+z3 = p2 (2,1)
+z4 = p2 (0,0)
+z5 = p2 (1,0)
+z6 = p2 (2,0)
+meta = metafont $ z4.--.z1.--.z2.--.z6.- tension 1.5 -.cyclePath
+--color = (goldenrod `withOpacity` 0.5)
+color = white `withOpacity` 1
+diag = (strokeLoop meta) Diag.# fcA color
 
-diag = square 1 Diag.# fcA (goldenrod `withOpacity` 0.5)
-
-imgtest img frames = do
+imgtest img frames mask = do
     let getDouble image = Img.toDouble <$> Repr.decompose image
         red       = RGB (A.constant 1) (A.constant 0) (A.constant 0)
         green     = RGB (A.constant 0) (A.constant 1) (A.constant 0)
@@ -68,23 +79,25 @@ imgtest img frames = do
 
     imageRGBA <- getDouble img
     framesRGBA <- getDouble frames
+    maskDouble <- getDouble mask
 
     --imageBackground <- G.extractBackground rgb framesRGBA
     let imageConstant     = Img.constant (A.index2 (512::Exp Int) (512::Exp Int)) [("rgba.r", A.constant 1), ("rgba.g", A.constant 0), ("rgba.b", A.constant 1), ("rgba.a", A.constant 1)]
         imageCheckerboard = Img.checkerboard (A.index2 (512::Exp Int) (512::Exp Int)) (A.constant 32) (black, white, black, white) (red, A.constant 0) (yellow, A.constant 0)
-        imageMask         = ImageMask "rgba.r" Nothing (A.constant False) imageCheckerboard
+        --imageMask         = ImageMask "rgba.r" Nothing (A.constant False) imageCheckerboard
+        imageMask         = ImageMask "rgba.r" Nothing (A.constant False) maskDouble
 
     maskChannel <- Img.get "rgba.r" imageCheckerboard
 
     let imageRGBAwithMask = Img.insert "mask.a" maskChannel imageRGBA
         premultiply = Premultiply "mask.a" (A.constant False)
 
-    imageGamma    <- Img.gamma    imageRGBAwithMask gammaMap (Just imageMask) (Just premultiply) 1
+    imageGamma    <- Img.gamma    imageRGBAwithMask gammaMap (Just imageMask) Nothing 1
     imageClamp    <- Img.clamp    imageRGBAwithMask clampMap Nothing Nothing 1
     imageClipTest <- Img.clipTest imageRGBAwithMask clipMap (Just imageMask) (Just premultiply) 1
     imageInvert   <- Img.invert   imageRGBAwithMask selection Nothing Nothing Nothing 1
 
-    let imageOut = imageInvert
+    let imageOut = imageGamma
 
     Repr.compose $ Img.toWord8 $ Img.map G.clipValues imageOut
 
@@ -113,13 +126,15 @@ main
         imageIn <- getImage fileIn
         framesIn <- getImages frameNames
 
-        diagram       <- Shape.rasterize 5 7 0 1 (Diag.Width 3) diag
+        diagram       <- Shape.rasterize 512 512 100 100 (Diag.Width 256) diag
         let dupa =  Img.toWord8 $ Img.map G.clipValues diagram
 
-        let imageOut = case Repr.compose dupa of
-                Left err  -> Right mempty
-                Right val -> Right val
-        --let imageOut = imgtest imageIn framesIn
+        let rasterizedDiagram = case Repr.compose dupa of
+                Left err  -> mempty
+                Right val -> val
+            --imageOut = Right rasterizedDiagram
+
+        let imageOut = imgtest imageIn framesIn rasterizedDiagram
 
         case imageOut of
             Left err  -> print err
