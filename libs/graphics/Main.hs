@@ -17,6 +17,7 @@ import           Control.Applicative
 import           Data.Array.Accelerate             (Exp)
 import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Accelerate.Interpreter as Interp
+import qualified Data.Array.Accelerate.CUDA        as CUDA
 import qualified Data.Map                          as Map
 import qualified Monitoring         as Monitoring
 import qualified ParseArgs          as ParseArgs
@@ -110,12 +111,19 @@ main
 
         argv                    <- Env.getArgs
         (conf, nops)            <- ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer argv
-        (fileIn, fileOut)       <- case nops of
-          (i:o:_) -> return (i,o)
+        (fileIn, fileOut, rest)       <- case nops of
+          (i:o:rest) -> return (i,o,rest)
           _       -> ParseArgs.parseArgs Cfg.configHelp Cfg.configBackend Cfg.options Cfg.defaults Cfg.header Cfg.footer ("--help":argv)
                   >> Exit.exitSuccess
 
+        let noCUDA = case rest of
+                (opt:_) -> opt == "no-cuda"
+                _       -> False
+
         let backend     = ParseArgs.Interpreter --Label.get Cfg.configBackend conf
+            backendRun  = case noCUDA of
+                False -> CUDA.run
+                True  -> Interp.run
             frameNames  = replicate 5 "lena.bmp"
             --frameNames  = fmap (\x -> (T.printf "frames/frame-small-%03d.bmp" x) :: String) ([1,5..66] :: [Int])
             getImage location = fmap (either (\_ -> mempty) id) (Img.readFromBMP location)
@@ -138,7 +146,8 @@ main
 
         case imageOut of
             Left err  -> print err
-            Right val -> do Img.writeToBMP (ParseArgs.run backend) fileOut val
+            --Right val -> do Img.writeToBMP (ParseArgs.run backend) fileOut val
+            Right val -> do Img.writeToBMP (backendRun) fileOut val
                             return ()
 
 
