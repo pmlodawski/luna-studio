@@ -14,11 +14,12 @@ import qualified AWS.EC2              as EC2
 import qualified AWS.EC2.Types        as Types
 import           Data.ByteString.Lazy (ByteString)
 import qualified Data.Digest.Pure.SHA as SHA
-import qualified Data.Map             as Map
 
 import           Data.IP                   (IPv4)
 import qualified Flowbox.AWS.Instance      as Instance
-import           Flowbox.AWS.User          (UserData (UserData), UserDatabase, UserName)
+import           Flowbox.AWS.User.Database (Database)
+import qualified Flowbox.AWS.User.Database as Database
+import qualified Flowbox.AWS.User.User     as User
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -31,25 +32,25 @@ logger = getLoggerIO "Flowbox.AWS.Session"
 type Error = String
 
 
-register :: UserName -> ByteString -> UserDatabase -> Either Error UserDatabase
-register userName password' database = case Map.lookup userName database of
+register :: User.Name -> ByteString -> Database -> Either Error Database
+register userName password' database = case Database.lookup userName database of
     Just _  -> Left "Cannot register user: username already exists"
-    Nothing -> do let userData = UserData $ SHA.sha256 password'
-                  Right $ Map.insert userName userData database
+    Nothing -> do let userData = User.Data $ SHA.sha256 password'
+                  Right $ Database.insert userName userData database
 
 
 login :: Instance.EC2Resource m
-      => UserName -> ByteString -> UserDatabase -> EC2 m (Either Error IPv4)
-login userName password' database = case Map.lookup userName database of
+      => User.Name -> ByteString -> Database -> EC2 m (Either Error IPv4)
+login userName password' database = case Database.lookup userName database of
     Nothing              -> return $ Left "Login failed: no such user"
-    Just (UserData hash) -> if hash /= SHA.sha256 password'
+    Just (User.Data hash) -> if hash /= SHA.sha256 password'
                                 then return $ Left "Login failed: password incorrect"
                                 else do logger info $ "Login successful, username=" ++ (show userName)
                                         inst <- Instance.get userName Instance.defaultInstanceRequest
                                         Right <$> (fromJust $ Types.instanceIpAddress inst)
 
 
-logout :: Instance.EC2Resource m => UserName -> EC2 m ()
+logout :: Instance.EC2Resource m => User.Name -> EC2 m ()
 logout userName = do
     logger info $ "Logout, terminating instances..."
     userInstances <- Instance.find userName

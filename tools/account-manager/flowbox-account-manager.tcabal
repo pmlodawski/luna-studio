@@ -29,6 +29,7 @@ Executable account-manager
                     conduit >= 1.1.0,
                     exceptions,
                     errors,
+                    flowbox-aws,
                     flowbox-rpc,
                     flowbox-utils,
                     network,

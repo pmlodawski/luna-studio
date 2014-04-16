@@ -7,16 +7,17 @@
 
 module Flowbox.AccountManager.Context where
 
---import           Control.Applicative
---import           Data.IORef          (IORef)
---import qualified Data.IORef          as IORef
+import           Data.IORef (IORef)
+import qualified Data.IORef as IORef
 
-import Flowbox.Prelude hiding (Context)
+import           Flowbox.AWS.User.Database (Database)
+import qualified Flowbox.AWS.User.Database as Database
+import           Flowbox.Prelude           hiding (Context)
 
 
 
-data Context = Context
+type Context = IORef Database
 
 
 mk :: IO Context
-mk = return Context
+mk = IORef.newIORef Database.empty

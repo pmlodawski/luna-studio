@@ -4,23 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.AWS.User where
+module Flowbox.AWS.User.Database (
+    module Data.Map,
+    Database,
+) where
 
-import qualified Data.Digest.Pure.SHA as SHA
-import           Data.Map             (Map)
+import Data.Map
 
-import Flowbox.Prelude
-
-
-
-type UserName = String
+import qualified Flowbox.AWS.User.User as User
 
 
-type Password = SHA.Digest SHA.SHA256State
 
-
-data UserData = UserData { password :: Password
-                         } deriving (Show, Eq, Ord)
-
-
-type UserDatabase = Map UserName UserData
+type Database = Map User.Name User.Data

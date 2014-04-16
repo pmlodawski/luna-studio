@@ -21,9 +21,9 @@ import qualified Control.Monad.Trans.Resource as Resource
 import           Data.Text                    (Text)
 import qualified Data.Text                    as Text
 
-import Flowbox.AWS.User          (UserName)
-import Flowbox.Prelude
-import Flowbox.System.Log.Logger
+import qualified Flowbox.AWS.User.User     as User
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 
 
 
@@ -90,14 +90,14 @@ defaultWaitTime = WaitTimes 10000000 10000000 100
 
 
 find :: EC2Resource m
-     => UserName -> EC2 m [Types.Instance]
+     => User.Name -> EC2 m [Types.Instance]
 find userName = do
     let userFilter = [(Text.append (Text.pack "tag:") userTagKey, [Text.pack userName])]
     concatMap Types.reservationInstanceSet <$> (Util.list $ EC2.describeInstances [] userFilter)
 
 
 startNew :: EC2Resource m
-         => UserName -> Types.RunInstancesRequest -> EC2 m Types.Instance
+         => User.Name -> Types.RunInstancesRequest -> EC2 m Types.Instance
 startNew userName instanceRequest = do
     logger info "Starting new instance..."
     reservation <- EC2.runInstances instanceRequest
@@ -137,9 +137,10 @@ waitForStart instanceIDs waitTimes = do
 
 
 get :: EC2Resource m
-    => UserName -> Types.RunInstancesRequest -> EC2 m Types.Instance
+    => User.Name -> Types.RunInstancesRequest -> EC2 m Types.Instance
 get userName instanceRequest = do
-    userInstances <- find userName
+    let usable inst = state /= Types.InstanceStateTerminated && state /= Types.InstanceStateShuttingDown where state = Types.instanceState inst
+    userInstances <- filter usable <$> find userName
     case map Types.instanceState userInstances of
             []                           -> startNew userName instanceRequest
             [Types.InstanceStatePending] -> head <$> waitForStart (map Types.instanceId userInstances) defaultWaitTime
