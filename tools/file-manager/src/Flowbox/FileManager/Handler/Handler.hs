@@ -29,17 +29,19 @@ topics = [ "filesystem.ls.request"
          , "filesystem.touch.request"
          , "filesystem.rm.request"
          , "filesystem.cp.request"
+         , "filesystem.mv.request"
          ]
 
 
 handler :: BusRPCHandler
 handler callback topic = case topic of
-    "filesystem.ls.request"    -> callback P.update $ P.singleResult FSHandler.ls
-    "filesystem.stat.request"  -> callback P.update $ P.singleResult FSHandler.stat
-    "filesystem.mkdir.request" -> callback P.status $ P.singleResult FSHandler.mkdir
-    "filesystem.touch.request" -> callback P.status $ P.singleResult FSHandler.touch
+    "filesystem.ls.request"    -> callback P.status $ P.singleResult FSHandler.ls
+    "filesystem.stat.request"  -> callback P.status $ P.singleResult FSHandler.stat
+    "filesystem.mkdir.request" -> callback P.update $ P.singleResult FSHandler.mkdir
+    "filesystem.touch.request" -> callback P.update $ P.singleResult FSHandler.touch
     "filesystem.rm.request"    -> callback P.update $ P.singleResult FSHandler.rm
     "filesystem.cp.request"    -> callback P.update $ P.singleResult FSHandler.cp
+    "filesystem.mv.request"    -> callback P.update $ P.singleResult FSHandler.mv
     unsupported             -> do let errMsg = "Unknown topic: " ++ show unsupported
                                   logger error errMsg
                                   return $ P.respondError topic errMsg
