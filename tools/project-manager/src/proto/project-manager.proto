@@ -502,6 +502,39 @@ message Project {
                                 }
                             }
                         }
+                        message Properties {
+                            message Get {
+                                message Request   { 
+                                    required int32 nodeID    = 1;
+                                    required generated.proto.crumb.Breadcrumbs bc = 2;
+                                    required int32 libraryID = 3;
+                                    required int32 projectID = 4;
+                                }
+                                message Status { 
+                                    required generated.proto.attributes.Properties properties = 1;
+                                    required int32 nodeID    = 2;
+                                    required generated.proto.crumb.Breadcrumbs bc = 3;
+                                    required int32 libraryID = 4;
+                                    required int32 projectID = 5;
+                                }   
+                            }
+                            message Set {
+                                message Request   { 
+                                    required generated.proto.attributes.Properties properties = 1;
+                                    required int32 nodeID    = 2;
+                                    required generated.proto.crumb.Breadcrumbs bc = 3;
+                                    required int32 libraryID = 4;
+                                    required int32 projectID = 5;
+                                }
+                                message Update { 
+                                    required generated.proto.attributes.Properties properties = 1;
+                                    required int32 nodeID    = 2;
+                                    required generated.proto.crumb.Breadcrumbs bc = 3;
+                                    required int32 libraryID = 4;
+                                    required int32 projectID = 5;
+                                }
+                            }
+                        }
                     }
                     message Connect {
                         message Request {

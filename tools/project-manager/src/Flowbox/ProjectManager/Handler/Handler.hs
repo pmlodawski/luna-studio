@@ -79,7 +79,9 @@ topics = [ "project.list.request"
          , "project.library.ast.function.graph.node.default.get.request"
          , "project.library.ast.function.graph.node.default.remove.request"
          , "project.library.ast.function.graph.node.default.set.request"
-         , "project.library.ast.properties.get.request"
+         , "project.library.ast.function.graph.node.properties.get.request"
+         , "project.library.ast.function.graph.node.properties.set.request"
+         , "project.library.ast.properties.set.request"
          , "project.library.ast.properties.set.request"
          ]
 
@@ -127,8 +129,10 @@ handler ctx callback topic = case topic of
     "project.library.ast.function.graph.node.default.get.request"    -> callback P.status $ P.singleResult $ NodeDefaultHandler.get ctx
     "project.library.ast.function.graph.node.default.remove.request" -> callback P.update $ P.singleResult $ NodeDefaultHandler.remove ctx
     "project.library.ast.function.graph.node.default.set.request"    -> callback P.update $ P.singleResult $ NodeDefaultHandler.set ctx
-    "project.library.ast.properties.get.request"                     -> callback P.status $ P.singleResult $ PropertiesHandler.get ctx
-    "project.library.ast.properties.set.request"                     -> callback P.update $ P.singleResult $ PropertiesHandler.set ctx
+    "project.library.ast.function.graph.node.properties.get.request" -> callback P.status $ P.singleResult $ PropertiesHandler.getNodeProperties ctx 
+    "project.library.ast.function.graph.node.properties.set.request" -> callback P.status $ P.singleResult $ PropertiesHandler.setNodeProperties ctx
+    "project.library.ast.properties.get.request"                     -> callback P.status $ P.singleResult $ PropertiesHandler.getASTProperties ctx
+    "project.library.ast.properties.set.request"                     -> callback P.update $ P.singleResult $ PropertiesHandler.setASTProperties ctx
     unsupported             -> do let errMsg = "Unknown topic: " ++ show unsupported
                                   logger error errMsg
                                   return $ P.respondError topic errMsg
