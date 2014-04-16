@@ -132,15 +132,15 @@ const std::string methodDefinition = R"(
 		return ret;
 	};
 
-	boost::barrier b{2};
+	CondSh<bool> isDone;
 	ReturnType ret;
 	std::string errorMessage;
 
 	// Because we are synchronous, we can use [&] -- we won't leave block until everything is done
 	auto callback = [&](Conversation &c)
 	{
-		FINALIZE{ b.wait(); };
-		logDebug("Project create call has been finished!");
+		FINALIZE{ isDone.setn(true); };
+		//logDebug("Project create call has been finished!");
 		if(c.ontopicReplies.empty())
 		{
 			logError("Warning: conversation %s about %s has been finished before exptected message %s has been received!"
@@ -187,7 +187,13 @@ const std::string methodDefinition = R"(
 	}; //Callback end
 
 	%method%_Async(%args_names_list_comma% callback);
-	b.wait();
+
+	if(threadManager->getThreadName(boost::this_thread::get_id()) == threads::LISTENER)
+	{
+		while(!isDone.get())
+			bh->processMessage();
+	}
+	isDone.waitWhile(false);
 
 	if(errorMessage.size())
 	{
