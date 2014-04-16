@@ -32,9 +32,12 @@ Library
                   errors,
                   flowbox-rpc,
                   flowbox-utils,
+                  iproute,
+                  monad-loops,
                   network,
                   optparse-applicative,
                   protocol-buffers,
+                  resourcet >= 1.1.0,
                   SHA,
                   text,
                   transformers
@@ -55,6 +58,7 @@ Executable aws-test
                   resourcet >= 1.1.0,
                   exceptions,
                   errors,
+                  flowbox-aws,
                   flowbox-rpc,
                   flowbox-utils,
                   mtl,
@@ -62,6 +66,7 @@ Executable aws-test
                   optparse-applicative,
                   pretty-show,
                   protocol-buffers,
+                  monad-loops,
                   text,
                   transformers
 
