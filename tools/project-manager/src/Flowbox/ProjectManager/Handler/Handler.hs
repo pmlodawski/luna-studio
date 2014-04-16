@@ -81,7 +81,7 @@ topics = [ "project.list.request"
          , "project.library.ast.function.graph.node.default.set.request"
          , "project.library.ast.function.graph.node.properties.get.request"
          , "project.library.ast.function.graph.node.properties.set.request"
-         , "project.library.ast.properties.set.request"
+         , "project.library.ast.properties.get.request"
          , "project.library.ast.properties.set.request"
          ]
 
