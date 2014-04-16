@@ -416,10 +416,11 @@ message Project {
                                 required int32 projectID = 4;
                             }
                             message Update {
-                                required generated.proto.graph.Node node      = 1;
-                                required generated.proto.crumb.Breadcrumbs bc = 2;
-                                required int32 libraryID = 3;
-                                required int32 projectID = 4;
+                                required int32 oldNodeID = 1;
+                                required generated.proto.graph.Node node      = 2;
+                                required generated.proto.crumb.Breadcrumbs bc = 3;
+                                required int32 libraryID = 4;
+                                required int32 projectID = 5;
                             }
                         }
                         message ModifyInPlace {
@@ -494,6 +495,39 @@ message Project {
                                 }
                                 message Update { 
                                     repeated int32 inPort    = 1;
+                                    required int32 nodeID    = 2;
+                                    required generated.proto.crumb.Breadcrumbs bc = 3;
+                                    required int32 libraryID = 4;
+                                    required int32 projectID = 5;
+                                }
+                            }
+                        }
+                        message Properties {
+                            message Get {
+                                message Request   { 
+                                    required int32 nodeID    = 1;
+                                    required generated.proto.crumb.Breadcrumbs bc = 2;
+                                    required int32 libraryID = 3;
+                                    required int32 projectID = 4;
+                                }
+                                message Status { 
+                                    required generated.proto.attributes.Properties properties = 1;
+                                    required int32 nodeID    = 2;
+                                    required generated.proto.crumb.Breadcrumbs bc = 3;
+                                    required int32 libraryID = 4;
+                                    required int32 projectID = 5;
+                                }   
+                            }
+                            message Set {
+                                message Request   { 
+                                    required generated.proto.attributes.Properties properties = 1;
+                                    required int32 nodeID    = 2;
+                                    required generated.proto.crumb.Breadcrumbs bc = 3;
+                                    required int32 libraryID = 4;
+                                    required int32 projectID = 5;
+                                }
+                                message Update { 
+                                    required generated.proto.attributes.Properties properties = 1;
                                     required int32 nodeID    = 2;
                                     required generated.proto.crumb.Breadcrumbs bc = 3;
                                     required int32 libraryID = 4;

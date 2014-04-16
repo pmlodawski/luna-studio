@@ -2,6 +2,10 @@
 
 #include "generated/server-api.pb.h"
 #include "generated/project-manager.pb.h"
+#include "generated/file-manager.pb.h"
+#include "generated/parser.pb.h"
+#include "generated/plugin-manager.pb.h"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
@@ -114,10 +118,10 @@ const std::string methodDefinition = R"(
 
 #ifdef USES_UPDATE
 	std::string topicAnswer = "%topic%.update";
-	typedef generated::proto::projectManager::%method%_Update AnswerType;
+	typedef %namespace%::%method%_Update AnswerType;
 #else
 	std::string topicAnswer = "%topic%.status";
-	typedef generated::proto::projectManager::%method%_Status AnswerType;
+	typedef %namespace%::%method%_Status AnswerType;
 #endif
 	typedef %rettype% ReturnType;
 
@@ -175,7 +179,8 @@ const std::string methodDefinition = R"(
 				}
 				break;
 			default:
-				logError("Conversation with correlation id=%s was finished by message of type %d. I expected something else.", c.id, type);
+				errorMessage = format_string("Conversation with correlation id=%s was finished by message of type %d. I expected something else.", c.id, type);
+				break;
 			}
 
 		}
@@ -199,7 +204,7 @@ void %wrapper_name%::%method%_Async(%args_list_comma% ConversationDoneCb callbac
 {
 	std::string topic = "%topic%";
 	std::string topicRequest = "%topic%.request";
-	typedef generated::proto::projectManager::%method%_Request RequestType;
+	typedef %namespace%::%method%_Request RequestType;
 	auto fillWithArgs = [&](RequestType &request)
 	{
 		%setters%
@@ -278,7 +283,12 @@ struct ArgWrapper
 				ret = "const %1 &";
 		}
 		else
-			ret = "%1";
+		{
+			if(asValue)
+				ret = "%2";
+			else
+				ret = "%1";
+		}
 
 		boost::replace_all(ret, "%1", translateBaseType(false));
 		boost::replace_all(ret, "%2", translateBaseType(true));
@@ -291,8 +301,16 @@ struct ArgWrapper
 	}
 };
 
+struct AgentWrapper
+{
+	std::string nameSpace;
+	std::string wrapperName;
+
+};
+
 struct MethodWrapper
 {
+	std::shared_ptr<const AgentWrapper> agent;
 	std::vector<const FieldDescriptor*> argsFields;
 	const Descriptor *args, *result;
 	const Descriptor *top;
@@ -306,8 +324,9 @@ struct MethodWrapper
 	std::vector<int> collapsedArgs;
 	std::string collapsedName; 
 
-	MethodWrapper(std::string topic, std::string name, const FileDescriptor *file, const Descriptor *top) : top(top)
-		, name(name), topic(topic)
+	MethodWrapper(std::string topic, std::string name, const FileDescriptor *file, const Descriptor *top, 
+				  std::shared_ptr<const AgentWrapper> agent)
+		: top(top), name(name), topic(topic), agent(agent)
 	{
 		args = top->FindNestedTypeByName("Request");
 		result = top->FindNestedTypeByName("Status");
@@ -328,6 +347,7 @@ struct MethodWrapper
 		boost::replace_all(ret, "%answerType%", boost::iequals(result->name(), "status") ? "STATUS" : "UPDATE");
 		boost::replace_all(ret, "%method%", name);
 		boost::replace_all(ret, "%topic%", topic);
+		boost::replace_all(ret, "%namespace%", agent->nameSpace);
 		boost::replace_all(ret, "%args_names_list_comma% ", argumentsNames + (arguments.size() ? ", " : ""));
 		boost::replace_all(ret, "%args_list%", arguments);
 		boost::replace_all(ret, "%args_list_comma%", arguments + (arguments.size() ? ", " : ""));
@@ -476,7 +496,7 @@ struct MethodWrapper
 
 	void formatEpilogue()
 	{
-		std::string resultPack = "generated::proto::projectManager::"+name+"_" + result->name();
+		std::string resultPack = agent->nameSpace + "::" + name + "_" + result->name();
 		if(result->field_count() == 0)
 		{
 			returnedType = "void";
@@ -523,7 +543,7 @@ struct MethodWrapper
 		}
 		else
 		{
-			returnedType = "generated::proto::projectManager::" + name + "_" + result->name();
+			returnedType = agent->nameSpace + "::" + name + "_" + result->name();
  			returnedType = "std::unique_ptr<" + returnedType + ">";
 // 			prepareRet = returnedType + " retHlp;\n";
 			prepareRet += "ret = std::move(answer);";
@@ -583,10 +603,15 @@ std::string extToClsCovnersions()
 	return ret;
 }
 
-std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeafs = false)
+void prepareMethodWrappersHelper(bool finalLeaves, std::vector<MethodWrapper> &methods,
+								 const google::protobuf::Descriptor *descriptor)
 {
-	std::vector<MethodWrapper> methods;
-	auto fileDescriptor = generated::proto::projectManager::Project::descriptor()->file();
+	auto fileDescriptor = descriptor->file();
+	auto agent = make_shared<AgentWrapper>();
+	agent->wrapperName = fileDescriptor->package().substr(fileDescriptor->package().find_last_of(".") + 1);
+	agent->nameSpace = fileDescriptor->package();
+	boost::replace_all(agent->nameSpace, ".", "::");
+
 	std::function<void(std::string, std::string, const google::protobuf::Descriptor *)> addMethodsRecursively =
 		[&](std::string topicSoFar, std::string nameSoFar, const google::protobuf::Descriptor *d)
 	{
@@ -601,15 +626,15 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeafs = false)
 			nameSoFar = d->name();
 		}
 
-		if(finalLeafs)
+		if(finalLeaves)
 		{
 			if(d->name() == "Request" || d->name() == "Status" || d->name() == "Update")
-				methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d);
+				methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d, agent);
 		}
 		else
 		{
 			if(d->FindNestedTypeByName("Request"))
-				methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d);
+				methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d, agent);
 		}
 		for(int i = 0; i < d->nested_type_count(); i++)
 		{
@@ -618,7 +643,16 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeafs = false)
 		}
 	};
 
-	addMethodsRecursively("", "", generated::proto::projectManager::Project::descriptor());
+	addMethodsRecursively("", "", descriptor);
+}
+
+std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeaves = false)
+{
+	std::vector<MethodWrapper> methods;
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::projectManager::Project::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parse::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::fileManager::FileSystem::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::pluginManager::Plugin::descriptor());
 	return methods;
 }
 
@@ -632,6 +666,7 @@ void generate(const std::string &outputFile)
 // 	auto methodsDescriptor = Request::Method_descriptor();
 	for(auto &method : methods)
 	{
+		std::cout << "Handling method " << method.name << std::endl;
 		methodImpls += method.formatImpl();
 		methodDecls += method.formatDecl() + "\n";
 	}
@@ -700,13 +735,14 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 
 )";
 	std::string deserialize = R"(
-		{ "%topic%", 
-		  [](crstring contents)
-		  {
-			auto ret = make_unique<%namespace%::%method%>();
-			ret->ParseFromString(contents);
-			return ret;
-		  }
+		{
+			"%topic%", 
+			[](crstring contents)
+			{
+				auto ret = make_unique<%namespace%::%method%>();
+				ret->ParseFromString(contents);
+				return ret;
+			}
 		},
 )";
 	
@@ -716,7 +752,7 @@ std::unique_ptr<google::protobuf::Message> PackageDeserializer::deserialize(cons
 	for (auto &method : methods)
 	{
 		std::string hlp = deserialize;
-		boost::replace_all(hlp, "%namespace%", "generated::proto::projectManager");
+		boost::replace_all(hlp, "%namespace%", method.agent->nameSpace);
 		boost::replace_all(hlp, "%topic%", method.topic);
 		boost::replace_all(hlp, "%method%", method.name);
 		entries += hlp;
@@ -787,11 +823,11 @@ struct MessageDispatcher
 			continue;
 
 		std::string hlp = entry;
-		boost::replace_all(hlp, "%namespace%", "generated::proto::projectManager");
+		boost::replace_all(hlp, "%namespace%", method.agent->nameSpace);
 		boost::replace_all(hlp, "%topic%", method.topic);
 		boost::replace_all(hlp, "%method%", method.name);
 		entries += hlp;
-		dispatchee += "virtual void on_"+method.name+"(const BusMessage &message, const std::shared_ptr<const generated::proto::projectManager::"+method.name+"> &ptr) {};\n";
+		dispatchee += "virtual void on_"+method.name+"(const BusMessage &message, const std::shared_ptr<const " + method.agent->nameSpace + "::"+method.name+"> &ptr) {};\n";
 	}
 	dispatchee += "}; \n";
 
