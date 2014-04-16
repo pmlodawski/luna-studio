@@ -23,19 +23,19 @@ logger = getLoggerIO "Flowbox.Parser.Handler"
 
 
 topics :: [Topic]
-topics = [ "parser.parse.expr.request"
-         , "parser.parse.pat.request"
-         , "parser.parse.type.request"
-         , "parser.parse.nodeexpr.request"
+topics = [ "parse.expr.request"
+         , "parse.pat.request"
+         , "parse.type.request"
+         , "parse.nodeexpr.request"
          ]
 
 
 handler :: BusRPCHandler
 handler  callback topic = case topic of
-    "parser.parse.expr.request"     -> callback P.update $ P.singleResult ParserHandler.parseExpr
-    "parser.parse.pat.request"      -> callback P.update $ P.singleResult ParserHandler.parsePat
-    "parser.parse.type.request"     -> callback P.update $ P.singleResult ParserHandler.parseType
-    "parser.parse.nodeexpr.request" -> callback P.update $ P.singleResult ParserHandler.parseNodeExpr
+    "parse.expr.request"     -> callback P.status $ P.singleResult ParserHandler.parseExpr
+    "parse.pat.request"      -> callback P.status $ P.singleResult ParserHandler.parsePat
+    "parse.type.request"     -> callback P.status $ P.singleResult ParserHandler.parseType
+    "parse.nodeexpr.request" -> callback P.status $ P.singleResult ParserHandler.parseNodeExpr
     unsupported -> do let errMsg = "Unknown topic: " ++ show unsupported
                       logger error errMsg
                       return $ P.respondError topic errMsg

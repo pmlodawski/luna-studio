@@ -75,13 +75,13 @@ topics = [ "project.list.request"
          , "project.library.ast.function.graph.node.add.request"
          , "project.library.ast.function.graph.node.remove.request"
          , "project.library.ast.function.graph.node.modify.request"
-         , "project.library.ast.function.graph.node.modifyInPlace.request"
+         , "project.library.ast.function.graph.node.modifyinplace.request"
          , "project.library.ast.function.graph.node.default.get.request"
          , "project.library.ast.function.graph.node.default.remove.request"
          , "project.library.ast.function.graph.node.default.set.request"
          , "project.library.ast.function.graph.node.properties.get.request"
          , "project.library.ast.function.graph.node.properties.set.request"
-         , "project.library.ast.properties.set.request"
+         , "project.library.ast.properties.get.request"
          , "project.library.ast.properties.set.request"
          ]
 
@@ -125,12 +125,12 @@ handler ctx callback topic = case topic of
     "project.library.ast.function.graph.node.add.request"           -> callback P.update $ P.singleResult $ GraphHandler.nodeAdd ctx
     "project.library.ast.function.graph.node.remove.request"        -> callback P.update $ P.singleResult $ GraphHandler.nodeRemove ctx
     "project.library.ast.function.graph.node.modify.request"        -> callback P.update $ P.singleResult $ GraphHandler.nodeModify ctx
-    "project.library.ast.function.graph.node.modifyInPlace.request" -> callback P.update $ P.singleResult $ GraphHandler.nodeModifyInPlace ctx
+    "project.library.ast.function.graph.node.modifyinplace.request" -> callback P.update $ P.singleResult $ GraphHandler.nodeModifyInPlace ctx
     "project.library.ast.function.graph.node.default.get.request"    -> callback P.status $ P.singleResult $ NodeDefaultHandler.get ctx
     "project.library.ast.function.graph.node.default.remove.request" -> callback P.update $ P.singleResult $ NodeDefaultHandler.remove ctx
     "project.library.ast.function.graph.node.default.set.request"    -> callback P.update $ P.singleResult $ NodeDefaultHandler.set ctx
     "project.library.ast.function.graph.node.properties.get.request" -> callback P.status $ P.singleResult $ PropertiesHandler.getNodeProperties ctx 
-    "project.library.ast.function.graph.node.properties.set.request" -> callback P.status $ P.singleResult $ PropertiesHandler.setNodeProperties ctx
+    "project.library.ast.function.graph.node.properties.set.request" -> callback P.update $ P.singleResult $ PropertiesHandler.setNodeProperties ctx
     "project.library.ast.properties.get.request"                     -> callback P.status $ P.singleResult $ PropertiesHandler.getASTProperties ctx
     "project.library.ast.properties.set.request"                     -> callback P.update $ P.singleResult $ PropertiesHandler.setASTProperties ctx
     unsupported             -> do let errMsg = "Unknown topic: " ++ show unsupported
