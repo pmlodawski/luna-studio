@@ -10,19 +10,11 @@ import Data.Map (Map)
 
 import           Flowbox.Prelude
 import           Flowbox.RepoManager.Data.Item.Item    (Item)
-import qualified Flowbox.RepoManager.Data.Item.Name    as Item
 import           Flowbox.RepoManager.Data.Version (Version)
 
-
-
 type Family a = Map Version a
-
-
-type NamedFamily a = (Item.Name, a)
-
-
+type NamedFamily a = (String, a)
 type AvailableFamilies = Family Item
-
 
 type Hash = String
 type InstalledFamilies = Family (Map Hash Item)
