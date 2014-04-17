@@ -1,0 +1,43 @@
+
+name:                particle
+version:             0.1.0.11
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  exposed-modules:
+    Particle
+    Particle.Algebra
+    Particle.PointAttractor
+    Particle.PointEmitter
+    Particle.Conversions
+    Particle.Drag
+    Particle.Force
+    Particle.PerlinNoise
+  build-depends:       base >=4.6 && <4.7
+                     , lens
+                     , accelerate
+                     , accelerate-io
+                     , accelerate-cuda
+                     , vector
+                     , data-default
+                     , Noise
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  ghc-options:      -fllvm -optlo-O3 -Wall -threaded -eventlog
+
+executable test
+  main-is:        Main.hs
+  build-depends:       base >=4.6 && <4.7
+                     , lens
+                     , accelerate
+                     , accelerate-io
+                     , accelerate-cuda
+                     , vector
+                     , thyme
+                     , vector-space
+                     , data-default
+                     , Noise
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  ghc-options:      -fllvm -optlo-O3 -Wall -threaded -eventlog
