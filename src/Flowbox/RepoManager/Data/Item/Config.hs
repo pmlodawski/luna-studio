@@ -24,8 +24,9 @@ import qualified Flowbox.RepoManager.Data.Environment as Environment
 import qualified Flowbox.RepoManager.Data.Item.Item   as Item
 import qualified Flowbox.RepoManager.Data.Version     as Version
 import           Flowbox.System.Log.Logger
-import qualified Prelude                              as Prelude
+import qualified Prelude
 import qualified Text.ParserCombinators.ReadP         as ReadP
+import qualified System.FilePath                      as FilePath
 
 logger :: LoggerIO
 logger = getLoggerIO "Flowbox.Config.Config"
@@ -37,8 +38,7 @@ fromList :: Value -> [Value]
 fromList (Configurator.List a) = a
 
 loadItem :: FilePath -> IO Item.Item
-loadItem file = do
-                   cfgFile <- Configurator.load [Configurator.Required file]
+loadItem file = do cfgFile <- Configurator.load [Configurator.Required file]
 
                    let readConf fieldName = Exception.onException (fromJust =<< (Configurator.lookup cfgFile fieldName :: IO (Maybe Value)))
                                      $ logger error ("Error reading config variable '" ++ show fieldName)
@@ -76,3 +76,17 @@ getDependencies dependenciesValue = fmap (getDependency . fromList) (fromList de
                                   (_cons:[])         -> [Version.Exclude (Version.Range Nothing Nothing)]
                                   (_cons1:_cons2:[]) -> [Version.Exclude (Version.Range Nothing Nothing)]
 
+
+--loadConfig :: FilePath -> IO (Either String Item.Item)
+--loadConfig file = do config <- Configurator.load [Configurator.Required file]
+                     
+--                     let fileBaseName = FilePath.takeBaseName file
+--                         name    = Prelude.takeWhile (/= '-') fileBaseName
+--                         version = Prelude.tail . Prelude.dropWhile (/= '-') $ fileBaseName
+
+--                     sources <- Configurator.require config "source"
+--                     install <- Configurator.require config "install"
+--                     uninstall <- Configurator.require config "uninstall"
+--                     dependencies <- Configurator.require config "dependencies"
+
+--                     return $ Right $ Item.Item name version sources install

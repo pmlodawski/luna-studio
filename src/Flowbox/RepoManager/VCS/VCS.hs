@@ -1,25 +1,13 @@
 module Flowbox.RepoManager.VCS.VCS where
 
-import qualified Data.List                    as List
+import qualified Data.List       as List
 import           Flowbox.Prelude
-import qualified Flowbox.RepoManager.VCS.Type as VCS
-import           System.FilePath              (pathSeparator)
-import           System.Process               (ProcessHandle)
+import qualified Network.URI     as URI
 
-
-data VCS = VCS { cls        :: VCS.Type
-               , name       :: String
-               , localPath  :: String
-               , remotePath :: String
-               , clone      :: VCS -> IO VCS
-               , update     :: VCS -> IO VCS
-               , remove     :: VCS -> IO ProcessHandle
-               }
-
-
-instance  Show VCS where
-    show (VCS cls name localPath remotePath _ _ _) = "VCS {type = " ++ (show cls)
-                                                     ++ ", name = " ++ (show name)
-                                                     ++ ", path = " ++ (show localPath)
-                                                     ++ ", uri = "  ++ (show remotePath)
-                                                     ++ "}"
+class VCS a where
+  name       :: a -> String
+  localPath  :: a -> URI.URI
+  remotePath :: a -> URI.URI
+  clone      :: a -> IO a
+  sync       :: a -> IO a
+  remove     :: a -> IO ()
