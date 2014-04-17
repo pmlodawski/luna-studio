@@ -29,14 +29,14 @@ loggerIO = getLoggerIO "Flowbox.ZMQ.RPC.Server"
 
 run :: Proto.Serializable request
     => String -> RPCHandler request -> IO ()
-run ctrlAddr handler = ZMQ.runZMQ $ serve ctrlAddr handler
+run endpoint handler = ZMQ.runZMQ $ serve endpoint handler
 
 
 serve :: Proto.Serializable request
       => String -> RPCHandler request -> ZMQ z ()
-serve ctrlAddr handler = do
+serve endpoint handler = do
     rep <- ZMQ.socket ZMQ.Rep
-    ZMQ.bind rep ctrlAddr
+    ZMQ.bind rep endpoint
     acceptAndHandle rep handler
 
 

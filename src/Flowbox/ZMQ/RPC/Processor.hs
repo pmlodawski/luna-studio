@@ -10,16 +10,22 @@
 
 module Flowbox.ZMQ.RPC.Processor where
 
+import           Control.Exception               (SomeException, try)
+import           Control.Monad                   (join)
+import           Control.Monad.IO.Class          (MonadIO, liftIO)
+import           Control.Monad.Trans.Either
 import           Data.ByteString                 (ByteString)
+import           Data.EitherR                    (fmapL)
 import           System.ZMQ4.Monadic             (ZMQ)
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
-import           Flowbox.Control.Error
 import           Flowbox.Prelude                                hiding (error)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Text.ProtocolBuffers                   (Int32, Serializable)
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
 import           Flowbox.Tools.Serialize.Proto.Conversion.Basic
+import           Flowbox.ZMQ.RPC.RPC                            (RPC)
+import qualified Flowbox.ZMQ.RPC.RPC                            as RPC
 import           Flowbox.ZMQ.RPC.RPCHandler                     (RPCHandler)
 import           Generated.Proto.Rpc.Exception                  (Exception (Exception))
 import qualified Generated.Proto.Rpc.Exception                  as Exception
@@ -41,22 +47,29 @@ responseExt rspType rspId rsp rspKey = Proto.messagePut'
 process :: Serializable request
         => RPCHandler request -> ByteString -> Int32 -> ZMQ z ByteString
 process handler encodedRequest requestID = case Proto.messageGet' encodedRequest of
-    Left  er      -> fail $ "Error while decoding request: " ++ er
-    Right request -> handler call request
-        where
-            call method reqKey rspKey = do
-                e <- runEitherT $ scriptIO $ unsafeCall method reqKey rspKey
-                case e of
-                    Left msg  -> do loggerIO error msg
-                                    let exc = Exception $ encodePJ msg
-                                    return $ responseExt ResponseType.Exception (Just requestID) exc Exception.rsp
-                    Right rsp -> return rsp
+    Left  err     -> responseError requestID err
+    Right request -> handler call request where
+        call method reqKey rspKey = do
+            result <- handleError $ do args <- hoistEither $ Proto.getExt' reqKey request
+                                       loggerIO debug $ show args
+                                       method args
+            either (responseError requestID) (responseResult requestID rspKey) result
 
-            unsafeCall method reqKey rspKey = do
-                rsp <- case Proto.getExt' reqKey request of
-                       Right args -> do loggerIO debug $ show args
-                                        method args
-                       Left  e    -> fail e
-                loggerIO trace $ show rsp
-                return $ responseExt ResponseType.Result (Just requestID) rsp rspKey
 
+responseResult :: (Show result, MonadIO m) => Int32 -> Proto.Key Maybe Response result -> result -> m ByteString
+responseResult requestID rspKey result = do
+    loggerIO trace $ show result
+    return $ responseExt ResponseType.Result (Just requestID) result rspKey
+
+
+responseError :: Int32 -> RPC.Error -> ZMQ z ByteString
+responseError requestID err = do
+    loggerIO error err
+    let exc = Exception $ encodePJ err
+    return $ responseExt ResponseType.Exception (Just requestID) exc Exception.rsp
+
+
+handleError :: MonadIO m => RPC r -> m (Either RPC.Error r)
+handleError fun = do
+    result <- liftIO $ (try :: IO a -> IO (Either SomeException a)) $ runEitherT fun
+    return $ join $ fmapL (\exception -> "Unhandled exception: " ++ show exception) result
