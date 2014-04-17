@@ -51,6 +51,10 @@ cabal.sandbox.config
 .cabal-sandbox
 .build.config
 
+# aws credentials
+aws.config
+
+
 ### DEPRECATED ###
 # cabal-dev
 
