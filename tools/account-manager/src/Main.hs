@@ -12,6 +12,8 @@ import qualified Flowbox.AccountManager.Config          as Config
 import qualified Flowbox.AccountManager.Context         as Context
 import qualified Flowbox.AccountManager.Handler.Handler as Handler
 import qualified Flowbox.AccountManager.Version         as Version
+import           Flowbox.AWS.Region                     (Region)
+import qualified Flowbox.AWS.Region                     as Region
 import           Flowbox.Options.Applicative            hiding (info)
 import qualified Flowbox.Options.Applicative            as Opt
 import           Flowbox.Prelude                        hiding (error)
@@ -19,6 +21,11 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.ZMQ.RPC.Server                 as RPC
 
 
+
+-- TODO [PM] : move to configuration file or anywhere else
+region :: Region
+region = Region.mk "eu-west-1"
+--
 
 rootLogger :: Logger
 rootLogger = getLogger "Flowbox"
@@ -51,5 +58,5 @@ run cmd = case cmd of
     Cmd.Serve {} -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
         logger info "Starting rpc service"
-        ctx <- Context.mk
+        ctx <- Context.mk region
         RPC.run (Cmd.address cmd) (Handler.handler ctx)

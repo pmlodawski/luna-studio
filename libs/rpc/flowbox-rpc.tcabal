@@ -25,6 +25,7 @@ Library
                   bytestring,
                   containers,
                   either,
+                  errors,
                   flowbox-utils,
                   mtl,
                   protocol-buffers,

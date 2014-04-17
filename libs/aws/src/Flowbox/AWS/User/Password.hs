@@ -4,16 +4,20 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.AWS.User.User where
+module Flowbox.AWS.User.Password where
 
-import Flowbox.AWS.User.Password (Password)
+import           Data.ByteString.Lazy.Char8 (pack)
+import qualified Data.Digest.Pure.SHA       as SHA
+
 import Flowbox.Prelude
 
 
 
-type Name = String
+type Password = SHA.Digest SHA.SHA256State
 
 
-data Data = Data { password :: Password
-                 } deriving (Show, Eq, Ord)
+type Plain = String
 
+
+mk :: Plain -> Password
+mk = SHA.sha256 . pack

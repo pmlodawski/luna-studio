@@ -4,16 +4,18 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.AWS.User.User where
 
-import Flowbox.AWS.User.Password (Password)
+module Flowbox.AWS.Region where
+
+import           Data.Text (Text)
+import qualified Data.Text as Text
+
 import Flowbox.Prelude
 
 
 
-type Name = String
+type Region = Text
 
 
-data Data = Data { password :: Password
-                 } deriving (Show, Eq, Ord)
-
+mk :: String -> Text
+mk = Text.pack

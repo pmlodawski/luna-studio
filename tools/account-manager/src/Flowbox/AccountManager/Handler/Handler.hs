@@ -8,7 +8,7 @@
 
 module Flowbox.AccountManager.Handler.Handler where
 
-import Flowbox.AccountManager.Context      (Context)
+import Flowbox.AccountManager.Context      (ContextRef)
 import Flowbox.AccountManager.Handler.User as HandlerUser
 import Flowbox.ZMQ.RPC.RPCHandler          (RPCHandler)
 
@@ -24,9 +24,9 @@ import qualified Generated.Proto.AccountManager.User.Register.Result as User_Reg
 
 
 
-handler :: Context -> RPCHandler Request
-handler ctx callback request = case Request.method request of
-    Method.User_Register -> callback (HandlerUser.register ctx) User_Register.req User_Register.rsp
-    Method.User_Login    -> callback (HandlerUser.login    ctx) User_Login.req    User_Login.rsp
-    Method.User_Logout   -> callback (HandlerUser.logout   ctx) User_Logout.req   User_Logout.rsp
+handler :: ContextRef -> RPCHandler Request
+handler ctxref callback request = case Request.method request of
+    Method.User_Register -> callback (HandlerUser.register ctxref) User_Register.req User_Register.rsp
+    Method.User_Login    -> callback (HandlerUser.login    ctxref) User_Login.req    User_Login.rsp
+    Method.User_Logout   -> callback (HandlerUser.logout   ctxref) User_Logout.req   User_Logout.rsp
 

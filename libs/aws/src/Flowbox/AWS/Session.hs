@@ -9,16 +9,15 @@
 
 module Flowbox.AWS.Session where
 
-import           AWS.EC2              (EC2)
-import qualified AWS.EC2              as EC2
-import qualified AWS.EC2.Types        as Types
-import           Data.ByteString.Lazy (ByteString)
-import qualified Data.Digest.Pure.SHA as SHA
+import           AWS.EC2       (EC2)
+import qualified AWS.EC2       as EC2
+import qualified AWS.EC2.Types as Types
 
 import           Data.IP                   (IPv4)
 import qualified Flowbox.AWS.Instance      as Instance
 import           Flowbox.AWS.User.Database (Database)
 import qualified Flowbox.AWS.User.Database as Database
+import qualified Flowbox.AWS.User.Password as Password
 import qualified Flowbox.AWS.User.User     as User
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -32,18 +31,18 @@ logger = getLoggerIO "Flowbox.AWS.Session"
 type Error = String
 
 
-register :: User.Name -> ByteString -> Database -> Either Error Database
-register userName password' database = case Database.lookup userName database of
+register :: User.Name -> Password.Plain -> Database -> Either Error Database
+register userName password database = case Database.lookup userName database of
     Just _  -> Left "Cannot register user: username already exists"
-    Nothing -> do let userData = User.Data $ SHA.sha256 password'
+    Nothing -> do let userData = User.Data $ Password.mk password
                   Right $ Database.insert userName userData database
 
 
 login :: Instance.EC2Resource m
-      => User.Name -> ByteString -> Database -> EC2 m (Either Error IPv4)
-login userName password' database = case Database.lookup userName database of
+      => User.Name -> Password.Plain -> Database -> EC2 m (Either Error IPv4)
+login userName password database = case Database.lookup userName database of
     Nothing              -> return $ Left "Login failed: no such user"
-    Just (User.Data hash) -> if hash /= SHA.sha256 password'
+    Just (User.Data hash) -> if hash /= Password.mk password
                                 then return $ Left "Login failed: password incorrect"
                                 else do logger info $ "Login successful, username=" ++ (show userName)
                                         inst <- Instance.get userName Instance.defaultInstanceRequest
