@@ -42,7 +42,7 @@ login :: Instance.EC2Resource m
       => User.Name -> Password.Plain -> Database -> EC2 m (Either Error IPv4)
 login userName password database = case Database.lookup userName database of
     Nothing              -> return $ Left "Login failed: no such user"
-    Just (User.Data hash) -> if hash /= Password.mk password
+    Just (User.Data hash) -> if not $ Password.verify hash password
                                 then return $ Left "Login failed: password incorrect"
                                 else do logger info $ "Login successful, username=" ++ (show userName)
                                         inst <- Instance.get userName Instance.defaultInstanceRequest
