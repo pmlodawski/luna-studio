@@ -12,8 +12,7 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: dist/gen,
-                  src
+  Hs-Source-Dirs: src
   Other-Modules:  Paths_flowbox_aws
 
   GHC-Options:    -Wall -O2 -threaded

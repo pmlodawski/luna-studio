@@ -32,7 +32,6 @@ logger = getLoggerIO "Flowbox.AWS.Instance"
 
 
 type InstanceID = Text
-type Region     = Text
 type ImageId    = Text
 type Type       = Text
 
