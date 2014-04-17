@@ -21,3 +21,7 @@ type Plain = String
 
 mk :: Plain -> Password
 mk = SHA.sha256 . pack
+
+
+verify :: Password -> Plain -> Bool
+verify password plain = password == mk plain
