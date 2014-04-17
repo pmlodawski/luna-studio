@@ -1,18 +1,32 @@
-*******************************************
-The Luna programming language specification
-*******************************************
-
-:revision: 1
-:date: 2014/04/16
-
+=============================================
+ The Luna programming language specification
+=============================================
 :copyright: Flowbox sp. z o.o. All rights reserved.
+:abstract: This specification is a work in progress. Expect rapid changes.
+
 
 
 .. contents:: Table of Contents
 
 
+
+****
+TODO
+****
+
+#. Differentiate between float and double in some way
+#. Describe ``Tuple``
+#. Describe ``Expr``
+#. Describe ``Block``
+#. Describe Constants_
+#. List basic types
+#. Don't allow ``_`` as a name for variable
+
+
+
+************
 Introduction
-============
+************
 
 Welcome to the Luna language reference guide.
 
@@ -29,7 +43,9 @@ For more information – and other documents – visit http://flowbox.io.
 Notation
 ========
 
-The syntax specified using Extended Backus-Naur Form (EBNF):
+The syntax specified using `Extended Backus-Naur Form (EBNF)`_:
+
+.. _`Extended Backus-Naur Form (EBNF)`: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_Form
 
 .. _EBNF Production:
 .. _EBNF Expression:
@@ -40,6 +56,8 @@ The syntax specified using Extended Backus-Naur Form (EBNF):
 .. _EBNF Repetition:
 
 .. code-block:: EBNF
+
+    source
 
     Production  = Production-Name "=" [ Expression ] "." ;
     Expression  = Alternative { "|" Alternative } ;
@@ -63,7 +81,6 @@ Lower-case production names are used to identify lexical tokens. Non-terminals a
 The form "``a … b``" represents the set of characters from ``a`` through ``b`` as alternatives. To conform with EBNF, this is written formally as "``a ?…? b``". The horizontal ellipsis "``…``" is also used elsewhere in the specification to informally denote various enumerations or code snippets that are not further specified. The character "``…``" (as opposed to the three characters "``...``") is not a token of the Luna language.
 
 
-
 Source code representation
 ==========================
 
@@ -78,8 +95,13 @@ The compiler disallows the NUL character (``U+0000``) in the source text. Moreov
 .. _byte-order mark: https://en.wikipedia.org/wiki/Byte_order_mark
 
 
+
+****************
+Lexical elements
+****************
+
 Characters, letters and digits
-------------------------------
+==============================
 
 The following terms are used to denote specific Unicode character classes and numbers. Take a note that the underscore character ``_`` (``U+005F``) is considered a lowercase letter.
 
@@ -108,12 +130,8 @@ The following terms are used to denote specific Unicode character classes and nu
     Hex-Digit        = "0" ?…? "9" | "A" ?…? "F" | "a" ?…? "f" ;
 
 
-
-Lexical elements
-================
-
 Comments
---------
+========
 
 There are two forms of comments:
 
@@ -134,7 +152,7 @@ Note that both of them start with the same character: ``#``. If ``#[`` cannot be
 
 
 Tokens
-------
+======
 
 Tokens form the vocabulary of the Luna language. There are four classes: *identifiers*, *keywords*, *operators & delimiters*, and *literals*.
 
@@ -142,7 +160,7 @@ White space, formed from spaces (``U+0020``), horizontal tabs (``U+0009``), carr
 
 
 Semicolons
-----------
+==========
 
 The formal grammar uses semicolons ``;`` as terminators in a number of productions. Luna programs may omit all of these semicolons using the following two rules:
 
@@ -159,13 +177,13 @@ To reflect idiomatic use, code examples in this document elide semicolons using 
 
 
 Values and types
-----------------
+================
 
 An expression evaluates to a value and has a static type. Values and types are separated in Luna. Every program must be well-typed to compile successfully.
 
 
 Identifiers
------------
+===========
 
 Identifiers name program entities such as variables and functions. An identifier is a sequence of one or more letters and digits.
 
@@ -177,7 +195,7 @@ Identifiers name program entities such as variables and functions. An identifier
 
 
 Type identifiers
-----------------
+================
 
 Type identifiers name such entities as classes and modules. All user-defined types must begin with an uppercase letter.
 
@@ -189,7 +207,7 @@ Type identifiers name such entities as classes and modules. All user-defined typ
 
 
 Keywords
---------
+========
 
 The following keywords are reserved and may not be used as identifiers.
 
@@ -205,7 +223,7 @@ The following keywords are reserved and may not be used as identifiers.
 
 
 Operators and Delimiters
-------------------------
+========================
 
 Any sequence of following characters is considered an operator in Luna. Operators act just like normal functions, but they are implicitly infix.
 
@@ -215,7 +233,7 @@ Any sequence of following characters is considered an operator in Luna. Operator
 
 
 Integer literals
-----------------
+================
 
 An integer literal is a sequence of digits representing an integer constant. An optional prefix sets a non-decimal base: ``0`` for octal, ``0x`` or ``0X`` for hexadecimal. In hexadecimal literals, letters ``a…f`` and ``A…F`` represent values ``10`` through ``15``.
 
@@ -235,7 +253,7 @@ An integer literal is a sequence of digits representing an integer constant. An 
 
 
 Floating-point literals
------------------------
+=======================
 
 A floating-point literal is a decimal representation of a floating-point constant. It has an integer part, a decimal point, a fractional part, and an exponent part. The integer and fractional part comprise decimal digits; the exponent part is an ``e`` or ``E`` followed by an optionally signed decimal exponent. One of the integer part or the fractional part may be elided; one of the decimal point or the exponent may be elided.
 
@@ -250,11 +268,9 @@ A floating-point literal is a decimal representation of a floating-point constan
     Decimals  = Decimal-Digit { Decimal-Digit } ;
     Exponent  = ( "e" | "E" ) [ "+" | "-" ] Decimals ;
 
-.. warning:: Czy osobno double/float?
-
 
 Character literals
-------------------
+==================
 
 A character literal represents a Unicode code point. A *rune literal* is expressed as one or more characters enclosed in single quotes. Within the quotes, any character may appear except single quote and newline. A single quoted character represents the Unicode value of the character itself, while multi-character sequences beginning with a backslash encode values in various formats.
 
@@ -268,7 +284,7 @@ After a backslash, certain single-character escapes represent special values:
 
 
 String literals
----------------
+===============
 
 A string literal represents a string constant obtained from concatenating a sequence of characters. Interpreted string literals are character sequences between double quotes ``""``. The text between the quotes, which may not contain newlines, forms the value of the literal, with backslash escapes interpreted as they are in rune literals (except that ``\'`` is illegal and ``\"`` is legal), with the same restrictions. The three-digit octal (``\nnn``) and two-digit hexadecimal (``\xnn``) escapes represent individual bytes of the resulting string; all other escapes represent the (possibly multi-byte) UTF-8 encoding of individual characters. Thus inside a string literal ``\377`` and ``\xFF`` represent a single byte of value ``0xFF`` = ``255``, while ``ÿ``, ``\u00FF``, ``\U000000FF`` and ``\xc3\xbf`` represent the two bytes ``0xc3 0xbf`` of the UTF-8 encoding of character ``U+00FF``.
 
@@ -280,28 +296,21 @@ A string literal represents a string constant obtained from concatenating a sequ
 
 
 Tuples
-------
+======
 
 .. code-block:: EBNF
 
     Tuple-Lit = "{" [ Token { "," Token } ] "}";
 
-.. warning:: TODO????
 
-.. warning:: Token???
-
-.. warning:: Niezdefiniowany ``Block`` jest jeszcze.
-
-
-
+*********
 Constants
-=========
-
-.. warning:: ??
+*********
 
 
+*****
 Types
-=====
+*****
 
 A type determines the set of values and operations specific to values of that type. A type may be specified by a (possibly qualified) type name or a type literal, which composes a new type from previously declared types.
 
@@ -316,19 +325,13 @@ A type determines the set of values and operations specific to values of that ty
     TypeLit  = ArrayType | StructType | PointerType | FunctionType | InterfaceType
              | SliceType | MapType | ChannelType ;
 
-.. warning:: [TODO przerobic; czy w ogole potrzebne?]
-
 Named instances of the types are predeclared. Composite types – list, class, module, function, interface, tuple – may be constructed using type literals.
-
-.. warning:: [todo lista typów]
-
-.. warning:: linki
 
 The type of a variable is the type defined by or inferred from its declaration.
 
 
 List type
----------
+=========
 
 A list a sequence of elements of a single type, called the element type.
 
@@ -342,7 +345,7 @@ List is  a parameterized type, meaning that it accepts a type parameter. The nam
 
 
 Tuple type
-----------
+==========
 
 A ``n``-tuple is an ordered sequence of length ``n``. Contrary to lists, they can contain elements of several different types and it contains a fixed number of elements (ie. tuple length is a part of its type).
 
@@ -354,11 +357,11 @@ Tuples' types match iff the length of a tuples is the same and corresponding ele
 
     TupleType = "{" [ Type { "," Type } ] "}" ;
 
-.. warning:: TUPLETYPE????
+
 
 
 Function types
---------------
+==============
 
 A function type denotes the set of all functions with the same parameter and result types.
 
@@ -380,7 +383,7 @@ If the function has more than one parameter, they must be written as comma-separ
 
 
 User-defined types
-------------------
+==================
 
 There are two kinds of user defined types: modules and classes. Their names can be used whenever a type is expected.
 
@@ -388,24 +391,26 @@ Type is visible within a whole file where it is defined, disregarding the defini
 
 
 Parametric types
-----------------
+================
 
 Instead of giving a particular (imported or defined within module) typename, it is also possible to give a type parameter. The type parameters names start with a lowercase character. Type parameters are “replaced” with the appropriate types during the compilation.
 If the type is omitted, it is usually the same as if it would be explicitly written as type parameter.
 
 
+******************************
 Properties of types and values
-==============================
-
-.. warning:: ??
+******************************
 
 
 
+
+
+******
 Blocks
-======
+******
 
 List literal
-------------
+============
 
 The number of elements is called the length. It is representable by a value of type ``Int`` and is never negative. Lists can be either finite or infinite. Currently it is not allowed to call ``length`` method on an infinite list.
 
@@ -437,7 +442,7 @@ The element under ``i``-th index can be accessed using ``list[i]`` notation. The
 
 
 Tuple literal
--------------
+=============
 
 Tuples are denoted by a comma separated list of types that is enclosed with braces.
 
@@ -448,7 +453,7 @@ Tuples are denoted by a comma separated list of types that is enclosed with brac
 
 
 Function declarations
----------------------
+=====================
 
 A function declaration binds an identifier, the *function name*, to a function body. Function name starts always with a lower-case character.
 
@@ -497,7 +502,7 @@ The function body consists of a series expressions. The last one will be interpr
         # this function will work only with integer parameters
 
 Function literal
-----------------
+================
 
 Lambdas are anonymous functions, defined within an expression. Lambdas are introduced by a colon ``:`` that separated the argument list and the function body.
 
@@ -525,34 +530,23 @@ Lambda body can access the variables from the surrounding scope. It should be no
         x = "kkkk"     #x is now a String
         y = lambda 100 #y is 110
 
-.. warning:: Używamy sformułowania „variable” ale to jest _ZŁE_ sformułowanie. Trzeba pójść podobnym tokiem jak Scala i używać terminu „values” / „binding to names”.
 
-
-
-
+**********************
 Declarations and scope
-======================
-
-.. warning:: Standardowy lexical scoping? Cokowleik ciekawego się dzieje?
+**********************
 
 
-
+***********
 Expressions
-===========
-
-.. warning:: ??
+***********
 
 
-
+**********
 Statements
-==========
-
-.. warning:: ???
+**********
 
 Pattern matching
-----------------
-
-.. warning:: ``_`` — nie matchowane.
+================
 
 Creating variables is straight-forward – just use them:
 
@@ -597,7 +591,7 @@ A bit more complex example:
 
 
 Function calls
---------------
+==============
 
 The most common expression is a function call. Luna, being a function language, strives to make calling function as syntactically clean as possible. There are two calling conventions:
 
@@ -611,15 +605,15 @@ The most common expression is a function call. Luna, being a function language, 
 
 
 
+******************
 Built-in functions
-==================
-
-.. warning:: Lista wbudowanych metod/procedur.
+******************
 
 
 
+*******
 Modules
-=======
+*******
 
 Module is basically a file that contains:
 
@@ -634,7 +628,7 @@ Programs are built from modules. Each module is defined in a separate file. Ther
 
 
 Importing
----------
+=========
 
 To declare dependencies of the current module (file), use the ``import`` statement in a given file. You can either import the module as a whole (including all of its nested members) or import functions and classes selectively.
 
@@ -677,13 +671,13 @@ You could also import everything from the module – just use the ``*``, e.g.:
 
 
 Program entry point
--------------------
+===================
 
 Each program has a module defined in the ``Main.luna`` file. This file contains the ``main`` method, which is the entry point of a program.
 
 
 Modules hierarchy
------------------
+=================
 
 Modules can be gouped in a hierarchy, by placing them in a directory structure. To import a module ``Mod`` from directory ``DirA/DirB/DirC``:
 
@@ -693,22 +687,19 @@ Modules can be gouped in a hierarchy, by placing them in a directory structure. 
 
 
 ``self`` implicit parameter
----------------------------
+===========================
 
 Every method defined in a module gets an implicit ``self`` parameter, that allows treating the module in the same way as a class.
 
 
 
+*******
 Classes
-=======
+*******
 
 Luna is *not* an object-oriented programming language in a strict sense, however it supports many of its useful aspects while providing a familiar syntax.
 
 Classes consist of fields (member variables) and methods (member functions). Class definition is introduced by a class keyword:
-
-.. warning:: static function????
-
-.. warning:: function ≠ method ≠ procedure.
 
 .. code-block:: ruby
 
@@ -721,13 +712,13 @@ Classes consist of fields (member variables) and methods (member functions). Cla
 
 
 Class fields
-------------
+============
 
 Class object is a sequence of fields. They can be accessed using the dot operator ``.``, as shown in the snipped in previous section.
 
 
 Methods
--------
+=======
 
 Defining methods works exactly the same as defining function within the module. The only difference is that the first self parameter will be the class object, not the module.
 Methods can be called, using dot operator ``.``,  on the object of the class. The class object on the left-hand side of dot will be passed to the function as the first, implicit parameter ``self``.
@@ -739,7 +730,7 @@ Methods can be called, using dot operator ``.``,  on the object of the class. Th
 
 
 Type constructor
-----------------
+================
 
 The class definition defines not only a type but also an entity known as "*type constructor*". It can be perceived as a special kind of function allowing creation of instances of the class, as well as pattern-matching on its fields.
 
@@ -754,8 +745,9 @@ Type constructor arguments are the type's fields in the order of definition. For
 
 Every class has exactly one type constructor and it is implicitly generated by the compiler.
 
+
 Parametrized class
-------------------
+==================
 
 The class can be parametrized by another types. For example, we might want to write a ``Point`` class that stores its coordinates using any user-provided type.
 
@@ -787,27 +779,23 @@ Parametrized class typename can be followed by the typenames that will be used t
         l = l.prepend 2
         l = l.prepend 1   # now l contains [1,2,3]
 
-.. warning:: nil? nul? null? none?
 
 
-
-
+******
 Errors
-======
-
-.. warning:: Opis tego jak propagują się błędy i jak można je obsługiwać.
+******
 
 
 
+*********************
 Visual representation
-=====================
-
-.. warning:: Obrazki prezentujące jak wyglądają różne odpowiadające sobie pary kod–graf.
+*********************
 
 
 
+****************
 Deployment guide
-================
+****************
 
 To build your program, pass the entry module of your program to the ``lunac`` compiler, ie. type the following in the shell in appropriate directorys:
 
@@ -825,5 +813,3 @@ Compiler supports a number of options, including:
     -h, --help -- display compiler’s options and lunac compiler usage
 
 To read more about compiler options, run ``lunac --help``.
-
-.. warning:: Tutaj informacja o tym, jak się korzysta z systemu np. na AWS.

@@ -11,5 +11,7 @@ guard :shell do
     puts "\n\n\n"
     puts "---[ Compiling DOT: #{m[1]}.dot -> #{m[1]}.png ]---"
     `dot #{m[0]} -Tpng -o #{m[1]}.png`
+    puts "---[ Compiling DOT: #{m[1]}.dot -> #{m[1]}.svg ]---"
+    `dot #{m[0]} -Tsvg -o #{m[1]}.svg`
   end
 end
