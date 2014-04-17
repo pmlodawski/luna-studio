@@ -21,6 +21,7 @@ TODO
 #. Describe Constants_
 #. List basic types
 #. Don't allow ``_`` as a name for variable
+#. Move ``thing`` to :code:`thing`
 
 
 
@@ -30,20 +31,20 @@ Introduction
 
 Welcome to the Luna language reference guide.
 
-Luna is a general-purpose language designed with efficient and easy data processing in mind. It is compiled, statically-typed and multi-paradigm. Luna is designed to fully utilize the power of modern hardware thanks to its concurrent nature and lightweight threading model. Type inference and concise syntax allow writing clean and elegant programs, while maintaining all the benefits of the static type system, like compile-time error detection and optimization opportunities.
+Luna is a general-purpose language designed with efficient and easy data processing in mind. It is compiled, statically-typed, and both data-flow and functional with elements of object-oriented paradigm. Luna is designed to fully utilize the power of modern hardware thanks to its concurrent nature and lightweight threading model. Type inference and concise syntax allow writing clean and elegant programs, while maintaining all the benefits of the static type system, like compile-time error detection and optimization opportunities.
 
 The distinctive feature of Luna is its dual textual & visual representation model. Every program in the text form has its equivalent representation as a visual dataflow graph and vice-versa. Both forms are interchangeable and can be developed simultaneously. The visual dataflow graph bridges the communication gap between technical and non-technical team members.
 
 The grammar of Luna is compact and regular, allowing for easy analysis by automatic tools such as integrated development environments.
 
-For more information – and other documents – visit http://flowbox.io.
+For more information – and other documents – visit http://flowbox.io/luna.
 
 
 
 Notation
 ========
 
-The syntax specified using `Extended Backus-Naur Form (EBNF)`_:
+The syntax is specified using `Extended Backus-Naur Form (EBNF)`_:
 
 .. _`Extended Backus-Naur Form (EBNF)`: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_Form
 
@@ -76,9 +77,9 @@ Productions are expressions constructed from terms and the following operators, 
     []  option (0 or 1 times)
     {}  repetition (0 to n times)
 
-Lower-case production names are used to identify lexical tokens. Non-terminals are in CamelCase. Lexical tokens are enclosed in double quotes ``""`` or back quotes ``````.
+Lower-case production names are used to identify lexical tokens. Non-terminals are written in CamelCase. Lexical tokens are enclosed in double quotes (``""``) or back quotes (``````).
 
-The form "``a … b``" represents the set of characters from ``a`` through ``b`` as alternatives. To conform with EBNF, this is written formally as "``a ?…? b``". The horizontal ellipsis "``…``" is also used elsewhere in the specification to informally denote various enumerations or code snippets that are not further specified. The character "``…``" (as opposed to the three characters "``...``") is not a token of the Luna language.
+The form "``a … b``" represents the set of characters from ``a`` through ``b`` as alternatives. To conform with EBNF, this is written formally as "``a ?…? b``". The horizontal ellipsis "``…``" is also used elsewhere in the specification to informally denote various enumerations or code snippets that are not further specified. The character "``…``" (as opposed to the two characters "``..``") is not a token of the Luna language.
 
 
 Source code representation
@@ -90,7 +91,7 @@ Source code is Unicode text encoded in UTF-8_. The text is not canonicalized, so
 
 Each code point is distinct; for instance, upper and lower case letters are different characters.
 
-The compiler disallows the NUL character (``U+0000``) in the source text. Moreover, `byte-order mark`_ (``U+FEFF``) at the beginning of a file are ignored and should not appear elsewhere.
+The compiler may disallow the ``NUL`` character (``U+0000``) in the source text. Moreover, `byte-order mark`_ (``U+FEFF``) at the beginning of a file are ignored and should not appear elsewhere.
 
 .. _byte-order mark: https://en.wikipedia.org/wiki/Byte_order_mark
 
@@ -138,8 +139,12 @@ There are two forms of comments:
 line comments
     start with the character ``#`` and stop at the end of the line. A line comment acts like a newline.
 
-general comment
-    start with the general comment begin character sequence ``#[`` and continue through the general comment end character sequence ``#]``. A general comment containing one or more newlines acts like a newline, otherwise it acts like a space. They can be nested.
+multi-line comment
+    start with the multi-line comment begin character sequence ``#[`` and continue through the multi-line comment end character sequence ``#]``. A multi-line comment containing one or more newlines acts like a newline, otherwise it acts like a space. They can be nested.
+
+.. warning:: REWRITEs
+
+
 
 Note that both of them start with the same character: ``#``. If ``#[`` cannot be matched with appropriate ``#]``, it is considered a *line comment*.
 
@@ -156,7 +161,9 @@ Tokens
 
 Tokens form the vocabulary of the Luna language. There are four classes: *identifiers*, *keywords*, *operators & delimiters*, and *literals*.
 
-White space, formed from spaces (``U+0020``), horizontal tabs (``U+0009``), carriage returns (``U+000D``), and newlines (``U+000A``), serves two purposes: to mark code blocks via same-indent (like in Python), and to separate tokens that would otherwise combine into a single token.
+.. warning:: sprawdzić
+
+Whitespace, formed from spaces (``U+0020``), horizontal tabs (``U+0009``), carriage returns (``U+000D``), and newlines (``U+000A``), serves two purposes: to mark code blocks via same-indent, and to separate tokens that would otherwise combine into a single token.
 
 
 Semicolons
@@ -172,6 +179,8 @@ The formal grammar uses semicolons ``;`` as terminators in a number of productio
     * one of the operators and delimiters ``++``, ``--``, ``)``, ``]``, or ``}``
       
 2. To allow complex statements to occupy a single line, a semicolon may be omitted before a closing "``)``" or "``}``".
+
+.. warning:: @Wojtek: do sprawdzenia
 
 To reflect idiomatic use, code examples in this document elide semicolons using these rules.
 
@@ -193,11 +202,17 @@ Identifiers name program entities such as variables and functions. An identifier
 
     Identifier = Letter-Lowercase { Letter | Digit } ;
 
+.. warning:: Do zmiany: pauzy w EBNF do kropek
+
+
 
 Type identifiers
 ================
 
-Type identifiers name such entities as classes and modules. All user-defined types must begin with an uppercase letter.
+.. warning:: Wszystko jest obiektem!
+.. warning:: Napisać, że to czego brakuje do OOP to inheritance; ale wszystko da się zrobić przy pomocy interfejsów.
+
+Type identifiers name such entities as classes and modules. All user-defined types have to begin with an uppercase letter.
 
 .. _EBNF Type-Identifier:
 
@@ -237,6 +252,8 @@ Integer literals
 
 An integer literal is a sequence of digits representing an integer constant. An optional prefix sets a non-decimal base: ``0`` for octal, ``0x`` or ``0X`` for hexadecimal. In hexadecimal literals, letters ``a…f`` and ``A…F`` represent values ``10`` through ``15``.
 
+.. warning:: W kompilatorze zapisać różnice między 010 a 10.
+
 .. _EBNF Int-Lit:
 .. _EBNF Bin-Lit:
 .. _EBNF Decimal-Lit:
@@ -272,19 +289,46 @@ A floating-point literal is a decimal representation of a floating-point constan
 Character literals
 ==================
 
-A character literal represents a Unicode code point. A *rune literal* is expressed as one or more characters enclosed in single quotes. Within the quotes, any character may appear except single quote and newline. A single quoted character represents the Unicode value of the character itself, while multi-character sequences beginning with a backslash encode values in various formats.
+A character literal represents a Unicode code point. A single quoted character represents the Unicode value of the character itself, while multi-character sequences beginning with a backslash encode values in various formats.
 
 The simplest form represents the single character within the quotes; since Luna source text is Unicode characters encoded in UTF-8, multiple UTF-8-encoded bytes may represent a single integer value. For instance, the literal ``'a'`` holds a single byte representing a literal ``a``, Unicode ``U+0061``, value ``0x61``, while ``'ä'`` holds two bytes (``0xc3`` ``0xa4``) representing a literal *a-dieresis*, ``U+00E4``, value ``0xe4``.
 
+.. warning:: sprawdzić jak bardzo działa UTF-8 u nas
+
 Several backslash escapes allow arbitrary values to be encoded as ASCII text. There are four ways to represent the integer value as a numeric constant: ``\x`` followed by exactly two hexadecimal digits; ``\u`` followed by exactly four hexadecimal digits; ``\U`` followed by exactly eight hexadecimal digits, and a plain backslash ``\`` followed by exactly three octal digits. In each case the value of the literal is the value represented by the digits in the corresponding base.
+
+.. warning:: Wprowadzić ``\x`` i inne do kompilatora
 
 Although these representations all result in an integer, they have different valid ranges. Octal escapes must represent a value between 0 and 255 inclusive. Hexadecimal escapes satisfy this condition by construction. The escapes ``\u`` and ``\U`` represent Unicode code points so within them some values are illegal, in particular those above ``0x10FFFF`` and surrogate halves.
 
 After a backslash, certain single-character escapes represent special values:
 
+.. code-block:: ruby
+
+    \a   U+0007 alert or bell
+    \b   U+0008 backspace
+    \f   U+000C form feed
+    \n   U+000A line feed or newline
+    \r   U+000D carriage return
+    \t   U+0009 horizontal tab
+    \v   U+000b vertical tab
+    \\   U+005c backslash
+    \'   U+0027 single quote  (valid escape only within rune literals)
+    \"   U+0022 double quote  (valid escape only within string literals)
+
 
 String literals
 ===============
+
+.. warning:: napisać, że String jest listą
+
+.. warning:: poprawki do skryptu budującego: docelowo ma wszystko lądować w dist, instrukcja budowania
+
+.. warning:: napisać o interpreted strings ($x i ${x})
+
+.. warning:: czy \" jest w stringu opisany jako "trzeba espape-ować"?
+
+.. warning:: mamy multiline jak w pythonie: """
 
 A string literal represents a string constant obtained from concatenating a sequence of characters. Interpreted string literals are character sequences between double quotes ``""``. The text between the quotes, which may not contain newlines, forms the value of the literal, with backslash escapes interpreted as they are in rune literals (except that ``\'`` is illegal and ``\"`` is legal), with the same restrictions. The three-digit octal (``\nnn``) and two-digit hexadecimal (``\xnn``) escapes represent individual bytes of the resulting string; all other escapes represent the (possibly multi-byte) UTF-8 encoding of individual characters. Thus inside a string literal ``\377`` and ``\xFF`` represent a single byte of value ``0xFF`` = ``255``, while ``ÿ``, ``\u00FF``, ``\U000000FF`` and ``\xc3\xbf`` represent the two bytes ``0xc3 0xbf`` of the UTF-8 encoding of character ``U+00FF``.
 
