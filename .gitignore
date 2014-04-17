@@ -19,6 +19,9 @@ tools/batch-clients/performance/zmq/generated
 tools/batch-clients/tcp-cpp/generated
 tools/batch-clients/dumper/generated
 
+# OS X temp
+.DS_Store
+
 # emacs backup files
 .\#*
 \#*\#

@@ -2,8 +2,14 @@
 
 guard :shell do
   watch /(lang-spec\/.*).rst$/ do |m|
-    puts "\n\n\n\n"
-    puts "---[ Compiling #{m[1]}.rst -> #{m[1]}.html ]---"
-    `rst2html.py #{m[1]}.rst > #{m[1]}.html`
+    puts "\n\n\n"
+    puts "---[ Compiling RST: #{m[1]}.rst -> #{m[1]}.html ]---"
+    `rst2html.py #{m[0]} > #{m[1]}.html`
+  end
+
+  watch /(lang-spec\/.*).dot$/ do |m|
+    puts "\n\n\n"
+    puts "---[ Compiling DOT: #{m[1]}.dot -> #{m[1]}.png ]---"
+    `dot #{m[0]} -Tpng -o #{m[1]}.png`
   end
 end
