@@ -1,0 +1,9 @@
+# vim: set syntax=ruby
+
+guard :shell do
+  watch /(lang-spec\/.*).rst$/ do |m|
+    puts "\n\n\n\n"
+    puts "---[ Compiling #{m[1]}.rst -> #{m[1]}.html ]---"
+    `rst2html.py #{m[1]}.rst > #{m[1]}.html`
+  end
+end

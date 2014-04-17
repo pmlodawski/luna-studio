@@ -4,6 +4,7 @@
 *.chs.h
 .virthualenv
 *~
+*.swp
 *.imports
 tools/batch-clients/performance/tcp/main
 tools/batch-clients/performance/zmq/main
