@@ -70,9 +70,9 @@ def checkInstall(name, installCmd, chckf):
 
 def checkPythonPkg(package, version=None):
     if version:
-        install_cmd = "pip install {package}=={version}".format(**locals())
+        install_cmd = "pip install --user {package}=={version}".format(**locals())
     else:
-        install_cmd = "pip install {package}".format(**locals())
+        install_cmd = "pip install --user {package}".format(**locals())
 
     try:
         res = subprocess.check_output("pip freeze", shell=True)
@@ -130,7 +130,7 @@ assertInstall("cabal")
 print_info ("Updating cabal package cache")
 try_call('cd && cabal update')
 
-checkInstall("cabal", "cd third-party/cabal-1.19.2/Cabal && cabal install && cd ../cabal-install && cabal install", checkCabalVersion)
+checkInstall("cabal", "cd third-party/cabal-1.19.2/Cabal && cabal install -j1 && cd ../cabal-install && cabal install -j1", checkCabalVersion)
 
 checkCabalPkg("hprotoc")
 checkCabalPkg("c2hs", version="0.16.5")
