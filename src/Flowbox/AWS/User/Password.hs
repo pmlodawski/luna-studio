@@ -13,15 +13,16 @@ import Flowbox.Prelude
 
 
 
-type Password = SHA.Digest SHA.SHA256State
+type Password = String
 
 
 type Plain = String
 
 
 mk :: Plain -> Password
-mk = SHA.sha256 . pack
+mk = SHA.showDigest . SHA.sha256 . pack
 
 
 verify :: Password -> Plain -> Bool
 verify password plain = password == mk plain
+
