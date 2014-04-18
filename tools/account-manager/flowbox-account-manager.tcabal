@@ -35,6 +35,7 @@ Executable account-manager
                     flowbox-utils,
                     network,
                     optparse-applicative,
+                    postgresql-simple,
                     protocol-buffers,
                     text,
                     transformers

@@ -9,6 +9,7 @@ module Flowbox.AccountManager.Config (
     module Paths_flowbox_account_manager,
 
     defaultAddress,
+    defaultRegion,
 ) where
 
 import Flowbox.Prelude
@@ -18,3 +19,7 @@ import Paths_flowbox_account_manager (version)
 
 defaultAddress :: String
 defaultAddress = "tcp://*:30530"
+
+
+defaultRegion :: String
+defaultRegion = "eu-west-1"

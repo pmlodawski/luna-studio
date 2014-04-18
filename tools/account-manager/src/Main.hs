@@ -6,13 +6,14 @@
 ---------------------------------------------------------------------------
 module Main where
 
+import qualified Database.PostgreSQL.Simple as PSQL
+
 import           Flowbox.AccountManager.Cmd             (Cmd)
 import qualified Flowbox.AccountManager.Cmd             as Cmd
 import qualified Flowbox.AccountManager.Config          as Config
 import qualified Flowbox.AccountManager.Context         as Context
 import qualified Flowbox.AccountManager.Handler.Handler as Handler
 import qualified Flowbox.AccountManager.Version         as Version
-import           Flowbox.AWS.Region                     (Region)
 import qualified Flowbox.AWS.Region                     as Region
 import           Flowbox.Options.Applicative            hiding (info)
 import qualified Flowbox.Options.Applicative            as Opt
@@ -21,11 +22,6 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.ZMQ.RPC.Server                 as RPC
 
 
-
--- TODO [PM] : move to configuration file or anywhere else
-region :: Region
-region = Region.mk "eu-west-1"
---
 
 rootLogger :: Logger
 rootLogger = getLogger "Flowbox"
@@ -38,9 +34,18 @@ logger = getLoggerIO "Flowbox.AccountManager"
 parser :: Parser Cmd
 parser = Opt.flag' Cmd.Version (long "version" <> hidden)
        <|> Cmd.Serve
-           <$> strOption ( long "address" <> short 'a' <> value Config.defaultAddress <> metavar "address" <> help ("Server address (default is " ++ Config.defaultAddress ++ ")"))
-           <*> optIntFlag (Just "verbose") 'v' 2 3          "Verbose level (level range is 0-5, default level is 3)"
-           <*> switch    ( long "no-color"          <> help "Disable color output" )
+           <$> strOption  (long "address" <> short 'a' <> value Config.defaultAddress <> metavar "address" <> help ("Server address (default is " ++ Config.defaultAddress ++ ")"))
+
+           <*> strOption  (long "region"  <> short 'r' <> value Config.defaultRegion  <> metavar "region"  <> help "Database connect address")
+
+           <*> strOption  (long "dbAddress"  <> metavar "address"  <> help "Database connect address")
+           <*> option     (long "dbPort"     <> metavar "port"     <> help "Database connect port")
+           <*> option     (long "dbUser"     <> metavar "user"     <> help "Database connect user")
+           <*> option     (long "dbPassword" <> metavar "password" <> value "" <> help "Database connect password")
+           <*> option     (long "database"   <> metavar "database" <> help "Database name")
+
+           <*> optIntFlag (Just "verbose") 'v' 2 3 "Verbose level (level range is 0-5, default level is 3)"
+           <*> switch     (long "no-color" <> help "Disable color output" )
 
 
 opts :: ParserInfo Cmd
@@ -58,5 +63,11 @@ run cmd = case cmd of
     Cmd.Serve {} -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
         logger info "Starting rpc service"
-        ctx <- Context.mk region
+        let connectionInfo = PSQL.ConnectInfo (Cmd.dbAddress  cmd)
+                                              (fromIntegral $ Cmd.dbPort cmd)
+                                              (Cmd.dbUser     cmd)
+                                              (Cmd.dbPassword cmd)
+                                              (Cmd.database   cmd)
+            region = Region.mk $ Cmd.region cmd
+        ctx <- Context.mk region connectionInfo
         RPC.run (Cmd.address cmd) (Handler.handler ctx)

@@ -9,15 +9,17 @@
 
 module Flowbox.AWS.Session where
 
-import           AWS.EC2       (EC2)
-import qualified AWS.EC2       as EC2
-import qualified AWS.EC2.Types as Types
+import           AWS.EC2                (EC2)
+import qualified AWS.EC2                as EC2
+import qualified AWS.EC2.Types          as Types
+import           Control.Monad.IO.Class
 
 import           Data.IP                   (IPv4)
 import qualified Flowbox.AWS.Instance      as Instance
 import           Flowbox.AWS.User.Database (Database)
 import qualified Flowbox.AWS.User.Database as Database
 import qualified Flowbox.AWS.User.Password as Password
+import           Flowbox.AWS.User.User     (User (User))
 import qualified Flowbox.AWS.User.User     as User
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -31,22 +33,22 @@ logger = getLoggerIO "Flowbox.AWS.Session"
 type Error = String
 
 
-register :: User.Name -> Password.Plain -> Database -> Either Error Database
-register userName password database = case Database.lookup userName database of
-    Just _  -> Left "Cannot register user: username already exists"
-    Nothing -> do let userData = User.Data $ Password.mk password
-                  Right $ Database.insert userName userData database
+register :: User.Name -> Password.Plain -> Database -> IO (Either Error ())
+register userName password database = do
+    Database.addUser database $ User userName $ Password.mk password
 
 
 login :: Instance.EC2Resource m
       => User.Name -> Password.Plain -> Database -> EC2 m (Either Error IPv4)
-login userName password database = case Database.lookup userName database of
-    Nothing              -> return $ Left "Login failed: no such user"
-    Just (User.Data hash) -> if not $ Password.verify hash password
-                                then return $ Left "Login failed: password incorrect"
-                                else do logger info $ "Login successful, username=" ++ (show userName)
-                                        inst <- Instance.get userName Instance.defaultInstanceRequest
-                                        Right <$> (fromJust $ Types.instanceIpAddress inst)
+login userName password database = do
+    users <- liftIO $ Database.getUser database userName
+    case users of
+        [User _ hash] -> if Password.verify hash password
+                            then do logger info $ "Login successful, username=" ++ (show userName)
+                                    inst <- Instance.get userName Instance.defaultInstanceRequest
+                                    Right <$> (fromJust $ Types.instanceIpAddress inst)
+                            else return $ Left "Login failed."
+        _             -> return $ Left "Login failed."
 
 
 logout :: Instance.EC2Resource m => User.Name -> EC2 m ()

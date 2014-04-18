@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Main where
 
@@ -20,13 +21,17 @@ import qualified Control.Monad.Loops          as Loops
 import qualified Control.Monad.Trans.Resource as Resource
 import           Data.Text                    (Text)
 import qualified Data.Text                    as Text
+import           Database.PostgreSQL.Simple   as PSQL
 import           Text.Show.Pretty             (ppShow)
 
-import qualified Flowbox.AWS.EC2      as EC2
-import qualified Flowbox.AWS.Instance as Instance
-import           Flowbox.AWS.Region   (Region)
-import qualified Flowbox.AWS.Region   as Region
+import qualified Flowbox.AWS.EC2           as EC2
+import qualified Flowbox.AWS.Instance      as Instance
+import           Flowbox.AWS.Region        (Region)
+import qualified Flowbox.AWS.Region        as Region
+import qualified Flowbox.AWS.User.Database as Database
+import           Flowbox.AWS.User.User     (User (User))
 import           Flowbox.Prelude
+
 
 
 type Tag = Text
@@ -38,11 +43,32 @@ region :: Region
 region = Region.mk "eu-west-1"
 
 
-main :: IO ()
-main = do
+getInstance :: IO ()
+getInstance = do
     credential <- AWS.loadCredential
     let userName = "zenon"
     ip <- EC2.runEC2inRegion credential region
           $ Types.instanceIpAddress <$> Instance.get userName Instance.defaultInstanceRequest
     print ip
-    putStrLn "quiting"
+
+
+queryDB :: IO ()
+queryDB = do
+    putStrLn "Connecting..."
+    db <- Database.mk $ PSQL.ConnectInfo "mydbinstance.cn1bxyb5bfdl.eu-west-1.rds.amazonaws.com"
+                                         5432
+                                         "test"
+                                         "************"
+                                         "flowbox"
+    putStrLn "Connected"
+    Database.addUser db $ User "stefan" "ala123"
+    Database.addUser db $ User "zenon"  "ala123"
+    u1 <- Database.getUser db "stefan"
+    u2 <- Database.getUser db "zenon"
+    print u1
+    print u2
+
+
+main :: IO ()
+main = do queryDB
+          putStrLn "quiting"

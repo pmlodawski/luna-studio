@@ -7,9 +7,10 @@
 
 module Flowbox.AccountManager.Context where
 
-import qualified AWS        as AWS
-import           Data.IORef (IORef)
-import qualified Data.IORef as IORef
+import qualified AWS                        as AWS
+import           Data.IORef                 (IORef)
+import qualified Data.IORef                 as IORef
+import qualified Database.PostgreSQL.Simple as PSQL
 
 import           Flowbox.AWS.Region        (Region)
 import           Flowbox.AWS.User.Database (Database)
@@ -18,15 +19,14 @@ import           Flowbox.Prelude           hiding (Context)
 
 
 
-type ContextRef = IORef Context
-
-
 data Context = Context { database   :: Database
                        , credential :: AWS.Credential
                        , region     :: Region
-                       } deriving (Show)
+                       }
 
 
-mk :: Region -> IO ContextRef
-mk region' = do credential' <- AWS.loadCredential
-                IORef.newIORef $ Context Database.empty credential' region'
+mk :: Region -> PSQL.ConnectInfo -> IO Context
+mk region' dbConnectionInfo = do
+    credential' <- AWS.loadCredential
+    database'   <- Database.mk dbConnectionInfo
+    return $ Context database' credential' region'

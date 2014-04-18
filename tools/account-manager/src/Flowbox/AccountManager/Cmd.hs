@@ -11,9 +11,18 @@ import Flowbox.Prelude
 
 
 
-data Cmd = Serve { address :: String
-                 , verbose :: Int
-                 , noColor :: Bool
+data Cmd = Serve { address    :: String
+
+                 , region     :: String
+
+                 , dbAddress  :: String
+                 , dbPort     :: Int
+                 , dbUser     :: String
+                 , dbPassword :: String
+                 , database   :: String
+
+                 , verbose    :: Int
+                 , noColor    :: Bool
                  }
          | Version
          deriving Show
